@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 -- indent guides for Neovim
 return {
   name = "indent-blankline.nvim",
@@ -37,9 +35,9 @@ return {
     local hooks = require("ibl.hooks")
     -- hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
     hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
-      state.theme.apply_integration({
-        theme = state.theme.theme:snapshot(),
-        transparency = state.theme.transparency:snapshot(),
+      eve.state.theme.apply_integration({
+        theme = eve.state.theme.theme:snapshot(),
+        transparency = eve.state.theme.transparency:snapshot(),
         integration = "plugin",
       })
     end)

@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local select_files = require("fml.fn.select_files")
 
 ---@class fml.action.find
@@ -15,7 +14,7 @@ function M.find_pinned_files()
     flag_regex = false,
     fetch_filepaths = function()
       local filepaths = {} ---@type string[]
-      local pinned_filepaths = state.bookmark.pinned:snapshot() ---@type string[]
+      local pinned_filepaths = eve.state.bookmark.pinned:snapshot() ---@type string[]
       for _, filepath in ipairs(pinned_filepaths) do
         local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
         table.insert(filepaths, relative_filepath)

@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local config = require("fml.dressing.image.config")
 local Placement = require("fml.dressing.image.placement")
 local ImageInline = require("fml.dressing.image.inline")
@@ -422,7 +421,7 @@ end
 
 ---@return nil
 function M.hover()
-  local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = eve.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
 

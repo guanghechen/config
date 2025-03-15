@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 ---@class fml.dressing.input.IOptions
 ---@field public relative               ?"editor"|"cursor"
 ---@field public width                  ?integer
@@ -151,8 +149,8 @@ function M.input(opts, on_confirm)
 end
 
 local original_input = vim.ui.input
-state.observe({ state.flight.dressing_input }, function()
-  local flag = state.flight.dressing_input:snapshot() ---@type boolean
+eve.state.observe({ eve.state.flight.dressing_input }, function()
+  local flag = eve.state.flight.dressing_input:snapshot() ---@type boolean
   if flag then
     vim.ui.input = M.input
   else

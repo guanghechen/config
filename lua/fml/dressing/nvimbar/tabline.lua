@@ -1,9 +1,7 @@
-local state = require("eve.state")
-
 local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
-local dirtier = state.status.dirtier_tabline ---@type eve.collection.IDirtier
+local dirtier = eve.state.status.dirtier_tabline ---@type eve.collection.IDirtier
 local position = "f_tl" ---@type fml.ux.nvimbar.Position
 
 local tabline ---@type fml.ux.INvimbar
@@ -14,7 +12,7 @@ tabline = Nvimbar.new({
   comp_sep_hlname_active = position .. "_bg",
   render_delay = 256,
   silent = function()
-    local devmode = state.flight.devmode:snapshot() ---@type boolean
+    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()
@@ -68,7 +66,7 @@ tabline
 
 ---@return boolean
 local function should_show_tabline()
-  local devmode = state.flight.devmode:snapshot() ---@type boolean
+  local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
   if devmode then
     return true
   end
@@ -79,7 +77,7 @@ local function should_show_tabline()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = state.tab.resolve(tabnr)
+  local meta = eve.state.tab.resolve(tabnr)
   return meta == nil or #meta.bufs > 1
 end
 

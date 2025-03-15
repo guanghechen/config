@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 return {
   name = "diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },
@@ -53,7 +51,7 @@ return {
       hooks = {
         ---@diagnostic disable-next-line: unused-local
         diff_buf_win_enter = function(bufnr, winid, ctx)
-          if state.flight.gitdiff_expand_all:snapshot() then
+          if eve.state.flight.gitdiff_expand_all:snapshot() then
             vim.opt_local.foldlevel = 99
           end
 
@@ -81,7 +79,7 @@ return {
         end,
         view_opened = function()
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          state.tab.refresh(tabnr)
+          eve.state.tab.refresh(tabnr)
         end,
       },
       icons = { -- Only applies when use_icons is true.

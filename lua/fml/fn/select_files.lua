@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 
@@ -31,7 +30,7 @@ local function select_files(params)
     get_present = function()
       local present_filepath = nil ---@type string|nil
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+      local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
       if bufnr_sourcefile ~= nil then
         local absolute_filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
         present_filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
@@ -80,7 +79,7 @@ local function select_files(params)
     extend_preset_keymaps = true,
     flag_fuzzy = eve.col.Observable.from_value(flag_fuzzy),
     flag_regex = eve.col.Observable.from_value(flag_regex),
-    frecency = state.frecency.files,
+    frecency = eve.state.frecency.files,
     input = input,
     multiple = multiple,
     permanent = false,

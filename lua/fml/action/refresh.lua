@@ -1,19 +1,17 @@
 local __module_name__ = "fml.action.refresh" ---@type string
 
-local state = require("eve.state")
-
 ---@class fml.action.refresh
 local M = {}
 
 ---@return nil
 function M.refresh_all()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
 
-  local devmode = state.flight.devmode:snapshot() ---@type boolean
+  local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd.checktime()
-  state.refresh()
+  eve.state.refresh()
 
   pcall(function()
     require("gitsigns").refresh()
@@ -36,9 +34,9 @@ function M.refresh_all()
   end
 
   vim.cmd("LspRestart")
-  state.status.suppress_warning:next(true)
-  state.status.dirtier_statusline:mark_dirty()
-  state.status.dirtier_tabline:mark_dirty()
+  eve.state.status.suppress_warning:next(true)
+  eve.state.status.dirtier_statusline:mark_dirty()
+  eve.state.status.dirtier_tabline:mark_dirty()
   vim.cmd.redraw()
 
   eve.reporter.info({

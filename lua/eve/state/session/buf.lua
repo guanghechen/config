@@ -1,14 +1,14 @@
----@class eve.t.state.buf.lsp.ISymbol
+---@class eve.state.buf.lsp.ISymbol
 ---@field public kind                   string
 ---@field public name                   string
 ---@field public row                    integer
 ---@field public col                    integer
 
----@class eve.t.state.buf.meta.data
+---@class eve.state.buf.meta.data
 ---@field public filepath               string
 ---@field public filetype               string
 
----@class eve.t.state.buf.meta.state
+---@class eve.state.buf.meta.state
 ---@field public fileicon               string
 ---@field public fileicon_hl            string
 ---@field public filename               string
@@ -17,14 +17,14 @@
 ---@field public relpath_pieces         string[]
 
 ---@class eve.state.buf.data
----@field public list                   eve.t.state.buf.meta.data[]
+---@field public list                   eve.state.buf.meta.data[]
 
 ---@class eve.state.buf.state
----@field public __meta_map__           table<integer, eve.t.state.buf.meta.state>
----@field public get                    fun(bufnr: integer|nil): eve.t.state.buf.meta.state|nil
----@field public set                    fun(bufnr: integer|nil, meta: eve.t.state.buf.meta.state): nil
+---@field public __meta_map__           table<integer, eve.state.buf.meta.state>
+---@field public get                    fun(bufnr: integer|nil): eve.state.buf.meta.state|nil
+---@field public set                    fun(bufnr: integer|nil, meta: eve.state.buf.meta.state): nil
 ---@field public del                    fun(bufnr: integer|nil): nil
----@field public resolve                fun(bufnr: integer|nil): eve.t.state.buf.meta.state|nil
+---@field public resolve                fun(bufnr: integer|nil): eve.state.buf.meta.state|nil
 ---@field public refresh                fun(bufnr: integer|nil): nil
 ---@field public refresh_all            fun(): nil
 ---
@@ -54,7 +54,7 @@ function M.normalize(data)
     if type(data.list) == "table" then
       for _, item in ipairs(data.list) do
         if type(item.filepath) == "string" and type(item.filetype) == "string" then
-          ---@type eve.t.state.buf.meta.data
+          ---@type eve.state.buf.meta.data
           local meta = {
             filepath = item.filepath,
             filetype = item.filetype,
@@ -71,12 +71,12 @@ end
 
 ---@return eve.state.buf.data
 function M.dump()
-  local list = {} ---@type eve.t.state.buf.meta.data[]
+  local list = {} ---@type eve.state.buf.meta.data[]
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    local meta = M.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+    local meta = M.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
     if meta ~= nil then
-      ---@type eve.t.state.buf.meta.data
+      ---@type eve.state.buf.meta.data
       local meta_data = {
         filepath = meta.filepath,
         filetype = vim.bo[bufnr].filetype,
@@ -112,7 +112,7 @@ function M.load(raw_data)
         vim.bo[bufnr].filetype = item.filetype
       end
 
-      ---@type eve.t.state.buf.meta.state
+      ---@type eve.state.buf.meta.state
       local meta = {
         fileicon_hl = fileicon_hl,
         fileicon = fileicon,
@@ -128,10 +128,10 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-M.__meta_map__ = {} ---@type table<integer, eve.t.state.buf.meta.state>
+M.__meta_map__ = {} ---@type table<integer, eve.state.buf.meta.state>
 
 ---@param bufnr                         integer|nil
----@return eve.t.state.buf.meta.state|nil
+---@return eve.state.buf.meta.state|nil
 function M.get(bufnr)
   if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
     return M.__meta_map__[bufnr]
@@ -139,7 +139,7 @@ function M.get(bufnr)
 end
 
 ---@param bufnr                         integer|nil
----@param meta                          eve.t.state.buf.meta.state
+---@param meta                          eve.state.buf.meta.state
 ---@return nil
 function M.set(bufnr, meta)
   if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
@@ -157,13 +157,13 @@ function M.del(bufnr)
 end
 
 ---@param bufnr                         integer|nil
----@return eve.t.state.buf.meta.state|nil
+---@return eve.state.buf.meta.state|nil
 function M.resolve(bufnr)
   if bufnr == nil or not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
     return nil
   end
 
-  local meta = M.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
+  local meta = M.__meta_map__[bufnr] ---@type eve.state.buf.meta.state|nil
   if meta ~= nil then
     return meta
   end
@@ -178,7 +178,7 @@ function M.resolve(bufnr)
   local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
   local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
 
-  ---@type eve.t.state.buf.meta.state
+  ---@type eve.state.buf.meta.state
   meta = {
     fileicon = fileicon,
     fileicon_hl = fileicon_hl,
@@ -198,7 +198,7 @@ function M.refresh(bufnr)
     return nil
   end
 
-  local meta = M.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
+  local meta = M.__meta_map__[bufnr] ---@type eve.state.buf.meta.state|nil
   if meta == nil then
     M.resolve(bufnr)
     return
@@ -252,7 +252,7 @@ function M.locate_by_filepath(filepath)
 
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    local meta = M.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
+    local meta = M.__meta_map__[bufnr] ---@type eve.state.buf.meta.state|nil
     local buf_filepath = meta and meta.filepath or vim.api.nvim_buf_get_name(bufnr) ---@type string
     if buf_filepath == filepath then
       return bufnr

@@ -1,6 +1,5 @@
 local __module_name__ = "fml.ux.select" ---@type string
 
-local state = require("eve.state")
 local Search = require("fml.ux.search.search")
 local SearchContext = require("fml.ux.search.context")
 
@@ -179,7 +178,7 @@ function M.new(props)
       local flag = case_sensitive:snapshot() ---@type boolean
       case_sensitive:next(not flag)
       self:mark_search_state_dirty()
-      state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -187,7 +186,7 @@ function M.new(props)
       local flag = flag_fuzzy:snapshot() ---@type boolean
       flag_fuzzy:next(not flag)
       self:mark_search_state_dirty()
-      state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -195,7 +194,7 @@ function M.new(props)
       local flag = flag_regex:snapshot() ---@type boolean
       flag_regex:next(not flag)
       self:mark_search_state_dirty()
-      state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -203,7 +202,7 @@ function M.new(props)
       local flag = flag_selected:snapshot() ---@type boolean
       flag_selected:next(not flag)
       -- self:mark_search_state_dirty() -- toggle selected state should not mark the data dirty
-      state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_statusline:mark_dirty()
     end
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
@@ -540,7 +539,7 @@ function M:find_matched_items(input, old_matches)
     end
   end
 
-  ---@type eve.oxi.string.ILineMatch[]|nil
+  ---@type eve.builtin.oxi.string.ILineMatch[]|nil
   local oxi_matches = eve.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     return old_matches

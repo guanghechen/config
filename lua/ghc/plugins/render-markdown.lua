@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 return {
   "render-markdown.nvim",
   ft = eve.filetype.get_markdown_filetypes(),
@@ -23,8 +21,8 @@ return {
     local plugin = require("render-markdown")
     plugin.setup(opts)
 
-    state.observe({ state.plugin.render_markdown }, function()
-      local flag = state.plugin.render_markdown:snapshot() ---@type boolean
+    eve.state.observe({ eve.state.plugin.render_markdown }, function()
+      local flag = eve.state.plugin.render_markdown:snapshot() ---@type boolean
       if flag then
         plugin.enable()
       else

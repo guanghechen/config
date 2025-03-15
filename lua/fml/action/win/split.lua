@@ -1,12 +1,10 @@
-local state = require("eve.state")
-
 ---@param winnr_source                  integer
 ---@return nil
 local function fork(winnr_source)
-  local meta_forked = state.win.fork(winnr_source) ---@type eve.t.state.win.meta.state|nil
+  local meta_forked = eve.state.win.fork(winnr_source) ---@type eve.state.win.meta.state|nil
   if meta_forked ~= nil then
     local winnr_target = vim.api.nvim_get_current_win() ---@type integer
-    state.win.set(winnr_target, meta_forked)
+    eve.state.win.set(winnr_target, meta_forked)
   end
 end
 

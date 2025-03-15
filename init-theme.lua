@@ -12,13 +12,12 @@ local theme = vim.env.GHC_THEME or "gruvbox-dark" ---@type eve.e.Theme
 if not vim.list_contains(eve.setting.themes, theme) then
   print("Unknown theme: " .. theme)
 else
-  local state = require("eve.state")
-  state.theme.apply_theme({
+  eve.state.theme.apply_theme({
     theme = theme,
-    transparency = state.theme.transparency:snapshot(),
+    transparency = eve.state.theme.transparency:snapshot(),
     persistent = true,
   })
 
-  state.theme.theme:next(theme)
-  state.save(storage)
+  eve.state.theme.theme:next(theme)
+  eve.state.save(storage)
 end

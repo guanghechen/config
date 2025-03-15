@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 ---@class fml.action.tab
 local M = {}
 
@@ -10,8 +8,8 @@ function M.new()
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  state.tab.tab_history:push(tabnr)
-  state.tab.resolve(tabnr)
+  eve.state.tab.tab_history:push(tabnr)
+  eve.state.tab.resolve(tabnr)
   return tabnr
 end
 
@@ -23,17 +21,17 @@ function M.new_with_buf(context)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local bufnr = context.bufnr ---@type integer
-  local bufs = {} ---@type eve.t.state.tab.buf.state[]
+  local bufs = {} ---@type eve.state.tab.buf.state[]
 
   if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
-    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
   end
 
   eve.editor.set_tabtype(tabnr, eve.var.TabTypes.NORMAL)
 
-  local meta = state.tab.Meta.new(tabnr, bufs, math.min(1, #bufs))
-  state.tab.set(tabnr, meta)
-  state.tab.tab_history:push(tabnr)
+  local meta = eve.state.tab.Meta.new(tabnr, bufs, math.min(1, #bufs))
+  eve.state.tab.set(tabnr, meta)
+  eve.state.tab.tab_history:push(tabnr)
 
   if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
     vim.api.nvim_win_set_buf(winnr, bufnr)

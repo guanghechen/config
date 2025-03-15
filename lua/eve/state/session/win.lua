@@ -1,25 +1,25 @@
 local __module_name__ = "eve.state.session.win"
 
----@class eve.t.state.win.meta.data
+---@class eve.state.win.meta.data
 ---@field public winnr                  integer
 ---@field public filepath_history       eve.collection.history.ISerializedData
 
----@class eve.t.state.win.meta.state
+---@class eve.state.win.meta.state
 ---@field public filepath_history       eve.collection.IAdvanceHistory
----@field public lsp_symbols            eve.t.state.buf.lsp.ISymbol[]
+---@field public lsp_symbols            eve.state.buf.lsp.ISymbol[]
 ---@field public winline                fml.ux.INvimbar|nil
 ---@field public winline_bufnr          integer
 
 ---@class eve.state.win.data
----@field public list                   eve.t.state.win.meta.data[]
+---@field public list                   eve.state.win.meta.data[]
 
 ---@class eve.state.win.state
----@field public __meta_map__           table<integer, eve.t.state.win.meta.state>
----@field public get                    fun(winnr: integer|nil): eve.t.state.win.meta.state|nil
----@field public set                    fun(winnr: integer|nil, meta: eve.t.state.win.meta.state): eve.t.state.win.meta.state|nil
+---@field public __meta_map__           table<integer, eve.state.win.meta.state>
+---@field public get                    fun(winnr: integer|nil): eve.state.win.meta.state|nil
+---@field public set                    fun(winnr: integer|nil, meta: eve.state.win.meta.state): eve.state.win.meta.state|nil
 ---@field public del                    fun(winnr: integer|nil): nil
----@field public fork                   fun(winnr: integer|nil): eve.t.state.win.meta.state|nil
----@field public resolve                fun(winnr: integer|nil): eve.t.state.win.meta.state|nil
+---@field public fork                   fun(winnr: integer|nil): eve.state.win.meta.state|nil
+---@field public resolve                fun(winnr: integer|nil): eve.state.win.meta.state|nil
 ---@field public refresh                fun(winnr: integer|nil): nil
 ---@field public refresh_all            fun(): nil
 ---@field public refresh_tabpage_wins   fun(tabnr: integer|nil): nil
@@ -72,10 +72,10 @@ function M.load(raw_data) end
 
 ----------------------------------------------------------------------------------------------------
 
-M.__meta_map__ = {} ---@type table<integer, eve.t.state.win.meta.state>
+M.__meta_map__ = {} ---@type table<integer, eve.state.win.meta.state>
 
 ---@param winnr                         integer|nil
----@return eve.t.state.win.meta.state|nil
+---@return eve.state.win.meta.state|nil
 function M.get(winnr)
   if winnr ~= nil and eve.editor.is_win_valid(winnr) then
     return M.__meta_map__[winnr]
@@ -83,8 +83,8 @@ function M.get(winnr)
 end
 
 ---@param winnr                         integer|nil
----@param meta                          eve.t.state.win.meta.state
----@return eve.t.state.win.meta.state|nil
+---@param meta                          eve.state.win.meta.state
+---@return eve.state.win.meta.state|nil
 function M.set(winnr, meta)
   if winnr ~= nil and eve.editor.is_win_valid(winnr) then
     M.__meta_map__[winnr] = meta
@@ -95,7 +95,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 function M.del(winnr)
-  local meta = winnr ~= nil and M.__meta_map__[winnr] or nil ---@type eve.t.state.win.meta.state|nil
+  local meta = winnr ~= nil and M.__meta_map__[winnr] or nil ---@type eve.state.win.meta.state|nil
   if winnr ~= nil and meta ~= nil then
     M.__meta_map__[winnr] = nil
     meta.filepath_history:clear()
@@ -106,11 +106,11 @@ function M.del(winnr)
 end
 
 ---@param winnr                         integer|nil
----@return eve.t.state.win.meta.state|nil
+---@return eve.state.win.meta.state|nil
 function M.fork(winnr)
-  local meta = M.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+  local meta = M.resolve(winnr) ---@type eve.state.win.meta.state|nil
   if meta ~= nil then
-    ---@type eve.t.state.win.meta.state
+    ---@type eve.state.win.meta.state
     local meta_forked = {
       filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
       lsp_symbols = vim.list_slice(meta.lsp_symbols),
@@ -122,13 +122,13 @@ function M.fork(winnr)
 end
 
 ---@param winnr                         integer|nil
----@return eve.t.state.win.meta.state|nil
+---@return eve.state.win.meta.state|nil
 function M.resolve(winnr)
   if winnr == nil or not eve.editor.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
     return nil
   end
 
-  local meta = M.__meta_map__[winnr] ---@type eve.t.state.win.meta.state|nil
+  local meta = M.__meta_map__[winnr] ---@type eve.state.win.meta.state|nil
   if meta ~= nil then
     return meta
   end
@@ -146,7 +146,7 @@ function M.resolve(winnr)
   })
   filepath_history:push(filepath)
 
-  ---@type eve.t.state.win.meta.state
+  ---@type eve.state.win.meta.state
   meta = {
     filepath_history = filepath_history,
     lsp_symbols = {},
@@ -274,7 +274,7 @@ function M.locate_symbols(winnr, callback)
       return
     end
 
-    local meta = M.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+    local meta = M.resolve(winnr) ---@type eve.state.win.meta.state|nil
     if meta == nil or type(symbols) ~= "table" then
       safe_callback(false)
       return
@@ -283,7 +283,7 @@ function M.locate_symbols(winnr, callback)
     local cursor_pos = { line = row - 1, character = col }
     local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
 
-    local pieces = meta.lsp_symbols ---@type eve.t.state.buf.lsp.ISymbol[]
+    local pieces = meta.lsp_symbols ---@type eve.state.buf.lsp.ISymbol[]
     local N = #pieces ---@type integer
     local k = 0 ---@type integer
     if symbol_path then
@@ -291,7 +291,7 @@ function M.locate_symbols(winnr, callback)
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
         local name = symbol.name
         local position = symbol.range and symbol.range.start or symbol.location.range.start
-        ---@type eve.t.state.buf.lsp.ISymbol
+        ---@type eve.state.buf.lsp.ISymbol
         local piece = {
           kind = kind,
           name = name,
@@ -334,7 +334,7 @@ function M.on_buf_enter(winnr, bufnr)
     return
   end
 
-  local meta = M.get(winnr) ---@type eve.t.state.win.meta.state|nil
+  local meta = M.get(winnr) ---@type eve.state.win.meta.state|nil
   if meta ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     meta.filepath_history:push(filepath)

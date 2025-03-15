@@ -1,8 +1,7 @@
-local state = require("eve.state")
 local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
-local dirtier = state.status.dirtier_statusline ---@type eve.collection.IDirtier
+local dirtier = eve.state.status.dirtier_statusline ---@type eve.collection.IDirtier
 local position = "f_sl" ---@type fml.ux.nvimbar.Position
 
 local statusline ---@type fml.ux.INvimbar
@@ -13,7 +12,7 @@ statusline = Nvimbar.new({
   comp_sep_hlname_active = position .. "_bg",
   render_delay = 256,
   silent = function()
-    local devmode = state.flight.devmode:snapshot() ---@type boolean
+    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()

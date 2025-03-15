@@ -1,14 +1,12 @@
 local __module_name__ = "fml.action.session" ---@type string
 
-local state = require("eve.state")
-
 ---@class fml.action.session
 local M = {}
 
 ---@return nil
 function M.restore()
   if eve.path.is_repo_git() then
-    local storage = state.get_storage() ---@type eve.state.storage
+    local storage = eve.state.get_storage() ---@type eve.state.storage
 
     local nvim_session_filepath = nil ---@type string|nil
     if storage.nvim_session and vim.fn.filereadable(storage.nvim_session) ~= 0 then
@@ -19,12 +17,12 @@ function M.restore()
 
     if nvim_session_filepath then
       eve.session.load_session(nvim_session_filepath)
-      state.load({
+      eve.state.load({
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
       }, true)
-      state.refresh()
+      eve.state.refresh()
     end
   end
 end
@@ -32,7 +30,7 @@ end
 ---@return nil
 function M.restore_autosaved()
   if eve.path.is_repo_git() then
-    local storage = state.get_storage() ---@type eve.state.storage
+    local storage = eve.state.get_storage() ---@type eve.state.storage
 
     local nvim_session_filepath = nil ---@type string|nil
     if storage.nvim_session_autosaved and vim.fn.filereadable(storage.nvim_session_autosaved) ~= 0 then
@@ -41,12 +39,12 @@ function M.restore_autosaved()
 
     if nvim_session_filepath then
       eve.session.load_session(nvim_session_filepath)
-      state.load({
+      eve.state.load({
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
       }, true)
-      state.refresh()
+      eve.state.refresh()
     end
   end
 end
@@ -54,8 +52,8 @@ end
 ---@return nil
 function M.save()
   if eve.path.is_repo_git() then
-    local storage = state.get_storage() ---@type eve.state.storage
-    state.save({
+    local storage = eve.state.get_storage() ---@type eve.state.storage
+    eve.state.save({
       session = storage.session,
       workspace = storage.workspace,
     })

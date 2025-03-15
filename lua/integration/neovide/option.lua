@@ -39,8 +39,7 @@ vim.g.neovide_padding_left = 0
 vim.g.neovide_remember_window_size = true
 
 do
-  local state = require("eve.state")
-  local scheme = state.theme.get_scheme(state.theme.theme:snapshot()) ---@type eve.t.theme.IScheme | nil
+  local scheme = eve.state.theme.get_scheme(eve.state.theme.theme:snapshot()) ---@type eve.t.theme.IScheme | nil
   if scheme ~= nil then
     local c = scheme.palette ---@type eve.t.theme.IPalette
     vim.g.terminal_color_0 = c.bg0

@@ -1,14 +1,12 @@
 local __module_name__ = "fml.action.inspect" ---@type string
 
-local state = require("eve.state")
-
 ---@class fml.action.inspect
 local M = {}
 
 ---@return nil
 function M.inspect_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+  local meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
 
   if meta == nil then
     eve.reporter.info({
@@ -55,7 +53,7 @@ end
 function M.inspect_state()
   local cwd = eve.path.cwd() ---@type string
   local workspace = eve.path.workspace() ---@type string
-  local full_state = state.dump() ---@type eve.state.data
+  local full_state = eve.state.dump() ---@type eve.state.data
 
   eve.reporter.info({
     from = __module_name__,
@@ -90,7 +88,7 @@ function M.inspect_state_full()
         cwd = cwd,
         workspace = workspace,
       },
-      state = state.dump(),
+      state = eve.state.dump(),
     },
   })
 end
@@ -98,7 +96,7 @@ end
 ---@return nil
 function M.inspect_tab()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  local meta = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   local tabid = eve.table.find_index(tabnrs, tabnr) or 1 ---@type integer
@@ -148,9 +146,9 @@ function M.inspect_window()
   local filetype = vim.bo[bufnr].filetype ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
-  local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  local meta_win = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
-  local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  local meta_win = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
+  local meta_buf = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
 
   eve.reporter.info({
     from = __module_name__,

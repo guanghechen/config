@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local SearchInput = require("fml.ux.search.input")
 local SearchMain = require("fml.ux.search.main")
 local SearchPreview = require("fml.ux.search.preview")
@@ -127,7 +126,7 @@ function M.new(props)
 
   local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
   local context = props.context ---@type fml.ux.search.IContext
-  local common_keymaps = state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  local common_keymaps = eve.state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
 
@@ -700,7 +699,7 @@ function M:create_wins_as_needed()
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
-  local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = eve.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   local match_count = #context.items ---@type integer
   local has_preview = vim.o.columns > 140 and self._preview ~= nil ---@type boolean
@@ -1049,7 +1048,7 @@ end
 
 ---@return nil
 function M:show()
-  state.widget.open(self)
+  eve.state.widget.open(self)
 end
 
 ---@return eve.e.WidgetStatus

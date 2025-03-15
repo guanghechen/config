@@ -1,7 +1,5 @@
 local __module_name__ = "ghc.action.nvim-treesitter" ---@type string
 
-local state = require("eve.state")
-
 local function find_conditional_node(node)
   local node_type = node:type() ---@type string
   if node_type == "ternary_expression" or node_type == "if_statement" then
@@ -18,7 +16,7 @@ local M = {}
 ---@return nil
 function M.swap_conditional_branches()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

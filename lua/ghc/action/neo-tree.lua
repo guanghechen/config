@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 ---@param cwd                           string
 ---@return boolean
 local function check_could_reveal(cwd)
@@ -24,7 +22,7 @@ local function create_widget(params)
   local source = params.source ---@type string
   local position = params.position ---@type "float"|"left"|"right"
 
-  return state.widget.wrap({
+  return eve.state.widget.wrap({
     name = name,
     close = function()
       require("neo-tree.command").execute({

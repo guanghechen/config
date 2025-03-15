@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local locate_mason_pkg_path = require("ghc.lsp.common").locate_mason_pkg_path
 
 ---@param config {type?:string, args?:string[]|fun():string[]?}
@@ -83,7 +82,7 @@ local function setup_python()
   local dap = require("dap")
 
   local function resolve_python_path()
-    local python_path = state.lsp.get_python_bin_path() ---@type string|nil
+    local python_path = eve.state.lsp.get_python_bin_path() ---@type string|nil
     return python_path
   end
 
@@ -121,8 +120,8 @@ local function setup_python()
       request = "attach",
       name = "attach",
       connect = function()
-        local host = state.lsp.python_debug_host:snapshot() ---@type string
-        local port = state.lsp.python_debug_port:snapshot() ---@type integer
+        local host = eve.state.lsp.python_debug_host:snapshot() ---@type string
+        local port = eve.state.lsp.python_debug_port:snapshot() ---@type integer
         return { host = host, port = port }
       end,
     },

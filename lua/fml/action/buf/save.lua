@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.buf" ---@type string
 
-local state = require("eve.state")
-
 ---@class fml.action.buf
 local M = {}
 
@@ -35,13 +33,13 @@ function M.save()
   local function check()
     if ready_count == new_file_count then
       vim.cmd("wa")
-      state.status.dirtier_statusline:mark_dirty()
-      state.status.dirtier_tabline:mark_dirty()
+      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_tabline:mark_dirty()
     end
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
+  local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
   if winnr_sourcefile == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -71,7 +69,7 @@ function M.save()
       ---@return nil
       local on_save = function()
         vim.api.nvim_buf_set_name(bufnr, next_filepath)
-        state.buf.refresh(bufnr)
+        eve.state.buf.refresh(bufnr)
 
         ready_count = ready_count + 1
         check()

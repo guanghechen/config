@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local state = require("eve.state")
 local Nvimbar = require("fml.ux.nvimbar")
 
 local btn = Nvimbar.btn
@@ -25,8 +24,8 @@ function M.ai(position)
 
   ---@type string
   local fn_show_message = eve.G.register_anonymous_fn(function()
-    local enabled = state.flight.ai:snapshot() ---@type boolean
-    local provider = state.flight.ai_provider:snapshot() ---@type string
+    local enabled = eve.state.flight.ai:snapshot() ---@type boolean
+    local provider = eve.state.flight.ai_provider:snapshot() ---@type string
     local status = "NIL" ---@type unknown
 
     if provider == "copilot" then
@@ -49,11 +48,11 @@ function M.ai(position)
     name = "ai",
     atomic = true,
     condition = function()
-      return state.flight.ai:snapshot()
+      return eve.state.flight.ai:snapshot()
     end,
     render = function()
-      local enabled = state.flight.ai:snapshot() ---@type boolean
-      local provider = state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+      local enabled = eve.state.flight.ai:snapshot() ---@type boolean
+      local provider = eve.state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
 
       if not enabled then
         local text = "󱙻 " .. provider .. " " ---@type string
@@ -119,7 +118,7 @@ function M.bufs(position)
   ---@return string
   ---@return string
   local function resolve_buf_info(bufnr)
-    local buf_meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+    local buf_meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
     if buf_meta then
       return buf_meta.filename, buf_meta.fileicon, buf_meta.fileicon_hl
     end
@@ -130,7 +129,7 @@ function M.bufs(position)
     return filename, fileicon, fileicon_hl
   end
 
-  ---@param buf                           eve.t.state.tab.buf.state
+  ---@param buf                           eve.state.tab.buf.state
   ---@param index                         integer
   ---@param current                       integer|nil
   ---@param total                         integer
@@ -223,12 +222,12 @@ function M.bufs(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+      local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
       if meta_tab == nil then
         return "", "", false
       end
 
-      local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.state[]
+      local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
       if #bufs < 1 then
         return "", "", false
       end
@@ -435,7 +434,7 @@ function M.debug_render_count(position)
     name = "debug_render_count",
     atomic = true,
     condition = function()
-      local devmode = state.flight.devmode:snapshot() ---@type boolean
+      local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
       return devmode
     end,
     render = function()
@@ -465,7 +464,7 @@ function M.devmode(position)
     name = "devmode",
     atomic = true,
     condition = function()
-      local devmode = state.flight.devmode:snapshot() ---@type boolean
+      local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
       return devmode
     end,
     render = function()
@@ -578,12 +577,12 @@ function M.dirpath(position)
     atomic = true,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+      local meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
       if meta == nil then
         return "", "", true
       end
 
-      local winnr_sourcefile = state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
+      local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
       local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
       local hl_text_sep = winnr_sourcefile == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
 
@@ -622,7 +621,7 @@ function M.dirpath_prominent(position)
     name = "dirpath_prominent",
     atomic = false,
     condition = function(context)
-      local winnr_sourcefile = state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
+      local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
       return context.winnr == winnr_sourcefile
     end,
     will_change = function(context, prev_context)
@@ -631,7 +630,7 @@ function M.dirpath_prominent(position)
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local meta = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+      local meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
       if meta == nil then
         return "", "", false
       end
@@ -734,7 +733,7 @@ function M.filename(position)
     name = "filename",
     atomic = true,
     render = function(context)
-      local winnr_sourcefile = state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
+      local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(context.tabnr) ---@type integer|nil
       local is_mod = vim.bo[context.bufnr].modified ---@type boolean
       local text_mod = is_mod and " " or "" ---@type string
       if context.winnr ~= winnr_sourcefile then
@@ -775,7 +774,7 @@ function M.filepath(position)
     end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local meta_buf = state.buf.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+      local meta_buf = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
       local filepath = meta_buf and meta_buf.relpath or context.filepath
 
       local text = context.fileicon .. " " .. filepath ---@type string
@@ -950,10 +949,10 @@ function M.lsp_message(position)
     name = "lsp_message",
     atomic = true,
     condition = function()
-      return not not rawget(vim, "lsp") and #state.status.lsp_msg:snapshot() > 0
+      return not not rawget(vim, "lsp") and #eve.state.status.lsp_msg:snapshot() > 0
     end,
     render = function()
-      local text = state.status.lsp_msg:snapshot() ---@type string
+      local text = eve.state.status.lsp_msg:snapshot() ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
@@ -994,12 +993,12 @@ function M.lsp_symbols(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
-      local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+      local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
       if meta == nil then
         return "", "", false
       end
 
-      local symbols = meta.lsp_symbols ---@type eve.t.state.buf.lsp.ISymbol[]|nil
+      local symbols = meta.lsp_symbols ---@type eve.state.buf.lsp.ISymbol[]|nil
       if symbols == nil or #symbols < 1 then
         return "", "", false
       end
@@ -1072,12 +1071,12 @@ function M.python_env(position)
   local python_version = "" ---@type string|nil
   local dirty = false ---@type boolean
 
-  state.observe({ state.lsp.python_venv_path }, function()
+  eve.state.observe({ eve.state.lsp.python_venv_path }, function()
     dirty = true
-    local python_venv_path = state.lsp.python_venv_path:snapshot() ---@type string
+    local python_venv_path = eve.state.lsp.python_venv_path:snapshot() ---@type string
     python_venv = python_venv_path ~= nil and eve.path.basename(python_venv_path) or nil ---@type string|nil
 
-    local python_path = state.lsp.get_python_bin_path() ---@type string|nil
+    local python_path = eve.state.lsp.get_python_bin_path() ---@type string|nil
     if python_path ~= nil then
       local cmd = vim.fn.shellescape(python_path) .. " --version"
       local ok, output = pcall(vim.fn.system, cmd)
@@ -1339,7 +1338,7 @@ function M.tabs(position)
   local fn_toggle_tabs_folded = eve.G.register_anonymous_fn(function()
     folded = not folded
     dirty = true
-    state.status.dirtier_tabline:mark_dirty()
+    eve.state.status.dirtier_tabline:mark_dirty()
   end) or ""
 
   ---@type fml.ux.nvimbar.IRawComponent
@@ -1398,7 +1397,7 @@ function M.username(position)
   local text_icon_only = eve.icon.os.current .. " " ---@type string
 
   local invalid = false ---@type boolean
-  state.observe({ state.theme.username }, function()
+  eve.state.observe({ eve.state.theme.username }, function()
     invalid = true
   end, true)
 
@@ -1414,7 +1413,7 @@ function M.username(position)
       local hln_text = hln_text_prefix .. context.mode ---@type string
 
       invalid = false
-      local show_username = state.theme.username:snapshot() ---@type boolean
+      local show_username = eve.state.theme.username:snapshot() ---@type boolean
       if not show_username then
         local text = text_icon_only ---@type string
         local hl_text = txt(text, hln_text) ---@type string
@@ -1449,7 +1448,7 @@ function M.widget(position)
     name = "widget",
     atomic = true,
     render = function()
-      local widget = state.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
+      local widget = eve.state.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
       if widget == nil then
         return "", "", true
       end

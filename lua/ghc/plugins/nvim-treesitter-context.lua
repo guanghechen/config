@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 ---! https://github.com/nvim-treesitter/nvim-treesitter-context
 return {
   name = "nvim-treesitter-context",
@@ -19,8 +17,8 @@ return {
     local tsc = require("treesitter-context")
     tsc.setup(opts)
 
-    state.observe({ state.plugin.treesitter_context }, function()
-      local flag = state.plugin.treesitter_context:snapshot() ---@type boolean
+    eve.state.observe({ eve.state.plugin.treesitter_context }, function()
+      local flag = eve.state.plugin.treesitter_context:snapshot() ---@type boolean
       if flag then
         tsc.enable()
       else

@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 local Printer = require("fml.ux.printer")
 
 ---@class ghc.plugins.gitsigns.config
@@ -168,7 +166,7 @@ local keymaps = {
       printer
         :lf()
         :line(
-          string.format("%s, %s (%s)", author_name, eve.nvim.time_ago(author_timestamp or os.time()), author_date),
+          string.format("%s, %s (%s)", author_name, eve.fn.time_ago(author_timestamp or os.time()), author_date),
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
@@ -251,7 +249,7 @@ local keymaps = {
         and type(wincfg.title[1]) == "table"
         and wincfg.title[1][1] == config.win.preview_hunk.title
       then
-        local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+        local winblend = eve.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
         vim.wo[winnr].number = false
         vim.wo[winnr].relativenumber = false
         vim.wo[winnr].signcolumn = "yes"

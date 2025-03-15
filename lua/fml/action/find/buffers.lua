@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.buffers.IItemData
@@ -16,7 +14,7 @@ local _select ---@type fml.ux.ISelect|nil
 ---@return fml.ux.ISelect
 local function get_select()
   if _select == nil then
-    local scopes = vim.list_slice(state.select.find_buffer_scopes) ---@type eve.e.FindBufferScope[]
+    local scopes = vim.list_slice(eve.state.select.find_buffer_scopes) ---@type eve.e.FindBufferScope[]
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {
@@ -24,13 +22,13 @@ local function get_select()
         type = "enum",
         desc = "find(buffer): toggle scope",
         symbol = "",
-        state = state.select.find_buffer_scope,
+        state = eve.state.select.find_buffer_scope,
         callback = function()
-          local scope = state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+          local scope = eve.state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
           local idx = eve.table.find_index(scopes, scope) or 1 ---@type integer
           local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
           local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
-          state.select.find_buffer_scope:next(next_scope)
+          eve.state.select.find_buffer_scope:next(next_scope)
 
           if _select ~= nil then
             _select:mark_data_dirty()
@@ -41,10 +39,10 @@ local function get_select()
         type = "flag",
         desc = "find(buffer): toggle selected",
         symbol = eve.icon.symbols.flag_selected,
-        state = state.select.find_buffer.flag_selected,
+        state = eve.state.select.find_buffer.flag_selected,
         callback = function()
-          local flag = state.select.find_buffer.flag_selected:snapshot() ---@type boolean
-          state.select.find_buffer.flag_selected:next(not flag)
+          local flag = eve.state.select.find_buffer.flag_selected:snapshot() ---@type boolean
+          eve.state.select.find_buffer.flag_selected:next(not flag)
         end,
       },
     }
@@ -78,10 +76,10 @@ local function get_select()
 
           local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
           for _, tabnr in ipairs(tabnrs) do
-            state.tab.on_bufs_close(tabnr, { bufnr })
+            eve.state.tab.on_bufs_close(tabnr, { bufnr })
           end
 
-          local unrefereced_bufnrs = state.tab.get_unrefereced_bufnrs() ---@type integer[]
+          local unrefereced_bufnrs = eve.state.tab.get_unrefereced_bufnrs() ---@type integer[]
           if #unrefereced_bufnrs > 0 then
             for _, unreferenced_bufnr in ipairs(unrefereced_bufnrs) do
               vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
@@ -97,9 +95,9 @@ local function get_select()
     local provider = {
       fetch_data = function()
         local cwd = eve.path.cwd() ---@type string
-        local scope = state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+        local scope = eve.state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
         local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        local meta_tab = state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+        local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
         ---@param bufnr                     integer
         ---@return boolean
@@ -201,12 +199,12 @@ local function get_select()
         width_preview = 0,
       },
       dirty_on_invisible = true,
-      flag_case_sensitive = state.select.find_buffer.flag_case_sensitive,
-      flag_fuzzy = state.select.find_buffer.flag_fuzzy,
-      flag_regex = state.select.find_buffer.flag_regex,
-      flag_selected = state.select.find_buffer.flag_selected,
-      input = state.select.find_buffer.input,
-      input_history = state.select.find_buffer.input_history,
+      flag_case_sensitive = eve.state.select.find_buffer.flag_case_sensitive,
+      flag_fuzzy = eve.state.select.find_buffer.flag_fuzzy,
+      flag_regex = eve.state.select.find_buffer.flag_regex,
+      flag_selected = eve.state.select.find_buffer.flag_selected,
+      input = eve.state.select.find_buffer.input,
+      input_history = eve.state.select.find_buffer.input_history,
       input_keymaps = main_keymaps,
       main_keymaps = main_keymaps,
       multiple = true,
@@ -220,7 +218,7 @@ local function get_select()
 
         if #items > 0 then
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
+          local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) or eve.editor.pick_sourcefile_win() ---@type integer|nil
           if winnr_sourcefile ~= nil then
             for _, item in ipairs(items) do
               local data = item.data ---@type fml.action.find.buffers.IItemData
@@ -239,21 +237,21 @@ local M = {}
 
 ---@return nil
 function M.find_bufs()
-  state.select.find_buffer_scope:next("A")
+  eve.state.select.find_buffer_scope:next("A")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end
 
 ---@return nil
 function M.find_bufs_file()
-  state.select.find_buffer_scope:next("F")
+  eve.state.select.find_buffer_scope:next("F")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end
 
 ---@return nil
 function M.find_bufs_term()
-  state.select.find_buffer_scope:next("T")
+  eve.state.select.find_buffer_scope:next("T")
   local select = get_select() ---@type fml.ux.ISelect
   select:show()
 end

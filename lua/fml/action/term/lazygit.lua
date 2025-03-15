@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local state = require("eve.state")
-
 local toggle_term = require("fml.action.term.toggle").toggle
 
 ---@return string|nil
@@ -41,8 +39,8 @@ end
 ---@return nil
 local function edit_lazygit_file_in_buffer(cwd)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
-  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     eve.reporter.error({
       from = __module_name__,

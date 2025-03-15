@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local get_capabilities = require("ghc.lsp.common").get_capabilities
 local handlers = require("ghc.lsp.common").handlers
 local basic_on_attach = require("ghc.lsp.common").on_attach
@@ -34,7 +33,7 @@ function M.pyright()
     settings = {
       python = {
         enabled = true,
-        pythonPath = state.lsp.get_python_bin_path(),
+        pythonPath = eve.state.lsp.get_python_bin_path(),
         analysis = {
           typeCheckingMode = "standard",
           autoImportCompletions = true,

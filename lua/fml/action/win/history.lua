@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.win" ---@type string
 
-local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 
 local _history_select = nil ---@type fml.ux.FileSelect|nil
@@ -9,7 +8,7 @@ local _history_select = nil ---@type fml.ux.FileSelect|nil
 local function get_history_select()
   if _history_select == nil then
     local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
-    local frecency = state.frecency.files ---@type eve.collection.IFrecency
+    local frecency = eve.state.frecency.files ---@type eve.collection.IFrecency
 
     ---@param ordinal                       integer
     ---@return string
@@ -26,9 +25,9 @@ local function get_history_select()
         local width = 0 ---@type integer
 
         local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+        local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
 
-        local meta = winnr_sourcefile and state.win.resolve(winnr_sourcefile) or nil ---@type eve.t.state.win.meta.state|nil
+        local meta = winnr_sourcefile and eve.state.win.resolve(winnr_sourcefile) or nil ---@type eve.state.win.meta.state|nil
         if meta == nil then
           eve.reporter.error({
             from = __module_name__,
@@ -110,10 +109,10 @@ local function get_history_select()
           local item = items[1] ---@type fml.ux.select.IItem
           local item_index = tonumber(item.uuid) ---@type integer|nil
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+          local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
 
           if item_index ~= nil then
-            local meta = winnr_sourcefile and state.win.resolve(winnr_sourcefile) or nil ---@type eve.t.state.win.meta.state|nil
+            local meta = winnr_sourcefile and eve.state.win.resolve(winnr_sourcefile) or nil ---@type eve.state.win.meta.state|nil
             if meta ~= nil then
               meta.filepath_history:go(item_index)
             end
@@ -146,11 +145,11 @@ function M.history_backward()
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "quickfix" then
-    state.qflist.backward()
+    eve.state.qflist.backward()
     return
   end
 
-  local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+  local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -174,11 +173,11 @@ function M.history_forward()
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "quickfix" then
-    state.qflist.forward()
+    eve.state.qflist.forward()
     return
   end
 
-  local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+  local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,

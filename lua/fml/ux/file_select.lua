@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local Select = require("fml.ux.select")
 
 ---@class fml.ux.IFileSelect : eve.t.ux.IWidget
@@ -146,8 +145,8 @@ function M.new(props)
         if #quickfix_items > 0 then
           _select:close()
 
-          state.qflist.push(quickfix_items)
-          state.qflist.open_qflist(false)
+          eve.state.qflist.push(quickfix_items)
+          eve.state.qflist.open_qflist(false)
         end
       end
     end
@@ -251,7 +250,7 @@ function M.new(props)
         on_close = on_close,
         on_confirm = on_confirm_from_props or function(widget, items)
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+          local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
           widget:close()
 
           for _, item in ipairs(items) do

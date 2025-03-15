@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 return {
   "smear-cursor.nvim",
   event = { "VeryLazy" },
@@ -14,8 +12,8 @@ return {
     local plugin = require("smear_cursor")
     plugin.setup(opts)
 
-    state.observe({ state.plugin.smear_cursor }, function()
-      local flag = state.plugin.smear_cursor:snapshot() ---@type boolean
+    eve.state.observe({ eve.state.plugin.smear_cursor }, function()
+      local flag = eve.state.plugin.smear_cursor:snapshot() ---@type boolean
       plugin.enabled = flag
 
       vim.defer_fn(function()

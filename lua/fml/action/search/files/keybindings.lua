@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local context = require("fml.action.search.files.context")
 
 ---@type eve.t.ux.widget.IRawStatuslineItem[]
@@ -14,49 +13,49 @@ local statusline_items = {
     type = "enum",
     desc = "search: toggle scope",
     symbol = "",
-    state = state.select.search_file_scope,
+    state = eve.state.select.search_file_scope,
     callback = context.toggle_scope,
   },
   {
     type = "flag",
     desc = "search: toggle selected",
     symbol = eve.icon.symbols.flag_selected,
-    state = state.select.search_file.flag_selected,
+    state = eve.state.select.search_file.flag_selected,
     callback = context.toggle_flag_selected,
   },
   {
     type = "flag",
     desc = "search: toggle exclude",
     symbol = eve.icon.symbols.flag_exclude,
-    state = state.select.search_file.flag_exclude,
+    state = eve.state.select.search_file.flag_exclude,
     callback = context.toggle_flag_exclude,
   },
   {
     type = "flag",
     desc = "search: toggle gitignore",
     symbol = eve.icon.symbols.flag_gitignore,
-    state = state.select.search_file.flag_gitignore,
+    state = eve.state.select.search_file.flag_gitignore,
     callback = context.toggle_flag_gitignore,
   },
   {
     type = "flag",
     desc = "search: toggle regex",
     symbol = eve.icon.symbols.flag_regex,
-    state = state.select.search_file.flag_regex,
+    state = eve.state.select.search_file.flag_regex,
     callback = context.toggle_flag_regex,
   },
   {
     type = "flag",
     desc = "search: toggle case sensitive",
     symbol = eve.icon.symbols.flag_case_sensitive,
-    state = state.select.search_file.flag_case_sensitive,
+    state = eve.state.select.search_file.flag_case_sensitive,
     callback = context.toggle_flag_case_sensitive,
   },
   {
     type = "flag",
     desc = "search: toggle mode",
     symbol = eve.icon.symbols.flag_replace,
-    state = state.search_file.flag_replace,
+    state = eve.state.search_file.flag_replace,
     callback = context.toggle_mode,
   },
 }

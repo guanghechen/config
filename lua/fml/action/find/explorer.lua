@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local Select = require("fml.ux.select")
 
 ---@class fml.action.find.explorer.IDirItem
@@ -42,9 +41,9 @@ local function fetch_diritem(dirpath, force)
     local owner_width = 0 ---@type integer
     local group_width = 0 ---@type integer
 
-    local raw_data = eve.oxi.readdir(dirpath) ---@type eve.oxi.IReaddirResult|nil
+    local raw_data = eve.oxi.readdir(dirpath) ---@type eve.builtin.oxi.IReaddirResult|nil
     if raw_data ~= nil then
-      local raw_itself = raw_data.itself ---@type eve.oxi.IFileItemWithStatus
+      local raw_itself = raw_data.itself ---@type eve.builtin.oxi.IFileItemWithStatus
 
       ---@type fml.action.find.explorer.IFileItem
       local itself = {
@@ -149,8 +148,8 @@ state_cwd:subscribe(
 ---@return fml.ux.ISelect
 local function get_select()
   if _select == nil then
-    local frecency = state.frecency.files ---@type eve.collection.IFrecency
-    local input_history = state.select.find_file.input_history ---@type eve.collection.IHistory
+    local frecency = eve.state.frecency.files ---@type eve.collection.IFrecency
+    local input_history = eve.state.select.find_file.input_history ---@type eve.collection.IHistory
 
     local main_width = 0.4 ---@type number
     ---@type fml.ux.search.IRawDimension
@@ -431,7 +430,7 @@ local function get_select()
         if #filepaths > 0 then
           widget:hide()
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+          local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
           for _, filepath in ipairs(filepaths) do
             eve.editor.open_filepath(winnr_sourcefile, filepath)
           end
@@ -465,7 +464,7 @@ function M.find_explorer(specified_dirpath)
     state_cwd:next(dirpath)
   else
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+    local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
     if winnr_sourcefile ~= nil then
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

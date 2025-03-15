@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.lsp" ---@type string
 
-local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 
 ---@param method                        string
@@ -9,7 +8,7 @@ local FileSelect = require("fml.ux.file_select")
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = eve.state.tab.get_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil then
     callback(false, nil)
     return

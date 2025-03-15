@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local Select = require("fml.ux.select")
 
 ---@class fml.dressing.select.IOptions
@@ -22,7 +21,7 @@ local providers = {
 
 ---@type table<string, eve.state.select.item.state>
 local states_by_title = {
-  ["(Avante) Add a file"] = state.select.select_avante,
+  ["(Avante) Add a file"] = eve.state.select.select_avante,
 }
 
 ---@class fml.dressing.select
@@ -90,8 +89,8 @@ function M.select(items, opts, on_choice)
 end
 
 local original_select = vim.ui.select
-state.observe({ state.flight.dressing_select }, function()
-  local flag = state.flight.dressing_select:snapshot() ---@type boolean
+eve.state.observe({ eve.state.flight.dressing_select }, function()
+  local flag = eve.state.flight.dressing_select:snapshot() ---@type boolean
   if flag then
     vim.ui.select = M.select
   else

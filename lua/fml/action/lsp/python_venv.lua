@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
 local clp = require("eve.constant.lang.python")
-local state = require("eve.state")
 local Select = require("fml.ux.select")
 
 ---@param folder                        string
@@ -251,7 +250,7 @@ local function get_select()
         end
 
         ---@type fml.ux.select.IData
-        return { items = items, uuid_present = state.lsp.python_venv_path:snapshot() }
+        return { items = items, uuid_present = eve.state.lsp.python_venv_path:snapshot() }
       end,
     }
 
@@ -264,12 +263,12 @@ local function get_select()
         width = 120,
       },
       dirty_on_invisible = true,
-      flag_case_sensitive = state.select.find_python_venv.flag_case_sensitive,
-      flag_fuzzy = state.select.find_python_venv.flag_fuzzy,
-      flag_regex = state.select.find_python_venv.flag_regex,
-      flag_selected = state.select.find_python_venv.flag_selected,
-      input = state.select.find_python_venv.input,
-      input_history = state.select.find_python_venv.input_history,
+      flag_case_sensitive = eve.state.select.find_python_venv.flag_case_sensitive,
+      flag_fuzzy = eve.state.select.find_python_venv.flag_fuzzy,
+      flag_regex = eve.state.select.find_python_venv.flag_regex,
+      flag_selected = eve.state.select.find_python_venv.flag_selected,
+      input = eve.state.select.find_python_venv.input,
+      input_history = eve.state.select.find_python_venv.input_history,
       multiple = false,
       preview_enabled = false,
       extend_preset_keymaps = true,
@@ -280,7 +279,7 @@ local function get_select()
 
         if #items == 1 then
           local item = items[1]
-          state.lsp.python_venv_path:next(item.data.path)
+          eve.state.lsp.python_venv_path:next(item.data.path)
         end
       end,
     })

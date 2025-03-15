@@ -2,8 +2,6 @@
 
 local __module_name__ = "fml.dressing.illumniate" ---@type string
 
-local state = require("eve.state")
-
 ---@class fml.dressing.illumniate.ILspWord
 ---@field public from { [1]: number, [2]: number }
 ---@field public to   { [1]: number, [2]: number }
@@ -27,7 +25,7 @@ local config = {
 ---@param modes                         ?boolean if modes is true, also check if the current mode is enabled
 ---@return boolean
 local function is_enabled(bufnr, modes)
-  local enabled = state.flight.dressing_illumniate:snapshot() ---@type boolean
+  local enabled = eve.state.flight.dressing_illumniate:snapshot() ---@type boolean
   if not enabled then
     return false
   end
@@ -82,8 +80,8 @@ local function get_reference_words()
   return words, current
 end
 
-state.observe({ state.flight.dressing_illumniate }, function()
-  local enabled = state.flight.dressing_illumniate:snapshot() ---@type boolean
+eve.state.observe({ eve.state.flight.dressing_illumniate }, function()
+  local enabled = eve.state.flight.dressing_illumniate:snapshot() ---@type boolean
 
   if enabled then
     vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "ModeChanged" }, {

@@ -26,9 +26,8 @@ require("ghc.command")
 
 ---! Reload session if not specify file and current directory is a git repository.
 if eve.path.is_repo_git() then
-  local state = require("eve.state")
-  if state.flight.autoload:snapshot() then
-    eve.session.load_session(state.get_storage().nvim_session_autosaved)
+  if eve.state.flight.autoload:snapshot() then
+    eve.session.load_session(eve.state.get_storage().nvim_session_autosaved)
   end
 end
 

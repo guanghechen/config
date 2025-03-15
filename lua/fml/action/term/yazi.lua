@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 local toggle_term = require("fml.action.term.toggle").toggle
 
 ---@param name                          string
@@ -59,7 +57,7 @@ end
 ---@return nil
 function M.yazi_reveal()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
 
   local cwd = eve.path.cwd() ---@type string
   if bufnr_sourcefile == nil then

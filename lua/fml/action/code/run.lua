@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.code" ---@type string
 
-local state = require("eve.state")
 local Terminal = require("fml.ux.terminal")
 
 local code_runner_terminals = {} ---@type table<string, fml.ux.ITerminal>
@@ -70,7 +69,7 @@ local M = {}
 ---@return nil
 function M.run(force)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

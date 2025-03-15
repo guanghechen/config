@@ -96,8 +96,7 @@ end
 
 ---@return nil
 function M.setup_breakpoints()
-  local state = require("eve.state")
-  local breakpoints = state.lsp.breakpoints:snapshot() ---@type eve.state.lsp.IBreakpointData
+  local breakpoints = eve.state.lsp.breakpoints:snapshot() ---@type eve.state.lsp.IBreakpointData
   if #breakpoints < 1 then
     return
   end
@@ -113,7 +112,7 @@ function M.setup_breakpoints()
   vim.defer_fn(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
-      local bufnr = state.buf.locate_by_filepath(breakpoint.filepath) ---@type integer|nil
+      local bufnr = eve.state.buf.locate_by_filepath(breakpoint.filepath) ---@type integer|nil
       if bufnr ~= nil then
         bps.set({
           condition = breakpoint.condition,
@@ -165,27 +164,24 @@ end
 function M.setup_state(storage)
   storage = storage or M.get_default_storage() ---@type eve.state.storage
 
-  local state = require("eve.state")
-  state.set_storage(storage)
-  state.load(storage, true)
+  eve.state.set_storage(storage)
+  eve.state.load(storage, true)
 end
 
 ---@return nil
 function M.setup_theme()
-  local state = require("eve.state")
-
-  state.theme.reload_theme(false, false)
+  eve.state.theme.reload_theme(false, false)
   vim.schedule(function()
-    state.watch_changes({
+    eve.state.watch_changes({
       on_theme_changed = function()
-        state.theme.reload_theme(false, true)
+        eve.state.theme.reload_theme(false, true)
       end,
     })
   end)
 
   ---Trigger reload the cover the unexpected changes by the plugins
   vim.defer_fn(function()
-    state.theme.reload_theme(false, false)
+    eve.state.theme.reload_theme(false, false)
   end, 100)
 end
 

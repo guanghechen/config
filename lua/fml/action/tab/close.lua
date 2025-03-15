@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.tab" ---@type string
 
-local state = require("eve.state")
-
 ---@class fml.action.tab
 local M = {}
 
@@ -42,8 +40,8 @@ function M.close_others()
 
   vim.schedule(function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    state.tab.tab_history:clear()
-    state.tab.tab_history:push(tabnr)
+    eve.state.tab.tab_history:clear()
+    eve.state.tab.tab_history:push(tabnr)
   end)
 end
 

@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 -- Better `vim.notify()`
 return {
   name = "nvim-notify",
@@ -20,7 +18,7 @@ return {
       return math.floor(vim.o.columns * 0.75)
     end,
     on_open = function(winnr)
-      local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+      local winblend = eve.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
       vim.wo[winnr].winblend = winblend
       vim.api.nvim_win_set_config(winnr, { zindex = 100 })
     end,

@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local fixed_winsep = require("fml.dressing.winsep.fixed")
 local float_winsep = require("fml.dressing.winsep.float")
 
@@ -15,11 +14,11 @@ local refresh_fixed = eve.col.Scheduler.new({
   name = "winsep_refresh fixed",
   delay = 50,
   silent = function()
-    local devmode = state.flight.devmode:snapshot() ---@type boolean
+    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   task = function(callback)
-    if state.flight.dressing_winsep_fixed:snapshot() then
+    if eve.state.flight.dressing_winsep_fixed:snapshot() then
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if fixed_winsep:should_show(winnr) then
         fixed_winsep:show(winnr)
@@ -33,11 +32,11 @@ local refresh_float = eve.col.Scheduler.new({
   name = "winsep_refresh float",
   delay = 200,
   silent = function()
-    local devmode = state.flight.devmode:snapshot() ---@type boolean
+    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   task = function(callback)
-    if state.flight.dressing_winsep_float:snapshot() then
+    if eve.state.flight.dressing_winsep_float:snapshot() then
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if float_winsep:should_show(winnr) then
         float_winsep:show(winnr)
@@ -57,8 +56,8 @@ vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
   end,
 })
 
-state.observe({ state.flight.dressing_winsep_fixed }, function()
-  local enabled = state.flight.dressing_winsep_fixed:snapshot() ---@type boolean
+eve.state.observe({ eve.state.flight.dressing_winsep_fixed }, function()
+  local enabled = eve.state.flight.dressing_winsep_fixed:snapshot() ---@type boolean
   if enabled then
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if fixed_winsep:should_show(winnr) then
@@ -69,8 +68,8 @@ state.observe({ state.flight.dressing_winsep_fixed }, function()
   end
 end)
 
-state.observe({ state.flight.dressing_winsep_float }, function()
-  local enabled = state.flight.dressing_winsep_float:snapshot() ---@type boolean
+eve.state.observe({ eve.state.flight.dressing_winsep_float }, function()
+  local enabled = eve.state.flight.dressing_winsep_float:snapshot() ---@type boolean
   if enabled then
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if float_winsep:should_show(winnr) then

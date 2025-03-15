@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 local get_capabilities = require("ghc.lsp.common").get_capabilities
 local handlers = require("ghc.lsp.common").handlers
 local locate_lsp_root = require("ghc.lsp.common").locate_lsp_root
@@ -19,7 +17,7 @@ local CONFIG_FILENAMES = {
 ---@param bufnr                         integer
 ---@return nil
 local function on_attach(client, bufnr)
-  local autoformat = state.flight.autoformat:snapshot() ---@type boolean
+  local autoformat = eve.state.flight.autoformat:snapshot() ---@type boolean
   if not autoformat then
     return
   end

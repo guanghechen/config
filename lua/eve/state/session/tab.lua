@@ -1,26 +1,26 @@
----@class eve.t.state.tab.buf.data
+---@class eve.state.tab.buf.data
 ---@field public filepath               string
 ---@field public pinned                 boolean
 
----@class eve.t.state.tab.buf.state
+---@class eve.state.tab.buf.state
 ---@field public bufnr                  integer
 ---@field public pinned                 boolean
 
----@class eve.t.state.tab.meta.data
+---@class eve.state.tab.meta.data
 ---@field public tabid                  integer
 ---@field public tabtype                eve.builtin.var.TabTypeEnum
----@field public bufs                   eve.t.state.tab.buf.data[]
+---@field public bufs                   eve.state.tab.buf.data[]
 ---@field public bufid_sourcefile       integer
 
 ---@class eve.state.tab.meta.state
 ---@field public tabnr                  integer
----@field public bufs                   eve.t.state.tab.buf.state[]
+---@field public bufs                   eve.state.tab.buf.state[]
 ---@field public bufid_sourcefile       eve.collection.IObservable -- integer|nil>
 ---@field public winnr_command          eve.collection.IObservable -- integer|nil>
 ---@field public winnr_fixed            eve.collection.IObservable -- integer|nil>
 ---
----@field public dump                   fun(self: eve.state.tab.meta.state, tabid: integer): eve.t.state.tab.meta.data
----@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.t.state.tab.buf.state|nil, integer|nil
+---@field public dump                   fun(self: eve.state.tab.meta.state, tabid: integer): eve.state.tab.meta.data
+---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.state.tab.buf.state|nil, integer|nil
 ---@field public find_bufid             fun(self: eve.state.tab.meta.state, bufnr: integer): integer|nil
 ---@field public focus_win_fixed        fun(self: eve.state.tab.meta.state): nil
 ---@field public get_winnr_fixed        fun(self: eve.state.tab.meta.state): integer|nil
@@ -34,7 +34,7 @@ local Meta = {}
 Meta.__index = Meta
 
 ---@class eve.state.tab.data
----@field public list                   eve.t.state.tab.meta.data[]
+---@field public list                   eve.state.tab.meta.data[]
 ---@field public tab_history            eve.collection.history.ISerializedData
 
 ---@class eve.state.tab.state
@@ -61,7 +61,7 @@ Meta.__index = Meta
 ---@field public get_winnr_fixed        fun(tabnr: integer): integer|nil
 ---@field public get_winnr_sourcefile   fun(tabnr: integer): integer|nil
 ---@field public get_unrefereced_bufnrs fun(bufnrs: integer[]|nil): integer[]
----@field public list_valid_bufs        fun(tabnr: integer): eve.t.state.tab.buf.state[]
+---@field public list_valid_bufs        fun(tabnr: integer): eve.state.tab.buf.state[]
 
 ---@class eve.state.tab : eve.state.tab.state
 ---@field public defaults               fun(): eve.state.tab.data
@@ -71,13 +71,13 @@ Meta.__index = Meta
 local M = {}
 
 ---@param tabnr                        integer
----@param bufs                         eve.t.state.tab.buf.state[]|nil
+---@param bufs                         eve.state.tab.buf.state[]|nil
 ---@param bufid_sourcefile             integer
 ---@return eve.state.tab.meta.state
 function Meta.new(tabnr, bufs, bufid_sourcefile)
   local self = setmetatable({}, Meta)
   self.tabnr = tabnr ---@type integer
-  self.bufs = bufs or {} ---@type eve.t.state.tab.buf.state[]
+  self.bufs = bufs or {} ---@type eve.state.tab.buf.state[]
   self.bufid_sourcefile = eve.col.Observable.from_value(math.max(0, math.min(#bufs, bufid_sourcefile or 1)))
   self.winnr_command = eve.col.Observable.from_value(0)
   self.winnr_fixed = eve.col.Observable.from_value(0)
@@ -85,9 +85,9 @@ function Meta.new(tabnr, bufs, bufid_sourcefile)
 end
 
 ---@param tabid                         integer
----@return eve.t.state.tab.meta.data
+---@return eve.state.tab.meta.data
 function Meta:dump(tabid)
-  ---@type eve.t.state.tab.meta.data
+  ---@type eve.state.tab.meta.data
   local data = {
     tabid = tabid,
     tabtype = eve.editor.resolve_tabtype(self.tabnr, false),
@@ -96,7 +96,7 @@ function Meta:dump(tabid)
   }
 
   for _, buf in ipairs(self.bufs) do
-    ---@type eve.t.state.tab.buf.data
+    ---@type eve.state.tab.buf.data
     local data_buf = {
       filepath = vim.api.nvim_buf_get_name(buf.bufnr),
       pinned = buf.pinned,
@@ -107,7 +107,7 @@ function Meta:dump(tabid)
 end
 
 ---@param bufnr                         integer
----@return eve.t.state.tab.buf.state|nil
+---@return eve.state.tab.buf.state|nil
 ---@return integer|nil
 function Meta:find_buf(bufnr)
   for index, buf in ipairs(self.bufs) do
@@ -140,7 +140,7 @@ end
 ---@return integer|nil
 function Meta:get_bufnr_sourcefile()
   local bufid = self.bufid_sourcefile:snapshot() ---@type integer
-  local buf = self.bufs[bufid] ---@type eve.t.state.tab.buf.state|nil
+  local buf = self.bufs[bufid] ---@type eve.state.tab.buf.state|nil
   return buf and buf.bufnr or nil
 end
 
@@ -188,11 +188,11 @@ end
 
 ---@return nil
 function Meta:rearrange_bufs()
-  local bufs = self.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufs = self.bufs ---@type eve.state.tab.buf.state[]
   local N = #bufs ---@type integer
   local k = 1 ---@type integer
   for i = 1, N, 1 do
-    local buf = bufs[i] ---@type eve.t.state.tab.buf.state
+    local buf = bufs[i] ---@type eve.state.tab.buf.state
     if buf ~= nil and eve.editor.is_buf_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
@@ -222,7 +222,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function Meta:toggle_pin(bufnr)
-  local bufs = self.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufs = self.bufs ---@type eve.state.tab.buf.state[]
   local buf, i = self:find_buf(bufnr)
   if i == nil or buf == nil then
     return
@@ -278,18 +278,18 @@ function M.normalize(data)
           and type(item.bufs) == "table"
           and type(item.bufid_sourcefile) == "number"
         then
-          ---@type eve.t.state.tab.meta.data
+          ---@type eve.state.tab.meta.data
           local meta_tab = {
             tabid = item.tabid,
             tabtype = item.tabtype,
             bufs = {},
             bufid_sourcefile = item.bufid_sourcefile,
           }
-          local bufs = meta_tab.bufs ---@type eve.t.state.tab.buf.data[]
+          local bufs = meta_tab.bufs ---@type eve.state.tab.buf.data[]
 
           for bufid, buf in ipairs(item.bufs) do
             if type(buf) == "table" and type(buf.filepath) == "string" and type(buf.pinned) == "boolean" then
-              local meta_buf = { filepath = buf.filepath, pinned = buf.pinned } ---@type eve.t.state.tab.buf.data
+              local meta_buf = { filepath = buf.filepath, pinned = buf.pinned } ---@type eve.state.tab.buf.data
               bufs[#bufs + 1] = meta_buf
               if bufid == item.bufid_sourcefile then
                 meta_tab.bufid_sourcefile = #bufs
@@ -317,13 +317,13 @@ end
 
 ---@return eve.state.tab.data
 function M.dump()
-  local list = {} ---@type eve.t.state.tab.meta.data[]
+  local list = {} ---@type eve.state.tab.meta.data[]
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for tabid, tabnr in ipairs(tabnrs) do
     local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
     if meta ~= nil then
-      local meta_tab = meta:dump(tabid) ---@type eve.t.state.tab.meta.data
+      local meta_tab = meta:dump(tabid) ---@type eve.state.tab.meta.data
       list[#list + 1] = meta_tab
     end
   end
@@ -377,13 +377,13 @@ function M.load(raw_data)
     local tabnr = tabnrs[data_tab.tabid] ---@type integer|nil
     local bufid_sourcefile = 0 ---@type integer
     if tabnr ~= nil then
-      local bufs = {} ---@type eve.t.state.tab.buf.state[]
+      local bufs = {} ---@type eve.state.tab.buf.state[]
       local bufnr_set = {} ---@type table<integer, boolean>
 
       for bufid, data_buf in ipairs(data_tab.bufs) do
         local bufnr = filepath2bufnr[data_buf.filepath] ---@type integer|nil
         if bufnr ~= nil and not bufnr_set[bufnr] then
-          local buf = { bufnr = bufnr, pinned = data_buf.pinned } ---@type eve.t.state.tab.buf.state
+          local buf = { bufnr = bufnr, pinned = data_buf.pinned } ---@type eve.state.tab.buf.state
           bufs[#bufs + 1] = buf
           bufnr_set[bufnr] = true
           if bufid == data_tab.bufid_sourcefile then
@@ -397,7 +397,7 @@ function M.load(raw_data)
         if eve.editor.is_win_sourcefile(winnr) then
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
           if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
-            local buf = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+            local buf = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
             bufs[#bufs + 1] = buf
             bufnr_set[bufnr] = true
           end
@@ -463,7 +463,7 @@ function M.resolve(tabnr)
     return meta
   end
 
-  local bufs = {} ---@type eve.t.state.tab.buf.data[]
+  local bufs = {} ---@type eve.state.tab.buf.data[]
   local bufnr_set = {} ---@type table<integer, true>
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   local bufid_sourcefile = 0 ---@type integer
@@ -475,7 +475,7 @@ function M.resolve(tabnr)
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
         bufnr_set[bufnr] = true
-        bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+        bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
         if bufnr == bufnr_current then
           bufid_sourcefile = #bufs
         end
@@ -507,14 +507,14 @@ function M.refresh(tabnr)
   end
 
   local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
-  local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufs = meta.bufs ---@type eve.state.tab.buf.state[]
 
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     if eve.editor.is_win_sourcefile(winnr) then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if not meta:find_buf(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
-        bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+        bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
       end
     end
   end
@@ -569,10 +569,10 @@ function M.on_buf_enter(tabnr, winnr, bufnr)
     return
   end
 
-  local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufs = meta.bufs ---@type eve.state.tab.buf.state[]
   local bufid = meta:find_bufid(bufnr) ---@type integer|nil
   if bufid == nil then
-    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
     bufid = #bufs
   end
   meta.bufid_sourcefile:next(bufid)
@@ -592,12 +592,12 @@ function M.on_bufs_close(tabnr, bufnrs)
   end
 
   local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
-  local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufs = meta.bufs ---@type eve.state.tab.buf.state[]
   local N = #bufs ---@type integer
 
   local k = 1 ---@type integer
   for i = 1, N, 1 do
-    local buf = bufs[i] ---@type eve.t.state.tab.buf.state
+    local buf = bufs[i] ---@type eve.state.tab.buf.state
     if not vim.list_contains(bufnrs, buf.bufnr) then
       bufs[k] = buf
       k = k + 1
@@ -689,7 +689,7 @@ function M.get_unrefereced_bufnrs(bufnrs)
 end
 
 ---@param tabnr                         integer
----@return eve.t.state.tab.buf.state[]
+---@return eve.state.tab.buf.state[]
 function M.list_valid_bufs(tabnr)
   local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   if meta == nil or #meta.bufs < 1 then

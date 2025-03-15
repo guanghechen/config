@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 local severity = vim.diagnostic.severity
 
 ---@type table<vim.diagnostic.Severity, string>
@@ -68,7 +66,7 @@ return {
     ---@diagnostic disable-next-line: unused-local
     eve.lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
-        local enable_inlay_hints = state.lsp.inlay_hints:snapshot() ---@type boolean
+        local enable_inlay_hints = eve.state.lsp.inlay_hints:snapshot() ---@type boolean
         vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
       end
     end)
@@ -77,7 +75,7 @@ return {
     if vim.lsp.codelens then
       ---@diagnostic disable-next-line: unused-local
       eve.lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
-        local enable_code_lens = state.lsp.code_lens:snapshot() ---@type boolean
+        local enable_code_lens = eve.state.lsp.code_lens:snapshot() ---@type boolean
         if enable_code_lens and vim.bo[bufnr].buftype == "" then
           vim.lsp.codelens.refresh()
           --- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {

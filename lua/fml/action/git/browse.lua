@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.git" ---@type string
 
-local state = require("eve.state")
 local select = require("fml.fn.select")
 
 ---@alias fml.action.git.browse.TargetScope
@@ -216,7 +215,7 @@ local M = {}
 ---@return nil
 function M.browse()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

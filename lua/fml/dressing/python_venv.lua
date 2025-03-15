@@ -1,7 +1,6 @@
 local __module_name__ = "fml.dressing.python_venv" ---@type string
 
 local clp = require("eve.constant.lang.python")
-local state = require("eve.state")
 
 ---@param text                          string
 ---@return string
@@ -90,7 +89,7 @@ local M = {}
 ---@param venv_path                     string
 ---@return nil
 function M.activate_venv(venv_path)
-  local venv_python, bin_path = state.lsp.get_python_bin_path() ---@type string|nil, string|nil
+  local venv_python, bin_path = eve.state.lsp.get_python_bin_path() ---@type string|nil, string|nil
   if venv_python == nil or bin_path == nil then
     return
   end
@@ -164,7 +163,7 @@ function M.deactivate_venv()
   -- TODO: Set pyright to use system python if it exists.
   -- Not sure how to do this in a cross platform compatible way.
 
-  state.lsp.python_venv_path:next(nil)
+  eve.state.lsp.python_venv_path:next(nil)
 end
 
 local initialized = false ---@type boolean
@@ -174,8 +173,8 @@ local function setup()
   if not initialized then
     initialized = true
 
-    state.observe({ state.lsp.python_venv_path }, function()
-      local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
+    eve.state.observe({ eve.state.lsp.python_venv_path }, function()
+      local venv_path = eve.state.lsp.python_venv_path:snapshot() ---@type string
       if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
         M.activate_venv(venv_path)
       end

@@ -1,12 +1,10 @@
-local state = require("eve.state")
-
 ---@class fml.action.clipboard
 local M = {}
 
 ---@return nil
 function M.paste()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

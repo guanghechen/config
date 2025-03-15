@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.find" ---@type string
 
-local state = require("eve.state")
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 local Setting = require("fml.ux.setting")
@@ -11,12 +10,12 @@ local _select = nil ---@type fml.ux.IFileSelect|nil
 ---@return fml.ux.IFileSelect
 local function get_select()
   if _select == nil then
-    local scopes = vim.list_slice(state.select.find_file_scopes) ---@type eve.e.FindFileScope[]
+    local scopes = vim.list_slice(eve.state.select.find_file_scopes) ---@type eve.e.FindFileScope[]
 
     ---@param dirpath                       string
     ---@return string
     local function get_scope_cwd(dirpath)
-      local scope = state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
+      local scope = eve.state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
       if scope == "W" then
         return eve.path.workspace()
       elseif scope == "C" then
@@ -36,9 +35,9 @@ local function get_select()
 
     local state_find_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 
-    state.observe({ state.select.find_file_scope }, function()
+    eve.state.observe({ eve.state.select.find_file_scope }, function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local bufnr = state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+      local bufnr = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
 
       ---@type string
       local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd()
@@ -50,13 +49,13 @@ local function get_select()
       end
     end, true)
 
-    state.observe({
-      state.select.find_file.excludes,
-      state.select.find_file.flag_case_sensitive,
-      state.select.find_file.flag_exclude,
-      state.select.find_file.flag_fuzzy,
-      state.select.find_file.flag_gitignore,
-      state.select.find_file.flag_regex,
+    eve.state.observe({
+      eve.state.select.find_file.excludes,
+      eve.state.select.find_file.flag_case_sensitive,
+      eve.state.select.find_file.flag_exclude,
+      eve.state.select.find_file.flag_fuzzy,
+      eve.state.select.find_file.flag_gitignore,
+      eve.state.select.find_file.flag_regex,
       state_find_cwd,
     }, function()
       if _select ~= nil then
@@ -67,9 +66,9 @@ local function get_select()
     ---@param scope                         eve.e.FindFileScope
     ---@return nil
     local function change_scope(scope)
-      local scope_current = state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
+      local scope_current = eve.state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
       if scope_current ~= scope then
-        state.select.find_file_scope:next(scope)
+        eve.state.select.find_file_scope:next(scope)
       end
     end
 
@@ -82,9 +81,9 @@ local function get_select()
         ---@field public includes       string[]
         ---@field public excludes       string[]
 
-        local s_keyword = state.select.find_file.input:snapshot() ---@type string
-        local s_includes = state.select.find_file.includes:snapshot() ---@type string[]
-        local s_excludes = state.select.find_file.excludes:snapshot() ---@type string[]
+        local s_keyword = eve.state.select.find_file.input:snapshot() ---@type string
+        local s_includes = eve.state.select.find_file.includes:snapshot() ---@type string[]
+        local s_excludes = eve.state.select.find_file.excludes:snapshot() ---@type string[]
 
         ---@type fml.action.find.files.actions.IConfigData
         local data = {
@@ -117,7 +116,7 @@ local function get_select()
           end,
           on_confirm = function(raw_data)
             vim.schedule(function()
-              local last_keyword = state.select.search_file.input:snapshot() ---@type string
+              local last_keyword = eve.state.select.search_file.input:snapshot() ---@type string
 
               local raw = vim.tbl_extend("force", data, raw_data)
               ---@cast raw                  fml.action.find.files.actions.IConfigData
@@ -126,9 +125,9 @@ local function get_select()
               local includes = raw.includes ---@type string[]
               local excludes = raw.excludes ---@type string[]
 
-              state.select.find_file.input:next(keyword)
-              state.select.find_file.includes:next(includes)
-              state.select.find_file.excludes:next(excludes)
+              eve.state.select.find_file.input:next(keyword)
+              eve.state.select.find_file.includes:next(includes)
+              eve.state.select.find_file.excludes:next(excludes)
 
               if _select ~= nil then
                 if keyword ~= last_keyword then
@@ -183,48 +182,48 @@ local function get_select()
           if #quickfix_items > 0 then
             _select:close()
 
-            state.qflist.push(quickfix_items)
-            state.qflist.open_qflist(false)
+            eve.state.qflist.push(quickfix_items)
+            eve.state.qflist.open_qflist(false)
           end
         end
       end,
       toggle_case_sensitive = function()
-        local flag = state.select.find_file.flag_case_sensitive:snapshot() ---@type boolean
-        state.select.find_file.flag_case_sensitive:next(not flag)
+        local flag = eve.state.select.find_file.flag_case_sensitive:snapshot() ---@type boolean
+        eve.state.select.find_file.flag_case_sensitive:next(not flag)
       end,
       toggle_flag_exclude = function()
-        local flag = state.select.find_file.flag_exclude:snapshot() ---@type boolean
-        state.select.find_file.flag_exclude:next(not flag)
+        local flag = eve.state.select.find_file.flag_exclude:snapshot() ---@type boolean
+        eve.state.select.find_file.flag_exclude:next(not flag)
       end,
       toggle_flag_fuzzy = function()
-        local flag = state.select.find_file.flag_fuzzy:snapshot() ---@type boolean
-        state.select.find_file.flag_fuzzy:next(not flag)
+        local flag = eve.state.select.find_file.flag_fuzzy:snapshot() ---@type boolean
+        eve.state.select.find_file.flag_fuzzy:next(not flag)
       end,
       ---@return nil
       toggle_flag_gitignore = function()
-        local flag = state.select.find_file.flag_gitignore:snapshot() ---@type boolean
-        state.select.find_file.flag_gitignore:next(not flag)
+        local flag = eve.state.select.find_file.flag_gitignore:snapshot() ---@type boolean
+        eve.state.select.find_file.flag_gitignore:next(not flag)
       end,
       toggle_flag_regex = function()
-        local flag = state.select.find_file.flag_regex:snapshot() ---@type boolean
-        state.select.find_file.flag_regex:next(not flag)
+        local flag = eve.state.select.find_file.flag_regex:snapshot() ---@type boolean
+        eve.state.select.find_file.flag_regex:next(not flag)
       end,
       ---@return nil
       toggle_flag_scope = function()
-        local scope = state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
+        local scope = eve.state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
         local idx = eve.table.find_index(scopes, scope) or 1 ---@type integer
         local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
         local next_scope = scopes[idx_next] ---@type eve.e.FindFileScope
-        state.select.find_file_scope:next(next_scope)
+        eve.state.select.find_file_scope:next(next_scope)
       end,
       ---@return nil
       toggle_flag_selected = function()
-        local flag = state.select.find_file.flag_selected:snapshot() ---@type boolean
-        state.select.find_file.flag_selected:next(not flag)
+        local flag = eve.state.select.find_file.flag_selected:snapshot() ---@type boolean
+        eve.state.select.find_file.flag_selected:next(not flag)
       end,
     }
 
-    local frecency = state.frecency.files ---@type eve.collection.IFrecency
+    local frecency = eve.state.frecency.files ---@type eve.collection.IFrecency
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]
     local statusline_items = {
@@ -239,49 +238,49 @@ local function get_select()
         type = "enum",
         desc = "find: toggle scope",
         symbol = "",
-        state = state.select.find_file_scope,
+        state = eve.state.select.find_file_scope,
         callback = actions.toggle_flag_scope,
       },
       {
         type = "flag",
         desc = "find: toggle selected",
         symbol = eve.icon.symbols.flag_selected,
-        state = state.select.find_file.flag_selected,
+        state = eve.state.select.find_file.flag_selected,
         callback = actions.toggle_flag_selected,
       },
       {
         type = "flag",
         desc = "find: toggle exclude",
         symbol = eve.icon.symbols.flag_exclude,
-        state = state.select.find_file.flag_exclude,
+        state = eve.state.select.find_file.flag_exclude,
         callback = actions.toggle_flag_exclude,
       },
       {
         type = "flag",
         desc = "find: toggle gitignore",
         symbol = eve.icon.symbols.flag_gitignore,
-        state = state.select.find_file.flag_gitignore,
+        state = eve.state.select.find_file.flag_gitignore,
         callback = actions.toggle_flag_gitignore,
       },
       {
         type = "flag",
         desc = "select: toggle flag fuzzy",
         symbol = eve.icon.symbols.flag_fuzzy,
-        state = state.select.find_file.flag_fuzzy,
+        state = eve.state.select.find_file.flag_fuzzy,
         callback = actions.toggle_flag_fuzzy,
       },
       {
         type = "flag",
         desc = "find: toggle case sensitive",
         symbol = eve.icon.symbols.flag_case_sensitive,
-        state = state.select.find_file.flag_case_sensitive,
+        state = eve.state.select.find_file.flag_case_sensitive,
         callback = actions.toggle_case_sensitive,
       },
       {
         type = "flag",
         desc = "select: toggle flag regex",
         symbol = eve.icon.symbols.flag_regex,
-        state = state.select.find_file.flag_regex,
+        state = eve.state.select.find_file.flag_regex,
         callback = actions.toggle_flag_regex,
       },
     }
@@ -346,9 +345,9 @@ local function get_select()
       fetch_data = function()
         local cwd = state_find_cwd:snapshot() ---@type string
         local workspace = eve.path.workspace() ---@type string
-        local flag_exclude = state.select.find_file.flag_exclude:snapshot() ---@type boolean
-        local flag_gitignore = state.select.find_file.flag_gitignore:snapshot() ---@type boolean
-        local excludes = flag_exclude and state.select.find_file.excludes:snapshot() or {} ---@type string[]
+        local flag_exclude = eve.state.select.find_file.flag_exclude:snapshot() ---@type boolean
+        local flag_gitignore = eve.state.select.find_file.flag_gitignore:snapshot() ---@type boolean
+        local excludes = flag_exclude and eve.state.select.find_file.excludes:snapshot() or {} ---@type string[]
 
         ---@type string[]
         local filepaths = eve.oxi.find({
@@ -378,7 +377,7 @@ local function get_select()
       end,
     }
 
-    local states = state.select.find_file ---@type eve.state.select.item.state
+    local states = eve.state.select.find_file ---@type eve.state.select.item.state
     _select = FileSelect.new({
       case_sensitive = states.flag_case_sensitive,
       cmp = Select.cmp_by_score,
@@ -415,21 +414,21 @@ end
 
 ---@return nil
 function M.find_files_cwd()
-  state.select.find_file_scope:next("C")
+  eve.state.select.find_file_scope:next("C")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:show()
 end
 
 ---@return nil
 function M.find_files_directory()
-  state.select.find_file_scope:next("D")
+  eve.state.select.find_file_scope:next("D")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:show()
 end
 
 ---@return nil
 function M.find_files_workspace()
-  state.select.find_file_scope:next("W")
+  eve.state.select.find_file_scope:next("W")
   local select = get_select() ---@type fml.ux.IFileSelect
   select:show()
 end

@@ -1,38 +1,37 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
-local state = require("eve.state")
 local select = require("fml.fn.select")
 
 ---@type table<string, eve.collection.IObservable -- boolean>>
 local flags = {
   ---flight
-  flight_ai = state.flight.ai,
-  flight_autoformat = state.flight.autoformat,
-  flight_autoload = state.flight.autoload,
-  flight_autosave = state.flight.autosave,
-  flight_devmode = state.flight.devmode,
-  flight_dressing_hipairs = state.flight.dressing_hipairs,
-  flight_dressing_illumniate = state.flight.dressing_illumniate,
-  flight_dressing_input = state.flight.dressing_input,
-  flight_dressing_select = state.flight.dressing_select,
-  flight_dressing_winsep_fixed = state.flight.dressing_winsep_fixed,
-  flight_dressing_winsep_float = state.flight.dressing_winsep_float,
-  flight_gitdiff_expand_all = state.flight.gitdiff_expand_all,
+  flight_ai = eve.state.flight.ai,
+  flight_autoformat = eve.state.flight.autoformat,
+  flight_autoload = eve.state.flight.autoload,
+  flight_autosave = eve.state.flight.autosave,
+  flight_devmode = eve.state.flight.devmode,
+  flight_dressing_hipairs = eve.state.flight.dressing_hipairs,
+  flight_dressing_illumniate = eve.state.flight.dressing_illumniate,
+  flight_dressing_input = eve.state.flight.dressing_input,
+  flight_dressing_select = eve.state.flight.dressing_select,
+  flight_dressing_winsep_fixed = eve.state.flight.dressing_winsep_fixed,
+  flight_dressing_winsep_float = eve.state.flight.dressing_winsep_float,
+  flight_gitdiff_expand_all = eve.state.flight.gitdiff_expand_all,
 
   ---lsp
-  lsp_code_lens = state.lsp.code_lens,
-  lsp_inlay_hints = state.lsp.inlay_hints,
-  lsp_spellcheck = state.lsp.spellcheck,
+  lsp_code_lens = eve.state.lsp.code_lens,
+  lsp_inlay_hints = eve.state.lsp.inlay_hints,
+  lsp_spellcheck = eve.state.lsp.spellcheck,
 
   ---ux
-  ux_relativenumber = state.option.relativenumber,
-  ux_username = state.theme.username,
-  ux_transparency = state.theme.transparency,
+  ux_relativenumber = eve.state.option.relativenumber,
+  ux_username = eve.state.theme.username,
+  ux_transparency = eve.state.theme.transparency,
 
   ---plugin
-  plugin_render_markdown = state.plugin.render_markdown,
-  plugin_smear_cursor = state.plugin.smear_cursor,
-  plugin_treesitter_context = state.plugin.treesitter_context,
+  plugin_render_markdown = eve.state.plugin.render_markdown,
+  plugin_smear_cursor = eve.state.plugin.smear_cursor,
+  plugin_treesitter_context = eve.state.plugin.treesitter_context,
 }
 
 ---@class fml.action.toggle.IItem
@@ -48,7 +47,7 @@ local toggle_item_map = {
   ai_provider = {
     title = "ai_provider",
     snapshot = function()
-      local provider = state.flight.ai_provider:snapshot() ---@type string
+      local provider = eve.state.flight.ai_provider:snapshot() ---@type string
       return provider, "String"
     end,
     action = function()
@@ -62,7 +61,7 @@ local toggle_item_map = {
     end,
     action = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_fixed = state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
+      local winnr_fixed = eve.state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
       if winnr_fixed ~= nil then
         local bufnr = vim.api.nvim_win_get_buf(winnr_fixed) ---@type integer
         require("mini.hipatterns").toggle(bufnr)
@@ -72,39 +71,39 @@ local toggle_item_map = {
   lsp_python_debug_host = {
     title = "python debug host",
     snapshot = function()
-      local host = state.lsp.python_debug_host:snapshot() ---@type string
+      local host = eve.state.lsp.python_debug_host:snapshot() ---@type string
       if host == nil then
         return "nil", "Keyword"
       end
       return host, "String"
     end,
     action = function()
-      local default_host = state.lsp.python_debug_host:snapshot() or "" ---@type string
+      local default_host = eve.state.lsp.python_debug_host:snapshot() or "" ---@type string
       local input_host = vim.fn.input("host [" .. default_host .. "]", default_host)
       local host = #input_host > 0 and input_host or default_host ---@type string
-      state.lsp.python_debug_host:next(host)
+      eve.state.lsp.python_debug_host:next(host)
     end,
   },
   lsp_python_debug_port = {
     title = "python debug port",
     snapshot = function()
-      local port = state.lsp.python_debug_port:snapshot() ---@type integer
+      local port = eve.state.lsp.python_debug_port:snapshot() ---@type integer
       if port == nil then
         return "nil", "Keyword"
       end
       return tostring(port), "Number"
     end,
     action = function()
-      local default_port = state.lsp.python_debug_port:snapshot() or 0 ---@type integer
+      local default_port = eve.state.lsp.python_debug_port:snapshot() or 0 ---@type integer
       local input_port = vim.fn.input("port [" .. tostring(default_port) .. "]", tostring(default_port))
       local port = #input_port > 0 and tonumber(input_port) or default_port ---@type integer
-      state.lsp.python_debug_port:next(port)
+      eve.state.lsp.python_debug_port:next(port)
     end,
   },
   lsp_python_venv = {
     title = "python venv path",
     snapshot = function()
-      local venv_path = state.lsp.python_venv_path:snapshot() ---@type string
+      local venv_path = eve.state.lsp.python_venv_path:snapshot() ---@type string
       if venv_path == nil then
         return "nil", "Keyword"
       end
@@ -122,9 +121,9 @@ local toggle_item_map = {
     action = function()
       local ok, render_markdown = pcall(require, "render-markdown")
       if ok then
-        state.plugin.render_markdown:next(true)
+        eve.state.plugin.render_markdown:next(true)
         local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        state.tab.focus_win_fixed(tabnr)
+        eve.state.tab.focus_win_fixed(tabnr)
         render_markdown.buf_toggle()
       end
     end,
@@ -164,7 +163,7 @@ local toggle_item_map = {
   theme = {
     title = "theme",
     snapshot = function()
-      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+      local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
       return theme, "String"
     end,
     action = function()
@@ -174,12 +173,12 @@ local toggle_item_map = {
   theme_variant = {
     title = "theme variant",
     snapshot = function()
-      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
-      local scheme = state.theme.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
+      local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
+      local scheme = eve.state.theme.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
       return scheme and scheme.variant or "", "String"
     end,
     action = function()
-      local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+      local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
       local app_home = eve.path.locate_app_config_home("guanghechen")
       local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
       local ok, error = pcall(function()
@@ -336,7 +335,7 @@ end
 function M.toggle_ai_provider(arg)
   local ai_provider = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(ai_providers, ai_provider) then
-    state.flight.ai_provider:next(ai_provider)
+    eve.state.flight.ai_provider:next(ai_provider)
   else
     select({
       title = "Toggle ai provider",
@@ -349,7 +348,7 @@ function M.toggle_ai_provider(arg)
       },
       multiple = false,
       get_present = function()
-        return state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+        return eve.state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
       end,
       fetch_items = function()
         local items = {} ---@type fml.ux.select.IItem[]
@@ -370,7 +369,7 @@ function M.toggle_ai_provider(arg)
         if #items == 1 then
           local item = items[1] ---@type fml.ux.select.IItem
           widget:close()
-          state.flight.ai_provider:next(item.uuid)
+          eve.state.flight.ai_provider:next(item.uuid)
         end
       end,
     })
@@ -380,13 +379,13 @@ end
 ---@return nil
 function M.toggle_maximize()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_fixed = state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
+  local winnr_fixed = eve.state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
   if winnr_fixed == nil then
     return
   end
 
-  if state.status.maximized_winnrs[winnr_fixed] then
-    state.status.maximized_winnrs[winnr_fixed] = nil
+  if eve.state.status.maximized_winnrs[winnr_fixed] then
+    eve.state.status.maximized_winnrs[winnr_fixed] = nil
     vim.api.nvim_win_close(winnr_fixed, true)
     return
   end
@@ -394,7 +393,7 @@ function M.toggle_maximize()
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   local winnr_maximized = nil ---@type integer|nil
   for _, winnr in ipairs(winnrs) do
-    if state.status.maximized_winnrs[winnr] then
+    if eve.state.status.maximized_winnrs[winnr] then
       winnr_maximized = winnr
       break
     end
@@ -426,7 +425,7 @@ function M.toggle_maximize()
     vim.wo[winnr].wrap = false
 
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = eve.editor.is_win_sourcefile(winnr_fixed)
-    state.status.maximized_winnrs[winnr] = true
+    eve.state.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
   end
@@ -450,7 +449,7 @@ function M.toggle_theme(arg)
       },
       multiple = false,
       get_present = function()
-        local theme = state.theme.theme:snapshot() ---@type eve.e.Theme
+        local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
         return theme
       end,
       fetch_items = function()

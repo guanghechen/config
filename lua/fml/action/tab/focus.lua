@@ -1,12 +1,10 @@
-local state = require("eve.state")
-
 ---@param tabnr                         integer the stable unique number of the tabpage
 ---@return nil
 local function go(tabnr)
   local tabnr_from = vim.api.nvim_get_current_tabpage() ---@type integer
   if tabnr_from ~= tabnr then
     vim.api.nvim_set_current_tabpage(tabnr)
-    state.tab.tab_history:push(tabnr)
+    eve.state.tab.tab_history:push(tabnr)
   end
 end
 

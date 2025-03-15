@@ -1,7 +1,5 @@
 local __module_name__ = "ghc.plugin" ---@type string
 
-local state = require("eve.state")
-
 ---@class ghc.plugin.IRawSpec
 ---@field public name                   string
 ---@field public branch                 ?string
@@ -29,7 +27,7 @@ local conds = {
   end,
   ---@return boolean
   ai = function()
-    return not vim.g.vscode and state.flight.ai:snapshot()
+    return not vim.g.vscode and eve.state.flight.ai:snapshot()
   end,
   ---@return boolean
   cmp = function()
@@ -50,11 +48,11 @@ local conds = {
   smear_cursor = function()
     return not vim.g.vscode
       and not vim.g.neovide
-      and state.plugin.smear_cursor:snapshot()
+      and eve.state.plugin.smear_cursor:snapshot()
       and (eve.env.IS_WSL or eve.env.IS_WIN)
   end,
   treesitter_context = function()
-    return not vim.g.vscode and state.plugin.treesitter_context:snapshot()
+    return not vim.g.vscode and eve.state.plugin.treesitter_context:snapshot()
   end,
 }
 

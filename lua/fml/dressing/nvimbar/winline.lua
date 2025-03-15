@@ -1,4 +1,3 @@
-local state = require("eve.state")
 local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
@@ -7,7 +6,7 @@ local position = "f_wl" ---@type fml.ux.nvimbar.Position
 ---@param winnr                         integer
 ---@return fml.ux.INvimbar|nil
 local function resolve_winline_scheduler(winnr)
-  local meta = state.win.resolve(winnr) ---@type eve.t.state.win.meta.state|nil
+  local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
   if meta == nil then
     return
   end
@@ -21,7 +20,7 @@ local function resolve_winline_scheduler(winnr)
       comp_sep_hlname_active = position .. "_bg",
       render_delay = 128,
       silent = function()
-        local devmode = state.flight.devmode:snapshot() ---@type boolean
+        local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
         return not devmode
       end,
       get_max_width = function()
@@ -45,7 +44,7 @@ local function resolve_winline_scheduler(winnr)
         end
 
         if vim.api.nvim_win_is_valid(winnr) then
-          state.win.locate_symbols(winnr, function(err)
+          eve.state.win.locate_symbols(winnr, function(err)
             if err == nil then
               callback()
               return
@@ -149,7 +148,7 @@ local function render(winnr)
   end
 end
 
-state.status.dirty_winline_nr:subscribe(
+eve.state.status.dirty_winline_nr:subscribe(
   eve.col.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)

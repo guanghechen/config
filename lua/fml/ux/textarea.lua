@@ -1,7 +1,5 @@
 local __module_name__ = "fml.ux.textarea" ---@type string
 
-local state = require("eve.state")
-
 ---@type string
 local WIN_HIGHLIGHT = table.concat({
   "Cursor:f_ut_current",
@@ -81,7 +79,7 @@ function M.new(props)
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
   local filetype = props.filetype ---@type string|nil
-  local winblend = state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = eve.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
 
   ---@type table<string, any>
   local win_opts = vim.tbl_extend("force", {

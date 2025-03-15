@@ -1,7 +1,5 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
-local state = require("eve.state")
-
 local config = {
   excluded = {
     ".git/",
@@ -78,7 +76,7 @@ return {
       name = __module_name__,
       delay = 100,
       silent = function()
-        local devmode = state.flight.devmode:snapshot() ---@type boolean
+        local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
         return devmode
       end,
       task = function()
@@ -153,7 +151,7 @@ return {
     vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
       group = eve.nvim.augroup("nvim-lint"),
       callback = function()
-        local spellcheck = state.lsp.spellcheck:snapshot() ---@type boolean
+        local spellcheck = eve.state.lsp.spellcheck:snapshot() ---@type boolean
         if spellcheck then
           lint_scheduler:schedule()
         end

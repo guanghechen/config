@@ -1,9 +1,8 @@
 local __module_name__ = "ghc.action.copilot-chat" ---@type string
 
-local state = require("eve.state")
 local select = require("fml.fn.select")
 
-if not state.flight.ai:snapshot() then
+if not eve.state.flight.ai:snapshot() then
   eve.reporter.error({
     from = __module_name__,
     subject = "copilot-chat",
@@ -48,7 +47,7 @@ local config = {
 }
 
 ---@type eve.t.ux.IWidget
-local chat = state.widget.wrap({
+local chat = eve.state.widget.wrap({
   name = "copilot-chat",
   close = function()
     local winnr = config.winnr ---@type integer|nil
@@ -92,7 +91,7 @@ local chat = state.widget.wrap({
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
-          local keymaps = state.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
+          local keymaps = eve.state.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
           eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 

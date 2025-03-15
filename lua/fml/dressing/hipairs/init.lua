@@ -1,5 +1,3 @@
-local state = require("eve.state")
-
 local ux = require("fml.dressing.hipairs.ux")
 
 local timer = nil ---@type any|nil
@@ -28,7 +26,7 @@ vim.api.nvim_create_autocmd({
   callback = function()
     close_timer()
 
-    local enabled = state.flight.dressing_hipairs:snapshot() ---@type boolean
+    local enabled = eve.state.flight.dressing_hipairs:snapshot() ---@type boolean
     if not enabled then
       return
     end
