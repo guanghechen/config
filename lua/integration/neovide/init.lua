@@ -8,17 +8,17 @@ pcall(require, "integration.local.autocmd")
 
 eve.setup_state()
 
-require("fml.command")
 require("integration.neovide.option")
 require("integration.neovide.keymap")
 pcall(require, "integration.local.option")
 pcall(require, "integration.local.keymap")
 
-eve.setup_theme()
 require("fml.dressing.nvimbar.statusline")
 require("fml.dressing.nvimbar.tabline")
 require("fml.dressing.nvimbar.winline")
+eve.setup_theme()
 
+require("fml.command")
 require("ghc.plugin")
 pcall(require, "integration.neovide.plugin")
 pcall(require, "integration.local.plugin")

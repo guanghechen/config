@@ -179,11 +179,6 @@ function M.setup_theme()
       end,
     })
   end)
-
-  ---Trigger reload the cover the unexpected changes by the plugins
-  vim.defer_fn(function()
-    eve.state.theme.reload_theme(false, false)
-  end, 100)
 end
 
 return M
