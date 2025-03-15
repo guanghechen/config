@@ -101,8 +101,7 @@ function M.setup_breakpoints()
   end
   local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
 
-  local editor = require("eve.module.editor")
-  editor.open_filepaths(0, filepaths)
+  eve.editor.open_filepaths(0, filepaths)
 
   vim.defer_fn(function()
     local bps = require("dap.breakpoints")

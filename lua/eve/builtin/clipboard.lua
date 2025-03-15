@@ -1,6 +1,6 @@
-local __module_name__ = "eve.module.clipboard" ---@type string
+local __module_name__ = "eve.builtin.clipboard" ---@type string
 
----@class fml.lib.clipboard
+---@class eve.builtin.clipboard
 ---@field public has_image              fun(): boolean
 ---@field public paste_image            fun(filepath: string): boolean
 ---@field public get_clipboard          fun(): table|nil

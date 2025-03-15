@@ -1,9 +1,9 @@
 local varnames = eve.setting.vars
 
----@class eve.module.editor
+---@class eve.builtin.editor
 local M = {}
 
----@class eve.module.editor.winpicker_filters
+---@class eve.builtin.editor.winpicker_filters
 M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
