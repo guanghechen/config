@@ -8,7 +8,7 @@
 
 ---@class eve.state.tab.meta.data
 ---@field public tabid                  integer
----@field public tabtype                eve.builtin.var.TabTypeEnum
+---@field public tabtype                eve.e.TabTypeEnum
 ---@field public bufs                   eve.state.tab.buf.data[]
 ---@field public bufid_sourcefile       integer
 

@@ -1,11 +1,6 @@
 ---@class eve.builtin.var
 local M = {}
 
----@alias eve.builtin.var.TabTypeEnum
----| 'all'
----| 'diffview'
----| 'normal'
-
 ---@class eve.builtin.var.TabTypes
 M.TabTypes = {
   ALL = "all",

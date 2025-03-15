@@ -18,12 +18,12 @@ local __module_name__ = "eve.builtin.command" ---@type string
 
 ---@class eve.builtin.command.ICommand
 ---@field public uuid                   string
----@field public tabtype                eve.builtin.var.TabTypeEnum
+---@field public tabtype                eve.e.TabTypeEnum
 ---@field public action                 fun(args?: string): nil
 
 ---@class eve.builtin.command.IImplementation
 ---@field public uuid                   string
----@field public tabtype                ?eve.builtin.var.TabTypeEnum
+---@field public tabtype                ?eve.e.TabTypeEnum
 ---@field public action                 fun(args?: string): nil
 
 local definition_map = {} ---@type table<string, eve.builtin.command.IDefinition>
@@ -135,7 +135,7 @@ end
 ---@return nil
 function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = eve.editor.resolve_tabtype(tabnr, false) ---@type eve.builtin.var.TabTypeEnum
+  local tabtype = eve.editor.resolve_tabtype(tabnr, false) ---@type eve.e.TabTypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] or command_map[uuid] ---@type eve.builtin.command.ICommand|nil
 
