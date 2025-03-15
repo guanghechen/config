@@ -76,6 +76,15 @@ function M.focus_win_fixed()
 end
 
 ---@return integer|nil
+function M.get_bufnr_sourcefile()
+  local winnr_sourcefile = M.get_winnr_sourcefile() ---@type integer|nil
+  if winnr_sourcefile == nil then
+    return nil
+  end
+  return vim.api.nvim_win_get_buf(winnr_sourcefile)
+end
+
+---@return integer|nil
 function M.get_winnr_command()
   local winnr_command = M.winnr_command:snapshot() ---@type integer
   if winnr_command ~= 0 and eve.editor.is_win_valid(winnr_command) then

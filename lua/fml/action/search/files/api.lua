@@ -275,8 +275,7 @@ function M.fetch_data(input_text, force, callback)
 
   local specified_filepath ---@type string|nil
   if scope == "B" then
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local bufnr = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+    local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
     if bufnr ~= nil then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil

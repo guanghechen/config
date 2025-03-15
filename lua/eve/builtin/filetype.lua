@@ -257,6 +257,48 @@ local filetypes = {
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
   },
+  no_sourcefile = {
+    [M.AERIAL] = true,
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
+    [M.AVANTE_SELECTED_FILES] = true,
+    [M.CHECKHEALTH] = true,
+    [M.COPILOT_CHAT] = true,
+    [M.DAP_FLOAT] = true,
+    [M.DAP_REPL] = true,
+    [M.DAP_UI_BREAKPOINTS] = true,
+    [M.DAP_UI_CONSOLE] = true,
+    [M.DAP_UI_HOVER] = true,
+    [M.DAP_UI_SCOPES] = true,
+    [M.DAP_UI_STACKS] = true,
+    [M.DAP_UI_WATCHES] = true,
+    [M.DIFFVIEW_FILE_HISTORY] = true,
+    [M.DIFFVIEW_FILES] = true,
+    [M.GITCOMMIT] = true,
+    [M.HELP] = true,
+    [M.LAZY] = true,
+    [M.MAN] = true,
+    [M.MASON] = true,
+    [M.NEOTREE] = true,
+    [M.NEOTREE_POPUP] = true,
+    [M.NOICE] = true,
+    [M.NOTIFY] = true,
+    [M.LSPINFO] = true,
+    [M.PLENARY_TEST_POPUP] = true,
+    [M.QUICKFIX] = true,
+    [M.SEARCH_INPUT] = true,
+    [M.SEARCH_MAIN] = true,
+    [M.SEARCH_PREVIEW] = true,
+    [M.SMEAR_CURSOR] = true,
+    [M.STARTUPTIME] = true,
+    [M.TEMP_VIEWER] = true,
+    [M.TERM] = true,
+    [M.TROUBLE] = true,
+    [M.UX_INPUT] = true,
+    [M.WINSEP] = true,
+    [M.WINPICKER_MASK] = true,
+    [M.YOZORA_VIEWER] = true,
+  },
   no_window_picker_focusable = {
     [M.NOICE] = true,
     [M.LSPINFO] = true,
@@ -465,6 +507,12 @@ end
 ---@return boolean
 function M.is_not_projectable_filetype(filetype)
   return filetype == nil or filetypes.no_window_picker_projectable[filetype]
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_not_sourcefile_filetype(filetype)
+  return filetype == nil or filetypes.no_sourcefile[filetype]
 end
 
 return M

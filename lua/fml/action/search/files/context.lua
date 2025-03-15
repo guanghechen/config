@@ -56,12 +56,8 @@ local state_search_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.path.cw
 eve.state.select.search_file_scope:subscribe(
   eve.col.Subscriber.new({
     on_next = function(scope, prev_scope)
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local bufnr = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
-
-      ---@type string
-      local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd()
-
+      local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+      local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string
       local current_search_cwd = state_search_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
       if current_search_cwd ~= next_search_cwd then

@@ -233,7 +233,7 @@ function M.bufs(position)
       end
 
       local N = #bufs ---@type integer
-      local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+      local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
       local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] or 1) ---@type integer
       vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 

@@ -224,13 +224,19 @@ function M.is_win_sourcefile(winnr)
     return is_sourcefile
   end
 
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  if config.relative ~= nil and config.relative ~= "" then
+  if M.is_win_floating(winnr) then
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
     return false
   end
 
-  vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if eve.filetype.is_not_sourcefile_filetype(filetype) then
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+    return false
+  end
+
+  -- vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
   return true
 end
 

@@ -36,12 +36,8 @@ local function get_select()
     local state_find_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 
     eve.state.observe({ eve.state.select.find_file_scope }, function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local bufnr = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
-
-      ---@type string
-      local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd()
-
+      local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+      local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string
       local current_find_cwd = state_find_cwd:snapshot() ---@type string
       local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
       if current_find_cwd ~= next_find_cwd then

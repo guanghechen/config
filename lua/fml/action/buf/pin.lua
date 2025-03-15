@@ -9,7 +9,7 @@ function M.toggle_pin()
     return
   end
 
-  local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
   if bufid_sourcefile == nil then
     return
   end

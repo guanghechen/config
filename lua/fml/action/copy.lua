@@ -45,8 +45,7 @@ end
 ---@param arg                           unknown|nil
 ---@return nil
 function M.copy_filepath(arg)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end
@@ -91,8 +90,7 @@ end
 
 ---@return nil
 function M.copy_filepath_absolute()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end
@@ -103,8 +101,7 @@ end
 
 ---@return nil
 function M.copy_filepath_relative()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

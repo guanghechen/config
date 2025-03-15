@@ -30,7 +30,7 @@ function M.close(bufnr)
     return
   end
 
-  bufnr = eve.state.tab.get_bufnr_sourcefile(tabnr) ---@type integer|nil
+  bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr == nil then
     return
   end
@@ -64,7 +64,7 @@ function M.close_to_leftest()
     return
   end
 
-  local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
   if bufid_sourcefile == nil then
     return
   end
@@ -97,7 +97,7 @@ function M.close_to_rightest()
     return
   end
 
-  local bufid_sourcefile = meta_tab.bufid_sourcefile:snapshot() ---@type integer|nil
+  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
   if bufid_sourcefile == nil then
     return
   end
