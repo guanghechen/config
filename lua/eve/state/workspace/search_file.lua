@@ -12,14 +12,12 @@
 ---@field public replacement            eve.collection.IObservable -- string>
 ---@field public search_paths           eve.collection.IObservable -- string[]>
 
----@class eve.state.search_file
+---@class eve.state.search_file : eve.state.search_file.state
 ---@field public defaults               fun(): eve.state.search_file.data
 ---@field public dump                   fun(): eve.state.search_file.data
----@field public load                   fun(data: unknown): eve.state.search_file.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.search_file.data
 local M = {}
-
-local _state = nil ---@type eve.state.search_file.state | nil
 
 ---@return eve.state.search_file.data
 function M.defaults()
@@ -61,46 +59,37 @@ end
 
 ---@return eve.state.search_file.data
 function M.dump()
-  if _state == nil then
-    ---@type eve.state.search_file.data
-    return M.defaults()
-  end
-
   ---@type eve.state.search_file.data
   return {
-    flag_replace = _state.flag_replace:snapshot(),
-    max_matches = _state.max_matches:snapshot(),
-    max_filesize = _state.max_filesize:snapshot(),
-    replacement = _state.replacement:snapshot(),
-    search_paths = _state.search_paths:snapshot(),
+    flag_replace = M.flag_replace:snapshot(),
+    max_matches = M.max_matches:snapshot(),
+    max_filesize = M.max_filesize:snapshot(),
+    replacement = M.replacement:snapshot(),
+    search_paths = M.search_paths:snapshot(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.search_file.state
+---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.search_file.data
 
-  if _state == nil then
-    ---@type eve.state.search_file.state
-    _state = {
-      flag_replace = eve.col.Observable.from_value(data.flag_replace),
-      max_filesize = eve.col.Observable.from_value(data.max_filesize),
-      max_matches = eve.col.Observable.from_value(data.max_matches),
-      replacement = eve.col.Observable.from_value(data.replacement),
-      search_paths = eve.col.Observable.from_value(data.search_paths),
-    }
-    return _state
+  M.flag_replace:next(data.flag_replace)
+  M.max_filesize:next(data.max_filesize)
+  M.max_matches:next(data.max_matches)
+  M.replacement:next(data.replacement)
+  if not eve.fn.equals_list(M.search_paths:snapshot(), data.search_paths) then
+    M.search_paths:next(data.search_paths)
   end
-
-  _state.flag_replace:next(data.flag_replace)
-  _state.max_filesize:next(data.max_filesize)
-  _state.max_matches:next(data.max_matches)
-  _state.replacement:next(data.replacement)
-  if not eve.fn.equals_list(_state.search_paths:snapshot(), data.search_paths) then
-    _state.search_paths:next(data.search_paths)
-  end
-  return _state
 end
+
+----------------------------------------------------------------------------------------------------
+
+local _defaults = M.defaults() ---@type eve.state.search_file.data
+M.flag_replace = eve.col.Observable.from_value(_defaults.flag_replace)
+M.max_filesize = eve.col.Observable.from_value(_defaults.max_filesize)
+M.max_matches = eve.col.Observable.from_value(_defaults.max_matches)
+M.replacement = eve.col.Observable.from_value(_defaults.replacement)
+M.search_paths = eve.col.Observable.from_value(_defaults.search_paths)
 
 return M

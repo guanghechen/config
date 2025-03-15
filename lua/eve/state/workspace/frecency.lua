@@ -1,19 +1,15 @@
-local md5 = require("eve.lib.md5")
-
 ---@class eve.state.frecency.data
 ---@field public files                  eve.collection.frecency.ISerializedData
 
 ---@class eve.state.frecency.state
 ---@field public files                  eve.collection.IFrecency
 
----@class eve.state.frecency
+---@class eve.state.frecency : eve.state.frecency.state
 ---@field public defaults               fun(): eve.state.frecency.data
 ---@field public dump                   fun(): eve.state.frecency.data
----@field public load                   fun(data: unknown): eve.state.frecency.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.frecency.data
 local M = {}
-
-local _state = nil ---@type eve.state.frecency.state | nil
 
 ---@return eve.state.frecency.data
 function M.defaults()
@@ -47,37 +43,30 @@ end
 
 ---@return eve.state.frecency.data
 function M.dump()
-  if _state == nil then
-    ---@type eve.state.frecency.data
-    return M.defaults()
-  end
-
   ---@type eve.state.frecency.data
   return {
-    files = _state.files:dump(),
+    files = M.files:dump(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.frecency.state
+---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.frecency.data
 
-  if _state == nil then
-    ---@type eve.state.frecency.state
-    _state = {
-      files = eve.col.Frecency.deserialize({
-        data = data.files,
-        normalize = function(key)
-          return md5.sumhexa(key)
-        end,
-      }),
-    }
-    return _state
-  end
-
-  _state.files:load(data.files)
-  return _state
+  M.files:load(data.files)
 end
+
+----------------------------------------------------------------------------------------------------
+
+local _defaults = M.defaults() ---@type eve.state.frecency.data
+
+---@type eve.collection.IFrecency
+M.files = eve.col.Frecency.deserialize({
+  data = _defaults.files,
+  normalize = function(key)
+    return eve.lib.md5.sumhexa(key)
+  end,
+})
 
 return M

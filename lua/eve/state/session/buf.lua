@@ -30,149 +30,13 @@
 ---
 ---@field public locate_by_filepath     fun(filepath: string|nil): integer|nil
 ---@field public pick_filepath          fun(cwd: string, existed_paths?: table<string, boolean>): string|nil
-local S = {}
 
----@class eve.state.buf
+---@class eve.state.buf : eve.state.buf.state
 ---@field public defaults               fun(): eve.state.buf.data
 ---@field public dump                   fun(): eve.state.buf.data
----@field public load                   fun(data: unknown): eve.state.buf.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.buf.data
 local M = {}
-
----@type eve.state.buf.state
-S = {
-  __meta_map__ = {}, ---@type table<integer, eve.t.state.buf.meta.state>
-  get = function(bufnr)
-    if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
-      return S.__meta_map__[bufnr]
-    end
-  end,
-  set = function(bufnr, meta)
-    if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
-      S.__meta_map__[bufnr] = meta
-      return meta
-    end
-  end,
-  del = function(bufnr)
-    if bufnr ~= nil and bufnr > 0 then
-      S.__meta_map__[bufnr] = nil
-    end
-  end,
-  resolve = function(bufnr)
-    if bufnr == nil or not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
-      return nil
-    end
-
-    local meta = S.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
-    if meta ~= nil then
-      return meta
-    end
-
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filename = eve.path.basename(filepath) ---@type string
-    filename = (not filename or filename == "") and eve.setting.BUF_UNTITLED or filename
-    local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
-
-    local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
-    local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
-    local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
-    local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
-
-    ---@type eve.t.state.buf.meta.state
-    meta = {
-      fileicon = fileicon,
-      fileicon_hl = fileicon_hl,
-      filename = filename,
-      filepath = filepath,
-      relpath = relpath,
-      relpath_pieces = relpath_pieces,
-    }
-    S.__meta_map__[bufnr] = meta
-    return meta
-  end,
-  refresh = function(bufnr)
-    if bufnr == nil or not eve.editor.is_buf_valid(bufnr) then
-      return nil
-    end
-
-    local meta = S.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
-    if meta == nil then
-      S.resolve(bufnr)
-      return
-    end
-
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if meta.filepath ~= filepath then
-      local filename = eve.path.basename(filepath) ---@type string
-      filename = #filename > 0 and filename or eve.setting.BUF_UNTITLED
-      local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
-
-      local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
-      local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
-      local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
-      local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
-
-      meta.fileicon = fileicon
-      meta.fileicon_hl = fileicon_hl
-      meta.filename = filename
-      meta.filepath = filepath
-      meta.relpath = relpath
-      meta.relpath_pieces = relpath_pieces
-    end
-  end,
-  refresh_all = function()
-    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-    for _, bufnr in ipairs(bufnrs) do
-      S.refresh(bufnr)
-    end
-
-    local invalid_bufnrs = {} ---@type integer[]
-    for bufnr in pairs(S.__meta_map__) do
-      if not eve.editor.is_buf_valid(bufnr) then
-        invalid_bufnrs[#invalid_bufnrs + 1] = bufnr
-      end
-    end
-
-    for _, bufnr in ipairs(invalid_bufnrs) do
-      S.__meta_map__[bufnr] = nil
-    end
-  end,
-  locate_by_filepath = function(filepath)
-    if filepath == nil or #filepath < 1 then
-      return nil
-    end
-
-    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-    for _, bufnr in ipairs(bufnrs) do
-      local meta = S.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
-      local buf_filepath = meta and meta.filepath or vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if buf_filepath == filepath then
-        return bufnr
-      end
-    end
-    return nil
-  end,
-  pick_filepath = function(cwd, existed_paths)
-    if existed_paths == nil then
-      existed_paths = {} ---@type table<string, boolean>
-
-      local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-      for _, bufnr in ipairs(bufnrs) do
-        local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath = eve.path.resolve(cwd, filename) ---@type string
-        existed_paths[filepath] = true
-      end
-    end
-
-    for i = 1, 100 do
-      local filepath = eve.path.join(cwd, eve.setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
-      if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
-        return filepath
-      end
-    end
-    return nil
-  end,
-}
 
 ---@return eve.state.buf.data
 function M.defaults()
@@ -210,7 +74,7 @@ function M.dump()
   local list = {} ---@type eve.t.state.buf.meta.data[]
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    local meta = S.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
+    local meta = M.resolve(bufnr) ---@type eve.t.state.buf.meta.state|nil
     if meta ~= nil then
       ---@type eve.t.state.buf.meta.data
       local meta_data = {
@@ -228,12 +92,11 @@ function M.dump()
 end
 
 ---@param raw_data                      any
----@return eve.state.buf.state
+---@return nil
 function M.load(raw_data)
-  S.__meta_map__ = {}
+  M.__meta_map__ = {}
 
   local data = M.normalize(raw_data) ---@type eve.state.buf.data
-
   local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
   local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
   local filepath2bufnr = eve.nvim.filepath2bufnr() ---@type table<string, integer>
@@ -258,10 +121,168 @@ function M.load(raw_data)
         relpath = relpath,
         relpath_pieces = relpath_pieces,
       }
-      S.set(bufnr, meta)
+      M.set(bufnr, meta)
     end
   end
-  return S
+end
+
+----------------------------------------------------------------------------------------------------
+
+M.__meta_map__ = {} ---@type table<integer, eve.t.state.buf.meta.state>
+
+---@param bufnr                         integer|nil
+---@return eve.t.state.buf.meta.state|nil
+function M.get(bufnr)
+  if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
+    return M.__meta_map__[bufnr]
+  end
+end
+
+---@param bufnr                         integer|nil
+---@param meta                          eve.t.state.buf.meta.state
+---@return nil
+function M.set(bufnr, meta)
+  if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
+    M.__meta_map__[bufnr] = meta
+    return meta
+  end
+end
+
+---@param bufnr                         integer|nil
+---@return nil
+function M.del(bufnr)
+  if bufnr ~= nil and bufnr > 0 then
+    M.__meta_map__[bufnr] = nil
+  end
+end
+
+---@param bufnr                         integer|nil
+---@return eve.t.state.buf.meta.state|nil
+function M.resolve(bufnr)
+  if bufnr == nil or not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
+    return nil
+  end
+
+  local meta = M.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
+  if meta ~= nil then
+    return meta
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local filename = eve.path.basename(filepath) ---@type string
+  filename = (not filename or filename == "") and eve.setting.BUF_UNTITLED or filename
+  local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
+
+  local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
+  local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
+  local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+  local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
+
+  ---@type eve.t.state.buf.meta.state
+  meta = {
+    fileicon = fileicon,
+    fileicon_hl = fileicon_hl,
+    filename = filename,
+    filepath = filepath,
+    relpath = relpath,
+    relpath_pieces = relpath_pieces,
+  }
+  M.__meta_map__[bufnr] = meta
+  return meta
+end
+
+---@param bufnr                         integer|nil
+---@return nil
+function M.refresh(bufnr)
+  if bufnr == nil or not eve.editor.is_buf_valid(bufnr) then
+    return nil
+  end
+
+  local meta = M.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
+  if meta == nil then
+    M.resolve(bufnr)
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  if meta.filepath ~= filepath then
+    local filename = eve.path.basename(filepath) ---@type string
+    filename = #filename > 0 and filename or eve.setting.BUF_UNTITLED
+    local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
+
+    local workspace_pieces = eve.path.split(eve.path.workspace()) ---@type string[]
+    local cwd_pieces = eve.path.split(eve.path.cwd()) ---@type string[]
+    local relpath_pieces = eve.path.split_prettier(workspace_pieces, cwd_pieces, filepath) ---@type string[]
+    local relpath = table.concat(relpath_pieces, eve.env.PATH_SEP)
+
+    meta.fileicon = fileicon
+    meta.fileicon_hl = fileicon_hl
+    meta.filename = filename
+    meta.filepath = filepath
+    meta.relpath = relpath
+    meta.relpath_pieces = relpath_pieces
+  end
+end
+
+---@return nil
+function M.refresh_all()
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    M.refresh(bufnr)
+  end
+
+  local invalid_bufnrs = {} ---@type integer[]
+  for bufnr in pairs(M.__meta_map__) do
+    if not eve.editor.is_buf_valid(bufnr) then
+      invalid_bufnrs[#invalid_bufnrs + 1] = bufnr
+    end
+  end
+
+  for _, bufnr in ipairs(invalid_bufnrs) do
+    M.__meta_map__[bufnr] = nil
+  end
+end
+
+---@param filepath                      string|nil
+---@return integer|nil
+function M.locate_by_filepath(filepath)
+  if filepath == nil or #filepath < 1 then
+    return nil
+  end
+
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    local meta = M.__meta_map__[bufnr] ---@type eve.t.state.buf.meta.state|nil
+    local buf_filepath = meta and meta.filepath or vim.api.nvim_buf_get_name(bufnr) ---@type string
+    if buf_filepath == filepath then
+      return bufnr
+    end
+  end
+  return nil
+end
+
+---@param cwd                           string
+---@param existed_paths                 ?table<string, boolean>
+---@return string|nil
+function M.pick_filepath(cwd, existed_paths)
+  if existed_paths == nil then
+    existed_paths = {} ---@type table<string, boolean>
+
+    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+    for _, bufnr in ipairs(bufnrs) do
+      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local filepath = eve.path.resolve(cwd, filename) ---@type string
+      existed_paths[filepath] = true
+    end
+  end
+
+  for i = 1, 100 do
+    local filepath = eve.path.join(cwd, eve.setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+    if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
+      return filepath
+    end
+  end
+  return nil
 end
 
 return M

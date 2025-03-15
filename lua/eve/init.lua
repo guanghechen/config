@@ -63,8 +63,8 @@ local __mods = {
 ---
 ---@field public col                    eve.collection
 ---@field public lib                    eve.lib
+---@field public state                  eve.state
 local M = setmetatable({
-  col = require("eve.collection"),
   lib = require("eve.lib"),
 }, {
   __index = function(t, k)
@@ -76,6 +76,9 @@ local M = setmetatable({
   end,
 })
 _G.eve = M
+
+M.col = require("eve.collection") ---@type eve.collection
+M.state = require("eve.state") ---@type eve.state
 
 ---@return eve.state.storage
 function M.get_default_storage()

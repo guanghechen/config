@@ -32,14 +32,12 @@
 ---
 ---@field public gitdiff_expand_all     eve.collection.IObservable -- boolean>
 
----@class eve.state.flight
+---@class eve.state.flight : eve.state.flight.state
 ---@field public defaults               fun(): eve.state.flight.data
 ---@field public dump                   fun(): eve.state.flight.data
----@field public load                   fun(data: unknown): eve.state.flight.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.flight.data
 local M = {}
-
-local _state = nil ---@type eve.state.flight.state | nil
 
 ---@return eve.state.flight.data
 function M.defaults()
@@ -122,73 +120,65 @@ end
 
 ---@return eve.state.flight.data
 function M.dump()
-  if _state == nil then
-    return M.defaults()
-  end
-
   ---@type eve.state.flight.data
   return {
-    ai = _state.ai:snapshot(),
-    ai_provider = _state.ai_provider:snapshot(),
-    autoformat = _state.autoformat:snapshot(),
-    autoload = _state.autoload:snapshot(),
-    autosave = _state.autosave:snapshot(),
-    devmode = _state.devmode:snapshot(),
+    ai = M.ai:snapshot(),
+    ai_provider = M.ai_provider:snapshot(),
+    autoformat = M.autoformat:snapshot(),
+    autoload = M.autoload:snapshot(),
+    autosave = M.autosave:snapshot(),
+    devmode = M.devmode:snapshot(),
 
-    dressing_hipairs = _state.dressing_hipairs:snapshot(),
-    dressing_illumniate = _state.dressing_illumniate:snapshot(),
-    dressing_input = _state.dressing_input:snapshot(),
-    dressing_select = _state.dressing_select:snapshot(),
-    dressing_winsep_fixed = _state.dressing_winsep_fixed:snapshot(),
-    dressing_winsep_float = _state.dressing_winsep_float:snapshot(),
+    dressing_hipairs = M.dressing_hipairs:snapshot(),
+    dressing_illumniate = M.dressing_illumniate:snapshot(),
+    dressing_input = M.dressing_input:snapshot(),
+    dressing_select = M.dressing_select:snapshot(),
+    dressing_winsep_fixed = M.dressing_winsep_fixed:snapshot(),
+    dressing_winsep_float = M.dressing_winsep_float:snapshot(),
 
-    gitdiff_expand_all = _state.gitdiff_expand_all:snapshot(),
+    gitdiff_expand_all = M.gitdiff_expand_all:snapshot(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.flight.state
+---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.flight.data
 
-  if _state == nil then
-    ---@type eve.state.flight.state
-    _state = {
-      ai = eve.col.Observable.from_value(data.ai),
-      ai_provider = eve.col.Observable.from_value(data.ai_provider),
-      autoformat = eve.col.Observable.from_value(data.autoformat),
-      autoload = eve.col.Observable.from_value(data.autoload),
-      autosave = eve.col.Observable.from_value(data.autosave),
-      devmode = eve.col.Observable.from_value(data.devmode),
+  M.ai:next(data.ai)
+  M.ai_provider:next(data.ai_provider)
+  M.autoformat:next(data.autoformat)
+  M.autoload:next(data.autoload)
+  M.autosave:next(data.autosave)
+  M.devmode:next(data.devmode)
 
-      dressing_hipairs = eve.col.Observable.from_value(data.dressing_hipairs),
-      dressing_illumniate = eve.col.Observable.from_value(data.dressing_illumniate),
-      dressing_input = eve.col.Observable.from_value(data.dressing_input),
-      dressing_select = eve.col.Observable.from_value(data.dressing_select),
-      dressing_winsep_fixed = eve.col.Observable.from_value(data.dressing_winsep_fixed),
-      dressing_winsep_float = eve.col.Observable.from_value(data.dressing_winsep_float),
+  M.dressing_hipairs:next(data.dressing_hipairs)
+  M.dressing_illumniate:next(data.dressing_illumniate)
+  M.dressing_input:next(data.dressing_input)
+  M.dressing_select:next(data.dressing_select)
+  M.dressing_winsep_fixed:next(data.dressing_winsep_fixed)
+  M.dressing_winsep_float:next(data.dressing_winsep_float)
 
-      gitdiff_expand_all = eve.col.Observable.from_value(data.gitdiff_expand_all),
-    }
-    return _state
-  end
-
-  _state.ai:next(data.ai)
-  _state.ai_provider:next(data.ai_provider)
-  _state.autoformat:next(data.autoformat)
-  _state.autoload:next(data.autoload)
-  _state.autosave:next(data.autosave)
-  _state.devmode:next(data.devmode)
-
-  _state.dressing_hipairs:next(data.dressing_hipairs)
-  _state.dressing_illumniate:next(data.dressing_illumniate)
-  _state.dressing_input:next(data.dressing_input)
-  _state.dressing_select:next(data.dressing_select)
-  _state.dressing_winsep_fixed:next(data.dressing_winsep_fixed)
-  _state.dressing_winsep_float:next(data.dressing_winsep_float)
-
-  _state.gitdiff_expand_all:next(data.gitdiff_expand_all)
-  return _state
+  M.gitdiff_expand_all:next(data.gitdiff_expand_all)
 end
+
+----------------------------------------------------------------------------------------------------
+
+local _defaults = M.defaults() ---@type eve.state.flight.data
+M.ai = eve.col.Observable.from_value(_defaults.ai)
+M.ai_provider = eve.col.Observable.from_value(_defaults.ai_provider)
+M.autoformat = eve.col.Observable.from_value(_defaults.autoformat)
+M.autoload = eve.col.Observable.from_value(_defaults.autoload)
+M.autosave = eve.col.Observable.from_value(_defaults.autosave)
+M.devmode = eve.col.Observable.from_value(_defaults.devmode)
+
+M.dressing_hipairs = eve.col.Observable.from_value(_defaults.dressing_hipairs)
+M.dressing_illumniate = eve.col.Observable.from_value(_defaults.dressing_illumniate)
+M.dressing_input = eve.col.Observable.from_value(_defaults.dressing_input)
+M.dressing_select = eve.col.Observable.from_value(_defaults.dressing_select)
+M.dressing_winsep_fixed = eve.col.Observable.from_value(_defaults.dressing_winsep_fixed)
+M.dressing_winsep_float = eve.col.Observable.from_value(_defaults.dressing_winsep_float)
+
+M.gitdiff_expand_all = eve.col.Observable.from_value(_defaults.gitdiff_expand_all)
 
 return M

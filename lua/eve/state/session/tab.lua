@@ -1,7 +1,3 @@
----@alias eve.builtin.var.TabTypeEnum
----| "normal"
----| "diffview"
-
 ---@class eve.t.state.tab.buf.data
 ---@field public filepath               string
 ---@field public pinned                 boolean
@@ -66,12 +62,11 @@ Meta.__index = Meta
 ---@field public get_winnr_sourcefile   fun(tabnr: integer): integer|nil
 ---@field public get_unrefereced_bufnrs fun(bufnrs: integer[]|nil): integer[]
 ---@field public list_valid_bufs        fun(tabnr: integer): eve.t.state.tab.buf.state[]
-local S = {}
 
----@class eve.state.tab
+---@class eve.state.tab : eve.state.tab.state
 ---@field public defaults               fun(): eve.state.tab.data
 ---@field public dump                   fun(): eve.state.tab.data
----@field public load                   fun(data: unknown): eve.state.tab.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.tab.data
 local M = {}
 
@@ -260,240 +255,6 @@ function Meta:toggle_pin(bufnr)
   bufs[j + 1] = buf
 end
 
----@type eve.state.tab.state
-S = {
-  Meta = Meta,
-  __meta_map__ = {},
-
-  tab_history = eve.col.AdvanceHistory.new({
-    name = "tabs",
-    capacity = eve.setting.TAB_HISTORY_CAPACITY,
-    validate = eve.editor.is_tab_valid,
-  }),
-
-  get = function(tabnr)
-    if tabnr ~= nil and eve.editor.is_tab_valid(tabnr) then
-      return S.__meta_map__[tabnr]
-    end
-  end,
-  set = function(tabnr, meta)
-    if tabnr ~= nil and eve.editor.is_tab_valid(tabnr) then
-      S.__meta_map__[tabnr] = meta
-      return meta
-    end
-  end,
-  del = function(tabnr)
-    if tabnr ~= nil and tabnr > 0 then
-      S.__meta_map__[tabnr] = nil
-    end
-  end,
-  resolve = function(tabnr)
-    if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
-      return nil
-    end
-
-    local meta = S.__meta_map__[tabnr] ---@type eve.state.tab.meta.state|nil
-    if meta ~= nil then
-      return meta
-    end
-
-    local bufs = {} ---@type eve.t.state.tab.buf.data[]
-    local bufnr_set = {} ---@type table<integer, true>
-    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    local bufid_sourcefile = 0 ---@type integer
-
-    local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    local bufnr_current = vim.api.nvim_win_get_buf(winnr_current) ---@type integer
-    for _, winnr in ipairs(winnrs) do
-      if eve.editor.is_win_sourcefile(winnr) then
-        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
-          bufnr_set[bufnr] = true
-          bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
-          if bufnr == bufnr_current then
-            bufid_sourcefile = #bufs
-          end
-        end
-      end
-    end
-
-    if bufid_sourcefile < 1 and #bufs > 0 then
-      bufid_sourcefile = 1
-    end
-
-    ---@type eve.state.tab.meta.state
-    meta = Meta.new(tabnr, bufs, bufid_sourcefile)
-    S.__meta_map__[tabnr] = meta
-    return meta
-  end,
-  refresh = function(tabnr)
-    if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
-      return
-    end
-
-    local meta = S.__meta_map__[tabnr] ---@type eve.state.tab.meta.state|nil
-    if meta == nil then
-      S.resolve(tabnr)
-      return
-    end
-
-    local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
-    local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
-
-    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-    for _, winnr in ipairs(winnrs) do
-      if eve.editor.is_win_sourcefile(winnr) then
-        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not meta:find_buf(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
-          bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
-        end
-      end
-    end
-
-    meta:rearrange_bufs()
-    meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
-
-    eve.editor.resolve_tabtype(tabnr, true)
-  end,
-  refresh_all = function()
-    local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-    for _, tabnr in ipairs(tabnrs) do
-      S.refresh(tabnr)
-    end
-
-    local invalid_tabnrs = {} ---@type integer[]
-    for tabnr in pairs(S.__meta_map__) do
-      if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
-        table.insert(invalid_tabnrs, tabnr)
-      end
-    end
-    for _, tabnr in ipairs(invalid_tabnrs) do
-      S.__meta_map__[tabnr] = nil
-    end
-  end,
-  on_buf_delete = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta ~= nil then
-      meta:rearrange_bufs()
-    end
-  end,
-  on_buf_enter = function(tabnr, winnr, bufnr)
-    if not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
-      return
-    end
-
-    if not eve.editor.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
-      return
-    end
-
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta == nil then
-      return
-    end
-
-    local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
-    local bufid = meta:find_bufid(bufnr) ---@type integer|nil
-    if bufid == nil then
-      bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
-      bufid = #bufs
-    end
-    meta.bufid_sourcefile:next(bufid)
-  end,
-  on_bufs_close = function(tabnr, bufnrs)
-    if #bufnrs < 1 then
-      return
-    end
-
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta == nil then
-      return
-    end
-
-    local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
-    local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
-    local N = #bufs ---@type integer
-
-    local k = 1 ---@type integer
-    for i = 1, N, 1 do
-      local buf = bufs[i] ---@type eve.t.state.tab.buf.state
-      if not vim.list_contains(bufnrs, buf.bufnr) then
-        bufs[k] = buf
-        k = k + 1
-      end
-    end
-    for i = k, N, 1 do
-      bufs[i] = nil
-    end
-
-    meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
-  end,
-  on_win_focus = function(tabnr, winnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta == nil then
-      return
-    end
-
-    local is_float = eve.editor.is_win_floating(winnr) ---@type boolean
-    if not is_float then
-      meta.winnr_fixed:next(winnr)
-      meta.winnr_command:next(winnr)
-    end
-  end,
-  focus_win_fixed = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta ~= nil then
-      meta:focus_win_fixed()
-    end
-  end,
-  get_bufnr_sourcefile = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta:get_bufnr_sourcefile() or nil ---@type integer|nil
-  end,
-  get_winnr_command = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta:get_winnr_command() or nil ---@type integer|nil
-  end,
-  get_winnr_fixed = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta:get_winnr_fixed() or nil ---@type integer|nil
-  end,
-  get_winnr_sourcefile = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    return meta and meta:get_winnr_sourcefile() or nil ---@type integer|nil
-  end,
-  get_unrefereced_bufnrs = function(bufnrs)
-    bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
-
-    local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-    local bufnrs_to_remove = {} ---@type integer[]
-    for _, bufnr in ipairs(bufnrs) do
-      if eve.editor.is_buf_sourcefile(bufnr) then
-        local has_copy = false ---@type boolean
-        for _, tabnr in ipairs(tabnrs) do
-          local meta_tab = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-          if meta_tab ~= nil and meta_tab:find_buf(bufnr) ~= nil then
-            has_copy = true
-            break
-          end
-        end
-        if not has_copy then
-          table.insert(bufnrs_to_remove, bufnr)
-        end
-      end
-    end
-    return bufnrs_to_remove
-  end,
-  list_valid_bufs = function(tabnr)
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-    if meta == nil or #meta.bufs < 1 then
-      return {}
-    end
-
-    meta:rearrange_bufs()
-    return meta.bufs
-  end,
-}
-
 ---@return eve.state.tab.data
 function M.defaults()
   ---@type eve.state.tab.data
@@ -559,7 +320,7 @@ function M.dump()
   local list = {} ---@type eve.t.state.tab.meta.data[]
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for tabid, tabnr in ipairs(tabnrs) do
-    local meta = S.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+    local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
     if meta ~= nil then
       local meta_tab = meta:dump(tabid) ---@type eve.t.state.tab.meta.data
@@ -568,7 +329,7 @@ function M.dump()
   end
 
   ---@type eve.collection.history.ISerializedData
-  local tab_history = S.tab_history and S.tab_history:dump() or { present = 0, stack = {} }
+  local tab_history = M.tab_history and M.tab_history:dump() or { present = 0, stack = {} }
 
   local stack = {} ---@type integer[]
   for _, tabnr in ipairs(tab_history.stack) do
@@ -588,14 +349,14 @@ function M.dump()
 end
 
 ---@param raw_data                      any
----@return eve.state.tab.state
+---@return nil
 function M.load(raw_data)
-  S.__meta_map__ = {}
+  M.__meta_map__ = {}
 
   local data = M.normalize(raw_data) ---@type eve.state.tab.data
 
   ---@type eve.collection.IAdvanceHistory
-  local tab_history = S.tab_history
+  local tab_history = M.tab_history
     or eve.col.AdvanceHistory.new({
       name = "tabs",
       capacity = eve.setting.TAB_HISTORY_CAPACITY,
@@ -609,7 +370,7 @@ function M.load(raw_data)
     stack[#stack + 1] = tabnr
   end
   tab_history:load({ present = #stack, stack = stack })
-  S.tab_history = tab_history
+  M.tab_history = tab_history
 
   local filepath2bufnr = eve.nvim.filepath2bufnr() ---@type table<string, integer>
   for _, data_tab in ipairs(data.list) do
@@ -642,16 +403,301 @@ function M.load(raw_data)
           end
         end
       end
-      
+
       eve.editor.set_tabtype(tabnr, data_tab.tabtype or eve.var.TabTypes.NORMAL)
 
       ---@type eve.state.tab.meta.state
       local meta = Meta.new(tabnr, bufs, bufid_sourcefile)
-      S.set(tabnr, meta)
+      M.set(tabnr, meta)
+    end
+  end
+end
+
+----------------------------------------------------------------------------------------------------
+
+M.Meta = Meta ---@type eve.state.tab.meta.state
+M.__meta_map__ = {} ---@type table<integer, eve.state.tab.meta.state>
+
+---@type eve.collection.IAdvanceHistory
+M.tab_history = eve.col.AdvanceHistory.new({
+  name = "tabs",
+  capacity = eve.setting.TAB_HISTORY_CAPACITY,
+  validate = eve.editor.is_tab_valid,
+})
+
+---@param tabnr                         integer|nil
+---@return eve.state.tab.meta.state|nil
+function M.get(tabnr)
+  if tabnr ~= nil and eve.editor.is_tab_valid(tabnr) then
+    return M.__meta_map__[tabnr]
+  end
+end
+
+---@param tabnr                         integer|nil
+---@param meta                          eve.state.tab.meta.state
+---@return eve.state.tab.meta.state|nil
+function M.set(tabnr, meta)
+  if tabnr ~= nil and eve.editor.is_tab_valid(tabnr) then
+    M.__meta_map__[tabnr] = meta
+    return meta
+  end
+end
+
+---@param tabnr                         integer|nil
+---@return nil
+function M.del(tabnr)
+  if tabnr ~= nil and tabnr > 0 then
+    M.__meta_map__[tabnr] = nil
+  end
+end
+
+---@param tabnr                         integer|nil
+---@return eve.state.tab.meta.state|nil
+function M.resolve(tabnr)
+  if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
+    return nil
+  end
+
+  local meta = M.__meta_map__[tabnr] ---@type eve.state.tab.meta.state|nil
+  if meta ~= nil then
+    return meta
+  end
+
+  local bufs = {} ---@type eve.t.state.tab.buf.data[]
+  local bufnr_set = {} ---@type table<integer, true>
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+  local bufid_sourcefile = 0 ---@type integer
+
+  local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+  local bufnr_current = vim.api.nvim_win_get_buf(winnr_current) ---@type integer
+  for _, winnr in ipairs(winnrs) do
+    if eve.editor.is_win_sourcefile(winnr) then
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
+        bufnr_set[bufnr] = true
+        bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+        if bufnr == bufnr_current then
+          bufid_sourcefile = #bufs
+        end
+      end
     end
   end
 
-  return S
+  if bufid_sourcefile < 1 and #bufs > 0 then
+    bufid_sourcefile = 1
+  end
+
+  ---@type eve.state.tab.meta.state
+  meta = Meta.new(tabnr, bufs, bufid_sourcefile)
+  M.__meta_map__[tabnr] = meta
+  return meta
+end
+
+---@param tabnr                         integer|nil
+---@return nil
+function M.refresh(tabnr)
+  if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
+    return
+  end
+
+  local meta = M.__meta_map__[tabnr] ---@type eve.state.tab.meta.state|nil
+  if meta == nil then
+    M.resolve(tabnr)
+    return
+  end
+
+  local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
+  local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+  for _, winnr in ipairs(winnrs) do
+    if eve.editor.is_win_sourcefile(winnr) then
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      if not meta:find_buf(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
+        bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+      end
+    end
+  end
+
+  meta:rearrange_bufs()
+  meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
+
+  eve.editor.resolve_tabtype(tabnr, true)
+end
+
+---@return nil
+function M.refresh_all()
+  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+  for _, tabnr in ipairs(tabnrs) do
+    M.refresh(tabnr)
+  end
+
+  local invalid_tabnrs = {} ---@type integer[]
+  for tabnr in pairs(M.__meta_map__) do
+    if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
+      table.insert(invalid_tabnrs, tabnr)
+    end
+  end
+  for _, tabnr in ipairs(invalid_tabnrs) do
+    M.__meta_map__[tabnr] = nil
+  end
+end
+
+---@param tabnr                         integer
+function M.on_buf_delete(tabnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta ~= nil then
+    meta:rearrange_bufs()
+  end
+end
+
+---@param tabnr                         integer
+---@param winnr                         integer
+---@param bufnr                         integer
+---@return nil
+function M.on_buf_enter(tabnr, winnr, bufnr)
+  if not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
+    return
+  end
+
+  if not eve.editor.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
+    return
+  end
+
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta == nil then
+    return
+  end
+
+  local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+  local bufid = meta:find_bufid(bufnr) ---@type integer|nil
+  if bufid == nil then
+    bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.t.state.tab.buf.state
+    bufid = #bufs
+  end
+  meta.bufid_sourcefile:next(bufid)
+end
+
+---@param tabnr                         integer
+---@param bufnrs                        integer[]
+---@return nil
+function M.on_bufs_close(tabnr, bufnrs)
+  if #bufnrs < 1 then
+    return
+  end
+
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta == nil then
+    return
+  end
+
+  local bufnr_sourcefile = meta:get_bufnr_sourcefile() ---@type integer|nil
+  local bufs = meta.bufs ---@type eve.t.state.tab.buf.state[]
+  local N = #bufs ---@type integer
+
+  local k = 1 ---@type integer
+  for i = 1, N, 1 do
+    local buf = bufs[i] ---@type eve.t.state.tab.buf.state
+    if not vim.list_contains(bufnrs, buf.bufnr) then
+      bufs[k] = buf
+      k = k + 1
+    end
+  end
+  for i = k, N, 1 do
+    bufs[i] = nil
+  end
+
+  meta:resolve_bufnr_sourcefile(bufnr_sourcefile)
+end
+
+---@param tabnr                         integer
+---@param winnr                         integer
+---@return nil
+function M.on_win_focus(tabnr, winnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta == nil then
+    return
+  end
+
+  local is_float = eve.editor.is_win_floating(winnr) ---@type boolean
+  if not is_float then
+    meta.winnr_fixed:next(winnr)
+    meta.winnr_command:next(winnr)
+  end
+end
+
+---@param tabnr                         integer
+---@return nil
+function M.focus_win_fixed(tabnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta ~= nil then
+    meta:focus_win_fixed()
+  end
+end
+
+---@param tabnr                         integer
+---@return integer|nil
+function M.get_bufnr_sourcefile(tabnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  return meta and meta:get_bufnr_sourcefile() or nil ---@type integer|nil
+end
+
+---@param tabnr                         integer
+---@return integer|nil
+function M.get_winnr_command(tabnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  return meta and meta:get_winnr_command() or nil ---@type integer|nil
+end
+
+---@param tabnr                         integer
+---@return integer|nil
+function M.get_winnr_fixed(tabnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  return meta and meta:get_winnr_fixed() or nil ---@type integer|nil
+end
+
+---@param tabnr                         integer
+---@return integer|nil
+function M.get_winnr_sourcefile(tabnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  return meta and meta:get_winnr_sourcefile() or nil ---@type integer|nil
+end
+
+---@param bufnrs                        integer[]|nil
+---@return integer[]
+function M.get_unrefereced_bufnrs(bufnrs)
+  bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
+
+  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+  local bufnrs_to_remove = {} ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    if eve.editor.is_buf_sourcefile(bufnr) then
+      local has_copy = false ---@type boolean
+      for _, tabnr in ipairs(tabnrs) do
+        local meta_tab = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+        if meta_tab ~= nil and meta_tab:find_buf(bufnr) ~= nil then
+          has_copy = true
+          break
+        end
+      end
+      if not has_copy then
+        table.insert(bufnrs_to_remove, bufnr)
+      end
+    end
+  end
+  return bufnrs_to_remove
+end
+
+---@param tabnr                         integer
+---@return eve.t.state.tab.buf.state[]
+function M.list_valid_bufs(tabnr)
+  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  if meta == nil or #meta.bufs < 1 then
+    return {}
+  end
+
+  meta:rearrange_bufs()
+  return meta.bufs
 end
 
 return M

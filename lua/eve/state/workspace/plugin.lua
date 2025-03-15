@@ -8,14 +8,12 @@
 ---@field public smear_cursor           eve.collection.IObservable -- boolean>
 ---@field public treesitter_context     eve.collection.IObservable -- boolean>
 
----@class eve.state.plugin
+---@class eve.state.plugin : eve.state.plugin.state
 ---@field public defaults               fun(): eve.state.plugin.data
 ---@field public dump                   fun(): eve.state.plugin.data
----@field public load                   fun(data: unknown): eve.state.plugin.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.plugin.data
 local M = {}
-
-local _state = nil ---@type eve.state.plugin.state | nil
 
 ---@return eve.state.plugin.data
 function M.defaults()
@@ -49,37 +47,29 @@ end
 
 ---@return eve.state.plugin.data
 function M.dump()
-  if _state == nil then
-    return M.defaults()
-  end
-
   ---@type eve.state.plugin.data
   return {
-    render_markdown = _state.render_markdown:snapshot(),
-    smear_cursor = _state.smear_cursor:snapshot(),
-    treesitter_context = _state.treesitter_context:snapshot(),
+    render_markdown = M.render_markdown:snapshot(),
+    smear_cursor = M.smear_cursor:snapshot(),
+    treesitter_context = M.treesitter_context:snapshot(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.plugin.state
+---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.plugin.data
 
-  if _state == nil then
-    ---@type eve.state.plugin.state
-    _state = {
-      render_markdown = eve.col.Observable.from_value(data.render_markdown),
-      smear_cursor = eve.col.Observable.from_value(data.smear_cursor),
-      treesitter_context = eve.col.Observable.from_value(data.treesitter_context),
-    }
-    return _state
-  end
-
-  _state.render_markdown:next(data.render_markdown)
-  _state.smear_cursor:next(data.smear_cursor)
-  _state.treesitter_context:next(data.treesitter_context)
-  return _state
+  M.render_markdown:next(data.render_markdown)
+  M.smear_cursor:next(data.smear_cursor)
+  M.treesitter_context:next(data.treesitter_context)
 end
+
+----------------------------------------------------------------------------------------------------
+
+local _defaults = M.defaults() ---@type eve.state.plugin.data
+M.render_markdown = eve.col.Observable.from_value(_defaults.render_markdown)
+M.smear_cursor = eve.col.Observable.from_value(_defaults.smear_cursor)
+M.treesitter_context = eve.col.Observable.from_value(_defaults.treesitter_context)
 
 return M

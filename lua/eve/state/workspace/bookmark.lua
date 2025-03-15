@@ -4,14 +4,12 @@
 ---@class eve.state.bookmark.state
 ---@field public pinned                 eve.collection.IObservable -- string[]>
 
----@class eve.state.bookmark
+---@class eve.state.bookmark : eve.state.bookmark.state
 ---@field public defaults               fun(): eve.state.bookmark.data
 ---@field public dump                   fun(): eve.state.bookmark.data
----@field public load                   fun(data: unknown): eve.state.bookmark.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.bookmark.data
 local M = {}
-
-local _state = nil ---@type eve.state.bookmark.state | nil
 
 ---@return eve.state.bookmark.data
 function M.defaults()
@@ -37,34 +35,25 @@ end
 
 ---@return eve.state.bookmark.data
 function M.dump()
-  if _state == nil then
-    ---@type eve.state.bookmark.data
-    return M.defaults()
-  end
-
   ---@type eve.state.bookmark.data
   return {
-    pinned = _state.pinned:snapshot(),
+    pinned = M.pinned:snapshot(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.bookmark.state
+---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.bookmark.data
 
-  if _state == nil then
-    ---@type eve.state.bookmark.state
-    _state = {
-      pinned = eve.col.Observable.from_value(data.pinned),
-    }
-    return _state
+  if not eve.fn.equals_list(M.pinned:snapshot(), data.pinned) then
+    M.pinned:next(data.pinned)
   end
-
-  if not eve.fn.equals_list(_state.pinned:snapshot(), data.pinned) then
-    _state.pinned:next(data.pinned)
-  end
-  return _state
 end
+
+----------------------------------------------------------------------------------------------------
+
+local _defaults = M.defaults() ---@type eve.state.bookmark.data
+M.pinned = eve.col.Observable.from_value(_defaults.pinned) ---@type eve.collection.IObservable -- string[]>
 
 return M

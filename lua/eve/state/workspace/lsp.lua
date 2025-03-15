@@ -26,6 +26,13 @@
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
 
+---@class eve.state.lsp : eve.state.lsp.state
+---@field public defaults               fun(): eve.state.lsp.data
+---@field public dump                   fun(): eve.state.lsp.data
+---@field public load                   fun(data: unknown): nil
+---@field public normalize              fun(data: unknown): eve.state.lsp.data
+local M = {}
+
 ---@param workspace                     string
 ---@param breakpoint                    table
 ---@return boolean
@@ -42,15 +49,6 @@ local function is_valid_breakpoint(workspace, breakpoint)
   end
   return false
 end
-
----@class eve.state.lsp
----@field public defaults               fun(): eve.state.lsp.data
----@field public dump                   fun(): eve.state.lsp.data
----@field public load                   fun(data: unknown): eve.state.lsp.state
----@field public normalize              fun(data: unknown): eve.state.lsp.data
-local M = {}
-
-local _state = nil ---@type eve.state.lsp.state | nil
 
 ---@return eve.state.lsp.data
 function M.defaults()
@@ -115,19 +113,15 @@ end
 
 ---@return eve.state.lsp.data
 function M.dump()
-  if _state == nil then
-    return M.defaults()
-  end
-
   ---@type eve.state.lsp.data
   return {
-    breakpoints = _state.breakpoints:snapshot(),
-    code_lens = _state.code_lens:snapshot(),
-    inlay_hints = _state.inlay_hints:snapshot(),
-    python_debug_host = _state.python_debug_host:snapshot(),
-    python_debug_port = _state.python_debug_port:snapshot(),
-    python_venv_path = _state.python_venv_path:snapshot(),
-    spellcheck = _state.spellcheck:snapshot(),
+    breakpoints = M.breakpoints:snapshot(),
+    code_lens = M.code_lens:snapshot(),
+    inlay_hints = M.inlay_hints:snapshot(),
+    python_debug_host = M.python_debug_host:snapshot(),
+    python_debug_port = M.python_debug_port:snapshot(),
+    python_venv_path = M.python_venv_path:snapshot(),
+    spellcheck = M.spellcheck:snapshot(),
   }
 end
 
@@ -136,75 +130,71 @@ end
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.lsp.data
 
-  if _state == nil then
-    local python_venv_path = eve.col.Observable.from_value(data.python_venv_path)
+  M.breakpoints:next(data.breakpoints)
+  M.code_lens:next(data.code_lens)
+  M.inlay_hints:next(data.inlay_hints)
+  M.python_debug_host:next(data.python_debug_host)
+  M.python_debug_port:next(data.python_debug_port)
+  M.python_venv_path:next(data.python_venv_path)
+  M.spellcheck:next(data.spellcheck)
+  return M
+end
 
-    ---@type eve.state.lsp.state
-    _state = {
-      breakpoints = eve.col.Observable.from_value(data.breakpoints),
-      code_lens = eve.col.Observable.from_value(data.code_lens),
-      inlay_hints = eve.col.Observable.from_value(data.inlay_hints),
-      python_debug_host = eve.col.Observable.from_value(data.python_debug_host),
-      python_debug_port = eve.col.Observable.from_value(data.python_debug_port),
-      python_venv_path = python_venv_path,
-      spellcheck = eve.col.Observable.from_value(data.spellcheck),
+----------------------------------------------------------------------------------------------------
 
-      ---@return string|nil
-      get_python_bin_path = function()
-        local venv_path = python_venv_path:snapshot() ---@type string|nil
-        if venv_path == nil or vim.fn.isdirectory(venv_path) == 0 then
-          return nil, nil
-        end
+local data = M.defaults() ---@type eve.state.lsp.data
+M.breakpoints = eve.col.Observable.from_value(data.breakpoints)
+M.code_lens = eve.col.Observable.from_value(data.code_lens)
+M.inlay_hints = eve.col.Observable.from_value(data.inlay_hints)
+M.python_debug_host = eve.col.Observable.from_value(data.python_debug_host)
+M.python_debug_port = eve.col.Observable.from_value(data.python_debug_port)
+M.python_venv_path = eve.col.Observable.from_value(data.python_venv_path)
+M.spellcheck = eve.col.Observable.from_value(data.spellcheck)
 
-        local python_name = eve.env.IS_WIN and "python.exe" or "python" ---@type string
-        local python_parent_path = eve.env.IS_WIN and "Scripts" or "bin" ---@type string
-
-        local bin_path = eve.path.join(venv_path, python_parent_path) ---@type string
-        local python_path = eve.path.join(bin_path, python_name) ---@type string
-        return python_path, bin_path
-      end,
-
-      ---@return nil
-      refresh_breakpoints = function()
-        local ok, bps = pcall(require, "dap.breakpoints")
-        if _state == nil or not ok then
-          return
-        end
-
-        local raw_breakpoints_list = bps.get()
-        local breakpoints = {} ---@type eve.state.lsp.IBreakpointData[]
-        local workspace = eve.path.workspace() ---@type string
-        for bufnr, raw_breakpoints in pairs(raw_breakpoints_list) do
-          local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-          for _, raw_breakpoint in ipairs(raw_breakpoints) do
-            ---@type eve.state.lsp.IBreakpointData
-            local breakpoint = {
-              filepath = filepath,
-              lnum = raw_breakpoint.line,
-              condition = raw_breakpoint.condition,
-              hit_condition = raw_breakpoint.hit_condition,
-              log_message = raw_breakpoint.log_message,
-            }
-            if is_valid_breakpoint(workspace, breakpoint) then
-              breakpoint.filepath = eve.path.relative(workspace, breakpoint.filepath, false) ---@type string
-              table.insert(breakpoints, breakpoint)
-            end
-          end
-        end
-        _state.breakpoints:next(breakpoints)
-      end,
-    }
-    return _state
+---@return string|nil
+---@return string|nil
+function M.get_python_bin_path()
+  local venv_path = M.python_venv_path:snapshot() ---@type string|nil
+  if venv_path == nil or vim.fn.isdirectory(venv_path) == 0 then
+    return nil, nil
   end
 
-  _state.breakpoints:next(data.breakpoints)
-  _state.code_lens:next(data.code_lens)
-  _state.inlay_hints:next(data.inlay_hints)
-  _state.python_debug_host:next(data.python_debug_host)
-  _state.python_debug_port:next(data.python_debug_port)
-  _state.python_venv_path:next(data.python_venv_path)
-  _state.spellcheck:next(data.spellcheck)
-  return _state
+  local python_name = eve.env.IS_WIN and "python.exe" or "python" ---@type string
+  local python_parent_path = eve.env.IS_WIN and "Scripts" or "bin" ---@type string
+
+  local bin_path = eve.path.join(venv_path, python_parent_path) ---@type string
+  local python_path = eve.path.join(bin_path, python_name) ---@type string
+  return python_path, bin_path
+end
+
+---@return nil
+function M.refresh_breakpoints()
+  local ok, bps = pcall(require, "dap.breakpoints")
+  if M == nil or not ok then
+    return
+  end
+
+  local raw_breakpoints_list = bps.get()
+  local breakpoints = {} ---@type eve.state.lsp.IBreakpointData[]
+  local workspace = eve.path.workspace() ---@type string
+  for bufnr, raw_breakpoints in pairs(raw_breakpoints_list) do
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    for _, raw_breakpoint in ipairs(raw_breakpoints) do
+      ---@type eve.state.lsp.IBreakpointData
+      local breakpoint = {
+        filepath = filepath,
+        lnum = raw_breakpoint.line,
+        condition = raw_breakpoint.condition,
+        hit_condition = raw_breakpoint.hit_condition,
+        log_message = raw_breakpoint.log_message,
+      }
+      if is_valid_breakpoint(workspace, breakpoint) then
+        breakpoint.filepath = eve.path.relative(workspace, breakpoint.filepath, false) ---@type string
+        table.insert(breakpoints, breakpoint)
+      end
+    end
+  end
+  M.breakpoints:next(breakpoints)
 end
 
 return M

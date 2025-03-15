@@ -1,20 +1,29 @@
 local __module_name__ = "eve.state" ---@type string
 
-local state_bookmark = require("eve.state.workspace.bookmark")
-local state_buf = require("eve.state.session.buf")
-local state_flight = require("eve.state.workspace.flight")
-local state_frecency = require("eve.state.workspace.frecency")
-local state_lsp = require("eve.state.workspace.lsp")
-local state_option = require("eve.state.workspace.option")
-local state_plugin = require("eve.state.workspace.plugin")
-local state_qflist = require("eve.state.session.qflist")
-local state_search_file = require("eve.state.workspace.search_file")
-local state_select = require("eve.state.workspace.select")
-local state_status = require("eve.state.session.status")
-local state_tab = require("eve.state.session.tab")
-local state_theme = require("eve.state.editor.theme")
-local state_widget = require("eve.state.session.widget")
-local state_win = require("eve.state.session.win")
+---@class eve.state.__mods
+local __mods = {
+  theme = "eve.state.editor.theme",
+
+  --------------------------------------------------------------------------------------------------
+
+  buf = "eve.state.session.buf",
+  qflist = "eve.state.session.qflist",
+  status = "eve.state.session.status",
+  tab = "eve.state.session.tab",
+  widget = "eve.state.session.widget",
+  win = "eve.state.session.win",
+
+  --------------------------------------------------------------------------------------------------
+
+  bookmark = "eve.state.workspace.bookmark",
+  flight = "eve.state.workspace.flight",
+  frecency = "eve.state.workspace.frecency",
+  lsp = "eve.state.workspace.lsp",
+  option = "eve.state.workspace.option",
+  plugin = "eve.state.workspace.plugin",
+  search_file = "eve.state.workspace.search_file",
+  select = "eve.state.workspace.select",
+}
 
 ---@class eve.state.state.IWatchChangeParams
 ---@field public on_theme_changed       ?fun(): nil
@@ -44,23 +53,6 @@ local state_win = require("eve.state.session.win")
 ---@field public select                 eve.state.select.data
 
 ---@class eve.state.state
----@field public theme                  eve.state.theme.state
----
----@field public buf                    eve.state.buf.state
----@field public tab                    eve.state.tab.state
----@field public win                    eve.state.win.state
----@field public qflist                 eve.state.qflist.state
----@field public status                 eve.state.win.state
----@field public widget                 eve.state.widget.state
----
----@field public bookmark               eve.state.bookmark.state
----@field public flight                 eve.state.flight.state
----@field public frecency               eve.state.frecency.state
----@field public lsp                    eve.state.lsp.state
----@field public option                 eve.state.option.state
----@field public plugin                 eve.state.plugin.state
----@field public search_file            eve.state.search_file.state
----@field public select                 eve.state.select.state
 ---
 ---@field public dump                   fun(): eve.state.data
 ---@field public load                   fun(storage: eve.state.storage): nil
@@ -76,34 +68,59 @@ local state_win = require("eve.state.session.win")
 ---@field public watch_changes          fun(params: eve.state.state.IWatchChangeParams): nil
 
 ---@class eve.state : eve.state.state
+---@field public theme                  eve.state.theme
+---
+---@field public buf                    eve.state.buf
+---@field public qflist                 eve.state.qflist
+---@field public status                 eve.state.status
+---@field public tab                    eve.state.tab
+---@field public widget                 eve.state.widget
+---@field public win                    eve.state.win
+---
+---@field public bookmark               eve.state.bookmark
+---@field public flight                 eve.state.flight
+---@field public frecency               eve.state.frecency
+---@field public lsp                    eve.state.lsp
+---@field public option                 eve.state.option
+---@field public plugin                 eve.state.plugin
+---@field public search_file            eve.state.search_file
+---@field public select                 eve.state.select
 ---@field private _storage              eve.state.storage
 ---@field private _disposables          eve.collection.BatchDisposable
-local M = {
+local M = setmetatable({
   _storage = {},
   _disposables = eve.col.BatchDisposable.new(),
-}
+}, {
+  __index = function(t, k)
+    local m = __mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
 
 ---@return eve.state.data
 function M.dump()
   ---@type eve.state.data
   local data = {
-    theme = state_theme.dump(),
+    theme = M.theme.dump(),
 
-    buf = state_buf.dump(),
-    tab = state_tab.dump(),
-    win = state_win.dump(),
-    qflist = state_qflist.dump(),
-    status = state_status.dump(),
-    widget = state_widget.dump(),
+    buf = M.buf.dump(),
+    qflist = M.qflist.dump(),
+    status = M.status.dump(),
+    tab = M.tab.dump(),
+    widget = M.widget.dump(),
+    win = M.win.dump(),
 
-    bookmark = state_bookmark.dump(),
-    flight = state_flight.dump(),
-    frecency = state_frecency.dump(),
-    lsp = state_lsp.dump(),
-    option = state_option.dump(),
-    plugin = state_plugin.dump(),
-    search_file = state_search_file.dump(),
-    select = state_select.dump(),
+    bookmark = M.bookmark.dump(),
+    flight = M.flight.dump(),
+    frecency = M.frecency.dump(),
+    lsp = M.lsp.dump(),
+    option = M.option.dump(),
+    plugin = M.plugin.dump(),
+    search_file = M.search_file.dump(),
+    select = M.select.dump(),
   }
   return data
 end
@@ -118,7 +135,7 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.editor) ~= 0
       and eve.fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
     ) or {}
-    M.theme = state_theme.load(data_editor.theme)
+    M.theme.load(data_editor.theme)
   end
 
   if storage.workspace or initialize then
@@ -127,14 +144,14 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.workspace) ~= 0
       and eve.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
     ) or {}
-    M.bookmark = state_bookmark.load(data_workspace.bookmark)
-    M.flight = state_flight.load(data_workspace.flight)
-    M.frecency = state_frecency.load(data_workspace.frecency)
-    M.lsp = state_lsp.load(data_workspace.lsp)
-    M.option = state_option.load(data_workspace.option)
-    M.plugin = state_plugin.load(data_workspace.plugin)
-    M.search_file = state_search_file.load(data_workspace.search_select)
-    M.select = state_select.load(data_workspace.select)
+    M.bookmark.load(data_workspace.bookmark)
+    M.flight.load(data_workspace.flight)
+    M.frecency.load(data_workspace.frecency)
+    M.lsp.load(data_workspace.lsp)
+    M.option.load(data_workspace.option)
+    M.plugin.load(data_workspace.plugin)
+    M.search_file.load(data_workspace.search_select)
+    M.select.load(data_workspace.select)
   end
 
   if storage.session or initialize then
@@ -143,12 +160,12 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.session) ~= 0
       and eve.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
-    M.buf = state_buf.load(data_session.buf)
-    M.tab = state_tab.load(data_session.tab)
-    M.win = state_win.load(data_session.win)
-    M.qflist = state_qflist.load(data_session.qflist)
-    M.status = state_status.load(data_session.status)
-    M.widget = state_widget.load(data_session.widget)
+    M.buf.load(data_session.buf)
+    M.qflist.load(data_session.qflist)
+    M.status.load(data_session.status)
+    M.tab.load(data_session.tab)
+    M.win.load(data_session.win)
+    M.widget.load(data_session.widget)
   end
   M.buf.refresh_all()
   M.win.refresh_all()
@@ -162,16 +179,16 @@ end
 function M.save(storage)
   if storage.editor then
     local data = {
-      theme = state_theme.dump(),
+      theme = M.theme.dump(),
     }
     eve.fs.write_json(storage.editor, data, true)
   end
 
   if storage.session then
     local data = {
-      buf = state_buf.dump(),
-      tab = state_tab.dump(),
-      win = state_win.dump(),
+      buf = M.buf.dump(),
+      tab = M.tab.dump(),
+      win = M.win.dump(),
     }
     eve.fs.write_json(storage.session, data, true)
   end
@@ -182,14 +199,14 @@ function M.save(storage)
     end
 
     local data = {
-      bookmark = state_bookmark.dump(),
-      flight = state_flight.dump(),
-      frecency = state_frecency.dump(),
-      lsp = state_lsp.dump(),
-      option = state_option.dump(),
-      plugin = state_plugin.dump(),
-      search = state_search_file.dump(),
-      select = state_select.dump(),
+      bookmark = M.bookmark.dump(),
+      flight = M.flight.dump(),
+      frecency = M.frecency.dump(),
+      lsp = M.lsp.dump(),
+      option = M.option.dump(),
+      plugin = M.plugin.dump(),
+      search = M.search_file.dump(),
+      select = M.select.dump(),
     }
     eve.fs.write_json(storage.workspace, data, true)
   end
@@ -311,7 +328,7 @@ function M.watch_changes(params)
     M.select.find_buffer_scope,
     M.select.find_file_scope,
   }
-  for _, key in ipairs(state_select.keys) do
+  for _, key in ipairs(M.select.keys) do
     local select_item = M.select[key] ---@type eve.state.select.item.state
     table.insert(select_states, select_item.flag_case_sensitive)
     table.insert(select_states, select_item.flag_gitignore)
@@ -355,10 +372,10 @@ function M.watch_changes(params)
       if M._storage.editor then
         local raw_data = eve.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
         local data = {
-          theme = state_theme.normalize(raw_data.theme),
+          theme = M.theme.normalize(raw_data.theme),
         }
         local snapshot = {
-          theme = state_theme.dump(),
+          theme = M.theme.dump(),
         }
 
         if

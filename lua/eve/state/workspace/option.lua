@@ -4,14 +4,12 @@
 ---@class eve.state.option.state
 ---@field public relativenumber         eve.collection.IObservable -- boolean>
 
----@class eve.state.option
+---@class eve.state.option : eve.state.option.state
 ---@field public defaults               fun(): eve.state.option.data
 ---@field public dump                   fun(): eve.state.option.data
----@field public load                   fun(data: unknown): eve.state.option.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.option.data
 local M = {}
-
-local _state = nil ---@type eve.state.option.state | nil
 
 ---@return eve.state.option.data
 function M.defaults()
@@ -37,32 +35,23 @@ end
 
 ---@return eve.state.option.data
 function M.dump()
-  if _state == nil then
-    ---@type eve.state.option.data
-    return M.defaults()
-  end
-
   ---@type eve.state.option.data
   return {
-    relativenumber = _state.relativenumber:snapshot(),
+    relativenumber = M.relativenumber:snapshot(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.option.state
+---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.option.data
 
-  if _state == nil then
-    ---@type eve.state.option.state
-    _state = {
-      relativenumber = eve.col.Observable.from_value(data.relativenumber),
-    }
-    return _state
-  end
-
-  _state.relativenumber:next(data.relativenumber)
-  return _state
+  M.relativenumber:next(data.relativenumber)
 end
+
+----------------------------------------------------------------------------------------------------
+
+local _defaults = M.defaults() ---@type eve.state.option.data
+M.relativenumber = eve.col.Observable.from_value(_defaults.relativenumber)
 
 return M

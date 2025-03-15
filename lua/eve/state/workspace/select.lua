@@ -31,46 +31,18 @@ local select_item = require("eve.state.workspace.select_item")
 ---@field public find_buffer_scope      eve.collection.IObservable -- eve.e.FindBufferScope>
 ---@field public find_file_scope        eve.collection.IObservable -- eve.e.FindFileScope>
 ---@field public search_file_scope      eve.collection.IObservable -- eve.e.SearchFileScope>
----
----@field public find_buffer_scopes     eve.e.FindBufferScope[]
----@field public find_file_scopes       eve.e.FindFileScope[]
----@field public search_file_scopes     eve.e.SearchFileScope[]
 
-local _state = nil ---@type eve.state.select.state | nil
-
----@type string[]
-local keys = {
-  "find_buffer",
-  "find_explorer",
-  "find_file",
-  "find_git",
-  "find_highlight",
-  "find_pinned_file",
-  "find_python_venv",
-  "find_vim_option",
-  "search_file",
-  "select_avante",
-}
-
-local find_buffer_scopes = { "A", "F", "L", "T" } ---@type eve.e.FindBufferScope[]
-local find_file_scopes = { "W", "C", "D" } ---@type eve.e.FindFileScope[]
-local search_file_scopes = { "W", "C", "D", "B" } ---@type eve.e.SearchFileScope[]
-
----@class eve.state.select
+---@class eve.state.select : eve.state.select.state
 ---@field public keys                   string[]
 ---@field public find_buffer_scopes     eve.e.FindBufferScope[]
 ---@field public find_file_scopes       eve.e.FindFileScope[]
 ---@field public search_file_scopes     eve.e.SearchFileScope[]
+---
 ---@field public defaults               fun(): eve.state.select.data
 ---@field public dump                   fun(): eve.state.select.data
----@field public load                   fun(data: unknown): eve.state.select.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.select.data
-local M = {
-  keys = keys,
-  find_buffer_scopes = vim.list_slice(find_buffer_scopes),
-  find_file_scopes = vim.list_slice(find_file_scopes),
-  search_file_scopes = vim.list_slice(search_file_scopes),
-}
+local M = {}
 
 ---@return eve.state.select.data
 function M.defaults()
@@ -116,13 +88,13 @@ function M.normalize(data)
     search_file_scope = "C",
   }
 
-  if type(data.find_buffer_scope) == "string" and vim.list_contains(find_buffer_scopes, data.find_buffer_scope) then
+  if type(data.find_buffer_scope) == "string" and vim.list_contains(M.find_buffer_scopes, data.find_buffer_scope) then
     resolved.find_buffer_scope = data.find_buffer_scope
   end
-  if type(data.find_file_scope) == "string" and vim.list_contains(find_file_scopes, data.find_file_scope) then
+  if type(data.find_file_scope) == "string" and vim.list_contains(M.find_file_scopes, data.find_file_scope) then
     resolved.find_file_scope = data.find_file_scope
   end
-  if type(data.search_file_scope) == "string" and vim.list_contains(search_file_scopes, data.search_file_scope) then
+  if type(data.search_file_scope) == "string" and vim.list_contains(M.search_file_scopes, data.search_file_scope) then
     resolved.search_file_scope = data.search_file_scope
   end
   return resolved
@@ -130,73 +102,79 @@ end
 
 ---@return eve.state.select.data
 function M.dump()
-  if _state == nil then
-    return M.defaults()
-  end
-
   ---@type eve.state.select.data
   return {
-    find_buffer = select_item.dump(_state.find_buffer),
-    find_explorer = select_item.dump(_state.find_explorer),
-    find_file = select_item.dump(_state.find_file),
-    find_git = select_item.dump(_state.find_git),
-    find_highlight = select_item.dump(_state.find_highlight),
-    find_pinned_file = select_item.dump(_state.find_pinned_file),
-    find_python_venv = select_item.dump(_state.find_python_venv),
-    find_vim_option = select_item.dump(_state.find_vim_option),
-    search_file = select_item.dump(_state.search_file),
-    select_avante = select_item.dump(_state.select_avante),
+    find_buffer = select_item.dump(M.find_buffer),
+    find_explorer = select_item.dump(M.find_explorer),
+    find_file = select_item.dump(M.find_file),
+    find_git = select_item.dump(M.find_git),
+    find_highlight = select_item.dump(M.find_highlight),
+    find_pinned_file = select_item.dump(M.find_pinned_file),
+    find_python_venv = select_item.dump(M.find_python_venv),
+    find_vim_option = select_item.dump(M.find_vim_option),
+    search_file = select_item.dump(M.search_file),
+    select_avante = select_item.dump(M.select_avante),
 
-    find_buffer_scope = _state.find_buffer_scope:snapshot(),
-    find_file_scope = _state.find_buffer_scope:snapshot(),
-    search_file_scope = _state.search_file_scope:snapshot(),
+    find_buffer_scope = M.find_buffer_scope:snapshot(),
+    find_file_scope = M.find_buffer_scope:snapshot(),
+    search_file_scope = M.search_file_scope:snapshot(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.select.state
+---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.select.data
 
-  if _state == nil then
-    ---@type eve.state.select.state
-    _state = {
-      find_buffer = select_item.load(nil, "find_buffer", data.find_buffer),
-      find_explorer = select_item.load(nil, "find_explorer", data.find_explorer),
-      find_file = select_item.load(nil, "find_file", data.find_file),
-      find_git = select_item.load(nil, "find_git", data.find_git),
-      find_highlight = select_item.load(nil, "find_highlight", data.find_highlight),
-      find_pinned_file = select_item.load(nil, "find_pinned_file", data.find_pinned_file),
-      find_python_venv = select_item.load(nil, "find_python_venv", data.find_python_venv),
-      find_vim_option = select_item.load(nil, "find_vim_option", data.find_vim_option),
-      search_file = select_item.load(nil, "search_file", data.search_file),
-      select_avante = select_item.load(nil, "select_avante", data.select_avante),
+  M.find_buffer = select_item.load(M.find_buffer, "find_buffer", data.find_buffer)
+  M.find_explorer = select_item.load(M.find_explorer, "find_explorer", data.find_explorer)
+  M.find_file = select_item.load(M.find_file, "find_file", data.find_file)
+  M.find_git = select_item.load(M.find_git, "find_git", data.find_git)
+  M.find_highlight = select_item.load(M.find_highlight, "find_highlight", data.find_highlight)
+  M.find_pinned_file = select_item.load(M.find_pinned_file, "find_pinned_file", data.find_pinned_file)
+  M.find_python_venv = select_item.load(M.find_python_venv, "find_python_venv", data.find_python_venv)
+  M.find_vim_option = select_item.load(M.find_vim_option, "find_vim_option", data.find_vim_option)
+  M.search_file = select_item.load(M.search_file, "search_file", data.search_file)
+  M.select_avante = select_item.load(M.select_avante, "select_avante", data.select_avante)
 
-      find_buffer_scope = eve.col.Observable.from_value(data.find_file_scope),
-      find_file_scope = eve.col.Observable.from_value(data.find_file_scope),
-      search_file_scope = eve.col.Observable.from_value(data.search_file_scope),
-
-      find_buffer_scopes = vim.list_slice(find_buffer_scopes),
-      find_file_scopes = vim.list_slice(find_file_scopes),
-      search_file_scopes = vim.list_slice(search_file_scopes),
-    }
-  else
-    _state.find_buffer = select_item.load(_state.find_buffer, "find_buffer", data.find_buffer)
-    _state.find_explorer = select_item.load(_state.find_explorer, "find_explorer", data.find_explorer)
-    _state.find_file = select_item.load(_state.find_file, "find_file", data.find_file)
-    _state.find_git = select_item.load(_state.find_git, "find_git", data.find_git)
-    _state.find_highlight = select_item.load(_state.find_highlight, "find_highlight", data.find_highlight)
-    _state.find_pinned_file = select_item.load(_state.find_pinned_file, "find_pinned_file", data.find_pinned_file)
-    _state.find_python_venv = select_item.load(_state.find_python_venv, "find_python_venv", data.find_python_venv)
-    _state.find_vim_option = select_item.load(_state.find_vim_option, "find_vim_option", data.find_vim_option)
-    _state.search_file = select_item.load(_state.search_file, "search_file", data.search_file)
-    _state.select_avante = select_item.load(_state.select_avante, "select_avante", data.select_avante)
-
-    _state.find_buffer_scope:next(data.find_buffer_scope)
-    _state.find_file_scope:next(data.find_file_scope)
-    _state.search_file_scope:next(data.search_file_scope)
-  end
-  return _state
+  M.find_buffer_scope:next(data.find_buffer_scope)
+  M.find_file_scope:next(data.find_file_scope)
+  M.search_file_scope:next(data.search_file_scope)
 end
+
+----------------------------------------------------------------------------------------------------
+
+local _defaults = M.defaults() ---@type eve.state.select.data
+M.find_buffer = select_item.load(nil, "find_buffer", _defaults.find_buffer)
+M.find_explorer = select_item.load(nil, "find_explorer", _defaults.find_explorer)
+M.find_file = select_item.load(nil, "find_file", _defaults.find_file)
+M.find_git = select_item.load(nil, "find_git", _defaults.find_git)
+M.find_highlight = select_item.load(nil, "find_highlight", _defaults.find_highlight)
+M.find_pinned_file = select_item.load(nil, "find_pinned_file", _defaults.find_pinned_file)
+M.find_python_venv = select_item.load(nil, "find_python_venv", _defaults.find_python_venv)
+M.find_vim_option = select_item.load(nil, "find_vim_option", _defaults.find_vim_option)
+M.search_file = select_item.load(nil, "search_file", _defaults.search_file)
+M.select_avante = select_item.load(nil, "select_avante", _defaults.select_avante)
+
+M.find_buffer_scope = eve.col.Observable.from_value(_defaults.find_file_scope)
+M.find_file_scope = eve.col.Observable.from_value(_defaults.find_file_scope)
+M.search_file_scope = eve.col.Observable.from_value(_defaults.search_file_scope)
+
+---@return string[]
+M.keys = {
+  "find_buffer",
+  "find_explorer",
+  "find_file",
+  "find_git",
+  "find_highlight",
+  "find_pinned_file",
+  "find_python_venv",
+  "find_vim_option",
+  "search_file",
+  "select_avante",
+}
+M.find_buffer_scopes = { "A", "F", "L", "T" } ---@type eve.e.FindBufferScope[]
+M.find_file_scopes = { "W", "C", "D" } ---@type eve.e.FindFileScope[]
+M.search_file_scopes = { "W", "C", "D", "B" } ---@type eve.e.SearchFileScope[]
 
 return M

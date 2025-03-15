@@ -3,8 +3,6 @@
 ---@field public tick_session           integer
 ---@field public tick_workspace         integer
 ---
----@field public dirty_statusline       integer
----@field public dirty_tabline          integer
 ---@field public dirty_winline_nr       integer
 ---
 ---@field public lsp_msg                string
@@ -28,14 +26,12 @@
 ---
 ---@field public reset                  fun(): nil
 
----@class eve.state.status
+---@class eve.state.status : eve.state.status.state
 ---@field public defaults               fun(): eve.state.status.data
 ---@field public dump                   fun(): eve.state.status.data
----@field public load                   fun(data: unknown): eve.state.status.state
+---@field public load                   fun(data: unknown): nil
 ---@field public normalize              fun(data: unknown): eve.state.status.data
 local M = {}
-
-local _state = nil ---@type eve.state.status.state | nil
 
 ---@return eve.state.status.data
 function M.defaults()
@@ -45,8 +41,6 @@ function M.defaults()
     tick_session = 0,
     tick_workspace = 0,
 
-    dirty_statusline = 0,
-    dirty_tabline = 0,
     dirty_winline_nr = 0,
 
     lsp_msg = "",
@@ -71,65 +65,62 @@ end
 
 ---@return eve.state.status.data
 function M.dump()
-  if _state == nil then
-    ---@type eve.state.status.data
-    return M.defaults()
-  end
-
   ---@type eve.state.status.data
   return {
-    tick_editor = _state.ticker_editor:snapshot(),
-    tick_session = _state.ticker_session:snapshot(),
-    tick_workspace = _state.ticker_workspace:snapshot(),
+    tick_editor = M.ticker_editor:snapshot(),
+    tick_session = M.ticker_session:snapshot(),
+    tick_workspace = M.ticker_workspace:snapshot(),
 
-    dirty_statusline = _state.dirtier_statusline:snapshot(),
-    dirty_tabline = _state.dirtier_tabline:snapshot(),
-    dirty_winline_nr = _state.dirty_winline_nr:snapshot(),
+    dirty_statusline = M.dirtier_statusline:snapshot(),
+    dirty_tabline = M.dirtier_tabline:snapshot(),
+    dirty_winline_nr = M.dirty_winline_nr:snapshot(),
 
-    lsp_msg = _state.lsp_msg:snapshot(),
-    maximized_winnrs = vim.tbl_extend("force", {}, _state.maximized_winnrs),
-    suppress_warning = _state.suppress_warning:snapshot(),
-    tmux_zen_mode = _state.tmux_zen_mode:snapshot(),
+    lsp_msg = M.lsp_msg:snapshot(),
+    maximized_winnrs = vim.tbl_extend("force", {}, M.maximized_winnrs),
+    suppress_warning = M.suppress_warning:snapshot(),
+    tmux_zen_mode = M.tmux_zen_mode:snapshot(),
   }
 end
 
 ---@param raw_data                      any
----@return eve.state.status.state
+---@return nil
 function M.load(raw_data)
   ---@diagnostic disable-next-line: unused-local
   local data = M.normalize(raw_data) ---@type eve.state.status.data
 
-  if _state == nil then
-    ---@type eve.state.status.state
-    _state = {
-      ticker_editor = eve.col.Ticker.new({ start = data.tick_editor }),
-      ticker_workspace = eve.col.Ticker.new({ start = data.tick_workspace }),
-      ticker_session = eve.col.Ticker.new({ start = data.tick_session }),
+  M.ticker_editor:next(data.tick_editor)
+  M.ticker_session:next(data.tick_session)
+  M.ticker_workspace:next(data.tick_workspace)
 
-      dirtier_statusline = eve.col.Dirtier.new({ dirty = true }),
-      dirtier_tabline = eve.col.Dirtier.new({ dirty = true }),
-      dirty_winline_nr = eve.col.Observable.from_value(data.dirty_winline_nr, eve.fn.falsy),
+  M.dirtier_statusline:mark_clean()
+  M.dirtier_tabline:mark_clean()
+  M.dirty_winline_nr:next(data.dirty_winline_nr)
 
-      lsp_msg = eve.col.Observable.from_value(data.lsp_msg),
-      maximized_winnrs = data.maximized_winnrs,
-      suppress_warning = eve.col.Observable.from_value(data.suppress_warning),
-      tmux_zen_mode = eve.col.Observable.from_value(data.tmux_zen_mode),
+  M.lsp_msg:next(data.lsp_msg)
+  M.maximized_winnrs = data.maximized_winnrs
+  M.suppress_warning:next(data.suppress_warning)
+  M.tmux_zen_mode:next(eve.tmux.is_tmux_pane_zoomed())
+end
 
-      reset = function()
-        ---@cast _state                 eve.state.status.state
+----------------------------------------------------------------------------------------------------
 
-        _state.lsp_msg:next(data.lsp_msg)
-        _state.maximized_winnrs = data.maximized_winnrs
-        _state.suppress_warning:next(data.suppress_warning)
+local _defaults = M.defaults() ---@type eve.state.status.data
+M.ticker_editor = eve.col.Ticker.new({ start = _defaults.tick_editor })
+M.ticker_workspace = eve.col.Ticker.new({ start = _defaults.tick_workspace })
+M.ticker_session = eve.col.Ticker.new({ start = _defaults.tick_session })
 
-        _state.dirtier_statusline:mark_dirty()
-        _state.dirtier_tabline:mark_dirty()
-        _state.dirty_winline_nr:next(data.dirty_winline_nr)
-      end,
-    }
-    return _state
-  end
-  return _state
+M.dirtier_statusline = eve.col.Dirtier.new({ dirty = true })
+M.dirtier_tabline = eve.col.Dirtier.new({ dirty = true })
+M.dirty_winline_nr = eve.col.Observable.from_value(_defaults.dirty_winline_nr, eve.fn.falsy)
+
+M.lsp_msg = eve.col.Observable.from_value(_defaults.lsp_msg)
+M.maximized_winnrs = _defaults.maximized_winnrs
+M.suppress_warning = eve.col.Observable.from_value(_defaults.suppress_warning)
+M.tmux_zen_mode = eve.col.Observable.from_value(_defaults.tmux_zen_mode)
+
+---@return nil
+function M.reset()
+  M.load(nil)
 end
 
 return M
