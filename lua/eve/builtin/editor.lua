@@ -84,7 +84,7 @@ function M.find_winnr_fixed(filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if filetype == nil or vim.bo[bufnr].filetype == filetype and not M.is_win_floating(winnr) then
+    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and M.is_win_fixed(winnr) then
       return winnr
     end
   end
@@ -98,6 +98,19 @@ function M.find_winnr_floating(filetype)
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if vim.bo[bufnr].filetype == filetype and M.is_win_floating(winnr) then
+      return winnr
+    end
+  end
+  return nil
+end
+
+---@param filetype                      string|nil
+---@return integer|nil
+function M.find_winnr_sourcefile(filetype)
+  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
+  for _, winnr in pairs(winnrs) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and M.is_win_sourcefile(winnr) then
       return winnr
     end
   end

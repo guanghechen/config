@@ -124,6 +124,9 @@ end
 function M.on_refresh()
   local winnr_fixed = eve.editor.find_winnr_fixed() or 0 ---@type integer
   M.winnr_fixed:next(winnr_fixed or 0)
+
+  local winnr_sourcefile = eve.editor.find_winnr_sourcefile() or 0 ---@type integer
+  M.winnr_sourcefile:next(winnr_sourcefile)
 end
 
 ---@param winnr                         integer

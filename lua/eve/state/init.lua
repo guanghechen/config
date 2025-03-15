@@ -254,6 +254,7 @@ function M.refresh()
   M.buf.refresh_all()
   M.win.refresh_all()
   M.tab.refresh_all()
+  M.editor.on_refresh()
 
   local unrefereced_bufnrs = M.tab.get_unrefereced_bufnrs() ---@type integer[]
   for _, bufnr in ipairs(unrefereced_bufnrs) do
