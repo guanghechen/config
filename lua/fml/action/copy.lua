@@ -1,10 +1,9 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
-local command = require("eve.command")
 local state = require("eve.state")
 local select = require("fml.fn.select")
 
----@param candidate                     eve.command.definitions.copy.Scope
+---@param candidate                     eve.builtin.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@return nil
 local function copy_current_filepath(candidate, filepath)
@@ -54,7 +53,7 @@ function M.copy_filepath(arg)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-  local scopes = command.definitions.copy.filepath.candidates
+  local scopes = eve.command.definitions.copy.filepath.candidates
   local scope = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(scopes, scope) then
     copy_current_filepath(scope, filepath)

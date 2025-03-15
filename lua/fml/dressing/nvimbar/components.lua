@@ -2,7 +2,6 @@ local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
 local state = require("eve.state")
 local Nvimbar = require("fml.ux.nvimbar")
-local command = require("eve.command")
 
 local btn = Nvimbar.btn
 local txt = Nvimbar.txt
@@ -42,7 +41,7 @@ function M.ai(position)
       details = { enabled = enabled, provider = provider, status = status },
     })
 
-    vim.cmd(command.definitions.toggle.ai_provider.uuid)
+    vim.cmd(eve.command.definitions.toggle.ai_provider.uuid)
   end)
 
   ---@type fml.ux.nvimbar.IRawComponent
@@ -102,17 +101,17 @@ function M.bufs(position)
 
   ---@type string
   local fn_active_buf = eve.G.register_anonymous_fn(function(bufnr)
-    vim.cmd(command.definitions.buf.open.uuid .. " " .. tostring(bufnr))
+    vim.cmd(eve.command.definitions.buf.open.uuid .. " " .. tostring(bufnr))
   end) or ""
 
   ---@type string
   local fn_focus_left_buf = eve.G.register_anonymous_fn(function()
-    vim.cmd(command.definitions.buf.focus_left.uuid)
+    vim.cmd(eve.command.definitions.buf.focus_left.uuid)
   end) or ""
 
   ---@type string
   local fn_focus_right_buf = eve.G.register_anonymous_fn(function()
-    vim.cmd(command.definitions.buf.focus_right.uuid)
+    vim.cmd(eve.command.definitions.buf.focus_right.uuid)
   end) or ""
 
   ---@param bufnr                       integer
@@ -570,7 +569,7 @@ function M.dirpath(position)
   ---@type string
   local fn_open_explorer = eve.G.register_anonymous_fn(function(index)
     local dirpath = table.concat(relpath_pieces, eve.env.PATH_SEP, 1, index) ---@type string
-    vim.cmd(command.definitions.find.explorer.uuid .. " " .. vim.fn.fnameescape(dirpath))
+    vim.cmd(eve.command.definitions.find.explorer.uuid .. " " .. vim.fn.fnameescape(dirpath))
   end) or ""
 
   ---@type fml.ux.nvimbar.IRawComponent
@@ -1096,7 +1095,7 @@ function M.python_env(position)
   end, false)
 
   local fn_select_python_venv = eve.G.register_anonymous_fn(function()
-    vim.cmd(command.definitions.lsp.select_python_venv.uuid)
+    vim.cmd(eve.command.definitions.lsp.select_python_venv.uuid)
   end)
 
   ---@type fml.ux.nvimbar.IRawComponent
@@ -1333,7 +1332,7 @@ function M.tabs(position)
 
   ---@type string
   local fn_active_tab = eve.G.register_anonymous_fn(function(tabid)
-    vim.cmd(command.definitions.tab.focus.uuid .. " " .. tostring(tabid))
+    vim.cmd(eve.command.definitions.tab.focus.uuid .. " " .. tostring(tabid))
   end) or ""
 
   ---@type string

@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
-local command = require("eve.command")
 local state = require("eve.state")
 local select = require("fml.fn.select")
 
@@ -41,8 +40,8 @@ local flags = {
 ---@field public snapshot               fun(): string, string
 ---@field public action                 fun(): nil
 
-local ai_providers = command.definitions.toggle.ai_provider.candidates ---@type string[]
-local themes = command.definitions.toggle.theme.candidates ---@type string[]
+local ai_providers = eve.command.definitions.toggle.ai_provider.candidates ---@type string[]
+local themes = eve.command.definitions.toggle.theme.candidates ---@type string[]
 
 ---@type table<string, fml.action.toggle.IItem>
 local toggle_item_map = {
@@ -53,7 +52,7 @@ local toggle_item_map = {
       return provider, "String"
     end,
     action = function()
-      command.execute(command.definitions.toggle.ai_provider.uuid)
+      eve.command.execute(eve.command.definitions.toggle.ai_provider.uuid)
     end,
   },
   hipatterns_local = {
@@ -112,7 +111,7 @@ local toggle_item_map = {
       return venv_path, "String"
     end,
     action = function()
-      command.execute(command.definitions.lsp.select_python_venv.uuid)
+      eve.command.execute(eve.command.definitions.lsp.select_python_venv.uuid)
     end,
   },
   markdown_local = {
@@ -136,7 +135,7 @@ local toggle_item_map = {
       return "", "String"
     end,
     action = function()
-      command.execute(command.definitions.toggle.maximize.uuid)
+      eve.command.execute(eve.command.definitions.toggle.maximize.uuid)
     end,
   },
   relativenumber_local = {
@@ -169,7 +168,7 @@ local toggle_item_map = {
       return theme, "String"
     end,
     action = function()
-      command.execute(command.definitions.toggle.theme.uuid)
+      eve.command.execute(eve.command.definitions.toggle.theme.uuid)
     end,
   },
   theme_variant = {
@@ -266,9 +265,9 @@ local function apply_theme(theme)
   end
 end
 
-command.define({
-  uuid = command.definitions.toggle.list.uuid,
-  desc = command.definitions.toggle.list.desc,
+eve.command.define({
+  uuid = eve.command.definitions.toggle.list.uuid,
+  desc = eve.command.definitions.toggle.list.desc,
   nargs = "?",
   candidates = toggle_item_names,
 }, true)

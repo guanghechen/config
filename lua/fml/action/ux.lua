@@ -1,4 +1,3 @@
-local command = require("eve.command")
 local state = require("eve.state")
 
 ---@class fml.action.ux
@@ -15,7 +14,7 @@ end
 function M.resume_last_widget()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   if state.status.maximized_winnrs[winnr_cur] then
-    command.execute(command.definitions.toggle.maximize.uuid)
+    eve.command.execute(eve.command.definitions.toggle.maximize.uuid)
     return
   end
 
@@ -33,7 +32,7 @@ function M.resume_last_widget()
       end
     end
   else
-    command.execute(command.definitions.find.files.uuid)
+    eve.command.execute(eve.command.definitions.find.files.uuid)
   end
 end
 

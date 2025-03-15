@@ -3,6 +3,7 @@ local __mods = {
   G = "eve.builtin.G",
   box = "eve.builtin.box",
   clipboard = "eve.builtin.clipboard",
+  command = "eve.builtin.command",
   debug = "eve.builtin.debug",
   editor = "eve.builtin.editor",
   env = "eve.builtin.env",
@@ -34,6 +35,7 @@ local __mods = {
 ---@field public G                      eve.builtin.G
 ---@field public box                    eve.builtin.box
 ---@field public clipboard              eve.builtin.clipboard
+---@field public command                eve.builtin.command
 ---@field public debug                  eve.builtin.debug
 ---@field public editor                 eve.builtin.editor
 ---@field public env                    eve.builtin.env

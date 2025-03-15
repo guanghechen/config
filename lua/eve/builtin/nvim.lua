@@ -131,7 +131,7 @@ end
 
 ---@param modes                         string[]
 ---@param keys                          string|string[]
----@param definition                    eve.command.IDefinition|eve.command.IDefinitionWithCandidates
+---@param definition                    eve.builtin.command.IDefinition|eve.builtin.command.IDefinitionWithCandidates
 ---@return nil
 function M.make_shortcut(modes, keys, definition)
   ---@return nil

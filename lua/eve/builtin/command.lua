@@ -1,45 +1,45 @@
-local __module_name__ = "eve.command" ---@type string
+local __module_name__ = "eve.builtin.command" ---@type string
 
----@alias eve.command.definitions.copy.Scope
+---@alias eve.builtin.command.definitions.copy.Scope
 ---| "absolute"
 ---| "relative"
 
----@class eve.command.IDefinition
+---@class eve.builtin.command.IDefinition
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public nargs                  0|1|"?"
 ---@field public candidates             ?string[]
 
----@class eve.command.IDefinitionWithCandidates
+---@class eve.builtin.command.IDefinitionWithCandidates
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public nargs                  1|"?"
 ---@field public candidates             string[]
 
----@class eve.command.ICommand
+---@class eve.builtin.command.ICommand
 ---@field public uuid                   string
 ---@field public tabtype                eve.builtin.var.TabTypeEnum
 ---@field public action                 fun(args?: string): nil
 
----@class eve.command.IImplementation
+---@class eve.builtin.command.IImplementation
 ---@field public uuid                   string
 ---@field public tabtype                ?eve.builtin.var.TabTypeEnum
 ---@field public action                 fun(args?: string): nil
 
-local definition_map = {} ---@type table<string, eve.command.IDefinition>
-local command_map = {} ---@type table<string, eve.command.ICommand>
+local definition_map = {} ---@type table<string, eve.builtin.command.IDefinition>
+local command_map = {} ---@type table<string, eve.builtin.command.ICommand>
 
----@class eve.command
----@field protected __definition_map__  table<string, eve.command.IDefinition>
----@field protected __command_map__     table<string, eve.command.ICommand>
+---@class eve.builtin.command
+---@field protected __definition_map__  table<string, eve.builtin.command.IDefinition>
+---@field protected __command_map__     table<string, eve.builtin.command.ICommand>
 local M = {
   __definition_map__ = definition_map,
   __command_map__ = command_map,
 }
 
----@param raw_definition                eve.command.IDefinition | eve.command.IDefinitionWithCandidates
+---@param raw_definition                eve.builtin.command.IDefinition | eve.builtin.command.IDefinitionWithCandidates
 ---@param overwrite                     boolean|nil
----@return eve.command
+---@return eve.builtin.command
 function M.define(raw_definition, overwrite)
   if definition_map[raw_definition.uuid] ~= nil and not overwrite then
     eve.reporter.warn({
@@ -51,7 +51,7 @@ function M.define(raw_definition, overwrite)
     return M
   end
 
-  ---@type eve.command.IDefinition
+  ---@type eve.builtin.command.IDefinition
   local definition = {
     uuid = raw_definition.uuid,
     desc = raw_definition.desc,
@@ -91,13 +91,13 @@ function M.define(raw_definition, overwrite)
   return M
 end
 
----@param implementation                 eve.command.IImplementation
----@return eve.command
+---@param implementation                 eve.builtin.command.IImplementation
+---@return eve.builtin.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
   local tabtype = implementation.tabtype or eve.var.TabTypes.ALL ---@type string
   local action = implementation.action ---@type fun(args?: string): nil
-  local definition = definition_map[uuid] ---@type eve.command.IDefinition|nil
+  local definition = definition_map[uuid] ---@type eve.builtin.command.IDefinition|nil
   if definition == nil then
     eve.reporter.warn({
       from = __module_name__,
@@ -119,7 +119,7 @@ function M.implement(implementation)
     return M
   end
 
-  ---@type eve.command.ICommand
+  ---@type eve.builtin.command.ICommand
   local command = {
     uuid = uuid,
     tabtype = tabtype,
@@ -137,7 +137,7 @@ function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = eve.editor.resolve_tabtype(tabnr, false) ---@type eve.builtin.var.TabTypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
-  local command = command_map[key] or command_map[uuid] ---@type eve.command.ICommand|nil
+  local command = command_map[key] or command_map[uuid] ---@type eve.builtin.command.ICommand|nil
 
   if command == nil then
     if not silent then
@@ -158,9 +158,9 @@ end
 ---@param desc                          string
 ---@param nargs                         ?0|1|"?"
 ---@param candidates                    ?string[]
----@return eve.command.IDefinition
+---@return eve.builtin.command.IDefinition
 local function def(uuid, desc, nargs, candidates)
-  ---@type eve.command.IDefinition
+  ---@type eve.builtin.command.IDefinition
   local definition = {
     uuid = uuid,
     desc = desc,
@@ -175,9 +175,9 @@ end
 ---@param desc                          string
 ---@param nargs                         1|"?"
 ---@param candidates                    string[]
----@return eve.command.IDefinitionWithCandidates
+---@return eve.builtin.command.IDefinitionWithCandidates
 local function defc(uuid, desc, nargs, candidates)
-  ---@type eve.command.IDefinitionWithCandidates
+  ---@type eve.builtin.command.IDefinitionWithCandidates
   local definition = {
     uuid = uuid,
     desc = desc,
@@ -188,10 +188,10 @@ local function defc(uuid, desc, nargs, candidates)
   return definition
 end
 
----@class eve.command.definitions
+---@class eve.builtin.command.definitions
 M.definitions = {}
 
----@class eve.command.definitions.ai
+---@class eve.builtin.command.definitions.ai
 M.definitions.ai = {
   avante_ask = def("Faiavanteask", "ai: avante ask"),
   avante_edit = def("Faiavanteedit", "ai: avante edit"),
@@ -204,7 +204,7 @@ M.definitions.ai = {
   copilot_chat_toggle = def("Faicopilotchattoggle", "ai: copilot chat toggle"),
 }
 
----@class eve.command.definitions.buf
+---@class eve.builtin.command.definitions.buf
 M.definitions.buf = {
   close = def("Fbufclose", "buf: close"),
   close_to_leftest = def("Fbufclosetoleftest", "buf: close to leftest"),
@@ -274,12 +274,12 @@ M.definitions.buf = {
   save = def("Fbufsave", "buf: save"),
 }
 
----@class eve.command.definitions.clipboard
+---@class eve.builtin.command.definitions.clipboard
 M.definitions.clipboard = {
   paste = def("Fclipboardpaste", "clipboard: paste"),
 }
 
----@class eve.command.definitions.code
+---@class eve.builtin.command.definitions.code
 M.definitions.code = {
   run = def("Fcoderun", "code: run"),
   run_force = def("Fcoderunforce", "code: run (force)"),
@@ -287,7 +287,7 @@ M.definitions.code = {
   swap_conditional_branches = def("Fcodeswapconditionalbranches", "code: swap conditional branches"),
 }
 
----@class eve.command.definitions.copy
+---@class eve.builtin.command.definitions.copy
 M.definitions.copy = {
   char_under_cursor = def("Fcopycharundercursor", "copy: char under cursor"),
 
@@ -296,7 +296,7 @@ M.definitions.copy = {
   filepath_relative = def("Fcopyfilepathrelative", "copy: current filepath (relative)"),
 }
 
----@class eve.command.definitions.inspect
+---@class eve.builtin.command.definitions.inspect
 M.definitions.inspect = {
   inspect_buf = def("Fdebuginspectbuf", "debug: inspect buf"),
   inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
@@ -307,7 +307,7 @@ M.definitions.inspect = {
   inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
 }
 
----@class eve.command.definitions.diagnostic
+---@class eve.builtin.command.definitions.diagnostic
 M.definitions.diagnostic = {
   goto_next = def("Fdiagnosticgotonext", "diagnostic: goto next"),
   goto_next_error = def("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
@@ -327,7 +327,7 @@ M.definitions.diagnostic = {
   outline = def("Fdiagnosticoutline", "diagnostic: outline"),
 }
 
----@class eve.command.definitions.explorer
+---@class eve.builtin.command.definitions.explorer
 M.definitions.explorer = {
   fs_cwd = def("Fexplorerfscwd", "explorer: filesystem (cwd)"),
   fs_workspace = def("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
@@ -340,7 +340,7 @@ M.definitions.explorer = {
   toggle = def("Fexplorertoggle", "explorer: toggle"),
 }
 
----@class eve.command.definitions.find
+---@class eve.builtin.command.definitions.find
 M.definitions.find = {
   bufs = def("Ffindbufs", "find: buffers"),
   bufs_file = def("Ffindbufsfile", "find: buffers (file)"),
@@ -357,7 +357,7 @@ M.definitions.find = {
   vim_options = def("Ffindvimoptions", "find: vim options"),
 }
 
----@class eve.command.definitions.git
+---@class eve.builtin.command.definitions.git
 M.definitions.git = {
   browse = def("Fgitbrowse", "git: browse"),
   diffview = def("Fgitdiffview", "git: diffview"),
@@ -365,7 +365,7 @@ M.definitions.git = {
   history_file = def("Fgithistoryfile", "git: history (file)"),
 }
 
----@class eve.command.definitions.lsp
+---@class eve.builtin.command.definitions.lsp
 M.definitions.lsp = {
   goto_definitions = def("Flspgotodefinitions", "lsp: goto definitions"),
   goto_implementations = def("Flspgotoimplementations", "lsp: goto implementations"),
@@ -375,12 +375,12 @@ M.definitions.lsp = {
   select_python_venv = def("Flspselectpythonvenv", "lsp: select python venv"),
 }
 
----@class eve.command.definitions.refresh
+---@class eve.builtin.command.definitions.refresh
 M.definitions.refresh = {
   all = def("Frefreshall", "refresh: all"),
 }
 
----@class eve.command.definitions.replace
+---@class eve.builtin.command.definitions.replace
 M.definitions.replace = {
   files = def("Freplacefiles", "replace: files"),
   files_in_buffer = def("Freplacefilesinbuffer", "replace: files (buffer)"),
@@ -389,7 +389,7 @@ M.definitions.replace = {
   files_in_workspace = def("Freplacefilesinworkspace", "replace: files (workspace)"),
 }
 
----@class eve.command.definitions.search
+---@class eve.builtin.command.definitions.search
 M.definitions.search = {
   files = def("Fsearchfiles", "search: files"),
   files_in_buffer = def("Fsearchfilesinbuffer", "search: files (buffer)"),
@@ -398,7 +398,7 @@ M.definitions.search = {
   files_in_workspace = def("Fsearchfilesinworkspace", "search: files (workspace)"),
 }
 
----@class eve.command.definitions.session
+---@class eve.builtin.command.definitions.session
 M.definitions.session = {
   restore = def("Fsessionrestore", "session: restore"),
   restore_autosaved = def("Fsessionrestoreautosaved", "session: restore autosaved"),
@@ -406,7 +406,7 @@ M.definitions.session = {
   save = def("Fsessionsave", "session: save"),
 }
 
----@class eve.command.definitions.tab
+---@class eve.builtin.command.definitions.tab
 M.definitions.tab = {
   close = def("Ftabclose", "tab: close"),
   close_others = def("Ftabcloseothers", "tab: close others"),
@@ -431,7 +431,7 @@ M.definitions.tab = {
   new_with_buf = def("Ftabnewwithbuf", "tab: new with buf"),
 }
 
----@class eve.command.definitions.term
+---@class eve.builtin.command.definitions.term
 M.definitions.term = {
   toggle_cwd = def("Ftermcwd", "term: toggle (cwd)"),
   toggle_directory = def("Ftermdirectory", "term: toggle (directory)"),
@@ -446,7 +446,7 @@ M.definitions.term = {
   yazi_workspace = def("Ftermyaziworkspace", "term: yazi (workspace)"),
 }
 
----@class eve.command.definitions.toggle
+---@class eve.builtin.command.definitions.toggle
 M.definitions.toggle = {
   list = defc("Ftoggle", "toggle: select", "?", eve.setting.togglers),
   ai_provider = defc("Ftoggleaiprovider", "toggle: ai provider", "?", eve.setting.ai_providers),
@@ -459,14 +459,14 @@ M.definitions.toggle = {
   username = def("Ftoggleusername", "toggle: username"),
 }
 
----@class eve.command.definitions.ux
+---@class eve.builtin.command.definitions.ux
 M.definitions.ux = {
   dismiss_notifications = def("Fuxdismissnotifications", "ux: dismiss notifications"),
   reload_theme = def("Fuxreloadtheme", "ux: reload theme", "?"),
   resume_last_widget = def("Fuxresume", "ux: resume last widget"),
 }
 
----@class eve.command.definitions.win
+---@class eve.builtin.command.definitions.win
 M.definitions.win = {
   close = def("Fwinclose", "win: close"),
   close_others = def("Fwincloseothers", "win: close others"),

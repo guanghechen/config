@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.refresh" ---@type string
 
 local state = require("eve.state")
-local command = require("eve.command")
 
 ---@class fml.action.refresh
 local M = {}
@@ -33,7 +32,7 @@ function M.refresh_all()
     require("plenary.reload").reload_module("eve.constant.lang")
     require("plenary.reload").reload_module("eve.constant.theme")
     require("plenary.reload").reload_module("eve.constant.hlgroup")
-    vim.cmd(command.definitions.ux.reload_theme.uuid .. " force")
+    vim.cmd(eve.command.definitions.ux.reload_theme.uuid .. " force")
   end
 
   vim.cmd("LspRestart")
