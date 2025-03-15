@@ -21,7 +21,7 @@ statusline = Nvimbar.new({
   is_active = eve.fn.falsy,
   trigger_rerender = function()
     local result = statusline:snapshot() or "" ---@type string
-    vim.opt.statusline = result
+    vim.o.statusline = result
     dirtier:mark_clean()
   end,
 })

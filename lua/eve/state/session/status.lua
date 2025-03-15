@@ -3,6 +3,8 @@
 ---@field public tick_session           integer
 ---@field public tick_workspace         integer
 ---
+---@field public dirty_statusline       boolean
+---@field public dirty_tabline          boolean
 ---@field public dirty_winline_nr       integer
 ---
 ---@field public lsp_msg                string
@@ -41,6 +43,8 @@ function M.defaults()
     tick_session = 0,
     tick_workspace = 0,
 
+    dirty_statusline = true,
+    dirty_tabline = true,
     dirty_winline_nr = 0,
 
     lsp_msg = "",
@@ -92,8 +96,8 @@ function M.load(raw_data)
   M.ticker_session:next(data.tick_session)
   M.ticker_workspace:next(data.tick_workspace)
 
-  M.dirtier_statusline:mark_clean()
-  M.dirtier_tabline:mark_clean()
+  M.dirtier_statusline:mark_dirty()
+  M.dirtier_tabline:mark_dirty()
   M.dirty_winline_nr:next(data.dirty_winline_nr)
 
   M.lsp_msg:next(data.lsp_msg)
@@ -109,8 +113,8 @@ M.ticker_editor = eve.col.Ticker.new({ start = _defaults.tick_editor })
 M.ticker_workspace = eve.col.Ticker.new({ start = _defaults.tick_workspace })
 M.ticker_session = eve.col.Ticker.new({ start = _defaults.tick_session })
 
-M.dirtier_statusline = eve.col.Dirtier.new({ dirty = true })
-M.dirtier_tabline = eve.col.Dirtier.new({ dirty = true })
+M.dirtier_statusline = eve.col.Dirtier.new({ dirty = _defaults.dirty_statusline })
+M.dirtier_tabline = eve.col.Dirtier.new({ dirty = _defaults.dirty_tabline })
 M.dirty_winline_nr = eve.col.Observable.from_value(_defaults.dirty_winline_nr, eve.fn.falsy)
 
 M.lsp_msg = eve.col.Observable.from_value(_defaults.lsp_msg)
