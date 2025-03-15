@@ -143,9 +143,6 @@ end
 ---@return eve.t.IKeymap[]
 function M.get_keymaps(widget)
   local function on_close()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_fixed = eve.state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
-
     widget:close()
 
     local widget_visible, widget_visible_index = M.get_widget_visible() ---@type eve.t.ux.IWidget|nil, integer|nil
@@ -153,8 +150,9 @@ function M.get_keymaps(widget)
       widget_visible:focus()
       M.history:go(widget_visible_index)
     else
-      if winnr_fixed ~= nil and eve.editor.is_win_valid(winnr_fixed) then
-        vim.api.nvim_tabpage_set_win(tabnr, winnr_fixed)
+      local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+      if winnr_command ~= nil then
+        vim.api.nvim_set_current_win(winnr_command)
       end
     end
   end

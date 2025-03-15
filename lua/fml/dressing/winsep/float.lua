@@ -1,7 +1,12 @@
 local Line = require("fml.dressing.winsep.line")
 
+---@class fml.dressing.winsep.float
+---@field public winsep                 fml.dressing.Winsep
+---@field public scheduler              eve.collection.Scheduler
+local M = {}
+
 ---@type fml.dressing.Winsep
-local float_winsep = {
+M.winsep = {
   left = Line.new({ direction = "h", zindex = 99, winhighlight = "NormalFloat:f_winsep_float" }),
   top = Line.new({ direction = "k", zindex = 99, winhighlight = "NormalFloat:f_winsep_float" }),
   right = Line.new({ direction = "l", zindex = 99, winhighlight = "NormalFloat:f_winsep_float" }),
@@ -31,12 +36,28 @@ local float_winsep = {
     self.bottom:move(row + height + 1, col, width)
     self.bottom:show()
   end,
-  ---@diagnostic disable-next-line: unused-local
-  should_show = function(self, winnr)
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    return eve.filetype.is_winsep_float(filetype)
-  end,
 }
 
-return float_winsep
+M.scheduler = eve.col.Scheduler.new({
+  name = "winsep_refresh float",
+  delay = 200,
+  silent = function()
+    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+    return not devmode
+  end,
+  task = function(callback)
+    if eve.state.flight.dressing_winsep_float:snapshot() then
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local filetype = vim.bo[bufnr].filetype ---@type string
+      if eve.filetype.is_winsep_float(filetype) then
+        M.winsep:show(winnr)
+      else
+        M.winsep:hide()
+      end
+    end
+    callback("fulfilled")
+  end,
+})
+
+return M

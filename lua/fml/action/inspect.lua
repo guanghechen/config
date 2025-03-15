@@ -108,6 +108,8 @@ function M.inspect_tab()
       details = {
         base = {
           tabnr = tabnr,
+          winnr_command = eve.state.editor.get_winnr_command(),
+          winnr_fixed = eve.state.editor.get_winnr_fixed(),
         },
         meta = vim.NIL,
       },
@@ -121,8 +123,8 @@ function M.inspect_tab()
     details = {
       base = {
         tabnr = tabnr,
-        winnr_command = meta:get_winnr_command(),
-        winnr_fixed = meta:get_winnr_fixed(),
+        winnr_command = eve.state.editor.get_winnr_command(),
+        winnr_fixed = eve.state.editor.get_winnr_fixed(),
         winnr_sourcefile = meta:get_winnr_sourcefile(),
       },
       meta = meta:dump(tabid),

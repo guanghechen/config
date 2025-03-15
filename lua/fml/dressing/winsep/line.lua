@@ -43,6 +43,7 @@ local config = {
 
 ---@class fml.dressing.winsep.Line
 ---@field public _cfg                   vim.api.keyset.win_config
+---@field public _size                  integer
 ---@field public _winnr                 integer|nil
 ---@field public _bufnr                 integer|nil
 ---@field public _winhighlight          string
@@ -73,6 +74,7 @@ function M.new(props)
   }
 
   self._cfg = cfg
+  self._size = 0
   self._winnr = nil
   self._bufnr = nil
   self._direction = direction
@@ -101,7 +103,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = eve.filetype.WINSEP
   vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = true
+  vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
   local winnr = self._winnr ---@type integer|nil
@@ -110,7 +112,19 @@ function M:create_buf_as_needed()
   end
 
   self._bufnr = bufnr
+  self._size = 0
   return bufnr, true
+end
+
+---@param bufnr                         integer
+---@param lines                         string[]
+---@return nil
+function M.set_content(bufnr, lines)
+  vim.bo[bufnr].modifiable = true
+  vim.bo[bufnr].readonly = false
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.bo[bufnr].modifiable = false
+  vim.bo[bufnr].readonly = true
 end
 
 ---@param row                           integer
@@ -118,7 +132,7 @@ end
 ---@param size                          integer
 ---@return nil
 function M:move(row, col, size)
-  local bufnr, new_created = self:create_buf_as_needed() ---@type integer
+  local bufnr = self:create_buf_as_needed() ---@type integer
   local cfg = self._cfg ---@type vim.api.keyset.win_config
   local direction = self._direction ---@type fml.dressing.winsep.line.Direction
 
@@ -126,37 +140,45 @@ function M:move(row, col, size)
   cfg.col = col
 
   if direction == "h" then
-    if not new_created or cfg.height ~= size then
+    if self._size ~= size then
       local lines = { "╭" } ---@type string[]
       for _ = 1, size, 1 do
         lines[#lines + 1] = "│"
       end
       lines[#lines + 1] = "╰"
 
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      self.set_content(bufnr, lines)
+      self._size = size
       cfg.height = size + 2
     end
   elseif direction == "k" then
-    if not new_created or cfg.width ~= size then
+    if self._size ~= size then
       local content = "╭" .. string.rep("─", size) .. "╮" ---@type string
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { content })
+      local lines = { content } ---@type string[]
+
+      self.set_content(bufnr, lines)
+      self._size = size
       cfg.width = size + 2
     end
   elseif direction == "l" then
-    if not new_created or cfg.height ~= size then
+    if cfg.height ~= size then
       local lines = { "╮" } ---@type string[]
       for _ = 1, size, 1 do
         lines[#lines + 1] = "│"
       end
       lines[#lines + 1] = "╯"
 
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      self.set_content(bufnr, lines)
+      self._size = size
       cfg.height = size + 2
     end
   elseif direction == "j" then
-    if not new_created or cfg.width ~= size then
+    if cfg.width ~= size then
       local content = "╰" .. string.rep("─", size) .. "╯" ---@type string
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { content })
+      local lines = { content } ---@type string[]
+
+      self.set_content(bufnr, lines)
+      self._size = size
       cfg.width = size + 2
     end
   end

@@ -63,6 +63,8 @@ function M.define(raw_definition, overwrite)
   ---@param opts                        { name: string, args: string, fargs: string[] }
   ---@return nil
   local function handle(opts)
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    eve.state.editor.set_winnr_command(winnr)
     M.execute(definition.uuid, opts.args, false)
   end
 

@@ -8,74 +8,35 @@ local float_winsep = require("fml.dressing.winsep.float")
 ---@field public bottom                 fml.dressing.winsep.Line
 ---@field public hide                   fun(self: fml.dressing.Winsep):nil
 ---@field public show                   fun(self: fml.dressing.Winsep, winnr: integer):nil
----@field public should_show            fun(self: fml.dressing.Winsep, winnr: integer):boolean
 
-local refresh_fixed = eve.col.Scheduler.new({
-  name = "winsep_refresh fixed",
-  delay = 50,
-  silent = function()
-    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
-    return not devmode
-  end,
-  task = function(callback)
-    if eve.state.flight.dressing_winsep_fixed:snapshot() then
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      if fixed_winsep:should_show(winnr) then
-        fixed_winsep:show(winnr)
-      end
-    end
-    callback("fulfilled")
-  end,
-})
-
-local refresh_float = eve.col.Scheduler.new({
-  name = "winsep_refresh float",
-  delay = 200,
-  silent = function()
-    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
-    return not devmode
-  end,
-  task = function(callback)
-    if eve.state.flight.dressing_winsep_float:snapshot() then
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      if float_winsep:should_show(winnr) then
-        float_winsep:show(winnr)
-      else
-        float_winsep:hide()
-      end
-    end
-    callback("fulfilled")
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "WinEnter", "WinResized", "SessionLoadPost" }, {
+vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
   group = eve.nvim.augroup("winsep_refresh"),
   callback = function()
-    refresh_fixed:schedule()
-    refresh_float:schedule()
+    fixed_winsep.scheduler:schedule()
+    float_winsep.scheduler:schedule()
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
+  group = eve.nvim.augroup("float_winsep_refresh_on_win_enter"),
+  callback = function()
+    float_winsep.scheduler:schedule()
   end,
 })
 
 eve.state.observe({ eve.state.flight.dressing_winsep_fixed }, function()
-  local enabled = eve.state.flight.dressing_winsep_fixed:snapshot() ---@type boolean
-  if enabled then
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if fixed_winsep:should_show(winnr) then
-      fixed_winsep:show(winnr)
-    end
-  else
-    fixed_winsep:hide()
-  end
-end)
-
-eve.state.observe({ eve.state.flight.dressing_winsep_float }, function()
   local enabled = eve.state.flight.dressing_winsep_float:snapshot() ---@type boolean
   if enabled then
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if float_winsep:should_show(winnr) then
-      float_winsep:show(winnr)
-    end
+    fixed_winsep.scheduler:schedule()
   else
-    float_winsep:hide()
+    fixed_winsep.winsep:hide()
   end
-end)
+end, false)
+
+eve.state.observe({ eve.state.editor.winnr_fixed }, function()
+  fixed_winsep.scheduler:schedule()
+end, false)
+
+eve.state.observe({ eve.state.flight.dressing_winsep_float }, function()
+  float_winsep.scheduler:schedule()
+end, false)

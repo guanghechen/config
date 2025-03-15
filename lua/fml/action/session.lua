@@ -22,7 +22,7 @@ function M.restore()
         session = storage.session,
         workspace = storage.workspace,
       }, true)
-      eve.state.refresh()
+      vim.schedule(eve.state.refresh)
     end
   end
 end
@@ -44,7 +44,7 @@ function M.restore_autosaved()
         session = storage.session,
         workspace = storage.workspace,
       }, true)
-      eve.state.refresh()
+      vim.schedule(eve.state.refresh)
     end
   end
 end

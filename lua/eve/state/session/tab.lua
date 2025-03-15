@@ -16,15 +16,10 @@
 ---@field public tabnr                  integer
 ---@field public bufs                   eve.state.tab.buf.state[]
 ---@field public bufid_sourcefile       eve.collection.IObservable -- integer|nil>
----@field public winnr_command          eve.collection.IObservable -- integer|nil>
----@field public winnr_fixed            eve.collection.IObservable -- integer|nil>
 ---
 ---@field public dump                   fun(self: eve.state.tab.meta.state, tabid: integer): eve.state.tab.meta.data
 ---@field public find_buf               fun(self: eve.state.tab.meta.state, bufnr: integer): eve.state.tab.buf.state|nil, integer|nil
 ---@field public find_bufid             fun(self: eve.state.tab.meta.state, bufnr: integer): integer|nil
----@field public focus_win_fixed        fun(self: eve.state.tab.meta.state): nil
----@field public get_winnr_fixed        fun(self: eve.state.tab.meta.state): integer|nil
----@field public get_winnr_command      fun(self: eve.state.tab.meta.state): integer|nil
 ---@field public get_bufnr_sourcefile   fun(self: eve.state.tab.meta.state): integer|nil
 ---@field public get_winnr_sourcefile   fun(self: eve.state.tab.meta.state): integer|nil
 ---@field public rearrange_bufs         fun(self: eve.state.tab.meta.state): nil
@@ -53,12 +48,8 @@ Meta.__index = Meta
 ---@field public on_buf_delete          fun(tabnr: integer): nil
 ---@field public on_buf_enter           fun(tabnr: integer, winnr: integer, bufnr: integer): nil
 ---@field public on_bufs_close          fun(tabnr: integer, bufnrs: integer[]): nil
----@field public on_win_focus           fun(tabnr: integer, winnr: integer): nil
 ---
----@field public focus_win_fixed        fun(tabnr: integer): nil
 ---@field public get_bufnr_sourcefile   fun(tabnr: integer): integer|nil
----@field public get_winnr_command      fun(tabnr: integer): integer|nil
----@field public get_winnr_fixed        fun(tabnr: integer): integer|nil
 ---@field public get_winnr_sourcefile   fun(tabnr: integer): integer|nil
 ---@field public get_unrefereced_bufnrs fun(bufnrs: integer[]|nil): integer[]
 ---@field public list_valid_bufs        fun(tabnr: integer): eve.state.tab.buf.state[]
@@ -79,8 +70,6 @@ function Meta.new(tabnr, bufs, bufid_sourcefile)
   self.tabnr = tabnr ---@type integer
   self.bufs = bufs or {} ---@type eve.state.tab.buf.state[]
   self.bufid_sourcefile = eve.col.Observable.from_value(math.max(0, math.min(#bufs, bufid_sourcefile or 1)))
-  self.winnr_command = eve.col.Observable.from_value(0)
-  self.winnr_fixed = eve.col.Observable.from_value(0)
   return self
 end
 
@@ -130,40 +119,10 @@ function Meta:find_bufid(bufnr)
 end
 
 ---@return integer|nil
-function Meta:focus_win_fixed()
-  local winnr = self:get_winnr_fixed() ---@type integer|nil
-  if winnr ~= nil then
-    vim.api.nvim_tabpage_set_win(self.tabnr, winnr)
-  end
-end
-
----@return integer|nil
 function Meta:get_bufnr_sourcefile()
   local bufid = self.bufid_sourcefile:snapshot() ---@type integer
   local buf = self.bufs[bufid] ---@type eve.state.tab.buf.state|nil
   return buf and buf.bufnr or nil
-end
-
----@return integer|nil
-function Meta:get_winnr_command()
-  local winnr_command = self.winnr_command:snapshot() ---@type integer
-  if eve.editor.is_win_valid(winnr_command) then
-    return winnr_command
-  else
-    self.winnr_command:next(0)
-    return nil
-  end
-end
-
----@return integer|nil
-function Meta:get_winnr_fixed()
-  local winnr_fixed = self.winnr_fixed:snapshot() ---@type integer
-  if eve.editor.is_win_valid(winnr_fixed) then
-    return winnr_fixed
-  else
-    self.winnr_fixed:next(0)
-    return nil
-  end
 end
 
 ---@return integer|nil
@@ -611,49 +570,10 @@ function M.on_bufs_close(tabnr, bufnrs)
 end
 
 ---@param tabnr                         integer
----@param winnr                         integer
----@return nil
-function M.on_win_focus(tabnr, winnr)
-  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta == nil then
-    return
-  end
-
-  local is_float = eve.editor.is_win_floating(winnr) ---@type boolean
-  if not is_float then
-    meta.winnr_fixed:next(winnr)
-    meta.winnr_command:next(winnr)
-  end
-end
-
----@param tabnr                         integer
----@return nil
-function M.focus_win_fixed(tabnr)
-  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta ~= nil then
-    meta:focus_win_fixed()
-  end
-end
-
----@param tabnr                         integer
 ---@return integer|nil
 function M.get_bufnr_sourcefile(tabnr)
   local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   return meta and meta:get_bufnr_sourcefile() or nil ---@type integer|nil
-end
-
----@param tabnr                         integer
----@return integer|nil
-function M.get_winnr_command(tabnr)
-  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  return meta and meta:get_winnr_command() or nil ---@type integer|nil
-end
-
----@param tabnr                         integer
----@return integer|nil
-function M.get_winnr_fixed(tabnr)
-  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  return meta and meta:get_winnr_fixed() or nil ---@type integer|nil
 end
 
 ---@param tabnr                         integer

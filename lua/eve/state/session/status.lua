@@ -25,8 +25,6 @@
 ---@field public maximized_winnrs       table<integer, boolean>
 ---@field public suppress_warning       eve.collection.IObservable -- boolean>
 ---@field public tmux_zen_mode          eve.collection.IObservable -- boolean>
----
----@field public reset                  fun(): nil
 
 ---@class eve.state.status : eve.state.status.state
 ---@field public defaults               fun(): eve.state.status.data
@@ -121,10 +119,5 @@ M.lsp_msg = eve.col.Observable.from_value(_defaults.lsp_msg)
 M.maximized_winnrs = _defaults.maximized_winnrs
 M.suppress_warning = eve.col.Observable.from_value(_defaults.suppress_warning)
 M.tmux_zen_mode = eve.col.Observable.from_value(_defaults.tmux_zen_mode)
-
----@return nil
-function M.reset()
-  M.load(nil)
-end
 
 return M

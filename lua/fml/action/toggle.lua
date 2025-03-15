@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.toggle" ---@type string
 
 local select = require("fml.fn.select")
 
----@type table<string, eve.collection.IObservable -- boolean>>
+---@type table<string, eve.collection.IObservable<boolean>>
 local flags = {
   ---flight
   flight_ai = eve.state.flight.ai,
@@ -60,10 +60,9 @@ local toggle_item_map = {
       return "unknown", "Boolean"
     end,
     action = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_fixed = eve.state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
-      if winnr_fixed ~= nil then
-        local bufnr = vim.api.nvim_win_get_buf(winnr_fixed) ---@type integer
+      local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+      if winnr_command ~= nil then
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
         require("mini.hipatterns").toggle(bufnr)
       end
     end,
@@ -122,8 +121,7 @@ local toggle_item_map = {
       local ok, render_markdown = pcall(require, "render-markdown")
       if ok then
         eve.state.plugin.render_markdown:next(true)
-        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        eve.state.tab.focus_win_fixed(tabnr)
+        eve.state.editor.focus_win_fixed()
         render_markdown.buf_toggle()
       end
     end,
@@ -140,8 +138,7 @@ local toggle_item_map = {
   relativenumber_local = {
     title = "relativenumber (local)",
     snapshot = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
       if winnr_command == nil then
         return "unknown", "Boolean"
       end
@@ -150,8 +147,7 @@ local toggle_item_map = {
       return flag and "true" or "false", "Boolean"
     end,
     action = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
       if winnr_command == nil then
         return
       end
@@ -197,8 +193,7 @@ local toggle_item_map = {
   wrap_local = {
     title = "wrap (local)",
     snapshot = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
       if winnr_command == nil then
         return "unknown", "Boolean"
       end
@@ -207,8 +202,7 @@ local toggle_item_map = {
       return flag and "true" or "false", "Boolean"
     end,
     action = function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_command = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+      local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
       if winnr_command == nil then
         return
       end
@@ -378,18 +372,18 @@ end
 
 ---@return nil
 function M.toggle_maximize()
+  local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+  if winnr_command == nil then
+    return
+  end
+
+  if eve.state.status.maximized_winnrs[winnr_command] then
+    eve.state.status.maximized_winnrs[winnr_command] = nil
+    vim.api.nvim_win_close(winnr_command, true)
+    return
+  end
+
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_fixed = eve.state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
-  if winnr_fixed == nil then
-    return
-  end
-
-  if eve.state.status.maximized_winnrs[winnr_fixed] then
-    eve.state.status.maximized_winnrs[winnr_fixed] = nil
-    vim.api.nvim_win_close(winnr_fixed, true)
-    return
-  end
-
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   local winnr_maximized = nil ---@type integer|nil
   for _, winnr in ipairs(winnrs) do
@@ -404,7 +398,7 @@ function M.toggle_maximize()
     return
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr_fixed) ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
   if eve.editor.is_buf_valid(bufnr) then
     local winnr = vim.api.nvim_open_win(bufnr, false, {
       relative = "editor",
@@ -424,7 +418,7 @@ function M.toggle_maximize()
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].wrap = false
 
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = eve.editor.is_win_sourcefile(winnr_fixed)
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = eve.editor.is_win_sourcefile(winnr_command)
     eve.state.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(tabnr, winnr)

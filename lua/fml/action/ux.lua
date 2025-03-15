@@ -22,11 +22,9 @@ function M.resume_last_widget()
       widget:focus()
       eve.state.widget.history:go(widget_index)
     else
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_fixed = eve.state.tab.get_winnr_fixed(tabnr) ---@type integer|nil
-
-      if winnr_fixed ~= nil then
-        vim.api.nvim_tabpage_set_win(tabnr, winnr_fixed)
+      local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+      if winnr_command ~= nil then
+        vim.api.nvim_set_current_win(winnr_command)
       end
     end
   else

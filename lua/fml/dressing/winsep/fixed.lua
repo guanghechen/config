@@ -1,7 +1,12 @@
 local Line = require("fml.dressing.winsep.line")
 
+---@class fml.dressing.winsep.fixed
+---@field public winsep                 fml.dressing.Winsep
+---@field public scheduler              eve.collection.Scheduler
+local M = {}
+
 ---@type fml.dressing.Winsep
-local fixed_winsep = {
+M.winsep = {
   left = Line.new({ direction = "h", zindex = 1, winhighlight = "NormalFloat:f_winsep_fixed" }),
   top = Line.new({ direction = "k", zindex = 1, winhighlight = "NormalFloat:f_winsep_fixed" }),
   right = Line.new({ direction = "l", zindex = 1, winhighlight = "NormalFloat:f_winsep_fixed" }),
@@ -77,10 +82,26 @@ local fixed_winsep = {
       self.bottom:hide()
     end
   end,
-  ---@diagnostic disable-next-line: unused-local
-  should_show = function(self, winnr)
-    return not eve.editor.is_win_floating(winnr)
-  end,
 }
 
-return fixed_winsep
+M.scheduler = eve.col.Scheduler.new({
+  name = "winsep_refresh fixed",
+  delay = 100,
+  silent = function()
+    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+    return not devmode
+  end,
+  task = function(callback)
+    if eve.state.flight.dressing_winsep_fixed:snapshot() then
+      local winnr = eve.state.editor.get_winnr_fixed() ---@type integer|nil
+      if winnr ~= nil then
+        vim.schedule(function()
+          M.winsep:show(winnr)
+        end)
+      end
+    end
+    callback("fulfilled")
+  end,
+})
+
+return M

@@ -27,6 +27,7 @@ require("ghc.command")
 if eve.path.is_repo_git() then
   if eve.state.flight.autoload:snapshot() then
     eve.session.load_session(eve.state.get_storage().nvim_session_autosaved)
+    vim.schedule(eve.state.refresh)
   end
 end
 

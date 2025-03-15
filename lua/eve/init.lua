@@ -165,7 +165,6 @@ function M.setup_state(storage)
   storage = storage or M.get_default_storage() ---@type eve.state.storage
   eve.state.set_storage(storage)
   eve.state.load(storage, false)
-  eve.state.refresh()
   require("eve.state.autocmd")
 end
 
