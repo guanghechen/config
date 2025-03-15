@@ -20,12 +20,12 @@ local state = require("eve.state")
 
 ---@class eve.command.ICommand
 ---@field public uuid                   string
----@field public tabtype                eve.e.state.tab.meta.TabType
+---@field public tabtype                eve.e.state.tab.meta.TabTypeEnum
 ---@field public action                 fun(args?: string): nil
 
 ---@class eve.command.IImplementation
 ---@field public uuid                   string
----@field public tabtype                ?eve.e.state.tab.meta.TabType
+---@field public tabtype                ?eve.e.state.tab.meta.TabTypeEnum
 ---@field public action                 fun(args?: string): nil
 
 local definition_map = {} ---@type table<string, eve.command.IDefinition>
@@ -97,7 +97,7 @@ end
 ---@return eve.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtype = implementation.tabtype or eve.setting.tabtypes.ALL ---@type string
+  local tabtype = implementation.tabtype or eve.var.TabTypeEnum.ALL ---@type string
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type eve.command.IDefinition|nil
   if definition == nil then
@@ -110,7 +110,7 @@ function M.implement(implementation)
     return M
   end
 
-  local key = tabtype == eve.setting.tabtypes.ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
+  local key = tabtype == eve.var.TabTypeEnum.ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
   if command_map[key] ~= nil then
     eve.reporter.error({
       from = __module_name__,
@@ -137,7 +137,7 @@ end
 ---@return nil
 function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = state.tab.get_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabType
+  local tabtype = state.tab.get_tabtype(tabnr) ---@type eve.e.state.tab.meta.TabTypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] or command_map[uuid] ---@type eve.command.ICommand|nil
 

@@ -61,13 +61,6 @@ M.sessions = {
   }, ","),
 }
 
----@class eve.builtin.setting.tabtypes
-M.tabtypes = {
-  ALL = "all",
-  DIFFVIEW = "diffview",
-  NORMAL = "normal",
-}
-
 ---@class eve.builtin.setting.vars
 M.vars = {
   BUFID_MIDDLE = "eve_bufid_middle",

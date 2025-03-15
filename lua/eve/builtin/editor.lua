@@ -68,7 +68,7 @@ function M.pick_swappable_win(winnr_source)
 end
 
 ---@param tabnr                         integer
----@return eve.e.state.tab.meta.TabType
+---@return eve.e.state.tab.meta.TabTypeEnum
 function M.calc_tabtype(tabnr)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
 
@@ -77,11 +77,11 @@ function M.calc_tabtype(tabnr)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == eve.filetype.DIFFVIEW_FILES or filetype == eve.filetype.DIFFVIEW_FILE_HISTORY then
-      return eve.setting.tabtypes.DIFFVIEW
+      return eve.var.TabTypeEnum.DIFFVIEW
     end
   end
 
-  return eve.setting.tabtypes.NORMAL ---@type string
+  return eve.var.TabTypeEnum.NORMAL ---@type string
 end
 
 ---@param filetype                      string

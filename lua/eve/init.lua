@@ -25,6 +25,7 @@ local __mods = {
   string = "eve.builtin.string",
   table = "eve.builtin.table",
   tmux = "eve.builtin.tmux",
+  var = "eve.builtin.var",
   winpicker = "eve.builtin.winpicker",
 }
 
@@ -55,6 +56,7 @@ local __mods = {
 ---@field public string                 eve.builtin.string
 ---@field public table                  eve.builtin.table
 ---@field public tmux                   eve.builtin.tmux
+---@field public var                    eve.builtin.var
 ---@field public winpicker              eve.builtin.winpicker
 ---
 ---@field public col                    eve.collection
