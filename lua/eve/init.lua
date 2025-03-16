@@ -62,10 +62,10 @@ local __mods = {
 ---@field public winpicker              eve.builtin.winpicker
 ---
 ---@field public col                    eve.collection
----@field public lib                    eve.lib
+---@field public std                    eve.std
 ---@field public state                  eve.state
 local M = setmetatable({
-  lib = require("eve.lib"),
+  std = require("eve.std"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
