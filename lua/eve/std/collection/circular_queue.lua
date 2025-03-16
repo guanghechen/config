@@ -1,28 +1,28 @@
----@class eve.collection.ICircularQueue
----@field public capacity               fun(self: eve.collection.ICircularQueue): integer
----@field public size                   fun(self: eve.collection.ICircularQueue): integer
----@field public at                     fun(self: eve.collection.ICircularQueue, index: integer): eve.t.T|nil
----@field public back                   fun(self: eve.collection.ICircularQueue): eve.t.T|nil
----@field public clear                  fun(self: eve.collection.ICircularQueue): nil
----@field public collect                fun(self: eve.collection.ICircularQueue): eve.t.T[]
----@field public count                  fun(self: eve.collection.ICircularQueue, filter: eve.t.IFilter): integer
----@field public dequeue                fun(self: eve.collection.ICircularQueue): eve.t.T|nil
----@field public dequeue_back           fun(self: eve.collection.ICircularQueue): eve.t.T|nil
----@field public enqueue                fun(self: eve.collection.ICircularQueue, element: eve.t.T): nil
----@field public fork                   fun(self: eve.collection.ICircularQueue, filter: eve.t.IFilter): eve.collection.ICircularQueue
----@field public front                  fun(self: eve.collection.ICircularQueue): eve.t.T|nil
----@field public iterator               fun(self: eve.collection.ICircularQueue): fun(): eve.t.T|nil
----@field public iterator_reverse       fun(self: eve.collection.ICircularQueue): fun(): eve.t.T|nil
----@field public rearrange              fun(self: eve.collection.ICircularQueue, filter: eve.t.IFilter): fun(): eve.t.T|nil
----@field public reset                  fun(self: eve.collection.ICircularQueue, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
----@field public update                 fun(self: eve.collection.ICircularQueue, index: integer, value: eve.t.T): nil
+---@class eve.std.collection.ICircularQueue
+---@field public capacity               fun(self: eve.std.collection.ICircularQueue): integer
+---@field public size                   fun(self: eve.std.collection.ICircularQueue): integer
+---@field public at                     fun(self: eve.std.collection.ICircularQueue, index: integer): eve.t.T|nil
+---@field public back                   fun(self: eve.std.collection.ICircularQueue): eve.t.T|nil
+---@field public clear                  fun(self: eve.std.collection.ICircularQueue): nil
+---@field public collect                fun(self: eve.std.collection.ICircularQueue): eve.t.T[]
+---@field public count                  fun(self: eve.std.collection.ICircularQueue, filter: eve.t.IFilter): integer
+---@field public dequeue                fun(self: eve.std.collection.ICircularQueue): eve.t.T|nil
+---@field public dequeue_back           fun(self: eve.std.collection.ICircularQueue): eve.t.T|nil
+---@field public enqueue                fun(self: eve.std.collection.ICircularQueue, element: eve.t.T): nil
+---@field public fork                   fun(self: eve.std.collection.ICircularQueue, filter: eve.t.IFilter): eve.std.collection.ICircularQueue
+---@field public front                  fun(self: eve.std.collection.ICircularQueue): eve.t.T|nil
+---@field public iterator               fun(self: eve.std.collection.ICircularQueue): fun(): eve.t.T|nil
+---@field public iterator_reverse       fun(self: eve.std.collection.ICircularQueue): fun(): eve.t.T|nil
+---@field public rearrange              fun(self: eve.std.collection.ICircularQueue, filter: eve.t.IFilter): fun(): eve.t.T|nil
+---@field public reset                  fun(self: eve.std.collection.ICircularQueue, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
+---@field public update                 fun(self: eve.std.collection.ICircularQueue, index: integer, value: eve.t.T): nil
 
----@class eve.collection.circular_queue.IProps
+---@class eve.std.collection.circular_queue.IProps
 ---@field public capacity               integer
 
 local _tmp_array = {} ---@type eve.t.T[]
 
----@class eve.collection.CircularQueue : eve.collection.ICircularQueue
+---@class eve.std.collection.CircularQueue : eve.std.collection.ICircularQueue
 ---@field private _elements             eve.t.T[]
 ---@field private _capacity             integer
 ---@field private _size                 integer
@@ -31,8 +31,8 @@ local _tmp_array = {} ---@type eve.t.T[]
 local M = {}
 M.__index = M
 
----@param props                         eve.collection.circular_queue.IProps
----@return eve.collection.CircularQueue
+---@param props                         eve.std.collection.circular_queue.IProps
+---@return eve.std.collection.CircularQueue
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
 
@@ -45,8 +45,8 @@ function M.new(props)
   return self
 end
 
----@param queue                         eve.collection.ICircularQueue
----@return eve.collection.CircularQueue
+---@param queue                         eve.std.collection.ICircularQueue
+---@return eve.std.collection.CircularQueue
 function M.from(queue)
   local elements = {} ---@type eve.t.T[]
   local size = 0 ---@type integer
@@ -66,7 +66,7 @@ end
 
 ---@param arr                          eve.t.T[]
 ---@param capacity                     integer
----@return eve.collection.CircularQueue
+---@return eve.std.collection.CircularQueue
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
   local elements = {} ---@type eve.t.T[]
@@ -205,7 +205,7 @@ function M:enqueue(element)
 end
 
 ---@param filter                        fun(element: eve.t.T, index: integer): boolean
----@return eve.collection.CircularQueue
+---@return eve.std.collection.CircularQueue
 function M:fork(filter)
   self:rearrange(filter)
   return M.from(self)

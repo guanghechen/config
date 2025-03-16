@@ -1,7 +1,6 @@
 ---@class eve.collection.__mods
 local __mods = {
   BatchDisposable = "eve.collection.batch_disposable",
-  CircularQueue = "eve.collection.circular_queue",
   CircularStack = "eve.collection.circular_stack",
   Dirtier = "eve.collection.dirtier",
   Frecency = "eve.collection.frecency",
@@ -19,7 +18,6 @@ local __mods = {
 ---@field public __mods                 eve.collection.__mods
 ---
 ---@field public BatchDisposable        eve.collection.BatchDisposable
----@field public CircularQueue          eve.collection.CircularQueue
 ---@field public CircularStack          eve.collection.CircularStack
 ---@field public Dirtier                eve.collection.Dirtier
 ---@field public Frecency               eve.collection.Frecency
