@@ -81,6 +81,10 @@ return {
       end,
       task = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+        if vim.b[bufnr][eve.var.Names.BUF_DISABLE_LINT] then
+          return "done"
+        end
+
         local filetype = vim.bo[bufnr].filetype ---@type string
         if eve.filetype.is_not_plain_file(filetype) then
           return "done"
