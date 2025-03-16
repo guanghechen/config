@@ -16,7 +16,7 @@ local __module_name__ = "eve.collection.observable" ---@type string
 ---@field public normalize              ?eve.t.INormalize Normalize the value before compare or update
 ---@field public readonly               ?boolean
 
----@type eve.collection.IUnsubscribable
+---@type eve.std.collection.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = eve.fn.noop }
 
 ---@class eve.collection.Observable : eve.collection.IObservable
@@ -108,7 +108,7 @@ end
 
 ---@param subscriber                    eve.std.collection.ISubscriber
 ---@param ignoreInitial                 boolean
----@return eve.collection.IUnsubscribable
+---@return eve.std.collection.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)
   if subscriber:is_disposed() then
     return noop_unsubscribable

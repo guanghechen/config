@@ -1,11 +1,9 @@
 ---@class eve.collection.__mods
 local __mods = {
   BatchDisposable = "eve.collection.batch_disposable",
-  BatchHandler = "eve.collection.batch_handler",
   CircularQueue = "eve.collection.circular_queue",
   CircularStack = "eve.collection.circular_stack",
   Dirtier = "eve.collection.dirtier",
-  Disposable = "eve.collection.disposable",
   Frecency = "eve.collection.frecency",
   History = "eve.collection.history",
   AdvanceHistory = "eve.collection.history_advance",
@@ -22,11 +20,9 @@ local __mods = {
 ---@field public __mods                 eve.collection.__mods
 ---
 ---@field public BatchDisposable        eve.collection.BatchDisposable
----@field public BatchHandler           eve.std.collection.BatchHandler
 ---@field public CircularQueue          eve.collection.CircularQueue
 ---@field public CircularStack          eve.collection.CircularStack
 ---@field public Dirtier                eve.collection.Dirtier
----@field public Disposable             eve.collection.Disposable
 ---@field public Frecency               eve.collection.Frecency
 ---@field public History                eve.collection.History
 ---@field public AdvanceHistory         eve.collection.AdvanceHistory

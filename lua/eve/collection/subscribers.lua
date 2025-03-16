@@ -1,10 +1,7 @@
----@class eve.collection.IUnsubscribable
----@field public unsubscribe            fun(self: eve.collection.IUnsubscribable):nil
-
 ---@class eve.collection.ISubscribable
----@field public subscribe              fun(self: eve.collection.ISubscribable, subscriber: eve.std.collection.ISubscriber, ignoreInitial?: boolean): eve.collection.IUnsubscribable
+---@field public subscribe              fun(self: eve.collection.ISubscribable, subscriber: eve.std.collection.ISubscriber, ignoreInitial?: boolean): eve.std.collection.IUnsubscribable
 
----@class eve.collection.ISubscribers : eve.collection.ISubscribable, eve.collection.IDisposable
+---@class eve.collection.ISubscribers : eve.collection.ISubscribable, eve.std.collection.IDisposable
 ---@field public count                  fun(self: eve.collection.ISubscribers): nil
 ---@field public notify                 fun(self: eve.collection.ISubscribers, value: eve.t.T, value_prev: eve.t.T | nil): nil
 
@@ -15,7 +12,7 @@
 ---@field subscriber                    eve.std.collection.ISubscriber
 ---@field unsubscribed                  boolean
 
----@type eve.collection.IUnsubscribable
+---@type eve.std.collection.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = eve.fn.noop }
 
 ---@class eve.collection.Subscribers : eve.collection.ISubscribers
@@ -121,7 +118,7 @@ function M:notify(value, value_prev)
 end
 
 ---@param subscriber                    eve.std.collection.ISubscriber
----@return eve.collection.IUnsubscribable
+---@return eve.std.collection.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:is_disposed() then
     return noop_unsubscribable
@@ -138,7 +135,7 @@ function M:subscribe(subscriber)
   table.insert(self._items, item)
   self._subscribing_count = self._subscribing_count + 1
 
-  ---@type eve.collection.IUnsubscribable
+  ---@type eve.std.collection.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if item.unsubscribed then

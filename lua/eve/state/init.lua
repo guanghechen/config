@@ -62,7 +62,7 @@ local __mods = {
 ---@field public get_storage            fun(): eve.state.storage
 ---@field public set_storage            fun(storage: eve.state.storage): nil
 ---
----@field public add_disposable         fun(disposable: eve.collection.IDisposable): nil
+---@field public add_disposable         fun(disposable: eve.std.collection.IDisposable): nil
 ---@field public dispose                fun(): nil
 ---@field public observe                fun(observables: eve.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
@@ -223,7 +223,7 @@ function M.set_storage(storage)
   M._storage = storage
 end
 
----@param disposable                    eve.collection.IDisposable
+---@param disposable                    eve.std.collection.IDisposable
 ---@return nil
 function M.add_disposable(disposable)
   M._disposables:add_disposable(disposable)
@@ -400,7 +400,7 @@ function M.watch_changes(params)
   )
 
   ---! Save when leave the eve.editor.
-  M.add_disposable(eve.col.Disposable.new({
+  M.add_disposable(eve.std.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -439,7 +439,7 @@ function M.watch_changes(params)
         })
       end,
     })
-    M.add_disposable(eve.col.Disposable.new({ on_dispose = unwatch }))
+    M.add_disposable(eve.std.Disposable.new({ on_dispose = unwatch }))
   end
 end
 

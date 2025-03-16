@@ -6,6 +6,7 @@ local __mods = {
   fn = "eve.std.fn",
   
   BatchHandler = "eve.std.collection.batch_handler",
+  Disposable = "eve.std.collection.disposable",
   Subscriber = "eve.std.collection.subscriber",
 }
 
@@ -18,6 +19,7 @@ local __mods = {
 ---@field public fn                     eve.std.fn
 ---
 ---@field public BatchHandler           eve.std.collection.BatchHandler
+---@field public Disposable             eve.std.collection.Disposable
 ---@field public Subscriber             eve.std.collection.Subscriber
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)

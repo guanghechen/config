@@ -1,4 +1,4 @@
----@class eve.std.collection.ISubscriber : eve.collection.IDisposable
+---@class eve.std.collection.ISubscriber : eve.std.collection.IDisposable
 ---@field public next                   fun(self: eve.std.collection.ISubscriber, value: eve.t.T, value_prev: eve.t.T| nil): nil
 
 ---@class eve.std.collection.subscriber.IProps
