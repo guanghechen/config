@@ -12,7 +12,6 @@ local __mods = {
   fs = "eve.builtin.fs",
   icon = "eve.builtin.icon",
   im = "eve.builtin.im",
-  is = "eve.builtin.is",
   json = "eve.builtin.json",
   lsp = "eve.builtin.lsp",
   nvim = "eve.builtin.nvim",
@@ -44,7 +43,6 @@ local __mods = {
 ---@field public fs                     eve.builtin.fs
 ---@field public icon                   eve.builtin.icon
 ---@field public im                     eve.builtin.im
----@field public is                     eve.builtin.is
 ---@field public json                   eve.builtin.json
 ---@field public lsp                    eve.builtin.lsp
 ---@field public nvim                   eve.builtin.nvim

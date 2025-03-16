@@ -4,6 +4,7 @@ local __mods = {
   md5 = "eve.std.lib.md5",
 
   fn = "eve.std.fn",
+  is = "eve.std.is",
   
   BatchHandler = "eve.std.collection.batch_handler",
   CircularQueue = "eve.std.collection.circular_queue",
@@ -20,6 +21,7 @@ local __mods = {
 ---@field public md5                    eve.std.lib.md5
 ---
 ---@field public fn                     eve.std.fn
+---@field public is                     eve.std.is
 ---
 ---@field public BatchHandler           eve.std.collection.BatchHandler
 ---@field public CircularQueue          eve.std.collection.CircularQueue
