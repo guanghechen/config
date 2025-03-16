@@ -302,7 +302,7 @@ return {
     },
     buffers = {
       follow_current_file = {
-        enabled = true,
+        enabled = false,
         leave_dirs_open = true,
       },
       group_empty_dirs = true, -- when true, empty folders will be grouped together
