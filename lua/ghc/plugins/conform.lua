@@ -119,7 +119,7 @@ return {
     },
     format_on_save = function(bufnr)
       -- Disable with a global or buffer-local variable
-      if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+      if vim.g[eve.var.Names.BUF_DISABLE_AUTO_FORMAT] or vim.b[bufnr][eve.var.Names.BUF_DISABLE_AUTO_FORMAT] then
         return
       end
 
