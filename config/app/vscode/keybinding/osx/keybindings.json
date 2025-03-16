@@ -83,6 +83,11 @@
     "when": "fileMatchOrMatchFocus && searchViewletVisible"
   },
   {
+    "key": "cmd+enter",
+    "command": "-editor.action.insertLineAfter",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
     "key": "cmd+left",
     "command": "-cursorHome",
     "when": "textInputFocus"
@@ -1332,11 +1337,6 @@
     "key": "cmd+enter",
     "command": "workbench.action.terminal.chat.runFirstCommand",
     "when": "terminalChatResponseContainsMultipleCodeBlocks && terminalHasBeenCreated && !terminalChatActiveRequest || terminalChatResponseContainsMultipleCodeBlocks && terminalProcessSupported && !terminalChatActiveRequest"
-  },
-  {
-    "key": "cmd+enter",
-    "command": "editor.action.insertLineAfter",
-    "when": "editorTextFocus && !editorReadonly"
   },
   {
     "key": "cmd+enter",

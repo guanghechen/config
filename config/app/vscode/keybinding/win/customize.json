@@ -134,11 +134,6 @@
   },
   {
     "key": "alt+enter",
-    "command": "editor.action.insertLineAfter",
-    "when": "editorTextFocus && !editorReadonly"
-  },
-  {
-    "key": "alt+enter",
     "command": "notebook.cell.insertCodeCellBelow",
     "when": "notebookCellListFocused && !inputFocus && notebookChatOuterFocusPosition == ''"
   },

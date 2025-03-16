@@ -83,6 +83,11 @@
     "when": "fileMatchOrMatchFocus && searchViewletVisible"
   },
   {
+    "key": "cmd+enter",
+    "command": "-editor.action.insertLineAfter",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
     "key": "cmd+left",
     "command": "-cursorHome",
     "when": "textInputFocus"
