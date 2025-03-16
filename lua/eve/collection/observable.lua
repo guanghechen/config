@@ -4,7 +4,7 @@ local __module_name__ = "eve.collection.observable" ---@type string
 ---@field public strict                 ?boolean Whether to throw an error if the observable disposed.
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 
----@class eve.collection.IObservable: eve.collection.IBatchDisposable, eve.collection.ISubscribable
+---@class eve.collection.IObservable: eve.collection.IBatchDisposable, eve.std.collection.ISubscribable
 ---@field public equals                 eve.t.IEquals
 ---@field public normalize              eve.t.INormalize
 ---@field public snapshot               fun(self: eve.collection.IObservable): eve.t.T
@@ -23,7 +23,7 @@ local noop_unsubscribable = { unsubscribe = eve.fn.noop }
 ---@field private _readonly             boolean
 ---@field private _value                eve.t.T
 ---@field private _value_last_notified  eve.t.T|nil
----@field private _subscribers          eve.collection.ISubscribers
+---@field private _subscribers          eve.std.collection.ISubscribers
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
@@ -45,7 +45,7 @@ function M.new(props)
   self._readonly = readonly
   self._value = normalize(initial_value)
   self._value_last_notified = nil
-  self._subscribers = eve.col.Subscribers.new()
+  self._subscribers = eve.std.Subscribers.new()
   return self
 end
 

@@ -1,30 +1,30 @@
----@class eve.collection.ISubscribable
----@field public subscribe              fun(self: eve.collection.ISubscribable, subscriber: eve.std.collection.ISubscriber, ignoreInitial?: boolean): eve.std.collection.IUnsubscribable
+---@class eve.std.collection.ISubscribable
+---@field public subscribe              fun(self: eve.std.collection.ISubscribable, subscriber: eve.std.collection.ISubscriber, ignoreInitial?: boolean): eve.std.collection.IUnsubscribable
 
----@class eve.collection.ISubscribers : eve.collection.ISubscribable, eve.std.collection.IDisposable
----@field public count                  fun(self: eve.collection.ISubscribers): nil
----@field public notify                 fun(self: eve.collection.ISubscribers, value: eve.t.T, value_prev: eve.t.T | nil): nil
+---@class eve.std.collection.ISubscribers : eve.std.collection.ISubscribable, eve.std.collection.IDisposable
+---@field public count                  fun(self: eve.std.collection.ISubscribers): nil
+---@field public notify                 fun(self: eve.std.collection.ISubscribers, value: eve.t.T, value_prev: eve.t.T | nil): nil
 
----@class eve.collection.Subscribers.IProps
+---@class eve.std.collection.subscribers.IProps
 ---@field public ARRANGE_THRESHOLD      ?number
 
----@class eve.collection.Subscribers.ISubscriberItem
+---@class eve.std.collection.subscribers.ISubscriberItem
 ---@field subscriber                    eve.std.collection.ISubscriber
 ---@field unsubscribed                  boolean
 
 ---@type eve.std.collection.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = eve.fn.noop }
+local noop_unsubscribable = { unsubscribe = eve.std.fn.noop }
 
----@class eve.collection.Subscribers : eve.collection.ISubscribers
+---@class eve.std.collection.Subscribers : eve.std.collection.ISubscribers
 ---@field private ARRANGE_THRESHOLD     number
 ---@field private _disposed             boolean
----@field private _items                eve.collection.Subscribers.ISubscriberItem[]
+---@field private _items                eve.std.collection.subscribers.ISubscriberItem[]
 ---@field private _subscribing_count    integer
 local M = {}
 M.__index = M
 
----@param props                         ?eve.collection.Subscribers.IProps
----@return eve.collection.Subscribers
+---@param props                         ?eve.std.collection.subscribers.IProps
+---@return eve.std.collection.Subscribers
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -34,7 +34,7 @@ function M.new(props)
   ---@type boolean
   self._disposed = false
 
-  ---@type eve.collection.Subscribers.ISubscriberItem[]
+  ---@type eve.std.collection.subscribers.ISubscriberItem[]
   self._items = {}
 
   ---@type integer
@@ -129,7 +129,7 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type eve.collection.Subscribers.ISubscriberItem
+  ---@type eve.std.collection.subscribers.ISubscriberItem
   local item = { subscriber = subscriber, unsubscribed = false }
 
   table.insert(self._items, item)
@@ -154,7 +154,7 @@ end
 function M:_arrange()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
-    ---@type eve.collection.Subscribers.ISubscriberItem[]
+    ---@type eve.std.collection.subscribers.ISubscriberItem[]
     local next_items = {}
 
     local i = 1

@@ -11,7 +11,6 @@ local __mods = {
   Promise = "eve.collection.promise",
   Scheduler = "eve.collection.scheduler",
   Spawn = "eve.collection.spawn",
-  Subscribers = "eve.collection.subscribers",
   Theme = "eve.collection.theme",
   Ticker = "eve.collection.ticker",
 }
@@ -30,7 +29,6 @@ local __mods = {
 ---@field public Promise                eve.collection.Promise
 ---@field public Scheduler              eve.collection.Scheduler
 ---@field public Spawn                  eve.collection.Spawn
----@field public Subscribers            eve.collection.Subscribers
 ---@field public Theme                  eve.collection.Theme
 ---@field public Ticker                 eve.collection.Ticker
 local M = setmetatable({ __mods = __mods }, {

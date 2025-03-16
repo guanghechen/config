@@ -8,6 +8,7 @@ local __mods = {
   BatchHandler = "eve.std.collection.batch_handler",
   Disposable = "eve.std.collection.disposable",
   Subscriber = "eve.std.collection.subscriber",
+  Subscribers = "eve.std.collection.subscribers",
 }
 
 ---@class eve.std
