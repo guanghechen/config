@@ -56,24 +56,27 @@ local function setup_node()
   end
 
   for _, language in ipairs(js_filetypes) do
-    if not dap.configurations[language] then
-      dap.configurations[language] = {
-        {
-          type = "pwa-node",
-          request = "launch",
-          name = "Launch file",
-          program = "${file}",
-          cwd = "${workspaceFolder}",
-        },
-        {
-          type = "pwa-node",
-          request = "attach",
-          name = "Attach",
-          processId = require("dap.utils").pick_process,
-          cwd = "${workspaceFolder}",
-        },
-      }
-    end
+    dap.configurations[language] = dap.configurations[language] or {}
+    vim.list_extend(dap.configurations[language], {
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "pwa-node: file",
+        description = "pwa-node: launch file",
+        program = "${file}",
+        cwd = "${workspaceFolder}",
+        console = "integratedTerminal",
+      },
+      {
+        type = "pwa-node",
+        request = "attach",
+        name = "pwa-node: attach",
+        description = "pwa-node: attach",
+        processId = require("dap.utils").pick_process,
+        cwd = "${workspaceFolder}",
+        console = "integratedTerminal",
+      },
+    })
   end
 end
 
@@ -118,7 +121,9 @@ local function setup_python()
     {
       type = "python",
       request = "attach",
-      name = "attach",
+      name = "python: attach",
+      description = "python: attach",
+      cwd = "${workspaceFolder}",
       connect = function()
         local host = eve.state.lsp.python_debug_host:snapshot() ---@type string
         local port = eve.state.lsp.python_debug_port:snapshot() ---@type integer
@@ -128,16 +133,20 @@ local function setup_python()
     {
       type = "python",
       request = "launch",
-      name = "file",
+      name = "python: file",
+      description = "python: launch file",
       program = "${file}",
+      cwd = "${workspaceFolder}",
       console = "integratedTerminal",
       pythonPath = resolve_python_path,
     },
     {
       type = "python",
       request = "launch",
-      name = "file:args",
+      name = "python: file:args",
+      description = "python: launch file with args",
       program = "${file}",
+      cwd = "${workspaceFolder}",
       console = "integratedTerminal",
       args = function()
         local text = vim.fn.input("args: ")
@@ -152,10 +161,12 @@ local function setup_python()
     {
       type = "python",
       request = "launch",
-      name = "file:doctest",
+      name = "python: file:doctest",
+      description = "python: launch doctest",
       module = "doctest",
       args = { "${file}" },
       noDebug = true,
+      cwd = "${workspaceFolder}",
       console = "integratedTerminal",
       pythonPath = resolve_python_path,
     },
