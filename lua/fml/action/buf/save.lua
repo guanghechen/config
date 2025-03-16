@@ -16,8 +16,9 @@ function M.save()
   local ready_count = 0 ---@type integer
 
   for _, bufnr in ipairs(bufnrs) do
+    local filetype = vim.bo[bufnr].filetype ---@type string
     local is_mod = vim.bo[bufnr].mod ---@type boolean
-    if is_mod then
+    if is_mod and not eve.filetype.is_not_plain_file(filetype) then
       modified_count = modified_count + 1
 
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
