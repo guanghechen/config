@@ -7,6 +7,7 @@ local __mods = {
   
   BatchHandler = "eve.std.collection.batch_handler",
   CircularQueue = "eve.std.collection.circular_queue",
+  CircularStack = "eve.std.collection.circular_stack",
   Disposable = "eve.std.collection.disposable",
   Subscriber = "eve.std.collection.subscriber",
   Subscribers = "eve.std.collection.subscribers",
@@ -22,6 +23,7 @@ local __mods = {
 ---
 ---@field public BatchHandler           eve.std.collection.BatchHandler
 ---@field public CircularQueue          eve.std.collection.CircularQueue
+---@field public CircularStack          eve.std.collection.CircularStack
 ---@field public Disposable             eve.std.collection.Disposable
 ---@field public Subscriber             eve.std.collection.Subscriber
 local M = setmetatable({ __mods = __mods }, {

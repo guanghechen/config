@@ -1,26 +1,26 @@
----@class eve.collection.ICircularStack
----@field public capacity               fun(self: eve.collection.ICircularStack): integer
----@field public size                   fun(self: eve.collection.ICircularStack): integer
----@field public at                     fun(self: eve.collection.ICircularStack, index: integer): eve.t.T|nil
----@field public clear                  fun(self: eve.collection.ICircularStack): nil
----@field public collect                fun(self: eve.collection.ICircularStack): eve.t.T[]
----@field public count                  fun(self: eve.collection.ICircularStack, filter: eve.t.IFilter): integer
----@field public fork                   fun(self: eve.collection.ICircularStack, filter: eve.t.IFilter): eve.collection.ICircularStack
----@field public iterator               fun(self: eve.collection.ICircularStack): fun(): eve.t.T|nil
----@field public iterator_reverse       fun(self: eve.collection.ICircularStack): fun(): eve.t.T|nil
----@field public pop                    fun(self: eve.collection.ICircularStack): eve.t.T|nil
----@field public push                   fun(self: eve.collection.ICircularStack, element: eve.t.T): nil
----@field public rearrange              fun(self: eve.collection.ICircularStack, filter: eve.t.IFilter): fun(): eve.t.T|nil
----@field public reset                  fun(self: eve.collection.ICircularStack, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
----@field public top                    fun(self: eve.collection.ICircularStack): eve.t.T|nil
----@field public update                 fun(self: eve.collection.ICircularStack, index: integer, value: eve.t.T): nil
+---@class eve.std.collection.ICircularStack
+---@field public capacity               fun(self: eve.std.collection.ICircularStack): integer
+---@field public size                   fun(self: eve.std.collection.ICircularStack): integer
+---@field public at                     fun(self: eve.std.collection.ICircularStack, index: integer): eve.t.T|nil
+---@field public clear                  fun(self: eve.std.collection.ICircularStack): nil
+---@field public collect                fun(self: eve.std.collection.ICircularStack): eve.t.T[]
+---@field public count                  fun(self: eve.std.collection.ICircularStack, filter: eve.t.IFilter): integer
+---@field public fork                   fun(self: eve.std.collection.ICircularStack, filter: eve.t.IFilter): eve.std.collection.ICircularStack
+---@field public iterator               fun(self: eve.std.collection.ICircularStack): fun(): eve.t.T|nil
+---@field public iterator_reverse       fun(self: eve.std.collection.ICircularStack): fun(): eve.t.T|nil
+---@field public pop                    fun(self: eve.std.collection.ICircularStack): eve.t.T|nil
+---@field public push                   fun(self: eve.std.collection.ICircularStack, element: eve.t.T): nil
+---@field public rearrange              fun(self: eve.std.collection.ICircularStack, filter: eve.t.IFilter): fun(): eve.t.T|nil
+---@field public reset                  fun(self: eve.std.collection.ICircularStack, elements: eve.t.T[]): boolean): fun(): eve.t.T|nil
+---@field public top                    fun(self: eve.std.collection.ICircularStack): eve.t.T|nil
+---@field public update                 fun(self: eve.std.collection.ICircularStack, index: integer, value: eve.t.T): nil
 
----@class eve.collection.circular_stack.IProps
+---@class eve.std.collection.circular_stack.IProps
 ---@field public capacity               integer
 
 local _tmp_array = {} ---@type eve.t.T[]
 
----@class eve.collection.CircularStack : eve.collection.ICircularStack
+---@class eve.std.collection.CircularStack : eve.std.collection.ICircularStack
 ---@field private _elements             eve.t.T[]
 ---@field private _capacity             integer
 ---@field private _size                 integer
@@ -29,8 +29,8 @@ local _tmp_array = {} ---@type eve.t.T[]
 local M = {}
 M.__index = M
 
----@param props                         eve.collection.circular_stack.IProps
----@return eve.collection.CircularStack
+---@param props                         eve.std.collection.circular_stack.IProps
+---@return eve.std.collection.CircularStack
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
 
@@ -43,8 +43,8 @@ function M.new(props)
   return self
 end
 
----@param queue                         eve.collection.ICircularStack
----@return eve.collection.CircularStack
+---@param queue                         eve.std.collection.ICircularStack
+---@return eve.std.collection.CircularStack
 function M.from(queue)
   local elements = {} ---@type eve.t.T[]
   local size = 0 ---@type integer
@@ -64,7 +64,7 @@ end
 
 ---@param arr                          eve.t.T[]
 ---@param capacity                     integer
----@return eve.collection.CircularStack
+---@return eve.std.collection.CircularStack
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
   local elements = {} ---@type eve.t.T[]
@@ -149,7 +149,7 @@ function M:count(filter)
 end
 
 ---@param filter                        fun(element: eve.t.T, index: integer): boolean
----@return eve.collection.CircularStack
+---@return eve.std.collection.CircularStack
 function M:fork(filter)
   self:rearrange(filter)
   return M.from(self)
