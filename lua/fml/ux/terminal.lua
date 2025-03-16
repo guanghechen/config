@@ -75,7 +75,7 @@ function M.new(props)
   self._status = "hidden"
   self._term_alive = false
   self._winnr = nil
-  self._on_exit = props.on_exit or eve.fn.noop
+  self._on_exit = props.on_exit or eve.std.fn.noop
   return self
 end
 

@@ -35,7 +35,7 @@ function M.new(props)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
   local items = props.items ---@type table<string, eve.collection.frecency.IItem>
-  local normalize = props.normalize or eve.fn.identity ---@type fun(key: string): string
+  local normalize = props.normalize or eve.std.fn.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
   self._items = items

@@ -17,7 +17,7 @@ local __module_name__ = "eve.collection.observable" ---@type string
 ---@field public readonly               ?boolean
 
 ---@type eve.std.collection.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = eve.fn.noop }
+local noop_unsubscribable = { unsubscribe = eve.std.fn.noop }
 
 ---@class eve.collection.Observable : eve.collection.IObservable
 ---@field private _readonly             boolean
@@ -32,8 +32,8 @@ setmetatable(M, eve.col.BatchDisposable)
 ---@param props                         eve.collection.observable.IProps
 ---@return eve.collection.Observable
 function M.new(props)
-  local equals = props.equals or eve.fn.equals_shallow ---@type eve.t.IEquals
-  local normalize = props.normalize or eve.fn.identity ---@type eve.t.INormalize
+  local equals = props.equals or eve.std.fn.equals_shallow ---@type eve.t.IEquals
+  local normalize = props.normalize or eve.std.fn.identity ---@type eve.t.INormalize
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type eve.t.T
 

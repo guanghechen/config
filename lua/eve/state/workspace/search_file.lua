@@ -78,7 +78,7 @@ function M.load(raw_data)
   M.max_filesize:next(data.max_filesize)
   M.max_matches:next(data.max_matches)
   M.replacement:next(data.replacement)
-  if not eve.fn.equals_list(M.search_paths:snapshot(), data.search_paths) then
+  if not eve.std.fn.equals_list(M.search_paths:snapshot(), data.search_paths) then
     M.search_paths:next(data.search_paths)
   end
 end

@@ -157,7 +157,7 @@ function M.push(qflist)
   end
 
   local qflist_cur = M.history:present() ---@type eve.t.IQuickFixItem[]|nil
-  if qflist_cur == nil or not eve.fn.equals_deep(qflist_cur, qflist) then
+  if qflist_cur == nil or not eve.std.fn.equals_deep(qflist_cur, qflist) then
     M.history:push(qflist)
     M.set_qflist(qflist)
   end

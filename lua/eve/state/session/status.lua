@@ -113,7 +113,7 @@ M.ticker_session = eve.col.Ticker.new({ start = _defaults.tick_session })
 
 M.dirtier_statusline = eve.col.Dirtier.new({ dirty = _defaults.dirty_statusline })
 M.dirtier_tabline = eve.col.Dirtier.new({ dirty = _defaults.dirty_tabline })
-M.dirty_winline_nr = eve.col.Observable.from_value(_defaults.dirty_winline_nr, eve.fn.falsy)
+M.dirty_winline_nr = eve.col.Observable.from_value(_defaults.dirty_winline_nr, eve.std.fn.falsy)
 
 M.lsp_msg = eve.col.Observable.from_value(_defaults.lsp_msg)
 M.maximized_winnrs = _defaults.maximized_winnrs

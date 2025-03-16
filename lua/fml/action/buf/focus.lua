@@ -28,7 +28,7 @@ function M.focus(bufid)
   end
 
   local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
-  local bufid_next = eve.fn.navigate_circular(0, bufid, #bufs) ---@type integer
+  local bufid_next = eve.std.fn.navigate_circular(0, bufid, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
@@ -55,7 +55,7 @@ function M.focus_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
 
   local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
-  local bufid_next = eve.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
+  local bufid_next = eve.std.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
@@ -81,7 +81,7 @@ function M.focus_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
-  local bufid_next = eve.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
+  local bufid_next = eve.std.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 

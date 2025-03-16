@@ -84,13 +84,13 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@type fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
-M.equals = eve.fn.equals_shallow
+M.equals = eve.std.fn.equals_shallow
 
 ---@type eve.collection.IHistory
 M.history = eve.col.History.new({
   name = "widget",
   capacity = 20,
-  equals = eve.fn.equals_shallow,
+  equals = eve.std.fn.equals_shallow,
 })
 
 ---@return nil

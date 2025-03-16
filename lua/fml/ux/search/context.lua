@@ -122,7 +122,7 @@ function M.new(props)
   local input = props.input ---@type eve.collection.IObservable -- string>
   local input_history = props.input_history ---@type eve.collection.IHistory|nil
   local input_line_count = eve.col.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable -- integer>
-  local state_has_matched = eve.col.Observable.new({ value = false, equals = eve.fn.falsy }) ---@type eve.collection.IObservable -- boolean>
+  local state_has_matched = eve.col.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.collection.IObservable -- boolean>
   local status = eve.col.Observable.from_value("hidden")
 
   local cfg_input_title = props.title ---@type string
@@ -491,7 +491,7 @@ function M:moveup()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = eve.fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+    local lnum = eve.std.fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
     return self:locate(lnum)
   end
 end
@@ -503,7 +503,7 @@ function M:movedown()
     return 0
   else
     local step = vim.v.count1 or 1 ---@type integer
-    local lnum = eve.fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+    local lnum = eve.std.fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
     return self:locate(lnum)
   end
 end
