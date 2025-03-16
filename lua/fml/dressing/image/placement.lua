@@ -126,7 +126,7 @@ function M:error()
         msg = msg .. "## " .. step.name .. "\n\n" .. step.err .. "\n\n"
         if step.proc then
           msg = msg
-            .. eve.debugger.cmd({
+            .. eve.debug.cmd({
               cmd = step.proc.opts.cmd,
               args = step.proc.opts.args,
               cwd = step.proc.opts.cwd,

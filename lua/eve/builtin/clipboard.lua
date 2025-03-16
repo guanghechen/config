@@ -146,7 +146,7 @@ elseif eve.env.IS_NIX then
     end
     return exit_code == 0
   end
-  
+
   function M.get_clipboard()
     return nil
   end
@@ -186,7 +186,7 @@ elseif eve.env.IS_WSL then
       })
     end
     return exit_code == 0
-  end 
+  end
 
   function M.get_clipboard()
     return {

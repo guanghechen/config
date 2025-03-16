@@ -29,7 +29,7 @@ function M.new_with_buf(context)
 
   eve.editor.set_tabtype(tabnr, eve.var.TabTypes.NORMAL)
 
-  local meta = eve.state.tab.Meta.new(tabnr, bufs, math.min(1, #bufs))
+  local meta = eve.state.tab.Meta.new(tabnr, bufs)
   eve.state.tab.set(tabnr, meta)
   eve.state.tab.tab_history:push(tabnr)
 

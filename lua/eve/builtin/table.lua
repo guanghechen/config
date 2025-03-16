@@ -30,7 +30,7 @@ function M.merge_config(...)
   local ret = select(1, ...)
   for i = 2, select("#", ...) do
     local value = select(i, ...)
-    if M.is_dict_like(ret) and M.is_dict(value) then
+    if eve.std.is.dict_like(ret) and eve.std.is.dict(value) then
       for k, v in pairs(value) do
         ret[k] = M.merge_config(ret[k], v)
       end
