@@ -287,7 +287,12 @@ return {
 
       behaviour = {
         auto_focus_sidebar = true,
+        auto_suggestions = false,
+        auto_suggestions_respect_ignore = true,
+        auto_set_highlight_group = false,
         enable_token_counting = false,
+        enable_cursor_planning_mode = false,
+        jump_result_buffer_on_finish = true,
         minimize_diff = true,
         use_cwd_as_project_root = true,
       },
