@@ -22,7 +22,7 @@ local __mods = {
 ---@field public __mods                 eve.collection.__mods
 ---
 ---@field public BatchDisposable        eve.collection.BatchDisposable
----@field public BatchHandler           eve.collection.BatchHandler
+---@field public BatchHandler           eve.std.collection.BatchHandler
 ---@field public CircularQueue          eve.collection.CircularQueue
 ---@field public CircularStack          eve.collection.CircularStack
 ---@field public Dirtier                eve.collection.Dirtier
