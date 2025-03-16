@@ -8,7 +8,7 @@
 ---@class fml.ux.search.Input : fml.ux.search.IInput
 ---@field protected _autocmd_group      integer
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    eve.collection.IScheduler
+---@field protected _input_scheduler    eve.std.collection.IScheduler
 ---@field protected _keymaps            eve.t.IKeymap[]
 local M = {}
 M.__index = M
@@ -26,7 +26,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local context = props.context ---@type fml.ux.search.IContext
-  local input_history = context.input_history ---@type eve.collection.IHistory|nil
+  local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
   local autocmd_group = eve.nvim.augroup(context.uuid .. ":search_input") ---@type integer
 
   local actions = {
@@ -60,7 +60,7 @@ function M.new(props)
     })
   end
 
-  local input_scheduler = eve.col.Scheduler.new({
+  local input_scheduler = eve.std.Scheduler.new({
     name = "fml.ux.search.input.on_change",
     delay = 32,
     task = function(callback)

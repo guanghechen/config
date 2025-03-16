@@ -8,8 +8,8 @@ local function close(handle)
   end
 end
 
----@class eve.collection.spawn.Proc
----@field public opts                   eve.collection.spawn.IOptions
+---@class eve.std.collection.spawn.Proc
+---@field public opts                   eve.std.collection.spawn.IOptions
 ---@field public handle                 ?uv.uv_process_t
 ---@field public stdout                 uv.uv_pipe_t
 ---@field public stderr                 uv.uv_pipe_t
@@ -21,8 +21,8 @@ end
 local Proc = {}
 Proc.__index = Proc
 
----@param opts                          eve.collection.spawn.IOptions
----@return eve.collection.spawn.Proc
+---@param opts                          eve.std.collection.spawn.IOptions
+---@return eve.std.collection.spawn.Proc
 function Proc.new(opts)
   local self = setmetatable({}, Proc)
   self.opts = opts
@@ -179,25 +179,25 @@ function Proc:on_exit()
   end)
 end
 
----@class eve.collection.Spawn
+---@class eve.std.collection.Spawn
 local M = {}
 
----@class eve.collection.spawn.IOptions: uv.spawn.options,{}
+---@class eve.std.collection.spawn.IOptions: uv.spawn.options,{}
 ---@field public cmd                    string
 ---@field public args                   ?(string|number)[]
 ---@field public timeout                ?number
 ---@field public run                    ?boolean
 ---@field public debug                  ?boolean
----@field public on_stdout              ?fun(proc: eve.collection.spawn.Proc, data: string)
----@field public on_stderr              ?fun(proc: eve.collection.spawn.Proc, data: string)
----@field public on_exit                ?fun(proc: eve.collection.spawn.Proc, err: boolean)
+---@field public on_stdout              ?fun(proc: eve.std.collection.spawn.Proc, data: string)
+---@field public on_stderr              ?fun(proc: eve.std.collection.spawn.Proc, data: string)
+---@field public on_exit                ?fun(proc: eve.std.collection.spawn.Proc, err: boolean)
 
----@class eve.collection.spawn.Multi: eve.collection.spawn.IOptions,{}
+---@class eve.std.collection.spawn.Multi: eve.std.collection.spawn.IOptions,{}
 ---@field cmd? nil
----@field on_exit? fun(procs: eve.collection.spawn.Proc[], err: boolean)
+---@field on_exit? fun(procs: eve.std.collection.spawn.Proc[], err: boolean)
 
----@param procs                         eve.collection.spawn.Proc[]
----@param opts                          ?eve.collection.spawn.Multi
+---@param procs                         eve.std.collection.spawn.Proc[]
+---@param opts                          ?eve.std.collection.spawn.Multi
 function M.multi(procs, opts)
   if #procs == 0 then
     return
@@ -228,7 +228,7 @@ function M.multi(procs, opts)
     proc:run()
   end
 
-  ---@type eve.collection.spawn.Proc|{procs: eve.collection.spawn.Proc[]}
+  ---@type eve.std.collection.spawn.Proc|{procs: eve.std.collection.spawn.Proc[]}
   local ret = setmetatable({
     procs = procs,
     run = next,

@@ -64,7 +64,7 @@ local __mods = {
 ---
 ---@field public add_disposable         fun(disposable: eve.std.collection.IDisposable): nil
 ---@field public dispose                fun(): nil
----@field public observe                fun(observables: eve.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---@field public observe                fun(observables: eve.std.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: eve.state.state.IWatchChangeParams): nil
@@ -89,10 +89,10 @@ local __mods = {
 ---@field public search_file            eve.state.search_file
 ---@field public select                 eve.state.select
 ---@field private _storage              eve.state.storage
----@field private _disposables          eve.collection.BatchDisposable
+---@field private _disposables          eve.std.collection.BatchDisposable
 local M = setmetatable({
   _storage = {},
-  _disposables = eve.col.BatchDisposable.new(),
+  _disposables = eve.std.BatchDisposable.new(),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
@@ -234,7 +234,7 @@ function M.dispose()
   M._disposables:dispose()
 end
 
----@param observables                   eve.collection.IObservable[]
+---@param observables                   eve.std.collection.IObservable[]
 ---@param callback                      fun(): nil
 ---@param ignore_initial                ?boolean
 ---@return nil
@@ -303,7 +303,7 @@ function M.watch_changes(params)
     vim.cmd.redraw()
   end, true)
 
-  ---@type eve.collection.IObservable[]
+  ---@type eve.std.collection.IObservable[]
   local select_states = {
     M.bookmark.pinned,
     M.flight.ai,
@@ -366,7 +366,7 @@ function M.watch_changes(params)
     M.status.dirtier_statusline:mark_dirty()
   end)
 
-  local editor_states_save_scheduler = eve.col.Scheduler.new({
+  local editor_states_save_scheduler = eve.std.Scheduler.new({
     name = "eve.state#editor/save",
     delay = 200,
     task = function(callback)

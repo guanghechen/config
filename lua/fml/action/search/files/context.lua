@@ -52,7 +52,7 @@ local function get_scope_cwd(dirpath)
   return eve.path.cwd()
 end
 
-local state_search_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+local state_search_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 eve.state.select.search_file_scope:subscribe(
   eve.std.Subscriber.new({
     on_next = function(scope, prev_scope)
@@ -226,7 +226,7 @@ function M.get_search()
     local api = require("fml.action.search.files.api")
     local keybindings = require("fml.action.search.files.keybindings")
 
-    local frecency = eve.state.frecency.files ---@type eve.collection.IFrecency
+    local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
     local title = M.get_title() ---@type string
 
     ---@type fml.ux.search.IContext

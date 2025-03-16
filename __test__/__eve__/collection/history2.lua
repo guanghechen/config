@@ -1,4 +1,4 @@
-local history = eve.col.AdvanceHistory.new({
+local history = eve.std.AdvanceHistory.new({
   name = "haha",
   capacity = 5,
   validate = function(v)

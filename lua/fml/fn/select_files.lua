@@ -6,7 +6,7 @@ local Select = require("fml.ux.select")
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
----@field public input                  ?eve.collection.IObservable -- string>
+---@field public input                  ?eve.std.collection.IObservable -- string>
 ---@field public multiple               ?boolean
 ---@field public title                  string
 ---@field public fetch_filepaths        fun(): string[]
@@ -19,7 +19,7 @@ local function select_files(params)
   local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
-  local input = params.input ---@type eve.collection.IObservable -- string> | nil
+  local input = params.input ---@type eve.std.collection.IObservable -- string> | nil
   local multiple = params.multiple ---@type boolean|nil
   local title = params.title ---@type string
   local fetch_filepaths = params.fetch_filepaths ---@type fun(): string[]
@@ -76,8 +76,8 @@ local function select_files(params)
     dirty_on_invisible = true,
     preview_enabled = false,
     extend_preset_keymaps = true,
-    flag_fuzzy = eve.col.Observable.from_value(flag_fuzzy),
-    flag_regex = eve.col.Observable.from_value(flag_regex),
+    flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.std.Observable.from_value(flag_regex),
     frecency = eve.state.frecency.files,
     input = input,
     multiple = multiple,

@@ -134,7 +134,7 @@ function M.new(props)
   local index = #raw_statusline_items > 0 and raw_statusline_items[1].type == "popup" and 0 or 1 ---@type integer
   for _, item in ipairs(raw_statusline_items) do
     if not item.disabled then
-      local stl_state = item.state ---@type eve.collection.IObservable
+      local stl_state = item.state ---@type eve.std.collection.IObservable
       local symbol = item.symbol ---@type string
       local callback = item.callback ---@type fun(): nil
       local callback_fn = eve.G.register_anonymous_fn(callback) or "" ---@type string
@@ -176,7 +176,7 @@ function M.new(props)
 
       local status = context.status:snapshot() ---@type eve.e.WidgetStatus
       if status ~= "visible" then
-        local input_history = context.input_history ---@type eve.collection.IHistory|nil
+        local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
@@ -563,7 +563,7 @@ function M.new(props)
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
-  local draw_wins_scheduler = eve.col.Scheduler.new({
+  local draw_wins_scheduler = eve.std.Scheduler.new({
     name = "fml.ux.search.search.draw",
     delay = 64,
     task = function(callback)

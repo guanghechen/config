@@ -72,7 +72,7 @@ return {
     end
     lint.linters_by_ft = linters_by_ft
 
-    local lint_scheduler = eve.col.Scheduler.new({
+    local lint_scheduler = eve.std.Scheduler.new({
       name = __module_name__,
       delay = 100,
       silent = function()

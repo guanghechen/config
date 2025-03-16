@@ -270,7 +270,7 @@ function M.browse()
     },
     flag_fuzzy = true,
     flag_regex = false,
-    input = eve.col.Observable.from_value(""),
+    input = eve.std.Observable.from_value(""),
     multiple = false,
     title = "Select remote to browse",
     fetch_items = function()

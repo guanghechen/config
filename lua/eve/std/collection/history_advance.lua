@@ -1,31 +1,31 @@
----@class eve.collection.IAdvanceHistory
+---@class eve.std.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
 ---@field public validate               eve.t.IValidate
----@field public backward               fun(self: eve.collection.IAdvanceHistory, step?: integer): eve.t.T|nil, boolean
----@field public capacity               fun(self: eve.collection.IAdvanceHistory): integer
----@field public clear                  fun(self: eve.collection.IAdvanceHistory): nil
----@field public dump                   fun(self: eve.collection.IAdvanceHistory): eve.collection.history.ISerializedData
----@field public fork                   fun(self: eve.collection.IAdvanceHistory, params?: eve.collection.history.IForkParams): eve.collection.IAdvanceHistory
----@field public forward                fun(self: eve.collection.IAdvanceHistory, step?: integer): eve.t.T|nil, boolean
----@field public go                     fun(self: eve.collection.IAdvanceHistory, index: integer): eve.t.T|nil
----@field public iterator               fun(self: eve.collection.IAdvanceHistory): fun(): eve.t.T|nil, integer|nil
----@field public iterator_reverse       fun(self: eve.collection.IAdvanceHistory): fun(): eve.t.T|nil, integer|nil
----@field public load                   fun(self: eve.collection.IAdvanceHistory, data: eve.collection.history.ISerializedData): nil
----@field public present                fun(self: eve.collection.IAdvanceHistory): eve.t.T|nil, integer
----@field public print                  fun(self: eve.collection.IAdvanceHistory): nil
----@field public push                   fun(self: eve.collection.IAdvanceHistory, element: eve.t.T|nil): nil
----@field public rearrange              fun(self: eve.collection.IAdvanceHistory): nil
----@field public size                   fun(self: eve.collection.IAdvanceHistory): integer
+---@field public backward               fun(self: eve.std.collection.IAdvanceHistory, step?: integer): eve.t.T|nil, boolean
+---@field public capacity               fun(self: eve.std.collection.IAdvanceHistory): integer
+---@field public clear                  fun(self: eve.std.collection.IAdvanceHistory): nil
+---@field public dump                   fun(self: eve.std.collection.IAdvanceHistory): eve.std.collection.history.ISerializedData
+---@field public fork                   fun(self: eve.std.collection.IAdvanceHistory, params?: eve.std.collection.history.IForkParams): eve.std.collection.IAdvanceHistory
+---@field public forward                fun(self: eve.std.collection.IAdvanceHistory, step?: integer): eve.t.T|nil, boolean
+---@field public go                     fun(self: eve.std.collection.IAdvanceHistory, index: integer): eve.t.T|nil
+---@field public iterator               fun(self: eve.std.collection.IAdvanceHistory): fun(): eve.t.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: eve.std.collection.IAdvanceHistory): fun(): eve.t.T|nil, integer|nil
+---@field public load                   fun(self: eve.std.collection.IAdvanceHistory, data: eve.std.collection.history.ISerializedData): nil
+---@field public present                fun(self: eve.std.collection.IAdvanceHistory): eve.t.T|nil, integer
+---@field public print                  fun(self: eve.std.collection.IAdvanceHistory): nil
+---@field public push                   fun(self: eve.std.collection.IAdvanceHistory, element: eve.t.T|nil): nil
+---@field public rearrange              fun(self: eve.std.collection.IAdvanceHistory): nil
+---@field public size                   fun(self: eve.std.collection.IAdvanceHistory): integer
 
----@class eve.collection.history_advance.IProps
+---@class eve.std.collection.history_advance.IProps
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?eve.t.IEquals
 ---@field public validate               ?eve.t.IValidate
 
----@class eve.collection.history_advance.IDeserializeProps
----@field public data                   eve.collection.history.ISerializedData
+---@class eve.std.collection.history_advance.IDeserializeProps
+---@field public data                   eve.std.collection.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
 ---@field public equals                 ?eve.t.IEquals
@@ -38,22 +38,22 @@ local function default_validate(element)
   return true
 end
 
----@class eve.collection.AdvanceHistory : eve.collection.IAdvanceHistory
+---@class eve.std.collection.AdvanceHistory : eve.std.collection.IAdvanceHistory
 ---@field public name                   string
 ---@field public equals                 eve.t.IEquals
 ---@field public validate               eve.t.IValidate
----@field private _history              eve.collection.IHistory
+---@field private _history              eve.std.collection.IHistory
 local M = {}
 M.__index = M
 
----@param props                         eve.collection.history_advance.IProps
----@return eve.collection.AdvanceHistory
+---@param props                         eve.std.collection.history_advance.IProps
+---@return eve.std.collection.AdvanceHistory
 function M.new(props)
   local name = props.name ---@type string
   local capacity = props.capacity ---@type integer
   local equals = props.equals ---@type eve.t.IEquals|nil
   local validate = props.validate or default_validate ---@type fun(element: eve.t.T): boolean
-  local history = eve.col.History.new({
+  local history = eve.std.History.new({
     name = name,
     capacity = capacity,
     equals = equals,
@@ -67,13 +67,13 @@ function M.new(props)
   return self
 end
 
----@param props                         eve.collection.history_advance.IDeserializeProps
----@return eve.collection.AdvanceHistory
+---@param props                         eve.std.collection.history_advance.IDeserializeProps
+---@return eve.std.collection.AdvanceHistory
 function M.deserialize(props)
-  local data = props.data ---@type eve.collection.history.ISerializedData
+  local data = props.data ---@type eve.std.collection.history.ISerializedData
 
-  ---@type eve.collection.IHistory
-  local history = eve.col.History.deserialize({
+  ---@type eve.std.collection.IHistory
+  local history = eve.std.History.deserialize({
     data = data,
     name = props.name,
     capacity = props.capacity,
@@ -119,15 +119,15 @@ function M:collect()
   return results
 end
 
----@return eve.collection.history.ISerializedData
+---@return eve.std.collection.history.ISerializedData
 function M:dump()
   return self._history:dump()
 end
 
----@param params                        eve.collection.history.IForkParams
----@return eve.collection.AdvanceHistory
+---@param params                        eve.std.collection.history.IForkParams
+---@return eve.std.collection.AdvanceHistory
 function M:fork(params)
-  local history = self._history:fork(params) ---@type eve.collection.IHistory
+  local history = self._history:fork(params) ---@type eve.std.collection.IHistory
   local instance = setmetatable({}, M)
   instance.name = history.name
   instance.equals = history.equals
@@ -140,7 +140,7 @@ end
 ---@return eve.t.T|nil
 ---@return boolean
 function M:forward(step)
-  local history = self._history ---@type eve.collection.IHistory
+  local history = self._history ---@type eve.std.collection.IHistory
   local _, should_be_top = history:forward(step) ---@type eve.t.T|nil, boolean
   local element = self:present()
   return element, should_be_top
@@ -182,7 +182,7 @@ function M:iterator_reverse()
   end
 end
 
----@param data                          eve.collection.history.ISerializedData
+---@param data                          eve.std.collection.history.ISerializedData
 ---@return nil
 function M:load(data)
   self._history:load(data)
@@ -191,7 +191,7 @@ end
 ---@return eve.t.T|nil
 ---@return integer
 function M:present()
-  local history = self._history ---@type eve.collection.IHistory
+  local history = self._history ---@type eve.std.collection.IHistory
   while true do
     local element, index = history:present()
     if element ~= nil and self.validate(element) then

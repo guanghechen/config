@@ -116,7 +116,7 @@ local function fetch_diritem(dirpath, force)
 end
 
 local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = eve.col.Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type eve.collection.IObservable -- string>
+local state_cwd = eve.std.Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type eve.std.collection.IObservable -- string>
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
@@ -145,8 +145,8 @@ state_cwd:subscribe(
   true
 )
 
-local frecency = eve.state.frecency.files ---@type eve.collection.IFrecency
-local input_history = eve.state.select.find_file.input_history ---@type eve.collection.IHistory
+local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
+local input_history = eve.state.select.find_file.input_history ---@type eve.std.collection.IHistory
 
 local main_width = 0.4 ---@type number
 ---@type fml.ux.search.IRawDimension

@@ -1,8 +1,8 @@
 ---@class eve.state.qflist.data
----@field public history                eve.collection.history.ISerializedData
+---@field public history                eve.std.collection.history.ISerializedData
 
 ---@class eve.state.qflist.state
----@field public history                eve.collection.IHistory
+---@field public history                eve.std.collection.IHistory
 ---
 ---@field public backward               fun(): nil
 ---@field public forward                fun(): nil
@@ -47,7 +47,7 @@ end
 
 ---@return eve.state.qflist.data
 function M.dump()
-  ---@type eve.collection.history.ISerializedData
+  ---@type eve.std.collection.history.ISerializedData
   local history = M.history and M.history:dump() or { present = 0, stack = {} }
 
   ---@type eve.state.qflist.data
@@ -61,8 +61,8 @@ end
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.qflist.data
 
-  ---@type eve.collection.IHistory
-  local history = M.history or eve.col.History.new({
+  ---@type eve.std.collection.IHistory
+  local history = M.history or eve.std.History.new({
     name = "qflist",
     capacity = 100,
   })
@@ -72,8 +72,8 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@type eve.collection.IHistory
-M.history = eve.col.History.new({
+---@type eve.std.collection.IHistory
+M.history = eve.std.History.new({
   name = "qflist",
   capacity = 100,
 })

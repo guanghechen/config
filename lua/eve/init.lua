@@ -59,7 +59,6 @@ local __mods = {
 ---@field public var                    eve.builtin.var
 ---@field public winpicker              eve.builtin.winpicker
 ---
----@field public col                    eve.collection
 ---@field public std                    eve.std
 ---@field public state                  eve.state
 local M = setmetatable({
@@ -75,7 +74,6 @@ local M = setmetatable({
 })
 _G.eve = M
 
-M.col = require("eve.collection") ---@type eve.collection
 M.state = require("eve.state") ---@type eve.state
 
 ---@return eve.state.storage

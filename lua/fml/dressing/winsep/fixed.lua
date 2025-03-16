@@ -2,7 +2,7 @@ local Line = require("fml.dressing.winsep.line")
 
 ---@class fml.dressing.winsep.fixed
 ---@field public winsep                 fml.dressing.Winsep
----@field public scheduler              eve.collection.Scheduler
+---@field public scheduler              eve.std.collection.Scheduler
 local M = {}
 
 ---@type fml.dressing.Winsep
@@ -84,7 +84,7 @@ M.winsep = {
   end,
 }
 
-M.scheduler = eve.col.Scheduler.new({
+M.scheduler = eve.std.Scheduler.new({
   name = "winsep_refresh fixed",
   delay = 50,
   silent = function()

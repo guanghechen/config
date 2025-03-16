@@ -36,7 +36,7 @@ local M = {}
 ---@field public meta                   fml.dressing.image.meta
 ---@field public done                   ?boolean
 ---@field public err                    ?string
----@field public proc                   ?eve.collection.spawn.Proc
+---@field public proc                   ?eve.std.collection.spawn.Proc
 
 ---@class fml.dressing.image.cmd
 ---@field public cmd                    (fun(step: fml.dressing.image.step): (fml.dressing.image.Proc|fml.dressing.image.Proc[])) | fml.dressing.image.Proc | fml.dressing.image.Proc[]
@@ -174,7 +174,7 @@ local proc_queue = {} ---@type fml.dressing.image.Proc[]
 local proc_running = 0 ---@type number
 local MAX_PROCS = 3
 
----@param proc                          ?eve.collection.spawn.Proc
+---@param proc                          ?eve.std.collection.spawn.Proc
 ---@return nil
 local function schedule(proc)
   if proc then
@@ -408,7 +408,7 @@ function Convertor:step()
     end
   end
 
-  step.proc = eve.col.Spawn.new({
+  step.proc = eve.std.Spawn.new({
     run = false,
     debug = config.state.debug.convert,
     cwd = cmd.cwd and util.tpl(cmd.cwd, data) or nil,

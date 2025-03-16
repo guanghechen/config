@@ -1,14 +1,14 @@
-local __module_name__ = "eve.collection.batch_disposable" ---@type string
+local __module_name__ = "eve.std.collection.batch_disposable" ---@type string
 
----@class eve.collection.IBatchDisposable : eve.std.collection.IDisposable
+---@class eve.std.collection.IBatchDisposable : eve.std.collection.IDisposable
 ---@field public dispose_all            fun(disposables: eve.std.collection.IDisposable[]): nil
----@field public add_disposable         fun(self: eve.collection.IBatchDisposable, disposable: eve.std.collection.IDisposable): nil
+---@field public add_disposable         fun(self: eve.std.collection.IBatchDisposable, disposable: eve.std.collection.IDisposable): nil
 
----@class eve.collection.BatchDisposable : eve.collection.IBatchDisposable
+---@class eve.std.collection.BatchDisposable : eve.std.collection.IBatchDisposable
 local M = {}
 M.__index = M
 
----@return eve.collection.BatchDisposable
+---@return eve.std.collection.BatchDisposable
 function M.new()
   local self = setmetatable({}, M)
 
@@ -33,7 +33,7 @@ function M.dispose_all(disposables)
       disposable:dispose()
     end)
   end
-  handler:summary("[eve.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
+  handler:summary("[eve.std.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
 end
 
 ---@return boolean

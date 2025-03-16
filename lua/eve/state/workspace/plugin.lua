@@ -4,9 +4,9 @@
 ---@field public treesitter_context     boolean
 
 ---@class eve.state.plugin.state
----@field public render_markdown        eve.collection.IObservable -- boolean>
----@field public smear_cursor           eve.collection.IObservable -- boolean>
----@field public treesitter_context     eve.collection.IObservable -- boolean>
+---@field public render_markdown        eve.std.collection.IObservable -- boolean>
+---@field public smear_cursor           eve.std.collection.IObservable -- boolean>
+---@field public treesitter_context     eve.std.collection.IObservable -- boolean>
 
 ---@class eve.state.plugin : eve.state.plugin.state
 ---@field public defaults               fun(): eve.state.plugin.data
@@ -68,8 +68,8 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.plugin.data
-M.render_markdown = eve.col.Observable.from_value(_defaults.render_markdown)
-M.smear_cursor = eve.col.Observable.from_value(_defaults.smear_cursor)
-M.treesitter_context = eve.col.Observable.from_value(_defaults.treesitter_context)
+M.render_markdown = eve.std.Observable.from_value(_defaults.render_markdown)
+M.smear_cursor = eve.std.Observable.from_value(_defaults.smear_cursor)
+M.treesitter_context = eve.std.Observable.from_value(_defaults.treesitter_context)
 
 return M

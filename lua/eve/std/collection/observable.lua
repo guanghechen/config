@@ -1,16 +1,16 @@
-local __module_name__ = "eve.collection.observable" ---@type string
+local __module_name__ = "eve.std.collection.observable" ---@type string
 
----@class eve.collection.observable.INextOptions
+---@class eve.std.collection.observable.INextOptions
 ---@field public strict                 ?boolean Whether to throw an error if the observable disposed.
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 
----@class eve.collection.IObservable: eve.collection.IBatchDisposable, eve.std.collection.ISubscribable
+---@class eve.std.collection.IObservable: eve.std.collection.IBatchDisposable, eve.std.collection.ISubscribable
 ---@field public equals                 eve.t.IEquals
 ---@field public normalize              eve.t.INormalize
----@field public snapshot               fun(self: eve.collection.IObservable): eve.t.T
----@field public next                   fun(self: eve.collection.IObservable, value: eve.t.T, options?: eve.collection.observable.INextOptions):boolean
+---@field public snapshot               fun(self: eve.std.collection.IObservable): eve.t.T
+---@field public next                   fun(self: eve.std.collection.IObservable, value: eve.t.T, options?: eve.std.collection.observable.INextOptions):boolean
 
----@class eve.collection.observable.IProps
+---@class eve.std.collection.observable.IProps
 ---@field public initial_value          eve.t.T           Initial value of the observable
 ---@field public equals                 ?eve.t.IEquals    Determine whether the two values are equal.
 ---@field public normalize              ?eve.t.INormalize Normalize the value before compare or update
@@ -19,7 +19,7 @@ local __module_name__ = "eve.collection.observable" ---@type string
 ---@type eve.std.collection.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = eve.std.fn.noop }
 
----@class eve.collection.Observable : eve.collection.IObservable
+---@class eve.std.collection.Observable : eve.std.collection.IObservable
 ---@field private _readonly             boolean
 ---@field private _value                eve.t.T
 ---@field private _value_last_notified  eve.t.T|nil
@@ -27,18 +27,18 @@ local noop_unsubscribable = { unsubscribe = eve.std.fn.noop }
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, eve.col.BatchDisposable)
+setmetatable(M, eve.std.BatchDisposable)
 
----@param props                         eve.collection.observable.IProps
----@return eve.collection.Observable
+---@param props                         eve.std.collection.observable.IProps
+---@return eve.std.collection.Observable
 function M.new(props)
   local equals = props.equals or eve.std.fn.equals_shallow ---@type eve.t.IEquals
   local normalize = props.normalize or eve.std.fn.identity ---@type eve.t.INormalize
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type eve.t.T
 
-  local self = setmetatable(eve.col.BatchDisposable.new(), M)
-  ---@cast self                         eve.collection.Observable
+  local self = setmetatable(eve.std.BatchDisposable.new(), M)
+  ---@cast self                         eve.std.collection.Observable
 
   self.equals = equals
   self.normalize = normalize
@@ -52,7 +52,7 @@ end
 ---@param value                         eve.t.T         Initial value of the observable
 ---@param equals                        ?eve.t.IEquals  Determine whether the two values are equal.
 ---@param normalize                     ?eve.t.INormalize Normalize the value before compare or update
----@return eve.collection.Observable
+---@return eve.std.collection.Observable
 function M.from_value(value, equals, normalize)
   return M.new({ initial_value = value, equals = equals, normalize = normalize })
 end
@@ -67,21 +67,21 @@ function M:dispose()
     return
   end
 
-  eve.col.BatchDisposable.dispose(self)
+  eve.std.BatchDisposable.dispose(self)
 
   -- Dispose subscribers
   self._subscribers:dispose()
 end
 
 ---@param value                         eve.t.T
----@param options                       ?eve.collection.observable.INextOptions
+---@param options                       ?eve.std.collection.observable.INextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
   if self._readonly then
     return false
   end
 
-  options = options or {} ---@type eve.collection.observable.INextOptions
+  options = options or {} ---@type eve.std.collection.observable.INextOptions
   if self:is_disposed() then
     local strict = options.strict ~= false ---@type boolean
     if strict then

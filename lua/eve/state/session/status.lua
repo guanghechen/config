@@ -13,18 +13,18 @@
 ---@field public tmux_zen_mode          boolean
 
 ---@class eve.state.status.state
----@field public ticker_editor          eve.collection.ITicker
----@field public ticker_session         eve.collection.ITicker
----@field public ticker_workspace       eve.collection.ITicker
+---@field public ticker_editor          eve.std.collection.ITicker
+---@field public ticker_session         eve.std.collection.ITicker
+---@field public ticker_workspace       eve.std.collection.ITicker
 ---
----@field public dirtier_statusline     eve.collection.IDirtier
----@field public dirtier_tabline        eve.collection.IDirtier
----@field public dirty_winline_nr       eve.collection.IObservable -- integer>
+---@field public dirtier_statusline     eve.std.collection.IDirtier
+---@field public dirtier_tabline        eve.std.collection.IDirtier
+---@field public dirty_winline_nr       eve.std.collection.IObservable -- integer>
 ---
----@field public lsp_msg                eve.collection.IObservable -- string>
+---@field public lsp_msg                eve.std.collection.IObservable -- string>
 ---@field public maximized_winnrs       table<integer, boolean>
----@field public suppress_warning       eve.collection.IObservable -- boolean>
----@field public tmux_zen_mode          eve.collection.IObservable -- boolean>
+---@field public suppress_warning       eve.std.collection.IObservable -- boolean>
+---@field public tmux_zen_mode          eve.std.collection.IObservable -- boolean>
 
 ---@class eve.state.status : eve.state.status.state
 ---@field public defaults               fun(): eve.state.status.data
@@ -107,17 +107,17 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.status.data
-M.ticker_editor = eve.col.Ticker.new({ start = _defaults.tick_editor })
-M.ticker_workspace = eve.col.Ticker.new({ start = _defaults.tick_workspace })
-M.ticker_session = eve.col.Ticker.new({ start = _defaults.tick_session })
+M.ticker_editor = eve.std.Ticker.new({ start = _defaults.tick_editor })
+M.ticker_workspace = eve.std.Ticker.new({ start = _defaults.tick_workspace })
+M.ticker_session = eve.std.Ticker.new({ start = _defaults.tick_session })
 
-M.dirtier_statusline = eve.col.Dirtier.new({ dirty = _defaults.dirty_statusline })
-M.dirtier_tabline = eve.col.Dirtier.new({ dirty = _defaults.dirty_tabline })
-M.dirty_winline_nr = eve.col.Observable.from_value(_defaults.dirty_winline_nr, eve.std.fn.falsy)
+M.dirtier_statusline = eve.std.Dirtier.new({ dirty = _defaults.dirty_statusline })
+M.dirtier_tabline = eve.std.Dirtier.new({ dirty = _defaults.dirty_tabline })
+M.dirty_winline_nr = eve.std.Observable.from_value(_defaults.dirty_winline_nr, eve.std.fn.falsy)
 
-M.lsp_msg = eve.col.Observable.from_value(_defaults.lsp_msg)
+M.lsp_msg = eve.std.Observable.from_value(_defaults.lsp_msg)
 M.maximized_winnrs = _defaults.maximized_winnrs
-M.suppress_warning = eve.col.Observable.from_value(_defaults.suppress_warning)
-M.tmux_zen_mode = eve.col.Observable.from_value(_defaults.tmux_zen_mode)
+M.suppress_warning = eve.std.Observable.from_value(_defaults.suppress_warning)
+M.tmux_zen_mode = eve.std.Observable.from_value(_defaults.tmux_zen_mode)
 
 return M

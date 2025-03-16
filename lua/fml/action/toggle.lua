@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.toggle" ---@type string
 
 local select = require("fml.fn.select")
 
----@type table<string, eve.collection.IObservable<boolean>>
+---@type table<string, eve.std.collection.IObservable<boolean>>
 local flags = {
   ---flight
   flight_ai = eve.state.flight.ai,
@@ -280,7 +280,7 @@ function M.list(arg)
       title = "Toggle Select",
       flag_fuzzy = true,
       flag_regex = false,
-      input = eve.col.Observable.from_value(flag_name),
+      input = eve.std.Observable.from_value(flag_name),
       dimension = {
         row = 3,
         width = 64,
@@ -335,7 +335,7 @@ function M.toggle_ai_provider(arg)
       title = "Toggle ai provider",
       flag_fuzzy = true,
       flag_regex = false,
-      input = eve.col.Observable.from_value(ai_provider),
+      input = eve.std.Observable.from_value(ai_provider),
       dimension = {
         row = 5,
         width = 50,
@@ -436,7 +436,7 @@ function M.toggle_theme(arg)
       title = "Select theme",
       flag_fuzzy = true,
       flag_regex = false,
-      input = eve.col.Observable.from_value(theme_name),
+      input = eve.std.Observable.from_value(theme_name),
       dimension = {
         row = 5,
         width = 50,

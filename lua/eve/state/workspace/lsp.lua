@@ -15,13 +15,13 @@
 ---@field public spellcheck             boolean
 
 ---@class eve.state.lsp.state
----@field public breakpoints            eve.collection.IObservable -- eve.state.lsp.IBreakpointData[]>
----@field public code_lens              eve.collection.IObservable -- boolean>
----@field public inlay_hints            eve.collection.IObservable -- boolean>
----@field public python_debug_host      eve.collection.IObservable -- string>
----@field public python_debug_port      eve.collection.IObservable -- integer>
----@field public python_venv_path       eve.collection.IObservable -- string|nil>
----@field public spellcheck             eve.collection.IObservable -- boolean>
+---@field public breakpoints            eve.std.collection.IObservable -- eve.state.lsp.IBreakpointData[]>
+---@field public code_lens              eve.std.collection.IObservable -- boolean>
+---@field public inlay_hints            eve.std.collection.IObservable -- boolean>
+---@field public python_debug_host      eve.std.collection.IObservable -- string>
+---@field public python_debug_port      eve.std.collection.IObservable -- integer>
+---@field public python_venv_path       eve.std.collection.IObservable -- string|nil>
+---@field public spellcheck             eve.std.collection.IObservable -- boolean>
 ---
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
@@ -143,13 +143,13 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local data = M.defaults() ---@type eve.state.lsp.data
-M.breakpoints = eve.col.Observable.from_value(data.breakpoints)
-M.code_lens = eve.col.Observable.from_value(data.code_lens)
-M.inlay_hints = eve.col.Observable.from_value(data.inlay_hints)
-M.python_debug_host = eve.col.Observable.from_value(data.python_debug_host)
-M.python_debug_port = eve.col.Observable.from_value(data.python_debug_port)
-M.python_venv_path = eve.col.Observable.from_value(data.python_venv_path)
-M.spellcheck = eve.col.Observable.from_value(data.spellcheck)
+M.breakpoints = eve.std.Observable.from_value(data.breakpoints)
+M.code_lens = eve.std.Observable.from_value(data.code_lens)
+M.inlay_hints = eve.std.Observable.from_value(data.inlay_hints)
+M.python_debug_host = eve.std.Observable.from_value(data.python_debug_host)
+M.python_debug_port = eve.std.Observable.from_value(data.python_debug_port)
+M.python_venv_path = eve.std.Observable.from_value(data.python_venv_path)
+M.spellcheck = eve.std.Observable.from_value(data.spellcheck)
 
 ---@return string|nil
 ---@return string|nil

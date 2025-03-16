@@ -6,11 +6,11 @@
 ---@field public search_paths           string[]
 
 ---@class eve.state.search_file.state
----@field public flag_replace           eve.collection.IObservable -- boolean>
----@field public max_filesize           eve.collection.IObservable -- string>
----@field public max_matches            eve.collection.IObservable -- integer>
----@field public replacement            eve.collection.IObservable -- string>
----@field public search_paths           eve.collection.IObservable -- string[]>
+---@field public flag_replace           eve.std.collection.IObservable -- boolean>
+---@field public max_filesize           eve.std.collection.IObservable -- string>
+---@field public max_matches            eve.std.collection.IObservable -- integer>
+---@field public replacement            eve.std.collection.IObservable -- string>
+---@field public search_paths           eve.std.collection.IObservable -- string[]>
 
 ---@class eve.state.search_file : eve.state.search_file.state
 ---@field public defaults               fun(): eve.state.search_file.data
@@ -86,10 +86,10 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.search_file.data
-M.flag_replace = eve.col.Observable.from_value(_defaults.flag_replace)
-M.max_filesize = eve.col.Observable.from_value(_defaults.max_filesize)
-M.max_matches = eve.col.Observable.from_value(_defaults.max_matches)
-M.replacement = eve.col.Observable.from_value(_defaults.replacement)
-M.search_paths = eve.col.Observable.from_value(_defaults.search_paths)
+M.flag_replace = eve.std.Observable.from_value(_defaults.flag_replace)
+M.max_filesize = eve.std.Observable.from_value(_defaults.max_filesize)
+M.max_matches = eve.std.Observable.from_value(_defaults.max_matches)
+M.replacement = eve.std.Observable.from_value(_defaults.replacement)
+M.search_paths = eve.std.Observable.from_value(_defaults.search_paths)
 
 return M

@@ -16,21 +16,21 @@
 ---@field public gitdiff_expand_all     boolean
 
 ---@class eve.state.flight.state
----@field public ai                     eve.collection.IObservable -- boolean>
----@field public ai_provider            eve.collection.IObservable -- eve.e.AiProvider>
----@field public autoformat             eve.collection.IObservable -- boolean>
----@field public autoload               eve.collection.IObservable -- boolean>
----@field public autosave               eve.collection.IObservable -- boolean>
----@field public devmode                eve.collection.IObservable -- boolean>
+---@field public ai                     eve.std.collection.IObservable -- boolean>
+---@field public ai_provider            eve.std.collection.IObservable -- eve.e.AiProvider>
+---@field public autoformat             eve.std.collection.IObservable -- boolean>
+---@field public autoload               eve.std.collection.IObservable -- boolean>
+---@field public autosave               eve.std.collection.IObservable -- boolean>
+---@field public devmode                eve.std.collection.IObservable -- boolean>
 ---
----@field public dressing_hipairs       eve.collection.IObservable -- boolean>
----@field public dressing_illumniate    eve.collection.IObservable -- boolean>
----@field public dressing_input         eve.collection.IObservable -- boolean>
----@field public dressing_select        eve.collection.IObservable -- boolean>
----@field public dressing_winsep_fixed  eve.collection.IObservable -- boolean>
----@field public dressing_winsep_float  eve.collection.IObservable -- boolean>
+---@field public dressing_hipairs       eve.std.collection.IObservable -- boolean>
+---@field public dressing_illumniate    eve.std.collection.IObservable -- boolean>
+---@field public dressing_input         eve.std.collection.IObservable -- boolean>
+---@field public dressing_select        eve.std.collection.IObservable -- boolean>
+---@field public dressing_winsep_fixed  eve.std.collection.IObservable -- boolean>
+---@field public dressing_winsep_float  eve.std.collection.IObservable -- boolean>
 ---
----@field public gitdiff_expand_all     eve.collection.IObservable -- boolean>
+---@field public gitdiff_expand_all     eve.std.collection.IObservable -- boolean>
 
 ---@class eve.state.flight : eve.state.flight.state
 ---@field public defaults               fun(): eve.state.flight.data
@@ -165,20 +165,20 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.flight.data
-M.ai = eve.col.Observable.from_value(_defaults.ai)
-M.ai_provider = eve.col.Observable.from_value(_defaults.ai_provider)
-M.autoformat = eve.col.Observable.from_value(_defaults.autoformat)
-M.autoload = eve.col.Observable.from_value(_defaults.autoload)
-M.autosave = eve.col.Observable.from_value(_defaults.autosave)
-M.devmode = eve.col.Observable.from_value(_defaults.devmode)
+M.ai = eve.std.Observable.from_value(_defaults.ai)
+M.ai_provider = eve.std.Observable.from_value(_defaults.ai_provider)
+M.autoformat = eve.std.Observable.from_value(_defaults.autoformat)
+M.autoload = eve.std.Observable.from_value(_defaults.autoload)
+M.autosave = eve.std.Observable.from_value(_defaults.autosave)
+M.devmode = eve.std.Observable.from_value(_defaults.devmode)
 
-M.dressing_hipairs = eve.col.Observable.from_value(_defaults.dressing_hipairs)
-M.dressing_illumniate = eve.col.Observable.from_value(_defaults.dressing_illumniate)
-M.dressing_input = eve.col.Observable.from_value(_defaults.dressing_input)
-M.dressing_select = eve.col.Observable.from_value(_defaults.dressing_select)
-M.dressing_winsep_fixed = eve.col.Observable.from_value(_defaults.dressing_winsep_fixed)
-M.dressing_winsep_float = eve.col.Observable.from_value(_defaults.dressing_winsep_float)
+M.dressing_hipairs = eve.std.Observable.from_value(_defaults.dressing_hipairs)
+M.dressing_illumniate = eve.std.Observable.from_value(_defaults.dressing_illumniate)
+M.dressing_input = eve.std.Observable.from_value(_defaults.dressing_input)
+M.dressing_select = eve.std.Observable.from_value(_defaults.dressing_select)
+M.dressing_winsep_fixed = eve.std.Observable.from_value(_defaults.dressing_winsep_fixed)
+M.dressing_winsep_float = eve.std.Observable.from_value(_defaults.dressing_winsep_float)
 
-M.gitdiff_expand_all = eve.col.Observable.from_value(_defaults.gitdiff_expand_all)
+M.gitdiff_expand_all = eve.std.Observable.from_value(_defaults.gitdiff_expand_all)
 
 return M

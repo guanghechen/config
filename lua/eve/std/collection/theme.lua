@@ -1,31 +1,31 @@
----@class eve.collection.theme.IApplyParams
+---@class eve.std.collection.theme.IApplyParams
 ---@field public scheme                 eve.t.theme.IScheme
 ---@field public nsnr                   integer
 
----@class eve.collection.theme.ICompileParams
+---@class eve.std.collection.theme.ICompileParams
 ---@field public scheme                 eve.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
----@class eve.collection.theme.ITheme
----@field public apply                  fun(self: eve.collection.theme.ITheme, params: eve.collection.theme.IApplyParams): nil
----@field public compile                fun(self: eve.collection.theme.ITheme, params: eve.collection.theme.ICompileParams): nil
----@field public register               fun(self: eve.collection.theme.ITheme, hlname: string, hlgroup: eve.t.theme.IHlgroup): eve.collection.theme.ITheme
----@field public registers              fun(self: eve.collection.theme.ITheme, hlgroup_map: table<string, eve.t.theme.IHlgroup | nil>): eve.collection.theme.ITheme
+---@class eve.std.collection.theme.ITheme
+---@field public apply                  fun(self: eve.std.collection.theme.ITheme, params: eve.std.collection.theme.IApplyParams): nil
+---@field public compile                fun(self: eve.std.collection.theme.ITheme, params: eve.std.collection.theme.ICompileParams): nil
+---@field public register               fun(self: eve.std.collection.theme.ITheme, hlname: string, hlgroup: eve.t.theme.IHlgroup): eve.std.collection.theme.ITheme
+---@field public registers              fun(self: eve.std.collection.theme.ITheme, hlgroup_map: table<string, eve.t.theme.IHlgroup | nil>): eve.std.collection.theme.ITheme
 
----@class eve.collection.Theme : eve.collection.theme.ITheme
+---@class eve.std.collection.Theme : eve.std.collection.theme.ITheme
 ---@field private hlgroup_map           table<string, eve.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
----@return eve.collection.Theme
+---@return eve.std.collection.Theme
 function M.new()
   local self = setmetatable({}, M)
   self.hlgroup_map = {}
   return self
 end
 
----@param params                        eve.collection.theme.IApplyParams
+---@param params                        eve.std.collection.theme.IApplyParams
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
@@ -36,14 +36,14 @@ end
 
 ---@param hlname                        string
 ---@param hlgroup                       eve.t.theme.IHlgroup
----@return eve.collection.Theme
+---@return eve.std.collection.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
 ---@param hlgroup_map                   table<string, eve.t.theme.IHlgroup|nil>
----@return eve.collection.Theme
+---@return eve.std.collection.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
     if hlgroup ~= nil then
@@ -53,7 +53,7 @@ function M:registers(hlgroup_map)
   return self
 end
 
----@param params                        eve.collection.theme.ICompileParams
+---@param params                        eve.std.collection.theme.ICompileParams
 ---@return nil
 function M:compile(params)
   local filepath = params.filepath ---@type string

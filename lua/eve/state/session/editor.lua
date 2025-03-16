@@ -4,9 +4,9 @@
 ---@field public winnr_sourcefile       integer|nil
 
 ---@class eve.state.editor.state
----@field public winnr_command          eve.collection.IObservable -- integer|nil>
----@field public winnr_fixed            eve.collection.IObservable -- integer|nil>
----@field public winnr_sourcefile       eve.collection.IObservable -- integer|nil>
+---@field public winnr_command          eve.std.collection.IObservable -- integer|nil>
+---@field public winnr_fixed            eve.std.collection.IObservable -- integer|nil>
+---@field public winnr_sourcefile       eve.std.collection.IObservable -- integer|nil>
 ---
 ---@field public focus_win_fixed        fun(): nil
 ---@field public get_winnr_fixed        fun(): integer|nil
@@ -63,9 +63,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.editor.data
-M.winnr_command = eve.col.Observable.from_value(_defaults.winnr_command)
-M.winnr_fixed = eve.col.Observable.from_value(_defaults.winnr_fixed)
-M.winnr_sourcefile = eve.col.Observable.from_value(_defaults.winnr_sourcefile)
+M.winnr_command = eve.std.Observable.from_value(_defaults.winnr_command)
+M.winnr_fixed = eve.std.Observable.from_value(_defaults.winnr_fixed)
+M.winnr_sourcefile = eve.std.Observable.from_value(_defaults.winnr_sourcefile)
 
 ---@return nil
 function M.focus_win_fixed()

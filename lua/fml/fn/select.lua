@@ -5,7 +5,7 @@ local Select = require("fml.ux.select")
 ---@field public dimension              ?fml.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
----@field public input                  ?eve.collection.IObservable -- string>
+---@field public input                  ?eve.std.collection.IObservable -- string>
 ---@field public multiple               ?boolean
 ---@field public preview_wrap           ?boolean
 ---@field public fetch_items            fun(): fml.ux.select.IItem[]
@@ -23,7 +23,7 @@ local function select(params)
   local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
-  local input = params.input ---@type eve.collection.IObservable -- string> | nil
+  local input = params.input ---@type eve.std.collection.IObservable -- string> | nil
   local multiple = params.multiple ---@type boolean|nil
   local preview_wrap = params.preview_wrap ---@type boolean|nil
   local fetch_items = params.fetch_items ---@type fun(): fml.ux.select.IItem[]
@@ -59,8 +59,8 @@ local function select(params)
   Select.new({
     dimension = dimension,
     extend_preset_keymaps = true,
-    flag_fuzzy = eve.col.Observable.from_value(flag_fuzzy),
-    flag_regex = eve.col.Observable.from_value(flag_regex),
+    flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.std.Observable.from_value(flag_regex),
     input = input,
     multiple = multiple,
     permanent = false,

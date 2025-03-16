@@ -6,7 +6,7 @@
 
 ---@class fml.ux.search.Main : fml.ux.search.IMain
 ---@field protected _keymaps            eve.t.IKeymap[]
----@field protected _render_scheduler   eve.collection.IScheduler
+---@field protected _render_scheduler   eve.std.collection.IScheduler
 local M = {}
 M.__index = M
 
@@ -68,7 +68,7 @@ function M.new(props)
     context:place_lnum_sign()
   end
 
-  local render_scheduler = eve.col.Scheduler.new({
+  local render_scheduler = eve.std.Scheduler.new({
     name = "fml.ux.search.main.render",
     delay = delay_render,
     task = function(callback)

@@ -19,19 +19,19 @@ local __module_name__ = "fml.ux.search.context" ---@type string
 ---@field public width_preview          ?number
 
 ---@class fml.ux.search.IContext
----@field public dirtier_dimension      eve.collection.IDirtier
----@field public dirtier_data           eve.collection.IDirtier
----@field public dirtier_data_cache     eve.collection.IDirtier
----@field public dirtier_main           eve.collection.IDirtier
----@field public dirtier_preview        eve.collection.IDirtier
----@field public dirtier_selected       eve.collection.IDirtier
+---@field public dirtier_dimension      eve.std.collection.IDirtier
+---@field public dirtier_data           eve.std.collection.IDirtier
+---@field public dirtier_data_cache     eve.std.collection.IDirtier
+---@field public dirtier_main           eve.std.collection.IDirtier
+---@field public dirtier_preview        eve.std.collection.IDirtier
+---@field public dirtier_selected       eve.std.collection.IDirtier
 ---
----@field public flag_selected          eve.collection.IObservable -- boolean>
----@field public input                  eve.collection.IObservable -- string>
----@field public input_history          eve.collection.IHistory|nil
----@field public input_line_count       eve.collection.IObservable -- integer>
----@field public state_has_matched      eve.collection.IObservable -- boolean>
----@field public status                 eve.collection.IObservable -- eve.e.WidgetStatus>
+---@field public flag_selected          eve.std.collection.IObservable -- boolean>
+---@field public input                  eve.std.collection.IObservable -- string>
+---@field public input_history          eve.std.collection.IHistory|nil
+---@field public input_line_count       eve.std.collection.IObservable -- integer>
+---@field public state_has_matched      eve.std.collection.IObservable -- boolean>
+---@field public status                 eve.std.collection.IObservable -- eve.e.WidgetStatus>
 ---
 ---@field public bufnr_input            integer|nil
 ---@field public bufnr_main             integer|nil
@@ -97,9 +97,9 @@ M.__index = M
 ---@field public dimension              fml.ux.search.IRawDimension|nil
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             fml.ux.search.IFetchData
----@field public flag_selected          eve.collection.IObservable -- boolean>
----@field public input                  eve.collection.IObservable -- string>
----@field public input_history          eve.collection.IHistory|nil
+---@field public flag_selected          eve.std.collection.IObservable -- boolean>
+---@field public input                  eve.std.collection.IObservable -- string>
+---@field public input_history          eve.std.collection.IHistory|nil
 ---@field public multiple               boolean|nil
 ---@field public permanent              boolean|nil
 ---@field public preview_title          string|nil
@@ -111,19 +111,19 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = eve.col.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_data = eve.col.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_data_cache = eve.col.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_main = eve.col.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_preview = eve.col.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
-  local dirtier_selected = eve.col.Dirtier.new({ dirty = false }) ---@type eve.collection.IDirtier
+  local dirtier_dimension = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
+  local dirtier_data = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
+  local dirtier_data_cache = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
+  local dirtier_main = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
+  local dirtier_preview = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
+  local dirtier_selected = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
 
-  local flag_selected = props.flag_selected ---@type eve.collection.IObservable -- boolean>
-  local input = props.input ---@type eve.collection.IObservable -- string>
-  local input_history = props.input_history ---@type eve.collection.IHistory|nil
-  local input_line_count = eve.col.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.collection.IObservable -- integer>
-  local state_has_matched = eve.col.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.collection.IObservable -- boolean>
-  local status = eve.col.Observable.from_value("hidden")
+  local flag_selected = props.flag_selected ---@type eve.std.collection.IObservable -- boolean>
+  local input = props.input ---@type eve.std.collection.IObservable -- string>
+  local input_history = props.input_history ---@type eve.std.collection.IHistory|nil
+  local input_line_count = eve.std.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.std.collection.IObservable -- integer>
+  local state_has_matched = eve.std.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.std.collection.IObservable -- boolean>
+  local status = eve.std.Observable.from_value("hidden")
 
   local cfg_input_title = props.title ---@type string
   local cfg_preview_title = props.preview_title or " preview " ---@type string
@@ -148,8 +148,8 @@ function M.new(props)
 
   local uuid = eve.oxi.uuid() ---@type string
 
-  ---@type eve.collection.IScheduler
-  local fetch_scheduler = eve.col.Scheduler.new({
+  ---@type eve.std.collection.IScheduler
+  local fetch_scheduler = eve.std.Scheduler.new({
     name = "fml.ux.search.state.fetch",
     delay = delay_fetch,
     task = function(callback)

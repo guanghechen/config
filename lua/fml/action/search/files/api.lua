@@ -587,7 +587,7 @@ function M.get_filematch(filepath)
 end
 
 ---@param items                         fml.ux.search.IItem[]
----@param frecency                      eve.collection.IFrecency
+---@param frecency                      eve.std.collection.IFrecency
 ---@return nil
 function M.open_files(items, frecency)
   local cwd = context.search_cwd:snapshot() ---@type string

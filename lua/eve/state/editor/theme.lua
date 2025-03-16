@@ -18,9 +18,9 @@ local __module_name__ = "eve.state.editor.theme" ---@type string
 ---@field public username               boolean
 
 ---@class eve.state.theme.state
----@field public theme                  eve.collection.IObservable -- eve.e.Theme>
----@field public transparency           eve.collection.IObservable -- boolean>
----@field public username               eve.collection.IObservable -- boolean>
+---@field public theme                  eve.std.collection.IObservable -- eve.e.Theme>
+---@field public transparency           eve.std.collection.IObservable -- boolean>
+---@field public username               eve.std.collection.IObservable -- boolean>
 ---
 ---@field public apply_integration      fun(params: eve.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.theme.ILoadThemeParams): nil
@@ -100,9 +100,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.theme.data
-M.theme = eve.col.Observable.from_value(_defaults.theme)
-M.transparency = eve.col.Observable.from_value(_defaults.transparency)
-M.username = eve.col.Observable.from_value(_defaults.username)
+M.theme = eve.std.Observable.from_value(_defaults.theme)
+M.transparency = eve.std.Observable.from_value(_defaults.transparency)
+M.username = eve.std.Observable.from_value(_defaults.username)
 
 ---@param params                        eve.theme.ILoadIntegrationParams
 ---@return nil
@@ -122,7 +122,7 @@ function M.apply_integration(params)
     }
     local gen_hlgroup_map = require("eve.constant.hlgroup." .. integration)
     local hlgroup_map = gen_hlgroup_map(themeContext)
-    local uxTheme = eve.col.Theme.new()
+    local uxTheme = eve.std.Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
   end
@@ -147,7 +147,7 @@ function M.apply_theme(params)
       transparency = transparency,
     })
 
-    local uxTheme = eve.col.Theme.new()
+    local uxTheme = eve.std.Theme.new()
     for _, integration in ipairs(integrations) do
       local gen_hlgroup_map = require("eve.constant.hlgroup." .. integration)
       ---@return table<string, eve.t.theme.IHlgroup>

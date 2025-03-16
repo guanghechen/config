@@ -8,19 +8,19 @@
 ---@field public includes               string[]
 ---@field public excludes               string[]
 ---@field public input                  string
----@field public input_history          eve.collection.history.ISerializedData
+---@field public input_history          eve.std.collection.history.ISerializedData
 
 ---@class eve.state.select.item.state
----@field public flag_case_sensitive    eve.collection.IObservable -- boolean>
----@field public flag_exclude           eve.collection.IObservable -- boolean>
----@field public flag_fuzzy             eve.collection.IObservable -- boolean>
----@field public flag_gitignore         eve.collection.IObservable -- boolean>
----@field public flag_regex             eve.collection.IObservable -- boolean>
----@field public flag_selected          eve.collection.IObservable -- boolean>
----@field public includes               eve.collection.IObservable -- string[]>
----@field public excludes               eve.collection.IObservable -- string[]>
----@field public input                  eve.collection.IObservable -- string>
----@field public input_history          eve.collection.IHistory
+---@field public flag_case_sensitive    eve.std.collection.IObservable -- boolean>
+---@field public flag_exclude           eve.std.collection.IObservable -- boolean>
+---@field public flag_fuzzy             eve.std.collection.IObservable -- boolean>
+---@field public flag_gitignore         eve.std.collection.IObservable -- boolean>
+---@field public flag_regex             eve.std.collection.IObservable -- boolean>
+---@field public flag_selected          eve.std.collection.IObservable -- boolean>
+---@field public includes               eve.std.collection.IObservable -- string[]>
+---@field public excludes               eve.std.collection.IObservable -- string[]>
+---@field public input                  eve.std.collection.IObservable -- string>
+---@field public input_history          eve.std.collection.IHistory
 
 ---@class eve.state.select.item
 ---@field public defaults               fun(): eve.state.select.item.data
@@ -134,16 +134,16 @@ function M.load(state, name, raw_data)
   if state == nil then
     ---@type eve.state.select.item.state
     state = {
-      flag_case_sensitive = eve.col.Observable.from_value(data.flag_case_sensitive),
-      flag_exclude = eve.col.Observable.from_value(data.flag_exclude),
-      flag_fuzzy = eve.col.Observable.from_value(data.flag_fuzzy),
-      flag_gitignore = eve.col.Observable.from_value(data.flag_gitignore),
-      flag_regex = eve.col.Observable.from_value(data.flag_regex),
-      flag_selected = eve.col.Observable.from_value(data.flag_selected),
-      includes = eve.col.Observable.from_value(data.includes),
-      excludes = eve.col.Observable.from_value(data.excludes),
-      input = eve.col.Observable.from_value(data.input),
-      input_history = eve.col.History.deserialize({
+      flag_case_sensitive = eve.std.Observable.from_value(data.flag_case_sensitive),
+      flag_exclude = eve.std.Observable.from_value(data.flag_exclude),
+      flag_fuzzy = eve.std.Observable.from_value(data.flag_fuzzy),
+      flag_gitignore = eve.std.Observable.from_value(data.flag_gitignore),
+      flag_regex = eve.std.Observable.from_value(data.flag_regex),
+      flag_selected = eve.std.Observable.from_value(data.flag_selected),
+      includes = eve.std.Observable.from_value(data.includes),
+      excludes = eve.std.Observable.from_value(data.excludes),
+      input = eve.std.Observable.from_value(data.input),
+      input_history = eve.std.History.deserialize({
         name = name,
         capacity = 100,
         data = data.input_history,

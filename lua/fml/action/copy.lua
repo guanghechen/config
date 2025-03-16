@@ -60,7 +60,7 @@ function M.copy_filepath(arg)
       title = "Copy current filepath",
       flag_fuzzy = true,
       flag_regex = false,
-      input = eve.col.Observable.from_value(scope),
+      input = eve.std.Observable.from_value(scope),
       dimension = {
         row = 5,
         width = 50,

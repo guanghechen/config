@@ -2,7 +2,7 @@
 ---@field public relativenumber         boolean
 
 ---@class eve.state.option.state
----@field public relativenumber         eve.collection.IObservable -- boolean>
+---@field public relativenumber         eve.std.collection.IObservable -- boolean>
 
 ---@class eve.state.option : eve.state.option.state
 ---@field public defaults               fun(): eve.state.option.data
@@ -52,6 +52,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.option.data
-M.relativenumber = eve.col.Observable.from_value(_defaults.relativenumber)
+M.relativenumber = eve.std.Observable.from_value(_defaults.relativenumber)
 
 return M

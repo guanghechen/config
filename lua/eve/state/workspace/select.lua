@@ -28,9 +28,9 @@ local select_item = require("eve.state.workspace.select_item")
 ---@field public search_file            eve.state.select.item.state
 ---@field public select_avante          eve.state.select.item.state
 ---
----@field public find_buffer_scope      eve.collection.IObservable -- eve.e.FindBufferScope>
----@field public find_file_scope        eve.collection.IObservable -- eve.e.FindFileScope>
----@field public search_file_scope      eve.collection.IObservable -- eve.e.SearchFileScope>
+---@field public find_buffer_scope      eve.std.collection.IObservable -- eve.e.FindBufferScope>
+---@field public find_file_scope        eve.std.collection.IObservable -- eve.e.FindFileScope>
+---@field public search_file_scope      eve.std.collection.IObservable -- eve.e.SearchFileScope>
 
 ---@class eve.state.select : eve.state.select.state
 ---@field public keys                   string[]
@@ -156,9 +156,9 @@ M.find_vim_option = select_item.load(nil, "find_vim_option", _defaults.find_vim_
 M.search_file = select_item.load(nil, "search_file", _defaults.search_file)
 M.select_avante = select_item.load(nil, "select_avante", _defaults.select_avante)
 
-M.find_buffer_scope = eve.col.Observable.from_value(_defaults.find_file_scope)
-M.find_file_scope = eve.col.Observable.from_value(_defaults.find_file_scope)
-M.search_file_scope = eve.col.Observable.from_value(_defaults.search_file_scope)
+M.find_buffer_scope = eve.std.Observable.from_value(_defaults.find_file_scope)
+M.find_file_scope = eve.std.Observable.from_value(_defaults.find_file_scope)
+M.search_file_scope = eve.std.Observable.from_value(_defaults.search_file_scope)
 
 ---@return string[]
 M.keys = {

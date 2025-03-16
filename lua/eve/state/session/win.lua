@@ -2,10 +2,10 @@ local __module_name__ = "eve.state.session.win"
 
 ---@class eve.state.win.meta.data
 ---@field public winnr                  integer
----@field public filepath_history       eve.collection.history.ISerializedData
+---@field public filepath_history       eve.std.collection.history.ISerializedData
 
 ---@class eve.state.win.meta.state
----@field public filepath_history       eve.collection.IAdvanceHistory
+---@field public filepath_history       eve.std.collection.IAdvanceHistory
 ---@field public lsp_symbols            eve.state.buf.lsp.ISymbol[]
 ---@field public winline                fml.ux.INvimbar|nil
 ---@field public winline_bufnr          integer
@@ -139,7 +139,7 @@ function M.resolve(winnr)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filepath_history = eve.col.AdvanceHistory.new({
+  local filepath_history = eve.std.AdvanceHistory.new({
     name = "win#bufs",
     capacity = eve.setting.WIN_BUF_HISTORY_CAPACITY,
     validate = eve.editor.is_valid_filepath,

@@ -62,18 +62,18 @@ local SearchContext = require("fml.ux.search.context")
 ---@field public render_item            ?fml.ux.select.IRenderItem
 
 ---@class fml.ux.Select : fml.ux.ISelect
----@field protected _case_sensitive     eve.collection.IObservable -- boolean>
+---@field protected _case_sensitive     eve.std.collection.IObservable -- boolean>
 ---@field protected _cmp                fml.ux.select.IMatchedItemCmp|nil
----@field protected _flag_fuzzy         eve.collection.IObservable -- boolean>
----@field protected _flag_regex         eve.collection.IObservable -- boolean>
----@field protected _frecency           eve.collection.IFrecency|nil
+---@field protected _flag_fuzzy         eve.std.collection.IObservable -- boolean>
+---@field protected _flag_regex         eve.std.collection.IObservable -- boolean>
+---@field protected _frecency           eve.std.collection.IFrecency|nil
 ---@field protected _full_matches       fml.ux.select.IMatchedItem[]
 ---@field protected _item_map           table<string, fml.ux.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
----@field protected _live_data_dirty    eve.collection.IObservable -- boolean>
+---@field protected _live_data_dirty    eve.std.collection.IObservable -- boolean>
 ---@field protected _matches            fml.ux.select.IMatchedItem[]
 ---@field protected _provider           fml.ux.select.IProvider
 ---@field protected _search             fml.ux.search.ISearch
@@ -81,7 +81,7 @@ local M = {}
 M.__index = M
 
 ---@class fml.ux.select.IProps
----@field public case_sensitive         ?eve.collection.IObservable -- boolean>
+---@field public case_sensitive         ?eve.std.collection.IObservable -- boolean>
 ---@field public cmp                    ?fml.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
@@ -91,12 +91,12 @@ M.__index = M
 ---@field public preview_title          ?string
 ---@field public preview_wrap           ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?eve.collection.IObservable -- boolean>
----@field public flag_selected          ?eve.collection.IObservable -- boolean>
----@field public flag_regex             ?eve.collection.IObservable -- boolean>
----@field public frecency               ?eve.collection.IFrecency
----@field public input                  ?eve.collection.IObservable -- string>
----@field public input_history          ?eve.collection.IHistory
+---@field public flag_fuzzy             ?eve.std.collection.IObservable -- boolean>
+---@field public flag_selected          ?eve.std.collection.IObservable -- boolean>
+---@field public flag_regex             ?eve.std.collection.IObservable -- boolean>
+---@field public frecency               ?eve.std.collection.IFrecency
+---@field public input                  ?eve.std.collection.IObservable -- string>
+---@field public input_history          ?eve.std.collection.IHistory
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
 ---@field public multiple               ?boolean
@@ -117,11 +117,11 @@ function M.new(props)
 
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local dimension = props.dimension ---@type fml.ux.search.IRawDimension|nil
-  local flag_fuzzy = props.flag_fuzzy or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
-  local flag_regex = props.flag_regex or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
-  local flag_selected = props.flag_selected or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
-  local input = props.input or eve.col.Observable.from_value("") ---@type eve.collection.IObservable -- string>
-  local input_history = props.input_history ---@type eve.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable -- boolean>
+  local flag_regex = props.flag_regex or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable -- boolean>
+  local flag_selected = props.flag_selected or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable -- boolean>
+  local input = props.input or eve.std.Observable.from_value("") ---@type eve.std.collection.IObservable -- string>
+  local input_history = props.input_history ---@type eve.std.collection.IHistory|nil
   local multiple = props.multiple ---@type boolean|nil
   local permanent = props.permanent ---@type boolean|nil
   local preview_title = props.preview_title ---@type string|nil
@@ -155,15 +155,15 @@ function M.new(props)
     title = title,
   })
 
-  local case_sensitive = props.case_sensitive or eve.col.Observable.from_value(false) ---@type eve.collection.IObservable -- boolean>
+  local case_sensitive = props.case_sensitive or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable -- boolean>
   local cmp = props.cmp ---@type fml.ux.select.IMatchedItemCmp|nil
   local delay_render = props.delay_render or 48 ---@type integer
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
   local preview_enabled = props.preview_enabled ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local frecency = props.frecency ---@type eve.collection.IFrecency|nil
+  local frecency = props.frecency ---@type eve.std.collection.IFrecency|nil
   local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
-  local live_data_dirty = eve.col.Observable.from_value(true) ---@type eve.collection.IObservable -- boolean>
+  local live_data_dirty = eve.std.Observable.from_value(true) ---@type eve.std.collection.IObservable -- boolean>
   local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
   local provider = props.provider ---@type fml.ux.select.IProvider
@@ -418,7 +418,7 @@ function M:fetch_data(input, force)
   self._live_data_dirty:next(false)
 
   if is_data_dirty then
-    local frecency = self._frecency ---@type eve.collection.IFrecency|nil
+    local frecency = self._frecency ---@type eve.std.collection.IFrecency|nil
     local data = self._provider.fetch_data(force) ---@type fml.ux.select.IData
     local item_map = {} ---@type table<string, fml.ux.select.IItem>
     local full_matches = {} ---@type fml.ux.select.IMatchedItem[]
@@ -459,7 +459,7 @@ end
 ---@param input                         string
 ---@return fml.ux.select.IMatchedItem[]
 function M:filter(input)
-  local frecency = self._frecency ---@type eve.collection.IFrecency|nil
+  local frecency = self._frecency ---@type eve.std.collection.IFrecency|nil
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
   local matches = self._full_matches ---@type fml.ux.select.IMatchedItem[]

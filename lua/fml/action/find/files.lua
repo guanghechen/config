@@ -4,7 +4,7 @@ local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
 local Setting = require("fml.ux.setting")
 
-local observable_truthy = eve.col.Observable.from_value(true)
+local observable_truthy = eve.std.Observable.from_value(true)
 local _select = nil ---@type fml.ux.IFileSelect|nil
 
 local scopes = vim.list_slice(eve.state.select.find_file_scopes) ---@type eve.e.FindFileScope[]
@@ -30,7 +30,7 @@ local function get_scope_cwd(dirpath)
   return eve.path.cwd()
 end
 
-local state_find_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+local state_find_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 
 eve.state.observe({ eve.state.select.find_file_scope }, function()
   local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil

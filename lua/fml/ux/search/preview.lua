@@ -20,7 +20,7 @@
 
 ---@class fml.ux.search.Preview : fml.ux.search.IPreview
 ---@field protected _keymaps            eve.t.IKeymap[]
----@field protected _render_scheduler   eve.collection.IScheduler
+---@field protected _render_scheduler   eve.std.collection.IScheduler
 local M = {}
 M.__index = M
 
@@ -128,7 +128,7 @@ function M.new(props)
     _update_win_config({ title = title, lnum = lnum, col = col })
   end
 
-  local _render_scheduler = eve.col.Scheduler.new({
+  local _render_scheduler = eve.std.Scheduler.new({
     name = "fml.ux.search.preview.render",
     delay = delay_render,
     task = function(callback)

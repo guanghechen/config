@@ -1,8 +1,8 @@
 ---@class eve.state.widget.data
----@field public history                eve.collection.history.ISerializedData
+---@field public history                eve.std.collection.history.ISerializedData
 
 ---@class eve.state.widget.state
----@field public history                eve.collection.IHistory
+---@field public history                eve.std.collection.IHistory
 ---
 ---@field public backward               fun(): nil
 ---@field public forward                fun(): nil
@@ -53,7 +53,7 @@ end
 
 ---@return eve.state.widget.data
 function M.dump()
-  ---@type eve.collection.history.ISerializedData
+  ---@type eve.std.collection.history.ISerializedData
   local history = M.history and M.history:dump() or { present = 0, stack = {} }
 
   local stack = {} ---@type string[]
@@ -73,8 +73,8 @@ function M.load(raw_data)
   ---@diagnostic disable-next-line: unused-local
   local data = M.normalize(raw_data) ---@type eve.state.widget.data
 
-  ---@type eve.collection.IHistory
-  local history = M.history or eve.col.History.new({
+  ---@type eve.std.collection.IHistory
+  local history = M.history or eve.std.History.new({
     name = "widget",
     capacity = 100,
   })
@@ -86,8 +86,8 @@ end
 ---@type fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
 M.equals = eve.std.fn.equals_shallow
 
----@type eve.collection.IHistory
-M.history = eve.col.History.new({
+---@type eve.std.collection.IHistory
+M.history = eve.std.History.new({
   name = "widget",
   capacity = 20,
   equals = eve.std.fn.equals_shallow,

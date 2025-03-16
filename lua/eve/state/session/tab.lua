@@ -26,13 +26,13 @@ Meta.__index = Meta
 
 ---@class eve.state.tab.data
 ---@field public list                   eve.state.tab.meta.data[]
----@field public tab_history            eve.collection.history.ISerializedData
+---@field public tab_history            eve.std.collection.history.ISerializedData
 
 ---@class eve.state.tab.state
 ---@field public Meta                   eve.state.tab.meta.state
 ---@field public __meta_map__           table<integer, eve.state.tab.meta.state>
 ---
----@field public tab_history            eve.collection.IAdvanceHistory
+---@field public tab_history            eve.std.collection.IAdvanceHistory
 ---
 ---@field public get                    fun(tabnr: integer|nil): eve.state.tab.meta.state|nil
 ---@field public set                    fun(tabnr: integer|nil, meta: eve.state.tab.meta.state): eve.state.tab.meta.state|nil
@@ -239,7 +239,7 @@ function M.dump()
     end
   end
 
-  ---@type eve.collection.history.ISerializedData
+  ---@type eve.std.collection.history.ISerializedData
   local tab_history = M.tab_history and M.tab_history:dump() or { present = 0, stack = {} }
 
   local stack = {} ---@type integer[]
@@ -266,9 +266,9 @@ function M.load(raw_data)
 
   local data = M.normalize(raw_data) ---@type eve.state.tab.data
 
-  ---@type eve.collection.IAdvanceHistory
+  ---@type eve.std.collection.IAdvanceHistory
   local tab_history = M.tab_history
-    or eve.col.AdvanceHistory.new({
+    or eve.std.AdvanceHistory.new({
       name = "tabs",
       capacity = eve.setting.TAB_HISTORY_CAPACITY,
       validate = eve.editor.is_tab_valid,
@@ -325,8 +325,8 @@ end
 M.Meta = Meta ---@type eve.state.tab.meta.state
 M.__meta_map__ = {} ---@type table<integer, eve.state.tab.meta.state>
 
----@type eve.collection.IAdvanceHistory
-M.tab_history = eve.col.AdvanceHistory.new({
+---@type eve.std.collection.IAdvanceHistory
+M.tab_history = eve.std.AdvanceHistory.new({
   name = "tabs",
   capacity = eve.setting.TAB_HISTORY_CAPACITY,
   validate = eve.editor.is_tab_valid,
