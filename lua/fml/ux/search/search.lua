@@ -1036,6 +1036,7 @@ function M:mark_item_deleted(uuid)
   self.context:set_item_deleted(uuid)
 end
 
+---@param text                          string
 ---@return nil
 function M:reset_input(text)
   self._input:reset_input(text)

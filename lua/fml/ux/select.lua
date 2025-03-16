@@ -15,6 +15,7 @@ local SearchContext = require("fml.ux.search.context")
 ---@field public get_winnr_preview      fun(self: fml.ux.ISelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.ux.ISelect): nil
 ---@field public mark_item_deleted      fun(self: fml.ux.ISelect, uuid: string): nil
+---@field public reset_input            fun(self: fml.ux.ISelect, text: string): nil
 ---@field public show                   fun(self: fml.ux.ISelect): nil
 ---@field public toggle                 fun(self: fml.ux.ISelect): nil
 
@@ -625,6 +626,12 @@ end
 ---@return nil
 function M:mark_search_state_dirty()
   self._search.context.dirtier_data:mark_dirty()
+end
+
+---@param text                          string
+---@return nil
+function M:reset_input(text)
+  self._search:reset_input(text)
 end
 
 ---@return nil

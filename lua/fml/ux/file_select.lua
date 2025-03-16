@@ -11,6 +11,7 @@ local Select = require("fml.ux.select")
 ---@field public get_winnr_preview      fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public mark_data_dirty        fun(self: fml.ux.IFileSelect): nil
 ---@field public mark_item_deleted      fun(self: fml.ux.IFileSelect, uuid: string): nil
+---@field public reset_input            fun(self: fml.ux.IFileSelect, text: string): nil
 ---@field public show                   fun(self: fml.ux.IFileSelect): nil
 ---@field public toggle                 fun(self: fml.ux.IFileSelect): nil
 
@@ -443,6 +444,13 @@ end
 function M:toggle()
   local select = self._get_select() ---@type fml.ux.ISelect
   select:toggle()
+end
+
+---@param text                          string
+---@return nil
+function M:reset_input(text)
+  local select = self._get_select() ---@type fml.ux.ISelect
+  select:reset_input(text)
 end
 
 return M
