@@ -81,7 +81,7 @@ local function should_show_tabline()
   return meta == nil or #meta.bufs > 1
 end
 
-dirtier:subscribe(eve.col.Subscriber.new({
+dirtier:subscribe(eve.std.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
       vim.o.showtabline = 2

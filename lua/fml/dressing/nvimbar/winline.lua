@@ -149,7 +149,7 @@ local function render(winnr)
 end
 
 eve.state.status.dirty_winline_nr:subscribe(
-  eve.col.Subscriber.new({
+  eve.std.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)
       if winnr_prev ~= winnr then

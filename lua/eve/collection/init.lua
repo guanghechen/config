@@ -13,7 +13,6 @@ local __mods = {
   Promise = "eve.collection.promise",
   Scheduler = "eve.collection.scheduler",
   Spawn = "eve.collection.spawn",
-  Subscriber = "eve.collection.subscriber",
   Subscribers = "eve.collection.subscribers",
   Theme = "eve.collection.theme",
   Ticker = "eve.collection.ticker",
@@ -35,7 +34,6 @@ local __mods = {
 ---@field public Promise                eve.collection.Promise
 ---@field public Scheduler              eve.collection.Scheduler
 ---@field public Spawn                  eve.collection.Spawn
----@field public Subscriber             eve.collection.Subscriber
 ---@field public Subscribers            eve.collection.Subscribers
 ---@field public Theme                  eve.collection.Theme
 ---@field public Ticker                 eve.collection.Ticker

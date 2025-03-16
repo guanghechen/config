@@ -1,7 +1,11 @@
 ---@class eve.std.__mods
 local __mods = {
-  color = "eve.std..lib.color",
+  color = "eve.std.lib.color",
   md5 = "eve.std.lib.md5",
+
+  fn = "eve.std.fn",
+  
+  Subscriber = "eve.std.collection.subscriber",
 }
 
 ---@class eve.std
@@ -9,6 +13,10 @@ local __mods = {
 ---
 ---@field public color                  eve.std.lib.color
 ---@field public md5                    eve.std.lib.md5
+---
+---@field public fn                     eve.std.fn
+---
+---@field public Subscriber             eve.std.collection.Subscriber
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

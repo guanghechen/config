@@ -6,7 +6,7 @@ local __module_name__ = "eve.collection.scheduler" ---@type string
 ---@field public execute_immediately    fun(self: eve.collection.IScheduler): nil
 ---@field public schedule               fun(self: eve.collection.IScheduler): nil
 ---@field public snapshot               fun(self: eve.collection.IScheduler): unknown|nil
----@field public subscribe              fun(self: eve.collection.IScheduler, subscriber: eve.collection.ISubscriber, ignoreInitial: boolean): eve.collection.IUnsubscribable
+---@field public subscribe              fun(self: eve.collection.IScheduler, subscriber: eve.std.collection.ISubscriber, ignoreInitial: boolean): eve.collection.IUnsubscribable
 
 ---@alias eve.collection.scheduler.ITask
 ---| fun(callback: eve.collection.promise.IOnFinally): nil
@@ -75,7 +75,7 @@ function M:snapshot()
   return self._value:snapshot()
 end
 
----@param subscriber                    eve.collection.ISubscriber
+---@param subscriber                    eve.std.collection.ISubscriber
 ---@param ignoreInitial                 boolean
 ---@return eve.collection.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)

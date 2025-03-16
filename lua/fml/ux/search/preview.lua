@@ -156,7 +156,7 @@ function M.new(props)
   end
 
   context.dirtier_preview:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus

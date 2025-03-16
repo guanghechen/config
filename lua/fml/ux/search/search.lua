@@ -587,7 +587,7 @@ function M.new(props)
   end
 
   context.status:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         trigger_draw_wins()
       end,
@@ -596,7 +596,7 @@ function M.new(props)
   )
 
   context.state_has_matched:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function(flag)
         local winnr_main = context.winnr_main ---@type integer|nil
         if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
@@ -613,7 +613,7 @@ function M.new(props)
   )
 
   context.dirtier_dimension:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         local is_dimension_dirty = context.dirtier_dimension:is_dirty() ---@type boolean
         if is_dimension_dirty then
@@ -625,7 +625,7 @@ function M.new(props)
   )
 
   context.dirtier_main:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
         if is_main_dirty then
@@ -639,7 +639,7 @@ function M.new(props)
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
     context.dirtier_preview:subscribe(
-      eve.col.Subscriber.new({
+      eve.std.Subscriber.new({
         on_next = function()
           local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
           if is_preview_dirty then
@@ -652,7 +652,7 @@ function M.new(props)
   end
 
   context.dirtier_selected:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         local is_selected_dirty = context.dirtier_selected:is_dirty() ---@type boolean
         if is_selected_dirty then
@@ -666,7 +666,7 @@ function M.new(props)
 
   if context.enable_multiline_input then
     context.input_line_count:subscribe(
-      eve.col.Subscriber.new({
+      eve.std.Subscriber.new({
         on_next = function()
           trigger_draw_wins()
         end,

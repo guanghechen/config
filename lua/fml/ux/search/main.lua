@@ -91,7 +91,7 @@ function M.new(props)
   self._render_scheduler = render_scheduler
 
   context.dirtier_main:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus

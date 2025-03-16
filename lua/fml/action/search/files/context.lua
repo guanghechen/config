@@ -54,7 +54,7 @@ end
 
 local state_search_cwd = eve.col.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 eve.state.select.search_file_scope:subscribe(
-  eve.col.Subscriber.new({
+  eve.std.Subscriber.new({
     on_next = function(scope, prev_scope)
       local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
       local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string

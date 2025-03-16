@@ -132,7 +132,7 @@ local function gen_title()
 end
 
 state_cwd:subscribe(
-  eve.col.Subscriber.new({
+  eve.std.Subscriber.new({
     on_next = function()
       if _select ~= nil then
         _select:mark_data_dirty()

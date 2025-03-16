@@ -2,7 +2,7 @@
 ---@field public unsubscribe            fun(self: eve.collection.IUnsubscribable):nil
 
 ---@class eve.collection.ISubscribable
----@field public subscribe              fun(self: eve.collection.ISubscribable, subscriber: eve.collection.ISubscriber, ignoreInitial?: boolean): eve.collection.IUnsubscribable
+---@field public subscribe              fun(self: eve.collection.ISubscribable, subscriber: eve.std.collection.ISubscriber, ignoreInitial?: boolean): eve.collection.IUnsubscribable
 
 ---@class eve.collection.ISubscribers : eve.collection.ISubscribable, eve.collection.IDisposable
 ---@field public count                  fun(self: eve.collection.ISubscribers): nil
@@ -12,7 +12,7 @@
 ---@field public ARRANGE_THRESHOLD      ?number
 
 ---@class eve.collection.Subscribers.ISubscriberItem
----@field subscriber                    eve.collection.ISubscriber
+---@field subscriber                    eve.std.collection.ISubscriber
 ---@field unsubscribed                  boolean
 
 ---@type eve.collection.IUnsubscribable
@@ -120,7 +120,7 @@ function M:notify(value, value_prev)
   handler:cleanup()
 end
 
----@param subscriber                    eve.collection.ISubscriber
+---@param subscriber                    eve.std.collection.ISubscriber
 ---@return eve.collection.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:is_disposed() then

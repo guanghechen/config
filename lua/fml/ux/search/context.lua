@@ -305,11 +305,11 @@ function M.new(props)
   self._item_uuid_cur = nil ---@type string|nil
   self._uuids_selected = {} ---@type table<string, true>
 
-  flag_selected:subscribe(eve.col.Subscriber.new({ on_next = on_flag_selected_change }), false)
-  input:subscribe(eve.col.Subscriber.new({ on_next = on_input_change }), false)
-  status:subscribe(eve.col.Subscriber.new({ on_next = on_refresh }), false)
-  dirtier_data:subscribe(eve.col.Subscriber.new({ on_next = on_refresh }), false)
-  dirtier_data_cache:subscribe(eve.col.Subscriber.new({ on_next = on_data_cache_dirty }), false)
+  flag_selected:subscribe(eve.std.Subscriber.new({ on_next = on_flag_selected_change }), false)
+  input:subscribe(eve.std.Subscriber.new({ on_next = on_input_change }), false)
+  status:subscribe(eve.std.Subscriber.new({ on_next = on_refresh }), false)
+  dirtier_data:subscribe(eve.std.Subscriber.new({ on_next = on_refresh }), false)
+  dirtier_data_cache:subscribe(eve.std.Subscriber.new({ on_next = on_data_cache_dirty }), false)
   return self
 end
 

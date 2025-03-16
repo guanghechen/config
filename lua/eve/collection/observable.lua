@@ -106,7 +106,7 @@ function M:next(value, options)
   return false
 end
 
----@param subscriber                    eve.collection.ISubscriber
+---@param subscriber                    eve.std.collection.ISubscriber
 ---@param ignoreInitial                 boolean
 ---@return eve.collection.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)

@@ -83,7 +83,7 @@ function M.new(props)
   self._keymaps = keymaps
 
   context.dirtier_preview:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus
@@ -97,7 +97,7 @@ function M.new(props)
   )
 
   context.input:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         if input_history ~= nil then
           local input_cur = context.input:snapshot() ---@type string

@@ -240,7 +240,7 @@ end
 ---@return nil
 function M.observe(observables, callback, ignore_initial)
   for _, observable in ipairs(observables) do
-    local subscriber = eve.col.Subscriber.new({
+    local subscriber = eve.std.Subscriber.new({
       on_next = function()
         vim.schedule(callback)
       end,
@@ -391,7 +391,7 @@ function M.watch_changes(params)
     end,
   })
   M.status.ticker_editor:subscribe(
-    eve.col.Subscriber.new({
+    eve.std.Subscriber.new({
       on_next = function()
         editor_states_save_scheduler:schedule()
       end,
