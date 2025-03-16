@@ -140,6 +140,7 @@ function M:move(row, col, size)
   cfg.col = col
 
   if direction == "h" then
+    cfg.height = size + 2
     if self._size ~= size then
       local lines = { "╭" } ---@type string[]
       for _ = 1, size, 1 do
@@ -149,19 +150,19 @@ function M:move(row, col, size)
 
       self.set_content(bufnr, lines)
       self._size = size
-      cfg.height = size + 2
     end
   elseif direction == "k" then
+    cfg.width = size + 2
     if self._size ~= size then
       local content = "╭" .. string.rep("─", size) .. "╮" ---@type string
       local lines = { content } ---@type string[]
 
       self.set_content(bufnr, lines)
       self._size = size
-      cfg.width = size + 2
     end
   elseif direction == "l" then
-    if cfg.height ~= size then
+    cfg.height = size + 2
+    if self._size ~= size then
       local lines = { "╮" } ---@type string[]
       for _ = 1, size, 1 do
         lines[#lines + 1] = "│"
@@ -170,16 +171,15 @@ function M:move(row, col, size)
 
       self.set_content(bufnr, lines)
       self._size = size
-      cfg.height = size + 2
     end
   elseif direction == "j" then
-    if cfg.width ~= size then
+    cfg.width = size + 2
+    if self._size ~= size then
       local content = "╰" .. string.rep("─", size) .. "╯" ---@type string
       local lines = { content } ---@type string[]
 
       self.set_content(bufnr, lines)
       self._size = size
-      cfg.width = size + 2
     end
   end
 end
