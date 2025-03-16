@@ -189,6 +189,7 @@ return {
     { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "dap: breakpoint condition" },
     { "<leader>dO", function() require("dap").step_over() end,                                            desc = "dap: step over" },
     { "<leader>dC", function() require("dap").run_to_cursor() end,                                        desc = "dap: run to cursor" },
+    { "<leader>dK", function() require("dap.ui.widgets").hover() end,                                     desc = "dap: hover widget" },
     { "<leader>da", function() require("dap").continue({ before = get_args }) end,                        desc = "dap: run with args" },
     { "<leader>db", function() require("dap").toggle_breakpoint() end,                                    desc = "dap: breakpoint" },
     { "<leader>dc", function() require("dap").continue() end,                                             desc = "dap: continue" },
