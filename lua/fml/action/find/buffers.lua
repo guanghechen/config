@@ -225,6 +225,19 @@ local select = Select.new({
 })
 _select = select
 
+eve.state.observe({ eve.state.select.find_buffer_scope }, function()
+  local scope = eve.state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+  if scope == "A" then
+    select:change_input_title("find buffers")
+  elseif scope == "F" then
+    select:change_input_title("find buffers (files)")
+  elseif scope == "L" then
+    select:change_input_title("find buffers (except widgets)")
+  elseif scope == "T" then
+    select:change_input_title("find buffers (terms)")
+  end
+end, false)
+
 ---@class fml.action.find
 local M = {}
 
