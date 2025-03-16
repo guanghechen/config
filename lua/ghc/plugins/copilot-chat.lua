@@ -2,6 +2,9 @@ local username = eve.env.USERNAME ---@type string
 
 return {
   name = "copilot-chat.nvim",
+  cmd = {
+    "CopilotChatTranslate",
+  },
   opts = {
     allow_insecure = false,
     auto_insert_mode = true,
@@ -25,15 +28,8 @@ return {
     prompts = {
       Translate = {
         description = "Translate English to Chinese and vice versa.",
-        prompt = "Translate and refine these words, if it's mainly written in English, then translate and refine it to Chinese, otherwise translate and refine to English",
-        system_prompt = [[
-You are a helpful assistant.
-You are highly proficient in both Chinese and English, and you are capable of translating or
-converting them smartly, concisely, elegantly, and without losing the accuracy of the information.
-Accuracy is extremely important, a point on which you steadfastly insist.
-In the following dialogue, should my message contain at least one Chinese character,
-please translate the whole sentence into English; otherwise, translate the whole sentence into Chinese."
-]],
+        prompt = "Translate and refine the given content.",
+        system_prompt = "You are a highly proficient bilingual assistant in Chinese and English. You translate or convert content intelligently, concisely, and elegantly while ensuring absolute accuracy. Accuracy is your top priority. If my message contains at least one Chinese character, translate the entire sentence into English; otherwise, translate the entire sentence into Chinese.",
       },
       ExplainNvimStartuptime = {
         description = "Explain the nvim startuptime output.",

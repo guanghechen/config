@@ -215,12 +215,12 @@ end
 
 ---@return nil
 function M.reset()
-  require("CopilotChat").reset()
+  vim.cmd("CopilotChatReset")
 end
 
 ---@return nil
 function M.stop()
-  require("CopilotChat").stop()
+  vim.cmd("CopilotChatStop")
 end
 
 ---@return nil
@@ -230,6 +230,12 @@ function M.toggle()
   else
     chat:focus()
   end
+end
+
+---@return nil
+function M.translate()
+  chat:focus()
+  vim.cmd("CopilotChatTranslate")
 end
 
 return M

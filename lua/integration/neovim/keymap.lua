@@ -22,6 +22,7 @@ ms({ "n", "v" }, "<leader>ar", K.ai.avante_refresh)
 
 ms({ "n", "v" }, "<leader>ap", K.ai.copilot_chat_prompt)
 ms({ "n", "v" }, "<leader>aq", K.ai.copilot_chat_quick)
+ms({ "n", "v" }, "<leader>at", K.ai.copilot_chat_translate)
 ms({ "n", "v" }, "<leader>aS", K.ai.copilot_chat_stop)
 ms({ "n", "v" }, "<leader>aX", K.ai.copilot_chat_reset)
 ---------------------------------------------------------------------------------------------#[a]i--

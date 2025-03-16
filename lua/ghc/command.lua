@@ -51,6 +51,12 @@ command
       require("ghc.action.copilot-chat").toggle()
     end,
   })
+  .implement({
+    uuid = K.ai.copilot_chat_translate.uuid,
+    action = function()
+      require("ghc.action.copilot-chat").translate()
+    end,
+  })
 
 --[code] -------------------------------------------------------------------------------------------
 command.implement({

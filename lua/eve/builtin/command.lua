@@ -204,6 +204,7 @@ M.definitions.ai = {
   copilot_chat_reset = def("Faicopilotchatreset", "ai: copilot chat reset"),
   copilot_chat_stop = def("Faicopilotchatstop", "ai: copilot chat stop"),
   copilot_chat_toggle = def("Faicopilotchattoggle", "ai: copilot chat toggle"),
+  copilot_chat_translate = def("Faicopilotchattranslate", "ai: copilot chat translate"),
 }
 
 ---@class eve.builtin.command.definitions.buf
