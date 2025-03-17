@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/css": "11.13.5",
     "@guanghechen/equal": "1.0.3",
+    "@guanghechen/parse-lineno": "^2.3.10",
     "@guanghechen/react-hooks": "3.0.14",
     "@guanghechen/react-viewmodel": "0.2.15",
     "@guanghechen/std": "1.0.4",
@@ -24,6 +25,7 @@
     "chokidar": "4.0.3",
     "clsx": "2.1.1",
     "copy-to-clipboard": "3.3.3",
+    "mermaid": "^11.5.0",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
