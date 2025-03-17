@@ -120,10 +120,20 @@ local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
 local function gen_title()
+  local cwd = eve.path.cwd() ---@type string
   local dirpath = state_cwd:snapshot() ---@type string
-  local relative_dirpath = eve.path.relative(eve.path.cwd(), dirpath, false)
+  if dirpath == cwd then
+    return "File explorer (cwd)" ---@type string
+  end
+
+  local relative_dirpath = eve.path.relative(cwd, dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
-    return "File explorer" ---@type string
+    return "File explorer (cwd)" ---@type string
+  end
+
+  local workspace = eve.path.workspace() ---@type string
+  if dirpath == workspace then
+    return "Find files (workspace)" ---@type string
   end
 
   dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath

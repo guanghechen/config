@@ -7,8 +7,6 @@ local Setting = require("fml.ux.setting")
 local observable_truthy = eve.std.Observable.from_value(true)
 local _select = nil ---@type fml.ux.IFileSelect|nil
 
-local scopes = vim.list_slice(eve.state.select.find_file_scopes) ---@type eve.e.FindFileScope[]
-
 ---@param dirpath                       string
 ---@return string
 local function get_scope_cwd(dirpath)
@@ -30,15 +28,38 @@ local function get_scope_cwd(dirpath)
   return eve.path.cwd()
 end
 
-local state_find_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+local scopes = vim.list_slice(eve.state.select.find_file_scopes) ---@type eve.e.FindFileScope[]
+local state_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+
+---@return string
+local function gen_title()
+  local cwd = eve.path.cwd() ---@type string
+  local dirpath = state_cwd:snapshot() ---@type string
+  if dirpath == cwd then
+    return "Find files (cwd)" ---@type string
+  end
+
+  local relative_dirpath = eve.path.relative(cwd, dirpath, false)
+  if #relative_dirpath < 1 or relative_dirpath == "." then
+    return "Find files (cwd)" ---@type string
+  end
+
+  local workspace = eve.path.workspace() ---@type string
+  if dirpath == workspace then
+    return "Find files (workspace)" ---@type string
+  end
+
+  dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
+  return "Find files (from " .. dirpath .. ")" ---@type string
+end
 
 eve.state.observe({ eve.state.select.find_file_scope }, function()
   local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
   local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string
-  local current_find_cwd = state_find_cwd:snapshot() ---@type string
+  local current_find_cwd = state_cwd:snapshot() ---@type string
   local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
   if current_find_cwd ~= next_find_cwd then
-    state_find_cwd:next(next_find_cwd)
+    state_cwd:next(next_find_cwd)
   end
 end, true)
 
@@ -49,12 +70,25 @@ eve.state.observe({
   eve.state.select.find_file.flag_fuzzy,
   eve.state.select.find_file.flag_gitignore,
   eve.state.select.find_file.flag_regex,
-  state_find_cwd,
 }, function()
   if _select ~= nil then
     _select:mark_data_dirty()
   end
 end, true)
+
+state_cwd:subscribe(
+  eve.std.Subscriber.new({
+    on_next = function()
+      if _select ~= nil then
+        _select:mark_data_dirty()
+
+        local title = gen_title() ---@type string
+        _select:change_input_title(title)
+      end
+    end,
+  }),
+  true
+)
 
 ---@param scope                         eve.e.FindFileScope
 ---@return nil
@@ -154,7 +188,7 @@ local actions = {
   send_to_qflist = function()
     if _select ~= nil then
       local cwd = eve.path.cwd() ---@type string
-      local select_cwd = state_find_cwd:snapshot() ---@type string
+      local select_cwd = state_cwd:snapshot() ---@type string
       local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
       local matched_items = _select:get_matched_items() ---@type fml.ux.select.IMatchedItem[]
       for _, matched_item in ipairs(matched_items) do
@@ -334,7 +368,7 @@ local preview_keymaps = vim.list_slice(common_keymaps)
 ---@type fml.ux.file_select.IProvider
 local provider = {
   fetch_data = function()
-    local cwd = state_find_cwd:snapshot() ---@type string
+    local cwd = state_cwd:snapshot() ---@type string
     local workspace = eve.path.workspace() ---@type string
     local flag_exclude = eve.state.select.find_file.flag_exclude:snapshot() ---@type boolean
     local flag_gitignore = eve.state.select.find_file.flag_gitignore:snapshot() ---@type boolean
@@ -390,7 +424,7 @@ local select = FileSelect.new({
   preview_keymaps = preview_keymaps,
   provider = provider,
   statusline_items = statusline_items,
-  title = "Find files",
+  title = gen_title(),
 })
 _select = select
 
@@ -408,9 +442,23 @@ function M.find_files_cwd()
   select:show()
 end
 
+---@param specified_dirpath             string|nil
 ---@return nil
-function M.find_files_directory()
-  eve.state.select.find_file_scope:next("D")
+function M.find_files_directory(specified_dirpath)
+  local silent = false ---@type boolean
+  if specified_dirpath ~= nil and #specified_dirpath > 0 then
+    local is_file_or_dir = eve.fs.is_file_or_dir(specified_dirpath) ---@type eve.e.FileType|nil
+    if is_file_or_dir == "directory" then
+      local dirpath = eve.path.normalize(specified_dirpath) ---@type string
+      state_cwd:next(dirpath)
+      silent = true
+    elseif is_file_or_dir == "file" then
+      local dirpath = eve.path.dirname(specified_dirpath) ---@type string
+      state_cwd:next(dirpath)
+      silent = true
+    end
+  end
+  eve.state.select.find_file_scope:next("D", { silent = silent })
   select:show()
 end
 

@@ -3,6 +3,7 @@ local __module_name__ = "eve.std.collection.observable" ---@type string
 ---@class eve.std.collection.observable.INextOptions
 ---@field public strict                 ?boolean Whether to throw an error if the observable disposed.
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
+---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
 ---@class eve.std.collection.IObservable: eve.std.collection.IBatchDisposable, eve.std.collection.ISubscribable
 ---@field public equals                 eve.t.IEquals
@@ -100,7 +101,11 @@ function M:next(value, options)
   local force = not not options.force ---@type boolean
   if force or not self.equals(value, self._value) then
     self._value = value
-    self:_notify()
+
+    local silent = not not options.silent ---@type boolean
+    if not silent then
+      self:_notify()
+    end
     return true
   end
   return false
