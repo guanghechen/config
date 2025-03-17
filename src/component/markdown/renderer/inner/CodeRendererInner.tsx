@@ -14,15 +14,16 @@ interface IProps {
   readonly copyingText?: string
   readonly copiedText?: string
   readonly failedText?: string
+  readonly style?: React.CSSProperties
 }
 
 export class CodeRendererInner extends React.PureComponent<IProps> {
   public override render(): React.ReactElement {
     const { calcContentForCopy } = this
-    const { darken, lang, value, preferCodeWrap, showCodeLineno } = this.props
+    const { darken, lang, value, preferCodeWrap, showCodeLineno, style } = this.props
 
     return (
-      <code className={codeCls} data-wrap={preferCodeWrap}>
+      <code className={codeCls} data-wrap={preferCodeWrap} style={style}>
         <CodeHighlighter
           lang={lang}
           value={value}
