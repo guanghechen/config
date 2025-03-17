@@ -115,8 +115,7 @@ local function fetch_diritem(dirpath, force)
   return diritem
 end
 
-local initial_dirpath = vim.fn.expand("%:p:h") ---@type string
-local state_cwd = eve.std.Observable.from_value(eve.path.normalize(initial_dirpath)) ---@type eve.std.collection.IObservable -- string>
+local state_cwd = eve.std.Observable.from_value(eve.path.cwd()) ---@type eve.std.collection.IObservable -- string>
 local _select = nil ---@type fml.ux.ISelect|nil
 
 ---@return string
@@ -402,7 +401,7 @@ local main_keymaps = vim.list_slice(common_keymaps)
 local preview_keymaps = vim.list_slice(common_keymaps)
 
 ---@type fml.ux.ISelect
-select = Select.new({
+local select = Select.new({
   dimension = dimension,
   dirty_on_invisible = true,
   preview_enabled = true,
@@ -453,18 +452,31 @@ local M = {}
 ---@param specified_dirpath             string|nil
 ---@return nil
 function M.find_explorer(specified_dirpath)
-  if specified_dirpath ~= nil and eve.fs.is_file_or_dir(specified_dirpath) == "directory" then
-    local dirpath = eve.path.normalize(specified_dirpath) ---@type string
-    state_cwd:next(dirpath)
-  else
+  local dirpath_resolved = false ---@type boolean
+  if specified_dirpath ~= nil and #specified_dirpath > 0 then
+    local is_file_or_dir = eve.fs.is_file_or_dir(specified_dirpath) ---@type eve.e.FileType|nil
+    if is_file_or_dir == "directory" then
+      local dirpath = eve.path.normalize(specified_dirpath) ---@type string
+      state_cwd:next(dirpath)
+      dirpath_resolved = true
+    elseif is_file_or_dir == "file" then
+      local dirpath = eve.path.dirname(specified_dirpath) ---@type string
+      state_cwd:next(dirpath)
+      dirpath_resolved = true
+    end
+  end
+  if not dirpath_resolved then
     local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
     if winnr_sourcefile ~= nil then
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then
         local doctype = eve.fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
-        local dirpath = doctype == "file" and eve.path.dirname(filepath) or filepath ---@type string
-        state_cwd:next(dirpath)
+        if doctype == "directory" then
+          state_cwd:next(filepath)
+        elseif doctype == "file" then
+          state_cwd:next(eve.path.dirname(filepath))
+        end
       end
     end
   end
