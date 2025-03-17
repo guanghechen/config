@@ -1,5 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Code } from '@yozora/ast'
+import cn from 'clsx'
 import React, { useState } from 'react'
 import { CodeIcon, TerminalIcon } from '@/component/icon/material'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
@@ -7,6 +8,45 @@ import { parseCodeMeta } from '@/util/parseCodeMeta'
 import { useNodeRendererContext } from '../context'
 import { CodeLiveRenderer } from './inner/CodeLive'
 import { CodeRendererInner } from './inner/CodeRendererInner'
+
+interface ICodeSourceInfoProps {
+  readonly darken: boolean
+  readonly lang: string
+  readonly title: string | undefined
+}
+
+const CodeSourceInfo: React.FC<ICodeSourceInfoProps> = props => {
+  const { darken, lang, title } = props
+  return (
+    <div className="flex items-center gap-2">
+      {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
+      <CodeIcon className="w-[18px] h-[18px] opacity-80" />
+      <span
+        className={cn('px-1.5 py-0.5 rounded text-xs', {
+          'bg-[#444]': darken,
+          'bg-gray-200': !darken,
+        })}
+      >
+        {lang}
+      </span>
+    </div>
+  )
+}
+
+interface ICodeResultInfoProps {
+  readonly title: string | undefined
+}
+
+const CodeResultInfo: React.FC<ICodeResultInfoProps> = props => {
+  const { title } = props
+  return (
+    <div className="flex items-center gap-2">
+      {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
+      <TerminalIcon className="w-[18px] h-[18px] opacity-80" />
+      <span className="text-sm">Result</span>
+    </div>
+  )
+}
 
 /**
  * Render `code`
@@ -31,8 +71,8 @@ export const CodeRenderer: React.FC<Code> = props => {
     [props.meta],
   )
 
-  const toggleSourceExpanded = React.useCallback(() => setIsSourceExpanded(v => !v), [])
-  const toggleResultExpanded = React.useCallback(() => setIsResultExpanded(v => !v), [])
+  const onSourceToggled = React.useCallback(() => setIsSourceExpanded(v => !v), [])
+  const onResultToggled = React.useCallback(() => setIsResultExpanded(v => !v), [])
   const title: string = (meta.filename || meta.title || '') as string
 
   if (!lang || !meta.live) {
@@ -49,48 +89,78 @@ export const CodeRenderer: React.FC<Code> = props => {
 
   return (
     <div className="my-4 rounded-lg overflow-hidden shadow-md">
-      <div className={isSourceExpanded ? 'border-b border-opacity-10 border-black' : ''}>
-        <div
-          className={`flex justify-between items-center p-2 px-4 cursor-pointer select-none ${
-            darken ? 'bg-[#2d2d2d]' : 'bg-gray-100'
-          } ${isSourceExpanded ? 'border-b border-opacity-10 border-black' : ''}`}
-          onClick={toggleSourceExpanded}
-        >
-          <div className="flex items-center gap-2">
-            <CodeIcon className="w-[18px] h-[18px] opacity-80" />
-            <span
-              className={`px-1.5 py-0.5 rounded text-xs ${darken ? 'bg-[#444]' : 'bg-gray-200'}`}
+      <div
+        className={cn({
+          'border-b border-opacity-10 border-black': isSourceExpanded,
+        })}
+      >
+        {isSourceExpanded ? (
+          <React.Fragment>
+            <div
+              className={cn(
+                'flex justify-between items-center p-2 px-4 cursor-pointer select-none',
+                {
+                  'bg-[#2d2d2d]': darken,
+                  'bg-gray-100': !darken,
+                  'border-b border-opacity-10 border-black': isSourceExpanded,
+                },
+              )}
+              onClick={onSourceToggled}
             >
-              {lang}
-            </span>
-            {title && <span className="text-sm">{title}</span>}
-          </div>
-        </div>
-        {isSourceExpanded && (
-          <div className="source-content">
-            <CodeRendererInner
-              darken={darken}
-              lang={lang}
-              value={value}
-              preferCodeWrap={false}
-              showCodeLineno={showCodeLineno}
-              style={{ marginBottom: 0 }}
-            />
+              <CodeSourceInfo darken={darken} lang={lang} title={title} />
+            </div>
+            <div className="source-content">
+              <CodeRendererInner
+                darken={darken}
+                lang={lang}
+                value={value}
+                preferCodeWrap={false}
+                showCodeLineno={showCodeLineno}
+                style={{ marginBottom: 0 }}
+              />
+            </div>
+          </React.Fragment>
+        ) : (
+          <div
+            className={cn('flex items-center p-2 px-4 cursor-pointer select-none', {
+              'bg-[#2d2d2d]': darken,
+              'bg-gray-100': !darken,
+              'border-b border-opacity-10 border-black': isSourceExpanded,
+              'flex-row-reverse': !isSourceExpanded && isResultExpanded,
+            })}
+          >
+            <div
+              className={isSourceExpanded || !isResultExpanded ? 'flex-auto' : 'flex-initial'}
+              onClick={onSourceToggled}
+            >
+              <CodeSourceInfo
+                darken={darken}
+                lang={lang}
+                title={!isSourceExpanded && isResultExpanded ? undefined : title}
+              />
+            </div>
+            <div
+              className={!isSourceExpanded && isResultExpanded ? 'flex-auto' : 'flex-initial'}
+              onClick={onResultToggled}
+            >
+              <CodeResultInfo title={!isSourceExpanded && isResultExpanded ? title : undefined} />
+            </div>
           </div>
         )}
       </div>
       <div>
-        <div
-          className={`flex justify-between items-center p-2 px-4 cursor-pointer select-none ${
-            darken ? 'bg-[#2d2d2d]' : 'bg-gray-100'
-          } ${isResultExpanded ? 'border-b border-opacity-10 border-black' : ''}`}
-          onClick={toggleResultExpanded}
-        >
-          <div className="flex items-center gap-2">
-            <TerminalIcon className="w-[18px] h-[18px] opacity-80" />
-            <span className="text-sm">Result</span>
+        {isResultExpanded && isSourceExpanded && (
+          <div
+            className={cn('flex justify-between items-center p-2 px-4 cursor-pointer select-none', {
+              'bg-[#2d2d2d]': darken,
+              'bg-gray-100': !darken,
+              'border-b border-opacity-10 border-black': isResultExpanded,
+            })}
+            onClick={onResultToggled}
+          >
+            <CodeResultInfo title={undefined} />
           </div>
-        </div>
+        )}
         {isResultExpanded && (
           <div className="p-4 flex justify-center items-center">
             <CodeLiveRenderer lang={lang} code={value} meta={meta} />
