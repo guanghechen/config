@@ -137,7 +137,7 @@ local function gen_title()
   end
 
   dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
-  return "File explorer (from " .. dirpath .. ")" ---@type string
+  return "File explorer (" .. dirpath .. ")" ---@type string
 end
 
 state_cwd:subscribe(
@@ -459,19 +459,19 @@ _select = select
 ---@class fml.action.find
 local M = {}
 
----@param specified_dirpath             string|nil
+---@param specified_filepath            string|nil
 ---@return nil
-function M.find_explorer(specified_dirpath)
+function M.find_explorer(specified_filepath)
   local dirpath_resolved = false ---@type boolean
-  if specified_dirpath ~= nil and #specified_dirpath > 0 then
-    local is_file_or_dir = eve.fs.is_file_or_dir(specified_dirpath) ---@type eve.e.FileType|nil
+  if specified_filepath ~= nil and #specified_filepath > 0 then
+    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
     if is_file_or_dir == "directory" then
-      local dirpath = eve.path.normalize(specified_dirpath) ---@type string
-      state_cwd:next(dirpath)
+      local dirpath = eve.path.normalize(specified_filepath) ---@type string
+      state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
     elseif is_file_or_dir == "file" then
-      local dirpath = eve.path.dirname(specified_dirpath) ---@type string
-      state_cwd:next(dirpath)
+      local dirpath = eve.path.dirname(specified_filepath) ---@type string
+      state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
     end
   end
@@ -483,9 +483,9 @@ function M.find_explorer(specified_dirpath)
       if #filepath > 0 then
         local doctype = eve.fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
         if doctype == "directory" then
-          state_cwd:next(filepath)
+          state_cwd:next(filepath, { force = true })
         elseif doctype == "file" then
-          state_cwd:next(eve.path.dirname(filepath))
+          state_cwd:next(eve.path.dirname(filepath), { force = true })
         end
       end
     end

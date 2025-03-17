@@ -259,6 +259,16 @@ return {
           local filepath = node:get_id() ---@type string
           vim.cmd(eve.command.definitions.find.files_directory.uuid .. " " .. filepath)
         end,
+        open_ghc_replacer = function(state)
+          local node = state.tree:get_node()
+          local filepath = node:get_id() ---@type string
+          vim.cmd(eve.command.definitions.replace.files_in_directory.uuid .. " " .. filepath)
+        end,
+        open_ghc_searcher = function(state)
+          local node = state.tree:get_node()
+          local filepath = node:get_id() ---@type string
+          vim.cmd(eve.command.definitions.search.files_in_directory.uuid .. " " .. filepath)
+        end,
       },
       filtered_items = {
         visible = false, -- when true, they will just be displayed differently than normal items
@@ -297,6 +307,9 @@ return {
           ["oa"] = "avante_add_files",
           ["oe"] = "open_ghc_file_explorer",
           ["of"] = "open_ghc_file_finder",
+          ["oo"] = "open",
+          ["or"] = "open_ghc_replacer",
+          ["os"] = "open_ghc_searcher",
           ["<C-a>r"] = refresh_filesystem,
           ["<D-r"] = refresh_filesystem,
           ["<M-r>"] = refresh_filesystem,

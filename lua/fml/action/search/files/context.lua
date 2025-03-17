@@ -52,19 +52,57 @@ local function get_scope_cwd(dirpath)
   return eve.path.cwd()
 end
 
-local state_search_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+local state_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+
+---@return string
+local function gen_title()
+  local flag_replace = eve.state.search_file.flag_replace:snapshot() ---@type boolean
+  local mode = flag_replace and "Replace" or "Search" ---@type string
+
+  local cwd = eve.path.cwd() ---@type string
+  local scope = eve.state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
+  if scope == "B" then
+    local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+    if bufnr ~= nil then
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      if eve.fs.is_file_or_dir(filepath) == "file" then
+        local relative_filepath = eve.path.relative(cwd, filepath, false)
+        return mode .. "in " .. relative_filepath ---@type string
+      end
+    end
+  end
+
+  local dirpath = state_cwd:snapshot() ---@type string
+  if dirpath == cwd then
+    return mode .. "in files (cwd)" ---@type string
+  end
+
+  local relative_dirpath = eve.path.relative(cwd, dirpath, false)
+  if #relative_dirpath < 1 or relative_dirpath == "." then
+    return mode .. "in files (cwd)" ---@type string
+  end
+
+  local workspace = eve.path.workspace() ---@type string
+  if dirpath == workspace then
+    return mode .. "in files (workspace)" ---@type string
+  end
+
+  dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
+  return mode .. "in files (" .. dirpath .. ")" ---@type string
+end
+
 eve.state.select.search_file_scope:subscribe(
   eve.std.Subscriber.new({
     on_next = function(scope, prev_scope)
       local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
       local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string
-      local current_search_cwd = state_search_cwd:snapshot() ---@type string
+      local current_search_cwd = state_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
       if current_search_cwd ~= next_search_cwd then
-        state_search_cwd:next(next_search_cwd)
+        state_cwd:next(next_search_cwd)
       end
       if scope == "B" or prev_scope == "B" then
-        state_search_cwd:next(next_search_cwd, { force = true })
+        state_cwd:next(next_search_cwd, { force = true })
       end
     end,
   }),
@@ -76,7 +114,7 @@ local _search = nil ---@type fml.ux.search.ISearch|nil
 ---@class fml.action.search.files.context
 local M = {}
 
-M.search_cwd = state_search_cwd
+M.search_cwd = state_cwd
 
 ---@return nil
 function M.close()
@@ -88,7 +126,7 @@ end
 ---@return nil
 function M.refresh_title()
   if _search ~= nil then
-    local title = M.get_title() ---@type string
+    local title = gen_title() ---@type string
     _search:change_input_title(title)
   end
 end
@@ -227,7 +265,7 @@ function M.get_search()
     local keybindings = require("fml.action.search.files.keybindings")
 
     local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
-    local title = M.get_title() ---@type string
+    local title = gen_title() ---@type string
 
     ---@type fml.ux.search.IContext
     local context = SearchContext.new({
@@ -278,15 +316,6 @@ function M.get_search()
     })
   end
   return _search
-end
-
----@return string
-function M.get_title()
-  local search_paths = eve.state.search_file.search_paths:snapshot() ---@type string[]
-  local title = (search_paths ~= nil and #search_paths > 0) --
-      and "Search in files (" .. table.concat(search_paths, ",") .. ")"
-    or "Search in files"
-  return title
 end
 
 ---@return nil

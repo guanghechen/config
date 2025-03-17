@@ -1,3 +1,5 @@
+local context = require("fml.action.search.files.context")
+
 ---@return nil
 local function focus()
   local selected_text = eve.editor.get_selected_text() ---@type string
@@ -35,10 +37,30 @@ function M.search_files_in_cwd()
   focus()
 end
 
+---@param specified_filepath             string|nil
 ---@return nil
-function M.search_files_in_directory()
+function M.search_files_in_directory(specified_filepath)
+  local silent = false ---@type boolean
+  local next_scope = "D" ---@type eve.e.SearchFileScope
+
+  if specified_filepath ~= nil and #specified_filepath > 0 then
+    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
+    if is_file_or_dir == "directory" then
+      local dirpath = eve.path.normalize(specified_filepath) ---@type string
+      context.search_cwd:next(dirpath)
+      silent = true
+    elseif is_file_or_dir == "file" then
+      local dirpath = eve.path.dirname(specified_filepath) ---@type string
+      context.search_cwd:next(dirpath, { force = true })
+      silent = true
+
+      eve.editor.open_filepath(nil, specified_filepath)
+      next_scope = "B"
+    end
+  end
+
   eve.state.search_file.flag_replace:next(false)
-  eve.state.select.search_file_scope:next("D")
+  eve.state.select.search_file_scope:next(next_scope, { silent = silent })
   focus()
 end
 
@@ -69,10 +91,30 @@ function M.replace_files_in_cwd()
   focus()
 end
 
+---@param specified_filepath             string|nil
 ---@return nil
-function M.replace_files_in_directory()
+function M.replace_files_in_directory(specified_filepath)
+  local silent = false ---@type boolean
+  local next_scope = "D" ---@type eve.e.SearchFileScope
+
+  if specified_filepath ~= nil and #specified_filepath > 0 then
+    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
+    if is_file_or_dir == "directory" then
+      local dirpath = eve.path.normalize(specified_filepath) ---@type string
+      context.search_cwd:next(dirpath)
+      silent = true
+    elseif is_file_or_dir == "file" then
+      local dirpath = eve.path.dirname(specified_filepath) ---@type string
+      context.search_cwd:next(dirpath, { force = true })
+      silent = true
+
+      eve.editor.open_filepath(nil, specified_filepath)
+      next_scope = "B"
+    end
+  end
+
   eve.state.search_file.flag_replace:next(true)
-  eve.state.select.search_file_scope:next("D")
+  eve.state.select.search_file_scope:next(next_scope, { silent = silent })
   focus()
 end
 

@@ -388,7 +388,7 @@ M.definitions.replace = {
   files = def("Freplacefiles", "replace: files"),
   files_in_buffer = def("Freplacefilesinbuffer", "replace: files (buffer)"),
   files_in_cwd = def("Freplacefilesincwd", "replace: files (cwd)"),
-  files_in_directory = def("Freplacefilesindirectory", "replace: files (directory)"),
+  files_in_directory = def("Freplacefilesindirectory", "replace: files (directory)", "?"),
   files_in_workspace = def("Freplacefilesinworkspace", "replace: files (workspace)"),
 }
 
@@ -397,7 +397,7 @@ M.definitions.search = {
   files = def("Fsearchfiles", "search: files"),
   files_in_buffer = def("Fsearchfilesinbuffer", "search: files (buffer)"),
   files_in_cwd = def("Fsearchfilesincwd", "search: files (cwd)"),
-  files_in_directory = def("Fsearchfilesindirectory", "search: files (directory)"),
+  files_in_directory = def("Fsearchfilesindirectory", "search: files (directory)", "?"),
   files_in_workspace = def("Fsearchfilesinworkspace", "search: files (workspace)"),
 }
 

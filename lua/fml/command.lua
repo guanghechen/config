@@ -424,8 +424,8 @@ command
   })
   .implement({
     uuid = K.replace.files_in_directory.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_directory()
+    action = function(args)
+      require("fml.action.search.files").replace_files_in_directory(args)
     end,
   })
   .implement({
@@ -457,8 +457,8 @@ command
   })
   .implement({
     uuid = K.search.files_in_directory.uuid,
-    action = function()
-      require("fml.action.search.files").search_files_in_directory()
+    action = function(args)
+      require("fml.action.search.files").search_files_in_directory(args)
     end,
   })
   .implement({

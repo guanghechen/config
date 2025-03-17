@@ -50,7 +50,7 @@ local function gen_title()
   end
 
   dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
-  return "Find files (from " .. dirpath .. ")" ---@type string
+  return "Find files (" .. dirpath .. ")" ---@type string
 end
 
 eve.state.observe({ eve.state.select.find_file_scope }, function()
@@ -76,19 +76,16 @@ eve.state.observe({
   end
 end, true)
 
-state_cwd:subscribe(
-  eve.std.Subscriber.new({
-    on_next = function()
-      if _select ~= nil then
-        _select:mark_data_dirty()
+eve.state.observe({
+  state_cwd,
+}, function()
+  if _select ~= nil then
+    _select:mark_data_dirty()
 
-        local title = gen_title() ---@type string
-        _select:change_input_title(title)
-      end
-    end,
-  }),
-  true
-)
+    local title = gen_title() ---@type string
+    _select:change_input_title(title)
+  end
+end, true)
 
 ---@param scope                         eve.e.FindFileScope
 ---@return nil
@@ -442,18 +439,18 @@ function M.find_files_cwd()
   select:show()
 end
 
----@param specified_dirpath             string|nil
+---@param specified_filepath            string|nil
 ---@return nil
-function M.find_files_directory(specified_dirpath)
+function M.find_files_directory(specified_filepath)
   local silent = false ---@type boolean
-  if specified_dirpath ~= nil and #specified_dirpath > 0 then
-    local is_file_or_dir = eve.fs.is_file_or_dir(specified_dirpath) ---@type eve.e.FileType|nil
+  if specified_filepath ~= nil and #specified_filepath > 0 then
+    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
     if is_file_or_dir == "directory" then
-      local dirpath = eve.path.normalize(specified_dirpath) ---@type string
+      local dirpath = eve.path.normalize(specified_filepath) ---@type string
       state_cwd:next(dirpath)
       silent = true
     elseif is_file_or_dir == "file" then
-      local dirpath = eve.path.dirname(specified_dirpath) ---@type string
+      local dirpath = eve.path.dirname(specified_filepath) ---@type string
       state_cwd:next(dirpath)
       silent = true
     end

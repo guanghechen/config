@@ -29,9 +29,13 @@ local _last_preview_data = nil ---@type fml.action.search.files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.builtin.oxi.search.IResult|nil
 
-eve.state.observe({ eve.state.search_file.search_paths }, function()
-  context.refresh_title()
-end, true)
+eve.state.observe(
+  { eve.state.search_file.search_paths, eve.state.search_file.flag_replace, context.search_cwd },
+  function()
+    context.refresh_title()
+  end,
+  true
+)
 
 eve.state.observe({
   eve.state.select.search_file.flag_case_sensitive,
