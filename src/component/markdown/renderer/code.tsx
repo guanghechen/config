@@ -1,4 +1,3 @@
-import { css } from '@emotion/css'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Code } from '@yozora/ast'
 import React, { useState } from 'react'
@@ -27,8 +26,6 @@ export const CodeRenderer: React.FC<Code> = props => {
   const [isSourceExpanded, setIsSourceExpanded] = useState(false)
   const [isResultExpanded, setIsResultExpanded] = useState(true)
 
-  const classes = useStyles({ darken, isResultExpanded, isSourceExpanded })
-
   const meta: ICodeMetaData = React.useMemo<ICodeMetaData>(
     () => parseCodeMeta(props.meta || '', { showCodeLineno }),
     [props.meta],
@@ -51,13 +48,22 @@ export const CodeRenderer: React.FC<Code> = props => {
   }
 
   return (
-    <div className={classes.container}>
-      <div className={classes.sourceContainer}>
-        <div className={classes.sourceHeader} onClick={toggleSourceExpanded}>
-          <div className={classes.headerGroup}>
-            <CodeIcon className={classes.headerIcon} />
-            <span className={classes.langBadge}>{lang}</span>
-            {title && <span className={classes.fileName}>{title}</span>}
+    <div className="my-4 rounded-lg overflow-hidden shadow-md">
+      <div className={isSourceExpanded ? 'border-b border-opacity-10 border-black' : ''}>
+        <div
+          className={`flex justify-between items-center p-2 px-4 cursor-pointer select-none ${
+            darken ? 'bg-[#2d2d2d]' : 'bg-gray-100'
+          } ${isSourceExpanded ? 'border-b border-opacity-10 border-black' : ''}`}
+          onClick={toggleSourceExpanded}
+        >
+          <div className="flex items-center gap-2">
+            <CodeIcon className="w-[18px] h-[18px] opacity-80" />
+            <span
+              className={`px-1.5 py-0.5 rounded text-xs ${darken ? 'bg-[#444]' : 'bg-gray-200'}`}
+            >
+              {lang}
+            </span>
+            {title && <span className="text-sm">{title}</span>}
           </div>
         </div>
         {isSourceExpanded && (
@@ -73,96 +79,24 @@ export const CodeRenderer: React.FC<Code> = props => {
           </div>
         )}
       </div>
-      <div className={classes.resultContainer}>
-        <div className={classes.resultHeader} onClick={toggleResultExpanded}>
-          <div className={classes.headerGroup}>
-            <TerminalIcon className={classes.headerIcon} />
-            <span className={classes.resultLabel}>Result</span>
+      <div>
+        <div
+          className={`flex justify-between items-center p-2 px-4 cursor-pointer select-none ${
+            darken ? 'bg-[#2d2d2d]' : 'bg-gray-100'
+          } ${isResultExpanded ? 'border-b border-opacity-10 border-black' : ''}`}
+          onClick={toggleResultExpanded}
+        >
+          <div className="flex items-center gap-2">
+            <TerminalIcon className="w-[18px] h-[18px] opacity-80" />
+            <span className="text-sm">Result</span>
           </div>
         </div>
         {isResultExpanded && (
-          <div className={classes.resultContent}>
+          <div className="p-4 flex justify-center items-center">
             <CodeLiveRenderer lang={lang} code={value} meta={meta} />
           </div>
         )}
       </div>
     </div>
-  )
-}
-
-const useStyles = (params: {
-  darken: boolean
-  isSourceExpanded: boolean
-  isResultExpanded: boolean
-}) => {
-  const { darken, isSourceExpanded, isResultExpanded } = params
-  return React.useMemo(
-    () => ({
-      container: css({
-        margin: '1rem 0',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      }),
-      sourceContainer: css({
-        borderBottom: isSourceExpanded ? '1px solid rgba(0,0,0,0.1)' : 'none',
-      }),
-      sourceHeader: css({
-        padding: '8px 16px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        cursor: 'pointer',
-        backgroundColor: darken ? '#2d2d2d' : '#f5f5f5',
-        borderBottom: isSourceExpanded ? '1px solid rgba(0,0,0,0.1)' : 'none',
-        userSelect: 'none',
-      }),
-      headerGroup: css({
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-      }),
-      headerIcon: css({
-        width: '18px',
-        height: '18px',
-        opacity: 0.8,
-      }),
-      langBadge: css({
-        padding: '2px 6px',
-        borderRadius: '4px',
-        backgroundColor: darken ? '#444' : '#e0e0e0',
-        fontSize: '0.8rem',
-      }),
-      fileName: css({
-        fontSize: '0.9rem',
-      }),
-      toggleText: css({
-        fontSize: '0.8rem',
-        opacity: 0.7,
-      }),
-      resultContainer: css({
-        // Result container styling
-      }),
-      resultHeader: css({
-        padding: '8px 16px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        cursor: 'pointer',
-        backgroundColor: darken ? '#2d2d2d' : '#f5f5f5',
-        borderBottom: isResultExpanded ? '1px solid rgba(0,0,0,0.1)' : 'none',
-        userSelect: 'none',
-      }),
-      resultLabel: css({
-        fontSize: '0.9rem',
-      }),
-      resultContent: css({
-        padding: '16px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }),
-    }),
-    [darken, isSourceExpanded, isResultExpanded],
   )
 }
