@@ -19,7 +19,7 @@ local runners = {
   },
   md = {
     run = function(filepath, force)
-      local url = "http://localhost:9527/api/file-switch?filepath="
+      local url = "http://localhost:7071/api/file-switch?filepath="
         .. eve.string.escape_url_component(filepath)
         .. "&force="
         .. (force and "true" or "false")
