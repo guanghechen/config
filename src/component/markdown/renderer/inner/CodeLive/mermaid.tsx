@@ -7,24 +7,25 @@ interface IProps {
 
 export const Mermaid: React.FC<IProps> = props => {
   const { code } = props
-  const containerRef = React.useRef<HTMLDivElement>(null)
+  const ref = React.useRef<HTMLDivElement>(null)
+  const id: string = React.useId().replaceAll(/:/g, '_')
 
   React.useEffect(() => {
-    if (!containerRef.current) return
+    if (!ref.current) return
 
     let cancelled: boolean = false
     mermaid.initialize({ startOnLoad: false })
 
-    void mermaid.render('mermaid-diagram', code).then(({ svg }) => {
-      if (!cancelled && containerRef.current) {
-        containerRef.current.innerHTML = svg
+    void mermaid.render(id, code).then(({ svg }) => {
+      if (!cancelled && ref.current) {
+        ref.current.innerHTML = svg
       }
     })
 
     return () => {
       cancelled = true
     }
-  }, [code])
+  }, [id, code])
 
-  return <div ref={containerRef} />
+  return <div ref={ref} />
 }
