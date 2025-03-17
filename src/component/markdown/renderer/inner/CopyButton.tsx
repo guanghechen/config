@@ -1,7 +1,7 @@
 import { css, cx } from '@emotion/css'
 import copy from 'copy-to-clipboard'
 import React from 'react'
-import { CopyIcon as CopiedIcon, CopyIcon } from '@/component/icon/material'
+import { CheckIcon, CopyIcon } from '@/component/icon/material'
 
 export enum CopyStatus {
   PENDING = 0,
@@ -52,18 +52,91 @@ export const CopyButton: React.FC<ICopyButtonProps> = props => {
       className={cx(
         classes.copyButton,
         className,
-        'flex bg-[#24A0ED] text-white disabled:text-black/50 dark:disabled:text-white/50 hover:bg-opacity-85 transition duration-100 disabled:bg-[#e0e0dc79] dark:disabled:bg-[#ececec21] rounded-full p-2',
+        status === CopyStatus.COPIED && classes.copied,
+        status === CopyStatus.FAILED && classes.failed,
       )}
       disabled={disabled}
       onClick={onCopy}
+      title={status === CopyStatus.COPIED ? 'Copied!' : 'Copy to clipboard'}
     >
-      {status === CopyStatus.PENDING ? <CopyIcon /> : <CopiedIcon />}
+      <span className={classes.iconWrapper}>
+        {status === CopyStatus.COPIED ? (
+          <CheckIcon className={classes.icon} />
+        ) : (
+          <CopyIcon className={classes.icon} />
+        )}
+      </span>
+      <span
+        className={cx(classes.statusText, {
+          [classes.statusTextCopied]: status === CopyStatus.COPIED,
+        })}
+      >
+        {status === CopyStatus.COPIED ? 'Copied!' : status === CopyStatus.FAILED ? 'Failed' : ''}
+      </span>
     </button>
   )
 }
 
 const classes = {
   copyButton: css({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 10px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: 500,
+    background: 'transparent',
+    color: 'var(--color-text-secondary, #718096)',
+    border: '1px solid transparent',
+    transition: 'all 0.2s ease',
     cursor: 'pointer',
+    '&:hover': {
+      background: 'var(--color-bg-hover, rgba(0, 0, 0, 0.04))',
+      color: 'var(--color-text-primary, #2d3748)',
+      '@media (prefers-color-scheme: dark)': {
+        background: 'rgba(255, 255, 255, 0.1)',
+        color: 'var(--color-text-primary-dark, #f7fafc)',
+      },
+    },
+    '&:focus': {
+      outline: 'none',
+      boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.5)',
+    },
+    '&:disabled': {
+      opacity: 0.5,
+      cursor: 'default',
+    },
+    '@media (prefers-color-scheme: dark)': {
+      color: 'var(--color-text-secondary-dark, #a0aec0)',
+    },
+  }),
+  iconWrapper: css({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }),
+  icon: css({
+    width: '16px',
+    height: '16px',
+  }),
+  copied: css({
+    color: 'var(--color-success, #38a169)',
+    '@media (prefers-color-scheme: dark)': {
+      color: 'var(--color-success-dark, #68d391)',
+    },
+  }),
+  failed: css({
+    color: 'var(--color-error, #e53e3e)',
+    '@media (prefers-color-scheme: dark)': {
+      color: 'var(--color-error-dark, #fc8181)',
+    },
+  }),
+  statusText: css({
+    opacity: 0,
+    transition: 'opacity 0.2s ease',
+  }),
+  statusTextCopied: css({
+    opacity: 1,
   }),
 }
