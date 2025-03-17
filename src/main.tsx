@@ -3,6 +3,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { MarkdownView } from '@/view/markdown'
 import { SiteContextProvider } from './context/site'
+import './index.css'
 
 const App: React.FC = () => {
   return (
