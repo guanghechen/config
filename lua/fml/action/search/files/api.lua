@@ -29,13 +29,9 @@ local _last_preview_data = nil ---@type fml.action.search.files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.builtin.oxi.search.IResult|nil
 
-eve.state.observe(
-  { eve.state.search_file.search_paths, eve.state.search_file.flag_replace, context.search_cwd },
-  function()
-    context.refresh_title()
-  end,
-  true
-)
+eve.state.observe({ eve.state.search_file.flag_replace, context.search_cwd }, function()
+  context.refresh_title()
+end, true)
 
 eve.state.observe({
   eve.state.select.search_file.flag_case_sensitive,
@@ -46,7 +42,6 @@ eve.state.observe({
   eve.state.select.search_file.includes,
   eve.state.search_file.max_filesize,
   eve.state.search_file.max_matches,
-  eve.state.search_file.search_paths,
   context.search_cwd,
 }, function()
   _last_preview_data = nil
@@ -310,7 +305,6 @@ function M.fetch_data(input_text, force, callback)
   local flag_replace = eve.state.search_file.flag_replace:snapshot() ---@type boolean
   local max_filesize = eve.state.search_file.max_filesize:snapshot() ---@type string
   local max_matches = eve.state.search_file.max_matches:snapshot() ---@type integer
-  local search_paths = eve.state.search_file.search_paths:snapshot() ---@type string[]
   local replacement = eve.state.search_file.replacement:snapshot() ---@type string
   local includes = eve.state.select.search_file.includes:snapshot() ---@type string[]
   local excludes = flag_exclude and eve.state.select.search_file.excludes:snapshot() or {} ---@type string[]
@@ -331,7 +325,7 @@ function M.fetch_data(input_text, force, callback)
       max_filesize = max_filesize,
       max_matches = max_matches,
       search_pattern = input_text,
-      search_paths = table.concat(search_paths, ","),
+      search_paths = "",
       include_patterns = table.concat(includes, ","),
       exclude_patterns = table.concat(excludes, ","),
       specified_filepath = specified_filepath,
@@ -700,7 +694,6 @@ function M.refresh_file_item(filepath)
     local excludes = eve.state.select.search_file.excludes:snapshot() ---@type string[]
     local max_filesize = eve.state.search_file.max_filesize:snapshot() ---@type string
     local max_matches = eve.state.search_file.max_matches:snapshot() ---@type integer
-    local search_paths = eve.state.search_file.search_paths:snapshot() ---@type string[]
     local keyword = eve.state.select.search_file.input:snapshot() ---@type string
     local specified_filepath = eve.path.resolve(cwd, filepath) ---@type string
 
@@ -713,7 +706,7 @@ function M.refresh_file_item(filepath)
       max_filesize = max_filesize,
       max_matches = max_matches,
       search_pattern = keyword,
-      search_paths = table.concat(search_paths, ","),
+      search_paths = ",",
       include_patterns = table.concat(includes, ","),
       exclude_patterns = table.concat(excludes, ","),
       specified_filepath = specified_filepath,

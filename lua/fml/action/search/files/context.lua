@@ -156,7 +156,6 @@ function M.edit_config()
   ---@class fml.action.search.files.IConfigData
   ---@field public keyword              string
   ---@field public replacement          string
-  ---@field public search_paths         string[]
   ---@field public max_filesize         string
   ---@field public max_matches          integer
   ---@field public includes             string[]
@@ -164,7 +163,6 @@ function M.edit_config()
 
   local s_keyword = eve.state.select.search_file.input:snapshot() ---@type string
   local s_replacement = eve.state.search_file.replacement:snapshot() ---@type string
-  local s_search_paths = eve.state.search_file.search_paths:snapshot() ---@type string[]
   local s_max_filesize = eve.state.search_file.max_filesize:snapshot() ---@type string
   local s_max_matches = eve.state.search_file.max_matches:snapshot() ---@type integer
   local s_includes = eve.state.select.search_file.includes:snapshot() ---@type string[]
@@ -174,7 +172,6 @@ function M.edit_config()
   local data = {
     keyword = s_keyword,
     replacement = s_replacement,
-    search_paths = s_search_paths,
     max_filesize = s_max_filesize,
     max_matches = s_max_matches,
     includes = s_includes,
@@ -197,10 +194,6 @@ function M.edit_config()
 
       if raw_data.replacement == nil or type(raw_data.replacement) ~= "string" then
         return "Invalid data.replacement, expect an string."
-      end
-
-      if raw_data.search_paths == nil or not vim.islist(raw_data.search_paths) then
-        return "Invalid data.search_paths, expect an array."
       end
 
       if type(raw_data.max_filesize) ~= "string" then
@@ -230,7 +223,6 @@ function M.edit_config()
         local replacement = raw.replacement ---@type string
         local max_filesize = raw.max_filesize ---@type string
         local max_matches = raw.max_matches ---@type integer
-        local search_paths = raw.search_paths ---@type string[]
         local includes = raw.includes ---@type string[]
         local excludes = raw.excludes ---@type string[]
 
@@ -240,7 +232,6 @@ function M.edit_config()
         eve.state.search_file.replacement:next(replacement)
         eve.state.search_file.max_filesize:next(max_filesize)
         eve.state.search_file.max_matches:next(max_matches)
-        eve.state.search_file.search_paths:next(search_paths)
 
         if keyword ~= last_keyword then
           M.reset_input(keyword)
