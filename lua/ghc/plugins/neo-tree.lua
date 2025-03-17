@@ -249,6 +249,11 @@ return {
           sidebar.file_selector:add_selected_file(relative_path)
           sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
         end,
+        open_ghc_file_explorer = function(state)
+          local node = state.tree:get_node()
+          local filepath = node:get_id() ---@type string
+          vim.cmd(eve.command.definitions.find.explorer.uuid .. " " .. filepath)
+        end,
       },
       filtered_items = {
         visible = false, -- when true, they will just be displayed differently than normal items
@@ -285,6 +290,7 @@ return {
       window = {
         mappings = {
           ["oa"] = "avante_add_files",
+          ["oe"] = "open_ghc_file_explorer",
           ["<C-a>r"] = refresh_filesystem,
           ["<D-r"] = refresh_filesystem,
           ["<M-r>"] = refresh_filesystem,
