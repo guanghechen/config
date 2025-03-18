@@ -87,11 +87,6 @@ export const MarkdownView: React.FC = () => {
     window.history.replaceState(null, '', newUrl)
   }, [filepath])
 
-  // Update color scheme based on theme
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-color-scheme', theme)
-  }, [theme])
-
   React.useEffect(() => {
     const meta = import.meta as any
     if (meta.hot) {
@@ -147,9 +142,8 @@ export const MarkdownView: React.FC = () => {
   )
 }
 
-// Define color scheme CSS
 const colorSchemeCSS = `
-  :root[data-color-scheme="lighten"] {
+  :root {
     --yo-bg-primary: #fdfdfd;
     --yo-bg-secondary: #f3f4f6;
     --yo-bg-header: #dfdfdf;
@@ -168,7 +162,7 @@ const colorSchemeCSS = `
     --yo-shadow: rgba(0, 0, 0, 0.1);
   }
 
-  :root[data-color-scheme="darken"] {
+  :root.dark {
     --yo-bg-primary: #1a1a1a;
     --yo-bg-secondary: #2d2d2d;
     --yo-bg-header: #252525;
