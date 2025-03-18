@@ -6,7 +6,7 @@ import { NodesRenderer } from '../../NodesRenderer'
 interface IProps {
   readonly url: string
   readonly title: string | undefined
-  readonly childNodes: Node[] | undefined
+  readonly childNodes: Node[]
   readonly className: string
   readonly target: React.HTMLAttributeAnchorTarget | undefined
 }

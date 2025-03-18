@@ -1,7 +1,6 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
-import { useMarkdownViewmodel } from '@/component/markdown/context'
+import { useMarkdownDarken } from '../../../context'
 
 interface IProps {
   readonly code: string
@@ -10,8 +9,7 @@ interface IProps {
 export const Mermaid: React.FC<IProps> = props => {
   const { code } = props
 
-  const viewmodel = useMarkdownViewmodel()
-  const theme = useStateValue(viewmodel.themeScheme$)
+  const darken: boolean = useMarkdownDarken()
 
   const ref = React.useRef<HTMLDivElement>(null)
   const id: string = React.useId().replaceAll(/:/g, '_')
@@ -30,7 +28,7 @@ export const Mermaid: React.FC<IProps> = props => {
     return () => {
       cancelled = true
     }
-  }, [id, code, theme])
+  }, [id, code, darken])
 
   return <div ref={ref} />
 }

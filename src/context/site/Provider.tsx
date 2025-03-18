@@ -27,6 +27,7 @@ export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = prop
     </React.Fragment>
   )
 }
+SiteContextProvider.displayName = 'SiteContextProvider'
 
 const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
   const { viewmodel } = props

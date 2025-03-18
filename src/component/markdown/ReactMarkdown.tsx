@@ -1,19 +1,11 @@
 import { css, cx } from '@emotion/css'
-import { useDeepCompareMemo } from '@guanghechen/react-hooks'
-import { useComputed } from '@guanghechen/react-viewmodel'
 import type { Definition, Root } from '@yozora/ast'
 import React from 'react'
-import type { INodeRendererContext, INodeRendererMap } from './context'
-import {
-  MarkdownViewModel,
-  NodeRendererContextType,
-  astClasses,
-  useNodeRendererContext,
-} from './context'
+import type { INodeRendererMap } from './context'
+import { MarkdownProvider, astClasses, useMarkdownAst } from './context'
 import { NodesRenderer } from './NodesRenderer'
-import { buildNodeRendererMap } from './renderer'
 
-export interface IMarkdownProps {
+interface IProps {
   /**
    * The markdown file path.
    */
@@ -35,10 +27,6 @@ export interface IMarkdownProps {
    */
   readonly showCodeLineno?: boolean
   /**
-   * Custom behavior instead of opening the link in a new tab.
-   */
-  readonly onClickAnchor?: React.MouseEventHandler<HTMLAnchorElement>
-  /**
    * Root css class of the component.
    */
   readonly className?: string
@@ -52,64 +40,38 @@ export interface IMarkdownProps {
   readonly theme: string
 }
 
-export const ReactMarkdown: React.FC<IMarkdownProps> = props => {
+export const ReactMarkdown: React.FC<IProps> = props => {
   const {
-    onClickAnchor,
     customizedRendererMap,
-    showCodeLineno = true,
+    presetDefinitionMap,
+    showCodeLineno,
     filepath,
-    ast: astFromProps,
+    ast,
     className,
     style,
-    theme: themeScheme,
+    theme,
   } = props
-
-  const presetDefinitionMap: Record<string, Readonly<Definition>> = useDeepCompareMemo(
-    () => props.presetDefinitionMap ?? {},
-    [props.presetDefinitionMap],
-  )
-  const [viewmodel] = React.useState<MarkdownViewModel>(() => {
-    return new MarkdownViewModel({
-      filepath,
-      ast: astFromProps,
-      rendererMap: buildNodeRendererMap(customizedRendererMap),
-      presetDefinitionMap,
-      showCodeLineno,
-      themeScheme,
-    })
-  })
-
-  const context = React.useMemo<INodeRendererContext>(
-    () => ({ viewmodel, onClickAnchor }),
-    [viewmodel, onClickAnchor],
-  )
-
-  const cls: string = cx(rootCls, themeScheme === 'darken' && astClasses.rootDarken, className)
-
-  React.useEffect(() => {
-    viewmodel.setContent(filepath, astFromProps)
-  }, [viewmodel, filepath, astFromProps])
-
-  React.useEffect(() => {
-    viewmodel.showCodeLineno$.next(showCodeLineno)
-  }, [viewmodel, showCodeLineno])
-
-  React.useEffect(() => {
-    viewmodel.themeScheme$.next(themeScheme)
-  }, [viewmodel, themeScheme])
+  const cls: string = cx(rootCls, theme === 'darken' && astClasses.rootDarken, className)
 
   return (
     <div className={cls} style={style}>
-      <NodeRendererContextType.Provider value={context}>
+      <MarkdownProvider
+        filepath={filepath}
+        ast={ast}
+        customizedRendererMap={customizedRendererMap}
+        presetDefinitionMap={presetDefinitionMap}
+        showCodeLineno={showCodeLineno}
+        theme={theme}
+      >
         <ReactMarkdownInner />
-      </NodeRendererContextType.Provider>
+      </MarkdownProvider>
     </div>
   )
 }
+ReactMarkdown.displayName = 'ReactMarkdown'
 
 const ReactMarkdownInner: React.FC = () => {
-  const { viewmodel } = useNodeRendererContext()
-  const ast: Root = useComputed(viewmodel.ast$)
+  const ast = useMarkdownAst()
   return <NodesRenderer nodes={ast.children} />
 }
 

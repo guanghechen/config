@@ -1,8 +1,7 @@
-import { useComputed } from '@guanghechen/react-viewmodel'
-import type { Definition, ImageReference } from '@yozora/ast'
+import type { ImageReference } from '@yozora/ast'
 import React from 'react'
 import type { INodeRenderer } from '../context'
-import { astClasses, useNodeRendererContext } from '../context'
+import { astClasses, useMarkdownDefinitionMap } from '../context'
 import { ImageRendererInner } from './inner/ImageRendererInner'
 
 /**
@@ -12,8 +11,7 @@ import { ImageRendererInner } from './inner/ImageRendererInner'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-image-reference
  */
 export const ImageReferenceRenderer: INodeRenderer<ImageReference> = props => {
-  const { viewmodel } = useNodeRendererContext()
-  const definitionMap: Readonly<Record<string, Definition>> = useComputed(viewmodel.definitionMap$)
+  const definitionMap = useMarkdownDefinitionMap()
   const { alt, srcSet, sizes, loading } = props as ImageReference &
     React.ImgHTMLAttributes<HTMLElement>
 

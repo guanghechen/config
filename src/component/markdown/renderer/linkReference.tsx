@@ -1,7 +1,6 @@
-import { useComputed } from '@guanghechen/react-viewmodel'
-import type { Definition, LinkReference } from '@yozora/ast'
+import type { LinkReference } from '@yozora/ast'
 import React from 'react'
-import { astClasses, useNodeRendererContext } from '../context'
+import { astClasses, useMarkdownDefinitionMap } from '../context'
 import { LinkRendererInner } from './inner/LinkRendererInner'
 
 /**
@@ -11,8 +10,7 @@ import { LinkRendererInner } from './inner/LinkRendererInner'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-link-reference
  */
 export const LinkReferenceRenderer: React.FC<LinkReference> = props => {
-  const { viewmodel } = useNodeRendererContext()
-  const definitionMap: Readonly<Record<string, Definition>> = useComputed(viewmodel.definitionMap$)
+  const definitionMap = useMarkdownDefinitionMap()
   const definition = definitionMap[props.identifier]
   const title: string | undefined = definition?.title
   const url: string = definition?.url ?? ''

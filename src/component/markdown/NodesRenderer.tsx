@@ -1,9 +1,8 @@
 import equals from '@guanghechen/equal'
-import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Node } from '@yozora/ast'
 import React from 'react'
-import type { INodeRenderer, INodeRendererMap } from './context'
-import { useNodeRendererContext } from './context'
+import type { INodeRenderer } from './context'
+import { useMarkdownRendererMap } from './context'
 
 export interface INodesRendererProps {
   /**
@@ -14,8 +13,7 @@ export interface INodesRendererProps {
 
 export const NodesRenderer: React.FC<INodesRendererProps> = props => {
   const { nodes } = props
-  const { viewmodel } = useNodeRendererContext()
-  const rendererMap: Readonly<INodeRendererMap> = useStateValue(viewmodel.rendererMap$)
+  const rendererMap = useMarkdownRendererMap()
 
   return (
     <React.Fragment>

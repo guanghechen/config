@@ -3,6 +3,7 @@ import cn from 'clsx'
 import React from 'react'
 import { CodeIcon } from '@/component/icon/material'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
+import { useMarkdownDarken } from '../../context'
 import { CopyButton } from './CopyButton'
 
 interface IProps {
@@ -16,6 +17,7 @@ interface IProps {
 export const CodeSource: React.FC<IProps> = props => {
   const { code, lang, meta, showLineNo, initialExpanded = false } = props
   const title: string = (meta.filename || meta.title || '') as string
+  const darken: boolean = useMarkdownDarken()
 
   const [expanded, setExpanded] = React.useState(initialExpanded)
   const calcContentForCopy = React.useCallback(() => code, [code])
@@ -37,7 +39,13 @@ export const CodeSource: React.FC<IProps> = props => {
       </div>
       {expanded && (
         <div className="group relative box-border block rounded-[4px] font-[var(--fontFamilyCode)] [&[data-wrap='true']>div]:whitespace-pre-wrap [&[data-wrap='true']>div]:break-keep">
-          <CodeHighlighter lang={lang} value={code} collapsed={false} showLineNo={showLineNo} />
+          <CodeHighlighter
+            darken={darken}
+            lang={lang}
+            value={code}
+            collapsed={false}
+            showLineNo={showLineNo}
+          />
           <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
             <CopyButton calcContentForCopy={calcContentForCopy} />
           </div>
