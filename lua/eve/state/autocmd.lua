@@ -26,14 +26,14 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
           local new_filepath = eve.state.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
           if new_filepath ~= nil then
             existed_filepaths[new_filepath] = true
-            vim.schedule(function()
+            if eve.editor.is_buf_valid(bufnr) then
               local filetype = vim.bo[bufnr].filetype ---@type string
               vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = true
               vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
               vim.bo[bufnr].swapfile = false
               vim.api.nvim_buf_set_name(bufnr, new_filepath)
               eve.state.buf.refresh(bufnr)
-            end)
+            end
           end
         end
       end
