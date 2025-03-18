@@ -19,6 +19,7 @@ export default defineConfig({
     },
   },
   server: {
+    cors: false,
     open: true,
     port: SERVER_PORT,
     host: SERVER_HOST,
