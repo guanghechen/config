@@ -1,9 +1,10 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Computed } from '@guanghechen/viewmodel'
 import React from 'react'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
 import type { ISiteData } from './viewmodel'
-import { SiteViewModel } from './viewmodel'
+import { SiteTheme, SiteViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/site'
 
@@ -28,6 +29,7 @@ export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = prop
 
 const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
   const { viewmodel } = props
+  const theme: SiteTheme = useStateValue(viewmodel.theme$)
 
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.theme$], () => {
@@ -38,6 +40,15 @@ const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
       computed.dispose()
     }
   }, [viewmodel])
+
+  React.useEffect(() => {
+    const darken = theme === SiteTheme.DARKEN
+    if (darken) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [theme])
 
   return <React.Fragment />
 }

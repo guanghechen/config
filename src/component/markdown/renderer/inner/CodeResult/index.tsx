@@ -22,25 +22,22 @@ const CodeResultRenderer: React.FC<ICodeResultRendererProps> = props => {
 }
 
 interface IProps {
-  readonly darken: boolean
   readonly code: string
   readonly lang: string
   readonly meta: ICodeMetaData
 }
 
 export const CodeResult: React.FC<IProps> = props => {
-  const { darken, code, lang, meta } = props
+  const { code, lang, meta } = props
   const [expanded, setExpanded] = React.useState(true)
 
   return (
     <div className="flex flex-col" onClick={() => setExpanded(v => !v)}>
       <div
         className={cn(
-          'w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex',
+          'w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex bg-gray-100 dark:bg-[#2d2d2d]',
           {
-            'bg-[#2d2d2d]': darken,
-            'bg-gray-100': !darken,
-            'border-b border-opacity-10 border-black': expanded,
+            'border-b border-opacity-10 border-black dark:border-gray-700': expanded,
           },
         )}
       >

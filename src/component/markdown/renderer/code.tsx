@@ -20,8 +20,6 @@ export const CodeRenderer: React.FC<Code> = props => {
 
   const { viewmodel } = useNodeRendererContext()
   const showCodeLineno: boolean = useStateValue(viewmodel.showCodeLineno$)
-  const themeScheme: string = useStateValue(viewmodel.themeScheme$)
-  const darken: boolean = themeScheme === 'darken'
 
   const meta: ICodeMetaData = React.useMemo<ICodeMetaData>(
     () => parseCodeMeta(props.meta || '', { showCodeLineno }),
@@ -32,14 +30,13 @@ export const CodeRenderer: React.FC<Code> = props => {
   return (
     <div className="my-4 flex flex-col overflow-hidden rounded-lg shadow-md">
       <CodeSource
-        darken={darken}
         code={code}
         lang={lang}
         meta={meta}
         showLineNo={showCodeLineno}
         initialExpanded={!hasPreview}
       />
-      {hasPreview && <CodeResult darken={darken} code={code} lang={lang!} meta={meta} />}
+      {hasPreview && <CodeResult code={code} lang={lang!} meta={meta} />}
     </div>
   )
 }

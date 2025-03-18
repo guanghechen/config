@@ -6,7 +6,6 @@ import type { ICodeMetaData } from '@/util/parseCodeMeta'
 import { CopyButton } from './CopyButton'
 
 interface IProps {
-  readonly darken: boolean
   readonly code: string
   readonly lang: string | null
   readonly meta: ICodeMetaData
@@ -15,7 +14,7 @@ interface IProps {
 }
 
 export const CodeSource: React.FC<IProps> = props => {
-  const { darken, code, lang, meta, showLineNo, initialExpanded = false } = props
+  const { code, lang, meta, showLineNo, initialExpanded = false } = props
   const title: string = (meta.filename || meta.title || '') as string
 
   const [expanded, setExpanded] = React.useState(initialExpanded)
@@ -24,32 +23,20 @@ export const CodeSource: React.FC<IProps> = props => {
   return (
     <div className="flex flex-col" onClick={() => setExpanded(v => !v)}>
       <div
-        className={cn('flex items-center gap-2 p-2 px-4 cursor-pointer select-none', {
-          'bg-[#2d2d2d]': darken,
-          'bg-gray-100': !darken,
-          'border-b border-gray-300': !expanded,
-        })}
+        className={cn(
+          'flex items-center gap-2 p-2 px-4 cursor-pointer select-none bg-gray-100 dark:bg-[#2d2d2d]',
+          {
+            'border-b border-gray-300 dark:border-gray-700': !expanded,
+          },
+        )}
       >
         <CodeIcon className="h-[18px] w-[18px] opacity-80" />
-        <span
-          className={cn('px-1.5 py-0.5 rounded text-xs', {
-            'bg-[#444]': darken,
-            'bg-gray-200': !darken,
-          })}
-        >
-          {lang}
-        </span>
+        <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs dark:bg-[#444]">{lang}</span>
         {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
       </div>
       {expanded && (
         <div className="group relative box-border block rounded-[4px] font-[var(--fontFamilyCode)] [&[data-wrap='true']>div]:whitespace-pre-wrap [&[data-wrap='true']>div]:break-keep">
-          <CodeHighlighter
-            lang={lang}
-            value={code}
-            collapsed={false}
-            showLineNo={showLineNo}
-            darken={darken}
-          />
+          <CodeHighlighter lang={lang} value={code} collapsed={false} showLineNo={showLineNo} />
           <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
             <CopyButton calcContentForCopy={calcContentForCopy} />
           </div>
