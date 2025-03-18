@@ -12,3 +12,6 @@ NodeRendererContextType.displayName = 'NodeRendererContextType'
 
 export const useNodeRendererContext = (): INodeRendererContext =>
   React.useContext(NodeRendererContextType)
+
+export const useMarkdownViewmodel = (): MarkdownViewModel =>
+  React.useContext(NodeRendererContextType).viewmodel

@@ -1,5 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Computed } from '@guanghechen/viewmodel'
+import mermaid from 'mermaid'
 import React from 'react'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
@@ -48,6 +49,8 @@ const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
     } else {
       document.documentElement.classList.remove('dark')
     }
+
+    mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
   }, [theme])
 
   return <React.Fragment />

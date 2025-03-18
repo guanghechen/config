@@ -1,5 +1,7 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
+import { useMarkdownViewmodel } from '@/component/markdown/context'
 
 interface IProps {
   readonly code: string
@@ -7,6 +9,10 @@ interface IProps {
 
 export const Mermaid: React.FC<IProps> = props => {
   const { code } = props
+
+  const viewmodel = useMarkdownViewmodel()
+  const theme = useStateValue(viewmodel.themeScheme$)
+
   const ref = React.useRef<HTMLDivElement>(null)
   const id: string = React.useId().replaceAll(/:/g, '_')
 
@@ -14,7 +20,6 @@ export const Mermaid: React.FC<IProps> = props => {
     if (!ref.current) return
 
     let cancelled: boolean = false
-    mermaid.initialize({ startOnLoad: false })
 
     void mermaid.render(id, code).then(({ svg }) => {
       if (!cancelled && ref.current) {
@@ -25,7 +30,7 @@ export const Mermaid: React.FC<IProps> = props => {
     return () => {
       cancelled = true
     }
-  }, [id, code])
+  }, [id, code, theme])
 
   return <div ref={ref} />
 }
