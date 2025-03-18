@@ -1,7 +1,7 @@
 import { Subscriber } from '@guanghechen/viewmodel'
 import type { Plugin } from 'vite'
 import { SERVER_HOST, SERVER_PORT } from '../../env'
-import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '../../shared/types'
+import type { IResponsePayloadFileSwitch } from '../../shared/types'
 import { ServerCustomEventType } from '../../shared/types'
 import state from '../state'
 import { sleep } from '../util/misc'
@@ -15,7 +15,8 @@ const plugin = (): Plugin => {
         new Subscriber({
           onNext(filepath) {
             if (filepath) {
-              const payload: IResponsePayloadFileChanged = { filepath }
+              const { workspace, relativePath } = state.sharpFilepath(filepath)
+              const payload: IResponsePayloadFileSwitch = { workspace, filepath: relativePath }
               server.ws.send({
                 type: 'custom',
                 event: ServerCustomEventType.FILE_CHANGED,
@@ -29,7 +30,8 @@ const plugin = (): Plugin => {
         new Subscriber({
           onNext(filepath) {
             if (filepath) {
-              const payload: IResponsePayloadFileSwitch = { filepath }
+              const { workspace, relativePath } = state.sharpFilepath(filepath)
+              const payload: IResponsePayloadFileSwitch = { workspace, filepath: relativePath }
               server.ws.send({
                 type: 'custom',
                 event: ServerCustomEventType.FILE_SWITCHED,
@@ -42,7 +44,12 @@ const plugin = (): Plugin => {
 
                 async function forceOpen(): Promise<void> {
                   try {
-                    const url: string = `http://${SERVER_HOST}:${SERVER_PORT}`
+                    const searchParams = new URLSearchParams()
+                    if (workspace) searchParams.set('workspace', workspace)
+                    if (relativePath) searchParams.set('filepath', relativePath)
+
+                    const search: string = searchParams.toString()
+                    const url: string = `http://${SERVER_HOST}:${SERVER_PORT}?${search}`
                     await openBrowser(url, true)
 
                     await sleep(500)

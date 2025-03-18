@@ -22,9 +22,14 @@ export const MarkdownView: React.FC = () => {
     const queryParams = new URLSearchParams(window.location.search)
     return decodeURIComponent(queryParams.get('filepath') || '')
   })
+  const [workspace, setWorkspace] = React.useState<string | null>(() => {
+    const queryParams = new URLSearchParams(window.location.search)
+    return decodeURIComponent(queryParams.get('workspace') || '') || null
+  })
   const filepathRef = React.useRef<string>(filepath)
+  const workspaceRef = React.useRef<string | null>(workspace)
 
-  const { data, error } = useFileResult(filepath, tick)
+  const { data, error } = useFileResult(workspace, filepath, tick)
   const ast: Root | undefined = data?.ast
 
   const onSubmit = useEventCallback(() => {
@@ -78,25 +83,28 @@ export const MarkdownView: React.FC = () => {
   // Update filepath in URL
   React.useEffect(() => {
     filepathRef.current = filepath
+    workspaceRef.current = workspace
     if (inputRef.current) inputRef.current.value = filepath
 
     const queryParams = new URLSearchParams(window.location.search)
-    queryParams.set('filepath', encodeURIComponent(filepath))
+    if (workspace) queryParams.set('workspace', encodeURIComponent(workspace))
+    if (filepath) queryParams.set('filepath', encodeURIComponent(filepath))
     const newUrl = `${window.location.pathname}?${queryParams.toString()}`
     window.history.replaceState(null, '', newUrl)
-  }, [filepath])
+  }, [workspace, filepath])
 
   React.useEffect(() => {
     const meta = import.meta as any
     if (meta.hot) {
       meta.hot.on(ServerCustomEventType.FILE_CHANGED, (data: IResponsePayloadFileChanged): void => {
-        if (data.filepath === filepathRef.current) {
+        if (data.workspace !== workspaceRef.current || data.filepath === filepathRef.current) {
           setTick(tick => tick + 1)
         }
       })
       meta.hot.on(ServerCustomEventType.FILE_SWITCHED, (data: IResponsePayloadFileSwitch): void => {
-        if (data.filepath !== filepathRef.current) {
+        if (data.workspace !== workspaceRef.current || data.filepath !== filepathRef.current) {
           setFilepath(data.filepath)
+          setWorkspace(data.workspace)
         } else {
           setTick(tick => tick + 1)
         }

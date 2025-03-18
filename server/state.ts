@@ -6,7 +6,7 @@ import { State } from '@guanghechen/viewmodel'
 import type { FSWatcher } from 'chokidar'
 import chokidar from 'chokidar'
 import path from 'node:path'
-import { resolveRealFilepath } from './util/path'
+import { normalizeFilepath, resolveRealFilepath } from './util/path'
 
 const reporter = new Reporter(chalk, {
   baseName: 'guanghechen',
@@ -23,10 +23,10 @@ export interface IWorkspaceItem {
   readonly path: string
 }
 
-export type IWorkspaceMap = Record<string, IWorkspaceItem>
+export type IWorkspaceMap = ReadonlyMap<string, IWorkspaceItem>
 
 const YOZORA_WORKSPACE_PREFIX = 'YOZORA_WORKSPACE_'
-const YOZORA_WORKSPACE_ENVS: IWorkspaceItem[] = Object.entries(process.env)
+const YOZORA_WORKSPACE_ITEMS: IWorkspaceItem[] = Object.entries(process.env)
   .filter(([key, val]) => !!val && key.startsWith(YOZORA_WORKSPACE_PREFIX))
   .map(([key, val]) => ({
     tag: key.slice(YOZORA_WORKSPACE_PREFIX.length).toLowerCase(),
@@ -38,18 +38,19 @@ class ServerViewModel {
   public readonly fileChanged$: IState<string | null>
   public readonly fileSwitch$: IState<string | null>
   public readonly fileSwitchArgForce$: IState<boolean>
-  public readonly workspaces$: IState<IWorkspaceMap>
+  public readonly workspaceMap$: IState<IWorkspaceMap>
   protected readonly _watchingFilepaths: Set<string>
   protected _watcher: FSWatcher | null
 
   constructor() {
+    const workspaceMap = new Map<string, IWorkspaceItem>()
+    for (const item of YOZORA_WORKSPACE_ITEMS) workspaceMap.set(item.tag, item)
+
+    this.reporter = reporter
     this.fileChanged$ = new State<string | null>(null, { equals: () => false, delay: 20 })
     this.fileSwitch$ = new State<string | null>(null, { equals: () => false, delay: 20 })
     this.fileSwitchArgForce$ = new State<boolean>(false)
-    this.reporter = reporter
-    this.workspaces$ = new State<IWorkspaceMap>(
-      Object.fromEntries(YOZORA_WORKSPACE_ENVS.map(item => [item.tag, item])),
-    )
+    this.workspaceMap$ = new State<IWorkspaceMap>(workspaceMap)
     this._watchingFilepaths = new Set<string>()
     this._watcher = null
   }
@@ -80,6 +81,24 @@ class ServerViewModel {
         fileChanged$.next(filepath)
       })
     }
+  }
+
+  public resolveFilepath = (workspace: string | null, relativePath: string): string => {
+    const workspaceMap: IWorkspaceMap = this.workspaceMap$.getSnapshot()
+    const item: IWorkspaceItem | undefined = workspaceMap.get(workspace?.toLowerCase() || '')
+    const p = item ? path.join(item.path, relativePath) : relativePath
+    return resolveRealFilepath(p)
+  }
+
+  public sharpFilepath = (filepath: string): { workspace: string | null; relativePath: string } => {
+    const p: string = normalizeFilepath(filepath)
+    const workspaceMap: IWorkspaceMap = this.workspaceMap$.getSnapshot()
+    for (const item of workspaceMap.values()) {
+      if (p.startsWith(item.path)) {
+        return { workspace: item.tag, relativePath: p.slice(item.path.length) }
+      }
+    }
+    return { workspace: null, relativePath: p }
   }
 }
 

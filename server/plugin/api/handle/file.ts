@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 import state from '../../../state'
 import parseMarkdown from '../../../util/parseMarkdown'
-import { resolveRealFilepath } from '../../../util/path'
 import type { IApiHandle, IApiHandleParams } from '../types'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
@@ -16,8 +15,9 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
 export const file: IApiHandle = async (params: IApiHandleParams): Promise<boolean> => {
   const { pathname, search, searchParams, res } = params
 
+  const workspace: string | null = decodeURIComponent(searchParams.get('workspace') ?? '') || null
   let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
-  filepath = resolveRealFilepath(filepath ? path.normalize(filepath) : '')
+  filepath = state.resolveFilepath(workspace, filepath)
 
   if (!filepath) {
     const data = {

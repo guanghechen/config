@@ -7,9 +7,9 @@ export const file_switch: IApiHandle = async (params: IApiHandleParams): Promise
 
   const force: boolean =
     decodeURIComponent(searchParams.get('force') ?? '').toLowerCase() === 'true'
-  const filepath: string = path.normalize(decodeURIComponent(searchParams.get('filepath') ?? ''))
+  const filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
   state.fileSwitchArgForce$.next(force)
-  state.fileSwitch$.next(filepath)
+  state.fileSwitch$.next(path.normalize(filepath))
 
   const data = { succeed: true }
   res.statusCode = 200

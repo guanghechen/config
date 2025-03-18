@@ -12,12 +12,17 @@ export interface IFetchFileResult {
   readonly error?: string | undefined
 }
 
-export async function fetchFile(filepath: string): Promise<IFetchFileResult> {
+export async function fetchFile(
+  workspace: string | null,
+  filepath: string,
+): Promise<IFetchFileResult> {
   if (!filepath) return {}
 
   try {
     const query: Record<string, string> = { filepath }
     const params = new URLSearchParams(query) // Add your query parameters here
+    if (workspace) params.set('workspace', workspace)
+
     const response = await fetch(`/api/file?${params}`)
     const contentType = response.headers.get('content-type')
 
@@ -36,7 +41,7 @@ export async function fetchFile(filepath: string): Promise<IFetchFileResult> {
     }
     return { error: `Unknown content type: ${contentType}` }
   } catch (error) {
-    console.error('Failed to fetching file:', { filepath, error })
-    return { error: 'Failed to fetching file: ' + JSON.stringify({ filepath, error }) }
+    console.error('Failed to fetching file:', { workspace, filepath, error })
+    return { error: 'Failed to fetching file: ' + JSON.stringify({ workspace, filepath, error }) }
   }
 }
