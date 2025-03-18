@@ -21,7 +21,8 @@ export const CopyButton: React.FC<ICopyButtonProps> = props => {
   const [status, setStatus] = React.useState<CopyStatus>(CopyStatus.PENDING)
   const disabled: boolean = status !== CopyStatus.PENDING
 
-  const onCopy = (): void => {
+  const onCopy = (e: React.MouseEvent): void => {
+    e.stopPropagation()
     if (status === CopyStatus.PENDING) {
       setStatus(CopyStatus.COPYING)
       try {
