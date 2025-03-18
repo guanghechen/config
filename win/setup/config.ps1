@@ -77,7 +77,4 @@ if (Test-Path $cargo_config_path) {
   Copy-Item -Path $source -Destination $target -Force
 }
 
-
-
-
 Write-Host "[setup config] done." -ForegroundColor DarkGreen
