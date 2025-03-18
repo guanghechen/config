@@ -28,7 +28,7 @@ export const CodeSource: React.FC<IProps> = props => {
         className={cn(
           'flex items-center gap-2 p-2 px-4 cursor-pointer select-none bg-gray-100 dark:bg-[#2d2d2d]',
           {
-            'border-b border-gray-300 dark:border-gray-700': !expanded,
+            'border-b border-gray-300 dark:border-gray-600': !expanded,
           },
         )}
         onClick={() => setExpanded(v => !v)}

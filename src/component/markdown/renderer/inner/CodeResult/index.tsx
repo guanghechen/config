@@ -37,7 +37,7 @@ export const CodeResult: React.FC<IProps> = props => {
         className={cn(
           'w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex bg-gray-100 dark:bg-[#2d2d2d]',
           {
-            'border-b border-opacity-10 border-black dark:border-gray-700': expanded,
+            'border-b border-opacity-10 border-black dark:border-gray-600': expanded,
           },
         )}
         onClick={() => setExpanded(v => !v)}
@@ -46,7 +46,7 @@ export const CodeResult: React.FC<IProps> = props => {
         <span className="text-sm">Result</span>
       </div>
       {expanded && (
-        <div className="flex items-center justify-center p-4">
+        <div className="flex items-center justify-center">
           <CodeResultRenderer lang={lang} code={code} meta={meta} />
         </div>
       )}

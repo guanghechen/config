@@ -26,7 +26,7 @@ export const CodeRenderer: React.FC<Code> = props => {
 
   const hasPreview: boolean = !!lang && !!meta.live
   return (
-    <div className="my-4 flex flex-col overflow-hidden rounded-lg shadow-md">
+    <div className="my-4 flex flex-col overflow-hidden rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
       <CodeSource
         code={code}
         lang={lang}
