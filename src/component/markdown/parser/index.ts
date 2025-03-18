@@ -1,6 +1,7 @@
 import type { Association, Root } from '@yozora/ast'
 import { ParagraphType, RootType, TextType } from '@yozora/ast'
 import Parser from '@yozora/parser'
+import { InlineCitationTokenizer } from './inline-citation/tokenizer'
 
 interface IParseOptions {
   /**
@@ -23,11 +24,9 @@ interface IParseOptions {
   readonly formatUrl?: (url: string) => string
 }
 
-const parser = new Parser({
-  defaultParseOptions: {
-    shouldReservePosition: false,
-  },
-})
+const parser = new Parser({ defaultParseOptions: { shouldReservePosition: false } })
+  //
+  .useTokenizer(new InlineCitationTokenizer())
 
 export const parseMarkdown = (text: string, options?: IParseOptions): Root => {
   try {

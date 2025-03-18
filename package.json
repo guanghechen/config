@@ -19,6 +19,8 @@
     "@guanghechen/viewmodel": "1.0.5",
     "@yozora/ast": "2.3.11",
     "@yozora/ast-util": "2.3.11",
+    "@yozora/character": "2.3.11",
+    "@yozora/core-tokenizer": "2.3.11",
     "@yozora/parser": "2.3.11",
     "@yozora/react-code-highlighter": "3.0.0-alpha.12",
     "@yozora/react-mathjax": "3.0.0-alpha.12",
