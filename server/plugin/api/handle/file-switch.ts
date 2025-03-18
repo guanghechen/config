@@ -1,6 +1,5 @@
 import path from 'node:path'
 import state from '../../../state'
-import { resolveShortFilepath } from '../../../util/path'
 import type { IApiHandle, IApiHandleParams } from '../types'
 
 export const file_switch: IApiHandle = async (params: IApiHandleParams): Promise<boolean> => {
@@ -8,8 +7,7 @@ export const file_switch: IApiHandle = async (params: IApiHandleParams): Promise
 
   const force: boolean =
     decodeURIComponent(searchParams.get('force') ?? '').toLowerCase() === 'true'
-  let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
-  filepath = resolveShortFilepath(filepath ? path.normalize(filepath) : '')
+  const filepath: string = path.normalize(decodeURIComponent(searchParams.get('filepath') ?? ''))
   state.fileSwitchArgForce$.next(force)
   state.fileSwitch$.next(filepath)
 

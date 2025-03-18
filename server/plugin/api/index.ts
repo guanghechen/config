@@ -2,13 +2,16 @@
 import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
 import state from '../../state'
+import { normalizeUrlPath } from '../../util/path'
 import { file } from './handle/file'
 import { file_switch } from './handle/file-switch'
+import { workspaces } from './handle/workspaces'
 import type { IApiHandle, IApiHandleParams } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
   '/api/file': file,
   '/api/file-switch': file_switch,
+  '/api/workspaces': workspaces,
 }
 
 const middleware = async (
@@ -21,7 +24,8 @@ const middleware = async (
     return
   }
 
-  const { search, searchParams, pathname } = new URL(req.url, 'http://localhost')
+  const { search, searchParams, pathname: pathname0 } = new URL(req.url, 'http://localhost')
+  const pathname: string = normalizeUrlPath(pathname0)
   if (!pathname.startsWith('/api/')) {
     next()
     return

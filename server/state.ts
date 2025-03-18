@@ -6,6 +6,7 @@ import { State } from '@guanghechen/viewmodel'
 import type { FSWatcher } from 'chokidar'
 import chokidar from 'chokidar'
 import path from 'node:path'
+import { resolveRealFilepath } from './util/path'
 
 const reporter = new Reporter(chalk, {
   baseName: 'guanghechen',
@@ -17,11 +18,27 @@ const reporter = new Reporter(chalk, {
   },
 })
 
+export interface IWorkspaceItem {
+  readonly tag: string
+  readonly path: string
+}
+
+export type IWorkspaceMap = Record<string, IWorkspaceItem>
+
+const YOZORA_WORKSPACE_PREFIX = 'YOZORA_WORKSPACE_'
+const YOZORA_WORKSPACE_ENVS: IWorkspaceItem[] = Object.entries(process.env)
+  .filter(([key, val]) => !!val && key.startsWith(YOZORA_WORKSPACE_PREFIX))
+  .map(([key, val]) => ({
+    tag: key.slice(YOZORA_WORKSPACE_PREFIX.length).toLowerCase(),
+    path: resolveRealFilepath(val!),
+  }))
+
 class ServerViewModel {
   public readonly reporter: IReporter
   public readonly fileChanged$: IState<string | null>
   public readonly fileSwitch$: IState<string | null>
   public readonly fileSwitchArgForce$: IState<boolean>
+  public readonly workspaces$: IState<IWorkspaceMap>
   protected readonly _watchingFilepaths: Set<string>
   protected _watcher: FSWatcher | null
 
@@ -30,6 +47,9 @@ class ServerViewModel {
     this.fileSwitch$ = new State<string | null>(null, { equals: () => false, delay: 20 })
     this.fileSwitchArgForce$ = new State<boolean>(false)
     this.reporter = reporter
+    this.workspaces$ = new State<IWorkspaceMap>(
+      Object.fromEntries(YOZORA_WORKSPACE_ENVS.map(item => [item.tag, item])),
+    )
     this._watchingFilepaths = new Set<string>()
     this._watcher = null
   }
