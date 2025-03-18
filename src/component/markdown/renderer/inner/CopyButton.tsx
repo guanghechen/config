@@ -1,4 +1,4 @@
-import { css, cx } from '@emotion/css'
+import cn from 'clsx'
 import copy from 'copy-to-clipboard'
 import React from 'react'
 import { CheckIcon, CopyIcon } from '@/component/icon/material'
@@ -50,94 +50,39 @@ export const CopyButton: React.FC<ICopyButtonProps> = props => {
 
   return (
     <button
-      className={cx(
-        classes.copyButton,
+      className={cn(
+        'flex items-center gap-1.5 py-1.5 px-2.5 rounded-md text-xs font-medium',
+        'bg-transparent border border-transparent transition-all duration-200',
+        'text-gray-500 dark:text-gray-400 cursor-pointer',
+        'hover:bg-gray-100 dark:hover:bg-white/10',
+        'focus:outline-none focus:ring-2 focus:ring-blue-300/50',
+        'disabled:opacity-50 disabled:cursor-default',
+        status === CopyStatus.COPIED &&
+          'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/20 border-green-500 dark:border-green-400/50',
+        status === CopyStatus.FAILED && 'text-red-600 dark:text-red-400',
         className,
-        status === CopyStatus.COPIED && classes.copied,
-        status === CopyStatus.FAILED && classes.failed,
       )}
       disabled={disabled}
       onClick={onCopy}
       title={status === CopyStatus.COPIED ? 'Copied!' : 'Copy to clipboard'}
     >
-      <span className={classes.iconWrapper}>
+      <span className="flex items-center justify-center">
         {status === CopyStatus.COPIED ? (
-          <CheckIcon className={classes.icon} />
+          <CheckIcon className="h-4 w-4" />
         ) : (
-          <CopyIcon className={classes.icon} />
+          <CopyIcon className="h-4 w-4" />
         )}
       </span>
       <span
-        className={cx(classes.statusText, {
-          [classes.statusTextCopied]: status === CopyStatus.COPIED,
-        })}
+        className={cn(
+          'transition-opacity duration-200',
+          status === CopyStatus.COPIED || status === CopyStatus.FAILED
+            ? 'font-semibold opacity-100'
+            : 'opacity-0',
+        )}
       >
         {status === CopyStatus.COPIED ? 'Copied!' : status === CopyStatus.FAILED ? 'Failed' : ''}
       </span>
     </button>
   )
-}
-
-const classes = {
-  copyButton: css({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '6px 10px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: 500,
-    background: 'transparent',
-    color: 'var(--color-text-secondary, #718096)',
-    border: '1px solid transparent',
-    transition: 'all 0.2s ease',
-    cursor: 'pointer',
-    '&:hover': {
-      background: 'var(--color-bg-hover, rgba(0, 0, 0, 0.04))',
-      color: 'var(--color-text-primary, #2d3748)',
-      '@media (prefers-color-scheme: dark)': {
-        background: 'rgba(255, 255, 255, 0.1)',
-        color: 'var(--color-text-primary-dark, #f7fafc)',
-      },
-    },
-    '&:focus': {
-      outline: 'none',
-      boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.5)',
-    },
-    '&:disabled': {
-      opacity: 0.5,
-      cursor: 'default',
-    },
-    '@media (prefers-color-scheme: dark)': {
-      color: 'var(--color-text-secondary-dark, #a0aec0)',
-    },
-  }),
-  iconWrapper: css({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }),
-  icon: css({
-    width: '16px',
-    height: '16px',
-  }),
-  copied: css({
-    color: 'var(--color-success, #38a169)',
-    '@media (prefers-color-scheme: dark)': {
-      color: 'var(--color-success-dark, #68d391)',
-    },
-  }),
-  failed: css({
-    color: 'var(--color-error, #e53e3e)',
-    '@media (prefers-color-scheme: dark)': {
-      color: 'var(--color-error-dark, #fc8181)',
-    },
-  }),
-  statusText: css({
-    opacity: 0,
-    transition: 'opacity 0.2s ease',
-  }),
-  statusTextCopied: css({
-    opacity: 1,
-  }),
 }
