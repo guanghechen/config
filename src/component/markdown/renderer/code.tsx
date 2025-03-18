@@ -32,7 +32,7 @@ export const CodeRenderer: React.FC<Code> = props => {
         lang={lang}
         meta={meta}
         showLineNo={showCodeLineno}
-        initialExpanded={!hasPreview}
+        initialExpanded={typeof meta.collapsed === 'boolean' ? !meta.collapsed : !hasPreview}
       />
       {hasPreview && <CodeResult code={code} lang={lang!} meta={meta} />}
     </div>
