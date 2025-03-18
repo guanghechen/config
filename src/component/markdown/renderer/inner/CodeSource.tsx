@@ -38,7 +38,7 @@ export const CodeSource: React.FC<IProps> = props => {
         {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
       </div>
       {expanded && (
-        <div className="group relative box-border block rounded-[4px] font-[var(--fontFamilyCode)] [&[data-wrap='true']>div]:whitespace-pre-wrap [&[data-wrap='true']>div]:break-keep">
+        <div className="group relative box-border block max-h-[40rem] overflow-auto rounded-[4px] font-[var(--fontFamilyCode)] [&[data-wrap='true']>div]:whitespace-pre-wrap [&[data-wrap='true']>div]:break-keep">
           <CodeHighlighter
             darken={darken}
             lang={lang}
