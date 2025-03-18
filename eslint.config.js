@@ -1,4 +1,5 @@
 import { genConfigs } from '@guanghechen/eslint-config'
+import tailwindcss from 'eslint-plugin-tailwindcss'
 
 const configs = [
   {
@@ -17,6 +18,10 @@ const configs = [
     files: ['src/**/*.{tsx,jsx}'],
     rules: {
       'react/jsx-curly-spacing': 'off',
+      'tailwindcss/classnames-order': 'warn',
+    },
+    plugins: {
+      tailwindcss,
     },
   },
 ]

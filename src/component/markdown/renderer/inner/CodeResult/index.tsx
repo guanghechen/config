@@ -36,7 +36,7 @@ export const CodeResult: React.FC<IProps> = props => {
     <div className="flex flex-col" onClick={() => setExpanded(v => !v)}>
       <div
         className={cn(
-          'flex w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none',
+          'w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex',
           {
             'bg-[#2d2d2d]': darken,
             'bg-gray-100': !darken,
@@ -44,11 +44,11 @@ export const CodeResult: React.FC<IProps> = props => {
           },
         )}
       >
-        <TerminalIcon className="w-[18px] h-[18px] opacity-80" />
+        <TerminalIcon className="h-[18px] w-[18px] opacity-80" />
         <span className="text-sm">Result</span>
       </div>
       {expanded && (
-        <div className="p-4 flex justify-center items-center">
+        <div className="flex items-center justify-center p-4">
           <CodeResultRenderer lang={lang} code={code} meta={meta} />
         </div>
       )}

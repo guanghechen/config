@@ -30,7 +30,7 @@ export const CodeSource: React.FC<IProps> = props => {
           'border-b border-gray-300': !expanded,
         })}
       >
-        <CodeIcon className="w-[18px] h-[18px] opacity-80" />
+        <CodeIcon className="h-[18px] w-[18px] opacity-80" />
         <span
           className={cn('px-1.5 py-0.5 rounded text-xs', {
             'bg-[#444]': darken,
@@ -42,7 +42,7 @@ export const CodeSource: React.FC<IProps> = props => {
         {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
       </div>
       {expanded && (
-        <div className="relative group block box-border rounded-[4px] font-[var(--fontFamilyCode)] [&[data-wrap='true']>div]:whitespace-pre-wrap [&[data-wrap='true']>div]:break-keep">
+        <div className="group relative box-border block rounded-[4px] font-[var(--fontFamilyCode)] [&[data-wrap='true']>div]:whitespace-pre-wrap [&[data-wrap='true']>div]:break-keep">
           <CodeHighlighter
             lang={lang}
             value={code}
@@ -50,7 +50,7 @@ export const CodeSource: React.FC<IProps> = props => {
             showLineNo={showLineNo}
             darken={darken}
           />
-          <div className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
             <CopyButton calcContentForCopy={calcContentForCopy} />
           </div>
         </div>
