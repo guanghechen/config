@@ -46,7 +46,7 @@ export const CodeResult: React.FC<IProps> = props => {
         <span className="text-sm">Result</span>
       </div>
       {expanded && (
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center p-4">
           <CodeResultRenderer lang={lang} code={code} meta={meta} />
         </div>
       )}
