@@ -105,7 +105,7 @@ export const MarkdownView: React.FC = () => {
   }, [])
 
   return (
-    <div className="box-border flex h-screen w-screen flex-col bg-[#fdfdfd] font-['Maple_Mono_NF_CN','Roboto_Mono',monospace,sans-serif] text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:bg-[#1a1a1a] dark:text-gray-200">
+    <div className="box-border flex h-screen w-screen flex-col bg-[#fdfdfd] font-['Maple_Mono_NF_CN','Roboto_Mono',monospace,sans-serif] text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:bg-[#1a1a1a] dark:text-gray-200 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar]:w-2">
       <div className="relative flex items-center justify-center bg-[#dfdfdf] p-5 dark:bg-[#252525]">
         <div className="flex w-[800px] items-center">
           <input
@@ -126,7 +126,7 @@ export const MarkdownView: React.FC = () => {
           <ThemeToggle />
         </div>
       </div>
-      <div className="flex flex-1 flex-col overflow-auto">
+      <div className="flex flex-1 flex-col overflow-auto [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar]:w-2">
         {!!error && (
           <div className="flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
             <code>error: {String(error)}</code>

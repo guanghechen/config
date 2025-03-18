@@ -38,7 +38,7 @@ export const CodeSource: React.FC<IProps> = props => {
         {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
       </div>
       {expanded && (
-        <div className="group relative box-border block max-h-[40rem] overflow-auto rounded-[4px] font-[var(--fontFamilyCode)]">
+        <div className="group relative box-border block max-h-[40rem] overflow-auto rounded-[4px] font-[var(--fontFamilyCode)] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar]:w-2">
           <div className="sticky right-2 top-2 float-right opacity-0 transition-opacity group-hover:opacity-100">
             <CopyButton calcContentForCopy={calcContentForCopy} />
           </div>
