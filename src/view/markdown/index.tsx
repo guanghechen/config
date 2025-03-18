@@ -1,4 +1,3 @@
-import { css } from '@emotion/css'
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
@@ -106,33 +105,36 @@ export const MarkdownView: React.FC = () => {
   }, [])
 
   return (
-    <div className={classes.container}>
-      <div className={classes.header}>
-        <div className={classes.fileSelect}>
+    <div className="box-border flex h-screen w-screen flex-col bg-[#fdfdfd] font-['Maple_Mono_NF_CN','Roboto_Mono',monospace,sans-serif] text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:bg-[#1a1a1a] dark:text-gray-200">
+      <div className="relative flex items-center justify-center bg-[#dfdfdf] p-5 dark:bg-[#252525]">
+        <div className="flex w-[800px] items-center">
           <input
-            className={classes.fileSelectInput}
+            className="mr-2.5 flex-1 rounded border border-gray-300 bg-gray-100 p-2.5 text-base text-gray-800 outline-none transition-colors duration-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-blue-500"
             ref={inputRef}
             type="text"
             defaultValue={filepath}
             onKeyDown={onInputKeyDown}
           />
-          <button className={classes.fileSelectSubmitButton} onClick={onSubmit}>
+          <button
+            className="cursor-pointer rounded border-none bg-blue-600 px-5 py-2.5 text-base text-white transition-colors duration-300 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            onClick={onSubmit}
+          >
             Load
           </button>
         </div>
-        <div className={classes.headerActions}>
-          <ThemeToggle />{' '}
+        <div className="absolute right-7">
+          <ThemeToggle />
         </div>
       </div>
-      <div className={classes.main}>
+      <div className="flex flex-1 flex-col overflow-auto">
         {!!error && (
-          <div className={classes.error}>
+          <div className="flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
             <code>error: {String(error)}</code>
           </div>
         )}
         {!!ast && (
-          <div className={classes.preview}>
-            <div className={classes.previewInner}>
+          <div className="my-5 flex flex-1 justify-center">
+            <div className="w-[800px]">
               <ReactMarkdown filepath={filepath} ast={ast} theme={theme} />
             </div>
           </div>
@@ -140,133 +142,4 @@ export const MarkdownView: React.FC = () => {
       </div>
     </div>
   )
-}
-
-const colorSchemeCSS = `
-  :root {
-    --yo-bg-primary: #fdfdfd;
-    --yo-bg-secondary: #f3f4f6;
-    --yo-bg-header: #dfdfdf;
-    --yo-bg-button: #007BFF;
-    --yo-bg-button-hover: #0056b3;
-    --yo-bg-error: #EEEEEE;
-
-    --yo-text-primary: #1f2937;
-    --yo-text-secondary: #4b5563;
-    --yo-text-button: #ffffff;
-    --yo-text-error: #EF4444;
-
-    --yo-border-input: #ccc;
-    --yo-border-input-focus: #007BFF;
-
-    --yo-shadow: rgba(0, 0, 0, 0.1);
-  }
-
-  :root.dark {
-    --yo-bg-primary: #1a1a1a;
-    --yo-bg-secondary: #2d2d2d;
-    --yo-bg-header: #252525;
-    --yo-bg-button: #3b82f6;
-    --yo-bg-button-hover: #2563eb;
-    --yo-bg-error: #2d2d2d;
-
-    --yo-text-primary: #e5e7eb;
-    --yo-text-secondary: #9ca3af;
-    --yo-text-button: #ffffff;
-    --yo-text-error: #f87171;
-
-    --yo-border-input: #4b5563;
-    --yo-border-input-focus: #3b82f6;
-
-    --yo-shadow: rgba(0, 0, 0, 0.25);
-  }
-`
-
-// Inject the color scheme CSS
-const styleElement = document.createElement('style')
-styleElement.textContent = colorSchemeCSS
-document.head.appendChild(styleElement)
-
-const classes = {
-  container: css({
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100vw',
-    height: '100vh',
-    boxSizing: 'border-box',
-    fontFamily: "'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif",
-    backgroundColor: 'var(--yo-bg-primary)',
-    color: 'var(--yo-text-primary)',
-    boxShadow: '0 4px 6px var(--yo-shadow)',
-    transition: 'background-color 0.3s ease, color 0.3s ease',
-  }),
-  header: css({
-    position: 'relative',
-    flex: '0 0 auto',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-    backgroundColor: 'var(--yo-bg-header)',
-  }),
-  main: css({
-    flex: '1 1 100%',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'auto',
-    backgroundColor: 'var(--color-bg-primary)',
-  }),
-  fileSelect: css({
-    display: 'flex',
-    alignItems: 'center',
-    width: '800px',
-  }),
-  fileSelectInput: css({
-    flex: 1,
-    padding: '10px',
-    borderRadius: '4px',
-    border: '1px solid var(--yo-border-input)',
-    backgroundColor: 'var(--yo-bg-secondary)',
-    color: 'var(--yo-text-primary)',
-    fontSize: '16px',
-    marginRight: '10px',
-    outline: 'none',
-    transition: 'border-color 0.3s, background-color 0.3s, color 0.3s',
-    '&:focus': {
-      borderColor: 'var(--yo-border-input-focus)',
-    },
-  }),
-  fileSelectSubmitButton: css({
-    padding: '10px 20px',
-    borderRadius: '4px',
-    border: 'none',
-    backgroundColor: 'var(--yo-bg-button)',
-    color: 'var(--yo-text-button)',
-    fontSize: '16px',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s',
-    '&:hover': {
-      backgroundColor: 'var(--yo-bg-button-hover)',
-    },
-  }),
-  headerActions: css({
-    position: 'absolute',
-    right: '28px',
-  }),
-  error: css({
-    flex: '0 0 auto',
-    padding: '6px 8px',
-    fontSize: '1rem',
-    color: 'var(--yo-text-error)',
-    background: 'var(--yo-bg-error)',
-  }),
-  preview: css({
-    flex: '1 1 auto',
-    display: 'flex',
-    justifyContent: 'center',
-    margin: '20px 0',
-  }),
-  previewInner: css({
-    width: '800px',
-  }),
 }
