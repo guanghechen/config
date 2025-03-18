@@ -1,3 +1,4 @@
 export * from './context'
-export * from './types'
+export * from './hook'
 export * from './viewmodel'
+export * from './Provider'

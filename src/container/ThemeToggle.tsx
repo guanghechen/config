@@ -1,10 +1,10 @@
 import { css } from '@emotion/css'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { SiteTheme, useSiteContext } from '@/context/site'
+import { SiteTheme, useSiteViewmodel } from '@/context/site'
 
 export const ThemeToggle: React.FC = () => {
-  const viewmodel = useSiteContext().viewmodel
+  const viewmodel = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(viewmodel.theme$)
 
   const onToggleTheme = React.useCallback(() => {

@@ -1,19 +1,14 @@
 import { Computed } from '@guanghechen/viewmodel'
 import React from 'react'
-import type { ISiteContext, ISiteData, ISiteViewModel } from './types'
+import type { ISiteContext } from './context'
+import { SiteContextType } from './context'
+import type { ISiteData } from './viewmodel'
 import { SiteViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/site'
 
-const SiteContextType = React.createContext<ISiteContext>({
-  viewmodel: SiteViewModel.fromData(undefined),
-})
-SiteContextType.displayName = 'SiteContextType'
-
-export const useSiteContext = (): ISiteContext => React.useContext(SiteContextType)
-
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const [viewmodel] = React.useState<ISiteViewModel>(() => {
+  const [viewmodel] = React.useState<SiteViewModel>(() => {
     const initialData: Partial<ISiteData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -22,6 +17,17 @@ export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = prop
   })
 
   const context: ISiteContext = React.useMemo<ISiteContext>(() => ({ viewmodel }), [viewmodel])
+
+  return (
+    <React.Fragment>
+      <SideEffect viewmodel={viewmodel} />
+      <SiteContextType.Provider value={context}>{props.children}</SiteContextType.Provider>
+    </React.Fragment>
+  )
+}
+
+const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
+  const { viewmodel } = props
 
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.theme$], () => {
@@ -33,5 +39,5 @@ export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = prop
     }
   }, [viewmodel])
 
-  return <SiteContextType.Provider value={context}>{props.children}</SiteContextType.Provider>
+  return <React.Fragment />
 }

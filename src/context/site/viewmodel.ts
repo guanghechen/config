@@ -1,9 +1,16 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { ISiteData, ISiteViewModel } from './types'
-import { SiteTheme } from './types'
 
-export interface ISiteViewModelProps {
+export enum SiteTheme {
+  LIGHTEN = 'lighten',
+  DARKEN = 'darken',
+}
+
+export interface ISiteData {
+  readonly theme: SiteTheme
+}
+
+interface IProps {
   /**
    * Site theme.
    */
@@ -14,10 +21,10 @@ const DEFAULT_SITE_DATA: ISiteData = {
   theme: SiteTheme.LIGHTEN,
 }
 
-export class SiteViewModel extends ViewModel implements ISiteViewModel {
+export class SiteViewModel extends ViewModel {
   public readonly theme$: IState<SiteTheme>
 
-  constructor(props: ISiteViewModelProps) {
+  constructor(props: IProps) {
     super()
 
     const { theme } = props

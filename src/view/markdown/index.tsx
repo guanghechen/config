@@ -6,13 +6,13 @@ import React from 'react'
 import { ReactMarkdown } from '@/component/markdown'
 import { ThemeToggle } from '@/container/ThemeToggle'
 import type { SiteTheme } from '@/context/site'
-import { useSiteContext } from '@/context/site'
+import { useSiteViewmodel } from '@/context/site'
 import { useFileResult } from '@/hook/useFileResult'
 import { ServerCustomEventType } from '@/shared/types'
 import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '@/shared/types'
 
 export const MarkdownView: React.FC = () => {
-  const siteViewModel = useSiteContext().viewmodel
+  const siteViewModel = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(siteViewModel.theme$)
 
   const [tick, setTick] = React.useState<number>(0)
