@@ -21,7 +21,7 @@ export const CodeSource: React.FC<IProps> = props => {
   const calcContentForCopy = React.useCallback(() => code, [code])
 
   return (
-    <div className="flex flex-col" onClick={() => setExpanded(v => !v)}>
+    <div className="flex flex-col">
       <div
         className={cn(
           'flex items-center gap-2 p-2 px-4 cursor-pointer select-none bg-gray-100 dark:bg-[#2d2d2d]',
@@ -29,6 +29,7 @@ export const CodeSource: React.FC<IProps> = props => {
             'border-b border-gray-300 dark:border-gray-700': !expanded,
           },
         )}
+        onClick={() => setExpanded(v => !v)}
       >
         <CodeIcon className="h-[18px] w-[18px] opacity-80" />
         <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs dark:bg-[#444]">{lang}</span>

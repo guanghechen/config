@@ -32,7 +32,7 @@ export const CodeResult: React.FC<IProps> = props => {
   const [expanded, setExpanded] = React.useState(true)
 
   return (
-    <div className="flex flex-col" onClick={() => setExpanded(v => !v)}>
+    <div className="flex flex-col">
       <div
         className={cn(
           'w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex bg-gray-100 dark:bg-[#2d2d2d]',
@@ -40,6 +40,7 @@ export const CodeResult: React.FC<IProps> = props => {
             'border-b border-opacity-10 border-black dark:border-gray-700': expanded,
           },
         )}
+        onClick={() => setExpanded(v => !v)}
       >
         <TerminalIcon className="h-[18px] w-[18px] opacity-80" />
         <span className="text-sm">Result</span>
