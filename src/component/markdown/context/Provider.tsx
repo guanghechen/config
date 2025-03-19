@@ -9,10 +9,6 @@ import { MarkdownViewModel } from './viewmodel'
 
 interface IProps {
   /**
-   * The markdown file path.
-   */
-  readonly filepath: string
-  /**
    * Text content of markdown.
    */
   readonly ast: Root
@@ -39,7 +35,7 @@ interface IProps {
 }
 
 export const MarkdownProvider: React.FC<IProps> = props => {
-  const { customizedRendererMap, showCodeLineno = true, filepath, ast, theme } = props
+  const { customizedRendererMap, showCodeLineno = true, ast, theme } = props
 
   const presetDefinitionMap: Record<string, Readonly<Definition>> = useDeepCompareMemo(
     () => props.presetDefinitionMap ?? {},
@@ -47,7 +43,6 @@ export const MarkdownProvider: React.FC<IProps> = props => {
   )
   const [viewmodel] = React.useState<MarkdownViewModel>(() => {
     return new MarkdownViewModel({
-      filepath,
       ast,
       rendererMap: buildNodeRendererMap(customizedRendererMap),
       presetDefinitionMap,
@@ -60,13 +55,7 @@ export const MarkdownProvider: React.FC<IProps> = props => {
 
   return (
     <React.Fragment>
-      <SideEffect
-        viewmodel={viewmodel}
-        filepath={filepath}
-        ast={ast}
-        showCodeLineno={showCodeLineno}
-        theme={theme}
-      />
+      <SideEffect viewmodel={viewmodel} ast={ast} showCodeLineno={showCodeLineno} theme={theme} />
       <MarkdownContextType.Provider value={context}>{props.children}</MarkdownContextType.Provider>
     </React.Fragment>
   )
@@ -75,18 +64,17 @@ MarkdownProvider.displayName = 'MarkdownProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: MarkdownViewModel
-  readonly filepath: string
   readonly ast: Root
   readonly showCodeLineno: boolean
   readonly theme: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, filepath, ast, showCodeLineno, theme } = props
+  const { viewmodel, ast, showCodeLineno, theme } = props
 
   React.useEffect(() => {
-    viewmodel.setContent(filepath, ast)
-  }, [viewmodel, filepath, ast])
+    viewmodel.setContent(ast)
+  }, [viewmodel, ast])
 
   React.useEffect(() => {
     viewmodel.showCodeLineno$.next(showCodeLineno)

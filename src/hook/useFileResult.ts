@@ -4,11 +4,11 @@ import { fetchFile } from '@/util/fetch'
 
 export const useFileResult = (
   workspace: string | null,
-  filepath: string,
+  filepath: string | null,
   tick: number,
 ): IFetchFileResult => {
   const [state, setState] = React.useState<IFetchFileResult>({
-    loading: true,
+    loading: false,
     data: undefined,
     text: undefined,
     url: undefined,
@@ -16,6 +16,10 @@ export const useFileResult = (
   })
 
   React.useEffect(() => {
+    if (!filepath) return
+
+    setState(v => ({ ...v, loading: true }))
+
     const handle = async (): Promise<void> => {
       setState(prevState => ({
         ...prevState,

@@ -7,10 +7,6 @@ import { NodesRenderer } from './NodesRenderer'
 
 interface IProps {
   /**
-   * The markdown file path.
-   */
-  readonly filepath: string
-  /**
    * Text content of markdown.
    */
   readonly ast: Root
@@ -45,7 +41,6 @@ export const ReactMarkdown: React.FC<IProps> = props => {
     customizedRendererMap,
     presetDefinitionMap,
     showCodeLineno,
-    filepath,
     ast,
     className,
     style,
@@ -56,7 +51,6 @@ export const ReactMarkdown: React.FC<IProps> = props => {
   return (
     <div className={cls} style={style}>
       <MarkdownProvider
-        filepath={filepath}
         ast={ast}
         customizedRendererMap={customizedRendererMap}
         presetDefinitionMap={presetDefinitionMap}
