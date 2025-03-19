@@ -71,6 +71,7 @@ vim.filetype.add({
   extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
   filename = {
     [".eslintignore"] = "ignore",
+    [".git-credentials"] = "git-credentials",
     [".prettierignore"] = "ignore",
     ["vimrc"] = "vim",
   },
