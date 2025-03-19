@@ -1,6 +1,6 @@
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 
-export type IFileTreeNode = IFileTreeFolderNode | IFileTreeFileNode
+export type IFileTreeNode = IFileTreeFolderNode | IFileTreeFileNode | IFileTreeRootNode
 export type IFileTreeDataMap = ReadonlyMap<string, IFileTreeNodeData>
 export type IFileTreeDataMapMutable = Map<string, IFileTreeNodeDataMutable>
 
@@ -33,6 +33,7 @@ export interface IFileTreeFolderNode {
 export interface IFileTreeFileNode {
   readonly uuid: string
   readonly type: 'file'
+  readonly extname: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -106,18 +107,26 @@ export class FileTreeViewModel extends ViewModel {
         }
 
         const uuid: string = items[i].pathFromRoot.slice(0, cur + 1).join('/')
+        const basename: string = items[i].pathFromRoot[cur]
+
         if (i + 1 === j) {
           dataMap.set(uuid, {
-            basename: items[i].pathFromRoot[cur],
+            basename,
             filepath: items[i].filepath,
             depth: cur + 1,
             collapsed: undefined,
           })
-          const node: IFileTreeNode = { uuid, type: 'file' }
+
+          const dotIndex = basename.lastIndexOf('.')
+          const node: IFileTreeNode = {
+            uuid,
+            type: 'file',
+            extname: basename.slice(dotIndex),
+          }
           nodes.push(node)
         } else {
           dataMap.set(uuid, {
-            basename: items[i].pathFromRoot[cur],
+            basename,
             filepath: undefined,
             depth: cur + 1,
             collapsed: false,

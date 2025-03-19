@@ -18,7 +18,7 @@ export async function findMarkdownFiles(cwd: string): Promise<string[]> {
 
     fd.on('close', code => {
       if (code === 0) {
-        resolve(result.trim().split('\n').filter(Boolean)) // Split into an array, filtering out empty lines
+        resolve(result.trim().split('\n').filter(Boolean).sort()) // Split into an array, filtering out empty lines
       } else {
         reject(new Error(`fd exited with code ${code}`))
       }
