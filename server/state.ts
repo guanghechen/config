@@ -21,6 +21,9 @@ const reporter = new Reporter(chalk, {
 export interface IWorkspaceItem {
   readonly tag: string
   readonly path: string
+  readonly files: {
+    mds: string[] | null
+  }
 }
 
 export type IWorkspaceMap = ReadonlyMap<string, IWorkspaceItem>
@@ -31,6 +34,7 @@ const YOZORA_WORKSPACE_ITEMS: IWorkspaceItem[] = Object.entries(process.env)
   .map(([key, val]) => ({
     tag: key.slice(YOZORA_WORKSPACE_PREFIX.length).toLowerCase(),
     path: resolveRealFilepath(val!),
+    files: { mds: null },
   }))
 
 class ServerViewModel {

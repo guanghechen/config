@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import state from '../../../state'
 import parseMarkdown from '../../../util/parseMarkdown'
-import type { IApiHandle, IApiHandleParams } from '../types'
+import type { IApiHandle, IApiHandleData } from '../types'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.md': 'application/json',
@@ -12,22 +12,20 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.jpeg': 'image/jpeg',
 }
 
-export const file: IApiHandle = async (params: IApiHandleParams): Promise<boolean> => {
-  const { pathname, search, searchParams, res } = params
+export const fetchFile: IApiHandle = async params => {
+  const { res, pathname, search, searchParams } = params
 
   const workspace: string | null = decodeURIComponent(searchParams.get('workspace') ?? '') || null
   let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
   filepath = state.resolveFilepath(workspace, filepath)
 
   if (!filepath) {
-    const data = {
+    const data: IApiHandleData = {
       error: 'Bad search parameters',
       details: { pathname, filepath, search },
+      data: null,
     }
-    res.statusCode = 400
-    res.setHeader('Content-Type', 'application/json')
-    res.end(JSON.stringify(data))
-    return true
+    return { code: 400, data }
   }
 
   const extname: string = path.extname(filepath).toLowerCase()
@@ -35,43 +33,41 @@ export const file: IApiHandle = async (params: IApiHandleParams): Promise<boolea
     SERVE_FILE_EXTNAME_TYPE_MAP[extname as keyof typeof SERVE_FILE_EXTNAME_TYPE_MAP]
 
   if (!contentType) {
-    res.statusCode = 404
-    res.setHeader('Content-Type', 'application/json')
-    const data = {
+    const data: IApiHandleData = {
       error: 'Not support for the given file format',
       details: { pathname, filepath, extname, contentType },
+      data: null,
     }
-    res.end(JSON.stringify(data))
-    return true
+    return { code: 400, data }
   }
 
   if (!fs.existsSync(filepath)) {
-    res.statusCode = 404
-    res.setHeader('Content-Type', 'application/json')
-    const data = {
+    const data: IApiHandleData = {
       error: 'File not found',
       details: { pathname, filepath, extname, contentType },
+      data: null,
     }
-    res.end(JSON.stringify(data))
-    return true
+    return { code: 404, data }
   }
 
   state.watch(filepath)
 
-  res.statusCode = 200
-  res.setHeader('Content-Type', contentType)
-
   if (extname === '.md') {
-    let result: object | undefined
+    let data: IApiHandleData
     try {
       const ast = await parseMarkdown(filepath)
-      result = { data: { ast } }
+      data = {
+        data: { ast },
+      }
     } catch (error) {
       state.reporter.error('Failed to parse markdown:', { filepath, error })
-      result = { error: 'Failed to parse markdown', details: { filepath } }
+      data = {
+        error: 'Failed to parse markdown',
+        details: { filepath },
+        data: null,
+      }
     }
-    res.end(JSON.stringify(result))
-    return true
+    return { code: 200, data }
   }
 
   const stream = fs.createReadStream(filepath)
@@ -86,4 +82,19 @@ export const file: IApiHandle = async (params: IApiHandleParams): Promise<boolea
     res.end(JSON.stringify(data))
   })
   return true
+}
+
+export const switchFile: IApiHandle = async params => {
+  const { searchParams } = params
+
+  const force: boolean =
+    decodeURIComponent(searchParams.get('force') ?? '').toLowerCase() === 'true'
+  const filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
+  state.fileSwitchArgForce$.next(force)
+  state.fileSwitch$.next(path.normalize(filepath))
+
+  const data: IApiHandleData = {
+    data: { succeed: true },
+  }
+  return { code: 200, data }
 }

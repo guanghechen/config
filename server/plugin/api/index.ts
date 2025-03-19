@@ -3,15 +3,14 @@ import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
 import state from '../../state'
 import { normalizeUrlPath } from '../../util/url'
-import { file } from './handle/file'
-import { file_switch } from './handle/file-switch'
-import { workspaces } from './handle/workspaces'
-import type { IApiHandle, IApiHandleParams } from './types'
+import { fetchFile, switchFile } from './handle/file'
+import { list_workspaces } from './handle/workspace'
+import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
-  '/api/file': file,
-  '/api/file-switch': file_switch,
-  '/api/workspaces': workspaces,
+  '/api/file': fetchFile,
+  '/api/file-switch': switchFile,
+  '/api/workspaces': list_workspaces,
 }
 
 const middleware = async (
@@ -36,8 +35,13 @@ const middleware = async (
   const handle: IApiHandle | undefined = handle_map[pathname]
   if (handle) {
     const params: IApiHandleParams = { req, res, next, pathname, search, searchParams }
-    const handled = await handle(params)
-    if (handled) return
+    const result: IApiHandleResult | true = await handle(params)
+    if (result === true) return
+
+    res.statusCode = result.code
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify(result.data))
+    return
   }
 
   {
