@@ -43,9 +43,9 @@ export const list_workspace_files: IApiHandle = async params => {
 
 export const list_workspaces: IApiHandle = async () => {
   const data: IResponsePayloadWorkspaces = {
-    workspaces: Array.from(state.workspaceMap$.getSnapshot().values()).map(item => ({
-      tag: item.tag,
-    })),
+    workspaces: Array.from(state.workspaceMap$.getSnapshot().values())
+      .map(item => ({ tag: item.tag }))
+      .sort((x, y) => x.tag.localeCompare(y.tag)),
   }
   const result: IApiHandleResult = {
     code: 200,

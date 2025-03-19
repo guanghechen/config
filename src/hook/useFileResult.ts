@@ -29,7 +29,7 @@ export const useFileResult = (
       setState({ loading: false, data, text, url, error })
     }
     void handle()
-  }, [filepath, tick])
+  }, [workspace, filepath, tick])
 
   React.useEffect(() => {
     return () => {

@@ -8,7 +8,7 @@ export async function fetchWorkspaces(): Promise<IWorkspaceItem[]> {
     console.error('Failed to fetch workspaces:', { error, details, data })
     return []
   }
-  return data
+  return data.workspaces
 }
 
 export const useWorkspaces = (tick: number): { loading: boolean; workspaces: IWorkspaceItem[] } => {

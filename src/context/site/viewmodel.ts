@@ -56,12 +56,7 @@ export class SiteViewModel extends ViewModel {
         onNext: () => {
           const workspace = this.workspace$.getSnapshot()
           const workspaces = this.workspaces$.getSnapshot()
-
-          if (workspaces.length === 0) {
-            this.filepath$.next(null)
-            this.workspace$.next(null)
-            return
-          }
+          if (workspaces.length === 0) return
 
           if (workspaces.some(item => item.tag === workspace)) return
           this.filepath$.next(null)

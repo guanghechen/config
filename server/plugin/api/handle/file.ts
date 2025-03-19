@@ -22,7 +22,16 @@ export const fetchFile: IApiHandle = async params => {
   if (!filepath) {
     const data: IApiHandleData = {
       error: 'Bad search parameters',
-      details: { pathname, filepath, search },
+      details: { pathname, workspace, filepath, search },
+      data: null,
+    }
+    return { code: 400, data }
+  }
+
+  if (!path.isAbsolute(filepath)) {
+    const data: IApiHandleData = {
+      error: 'Cannot resolve the given filepath.',
+      details: { pathname, workspace, filepath, search },
       data: null,
     }
     return { code: 400, data }
@@ -35,7 +44,7 @@ export const fetchFile: IApiHandle = async params => {
   if (!contentType) {
     const data: IApiHandleData = {
       error: 'Not support for the given file format',
-      details: { pathname, filepath, extname, contentType },
+      details: { pathname, workspace, filepath, extname, contentType },
       data: null,
     }
     return { code: 400, data }
@@ -44,7 +53,7 @@ export const fetchFile: IApiHandle = async params => {
   if (!fs.existsSync(filepath)) {
     const data: IApiHandleData = {
       error: 'File not found',
-      details: { pathname, filepath, extname, contentType },
+      details: { pathname, workspace, filepath, extname, contentType },
       data: null,
     }
     return { code: 404, data }
@@ -63,7 +72,7 @@ export const fetchFile: IApiHandle = async params => {
       state.reporter.error('Failed to parse markdown:', { filepath, error })
       data = {
         error: 'Failed to parse markdown',
-        details: { filepath },
+        details: { pathname, workspace, filepath },
         data: null,
       }
     }
@@ -77,7 +86,7 @@ export const fetchFile: IApiHandle = async params => {
     res.setHeader('Content-Type', 'application/json')
     const data = {
       error: 'Failed to read file',
-      details: { pathname, filepath, extname, contentType, err },
+      details: { pathname, workspace, filepath, extname, contentType, err },
     }
     res.end(JSON.stringify(data))
   })
