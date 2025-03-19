@@ -37,7 +37,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     vim.b[bufnr].eve_last_loc = true
 
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if eve.filetype.is_plain_file(filetype) then
+    if not eve.filetype.is_not_sourcefile(filetype) then
       local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
       local count = vim.api.nvim_buf_line_count(bufnr)
       if mark[1] > 0 and mark[1] <= count then

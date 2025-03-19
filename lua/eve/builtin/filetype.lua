@@ -151,7 +151,7 @@ local filetypes = {
     [M.AVANTE] = true,
     [M.YOZORA_VIEWER] = true,
   },
-  not_plain = {
+  not_sourcefile = {
     [M.AERIAL] = true,
     [M.AVANTE] = true,
     [M.AVANTE_INPUT] = true,
@@ -462,11 +462,11 @@ end
 
 ---@param filetype                      string|nil
 ---@return boolean
-function M.is_plain_file(filetype)
-  if filetype == nil or #filetype < 1 or filetypes.not_plain[filetype] then
-    return false
+function M.is_not_sourcefile(filetype)
+  if filetype == nil or #filetype < 1 then
+    return true
   end
-  return true
+  return filetypes.not_sourcefile[filetype]
 end
 
 ---@param filename                      string
@@ -494,7 +494,7 @@ end
 ---@param filetype                      string|nil
 ---@return boolean
 function M.is_not_plain_file(filetype)
-  return filetype == nil or #filetype < 1 or filetypes.not_plain[filetype]
+  return filetype == nil or #filetype < 1 or filetypes.not_sourcefile[filetype]
 end
 
 ---@param filetype                      string|nil

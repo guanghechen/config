@@ -488,7 +488,15 @@ function M:render_sync(force)
         from = __module_name__,
         subject = "render",
         message = "Encounter error while render the nvimbar component.",
-        details = { context = context, component = component, error = hltext },
+        details = {
+          buf = {
+            bufnr = context.bufnr,
+            sourcefile = vim.b[context.bufnr][eve.var.Names.FLAG_SOURCEFILE] or vim.NIL,
+          },
+          context = context,
+          component = component,
+          error = hltext,
+        },
       })
     end
   end

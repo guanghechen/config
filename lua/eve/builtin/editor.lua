@@ -181,7 +181,7 @@ function M.is_buf_sourcefile(bufnr)
     return flag
   end
 
-  if not eve.filetype.is_plain_file(filetype) then
+  if eve.filetype.is_not_sourcefile(filetype) then
     vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = false
     return false
   end

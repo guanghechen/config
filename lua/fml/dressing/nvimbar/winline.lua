@@ -142,7 +142,7 @@ local function render(winnr)
     return
   end
 
-  if eve.filetype.is_plain_file(filetype) then
+  if not eve.filetype.is_not_sourcefile(filetype) then
     vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
     return
   end
