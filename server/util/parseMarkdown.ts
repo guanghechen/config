@@ -7,6 +7,7 @@ import { existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import state from '../state'
+import { toSearch } from './url'
 
 const srcEncoding: BufferEncoding = 'utf8'
 const srcFileRegex: RegExp = new RegExp(`(?:^|\\b)${'sourcefile'}="([^"]+)"`, 'i')
@@ -49,10 +50,10 @@ async function parseMarkdown(filepath: string): Promise<Root> {
     formatUrl: (url: string) => {
       if (url[0] === '.' || url[0] === '/') {
         const targetFilepath: string = path.normalize(path.resolve(dirpath, url))
-        const query: Record<string, string> = { filepath: targetFilepath }
-        const params = new URLSearchParams(query)
-        if (targetFilepath.endsWith('.md')) return `/page/?${params}`
-        return `/api/file?${params}`
+        const { workspace, relativePath } = state.sharpFilepath(targetFilepath)
+        const search: string = toSearch({ workspace, filepath: relativePath })
+        if (targetFilepath.endsWith('.md')) return `/page${search}`
+        return `/api/file${search}`
       }
       return url
     },

@@ -6,6 +6,7 @@ import { ServerCustomEventType } from '../../shared/types'
 import state from '../state'
 import { sleep } from '../util/misc'
 import { openBrowser } from '../util/open'
+import { toSearch } from '../util/url'
 
 const plugin = (): Plugin => {
   return {
@@ -44,12 +45,8 @@ const plugin = (): Plugin => {
 
                 async function forceOpen(): Promise<void> {
                   try {
-                    const searchParams = new URLSearchParams()
-                    if (workspace) searchParams.set('workspace', workspace)
-                    if (relativePath) searchParams.set('filepath', relativePath)
-
-                    const search: string = searchParams.toString()
-                    const url: string = `http://${SERVER_HOST}:${SERVER_PORT}?${search}`
+                    const search: string = toSearch({ workspace, filepath: relativePath })
+                    const url: string = `http://${SERVER_HOST}:${SERVER_PORT}${search}`
                     await openBrowser(url, true)
 
                     await sleep(500)

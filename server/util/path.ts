@@ -28,11 +28,6 @@ export function normalizeFilepath(filepath: string): string {
   return resolvedFilepath
 }
 
-export function normalizeUrlPath(pathname: string): string {
-  const p: string = pathname.trim().replace(/[/\\]+/g, '/')
-  return p.length > 0 ? p.replace(/\/+$/, '') : p
-}
-
 export function resolveRealFilepath(filepath: string): string {
   return path.normalize(normalizeFilepath(filepath))
 }

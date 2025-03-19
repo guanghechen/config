@@ -19,12 +19,12 @@ export const MarkdownView: React.FC = () => {
   const [historyIndex, setHistoryIndex] = React.useState<number>(-1)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [filepath, setFilepath] = React.useState<string>(() => {
-    const queryParams = new URLSearchParams(window.location.search)
-    return decodeURIComponent(queryParams.get('filepath') || '')
+    const usp = new URLSearchParams(window.location.search)
+    return decodeURIComponent(usp.get('filepath') || '')
   })
   const [workspace, setWorkspace] = React.useState<string | null>(() => {
-    const queryParams = new URLSearchParams(window.location.search)
-    return decodeURIComponent(queryParams.get('workspace') || '') || null
+    const usp = new URLSearchParams(window.location.search)
+    return decodeURIComponent(usp.get('workspace') || '') || null
   })
   const filepathRef = React.useRef<string>(filepath)
   const workspaceRef = React.useRef<string | null>(workspace)
@@ -86,10 +86,10 @@ export const MarkdownView: React.FC = () => {
     workspaceRef.current = workspace
     if (inputRef.current) inputRef.current.value = filepath
 
-    const queryParams = new URLSearchParams(window.location.search)
-    if (workspace) queryParams.set('workspace', encodeURIComponent(workspace))
-    if (filepath) queryParams.set('filepath', encodeURIComponent(filepath))
-    const newUrl = `${window.location.pathname}?${queryParams.toString()}`
+    const usp = new URLSearchParams(window.location.search)
+    if (workspace) usp.set('workspace', encodeURIComponent(workspace))
+    if (filepath) usp.set('filepath', encodeURIComponent(filepath))
+    const newUrl = `${window.location.pathname}?${usp.toString()}`
     window.history.replaceState(null, '', newUrl)
   }, [workspace, filepath])
 

@@ -2,7 +2,7 @@
 import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
 import state from '../../state'
-import { normalizeUrlPath } from '../../util/path'
+import { normalizeUrlPath } from '../../util/url'
 import { file } from './handle/file'
 import { file_switch } from './handle/file-switch'
 import { workspaces } from './handle/workspaces'
