@@ -56,4 +56,6 @@ export const WorkspaceView: React.FC = () => {
     </WorkspaceContextProvider>
   )
 }
+
 WorkspaceView.displayName = 'WorkspaceView'
+export default WorkspaceView
