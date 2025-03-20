@@ -5,8 +5,8 @@ import { ReactMarkdown } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
 import { useFileResult } from '@/hook/useFileResult'
-import { FileTree } from '../filetree'
-import { TopbarView } from '../topbar'
+import { Sidebar } from './sidebar'
+import { TopbarView } from './topbar'
 
 export const MarkdownView: React.FC = () => {
   const siteViewModel = useSiteViewmodel()
@@ -29,7 +29,7 @@ export const MarkdownView: React.FC = () => {
         {!!ast && (
           <div className="flex">
             <div className="sticky top-0 h-screen w-64 flex-none overflow-auto border-r border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-              <FileTree />
+              <Sidebar />
             </div>
             <div className="my-5 flex flex-auto justify-center">
               <div className="w-[800px]">
