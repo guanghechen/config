@@ -22,7 +22,7 @@ export const MarkdownView: React.FC = () => {
       <div className="sticky top-0 h-screen w-64 flex-none border-r border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900">
         <Sidebar />
       </div>
-      <div className="flex flex-1 flex-col">
+      <div className="relative flex flex-1 flex-col overflow-auto">
         <div className="sticky top-0 z-10 h-8 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
           <Topbar />
         </div>
