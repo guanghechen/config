@@ -1,4 +1,3 @@
-import { useEventCallback } from '@guanghechen/react-hooks'
 import cn from 'clsx'
 import React from 'react'
 import { FileTypeIcon } from '@/component/icon/filetype'
@@ -13,36 +12,30 @@ import { useFileTreeViewmodel } from './context'
 
 interface IProps {
   readonly node: IFileTreeNode
+  readonly currentFilepath: string | null
   readonly onNodeClick: (node: IFileTreeNode) => void
 }
 
 export const FileTreeNode: React.FC<IProps> = props => {
-  const { node, onNodeClick: onNodeClickFromProps } = props
+  const { node, currentFilepath, onNodeClick } = props
   const viewmodel = useFileTreeViewmodel()
-  const currentFilepath: string | null = viewmodel.currentFilepath$.getSnapshot()
-  const collapsed: boolean = viewmodel.checkCollapsed(node)
-  const visible: boolean = viewmodel.checkVisible(node)
-
-  const onNodeClick = useEventCallback((): void => {
-    onNodeClickFromProps(node)
-  })
 
   if (node.type === 'folder') {
     return (
-      <div className={cn('select-none', { hidden: !visible })}>
+      <div className={cn('select-none', { hidden: node.parentCollapsed })}>
         <div
           className="flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={e => {
             e.stopPropagation()
-            viewmodel.onToggleCollapse(node.uuid)
+            viewmodel.toggleCollapse(node)
           }}
           style={{ paddingLeft: `${node.depth * 12}px` }}
         >
           <span className="mr-1 flex-shrink-0">
-            {collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+            {node.collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
           </span>
           <span className="mr-1 flex-shrink-0">
-            {collapsed ? (
+            {node.collapsed ? (
               <FolderIcon className="text-blue-500" />
             ) : (
               <FolderOpenIcon className="text-blue-500" />
@@ -59,12 +52,12 @@ export const FileTreeNode: React.FC<IProps> = props => {
       className={cn(
         'flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700',
         {
-          hidden: !visible,
+          hidden: node.parentCollapsed,
           'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300':
             currentFilepath === node.filepath,
         },
       )}
-      onClick={onNodeClick}
+      onClick={() => onNodeClick(node)}
       style={{ paddingLeft: `${node.depth * 12}px` }}
     >
       <span className="invisible mr-1 flex-shrink-0">

@@ -1,12 +1,13 @@
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { Mutable } from '@/shared/types'
 import type {
-  IFileTreeDataMap,
-  IFileTreeDataMapMutable,
   IFileTreeFileNode,
   IFileTreeFolderNode,
+  IFileTreeFolderNodeMutable,
   IFileTreeNode,
-  IFileTreeNodeData,
+  IFileTreeNodeMap,
+  IFileTreeNodeMapMutable,
+  IFileTreeNodeMutable,
 } from './types'
 
 interface IFileTreePathItem {
@@ -19,7 +20,7 @@ interface IProps {
 }
 
 export class FileTreeViewModel extends ViewModel {
-  public readonly dataMap$: State<ReadonlyMap<string, IFileTreeNodeData>>
+  public readonly nodeMap$: State<ReadonlyMap<string, IFileTreeNode>>
   public readonly nodes$: State<IFileTreeNode[]>
   public readonly currentFilepath$: State<string | null>
   public readonly forceRerenderTick$: State<number> = new State(0)
@@ -27,7 +28,7 @@ export class FileTreeViewModel extends ViewModel {
   constructor(_props: IProps) {
     super()
 
-    this.dataMap$ = new State<ReadonlyMap<string, IFileTreeNodeData>>(new Map())
+    this.nodeMap$ = new State<ReadonlyMap<string, IFileTreeNode>>(new Map())
     this.nodes$ = new State<IFileTreeNode[]>([])
     this.currentFilepath$ = new State<string | null>(null)
   }
@@ -38,50 +39,44 @@ export class FileTreeViewModel extends ViewModel {
   }
 
   public readonly updateFromFilepaths = (filepaths: string[]): void => {
-    const { dataMap, nodes } = this.buildFileTree(filepaths)
-    this.dataMap$.next(dataMap)
+    const { nodeMap, nodes } = this.buildFileTree(filepaths)
+    this.nodeMap$.next(nodeMap)
     this.nodes$.next(nodes)
   }
 
   public readonly buildFromFilepaths = (filepaths: string[]): void => {
-    const { dataMap, nodes } = this.buildFileTree(filepaths)
-    const oldDataMap: IFileTreeDataMap = this.dataMap$.getSnapshot()
+    const { nodeMap, nodes } = this.buildFileTree(filepaths)
+    const oldNodeMap: IFileTreeNodeMap = this.nodeMap$.getSnapshot()
 
-    for (const [uuid, item] of dataMap.entries()) {
-      const oldItem = oldDataMap.get(uuid)
-      if (oldItem) {
-        item.collapsed = oldItem.collapsed
+    for (const [uuid, item] of nodeMap.entries()) {
+      const oldNode: IFileTreeNode | undefined = oldNodeMap.get(uuid)
+      if (oldNode?.type === 'folder') {
+        ;(item as IFileTreeFolderNodeMutable).collapsed = oldNode.collapsed
       }
     }
 
-    this.dataMap$.next(dataMap)
+    this.nodeMap$.next(nodeMap)
     this.nodes$.next(nodes)
   }
 
-  public readonly checkCollapsed = (node: IFileTreeNode): boolean => {
-    const dataMap: IFileTreeDataMap = this.dataMap$.getSnapshot()
-    return !!dataMap.get(node.uuid)?.collapsed
-  }
+  public readonly toggleCollapse = (node: IFileTreeFolderNode): void => {
+    // eslint-disable-next-line no-param-reassign
+    ;(node as IFileTreeFolderNodeMutable).collapsed = !node.collapsed
+    update(node)
+    this.forceRerender()
 
-  public readonly checkVisible = (node: IFileTreeNode): boolean => {
-    const dataMap: IFileTreeDataMap = this.dataMap$.getSnapshot()
-    for (let parent = node.parent; parent; parent = parent.parent) {
-      if (dataMap.get(parent.uuid)?.collapsed) return false
-    }
-    return true
-  }
-
-  public readonly onToggleCollapse = (uuid: string): void => {
-    const data = this.dataMap$.getSnapshot().get(uuid)
-    if (data) {
-      ;(data as Mutable<IFileTreeNodeData>).collapsed = !data.collapsed
-      this.forceRerender()
+    function update(o: IFileTreeFolderNode): void {
+      const nextParentCollapsed: boolean = o.parentCollapsed || o.collapsed
+      for (const child of o.children) {
+        ;(child as IFileTreeFolderNodeMutable).parentCollapsed = nextParentCollapsed
+        if (child.type === 'folder') update(child)
+      }
     }
   }
 
   protected readonly buildFileTree = (
     filepaths: string[],
-  ): { dataMap: IFileTreeDataMapMutable; nodes: IFileTreeNode[]; root: IFileTreeFolderNode } => {
+  ): { nodeMap: IFileTreeNodeMap; nodes: IFileTreeNode[]; root: IFileTreeFolderNode } => {
     const items: IFileTreePathItem[] = []
     for (const filepath of filepaths) {
       const pieces: string[] = filepath.split(/[/\\]+/g)
@@ -89,23 +84,23 @@ export class FileTreeViewModel extends ViewModel {
       items.push(item)
     }
 
-    const dataMap: IFileTreeDataMapMutable = new Map()
-    const root: IFileTreeFolderNode = {
+    const nodeMap: IFileTreeNodeMapMutable = new Map()
+    const root: IFileTreeNodeMutable = {
       uuid: '.',
       type: 'folder',
       parent: null,
       children: [],
       basename: '.',
       depth: 0,
-    }
-    ;(root as Mutable<IFileTreeFolderNode>).children = buildChildren(0, items.length, 0, root)
-    dataMap.set(root.uuid, {
       collapsed: false,
-    })
+      parentCollapsed: false,
+    }
+    root.children = buildChildren(0, items.length, 0, root)
+    nodeMap.set(root.uuid, root)
 
     const nodes: IFileTreeNode[] = []
     inorderTraversal(root)
-    return { dataMap, nodes, root }
+    return { nodeMap, nodes, root }
 
     function buildChildren(
       lft: number,
@@ -126,10 +121,8 @@ export class FileTreeViewModel extends ViewModel {
         const basename: string = item_i.pathFromRoot[cur]
 
         if (i + 1 === j && cur + 1 === item_i.pathFromRoot.length) {
-          dataMap.set(uuid, {})
-
           const dotIndex = basename.lastIndexOf('.')
-          const node: IFileTreeFileNode = {
+          const child: IFileTreeFileNode = {
             type: 'file',
             uuid,
             parent,
@@ -137,12 +130,11 @@ export class FileTreeViewModel extends ViewModel {
             extname: basename.slice(dotIndex),
             filepath: item_i.filepath,
             depth: cur + 1,
+            parentCollapsed: parent.parentCollapsed || parent.collapsed,
           }
-          children.push(node)
+          nodeMap.set(uuid, child)
+          children.push(child)
         } else {
-          dataMap.set(uuid, {
-            collapsed: cur > 2,
-          })
           const child: Mutable<IFileTreeNode> = {
             uuid,
             type: 'folder',
@@ -150,8 +142,11 @@ export class FileTreeViewModel extends ViewModel {
             children: [],
             basename,
             depth: cur + 1,
+            collapsed: cur > 1,
+            parentCollapsed: parent.parentCollapsed || parent.collapsed,
           }
           child.children = buildChildren(i, j, cur + 1, child)
+          nodeMap.set(uuid, child)
           children.push(child)
         }
       }
