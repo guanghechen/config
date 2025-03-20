@@ -19,6 +19,7 @@ interface IProps {
 export const FileTreeNode: React.FC<IProps> = props => {
   const { node, onNodeClick: onNodeClickFromProps } = props
   const viewmodel = useFileTreeViewmodel()
+  const currentFilepath: string | null = viewmodel.currentFilepath$.getSnapshot()
   const collapsed: boolean = viewmodel.checkCollapsed(node)
   const visible: boolean = viewmodel.checkVisible(node)
 
@@ -57,7 +58,11 @@ export const FileTreeNode: React.FC<IProps> = props => {
     <div
       className={cn(
         'flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700',
-        { hidden: !visible },
+        {
+          hidden: !visible,
+          'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300':
+            currentFilepath === node.filepath,
+        },
       )}
       onClick={onNodeClick}
       style={{ paddingLeft: `${node.depth * 12}px` }}
