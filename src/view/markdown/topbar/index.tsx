@@ -1,12 +1,13 @@
 import React from 'react'
 import { ThemeToggle } from './ThemeToggle'
 
-export const TopbarView: React.FC = () => {
+export const Topbar: React.FC = () => {
   return (
-    <div className="relative flex items-center justify-center bg-[#dfdfdf] p-5 dark:bg-[#252525]">
-      <div className="absolute right-7 flex items-center">
+    <div className="flex items-center bg-neutral-200 px-4 py-2 dark:bg-neutral-800">
+      <div className="ml-auto">
         <ThemeToggle />
       </div>
     </div>
   )
 }
+Topbar.displayName = 'MarkdownTopbar'
