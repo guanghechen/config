@@ -2,6 +2,7 @@ import CodeHighlighter from '@yozora/react-code-highlighter'
 import cn from 'clsx'
 import React from 'react'
 import { CodeIcon } from '@/component/icon/material'
+import { PRESET_CLASSES } from '@/constant/classes'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
 import { useMarkdownDarken } from '../../context'
 import { CopyButton } from './CopyButton'
@@ -38,7 +39,12 @@ export const CodeSource: React.FC<IProps> = props => {
         {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
       </div>
       {expanded && (
-        <div className="group relative box-border block max-h-[40rem] overflow-auto rounded-[4px]  pb-2 font-[var(--fontFamilyCode)] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar]:w-2">
+        <div
+          className={cn(
+            'group relative box-border block max-h-[40rem] overflow-auto rounded-[4px]  pb-2 font-[var(--fontFamilyCode)]',
+            PRESET_CLASSES.scrollbar,
+          )}
+        >
           <div className="sticky right-0 top-0 float-right h-2 w-full opacity-0 transition-opacity group-hover:opacity-100">
             <div className="relative">
               <div className="absolute right-0 top-2">

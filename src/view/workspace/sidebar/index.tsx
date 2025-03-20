@@ -2,6 +2,7 @@ import { css } from '@emotion/css'
 import cn from 'clsx'
 import React from 'react'
 import { ArrowMenuClose, ArrowMenuOpen } from '@/component/icon/material'
+import { PRESET_CLASSES } from '@/constant/classes'
 import { useSidebarVisible, useToggleSidebarVisible, useWorkspaceViewmodel } from '../context'
 import { FileTree } from './FileTree'
 import { Workspace } from './Workspace'
@@ -81,12 +82,12 @@ export const Sidebar: React.FC = () => {
             {visible ? <ArrowMenuClose /> : <ArrowMenuOpen />}
           </button>
         </div>
-        <div className="w-full flex-auto overflow-auto">
+        <div className={cn('w-full flex-auto overflow-auto', PRESET_CLASSES.scrollbar)}>
           <FileTree />
         </div>
       </div>
       <div
-        className="absolute right-[-8px] top-0 box-content h-full w-[1px] cursor-col-resize border-8 border-solid border-transparent bg-clip-content hover:bg-blue-500 hover:opacity-50"
+        className="absolute right-[-8px] top-0 box-content h-full w-[1px] cursor-col-resize border-8 border-b-0 border-t-0 border-solid border-transparent bg-clip-content hover:bg-blue-500 hover:opacity-50"
         onMouseDown={onResizeStart}
       />
     </div>

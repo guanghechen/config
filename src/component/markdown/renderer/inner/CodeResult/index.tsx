@@ -35,7 +35,7 @@ export const CodeResult: React.FC<IProps> = props => {
     <div className="flex flex-col">
       <div
         className={cn(
-          'w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex bg-gray-100 dark:bg-[#2d2d2d]',
+          'box-border w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex bg-gray-100 dark:bg-[#2d2d2d]',
           {
             'border-b border-opacity-10 border-black dark:border-gray-600': expanded,
           },

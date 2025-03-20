@@ -9,7 +9,7 @@ export const Topbar: React.FC = () => {
   const onToggleSidebarVisible: () => void = useToggleSidebarVisible()
 
   return (
-    <div className="flex items-center bg-neutral-200 px-4 py-2 dark:bg-neutral-800">
+    <div className="flex h-full items-center bg-neutral-200 px-4 dark:bg-neutral-800">
       {!sidebarVisible && (
         <div className="relative box-border flex flex-shrink-0 flex-grow-0 justify-center px-4">
           <Workspace />

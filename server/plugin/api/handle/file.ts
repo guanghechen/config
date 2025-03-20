@@ -10,6 +10,7 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg',
 }
 
 export const fetchFile: IApiHandle = async params => {
