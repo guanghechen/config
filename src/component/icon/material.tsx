@@ -5,6 +5,38 @@ export interface IIconProps {
   readonly className?: string
 }
 
+export const ArrowMenuClose: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M440-280v-400L240-480l200 200Zm80 160h80v-720h-80v720Z" />
+    </svg>
+  )
+}
+
+export const ArrowMenuOpen: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M360-120v-720h80v720h-80Zm160-160v-400l200 200-200 200Z" />
+    </svg>
+  )
+}
+
 export const CheckIcon: React.FC<IIconProps> = props => {
   const { fill = 'currentColor', className } = props
   return (

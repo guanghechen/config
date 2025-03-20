@@ -19,7 +19,7 @@ export const MarkdownView: React.FC = () => {
 
   return (
     <div className="relative box-border flex h-screen w-screen overflow-auto bg-gray-50 font-['Maple_Mono_NF_CN','Roboto_Mono',monospace,sans-serif] text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-900 dark:text-gray-200 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-50 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2">
-      <div className="sticky top-0 h-screen w-64 flex-none border-r border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+      <div className="sticky top-0 h-screen flex-none border-r border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900">
         <Sidebar />
       </div>
       <div className="relative flex flex-1 flex-col overflow-auto">
