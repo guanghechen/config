@@ -1,4 +1,5 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
+import cn from 'clsx'
 import React from 'react'
 import { FileTypeIcon } from '@/component/icon/filetype'
 import {
@@ -7,41 +8,33 @@ import {
   FolderIcon,
   FolderOpenIcon,
 } from '@/component/icon/material'
-import type { IFileTreeFolderNode, IFileTreeNode, IFileTreeNodeData } from './context'
+import type { IFileTreeNode } from './context'
 import { useFileTreeViewmodel } from './context'
 
 interface IProps {
   readonly node: IFileTreeNode
-  readonly data: IFileTreeNodeData
   readonly onNodeClick: (node: IFileTreeNode) => void
 }
 
-export const FileTreeNode: React.FC<IProps> = ({ node, data, onNodeClick }) => {
+export const FileTreeNode: React.FC<IProps> = props => {
+  const { node, onNodeClick: onNodeClickFromProps } = props
   const viewmodel = useFileTreeViewmodel()
-  const collapsed = data.collapsed !== false
+  const collapsed: boolean = viewmodel.checkCollapsed(node)
+  const visible: boolean = viewmodel.checkVisible(node)
 
-  const onToggleCollapse = useEventCallback((e: React.MouseEvent): void => {
-    e.stopPropagation()
-    if (node.type === 'folder') {
-      const newDataMap = new Map(viewmodel.dataMap$.getSnapshot())
-      const nodeData = { ...newDataMap.get(node.uuid)! }
-      nodeData.collapsed = !nodeData.collapsed
-      newDataMap.set(node.uuid, nodeData)
-      viewmodel.dataMap$.next(newDataMap)
-    }
+  const onNodeClick = useEventCallback((): void => {
+    onNodeClickFromProps(node)
   })
 
-  const handleNodeClick = (): void => {
-    onNodeClick(node)
-  }
-
   if (node.type === 'folder') {
-    const folderNode = node as IFileTreeFolderNode
     return (
-      <div className="select-none">
+      <div className={cn('select-none', { hidden: !visible })}>
         <div
           className="flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
-          onClick={onToggleCollapse}
+          onClick={e => {
+            e.stopPropagation()
+            viewmodel.onToggleCollapse(node.uuid)
+          }}
           style={{ paddingLeft: `${node.depth * 12}px` }}
         >
           <span className="mr-1 flex-shrink-0">
@@ -56,30 +49,17 @@ export const FileTreeNode: React.FC<IProps> = ({ node, data, onNodeClick }) => {
           </span>
           <span className="truncate">{node.basename}</span>
         </div>
-
-        {!collapsed && (
-          <div>
-            {folderNode.children.map(childNode => {
-              const childData = viewmodel.dataMap$.getSnapshot().get(childNode.uuid)!
-              return (
-                <FileTreeNode
-                  key={childNode.uuid}
-                  node={childNode}
-                  data={childData}
-                  onNodeClick={onNodeClick}
-                />
-              )
-            })}
-          </div>
-        )}
       </div>
     )
   }
 
   return (
     <div
-      className="flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
-      onClick={handleNodeClick}
+      className={cn(
+        'flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700',
+        { hidden: !visible },
+      )}
+      onClick={onNodeClick}
       style={{ paddingLeft: `${node.depth * 12}px` }}
     >
       <span className="invisible mr-1 flex-shrink-0">

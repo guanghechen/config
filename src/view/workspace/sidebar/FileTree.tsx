@@ -13,7 +13,9 @@ import { useWorkspaceViewmodel } from '../context'
 export const FileTree: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
   const [viewmodel] = React.useState<FileTreeViewModel>(() => {
-    const viewmodel = new FileTreeViewModel({})
+    const viewmodel = new FileTreeViewModel({
+      currentFilepath: workspaceVM.filepath$.getSnapshot(),
+    })
     return viewmodel
   })
 
@@ -40,8 +42,13 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
   const { viewmodel } = props
   const workspaceVM = useWorkspaceViewmodel()
 
+  const filepath: string | null = useStateValue(workspaceVM.filepath$)
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
   const { files } = useWorkspaceFiles(workspace, 0)
+
+  React.useEffect(() => {
+    viewmodel.currentFilepath$.next(filepath)
+  }, [filepath])
 
   React.useEffect(() => {
     viewmodel.updateFromFilepaths(files)

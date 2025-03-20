@@ -19,8 +19,8 @@ interface IProps {
 
 export const FileTree: React.FC<IProps> = props => {
   const { viewmodel, onFileNodeClick } = props
-  const root = useStateValue(viewmodel.root$)
-  const dataMap = useStateValue(viewmodel.dataMap$)
+  const nodes = useStateValue(viewmodel.nodes$)
+  useStateValue(viewmodel.forceRerenderTick$)
 
   const onNodeClick = useEventCallback((node: IFileTreeNode) => {
     if (node.type === 'file') {
@@ -29,18 +29,11 @@ export const FileTree: React.FC<IProps> = props => {
     }
   })
 
-  if (!root) {
-    return <div className="p-4">Loading file tree...</div>
-  }
-
   return (
     <div className="text-sm">
-      {root.children.map(node => {
-        const nodeData = dataMap.get(node.uuid)!
-        return (
-          <FileTreeNode key={node.uuid} node={node} data={nodeData} onNodeClick={onNodeClick} />
-        )
-      })}
+      {nodes.map(node => (
+        <FileTreeNode key={node.uuid} node={node} onNodeClick={onNodeClick} />
+      ))}
     </div>
   )
 }
