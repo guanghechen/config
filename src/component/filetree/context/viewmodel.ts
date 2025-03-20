@@ -1,39 +1,16 @@
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
+import type {
+  IFileTreeDataMap,
+  IFileTreeDataMapMutable,
+  IFileTreeFileNode,
+  IFileTreeFolderNode,
+  IFileTreeNode,
+  IFileTreeNodeData,
+} from './types'
 
-export type IFileTreeNode = IFileTreeFolderNode | IFileTreeFileNode | IFileTreeRootNode
-export type IFileTreeDataMap = ReadonlyMap<string, IFileTreeNodeData>
-export type IFileTreeDataMapMutable = Map<string, IFileTreeNodeDataMutable>
-
-export interface IFileTreePathItem {
+interface IFileTreePathItem {
   readonly filepath: string
   readonly pathFromRoot: string[]
-}
-
-export interface IFileTreeNodeDataMutable {
-  basename: string
-  depth: number
-  filepath: string | undefined
-  collapsed: boolean | undefined
-}
-
-export type IFileTreeNodeData = Readonly<IFileTreeNodeDataMutable>
-
-export interface IFileTreeRootNode {
-  readonly uuid: string
-  readonly type: 'root'
-  readonly children: IFileTreeNode[]
-}
-
-export interface IFileTreeFolderNode {
-  readonly uuid: string
-  readonly type: 'folder'
-  readonly children: IFileTreeNode[]
-}
-
-export interface IFileTreeFileNode {
-  readonly uuid: string
-  readonly type: 'file'
-  readonly extname: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -43,13 +20,13 @@ interface IProps {
 
 export class FileTreeViewModel extends ViewModel {
   public readonly dataMap$: State<ReadonlyMap<string, IFileTreeNodeData>>
-  public readonly root$: State<IFileTreeRootNode | null>
+  public readonly root$: State<IFileTreeFolderNode | null>
 
   constructor(_props: IProps) {
     super()
 
     this.dataMap$ = new State<ReadonlyMap<string, IFileTreeNodeData>>(new Map())
-    this.root$ = new State<IFileTreeRootNode | null>(null)
+    this.root$ = new State<IFileTreeFolderNode | null>(null)
   }
 
   public readonly updateFromFilepaths = (filepaths: string[]): void => {
@@ -75,7 +52,7 @@ export class FileTreeViewModel extends ViewModel {
 
   protected readonly buildFileTree = (
     filepaths: string[],
-  ): { root: IFileTreeRootNode; dataMap: IFileTreeDataMapMutable } => {
+  ): { root: IFileTreeFolderNode; dataMap: IFileTreeDataMapMutable } => {
     const items: IFileTreePathItem[] = []
     for (const filepath of filepaths) {
       const pieces: string[] = filepath.split(/[/\\]+/g)
@@ -84,15 +61,14 @@ export class FileTreeViewModel extends ViewModel {
     }
 
     const dataMap: IFileTreeDataMapMutable = new Map()
-    const root: IFileTreeRootNode = {
+    const root: IFileTreeFolderNode = {
       uuid: '.',
-      type: 'root',
+      type: 'folder',
       children: buildChildren(0, items.length, 0),
+      basename: '.',
+      depth: 0,
     }
     dataMap.set(root.uuid, {
-      basename: '.',
-      filepath: '.',
-      depth: 0,
       collapsed: false,
     })
     return { root, dataMap }
@@ -100,45 +76,48 @@ export class FileTreeViewModel extends ViewModel {
     function buildChildren(lft: number, rht: number, cur: number): IFileTreeNode[] {
       const nodes: IFileTreeNode[] = []
       for (let i = lft, j: number; i < rht; i = j) {
-        const x: string = items[i].pathFromRoot[cur]
+        const item_i: IFileTreePathItem = items[i]
+        const x: string = item_i.pathFromRoot[cur]
         for (j = i + 1; j < rht; ++j) {
           const y: string = items[j].pathFromRoot[cur]
           if (x !== y) break
         }
 
-        const uuid: string = items[i].pathFromRoot.slice(0, cur + 1).join('/')
-        const basename: string = items[i].pathFromRoot[cur]
+        const uuid: string = item_i.pathFromRoot.slice(0, cur + 1).join('/')
+        const basename: string = item_i.pathFromRoot[cur]
 
-        if (i + 1 === j) {
-          dataMap.set(uuid, {
-            basename,
-            filepath: items[i].filepath,
-            depth: cur + 1,
-            collapsed: undefined,
-          })
+        if (i + 1 === j && cur + 1 === item_i.pathFromRoot.length) {
+          dataMap.set(uuid, {})
 
           const dotIndex = basename.lastIndexOf('.')
-          const node: IFileTreeNode = {
-            uuid,
+          const node: IFileTreeFileNode = {
             type: 'file',
+            uuid,
+            basename,
             extname: basename.slice(dotIndex),
+            filepath: item_i.filepath,
+            depth: cur + 1,
           }
           nodes.push(node)
         } else {
           dataMap.set(uuid, {
-            basename,
-            filepath: undefined,
-            depth: cur + 1,
             collapsed: false,
           })
           const node: IFileTreeNode = {
             uuid,
             type: 'folder',
             children: buildChildren(i, j, cur + 1),
+            basename,
+            depth: cur + 1,
           }
           nodes.push(node)
         }
       }
+
+      nodes.sort((x, y) => {
+        if (x.type !== y.type) return x.type === 'folder' ? -1 : 1
+        return x.basename.localeCompare(y.basename)
+      })
       return nodes
     }
   }

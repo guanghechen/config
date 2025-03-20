@@ -102,3 +102,4 @@ const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
 
   return <React.Fragment />
 }
+SideEffect.displayName = 'SiteContextSideEffect'

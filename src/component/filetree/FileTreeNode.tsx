@@ -18,7 +18,7 @@ interface IProps {
 
 export const FileTreeNode: React.FC<IProps> = ({ node, data, onNodeClick }) => {
   const viewmodel = useFileTreeViewmodel()
-  const isCollapsed = data.collapsed !== false
+  const collapsed = data.collapsed !== false
 
   const onToggleCollapse = useEventCallback((e: React.MouseEvent): void => {
     e.stopPropagation()
@@ -35,29 +35,29 @@ export const FileTreeNode: React.FC<IProps> = ({ node, data, onNodeClick }) => {
     onNodeClick(node)
   }
 
-  if (node.type === 'folder' || node.type === 'root') {
+  if (node.type === 'folder') {
     const folderNode = node as IFileTreeFolderNode
     return (
       <div className="select-none">
         <div
           className="flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={onToggleCollapse}
-          style={{ paddingLeft: `${data.depth * 12}px` }}
+          style={{ paddingLeft: `${node.depth * 12}px` }}
         >
           <span className="mr-1 flex-shrink-0">
-            {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+            {collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
           </span>
           <span className="mr-1 flex-shrink-0">
-            {isCollapsed ? (
-              <FolderIcon className="text-amber-500" />
+            {collapsed ? (
+              <FolderIcon className="text-blue-500" />
             ) : (
-              <FolderOpenIcon className="text-amber-500" />
+              <FolderOpenIcon className="text-blue-500" />
             )}
           </span>
-          <span className="truncate">{data.basename}</span>
+          <span className="truncate">{node.basename}</span>
         </div>
 
-        {!isCollapsed && (
+        {!collapsed && (
           <div>
             {folderNode.children.map(childNode => {
               const childData = viewmodel.dataMap$.getSnapshot().get(childNode.uuid)!
@@ -80,7 +80,7 @@ export const FileTreeNode: React.FC<IProps> = ({ node, data, onNodeClick }) => {
     <div
       className="flex cursor-pointer items-center rounded px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
       onClick={handleNodeClick}
-      style={{ paddingLeft: `${data.depth * 12}px` }}
+      style={{ paddingLeft: `${node.depth * 12}px` }}
     >
       <span className="invisible mr-1 flex-shrink-0">
         <ChevronRightIcon />
@@ -88,7 +88,7 @@ export const FileTreeNode: React.FC<IProps> = ({ node, data, onNodeClick }) => {
       <span className="mr-1 flex-shrink-0">
         <FileTypeIcon extname={node.extname} />
       </span>
-      <span className="truncate">{data.basename}</span>
+      <span className="truncate">{node.basename}</span>
     </div>
   )
 }

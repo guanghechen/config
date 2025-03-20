@@ -15,9 +15,7 @@ export const FileTreeContextProvider: React.FC<{ children: React.ReactNode }> = 
   )
 
   return (
-    <React.Fragment>
-      <FileTreeContextType.Provider value={context}>{props.children}</FileTreeContextType.Provider>
-    </React.Fragment>
+    <FileTreeContextType.Provider value={context}>{props.children}</FileTreeContextType.Provider>
   )
 }
 FileTreeContextProvider.displayName = 'FileTreeContextProvider'
