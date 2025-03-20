@@ -1,6 +1,4 @@
-type Mutable<T> = {
-  -readonly [K in keyof T]: T[K]
-}
+import type { Mutable } from '@/shared/types'
 
 export interface IFileTreeFileNode {
   readonly type: 'file'

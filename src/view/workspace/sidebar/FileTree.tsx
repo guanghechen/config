@@ -7,11 +7,11 @@ import {
   FileTreeContextType,
   FileTreeViewModel,
 } from '@/component/filetree'
-import { useSiteViewmodel } from '@/context/site'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
+import { useWorkspaceViewmodel } from '../context'
 
 export const FileTree: React.FC = () => {
-  const siteViewmodel = useSiteViewmodel()
+  const workspaceVM = useWorkspaceViewmodel()
   const [viewmodel] = React.useState<FileTreeViewModel>(() => {
     const viewmodel = new FileTreeViewModel({})
     return viewmodel
@@ -23,7 +23,7 @@ export const FileTree: React.FC = () => {
   )
 
   const onFileNodeClick = useEventCallback((node: IFileTreeFileNode): void => {
-    siteViewmodel.filepath$.next(node.filepath || node.uuid)
+    workspaceVM.filepath$.next(node.filepath || node.uuid)
   })
 
   return (
@@ -38,9 +38,9 @@ export const FileTree: React.FC = () => {
 
 const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
   const { viewmodel } = props
-  const siteViewmodel = useSiteViewmodel()
+  const workspaceVM = useWorkspaceViewmodel()
 
-  const workspace: string | null = useStateValue(siteViewmodel.workspace$)
+  const workspace: string | null = useStateValue(workspaceVM.workspace$)
   const { files } = useWorkspaceFiles(workspace, 0)
 
   React.useEffect(() => {

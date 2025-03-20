@@ -1,7 +1,7 @@
 import { MathJaxProvider } from '@yozora/react-mathjax'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { MarkdownView } from '@/view/markdown'
+import { WorkspaceView } from '@/view/workspace'
 import { SiteContextProvider } from './context/site'
 import './index.css'
 
@@ -11,7 +11,7 @@ const App: React.FC = () => {
       <React.Suspense fallback={<div>loading...</div>}>
         <MathJaxProvider>
           <SiteContextProvider>
-            <MarkdownView />
+            <WorkspaceView />
           </SiteContextProvider>
         </MathJaxProvider>
       </React.Suspense>

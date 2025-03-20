@@ -1,15 +1,15 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
+import type { ISetState } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { SiteTheme, useSiteViewmodel } from '@/context/site'
+import { SiteTheme, useSetSiteTheme, useSiteTheme } from '@/context/site'
 
 export const ThemeToggle: React.FC = () => {
-  const viewmodel = useSiteViewmodel()
-  const theme: SiteTheme = useStateValue(viewmodel.theme$)
+  const theme: SiteTheme = useSiteTheme()
+  const setTheme: ISetState<SiteTheme> = useSetSiteTheme()
   const isDark: boolean = theme === SiteTheme.DARKEN
 
   const onToggleTheme = React.useCallback(() => {
-    viewmodel.theme$.setState(t => (t === SiteTheme.DARKEN ? SiteTheme.LIGHTEN : SiteTheme.DARKEN))
-  }, [viewmodel])
+    setTheme(t => (t === SiteTheme.DARKEN ? SiteTheme.LIGHTEN : SiteTheme.DARKEN))
+  }, [setTheme])
 
   return (
     <div className="ml-5 select-none">

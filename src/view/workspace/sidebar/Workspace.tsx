@@ -1,13 +1,13 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { useSiteViewmodel } from '@/context/site/hook'
 import type { IWorkspaceItem } from '@/types/api'
+import { useWorkspaceViewmodel } from '../context'
 
 export const Workspace: React.FC = () => {
-  const viewmodel = useSiteViewmodel()
-  const currentWorkspace = useStateValue(viewmodel.workspace$)
-  const workspaces = useStateValue(viewmodel.workspaces$)
+  const viewmodelVM = useWorkspaceViewmodel()
+  const currentWorkspace = useStateValue(viewmodelVM.workspace$)
+  const workspaces = useStateValue(viewmodelVM.workspaces$)
 
   const [isEditing, setIsEditing] = React.useState(false)
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -28,16 +28,16 @@ export const Workspace: React.FC = () => {
 
   const onWorkspaceChange = React.useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>): void => {
-      viewmodel.workspace$.setState(() => event.target.value)
+      viewmodelVM.workspace$.setState(() => event.target.value)
       setIsEditing(false)
     },
-    [viewmodel],
+    [viewmodelVM],
   )
 
   return (
     <div
       ref={containerRef}
-      className="relative cursor-pointer select-none text-sm text-gray-700 dark:text-gray-300"
+      className="relative h-11 cursor-pointer select-none px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
       onMouseEnter={() => setIsEditing(true)}
       onMouseLeave={() => setIsEditing(false)}
     >
