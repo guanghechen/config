@@ -49,6 +49,7 @@
     "cross-spawn": "7.0.6",
     "dotenv": "16.4.7",
     "eslint": "9.22.0",
+    "eslint-plugin-react-hooks": "5.2.0",
     "open": "10.1.0",
     "postcss": "8.5.3",
     "prettier": "3.5.3",

@@ -1,4 +1,5 @@
 import { genConfigs } from '@guanghechen/eslint-config'
+import reactHooks from 'eslint-plugin-react-hooks'
 import tailwindcss from 'eslint-plugin-tailwindcss'
 
 const configs = [
@@ -6,6 +7,7 @@ const configs = [
     ignores: ['.vscode/', '**/__tmp__/', '**/doc/', '**/example/', '.prettierrc'],
   },
   ...genConfigs({ tsconfigPath: './tsconfig.eslint.json' }),
+  reactHooks.configs['recommended-latest'],
   {
     files: ['src/**/*.{ts,cts,mts}'],
     rules: {
