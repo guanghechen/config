@@ -29,6 +29,7 @@ ms({ "n", "v" }, "<leader>aX", K.ai.copilot_chat_reset)
 
 --#[b]uf--------------------------------------------------------------------------------------------
 ms({ "i", "n", "v" }, { "<C-a>s", "<D-s>", "<M-s>" }, K.buf.save)
+ms({ "i", "n", "v" }, { "<C-a>w", "<D-w>", "<M-w>" }, K.buf.close)
 ms({ "n", "v" }, "<leader>[", K.buf.focus_left)
 ms({ "n", "v" }, "<leader>]", K.buf.focus_right)
 ms({ "n", "v" }, "<leader>{", K.buf.swap_left)
