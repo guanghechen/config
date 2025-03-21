@@ -7,7 +7,7 @@ import { useSidebarVisible, useToggleSidebarVisible, useWorkspaceViewmodel } fro
 import { FileTree } from './FileTree'
 import { Workspace } from './Workspace'
 
-export const Sidebar: React.FC = () => {
+export const WorkspaceSidebar: React.FC = () => {
   const visible: boolean = useSidebarVisible()
   const onToggleVisible: () => void = useToggleSidebarVisible()
 
@@ -93,7 +93,9 @@ export const Sidebar: React.FC = () => {
     </div>
   )
 }
-Sidebar.displayName = 'WorkspaceSidebar'
+
+WorkspaceSidebar.displayName = 'WorkspaceSidebar'
+export default WorkspaceSidebar
 
 const classes = {
   container: css({

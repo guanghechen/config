@@ -4,7 +4,7 @@ import { ThemeToggle } from '@/container/ThemeToggle'
 import { useSidebarVisible, useToggleSidebarVisible } from '../context'
 import { Workspace } from '../sidebar/Workspace'
 
-export const Topbar: React.FC = () => {
+export const WorkspaceTopbar: React.FC = () => {
   const sidebarVisible: boolean = useSidebarVisible()
   const onToggleSidebarVisible: () => void = useToggleSidebarVisible()
 
@@ -29,4 +29,6 @@ export const Topbar: React.FC = () => {
     </div>
   )
 }
-Topbar.displayName = 'WorkspaceTopbar'
+
+WorkspaceTopbar.displayName = 'WorkspaceTopbar'
+export default WorkspaceTopbar
