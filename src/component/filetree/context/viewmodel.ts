@@ -21,31 +21,25 @@ interface IProps {
 
 export class FileTreeViewModel extends ViewModel {
   public readonly nodeMap$: State<ReadonlyMap<string, IFileTreeNode>>
-  public readonly nodes$: State<IFileTreeNode[]>
+  public readonly root$: State<IFileTreeFolderNode | null>
   public readonly currentFilepath$: State<string | null>
-  public readonly forceRerenderTick$: State<number> = new State(0)
 
   constructor(_props: IProps) {
     super()
 
     this.nodeMap$ = new State<ReadonlyMap<string, IFileTreeNode>>(new Map())
-    this.nodes$ = new State<IFileTreeNode[]>([])
+    this.root$ = new State<IFileTreeFolderNode | null>(null)
     this.currentFilepath$ = new State<string | null>(null)
   }
 
-  public readonly forceRerender = (): void => {
-    const tick: number = this.forceRerenderTick$.getSnapshot()
-    this.forceRerenderTick$.next(tick + 1)
-  }
-
   public readonly updateFromFilepaths = (filepaths: string[]): void => {
-    const { nodeMap, nodes } = this.buildFileTree(filepaths)
+    const { nodeMap, root } = this.buildFileTree(filepaths)
     this.nodeMap$.next(nodeMap)
-    this.nodes$.next(nodes)
+    this.root$.next(root)
   }
 
   public readonly buildFromFilepaths = (filepaths: string[]): void => {
-    const { nodeMap, nodes } = this.buildFileTree(filepaths)
+    const { nodeMap, root } = this.buildFileTree(filepaths)
     const oldNodeMap: IFileTreeNodeMap = this.nodeMap$.getSnapshot()
 
     for (const [uuid, item] of nodeMap.entries()) {
@@ -56,27 +50,12 @@ export class FileTreeViewModel extends ViewModel {
     }
 
     this.nodeMap$.next(nodeMap)
-    this.nodes$.next(nodes)
-  }
-
-  public readonly toggleCollapse = (node: IFileTreeFolderNode): void => {
-    // eslint-disable-next-line no-param-reassign
-    ;(node as IFileTreeFolderNodeMutable).collapsed = !node.collapsed
-    update(node)
-    this.forceRerender()
-
-    function update(o: IFileTreeFolderNode): void {
-      const nextParentCollapsed: boolean = o.parentCollapsed || o.collapsed
-      for (const child of o.children) {
-        ;(child as IFileTreeFolderNodeMutable).parentCollapsed = nextParentCollapsed
-        if (child.type === 'folder') update(child)
-      }
-    }
+    this.root$.next(root)
   }
 
   protected readonly buildFileTree = (
     filepaths: string[],
-  ): { nodeMap: IFileTreeNodeMap; nodes: IFileTreeNode[]; root: IFileTreeFolderNode } => {
+  ): { nodeMap: IFileTreeNodeMap; root: IFileTreeFolderNode } => {
     const items: IFileTreePathItem[] = []
     for (const filepath of filepaths) {
       const pieces: string[] = filepath.split(/[/\\]+/g)
@@ -93,14 +72,10 @@ export class FileTreeViewModel extends ViewModel {
       basename: '.',
       depth: 0,
       collapsed: false,
-      parentCollapsed: false,
     }
     root.children = buildChildren(0, items.length, 0, root)
     nodeMap.set(root.uuid, root)
-
-    const nodes: IFileTreeNode[] = []
-    inorderTraversal(root)
-    return { nodeMap, nodes, root }
+    return { nodeMap, root }
 
     function buildChildren(
       lft: number,
@@ -130,7 +105,6 @@ export class FileTreeViewModel extends ViewModel {
             extname: basename.slice(dotIndex),
             filepath: item_i.filepath,
             depth: cur + 1,
-            parentCollapsed: parent.parentCollapsed || parent.collapsed,
           }
           nodeMap.set(uuid, child)
           children.push(child)
@@ -143,7 +117,6 @@ export class FileTreeViewModel extends ViewModel {
             basename,
             depth: cur + 1,
             collapsed: cur > 1,
-            parentCollapsed: parent.parentCollapsed || parent.collapsed,
           }
           child.children = buildChildren(i, j, cur + 1, child)
           nodeMap.set(uuid, child)
@@ -156,14 +129,6 @@ export class FileTreeViewModel extends ViewModel {
         return x.basename.localeCompare(y.basename)
       })
       return children
-    }
-
-    function inorderTraversal(root: IFileTreeFolderNode): void {
-      nodes.push(root)
-      for (const child of root.children) {
-        if (child.type === 'folder') inorderTraversal(child)
-        else nodes.push(child)
-      }
     }
   }
 }

@@ -8,7 +8,6 @@ export interface IFileTreeFileNode {
   readonly extname: string
   readonly filepath: string
   readonly depth: number
-  readonly parentCollapsed: boolean
 }
 
 export interface IFileTreeFolderNode {
@@ -19,7 +18,6 @@ export interface IFileTreeFolderNode {
   readonly basename: string
   readonly depth: number
   readonly collapsed: boolean
-  readonly parentCollapsed: boolean
 }
 
 export type IFileTreeFileNodeMutable = Mutable<IFileTreeFileNode>
