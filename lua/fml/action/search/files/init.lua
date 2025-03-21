@@ -61,6 +61,7 @@ function M.search_files_in_directory(specified_filepath)
 
   eve.state.search_file.flag_replace:next(false)
   eve.state.select.search_file_scope:next(next_scope, { silent = silent })
+  eve.state.status.dirtier_statusline:mark_dirty()
   focus()
 end
 
@@ -115,6 +116,7 @@ function M.replace_files_in_directory(specified_filepath)
 
   eve.state.search_file.flag_replace:next(true)
   eve.state.select.search_file_scope:next(next_scope, { silent = silent })
+  eve.state.status.dirtier_statusline:mark_dirty()
   focus()
 end
 

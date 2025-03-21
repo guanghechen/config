@@ -33,24 +33,26 @@ local state_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 
 ---@return string
 local function gen_title()
+  local scope = eve.state.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
+  if scope == "W" then
+    return "Find files (workspace)" ---@type string
+  elseif scope == "C" then
+    return "Find files (cwd)" ---@type string
+  end
+
   local cwd = eve.path.cwd() ---@type string
   local dirpath = state_cwd:snapshot() ---@type string
   if dirpath == cwd then
-    return "Find files (cwd)" ---@type string
+    return "Find files (dir: .)" ---@type string
   end
 
   local relative_dirpath = eve.path.relative(cwd, dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
-    return "Find files (cwd)" ---@type string
-  end
-
-  local workspace = eve.path.workspace() ---@type string
-  if dirpath == workspace then
-    return "Find files (workspace)" ---@type string
+    return "Find files (dir: .)" ---@type string
   end
 
   dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
-  return "Find files (" .. dirpath .. ")" ---@type string
+  return "Find files (dir: " .. dirpath .. ")" ---@type string
 end
 
 eve.state.observe({ eve.state.select.find_file_scope }, function()
@@ -77,6 +79,7 @@ eve.state.observe({
 end, true)
 
 eve.state.observe({
+  eve.state.select.find_file_scope,
   state_cwd,
 }, function()
   if _select ~= nil then
@@ -456,6 +459,7 @@ function M.find_files_directory(specified_filepath)
     end
   end
   eve.state.select.find_file_scope:next("D", { silent = silent })
+  eve.state.status.dirtier_statusline:mark_dirty()
   select:show()
 end
 

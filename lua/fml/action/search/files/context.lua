@@ -56,39 +56,40 @@ local state_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 
 ---@return string
 local function gen_title()
+  local scope = eve.state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
   local flag_replace = eve.state.search_file.flag_replace:snapshot() ---@type boolean
   local mode = flag_replace and "Replace" or "Search" ---@type string
 
+  if scope == "W" then
+    return mode .. "in files (workspace)" ---@type string
+  elseif scope == "C" then
+    return mode .. "in files (cwd)" ---@type string
+  elseif scope == "D" then
+    local cwd = eve.path.cwd() ---@type string
+    local dirpath = state_cwd:snapshot() ---@type string
+    if dirpath == cwd then
+      return mode .. "in files (dir: .)" ---@type string
+    end
+
+    local relative_dirpath = eve.path.relative(cwd, dirpath, false)
+    if #relative_dirpath < 1 or relative_dirpath == "." then
+      return mode .. "in files (dir: .)" ---@type string
+    end
+
+    dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
+    return mode .. "in files (dir: " .. dirpath .. ")" ---@type string
+  end
+
   local cwd = eve.path.cwd() ---@type string
-  local scope = eve.state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
-  if scope == "B" then
-    local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
-    if bufnr ~= nil then
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if eve.fs.is_file_or_dir(filepath) == "file" then
-        local relative_filepath = eve.path.relative(cwd, filepath, false)
-        return mode .. "in " .. relative_filepath ---@type string
-      end
+  local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  if bufnr ~= nil then
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    if eve.fs.is_file_or_dir(filepath) == "file" then
+      local relative_filepath = eve.path.relative(cwd, filepath, false)
+      return mode .. "in " .. relative_filepath ---@type string
     end
   end
-
-  local dirpath = state_cwd:snapshot() ---@type string
-  if dirpath == cwd then
-    return mode .. "in files (cwd)" ---@type string
-  end
-
-  local relative_dirpath = eve.path.relative(cwd, dirpath, false)
-  if #relative_dirpath < 1 or relative_dirpath == "." then
-    return mode .. "in files (cwd)" ---@type string
-  end
-
-  local workspace = eve.path.workspace() ---@type string
-  if dirpath == workspace then
-    return mode .. "in files (workspace)" ---@type string
-  end
-
-  dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
-  return mode .. "in files (" .. dirpath .. ")" ---@type string
+  return mode .. "in buf#" .. tostring(bufnr) ---@type string
 end
 
 eve.state.select.search_file_scope:subscribe(
