@@ -5,6 +5,7 @@ import type { IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
 import {
   FileTree as FileTreeComponent,
   FileTreeContextType,
+  FileTreeSearch,
   FileTreeViewModel,
 } from '@/component/filetree'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
@@ -32,6 +33,7 @@ export const FileTree: React.FC = () => {
     <React.Fragment>
       <SideEffect viewmodel={viewmodel} />
       <FileTreeContextType.Provider value={context}>
+        <FileTreeSearch viewmodel={viewmodel} />
         <FileTreeComponent viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
       </FileTreeContextType.Provider>
     </React.Fragment>

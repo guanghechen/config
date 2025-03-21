@@ -7,6 +7,11 @@ import type { WorkspaceViewModel } from './viewmodel'
 export const useWorkspaceViewmodel = (): WorkspaceViewModel =>
   React.useContext(WorkspaceContextType).viewmodel
 
+export const useWorkspace = (): string | null => {
+  const viewmodel = useWorkspaceViewmodel()
+  return useStateValue(viewmodel.workspace$)
+}
+
 export const useSidebarVisible = (): boolean => {
   const viewmodel = useWorkspaceViewmodel()
   return useStateValue(viewmodel.sidebarVisible$)

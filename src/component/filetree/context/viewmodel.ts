@@ -106,6 +106,7 @@ export class FileTreeViewModel extends ViewModel {
             basename,
             extname: basename.slice(dotIndex),
             filepath: item_i.filepath,
+            filepath_lower: item_i.filepath.toLowerCase(),
             depth: cur + 1,
           }
           nodeMap.set(uuid, child)

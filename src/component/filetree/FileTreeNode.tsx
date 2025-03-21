@@ -10,19 +10,21 @@ import type { IFileTreeNode } from './context'
 
 interface IProps {
   readonly node: IFileTreeNode
+  readonly collapsed?: boolean | undefined
 }
 
 const FileTreeNodeInner: React.FC<IProps> = props => {
   const { node } = props
 
   if (node.type === 'folder') {
+    const { collapsed = node.collapsed } = props
     return (
       <div className="flex cursor-pointer items-center">
         <span className="mr-1 flex-shrink-0">
-          {node.collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+          {collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
         </span>
         <span className="mr-1 flex-shrink-0">
-          {node.collapsed ? (
+          {collapsed ? (
             <FolderIcon className="text-blue-500" />
           ) : (
             <FolderOpenIcon className="text-blue-500" />
@@ -48,5 +50,9 @@ const FileTreeNodeInner: React.FC<IProps> = props => {
 
 export const FileTreeNode = React.memo(
   FileTreeNodeInner,
-  (prevProps, nextProps) => prevProps.node === nextProps.node,
+  (prevProps, nextProps) =>
+    prevProps.node === nextProps.node && //
+    prevProps.collapsed === nextProps.collapsed,
 )
+
+FileTreeNode.displayName = 'FileTreeNode'

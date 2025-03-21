@@ -7,6 +7,7 @@ export interface IFileTreeFileNode {
   readonly basename: string
   readonly extname: string
   readonly filepath: string
+  readonly filepath_lower: string
   readonly depth: number
 }
 

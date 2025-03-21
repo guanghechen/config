@@ -23,8 +23,7 @@ export const FileTree: React.FC<IProps> = props => {
   const currentFilepath: string | null = useStateValue(viewmodel.currentFilepath$)
   const searchKeyword: string = useStateValue(viewmodel.searchKeyword$)
 
-  const [_, setTick] = React.useState<number>(0)
-  const visibleUuidSet = React.useMemo(() => new Set<string>(), [])
+  const [tick, setTick] = React.useState<number>(0)
 
   const onNodeClick = useEventCallback((node: IFileTreeNode) => {
     switch (node.type) {
@@ -32,6 +31,8 @@ export const FileTree: React.FC<IProps> = props => {
         onFileNodeClick(node)
         break
       case 'folder': {
+        if (searchKeyword.length > 0) return
+
         const o = node as IFileTreeFolderNodeMutable
         o.collapsed = !o.collapsed
         setTick(tick => tick + 1)
@@ -42,18 +43,13 @@ export const FileTree: React.FC<IProps> = props => {
     }
   })
 
-  const elements: React.ReactElement[] = React.useMemo<React.ReactElement[]>(() => {
-    if (!root) return []
-
-    const list: React.ReactElement[] = []
-    inorderTraversalBuild(root, false)
-    return list
-
-    function inorderTraversalBuild(node: IFileTreeNode, parentCollapsed: boolean): void {
-      const activate: boolean = node.type === 'file' && node.filepath === currentFilepath
-      const visible: boolean =
-        !parentCollapsed && (searchKeyword.length === 0 || visibleUuidSet.has(node.uuid))
-
+  const renderNode = React.useCallback(
+    (
+      node: IFileTreeNode,
+      visible: boolean,
+      activate: boolean,
+      collapsed: boolean,
+    ): React.ReactElement => {
       const element: React.ReactElement = (
         <div
           key={node.uuid}
@@ -64,36 +60,67 @@ export const FileTree: React.FC<IProps> = props => {
           style={{ paddingLeft: `${node.depth * 12}px` }}
           onClick={() => onNodeClick(node)}
         >
-          <FileTreeNode node={node} />
+          <FileTreeNode node={node} collapsed={collapsed} />
         </div>
       )
-      list.push(element)
+      return element
+    },
+    [onNodeClick],
+  )
 
-      if (node.type === 'folder') {
-        const collapsed: boolean = parentCollapsed || node.collapsed
-        for (const child of node.children) inorderTraversalBuild(child, collapsed)
-      }
-    }
-  }, [root, currentFilepath, onNodeClick, searchKeyword, visibleUuidSet])
+  const elements: React.ReactElement[] = React.useMemo<React.ReactElement[]>(() => {
+    if (!root) return []
 
-  React.useEffect(() => {
-    visibleUuidSet.clear()
+    const list: React.ReactElement[] = []
     if (searchKeyword.length > 0) {
-      const keyword: string = searchKeyword.toLowerCase()
+      const keyword = searchKeyword.toLowerCase()
+      const uuids = new Set<string>()
       const nodeMap: IFileTreeNodeMap = viewmodel.nodeMap$.getSnapshot()
       for (const node of nodeMap.values()) {
         if (node.type !== 'file') continue
-        if (!node.filepath.toLowerCase().includes(keyword)) continue
+        if (!node.filepath_lower.includes(keyword)) continue
 
-        visibleUuidSet.add(node.uuid)
+        uuids.add(node.uuid)
         for (let parent: IFileTreeFolderNode | null = node.parent; parent; parent = parent.parent) {
-          if (visibleUuidSet.has(parent.uuid)) break
-          visibleUuidSet.add(parent.uuid)
+          if (uuids.has(parent.uuid)) break
+          uuids.add(parent.uuid)
+        }
+      }
+      inorderTraversalWithFilter(root)
+      return list
+
+      function inorderTraversalWithFilter(node: IFileTreeNode): void {
+        const visible: boolean = uuids.has(node.uuid)
+        const activate: boolean = node.type === 'file' && node.filepath === currentFilepath
+
+        const element: React.ReactElement = renderNode(node, visible, activate, false)
+        list.push(element)
+
+        if (node.type === 'folder') {
+          for (const child of node.children) inorderTraversalWithFilter(child)
+        }
+      }
+    } else {
+      inorderTraversal(root, false)
+      return list
+
+      function inorderTraversal(node: IFileTreeNode, parentCollapsed: boolean): void {
+        const visible: boolean = !parentCollapsed
+        const activate: boolean = node.type === 'file' && node.filepath === currentFilepath
+        const collapsed: boolean = node.type === 'folder' && node.collapsed
+
+        const element: React.ReactElement = renderNode(node, visible, activate, collapsed)
+        list.push(element)
+
+        if (node.type === 'folder') {
+          const collapsed: boolean = parentCollapsed || node.collapsed
+          for (const child of node.children) inorderTraversal(child, collapsed)
         }
       }
     }
-    setTick(tick => tick + 1)
-  }, [viewmodel, searchKeyword, visibleUuidSet])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [root, searchKeyword, viewmodel, currentFilepath, renderNode, tick])
 
   return <div className="text-sm">{elements}</div>
 }
+FileTree.displayName = 'FileTree'
