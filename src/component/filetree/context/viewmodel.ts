@@ -23,6 +23,7 @@ export class FileTreeViewModel extends ViewModel {
   public readonly nodeMap$: State<ReadonlyMap<string, IFileTreeNode>>
   public readonly root$: State<IFileTreeFolderNode | null>
   public readonly currentFilepath$: State<string | null>
+  public readonly searchKeyword$: State<string>
 
   constructor(_props: IProps) {
     super()
@@ -30,6 +31,7 @@ export class FileTreeViewModel extends ViewModel {
     this.nodeMap$ = new State<ReadonlyMap<string, IFileTreeNode>>(new Map())
     this.root$ = new State<IFileTreeFolderNode | null>(null)
     this.currentFilepath$ = new State<string | null>(null)
+    this.searchKeyword$ = new State<string>('')
   }
 
   public readonly updateFromFilepaths = (filepaths: string[]): void => {
