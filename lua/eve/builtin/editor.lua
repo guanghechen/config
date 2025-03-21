@@ -240,7 +240,6 @@ function M.is_win_sourcefile(winnr)
     return false
   end
 
-  vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
   return true
 end
 
