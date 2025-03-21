@@ -32,5 +32,5 @@ export const useToggleSidebarVisible = (): (() => void) => {
   return React.useCallback(() => {
     const visible = viewmodel.sidebarVisible$.getSnapshot()
     viewmodel.sidebarVisible$.next(!visible)
-  }, [])
+  }, [viewmodel.sidebarVisible$])
 }

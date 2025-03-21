@@ -48,11 +48,11 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
 
   React.useEffect(() => {
     viewmodel.currentFilepath$.next(filepath)
-  }, [filepath])
+  }, [filepath, viewmodel.currentFilepath$])
 
   React.useEffect(() => {
     viewmodel.updateFromFilepaths(files)
-  }, [files])
+  }, [files, viewmodel])
 
   return <React.Fragment />
 }
