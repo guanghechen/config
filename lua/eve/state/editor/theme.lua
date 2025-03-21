@@ -53,7 +53,7 @@ end
 function M.defaults()
   ---@type eve.state.theme.data
   return {
-    theme = "gruvbox-dark",
+    theme = "catppuccin-mocha",
     transparency = false,
     username = true,
   }
