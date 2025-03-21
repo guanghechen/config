@@ -231,12 +231,16 @@ function M.is_win_sourcefile(winnr)
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+
   if eve.filetype.is_not_sourcefile_filetype(filetype) then
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
     return false
   end
 
-  -- vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
+  vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
   return true
 end
 

@@ -38,6 +38,13 @@ function M.edit_file(filepath)
 end
 
 ---@param filepath                      string
+---@return boolean
+function M.is_exists(filepath)
+  local stat = vim.uv.fs_stat(filepath)
+  return stat ~= nil
+end
+
+---@param filepath                      string
 ---@return eve.e.FileType|nil
 function M.is_file_or_dir(filepath)
   local stat = vim.uv.fs_stat(filepath)

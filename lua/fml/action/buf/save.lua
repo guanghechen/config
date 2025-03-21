@@ -21,9 +21,8 @@ function M.save()
     if is_mod and not eve.filetype.is_not_plain_file(filetype) then
       modified_count = modified_count + 1
 
-      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = eve.path.resolve(cwd, filename) ---@type string
-      if eve.fs.is_file_or_dir(filepath) == nil then
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      if eve.path.is_absolute(filepath) and not eve.fs.is_exists(filepath) then
         new_file_count = new_file_count + 1
         table.insert(new_file_bufnrs, bufnr)
       end
