@@ -1,10 +1,12 @@
 import React from 'react'
-import { MarkdownContainer } from './Markdown'
+import { MarkdownContainer } from './markdown'
 
 export const WorkspaceMain: React.FC = () => {
   return (
     <div className="flex justify-center py-4">
-      <MarkdownContainer />
+      <div className="box-border w-[800px]">
+        <MarkdownContainer />
+      </div>
     </div>
   )
 }

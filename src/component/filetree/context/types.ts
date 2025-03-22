@@ -1,5 +1,10 @@
 import type { Mutable } from '@/shared/types'
 
+export enum FileTreeViewMode {
+  TREE = 'tree',
+  LIST = 'list',
+}
+
 export interface IFileTreeFileNode {
   readonly type: 'file'
   readonly uuid: string

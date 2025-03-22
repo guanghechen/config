@@ -1,13 +1,15 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
+import cn from 'clsx'
 import React from 'react'
 import type { IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
 import {
-  FileTree as FileTreeComponent,
+  FileTreeComposer,
   FileTreeContextType,
   FileTreeSearch,
   FileTreeViewModel,
 } from '@/component/filetree'
+import { PRESET_CLASSES } from '@/constant/classes'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
 import { useWorkspaceViewmodel } from '../context'
 
@@ -33,8 +35,14 @@ export const FileTree: React.FC = () => {
     <React.Fragment>
       <SideEffect viewmodel={viewmodel} />
       <FileTreeContextType.Provider value={context}>
-        <FileTreeSearch viewmodel={viewmodel} />
-        <FileTreeComponent viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
+        <div className="flex h-full flex-col">
+          <div className="flex-initial">
+            <FileTreeSearch viewmodel={viewmodel} />
+          </div>
+          <div className={cn('w-full h-full flex-auto overflow-auto', PRESET_CLASSES.scrollbar)}>
+            <FileTreeComposer viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
+          </div>
+        </div>
       </FileTreeContextType.Provider>
     </React.Fragment>
   )
