@@ -18,7 +18,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
 
   if (mode === 'ast') {
     return (
-      <div className="overflow-auto p-4">
+      <div className="p-4">
         <pre className="whitespace-pre-wrap break-words text-sm">
           <code>{JSON.stringify(ast, null, 2)}</code>
         </pre>

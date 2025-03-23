@@ -16,8 +16,26 @@ export const MarkdownContainer: React.FC = () => {
   const ast: Root | undefined = data?.ast
 
   const [mode, setMode] = React.useState<MarkdownModeEnum>(MarkdownModeEnum.PREVIEW)
+  const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
+
   const onModeToggle = React.useCallback(() => {
     setMode(m => (m === MarkdownModeEnum.PREVIEW ? MarkdownModeEnum.AST : MarkdownModeEnum.PREVIEW))
+  }, [])
+
+  const onScrollToTop = React.useCallback((): void => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  React.useEffect(() => {
+    const onScroll = (): void => {
+      console.log('scrollY: ', window.scrollY)
+      if (window.scrollY > 100) setVisibleOfScrollToTop(true)
+      else setVisibleOfScrollToTop(false)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return (
@@ -31,6 +49,25 @@ export const MarkdownContainer: React.FC = () => {
           <MarkdownComposer ast={ast} mode={mode} />
         </div>
       )}
+      <button
+        onClick={onScrollToTop}
+        className={`fixed bottom-8 right-8 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 ${
+          visibleOfScrollToTop
+            ? 'translate-y-0 opacity-90'
+            : 'pointer-events-none translate-y-16 opacity-0'
+        }`}
+        title="Scroll to top"
+        aria-label="Scroll to top"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+        </svg>
+      </button>
     </div>
   )
 }
