@@ -304,10 +304,11 @@ return {
       group_empty_dirs = true, -- when true, empty folders will be grouped together
       window = {
         mappings = {
+          ["h"] = "close_node",
+          ["l"] = "open",
           ["oa"] = "avante_add_files",
           ["oe"] = "open_ghc_file_explorer",
           ["of"] = "open_ghc_file_finder",
-          ["oo"] = "open",
           ["or"] = "open_ghc_replacer",
           ["os"] = "open_ghc_searcher",
           ["<C-a>r"] = refresh_filesystem,
