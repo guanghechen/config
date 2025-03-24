@@ -5,7 +5,7 @@ import { Json } from '@/component/json'
 import { ReactMarkdown } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
-import type { MarkdownModeEnum } from './types'
+import { MarkdownModeEnum } from './types'
 
 interface IProps {
   readonly ast: Root
@@ -59,15 +59,36 @@ export const MarkdownComposer: React.FC<IProps> = props => {
   const siteVM = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(siteVM.theme$)
 
-  if (mode === 'ast') {
-    return (
-      <div className="p-4">
-        <Json json={ast || json} />
-      </div>
-    )
+  switch (mode) {
+    case MarkdownModeEnum.PREVIEW:
+      return (
+        <div className="flex w-full justify-center">
+          <div className="w-[80rem] flex-shrink flex-grow-0 p-4">
+            <ReactMarkdown ast={ast} theme={theme} />
+          </div>
+        </div>
+      )
+    case MarkdownModeEnum.AST:
+      return (
+        <div className="flex w-full justify-center">
+          <div className="w-[60rem] flex-shrink flex-grow-0 p-4">
+            <Json json={ast || json} />
+          </div>
+        </div>
+      )
+    case MarkdownModeEnum.SBS:
+      return (
+        <div className="flex h-[calc(100vh-5rem)] items-start justify-center p-4">
+          <div className="h-full w-[80rem] flex-shrink flex-grow-0 overflow-auto">
+            <ReactMarkdown ast={ast} theme={theme} />
+          </div>
+          <div className="mx-6 h-full flex-shrink-0 border-r border-gray-300" />
+          <div className="h-full w-[60rem] flex-shrink flex-grow-0 overflow-auto">
+            <Json json={ast || json} />
+          </div>
+        </div>
+      )
   }
-
-  return <ReactMarkdown ast={ast} theme={theme} />
 }
 
 MarkdownComposer.displayName = 'MarkdownComposer'

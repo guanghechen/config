@@ -19,12 +19,8 @@ export const MarkdownContainer: React.FC = () => {
   const { data, error } = useFileResult(workspace, filepath, tick)
   const ast: Root | undefined = data?.ast
 
-  const [mode, setMode] = React.useState<MarkdownModeEnum>(MarkdownModeEnum.AST)
+  const [mode, setMode] = React.useState<MarkdownModeEnum>(MarkdownModeEnum.PREVIEW)
   const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
-
-  const onModeToggle = React.useCallback(() => {
-    setMode(m => (m === MarkdownModeEnum.PREVIEW ? MarkdownModeEnum.AST : MarkdownModeEnum.PREVIEW))
-  }, [])
 
   const onScrollToTop = useEventCallback((): void => {
     if (container) container.scrollTo({ top: 0, behavior: 'smooth' })
@@ -44,15 +40,15 @@ export const MarkdownContainer: React.FC = () => {
   }, [container])
 
   return (
-    <div className="relative">
+    <div className="relative size-full">
       {!!error && (
         <div className="relative mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
           <code>error: {String(error)}</code>
         </div>
       )}
       {!!ast && (
-        <div className="relative">
-          <MarkdownModeToggle mode={mode} onToggle={onModeToggle} />
+        <div className="relative w-full">
+          <MarkdownModeToggle mode={mode} setMode={setMode} />
           <MarkdownComposer ast={ast} mode={mode} />
         </div>
       )}

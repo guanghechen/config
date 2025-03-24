@@ -3,8 +3,8 @@ import { MarkdownContainer } from './markdown'
 
 export const WorkspaceMain: React.FC = () => {
   return (
-    <div className="flex justify-center py-4">
-      <div className="box-border w-[800px]">
+    <div className="box-border flex h-full justify-center">
+      <div className="box-border h-full w-full p-8">
         <MarkdownContainer />
       </div>
     </div>
