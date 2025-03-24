@@ -295,7 +295,6 @@ function M.get_search()
         end
       end,
       on_close = function()
-        vim.cmd.checktime()
         local scope = eve.state.select.search_file_scope:snapshot() ---@type eve.e.SearchFileScope
         if scope == "B" then
           M.reload()
