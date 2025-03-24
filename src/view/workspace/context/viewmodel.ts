@@ -39,6 +39,8 @@ export class WorkspaceViewModel extends ViewModel {
   public readonly filepathDirtyTick$: IState<number>
   public readonly workspacesDirtyTick$: IState<number>
 
+  public readonly mainScrollableContainer$: IState<HTMLDivElement | null>
+
   public static fromData(data: Partial<IWorkspaceData> | undefined): WorkspaceViewModel {
     const { filepath, workspace, workspaces, sidebarVisible, sidebarWidth }: IWorkspaceData =
       this.normalize(DEFAULT_WORKSPACE_DATA, data)
@@ -87,6 +89,8 @@ export class WorkspaceViewModel extends ViewModel {
 
     this.workspacesDirtyTick$ = new State<number>(0)
     this.filepathDirtyTick$ = new State<number>(0)
+
+    this.mainScrollableContainer$ = new State<HTMLDivElement | null>(null)
 
     this.workspace$.subscribe(
       new Subscriber({

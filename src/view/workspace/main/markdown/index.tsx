@@ -1,5 +1,7 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
+import cn from 'clsx'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
 import { useWorkspaceViewmodel } from '../../context'
@@ -12,6 +14,8 @@ export const MarkdownContainer: React.FC = () => {
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
   const filepath = useStateValue(workspaceVM.filepath$)
   const tick: number = useStateValue(workspaceVM.filepathDirtyTick$)
+  const container = useStateValue(workspaceVM.mainScrollableContainer$)
+
   const { data, error } = useFileResult(workspace, filepath, tick)
   const ast: Root | undefined = data?.ast
 
@@ -22,21 +26,22 @@ export const MarkdownContainer: React.FC = () => {
     setMode(m => (m === MarkdownModeEnum.PREVIEW ? MarkdownModeEnum.AST : MarkdownModeEnum.PREVIEW))
   }, [])
 
-  const onScrollToTop = React.useCallback((): void => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [])
+  const onScrollToTop = useEventCallback((): void => {
+    if (container) container.scrollTo({ top: 0, behavior: 'smooth' })
+  })
 
   React.useEffect(() => {
+    if (!container) return
+
     const onScroll = (): void => {
-      console.log('scrollY: ', window.scrollY)
-      if (window.scrollY > 100) setVisibleOfScrollToTop(true)
+      if (container.scrollTop > 100) setVisibleOfScrollToTop(true)
       else setVisibleOfScrollToTop(false)
     }
 
     onScroll()
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    container.addEventListener('scroll', onScroll)
+    return () => container.removeEventListener('scroll', onScroll)
+  }, [container])
 
   return (
     <div className="relative">
@@ -53,11 +58,12 @@ export const MarkdownContainer: React.FC = () => {
       )}
       <button
         onClick={onScrollToTop}
-        className={`fixed bottom-8 right-8 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 ${
+        className={cn(
+          'cursor-pointer fixed bottom-8 right-8 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
           visibleOfScrollToTop
             ? 'translate-y-0 opacity-90'
-            : 'pointer-events-none translate-y-16 opacity-0'
-        }`}
+            : 'pointer-events-none translate-y-16 opacity-0',
+        )}
         title="Scroll to top"
         aria-label="Scroll to top"
       >
