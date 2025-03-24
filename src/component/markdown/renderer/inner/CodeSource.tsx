@@ -4,8 +4,8 @@ import React from 'react'
 import { CodeIcon } from '@/component/icon/material'
 import { PRESET_CLASSES } from '@/constant/classes'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
+import { CopyButton } from '../../../CopyButton'
 import { useMarkdownDarken } from '../../context'
-import { CopyButton } from './CopyButton'
 
 interface IProps {
   readonly code: string

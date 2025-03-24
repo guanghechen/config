@@ -112,7 +112,7 @@ export const ChevronUpIcon: React.FC<IIconProps> = props => {
       fill={fill}
       className={className}
     >
-      <path d="M720-560L480-320 240-560l56-56 184 184 184-184 56 56Z" />
+      <path d="M240-400l240-240 240 240-56 56-184-184-184 184-56-56Z" />
     </svg>
   )
 }

@@ -1,0 +1,37 @@
+import React from 'react'
+import { classes } from '../constant'
+import { JsonFieldCopyButton } from '../FieldCopyButton'
+import { JsonFieldKey } from '../FieldKey'
+
+interface IProps {
+  readonly name: string | number | null
+  readonly value: unknown
+  readonly depth: number
+}
+
+export class JsonFieldUnknown extends React.Component<IProps> {
+  public static displayName = 'JsonFieldUnknown'
+
+  public override render(): React.ReactElement {
+    const { name, value, depth } = this.props
+    const indentStyle: React.CSSProperties = { paddingLeft: `${depth * 1.5}rem` }
+    const text: string = `[${typeof value}]`
+
+    return (
+      <div className={classes.container.line} style={indentStyle}>
+        <JsonFieldKey name={name} />
+        <span className="italic text-rose-500">{text}</span>
+        <JsonFieldCopyButton value={value} contentForCopy={text} />
+      </div>
+    )
+  }
+
+  public override shouldComponentUpdate(nextProps: IProps): boolean {
+    const props: IProps = this.props
+    return (
+      props.name !== nextProps.name ||
+      props.value !== nextProps.value ||
+      props.depth !== nextProps.depth
+    )
+  }
+}
