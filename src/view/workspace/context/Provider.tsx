@@ -9,7 +9,7 @@ import type {
 } from '@/shared/types'
 import type { IWorkspaceContext } from './context'
 import { WorkspaceContextType } from './context'
-import type { IWorkspaceData } from './viewmodel'
+import type { IWorkspaceData } from './types'
 import { WorkspaceViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/view/workspace'
@@ -55,6 +55,8 @@ const PersistSideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => 
         viewmodel.filepath$,
         viewmodel.workspace$,
         viewmodel.workspaces$,
+        viewmodel.filetreeMode$,
+        viewmodel.markdownMode$,
         viewmodel.sidebarWidth$,
         viewmodel.sidebarVisible$,
       ],

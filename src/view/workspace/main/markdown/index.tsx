@@ -7,7 +7,6 @@ import { useFileResult } from '@/hook/useFileResult'
 import { useWorkspaceViewmodel } from '../../context'
 import { MarkdownComposer } from './composer'
 import { MarkdownModeToggle } from './mode'
-import { MarkdownModeEnum } from './types'
 
 export const MarkdownContainer: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
@@ -19,7 +18,6 @@ export const MarkdownContainer: React.FC = () => {
   const { data, error } = useFileResult(workspace, filepath, tick)
   const ast: Root | undefined = data?.ast
 
-  const [mode, setMode] = React.useState<MarkdownModeEnum>(MarkdownModeEnum.PREVIEW)
   const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
 
   const onScrollToTop = useEventCallback((): void => {
@@ -48,8 +46,8 @@ export const MarkdownContainer: React.FC = () => {
       )}
       {!!ast && (
         <div className="relative w-full">
-          <MarkdownModeToggle mode={mode} setMode={setMode} />
-          <MarkdownComposer ast={ast} mode={mode} />
+          <MarkdownModeToggle />
+          <MarkdownComposer ast={ast} />
         </div>
       )}
       <button

@@ -60,7 +60,11 @@ export const FileList: React.FC<IProps> = props => {
             <span className="mr-1 flex-shrink-0">
               <FileTypeIcon extname={node.extname} />
             </span>
-            <span className="truncate">{node.filepath}</span>
+            <span className="truncate">
+              {searchKeyword.length > 0
+                ? highlightMatches(node.filepath_lower, keyword)
+                : node.filepath}
+            </span>
           </div>
         </div>
       )
@@ -71,6 +75,35 @@ export const FileList: React.FC<IProps> = props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileNodes, searchKeyword, viewmodel, currentFilepath, tick])
 
-  return <div className="text-sm">{elements}</div>
+  return <div className="p-2 text-sm">{elements}</div>
 }
 FileList.displayName = 'FileList'
+
+const highlightMatches = (text: string, keyword: string): React.ReactNode[] => {
+  const result: React.ReactNode[] = []
+
+  let lastIndex = 0
+  for (let index = text.indexOf(keyword, lastIndex); index !== -1; ) {
+    if (index > lastIndex) {
+      result.push(text.substring(lastIndex, index))
+    }
+
+    result.push(
+      <span
+        key={`highlight-${index}`}
+        className="rounded-sm bg-yellow-200 text-gray-900 dark:bg-yellow-700 dark:text-gray-100"
+      >
+        {text.substring(index, index + keyword.length)}
+      </span>,
+    )
+
+    lastIndex = index + keyword.length
+    index = text.indexOf(keyword, lastIndex)
+  }
+
+  if (lastIndex < text.length) {
+    result.push(text.substring(lastIndex))
+  }
+
+  return result
+}

@@ -1,59 +1,63 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
+import cn from 'clsx'
 import React from 'react'
-import { FileTreeViewMode, type FileTreeViewModel, type IFileTreeFileNode } from './context'
+import type { FileTreeViewModel, IFileTreeFileNode } from './context'
+import { FiletreeMode } from './context'
 import { FileList } from './FileList'
 import { FileTree } from './FileTree'
 
 interface IProps {
   readonly viewmodel: FileTreeViewModel
+  readonly mode: FiletreeMode
   readonly onFileNodeClick: (node: IFileTreeFileNode) => void
+  readonly onModeChange: (mode: FiletreeMode) => void
 }
 
 export const FileTreeComposer: React.FC<IProps> = props => {
-  const { viewmodel, onFileNodeClick } = props
+  const { viewmodel, mode, onFileNodeClick, onModeChange } = props
   const searchKeyword: string = useStateValue(viewmodel.searchKeyword$)
-  const mode: FileTreeViewMode = useStateValue(viewmodel.viewMode$)
 
-  const onViewModeToggle = React.useCallback(() => {
-    const snapshot: FileTreeViewMode = viewmodel.viewMode$.getSnapshot()
-    const nextMode: FileTreeViewMode =
-      snapshot === FileTreeViewMode.LIST ? FileTreeViewMode.TREE : FileTreeViewMode.LIST
-    viewmodel.viewMode$.next(nextMode)
-  }, [viewmodel])
+  const listMode: boolean = mode === FiletreeMode.LIST || searchKeyword.length > 0
+  const treeMode: boolean = mode === FiletreeMode.TREE && searchKeyword.length === 0
 
   return (
-    <div className="relative">
-      <button
-        className="absolute right-1 top-1 z-10 flex h-7 w-7 items-center justify-center rounded-md bg-gray-200 bg-opacity-60 text-gray-600 shadow-sm transition-all hover:bg-opacity-80 hover:text-gray-800 dark:bg-gray-700 dark:bg-opacity-60 dark:text-gray-300 dark:hover:bg-opacity-80 dark:hover:text-gray-100"
-        onClick={onViewModeToggle}
-        title={`Switch to ${mode === FileTreeViewMode.LIST ? 'tree' : 'list'} view`}
-      >
-        {mode === FileTreeViewMode.LIST ? (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 24 24"
-            fill="currentColor"
+    <div>
+      <div className="flex justify-end pr-2 pt-2">
+        <div
+          className="flex h-5 select-none rounded-lg bg-gray-200 bg-opacity-70 text-xs shadow-sm transition-all hover:bg-opacity-90 dark:bg-gray-700 dark:bg-opacity-70 dark:hover:bg-opacity-90"
+          title={`Current view: ${mode === FiletreeMode.LIST ? 'list' : 'tree'}`}
+        >
+          <button
+            className={cn(
+              'box-border relative px-3 transition-all rounded-l-lg',
+              listMode
+                ? 'bg-indigo-500 bg-opacity-90 font-medium text-white'
+                : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100',
+            )}
+            onClick={() => onModeChange(FiletreeMode.LIST)}
           >
-            <path d="M3 3h6v4H3V3zm0 6h6v4H3V9zm0 6h6v4H3v-4zm8-12h10v4H11V3zm0 6h10v4H11V9zm0 6h10v4H11v-4z" />
-          </svg>
+            list
+          </button>
+          <button
+            className={cn(
+              'box-border relative px-3 transition-all rounded-r-lg',
+              treeMode
+                ? 'bg-blue-500 bg-opacity-90 font-medium text-white'
+                : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100',
+            )}
+            onClick={() => onModeChange(FiletreeMode.TREE)}
+          >
+            tree
+          </button>
+        </div>
+      </div>
+      <div>
+        {mode === FiletreeMode.LIST || searchKeyword.length > 0 ? (
+          <FileList viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
         ) : (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
-          </svg>
+          <FileTree viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
         )}
-      </button>
-
-      {mode === FileTreeViewMode.LIST || searchKeyword.length > 0 ? (
-        <FileList viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
-      ) : (
-        <FileTree viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
-      )}
+      </div>
     </div>
   )
 }

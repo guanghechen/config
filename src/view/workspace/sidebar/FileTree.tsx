@@ -2,7 +2,7 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import type { IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
+import type { FiletreeMode, IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
 import {
   FileTreeComposer,
   FileTreeContextType,
@@ -15,6 +15,8 @@ import { useWorkspaceViewmodel } from '../context'
 
 export const FileTree: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
+  const mode: FiletreeMode = useStateValue(workspaceVM.filetreeMode$)
+
   const [viewmodel] = React.useState<FileTreeViewModel>(() => {
     const viewmodel = new FileTreeViewModel({
       currentFilepath: workspaceVM.filepath$.getSnapshot(),
@@ -40,7 +42,12 @@ export const FileTree: React.FC = () => {
             <FileTreeSearch viewmodel={viewmodel} />
           </div>
           <div className={cn('w-full h-full flex-auto overflow-auto', PRESET_CLASSES.scrollbar)}>
-            <FileTreeComposer viewmodel={viewmodel} onFileNodeClick={onFileNodeClick} />
+            <FileTreeComposer
+              viewmodel={viewmodel}
+              mode={mode}
+              onFileNodeClick={onFileNodeClick}
+              onModeChange={mode => workspaceVM.filetreeMode$.next(mode)}
+            />
           </div>
         </div>
       </FileTreeContextType.Provider>

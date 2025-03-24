@@ -9,7 +9,6 @@ import type {
   IFileTreeNodeMapMutable,
   IFileTreeNodeMutable,
 } from './types'
-import { FileTreeViewMode } from './types'
 
 interface IFileTreePathItem {
   readonly filepath: string
@@ -26,7 +25,6 @@ export class FileTreeViewModel extends ViewModel {
   public readonly fileNodes$: State<IFileTreeFileNode[]>
   public readonly currentFilepath$: State<string | null>
   public readonly searchKeyword$: State<string>
-  public readonly viewMode$: State<FileTreeViewMode>
 
   constructor(_props: IProps) {
     super()
@@ -36,7 +34,6 @@ export class FileTreeViewModel extends ViewModel {
     this.fileNodes$ = new State<IFileTreeFileNode[]>([])
     this.currentFilepath$ = new State<string | null>(null)
     this.searchKeyword$ = new State<string>('')
-    this.viewMode$ = new State<FileTreeViewMode>(FileTreeViewMode.TREE)
   }
 
   public readonly updateFromFilepaths = (filepaths: string[]): void => {

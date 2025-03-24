@@ -1,6 +1,6 @@
 import type { Mutable } from '@/shared/types'
 
-export enum FileTreeViewMode {
+export enum FiletreeMode {
   TREE = 'tree',
   LIST = 'list',
 }

@@ -5,11 +5,10 @@ import { Json } from '@/component/json'
 import { ReactMarkdown } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
-import { MarkdownModeEnum } from './types'
+import { MarkdownModeEnum, useWorkspaceViewmodel } from '../../context'
 
 interface IProps {
   readonly ast: Root
-  readonly mode: MarkdownModeEnum
 }
 
 const json = {
@@ -55,8 +54,10 @@ const json = {
 }
 
 export const MarkdownComposer: React.FC<IProps> = props => {
-  const { ast, mode } = props
+  const { ast } = props
   const siteVM = useSiteViewmodel()
+  const workspaceVM = useWorkspaceViewmodel()
+  const mode: MarkdownModeEnum = useStateValue(workspaceVM.markdownMode$)
   const theme: SiteTheme = useStateValue(siteVM.theme$)
 
   switch (mode) {

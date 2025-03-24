@@ -74,6 +74,6 @@ export const FileTree: React.FC<IProps> = props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [root, viewmodel, currentFilepath, tick])
 
-  return <div className="text-sm">{elements}</div>
+  return <div className="p-2 text-sm">{elements}</div>
 }
 FileTree.displayName = 'FileTree'
