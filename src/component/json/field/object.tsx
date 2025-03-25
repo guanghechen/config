@@ -9,29 +9,35 @@ interface IProps {
   readonly name: string | number | null
   readonly value: object
   readonly depth: number
+  readonly forceCollapseTick: number
 }
 
 interface IState {
-  readonly collapsed: boolean
+  readonly tick: number
 }
 
 export class JsonFieldObject extends React.Component<IProps, IState> {
   public static displayName = 'JsonFieldObject'
 
-  public entries: Array<[string, unknown]> = []
+  protected entries: Array<[string, unknown]>
+  protected collapsed: boolean
+  protected forceTick: number
 
   constructor(props: IProps) {
     super(props)
 
-    const state: IState = { collapsed: props.depth > 2 }
+    const { depth, forceCollapseTick } = props
+    const state: IState = { tick: 0 }
+
     this.state = state
+    this.collapsed = forceCollapseTick > 0 ? forceCollapseTick % 2 === 0 : depth > 2
+    this.forceTick = forceCollapseTick
     this.entries = Object.entries(props.value)
   }
 
   public override render(): React.ReactElement {
-    const { entries, onCollapsedToggle } = this
+    const { entries, collapsed, forceTick, onCollapse, onExpand } = this
     const { name, value, depth } = this.props
-    const { collapsed } = this.state
     const indentStyle: React.CSSProperties = { paddingLeft: `${depth * 1.5}rem` }
 
     if (entries.length === 0) {
@@ -49,8 +55,8 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
     if (collapsed) {
       return (
         <div>
-          <div className={classes.container.line} style={indentStyle} onClick={onCollapsedToggle}>
-            <span onClick={onCollapsedToggle} className="align-middle">
+          <div className={classes.container.line} style={indentStyle} onClick={onExpand}>
+            <span className="align-middle">
               <ChevronRightIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 hover:text-gray-700" />
             </span>
             <JsonFieldKey name={name} />
@@ -67,8 +73,8 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
 
     return (
       <div>
-        <div className={classes.container.line} style={indentStyle} onClick={onCollapsedToggle}>
-          <span onClick={onCollapsedToggle} className="align-middle">
+        <div className={classes.container.line} style={indentStyle} onClick={onCollapse}>
+          <span className="align-middle">
             <ChevronDownIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 hover:text-gray-700" />
           </span>
           <JsonFieldKey name={name} />
@@ -76,12 +82,18 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
           <JsonFieldCopyButton value={value} />
         </div>
         {entries.map(([objKey, objVal]) => (
-          <JsonField key={objKey} name={objKey} value={objVal} depth={depth + 1} />
+          <JsonField
+            key={objKey}
+            name={objKey}
+            value={objVal}
+            depth={depth + 1}
+            forceCollapseTick={forceTick}
+          />
         ))}
         <div
           className="flex cursor-pointer items-center rounded transition hover:bg-gray-200 dark:hover:bg-gray-700"
           style={indentStyle}
-          onClick={onCollapsedToggle}
+          onClick={onCollapse}
         >
           <span className="font-medium text-gray-700">&#125;</span>
         </div>
@@ -93,22 +105,56 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
     const props: IProps = this.props
     const state: IState = this.state
 
-    const changed: boolean =
-      state.collapsed !== nextState.collapsed ||
-      props.name !== nextProps.name ||
-      props.value !== nextProps.value ||
-      props.depth !== nextProps.depth
-
-    if (changed) {
+    let changed: boolean = false
+    if (props.value !== nextProps.value) {
+      changed = true
       this.entries = Object.entries(nextProps.value)
     }
 
-    return changed
+    if (
+      props.forceCollapseTick !== nextProps.forceCollapseTick &&
+      nextProps.forceCollapseTick > 0
+    ) {
+      changed = true
+
+      this.collapsed = nextProps.forceCollapseTick % 2 === 0
+      this.forceTick += 1
+      if (this.forceTick % 2 !== nextProps.forceCollapseTick % 2) this.forceTick += 1
+    }
+
+    return (
+      changed ||
+      state.tick !== nextState.tick ||
+      props.name !== nextProps.name ||
+      props.depth !== nextProps.depth
+    )
   }
 
-  public onCollapsedToggle: React.MouseEventHandler = (evt: React.MouseEvent): void => {
+  public onCollapse: React.MouseEventHandler = (evt: React.MouseEvent): void => {
     evt.stopPropagation()
+
     const state: IState = this.state
-    this.setState({ collapsed: !state.collapsed })
+    this.collapsed = true
+
+    if (evt.altKey) {
+      this.forceTick += 1
+      if (this.forceTick % 2 !== 0) this.forceTick += 1
+    }
+
+    this.setState({ tick: state.tick + 1 })
+  }
+
+  public onExpand: React.MouseEventHandler = (evt: React.MouseEvent): void => {
+    evt.stopPropagation()
+
+    const state: IState = this.state
+    this.collapsed = false
+
+    if (evt.altKey) {
+      this.forceTick += 1
+      if (this.forceTick % 2 === 0) this.forceTick += 1
+    }
+
+    this.setState({ tick: state.tick + 1 })
   }
 }
