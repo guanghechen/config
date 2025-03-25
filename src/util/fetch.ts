@@ -1,7 +1,9 @@
 import type { Root } from '@yozora/ast'
+import type { IHeadingToc } from '@yozora/ast-util'
 
 export interface IMarkdownData {
   readonly ast: Root
+  readonly toc: IHeadingToc
 }
 
 export interface IFetchFileResult {

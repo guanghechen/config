@@ -76,7 +76,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
       return (
         <div className="flex w-full justify-center">
           <div className="w-[60rem] flex-shrink flex-grow-0 p-4">
-            <Json json={json} />
+            <Json json={ast || json} />
           </div>
         </div>
       )

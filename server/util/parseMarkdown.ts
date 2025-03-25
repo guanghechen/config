@@ -1,7 +1,13 @@
 import { collectIntervals } from '@guanghechen/std'
-import type { Code, Root } from '@yozora/ast'
-import { CodeType } from '@yozora/ast'
-import { shallowMutateAstInPreorderAsync } from '@yozora/ast-util'
+import type { Code, Root, Text } from '@yozora/ast'
+import { CodeType, TextType } from '@yozora/ast'
+import type { IHeadingToc } from '@yozora/ast-util'
+import {
+  calcHeadingToc,
+  shallowMutateAstInPreorder,
+  shallowMutateAstInPreorderAsync,
+} from '@yozora/ast-util'
+import { stripChineseCharacters } from '@yozora/character'
 import Parser from '@yozora/parser'
 import { existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
@@ -33,7 +39,7 @@ async function resolveRefPath(curDir: string, refPath: string): Promise<string |
   return null
 }
 
-async function parseMarkdown(filepath: string): Promise<Root> {
+async function parseMarkdown(filepath: string): Promise<{ ast: Root; toc: IHeadingToc }> {
   if (!existsSync(filepath)) throw new Error(`File not found: ${filepath}.`)
 
   const stat = statSync(filepath)
@@ -109,7 +115,14 @@ async function parseMarkdown(filepath: string): Promise<Root> {
     return { ...o, value }
   })
 
-  return ast
+  ast = shallowMutateAstInPreorder(ast, [TextType], node => {
+    const text = node as Text
+    const nextValue: string = text.value ? stripChineseCharacters(text.value) : text.value
+    return text.value === nextValue ? node : { ...node, value: nextValue }
+  })
+
+  const toc: IHeadingToc = calcHeadingToc(ast, 'heading-')
+  return { ast, toc }
 }
 
 export default parseMarkdown

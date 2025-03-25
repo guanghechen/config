@@ -65,9 +65,9 @@ export const fetchFile: IApiHandle = async params => {
   if (extname === '.md') {
     let data: IApiHandleData
     try {
-      const ast = await parseMarkdown(filepath)
+      const { ast, toc } = await parseMarkdown(filepath)
       data = {
-        data: { ast },
+        data: { ast, toc },
       }
     } catch (error) {
       state.reporter.error('Failed to parse markdown:', { filepath, error })
