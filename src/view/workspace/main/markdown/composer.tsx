@@ -5,6 +5,7 @@ import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
 import { MarkdownProvider, MarkdownToc, ReactMarkdown } from '@/component/markdown'
+import { ReactMarkdownContent } from '@/component/markdown/ReactMarkdownContent'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
 import { MarkdownModeEnum, useWorkspaceViewmodel } from '../../context'
@@ -82,6 +83,11 @@ export const MarkdownComposer: React.FC<IProps> = props => {
                 'p-2 overflow-auto': count > 1,
               })}
             >
+              <ReactMarkdownContent
+                Tag="h1"
+                className="mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white"
+                content={(frontmatter?.title as string) || 'Untitled'}
+              />
               <ReactMarkdown />
             </div>
             {count > 1 && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}

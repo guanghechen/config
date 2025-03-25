@@ -3,6 +3,7 @@ import { Computed, State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
 import { calcDefinitionMap, calcFootnoteDefinitionMap, calcHeadingToc } from '@yozora/ast-util'
+import { parseMarkdown } from '../parser'
 import type { INodeRendererMap } from './types'
 
 export interface IMarkdownViewModelProps {
@@ -41,6 +42,9 @@ export class MarkdownViewModel extends ViewModel {
   public readonly rendererMap$: State<Readonly<INodeRendererMap>>
   public readonly showCodeLineno$: State<boolean>
   public readonly themeScheme$: State<string>
+
+  protected readonly presetDefinitionMap: Readonly<Record<string, Definition>>
+  protected readonly presetFootnoteDefinitionMap: Readonly<Record<string, FootnoteDefinition>>
 
   constructor(props: IMarkdownViewModelProps) {
     super()
@@ -93,9 +97,21 @@ export class MarkdownViewModel extends ViewModel {
     this.rendererMap$ = new State(rendererMap)
     this.showCodeLineno$ = new State<boolean>(showCodeLineno)
     this.themeScheme$ = new State<string>(themeScheme)
+
+    this.presetDefinitionMap = presetDefinitionMap
+    this.presetFootnoteDefinitionMap = presetFootnoteDefinitionMap
   }
 
   public setContent = (ast: Root): void => {
     this.ast$.next(ast)
+  }
+
+  public parseMarkdown = (content: string): Root => {
+    const ast: Root = parseMarkdown(content, {
+      shouldReservePosition: false,
+      presetDefinitions: Object.values(this.presetDefinitionMap),
+      presetFootnoteDefinitions: Object.values(this.presetFootnoteDefinitionMap),
+    })
+    return ast
   }
 }
