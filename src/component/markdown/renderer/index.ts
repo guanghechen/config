@@ -7,6 +7,9 @@ import {
   DefinitionType,
   DeleteType,
   EmphasisType,
+  FootnoteDefinitionType,
+  FootnoteReferenceType,
+  FootnoteType,
   HeadingType,
   HtmlType,
   ImageReferenceType,
@@ -31,6 +34,7 @@ import { BreakRenderer } from './break'
 import { CodeRenderer } from './code'
 import { DeleteRenderer } from './delete'
 import { EmphasisRenderer } from './emphasis'
+import { FootnoteReferenceRenderer } from './footnoteReference'
 import { HeadingRenderer } from './heading'
 import { ImageRenderer } from './image'
 import { ImageReferenceRenderer } from './imageReference'
@@ -73,6 +77,9 @@ export const defaultNodeRendererMap: Readonly<INodeRendererMap> = {
   [DefinitionType]: () => null,
   [DeleteType]: DeleteRenderer,
   [EmphasisType]: EmphasisRenderer,
+  [FootnoteDefinitionType]: () => null,
+  [FootnoteType]: () => null,
+  [FootnoteReferenceType]: FootnoteReferenceRenderer,
   [HeadingType]: HeadingRenderer,
   [HtmlType]: () => null,
   [ImageType]: ImageRenderer,

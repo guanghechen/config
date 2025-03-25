@@ -1,7 +1,7 @@
 import equals from '@guanghechen/equal'
 import { Computed, State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { Definition, Root } from '@yozora/ast'
-import { calcDefinitionMap } from '@yozora/ast-util'
+import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
+import { calcDefinitionMap, calcFootnoteDefinitionMap } from '@yozora/ast-util'
 import type { INodeRendererMap } from './types'
 
 export interface IMarkdownViewModelProps {
@@ -13,6 +13,10 @@ export interface IMarkdownViewModelProps {
    * Preset Link / Image reference definitions.
    */
   readonly presetDefinitionMap: Readonly<Record<string, Definition>>
+  /**
+   * Preset footnote reference definitions.
+   */
+  readonly presetFootnoteDefinitionMap: Readonly<Record<string, FootnoteDefinition>>
   /**
    * Ast node renderer map.
    */
@@ -33,27 +37,50 @@ export class MarkdownViewModel extends ViewModel {
   public readonly showCodeLineno$: State<boolean>
   public readonly themeScheme$: State<string>
   public readonly definitionMap$: Computed<Readonly<Record<string, Definition>>>
+  public readonly footnoteDefinitionMap$: Computed<Readonly<Record<string, FootnoteDefinition>>>
 
   constructor(props: IMarkdownViewModelProps) {
     super()
 
-    const { ast, presetDefinitionMap, rendererMap, showCodeLineno, themeScheme } = props
+    const {
+      ast,
+      presetDefinitionMap,
+      presetFootnoteDefinitionMap,
+      rendererMap,
+      showCodeLineno,
+      themeScheme,
+    } = props
 
     const ast$: State<Root> = new State<Root>(ast, { equals })
     const definitionMap$ = Computed.fromObservables(
       [ast$],
       ([ast]): Readonly<Record<string, Definition>> => {
-        const definitionMap: Record<string, Definition> = {
-          ...presetDefinitionMap,
-        }
-        const map: Readonly<Record<string, Definition>> = calcDefinitionMap(ast).definitionMap
-        for (const [key, val] of Object.entries(map)) definitionMap[key] = val
+        const presetDefinitions: Definition[] = Object.values({ ...presetDefinitionMap })
+        const { root, definitionMap } = calcDefinitionMap(ast, undefined, presetDefinitions)
+        ast$.next(root)
         return definitionMap
+      },
+    )
+    const footnoteDefinitionMap$ = Computed.fromObservables(
+      [ast$],
+      ([ast]): Readonly<Record<string, FootnoteDefinition>> => {
+        const presetFootnoteDefinitions: FootnoteDefinition[] = Object.values({
+          ...presetFootnoteDefinitionMap,
+        })
+        const { root, footnoteDefinitionMap } = calcFootnoteDefinitionMap(
+          ast,
+          undefined,
+          presetFootnoteDefinitions,
+          true,
+        )
+        ast$.next(root)
+        return footnoteDefinitionMap
       },
     )
 
     this.ast$ = ast$
     this.definitionMap$ = definitionMap$
+    this.footnoteDefinitionMap$ = footnoteDefinitionMap$
     this.rendererMap$ = new State(rendererMap)
     this.showCodeLineno$ = new State<boolean>(showCodeLineno)
     this.themeScheme$ = new State<string>(themeScheme)

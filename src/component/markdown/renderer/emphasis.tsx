@@ -1,5 +1,5 @@
-import { css, cx } from '@emotion/css'
 import type { Emphasis, Node } from '@yozora/ast'
+import cn from 'clsx'
 import React from 'react'
 import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
@@ -19,17 +19,9 @@ export class EmphasisRenderer extends React.Component<Emphasis> {
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
-      <em className={cls}>
+      <em className={cn(astClasses.emphasis, 'italic mr-2 ml-1')}>
         <NodesRenderer nodes={childNodes} />
       </em>
     )
   }
 }
-
-const cls = cx(
-  astClasses.emphasis,
-  css({
-    fontStyle: 'italic',
-    margin: '0 6px 0 2px',
-  }),
-)

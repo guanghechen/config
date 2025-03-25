@@ -1,5 +1,5 @@
 import { useDeepCompareMemo } from '@guanghechen/react-hooks'
-import type { Definition, Root } from '@yozora/ast'
+import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
 import React from 'react'
 import { buildNodeRendererMap } from '../renderer'
 import type { IMarkdownContext } from './context'
@@ -21,6 +21,10 @@ interface IProps {
    */
   readonly presetDefinitionMap?: Readonly<Record<string, Definition>>
   /**
+   * Preset footnote reference definitions.
+   */
+  readonly presetFootnoteDefinitionMap?: Readonly<Record<string, FootnoteDefinition>>
+  /**
    * Whether if show lineno for code block.
    */
   readonly showCodeLineno?: boolean
@@ -41,11 +45,19 @@ export const MarkdownProvider: React.FC<IProps> = props => {
     () => props.presetDefinitionMap ?? {},
     [props.presetDefinitionMap],
   )
+  const presetFootnoteDefinitionMap: Record<
+    string,
+    Readonly<FootnoteDefinition>
+  > = useDeepCompareMemo(
+    () => props.presetFootnoteDefinitionMap ?? {},
+    [props.presetFootnoteDefinitionMap],
+  )
   const [viewmodel] = React.useState<MarkdownViewModel>(() => {
     return new MarkdownViewModel({
       ast,
       rendererMap: buildNodeRendererMap(customizedRendererMap),
       presetDefinitionMap,
+      presetFootnoteDefinitionMap,
       showCodeLineno,
       themeScheme: theme,
     })
