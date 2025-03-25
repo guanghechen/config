@@ -18,6 +18,9 @@ const json = {
     story:
       "Once upon a time in a small coastal village, a young fisher named Maya discovered an unusual bottle washed ashore. Inside was a map leading to a hidden cove. Curiosity sparked, she sailed at dawn, navigating treacherous waters until reaching the secluded bay. There stood an ancient lighthouse, abandoned for decades. Inside, she found journals detailing the life of a lonely keeper who had discovered how to communicate with whales through music. Maya restored the lighthouse and learned his methods. Soon, whales returned to the waters, bringing prosperity to her village. Years later, tourists would visit to hear Maya's enchanting melodies and watch as massive creatures danced in the waves, a testament to how one unexpected discovery can transform a life and community forever.",
   },
+  nums: Array.from(new Array(300))
+    .map((_, i): unknown => i)
+    .concat({ a: 1, b: 2, c: 3, d: { e: 5, f: 7 }, g: [10, 11, '23'] }),
   name: 'lemon',
   age: 10,
   address: ['a', 'bc', 'def'],
@@ -73,7 +76,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
       return (
         <div className="flex w-full justify-center">
           <div className="w-[60rem] flex-shrink flex-grow-0 p-4">
-            <Json json={ast || json} />
+            <Json json={json} />
           </div>
         </div>
       )

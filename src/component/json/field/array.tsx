@@ -4,6 +4,7 @@ import { classes } from '../constant'
 import { JsonField } from '../Field'
 import { JsonFieldCopyButton } from '../FieldCopyButton'
 import { JsonFieldKey } from '../FieldKey'
+import { FieldArrayOmitter } from './array_omitter'
 
 interface IProps {
   readonly name: string | number | null
@@ -18,6 +19,7 @@ interface IState {
 
 export class JsonFieldArray extends React.Component<IProps, IState> {
   public static displayName = 'JsonFieldArray'
+  public static ITEMS_PER_GROUP = 50
 
   protected collapsed: boolean
   protected forceTick: number
@@ -34,7 +36,7 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
   }
 
   public override render(): React.ReactElement {
-    const { collapsed, forceTick, onCollapse, onExpand } = this
+    const { collapsed, onCollapse, onExpand } = this
     const { name, value, depth } = this.props
     const indentStyle: React.CSSProperties = { paddingLeft: `${depth * 1.5}rem` }
 
@@ -59,7 +61,7 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
             </span>
             <JsonFieldKey name={name} />
             <span className="font-medium text-gray-700">&#91;</span>
-            <span className="italic text-gray-500">
+            <span className="italic text-gray-400">
               {value.length} {value.length === 1 ? 'item' : 'items'}
               <span className="ml-1 font-medium text-gray-700">&#93;</span>
             </span>
@@ -77,17 +79,13 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
           </span>
           <JsonFieldKey name={name} />
           <span className="font-medium text-gray-700">&#91;</span>
+          <span className="italic text-gray-400">
+            {value.length} {value.length === 1 ? 'item' : 'items'}
+            <span className="ml-1 font-medium text-gray-700">&nbsp;</span>
+          </span>
           <JsonFieldCopyButton value={value} />
         </div>
-        {value.map((item, index) => (
-          <JsonField
-            key={index}
-            name={index}
-            value={item}
-            depth={depth + 1}
-            forceCollapseTick={forceTick}
-          />
-        ))}
+        {this.renderArrayItems()}
         <div
           className="flex cursor-pointer items-center rounded transition hover:bg-gray-200 dark:hover:bg-gray-700"
           style={indentStyle}
@@ -121,7 +119,7 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
     )
   }
 
-  public onCollapse: React.MouseEventHandler = (evt: React.MouseEvent): void => {
+  protected onCollapse: React.MouseEventHandler = (evt: React.MouseEvent): void => {
     evt.stopPropagation()
 
     const state: IState = this.state
@@ -135,7 +133,7 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
     this.setState({ tick: state.tick + 1 })
   }
 
-  public onExpand: React.MouseEventHandler = (evt: React.MouseEvent): void => {
+  protected onExpand: React.MouseEventHandler = (evt: React.MouseEvent): void => {
     evt.stopPropagation()
 
     const state: IState = this.state
@@ -147,5 +145,43 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
     }
 
     this.setState({ tick: state.tick + 1 })
+  }
+
+  protected renderArrayItems(): React.ReactNode[] {
+    const { value, depth } = this.props
+    const { forceTick } = this
+    const nodes: React.ReactNode[] = []
+
+    if (value.length <= JsonFieldArray.ITEMS_PER_GROUP) {
+      for (let i = 0; i < value.length; i++) {
+        nodes.push(
+          <JsonField
+            key={i}
+            name={i}
+            value={value[i]}
+            depth={depth + 1}
+            forceCollapseTick={forceTick}
+          />,
+        )
+      }
+      return nodes
+    }
+
+    for (let i: number = 0, j: number; i < value.length; i = j) {
+      j = i + JsonFieldArray.ITEMS_PER_GROUP
+      if (j > value.length) j = value.length
+      nodes.push(
+        <FieldArrayOmitter
+          key={i}
+          startIndex={i}
+          endIndex={j}
+          items={value}
+          depth={depth + 1}
+          forceCollapseTick={forceTick}
+        />,
+      )
+    }
+
+    return nodes
   }
 }

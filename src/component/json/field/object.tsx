@@ -61,7 +61,7 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
             </span>
             <JsonFieldKey name={name} />
             <span className="font-medium text-gray-700">&#123;</span>
-            <span className="italic text-gray-500">
+            <span className="italic text-gray-400">
               {entries.length} {entries.length === 1 ? 'property' : 'properties'}
               <span className="ml-1 font-medium text-gray-700">&#125;</span>
             </span>
@@ -79,6 +79,10 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
           </span>
           <JsonFieldKey name={name} />
           <span className="font-medium text-gray-700">&#123;</span>
+          <span className="italic text-gray-400">
+            {entries.length} {entries.length === 1 ? 'property' : 'properties'}
+            <span className="ml-1 font-medium text-gray-700">&nbsp;</span>
+          </span>
           <JsonFieldCopyButton value={value} />
         </div>
         {entries.map(([objKey, objVal]) => (
@@ -130,7 +134,7 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
     )
   }
 
-  public onCollapse: React.MouseEventHandler = (evt: React.MouseEvent): void => {
+  protected onCollapse: React.MouseEventHandler = (evt: React.MouseEvent): void => {
     evt.stopPropagation()
 
     const state: IState = this.state
@@ -144,7 +148,7 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
     this.setState({ tick: state.tick + 1 })
   }
 
-  public onExpand: React.MouseEventHandler = (evt: React.MouseEvent): void => {
+  protected onExpand: React.MouseEventHandler = (evt: React.MouseEvent): void => {
     evt.stopPropagation()
 
     const state: IState = this.state
