@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.lsp.lang.typescript" ---@type string
+
 local get_capabilities = require("ghc.lsp.common").get_capabilities
 local handlers = require("ghc.lsp.common").handlers
 local basic_on_attach = require("ghc.lsp.common").on_attach
@@ -150,6 +152,38 @@ local function on_attach(client, bufnr)
         })
       end,
       desc = "lsp: fix all",
+    },
+    {
+      modes = { "n" },
+      key = "<leader>cr",
+      callback = function()
+        local old_name = vim.fn.expand("<cword>")
+        vim.ui.input({ prompt = "New Name", default = old_name }, function(new_name)
+          if new_name == nil or old_name == new_name then
+            return
+          end
+
+          vim.api.nvim_feedkeys("l", "n", false)
+
+          local params = vim.lsp.util.make_position_params()
+          params.position.character = params.position.character + 1
+          params.newName = new_name
+
+          vim.lsp.buf_request(bufnr, "textDocument/rename", params, function(err, result, ctx, config)
+            if err then
+              eve.reporter.error({
+                from = __module_name__,
+                subject = "rename",
+                message = "Failed to rename.",
+                details = { err = err, result = result, ctx = ctx, config = config },
+              })
+              return
+            end
+            vim.lsp.handlers["textDocument/rename"](err, result, ctx, config)
+          end)
+        end)
+      end,
+      desc = "lsp: rename",
     },
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
