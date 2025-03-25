@@ -1,5 +1,10 @@
-export * from './ReactMarkdown'
 export * from './context'
 export * from './parser'
 export * from './renderer'
 export * from './util'
+
+export * from './ReactMarkdown'
+export * from './FootnoteDefinitions'
+export * from './NodesRenderer'
+export * from './MarkdownToc'
+export * from './MarkdownTocItem'

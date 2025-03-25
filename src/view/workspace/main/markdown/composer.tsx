@@ -1,14 +1,17 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
+import type { IHeadingToc } from '@yozora/ast-util'
+import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
-import { ReactMarkdown } from '@/component/markdown'
+import { MarkdownProvider, MarkdownToc, ReactMarkdown } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
 import { MarkdownModeEnum, useWorkspaceViewmodel } from '../../context'
 
 interface IProps {
   readonly ast: Root
+  readonly toc: IHeadingToc | undefined
 }
 
 const json = {
@@ -57,42 +60,56 @@ const json = {
 }
 
 export const MarkdownComposer: React.FC<IProps> = props => {
-  const { ast } = props
+  const { ast, toc } = props
   const siteVM = useSiteViewmodel()
   const workspaceVM = useWorkspaceViewmodel()
   const mode: MarkdownModeEnum = useStateValue(workspaceVM.markdownMode$)
   const theme: SiteTheme = useStateValue(siteVM.theme$)
 
-  switch (mode) {
-    case MarkdownModeEnum.PREVIEW:
-      return (
-        <div className="flex w-full justify-center">
-          <div className="w-[80rem] flex-shrink flex-grow-0 p-4">
-            <ReactMarkdown ast={ast} theme={theme} />
+  const showView: boolean = mode === 0 || (mode & MarkdownModeEnum.VIEW) !== 0
+  const showAst: boolean = (mode & MarkdownModeEnum.AST) !== 0
+  const showToc: boolean = (mode & MarkdownModeEnum.TOC) !== 0
+  const count: number = (showView ? 1 : 0) + (showAst ? 1 : 0) + (showToc ? 1 : 0)
+
+  return (
+    <MarkdownProvider ast={ast} theme={theme}>
+      <div className="flex h-[calc(100vh-5rem)] w-full items-start justify-center p-4">
+        {showView && (
+          <React.Fragment>
+            <div
+              className={cn('h-full w-[72rem] flex-initial', {
+                'p-2 overflow-auto': count > 1,
+              })}
+            >
+              <ReactMarkdown />
+            </div>
+            {count > 1 && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
+          </React.Fragment>
+        )}
+        {showAst && (
+          <React.Fragment>
+            <div
+              className={cn('h-full w-[48rem] flex-initial', {
+                'p-2 overflow-auto': count > 1,
+              })}
+            >
+              <Json json={ast || json} />
+            </div>
+            {showToc && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
+          </React.Fragment>
+        )}
+        {showToc && (
+          <div
+            className={cn('h-full w-[24rem] flex-initial', {
+              'p-2 overflow-auto': count > 1,
+            })}
+          >
+            <MarkdownToc toc={toc} />
           </div>
-        </div>
-      )
-    case MarkdownModeEnum.AST:
-      return (
-        <div className="flex w-full justify-center">
-          <div className="w-[60rem] flex-shrink flex-grow-0 p-4">
-            <Json json={ast || json} />
-          </div>
-        </div>
-      )
-    case MarkdownModeEnum.SBS:
-      return (
-        <div className="flex h-[calc(100vh-5rem)] items-start justify-center p-4">
-          <div className="h-full w-[80rem] flex-shrink flex-grow-0 overflow-auto">
-            <ReactMarkdown ast={ast} theme={theme} />
-          </div>
-          <div className="mx-6 h-full flex-shrink-0 border-r border-gray-300" />
-          <div className="h-full w-[60rem] flex-shrink flex-grow-0 overflow-auto">
-            <Json json={ast || json} />
-          </div>
-        </div>
-      )
-  }
+        )}
+      </div>
+    </MarkdownProvider>
+  )
 }
 
 MarkdownComposer.displayName = 'MarkdownComposer'

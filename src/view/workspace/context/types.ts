@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 import type { FiletreeMode } from '@/component/filetree/context/types'
 
+const bit: number = 1
+
 export enum MarkdownModeEnum {
-  AST = 'ast',
-  PREVIEW = 'preview',
-  SBS = 'sbs',
+  VIEW = bit << 0,
+  AST = bit << 1,
+  TOC = bit << 2,
 }
 
 export interface IWorkspaceItem {

@@ -22,7 +22,7 @@ const DEFAULT_WORKSPACE_DATA: IWorkspaceData = {
   workspaces: [],
   filetreeKeyword: '',
   filetreeMode: FiletreeMode.TREE,
-  markdownMode: MarkdownModeEnum.PREVIEW,
+  markdownMode: MarkdownModeEnum.VIEW,
   sidebarVisible: true,
   sidebarWidth: 300,
 }
@@ -100,9 +100,7 @@ export class WorkspaceViewModel extends ViewModel {
         ? filetreeMode
         : DEFAULT_WORKSPACE_DATA.filetreeMode
     const normalizedMarkdownMode: MarkdownModeEnum =
-      markdownMode === MarkdownModeEnum.AST ||
-      markdownMode === MarkdownModeEnum.PREVIEW ||
-      markdownMode === MarkdownModeEnum.SBS
+      typeof markdownMode === 'number' && markdownMode > 0 && Number.isInteger(markdownMode)
         ? markdownMode
         : DEFAULT_WORKSPACE_DATA.markdownMode
 

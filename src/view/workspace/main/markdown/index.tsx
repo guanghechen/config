@@ -1,6 +1,7 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
+import type { IHeadingToc } from '@yozora/ast-util'
 import cn from 'clsx'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
@@ -17,6 +18,7 @@ export const MarkdownContainer: React.FC = () => {
 
   const { data, error } = useFileResult(workspace, filepath, tick)
   const ast: Root | undefined = data?.ast
+  const toc: IHeadingToc | undefined = data?.toc
 
   const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
 
@@ -47,7 +49,7 @@ export const MarkdownContainer: React.FC = () => {
       {!!ast && (
         <div className="relative w-full">
           <MarkdownModeToggle />
-          <MarkdownComposer ast={ast} />
+          <MarkdownComposer ast={ast} toc={toc} />
         </div>
       )}
       <button
