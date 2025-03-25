@@ -10,6 +10,8 @@ import { astClasses } from '../context'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-inline-math
  */
 export class InlineMathRenderer extends React.Component<InlineMath> {
+  public static displayName = 'YozoraInlineMath'
+
   public override shouldComponentUpdate(nextProps: Readonly<InlineMath>): boolean {
     const props = this.props
     return props.value !== nextProps.value

@@ -38,3 +38,4 @@ export const FootnoteReferenceRenderer: React.FC<FootnoteReference> = props => {
     </sup>
   )
 }
+FootnoteReferenceRenderer.displayName = 'YozoraFootnoteReference'

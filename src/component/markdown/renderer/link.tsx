@@ -27,3 +27,4 @@ export const LinkRenderer: React.FC<Link> = props => {
     />
   )
 }
+LinkRenderer.displayName = 'YozoraLink'

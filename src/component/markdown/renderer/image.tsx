@@ -26,3 +26,4 @@ export const ImageRenderer: INodeRenderer<Image> = props => {
     />
   )
 }
+ImageRenderer.displayName = 'YozoraImage'

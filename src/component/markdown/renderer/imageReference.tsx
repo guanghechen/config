@@ -31,3 +31,4 @@ export const ImageReferenceRenderer: INodeRenderer<ImageReference> = props => {
     />
   )
 }
+ImageReferenceRenderer.displayName = 'YozoraImageReference'

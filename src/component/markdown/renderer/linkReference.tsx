@@ -28,3 +28,4 @@ export const LinkReferenceRenderer: React.FC<LinkReference> = props => {
     />
   )
 }
+LinkReferenceRenderer.displayName = 'YozoraLinkReference'

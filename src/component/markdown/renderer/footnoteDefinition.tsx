@@ -45,3 +45,4 @@ export const FootnoteDefinitionRenderer: React.FC<FootnoteDefinition> = props =>
     </div>
   )
 }
+FootnoteDefinitionRenderer.displayName = 'YozoraFootnoteDefinition'

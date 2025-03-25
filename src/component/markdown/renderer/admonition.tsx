@@ -10,6 +10,8 @@ import { NodesRenderer } from '../NodesRenderer'
  * Render `Admonition`.
  */
 export class AdmonitionRenderer extends React.Component<Admonition> {
+  public static displayName = 'YozoraAdmonition'
+
   public override shouldComponentUpdate(nextProps: Readonly<Admonition>): boolean {
     const props = this.props
     return props.children !== nextProps.children

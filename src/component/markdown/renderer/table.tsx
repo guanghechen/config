@@ -16,6 +16,8 @@ import { NodesRenderer } from '../NodesRenderer'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-table-cell
  */
 export class TableRenderer extends React.Component<Table> {
+  public static displayName = 'YozoraTable'
+
   public override shouldComponentUpdate(nextProps: Readonly<Table>): boolean {
     const props = this.props
     return !equals(props.columns, nextProps.columns) || !equals(props.children, nextProps.children)

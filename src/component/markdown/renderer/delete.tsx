@@ -11,6 +11,8 @@ import { NodesRenderer } from '../NodesRenderer'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-delete
  */
 export class DeleteRenderer extends React.Component<Delete> {
+  public static displayName = 'YozoraDelete'
+
   public override shouldComponentUpdate(nextProps: Readonly<Delete>): boolean {
     const props = this.props
     return props.children !== nextProps.children

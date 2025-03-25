@@ -10,6 +10,8 @@ import { astClasses } from '../context'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-thematic-break
  */
 export class ThematicBreakRenderer extends React.Component<ThematicBreak> {
+  public static displayName = 'YozoraThematicBreak'
+
   public override shouldComponentUpdate(): boolean {
     return false
   }

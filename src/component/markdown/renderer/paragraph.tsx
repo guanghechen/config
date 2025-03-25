@@ -12,6 +12,8 @@ import { NodesRenderer } from '../NodesRenderer'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-paragraph
  */
 export class ParagraphRenderer extends React.Component<Paragraph> {
+  public static displayName = 'YozoraParagraph'
+
   public override shouldComponentUpdate(nextProps: Readonly<Paragraph>): boolean {
     const props = this.props
     return props.children !== nextProps.children

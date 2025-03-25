@@ -10,6 +10,8 @@ import { astClasses } from '../context'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-math
  */
 export class MathRenderer extends React.Component<Math> {
+  public static displayName = 'YozoraMath'
+
   public override shouldComponentUpdate(nextProps: Readonly<Math>): boolean {
     const props = this.props
     return props.value !== nextProps.value

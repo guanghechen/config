@@ -11,6 +11,8 @@ import { NodesRenderer } from '../NodesRenderer'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-list-item
  */
 export class ListItemRenderer extends React.Component<ListItem> {
+  public static displayName = 'YozoraListItem'
+
   public override shouldComponentUpdate(nextProps: Readonly<ListItem>): boolean {
     const props = this.props
     return props.children !== nextProps.children
@@ -32,9 +34,6 @@ const cls = cx(
     position: 'relative',
     padding: 0,
     margin: 0,
-    '> :last-child': {
-      marginBottom: 0,
-    },
     [`> .${astClasses.paragraph} + .${astClasses.list}`]: {
       marginTop: '-1rem',
     },

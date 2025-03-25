@@ -11,6 +11,8 @@ import { NodesRenderer } from '../NodesRenderer'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-list
  */
 export class ListRenderer extends React.Component<List> {
+  public static displayName = 'YozoraList'
+
   public override shouldComponentUpdate(nextProps: Readonly<List>): boolean {
     const props = this.props
     return (

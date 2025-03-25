@@ -10,6 +10,8 @@ import { astClasses } from '../context'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-break
  */
 export class BreakRenderer extends React.Component<Break> {
+  public static displayName = 'YozoraBreak'
+
   public override shouldComponentUpdate(): boolean {
     return false
   }

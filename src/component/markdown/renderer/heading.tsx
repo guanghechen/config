@@ -17,6 +17,8 @@ interface IProps extends Heading {
  * @see https://www.npmjs.com/package/@yozora/tokenizer-heading
  */
 export class HeadingRenderer extends React.Component<IProps> {
+  public static displayName = 'YozoraHeading'
+
   public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
     const props = this.props
     return (

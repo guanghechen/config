@@ -11,6 +11,8 @@ import { NodesRenderer } from '../NodesRenderer'
  * @see https://www.npmjs.com/package/@yozora/tokenizer-emphasis
  */
 export class StrongRenderer extends React.Component<Strong> {
+  public static displayName = 'YozoraStrong'
+
   public override shouldComponentUpdate(nextProps: Readonly<Strong>): boolean {
     const props = this.props
     return props.children !== nextProps.children

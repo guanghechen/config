@@ -21,7 +21,7 @@ export const CodeRenderer: React.FC<Code> = props => {
 
   const meta: ICodeMetaData = React.useMemo<ICodeMetaData>(
     () => parseCodeMeta(props.meta || '', { showCodeLineno }),
-    [props.meta],
+    [props.meta, showCodeLineno],
   )
 
   const hasPreview: boolean = !!lang && !!meta.live
@@ -38,3 +38,5 @@ export const CodeRenderer: React.FC<Code> = props => {
     </div>
   )
 }
+
+CodeRenderer.displayName = 'YozoraCode'
