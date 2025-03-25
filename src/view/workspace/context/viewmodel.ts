@@ -1,4 +1,3 @@
-import type { IState } from '@guanghechen/react-viewmodel'
 import { State, Subscriber, ViewModel } from '@guanghechen/react-viewmodel'
 import { FiletreeMode } from '@/component/filetree/context/types'
 import type { IWorkspaceData, IWorkspaceItem } from './types'
@@ -29,21 +28,21 @@ const DEFAULT_WORKSPACE_DATA: IWorkspaceData = {
 }
 
 export class WorkspaceViewModel extends ViewModel {
-  public readonly filepath$: IState<string | null>
-  public readonly workspace$: IState<string | null>
-  public readonly workspaces$: IState<IWorkspaceItem[]>
+  public readonly filepath$: State<string | null>
+  public readonly workspace$: State<string | null>
+  public readonly workspaces$: State<IWorkspaceItem[]>
 
-  public readonly filetreeKeyword$: IState<string>
-  public readonly filetreeMode$: IState<FiletreeMode>
-  public readonly markdownMode$: IState<MarkdownModeEnum>
+  public readonly filetreeKeyword$: State<string>
+  public readonly filetreeMode$: State<FiletreeMode>
+  public readonly markdownMode$: State<MarkdownModeEnum>
 
-  public readonly sidebarVisible$: IState<boolean>
-  public readonly sidebarWidth$: IState<number>
+  public readonly sidebarVisible$: State<boolean>
+  public readonly sidebarWidth$: State<number>
 
-  public readonly filepathDirtyTick$: IState<number>
-  public readonly workspacesDirtyTick$: IState<number>
+  public readonly filepathDirtyTick$: State<number>
+  public readonly workspacesDirtyTick$: State<number>
 
-  public readonly mainScrollableContainer$: IState<HTMLDivElement | null>
+  public readonly mainScrollableContainer$: State<HTMLDivElement | null>
 
   public static fromData(data: Partial<IWorkspaceData> | undefined): WorkspaceViewModel {
     const {
