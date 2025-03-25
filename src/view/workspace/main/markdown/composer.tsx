@@ -12,6 +12,7 @@ import { MarkdownModeEnum, useWorkspaceViewmodel } from '../../context'
 interface IProps {
   readonly ast: Root
   readonly toc: IHeadingToc | undefined
+  readonly frontmatter: Record<string, unknown> | undefined
 }
 
 const json = {
@@ -60,7 +61,7 @@ const json = {
 }
 
 export const MarkdownComposer: React.FC<IProps> = props => {
-  const { ast, toc } = props
+  const { ast, toc, frontmatter } = props
   const siteVM = useSiteViewmodel()
   const workspaceVM = useWorkspaceViewmodel()
   const mode: MarkdownModeEnum = useStateValue(workspaceVM.markdownMode$)
@@ -100,11 +101,36 @@ export const MarkdownComposer: React.FC<IProps> = props => {
         )}
         {showToc && (
           <div
-            className={cn('h-full w-[24rem] flex-initial', {
-              'p-2 overflow-auto': count > 1,
+            className={cn('flex h-full justify-center', {
+              'w-[32rem] flex-col flex-initial': count > 1,
             })}
           >
-            <MarkdownToc toc={toc} />
+            <div
+              className={cn('flex-auto basis-0 overflow-auto p-2', {
+                'flex justify-center': count === 1,
+              })}
+            >
+              <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">
+                Table of Contents
+              </h3>
+              <MarkdownToc toc={toc} />
+            </div>
+            <div
+              className={cn('flex-shrink-0 border-gray-300', {
+                'mx-2 h-full border-r': count === 1,
+                'my-2 w-full border-b': count > 1,
+              })}
+            />
+            <div
+              className={cn('flex-auto basis-0 overflow-auto p-2', {
+                'flex justify-center': count === 1,
+              })}
+            >
+              <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">
+                Frontmatter
+              </h3>
+              <Json json={frontmatter} />
+            </div>
           </div>
         )}
       </div>

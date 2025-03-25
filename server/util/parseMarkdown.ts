@@ -12,14 +12,17 @@ import Parser from '@yozora/parser'
 import { existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { parse as parseYaml } from 'yaml'
 import state from '../state'
 import { toSearch } from './url'
 
-const srcEncoding: BufferEncoding = 'utf8'
-const srcFileRegex: RegExp = new RegExp(`(?:^|\\b)${'sourcefile'}="([^"]+)"`, 'i')
-const srcLineRegex: RegExp = new RegExp(`(?:^|\\b)${'sourceline'}="([^"]+)"`, 'i')
-const indentRegex: RegExp = /^\s*/
-const lineRegex: RegExp = /\r|\n|\n\r/g
+const regexes = {
+  frontmatter: /^\s*[-]{3,}\n\s*([\s\S]*?)[-]{3,}\n/,
+  indent: /^\s*/,
+  line: /\r|\n|\n\r/g,
+  srcFile: new RegExp(`(?:^|\\b)${'sourcefile'}="([^"]+)"`, 'i'),
+  srcLine: new RegExp(`(?:^|\\b)${'sourceline'}="([^"]+)"`, 'i'),
+}
 
 const parser = new Parser({
   defaultParseOptions: {
@@ -39,7 +42,11 @@ async function resolveRefPath(curDir: string, refPath: string): Promise<string |
   return null
 }
 
-async function parseMarkdown(filepath: string): Promise<{ ast: Root; toc: IHeadingToc }> {
+async function parseMarkdown(filepath: string): Promise<{
+  readonly ast: Root
+  readonly toc: IHeadingToc
+  readonly frontmatter: Record<string, unknown>
+}> {
   if (!existsSync(filepath)) throw new Error(`File not found: ${filepath}.`)
 
   const stat = statSync(filepath)
@@ -51,7 +58,12 @@ async function parseMarkdown(filepath: string): Promise<{ ast: Root; toc: IHeadi
   }
 
   const dirpath: string = path.dirname(filepath)
-  const content: string = await fs.readFile(filepath, 'utf8')
+  const rawContent: string = await fs.readFile(filepath, 'utf8')
+
+  const match: string[] | null = regexes.frontmatter.exec(rawContent) ?? ['', '']
+  const frontmatter: Record<string, unknown> = match[1] ? parseYaml(match[1]) : {}
+  const content: string = rawContent.slice(match[0].length)
+
   let ast: Root = parser.parse(content, {
     formatUrl: (url: string) => {
       if (url[0] === '.' || url[0] === '/') {
@@ -68,33 +80,30 @@ async function parseMarkdown(filepath: string): Promise<{ ast: Root; toc: IHeadi
     const { meta } = o as Code
     if (meta == null) return o
 
-    const sourcefileMatch = srcFileRegex.exec(meta!)
+    const sourcefileMatch = regexes.srcFile.exec(meta!)
     if (sourcefileMatch == null) return o
 
     const relativeSrcPath: string = sourcefileMatch[1]
     const refPath: string | null = await resolveRefPath(dirpath, relativeSrcPath)
     if (refPath === null) return o
 
-    const rawContent = await fs.readFile(refPath)
-    if (rawContent === null) return o
-
-    const content = rawContent.toString(srcEncoding)
+    const content = await fs.readFile(refPath, 'utf8')
     let value: string = content
 
-    const srcLineMatch = srcLineRegex.exec(meta!)
+    const srcLineMatch = regexes.srcLine.exec(meta!)
     if (srcLineMatch != null) {
       const lineIntervals: Array<[number, number]> = collectIntervals(srcLineMatch[1])
 
       let commonIndent = Number.MAX_SAFE_INTEGER
       if (lineIntervals.length > 0) {
-        const lines: string[] = content.split(lineRegex)
+        const lines: string[] = content.split(regexes.line)
         const requiredLines: string[] = []
         for (const [x, y] of lineIntervals) {
           if (x < 0) continue
           if (x >= lines.length) break
           for (let i = x - 1; i < y; ++i) {
             if (commonIndent > 0) {
-              const indent = indentRegex.exec(lines[i])![0].length
+              const indent = regexes.indent.exec(lines[i])![0].length
               if (indent < lines[i].length && indent < commonIndent) {
                 commonIndent = indent
               }
@@ -122,7 +131,7 @@ async function parseMarkdown(filepath: string): Promise<{ ast: Root; toc: IHeadi
   })
 
   const toc: IHeadingToc = calcHeadingToc(ast, 'heading-')
-  return { ast, toc }
+  return { ast, toc, frontmatter }
 }
 
 export default parseMarkdown

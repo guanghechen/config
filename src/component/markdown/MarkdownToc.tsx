@@ -11,9 +11,6 @@ export const MarkdownToc: React.FC<IProps> = props => {
 
   return (
     <div className="h-full overflow-auto p-4">
-      <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">
-        Table of Contents
-      </h3>
       {toc ? (
         <div className="toc-container">
           {toc.children.map(item => (

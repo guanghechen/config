@@ -4,6 +4,7 @@ import type { IHeadingToc } from '@yozora/ast-util'
 export interface IMarkdownData {
   readonly ast: Root
   readonly toc: IHeadingToc
+  readonly frontmatter: Record<string, unknown>
 }
 
 export interface IFetchFileResult {

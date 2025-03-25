@@ -19,6 +19,7 @@ export const MarkdownContainer: React.FC = () => {
   const { data, error } = useFileResult(workspace, filepath, tick)
   const ast: Root | undefined = data?.ast
   const toc: IHeadingToc | undefined = data?.toc
+  const frontmatter: Record<string, unknown> | undefined = data?.frontmatter
 
   const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
 
@@ -49,7 +50,7 @@ export const MarkdownContainer: React.FC = () => {
       {!!ast && (
         <div className="relative w-full">
           <MarkdownModeToggle />
-          <MarkdownComposer ast={ast} toc={toc} />
+          <MarkdownComposer ast={ast} toc={toc} frontmatter={frontmatter} />
         </div>
       )}
       <button
