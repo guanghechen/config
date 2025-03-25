@@ -1,7 +1,6 @@
 local get_capabilities = require("ghc.lsp.common").get_capabilities
 local handlers = require("ghc.lsp.common").handlers
 local locate_lsp_root = require("ghc.lsp.common").locate_lsp_root
-local on_attach = require("ghc.lsp.common").on_attach
 local on_init = require("ghc.lsp.common").on_init
 
 ---@type string[]
@@ -17,7 +16,6 @@ return function()
   return {
     capabilities = capabilities,
     handlers = handlers,
-    on_attach = on_attach,
     on_init = on_init,
     filetypes_exclude = { "markdown" },
     filetypes_include = { "css", "javascriptreact", "javascript.jsx", "typescriptreact", "typescript.tsx" },

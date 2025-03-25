@@ -220,6 +220,7 @@
     "cursorcolumn",
     "cursorline",
     "cursorlineopt",
+    "cword",
     "dapui",
     "datamap",
     "dbclick",
