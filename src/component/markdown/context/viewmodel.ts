@@ -1,7 +1,8 @@
 import equals from '@guanghechen/equal'
 import { Computed, State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
-import { calcDefinitionMap, calcFootnoteDefinitionMap } from '@yozora/ast-util'
+import type { IHeadingToc } from '@yozora/ast-util'
+import { calcDefinitionMap, calcFootnoteDefinitionMap, calcHeadingToc } from '@yozora/ast-util'
 import type { INodeRendererMap } from './types'
 
 export interface IMarkdownViewModelProps {
@@ -33,11 +34,13 @@ export interface IMarkdownViewModelProps {
 
 export class MarkdownViewModel extends ViewModel {
   public readonly ast$: State<Root>
+  public readonly toc$: Computed<IHeadingToc>
+  public readonly definitionMap$: Computed<Readonly<Record<string, Definition>>>
+  public readonly footnoteDefinitionMap$: Computed<Readonly<Record<string, FootnoteDefinition>>>
+
   public readonly rendererMap$: State<Readonly<INodeRendererMap>>
   public readonly showCodeLineno$: State<boolean>
   public readonly themeScheme$: State<string>
-  public readonly definitionMap$: Computed<Readonly<Record<string, Definition>>>
-  public readonly footnoteDefinitionMap$: Computed<Readonly<Record<string, FootnoteDefinition>>>
 
   constructor(props: IMarkdownViewModelProps) {
     super()
@@ -52,6 +55,10 @@ export class MarkdownViewModel extends ViewModel {
     } = props
 
     const ast$: State<Root> = new State<Root>(ast, { equals })
+    const toc$ = Computed.fromObservables([ast$], ([ast]): IHeadingToc => {
+      const toc: IHeadingToc = calcHeadingToc(ast, 'heading-')
+      return toc
+    })
     const definitionMap$ = Computed.fromObservables(
       [ast$],
       ([ast]): Readonly<Record<string, Definition>> => {
@@ -79,8 +86,10 @@ export class MarkdownViewModel extends ViewModel {
     )
 
     this.ast$ = ast$
+    this.toc$ = toc$
     this.definitionMap$ = definitionMap$
     this.footnoteDefinitionMap$ = footnoteDefinitionMap$
+
     this.rendererMap$ = new State(rendererMap)
     this.showCodeLineno$ = new State<boolean>(showCodeLineno)
     this.themeScheme$ = new State<string>(themeScheme)
