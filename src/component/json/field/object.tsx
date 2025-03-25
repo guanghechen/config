@@ -61,10 +61,10 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
             </span>
             <JsonFieldKey name={name} />
             <span className="font-medium text-gray-700">&#123;</span>
-            <span className="italic text-gray-400">
+            <span className="px-1 text-sm italic text-gray-400">
               {entries.length} {entries.length === 1 ? 'property' : 'properties'}
-              <span className="ml-1 font-medium text-gray-700">&#125;</span>
             </span>
+            <span className="font-medium text-gray-700">&#125;</span>
             <JsonFieldCopyButton value={value} />
           </div>
         </div>
@@ -79,10 +79,10 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
           </span>
           <JsonFieldKey name={name} />
           <span className="font-medium text-gray-700">&#123;</span>
-          <span className="italic text-gray-400">
+          <span className="px-1 text-sm italic text-gray-400">
             {entries.length} {entries.length === 1 ? 'property' : 'properties'}
-            <span className="ml-1 font-medium text-gray-700">&nbsp;</span>
           </span>
+          <span className="font-medium text-gray-700">&nbsp;</span>
           <JsonFieldCopyButton value={value} />
         </div>
         {entries.map(([objKey, objVal]) => (
