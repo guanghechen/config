@@ -18,7 +18,7 @@ export const MarkdownModeToggle: React.FC = () => {
         className={cn(
           'box-border px-3 transition-all duration-200 rounded-l-lg',
           mode === 0 || (mode & MarkdownModeEnum.VIEW) !== 0
-            ? 'bg-emerald-500 bg-opacity-90 font-medium text-white shadow-inner'
+            ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
         onClick={() => setMode(m => m ^ MarkdownModeEnum.VIEW)}
@@ -29,7 +29,7 @@ export const MarkdownModeToggle: React.FC = () => {
         className={cn(
           'box-border px-3 transition-all duration-200',
           (mode & MarkdownModeEnum.AST) !== 0
-            ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
+            ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
         onClick={() => setMode(m => m ^ MarkdownModeEnum.AST)}
@@ -38,14 +38,25 @@ export const MarkdownModeToggle: React.FC = () => {
       </button>
       <button
         className={cn(
-          'box-border px-3 transition-all duration-200 rounded-r-lg',
+          'box-border px-3 transition-all duration-200',
           (mode & MarkdownModeEnum.TOC) !== 0
-            ? 'bg-violet-500 bg-opacity-90 font-medium text-white shadow-inner'
+            ? 'bg-sky-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
         onClick={() => setMode(m => m ^ MarkdownModeEnum.TOC)}
       >
         toc
+      </button>
+      <button
+        className={cn(
+          'box-border px-3 transition-all duration-200 rounded-r-lg',
+          (mode & MarkdownModeEnum.FM) !== 0
+            ? 'bg-teal-500 bg-opacity-90 font-medium text-white shadow-inner'
+            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+        )}
+        onClick={() => setMode(m => m ^ MarkdownModeEnum.FM)}
+      >
+        fm
       </button>
     </div>
   )

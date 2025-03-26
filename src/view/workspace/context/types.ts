@@ -7,6 +7,7 @@ export enum MarkdownModeEnum {
   VIEW = bit << 0,
   AST = bit << 1,
   TOC = bit << 2,
+  FM = bit << 3,
 }
 
 export interface IWorkspaceItem {

@@ -71,7 +71,8 @@ export const MarkdownComposer: React.FC<IProps> = props => {
   const showView: boolean = mode === 0 || (mode & MarkdownModeEnum.VIEW) !== 0
   const showAst: boolean = (mode & MarkdownModeEnum.AST) !== 0
   const showToc: boolean = (mode & MarkdownModeEnum.TOC) !== 0
-  const count: number = (showView ? 1 : 0) + (showAst ? 1 : 0) + (showToc ? 1 : 0)
+  const showFm: boolean = (mode & MarkdownModeEnum.FM) !== 0
+  const columns: number = (showView ? 1 : 0) + (showAst ? 1 : 0) + (showToc || showFm ? 1 : 0)
 
   return (
     <MarkdownProvider ast={ast} theme={theme}>
@@ -80,7 +81,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
           <React.Fragment>
             <div
               className={cn('h-full w-[72rem] flex-initial', {
-                'p-2 overflow-auto': count > 1,
+                'p-2 overflow-auto': columns > 1,
               })}
             >
               <ReactMarkdownContent
@@ -90,52 +91,59 @@ export const MarkdownComposer: React.FC<IProps> = props => {
               />
               <ReactMarkdown />
             </div>
-            {count > 1 && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
+            {columns > 1 && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
           </React.Fragment>
         )}
         {showAst && (
           <React.Fragment>
             <div
               className={cn('h-full w-[48rem] flex-initial', {
-                'p-2 overflow-auto': count > 1,
+                'p-2 overflow-auto': columns > 1,
               })}
             >
               <Json json={ast || json} />
             </div>
-            {showToc && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
+            {(showToc || showFm) && (
+              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />
+            )}
           </React.Fragment>
         )}
-        {showToc && (
+        {(showToc || showFm) && (
           <div
             className={cn('flex h-full justify-center', {
-              'w-[32rem] flex-col flex-initial': count > 1,
+              'w-[32rem] flex-col flex-initial': columns > 1,
             })}
           >
             <div
               className={cn('flex-auto basis-0 overflow-auto p-2', {
-                'flex justify-center': count === 1,
+                'flex justify-center': columns === 1,
+                hidden: !showToc,
               })}
             >
               <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">
                 Table of Contents
               </h3>
-              <MarkdownToc toc={toc} />
+              <div>
+                <MarkdownToc toc={toc} />
+              </div>
             </div>
             <div
               className={cn('flex-shrink-0 border-gray-300', {
-                'mx-2 h-full border-r': count === 1,
-                'my-2 w-full border-b': count > 1,
+                'mx-2 h-full border-r': columns === 1,
+                'my-2 w-full border-b': columns > 1,
+                hidden: !showToc || !showFm,
               })}
             />
             <div
               className={cn('flex-auto basis-0 overflow-auto p-2', {
-                'flex justify-center': count === 1,
+                'flex justify-center': columns === 1,
+                hidden: !showFm,
               })}
             >
               <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">
                 Frontmatter
               </h3>
-              <Json json={frontmatter} />
+              <Json json={frontmatter} initialCollapsed="expanded" />
             </div>
           </div>
         )}
