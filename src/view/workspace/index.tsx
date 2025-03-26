@@ -2,6 +2,7 @@ import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/constant/classes'
 import { WorkspaceContextProvider, useWorkspaceViewmodel } from './context'
+import WorkspaceFloat from './float'
 import WorkspaceMain from './main'
 import WorkspaceSidebar from './sidebar'
 import WorkspaceTopbar from './topbar'
@@ -27,6 +28,7 @@ export const WorkspaceContaienr: React.FC = () => {
           <WorkspaceMain />
         </div>
       </div>
+      <WorkspaceFloat />
     </div>
   )
 }
