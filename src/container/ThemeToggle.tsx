@@ -26,7 +26,7 @@ export const ThemeToggle: React.FC = () => {
       >
         <div className="absolute left-1 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-500 ease-in-out dark:left-[29px] dark:bg-gray-100" />
         <svg
-          className="absolute left-[6px] h-4 w-4 text-amber-500 opacity-100 transition-all duration-300 ease-in-out dark:translate-x-6 dark:opacity-0"
+          className="absolute left-[6px] h-4 w-4 text-yellow-400 opacity-100 transition-all duration-300 ease-in-out dark:translate-x-6 dark:opacity-0"
           viewBox="0 0 24 24"
           fill="currentColor"
           xmlns="http://www.w3.org/2000/svg"
@@ -35,12 +35,16 @@ export const ThemeToggle: React.FC = () => {
         </svg>
         <div className="absolute right-[6px] h-4 w-4 rounded-full bg-gray-800/0 transition-all duration-300 ease-in-out dark:bg-gray-800/40">
           <svg
-            className="h-4 w-4 text-gray-200 opacity-0 transition-all duration-300 ease-in-out dark:opacity-100"
+            className="h-4 w-4 text-blue-400 opacity-0 transition-all duration-300 ease-in-out dark:opacity-100"
             viewBox="0 0 24 24"
             fill="currentColor"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M12.979 3.5a.75.75 0 0 0-.958.713c.077 3.267-2.21 6.165-5.397 6.83a.75.75 0 0 0-.565.842C6.575 17.182 10.59 20.5 15 20.5c4.244 0 7.5-3.838 7.5-8.253 0-4.823-4.675-9.092-9.521-8.747zM14.5 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zm-1.5-5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"
+            />
           </svg>
         </div>
       </label>
