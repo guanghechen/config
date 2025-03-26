@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-import type { FiletreeMode } from '@/component/filetree/context/types'
+import type { FileTreeModeEnum } from '@/component/filetree/context/types'
 
 const bit: number = 1
 
@@ -25,7 +25,7 @@ export interface IWorkspaceData {
   readonly workspaces: IWorkspaceItem[]
 
   readonly filetreeKeyword: string
-  readonly filetreeMode: FiletreeMode
+  readonly filetreeMode: FileTreeModeEnum
   readonly jsonMode: JsonModeEnum
   readonly markdownMode: MarkdownModeEnum
 

@@ -1,5 +1,5 @@
 import { State, Subscriber, ViewModel } from '@guanghechen/react-viewmodel'
-import { FiletreeMode } from '@/component/filetree/context/types'
+import { FileTreeModeEnum } from '@/component/filetree/context/types'
 import type { IWorkspaceData, IWorkspaceItem } from './types'
 import { JsonModeEnum, MarkdownModeEnum } from './types'
 
@@ -9,7 +9,7 @@ interface IProps {
   readonly workspaces: IWorkspaceItem[]
 
   readonly filetreeKeyword: string
-  readonly filetreeMode: FiletreeMode
+  readonly filetreeMode: FileTreeModeEnum
   readonly jsonMode: JsonModeEnum
   readonly markdownMode: MarkdownModeEnum
 
@@ -22,7 +22,7 @@ const DEFAULT_WORKSPACE_DATA: IWorkspaceData = {
   workspace: null,
   workspaces: [],
   filetreeKeyword: '',
-  filetreeMode: FiletreeMode.TREE,
+  filetreeMode: FileTreeModeEnum.TREE,
   jsonMode: JsonModeEnum.VIEW,
   markdownMode: MarkdownModeEnum.VIEW,
   sidebarVisible: true,
@@ -35,7 +35,7 @@ export class WorkspaceViewModel extends ViewModel {
   public readonly workspaces$: State<IWorkspaceItem[]>
 
   public readonly filetreeKeyword$: State<string>
-  public readonly filetreeMode$: State<FiletreeMode>
+  public readonly filetreeMode$: State<FileTreeModeEnum>
   public readonly jsonMode$: State<JsonModeEnum>
   public readonly markdownMode$: State<MarkdownModeEnum>
 
@@ -101,8 +101,8 @@ export class WorkspaceViewModel extends ViewModel {
     }
 
     const normalizedFiletreeKeyword = typeof filetreeKeyword === 'string' ? filetreeKeyword : ''
-    const normalizedFiletreeMode: FiletreeMode =
-      filetreeMode === FiletreeMode.TREE || filetreeMode === FiletreeMode.LIST
+    const normalizedFiletreeMode: FileTreeModeEnum =
+      filetreeMode === FileTreeModeEnum.TREE || filetreeMode === FileTreeModeEnum.LIST
         ? filetreeMode
         : DEFAULT_WORKSPACE_DATA.filetreeMode
     const normalizedJsonMode: JsonModeEnum =
@@ -149,7 +149,7 @@ export class WorkspaceViewModel extends ViewModel {
     this.workspaces$ = new State<IWorkspaceItem[]>(workspaces)
 
     this.filetreeKeyword$ = new State<string>(filetreeKeyword)
-    this.filetreeMode$ = new State<FiletreeMode>(filetreeMode)
+    this.filetreeMode$ = new State<FileTreeModeEnum>(filetreeMode)
     this.jsonMode$ = new State<JsonModeEnum>(jsonMode)
     this.markdownMode$ = new State<MarkdownModeEnum>(markdownMode)
 
@@ -191,7 +191,7 @@ export class WorkspaceViewModel extends ViewModel {
     const workspace: string | null = this.workspace$.getSnapshot()
     const workspaces: IWorkspaceItem[] = this.workspaces$.getSnapshot()
     const filetreeKeyword: string = this.filetreeKeyword$.getSnapshot()
-    const filetreeMode: FiletreeMode = this.filetreeMode$.getSnapshot()
+    const filetreeMode: FileTreeModeEnum = this.filetreeMode$.getSnapshot()
     const jsonMode: JsonModeEnum = this.jsonMode$.getSnapshot()
     const markdownMode: MarkdownModeEnum = this.markdownMode$.getSnapshot()
     const sidebarVisible: boolean = this.sidebarVisible$.getSnapshot()

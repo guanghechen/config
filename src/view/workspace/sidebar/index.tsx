@@ -66,7 +66,7 @@ export const WorkspaceSidebar: React.FC = () => {
       className={cn(
         'h-full box-border transition-all duration-300 ease-in-out',
         classes.container,
-        visible ? 'opacity-100' : 'w-0 overflow-hidden opacity-0',
+        visible ? 'opacity-100' : 'w-0 opacity-0',
       )}
       style={{ width: visible ? width : 0 }}
     >

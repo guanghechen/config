@@ -1,6 +1,7 @@
 export * from './context'
 export * from './FileList'
 export * from './FileTree'
+export * from './FileTreeMode'
 export * from './FileTreeNode'
 export * from './FileTreeComposer'
 export * from './FileTreeSearch'
