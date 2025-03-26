@@ -7,7 +7,7 @@ local K = eve.command.definitions ---@type eve.builtin.command.definitions
 ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 
 --- quick access widgets (diagnostic, explorer, terminal) -----
-ms({ "n", "t", "v" }, "<leader>`", K.ux.resume_last_widget)
+ms({ "n", "v" }, "<leader>`", K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>;", K.ai.copilot_chat_toggle)
 ms({ "n", "v" }, "<leader>'", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
