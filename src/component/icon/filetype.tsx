@@ -1,25 +1,19 @@
 import React from 'react'
-import { FileIcon } from './material'
 
-export interface IIconProps {
-  readonly fill?: string
-  readonly className?: string
+export const ChevronDownIcon: React.FC<{ className?: string }> = () => {
+  return <span className="mr-2 text-gray-500"> </span>
 }
 
-export const MarkdownIcon: React.FC<IIconProps> = props => {
-  const { fill = 'currentColor', className } = props
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      height="24px"
-      viewBox="0 -960 960 960"
-      width="24px"
-      fill={fill}
-      className={className}
-    >
-      <path d="m640-360 120-120-42-43-48 48v-125h-60v125l-48-48-42 43 120 120ZM160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z" />
-    </svg>
-  )
+export const ChevronRightIcon: React.FC<{ className?: string }> = () => {
+  return <span className="mr-2 text-gray-500"> </span>
+}
+
+export const FolderIcon: React.FC<{ className?: string }> = () => {
+  return <span className="mr-2 text-blue-500"> </span>
+}
+
+export const FolderOpenIcon: React.FC<{ className?: string }> = () => {
+  return <span className="mr-2 text-blue-500"> </span>
 }
 
 export const FileTypeIcon: React.FC<{ extname: string }> = props => {
@@ -27,8 +21,14 @@ export const FileTypeIcon: React.FC<{ extname: string }> = props => {
 
   switch (extname) {
     case '.md':
-      return <MarkdownIcon className="text-gray-500" />
+      return <span className="mx-1 text-gray-700">󰍔 </span>
+    case '.json':
+      return <span className="mx-1 text-yellow-700">󰘦 </span>
+    case '.png':
+    case '.jpg':
+    case '.jpeg':
+      return <span className="mx-1 text-blue-700">󰉏 </span>
     default:
-      return <FileIcon className="text-blue-400" />
+      return <span className="mx-1 text-pink-700">󰈚 </span>
   }
 }

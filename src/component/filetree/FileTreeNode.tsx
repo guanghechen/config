@@ -1,11 +1,11 @@
 import React from 'react'
-import { FileTypeIcon } from '@/component/icon/filetype'
 import {
   ChevronDownIcon,
   ChevronRightIcon,
+  FileTypeIcon,
   FolderIcon,
   FolderOpenIcon,
-} from '@/component/icon/material'
+} from '@/component/icon/filetype'
 import type { IFileTreeNode } from './context'
 
 interface IProps {
