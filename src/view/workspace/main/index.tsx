@@ -2,12 +2,14 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useWorkspaceViewmodel } from '../context'
 
+const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
 const MarkdownContainer = React.lazy(() => import('./markdown'))
 const UnknownContainer = React.lazy(() => import('./unknown'))
 
 export const WorkspaceMain: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
+  const workspace: string | null = useStateValue(workspaceVM.workspace$)
   const filepath = useStateValue(workspaceVM.filepath$)
 
   const extname: string = React.useMemo<string>(() => {
@@ -17,15 +19,20 @@ export const WorkspaceMain: React.FC = () => {
   }, [filepath])
 
   const container: React.ReactElement = React.useMemo<React.ReactElement>(() => {
-    switch (extname) {
+    switch (extname.toLowerCase()) {
       case '.json':
         return <JsonContainer />
       case '.md':
         return <MarkdownContainer />
+      case '.png':
+      case '.jpg':
+      case '.jpeg':
+      case '.svg':
+        return <ImageContainer filepath={filepath} workspace={workspace} />
       default:
         return <UnknownContainer extname={extname} filepath={filepath} />
     }
-  }, [filepath, extname])
+  }, [extname, filepath, workspace])
 
   return (
     <div className="box-border flex h-full justify-center">
