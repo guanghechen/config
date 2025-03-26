@@ -286,6 +286,7 @@ return {
       ------------------------------------------------------------------------------------------------
 
       behaviour = {
+        auto_apply_diff_after_generation = true,
         auto_focus_sidebar = true,
         auto_suggestions = false,
         auto_suggestions_respect_ignore = true,
@@ -357,6 +358,10 @@ return {
         submit = {
           normal = "<CR>",
           insert = "<C-a>s",
+        },
+        cancel = {
+          normal = { "<C-c>", "q" },
+          insert = { "<C-c>" },
         },
         suggestion = {
           accept = "<C-cr>",
