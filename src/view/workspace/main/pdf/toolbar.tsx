@@ -1,5 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
+import { CopyButton } from '@/component/CopyButton'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -10,6 +11,7 @@ import {
 } from '@/component/icon/material'
 
 interface IProps {
+  readonly filepath: string | null
   readonly pages: number
   readonly pageno: number
   readonly scale: number
@@ -21,7 +23,17 @@ interface IProps {
 }
 
 export const PDFToolbar: React.FC<IProps> = props => {
-  const { pages, pageno, scale, multiview, setPageno, setScale, setMultiview, className } = props
+  const {
+    filepath,
+    pages,
+    pageno,
+    scale,
+    multiview,
+    setPageno,
+    setScale,
+    setMultiview,
+    className,
+  } = props
 
   const onGotoPage = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -41,6 +53,14 @@ export const PDFToolbar: React.FC<IProps> = props => {
     [setScale],
   )
 
+  const onZoomIn = React.useCallback((): void => {
+    setScale(prev => Math.min(prev + 0.2, 3))
+  }, [setScale])
+
+  const onZoomOut = React.useCallback((): void => {
+    setScale(prev => Math.max(prev - 0.2, 0.5))
+  }, [setScale])
+
   const onViewModeToggle = React.useCallback((): void => {
     setMultiview(prev => !prev)
   }, [setMultiview])
@@ -48,15 +68,30 @@ export const PDFToolbar: React.FC<IProps> = props => {
   return (
     <div
       className={cn(
-        'flex flex-col md:flex-row justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm',
+        'flex justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm',
         'border border-gray-200 dark:border-gray-700',
         className,
       )}
     >
+      <div className="mb-2 inline-flex flex-initial items-center overflow-hidden md:mb-0 md:ml-4">
+        <h2 className="truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
+          {filepath}
+        </h2>
+        <div className="ml-2 w-28 p-2">
+          <CopyButton
+            className={cn(
+              'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+              'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
+              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            )}
+            calcContentForCopy={() => filepath || ''}
+          />
+        </div>
+      </div>
       <div className="mb-2 flex items-center space-x-2 md:mb-0">
         <button
           className={cn(
-            'p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
@@ -84,7 +119,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
         </div>
         <button
           className={cn(
-            'p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
@@ -99,11 +134,11 @@ export const PDFToolbar: React.FC<IProps> = props => {
       <div className="flex items-center space-x-2">
         <button
           className={cn(
-            'p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
-          onClick={() => setScale(prev => Math.max(prev - 0.2, 0.5))}
+          onClick={onZoomOut}
           aria-label="Zoom out"
         >
           <ZoomOutIcon />
@@ -125,11 +160,11 @@ export const PDFToolbar: React.FC<IProps> = props => {
         </div>
         <button
           className={cn(
-            'p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
-          onClick={() => setScale(prev => Math.min(prev + 0.2, 3))}
+          onClick={onZoomIn}
           aria-label="Zoom in"
         >
           <ZoomInIcon />
