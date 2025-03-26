@@ -58,6 +58,8 @@ export const CodeSource: React.FC<IProps> = props => {
             value={code}
             collapsed={false}
             showLineNo={showLineNo}
+            className={PRESET_CLASSES.scrollbar}
+            codesClassName={PRESET_CLASSES.scrollbar}
           />
         </div>
       )}

@@ -96,6 +96,8 @@ export const JsonComposer: React.FC<IProps> = props => {
               value={code}
               collapsed={false}
               showLineNo={true}
+              className={PRESET_CLASSES.scrollbar}
+              codesClassName={PRESET_CLASSES.scrollbar}
             />
           </div>
         </React.Fragment>
