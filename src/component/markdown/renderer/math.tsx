@@ -1,5 +1,6 @@
 import type { Math } from '@yozora/ast'
 import { MathJaxNode } from '@yozora/react-mathjax'
+import cn from 'clsx'
 import React from 'react'
 import { astClasses } from '../context'
 
@@ -18,6 +19,12 @@ export class MathRenderer extends React.Component<Math> {
   }
 
   public override render(): React.ReactElement {
-    return <MathJaxNode className={astClasses.math} inline={false} formula={this.props.value} />
+    return (
+      <MathJaxNode
+        className={cn(astClasses.math, 'text-blue-300')}
+        inline={false}
+        formula={this.props.value}
+      />
+    )
   }
 }
