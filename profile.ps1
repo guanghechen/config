@@ -1,5 +1,6 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 Set-PSReadLineOption -EditMode Vi
+Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineOption -Colors @{
   InlinePrediction        = "DarkGray"
   Command                 = "Yellow"
