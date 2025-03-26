@@ -5,6 +5,7 @@ import { useWorkspaceViewmodel } from '../context'
 const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
 const MarkdownContainer = React.lazy(() => import('./markdown'))
+const PDFContainer = React.lazy(() => import('./pdf'))
 const UnknownContainer = React.lazy(() => import('./unknown'))
 
 export const WorkspaceMain: React.FC = () => {
@@ -24,6 +25,8 @@ export const WorkspaceMain: React.FC = () => {
         return <JsonContainer />
       case '.md':
         return <MarkdownContainer />
+      case '.pdf':
+        return <PDFContainer filepath={filepath} workspace={workspace} />
       case '.png':
       case '.jpg':
       case '.jpeg':

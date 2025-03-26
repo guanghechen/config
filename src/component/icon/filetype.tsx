@@ -24,6 +24,8 @@ export const FileTypeIcon: React.FC<{ extname: string }> = props => {
       return <span className="mx-1 text-gray-700">󰍔 </span>
     case '.json':
       return <span className="mx-1 text-yellow-700">󰘦 </span>
+    case '.pdf':
+      return <span className="mx-1 text-yellow-700"> </span>
     case '.png':
     case '.jpg':
     case '.jpeg':

@@ -212,3 +212,67 @@ export const TerminalIcon: React.FC<IIconProps> = props => {
     </svg>
   )
 }
+
+export const ViewPageByPageIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M450-500q21 0 35.5-14.5T500-550q0-21-14.5-35.5T450-600q-21 0-35.5 14.5T400-550q0 21 14.5 35.5T450-500Zm7 180 223-223-57-57-223 223 57 57Zm173 0q21 0 35.5-14.5T680-370q0-21-14.5-35.5T630-420q-21 0-35.5 14.5T580-370q0 21 14.5 35.5T630-320Zm130 120H320q-33 0-56.5-23.5T240-280v-560q0-33 23.5-56.5T320-920h280l240 240v400q0 33-23.5 56.5T760-200ZM560-640v-200H320v560h440v-360H560ZM160-40q-33 0-56.5-23.5T80-120v-560h80v560h440v80H160Zm160-800v200-200 560-560Z" />
+    </svg>
+  )
+}
+
+export const ViewStreamIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M760-280v-160H200v160h560Zm0-240v-160H200v160h560ZM200-200q-33 0-56.5-23.5T120-280v-400q0-33 23.5-56.5T200-760h560q33 0 56.5 23.5T840-680v400q0 33-23.5 56.5T760-200H200Z" />
+    </svg>
+  )
+}
+
+export const ZoomInIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Zm-40-60v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80Z" />
+    </svg>
+  )
+}
+
+export const ZoomOutIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400ZM280-540v-80h200v80H280Z" />
+    </svg>
+  )
+}
