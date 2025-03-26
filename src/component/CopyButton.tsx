@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import cn from 'clsx'
 import copy from 'copy-to-clipboard'
 import React from 'react'
@@ -21,7 +22,7 @@ export const CopyButton: React.FC<IProps> = props => {
   const [status, setStatus] = React.useState<CopyStatusEnum>(CopyStatusEnum.PENDING)
   const disabled: boolean = status !== CopyStatusEnum.PENDING
 
-  const onCopy = (e: React.MouseEvent): void => {
+  const onCopy = useEventCallback((e: React.MouseEvent): void => {
     e.stopPropagation()
     if (status === CopyStatusEnum.PENDING) {
       setStatus(CopyStatusEnum.COPYING)
@@ -33,7 +34,7 @@ export const CopyButton: React.FC<IProps> = props => {
         setStatus(CopyStatusEnum.FAILED)
       }
     }
-  }
+  })
 
   React.useEffect((): (() => void) | undefined => {
     if (status === CopyStatusEnum.COPIED || status === CopyStatusEnum.FAILED) {

@@ -11,6 +11,7 @@ import { useSiteViewmodel } from '@/context/site'
 import { MarkdownModeEnum, useWorkspaceViewmodel } from '../../context'
 
 interface IProps {
+  readonly filepath: string | null
   readonly ast: Root
   readonly toc: IHeadingToc | undefined
   readonly frontmatter: Record<string, unknown> | undefined
@@ -62,7 +63,7 @@ const json = {
 }
 
 export const MarkdownComposer: React.FC<IProps> = props => {
-  const { ast, toc, frontmatter } = props
+  const { ast, toc, frontmatter, filepath } = props
   const siteVM = useSiteViewmodel()
   const workspaceVM = useWorkspaceViewmodel()
   const mode: MarkdownModeEnum = useStateValue(workspaceVM.markdownMode$)
@@ -87,7 +88,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
               <ReactMarkdownContent
                 Tag="h1"
                 className="mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white"
-                content={(frontmatter?.title as string) || 'Untitled'}
+                content={(frontmatter?.title as string) || filepath || 'Untitled'}
               />
               <ReactMarkdown />
             </div>

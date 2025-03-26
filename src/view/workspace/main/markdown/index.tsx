@@ -9,7 +9,7 @@ import { useWorkspaceViewmodel } from '../../context'
 import { MarkdownComposer } from './composer'
 import { MarkdownModeToggle } from './mode'
 
-export const MarkdownContainer: React.FC = () => {
+const MarkdownContainer: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
   const filepath = useStateValue(workspaceVM.filepath$)
@@ -50,7 +50,7 @@ export const MarkdownContainer: React.FC = () => {
       {!!ast && (
         <div className="relative w-full">
           <MarkdownModeToggle />
-          <MarkdownComposer ast={ast} toc={toc} frontmatter={frontmatter} />
+          <MarkdownComposer filepath={filepath} ast={ast} toc={toc} frontmatter={frontmatter} />
         </div>
       )}
       <button
@@ -78,3 +78,5 @@ export const MarkdownContainer: React.FC = () => {
 }
 
 MarkdownContainer.displayName = 'MarkdownContainer'
+
+export default React.memo(MarkdownContainer, () => true)

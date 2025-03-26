@@ -5,6 +5,7 @@ import parseMarkdown from '../../../util/parseMarkdown'
 import type { IApiHandle, IApiHandleData } from '../types'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
+  '.html': 'text/html',
   '.md': 'application/json',
   '.json': 'application/json',
   '.png': 'image/png',

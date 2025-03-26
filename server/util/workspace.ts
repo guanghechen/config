@@ -2,10 +2,17 @@ import { spawn } from 'node:child_process'
 
 export async function findMarkdownFiles(cwd: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
-    const fd = spawn('fd', ['-e', 'md', '--exclude', 'node_modules', '--exclude', '.git'], {
-      cwd,
-      shell: true,
-    })
+    const fd = spawn(
+      'fd',
+      [
+        ...['html', 'jpg', 'jpeg', 'json', 'md', 'png', 'svg'].map(ext => ['-e', ext]).flat(),
+        ...['.git', 'node_modules'].map(dir => ['--exclude', dir]).flat(),
+      ],
+      {
+        cwd,
+        shell: true,
+      },
+    )
 
     let result = ''
     fd.stdout.on('data', data => {
