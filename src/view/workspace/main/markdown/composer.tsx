@@ -46,7 +46,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
                 className="mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white"
                 content={(frontmatter?.title as string) || filepath || 'Untitled'}
               />
-              <ReactMarkdown />
+              <ReactMarkdown className="pb-4" />
             </div>
             {columns > 1 && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
           </React.Fragment>
