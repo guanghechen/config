@@ -10,6 +10,8 @@ local code_runner_terminals = {} ---@type table<string, fml.ux.ITerminal>
 ---@class fml.action.code.IRunners
 ---@field public lua                    fml.action.code.IRunner
 
+local YOZORA_SERVER_PORT = type(vim.env.YOZORA_SERVER_PORT) == "string" and vim.env.YOZORA_SERVER_PORT or "7071" ---@type string
+
 ---@type fml.action.code.IRunners
 local runners = {
   lua = {
@@ -19,10 +21,12 @@ local runners = {
   },
   md = {
     run = function(filepath, force)
-      local url = "http://localhost:7071/api/file-switch?filepath="
-        .. eve.string.escape_url_component(filepath)
-        .. "&force="
-        .. (force and "true" or "false")
+      local url = string.format(
+        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+        YOZORA_SERVER_PORT,
+        eve.string.escape_url_component(filepath),
+        force and "true" or "false"
+      )
       vim.system({ "curl", "-X", "POST", url }, { detach = true })
     end,
   },
