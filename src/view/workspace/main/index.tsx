@@ -2,6 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useWorkspaceViewmodel } from '../context'
 
+const JsonContainer = React.lazy(() => import('./json'))
 const MarkdownContainer = React.lazy(() => import('./markdown'))
 const UnknownContainer = React.lazy(() => import('./unknown'))
 
@@ -17,6 +18,8 @@ export const WorkspaceMain: React.FC = () => {
 
   const container: React.ReactElement = React.useMemo<React.ReactElement>(() => {
     switch (extname) {
+      case '.json':
+        return <JsonContainer />
       case '.md':
         return <MarkdownContainer />
       default:

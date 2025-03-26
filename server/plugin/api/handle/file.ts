@@ -1,4 +1,5 @@
-import fs from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import state from '../../../state'
 import parseMarkdown from '../../../util/parseMarkdown'
@@ -52,7 +53,7 @@ export const fetchFile: IApiHandle = async params => {
     return { code: 400, data }
   }
 
-  if (!fs.existsSync(filepath)) {
+  if (!existsSync(filepath)) {
     const data: IApiHandleData = {
       error: 'File not found',
       details: { pathname, workspace, filepath, extname, contentType },
@@ -63,25 +64,45 @@ export const fetchFile: IApiHandle = async params => {
 
   state.watch(filepath)
 
-  if (extname === '.md') {
-    let data: IApiHandleData
-    try {
-      const { ast, toc, frontmatter } = await parseMarkdown(filepath)
-      data = {
-        data: { ast, toc, frontmatter },
+  switch (extname) {
+    case '.json': {
+      let data: IApiHandleData
+      try {
+        const content: string = await fs.readFile(filepath, 'utf8')
+        data = {
+          data: JSON.parse(content),
+        }
+      } catch (error) {
+        state.reporter.error('Failed to parse markdown:', { filepath, error })
+        data = {
+          error: 'Failed to parse markdown',
+          details: { pathname, workspace, filepath },
+          data: null,
+        }
       }
-    } catch (error) {
-      state.reporter.error('Failed to parse markdown:', { filepath, error })
-      data = {
-        error: 'Failed to parse markdown',
-        details: { pathname, workspace, filepath },
-        data: null,
-      }
+      return { code: 200, data }
     }
-    return { code: 200, data }
+    case '.md': {
+      let data: IApiHandleData
+      try {
+        const { ast, toc, frontmatter } = await parseMarkdown(filepath)
+        data = {
+          data: { ast, toc, frontmatter },
+        }
+      } catch (error) {
+        state.reporter.error('Failed to parse markdown:', { filepath, error })
+        data = {
+          error: 'Failed to parse markdown',
+          details: { pathname, workspace, filepath },
+          data: null,
+        }
+      }
+      return { code: 200, data }
+    }
+    default:
   }
 
-  const stream = fs.createReadStream(filepath)
+  const stream = createReadStream(filepath)
   stream.pipe(res)
   stream.on('error', err => {
     res.statusCode = 500

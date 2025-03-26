@@ -10,6 +10,11 @@ export enum MarkdownModeEnum {
   FM = bit << 3,
 }
 
+export enum JsonModeEnum {
+  LITERAL = bit << 0,
+  VIEW = bit << 1,
+}
+
 export interface IWorkspaceItem {
   readonly tag: string
 }
@@ -21,6 +26,7 @@ export interface IWorkspaceData {
 
   readonly filetreeKeyword: string
   readonly filetreeMode: FiletreeMode
+  readonly jsonMode: JsonModeEnum
   readonly markdownMode: MarkdownModeEnum
 
   readonly sidebarVisible: boolean

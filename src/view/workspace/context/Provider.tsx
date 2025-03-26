@@ -56,6 +56,7 @@ const PersistSideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => 
         viewmodel.workspace$,
         viewmodel.workspaces$,
         viewmodel.filetreeMode$,
+        viewmodel.jsonMode$,
         viewmodel.markdownMode$,
         viewmodel.sidebarWidth$,
         viewmodel.sidebarVisible$,

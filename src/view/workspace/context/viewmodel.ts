@@ -1,7 +1,7 @@
 import { State, Subscriber, ViewModel } from '@guanghechen/react-viewmodel'
 import { FiletreeMode } from '@/component/filetree/context/types'
 import type { IWorkspaceData, IWorkspaceItem } from './types'
-import { MarkdownModeEnum } from './types'
+import { JsonModeEnum, MarkdownModeEnum } from './types'
 
 interface IProps {
   readonly filepath: string | null
@@ -10,6 +10,7 @@ interface IProps {
 
   readonly filetreeKeyword: string
   readonly filetreeMode: FiletreeMode
+  readonly jsonMode: JsonModeEnum
   readonly markdownMode: MarkdownModeEnum
 
   readonly sidebarVisible: boolean
@@ -22,6 +23,7 @@ const DEFAULT_WORKSPACE_DATA: IWorkspaceData = {
   workspaces: [],
   filetreeKeyword: '',
   filetreeMode: FiletreeMode.TREE,
+  jsonMode: JsonModeEnum.VIEW,
   markdownMode: MarkdownModeEnum.VIEW,
   sidebarVisible: true,
   sidebarWidth: 300,
@@ -34,6 +36,7 @@ export class WorkspaceViewModel extends ViewModel {
 
   public readonly filetreeKeyword$: State<string>
   public readonly filetreeMode$: State<FiletreeMode>
+  public readonly jsonMode$: State<JsonModeEnum>
   public readonly markdownMode$: State<MarkdownModeEnum>
 
   public readonly sidebarVisible$: State<boolean>
@@ -51,6 +54,7 @@ export class WorkspaceViewModel extends ViewModel {
       workspaces,
       filetreeKeyword,
       filetreeMode,
+      jsonMode,
       markdownMode,
       sidebarVisible,
       sidebarWidth,
@@ -61,6 +65,7 @@ export class WorkspaceViewModel extends ViewModel {
       workspaces,
       filetreeKeyword,
       filetreeMode,
+      jsonMode,
       markdownMode,
       sidebarVisible,
       sidebarWidth,
@@ -77,6 +82,7 @@ export class WorkspaceViewModel extends ViewModel {
       workspaces,
       filetreeKeyword,
       filetreeMode,
+      jsonMode,
       markdownMode,
       sidebarVisible,
       sidebarWidth,
@@ -99,6 +105,10 @@ export class WorkspaceViewModel extends ViewModel {
       filetreeMode === FiletreeMode.TREE || filetreeMode === FiletreeMode.LIST
         ? filetreeMode
         : DEFAULT_WORKSPACE_DATA.filetreeMode
+    const normalizedJsonMode: JsonModeEnum =
+      typeof jsonMode === 'number' && jsonMode > 0 && Number.isInteger(jsonMode)
+        ? jsonMode
+        : DEFAULT_WORKSPACE_DATA.jsonMode
     const normalizedMarkdownMode: MarkdownModeEnum =
       typeof markdownMode === 'number' && markdownMode > 0 && Number.isInteger(markdownMode)
         ? markdownMode
@@ -112,6 +122,7 @@ export class WorkspaceViewModel extends ViewModel {
       workspaces: normalizedWorkspaces,
       filetreeKeyword: normalizedFiletreeKeyword,
       filetreeMode: normalizedFiletreeMode,
+      jsonMode: normalizedJsonMode,
       markdownMode: normalizedMarkdownMode,
       sidebarVisible: normalizedVisible,
       sidebarWidth: normalizedWidth,
@@ -128,6 +139,7 @@ export class WorkspaceViewModel extends ViewModel {
       workspaces,
       filetreeKeyword,
       filetreeMode,
+      jsonMode,
       markdownMode,
       sidebarWidth,
       sidebarVisible,
@@ -138,6 +150,7 @@ export class WorkspaceViewModel extends ViewModel {
 
     this.filetreeKeyword$ = new State<string>(filetreeKeyword)
     this.filetreeMode$ = new State<FiletreeMode>(filetreeMode)
+    this.jsonMode$ = new State<JsonModeEnum>(jsonMode)
     this.markdownMode$ = new State<MarkdownModeEnum>(markdownMode)
 
     this.sidebarVisible$ = new State<boolean>(sidebarVisible)
@@ -179,6 +192,7 @@ export class WorkspaceViewModel extends ViewModel {
     const workspaces: IWorkspaceItem[] = this.workspaces$.getSnapshot()
     const filetreeKeyword: string = this.filetreeKeyword$.getSnapshot()
     const filetreeMode: FiletreeMode = this.filetreeMode$.getSnapshot()
+    const jsonMode: JsonModeEnum = this.jsonMode$.getSnapshot()
     const markdownMode: MarkdownModeEnum = this.markdownMode$.getSnapshot()
     const sidebarVisible: boolean = this.sidebarVisible$.getSnapshot()
     const sidebarWidth: number = this.sidebarWidth$.getSnapshot()
@@ -188,6 +202,7 @@ export class WorkspaceViewModel extends ViewModel {
       workspaces,
       filetreeKeyword,
       filetreeMode,
+      jsonMode,
       markdownMode,
       sidebarVisible,
       sidebarWidth,
@@ -201,6 +216,7 @@ export class WorkspaceViewModel extends ViewModel {
       workspaces,
       filetreeKeyword,
       filetreeMode,
+      jsonMode,
       markdownMode,
       sidebarVisible,
       sidebarWidth,
@@ -209,6 +225,7 @@ export class WorkspaceViewModel extends ViewModel {
     this.workspace$.next(workspace)
     this.filetreeKeyword$.next(filetreeKeyword)
     this.filetreeMode$.next(filetreeMode)
+    this.jsonMode$.next(jsonMode)
     this.markdownMode$.next(markdownMode)
     this.filepath$.next(filepath)
     this.sidebarVisible$.next(sidebarVisible)
