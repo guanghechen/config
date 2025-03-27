@@ -14,8 +14,8 @@ export const ImageContainer: React.FC<ImageContainerProps> = props => {
   const [position, setPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 })
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="mb-4 flex-initial border-b border-gray-200 pb-3 dark:border-gray-700">
+    <div className="w-full max-w-[80rem] p-8">
+      <div className="h-[4rem] border-b border-gray-200 dark:border-gray-700">
         <ImageTopbar
           filepath={filepath}
           scale={scale}
@@ -24,7 +24,7 @@ export const ImageContainer: React.FC<ImageContainerProps> = props => {
           setScale={setScale}
         />
       </div>
-      <div className="h-full flex-auto overflow-hidden bg-gray-100 dark:bg-gray-800">
+      <div className="h-[calc(100vh-12rem)] select-none overflow-hidden bg-gray-100 dark:bg-gray-800">
         <ImageMain
           workspace={workspace}
           filepath={filepath}

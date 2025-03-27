@@ -88,7 +88,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           />
         </div>
       </div>
-      <div className="mb-2 flex items-center space-x-2 md:mb-0">
+      <div className="mb-2 flex select-none items-center space-x-2 md:mb-0">
         <button
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
@@ -131,7 +131,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           <ChevronRightIcon />
         </button>
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex select-none items-center space-x-2">
         <button
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',

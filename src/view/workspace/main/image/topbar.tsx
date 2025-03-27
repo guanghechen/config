@@ -51,12 +51,7 @@ export const ImageTopbar: React.FC<IProps> = props => {
   }, [setRotation])
 
   return (
-    <div
-      className={cn(
-        'flex justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm',
-        'border border-gray-200 dark:border-gray-700',
-      )}
-    >
+    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
       <div className="mb-2 inline-flex flex-initial items-center overflow-hidden md:mb-0 md:ml-4">
         <h2 className="truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
           {filepath}
@@ -72,7 +67,7 @@ export const ImageTopbar: React.FC<IProps> = props => {
           />
         </div>
       </div>
-      <div className="flex items-center space-x-2 md:mr-2">
+      <div className="flex select-none items-center space-x-2 md:mr-2">
         <div className="flex items-center space-x-2">
           <button
             className={cn(

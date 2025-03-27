@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useWorkspaceViewmodel } from '../context'
+import type { WorkspaceViewModel } from '../context'
 
 const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
@@ -8,10 +8,14 @@ const MarkdownContainer = React.lazy(() => import('./markdown'))
 const PDFContainer = React.lazy(() => import('./pdf'))
 const UnknownContainer = React.lazy(() => import('./unknown'))
 
-export const WorkspaceMain: React.FC = () => {
-  const workspaceVM = useWorkspaceViewmodel()
-  const workspace: string | null = useStateValue(workspaceVM.workspace$)
-  const filepath = useStateValue(workspaceVM.filepath$)
+interface IProps {
+  readonly viewmodel: WorkspaceViewModel
+}
+
+export const WorkspaceMain: React.FC<IProps> = props => {
+  const { viewmodel } = props
+  const workspace: string | null = useStateValue(viewmodel.workspace$)
+  const filepath = useStateValue(viewmodel.filepath$)
 
   const extname: string = React.useMemo<string>(() => {
     if (!filepath) return ''
@@ -37,11 +41,7 @@ export const WorkspaceMain: React.FC = () => {
     }
   }, [extname, filepath, workspace])
 
-  return (
-    <div className="box-border flex h-full justify-center">
-      <div className="box-border h-full w-full p-8">{container}</div>
-    </div>
-  )
+  return container
 }
 
 WorkspaceMain.displayName = 'WorkspaceMain'

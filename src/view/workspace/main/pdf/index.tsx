@@ -1,9 +1,7 @@
-import cn from 'clsx'
 import React from 'react'
 import { Document, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
 import 'react-pdf/dist/esm/Page/TextLayer.css'
-import { PRESET_CLASSES } from '@/constant/classes'
 import { toSearch } from '@/util/url'
 import { PDFPages } from './pages'
 import { PDFToolbar } from './toolbar'
@@ -35,8 +33,8 @@ export const PDFContainer: React.FC<IProps> = props => {
   }, [filepath, workspace])
 
   return (
-    <div className="flex h-full flex-col bg-gray-50 dark:bg-gray-900">
-      <div className="sticky top-0 z-10 mb-4 flex-initial flex-shrink-0">
+    <div className="w-full max-w-[80rem] p-8">
+      <div className="h-[4rem] border-b border-gray-200 dark:border-gray-700">
         <PDFToolbar
           filepath={filepath}
           pages={pages}
@@ -49,9 +47,7 @@ export const PDFContainer: React.FC<IProps> = props => {
           className="w-full"
         />
       </div>
-      <div
-        className={cn('flex flex-auto justify-center overflow-auto p-4', PRESET_CLASSES.scrollbar)}
-      >
+      <div className="flex justify-center p-4">
         <Document
           options={options}
           file={url}

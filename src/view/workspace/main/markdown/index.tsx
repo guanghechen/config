@@ -41,22 +41,24 @@ const MarkdownContainer: React.FC = () => {
   }, [container])
 
   return (
-    <div className="relative size-full">
+    <div className="w-full px-4 pt-12">
       {!!error && (
-        <div className="relative mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
+        <div className="mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
           <code>error: {String(error)}</code>
         </div>
       )}
+      <div className="fixed right-4 top-16 z-50">
+        <MarkdownModeToggle />
+      </div>
       {!!ast && (
-        <div className="relative w-full">
-          <MarkdownModeToggle />
+        <div className="w-full">
           <MarkdownComposer filepath={filepath} ast={ast} toc={toc} frontmatter={frontmatter} />
         </div>
       )}
       <button
         onClick={onScrollToTop}
         className={cn(
-          'cursor-pointer fixed bottom-8 right-8 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
+          'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
           visibleOfScrollToTop
             ? 'translate-y-0 opacity-90'
             : 'pointer-events-none translate-y-16 opacity-0',

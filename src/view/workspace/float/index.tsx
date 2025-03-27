@@ -17,6 +17,11 @@ export class WorkspaceFloat extends React.Component<IProps> {
       </React.Fragment>
     )
   }
+
+  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
+    const props: IProps = this.props
+    return props.viewmodel !== nextProps.viewmodel
+  }
 }
 
 export default WorkspaceFloat

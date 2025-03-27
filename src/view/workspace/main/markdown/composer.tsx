@@ -33,12 +33,17 @@ export const MarkdownComposer: React.FC<IProps> = props => {
 
   return (
     <MarkdownProvider ast={ast} theme={theme}>
-      <div className="flex h-[calc(100vh-5rem)] w-full items-start justify-center p-4">
+      <div
+        className={cn('flex w-full items-start justify-center', {
+          'h-[calc(100vh-6rem)]': columns > 1,
+        })}
+      >
         {showView && (
           <React.Fragment>
             <div
-              className={cn('h-full w-[72rem] flex-initial', PRESET_CLASSES.scrollbar, {
-                'p-2 overflow-auto': columns > 1,
+              className={cn('w-[72rem] flex-initial px-2', {
+                'overflow-auto h-full': columns > 1,
+                [PRESET_CLASSES.scrollbar]: columns > 1,
               })}
             >
               <ReactMarkdownContent
@@ -54,8 +59,9 @@ export const MarkdownComposer: React.FC<IProps> = props => {
         {showAst && (
           <React.Fragment>
             <div
-              className={cn('h-full w-[48rem] flex-initial', PRESET_CLASSES.scrollbar, {
-                'p-2 overflow-auto': columns > 1,
+              className={cn('w-[48rem] flex-initial px-2', {
+                'overflow-auto h-full': columns > 1,
+                [PRESET_CLASSES.scrollbar]: columns > 1,
               })}
             >
               <Json json={ast} />
@@ -72,7 +78,9 @@ export const MarkdownComposer: React.FC<IProps> = props => {
             })}
           >
             <div
-              className={cn('flex-auto basis-0 overflow-auto p-2', PRESET_CLASSES.scrollbar, {
+              className={cn('flex-auto basis-0 px-2', {
+                'overflow-auto h-full': columns > 1,
+                [PRESET_CLASSES.scrollbar]: columns > 1,
                 'flex justify-center': columns === 1,
                 hidden: !showToc,
               })}
@@ -92,7 +100,9 @@ export const MarkdownComposer: React.FC<IProps> = props => {
               })}
             />
             <div
-              className={cn('flex-auto basis-0 overflow-auto p-2', PRESET_CLASSES.scrollbar, {
+              className={cn('flex-auto basis-0 px-2', {
+                'overflow-auto h-full': columns > 1,
+                [PRESET_CLASSES.scrollbar]: columns > 1,
                 'flex justify-center': columns === 1,
                 hidden: !showFm,
               })}

@@ -74,9 +74,9 @@ export const fetchFile: IApiHandle = async params => {
           data: JSON.parse(content),
         }
       } catch (error) {
-        state.reporter.error('Failed to parse markdown:', { filepath, error })
+        state.reporter.error('Failed to parse json:', { filepath, error })
         data = {
-          error: 'Failed to parse markdown',
+          error: 'Failed to parse json',
           details: { pathname, workspace, filepath },
           data: null,
         }
