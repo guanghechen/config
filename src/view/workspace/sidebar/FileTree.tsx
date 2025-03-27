@@ -63,6 +63,7 @@ export const FileTree: React.FC = () => {
 const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
   const { viewmodel } = props
   const workspaceVM = useWorkspaceViewmodel()
+  const sidebarVisible = useStateValue(workspaceVM.sidebarVisible$)
 
   const filepath: string | null = useStateValue(workspaceVM.filepath$)
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
@@ -75,6 +76,28 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
   React.useEffect(() => {
     viewmodel.updateFromFilepaths(files)
   }, [files, viewmodel])
+
+  React.useEffect(() => {
+    if (!sidebarVisible) return
+
+    const { selector } = viewmodel.reveal(filepath)
+    if (!selector) return
+
+    let cancelled: boolean = false
+    setTimeout(() => {
+      if (cancelled) return
+
+      const element: HTMLElement | null = document.querySelector(selector)
+      element?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    }, 200)
+
+    return (): void => {
+      cancelled = true
+    }
+  }, [sidebarVisible, filepath, viewmodel])
 
   return <React.Fragment />
 }

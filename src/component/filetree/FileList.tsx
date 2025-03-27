@@ -20,6 +20,7 @@ export const FileList: React.FC<IProps> = props => {
   const fileNodes = useStateValue(viewmodel.fileNodes$)
   const currentFilepath: string | null = useStateValue(viewmodel.currentFilepath$)
   const searchKeyword: string = useStateValue(viewmodel.searchKeyword$)
+  useStateValue(viewmodel.nodeDataDirtyTick$)
 
   const [tick, setTick] = React.useState<number>(0)
 

@@ -19,6 +19,7 @@ export const FileTree: React.FC<IProps> = props => {
   const { viewmodel, onFileNodeClick } = props
   const root = useStateValue(viewmodel.root$)
   const currentFilepath: string | null = useStateValue(viewmodel.currentFilepath$)
+  useStateValue(viewmodel.nodeDataDirtyTick$)
 
   const [tick, setTick] = React.useState<number>(0)
 

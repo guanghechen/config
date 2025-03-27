@@ -25,6 +25,7 @@ export class FileTreeViewModel extends ViewModel {
   public readonly fileNodes$: State<IFileTreeFileNode[]>
   public readonly currentFilepath$: State<string | null>
   public readonly searchKeyword$: State<string>
+  public readonly nodeDataDirtyTick$: State<number>
 
   constructor(_props: IProps) {
     super()
@@ -34,6 +35,7 @@ export class FileTreeViewModel extends ViewModel {
     this.fileNodes$ = new State<IFileTreeFileNode[]>([])
     this.currentFilepath$ = new State<string | null>(null)
     this.searchKeyword$ = new State<string>('')
+    this.nodeDataDirtyTick$ = new State<number>(0)
   }
 
   public readonly updateFromFilepaths = (filepaths: string[]): void => {
@@ -57,6 +59,22 @@ export class FileTreeViewModel extends ViewModel {
     this.nodeMap$.next(nodeMap)
     this.root$.next(root)
     this.fileNodes$.next(fileNodes)
+  }
+
+  public readonly reveal = (filepath: string | null): { selector: string | undefined } => {
+    if (!filepath) return { selector: undefined }
+
+    const fileNodes: IFileTreeFileNode[] = this.fileNodes$.getSnapshot()
+    const node = fileNodes.find(node => node.filepath === filepath)
+    if (!node) return { selector: undefined }
+
+    for (let parent = node.parent; parent; parent = parent.parent) {
+      ;(parent as IFileTreeFolderNodeMutable).collapsed = false
+    }
+
+    const selector = `[data-filetree-node-uuid="${node.uuid}"]`
+    this.nodeDataDirtyTick$.next(this.nodeDataDirtyTick$.getSnapshot() + 1)
+    return { selector }
   }
 
   protected readonly buildFileTree = (
