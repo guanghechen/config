@@ -20,8 +20,8 @@ local function gen_hlgroup_map(context)
   }
 
   local bgs = {
-    f_sl = t and "none" or c.bg1,
-    f_tl = t and "none" or c.bg1,
+    f_sl = t and c.bg0 or c.bg1,
+    f_tl = t and c.bg0 or c.bg1,
     f_wl = "none",
   }
 
