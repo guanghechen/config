@@ -20,7 +20,7 @@ export const FileList: React.FC<IProps> = props => {
   const fileNodes = useStateValue(viewmodel.fileNodes$)
   const currentFilepath: string | null = useStateValue(viewmodel.currentFilepath$)
   const searchKeyword: string = useStateValue(viewmodel.searchKeyword$)
-  useStateValue(viewmodel.nodeDataDirtyTick$)
+  const nodeDataDirtyTick: number = useStateValue<number>(viewmodel.nodeDataDirtyTick$)
 
   const [tick, setTick] = React.useState<number>(0)
 
@@ -74,7 +74,7 @@ export const FileList: React.FC<IProps> = props => {
 
     return list
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileNodes, searchKeyword, viewmodel, currentFilepath, tick])
+  }, [fileNodes, searchKeyword, viewmodel, currentFilepath, tick, nodeDataDirtyTick])
 
   return <div className="p-2 text-sm">{elements}</div>
 }

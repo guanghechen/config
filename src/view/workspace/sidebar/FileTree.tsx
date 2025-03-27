@@ -63,7 +63,8 @@ export const FileTree: React.FC = () => {
 const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
   const { viewmodel } = props
   const workspaceVM = useWorkspaceViewmodel()
-  const sidebarVisible = useStateValue(workspaceVM.sidebarVisible$)
+  const sidebarVisible: boolean = useStateValue<boolean>(workspaceVM.sidebarVisible$)
+  const revealTick: number = useStateValue<number>(workspaceVM.revealTick$)
 
   const filepath: string | null = useStateValue(workspaceVM.filepath$)
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
@@ -97,7 +98,7 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
     return (): void => {
       cancelled = true
     }
-  }, [sidebarVisible, filepath, viewmodel])
+  }, [revealTick, sidebarVisible, filepath, viewmodel])
 
   return <React.Fragment />
 }

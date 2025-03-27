@@ -18,8 +18,8 @@ interface IProps {
 export const FileTree: React.FC<IProps> = props => {
   const { viewmodel, onFileNodeClick } = props
   const root = useStateValue(viewmodel.root$)
-  const currentFilepath: string | null = useStateValue(viewmodel.currentFilepath$)
-  useStateValue(viewmodel.nodeDataDirtyTick$)
+  const currentFilepath: string | null = useStateValue<string | null>(viewmodel.currentFilepath$)
+  const nodeDataDirtyTick: number = useStateValue<number>(viewmodel.nodeDataDirtyTick$)
 
   const [tick, setTick] = React.useState<number>(0)
 
@@ -73,7 +73,7 @@ export const FileTree: React.FC<IProps> = props => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [root, viewmodel, currentFilepath, tick])
+  }, [root, viewmodel, currentFilepath, tick, nodeDataDirtyTick])
 
   return <div className="p-2 text-sm">{elements}</div>
 }

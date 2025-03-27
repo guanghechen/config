@@ -44,6 +44,7 @@ export class WorkspaceViewModel extends ViewModel {
   public readonly sidebarWidth$: State<number>
 
   public readonly filepathDirtyTick$: State<number>
+  public readonly revealTick$: State<number>
   public readonly workspacesDirtyTick$: State<number>
 
   public readonly mainScrollableContainer$: State<HTMLDivElement | null>
@@ -161,8 +162,9 @@ export class WorkspaceViewModel extends ViewModel {
     const sidebarVisible$ = new State<boolean>(sidebarVisible)
     const sidebarWidth$ = new State<number>(sidebarWidth)
 
-    const workspacesDirtyTick$ = new State<number>(0)
     const filepathDirtyTick$ = new State<number>(0)
+    const revealTick$ = new State<number>(0)
+    const workspacesDirtyTick$ = new State<number>(0)
 
     const mainScrollableContainer$ = new State<HTMLDivElement | null>(null)
     const resizing$ = new State<boolean>(false)
@@ -176,8 +178,11 @@ export class WorkspaceViewModel extends ViewModel {
     this.markdownMode$ = markdownMode$
     this.sidebarVisible$ = sidebarVisible$
     this.sidebarWidth$ = sidebarWidth$
-    this.workspacesDirtyTick$ = workspacesDirtyTick$
+
     this.filepathDirtyTick$ = filepathDirtyTick$
+    this.revealTick$ = revealTick$
+    this.workspacesDirtyTick$ = workspacesDirtyTick$
+
     this.mainScrollableContainer$ = mainScrollableContainer$
     this.resizing$ = resizing$
 

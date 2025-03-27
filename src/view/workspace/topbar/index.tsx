@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
 import { CopyButton } from '@/component/CopyButton'
-import { DockToRightIcon, OpenInNewIcon } from '@/component/icon/material'
+import { DockToRightIcon, OpenInNewIcon, OpenWithIcon } from '@/component/icon/material'
 import { ThemeToggle } from '@/container/ThemeToggle'
 import { toSearch } from '@/util/url'
 import type { WorkspaceViewModel } from '../context'
@@ -10,6 +10,7 @@ import {
   useSidebarVisible,
   useToggleSidebarVisible,
   useWorkspace,
+  useWorkspaceViewmodel,
 } from '../context'
 import { Workspace } from '../sidebar/Workspace'
 
@@ -18,6 +19,7 @@ interface IProps {
 }
 
 export const WorkspaceTopbar: React.FC<IProps> = () => {
+  const viewmodel = useWorkspaceViewmodel()
   const workspace: string | null = useWorkspace()
   const sidebarVisible: boolean = useSidebarVisible()
   const onToggleSidebarVisible: () => void = useToggleSidebarVisible()
@@ -27,6 +29,13 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
     const search = toSearch({ filepath, workspace })
     return `/api/file${search}`
   }, [filepath, workspace])
+
+  const reveal = React.useCallback(() => {
+    viewmodel.sidebarVisible$.next(true)
+    setTimeout(() => {
+      viewmodel.revealTick$.next(viewmodel.revealTick$.getSnapshot() + 1)
+    }, 50)
+  }, [viewmodel])
 
   return (
     <div className="flex h-full items-center bg-neutral-200 px-4 dark:bg-neutral-800">
@@ -46,6 +55,14 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
           <h2 className="truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
             {filepath}
           </h2>
+          <div>
+            <span
+              className="ml-2 flex items-center justify-center rounded-lg  text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+              onClick={reveal}
+            >
+              <OpenWithIcon className="size-4" />
+            </span>
+          </div>
           <div>
             <a
               href={url}
