@@ -26,7 +26,8 @@ local function fetch_data(method, additional_params, callback)
   end
 
   local cwd = eve.path.cwd() ---@type string
-  local params = vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile), additional_params)
+  local params =
+    vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile, "utf-8"), additional_params)
 
   vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
     local items = {}
@@ -35,7 +36,7 @@ local function fetch_data(method, additional_params, callback)
     local uri_cur = params.textDocument.uri ---@type string
     local line_cur = params.position.line ---@type integer
     for client_id, result_or_error in pairs(results_per_client) do
-      local error, result = result_or_error.error, result_or_error.result
+      local error, result = result_or_error.err, result_or_error.result
       if error then
         local details = "Failed to executing '" .. method .. "' (" .. client_id .. "): " .. error.message
         table.insert(errors, details)

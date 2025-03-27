@@ -294,7 +294,7 @@ function M.on_attach(client, bufnr)
 end
 
 function M.on_init(client, _)
-  if client.supports_method("textDocument/semanticTokens") then
+  if client:supports_method("textDocument/semanticTokens") then
     client.server_capabilities.semanticTokensProvider = nil
   end
 end

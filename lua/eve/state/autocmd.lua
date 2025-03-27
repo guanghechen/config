@@ -116,7 +116,7 @@ vim.api.nvim_create_autocmd({ "WinEnter" }, {
 vim.api.nvim_create_autocmd("WinClosed", {
   group = eve.nvim.augroup("state_on_win_closed"),
   callback = function(args)
-    local winnr = type(args) == "table" and args.file or nil ---@type integer|nil
+    local winnr = type(args.file) == "string" and tonumber(args.file) or nil ---@type integer|nil
     if type(winnr) == "number" then
       eve.state.status.maximized_winnrs[winnr] = nil
     end

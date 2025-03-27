@@ -141,7 +141,7 @@ end
 ---@param qflist                        eve.t.IQuickFixItem[]|nil
 ---@return nil
 function M.set_qflist(qflist)
-  if qflist ~= nil or #qflist > 0 then
+  if qflist ~= nil and #qflist > 0 then
     vim.api.nvim_exec_autocmds("QuickFixCmdPre", {})
     vim.fn.setqflist(qflist, "r")
     vim.fn.setqflist({}, "a", { title = "" })

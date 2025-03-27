@@ -22,7 +22,7 @@ local function hook_basedpyright(venv_path, venv_python)
       client.config.settings =
         vim.tbl_deep_extend("force", client.config.settings, { python = { pythonPath = venv_python } })
     end
-    client.notify("workspace/didChangeConfiguration", { settings = nil })
+    client:notify("workspace/didChangeConfiguration", { settings = nil })
   end
 end
 
@@ -34,7 +34,7 @@ local function hook_pyright(venv_path, venv_python)
   local client = vim.lsp.get_clients({ name = "pyright" })[1]
   if client then
     client.settings.python.pythonPath = venv_python
-    client.notify("workspace/didChangeConfiguration", { settings = nil })
+    client:notify("workspace/didChangeConfiguration", { settings = nil })
   end
 end
 
@@ -51,7 +51,7 @@ local function hook_pylance(venv_path, venv_python)
       client.config.settings =
         vim.tbl_deep_extend("force", client.config.settings, { python = { pythonPath = venv_python } })
     end
-    client.notify("workspace/didChangeConfiguration", { settings = nil })
+    client:notify("workspace/didChangeConfiguration", { settings = nil })
   end
 end
 
@@ -71,7 +71,7 @@ local function hook_pylsp(venv_path, venv_python)
         },
       },
     })
-    client.notify("workspace/didChangeConfiguration", { settings = settings })
+    client:notify("workspace/didChangeConfiguration", { settings = settings })
   end
 end
 

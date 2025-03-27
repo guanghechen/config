@@ -4,15 +4,14 @@ local Select = require("fml.ux.select")
 ---@field public data                   integer
 
 local _hlnames ---@type string[]|nil
-local _hlgroups ---@type table<string, vim.api.keyset.hl_info>
+local _hlgroups ---@type table<string, vim.api.keyset.get_hl_info>
 local _preview_data ---@type fml.ux.search.preview.IData|nil
 
 ---@type fml.ux.select.IProvider
 local provider = {
   fetch_data = function(force)
     if force or _hlnames == nil then
-      ---@type table<string, vim.api.keyset.hl_info[]>
-      local hlgroups = vim.api.nvim_get_hl(0, { create = false })
+      local hlgroups = vim.api.nvim_get_hl(0, { create = false }) ---@type table<string, vim.api.keyset.get_hl_info>
       local hlnames = {} ---@type string[]
       for hlname in pairs(hlgroups) do
         table.insert(hlnames, hlname)
@@ -36,7 +35,7 @@ local provider = {
   fetch_preview_data = function(item)
     if _preview_data == nil then
       local hlnames = _hlnames or {} ---@type string[]
-      local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.hl_info>
+      local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.get_hl_info>
 
       local lines = {} ---@type string[]
       local highlights = {} ---@type eve.t.IHighlight[]
@@ -50,7 +49,7 @@ local provider = {
         local line = "xxx   " .. eve.string.pad_end(hlname, max_hlname_width, " ") ---@type string
         local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
 
-        local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.hl_info
+        local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.get_hl_info
         if hlgroup.fg ~= nil then
           local color_name = eve.std.color.int2hex(hlgroup.fg) ---@type string
           line = line .. " fg=" .. color_name

@@ -175,10 +175,11 @@ function M:focus()
     vim.api.nvim_tabpage_set_win(0, winnr)
     if not self._term_alive then
       self._term_alive = true
-      vim.fn.termopen(self._cmd, {
+      vim.fn.jobstart(self._cmd, {
         cwd = self._cmd_cwd,
         env = self._cmd_env,
         on_exit = self._on_exit,
+        term = true,
       })
       vim.api.nvim_create_autocmd("TermClose", {
         once = true,

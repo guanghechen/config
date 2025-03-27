@@ -17,14 +17,14 @@ local function on_attach(client, bufnr)
     ---@cast range                      lsp.Range
 
     local function move(new_filename)
-      client.request("workspace/executeCommand", {
+      client:request("workspace/executeCommand", {
         command = lsp_command.command,
         arguments = { action, uri, range, new_filename },
       })
     end
 
     local fname = vim.uri_to_fname(uri)
-    client.request("workspace/executeCommand", {
+    client:request("workspace/executeCommand", {
       command = "typescript.tsserverRequest",
       arguments = {
         "getMoveToRefactoringFileSuggestions",
@@ -165,7 +165,7 @@ local function on_attach(client, bufnr)
 
           vim.api.nvim_feedkeys("l", "n", false)
 
-          local params = vim.lsp.util.make_position_params()
+          local params = vim.lsp.util.make_position_params(nil, "utf-8")
           params.position.character = params.position.character + 1
           params.newName = new_name
 
