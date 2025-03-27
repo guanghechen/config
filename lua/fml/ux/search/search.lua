@@ -756,6 +756,8 @@ function M:create_wins_as_needed()
   local winnr_main = context.winnr_main ---@type integer|nil
   local winnr_preview = context.winnr_preview ---@type integer|nil
 
+  local winnr_main_new_created = false ---@type boolean
+
   if has_main then
     ---@type vim.api.keyset.win_config
     local wincfg_main = {
@@ -775,6 +777,7 @@ function M:create_wins_as_needed()
     if winnr_main == nil or not vim.api.nvim_win_is_valid(winnr_main) then
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       context.winnr_main = winnr_main
+      winnr_main_new_created = true
 
       vim.wo[winnr_main].number = false
       vim.wo[winnr_main].relativenumber = false
@@ -894,8 +897,14 @@ function M:create_wins_as_needed()
         vim.api.nvim_tabpage_set_win(0, winnr_input)
       end
     elseif context.focused_pane == "main" then
-      if winnr_main ~= nil and winnr_cur ~= winnr_main then
-        vim.api.nvim_tabpage_set_win(0, winnr_main)
+      if winnr_main_new_created then
+        if winnr_input ~= nil and winnr_cur ~= winnr_input then
+          vim.api.nvim_tabpage_set_win(0, winnr_input)
+        end
+      else
+        if winnr_main ~= nil and winnr_cur ~= winnr_main then
+          vim.api.nvim_tabpage_set_win(0, winnr_main)
+        end
       end
     elseif context.focused_pane == "preview" then
       if winnr_preview ~= nil and winnr_cur ~= winnr_preview then
