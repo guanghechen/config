@@ -12,6 +12,11 @@ export const useWorkspace = (): string | null => {
   return useStateValue(viewmodel.workspace$)
 }
 
+export const useCurrentFilepath = (): string | null => {
+  const viewmodel = useWorkspaceViewmodel()
+  return useStateValue(viewmodel.filepath$)
+}
+
 export const useSidebarVisible = (): boolean => {
   const viewmodel = useWorkspaceViewmodel()
   return useStateValue(viewmodel.sidebarVisible$)

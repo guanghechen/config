@@ -1,6 +1,5 @@
 import cn from 'clsx'
 import React from 'react'
-import { CopyButton } from '@/component/CopyButton'
 import {
   ResetZoomIcon,
   RotateLeftIcon,
@@ -10,7 +9,6 @@ import {
 } from '@/component/icon/material'
 
 interface IProps {
-  readonly filepath: string | null
   readonly scale: number
   readonly setPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>
   readonly setRotation: React.Dispatch<React.SetStateAction<number>>
@@ -18,7 +16,7 @@ interface IProps {
 }
 
 export const ImageTopbar: React.FC<IProps> = props => {
-  const { filepath, scale, setPosition, setRotation, setScale } = props
+  const { scale, setPosition, setRotation, setScale } = props
 
   const onZoomIn = React.useCallback((): void => {
     setScale(prevScale => Math.min(prevScale + 0.2, 5))
@@ -51,24 +49,9 @@ export const ImageTopbar: React.FC<IProps> = props => {
   }, [setRotation])
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-      <div className="mb-2 inline-flex flex-initial items-center overflow-hidden md:mb-0 md:ml-4">
-        <h2 className="truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
-          {filepath}
-        </h2>
-        <div className="ml-2 w-28 p-2">
-          <CopyButton
-            className={cn(
-              'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
-              'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
-            )}
-            calcContentForCopy={() => filepath || ''}
-          />
-        </div>
-      </div>
+    <div className="flex items-center justify-end rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
       <div className="flex select-none items-center space-x-2 md:mr-2">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <button
             className={cn(
               'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
@@ -80,7 +63,7 @@ export const ImageTopbar: React.FC<IProps> = props => {
           >
             <ZoomOutIcon />
           </button>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <input
               type="range"
               min="0.1"
@@ -91,13 +74,13 @@ export const ImageTopbar: React.FC<IProps> = props => {
               className="h-2 w-24 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
               aria-label="Zoom level"
             />
-            <span className="min-w-[60px] text-sm font-medium text-gray-600 dark:text-gray-300">
+            <span className="w-10 text-sm font-medium text-gray-600 dark:text-gray-300">
               {Math.round(scale * 100)}%
             </span>
           </div>
           <button
             className={cn(
-              'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+              'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
               'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
               'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             )}

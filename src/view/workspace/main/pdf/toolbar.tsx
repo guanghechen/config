@@ -73,21 +73,6 @@ export const PDFToolbar: React.FC<IProps> = props => {
         className,
       )}
     >
-      <div className="mb-2 inline-flex flex-initial items-center overflow-hidden md:mb-0 md:ml-4">
-        <h2 className="truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
-          {filepath}
-        </h2>
-        <div className="ml-2 w-28 p-2">
-          <CopyButton
-            className={cn(
-              'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
-              'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
-            )}
-            calcContentForCopy={() => filepath || ''}
-          />
-        </div>
-      </div>
       <div className="mb-2 flex select-none items-center space-x-2 md:mb-0">
         <button
           className={cn(
@@ -131,7 +116,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           <ChevronRightIcon />
         </button>
       </div>
-      <div className="flex select-none items-center space-x-2">
+      <div className="flex select-none items-center gap-2">
         <button
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
@@ -154,13 +139,13 @@ export const PDFToolbar: React.FC<IProps> = props => {
             className="h-2 w-24 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
             aria-label="Zoom level"
           />
-          <span className="min-w-[60px] text-sm font-medium text-gray-600 dark:text-gray-300">
+          <span className="w-10 text-sm font-medium text-gray-600 dark:text-gray-300">
             {Math.round(scale * 100)}%
           </span>
         </div>
         <button
           className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}

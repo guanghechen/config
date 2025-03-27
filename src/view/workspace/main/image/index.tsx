@@ -14,10 +14,9 @@ export const ImageContainer: React.FC<ImageContainerProps> = props => {
   const [position, setPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 })
 
   return (
-    <div className="w-full max-w-[80rem] p-8">
+    <div className="w-full p-8">
       <div className="h-[4rem] border-b border-gray-200 dark:border-gray-700">
         <ImageTopbar
-          filepath={filepath}
           scale={scale}
           setPosition={setPosition}
           setRotation={setRotation}
