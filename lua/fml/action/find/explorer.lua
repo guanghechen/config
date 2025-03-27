@@ -435,8 +435,9 @@ local select = Select.new({
     end
 
     if #filepaths > 0 then
-      widget:hide()
       local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
+
+      widget:hide()
       for _, filepath in ipairs(filepaths) do
         eve.editor.open_filepath(winnr_sourcefile, filepath)
       end
