@@ -21,7 +21,7 @@ export class MathRenderer extends React.Component<Math> {
   public override render(): React.ReactElement {
     return (
       <MathJaxNode
-        className={cn(astClasses.math, 'text-blue-300')}
+        className={cn(astClasses.math, 'text-indigo-500 dark:text-blue-300')}
         inline={false}
         formula={this.props.value}
       />
