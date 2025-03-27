@@ -106,6 +106,9 @@ const SideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
 
   React.useEffect(() => {
     const usp = new URLSearchParams(window.location.search)
+    usp.delete('workspace')
+    usp.delete('filepath')
+
     if (workspace) usp.set('workspace', encodeURIComponent(workspace))
     if (filepath) usp.set('filepath', encodeURIComponent(filepath))
     const newUrl = `${window.location.pathname}?${usp.toString()}`

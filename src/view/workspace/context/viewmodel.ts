@@ -187,12 +187,13 @@ export class WorkspaceViewModel extends ViewModel {
 
     workspace$.subscribe(
       new Subscriber({
-        onNext: () => {
-          const workspace = workspace$.getSnapshot()
+        onNext: value => {
+          if (value === null) return
+
           const workspaces = workspaces$.getSnapshot()
           if (workspaces.length === 0) return
 
-          if (workspaces.some(item => item.tag === workspace)) return
+          if (workspaces.some(item => item.tag === value)) return
           filepath$.next(null)
           workspace$.next(workspaces[0].tag)
         },
