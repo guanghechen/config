@@ -286,7 +286,7 @@ return {
       ------------------------------------------------------------------------------------------------
 
       behaviour = {
-        auto_apply_diff_after_generation = true,
+        auto_apply_diff_after_generation = false,
         auto_focus_sidebar = true,
         auto_suggestions = false,
         auto_suggestions_respect_ignore = true,
