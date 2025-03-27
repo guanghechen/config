@@ -4,7 +4,7 @@ import cn from 'clsx'
 import React from 'react'
 import { FileTypeIcon } from '@/component/icon/filetype'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
-import { useWorkspaceViewmodel } from '../context'
+import type { WorkspaceViewModel } from '../context'
 
 interface FileItem {
   filepath: string
@@ -12,9 +12,13 @@ interface FileItem {
   extname: string
 }
 
-export const FileSearch: React.FC = () => {
-  const workspaceVM = useWorkspaceViewmodel()
-  const workspace = useStateValue(workspaceVM.workspace$)
+interface IProps {
+  readonly viewmodel: WorkspaceViewModel
+}
+
+export const FileSearch: React.FC<IProps> = props => {
+  const { viewmodel } = props
+  const workspace = useStateValue(viewmodel.workspace$)
   const { files } = useWorkspaceFiles(workspace, 0)
 
   const [isVisible, setIsVisible] = React.useState(false)
@@ -135,7 +139,7 @@ export const FileSearch: React.FC = () => {
   }, [])
 
   const onSelect = useEventCallback((filepath: string) => {
-    workspaceVM.filepath$.next(filepath)
+    viewmodel.filepath$.next(filepath)
     onClose()
   })
 

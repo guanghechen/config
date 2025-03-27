@@ -1,4 +1,5 @@
 import { State, Subscriber, ViewModel } from '@guanghechen/react-viewmodel'
+import debounce from 'lodash.debounce'
 import { FileTreeModeEnum } from '@/component/filetree/context/types'
 import type { IWorkspaceData, IWorkspaceItem } from './types'
 import { JsonModeEnum, MarkdownModeEnum } from './types'
@@ -46,6 +47,9 @@ export class WorkspaceViewModel extends ViewModel {
   public readonly workspacesDirtyTick$: State<number>
 
   public readonly mainScrollableContainer$: State<HTMLDivElement | null>
+  public readonly resizing$: State<boolean>
+
+  public readonly updateSidebarWidthDebounced: (nextWidth: number) => void
 
   public static fromData(data: Partial<IWorkspaceData> | undefined): WorkspaceViewModel {
     const {
@@ -144,33 +148,53 @@ export class WorkspaceViewModel extends ViewModel {
       sidebarWidth,
       sidebarVisible,
     } = props
-    this.filepath$ = new State<string | null>(filepath)
-    this.workspace$ = new State<string | null>(workspace)
-    this.workspaces$ = new State<IWorkspaceItem[]>(workspaces)
 
-    this.filetreeKeyword$ = new State<string>(filetreeKeyword)
-    this.filetreeMode$ = new State<FileTreeModeEnum>(filetreeMode)
-    this.jsonMode$ = new State<JsonModeEnum>(jsonMode)
-    this.markdownMode$ = new State<MarkdownModeEnum>(markdownMode)
+    const filepath$ = new State<string | null>(filepath)
+    const workspace$ = new State<string | null>(workspace)
+    const workspaces$ = new State<IWorkspaceItem[]>(workspaces)
 
-    this.sidebarVisible$ = new State<boolean>(sidebarVisible)
-    this.sidebarWidth$ = new State<number>(sidebarWidth)
+    const filetreeKeyword$ = new State<string>(filetreeKeyword)
+    const filetreeMode$ = new State<FileTreeModeEnum>(filetreeMode)
+    const jsonMode$ = new State<JsonModeEnum>(jsonMode)
+    const markdownMode$ = new State<MarkdownModeEnum>(markdownMode)
 
-    this.workspacesDirtyTick$ = new State<number>(0)
-    this.filepathDirtyTick$ = new State<number>(0)
+    const sidebarVisible$ = new State<boolean>(sidebarVisible)
+    const sidebarWidth$ = new State<number>(sidebarWidth)
 
-    this.mainScrollableContainer$ = new State<HTMLDivElement | null>(null)
+    const workspacesDirtyTick$ = new State<number>(0)
+    const filepathDirtyTick$ = new State<number>(0)
 
-    this.workspace$.subscribe(
+    const mainScrollableContainer$ = new State<HTMLDivElement | null>(null)
+    const resizing$ = new State<boolean>(false)
+
+    this.filepath$ = filepath$
+    this.workspace$ = workspace$
+    this.workspaces$ = workspaces$
+    this.filetreeKeyword$ = filetreeKeyword$
+    this.filetreeMode$ = filetreeMode$
+    this.jsonMode$ = jsonMode$
+    this.markdownMode$ = markdownMode$
+    this.sidebarVisible$ = sidebarVisible$
+    this.sidebarWidth$ = sidebarWidth$
+    this.workspacesDirtyTick$ = workspacesDirtyTick$
+    this.filepathDirtyTick$ = filepathDirtyTick$
+    this.mainScrollableContainer$ = mainScrollableContainer$
+    this.resizing$ = resizing$
+
+    this.updateSidebarWidthDebounced = debounce(function (nextWidth: number): void {
+      sidebarWidth$.next(nextWidth)
+    }, 100)
+
+    workspace$.subscribe(
       new Subscriber({
         onNext: () => {
-          const workspace = this.workspace$.getSnapshot()
-          const workspaces = this.workspaces$.getSnapshot()
+          const workspace = workspace$.getSnapshot()
+          const workspaces = workspaces$.getSnapshot()
           if (workspaces.length === 0) return
 
           if (workspaces.some(item => item.tag === workspace)) return
-          this.filepath$.next(null)
-          this.workspace$.next(workspaces[0].tag)
+          filepath$.next(null)
+          workspace$.next(workspaces[0].tag)
         },
       }),
     )

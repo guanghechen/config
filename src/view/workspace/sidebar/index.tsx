@@ -2,15 +2,20 @@ import { css } from '@emotion/css'
 import cn from 'clsx'
 import React from 'react'
 import { ArrowMenuClose, ArrowMenuOpen } from '@/component/icon/material'
-import { useSidebarVisible, useToggleSidebarVisible, useWorkspaceViewmodel } from '../context'
+import type { WorkspaceViewModel } from '../context'
+import { useSidebarVisible, useToggleSidebarVisible } from '../context'
 import { FileTree } from './FileTree'
 import { Workspace } from './Workspace'
 
-export const WorkspaceSidebar: React.FC = () => {
+interface IProps {
+  readonly viewmodel: WorkspaceViewModel
+}
+
+export const WorkspaceSidebar: React.FC<IProps> = props => {
+  const { viewmodel } = props
+
   const visible: boolean = useSidebarVisible()
   const onToggleVisible: () => void = useToggleSidebarVisible()
-
-  const viewmodel = useWorkspaceViewmodel()
   const width: number = viewmodel.sidebarWidth$.getSnapshot() // don't subscribe the width change since we adjust it in resizer callback
 
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -18,24 +23,26 @@ export const WorkspaceSidebar: React.FC = () => {
   const startXRef = React.useRef<number>(0)
   const startWidthRef = React.useRef<number>(0)
 
-  const onResizeStart = React.useCallback((e: React.MouseEvent) => {
-    if (containerRef.current) {
-      resizingRef.current = true
-      startXRef.current = e.clientX
-      startWidthRef.current = containerRef.current.offsetWidth
-      document.body.classList.add('resizing')
-    }
-  }, [])
+  const onResizeStart = React.useCallback(
+    (e: React.MouseEvent) => {
+      if (containerRef.current) {
+        resizingRef.current = true
+        startXRef.current = e.clientX
+        startWidthRef.current = containerRef.current.offsetWidth
+        viewmodel.resizing$.next(true)
+      }
+    },
+    [viewmodel.resizing$],
+  )
 
   const onResizeMove = React.useCallback(
     (e: MouseEvent) => {
       if (resizingRef.current) {
-        const newWidth: number = startWidthRef.current + (e.clientX - startXRef.current)
-        const halfWidth = document.documentElement.clientWidth / 2
-
-        if (newWidth >= 240 && newWidth <= halfWidth) {
-          if (containerRef.current) containerRef.current.style.width = `${newWidth}px`
-          viewmodel.sidebarWidth$.next(newWidth)
+        const halfScreenWidth: number = document.documentElement.clientWidth / 2
+        const nextWidth: number = startWidthRef.current + (e.clientX - startXRef.current)
+        if (nextWidth >= 240 && nextWidth <= halfScreenWidth) {
+          if (containerRef.current) containerRef.current.style.width = `${nextWidth}px`
+          viewmodel.updateSidebarWidthDebounced(nextWidth)
         }
       }
     },
@@ -45,9 +52,9 @@ export const WorkspaceSidebar: React.FC = () => {
   const onResizeEnd = React.useCallback(() => {
     if (resizingRef.current) {
       resizingRef.current = false
-      document.body.classList.remove('resizing')
+      viewmodel.resizing$.next(false)
     }
-  }, [])
+  }, [viewmodel.resizing$])
 
   React.useEffect(() => {
     document.addEventListener('mousemove', onResizeMove)
@@ -56,9 +63,9 @@ export const WorkspaceSidebar: React.FC = () => {
     return () => {
       document.removeEventListener('mousemove', onResizeMove)
       document.removeEventListener('mouseup', onResizeEnd)
-      document.body.classList.remove('resizing')
+      viewmodel.resizing$.next(false)
     }
-  }, [onResizeMove, onResizeEnd])
+  }, [onResizeMove, onResizeEnd, viewmodel.resizing$])
 
   return (
     <div

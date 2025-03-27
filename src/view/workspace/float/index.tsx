@@ -1,13 +1,22 @@
 import React from 'react'
+import type { WorkspaceViewModel } from '../context'
 import { FileSearch } from './FileSearch'
 
-export const WorkspaceFloat: React.FC = () => {
-  return (
-    <React.Fragment>
-      <FileSearch />
-    </React.Fragment>
-  )
+interface IProps {
+  readonly viewmodel: WorkspaceViewModel
 }
 
-WorkspaceFloat.displayName = 'WorkspaceFloat'
+export class WorkspaceFloat extends React.Component<IProps> {
+  public static readonly displayName = 'WorkspaceFloat'
+
+  public override render(): React.ReactElement {
+    const { viewmodel } = this.props
+    return (
+      <React.Fragment>
+        <FileSearch viewmodel={viewmodel} />
+      </React.Fragment>
+    )
+  }
+}
+
 export default WorkspaceFloat

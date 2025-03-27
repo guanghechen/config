@@ -1,10 +1,15 @@
 import React from 'react'
 import { ArrowMenuClose, ArrowMenuOpen } from '@/component/icon/material'
 import { ThemeToggle } from '@/container/ThemeToggle'
+import type { WorkspaceViewModel } from '../context'
 import { useSidebarVisible, useToggleSidebarVisible } from '../context'
 import { Workspace } from '../sidebar/Workspace'
 
-export const WorkspaceTopbar: React.FC = () => {
+interface IProps {
+  readonly viewmodel: WorkspaceViewModel
+}
+
+export const WorkspaceTopbar: React.FC<IProps> = () => {
   const sidebarVisible: boolean = useSidebarVisible()
   const onToggleSidebarVisible: () => void = useToggleSidebarVisible()
 

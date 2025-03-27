@@ -22,6 +22,13 @@ export const useSidebarWidth = (): number => {
   return useStateValue(viewmodel.sidebarWidth$)
 }
 
+export const useResizing = (): boolean => {
+  const viewmodel = useWorkspaceViewmodel()
+  return useStateValue(viewmodel.resizing$)
+}
+
+// -------------------------------------------------------------------------------------------------
+
 export const useSetSidebarVisible = (): ISetState<boolean> => {
   const viewmodel = useWorkspaceViewmodel()
   return useSetState(viewmodel.sidebarVisible$)
