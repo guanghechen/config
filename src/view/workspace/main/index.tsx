@@ -6,6 +6,7 @@ const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
 const MarkdownContainer = React.lazy(() => import('./markdown'))
 const PDFContainer = React.lazy(() => import('./pdf'))
+const SvgContainer = React.lazy(() => import('./svg'))
 const UnknownContainer = React.lazy(() => import('./unknown'))
 
 interface IProps {
@@ -31,10 +32,11 @@ export const WorkspaceMain: React.FC<IProps> = props => {
         return <MarkdownContainer />
       case '.pdf':
         return <PDFContainer filepath={filepath} workspace={workspace} />
+      case '.svg':
+        return <SvgContainer filepath={filepath} workspace={workspace} />
       case '.png':
       case '.jpg':
       case '.jpeg':
-      case '.svg':
         return <ImageContainer filepath={filepath} workspace={workspace} />
       default:
         return <UnknownContainer extname={extname} filepath={filepath} />
