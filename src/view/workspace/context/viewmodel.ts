@@ -48,7 +48,6 @@ export class WorkspaceViewModel extends ViewModel {
   public readonly workspacesDirtyTick$: State<number>
 
   public readonly mainScrollableContainer$: State<HTMLDivElement | null>
-  public readonly resizing$: State<boolean>
 
   public readonly updateSidebarWidthDebounced: (nextWidth: number) => void
 
@@ -167,7 +166,6 @@ export class WorkspaceViewModel extends ViewModel {
     const workspacesDirtyTick$ = new State<number>(0)
 
     const mainScrollableContainer$ = new State<HTMLDivElement | null>(null)
-    const resizing$ = new State<boolean>(false)
 
     this.filepath$ = filepath$
     this.workspace$ = workspace$
@@ -184,7 +182,6 @@ export class WorkspaceViewModel extends ViewModel {
     this.workspacesDirtyTick$ = workspacesDirtyTick$
 
     this.mainScrollableContainer$ = mainScrollableContainer$
-    this.resizing$ = resizing$
 
     this.updateSidebarWidthDebounced = debounce(function (nextWidth: number): void {
       sidebarWidth$.next(nextWidth)

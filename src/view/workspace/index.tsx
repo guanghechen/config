@@ -1,17 +1,10 @@
-import cn from 'clsx'
 import React from 'react'
-import { WorkspaceContextProvider, useResizing, useWorkspaceViewmodel } from './context'
+import { WorkspaceContextProvider, useWorkspaceViewmodel } from './context'
 import { WorkspaceLayout } from './Layout'
 
 export const WorkspaceContaienr: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
-  const resizing: boolean = useResizing()
-
-  return (
-    <div className={cn({ 'select-none': resizing })}>
-      <WorkspaceLayout viewmodel={viewmodel} />
-    </div>
-  )
+  return <WorkspaceLayout viewmodel={viewmodel} />
 }
 
 export const WorkspaceView: React.FC = () => {

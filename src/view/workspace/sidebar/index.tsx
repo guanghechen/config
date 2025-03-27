@@ -20,17 +20,14 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
   const startXRef = React.useRef<number>(0)
   const startWidthRef = React.useRef<number>(0)
 
-  const onResizeStart = React.useCallback(
-    (e: React.MouseEvent) => {
-      if (containerRef.current) {
-        resizingRef.current = true
-        startXRef.current = e.clientX
-        startWidthRef.current = containerRef.current.offsetWidth
-        viewmodel.resizing$.next(true)
-      }
-    },
-    [viewmodel.resizing$],
-  )
+  const onResizeStart = React.useCallback((e: React.MouseEvent) => {
+    if (containerRef.current) {
+      resizingRef.current = true
+      startXRef.current = e.clientX
+      startWidthRef.current = containerRef.current.offsetWidth
+      document.body.classList.add('selection-none')
+    }
+  }, [])
 
   const onResizeMove = React.useCallback(
     (e: MouseEvent) => {
@@ -49,9 +46,9 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
   const onResizeEnd = React.useCallback(() => {
     if (resizingRef.current) {
       resizingRef.current = false
-      viewmodel.resizing$.next(false)
+      document.body.classList.remove('selection-none')
     }
-  }, [viewmodel.resizing$])
+  }, [])
 
   React.useEffect(() => {
     document.addEventListener('mousemove', onResizeMove)
@@ -60,9 +57,9 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
     return () => {
       document.removeEventListener('mousemove', onResizeMove)
       document.removeEventListener('mouseup', onResizeEnd)
-      viewmodel.resizing$.next(false)
+      document.body.classList.remove('selection-none')
     }
-  }, [onResizeMove, onResizeEnd, viewmodel.resizing$])
+  }, [onResizeMove, onResizeEnd])
 
   return (
     <div
@@ -78,7 +75,7 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
         <FileTree />
       </div>
       <div
-        className="absolute right-[-8px] top-0 box-content h-full w-[1px] cursor-col-resize border-8 border-b-0 border-t-0 border-solid border-transparent bg-clip-content hover:bg-blue-500 hover:opacity-50"
+        className="border-1 absolute right-0 top-0 box-content h-full w-[1px] cursor-col-resize border-b-0 border-t-0 border-solid border-transparent bg-clip-content hover:bg-blue-500 hover:opacity-50"
         onMouseDown={onResizeStart}
       />
     </div>
