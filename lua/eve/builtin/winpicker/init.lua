@@ -65,9 +65,18 @@ function M.pick_window(filter, winnr_source, split_as_needed)
     if split_as_needed then
       for _, winnr in ipairs(winnrs) do
         if not eve.editor.is_win_floating(winnr) then
+          local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+          vim.bo[bufnr].bufhidden = "wipe"
+          vim.bo[bufnr].buflisted = true
+          vim.bo[bufnr].buftype = "nofile"
+          vim.bo[bufnr].filetype = "text"
+          vim.bo[bufnr].swapfile = false
+
           vim.api.nvim_set_current_win(winnr)
           vim.cmd("vsplit")
-          return vim.api.nvim_get_current_win() ---@type integer
+          local winnr_new = vim.api.nvim_get_current_win() ---@type integer
+          vim.api.nvim_win_set_buf(winnr_new, bufnr)
+          return winnr_new
         end
       end
     end

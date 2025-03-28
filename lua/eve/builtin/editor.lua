@@ -64,11 +64,12 @@ function M.pick_sourcefile_win(winnr_source)
     return winnr_source
   end
 
-  local winnr_sourcefile
-  eve.winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true) ---@type integer|nil
-  if winnr_sourcefile ~= nil then
-    vim.w[winnr_sourcefile][eve.var.Names.FLAG_SOURCEFILE] = true
+  local winnr_sourcefile = eve.winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true) ---@type integer|nil
+  if winnr_sourcefile == nil then
+    return nil
   end
+
+  vim.w[winnr_sourcefile][eve.var.Names.FLAG_SOURCEFILE] = true
   return winnr_sourcefile
 end
 
@@ -269,13 +270,6 @@ function M.is_valid_filepath(filepath)
     return false
   end
   return eve.fs.is_file_or_dir(filepath) == "file"
-end
-
----@param winnr                         integer
-function M.mark_win_sourcefile(winnr)
-  if M.is_win_valid(winnr) then
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
-  end
 end
 
 ---@param winnr_source                  integer|nil

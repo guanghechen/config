@@ -89,12 +89,14 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = arg.buf ---@type integer
 
-    eve.state.win.on_buf_enter(winnr, bufnr)
-    eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
+    vim.schedule(function()
+      eve.state.win.on_buf_enter(winnr, bufnr)
+      eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
 
-    eve.state.status.dirty_winline_nr:next(winnr)
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
+      eve.state.status.dirty_winline_nr:next(winnr)
+      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_tabline:mark_dirty()
+    end)
   end,
 })
 
@@ -105,11 +107,13 @@ vim.api.nvim_create_autocmd({ "WinEnter" }, {
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = arg.buf ---@type integer
 
-    eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
-    eve.state.editor.on_win_enter(winnr)
+    vim.schedule(function()
+      eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
+      eve.state.editor.on_win_enter(winnr)
 
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
+      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.state.status.dirtier_tabline:mark_dirty()
+    end)
   end,
 })
 
