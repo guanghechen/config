@@ -1,7 +1,7 @@
 import type { FootnoteReference } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
-import { astClasses, useFootnoteHighlighting } from '../context'
+import { useFootnoteHighlighting } from '../context'
 
 /**
  * Render yozora `footnoteReference`.
@@ -24,7 +24,7 @@ export const FootnoteReferenceRenderer: React.FC<FootnoteReference> = props => {
       ref={ref}
       id={refid}
       className={cn(
-        astClasses.footnoteReference,
+        'yozora-footnote-reference',
         highlighting && 'bg-fuchsia-300 rounded-md animate-pulse px-1 font-bold text-black',
       )}
     >

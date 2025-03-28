@@ -1,7 +1,5 @@
-import { css, cx } from '@emotion/css'
 import type { InlineCode } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
 
 /**
  * Render `inline-code`.
@@ -18,21 +16,10 @@ export class InlineCodeRenderer extends React.Component<InlineCode> {
   }
 
   public override render(): React.ReactElement {
-    return <code className={cls}>{this.props.value}</code>
+    return (
+      <code className="yozora-inline-code m-0 rounded bg-slate-300/15 p-1 font-mono text-[min(1rem,18px)] font-medium leading-tight text-rose-500">
+        {this.props.value}
+      </code>
+    )
   }
 }
-
-const cls = cx(
-  astClasses.inlineCode,
-  css({
-    padding: '1px 4px',
-    borderRadius: '4px',
-    margin: 0,
-    background: 'var(--colorBgInlineCode)',
-    lineHeight: '1.375',
-    color: 'var(--colorInlineCode)',
-    fontFamily: 'var(--fontFamilyCode)',
-    fontSize: 'min(1rem, 18px)',
-    fontWeight: 500,
-  }),
-)

@@ -1,4 +1,3 @@
-import { css } from '@emotion/css'
 import cn from 'clsx'
 import React from 'react'
 
@@ -21,7 +20,10 @@ export class ImageRendererInner extends React.Component<IProps> {
     const figureStyle: React.CSSProperties = { width, height }
 
     return (
-      <figure className={cn(className, cls)} style={figureStyle}>
+      <figure
+        className={cn(className, 'box-border max-w-full flex flex-col items-center m-0 px-8')}
+        style={figureStyle}
+      >
         <img
           alt={alt}
           src={src}
@@ -31,8 +33,11 @@ export class ImageRendererInner extends React.Component<IProps> {
           loading={loading}
           width={width}
           height={height}
+          className="box-border flex-1 border border-purple-600 object-contain shadow-[0_0_20px_1px_rgba(126,125,150,0.6)]"
         />
-        {title && <figcaption>{title}</figcaption>}
+        {title && (
+          <figcaption className="text-center text-base italic text-gray-500">{title}</figcaption>
+        )}
       </figure>
     )
   }
@@ -69,26 +74,3 @@ export class ImageRendererInner extends React.Component<IProps> {
     }
   }
 }
-
-const cls = css({
-  boxSizing: 'border-box',
-  maxWidth: '80%', // Prevent images from overflowing the container.
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  margin: 0,
-  '> img': {
-    flex: '1 0 auto',
-    boxSizing: 'border-box',
-    maxWidth: '100%',
-    objectFit: 'contain',
-    border: '1px solid var(--colorBorderImage)',
-    boxShadow: '0 0 20px 1px rgba(126, 125, 150, 0.6)',
-  },
-  '> figcaption': {
-    textAlign: 'center',
-    fontStyle: 'italic',
-    fontSize: '1em',
-    color: 'var(--colorImageTitle)',
-  },
-})

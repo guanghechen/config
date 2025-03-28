@@ -1,7 +1,5 @@
-import { css, cx } from '@emotion/css'
 import type { Delete, Node } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -21,19 +19,9 @@ export class DeleteRenderer extends React.Component<Delete> {
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
-      <del className={cls}>
+      <del className="yozora-delete mx-1 italic text-slate-400 line-through">
         <NodesRenderer nodes={childNodes} />
       </del>
     )
   }
 }
-
-const cls = cx(
-  astClasses.delete,
-  css({
-    marginRight: '4px',
-    color: 'var(--colorDelete)',
-    fontStyle: 'italic',
-    textDecoration: 'line-through',
-  }),
-)

@@ -1,7 +1,5 @@
 import type { Emphasis, Node } from '@yozora/ast'
-import cn from 'clsx'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -21,7 +19,7 @@ export class EmphasisRenderer extends React.Component<Emphasis> {
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
-      <em className={cn(astClasses.emphasis, 'italic mr-2 ml-1')}>
+      <em className="yozora-emphasis ml-1 mr-2 italic">
         <NodesRenderer nodes={childNodes} />
       </em>
     )

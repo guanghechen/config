@@ -1,8 +1,6 @@
 import type { InlineMath } from '@yozora/ast'
 import { MathJaxNode } from '@yozora/react-mathjax'
-import cn from 'clsx'
 import React from 'react'
-import { astClasses } from '../context'
 
 /**
  * Render yozora `inline-math`.
@@ -21,7 +19,7 @@ export class InlineMathRenderer extends React.Component<InlineMath> {
   public override render(): React.ReactElement {
     return (
       <MathJaxNode
-        className={cn(astClasses.inlineMath, 'text-indigo-500 dark:text-blue-300')}
+        className="yozora-inline-math text-indigo-500 dark:text-blue-300"
         inline={true}
         formula={this.props.value}
       />
