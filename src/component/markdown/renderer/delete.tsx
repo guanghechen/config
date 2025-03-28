@@ -11,11 +11,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class DeleteRenderer extends React.Component<Delete> {
   public static displayName = 'YozoraDelete'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Delete>): boolean {
-    const props = this.props
-    return props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
@@ -23,5 +18,10 @@ export class DeleteRenderer extends React.Component<Delete> {
         <NodesRenderer nodes={childNodes} />
       </del>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Delete>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 }

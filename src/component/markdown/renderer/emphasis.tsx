@@ -11,11 +11,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class EmphasisRenderer extends React.Component<Emphasis> {
   public static displayName = 'YozoraEmphasis'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Emphasis>): boolean {
-    const props = this.props
-    return props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
@@ -23,5 +18,10 @@ export class EmphasisRenderer extends React.Component<Emphasis> {
         <NodesRenderer nodes={childNodes} />
       </em>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Emphasis>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 }

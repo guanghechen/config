@@ -13,11 +13,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class ListItemRenderer extends React.Component<ListItem> {
   public static displayName = 'YozoraListItem'
 
-  public override shouldComponentUpdate(nextProps: Readonly<ListItem>): boolean {
-    const props = this.props
-    return props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
@@ -25,6 +20,11 @@ export class ListItemRenderer extends React.Component<ListItem> {
         <NodesRenderer nodes={childNodes} />
       </li>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<ListItem>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 }
 

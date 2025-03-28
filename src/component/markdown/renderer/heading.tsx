@@ -15,15 +15,6 @@ type IHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
 export class HeadingRenderer extends React.Component<Heading> {
   public static displayName = 'YozoraHeading'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Heading>): boolean {
-    const props = this.props
-    return (
-      props.depth !== nextProps.depth ||
-      props.identifier !== nextProps.identifier ||
-      props.children !== nextProps.children
-    )
-  }
-
   public override render(): React.ReactElement {
     const { depth, identifier, children } = this.props
 
@@ -48,6 +39,15 @@ export class HeadingRenderer extends React.Component<Heading> {
           <NodesRenderer nodes={children} />
         </p>
       </H>
+    )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Heading>): boolean {
+    const props = this.props
+    return (
+      props.depth !== nextProps.depth ||
+      props.identifier !== nextProps.identifier ||
+      props.children !== nextProps.children
     )
   }
 }

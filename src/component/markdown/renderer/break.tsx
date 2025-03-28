@@ -12,12 +12,12 @@ import { astClasses } from '../context'
 export class BreakRenderer extends React.Component<Break> {
   public static displayName = 'YozoraBreak'
 
-  public override shouldComponentUpdate(): boolean {
-    return false
-  }
-
   public override render(): React.ReactElement {
     return <br className={cls} />
+  }
+
+  public override shouldComponentUpdate(): boolean {
+    return false
   }
 }
 

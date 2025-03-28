@@ -10,16 +10,16 @@ import React from 'react'
 export class InlineCodeRenderer extends React.Component<InlineCode> {
   public static displayName = 'YozoraInlineCode'
 
-  public override shouldComponentUpdate(nextProps: Readonly<InlineCode>): boolean {
-    const props = this.props
-    return props.value !== nextProps.value
-  }
-
   public override render(): React.ReactElement {
     return (
       <code className="yozora-inline-code m-0 rounded bg-slate-300/15 p-1 font-mono text-[min(1rem,18px)] font-medium leading-tight text-rose-500">
         {this.props.value}
       </code>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<InlineCode>): boolean {
+    const props = this.props
+    return props.value !== nextProps.value
   }
 }

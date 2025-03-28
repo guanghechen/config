@@ -18,11 +18,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class TableRenderer extends React.Component<Table> {
   public static displayName = 'YozoraTable'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Table>): boolean {
-    const props = this.props
-    return !equals(props.columns, nextProps.columns) || !equals(props.children, nextProps.children)
-  }
-
   public override render(): React.ReactElement {
     const { columns, children: rows } = this.props
     const aligns = columns.map(col => col.align ?? undefined)
@@ -54,6 +49,11 @@ export class TableRenderer extends React.Component<Table> {
       </table>
     )
   }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Table>): boolean {
+    const props = this.props
+    return !equals(props.columns, nextProps.columns) || !equals(props.children, nextProps.children)
+  }
 }
 
 interface IThProps {
@@ -69,11 +69,6 @@ class Th extends React.Component<IThProps> {
     this.ref = { current: null }
   }
 
-  public override shouldComponentUpdate(nextProps: Readonly<IThProps>): boolean {
-    const props = this.props
-    return props.align !== nextProps.align || props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const { align, children } = this.props
     return (
@@ -81,6 +76,11 @@ class Th extends React.Component<IThProps> {
         {children}
       </th>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<IThProps>): boolean {
+    const props = this.props
+    return props.align !== nextProps.align || props.children !== nextProps.children
   }
 
   public override componentDidMount(): void {

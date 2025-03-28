@@ -32,3 +32,4 @@ export const Mermaid: React.FC<IProps> = props => {
 
   return <div ref={ref} />
 }
+Mermaid.displayName = 'CodeRendererMermaid'

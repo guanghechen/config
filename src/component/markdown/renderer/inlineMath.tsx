@@ -11,11 +11,6 @@ import React from 'react'
 export class InlineMathRenderer extends React.Component<InlineMath> {
   public static displayName = 'YozoraInlineMath'
 
-  public override shouldComponentUpdate(nextProps: Readonly<InlineMath>): boolean {
-    const props = this.props
-    return props.value !== nextProps.value
-  }
-
   public override render(): React.ReactElement {
     return (
       <MathJaxNode
@@ -24,5 +19,10 @@ export class InlineMathRenderer extends React.Component<InlineMath> {
         formula={this.props.value}
       />
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<InlineMath>): boolean {
+    const props = this.props
+    return props.value !== nextProps.value
   }
 }

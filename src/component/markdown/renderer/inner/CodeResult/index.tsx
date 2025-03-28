@@ -2,6 +2,7 @@ import cn from 'clsx'
 import React from 'react'
 import { TerminalIcon } from '@/component/icon/material'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
+import { Math } from './math'
 import { Mermaid } from './mermaid'
 
 interface ICodeResultRendererProps {
@@ -14,6 +15,8 @@ const CodeResultRenderer: React.FC<ICodeResultRendererProps> = props => {
   const { lang, code } = props
 
   switch (lang.toLowerCase()) {
+    case 'math':
+      return <Math code={code} />
     case 'mermaid':
       return <Mermaid code={code} />
     default:

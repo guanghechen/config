@@ -11,11 +11,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class StrongRenderer extends React.Component<Strong> {
   public static displayName = 'YozoraStrong'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Strong>): boolean {
-    const props = this.props
-    return props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
@@ -23,5 +18,10 @@ export class StrongRenderer extends React.Component<Strong> {
         <NodesRenderer nodes={childNodes} />
       </strong>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Strong>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 }

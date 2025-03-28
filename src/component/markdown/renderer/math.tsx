@@ -11,11 +11,6 @@ import React from 'react'
 export class MathRenderer extends React.Component<Math> {
   public static displayName = 'YozoraMath'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Math>): boolean {
-    const props = this.props
-    return props.value !== nextProps.value
-  }
-
   public override render(): React.ReactElement {
     return (
       <MathJaxNode
@@ -24,5 +19,10 @@ export class MathRenderer extends React.Component<Math> {
         formula={this.props.value}
       />
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Math>): boolean {
+    const props = this.props
+    return props.value !== nextProps.value
   }
 }

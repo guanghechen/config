@@ -12,11 +12,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class AdmonitionRenderer extends React.Component<Admonition> {
   public static displayName = 'YozoraAdmonition'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Admonition>): boolean {
-    const props = this.props
-    return props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const { children: childNodes, keyword } = this.props
 
@@ -52,6 +47,11 @@ export class AdmonitionRenderer extends React.Component<Admonition> {
         <NodesRenderer nodes={childNodes} />
       </div>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Admonition>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 }
 

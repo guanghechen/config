@@ -10,12 +10,12 @@ import React from 'react'
 export class TextRenderer extends React.Component<Text> {
   public static displayName = 'YozoraText'
 
+  public override render(): React.ReactElement {
+    return <React.Fragment>{this.props.value}</React.Fragment>
+  }
+
   public override shouldComponentUpdate(nextProps: Readonly<Text>): boolean {
     const props = this.props
     return props.value !== nextProps.value
-  }
-
-  public override render(): React.ReactElement {
-    return <React.Fragment>{this.props.value}</React.Fragment>
   }
 }

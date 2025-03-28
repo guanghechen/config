@@ -14,11 +14,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class ParagraphRenderer extends React.Component<Paragraph> {
   public static displayName = 'YozoraParagraph'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Paragraph>): boolean {
-    const props = this.props
-    return props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
 
@@ -43,6 +38,11 @@ export class ParagraphRenderer extends React.Component<Paragraph> {
         <NodesRenderer nodes={childNodes} />
       </div>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Paragraph>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 }
 

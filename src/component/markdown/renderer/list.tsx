@@ -13,16 +13,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class ListRenderer extends React.Component<List> {
   public static displayName = 'YozoraList'
 
-  public override shouldComponentUpdate(nextProps: Readonly<List>): boolean {
-    const props = this.props
-    return (
-      props.ordered !== nextProps.ordered ||
-      props.orderType !== nextProps.orderType ||
-      props.start !== nextProps.start ||
-      props.children !== nextProps.children
-    )
-  }
-
   public override render(): React.ReactElement {
     const { ordered, orderType, start, children } = this.props
 
@@ -38,6 +28,16 @@ export class ListRenderer extends React.Component<List> {
       <ul className={ulCls}>
         <NodesRenderer nodes={children} />
       </ul>
+    )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<List>): boolean {
+    const props = this.props
+    return (
+      props.ordered !== nextProps.ordered ||
+      props.orderType !== nextProps.orderType ||
+      props.start !== nextProps.start ||
+      props.children !== nextProps.children
     )
   }
 }

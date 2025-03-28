@@ -12,17 +12,6 @@ interface IProps {
 }
 
 export class LinkRendererInner extends React.Component<IProps> {
-  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
-    const props = this.props
-    return (
-      props.target !== nextProps.target ||
-      props.title !== nextProps.title ||
-      props.url !== nextProps.url ||
-      props.childNodes !== nextProps.childNodes ||
-      props.className !== nextProps.className
-    )
-  }
-
   public override render(): React.ReactElement {
     const { target, title, url, childNodes, className } = this.props
     return (
@@ -35,6 +24,17 @@ export class LinkRendererInner extends React.Component<IProps> {
       >
         <NodesRenderer nodes={childNodes} />
       </a>
+    )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
+    const props = this.props
+    return (
+      props.target !== nextProps.target ||
+      props.title !== nextProps.title ||
+      props.url !== nextProps.url ||
+      props.childNodes !== nextProps.childNodes ||
+      props.className !== nextProps.className
     )
   }
 }

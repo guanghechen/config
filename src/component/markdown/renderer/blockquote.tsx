@@ -13,11 +13,6 @@ import { NodesRenderer } from '../NodesRenderer'
 export class BlockquoteRenderer extends React.Component<Blockquote> {
   public static displayName = 'YozoraBlockquote'
 
-  public override shouldComponentUpdate(nextProps: Readonly<Blockquote>): boolean {
-    const props = this.props
-    return props.children !== nextProps.children
-  }
-
   public override render(): React.ReactElement {
     const childNodes = this.props.children
     return (
@@ -25,6 +20,11 @@ export class BlockquoteRenderer extends React.Component<Blockquote> {
         <NodesRenderer nodes={childNodes} />
       </blockquote>
     )
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<Blockquote>): boolean {
+    const props = this.props
+    return props.children !== nextProps.children
   }
 }
 
