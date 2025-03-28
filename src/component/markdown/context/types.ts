@@ -41,6 +41,17 @@ import type {
 } from '@yozora/ast'
 import type React from 'react'
 
+export interface IMarkdownImageItem {
+  /**
+   * Image url
+   */
+  readonly src: string
+  /**
+   * Alt of image.
+   */
+  readonly alt: string
+}
+
 // Renderer for markdown AST node.
 export type INodeRenderer<T extends Node = Node> = React.ComponentType<T> | React.FC<T>
 
