@@ -9,16 +9,23 @@ interface IProps {
   readonly onClose?: (e: React.MouseEvent) => void
 }
 
+// Scale step for mouse wheel scaling
+const SCALE_STEP = 0.1
+
 export const ImageViewer: React.FC<IProps> = props => {
   const { src, alt, isOpen, initialScale = 1, initialRotation = 0, onClose } = props
   const [rotation, setRotation] = React.useState(initialRotation)
   const [scale, setScale] = React.useState(initialScale)
+  const [position, setPosition] = React.useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = React.useState(false)
+  const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 })
 
   const handleClose = React.useCallback(
     (e: React.MouseEvent): void => {
       e.stopPropagation()
       setRotation(initialRotation)
       setScale(initialScale)
+      setPosition({ x: 0, y: 0 })
       onClose?.(e)
     },
     [initialRotation, initialScale, onClose],
@@ -49,15 +56,68 @@ export const ImageViewer: React.FC<IProps> = props => {
       e.stopPropagation()
       setRotation(initialRotation)
       setScale(initialScale)
+      setPosition({ x: 0, y: 0 })
     },
     [initialRotation, initialScale],
   )
+
+  const handleMouseDown = React.useCallback(
+    (e: React.MouseEvent): void => {
+      e.stopPropagation()
+      setIsDragging(true)
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+    },
+    [position],
+  )
+
+  const handleMouseMove = React.useCallback(
+    (e: React.MouseEvent): void => {
+      if (isDragging) {
+        e.stopPropagation()
+        setPosition({
+          x: e.clientX - dragStart.x,
+          y: e.clientY - dragStart.y,
+        })
+      }
+    },
+    [isDragging, dragStart],
+  )
+
+  const handleMouseUp = React.useCallback((): void => {
+    setIsDragging(false)
+  }, [])
+
+  // Handle mouse events outside the component
+  React.useEffect(() => {
+    if (isOpen) {
+      const handleGlobalMouseUp = (): void => {
+        setIsDragging(false)
+      }
+
+      const handleGlobalMouseMove = (e: MouseEvent): void => {
+        if (isDragging) {
+          setPosition({
+            x: e.clientX - dragStart.x,
+            y: e.clientY - dragStart.y,
+          })
+        }
+      }
+
+      window.addEventListener('mouseup', handleGlobalMouseUp)
+      window.addEventListener('mousemove', handleGlobalMouseMove)
+
+      return () => {
+        window.removeEventListener('mouseup', handleGlobalMouseUp)
+        window.removeEventListener('mousemove', handleGlobalMouseMove)
+      }
+    }
+  }, [isOpen, isDragging, dragStart])
 
   if (!isOpen) return null
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80"
+      className="fixed inset-0 z-50 flex select-none flex-col items-center justify-center bg-black/80"
       onClick={handleClose}
     >
       <div className="absolute right-4 top-4 flex gap-4">
@@ -179,16 +239,43 @@ export const ImageViewer: React.FC<IProps> = props => {
           </svg>
         </button>
       </div>
-      <div className="max-h-[90vh] max-w-[90vw] overflow-hidden" onClick={e => e.stopPropagation()}>
-        <img
-          alt={alt}
-          src={src}
-          className="object-contain"
+      <div
+        className="flex h-screen w-screen items-center justify-center overflow-hidden"
+        onClick={e => e.stopPropagation()}
+        onWheel={e => {
+          // Only handle scaling when Alt key is pressed (as per your current implementation)
+          // or Ctrl key is pressed (as per your request)
+          if (e.altKey || e.ctrlKey) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            // Determine scaling direction from wheel delta
+            const delta = e.deltaY < 0 ? SCALE_STEP : -SCALE_STEP
+            setScale(prevScale => Math.max(0.2, prevScale + delta))
+          }
+        }}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        <div
           style={{
-            transform: `rotate(${rotation}deg) scale(${scale})`,
-            transition: 'transform 0.3s ease',
+            position: 'relative',
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            cursor: isDragging ? 'grabbing' : 'grab',
           }}
-        />
+          onMouseDown={handleMouseDown}
+        >
+          <img
+            alt={alt}
+            src={src}
+            className="object-contain"
+            style={{
+              transform: `rotate(${rotation}deg) scale(${scale})`,
+              transition: isDragging ? 'none' : 'transform 0.3s ease',
+            }}
+          />
+        </div>
       </div>
     </div>
   )
