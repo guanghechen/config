@@ -81,8 +81,11 @@ function M.line()
     border = "rounded",
   })
 
-  local dressing_float_win = require("fml.dressing.floatwin")
-  dressing_float_win(winnr, 100)
+  vim.schedule(function()
+    if winnr ~= nil and eve.editor.is_win_valid(winnr) then
+      vim.api.nvim_set_current_win(winnr)
+    end
+  end)
 end
 
 return M
