@@ -71,7 +71,7 @@ export const fetchFile: IApiHandle = async params => {
       try {
         const content: string = await fs.readFile(filepath, 'utf8')
         data = {
-          data: JSON.parse(content),
+          data: { content },
         }
       } catch (error) {
         state.reporter.error('Failed to parse json:', { filepath, error })

@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import CodeHighlighter from '@yozora/react-code-highlighter'
 import cn from 'clsx'
+import JSON5 from 'json5'
 import React from 'react'
 import { Json } from '@/component/json'
 import { PRESET_CLASSES } from '@/constant/classes'
@@ -8,7 +9,7 @@ import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { JsonModeEnum, useWorkspaceViewmodel } from '../../context'
 
 interface IProps {
-  readonly json: unknown
+  readonly content: string | undefined
 }
 
 const DEFAULT_JSON = {
@@ -57,7 +58,7 @@ const DEFAULT_JSON = {
 }
 
 export const JsonComposer: React.FC<IProps> = props => {
-  const { json = DEFAULT_JSON } = props
+  const { content } = props
   const siteVM = useSiteViewmodel()
   const workspaceVM = useWorkspaceViewmodel()
   const mode: JsonModeEnum = useStateValue(workspaceVM.jsonMode$)
@@ -67,7 +68,10 @@ export const JsonComposer: React.FC<IProps> = props => {
   const showLiteral: boolean = (mode & JsonModeEnum.LITERAL) !== 0
   const columns: number = (showView ? 1 : 0) + (showLiteral ? 1 : 0)
 
-  const code: string = React.useMemo<string>(() => JSON.stringify(json, null, 2), [json])
+  const json = React.useMemo<unknown>(
+    () => (typeof content === 'string' ? JSON5.parse(content) : DEFAULT_JSON),
+    [content],
+  )
 
   return (
     <div className="flex h-[calc(100vh-5rem)] w-full items-start justify-center p-4">
@@ -93,7 +97,7 @@ export const JsonComposer: React.FC<IProps> = props => {
             <CodeHighlighter
               darken={theme === SiteTheme.DARKEN}
               lang="json"
-              value={code}
+              value={content || ''}
               collapsed={false}
               showLineNo={true}
               className={PRESET_CLASSES.scrollbar}

@@ -1,15 +1,21 @@
 import type { Root } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
 
-export interface IMarkdownData {
+export interface IMarkdownFileData {
   readonly ast: Root
   readonly toc: IHeadingToc
   readonly frontmatter: Record<string, unknown>
 }
 
+export interface IJsonFileData {
+  readonly content: string
+}
+
+export type IFetchFileData = IMarkdownFileData | IJsonFileData
+
 export interface IFetchFileResult {
   readonly loading?: boolean
-  readonly data?: IMarkdownData | undefined
+  readonly data?: IFetchFileData | undefined
   readonly text?: string | undefined
   readonly url?: string | undefined
   readonly error?: string | undefined

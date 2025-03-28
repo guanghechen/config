@@ -3,6 +3,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
+import type { IJsonFileData } from '@/util/fetch'
 import { useWorkspaceViewmodel } from '../../context'
 import { JsonComposer } from './composer'
 import { JsonModeToggle } from './mode'
@@ -45,7 +46,7 @@ const JsonContainer: React.FC = () => {
       {!!data && (
         <div className="relative w-full">
           <JsonModeToggle />
-          <JsonComposer json={data} />
+          <JsonComposer content={(data as IJsonFileData)?.content} />
         </div>
       )}
       <button
