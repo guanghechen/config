@@ -66,6 +66,7 @@ vim.opt.tabstop = 2 -- set the tab width
 vim.opt.termguicolors = true
 vim.opt.timeout = true
 vim.opt.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) to quickly trigger which-key
+-- vim.opt.winborder = "rounded"
 vim.opt.winminwidth = 10 -- Minimum window width
 vim.opt.wrap = false
 

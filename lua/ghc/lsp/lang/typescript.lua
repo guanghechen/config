@@ -69,7 +69,7 @@ local function on_attach(client, bufnr)
       modes = { "n" },
       key = "gD",
       callback = function()
-        local params = vim.lsp.util.make_position_params()
+        local params = vim.lsp.util.make_position_params(nil, "utf-8")
         require("trouble").open({
           mode = "lsp_command",
           params = {

@@ -539,6 +539,7 @@
     "wildmode",
     "winbar",
     "winblend",
+    "winborder",
     "wincfg",
     "wincmd",
     "winfixbuf",

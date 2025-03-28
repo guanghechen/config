@@ -3,18 +3,7 @@ local __module_name__ = "ghc.lsp.common" ---@type string
 ---@class ghc.lsp.common
 local M = {}
 
-M.handlers = {
-  ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-    border = "rounded",
-    focusable = true,
-    silent = true,
-  }),
-  ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-    border = "rounded",
-    focusable = true,
-    silent = true,
-  }),
-}
+M.handlers = {}
 
 M.get_capabilities = function()
   local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
