@@ -166,6 +166,7 @@ function M.inspect_window()
         buftype = buftype or vim.NIL,
         filetype = filetype or vim.NIL,
         filepath = filepath or vim.NIL,
+        sourcefile = eve.editor.is_win_sourcefile(winnr),
       },
       z_meta = {
         buf = meta_buf,

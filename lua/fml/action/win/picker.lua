@@ -2,6 +2,12 @@
 local M = {}
 
 ---@return nil
+function M.mark_sourcefile()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  eve.editor.mark_win_sourcefile(winnr)
+end
+
+---@return nil
 function M.focus()
   local winnr_source = vim.api.nvim_get_current_win() ---@type integer
   local winnr_target = eve.editor.pick_focusable_win(winnr_source) ---@type integer|nil

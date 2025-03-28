@@ -485,6 +485,8 @@ M.definitions.win = {
   history_backward = def("Fwinhistorybackward", "win: history backward"),
   history_forward = def("Fwinhistoryforward", "win: history forward"),
 
+  mark_sourcefile = def("Fwinmarksoucefile", "win: mark current window as sourcefile"),
+
   resize_horizontal_minus = def("Fwinresizehorizontalminus", "win: resize horizontal (minus)"),
   resize_horizontal_plus = def("Fwinresizehorizontalplus", "win: resize horizontal (plus)"),
   resize_vertical_minus = def("Fwinresizeverticalminus", "win: resize vertical (minus)"),

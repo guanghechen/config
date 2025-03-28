@@ -17,6 +17,10 @@ M.winpicker_filters = {
       return false
     end
 
+    if M.is_win_sourcefile(winnr) then
+      return true
+    end
+
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     return not eve.filetype.is_not_projectable_filetype(filetype)
@@ -29,6 +33,10 @@ M.winpicker_filters = {
   swappable = function(winnr)
     if vim.wo[winnr].winfixbuf or M.is_win_floating(winnr) then
       return false
+    end
+
+    if M.is_win_sourcefile(winnr) then
+      return true
     end
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -261,6 +269,13 @@ function M.is_valid_filepath(filepath)
     return false
   end
   return eve.fs.is_file_or_dir(filepath) == "file"
+end
+
+---@param winnr                         integer
+function M.mark_win_sourcefile(winnr)
+  if M.is_win_valid(winnr) then
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
+  end
 end
 
 ---@param winnr_source                  integer|nil
