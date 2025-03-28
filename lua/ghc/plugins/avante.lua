@@ -244,6 +244,7 @@ return {
   },
   keys = {
     "<leader>aa",
+    "<leader>ab",
     "<leader>ae",
     "<leader>ar",
   },
