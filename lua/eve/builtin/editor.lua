@@ -56,7 +56,12 @@ function M.pick_sourcefile_win(winnr_source)
     return winnr_source
   end
 
-  return eve.winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true) ---@type integer|nil
+  local winnr_sourcefile
+  eve.winpicker.pick_window(M.winpicker_filters.sourcefile, winnr_source, true) ---@type integer|nil
+  if winnr_sourcefile ~= nil then
+    vim.w[winnr_sourcefile][eve.var.Names.FLAG_SOURCEFILE] = true
+  end
+  return winnr_sourcefile
 end
 
 ---@param winnr_source                  integer|nil
