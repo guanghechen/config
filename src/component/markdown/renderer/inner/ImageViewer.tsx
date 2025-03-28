@@ -1,5 +1,7 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
+import { useComputed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { useMarkdownViewmodel } from '../../context'
 
 interface IProps {
   readonly src: string
@@ -10,9 +12,6 @@ interface IProps {
   readonly onClose?: (e: React.MouseEvent) => void
 }
 
-// Scale step for mouse wheel scaling
-const SCALE_STEP = 0.1
-
 export const ImageViewer: React.FC<IProps> = props => {
   const {
     src,
@@ -22,6 +21,30 @@ export const ImageViewer: React.FC<IProps> = props => {
     initialRotation = 0,
     onClose: onCloseFromProps,
   } = props
+
+  const viewmodel = useMarkdownViewmodel()
+  const imageList = useComputed(viewmodel.images$)
+  const [currentIndex, setCurrentIndex] = React.useState<number>(-1)
+
+  React.useEffect(() => {
+    const index = imageList.findIndex(img => img.src === src)
+    setCurrentIndex(index)
+  }, [src, imageList])
+
+  const navigateToImage = React.useCallback(
+    (index: number) => {
+      if (imageList.length > 0) {
+        if (index < 0) {
+          setCurrentIndex(imageList.length - 1)
+        } else if (index >= imageList.length) {
+          setCurrentIndex(0)
+        } else {
+          setCurrentIndex(index)
+        }
+      }
+    },
+    [imageList],
+  )
   const [rotation, setRotation] = React.useState(initialRotation)
   const [scale, setScale] = React.useState(initialScale)
   const [position, setPosition] = React.useState({ x: 0, y: 0 })
@@ -103,6 +126,20 @@ export const ImageViewer: React.FC<IProps> = props => {
         if (e.key === 'Escape') {
           const closeEvent = new MouseEvent('click') as unknown as React.MouseEvent
           onClose(closeEvent)
+        } else if (imageList.length > 0 && currentIndex >= 0) {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault()
+            navigateToImage(currentIndex - 1)
+            setPosition({ x: 0, y: 0 })
+            setScale(initialScale)
+            setRotation(initialRotation)
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault()
+            navigateToImage(currentIndex + 1)
+            setPosition({ x: 0, y: 0 })
+            setScale(initialScale)
+            setRotation(initialRotation)
+          }
         }
       }
 
@@ -116,7 +153,17 @@ export const ImageViewer: React.FC<IProps> = props => {
         window.removeEventListener('keydown', handleKeyDown)
       }
     }
-  }, [isOpen, isDragging, dragStart, onClose])
+  }, [
+    isOpen,
+    isDragging,
+    dragStart,
+    onClose,
+    imageList,
+    currentIndex,
+    navigateToImage,
+    initialScale,
+    initialRotation,
+  ])
 
   if (!isOpen) return null
 
@@ -248,20 +295,73 @@ export const ImageViewer: React.FC<IProps> = props => {
         className="flex h-screen w-screen items-center justify-center overflow-hidden"
         onClick={e => e.stopPropagation()}
         onWheel={e => {
-          // Only handle scaling when Alt key is pressed (as per your current implementation)
-          // or Ctrl key is pressed (as per your request)
           if (e.altKey || e.ctrlKey) {
             e.preventDefault()
             e.stopPropagation()
-
-            // Determine scaling direction from wheel delta
-            const delta = e.deltaY < 0 ? SCALE_STEP : -SCALE_STEP
+            const delta = e.deltaY < 0 ? 0.1 : -0.1
             setScale(prevScale => Math.max(0.2, prevScale + delta))
           }
         }}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
       >
+        {imageList.length > 1 && (
+          <button
+            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-gray-800/70 p-3 text-white backdrop-blur-sm transition-opacity hover:bg-gray-700/90"
+            onClick={e => {
+              e.stopPropagation()
+              navigateToImage(currentIndex - 1)
+              setPosition({ x: 0, y: 0 })
+              setScale(initialScale)
+              setRotation(initialRotation)
+            }}
+            title="Previous image"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        )}
+
+        {/* Right navigation button */}
+        {imageList.length > 1 && (
+          <button
+            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-gray-800/70 p-3 text-white backdrop-blur-sm transition-opacity hover:bg-gray-700/90"
+            onClick={e => {
+              e.stopPropagation()
+              navigateToImage(currentIndex + 1)
+              // Reset position, scale, and rotation for the new image
+              setPosition({ x: 0, y: 0 })
+              setScale(initialScale)
+              setRotation(initialRotation)
+            }}
+            title="Next image"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        )}
         <div
           style={{
             position: 'relative',
@@ -272,8 +372,16 @@ export const ImageViewer: React.FC<IProps> = props => {
           onMouseDown={onMouseDown}
         >
           <img
-            alt={alt}
-            src={src}
+            alt={
+              currentIndex >= 0 && currentIndex < imageList.length
+                ? imageList[currentIndex].alt
+                : alt
+            }
+            src={
+              currentIndex >= 0 && currentIndex < imageList.length
+                ? imageList[currentIndex].src
+                : src
+            }
             className="object-contain"
             style={{
               transform: `rotate(${rotation}deg) scale(${scale})`,
