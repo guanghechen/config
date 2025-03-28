@@ -1,49 +1,69 @@
 import cn from 'clsx'
 import React from 'react'
+import { ImageViewer } from './ImageViewer'
 
 interface IProps {
-  src: string
-  alt: string
-  title: string | undefined
-  srcSet: string | undefined
-  sizes: string | undefined
-  loading: 'eager' | 'lazy' | undefined
-  className: string
+  readonly src: string
+  readonly alt: string
+  readonly title: string | undefined
+  readonly srcSet: string | undefined
+  readonly sizes: string | undefined
+  readonly loading: 'eager' | 'lazy' | undefined
+  readonly className: string
 }
 
-export class ImageRendererInner extends React.Component<IProps> {
+interface IState {
+  readonly isFullscreen: boolean
+}
+
+export class ImageRendererInner extends React.Component<IProps, IState> {
   public static displayName = 'ImageRendererInner'
+
+  constructor(props: IProps) {
+    super(props)
+
+    this.state = {
+      isFullscreen: false,
+    }
+  }
 
   public override render(): React.ReactElement {
     const { src, alt, title, srcSet, sizes, loading, className } = this.props
+    const { isFullscreen } = this.state
     const { width, height } = this.parseImageDimensions(src)
     const figureStyle: React.CSSProperties = { width, height }
 
     return (
-      <figure
-        className={cn(className, 'box-border max-w-full flex flex-col items-center m-0 px-8')}
-        style={figureStyle}
-      >
-        <img
-          alt={alt}
-          src={src}
-          title={title}
-          srcSet={srcSet}
-          sizes={sizes}
-          loading={loading}
-          width={width}
-          height={height}
-          className="box-border flex-1 border border-purple-600 object-contain shadow-[0_0_20px_1px_rgba(126,125,150,0.6)]"
-        />
-        {title && (
-          <figcaption className="text-center text-base italic text-gray-500">{title}</figcaption>
-        )}
-      </figure>
+      <React.Fragment>
+        <figure
+          className={cn(className, 'box-border max-w-full flex flex-col items-center m-0 px-8')}
+          style={figureStyle}
+        >
+          <img
+            alt={alt}
+            src={src}
+            title={title}
+            srcSet={srcSet}
+            sizes={sizes}
+            loading={loading}
+            width={width}
+            height={height}
+            className="box-border flex-1 cursor-pointer border border-purple-600 object-contain shadow-[0_0_20px_1px_rgba(126,125,150,0.6)]"
+            onClick={this.onOpenFullscreen}
+          />
+          {title && (
+            <figcaption className="text-center text-base italic text-gray-500">{title}</figcaption>
+          )}
+        </figure>
+
+        <ImageViewer src={src} alt={alt} isOpen={isFullscreen} onClose={this.onCloseFullscreen} />
+      </React.Fragment>
     )
   }
 
-  public override shouldComponentUpdate(nextProps: IProps): boolean {
+  public override shouldComponentUpdate(nextProps: IProps, nextState: IState): boolean {
     const props = this.props
+    const state = this.state
     return (
       props.src !== nextProps.src ||
       props.alt !== nextProps.alt ||
@@ -51,7 +71,8 @@ export class ImageRendererInner extends React.Component<IProps> {
       props.srcSet !== nextProps.srcSet ||
       props.sizes !== nextProps.sizes ||
       props.loading !== nextProps.loading ||
-      props.className !== nextProps.className
+      props.className !== nextProps.className ||
+      state.isFullscreen !== nextState.isFullscreen
     )
   }
 
@@ -72,5 +93,15 @@ export class ImageRendererInner extends React.Component<IProps> {
         height: urlParams.get('height') || undefined,
       }
     }
+  }
+
+  protected onOpenFullscreen = (e: React.MouseEvent): void => {
+    e.stopPropagation()
+    this.setState({ isFullscreen: true })
+  }
+
+  protected onCloseFullscreen = (e: React.MouseEvent): void => {
+    e.stopPropagation()
+    this.setState({ isFullscreen: false })
   }
 }
