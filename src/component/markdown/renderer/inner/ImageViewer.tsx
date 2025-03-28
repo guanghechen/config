@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import React from 'react'
 
 interface IProps {
@@ -13,77 +14,72 @@ interface IProps {
 const SCALE_STEP = 0.1
 
 export const ImageViewer: React.FC<IProps> = props => {
-  const { src, alt, isOpen, initialScale = 1, initialRotation = 0, onClose } = props
+  const {
+    src,
+    alt,
+    isOpen,
+    initialScale = 1,
+    initialRotation = 0,
+    onClose: onCloseFromProps,
+  } = props
   const [rotation, setRotation] = React.useState(initialRotation)
   const [scale, setScale] = React.useState(initialScale)
   const [position, setPosition] = React.useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = React.useState(false)
   const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 })
 
-  const handleClose = React.useCallback(
-    (e: React.MouseEvent): void => {
-      e.stopPropagation()
-      setRotation(initialRotation)
-      setScale(initialScale)
-      setPosition({ x: 0, y: 0 })
-      onClose?.(e)
-    },
-    [initialRotation, initialScale, onClose],
-  )
+  const onClose = useEventCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
+    setRotation(initialRotation)
+    setScale(initialScale)
+    setPosition({ x: 0, y: 0 })
+    onCloseFromProps?.(e)
+  })
 
-  const handleRotateLeft = React.useCallback((e: React.MouseEvent): void => {
+  const onRotateLeft = React.useCallback((e: React.MouseEvent): void => {
     e.stopPropagation()
     setRotation(prevRotation => prevRotation - 90)
   }, [])
 
-  const handleRotateRight = React.useCallback((e: React.MouseEvent): void => {
+  const onRotateRight = React.useCallback((e: React.MouseEvent): void => {
     e.stopPropagation()
     setRotation(prevRotation => prevRotation + 90)
   }, [])
 
-  const handleZoomIn = React.useCallback((e: React.MouseEvent): void => {
+  const onZoomIn = React.useCallback((e: React.MouseEvent): void => {
     e.stopPropagation()
     setScale(prevScale => prevScale + 0.2)
   }, [])
 
-  const handleZoomOut = React.useCallback((e: React.MouseEvent): void => {
+  const onZoomOut = React.useCallback((e: React.MouseEvent): void => {
     e.stopPropagation()
     setScale(prevScale => Math.max(0.2, prevScale - 0.2))
   }, [])
 
-  const handleReset = React.useCallback(
-    (e: React.MouseEvent): void => {
+  const onReset = useEventCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
+    setRotation(initialRotation)
+    setScale(initialScale)
+    setPosition({ x: 0, y: 0 })
+  })
+
+  const onMouseDown = useEventCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+  })
+
+  const onMouseMove = useEventCallback((e: React.MouseEvent): void => {
+    if (isDragging) {
       e.stopPropagation()
-      setRotation(initialRotation)
-      setScale(initialScale)
-      setPosition({ x: 0, y: 0 })
-    },
-    [initialRotation, initialScale],
-  )
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      })
+    }
+  })
 
-  const handleMouseDown = React.useCallback(
-    (e: React.MouseEvent): void => {
-      e.stopPropagation()
-      setIsDragging(true)
-      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
-    },
-    [position],
-  )
-
-  const handleMouseMove = React.useCallback(
-    (e: React.MouseEvent): void => {
-      if (isDragging) {
-        e.stopPropagation()
-        setPosition({
-          x: e.clientX - dragStart.x,
-          y: e.clientY - dragStart.y,
-        })
-      }
-    },
-    [isDragging, dragStart],
-  )
-
-  const handleMouseUp = React.useCallback((): void => {
+  const onMouseUp = React.useCallback((): void => {
     setIsDragging(false)
   }, [])
 
@@ -103,27 +99,36 @@ export const ImageViewer: React.FC<IProps> = props => {
         }
       }
 
+      const handleKeyDown = (e: KeyboardEvent): void => {
+        if (e.key === 'Escape') {
+          const closeEvent = new MouseEvent('click') as unknown as React.MouseEvent
+          onClose(closeEvent)
+        }
+      }
+
       window.addEventListener('mouseup', handleGlobalMouseUp)
       window.addEventListener('mousemove', handleGlobalMouseMove)
+      window.addEventListener('keydown', handleKeyDown)
 
       return () => {
         window.removeEventListener('mouseup', handleGlobalMouseUp)
         window.removeEventListener('mousemove', handleGlobalMouseMove)
+        window.removeEventListener('keydown', handleKeyDown)
       }
     }
-  }, [isOpen, isDragging, dragStart])
+  }, [isOpen, isDragging, dragStart, onClose])
 
   if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 z-50 flex select-none flex-col items-center justify-center bg-black/80"
-      onClick={handleClose}
+      onClick={onClose}
     >
       <div className="absolute right-4 top-4 flex gap-4">
         <button
           className="rounded-full bg-gray-800 p-2 text-white hover:bg-gray-700"
-          onClick={handleRotateLeft}
+          onClick={onRotateLeft}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -142,7 +147,7 @@ export const ImageViewer: React.FC<IProps> = props => {
         </button>
         <button
           className="rounded-full bg-gray-800 p-2 text-white hover:bg-gray-700"
-          onClick={handleRotateRight}
+          onClick={onRotateRight}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -161,7 +166,7 @@ export const ImageViewer: React.FC<IProps> = props => {
         </button>
         <button
           className="rounded-full bg-gray-800 p-2 text-white hover:bg-gray-700"
-          onClick={handleZoomIn}
+          onClick={onZoomIn}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -182,7 +187,7 @@ export const ImageViewer: React.FC<IProps> = props => {
         </button>
         <button
           className="rounded-full bg-gray-800 p-2 text-white hover:bg-gray-700"
-          onClick={handleZoomOut}
+          onClick={onZoomOut}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -202,7 +207,7 @@ export const ImageViewer: React.FC<IProps> = props => {
         </button>
         <button
           className="rounded-full bg-gray-800 p-2 text-white hover:bg-gray-700"
-          onClick={handleReset}
+          onClick={onReset}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -221,7 +226,7 @@ export const ImageViewer: React.FC<IProps> = props => {
         </button>
         <button
           className="rounded-full bg-gray-800 p-2 text-white hover:bg-gray-700"
-          onClick={handleClose}
+          onClick={onClose}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -254,8 +259,8 @@ export const ImageViewer: React.FC<IProps> = props => {
             setScale(prevScale => Math.max(0.2, prevScale + delta))
           }
         }}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
       >
         <div
           style={{
@@ -264,7 +269,7 @@ export const ImageViewer: React.FC<IProps> = props => {
             top: `${position.y}px`,
             cursor: isDragging ? 'grabbing' : 'grab',
           }}
-          onMouseDown={handleMouseDown}
+          onMouseDown={onMouseDown}
         >
           <img
             alt={alt}
