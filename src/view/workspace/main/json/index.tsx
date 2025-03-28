@@ -15,7 +15,7 @@ const JsonContainer: React.FC = () => {
   const tick: number = useStateValue(workspaceVM.filepathDirtyTick$)
   const container = useStateValue(workspaceVM.mainScrollableContainer$)
 
-  const { data, error } = useFileResult(workspace, filepath, tick)
+  const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, tick)
 
   const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
 
@@ -37,7 +37,7 @@ const JsonContainer: React.FC = () => {
   }, [container])
 
   return (
-    <div className="w-full p-8">
+    <div className="w-full pt-12">
       {!!error && (
         <div className="relative mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
           <code>error: {String(error)}</code>
@@ -46,7 +46,7 @@ const JsonContainer: React.FC = () => {
       {!!data && (
         <div className="relative w-full">
           <JsonModeToggle />
-          <JsonComposer content={(data as IJsonFileData)?.content} />
+          <JsonComposer content={data?.content} />
         </div>
       )}
       <button

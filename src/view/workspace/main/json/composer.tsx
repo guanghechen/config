@@ -74,11 +74,15 @@ export const JsonComposer: React.FC<IProps> = props => {
   )
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] w-full items-start justify-center p-4">
+    <div
+      className={cn('flex w-full items-start justify-center pb-8', {
+        'h-[calc(100vh-6rem)]': columns > 1,
+      })}
+    >
       {showView && (
         <React.Fragment>
           <div
-            className={cn('h-full w-[72rem] flex-initial', PRESET_CLASSES.scrollbar, {
+            className={cn('h-full w-[72rem] max-w-[100rem] flex-auto', PRESET_CLASSES.scrollbar, {
               'p-2 overflow-auto': columns > 1,
             })}
           >
@@ -88,23 +92,25 @@ export const JsonComposer: React.FC<IProps> = props => {
         </React.Fragment>
       )}
       {showLiteral && (
-        <React.Fragment>
-          <div
-            className={cn('h-full w-[48rem] flex-initial', PRESET_CLASSES.scrollbar, {
+        <div
+          className={cn(
+            'h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200',
+            PRESET_CLASSES.scrollbar,
+            {
               'p-2 overflow-auto': columns > 1,
-            })}
-          >
-            <CodeHighlighter
-              darken={theme === SiteTheme.DARKEN}
-              lang="json"
-              value={content || ''}
-              collapsed={false}
-              showLineNo={true}
-              className={PRESET_CLASSES.scrollbar}
-              codesClassName={PRESET_CLASSES.scrollbar}
-            />
-          </div>
-        </React.Fragment>
+            },
+          )}
+        >
+          <CodeHighlighter
+            darken={theme === SiteTheme.DARKEN}
+            lang="json"
+            value={content || ''}
+            collapsed={false}
+            showLineNo={true}
+            className={PRESET_CLASSES.scrollbar}
+            codesClassName={PRESET_CLASSES.scrollbar}
+          />
+        </div>
       )}
     </div>
   )

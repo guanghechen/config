@@ -13,18 +13,18 @@ export interface IJsonFileData {
 
 export type IFetchFileData = IMarkdownFileData | IJsonFileData
 
-export interface IFetchFileResult {
+export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly loading?: boolean
-  readonly data?: IFetchFileData | undefined
+  readonly data?: T | undefined
   readonly text?: string | undefined
   readonly url?: string | undefined
   readonly error?: string | undefined
 }
 
-export async function fetchFile(
+export async function fetchFile<T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,
   filepath: string,
-): Promise<IFetchFileResult> {
+): Promise<IFetchFileResult<T>> {
   if (!filepath) return {}
 
   try {

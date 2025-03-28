@@ -1,13 +1,13 @@
 import React from 'react'
-import type { IFetchFileResult } from '@/util/fetch'
+import type { IFetchFileData, IFetchFileResult } from '@/util/fetch'
 import { fetchFile } from '@/util/fetch'
 
-export const useFileResult = (
+export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,
   filepath: string | null,
   tick: number,
-): IFetchFileResult => {
-  const [state, setState] = React.useState<IFetchFileResult>({
+): IFetchFileResult<T> => {
+  const [state, setState] = React.useState<IFetchFileResult<T>>({
     loading: false,
     data: undefined,
     text: undefined,
@@ -25,7 +25,7 @@ export const useFileResult = (
         ...prevState,
         loading: true,
       }))
-      const { data, text, url, error } = await fetchFile(workspace, filepath)
+      const { data, text, url, error } = await fetchFile<T>(workspace, filepath)
       setState({ loading: false, data, text, url, error })
     }
     void handle()

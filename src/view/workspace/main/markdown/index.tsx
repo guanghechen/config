@@ -5,6 +5,7 @@ import type { IHeadingToc } from '@yozora/ast-util'
 import cn from 'clsx'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
+import type { IMarkdownFileData } from '@/util/fetch'
 import { useWorkspaceViewmodel } from '../../context'
 import { MarkdownComposer } from './composer'
 import { MarkdownModeToggle } from './mode'
@@ -16,7 +17,7 @@ const MarkdownContainer: React.FC = () => {
   const tick: number = useStateValue(workspaceVM.filepathDirtyTick$)
   const container = useStateValue(workspaceVM.mainScrollableContainer$)
 
-  const { data, error } = useFileResult(workspace, filepath, tick)
+  const { data, error } = useFileResult<IMarkdownFileData>(workspace, filepath, tick)
   const ast: Root | undefined = data?.ast
   const toc: IHeadingToc | undefined = data?.toc
   const frontmatter: Record<string, unknown> | undefined = data?.frontmatter
@@ -41,7 +42,7 @@ const MarkdownContainer: React.FC = () => {
   }, [container])
 
   return (
-    <div className="w-full px-4 pt-12">
+    <div className="w-full pt-12">
       {!!error && (
         <div className="mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
           <code>error: {String(error)}</code>

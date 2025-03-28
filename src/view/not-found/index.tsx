@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 export const NotFoundView: React.FC = () => {
   return (
-    <div className="relative box-border flex h-screen w-screen items-center justify-center overflow-auto bg-gray-50 font-['Maple_Mono_NF_CN','Roboto_Mono',monospace,sans-serif] text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-900 dark:text-gray-200">
+    <div className="relative box-border flex size-full items-center justify-center overflow-auto bg-gray-50 font-['Maple_Mono_NF_CN','Roboto_Mono',monospace,sans-serif] text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-900 dark:text-gray-200">
       <div className="flex flex-col items-center justify-center p-6 text-center">
         <h1 className="mb-4 text-9xl font-bold text-gray-300 dark:text-gray-700">404</h1>
         <div className="mb-8">
