@@ -141,6 +141,10 @@ end
 ---@param winnr                         integer
 ---@return nil
 function M.on_win_enter(winnr)
+  if not eve.editor.is_win_valid(winnr) then
+    return
+  end
+
   if eve.editor.is_win_fixed(winnr) then
     M.winnr_fixed:next(winnr)
   end
