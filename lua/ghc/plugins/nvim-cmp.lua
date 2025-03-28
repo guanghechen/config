@@ -146,7 +146,7 @@ return {
       }, -- configure any filetype to auto add brackets
       completion = {
         cmp = { enabled = true },
-        completeopt = "menu,menuone,noinsert,noselect",
+        completeopt = "menuone,noselect,popup",
       },
       experimental = {
         ghost_text = {

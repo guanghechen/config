@@ -130,7 +130,7 @@ vim.opt.spell = false
 vim.opt.spelllang = { "en" }
 
 -- misc
-vim.opt.completeopt = "menu,menuone,noselect"
+vim.opt.completeopt = "menuone,noselect,popup"
 vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
 vim.opt.inccommand = "nosplit" -- preview incremental substitute
 vim.opt.jumpoptions = "view"
