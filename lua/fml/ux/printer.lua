@@ -155,10 +155,12 @@ end
 function M:render(bufnr)
   local lines = self._lines ---@type string[]
   local highlights = self._highlights ---@type eve.t.IHighlight[]
+  local nsnr = eve.var.Namespaces.printer_default ---@type integer
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, hl.lnum - 1, hl.coll, hl.colr)
+    local row = hl.lnum - 1 ---@type integer
+    vim.hl.range(bufnr, nsnr, hl.hlname, { row, hl.coll }, { row, hl.colr })
   end
 end
 

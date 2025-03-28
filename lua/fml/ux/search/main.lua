@@ -58,9 +58,11 @@ function M.new(props)
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
+      local nsnr = eve.var.Namespaces.search_main ---@type integer
       for lnum, item in ipairs(context.items) do
         for _, hl in ipairs(item.highlights) do
-          vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, lnum - 1, hl.coll, hl.colr)
+          local row = lnum - 1 ---@type integer
+          vim.hl.range(bufnr, nsnr, hl.hlname, { row, hl.coll }, { row, hl.colr })
         end
       end
     end

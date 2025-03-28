@@ -117,8 +117,10 @@ function M.new(props)
         end
       end
 
+      local nsnr = eve.var.Namespaces.search_preview ---@type integer
       for _, hl in ipairs(data.highlights) do
-        vim.api.nvim_buf_add_highlight(bufnr, 0, hl.hlname, hl.lnum - 1, hl.coll, hl.colr)
+        local row = hl.lnum - 1 ---@type integer
+        vim.hl.range(bufnr, nsnr, hl.hlname, { row, hl.coll }, { row, hl.colr })
       end
     end
 

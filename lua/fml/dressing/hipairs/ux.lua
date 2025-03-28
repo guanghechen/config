@@ -6,7 +6,6 @@ local config = {
     i = true,
     n = true,
   },
-  nsnr = vim.api.nvim_create_namespace("fml.dressing.hipairs.namespace"),
   all_pairs = {
     { "(", ")" },
     { "[", "]" },
@@ -129,7 +128,8 @@ function M.clear(bufnr)
   if viewport ~= nil then
     local top = math.max(0, viewport.top - 1) ---@type integer
     local bot = math.min(vim.api.nvim_buf_line_count(bufnr), viewport.bot)
-    vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr, top, bot)
+    local nsnr = eve.var.Namespaces.hipairs ---@type integer
+    vim.api.nvim_buf_clear_namespace(bufnr, nsnr, top, bot)
     vim.b[bufnr].hipairs_viewport = nil
   end
 end
@@ -189,25 +189,18 @@ function M.render(winnr)
         bot = outermost_surround.right.row,
       }
 
+      local nsnr = eve.var.Namespaces.hipairs ---@type integer
       for index, pair in ipairs(surrounds) do
         local left = pair.left ---@type fml.dressing.hipairs.IPos
         local right = pair.right ---@type fml.dressing.hipairs.IPos
         local hlgroup = config.hlgroups[index] ---@type string
-        vim.api.nvim_buf_add_highlight( --
+        vim.hl.range(bufnr, nsnr, hlgroup or "MatchParen", { left.row - 1, left.col - 1 }, { left.row - 1, left.col })
+        vim.hl.range(
           bufnr,
-          config.nsnr,
+          nsnr,
           hlgroup or "MatchParen",
-          left.row - 1,
-          left.col - 1,
-          left.col
-        )
-        vim.api.nvim_buf_add_highlight(
-          bufnr,
-          config.nsnr,
-          hlgroup or "MatchParen",
-          right.row - 1,
-          right.col - 1,
-          right.col
+          { right.row - 1, right.col - 1 },
+          { right.row - 1, right.col }
         )
       end
     end

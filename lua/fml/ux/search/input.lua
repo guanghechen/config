@@ -14,7 +14,6 @@ local M = {}
 M.__index = M
 
 local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
-local EXTMARK_NSNR = vim.api.nvim_create_namespace("fml.ux.search.input") ---@type integer
 
 ---@class fml.ux.search.input.IProps
 ---@field public context                fml.ux.search.IContext
@@ -184,12 +183,12 @@ function M:set_virtual_text()
     lnum = lnum > total and total or lnum
 
     if self._extmark_nr then
-      vim.api.nvim_buf_del_extmark(bufnr, EXTMARK_NSNR, self._extmark_nr)
+      vim.api.nvim_buf_del_extmark(bufnr, eve.var.Namespaces.search_input, self._extmark_nr)
       self._extmark_nr = nil
     end
 
     ---! Set the extmark with the right-aligned virtual text
-    self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, EXTMARK_NSNR, 0, 0, {
+    self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, eve.var.Namespaces.search_input, 0, 0, {
       virt_text = { { "" .. lnum .. " / " .. total, "Comment" } },
       virt_text_pos = "right_align",
     })
