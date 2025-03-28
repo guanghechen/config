@@ -139,7 +139,11 @@ ms({ "n", "v" }, "<leader>et", K.explorer.toggle)
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-ms({ "n", "v" }, "<leader><leader>", K.find.files)
+if eve.path.is_repo_git() then
+  ms({ "n", "v" }, "<leader><leader>", K.find.files)
+else
+  ms({ "n", "v" }, "<leader><leader>", K.find.explorer)
+end
 ms({ "n", "v" }, "<leader>fb", K.find.bufs)
 ms({ "n", "v" }, "<leader>fc", K.find.files_cwd)
 ms({ "n", "v" }, "<leader>fd", K.find.files_directory)
