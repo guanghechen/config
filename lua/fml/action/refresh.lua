@@ -31,7 +31,7 @@ function M.refresh_all()
     vim.cmd(eve.command.definitions.ux.reload_theme.uuid .. " force")
   end
 
-  vim.cmd("LspRestart")
+  pcall(vim.cmd.LspRestart)
   eve.state.status.suppress_warning:next(true)
   eve.state.status.dirtier_statusline:mark_dirty()
   eve.state.status.dirtier_tabline:mark_dirty()
