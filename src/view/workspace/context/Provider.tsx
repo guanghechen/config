@@ -97,6 +97,14 @@ const SideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
         if (data.workspace !== workspace) viewmodel.workspace$.next(data.workspace)
         if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
         else viewmodel.markFilepathDirty()
+
+        window.postMessage({
+          action: '@@tsuki-event@@',
+          tsuki: {
+            event: 'focus_me',
+            payload: {},
+          },
+        })
       })
     }
   })
