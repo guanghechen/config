@@ -34,6 +34,7 @@
     "@rollup/plugin-replace": "6.0.2",
     "@rollup/plugin-terser": "0.4.4",
     "@tailwindcss/vite": "4.0.17",
+    "@types/chrome": "^0.0.313",
     "@types/lodash.debounce": "4.0.9",
     "@types/node": "20.17.28",
     "@types/react": "19.0.12",

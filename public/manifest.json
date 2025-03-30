@@ -24,5 +24,12 @@
   "background": {
     "service_worker": "inject/server.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost/*"],
+      "js": ["inject/localhost-yozora.js"],
+      "run_at": "document_start"
+    }
+  ],
   "host_permissions": ["http://localhost/*", "https://localhost/*"]
 }
