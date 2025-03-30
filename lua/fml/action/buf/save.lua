@@ -32,7 +32,17 @@ function M.save()
   ---@return nil
   local function check()
     if ready_count == new_file_count then
-      vim.cmd("wa")
+      for _, bufnr in ipairs(bufnrs) do
+        if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" and vim.bo[bufnr].modified then
+          local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+          if #filepath > 0 and eve.path.is_absolute(filepath) then
+            vim.api.nvim_buf_call(bufnr, function()
+              vim.cmd.write()
+            end)
+          end
+        end
+      end
+
       eve.state.status.dirtier_statusline:mark_dirty()
       eve.state.status.dirtier_tabline:mark_dirty()
     end
