@@ -92,7 +92,7 @@ const SideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
       meta.hot.on(ServerCustomEventType.FILE_CHANGED, (data: IResponsePayloadFileChanged): void => {
         viewmodel.workspace$.next(data.workspace)
         viewmodel.filepath$.next(data.filepath, { force: true })
-        viewmodel.markFilepathDirty()
+        if (data.filepath === filepath) viewmodel.markFilepathDirty()
       })
       meta.hot.on(ServerCustomEventType.FILE_SWITCHED, (data: IResponsePayloadFileSwitch): void => {
         const workspace: string | null = viewmodel.workspace$.getSnapshot()
