@@ -1,0 +1,68 @@
+{
+  "name": "@guanghechen/tsuki-chrome-extension",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    ":upgrade": "yarn upgrade-interactive && yarn format",
+    "build": "tsc -b && vite build --emptyOutDir && yarn inject:build",
+    "format": "yarn format:lintfix && yarn format:prettier",
+    "format:prettier": "prettier . --write",
+    "format:lintfix": "eslint . --fix",
+    "inject:build": "rollup -c rollup.config.inject.mjs",
+    "inject:build:production": "cross-env NODE_ENV=production rollup -c rollup.config.inject.mjs",
+    "inject:watch": "rollup -c rollup.config.inject.mjs -w",
+    "start": "vite --force",
+    "watch": "npm-watch"
+  },
+  "dependencies": {
+    "@guanghechen/equal": "1.0.3",
+    "@guanghechen/react-hooks": "3.0.14",
+    "@guanghechen/react-viewmodel": "0.2.16",
+    "@guanghechen/viewmodel": "1.0.5",
+    "eslint-plugin-tailwindcss": "3.18.0",
+    "lodash.debounce": "4.0.8",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "tailwindcss": "4.0.17"
+  },
+  "devDependencies": {
+    "@guanghechen/chalk": "1.0.4",
+    "@guanghechen/eslint-config": "7.0.17",
+    "@guanghechen/reporter": "1.0.6",
+    "@guanghechen/rollup-config": "6.0.9",
+    "@rollup/plugin-replace": "6.0.2",
+    "@rollup/plugin-terser": "0.4.4",
+    "@tailwindcss/vite": "4.0.17",
+    "@types/lodash.debounce": "4.0.9",
+    "@types/node": "20.17.28",
+    "@types/react": "19.0.12",
+    "@types/react-dom": "19.0.4",
+    "@vitejs/plugin-react": "4.3.4",
+    "cross-env": "7.0.3",
+    "dotenv": "16.4.7",
+    "eslint": "9.23.0",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "npm-watch": "0.13.0",
+    "prettier": "3.5.3",
+    "rollup": "4.38.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.8.2",
+    "vite": "6.2.3"
+  },
+  "watch": {
+    "build": {
+      "patterns": [
+        "src/**",
+        "public/**",
+        "package.json"
+      ],
+      "ignore": [
+        ".git/",
+        "dist/",
+        "node_modules/"
+      ],
+      "extensions": "css,js,mjs,json,lock,tsx,ts"
+    }
+  }
+}

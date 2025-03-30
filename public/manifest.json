@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "tsuki",
+  "description": "tsuki plugin",
+  "version": "0.0.20250330",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "tsuki",
+    "default_icon": {
+      "16": "images/icon.png",
+      "48": "images/icon.png",
+      "128": "images/icon.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "icons": {
+    "16": "images/icon.png",
+    "48": "images/icon.png",
+    "128": "images/icon.png"
+  },
+  "permissions": ["activeTab", "tabs"],
+  "background": {
+    "service_worker": "inject/server.js"
+  },
+  "host_permissions": ["http://localhost/*", "https://localhost/*"]
+}
