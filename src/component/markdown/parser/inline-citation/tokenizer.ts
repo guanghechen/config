@@ -20,8 +20,8 @@ import { uniqueName } from './types'
  * Lexical Analyzer for inlineCitation.
  */
 export class InlineCitationTokenizer
-  extends BaseInlineTokenizer<T, IDelimiter, IToken, INode, IThis>
-  implements IInlineTokenizer<T, IDelimiter, IToken, INode, IThis>
+  extends BaseInlineTokenizer<T, IDelimiter, IToken, INode>
+  implements IInlineTokenizer<T, IDelimiter, IToken, INode>
 {
   /* istanbul ignore next */
   constructor(properties: ITokenizerProperties = {}) {
@@ -31,7 +31,7 @@ export class InlineCitationTokenizer
     })
   }
 
-  public override readonly match: IMatchInlineHookCreator<T, IDelimiter, IToken, IThis> = match
+  public override readonly match: IMatchInlineHookCreator<T, IDelimiter, IToken> = match
 
-  public override readonly parse: IParseInlineHookCreator<T, IToken, INode, IThis> = parse
+  public override readonly parse: IParseInlineHookCreator<T, IToken, INode> = parse
 }

@@ -3,9 +3,9 @@ import React from 'react'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
 import { parseCodeMeta } from '@/util/parseCodeMeta'
 import { useMarkdownShowCodeLineNumber } from '../context'
+import { Embed } from './embed'
 import { CodeResult } from './inner/CodeResult'
 import { CodeSource } from './inner/CodeSource'
-import { Embed } from './embed'
 
 /**
  * Render `code`

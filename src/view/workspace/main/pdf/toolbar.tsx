@@ -1,6 +1,5 @@
 import cn from 'clsx'
 import React from 'react'
-import { CopyButton } from '@/component/CopyButton'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -11,7 +10,6 @@ import {
 } from '@/component/icon/material'
 
 interface IProps {
-  readonly filepath: string | null
   readonly pages: number
   readonly pageno: number
   readonly scale: number
@@ -23,17 +21,7 @@ interface IProps {
 }
 
 export const PDFToolbar: React.FC<IProps> = props => {
-  const {
-    filepath,
-    pages,
-    pageno,
-    scale,
-    multiview,
-    setPageno,
-    setScale,
-    setMultiview,
-    className,
-  } = props
+  const { pages, pageno, scale, multiview, setPageno, setScale, setMultiview, className } = props
 
   const onGotoPage = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>): void => {

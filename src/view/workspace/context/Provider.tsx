@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useWorkspaces } from '@/hook/useWorkspaces'
@@ -82,11 +83,7 @@ const SideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
   const { workspaces } = useWorkspaces(workspacesDirtyTick)
 
-  React.useEffect(() => {
-    viewmodel.workspaces$.next(workspaces)
-  }, [viewmodel, workspaces])
-
-  React.useEffect(() => {
+  const hmr = useEventCallback((): void => {
     const meta = import.meta as any
     if (meta.hot) {
       meta.hot.on(ServerCustomEventType.FILE_CHANGED, (data: IResponsePayloadFileChanged): void => {
@@ -102,7 +99,15 @@ const SideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
         else viewmodel.markFilepathDirty()
       })
     }
-  }, [viewmodel])
+  })
+
+  React.useEffect(() => {
+    viewmodel.workspaces$.next(workspaces)
+  }, [viewmodel, workspaces])
+
+  React.useEffect(() => {
+    hmr()
+  }, [hmr])
 
   React.useEffect(() => {
     const usp = new URLSearchParams(window.location.search)

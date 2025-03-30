@@ -36,7 +36,6 @@ export const PDFContainer: React.FC<IProps> = props => {
     <div className="w-full p-8">
       <div className="h-[4rem] border-b border-gray-200 dark:border-gray-700">
         <PDFToolbar
-          filepath={filepath}
           pages={pages}
           pageno={pageno}
           scale={scale}
