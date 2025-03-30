@@ -5,6 +5,7 @@ import { parseCodeMeta } from '@/util/parseCodeMeta'
 import { useMarkdownShowCodeLineNumber } from '../context'
 import { CodeResult } from './inner/CodeResult'
 import { CodeSource } from './inner/CodeSource'
+import { Embed } from './embed'
 
 /**
  * Render `code`
@@ -24,17 +25,38 @@ export const CodeRenderer: React.FC<Code> = props => {
     [props.meta, showCodeLineno],
   )
 
-  const hasPreview: boolean = !!lang && !!meta.live
+  if (!!lang && !!meta.live) {
+    return (
+      <div className="yozora-code my-4 flex flex-col overflow-hidden rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
+        <CodeSource
+          code={code}
+          lang={lang}
+          meta={meta}
+          showLineNo={showCodeLineno}
+          initialExpanded={typeof meta.collapsed === 'boolean' ? !meta.collapsed : true}
+        />
+        <CodeResult code={code} lang={lang!} meta={meta} />
+      </div>
+    )
+  }
+
+  if (!!lang && !!meta.embed) {
+    return (
+      <div className="yozora-code flex items-center justify-center p-4">
+        <Embed lang={lang} code={code} meta={meta} />
+      </div>
+    )
+  }
+
   return (
-    <div className="my-4 flex flex-col overflow-hidden rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
+    <div className="yozora-code my-4 flex flex-col overflow-hidden rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
       <CodeSource
         code={code}
         lang={lang}
         meta={meta}
         showLineNo={showCodeLineno}
-        initialExpanded={typeof meta.collapsed === 'boolean' ? !meta.collapsed : !hasPreview}
+        initialExpanded={typeof meta.collapsed === 'boolean' ? !meta.collapsed : false}
       />
-      {hasPreview && <CodeResult code={code} lang={lang!} meta={meta} />}
     </div>
   )
 }

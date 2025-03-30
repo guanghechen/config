@@ -1,12 +1,12 @@
 import mermaid from 'mermaid'
 import React from 'react'
-import { useMarkdownDarken } from '../../../context'
+import { useMarkdownDarken } from '../../context'
 
 interface IProps {
   readonly code: string
 }
 
-export const Mermaid: React.FC<IProps> = props => {
+const Mermaid: React.FC<IProps> = props => {
   const { code } = props
 
   const darken: boolean = useMarkdownDarken()
@@ -33,3 +33,5 @@ export const Mermaid: React.FC<IProps> = props => {
   return <div ref={ref} />
 }
 Mermaid.displayName = 'CodeRendererMermaid'
+
+export default Mermaid

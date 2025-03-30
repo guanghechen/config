@@ -5,7 +5,7 @@ interface IProps {
   readonly code: string
 }
 
-export class Math extends React.Component<IProps> {
+class Math extends React.Component<IProps> {
   public static displayName = 'CodeRendererMath'
 
   public override render(): React.ReactElement {
@@ -24,3 +24,5 @@ export class Math extends React.Component<IProps> {
     return props.code !== nextProps.code
   }
 }
+
+export default Math

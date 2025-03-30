@@ -2,27 +2,7 @@ import cn from 'clsx'
 import React from 'react'
 import { TerminalIcon } from '@/component/icon/material'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
-import { Math } from './math'
-import { Mermaid } from './mermaid'
-
-interface ICodeResultRendererProps {
-  readonly lang: string
-  readonly code: string
-  readonly meta: ICodeMetaData
-}
-
-const CodeResultRenderer: React.FC<ICodeResultRendererProps> = props => {
-  const { lang, code } = props
-
-  switch (lang.toLowerCase()) {
-    case 'math':
-      return <Math code={code} />
-    case 'mermaid':
-      return <Mermaid code={code} />
-    default:
-      return <React.Fragment />
-  }
-}
+import { Embed } from '../embed'
 
 interface IProps {
   readonly code: string
@@ -40,7 +20,7 @@ export const CodeResult: React.FC<IProps> = props => {
         className={cn(
           'box-border w-full justify-start items-center gap-2 p-2 px-4 cursor-pointer select-none flex bg-gray-100 dark:bg-[#2d2d2d]',
           {
-            'border-b border-opacity-10 border-black dark:border-gray-600': expanded,
+            'border-b border-opacity-10 border-gray-300 dark:border-gray-600': expanded,
           },
         )}
         onClick={() => setExpanded(v => !v)}
@@ -50,7 +30,7 @@ export const CodeResult: React.FC<IProps> = props => {
       </div>
       {expanded && (
         <div className="flex items-center justify-center p-4">
-          <CodeResultRenderer lang={lang} code={code} meta={meta} />
+          <Embed lang={lang} code={code} meta={meta} />
         </div>
       )}
     </div>
