@@ -42,7 +42,7 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
       <div className="box-border flex flex-initial justify-center gap-4">
         <button
           onClick={onToggleSidebarVisible}
-          className="text-gray-600 hover:text-gray-800 focus:outline-none dark:text-gray-400 dark:hover:text-gray-200"
+          className="text-gray-600 hover:text-gray-800 focus:outline-hidden dark:text-gray-400 dark:hover:text-gray-200"
           title={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
         >
           <DockToRightIcon />
@@ -79,7 +79,7 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
               className={cn(
                 'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
                 'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-                'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+                'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
               )}
               calcContentForCopy={() => filepath || ''}
             />

@@ -56,7 +56,7 @@ export const CopyButton: React.FC<IProps> = props => {
         'bg-transparent border border-transparent transition-all duration-200',
         'text-gray-500 dark:text-gray-400 cursor-pointer',
         'hover:bg-gray-100 dark:hover:bg-white/10',
-        'focus:outline-none focus:ring-2 focus:ring-blue-300/50',
+        'focus:outline-hidden focus:ring-2 focus:ring-blue-300/50',
         'disabled:opacity-50 disabled:cursor-default',
         status === CopyStatusEnum.COPIED &&
           'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/20 border-green-500 dark:border-green-400/50',

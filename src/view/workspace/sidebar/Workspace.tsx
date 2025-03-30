@@ -44,7 +44,7 @@ export const Workspace: React.FC = () => {
       <div className="w-full min-w-[10rem] max-w-[20rem]">
         <select
           className={cn(
-            'centered-select w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-center text-sm shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
+            'centered-select w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-center text-sm shadow-xs focus:border-blue-500 focus:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
             { hidden: !isEditing },
           )}
           value={currentWorkspace || ''}

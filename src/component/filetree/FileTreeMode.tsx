@@ -19,7 +19,7 @@ export const FileTreeMode: React.FC<IProps> = props => {
 
   return (
     <div
-      className="flex h-5 select-none rounded-lg bg-gray-200 bg-opacity-70 text-xs shadow-sm transition-all hover:bg-opacity-90 dark:bg-gray-700 dark:bg-opacity-70 dark:hover:bg-opacity-90"
+      className="flex h-5 select-none rounded-lg bg-gray-200 bg-opacity-70 text-xs shadow-xs transition-all hover:bg-opacity-90 dark:bg-gray-700 dark:bg-opacity-70 dark:hover:bg-opacity-90"
       title={`Current view: ${mode === FileTreeModeEnum.LIST ? 'list' : 'tree'}`}
     >
       <button

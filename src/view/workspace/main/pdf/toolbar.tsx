@@ -68,7 +68,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
   return (
     <div
       className={cn(
-        'flex justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm',
+        'flex justify-between items-center bg-white dark:bg-gray-800 rounded-lg shadow-xs',
         'border border-gray-200 dark:border-gray-700',
         className,
       )}
@@ -78,7 +78,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
           )}
           onClick={() => setPageno(prev => Math.max(prev - 1, 1))}
@@ -96,7 +96,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
             max={pages}
             className={cn(
               'w-12 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600',
-              'rounded px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500',
+              'rounded px-2 py-1 text-sm text-center focus:outline-hidden focus:ring-2 focus:ring-blue-500',
             )}
             aria-label="Current page"
           />
@@ -106,7 +106,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
           )}
           onClick={() => setPageno(prev => Math.min(prev + 1, pages))}
@@ -121,7 +121,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onZoomOut}
           aria-label="Zoom out"
@@ -147,7 +147,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           className={cn(
             'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onZoomIn}
           aria-label="Zoom in"
@@ -159,7 +159,7 @@ export const PDFToolbar: React.FC<IProps> = props => {
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             multiview && 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
           )}
           onClick={onViewModeToggle}

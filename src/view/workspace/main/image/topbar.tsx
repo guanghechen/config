@@ -49,14 +49,14 @@ export const ImageTopbar: React.FC<IProps> = props => {
   }, [setRotation])
 
   return (
-    <div className="flex items-center justify-end rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div className="flex items-center justify-end rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-700 dark:bg-gray-800">
       <div className="flex select-none items-center space-x-2 md:mr-2">
         <div className="flex items-center gap-2">
           <button
             className={cn(
               'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
               'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+              'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             )}
             onClick={onZoomOut}
             aria-label="Zoom out"
@@ -82,7 +82,7 @@ export const ImageTopbar: React.FC<IProps> = props => {
             className={cn(
               'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
               'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+              'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             )}
             onClick={onZoomIn}
             aria-label="Zoom in"
@@ -95,7 +95,7 @@ export const ImageTopbar: React.FC<IProps> = props => {
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onRotateLeft}
           aria-label="Rotate left"
@@ -106,7 +106,7 @@ export const ImageTopbar: React.FC<IProps> = props => {
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onRotateRight}
           aria-label="Rotate right"
@@ -118,7 +118,7 @@ export const ImageTopbar: React.FC<IProps> = props => {
           className={cn(
             'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onResetZoom}
           aria-label="Reset view"
