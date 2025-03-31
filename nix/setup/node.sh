@@ -10,4 +10,4 @@ fi
 
 printf "\n\e[34m  [setup node] setup yozora...\e[0m\n"
 fish -c "npm install -g npm pm2 yarn"
-fish -c "cd $HOME/.config/yozora && npm install"
+fish -c "cd $HOME/.config/yozora && yarn install"
