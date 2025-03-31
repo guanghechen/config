@@ -9,37 +9,34 @@ function M.save()
   local workspace = eve.path.workspace() ---@type string
 
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  local new_file_bufnrs = {} ---@type integer[]
-
-  local modified_count = 0 ---@type integer
-  local new_file_count = 0 ---@type integer
-  local ready_count = 0 ---@type integer
+  local bufnrs_modified = {} ---@type integer[]
+  local bufnrs_new_file = {} ---@type integer[]
 
   for _, bufnr in ipairs(bufnrs) do
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    local is_mod = vim.bo[bufnr].mod ---@type boolean
-    if is_mod and not eve.filetype.is_not_plain_file(filetype) then
-      modified_count = modified_count + 1
-
+    if vim.bo[bufnr].modified and vim.bo[bufnr].buftype == "" then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if eve.path.is_absolute(filepath) and not eve.fs.is_exists(filepath) then
-        new_file_count = new_file_count + 1
-        table.insert(new_file_bufnrs, bufnr)
+      if #filepath > 0 and eve.path.is_absolute(filepath) then
+        table.insert(bufnrs_modified, bufnr)
+
+        if not eve.fs.is_exists(filepath) then
+          table.insert(bufnrs_new_file, bufnr)
+        end
       end
     end
   end
 
+  local count_modified = #bufnrs_modified ---@type integer
+  local count_new_file = #bufnrs_new_file ---@type integer
+  local count_ready = 0 ---@type integer
+
   ---@return nil
   local function check()
-    if ready_count == new_file_count then
-      for _, bufnr in ipairs(bufnrs) do
-        if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" and vim.bo[bufnr].modified then
-          local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-          if #filepath > 0 and eve.path.is_absolute(filepath) then
-            vim.api.nvim_buf_call(bufnr, function()
-              vim.cmd.write()
-            end)
-          end
+    if count_ready == count_new_file then
+      for _, bufnr in ipairs(bufnrs_modified) do
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          vim.api.nvim_buf_call(bufnr, function()
+            vim.cmd.write()
+          end)
         end
       end
 
@@ -58,7 +55,7 @@ function M.save()
     return
   end
 
-  for _, bufnr in ipairs(new_file_bufnrs) do
+  for _, bufnr in ipairs(bufnrs_new_file) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local initial_text = eve.path.is_under(workspace, filepath) and eve.path.relative(cwd, filepath, true) or filepath ---@type string
     vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
@@ -80,7 +77,7 @@ function M.save()
         vim.api.nvim_buf_set_name(bufnr, next_filepath)
         eve.state.buf.refresh(bufnr)
 
-        ready_count = ready_count + 1
+        count_ready = count_ready + 1
         check()
       end
 
@@ -111,7 +108,7 @@ function M.save()
           },
         })
 
-        ready_count = ready_count + 1
+        count_ready = count_ready + 1
         check()
         return false
       end
@@ -121,7 +118,7 @@ function M.save()
     end)
   end
 
-  if modified_count > 0 then
+  if count_modified > 0 then
     check()
   end
 end

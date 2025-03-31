@@ -27,7 +27,6 @@ return function()
   end
 
   local lspBinPath = detectLspServer()
-  eve.debug.log({ lspBinPath = lspBinPath })
 
   return {
     capabilities = capabilities,
