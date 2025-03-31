@@ -1,7 +1,7 @@
 import os from 'node:os'
 import path from 'node:path'
 
-const platform: 'win' | 'wsl' | 'mac' | 'nix' | 'unknown' = (() => {
+export const platform: 'win' | 'wsl' | 'mac' | 'nix' | 'unknown' = (() => {
   if (os.release().toLowerCase().includes('microsoft')) return 'wsl'
   if (os.platform() === 'win32') return 'win'
   if (os.platform() === 'darwin') return 'mac'

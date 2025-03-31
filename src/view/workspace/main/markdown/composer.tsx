@@ -1,7 +1,9 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
-import type { IHeadingToc } from '@yozora/ast-util'
+import type { IHeadingToc, IHeadingTocNode } from '@yozora/ast-util'
 import cn from 'clsx'
+import throttle from 'lodash.throttle'
 import React from 'react'
 import { MarkdownProvider } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
@@ -19,16 +21,76 @@ interface IProps {
 export const MarkdownComposer: React.FC<IProps> = props => {
   const { ast, toc, frontmatter, filepath } = props
   const siteVM = useSiteViewmodel()
-  const workspaceVM = useWorkspaceViewmodel()
-  const mode: MarkdownModeEnum = useStateValue(workspaceVM.markdownMode$)
+  const { markdownMode$, tocActivatedIdentifier$, specifiedTocActivatedIdentifier$ } =
+    useWorkspaceViewmodel()
+
+  const mode: MarkdownModeEnum = useStateValue(markdownMode$)
   const theme: SiteTheme = useStateValue(siteVM.theme$)
-  const tocActivatedIdentifier: string | null = useStateValue(workspaceVM.tocActivatedIdentifier$)
+  const tocActivatedIdentifier: string | null = useStateValue(tocActivatedIdentifier$)
+
+  const contentContainerRef = React.useRef<HTMLDivElement | null>(null)
+  const specifiedTocIdentifierTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const showView: boolean = mode === 0 || (mode & MarkdownModeEnum.VIEW) !== 0
   const showAst: boolean = (mode & MarkdownModeEnum.AST) !== 0
   const showToc: boolean = (mode & MarkdownModeEnum.TOC) !== 0
   const showFm: boolean = (mode & MarkdownModeEnum.FM) !== 0
   const columns: number = (showView ? 1 : 0) + (showAst ? 1 : 0) + (showToc || showFm ? 1 : 0)
+
+  const setTimeoutForSpecifiedTocIdentifier = useEventCallback((): void => {
+    specifiedTocIdentifierTimerRef.current = setTimeout(() => {
+      specifiedTocIdentifierTimerRef.current = null
+      const specifiedTocIdentifier: string | null = specifiedTocActivatedIdentifier$.getSnapshot()
+      if (specifiedTocIdentifier !== null) {
+        specifiedTocActivatedIdentifier$.next(null)
+        tocActivatedIdentifier$.next(specifiedTocIdentifier)
+      }
+    }, 72)
+  })
+
+  const setAactivatedIdentifier = React.useCallback(
+    (activatedIdentifier: string | null) => {
+      specifiedTocActivatedIdentifier$.next(activatedIdentifier)
+      setTimeoutForSpecifiedTocIdentifier()
+    },
+    [setTimeoutForSpecifiedTocIdentifier, specifiedTocActivatedIdentifier$],
+  )
+
+  const contentContainer: HTMLDivElement | null = contentContainerRef.current
+  React.useEffect(() => {
+    if (!showToc || !toc || !contentContainer) return
+
+    const identifiers: Array<[string, HTMLElement]> = []
+    const collect = (item: IHeadingTocNode): void => {
+      let identifier: string = decodeURIComponent(item.identifier)
+      identifier = encodeURIComponent(item.identifier)
+      const element: HTMLElement | null = document.getElementById(identifier)
+      if (element) identifiers.push([item.identifier, element])
+      for (const child of item.children) collect(child)
+    }
+    for (const child of toc.children) collect(child)
+
+    const onScroll = throttle((): void => {
+      const viewportTopOffset: number = 48
+      let nextTocActivatedIdentifier: string | null = null
+      for (const [identifier, element] of identifiers) {
+        if (element.getBoundingClientRect().top >= viewportTopOffset) {
+          nextTocActivatedIdentifier = identifier
+          break
+        }
+      }
+      tocActivatedIdentifier$.next(nextTocActivatedIdentifier)
+
+      if (specifiedTocIdentifierTimerRef.current) {
+        clearTimeout(specifiedTocIdentifierTimerRef.current)
+        setTimeoutForSpecifiedTocIdentifier()
+      }
+    }, 50)
+
+    onScroll()
+    contentContainer.addEventListener('scroll', onScroll)
+    return () => contentContainer.removeEventListener('scroll', onScroll)
+  }, [toc, showToc, contentContainer, tocActivatedIdentifier$, setTimeoutForSpecifiedTocIdentifier])
 
   return (
     <MarkdownProvider ast={ast} theme={theme}>
@@ -40,6 +102,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
         {showView && (
           <React.Fragment>
             <ContentView
+              containerRef={contentContainerRef}
               filepath={filepath}
               frontmatter={frontmatter}
               singleColumn={columns === 1}
@@ -66,6 +129,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
                 singleColumn={columns === 1}
                 toc={toc}
                 tocActivatedIdentifier={tocActivatedIdentifier}
+                setAactivatedIdentifier={setAactivatedIdentifier}
               />
             )}
             <div

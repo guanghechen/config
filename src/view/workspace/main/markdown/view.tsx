@@ -9,6 +9,7 @@ import { ReactMarkdownContent } from '@/component/markdown/ReactMarkdownContent'
 import { PRESET_CLASSES } from '@/constant/classes'
 
 interface IMainContentProps {
+  readonly containerRef: React.RefObject<HTMLDivElement | null>
   readonly filepath: string | null
   readonly frontmatter: Record<string, unknown> | undefined
   readonly singleColumn: boolean
@@ -18,9 +19,10 @@ export class ContentView extends React.Component<IMainContentProps> {
   public static displayName: string = 'ContentView'
 
   public override render(): React.ReactElement {
-    const { filepath, frontmatter, singleColumn } = this.props
+    const { containerRef, filepath, frontmatter, singleColumn } = this.props
     return (
       <div
+        ref={containerRef}
         className={cn('w-[72rem] flex-initial px-2', {
           'overflow-auto h-full': !singleColumn,
           [PRESET_CLASSES.scrollbar]: !singleColumn,
@@ -39,6 +41,7 @@ export class ContentView extends React.Component<IMainContentProps> {
   public override shouldComponentUpdate(nextProps: Readonly<IMainContentProps>): boolean {
     const props: IMainContentProps = this.props
     return (
+      props.containerRef !== nextProps.containerRef ||
       props.singleColumn !== nextProps.singleColumn ||
       props.filepath !== nextProps.filepath ||
       !isEqual(props.frontmatter, nextProps.frontmatter)
@@ -78,13 +81,14 @@ interface ITocViewProps {
   readonly singleColumn: boolean
   readonly toc: IHeadingToc | undefined
   readonly tocActivatedIdentifier: string | null
+  readonly setAactivatedIdentifier: (identifier: string | null) => void
 }
 
 export class TocView extends React.Component<ITocViewProps> {
   public static displayName: string = 'TocView'
 
   public override render(): React.ReactElement {
-    const { singleColumn, toc, tocActivatedIdentifier } = this.props
+    const { singleColumn, toc, tocActivatedIdentifier, setAactivatedIdentifier } = this.props
     return (
       <div
         className={cn('flex-auto basis-0 px-2', {
@@ -97,7 +101,11 @@ export class TocView extends React.Component<ITocViewProps> {
           Table of Contents
         </h3>
         <div>
-          <MarkdownToc toc={toc} activatedIdentifier={tocActivatedIdentifier} />
+          <MarkdownToc
+            toc={toc}
+            activatedIdentifier={tocActivatedIdentifier}
+            setAactivatedIdentifier={setAactivatedIdentifier}
+          />
         </div>
       </div>
     )
@@ -108,6 +116,7 @@ export class TocView extends React.Component<ITocViewProps> {
     return (
       props.singleColumn !== nextProps.singleColumn ||
       props.tocActivatedIdentifier !== nextProps.tocActivatedIdentifier ||
+      props.setAactivatedIdentifier !== nextProps.setAactivatedIdentifier ||
       !isEqual(props.toc, nextProps.toc)
     )
   }
