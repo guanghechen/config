@@ -45,12 +45,13 @@ export const ElementViewer: React.FC<IProps> = props => {
     }
   })
 
-  const onMouseDown = React.useCallback((e: React.MouseEvent) => {
+  const onDragStart = React.useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
     setIsDragging(true)
     setDragStart({ x: e.clientX, y: e.clientY })
   }, [])
 
-  const onMouseUp = React.useCallback(() => {
+  const onDragEnd = React.useCallback(() => {
     setIsDragging(false)
   }, [])
 
@@ -213,14 +214,15 @@ export const ElementViewer: React.FC<IProps> = props => {
       </div>
       <div
         className="flex h-screen w-screen items-center justify-center overflow-hidden"
-        onMouseDown={onMouseDown}
+        onMouseDown={onClose}
+        onMouseLeave={onDragEnd}
         onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
+        onMouseUp={onDragEnd}
         onWheel={onWheel}
       >
         <div
           className="transition-transform duration-200 bg-white/10 rounded-lg p-6 shadow-2xl"
+          onMouseDown={onDragStart}
           style={{
             transform: `translate(${translateX}px, ${translateY}px) scale(${scale}) rotate(${rotation}deg)`,
             cursor: isDragging ? 'grabbing' : 'grab',
