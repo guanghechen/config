@@ -23,8 +23,10 @@ local repo_map = {
       "pwsh",
       "ripgrep",
       "tmux",
+      "tsuki",
       "wezterm",
       "yazi",
+      "yozora",
       "zellij",
     },
     ["guanghechen"] = {
