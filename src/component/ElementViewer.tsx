@@ -17,6 +17,8 @@ export const ElementViewer: React.FC<IProps> = props => {
   const [isDragging, setIsDragging] = React.useState(false)
   const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 })
 
+  const containerRef = React.useRef<HTMLDivElement | null>(null)
+
   const onZoomIn = React.useCallback(() => {
     setScale(prev => prev * 1.2)
   }, [])
@@ -66,14 +68,22 @@ export const ElementViewer: React.FC<IProps> = props => {
     }
   })
 
-  const onWheel = useEventCallback((e: React.WheelEvent) => {
-    e.preventDefault()
+  const onWheel = useEventCallback((e: WheelEvent) => {
     e.stopPropagation()
+    e.preventDefault()
 
     const scaleFactor = e.deltaY < 0 ? 1.1 : 0.9
     const newScale = scale * scaleFactor
     if (newScale >= 0.1 && newScale <= 10) setScale(newScale)
   })
+
+  const container = containerRef.current
+  React.useEffect(() => {
+    if (!container) return
+
+    container.addEventListener('wheel', onWheel, { passive: false })
+    return () => container.removeEventListener('wheel', onWheel)
+  }, [onWheel, container])
 
   React.useEffect(() => {
     if (open) {
@@ -224,12 +234,12 @@ export const ElementViewer: React.FC<IProps> = props => {
         </button>
       </div>
       <div
+        ref={containerRef}
         className="flex h-screen w-screen z-40 items-center justify-center overflow-hidden"
         onMouseDown={onClose}
         onMouseLeave={onDragEnd}
         onMouseMove={onMouseMove}
         onMouseUp={onDragEnd}
-        onWheel={onWheel}
       >
         <div
           className="transition-transform duration-200 bg-white/10 rounded-lg p-2 shadow-2xl"
