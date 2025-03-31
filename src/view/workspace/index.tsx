@@ -2,7 +2,7 @@ import React from 'react'
 import { WorkspaceContextProvider, useWorkspaceViewmodel } from '@/context/workspace'
 import { WorkspaceLayout } from './Layout'
 
-export const WorkspaceContaienr: React.FC = () => {
+export const WorkspaceContainer: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
   return <WorkspaceLayout viewmodel={viewmodel} />
 }
@@ -10,7 +10,7 @@ export const WorkspaceContaienr: React.FC = () => {
 export const WorkspaceView: React.FC = () => {
   return (
     <WorkspaceContextProvider>
-      <WorkspaceContaienr />
+      <WorkspaceContainer />
     </WorkspaceContextProvider>
   )
 }
