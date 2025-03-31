@@ -2,7 +2,7 @@ import type { ISetState } from '@guanghechen/react-viewmodel'
 import { useSetState, useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { MarkdownModeEnum, useWorkspaceViewmodel } from '../../context'
+import { MarkdownModeEnum, useWorkspaceViewmodel } from '@/context/workspace'
 
 export const MarkdownModeToggle: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()

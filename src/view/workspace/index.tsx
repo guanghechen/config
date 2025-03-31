@@ -1,5 +1,5 @@
 import React from 'react'
-import { WorkspaceContextProvider, useWorkspaceViewmodel } from './context'
+import { WorkspaceContextProvider, useWorkspaceViewmodel } from '@/context/workspace'
 import { WorkspaceLayout } from './Layout'
 
 export const WorkspaceContaienr: React.FC = () => {

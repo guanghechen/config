@@ -1,8 +1,8 @@
 import { css } from '@emotion/css'
 import cn from 'clsx'
 import React from 'react'
-import type { WorkspaceViewModel } from '../context'
-import { useSidebarVisible } from '../context'
+import type { WorkspaceViewModel } from '@/context/workspace'
+import { useSidebarVisible } from '@/context/workspace'
 import { FileTree } from './FileTree'
 
 interface IProps {

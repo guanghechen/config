@@ -1,5 +1,5 @@
 import React from 'react'
-import type { WorkspaceViewModel } from './context'
+import type { WorkspaceViewModel } from '@/context/workspace'
 import WorkspaceFloat from './float'
 import WorkspaceMain from './main'
 import WorkspaceSidebar from './sidebar'

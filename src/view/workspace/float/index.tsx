@@ -1,5 +1,5 @@
 import React from 'react'
-import type { WorkspaceViewModel } from '../context'
+import type { WorkspaceViewModel } from '@/context/workspace'
 import { FileSearch } from './FileSearch'
 
 interface IProps {

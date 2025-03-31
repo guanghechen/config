@@ -6,7 +6,7 @@ import React from 'react'
 import { Json } from '@/component/json'
 import { PRESET_CLASSES } from '@/constant/classes'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
-import { JsonModeEnum, useWorkspaceViewmodel } from '../../context'
+import { JsonModeEnum, useWorkspaceViewmodel } from '@/context/workspace'
 
 interface IProps {
   readonly content: string | undefined

@@ -11,8 +11,8 @@ import {
   FileTreeViewModel,
 } from '@/component/filetree'
 import { PRESET_CLASSES } from '@/constant/classes'
+import { useWorkspaceViewmodel } from '@/context/workspace'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
-import { useWorkspaceViewmodel } from '../context'
 
 export const FileTree: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()

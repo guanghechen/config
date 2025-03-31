@@ -9,7 +9,7 @@ import { ReactMarkdownContent } from '@/component/markdown/ReactMarkdownContent'
 import { PRESET_CLASSES } from '@/constant/classes'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
-import { MarkdownModeEnum, useWorkspaceViewmodel } from '../../context'
+import { MarkdownModeEnum, useWorkspaceViewmodel } from '@/context/workspace'
 
 interface IProps {
   readonly filepath: string | null

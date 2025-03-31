@@ -3,15 +3,15 @@ import React from 'react'
 import { CopyButton } from '@/component/CopyButton'
 import { DockToRightIcon, OpenInNewIcon, OpenWithIcon } from '@/component/icon/material'
 import { ThemeToggle } from '@/container/ThemeToggle'
-import { toSearch } from '@/util/url'
-import type { WorkspaceViewModel } from '../context'
+import type { WorkspaceViewModel } from '@/context/workspace'
 import {
   useCurrentFilepath,
   useSidebarVisible,
   useToggleSidebarVisible,
   useWorkspace,
   useWorkspaceViewmodel,
-} from '../context'
+} from '@/context/workspace'
+import { toSearch } from '@/util/url'
 import { Workspace } from '../sidebar/Workspace'
 
 interface IProps {

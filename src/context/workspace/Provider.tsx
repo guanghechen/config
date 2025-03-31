@@ -13,7 +13,7 @@ import { WorkspaceContextType } from './context'
 import type { IWorkspaceData } from './types'
 import { WorkspaceViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/view/workspace'
+const storageKey: string = '@guanghechen/yozora/workspace'
 
 export const WorkspaceContextProvider: React.FC<{ children: React.ReactNode }> = props => {
   const [viewmodel] = React.useState<WorkspaceViewModel>(() => {

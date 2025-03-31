@@ -2,7 +2,7 @@ import type { ISetState } from '@guanghechen/react-viewmodel'
 import { useSetState, useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { JsonModeEnum, useWorkspaceViewmodel } from '../../context'
+import { JsonModeEnum, useWorkspaceViewmodel } from '@/context/workspace'
 
 export const JsonModeToggle: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()

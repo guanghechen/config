@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import type { WorkspaceViewModel } from '../context'
+import type { WorkspaceViewModel } from '@/context/workspace'
 
 const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
