@@ -6,10 +6,11 @@ import { NodesRenderer } from './NodesRenderer'
 interface IProps {
   readonly item: IHeadingTocNode
   readonly depth: number
+  readonly activatedIdentifier: string | null
 }
 
 export const MarkdownTocItem: React.FC<IProps> = props => {
-  const { item, depth } = props
+  const { item, depth, activatedIdentifier } = props
   const [expanded, setExpanded] = React.useState<boolean>(true)
   const hasChildren: boolean = item.children && item.children.length > 0
 
@@ -31,7 +32,11 @@ export const MarkdownTocItem: React.FC<IProps> = props => {
   )
 
   return (
-    <div className="toc-item">
+    <div
+      className={cn('toc-item', {
+        '': activatedIdentifier === item.identifier,
+      })}
+    >
       <div
         className={cn(
           'flex items-center py-1 text-sm hover:text-indigo-500 dark:hover:text-indigo-400 cursor-pointer transition-colors',
@@ -62,7 +67,12 @@ export const MarkdownTocItem: React.FC<IProps> = props => {
       {hasChildren && expanded && (
         <div className="toc-children">
           {item.children?.map(child => (
-            <MarkdownTocItem key={child.identifier} item={child} depth={depth + 1} />
+            <MarkdownTocItem
+              key={child.identifier}
+              item={child}
+              depth={depth + 1}
+              activatedIdentifier={activatedIdentifier}
+            />
           ))}
         </div>
       )}

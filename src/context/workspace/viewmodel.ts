@@ -43,6 +43,8 @@ export class WorkspaceViewModel extends ViewModel {
   public readonly sidebarVisible$: State<boolean>
   public readonly sidebarWidth$: State<number>
 
+  public readonly tocActivatedIdentifier$: State<string | null>
+
   public readonly filepathDirtyTick$: State<number>
   public readonly revealTick$: State<number>
   public readonly workspacesDirtyTick$: State<number>
@@ -161,6 +163,8 @@ export class WorkspaceViewModel extends ViewModel {
     const sidebarVisible$ = new State<boolean>(sidebarVisible)
     const sidebarWidth$ = new State<number>(sidebarWidth)
 
+    const tocActivatedIdentifier$ = new State<string | null>(null)
+
     const filepathDirtyTick$ = new State<number>(0)
     const revealTick$ = new State<number>(0)
     const workspacesDirtyTick$ = new State<number>(0)
@@ -176,13 +180,11 @@ export class WorkspaceViewModel extends ViewModel {
     this.markdownMode$ = markdownMode$
     this.sidebarVisible$ = sidebarVisible$
     this.sidebarWidth$ = sidebarWidth$
-
+    this.tocActivatedIdentifier$ = tocActivatedIdentifier$
     this.filepathDirtyTick$ = filepathDirtyTick$
     this.revealTick$ = revealTick$
     this.workspacesDirtyTick$ = workspacesDirtyTick$
-
     this.mainScrollableContainer$ = mainScrollableContainer$
-
     this.updateSidebarWidthDebounced = debounce(function (nextWidth: number): void {
       sidebarWidth$.next(nextWidth)
     }, 100)

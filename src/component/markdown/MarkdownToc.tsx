@@ -4,17 +4,23 @@ import { MarkdownTocItem } from './MarkdownTocItem'
 
 interface IProps {
   readonly toc: IHeadingToc | undefined
+  readonly activatedIdentifier: string | null
 }
 
 export const MarkdownToc: React.FC<IProps> = props => {
-  const { toc } = props
+  const { toc, activatedIdentifier } = props
 
   return (
     <div className="h-full overflow-auto p-4">
       {toc ? (
         <div className="toc-container">
           {toc.children.map(item => (
-            <MarkdownTocItem key={item.identifier} item={item} depth={0} />
+            <MarkdownTocItem
+              key={item.identifier}
+              item={item}
+              depth={0}
+              activatedIdentifier={activatedIdentifier}
+            />
           ))}
         </div>
       ) : (
