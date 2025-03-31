@@ -4,11 +4,12 @@ import React from 'react'
 interface IProps {
   readonly open: boolean
   readonly children: React.ReactElement
+  readonly resetOnOpen: boolean
   readonly onClose: () => void
 }
 
 export const ElementViewer: React.FC<IProps> = props => {
-  const { open, children, onClose } = props
+  const { open, resetOnOpen, children, onClose } = props
   const [scale, setScale] = React.useState<number>(1)
   const [rotation, setRotation] = React.useState<number>(0)
   const [translateX, setTranslateX] = React.useState<number>(0)
@@ -83,11 +84,21 @@ export const ElementViewer: React.FC<IProps> = props => {
     }
   }, [open, onKeyDown])
 
+  // Reset all transformations when the component opens
+  React.useEffect(() => {
+    if (resetOnOpen && open) {
+      setScale(1)
+      setRotation(0)
+      setTranslateX(0)
+      setTranslateY(0)
+    }
+  }, [open, resetOnOpen])
+
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center bg-black/60 backdrop-blur-sm">
-      <div className="absolute right-4 top-4 flex gap-4">
+      <div className="absolute z-50 right-4 top-4 flex gap-4">
         <button
           onClick={onRotateCounterClockwise}
           title="Rotate Counter-Clockwise"
@@ -213,7 +224,7 @@ export const ElementViewer: React.FC<IProps> = props => {
         </button>
       </div>
       <div
-        className="flex h-screen w-screen items-center justify-center overflow-hidden"
+        className="flex h-screen w-screen z-40 items-center justify-center overflow-hidden"
         onMouseDown={onClose}
         onMouseLeave={onDragEnd}
         onMouseMove={onMouseMove}
@@ -221,7 +232,7 @@ export const ElementViewer: React.FC<IProps> = props => {
         onWheel={onWheel}
       >
         <div
-          className="transition-transform duration-200 bg-white/10 rounded-lg p-6 shadow-2xl"
+          className="transition-transform duration-200 bg-white/10 rounded-lg p-2 shadow-2xl"
           onMouseDown={onDragStart}
           style={{
             transform: `translate(${translateX}px, ${translateY}px) scale(${scale}) rotate(${rotation}deg)`,

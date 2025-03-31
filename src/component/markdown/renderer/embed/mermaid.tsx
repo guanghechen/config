@@ -58,7 +58,7 @@ const Mermaid: React.FC<{ readonly code: string }> = props => {
   return (
     <React.Fragment>
       <MermaidRenderer code={code} className="cursor-pointer" onClick={onClick} />
-      <ElementViewer open={open} onClose={onClose}>
+      <ElementViewer open={open} resetOnOpen={false} onClose={onClose}>
         <MermaidRenderer code={code} className="w-[80vw] h-[80vh]" />
       </ElementViewer>
     </React.Fragment>

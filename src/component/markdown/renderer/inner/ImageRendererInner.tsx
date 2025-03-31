@@ -56,7 +56,7 @@ export class ImageRendererInner extends React.Component<IProps, IState> {
           )}
         </figure>
 
-        <ImageViewer src={src} alt={alt} isOpen={isFullscreen} onClose={this.onCloseFullscreen} />
+        <ImageViewer src={src} alt={alt} open={isFullscreen} onClose={this.onCloseFullscreen} />
       </React.Fragment>
     )
   }
@@ -100,8 +100,7 @@ export class ImageRendererInner extends React.Component<IProps, IState> {
     this.setState({ isFullscreen: true })
   }
 
-  protected onCloseFullscreen = (e: React.MouseEvent): void => {
-    e.stopPropagation()
+  protected onCloseFullscreen = (): void => {
     this.setState({ isFullscreen: false })
   }
 }
