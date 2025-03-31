@@ -13,10 +13,10 @@ return {
       },
     },
     routes = {
-      -- {
-      --   view = "notify",
-      --   filter = { event = "msg_showmode" },
-      -- },
+      {
+        view = "notify",
+        filter = { event = "msg_showmode" },
+      },
       {
         view = "mini",
         filter = {
