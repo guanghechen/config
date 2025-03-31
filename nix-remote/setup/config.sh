@@ -12,19 +12,9 @@ clone_or_update_config_repo() {
     "lazygit"
     "lsd"
     "nvim"
-    "pm2"
     "ripgrep"
     "tmux"
-    "tsuki"
     "yazi"
-    "yozora"
-  )
-  local OPTIONAL_CONFIG_BRANCHES=(
-    "alacritty"
-    "kitty"
-    "neovide"
-    "nvim-nvchad"
-    "wezterm"
   )
 
   for branch in "${CONFIG_BRANCHES[@]}"; do
@@ -34,13 +24,6 @@ clone_or_update_config_repo() {
     else
       mkdir -p "$repo_path"
       git clone $CONFIG_REPO "$repo_path" --single-branch --branch=$branch
-    fi
-  done
-
-  for branch in "${OPTIONAL_CONFIG_BRANCHES[@]}"; do
-    local repo_path="$CONFIG_ROOT_DIR/$branch"
-    if [ -d "$repo_path/.git" ]; then
-      git -C "$repo_path" pull origin $branch
     fi
   done
 }

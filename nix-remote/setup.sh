@@ -20,7 +20,7 @@ fi
 
 ## Setup app configs
 printf "\n\e[32m  [setup config] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/config.sh
+source ~/.config/guanghechen/nix-remote/setup/config.sh
 printf "\e[32m  [setup config] done.\e[0m\n"
 
 ## Setup rust envrionment

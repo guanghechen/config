@@ -11,6 +11,7 @@ $config_repo_branch = @(
   "pm2",
   "pwsh",
   "ripgrep",
+  "tsuki",
   "yazi",
   "yozora"
 )
