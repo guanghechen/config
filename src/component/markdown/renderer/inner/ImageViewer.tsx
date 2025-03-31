@@ -295,7 +295,7 @@ export const ImageViewer: React.FC<IProps> = props => {
         className="flex h-screen w-screen items-center justify-center overflow-hidden"
         onClick={e => e.stopPropagation()}
         onWheel={e => {
-          if (e.altKey || e.ctrlKey) {
+          if (!e.altKey && !e.ctrlKey) {
             e.preventDefault()
             e.stopPropagation()
             const delta = e.deltaY < 0 ? 0.1 : -0.1
