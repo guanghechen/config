@@ -1,5 +1,6 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
+import mermaid from 'mermaid'
 import React from 'react'
 import { useWorkspaces } from '@/hook/useWorkspaces'
 import { ServerCustomEventType } from '@/shared/types'
@@ -8,12 +9,17 @@ import type {
   IResponsePayloadFileSwitch,
   Mutable,
 } from '@/shared/types'
+import { SiteTheme, useSiteTheme } from '../site'
 import type { IWorkspaceContext } from './context'
 import { WorkspaceContextType } from './context'
 import type { IWorkspaceData } from './types'
 import { WorkspaceViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/workspace'
+
+interface ISideEffectProps {
+  readonly viewmodel: WorkspaceViewModel
+}
 
 export const WorkspaceContextProvider: React.FC<{ children: React.ReactNode }> = props => {
   const [viewmodel] = React.useState<WorkspaceViewModel>(() => {
@@ -39,6 +45,7 @@ export const WorkspaceContextProvider: React.FC<{ children: React.ReactNode }> =
     <React.Fragment>
       <PersistSideEffect viewmodel={viewmodel} />
       <SideEffect viewmodel={viewmodel} />
+      <MermaidSideEffect viewmodel={viewmodel} />
       <WorkspaceContextType.Provider value={context}>
         {props.children}
       </WorkspaceContextType.Provider>
@@ -47,7 +54,7 @@ export const WorkspaceContextProvider: React.FC<{ children: React.ReactNode }> =
 }
 WorkspaceContextProvider.displayName = 'WorkspaceContextProvider'
 
-const PersistSideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
+const PersistSideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
   React.useEffect(() => {
@@ -76,7 +83,7 @@ const PersistSideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => 
 }
 PersistSideEffect.displayName = 'WorkspacePersistSideEffect'
 
-const SideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
+const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath: string | null = useStateValue(viewmodel.filepath$)
@@ -127,6 +134,17 @@ const SideEffect: React.FC<{ viewmodel: WorkspaceViewModel }> = props => {
     const newUrl = `${window.location.pathname}?${usp.toString()}`
     window.history.replaceState(null, '', newUrl)
   }, [workspace, filepath])
+
+  return <React.Fragment />
+}
+
+const MermaidSideEffect: React.FC<ISideEffectProps> = () => {
+  const theme: SiteTheme = useSiteTheme()
+
+  React.useEffect(() => {
+    const darken = theme === SiteTheme.DARKEN
+    mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
+  }, [theme])
 
   return <React.Fragment />
 }

@@ -1,6 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Computed } from '@guanghechen/viewmodel'
-import mermaid from 'mermaid'
 import React from 'react'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
@@ -8,6 +7,10 @@ import type { ISiteData } from './viewmodel'
 import { SiteTheme, SiteViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/site'
+
+interface ISideEffectProps {
+  readonly viewmodel: SiteViewModel
+}
 
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
   const [viewmodel] = React.useState<SiteViewModel>(() => {
@@ -30,7 +33,7 @@ export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = prop
 }
 SiteContextProvider.displayName = 'SiteContextProvider'
 
-const PersistentSideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
+const PersistentSideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
   React.useEffect(() => {
@@ -47,7 +50,7 @@ const PersistentSideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
 }
 PersistentSideEffect.displayName = 'SitePersistentSideEffect'
 
-const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
+const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
   const theme: SiteTheme = useStateValue(viewmodel.theme$)
 
@@ -58,8 +61,6 @@ const SideEffect: React.FC<{ viewmodel: SiteViewModel }> = props => {
     } else {
       document.documentElement.classList.remove('dark')
     }
-
-    mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
   }, [theme])
 
   return <React.Fragment />
