@@ -21,7 +21,17 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
 
     let cancelled: boolean = false
     void mermaid.render(id, code).then(({ svg }) => {
-      if (!cancelled && ref.current) ref.current.innerHTML = svg
+      if (!cancelled && ref.current) {
+        ref.current.innerHTML = svg
+
+        const svgElement: SVGSVGElement | null = ref.current.querySelector('svg')
+        if (svgElement) {
+          svgElement.style.width = '100%'
+          svgElement.style.height = '100%'
+          svgElement.style.maxWidth = 'unset'
+          svgElement.style.maxHeight = 'unset'
+        }
+      }
     })
 
     return () => {
@@ -49,7 +59,7 @@ const Mermaid: React.FC<{ readonly code: string }> = props => {
     <React.Fragment>
       <MermaidRenderer code={code} className="cursor-pointer" onClick={onClick} />
       <ElementViewer open={open} onClose={onClose}>
-        <MermaidRenderer code={code} />
+        <MermaidRenderer code={code} className="w-[80vw] h-[80vh]" />
       </ElementViewer>
     </React.Fragment>
   )
