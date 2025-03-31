@@ -1,6 +1,6 @@
 import mermaid from 'mermaid'
 import React from 'react'
-import { ImageViewer } from '@/component/ImageViewer'
+import { ElementViewer } from '@/component/ElementViewer'
 import { useMarkdownDarken } from '../../context'
 
 interface IMermaidRendererProps {
@@ -48,9 +48,9 @@ const Mermaid: React.FC<{ readonly code: string }> = props => {
   return (
     <React.Fragment>
       <MermaidRenderer code={code} className="cursor-pointer" onClick={onClick} />
-      <ImageViewer open={open} onClose={onClose}>
+      <ElementViewer open={open} onClose={onClose}>
         <MermaidRenderer code={code} />
-      </ImageViewer>
+      </ElementViewer>
     </React.Fragment>
   )
 }

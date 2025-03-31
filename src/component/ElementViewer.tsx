@@ -3,11 +3,11 @@ import React from 'react'
 
 interface IProps {
   readonly open: boolean
-  readonly children: React.ReactNode
+  readonly children: React.ReactElement
   readonly onClose: () => void
 }
 
-export const ImageViewer: React.FC<IProps> = props => {
+export const ElementViewer: React.FC<IProps> = props => {
   const { open, children, onClose } = props
   const [scale, setScale] = React.useState<number>(1)
   const [rotation, setRotation] = React.useState<number>(0)
@@ -232,4 +232,4 @@ export const ImageViewer: React.FC<IProps> = props => {
     </div>
   )
 }
-ImageViewer.displayName = 'ImageViewer'
+ElementViewer.displayName = 'ElementViewer'
