@@ -38,7 +38,7 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
   }, [viewmodel])
 
   return (
-    <div className="flex h-full items-center bg-neutral-200 px-4 dark:bg-neutral-800">
+    <div className="flex h-full items-center backdrop-blur-md backdrop-saturate-150 bg-white/70 border-b border-white/20 text-slate-800 px-4 dark:bg-gray-800/70 dark:border-gray-700/30 dark:text-gray-200">
       <div className="box-border flex flex-initial justify-center gap-4">
         <button
           onClick={onToggleSidebarVisible}

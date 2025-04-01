@@ -37,7 +37,7 @@ const JsonContainer: React.FC = () => {
   }, [container])
 
   return (
-    <div className="w-full pt-12">
+    <div className="w-full pt-8">
       {!!error && (
         <div className="relative mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
           <code>error: {String(error)}</code>

@@ -1,4 +1,3 @@
-import { css } from '@emotion/css'
 import cn from 'clsx'
 import React from 'react'
 import type { WorkspaceViewModel } from '@/context/workspace'
@@ -66,12 +65,13 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
       ref={containerRef}
       className={cn(
         'h-full box-border transition-all duration-300 ease-in-out',
-        classes.container,
-        visible ? 'opacity-100' : 'w-0 opacity-0',
+        'backdrop-blur-md backdrop-saturate-150',
+        'bg-white/70 border-r border-white/20 text-slate-800',
+        'dark:bg-gray-800/70 dark:border-r dark:border-gray-700/30 dark:text-gray-200',
       )}
       style={{ width: visible ? width : 0 }}
     >
-      <div className="box-border flex h-full w-full flex-col">
+      <div className="select-none box-border flex h-full w-full flex-col">
         <FileTree />
       </div>
       <div
@@ -84,10 +84,3 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
 
 WorkspaceSidebar.displayName = 'WorkspaceSidebar'
 export default WorkspaceSidebar
-
-const classes = {
-  container: css({
-    transition: 'width 300ms ease-in-out, opacity 300ms ease-in-out',
-    willChange: 'width, opacity',
-  }),
-}

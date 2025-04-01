@@ -7,7 +7,7 @@ interface IProps {
   readonly item: IHeadingTocNode
   readonly depth: number
   readonly activatedIdentifier: string | null
-  readonly setAactivatedIdentifier: (identifier: string | null) => void
+  readonly setActivatedIdentifier: (identifier: string | null) => void
 }
 
 interface IState {
@@ -25,7 +25,7 @@ export class MarkdownTocItem extends React.Component<IProps, IState> {
   }
 
   public override render(): React.ReactElement {
-    const { item, depth, activatedIdentifier, setAactivatedIdentifier } = this.props
+    const { item, depth, activatedIdentifier, setActivatedIdentifier } = this.props
     const { expanded } = this.state
     const { onClick, onToggle } = this
 
@@ -80,7 +80,7 @@ export class MarkdownTocItem extends React.Component<IProps, IState> {
                 item={child}
                 depth={depth + 1}
                 activatedIdentifier={activatedIdentifier}
-                setAactivatedIdentifier={setAactivatedIdentifier}
+                setActivatedIdentifier={setActivatedIdentifier}
               />
             ))}
           </div>
@@ -101,15 +101,15 @@ export class MarkdownTocItem extends React.Component<IProps, IState> {
       props.item !== nextProps.item ||
       props.depth !== nextProps.depth ||
       props.activatedIdentifier !== nextProps.activatedIdentifier ||
-      props.setAactivatedIdentifier !== nextProps.setAactivatedIdentifier
+      props.setActivatedIdentifier !== nextProps.setActivatedIdentifier
     )
   }
 
   protected readonly onClick = (e: React.MouseEvent): void => {
     e.preventDefault()
 
-    const { item, setAactivatedIdentifier } = this.props
-    setAactivatedIdentifier(item.identifier)
+    const { item, setActivatedIdentifier } = this.props
+    setActivatedIdentifier(item.identifier)
 
     let identifier: string = decodeURIComponent(item.identifier)
     identifier = encodeURIComponent(item.identifier)

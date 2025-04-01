@@ -19,14 +19,14 @@ const DEFAULT_JSON = {
     story:
       "Once upon a time in a small coastal village, a young fisher named Maya discovered an unusual bottle washed ashore. Inside was a map leading to a hidden cove. Curiosity sparked, she sailed at dawn, navigating treacherous waters until reaching the secluded bay. There stood an ancient lighthouse, abandoned for decades. Inside, she found journals detailing the life of a lonely keeper who had discovered how to communicate with whales through music. Maya restored the lighthouse and learned his methods. Soon, whales returned to the waters, bringing prosperity to her village. Years later, tourists would visit to hear Maya's enchanting melodies and watch as massive creatures danced in the waves, a testament to how one unexpected discovery can transform a life and community forever.",
   },
-  nums: Array.from(new Array(300))
+  numbers: Array.from(new Array(300))
     .map((_, i): unknown => i)
     .concat({ a: 1, b: 2, c: 3, d: { e: 5, f: 7 }, g: [10, 11, '23'] }),
   name: 'lemon',
   age: 10,
   address: ['a', 'bc', 'def'],
   others: {
-    favirate: [
+    favorite: [
       'apple',
       'banana',
       {
@@ -44,7 +44,7 @@ const DEFAULT_JSON = {
     integer: 1,
     number: 0.2,
     string: 'hello, world!',
-    symbol: Symbol.for('lemoncat'),
+    symbol: Symbol.for('lemon_cat'),
     bigint: 20n,
   },
   methods: {
@@ -75,8 +75,8 @@ export const JsonComposer: React.FC<IProps> = props => {
 
   return (
     <div
-      className={cn('flex w-full items-start justify-center pb-8', {
-        'h-[calc(100vh-6rem)]': columns > 1,
+      className={cn('flex w-full items-start justify-center', {
+        'h-[calc(100vh-7rem)]': columns > 1,
       })}
     >
       {showView && (

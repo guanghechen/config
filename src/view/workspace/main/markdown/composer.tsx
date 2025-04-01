@@ -48,7 +48,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
     }, 72)
   })
 
-  const setAactivatedIdentifier = React.useCallback(
+  const setActivatedIdentifier = React.useCallback(
     (activatedIdentifier: string | null) => {
       specifiedTocActivatedIdentifier$.next(activatedIdentifier)
       setTimeoutForSpecifiedTocIdentifier()
@@ -95,8 +95,8 @@ export const MarkdownComposer: React.FC<IProps> = props => {
   return (
     <MarkdownProvider ast={ast} theme={theme}>
       <div
-        className={cn('flex w-full items-start justify-center pb-8', {
-          'h-[calc(100vh-6rem)]': columns > 1,
+        className={cn('flex w-full items-start justify-center', {
+          'h-[calc(100vh-7rem)]': columns > 1,
         })}
       >
         {showView && (
@@ -129,7 +129,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
                 singleColumn={columns === 1}
                 toc={toc}
                 tocActivatedIdentifier={tocActivatedIdentifier}
-                setAactivatedIdentifier={setAactivatedIdentifier}
+                setActivatedIdentifier={setActivatedIdentifier}
               />
             )}
             <div

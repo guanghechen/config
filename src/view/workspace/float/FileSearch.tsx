@@ -169,7 +169,7 @@ export const FileSearch: React.FC<IProps> = props => {
   return (
     <div
       ref={containerRef}
-      className="fixed left-1/2 top-1/4 z-50 w-[48rem] max-w-[60vw] -translate-x-1/2 transform rounded-lg border border-gray-300 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+      className="fixed left-1/2 top-1/4 z-50 w-[48rem] max-w-[60vw] -translate-x-1/2 transform rounded-lg backdrop-blur-md backdrop-saturate-150 bg-white/30 border border-white/20 shadow-xl text-slate-800 dark:bg-gray-800/30 dark:border-gray-700/20 dark:text-gray-200"
     >
       <div className="p-2">
         <input
@@ -178,12 +178,11 @@ export const FileSearch: React.FC<IProps> = props => {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search files..."
-          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-200"
+          className="w-full rounded-md border border-gray-300/30 bg-transparent backdrop-blur-sm px-3 py-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500/60 dark:border-gray-700/20 dark:text-gray-200"
           autoFocus={true}
         />
       </div>
-
-      <div className="max-h-80 overflow-y-auto p-2 text-sm">
+      <div className="max-h-80 overflow-y-auto p-2 text-sm bg-white/20 dark:bg-gray-800/20 rounded-b-lg">
         {filteredFileList.map(file => (
           <div
             key={file.filepath}

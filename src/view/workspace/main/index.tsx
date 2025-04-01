@@ -1,7 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { WorkspaceViewModel } from '@/context/workspace'
-
 const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
 const MarkdownContainer = React.lazy(() => import('./markdown'))
@@ -45,6 +44,5 @@ export const WorkspaceMain: React.FC<IProps> = props => {
 
   return container
 }
-
 WorkspaceMain.displayName = 'WorkspaceMain'
 export default WorkspaceMain

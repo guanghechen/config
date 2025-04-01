@@ -5,14 +5,14 @@ import { MarkdownTocItem } from './MarkdownTocItem'
 interface IProps {
   readonly toc: IHeadingToc | undefined
   readonly activatedIdentifier: string | null
-  readonly setAactivatedIdentifier: (identifier: string | null) => void
+  readonly setActivatedIdentifier: (identifier: string | null) => void
 }
 
 export class MarkdownToc extends React.Component<IProps> {
   public static readonly displayName: string = 'MarkdownToc'
 
   public override render(): React.ReactElement {
-    const { toc, activatedIdentifier, setAactivatedIdentifier } = this.props
+    const { toc, activatedIdentifier, setActivatedIdentifier } = this.props
 
     return (
       <div className="h-full overflow-auto p-4">
@@ -24,7 +24,7 @@ export class MarkdownToc extends React.Component<IProps> {
                 item={item}
                 depth={0}
                 activatedIdentifier={activatedIdentifier}
-                setAactivatedIdentifier={setAactivatedIdentifier}
+                setActivatedIdentifier={setActivatedIdentifier}
               />
             ))}
           </div>
@@ -59,7 +59,7 @@ export class MarkdownToc extends React.Component<IProps> {
     const props: IProps = this.props
     return (
       props.activatedIdentifier !== nextProps.activatedIdentifier ||
-      props.setAactivatedIdentifier !== nextProps.setAactivatedIdentifier ||
+      props.setActivatedIdentifier !== nextProps.setActivatedIdentifier ||
       props.toc !== nextProps.toc
     )
   }

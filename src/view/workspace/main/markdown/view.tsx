@@ -23,10 +23,13 @@ export class ContentView extends React.Component<IMainContentProps> {
     return (
       <div
         ref={containerRef}
-        className={cn('w-[72rem] flex-initial px-2', {
-          'overflow-auto h-full': !singleColumn,
-          [PRESET_CLASSES.scrollbar]: !singleColumn,
-        })}
+        className={cn(
+          'w-[72rem] flex-initial px-8 py-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          {
+            'overflow-auto h-full': !singleColumn,
+            [PRESET_CLASSES.scrollbar]: !singleColumn,
+          },
+        )}
       >
         <ReactMarkdownContent
           Tag="h1"
@@ -61,10 +64,13 @@ export class AstView extends React.Component<IAstViewProps> {
     const { ast, singleColumn } = this.props
     return (
       <div
-        className={cn('w-[48rem] flex-initial px-2', {
-          'overflow-auto h-full': !singleColumn,
-          [PRESET_CLASSES.scrollbar]: !singleColumn,
-        })}
+        className={cn(
+          'w-[48rem] flex-auto p-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          {
+            'overflow-auto h-full': !singleColumn,
+            [PRESET_CLASSES.scrollbar]: !singleColumn,
+          },
+        )}
       >
         <Json json={ast} />
       </div>
@@ -81,21 +87,24 @@ interface ITocViewProps {
   readonly singleColumn: boolean
   readonly toc: IHeadingToc | undefined
   readonly tocActivatedIdentifier: string | null
-  readonly setAactivatedIdentifier: (identifier: string | null) => void
+  readonly setActivatedIdentifier: (identifier: string | null) => void
 }
 
 export class TocView extends React.Component<ITocViewProps> {
   public static displayName: string = 'TocView'
 
   public override render(): React.ReactElement {
-    const { singleColumn, toc, tocActivatedIdentifier, setAactivatedIdentifier } = this.props
+    const { singleColumn, toc, tocActivatedIdentifier, setActivatedIdentifier } = this.props
     return (
       <div
-        className={cn('flex-auto basis-0 px-2', {
-          'overflow-auto h-full': !singleColumn,
-          [PRESET_CLASSES.scrollbar]: !singleColumn,
-          'flex justify-center': singleColumn,
-        })}
+        className={cn(
+          'flex-auto basis-0 p-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          {
+            'overflow-auto h-full': !singleColumn,
+            [PRESET_CLASSES.scrollbar]: !singleColumn,
+            'flex justify-center': singleColumn,
+          },
+        )}
       >
         <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">
           Table of Contents
@@ -104,7 +113,7 @@ export class TocView extends React.Component<ITocViewProps> {
           <MarkdownToc
             toc={toc}
             activatedIdentifier={tocActivatedIdentifier}
-            setAactivatedIdentifier={setAactivatedIdentifier}
+            setActivatedIdentifier={setActivatedIdentifier}
           />
         </div>
       </div>
@@ -116,7 +125,7 @@ export class TocView extends React.Component<ITocViewProps> {
     return (
       props.singleColumn !== nextProps.singleColumn ||
       props.tocActivatedIdentifier !== nextProps.tocActivatedIdentifier ||
-      props.setAactivatedIdentifier !== nextProps.setAactivatedIdentifier ||
+      props.setActivatedIdentifier !== nextProps.setActivatedIdentifier ||
       !isEqual(props.toc, nextProps.toc)
     )
   }
@@ -134,11 +143,14 @@ export class FrontmatterView extends React.Component<IFrontmatterViewProps> {
     const { frontmatter, singleColumn } = this.props
     return (
       <div
-        className={cn('flex-auto basis-0 px-2', {
-          'overflow-auto h-full': !singleColumn,
-          [PRESET_CLASSES.scrollbar]: !singleColumn,
-          'flex justify-center': singleColumn,
-        })}
+        className={cn(
+          'flex-auto basis-0 p-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          {
+            'overflow-auto h-full': !singleColumn,
+            [PRESET_CLASSES.scrollbar]: !singleColumn,
+            'flex justify-center': singleColumn,
+          },
+        )}
       >
         <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">Frontmatter</h3>
         <Json json={frontmatter} initialCollapsed="expanded" />

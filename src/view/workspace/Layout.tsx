@@ -21,11 +21,11 @@ export class WorkspaceLayout extends React.Component<IProps> {
             <WorkspaceTopbar viewmodel={viewmodel} />
           </div>
         </div>
-        <div className="sticky left-0 top-[3rem] z-30 box-border h-[calc(100vh-3rem)] flex-shrink-0 flex-grow-0 border-r border-gray-300 bg-gray-50 shadow-xs dark:border-gray-700 dark:bg-gray-900">
+        <div className="sticky left-0 top-[3rem] z-30 box-border h-[calc(100vh-3rem)] flex-shrink-0 flex-grow-0">
           <WorkspaceSidebar viewmodel={viewmodel} />
         </div>
         <div className="box-border min-h-screen w-0 flex-auto pt-[3rem]">
-          <div className="box-border flex w-full justify-center">
+          <div className="box-border flex w-full justify-center p-4">
             <WorkspaceMain viewmodel={viewmodel} />
           </div>
         </div>
