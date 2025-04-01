@@ -1,8 +1,6 @@
-import { css, cx } from '@emotion/css'
 import type { Node, Paragraph } from '@yozora/ast'
 import { ImageReferenceType, ImageType } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -27,14 +25,14 @@ export class ParagraphRenderer extends React.Component<Paragraph> {
 
     if (notValidParagraph) {
       return (
-        <div className={paragraphDisplayCls}>
+        <div className="yozora-paragraph flex items-center justify-center py-4 m-0 overflow-hidden hyphens-auto break-normal anywhere">
           <NodesRenderer nodes={childNodes} />
         </div>
       )
     }
 
     return (
-      <div className={paragraphCls}>
+      <div className="yozora-paragraph overflow-hidden p-0 mb-5 leading-[1.8] hyphens-auto break-normal anywhere [&>:last-child]:mb-0">
         <NodesRenderer nodes={childNodes} />
       </div>
     )
@@ -45,30 +43,3 @@ export class ParagraphRenderer extends React.Component<Paragraph> {
     return props.children !== nextProps.children
   }
 }
-
-const paragraphCls: string = cx(
-  astClasses.paragraph,
-  css({
-    overflow: 'hidden',
-    padding: 0,
-    margin: '0px 0px 1.25em 0px',
-    marginBottom: '1em',
-    lineHeight: '1.8',
-    hyphens: 'auto',
-    wordBreak: 'normal',
-    overflowWrap: 'anywhere',
-    '> :last-child': {
-      marginBottom: 0,
-    },
-  }),
-)
-const paragraphDisplayCls: string = cx(
-  paragraphCls,
-  css({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '1rem 0',
-    margin: 0,
-  }),
-)

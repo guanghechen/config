@@ -29,6 +29,10 @@
   --color-inline-math: var(--color-gray-700);
 }
 
+.yozora-blockquote__content > :last-child {
+  margin-bottom: 0;
+}
+
 .yozora-code {
   font-family:
     'Maple Mono NF CN', Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif;

@@ -1,7 +1,5 @@
-import { css, cx } from '@emotion/css'
 import type { Blockquote } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -16,8 +14,11 @@ export class BlockquoteRenderer extends React.Component<Blockquote> {
   public override render(): React.ReactElement {
     const childNodes = this.props.children
     return (
-      <blockquote className={cls}>
-        <NodesRenderer nodes={childNodes} />
+      <blockquote className="yozora-blockquote relative box-border rounded-lg mb-6 shadow-sm overflow-hidden border-l-4 transition-all hover:shadow-md dark:shadow-md/20 dark:hover:shadow-lg/20 border-sky-400 dark:border-sky-500 p-0.5">
+        <div className="absolute inset-0 opacity-5 dark:opacity-10 bg-gradient-to-br from-sky-400 to-sky-600" />
+        <div className="yozora-blockquote__content relative z-10 py-4 px-5 bg-sky-50 dark:bg-sky-900/20 text-sky-800 dark:text-sky-200">
+          <NodesRenderer nodes={childNodes} />
+        </div>
       </blockquote>
     )
   }
@@ -27,18 +28,3 @@ export class BlockquoteRenderer extends React.Component<Blockquote> {
     return props.children !== nextProps.children
   }
 }
-
-const cls = cx(
-  astClasses.blockquote,
-  css({
-    boxSizing: 'border-box',
-    padding: '0.625em 1em',
-    borderLeft: '0.25em solid var(--colorBorderBlockquote)',
-    margin: '0px 0px 1.25em 0px',
-    background: 'var(--colorBgBlockquote)',
-    boxShadow: '0 1px 2px 0 hsla(0deg, 0%, 0%, 0.1)',
-    '> :last-child': {
-      marginBottom: 0,
-    },
-  }),
-)
