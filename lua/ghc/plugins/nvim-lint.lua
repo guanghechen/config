@@ -80,6 +80,11 @@ return {
         return devmode
       end,
       task = function()
+        local spellcheck = eve.state.lsp.spellcheck:snapshot() ---@type boolean
+        if not spellcheck then
+          return
+        end
+
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
         if vim.b[bufnr][eve.var.Names.BUF_DISABLE_LINT] then
           return "done"
@@ -152,13 +157,25 @@ return {
       end,
     })
 
-    vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
-      group = eve.nvim.augroup("nvim-lint"),
+    eve.state.observe({ eve.state.status.lint_schedule_nr }, function()
+      vim.schedule(function()
+        lint_scheduler:execute_immediately()
+      end)
+    end)
+
+    vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
+      group = eve.nvim.augroup("nvim-lint-on-file-load-save"),
       callback = function()
-        local spellcheck = eve.state.lsp.spellcheck:snapshot() ---@type boolean
-        if spellcheck then
-          lint_scheduler:schedule()
-        end
+        vim.schedule(function()
+          lint_scheduler:execute_immediately()
+        end)
+      end,
+    })
+
+    vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+      group = eve.nvim.augroup("nvim-lint-on-insert-leave"),
+      callback = function()
+        lint_scheduler:schedule()
       end,
     })
   end,

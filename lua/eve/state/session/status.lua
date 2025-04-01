@@ -7,6 +7,8 @@
 ---@field public dirty_tabline          boolean
 ---@field public dirty_winline_nr       integer
 ---
+---@field public lint_schedule_nr       integer
+---
 ---@field public lsp_msg                string
 ---@field public maximized_winnrs       table<integer, boolean>
 ---@field public suppress_warning       boolean
@@ -20,6 +22,8 @@
 ---@field public dirtier_statusline     eve.std.collection.IDirtier
 ---@field public dirtier_tabline        eve.std.collection.IDirtier
 ---@field public dirty_winline_nr       eve.std.collection.IObservable -- integer>
+---
+---@field public lint_schedule_nr       eve.std.collection.IObservable -- integer>
 ---
 ---@field public lsp_msg                eve.std.collection.IObservable -- string>
 ---@field public maximized_winnrs       table<integer, boolean>
@@ -44,6 +48,8 @@ function M.defaults()
     dirty_statusline = true,
     dirty_tabline = true,
     dirty_winline_nr = 0,
+
+    lint_schedule_nr = 0,
 
     lsp_msg = "",
     maximized_winnrs = {},
@@ -77,6 +83,8 @@ function M.dump()
     dirty_tabline = M.dirtier_tabline:snapshot(),
     dirty_winline_nr = M.dirty_winline_nr:snapshot(),
 
+    lint_schedule_nr = M.lint_schedule_nr:snapshot(),
+
     lsp_msg = M.lsp_msg:snapshot(),
     maximized_winnrs = vim.tbl_extend("force", {}, M.maximized_winnrs),
     suppress_warning = M.suppress_warning:snapshot(),
@@ -98,6 +106,8 @@ function M.load(raw_data)
   M.dirtier_tabline:mark_dirty()
   M.dirty_winline_nr:next(data.dirty_winline_nr)
 
+  M.lint_schedule_nr:next(data.lint_schedule_nr)
+
   M.lsp_msg:next(data.lsp_msg)
   M.maximized_winnrs = data.maximized_winnrs
   M.suppress_warning:next(data.suppress_warning)
@@ -114,6 +124,8 @@ M.ticker_session = eve.std.Ticker.new({ start = _defaults.tick_session })
 M.dirtier_statusline = eve.std.Dirtier.new({ dirty = _defaults.dirty_statusline })
 M.dirtier_tabline = eve.std.Dirtier.new({ dirty = _defaults.dirty_tabline })
 M.dirty_winline_nr = eve.std.Observable.from_value(_defaults.dirty_winline_nr, eve.std.fn.falsy)
+
+M.lint_schedule_nr = eve.std.Observable.from_value(_defaults.lint_schedule_nr, eve.std.fn.falsy)
 
 M.lsp_msg = eve.std.Observable.from_value(_defaults.lsp_msg)
 M.maximized_winnrs = _defaults.maximized_winnrs

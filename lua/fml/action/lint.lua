@@ -7,6 +7,11 @@ local M = {}
 function M.spellcheck_register()
   local word = vim.fn.expand("<cword>"):lower() ---@type string
 
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  vim.schedule(function()
+    eve.state.status.lint_schedule_nr:next(bufnr)
+  end)
+
   local workspace = eve.path.workspace() ---@type string
   local filepath = eve.path.join(workspace, ".cspell.json")
   if not eve.fs.is_exists(filepath) then

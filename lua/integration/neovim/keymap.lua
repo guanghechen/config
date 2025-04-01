@@ -2,6 +2,8 @@ local mk = eve.nvim.make_keys
 local ms = eve.nvim.make_shortcut
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
+vim.cmd.menu(("PopUp.%s :%s<cr>"):format("Add\\ word\\ to\\ cspell", K.lint.spellcheck_register.uuid)) --action is like map-rhs
+
 --#enhance------------------------------------------------------------------------------------------
 ----- better copy/paste list -----
 ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)

@@ -415,6 +415,7 @@
     "pyright",
     "qflist",
     "quitable",
+    "railgun",
     "relativenumber",
     "relpath",
     "renamer",
