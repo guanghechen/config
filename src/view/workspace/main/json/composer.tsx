@@ -88,7 +88,9 @@ export const JsonComposer: React.FC<IProps> = props => {
           >
             <Json json={json} />
           </div>
-          {columns > 1 && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
+          {columns > 1 && (
+            <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+          )}
         </React.Fragment>
       )}
       {showLiteral && (

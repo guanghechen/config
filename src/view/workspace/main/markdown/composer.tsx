@@ -107,14 +107,16 @@ export const MarkdownComposer: React.FC<IProps> = props => {
               frontmatter={frontmatter}
               singleColumn={columns === 1}
             />
-            {columns > 1 && <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />}
+            {columns > 1 && (
+              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+            )}
           </React.Fragment>
         )}
         {showAst && (
           <React.Fragment>
             <AstView ast={ast} singleColumn={columns === 1} />
             {(showToc || showFm) && (
-              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300" />
+              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
             )}
           </React.Fragment>
         )}
@@ -133,7 +135,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
               />
             )}
             <div
-              className={cn('flex-shrink-0 border-gray-300', {
+              className={cn('flex-shrink-0 border-gray-300 dark:border-gray-700', {
                 'mx-2 h-full border-r': columns === 1,
                 'my-2 w-full border-b': columns > 1,
                 hidden: !showToc || !showFm,
