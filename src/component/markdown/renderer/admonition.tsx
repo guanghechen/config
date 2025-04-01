@@ -1,9 +1,8 @@
-import { css } from '@emotion/css'
-import { ParagraphType } from '@yozora/ast'
-import type { Admonition, Paragraph } from '@yozora/ast'
+import type { Admonition } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
 import { astClasses } from '../context'
+import { getAdmonitionDescriptor } from './descriptor'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -15,76 +14,51 @@ export class AdmonitionRenderer extends React.Component<Admonition> {
   public override render(): React.ReactElement {
     const { children: childNodes, keyword } = this.props
 
+    // Handle contextList keyword special case separately
     if (keyword === 'contextList') {
-      if (childNodes.length === 1 && childNodes[0].type === ParagraphType) {
-        const paragraph = childNodes[0] as Paragraph
-        return (
-          <div className={cn(astClasses.admonition, classes.contextList)}>
-            <div key="content" className={classes.contextListContent}>
-              <NodesRenderer nodes={paragraph.children.slice(1)} />
-            </div>
-            <div key="image" className={classes.contextListImage}>
-              <NodesRenderer nodes={paragraph.children.slice(0, 1)} />
-            </div>
-          </div>
-        )
-      }
-
       return (
-        <div className={cn(astClasses.admonition, classes.contextList)}>
-          <div key="content" className={classes.contextListContent}>
+        <div
+          className={cn(
+            astClasses.admonition,
+            'flex w-full my-4 pb-4 gap-6 border-b border-gray-200 text-sm',
+          )}
+        >
+          <div className="flex-grow leading-relaxed">
             <NodesRenderer nodes={childNodes.slice(1)} />
           </div>
-          <div key="image" className={classes.contextListImage}>
+          <div className="mt-2 flex w-24 flex-shrink-0">
             <NodesRenderer nodes={childNodes.slice(0, 1)} />
           </div>
         </div>
       )
     }
 
+    // Handle different admonition types (note, info, tip, caution, danger, hint)
+    const descriptor = getAdmonitionDescriptor(keyword)
+
     return (
-      <div className={cn(astClasses.admonition, classes.fallback)}>
-        <NodesRenderer nodes={childNodes} />
+      <div
+        className={cn(
+          astClasses.admonition,
+          'box-border rounded-md mb-5 shadow-sm [&>:last-child]:mb-0',
+          descriptor.bgClass,
+        )}
+      >
+        <div className={cn('flex items-center px-4 py-2 border-b', descriptor.borderClass)}>
+          <span className={cn('mr-2', descriptor.textClass)}>{descriptor.icon}</span>
+          <span className={cn('font-semibold text-sm tracking-wider', descriptor.textClass)}>
+            {descriptor.title}
+          </span>
+        </div>
+        <div className="px-4 py-3">
+          <NodesRenderer nodes={childNodes} />
+        </div>
       </div>
     )
   }
 
   public override shouldComponentUpdate(nextProps: Readonly<Admonition>): boolean {
     const props = this.props
-    return props.children !== nextProps.children
+    return props.children !== nextProps.children || props.keyword !== nextProps.keyword
   }
-}
-
-const classes = {
-  contextList: css({
-    display: 'flex',
-    width: '100%',
-    marginTop: '1rem',
-    marginBottom: '1rem',
-    paddingBottom: '1rem',
-    gap: '1.5rem',
-    borderBottom: '1px solid #e0e0e0',
-    fontSize: '0.875rem',
-  }),
-  contextListContent: css({
-    flexGrow: 1,
-    lineHeight: 1.5,
-  }),
-  contextListImage: css({
-    marginTop: '0.5rem',
-    display: 'flex',
-    width: '6rem',
-    flexShrink: 0,
-  }),
-  fallback: css({
-    boxSizing: 'border-box',
-    padding: '0.625em 1em',
-    borderLeft: '0.25em solid var(--colorBorderBlockquote)',
-    margin: '0px 0px 1.25em 0px',
-    background: 'var(--colorBgBlockquote)',
-    boxShadow: '0 1px 2px 0 hsla(0deg, 0%, 0%, 0.1)',
-    '> :last-child': {
-      marginBottom: 0,
-    },
-  }),
 }
