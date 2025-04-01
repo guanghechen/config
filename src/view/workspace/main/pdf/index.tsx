@@ -33,7 +33,7 @@ export const PDFContainer: React.FC<IProps> = props => {
   }, [filepath, workspace])
 
   return (
-    <div className="w-full p-8">
+    <div className="w-full">
       <div className="h-[4rem] border-b border-gray-200 dark:border-gray-700">
         <PDFToolbar
           pages={pages}
