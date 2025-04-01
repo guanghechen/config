@@ -1,3 +1,4 @@
+import cn from 'clsx'
 import React from 'react'
 import type { WorkspaceViewModel } from '@/context/workspace'
 import { useSidebarVisible } from '@/context/workspace'
@@ -62,7 +63,10 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
   return (
     <div
       ref={containerRef}
-      className="h-full box-border transition-all duration-300 ease-in-out backdrop-blur-md backdrop-saturate-150 bg-white/70 border-r border-gray-200 text-slate-800 dark:bg-gray-800/70 dark:border-r dark:border-gray-700/30 dark:text-gray-200"
+      className={cn(
+        'h-full box-border transition-all duration-300 ease-in-out backdrop-blur-md backdrop-saturate-150 bg-white/70 border-r border-gray-200 text-slate-800 dark:bg-gray-800/70 dark:border-r dark:border-gray-700/30 dark:text-gray-200',
+        { 'overflow-hidden': !visible },
+      )}
       style={{ width: visible ? width : 0 }}
     >
       <div className="select-none box-border flex h-full w-full flex-col">
