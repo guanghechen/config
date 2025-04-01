@@ -38,7 +38,7 @@ export const CodeSource: React.FC<IProps> = props => {
       >
         <CodeIcon className="h-[18px] w-[18px] opacity-80" />
         <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs dark:bg-[#444]">{lang}</span>
-        {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
+        {title && <span className="text-sm text-gray-600 dark:text-gray-400">{title}</span>}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {lineCount} {lineCount === 1 ? 'line' : 'lines'}
