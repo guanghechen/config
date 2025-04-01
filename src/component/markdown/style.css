@@ -17,22 +17,22 @@
   margin-left: 1.2rem;
 }
 
-.yozora-admonition-danger__title yozora-inline-math {
+.yozora-root .yozora-admonition-danger__title {
   --color-inline-math: var(--color-red-700);
 }
-.yozora-admonition-caution__title yozora-inline-math {
+.yozora-root .yozora-admonition-caution__title {
   --color-inline-math: var(--color-amber-700);
 }
-.yozora-admonition-hint__title yozora-inline-math {
+.yozora-root .yozora-admonition-hint__title {
   --color-inline-math: var(--color-purple-700);
 }
-.yozora-admonition-info__title yozora-inline-math {
+.yozora-root .yozora-admonition-info__title {
   --color-inline-math: var(--color-blue-700);
 }
-.yozora-admonition-tip__title yozora-inline-math {
+.yozora-root .yozora-admonition-tip__title {
   --color-inline-math: var(--color-green-700);
 }
-.yozora-admonition-note__title yozora-inline-math {
+.yozora-root .yozora-admonition-note__title {
   --color-inline-math: var(--color-gray-700);
 }
 
@@ -73,22 +73,22 @@ html.dark {
     --color-math: var(--color-blue-300);
   }
 
-  .yozora-admonition-danger__title yozora-inline-math {
+  .yozora-root .yozora-admonition-danger__title {
     --color-inline-math: var(--color-red-300);
   }
-  .yozora-admonition-caution__title yozora-inline-math {
+  .yozora-root .yozora-admonition-caution__title {
     --color-inline-math: var(--color-amber-300);
   }
-  .yozora-admonition-hint__title yozora-inline-math {
+  .yozora-root .yozora-admonition-hint__title {
     --color-inline-math: var(--color-purple-300);
   }
-  .yozora-admonition-info__title yozora-inline-math {
+  .yozora-root .yozora-admonition-info__title {
     --color-inline-math: var(--color-blue-300);
   }
-  .yozora-admonition-tip__title yozora-inline-math {
+  .yozora-root .yozora-admonition-tip__title {
     --color-inline-math: var(--color-green-300);
   }
-  .yozora-admonition-note__title yozora-inline-math {
+  .yozora-root .yozora-admonition-note__title {
     --color-inline-math: var(--color-gray-300);
   }
 }

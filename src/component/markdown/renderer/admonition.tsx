@@ -80,7 +80,7 @@ function getAdmonitionDescriptor(keyword = 'note'): IAdmonitionDescriptor {
         type: 'danger',
         icon: <AdmonitionDangerIcon className="w-5 h-5" />,
         gradientClass: 'bg-gradient-to-br from-red-500 to-red-700',
-        borderClass: 'border-red-500 dark:border-red-400',
+        borderClass: 'border-red-500 dark:border-red-600',
         textClass: 'text-red-700 dark:text-red-300',
         bgClass: 'bg-red-50 dark:bg-red-900/30',
       }
@@ -90,7 +90,7 @@ function getAdmonitionDescriptor(keyword = 'note'): IAdmonitionDescriptor {
         type: 'caution',
         icon: <AdmonitionCautionIcon className="w-5 h-5" />,
         gradientClass: 'bg-gradient-to-br from-amber-500 to-amber-700',
-        borderClass: 'border-amber-500 dark:border-amber-400',
+        borderClass: 'border-amber-500 dark:border-amber-600',
         textClass: 'text-amber-700 dark:text-amber-300',
         bgClass: 'bg-amber-50 dark:bg-amber-900/30',
       }
@@ -99,7 +99,7 @@ function getAdmonitionDescriptor(keyword = 'note'): IAdmonitionDescriptor {
         type: 'hint',
         icon: <AdmonitionHintIcon className="w-5 h-5" />,
         gradientClass: 'bg-gradient-to-br from-purple-500 to-purple-700',
-        borderClass: 'border-purple-500 dark:border-purple-400',
+        borderClass: 'border-purple-500 dark:border-purple-600',
         textClass: 'text-purple-700 dark:text-purple-300',
         bgClass: 'bg-purple-50 dark:bg-purple-900/30',
       }
@@ -109,7 +109,7 @@ function getAdmonitionDescriptor(keyword = 'note'): IAdmonitionDescriptor {
         type: 'info',
         icon: <AdmonitionInfoIcon className="w-5 h-5" />,
         gradientClass: 'bg-gradient-to-br from-blue-500 to-blue-700',
-        borderClass: 'border-blue-500 dark:border-blue-400',
+        borderClass: 'border-blue-500 dark:border-blue-600',
         textClass: 'text-blue-700 dark:text-blue-300',
         bgClass: 'bg-blue-50 dark:bg-blue-900/30',
       }
@@ -119,7 +119,7 @@ function getAdmonitionDescriptor(keyword = 'note'): IAdmonitionDescriptor {
         type: 'tip',
         icon: <AdmonitionTipIcon className="w-5 h-5" />,
         gradientClass: 'bg-gradient-to-br from-green-500 to-green-700',
-        borderClass: 'border-green-500 dark:border-green-400',
+        borderClass: 'border-green-500 dark:border-green-600',
         textClass: 'text-green-700 dark:text-green-300',
         bgClass: 'bg-green-50 dark:bg-green-900/30',
       }
@@ -131,7 +131,7 @@ function getAdmonitionDescriptor(keyword = 'note'): IAdmonitionDescriptor {
         type: 'note',
         icon: <AdmonitionNoteIcon className="w-5 h-5" />,
         gradientClass: 'bg-gradient-to-br from-gray-500 to-gray-700',
-        borderClass: 'border-gray-500 dark:border-gray-400',
+        borderClass: 'border-gray-500 dark:border-gray-600',
         textClass: 'text-gray-700 dark:text-gray-300',
         bgClass: 'bg-gray-50 dark:bg-gray-800/50',
       }
