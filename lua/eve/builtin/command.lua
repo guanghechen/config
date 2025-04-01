@@ -368,6 +368,11 @@ M.definitions.git = {
   history_file = def("Fgithistoryfile", "git: history (file)"),
 }
 
+---@class eve.builtin.command.definitions.lint
+M.definitions.lint = {
+  spellcheck_register = def("Flintspellcheckregisterss", "lint: spellcheck register"),
+}
+
 ---@class eve.builtin.command.definitions.lsp
 M.definitions.lsp = {
   goto_definitions = def("Flspgotodefinitions", "lsp: goto definitions"),
