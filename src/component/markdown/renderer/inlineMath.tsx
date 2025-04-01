@@ -14,7 +14,8 @@ export class InlineMathRenderer extends React.Component<InlineMath> {
   public override render(): React.ReactElement {
     return (
       <MathJaxNode
-        className="yozora-inline-math text-indigo-500 dark:text-blue-300"
+        className="yozora-inline-math"
+        style={{ color: 'var(--color-inline-math)' }}
         inline={true}
         formula={this.props.value}
       />

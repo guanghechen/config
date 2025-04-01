@@ -1,16 +1,19 @@
 import React from 'react'
+import type { IIconProps } from './material'
 
 /**
  * Note icon (Info)
  */
-export const AdmonitionNoteIcon: React.FC = () => {
+export const AdmonitionNoteIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       height="24px"
       viewBox="0 0 24 24"
       width="24px"
-      fill="currentColor"
+      fill={fill}
+      className={className}
     >
       <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
     </svg>
@@ -20,14 +23,16 @@ export const AdmonitionNoteIcon: React.FC = () => {
 /**
  * Tip icon (Lightbulb)
  */
-export const AdmonitionTipIcon: React.FC = () => {
+export const AdmonitionTipIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       height="24px"
       viewBox="0 0 24 24"
       width="24px"
-      fill="currentColor"
+      fill={fill}
+      className={className}
     >
       <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" />
     </svg>
@@ -37,14 +42,16 @@ export const AdmonitionTipIcon: React.FC = () => {
 /**
  * Info icon (Info circle)
  */
-export const AdmonitionInfoIcon: React.FC = () => {
+export const AdmonitionInfoIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       height="24px"
       viewBox="0 0 24 24"
       width="24px"
-      fill="currentColor"
+      fill={fill}
+      className={className}
     >
       <path d="M11 15h2v2h-2v-2zm0-8h2v6h-2V7zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
     </svg>
@@ -54,14 +61,16 @@ export const AdmonitionInfoIcon: React.FC = () => {
 /**
  * Caution icon (Warning)
  */
-export const AdmonitionCautionIcon: React.FC = () => {
+export const AdmonitionCautionIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       height="24px"
       viewBox="0 0 24 24"
       width="24px"
-      fill="currentColor"
+      fill={fill}
+      className={className}
     >
       <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
     </svg>
@@ -71,7 +80,8 @@ export const AdmonitionCautionIcon: React.FC = () => {
 /**
  * Danger icon (Fire)
  */
-export const AdmonitionDangerIcon: React.FC = () => {
+export const AdmonitionDangerIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -79,7 +89,8 @@ export const AdmonitionDangerIcon: React.FC = () => {
       height="24px"
       viewBox="0 0 24 24"
       width="24px"
-      fill="currentColor"
+      fill={fill}
+      className={className}
     >
       <g>
         <rect fill="none" height="24" width="24" y="0" />
@@ -94,14 +105,16 @@ export const AdmonitionDangerIcon: React.FC = () => {
 /**
  * Hint icon (Idea lightbulb outlined)
  */
-export const AdmonitionHintIcon: React.FC = () => {
+export const AdmonitionHintIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       height="24px"
       viewBox="0 0 24 24"
       width="24px"
-      fill="currentColor"
+      fill={fill}
+      className={className}
     >
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2zm1-10c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" />
     </svg>

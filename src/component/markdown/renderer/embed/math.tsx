@@ -12,7 +12,8 @@ class Math extends React.Component<IProps> {
     const { code } = this.props
     return (
       <MathJaxNode
-        className="yozora-math text-indigo-500 dark:text-blue-300"
+        className="yozora-math"
+        style={{ color: 'var(--color-math)' }}
         inline={false}
         formula={code}
       />

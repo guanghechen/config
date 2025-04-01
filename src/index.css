@@ -21,17 +21,3 @@ button {
   font-weight: bold;
   font-style: normal;
 }
-
-.yozora-code {
-  font-family:
-    'Maple Mono NF CN', Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif;
-}
-
-.yozora-inline-code {
-  font-family:
-    'Maple Mono NF CN', Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif;
-}
-
-.yozora-heading {
-  font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
-}

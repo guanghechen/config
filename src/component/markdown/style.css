@@ -1,0 +1,68 @@
+.yozora-root {
+  --color-inline-math: var(--color-indigo-500);
+  --color-math: var(--color-indigo-500);
+  font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
+}
+.yozora-root > :last-child {
+  margin-bottom: 0;
+}
+.yozora-root .yozora-list-item > .yozora-list {
+  margin-left: 1.2rem;
+}
+
+.yozora-admonition-danger__title yozora-inline-math {
+  --color-inline-math: var(--color-red-700);
+}
+.yozora-admonition-caution__title yozora-inline-math {
+  --color-inline-math: var(--color-amber-700);
+}
+.yozora-admonition-hint__title yozora-inline-math {
+  --color-inline-math: var(--color-purple-700);
+}
+.yozora-admonition-info__title yozora-inline-math {
+  --color-inline-math: var(--color-blue-700);
+}
+.yozora-admonition-tip__title yozora-inline-math {
+  --color-inline-math: var(--color-green-700);
+}
+.yozora-admonition-note__title yozora-inline-math {
+  --color-inline-math: var(--color-gray-700);
+}
+
+.yozora-code {
+  font-family:
+    'Maple Mono NF CN', Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif;
+}
+.yozora-heading {
+  font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
+}
+.yozora-inline-code {
+  font-family:
+    'Maple Mono NF CN', Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif;
+}
+
+html.dark {
+  .yozora-root {
+    --color-inline-math: var(--color-blue-300);
+    --color-math: var(--color-blue-300);
+  }
+
+  .yozora-admonition-danger__title yozora-inline-math {
+    --color-inline-math: var(--color-red-300);
+  }
+  .yozora-admonition-caution__title yozora-inline-math {
+    --color-inline-math: var(--color-amber-300);
+  }
+  .yozora-admonition-hint__title yozora-inline-math {
+    --color-inline-math: var(--color-purple-300);
+  }
+  .yozora-admonition-info__title yozora-inline-math {
+    --color-inline-math: var(--color-blue-300);
+  }
+  .yozora-admonition-tip__title yozora-inline-math {
+    --color-inline-math: var(--color-green-300);
+  }
+  .yozora-admonition-note__title yozora-inline-math {
+    --color-inline-math: var(--color-gray-300);
+  }
+}

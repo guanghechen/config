@@ -14,7 +14,8 @@ export class MathRenderer extends React.Component<Math> {
   public override render(): React.ReactElement {
     return (
       <MathJaxNode
-        className="yozora-math text-indigo-500 dark:text-blue-300"
+        className="yozora-math"
+        style={{ color: 'var(--color-math)' }}
         inline={false}
         formula={this.props.value}
       />
