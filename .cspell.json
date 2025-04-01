@@ -1,10 +1,11 @@
 {
-  "version": "0.2",
   "language": "en",
+  "version": "0.2",
   "words": [
     "applescript",
     "consolas",
     "defid",
+    "filetree",
     "guanghechen",
     "mathjax",
     "multiview",
