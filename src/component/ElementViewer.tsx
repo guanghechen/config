@@ -1,5 +1,6 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import React from 'react'
+import { createPortal } from 'react-dom'
 
 interface IProps {
   readonly open: boolean
@@ -106,7 +107,7 @@ export const ElementViewer: React.FC<IProps> = props => {
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col items-center bg-black/60 backdrop-blur-sm">
       <div className="absolute z-50 right-4 top-4 flex gap-4">
         <button
@@ -252,7 +253,8 @@ export const ElementViewer: React.FC<IProps> = props => {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 ElementViewer.displayName = 'ElementViewer'
