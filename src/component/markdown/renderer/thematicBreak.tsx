@@ -12,7 +12,7 @@ export class ThematicBreakRenderer extends React.Component<ThematicBreak> {
 
   public override render(): React.ReactElement {
     return (
-      <hr className="yozora-thematic-break my-4 box-content block h-0 w-full border-0 border-b border-gray-300 p-0 outline-hidden" />
+      <hr className="yozora-thematic-break my-4 box-content block h-0 w-full border-0 border-b border-gray-300 dark:border-gray-700 p-0 outline-hidden" />
     )
   }
 
