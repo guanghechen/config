@@ -16,7 +16,7 @@ export const JsonModeToggle: React.FC = () => {
     >
       <button
         className={cn(
-          'box-border px-3 transition-all duration-200 rounded-l-lg',
+          'box-border px-3 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
           mode === 0 || (mode & JsonModeEnum.VIEW) !== 0
             ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
@@ -27,7 +27,7 @@ export const JsonModeToggle: React.FC = () => {
       </button>
       <button
         className={cn(
-          'box-border px-3 transition-all duration-200 rounded-r-lg',
+          'box-border px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
           (mode & JsonModeEnum.LITERAL) !== 0
             ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',

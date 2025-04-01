@@ -33,44 +33,46 @@ export class MarkdownTocItem extends React.Component<IProps, IState> {
 
     return (
       <div className="toc-item">
-        <div
-          className={cn(
-            'flex font-normal items-center py-1 text-sm hover:text-indigo-500 dark:hover:text-indigo-400 cursor-pointer transition-colors',
-            {
-              'font-medium': depth === 0,
-              'text-indigo-600 dark:text-indigo-400 border-l-2 border-indigo-500 dark:border-indigo-400 -ml-[2px] pl-[14px]':
-                activatedIdentifier === item.identifier,
-            },
-          )}
-          style={{ paddingLeft: `${depth * 16}px` }}
-        >
-          {hasChildren && (
-            <button
-              onClick={onToggle}
-              className="mr-1 flex h-5 w-5 items-center justify-center rounded text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <svg
-                className={cn(
-                  'w-3 h-3 transition-transform',
-                  expanded ? 'transform rotate-90' : '',
-                )}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        <div style={{ paddingLeft: depth * 16 }}>
+          <div
+            className={cn(
+              'flex font-normal items-center py-1 border-l-2 text-sm cursor-pointer transition-colors hover:text-indigo-500 dark:hover:text-indigo-400',
+              {
+                'font-medium': depth === 0,
+                'text-indigo-600 border-indigo-500 dark:text-indigo-400 dark:border-indigo-400':
+                  activatedIdentifier === item.identifier,
+                'border-transparent': activatedIdentifier !== item.identifier,
+              },
+            )}
+          >
+            {hasChildren && (
+              <button
+                onClick={onToggle}
+                className="mr-1 flex h-5 w-5 items-center justify-center rounded text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          )}
-          {!hasChildren && <div className="w-5" />}
-          <a href={`#${item.identifier}`} onClick={onClick} className="truncate hover:underline">
-            <NodesRenderer nodes={item.contents} />
-          </a>
+                <svg
+                  className={cn(
+                    'w-3 h-3 transition-transform',
+                    expanded ? 'transform rotate-90' : '',
+                  )}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            )}
+            {!hasChildren && <div className="w-5" />}
+            <a href={`#${item.identifier}`} onClick={onClick} className="truncate hover:underline">
+              <NodesRenderer nodes={item.contents} />
+            </a>
+          </div>
         </div>
         {hasChildren && expanded && (
           <div className="toc-children">
