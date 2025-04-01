@@ -23,6 +23,8 @@ export const CodeSource: React.FC<IProps> = props => {
   const [expanded, setExpanded] = React.useState(initialExpanded)
   const calcContentForCopy = React.useCallback(() => code, [code])
 
+  const lineCount = React.useMemo(() => code.split('\n').length, [code])
+
   return (
     <div className="flex flex-col">
       <div
@@ -37,6 +39,13 @@ export const CodeSource: React.FC<IProps> = props => {
         <CodeIcon className="h-[18px] w-[18px] opacity-80" />
         <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs dark:bg-[#444]">{lang}</span>
         {title && <span className="text-sm text-indigo-600 dark:text-indigo-400">{title}</span>}
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {lineCount} {lineCount === 1 ? 'line' : 'lines'}
+          </span>
+          <div className="h-4 w-px mx-1 bg-gray-300 dark:bg-gray-600" />
+          <CopyButton calcContentForCopy={calcContentForCopy} nopadding={true} />
+        </div>
       </div>
       {expanded && (
         <div
