@@ -1,7 +1,7 @@
 import type { FootnoteDefinition } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
-import { astClasses, useFootnoteHighlighting } from '../context'
+import { useFootnoteHighlighting } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -25,7 +25,7 @@ export const FootnoteDefinitionRenderer: React.FC<FootnoteDefinition> = props =>
   return (
     <div
       ref={ref}
-      className={cn(astClasses.footnoteDefinition, 'flex items-start justify-start w-full p-0 m-0')}
+      className="yozora-footnote-definition flex items-start justify-start w-full p-0 m-0"
     >
       <p id={defid} className="inline-block flex-initial flex-shrink-0 select-none">
         <a

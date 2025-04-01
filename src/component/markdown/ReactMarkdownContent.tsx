@@ -1,7 +1,7 @@
-import { css, cx } from '@emotion/css'
 import type { Root } from '@yozora/ast'
+import cn from 'clsx'
 import React from 'react'
-import { astClasses, useMarkdownDarken, useMarkdownViewmodel } from './context'
+import { useMarkdownViewmodel } from './context'
 import { NodesRenderer } from './NodesRenderer'
 
 interface IProps {
@@ -24,35 +24,15 @@ export const ReactMarkdownContent: React.FC<IProps> = props => {
   const { Tag = 'div', content, className, style } = props
 
   const viewmodel = useMarkdownViewmodel()
-  const darken: boolean = useMarkdownDarken()
-  const cls: string = cx(rootCls, darken && astClasses.rootDarken, className)
-
   const ast: Root = React.useMemo<Root>(
     () => viewmodel.parseMarkdown(content),
     [viewmodel, content],
   )
 
   return (
-    <Tag className={cls} style={style}>
+    <Tag className={cn('yozora-root', className)} style={style}>
       <NodesRenderer nodes={ast.children} />
     </Tag>
   )
 }
 ReactMarkdownContent.displayName = 'ReactMarkdownContent'
-
-const rootCls = cx(
-  astClasses.root,
-  css({
-    wordBreak: 'break-all',
-    userSelect: 'unset',
-    fontFamily: "'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif",
-    [astClasses.listItem]: {
-      [`> ${astClasses.list}`]: {
-        marginLeft: '1.2em',
-      },
-    },
-    '> :last-child': {
-      marginBottom: 0,
-    },
-  }),
-)

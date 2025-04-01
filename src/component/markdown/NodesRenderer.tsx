@@ -1,18 +1,17 @@
-import equals from '@guanghechen/equal'
 import type { Node } from '@yozora/ast'
 import React from 'react'
 import type { INodeRenderer } from './context'
 import { useMarkdownRendererMap } from './context'
 import './style.css'
 
-export interface INodesRendererProps {
+export interface IProps {
   /**
    * Ast nodes.
    */
   readonly nodes: Node[]
 }
 
-export const NodesRenderer: React.FC<INodesRendererProps> = props => {
+export const NodesRenderer: React.FC<IProps> = props => {
   const { nodes } = props
   const rendererMap = useMarkdownRendererMap()
 
@@ -21,25 +20,8 @@ export const NodesRenderer: React.FC<INodesRendererProps> = props => {
       {nodes.map((node, index) => {
         const key = `${node.type}-${index}`
         const Renderer: INodeRenderer = rendererMap[node.type] ?? rendererMap._fallback
-        return <NodeRenderer key={key} node={node} Renderer={Renderer} />
+        return <Renderer key={key} {...node} />
       })}
     </React.Fragment>
   )
-}
-
-interface IProps {
-  readonly node: Node
-  readonly Renderer: INodeRenderer
-}
-
-class NodeRenderer extends React.Component<IProps> {
-  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
-    const props = this.props
-    return props.Renderer !== nextProps.Renderer || !equals(props.node, nextProps.node)
-  }
-
-  public override render(): React.ReactElement {
-    const { node, Renderer } = this.props
-    return React.createElement(Renderer, node)
-  }
 }

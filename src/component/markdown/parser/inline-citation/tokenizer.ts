@@ -6,14 +6,7 @@ import type {
 import { BaseInlineTokenizer, TokenizerPriority } from '@yozora/core-tokenizer'
 import { match } from './match'
 import { parse } from './parse'
-import type {
-  IDelimiter,
-  INode,
-  IThis,
-  IToken,
-  ITokenizerProps as ITokenizerProperties,
-  T,
-} from './types'
+import type { IDelimiter, INode, IToken, ITokenizerProps as ITokenizerProperties, T } from './types'
 import { uniqueName } from './types'
 
 /**

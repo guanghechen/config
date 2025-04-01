@@ -1,5 +1,5 @@
 import type { IParseInlineHookCreator } from '@yozora/core-tokenizer'
-import { type INode, type IThis, type IToken, type T } from './types'
+import { type INode, type IToken, type T } from './types'
 
 export const parse: IParseInlineHookCreator<T, IToken, INode> = function (api) {
   return {

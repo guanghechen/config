@@ -35,7 +35,7 @@ export class AdmonitionRenderer extends React.Component<Admonition> {
         className={cn(
           'yozora-admonition',
           `yozora-admonition-${descriptor.type}`,
-          'relative box-border rounded-lg mb-6 shadow-md overflow-hidden',
+          'relative box-border rounded-lg mb-4 shadow-md overflow-hidden',
           'border-l-4 transition-all hover:shadow-lg dark:shadow-lg/20 dark:hover:shadow-xl/20',
           descriptor.borderClass,
         )}
@@ -43,7 +43,7 @@ export class AdmonitionRenderer extends React.Component<Admonition> {
         <div
           className={cn('absolute inset-0 opacity-10 dark:opacity-20', descriptor.gradientClass)}
         />
-        <div className={cn('flex items-center px-5 gap-2 py-3 relative z-10', descriptor.bgClass)}>
+        <div className={cn('flex items-center px-5 gap-2 pt-3 relative z-10', descriptor.bgClass)}>
           <span className={descriptor.textClass}>{descriptor.icon}</span>
 
           <span
@@ -55,7 +55,9 @@ export class AdmonitionRenderer extends React.Component<Admonition> {
             {title ? <NodesRenderer nodes={title} /> : descriptor.type}
           </span>
         </div>
-        <div className={cn('px-5 py-4 relative z-10', descriptor.bgClass)}>
+        <div
+          className={cn('yozora-admonition__content px-5 py-4 relative z-10', descriptor.bgClass)}
+        >
           <NodesRenderer nodes={childNodes} />
         </div>
       </div>

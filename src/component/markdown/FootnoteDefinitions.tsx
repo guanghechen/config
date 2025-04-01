@@ -1,7 +1,6 @@
 import type { FootnoteDefinition } from '@yozora/ast'
-import cn from 'clsx'
 import React from 'react'
-import { astClasses, useMarkdownFootnoteDefinitionMap } from './context'
+import { useMarkdownFootnoteDefinitionMap } from './context'
 import { FootnoteDefinitionRenderer } from './renderer/footnoteDefinition'
 
 interface IProps {
@@ -30,7 +29,7 @@ export const FootnoteDefinitions: React.FC<IProps> = props => {
   if (dontNeedFootnoteDefinitions || children === null) return null
 
   return (
-    <div className={cn(astClasses.footnoteDefinition, 'mt-8 mb-4 text-sm')}>
+    <div className="yozora-footnote-definitions mt-8 mb-4 text-sm">
       <div className="m-0 mb-4 border-b border-gray-300 p-0 italic">
         <a href="#footnote-definitions" title="footnote definitions" rel="noopener, noreferrer">
           <span id="footnote-definitions">footnote-definitions</span>

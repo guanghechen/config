@@ -1,7 +1,5 @@
-import { css, cx } from '@emotion/css'
 import type { ListItem, Node } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -16,7 +14,7 @@ export class ListItemRenderer extends React.Component<ListItem> {
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
-      <li className={cls}>
+      <li className="yozora-list-item relative p-0 m-0">
         <NodesRenderer nodes={childNodes} />
       </li>
     )
@@ -27,15 +25,3 @@ export class ListItemRenderer extends React.Component<ListItem> {
     return props.children !== nextProps.children
   }
 }
-
-const cls = cx(
-  astClasses.listItem,
-  css({
-    position: 'relative',
-    padding: 0,
-    margin: 0,
-    [`> .${astClasses.paragraph} + .${astClasses.list}`]: {
-      marginTop: '-1rem',
-    },
-  }),
-)

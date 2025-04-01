@@ -1,10 +1,18 @@
-import { css, cx } from '@emotion/css'
 import type { Heading } from '@yozora/ast'
+import cn from 'clsx'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 type IHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+
+const levelClasses: Record<IHeading, string> = {
+  h1: 'py-1 border-b border-b-gray-200 dark:border-b-gray-700 text-2xl font-medium',
+  h2: 'py-1 border-b border-b-gray-200 dark:border-b-gray-700 text-[1.5rem] font-medium mb-3.5',
+  h3: 'text-xl font-medium',
+  h4: 'text-base font-medium',
+  h5: 'text-sm font-medium',
+  h6: 'text-[0.85rem] font-medium',
+}
 
 /**
  * Render `heading` content.
@@ -21,13 +29,29 @@ export class HeadingRenderer extends React.Component<Heading> {
     const id = identifier == null ? undefined : encodeURIComponent(identifier)
     const h: IHeading = ('h' + depth) as IHeading
     const H: any = h
-    const cls = cx(astClasses.heading, classes.heading, classes[h])
 
     return (
-      <H id={id} className={cls}>
+      <H
+        id={id}
+        className={cn(
+          'yozora-heading relative flex items-center justify-start p-0 mb-4 leading-tight font-heading text-gray-900 dark:text-gray-100 group',
+          levelClasses[h],
+        )}
+      >
         {identifier && (
-          <a className={classes.anchor} href={'#' + id} aria-hidden="true">
-            <svg viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+          <a
+            className="absolute -left-8 flex-[0_0_3rem] pl-2 text-sky-500 opacity-0 transition-[color,opacity] duration-200 ease-in-out select-none no-underline group-hover:opacity-80 group-hover:text-sky-600 group-active:opacity-80 group-active:text-sky-700 dark:text-sky-400 dark:group-hover:text-sky-300 dark:group-active:text-sky-200"
+            href={'#' + id}
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              version="1.1"
+              width="16"
+              height="16"
+              aria-hidden="true"
+              className="overflow-hidden inline-block align-middle fill-current"
+            >
               <path
                 fillRule="evenodd"
                 d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"
@@ -35,7 +59,7 @@ export class HeadingRenderer extends React.Component<Heading> {
             </svg>
           </a>
         )}
-        <p className={classes.content}>
+        <p className="flex-[0_1_auto] min-w-0 m-0 overflow-hidden text-ellipsis whitespace-pre-wrap leading-7">
           <NodesRenderer nodes={children} />
         </p>
       </H>
@@ -50,90 +74,4 @@ export class HeadingRenderer extends React.Component<Heading> {
       props.children !== nextProps.children
     )
   }
-}
-
-const anchorCls = css({
-  position: 'absolute',
-  left: '-2rem',
-  flex: '0 0 3rem',
-  paddingLeft: '0.5rem',
-  color: 'var(--colorLink)',
-  opacity: 0,
-  transition: 'color 0.2s ease-in-out, opacity 0.2s ease-in-out',
-  userSelect: 'none',
-  textDecoration: 'none',
-  '> svg': {
-    overflow: 'hidden',
-    display: 'inline-block',
-    verticalAlign: 'middle',
-    fill: 'currentColor',
-  },
-})
-
-const classes = {
-  heading: css({
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: '0px',
-    margin: '0px 0px 1.25em 0px',
-    marginBottom: '1em',
-    lineHeight: '1.25',
-    fontFamily: 'var(--fontFamilyHeading)',
-    color: 'var(--colorHeading)',
-    [`&:active .${anchorCls}`]: {
-      opacity: 0.8,
-      color: 'var(--colorLinkActive)',
-    },
-    [`&&:hover .${anchorCls}`]: {
-      opacity: 0.8,
-      color: 'var(--colorLinkHover)',
-    },
-  }),
-  anchor: anchorCls,
-  content: css({
-    flex: '0 1 auto',
-    minWidth: 0,
-    margin: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'pre-wrap',
-    lineHeight: '1.7',
-  }),
-  h1: css({
-    padding: '0.3rem 0',
-    borderBottom: '1px solid var(--colorBorderHeading)',
-    fontSize: '2rem',
-    fontStyle: 'normal',
-    fontWeight: 500,
-  }),
-  h2: css({
-    padding: '0.3rem 0',
-    borderBottom: '1px solid var(--colorBorderHeading)',
-    fontSize: '1.5rem',
-    fontStyle: 'normal',
-    fontWeight: 500,
-    marginBottom: '0.875rem',
-  }),
-  h3: css({
-    fontSize: '1.25rem',
-    fontStyle: 'normal',
-    fontWeight: 500,
-  }),
-  h4: css({
-    fontSize: '1rem',
-    fontStyle: 'normal',
-    fontWeight: 500,
-  }),
-  h5: css({
-    fontSize: '0.875rem',
-    fontStyle: 'normal',
-    fontWeight: 500,
-  }),
-  h6: css({
-    fontSize: '0.85rem',
-    fontStyle: 'normal',
-    fontWeight: 500,
-  }),
 }

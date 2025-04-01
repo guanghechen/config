@@ -1,8 +1,6 @@
-import { css, cx } from '@emotion/css'
 import equals from '@guanghechen/equal'
 import type { Table } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -25,9 +23,9 @@ export class TableRenderer extends React.Component<Table> {
       row.children.map((cell, index) => <NodesRenderer key={index} nodes={cell.children} />),
     )
     return (
-      <table className={cls}>
+      <table className="yozora-table box-border overflow-auto w-full p-0 border-collapse rounded-md border-spacing-0 border border-solid border-gray-200 dark:border-gray-700 mx-auto mb-5 leading-relaxed [font-variation-settings:_'opsz'_40,_'wght'_410]">
         <thead>
-          <tr>
+          <tr className="border-b border-gray-200 dark:border-gray-700 bg-sky-50 dark:bg-sky-900/30">
             {ths.map((children, index) => (
               <Th key={index} align={aligns[index]}>
                 {children}
@@ -37,9 +35,16 @@ export class TableRenderer extends React.Component<Table> {
         </thead>
         <tbody>
           {tds.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr
+              key={rowIndex}
+              className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 last:border-b-0"
+            >
               {row.map((children, index) => (
-                <td key={index} align={aligns[index]}>
+                <td
+                  key={index}
+                  align={aligns[index]}
+                  className="p-2.5 border-r border-gray-200 dark:border-gray-700 last:border-r-0"
+                >
                   {children}
                 </td>
               ))}
@@ -72,7 +77,11 @@ class Th extends React.Component<IThProps> {
   public override render(): React.ReactElement {
     const { align, children } = this.props
     return (
-      <th ref={this.ref} align={align}>
+      <th
+        ref={this.ref}
+        align={align}
+        className="p-2.5 border-l border-gray-200 dark:border-gray-700 break-all whitespace-normal overflow-hidden text-ellipsis last:border-r-0"
+      >
         {children}
       </th>
     )
@@ -97,53 +106,3 @@ class Th extends React.Component<IThProps> {
     }
   }
 }
-
-const cls: string = cx(
-  astClasses.table,
-  css({
-    boxSizing: 'border-box',
-    overflow: 'auto',
-    width: '100%',
-    padding: 0,
-    borderCollapse: 'collapse',
-    borderRadius: '6px',
-    borderSpacing: '0px',
-    border: '1px solid var(--colorBorderTable)',
-    margin: '0 auto 1.25em',
-    lineHeight: '1.6',
-    fontVariationSettings: '"opsz" 40, "wght" 410',
-    '> thead': {
-      tr: {
-        borderBottom: '1px solid var(--colorBorderTable)',
-        backgroundColor: 'var(--colorBgTableHead)',
-      },
-      th: {
-        padding: '.625rem 1rem',
-        borderLeft: '1px solid var(--colorBorderTable)',
-        wordBreak: 'break-all',
-        whiteSpace: 'wrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        '&:last-child': {
-          borderRight: 'none',
-        },
-      },
-    },
-    '> tbody': {
-      tr: {
-        borderBottom: '1px solid var(--colorBorderTable)',
-        background: 'var(--colorBgTableEvenRow)',
-        '&:last-child': {
-          borderBottom: 'none',
-        },
-      },
-      td: {
-        padding: '.625rem 1rem',
-        borderRight: '1px solid var(--colorBorderTable)',
-        '&:last-child': {
-          borderRight: 'none',
-        },
-      },
-    },
-  }),
-)

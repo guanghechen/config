@@ -1,7 +1,5 @@
-import { css, cx } from '@emotion/css'
 import type { List } from '@yozora/ast'
 import React from 'react'
-import { astClasses } from '../context'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**
@@ -18,14 +16,18 @@ export class ListRenderer extends React.Component<List> {
 
     if (ordered) {
       return (
-        <ol className={olCls} type={orderType} start={start}>
+        <ol
+          className="yozora-list yozora-list-order list-outside list-disc p-0 m-0 mb-4 ml-8"
+          type={orderType}
+          start={start}
+        >
           <NodesRenderer nodes={children} />
         </ol>
       )
     }
 
     return (
-      <ul className={ulCls}>
+      <ul className="yozora-list yozora-list-bullet list-outside list-decimal p-0 m-0 mb-4 ml-8">
         <NodesRenderer nodes={children} />
       </ul>
     )
@@ -41,43 +43,3 @@ export class ListRenderer extends React.Component<List> {
     )
   }
 }
-
-const ulCls = cx(
-  astClasses.list,
-  'list-outside',
-  'list-disc',
-  css({
-    padding: '0px',
-    margin: '0 0 1em 2em',
-    lineHeight: '2',
-    '> :last-child': {
-      marginBottom: '0px',
-    },
-    ul: {
-      listStyleType: 'circle',
-    },
-    'ul ul': {
-      listStyleType: 'square',
-    },
-  }),
-)
-
-const olCls = cx(
-  astClasses.list,
-  'list-outside',
-  'list-decimal',
-  css({
-    padding: '0px',
-    margin: '0 0 1em 2em',
-    lineHeight: '2',
-    '> :last-child': {
-      marginBottom: '0px',
-    },
-    ol: {
-      listStyleType: 'lower-alpha',
-    },
-    'ol ol': {
-      listStyleType: 'roman',
-    },
-  }),
-)

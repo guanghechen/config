@@ -1,7 +1,7 @@
 import type { ImageReference } from '@yozora/ast'
 import React from 'react'
 import type { INodeRenderer } from '../context'
-import { astClasses, useMarkdownDefinitionMap } from '../context'
+import { useMarkdownDefinitionMap } from '../context'
 import { ImageRendererInner } from './inner/ImageRendererInner'
 
 /**
@@ -12,10 +12,10 @@ import { ImageRendererInner } from './inner/ImageRendererInner'
  */
 export const ImageReferenceRenderer: INodeRenderer<ImageReference> = props => {
   const definitionMap = useMarkdownDefinitionMap()
-  const { alt, srcSet, sizes, loading } = props as ImageReference &
+  const { identifier, alt, srcSet, sizes, loading } = props as ImageReference &
     React.ImgHTMLAttributes<HTMLElement>
 
-  const definition = definitionMap[props.identifier]
+  const definition = definitionMap[identifier]
   const title: string | undefined = definition?.title
   const url: string = definition?.url ?? ''
 
@@ -27,7 +27,7 @@ export const ImageReferenceRenderer: INodeRenderer<ImageReference> = props => {
       srcSet={srcSet}
       sizes={sizes}
       loading={loading}
-      className={astClasses.imageReference}
+      className="yozora-image-reference"
     />
   )
 }
