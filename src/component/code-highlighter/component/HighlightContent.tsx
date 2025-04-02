@@ -1,9 +1,8 @@
-import { cx } from '@emotion/css'
 import { isEqual } from '@guanghechen/equal'
+import cn from 'clsx'
 import type { TokenStream } from 'prismjs'
 import Prism from 'prismjs'
 import React from 'react'
-import { classes, vars } from '../style'
 import type {
   ILineInputProps,
   ILineOutputProps,
@@ -12,23 +11,23 @@ import type {
   IToken,
   ITokenInputProps,
   ITokenOutputProps,
-} from '../types/prism'
+} from '../types'
 import { themeToDict } from '../util/theme'
 import { normalizeTokens } from '../util/token'
 import { HighlightLinenos } from './HighlightLinenos'
 
 interface IProps {
-  code: string
-  codesRef: React.RefCallback<HTMLDivElement> | React.RefObject<HTMLDivElement> | undefined
-  collapsed: boolean
-  language: string
-  maxLines: number
-  showLineno: boolean
-  theme: IPrismTheme
-  highlightLinenos: number[]
-  className?: string
-  codesClassName?: string
-  onLinenoWidthChange?(linenoWidth: React.CSSProperties['width']): void // Callback when linenoWidth changed.
+  readonly code: string
+  readonly codesRef: React.RefCallback<HTMLDivElement> | React.RefObject<HTMLDivElement> | undefined
+  readonly collapsed: boolean
+  readonly language: string
+  readonly maxLines: number
+  readonly showLineno: boolean
+  readonly theme: IPrismTheme
+  readonly highlightLinenos: number[]
+  readonly className?: string
+  readonly codesClassName?: string
+  readonly onLinenoWidthChange?: (linenoWidth: React.CSSProperties['width']) => void // Callback when linenoWidth changed.
 }
 
 interface IState {
@@ -52,29 +51,6 @@ export class HighlightContent extends React.Component<IProps, IState> {
       : undefined
     this.state = { linenoWidth, themeDict, tokens }
     this.linenoRef = { current: null }
-  }
-
-  public override shouldComponentUpdate(
-    nextProps: Readonly<IProps>,
-    nextState: Readonly<IState>,
-  ): boolean {
-    const props: IProps = this.props
-    const state: IState = this.state
-    return (
-      state.linenoWidth !== nextState.linenoWidth ||
-      state.themeDict !== nextState.themeDict ||
-      state.tokens !== nextState.tokens ||
-      props.code !== nextProps.code ||
-      props.codesRef !== nextProps.codesRef ||
-      props.collapsed !== nextProps.collapsed ||
-      props.language !== nextProps.language ||
-      props.maxLines !== nextProps.maxLines ||
-      props.showLineno !== nextProps.showLineno ||
-      props.className !== nextProps.className ||
-      props.codesClassName !== nextProps.codesClassName ||
-      !isEqual(props.theme, nextProps.theme) ||
-      !isEqual(props.highlightLinenos, nextProps.highlightLinenos)
-    )
   }
 
   public override render(): React.ReactElement {
@@ -103,15 +79,15 @@ export class HighlightContent extends React.Component<IProps, IState> {
             maxHeight: 0,
           }
         : {
-            maxHeight: `calc(calc(${vars.lineHeightCode} * ${visibleLines + 0.8}) + 6px)`,
+            maxHeight: `calc(1.6em * ${visibleLines + 0.8} + 6px)`,
             minHeight: '100%',
           }),
     }
 
     return (
       <div
-        className={cx(
-          classes.container,
+        className={cn(
+          'flex items-stretch overflow-hidden w-full text-sm leading-6 p-0 antialiased transition-[max-height] duration-500 ease-in-out tab-[2] font-smooth-always whitespace-pre break-keep',
           language ? `prism-code language-${language}` : 'prism-code',
           className,
         )}
@@ -120,7 +96,7 @@ export class HighlightContent extends React.Component<IProps, IState> {
         {showLineno && (
           <div
             key="linenos"
-            className={classes.lineno}
+            className="flex-none overflow-hidden box-border p-2 cursor-default text-sm leading-6 select-none text-right border-r border-gray-300 dark:border-gray-600"
             style={{ width: linenoWidth }}
             ref={linenoRef}
           >
@@ -130,10 +106,10 @@ export class HighlightContent extends React.Component<IProps, IState> {
         <div
           key="codes"
           ref={codesRef}
-          className={cx(classes.codes, codesClassName)}
+          className={cn('flex-auto overflow-auto box-border p-2 text-sm leading-6', codesClassName)}
           onScroll={onScroll}
         >
-          <div className={classes.codeWrapper}>
+          <div className="min-w-full w-fit">
             {tokens.map((line, lineNo) => {
               const isHighlight = highlightLinenos.includes(lineNo + 1)
               const lineProps = this.getLineProps({ line })
@@ -141,10 +117,11 @@ export class HighlightContent extends React.Component<IProps, IState> {
                 <div
                   {...lineProps}
                   key={lineNo}
-                  className={cx(
-                    classes.line,
-                    classes.codeLine,
-                    isHighlight && classes.highlightLine,
+                  className={cn(
+                    'box-border flex min-w-fit w-full px-1.5 text-sm leading-6 h-6',
+                    'break-inherit tab-inherit text-inherit whitespace-inherit',
+                    'px-3',
+                    isHighlight && 'bg-amber-500/30 dark:bg-amber-600/30 border-transparent',
                     lineProps.className,
                   )}
                 >
@@ -157,6 +134,29 @@ export class HighlightContent extends React.Component<IProps, IState> {
           </div>
         </div>
       </div>
+    )
+  }
+
+  public override shouldComponentUpdate(
+    nextProps: Readonly<IProps>,
+    nextState: Readonly<IState>,
+  ): boolean {
+    const props: IProps = this.props
+    const state: IState = this.state
+    return (
+      state.linenoWidth !== nextState.linenoWidth ||
+      state.themeDict !== nextState.themeDict ||
+      state.tokens !== nextState.tokens ||
+      props.code !== nextProps.code ||
+      props.codesRef !== nextProps.codesRef ||
+      props.collapsed !== nextProps.collapsed ||
+      props.language !== nextProps.language ||
+      props.maxLines !== nextProps.maxLines ||
+      props.showLineno !== nextProps.showLineno ||
+      props.className !== nextProps.className ||
+      props.codesClassName !== nextProps.codesClassName ||
+      !isEqual(props.theme, nextProps.theme) ||
+      !isEqual(props.highlightLinenos, nextProps.highlightLinenos)
     )
   }
 

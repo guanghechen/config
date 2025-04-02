@@ -2,7 +2,7 @@
  * See https://github.com/FormidableLabs/prism-react-renderer/blob/d307f34360ecc4f0b4aadde4f72d09fd6dbf0132/src/utils/normalizeTokens.js
  */
 import type { Token, TokenStream } from 'prismjs'
-import type { IToken } from '../types/prism'
+import type { IToken } from '../types'
 
 const newlineRegex = /\r\n|\r|\n/
 

@@ -1,4 +1,4 @@
-import type { IPrismTheme } from '../types/prism'
+import type { IPrismTheme } from '../types'
 
 /**
  * Generated Prism Theme from VSCode .json Themes

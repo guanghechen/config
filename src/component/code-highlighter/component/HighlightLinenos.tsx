@@ -1,23 +1,14 @@
-import { cx } from '@emotion/css'
 import { isEqual } from '@guanghechen/equal'
+import cn from 'clsx'
 import React from 'react'
-import { classes } from '../style'
 
 interface IProps {
-  countOfLines: number
-  highlightLinenos: number[] | undefined
+  readonly countOfLines: number
+  readonly highlightLinenos: number[] | undefined
 }
 
 export class HighlightLinenos extends React.Component<IProps> {
-  public static readonly displayName = 'HighlightLinenos'
-
-  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
-    const props = this.props
-    return (
-      props.countOfLines !== nextProps.countOfLines ||
-      !isEqual(props.highlightLinenos, nextProps.highlightLinenos)
-    )
-  }
+  public static readonly displayName = 'CodeHighlightLinenos'
 
   public override render(): React.ReactElement {
     const { countOfLines, highlightLinenos = [] } = this.props
@@ -27,7 +18,11 @@ export class HighlightLinenos extends React.Component<IProps> {
       const line = (
         <div
           key={lineno}
-          className={cx(classes.line, classes.linenoLine, isHighlight && classes.highlightLine)}
+          className={cn(
+            'box-border flex min-w-fit w-full px-1.5 text-sm leading-6 h-6',
+            'justify-end px-1',
+            isHighlight && 'bg-amber-500/30 dark:bg-amber-600/30 border-transparent',
+          )}
         >
           <span key={lineno}>{lineno + 1}</span>
         </div>
@@ -35,5 +30,13 @@ export class HighlightLinenos extends React.Component<IProps> {
       lines.push(line)
     }
     return <React.Fragment>{lines}</React.Fragment>
+  }
+
+  public override shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
+    const props = this.props
+    return (
+      props.countOfLines !== nextProps.countOfLines ||
+      !isEqual(props.highlightLinenos, nextProps.highlightLinenos)
+    )
   }
 }

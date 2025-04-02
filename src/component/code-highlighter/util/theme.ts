@@ -1,5 +1,5 @@
 import type React from 'react'
-import type { IPrismTheme, IThemeDict } from '../types/prism'
+import type { IPrismTheme, IThemeDict } from '../types'
 
 const languageMap = {
   js: 'javascript',
