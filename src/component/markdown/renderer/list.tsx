@@ -17,7 +17,7 @@ export class ListRenderer extends React.Component<List> {
     if (ordered) {
       return (
         <ol
-          className="yozora-list yozora-list-order list-outside list-disc p-0 m-0 mb-4 ml-8"
+          className="yozora-list yozora-list-order list-outside list-decimal p-0 m-0 mb-4 ml-8"
           type={orderType}
           start={start}
         >
@@ -27,7 +27,7 @@ export class ListRenderer extends React.Component<List> {
     }
 
     return (
-      <ul className="yozora-list yozora-list-bullet list-outside list-decimal p-0 m-0 mb-4 ml-8">
+      <ul className="yozora-list yozora-list-bullet list-outside list-disc p-0 m-0 mb-4 ml-8">
         <NodesRenderer nodes={children} />
       </ul>
     )
