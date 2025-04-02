@@ -55,6 +55,7 @@ export class ReactMarkdown extends React.Component<IProps> {
     return (
       props.className !== nextProps.className ||
       props.style !== nextProps.style ||
+      props.dontShowFirstHeading !== nextProps.dontShowFirstHeading ||
       !isEqual(props.ast, nextProps.ast)
     )
   }
