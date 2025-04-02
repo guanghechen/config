@@ -1,5 +1,6 @@
 import './prism-clike'
 import './prism-markup'
+import './prism-powershell'
 
 import './prism-bash'
 import './prism-c'
