@@ -16,14 +16,14 @@ interface IProps {
 }
 
 export const CodeSource: React.FC<IProps> = props => {
-  const { code, lang, meta, showLineNo, initialExpanded = false } = props
-  const title: string = (meta.filename || meta.title || '') as string
+  const { code, lang, meta, showLineNo, initialExpanded } = props
   const darken: boolean = useMarkdownDarken()
 
-  const [expanded, setExpanded] = React.useState(initialExpanded)
-  const calcContentForCopy = React.useCallback(() => code, [code])
-
+  const title: string = (meta.filename || meta.title || '') as string
   const lineCount = React.useMemo(() => code.split('\n').length, [code])
+
+  const [expanded, setExpanded] = React.useState(initialExpanded ?? lineCount < 16)
+  const calcContentForCopy = React.useCallback(() => code, [code])
 
   return (
     <div className="flex flex-col">

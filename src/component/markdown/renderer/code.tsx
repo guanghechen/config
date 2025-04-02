@@ -55,7 +55,7 @@ export const CodeRenderer: React.FC<Code> = props => {
         lang={lang}
         meta={meta}
         showLineNo={showCodeLineno}
-        initialExpanded={typeof meta.collapsed === 'boolean' ? !meta.collapsed : false}
+        initialExpanded={typeof meta.collapsed === 'boolean' ? !meta.collapsed : undefined}
       />
     </div>
   )
