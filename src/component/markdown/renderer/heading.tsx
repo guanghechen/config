@@ -6,12 +6,12 @@ import { NodesRenderer } from '../NodesRenderer'
 type IHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
 
 const levelClasses: Record<IHeading, string> = {
-  h1: 'py-1 border-b border-b-gray-200 dark:border-b-gray-700 text-2xl font-medium',
-  h2: 'py-1 border-b border-b-gray-200 dark:border-b-gray-700 text-[1.5rem] font-medium mb-3.5',
-  h3: 'text-xl font-medium',
-  h4: 'text-base font-medium',
-  h5: 'text-sm font-medium',
-  h6: 'text-[0.85rem] font-medium',
+  h1: 'py-3 mt-2 border-b border-b-gray-200 dark:border-b-gray-700 text-3xl font-bold bg-gradient-to-br from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent',
+  h2: 'py-2 mt-6 mb-4 border-b border-b-gray-200 dark:border-b-gray-700 text-2xl font-semibold text-gray-800 dark:text-gray-200',
+  h3: 'mt-5 mb-3 text-xl font-medium text-gray-700 dark:text-gray-300',
+  h4: 'mt-4 mb-2 text-lg font-medium text-gray-700 dark:text-gray-300',
+  h5: 'mt-3 mb-1 text-base font-medium text-gray-600 dark:text-gray-400',
+  h6: 'mt-2 mb-1 text-sm font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wider',
 }
 
 /**
@@ -34,7 +34,7 @@ export class HeadingRenderer extends React.Component<Heading> {
       <H
         id={id}
         className={cn(
-          'yozora-heading relative flex items-center justify-start p-0 mb-4 leading-tight font-heading text-gray-900 dark:text-gray-100 group',
+          'yozora-heading relative flex items-center justify-start p-0 leading-tight font-heading group',
           levelClasses[h],
         )}
       >

@@ -57,7 +57,7 @@ export class ContentView extends React.Component<IMainContentProps> {
         <div className="py-4 mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white">
           {title}
         </div>
-        <ReactMarkdown />
+        <ReactMarkdown ast={ast} dontShowFirstHeading={true} />
       </div>
     )
   }

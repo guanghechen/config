@@ -17,37 +17,33 @@
   margin-left: 1.2rem;
 }
 
-.yozora-root .yozora-admonition-danger__title {
+.yozora-admonition .yozora-admonition-danger__title {
   --color-inline-math: var(--color-red-700);
 }
-.yozora-root .yozora-admonition-caution__title {
+.yozora-admonition .yozora-admonition-caution__title {
   --color-inline-math: var(--color-amber-700);
 }
-.yozora-root .yozora-admonition-hint__title {
+.yozora-admonition .yozora-admonition-hint__title {
   --color-inline-math: var(--color-purple-700);
 }
-.yozora-root .yozora-admonition-info__title {
+.yozora-admonition .yozora-admonition-info__title {
   --color-inline-math: var(--color-blue-700);
 }
-.yozora-root .yozora-admonition-tip__title {
+.yozora-admonition .yozora-admonition-tip__title {
   --color-inline-math: var(--color-green-700);
 }
-.yozora-root .yozora-admonition-note__title {
+.yozora-admonition .yozora-admonition-note__title {
   --color-inline-math: var(--color-gray-700);
 }
 
-.yozora-code {
+.yozora-code.yozora-code.yozora-code,
+.yozora-inline-code.yozora-inline-code.yozora-inline-code {
   font-family:
     'Maple Mono NF CN', Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif;
 }
 
 .yozora-heading {
   font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
-}
-
-.yozora-inline-code {
-  font-family:
-    'Maple Mono NF CN', Consolas, 'Source Code Pro', 'Roboto Mono', monospace, sans-serif;
 }
 
 .yozora-list.yozora-list-bullet .yozora-list-bullet {
@@ -63,7 +59,12 @@
   list-style-type: lower-roman;
 }
 
-.yozora-list-item > .yozora-paragraph + .yozora-list {
+.yozora-list-item::marker {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji';
+}
+.yozora-paragraph + .yozora-list {
   margin-top: -1rem;
 }
 
@@ -73,22 +74,22 @@ html.dark {
     --color-math: var(--color-blue-300);
   }
 
-  .yozora-root .yozora-admonition-danger__title {
+  .yozora-admonition .yozora-admonition-danger__title {
     --color-inline-math: var(--color-red-300);
   }
-  .yozora-root .yozora-admonition-caution__title {
+  .yozora-admonition .yozora-admonition-caution__title {
     --color-inline-math: var(--color-amber-300);
   }
-  .yozora-root .yozora-admonition-hint__title {
+  .yozora-admonition .yozora-admonition-hint__title {
     --color-inline-math: var(--color-purple-300);
   }
-  .yozora-root .yozora-admonition-info__title {
+  .yozora-admonition .yozora-admonition-info__title {
     --color-inline-math: var(--color-blue-300);
   }
-  .yozora-root .yozora-admonition-tip__title {
+  .yozora-admonition .yozora-admonition-tip__title {
     --color-inline-math: var(--color-green-300);
   }
-  .yozora-root .yozora-admonition-note__title {
+  .yozora-admonition .yozora-admonition-note__title {
     --color-inline-math: var(--color-gray-300);
   }
 }

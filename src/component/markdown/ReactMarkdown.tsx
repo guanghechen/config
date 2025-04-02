@@ -1,11 +1,19 @@
-import type { Root } from '@yozora/ast'
+import { isEqual } from '@guanghechen/equal'
+import type { Heading, Node, Root } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
-import { useMarkdownAst } from './context'
 import { FootnoteDefinitions } from './FootnoteDefinitions'
 import { NodesRenderer } from './NodesRenderer'
 
 interface IProps {
+  /**
+   * Markdown ast
+   */
+  readonly ast: Root
+  /**
+   * Whether to hide the first heading in the document
+   */
+  readonly dontShowFirstHeading: boolean
   /**
    * Root css class of the component.
    */
@@ -16,21 +24,38 @@ interface IProps {
   readonly style?: React.CSSProperties
 }
 
-export const ReactMarkdown: React.FC<IProps> = props => {
-  const { style, className } = props
-  const ast: Root = useMarkdownAst()
+export class ReactMarkdown extends React.Component<IProps> {
+  public static readonly displayName: string = 'ReactMarkdown'
 
-  return (
-    <div className={cn('yozora-root', className)} style={style}>
-      <section>
-        <main>
-          <NodesRenderer nodes={ast.children} />
-        </main>
-        <footer>
-          <FootnoteDefinitions dontNeedFootnoteDefinitions={false} />
-        </footer>
-      </section>
-    </div>
-  )
+  public override render(): React.ReactElement {
+    const { ast, dontShowFirstHeading, className, style } = this.props
+    const childNodes: Node[] =
+      dontShowFirstHeading &&
+      ast.children[0].type === 'heading' &&
+      (ast.children[0] as Heading).depth === 1
+        ? ast.children.slice(1)
+        : ast.children
+
+    return (
+      <div className={cn('yozora-root', className)} style={style}>
+        <section>
+          <main>
+            <NodesRenderer nodes={childNodes} />
+          </main>
+          <footer>
+            <FootnoteDefinitions dontNeedFootnoteDefinitions={false} />
+          </footer>
+        </section>
+      </div>
+    )
+  }
+
+  public shouldComponentUpdate(nextProps: Readonly<IProps>): boolean {
+    const props: IProps = this.props
+    return (
+      props.className !== nextProps.className ||
+      props.style !== nextProps.style ||
+      !isEqual(props.ast, nextProps.ast)
+    )
+  }
 }
-ReactMarkdown.displayName = 'ReactMarkdown'
