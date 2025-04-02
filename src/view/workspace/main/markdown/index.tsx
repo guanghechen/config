@@ -4,6 +4,9 @@ import type { Root } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
 import cn from 'clsx'
 import React from 'react'
+import { MarkdownProvider } from '@/component/markdown'
+import type { SiteTheme } from '@/context/site'
+import { useSiteViewmodel } from '@/context/site'
 import { useWorkspaceViewmodel } from '@/context/workspace'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IMarkdownFileData } from '@/util/fetch'
@@ -11,6 +14,9 @@ import { MarkdownComposer } from './composer'
 import { MarkdownModeToggle } from './mode'
 
 const MarkdownContainer: React.FC = () => {
+  const siteVM = useSiteViewmodel()
+  const theme: SiteTheme = useStateValue(siteVM.theme$)
+
   const workspaceVM = useWorkspaceViewmodel()
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
   const filepath = useStateValue(workspaceVM.filepath$)
@@ -52,9 +58,11 @@ const MarkdownContainer: React.FC = () => {
         <MarkdownModeToggle />
       </div>
       {!!ast && (
-        <div className="w-full">
-          <MarkdownComposer filepath={filepath} ast={ast} toc={toc} frontmatter={frontmatter} />
-        </div>
+        <MarkdownProvider ast={ast} theme={theme}>
+          <div className="w-full">
+            <MarkdownComposer filepath={filepath} toc={toc} frontmatter={frontmatter} />
+          </div>
+        </MarkdownProvider>
       )}
       <button
         onClick={onScrollToTop}

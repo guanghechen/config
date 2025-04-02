@@ -5,27 +5,23 @@ import type { IHeadingToc, IHeadingTocNode } from '@yozora/ast-util'
 import cn from 'clsx'
 import throttle from 'lodash.throttle'
 import React from 'react'
-import { MarkdownProvider } from '@/component/markdown'
-import type { SiteTheme } from '@/context/site'
-import { useSiteViewmodel } from '@/context/site'
+import { useMarkdownAst } from '@/component/markdown'
 import { MarkdownModeEnum, useWorkspaceViewmodel } from '@/context/workspace'
 import { AstView, ContentView, FrontmatterView, TocView } from './view'
 
 interface IProps {
   readonly filepath: string | null
-  readonly ast: Root
   readonly toc: IHeadingToc | undefined
   readonly frontmatter: Record<string, unknown> | undefined
 }
 
 export const MarkdownComposer: React.FC<IProps> = props => {
-  const { ast, toc, frontmatter, filepath } = props
-  const siteVM = useSiteViewmodel()
+  const { toc, frontmatter, filepath } = props
   const { markdownMode$, tocActivatedIdentifier$, specifiedTocActivatedIdentifier$ } =
     useWorkspaceViewmodel()
+  const ast: Root = useMarkdownAst()
 
   const mode: MarkdownModeEnum = useStateValue(markdownMode$)
-  const theme: SiteTheme = useStateValue(siteVM.theme$)
   const tocActivatedIdentifier: string | null = useStateValue(tocActivatedIdentifier$)
 
   const contentContainerRef = React.useRef<HTMLDivElement | null>(null)
@@ -93,60 +89,58 @@ export const MarkdownComposer: React.FC<IProps> = props => {
   }, [toc, showToc, contentContainer, tocActivatedIdentifier$, setTimeoutForSpecifiedTocIdentifier])
 
   return (
-    <MarkdownProvider ast={ast} theme={theme}>
-      <div
-        className={cn('flex w-full items-start justify-center', {
-          'h-[calc(100vh-7rem)]': columns > 1,
-        })}
-      >
-        {showView && (
-          <React.Fragment>
-            <ContentView
-              containerRef={contentContainerRef}
-              ast={ast}
-              filepath={filepath}
-              frontmatter={frontmatter}
+    <div
+      className={cn('flex w-full items-start justify-center', {
+        'h-[calc(100vh-7rem)]': columns > 1,
+      })}
+    >
+      {showView && (
+        <React.Fragment>
+          <ContentView
+            containerRef={contentContainerRef}
+            ast={ast}
+            filepath={filepath}
+            frontmatter={frontmatter}
+            singleColumn={columns === 1}
+          />
+          {columns > 1 && (
+            <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+          )}
+        </React.Fragment>
+      )}
+      {showAst && (
+        <React.Fragment>
+          <AstView ast={ast} singleColumn={columns === 1} />
+          {(showToc || showFm) && (
+            <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+          )}
+        </React.Fragment>
+      )}
+      {(showToc || showFm) && (
+        <div
+          className={cn('flex h-full justify-center', {
+            'w-[32rem] flex-col flex-initial': columns > 1,
+          })}
+        >
+          {showToc && (
+            <TocView
               singleColumn={columns === 1}
+              toc={toc}
+              tocActivatedIdentifier={tocActivatedIdentifier}
+              setActivatedIdentifier={setActivatedIdentifier}
             />
-            {columns > 1 && (
-              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
-            )}
-          </React.Fragment>
-        )}
-        {showAst && (
-          <React.Fragment>
-            <AstView ast={ast} singleColumn={columns === 1} />
-            {(showToc || showFm) && (
-              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
-            )}
-          </React.Fragment>
-        )}
-        {(showToc || showFm) && (
+          )}
           <div
-            className={cn('flex h-full justify-center', {
-              'w-[32rem] flex-col flex-initial': columns > 1,
+            className={cn('flex-shrink-0 border-gray-300 dark:border-gray-700', {
+              'mx-2 h-full border-r': columns === 1,
+              'my-2 w-full border-b': columns > 1,
+              hidden: !showToc || !showFm,
             })}
-          >
-            {showToc && (
-              <TocView
-                singleColumn={columns === 1}
-                toc={toc}
-                tocActivatedIdentifier={tocActivatedIdentifier}
-                setActivatedIdentifier={setActivatedIdentifier}
-              />
-            )}
-            <div
-              className={cn('flex-shrink-0 border-gray-300 dark:border-gray-700', {
-                'mx-2 h-full border-r': columns === 1,
-                'my-2 w-full border-b': columns > 1,
-                hidden: !showToc || !showFm,
-              })}
-            />
-            {showFm && <FrontmatterView frontmatter={frontmatter} singleColumn={columns === 1} />}
-          </div>
-        )}
-      </div>
-    </MarkdownProvider>
+          />
+          {showFm && <FrontmatterView frontmatter={frontmatter} singleColumn={columns === 1} />}
+        </div>
+      )}
+    </div>
   )
 }
 
