@@ -20,7 +20,7 @@ export const LinkRenderer: React.FC<Link> = React.memo(
 
     return (
       <a
-        className="yozora-link py-0.5 px-0 text-sky-600 dark:text-sky-400 italic no-underline hover:text-sky-700 dark:hover:text-sky-300 hover:underline active:text-sky-800 dark:active:text-sky-500 visited:text-purple-600 dark:visited:text-purple-400"
+        className="yozora-link py-0.5 px-0 text-blue-700 dark:text-blue-400 font-medium border-b border-blue-300 dark:border-blue-500/50 hover:text-blue-800 dark:hover:text-blue-300 hover:border-b-2 hover:border-blue-500 dark:hover:border-blue-400 active:text-blue-900 dark:active:text-blue-200 visited:text-violet-700 dark:visited:text-violet-400 visited:border-violet-300 dark:visited:border-violet-500/50"
         href={url}
         title={title}
         rel="noopener, noreferrer"
