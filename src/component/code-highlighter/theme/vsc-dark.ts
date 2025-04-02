@@ -1,11 +1,11 @@
-import type { IPrismTheme } from '../types'
+import type { IPrismThemeScheme } from '../types'
 
 /**
  * Generated Prism Theme from VSCode .json Themes
  *
  * @see https://github.com/FormidableLabs/prism-react-renderer/blob/95025358684be04865669bb912e8cf6203c1a391/tools/themeFromVsCode/README.md
  */
-export const vscDarkTheme: IPrismTheme = {
+export const vscDarkTheme: IPrismThemeScheme = {
   plain: {
     color: '#d4d4d4',
     backgroundColor: '#1e1e1e',

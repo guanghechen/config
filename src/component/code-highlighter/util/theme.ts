@@ -1,12 +1,12 @@
 import type React from 'react'
-import type { IPrismTheme, IThemeDict } from '../types'
+import type { IPrismThemeScheme, IThemeDict } from '../types'
 
 const languageMap = {
   js: 'javascript',
   ts: 'typescript',
 }
 
-export const themeToDict = (language: string, theme: IPrismTheme): IThemeDict => {
+export const themeToDict = (language: string, theme: IPrismThemeScheme): IThemeDict => {
   // eslint-disable-next-line no-param-reassign
   language = languageMap[language as keyof typeof languageMap] ?? language
 

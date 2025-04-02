@@ -3,28 +3,27 @@ import cn from 'clsx'
 import type { TokenStream } from 'prismjs'
 import Prism from 'prismjs'
 import React from 'react'
+import { PRESET_CLASSES } from '@/constant/classes'
 import type {
   ILineInputProps,
   ILineOutputProps,
-  IPrismTheme,
+  IPrismThemeScheme,
   IThemeDict,
   IToken,
   ITokenInputProps,
   ITokenOutputProps,
-} from '../types'
-import { themeToDict } from '../util/theme'
-import { normalizeTokens } from '../util/token'
+} from './types'
+import { themeToDict } from './util/theme'
+import { normalizeTokens } from './util/token'
 
 interface IProps {
   readonly code: string
-  readonly collapsed: boolean
-  readonly language: string
-  readonly maxLines: number
-  readonly showLineno: boolean
-  readonly theme: IPrismTheme
-  readonly highlightLinenos: number[]
-  readonly className?: string
-  readonly codesClassName?: string
+  readonly themeScheme: IPrismThemeScheme
+  readonly lang?: string
+  readonly collapsed?: boolean
+  readonly maxLines?: number
+  readonly showLineno?: boolean
+  readonly highlightLinenos?: number[]
 }
 
 interface IState {
@@ -33,15 +32,17 @@ interface IState {
   readonly tokens: IToken[][]
 }
 
-export class HighlightContent extends React.Component<IProps, IState> {
-  public static readonly displayName = 'HighlightContent'
+export class CodeHighlighter extends React.Component<IProps, IState> {
+  public static readonly displayName = 'CodeHighlighter'
 
   constructor(props: IProps) {
     super(props)
 
-    const themeDict: IThemeDict = themeToDict(props.language, props.theme)
-    const tokens: IToken[][] = this.tokenize(props.code, props.language)
-    const linenoWidth: string | undefined = props.showLineno
+    const { code, lang = '', themeScheme, showLineno } = props
+
+    const themeDict: IThemeDict = themeToDict(lang, themeScheme)
+    const tokens: IToken[][] = this.tokenize(code, lang)
+    const linenoWidth: string | undefined = showLineno
       ? `${Math.max(2, String(tokens.length).length) * 1.1}em`
       : undefined
     this.state = { linenoWidth, themeDict, tokens }
@@ -49,13 +50,11 @@ export class HighlightContent extends React.Component<IProps, IState> {
 
   public override render(): React.ReactElement {
     const {
-      collapsed,
-      highlightLinenos,
-      language,
-      maxLines,
+      collapsed = false,
+      highlightLinenos = [],
+      lang = '',
+      maxLines = -1,
       showLineno = true,
-      className,
-      codesClassName,
     } = this.props
     const { linenoWidth, tokens } = this.state
 
@@ -79,13 +78,12 @@ export class HighlightContent extends React.Component<IProps, IState> {
     return (
       <div
         className={cn(
-          'overflow-auto w-full text-sm leading-6 p-0 antialiased transition-[max-height] duration-500 ease-in-out tab-[2] font-smooth-always whitespace-pre break-keep',
-          language ? `prism-code language-${language}` : 'prism-code',
-          className,
+          'w-full text-sm leading-6 p-0 antialiased transition-[max-height] duration-500 ease-in-out tab-[2] font-smooth-always whitespace-pre break-keep',
+          lang ? `prism-code language-${lang}` : 'prism-code',
         )}
         style={style}
       >
-        <div className={cn('min-w-full w-fit p-2', codesClassName)}>
+        <div className={cn('min-w-full w-fit p-0 m-0', PRESET_CLASSES.scrollbar)}>
           {tokens.map((line, index) => {
             const lineno: number = index + 1
             const isHighlight = highlightLinenos.includes(lineno)
@@ -97,7 +95,7 @@ export class HighlightContent extends React.Component<IProps, IState> {
                 className={cn(
                   'box-border flex min-w-fit w-full text-sm leading-6 h-6',
                   'break-inherit tab-inherit text-inherit whitespace-inherit',
-                  isHighlight && 'bg-amber-500/30 dark:bg-amber-600/30 border-transparent',
+                  isHighlight && 'bg-blue-100/80 dark:bg-blue-900/30',
                   lineProps.className,
                 )}
               >
@@ -134,12 +132,10 @@ export class HighlightContent extends React.Component<IProps, IState> {
       state.tokens !== nextState.tokens ||
       props.code !== nextProps.code ||
       props.collapsed !== nextProps.collapsed ||
-      props.language !== nextProps.language ||
+      props.lang !== nextProps.lang ||
       props.maxLines !== nextProps.maxLines ||
       props.showLineno !== nextProps.showLineno ||
-      props.className !== nextProps.className ||
-      props.codesClassName !== nextProps.codesClassName ||
-      !isEqual(props.theme, nextProps.theme) ||
+      !isEqual(props.themeScheme, nextProps.themeScheme) ||
       !isEqual(props.highlightLinenos, nextProps.highlightLinenos)
     )
   }
@@ -151,16 +147,18 @@ export class HighlightContent extends React.Component<IProps, IState> {
     const props: IProps = this.props
     const state: IState = this.state
 
+    const { code, lang = '' } = props
+
     const latestThemeDict: IThemeDict =
-      props.language !== prevProps.language || !isEqual(props.theme, prevProps.theme)
-        ? themeToDict(props.language, props.theme)
+      props.lang !== prevProps.lang || !isEqual(props.themeScheme, prevProps.themeScheme)
+        ? themeToDict(lang, props.themeScheme)
         : state.themeDict
     if (
       props.code !== prevProps.code ||
-      props.language !== prevProps.language ||
+      props.lang !== prevProps.lang ||
       latestThemeDict !== prevState.themeDict
     ) {
-      const nextTokens: IToken[][] = this.tokenize(props.code, props.language)
+      const nextTokens: IToken[][] = this.tokenize(code, lang)
       const linenoWidth: string | undefined = props.showLineno
         ? `${Math.max(2, String(nextTokens.length).length) * 1.1}em`
         : undefined
@@ -168,10 +166,10 @@ export class HighlightContent extends React.Component<IProps, IState> {
     }
   }
 
-  protected tokenize(code: string, language: string): IToken[][] {
-    const grammar = language ? Prism.languages[language] : undefined
+  protected tokenize(code: string, lang: string): IToken[][] {
+    const grammar = lang ? Prism.languages[lang] : undefined
     if (grammar) {
-      const env = { code, grammar, language, tokens: [] as TokenStream }
+      const env = { code, grammar, lang, tokens: [] as TokenStream }
       Prism.hooks.run('before-tokenize', env)
       env.tokens = Prism.tokenize(env.code, env.grammar)
       Prism.hooks.run('after-tokenize', env)

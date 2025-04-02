@@ -1,6 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
-import { CodeHighlighter } from '@/component/code-highlighter'
+import type { IPrismThemeScheme } from '@/component/code-highlighter'
+import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { CodeIcon } from '@/component/icon/material'
 import { PRESET_CLASSES } from '@/constant/classes'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
@@ -11,14 +12,15 @@ interface IProps {
   readonly code: string
   readonly lang: string | null
   readonly meta: ICodeMetaData
-  readonly showLineNo: boolean
+  readonly showLineno: boolean
   readonly initialExpanded?: boolean
 }
 
 export const CodeSource: React.FC<IProps> = props => {
-  const { code, lang, meta, showLineNo, initialExpanded } = props
+  const { code, lang, meta, showLineno, initialExpanded } = props
   const darken: boolean = useMarkdownDarken()
 
+  const themeScheme: IPrismThemeScheme = darken ? vscDarkTheme : vscLightTheme
   const title: string = (meta.filename || meta.title || '') as string
   const lineCount = React.useMemo(() => code.split('\n').length, [code])
 
@@ -62,13 +64,12 @@ export const CodeSource: React.FC<IProps> = props => {
             </div>
           </div>
           <CodeHighlighter
-            darken={darken}
-            lang={lang}
-            value={code}
+            themeScheme={themeScheme}
+            highlightLinenos={meta.highlights}
+            lang={lang ?? ''}
+            code={code}
             collapsed={false}
-            showLineNo={showLineNo}
-            className={PRESET_CLASSES.scrollbar}
-            codesClassName={PRESET_CLASSES.scrollbar}
+            showLineno={showLineno}
           />
         </div>
       )}

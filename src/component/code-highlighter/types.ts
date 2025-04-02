@@ -66,7 +66,7 @@ interface PrismThemeEntry {
   [styleKey: string]: string | number | void
 }
 
-export interface IPrismTheme {
+export interface IPrismThemeScheme {
   plain: PrismThemeEntry
   styles: Array<{
     types: string[]

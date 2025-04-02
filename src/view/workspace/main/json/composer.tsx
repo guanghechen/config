@@ -2,7 +2,8 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import JSON5 from 'json5'
 import React from 'react'
-import { CodeHighlighter } from '@/component/code-highlighter'
+import type { IPrismThemeScheme } from '@/component/code-highlighter'
+import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { Json } from '@/component/json'
 import { PRESET_CLASSES } from '@/constant/classes'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
@@ -63,6 +64,7 @@ export const JsonComposer: React.FC<IProps> = props => {
   const workspaceVM = useWorkspaceViewmodel()
   const mode: JsonModeEnum = useStateValue(workspaceVM.jsonMode$)
   const theme: SiteTheme = useStateValue(siteVM.theme$)
+  const themeScheme: IPrismThemeScheme = theme === SiteTheme.DARKEN ? vscDarkTheme : vscLightTheme
 
   const showView: boolean = mode === 0 || (mode & JsonModeEnum.VIEW) !== 0
   const showLiteral: boolean = (mode & JsonModeEnum.LITERAL) !== 0
@@ -104,13 +106,11 @@ export const JsonComposer: React.FC<IProps> = props => {
           )}
         >
           <CodeHighlighter
-            darken={theme === SiteTheme.DARKEN}
+            themeScheme={themeScheme}
             lang="json"
-            value={content || ''}
+            code={content || ''}
             collapsed={false}
-            showLineNo={true}
-            className={PRESET_CLASSES.scrollbar}
-            codesClassName={PRESET_CLASSES.scrollbar}
+            showLineno={true}
           />
         </div>
       )}
