@@ -1,15 +1,16 @@
 import { isEqual } from '@guanghechen/equal'
-import type { Root } from '@yozora/ast'
+import type { Heading, Root } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
-import { MarkdownToc, ReactMarkdown } from '@/component/markdown'
+import { MarkdownToc, NodesRenderer, ReactMarkdown } from '@/component/markdown'
 import { ReactMarkdownContent } from '@/component/markdown/ReactMarkdownContent'
 import { PRESET_CLASSES } from '@/constant/classes'
 
 interface IMainContentProps {
   readonly containerRef: React.RefObject<HTMLDivElement | null>
+  readonly ast: Root
   readonly filepath: string | null
   readonly frontmatter: Record<string, unknown> | undefined
   readonly singleColumn: boolean
@@ -19,7 +20,29 @@ export class ContentView extends React.Component<IMainContentProps> {
   public static displayName: string = 'ContentView'
 
   public override render(): React.ReactElement {
-    const { containerRef, filepath, frontmatter, singleColumn } = this.props
+    const { containerRef, ast, filepath, frontmatter, singleColumn } = this.props
+    let title: React.ReactElement
+
+    if (
+      !frontmatter?.title &&
+      ast.children[0].type === 'heading' &&
+      (ast.children[0] as Heading).depth === 1
+    ) {
+      const heading: Heading = ast.children[0] as Heading
+      title = (
+        <h1 className="yozora-root">
+          <NodesRenderer nodes={heading.children} />
+        </h1>
+      )
+    } else {
+      title = (
+        <ReactMarkdownContent
+          Tag="h1"
+          content={(frontmatter?.title as string) || filepath || 'Untitled'}
+        />
+      )
+    }
+
     return (
       <div
         ref={containerRef}
@@ -31,11 +54,9 @@ export class ContentView extends React.Component<IMainContentProps> {
           },
         )}
       >
-        <ReactMarkdownContent
-          Tag="h1"
-          className="mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white"
-          content={(frontmatter?.title as string) || filepath || 'Untitled'}
-        />
+        <div className="py-4 mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white">
+          {title}
+        </div>
         <ReactMarkdown />
       </div>
     )
@@ -44,6 +65,7 @@ export class ContentView extends React.Component<IMainContentProps> {
   public override shouldComponentUpdate(nextProps: Readonly<IMainContentProps>): boolean {
     const props: IMainContentProps = this.props
     return (
+      props.ast !== nextProps.ast ||
       props.containerRef !== nextProps.containerRef ||
       props.singleColumn !== nextProps.singleColumn ||
       props.filepath !== nextProps.filepath ||

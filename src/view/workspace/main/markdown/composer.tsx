@@ -103,6 +103,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
           <React.Fragment>
             <ContentView
               containerRef={contentContainerRef}
+              ast={ast}
               filepath={filepath}
               frontmatter={frontmatter}
               singleColumn={columns === 1}
