@@ -691,6 +691,27 @@ end
 
 ---@param position                      fml.ux.nvimbar.Position
 ---@return fml.ux.nvimbar.IRawComponent
+function M.encoding(position)
+  local hln_text = position .. "_text" ---@type string
+
+  ---@type fml.ux.nvimbar.IRawComponent
+  local component = {
+    name = "encoding",
+    atomic = true,
+    render = function(context)
+      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local encoding = vim.bo[bufnr].fileencoding ---@type string
+
+      local text = encoding ---@type string
+      local hl_text = txt(text, hln_text)
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      fml.ux.nvimbar.Position
+---@return fml.ux.nvimbar.IRawComponent
 function M.fileformat(position)
   local hln_text = position .. "_text" ---@type string
 
@@ -700,21 +721,46 @@ function M.fileformat(position)
     unix = "LF",
   }
 
+  local fileformat_icon_map = {
+    dos = eve.icon.os.dos,
+    mac = eve.icon.os.mac,
+    unix = eve.icon.os.nix,
+  }
+
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "fileformat",
     atomic = true,
-    condition = function()
-      return vim.o.columns > 100
-    end,
-    render = function()
-      ---@diagnostic disable-next-line: undefined-field
-      local text_encoding = vim.opt.fileencoding:get()
-      local text_fileformat = fileformat_text_map[vim.bo.fileformat] or "UNKNOWN"
-      local icon_tab = eve.icon.ui.Tab .. " "
-      local text_tab = vim.api.nvim_get_option_value("shiftwidth", { scope = "local" })
+    render = function(context)
+      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local fileformat = vim.bo[bufnr].fileformat ---@type string
 
-      local text = text_encoding .. " " .. text_fileformat .. " " .. icon_tab .. text_tab
+      local icon_fileformat = fileformat_icon_map[fileformat] or eve.icon.os.current ---@type string
+      local text_fileformat = fileformat_text_map[fileformat] or fileformat ---@type string
+
+      local text = string.format("%s %s", icon_fileformat, text_fileformat) ---@type string
+      local hl_text = txt(text, hln_text)
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      fml.ux.nvimbar.Position
+---@return fml.ux.nvimbar.IRawComponent
+function M.fileindent(position)
+  local hln_text = position .. "_text" ---@type string
+  local icon_shiftwidth = eve.icon.ui.Tab ---@type string
+
+  ---@type fml.ux.nvimbar.IRawComponent
+  local component = {
+    name = "fileindent",
+    atomic = true,
+    render = function(context)
+      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local shiftwidth = vim.bo[bufnr].shiftwidth ---@type integer
+
+      local text = string.format("%s %d", icon_shiftwidth, shiftwidth) ---@type string
       local hl_text = txt(text, hln_text)
       return text, hl_text, true
     end,

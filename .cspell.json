@@ -262,6 +262,7 @@
     "fileencodings",
     "fileformat",
     "fileicon",
+    "fileindent",
     "fileitem",
     "filematch",
     "filereadable",

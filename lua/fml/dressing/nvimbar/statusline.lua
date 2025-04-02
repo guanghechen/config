@@ -41,8 +41,10 @@ statusline
   --
   :place("right", c.cwd(position), 100)
   :place("right", c.fileformat(position), 95)
-  :place("right", c.python_env(position), 100)
+  :place("right", c.fileindent(position), 95)
+  :place("right", c.encoding(position), 100)
   :place("right", c.filetype(position), 95)
+  :place("right", c.python_env(position), 100)
   :place("right", c.lsp_message(position), 90)
   :place("right", c.lsp(position), 100)
   :place("right", c.ai(position), 95)
