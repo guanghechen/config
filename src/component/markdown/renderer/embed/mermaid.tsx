@@ -5,12 +5,10 @@ import { useMarkdownDarken } from '../../context'
 
 interface IMermaidRendererProps {
   readonly code: string
-  readonly className?: string
-  readonly onClick?: () => void
 }
 
 const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
-  const { code, className, onClick } = props
+  const { code } = props
   const darken: boolean = useMarkdownDarken()
 
   const ref = React.useRef<HTMLDivElement>(null)
@@ -39,7 +37,7 @@ const MermaidRenderer: React.FC<IMermaidRendererProps> = props => {
     }
   }, [id, code, darken])
 
-  return <div ref={ref} className={className} onClick={onClick} />
+  return <div ref={ref} className="size-full p-2" />
 }
 MermaidRenderer.displayName = 'MermaidRenderer'
 
@@ -57,9 +55,16 @@ const Mermaid: React.FC<{ readonly code: string }> = props => {
 
   return (
     <React.Fragment>
-      <MermaidRenderer code={code} className="cursor-pointer" onClick={onClick} />
+      <div
+        className="cursor-pointer w-full h-full flex items-center justify-center"
+        onClick={onClick}
+      >
+        <MermaidRenderer code={code} />
+      </div>
       <ElementViewer open={open} resetOnOpen={false} onClose={onClose}>
-        <MermaidRenderer code={code} className="w-[80vw] h-[80vh]" />
+        <div className="w-[80vw] h-[80vh]">
+          <MermaidRenderer code={code} />
+        </div>
       </ElementViewer>
     </React.Fragment>
   )
