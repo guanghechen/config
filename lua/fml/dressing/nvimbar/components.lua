@@ -727,6 +727,11 @@ function M.fileformat(position)
     unix = eve.icon.os.nix,
   }
 
+  ---@type string
+  local fn_toggle_fileformat = eve.G.register_anonymous_fn(function()
+    vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileformat_local")
+  end) or ""
+
   ---@type fml.ux.nvimbar.IRawComponent
   local component = {
     name = "fileformat",
@@ -739,7 +744,7 @@ function M.fileformat(position)
       local text_fileformat = fileformat_text_map[fileformat] or fileformat ---@type string
 
       local text = string.format("%s %s", icon_fileformat, text_fileformat) ---@type string
-      local hl_text = txt(text, hln_text)
+      local hl_text = btn(txt(text, hln_text), fn_toggle_fileformat)
       return text, hl_text, true
     end,
   }
