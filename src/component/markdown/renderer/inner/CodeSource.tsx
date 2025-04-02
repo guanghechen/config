@@ -1,6 +1,6 @@
-import CodeHighlighter from '@yozora/react-code-highlighter'
 import cn from 'clsx'
 import React from 'react'
+import { CodeHighlighter } from '@/component/code-highlighter'
 import { CodeIcon } from '@/component/icon/material'
 import { PRESET_CLASSES } from '@/constant/classes'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'

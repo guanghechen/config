@@ -736,6 +736,7 @@ __metadata:
     "@types/lodash.debounce": 4.0.9
     "@types/lodash.throttle": 4.1.9
     "@types/node": 20.17.28
+    "@types/prismjs": 1.26.5
     "@types/react": 19.0.12
     "@types/react-dom": 19.0.4
     "@vitejs/plugin-react": 4.3.4
@@ -744,7 +745,6 @@ __metadata:
     "@yozora/character": 2.3.12
     "@yozora/core-tokenizer": 2.3.12
     "@yozora/parser": 2.3.12
-    "@yozora/react-code-highlighter": 3.0.0-alpha.15
     "@yozora/react-mathjax": 3.0.0-alpha.14
     chokidar: 4.0.3
     clsx: 2.1.1
@@ -761,6 +761,7 @@ __metadata:
     mermaid: 11.6.0
     open: 10.1.0
     prettier: 3.5.3
+    prismjs: 1.30.0
     react: 19.1.0
     react-dom: 19.1.0
     react-pdf: 9.2.1
@@ -1815,6 +1816,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/prismjs@npm:1.26.5":
+  version: 1.26.5
+  resolution: "@types/prismjs@npm:1.26.5"
+  checksum: d208b04ee9b6de6b2dc916439a81baa47e64ab3659a66d3d34bc3e42faccba9d4b26f590d76f97f7978d1dfaafa0861f81172b1e3c68696dd7a42d73aaaf5b7b
+  languageName: node
+  linkType: hard
+
 "@types/react-dom@npm:19.0.4":
   version: 19.0.4
   resolution: "@types/react-dom@npm:19.0.4"
@@ -2065,21 +2073,6 @@ __metadata:
     "@yozora/tokenizer-text": ^2.3.12
     "@yozora/tokenizer-thematic-break": ^2.3.12
   checksum: 5d88afeb482cb8c4735adbf86ff17312657491d497eeff642e19b8df6d4969ac6ca48d2702eafd60eaa616c91ccc2af9f56fcc4b1441bf8f58477bd00cb73331
-  languageName: node
-  linkType: hard
-
-"@yozora/react-code-highlighter@npm:3.0.0-alpha.15":
-  version: 3.0.0-alpha.15
-  resolution: "@yozora/react-code-highlighter@npm:3.0.0-alpha.15"
-  dependencies:
-    "@guanghechen/equal": ^1.0.3
-    "@yozora/core-react-constant": ^3.0.0-alpha.11
-    prismjs: 1.30.0
-  peerDependencies:
-    "@emotion/css": ^11.0.0
-    prop-types: ^15.7.2
-    react: ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 0b2b7774157d595a0404cdb062c8ae98f4f1d79c0529d5faa5dcc555ec615a7bc93ddb98ae03075caa71a0217c2d0c9f798f9b60e309e14b531fb21174872e03
   languageName: node
   linkType: hard
 
