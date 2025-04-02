@@ -15,7 +15,7 @@ export class MarkdownToc extends React.Component<IProps> {
     const { toc, activatedIdentifier, setActivatedIdentifier } = this.props
 
     return (
-      <div className="h-full overflow-auto p-4">
+      <div className="h-full overflow-auto">
         {toc ? (
           <div className="toc-container">
             {toc.children.map(item => (

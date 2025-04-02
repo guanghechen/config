@@ -47,17 +47,19 @@ export class ContentView extends React.Component<IMainContentProps> {
       <div
         ref={containerRef}
         className={cn(
-          'w-[72rem] flex-initial px-8 py-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          'w-[72rem] flex-initial border-x-4 border-y-20 border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:text-gray-200',
           {
             'overflow-auto h-full': !singleColumn,
             [PRESET_CLASSES.scrollbar]: !singleColumn,
           },
         )}
       >
-        <div className="py-4 mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white">
-          {title}
+        <div className="px-8 py-4">
+          <div className="mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white">
+            {title}
+          </div>
+          <ReactMarkdown ast={ast} dontShowFirstHeading={true} />
         </div>
-        <ReactMarkdown ast={ast} dontShowFirstHeading={true} />
       </div>
     )
   }
@@ -87,14 +89,16 @@ export class AstView extends React.Component<IAstViewProps> {
     return (
       <div
         className={cn(
-          'w-[48rem] flex-auto p-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          'w-[48rem] flex-initial border-x-4 border-y-20 border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:text-gray-200',
           {
             'overflow-auto h-full': !singleColumn,
             [PRESET_CLASSES.scrollbar]: !singleColumn,
           },
         )}
       >
-        <Json json={ast} />
+        <div className="px-8 py-4">
+          <Json json={ast} />
+        </div>
       </div>
     )
   }
@@ -120,7 +124,7 @@ export class TocView extends React.Component<ITocViewProps> {
     return (
       <div
         className={cn(
-          'flex-auto basis-0 p-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          'flex-auto basis-0 border-4 border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:text-gray-200',
           {
             'overflow-auto h-full': !singleColumn,
             [PRESET_CLASSES.scrollbar]: !singleColumn,
@@ -128,15 +132,17 @@ export class TocView extends React.Component<ITocViewProps> {
           },
         )}
       >
-        <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">
-          Table of Contents
-        </h3>
-        <div>
-          <MarkdownToc
-            toc={toc}
-            activatedIdentifier={tocActivatedIdentifier}
-            setActivatedIdentifier={setActivatedIdentifier}
-          />
+        <div className="p-4">
+          <h3 className="text-lg p-0 m-0 mb-4 font-medium text-gray-800 dark:text-gray-100">
+            Table of Contents
+          </h3>
+          <div>
+            <MarkdownToc
+              toc={toc}
+              activatedIdentifier={tocActivatedIdentifier}
+              setActivatedIdentifier={setActivatedIdentifier}
+            />
+          </div>
         </div>
       </div>
     )
@@ -166,7 +172,7 @@ export class FrontmatterView extends React.Component<IFrontmatterViewProps> {
     return (
       <div
         className={cn(
-          'flex-auto basis-0 p-4 backdrop-blur-md backdrop-saturate-150 bg-white/70 border border-white/20 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:border-gray-700/30 dark:text-gray-200',
+          'flex-auto basis-0 border-4 border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 rounded-lg shadow-lg text-slate-800 dark:bg-gray-800/60 dark:text-gray-200',
           {
             'overflow-auto h-full': !singleColumn,
             [PRESET_CLASSES.scrollbar]: !singleColumn,
@@ -174,8 +180,12 @@ export class FrontmatterView extends React.Component<IFrontmatterViewProps> {
           },
         )}
       >
-        <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-100">Frontmatter</h3>
-        <Json json={frontmatter} initialCollapsed="expanded" />
+        <div className="p-4">
+          <h3 className="text-lg p-0 m-0 mb-4 font-medium text-gray-800 dark:text-gray-100">
+            Frontmatter
+          </h3>
+          <Json json={frontmatter} initialCollapsed="expanded" />
+        </div>
       </div>
     )
   }
