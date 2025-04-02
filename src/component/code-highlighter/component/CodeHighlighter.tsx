@@ -43,10 +43,6 @@ interface IProps {
    */
   readonly theme?: IPrismTheme
   /**
-   * Ref of the codes area.
-   */
-  readonly codesRef?: React.RefCallback<HTMLDivElement> | React.RefObject<HTMLDivElement>
-  /**
    * Custom css class for the container.
    */
   readonly className?: string
@@ -54,10 +50,6 @@ interface IProps {
    * Custom css class for the codes area.
    */
   readonly codesClassName?: string
-  /**
-   * Callback when linenoWidth changed.
-   */
-  readonly onLinenoWidthChange?: (linenoWidth: React.CSSProperties['width']) => void
 }
 
 export class CodeHighlighter extends React.PureComponent<IProps> {
@@ -72,8 +64,6 @@ export class CodeHighlighter extends React.PureComponent<IProps> {
       maxLines = -1,
       collapsed = false,
       showLineNo = true,
-      codesRef,
-      onLinenoWidthChange,
       className,
       codesClassName,
     } = this.props
@@ -82,14 +72,12 @@ export class CodeHighlighter extends React.PureComponent<IProps> {
     return (
       <HighlightContent
         code={code}
-        codesRef={codesRef}
         collapsed={collapsed}
         highlightLinenos={highlightLinenos}
         language={lang ?? ''}
         maxLines={maxLines}
         showLineno={showLineNo}
         theme={theme}
-        onLinenoWidthChange={onLinenoWidthChange}
         className={className}
         codesClassName={codesClassName}
       />

@@ -1,7 +1,6 @@
 import './language'
 
 export * from './component/CodeHighlighter'
-export * from './component/HighlightLinenos'
 export * from './component/HighlightContent'
 export * from './types'
 export * from './theme/vsc-dark'

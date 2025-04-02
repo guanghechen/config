@@ -14,11 +14,9 @@ import type {
 } from '../types'
 import { themeToDict } from '../util/theme'
 import { normalizeTokens } from '../util/token'
-import { HighlightLinenos } from './HighlightLinenos'
 
 interface IProps {
   readonly code: string
-  readonly codesRef: React.RefCallback<HTMLDivElement> | React.RefObject<HTMLDivElement> | undefined
   readonly collapsed: boolean
   readonly language: string
   readonly maxLines: number
@@ -27,19 +25,16 @@ interface IProps {
   readonly highlightLinenos: number[]
   readonly className?: string
   readonly codesClassName?: string
-  readonly onLinenoWidthChange?: (linenoWidth: React.CSSProperties['width']) => void // Callback when linenoWidth changed.
 }
 
 interface IState {
-  linenoWidth: string | undefined
-  themeDict: IThemeDict
-  tokens: IToken[][]
+  readonly linenoWidth: string | undefined
+  readonly themeDict: IThemeDict
+  readonly tokens: IToken[][]
 }
 
 export class HighlightContent extends React.Component<IProps, IState> {
   public static readonly displayName = 'HighlightContent'
-
-  protected readonly linenoRef: React.RefObject<HTMLDivElement | null>
 
   constructor(props: IProps) {
     super(props)
@@ -50,13 +45,10 @@ export class HighlightContent extends React.Component<IProps, IState> {
       ? `${Math.max(2, String(tokens.length).length) * 1.1}em`
       : undefined
     this.state = { linenoWidth, themeDict, tokens }
-    this.linenoRef = { current: null }
   }
 
   public override render(): React.ReactElement {
-    const { linenoRef, onScroll } = this
     const {
-      codesRef,
       collapsed,
       highlightLinenos,
       language,
@@ -87,51 +79,44 @@ export class HighlightContent extends React.Component<IProps, IState> {
     return (
       <div
         className={cn(
-          'flex items-stretch overflow-hidden w-full text-sm leading-6 p-0 antialiased transition-[max-height] duration-500 ease-in-out tab-[2] font-smooth-always whitespace-pre break-keep',
+          'overflow-auto w-full text-sm leading-6 p-0 antialiased transition-[max-height] duration-500 ease-in-out tab-[2] font-smooth-always whitespace-pre break-keep',
           language ? `prism-code language-${language}` : 'prism-code',
           className,
         )}
         style={style}
       >
-        {showLineno && (
-          <div
-            key="linenos"
-            className="flex-none overflow-hidden box-border p-2 cursor-default text-sm leading-6 select-none text-right border-r border-gray-300 dark:border-gray-600"
-            style={{ width: linenoWidth }}
-            ref={linenoRef}
-          >
-            <HighlightLinenos countOfLines={countOfLines} highlightLinenos={highlightLinenos} />
-          </div>
-        )}
-        <div
-          key="codes"
-          ref={codesRef}
-          className={cn('flex-auto overflow-auto box-border p-2 text-sm leading-6', codesClassName)}
-          onScroll={onScroll}
-        >
-          <div className="min-w-full w-fit">
-            {tokens.map((line, lineNo) => {
-              const isHighlight = highlightLinenos.includes(lineNo + 1)
-              const lineProps = this.getLineProps({ line })
-              return (
-                <div
-                  {...lineProps}
-                  key={lineNo}
-                  className={cn(
-                    'box-border flex min-w-fit w-full px-1.5 text-sm leading-6 h-6',
-                    'break-inherit tab-inherit text-inherit whitespace-inherit',
-                    'px-3',
-                    isHighlight && 'bg-amber-500/30 dark:bg-amber-600/30 border-transparent',
-                    lineProps.className,
-                  )}
-                >
+        <div className={cn('min-w-full w-fit p-2', codesClassName)}>
+          {tokens.map((line, index) => {
+            const lineno: number = index + 1
+            const isHighlight = highlightLinenos.includes(lineno)
+            const lineProps = this.getLineProps({ line })
+            return (
+              <div
+                {...lineProps}
+                key={lineno}
+                className={cn(
+                  'box-border flex min-w-fit w-full text-sm leading-6 h-6',
+                  'break-inherit tab-inherit text-inherit whitespace-inherit',
+                  isHighlight && 'bg-amber-500/30 dark:bg-amber-600/30 border-transparent',
+                  lineProps.className,
+                )}
+              >
+                {showLineno && (
+                  <div
+                    className="flex-none cursor-default select-none text-right pr-2 mr-2 border-r border-gray-300 dark:border-gray-600"
+                    style={{ width: linenoWidth }}
+                  >
+                    <span>{lineno}</span>
+                  </div>
+                )}
+                <div className="flex-auto px-3">
                   {line.map((token, key) => (
                     <span {...this.getTokenProps({ token })} key={key} />
                   ))}
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     )
@@ -148,7 +133,6 @@ export class HighlightContent extends React.Component<IProps, IState> {
       state.themeDict !== nextState.themeDict ||
       state.tokens !== nextState.tokens ||
       props.code !== nextProps.code ||
-      props.codesRef !== nextProps.codesRef ||
       props.collapsed !== nextProps.collapsed ||
       props.language !== nextProps.language ||
       props.maxLines !== nextProps.maxLines ||
@@ -158,10 +142,6 @@ export class HighlightContent extends React.Component<IProps, IState> {
       !isEqual(props.theme, nextProps.theme) ||
       !isEqual(props.highlightLinenos, nextProps.highlightLinenos)
     )
-  }
-
-  public override componentDidMount(): void {
-    this.props.onLinenoWidthChange?.(this.state.linenoWidth)
   }
 
   public override componentDidUpdate(
@@ -186,18 +166,6 @@ export class HighlightContent extends React.Component<IProps, IState> {
         : undefined
       this.setState({ linenoWidth, themeDict: latestThemeDict, tokens: nextTokens })
     }
-
-    if (state.linenoWidth !== prevState.linenoWidth) {
-      this.props.onLinenoWidthChange?.(state.linenoWidth)
-    }
-  }
-
-  protected readonly onScroll = (e: React.UIEvent<HTMLDivElement>): void => {
-    const codesArea = e.target as HTMLTextAreaElement
-    if (codesArea == null) return
-
-    const { scrollTop } = codesArea
-    this.linenoRef.current?.scrollTo?.(0, scrollTop)
   }
 
   protected tokenize(code: string, language: string): IToken[][] {
