@@ -14,11 +14,11 @@ local function get_history_select()
       return eve.string.pad_start(tostring(ordinal), ORDINAL_WIDTH, " ")
     end
 
-    ---@type eve.ux.file_select.IProvider
+    ---@type eve.ux.select_file.IProvider
     local provider = {
       fetch_data = function()
         local cwd = eve.path.cwd() ---@type string
-        local items = {} ---@type eve.ux.file_select.IRawItem[]
+        local items = {} ---@type eve.ux.select_file.IRawItem[]
         local uuid_present = "0" ---@type string
         local width = 0 ---@type integer
 
@@ -30,7 +30,7 @@ local function get_history_select()
             message = "Cannot find window.",
             details = { winnr_source = winnr_sourcefile },
           })
-          ---@type eve.ux.file_select.IData
+          ---@type eve.ux.select_file.IData
           return { cwd = cwd, items = {} }
         else
           local _, present_ordinal = meta.filepath_history:present() ---@type string|nil, integer|nil
@@ -41,7 +41,7 @@ local function get_history_select()
           for filepath, ordinal in meta.filepath_history:iterator_reverse() do
             local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-            ---@type eve.ux.file_select.IRawItem
+            ---@type eve.ux.select_file.IRawItem
             local item = {
               uuid = uuid,
               filepath = filepath,
@@ -61,7 +61,7 @@ local function get_history_select()
           _history_select:change_dimension({ height = #items + 3, width = width + 16 })
         end
 
-        ---@type eve.ux.file_select.IData
+        ---@type eve.ux.select_file.IData
         return { cwd = cwd, items = items, uuid_present = uuid_present }
       end,
       render_item = function(item, match)

@@ -189,7 +189,7 @@ local actions = {
       local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
       for _, matched_item in ipairs(matched_items) do
         local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
-        ---@cast item                   eve.ux.file_select.IItem
+        ---@cast item                   eve.ux.select_file.IItem
 
         if item ~= nil then
           local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
@@ -361,7 +361,7 @@ local main_keymaps = vim.list_slice(common_keymaps)
 ---@type eve.t.IKeymap[]
 local preview_keymaps = vim.list_slice(common_keymaps)
 
----@type eve.ux.file_select.IProvider
+---@type eve.ux.select_file.IProvider
 local provider = {
   fetch_data = function()
     local cwd = state_cwd:snapshot() ---@type string
@@ -383,17 +383,17 @@ local provider = {
     })
     table.sort(filepaths)
 
-    local items = {} ---@type eve.ux.file_select.IRawItem[]
+    local items = {} ---@type eve.ux.select_file.IRawItem[]
     for _, relative_filepath in ipairs(filepaths) do
       local filepath = eve.path.resolve(cwd, relative_filepath) ---@type string
-      ---@type eve.ux.file_select.IRawItem
+      ---@type eve.ux.select_file.IRawItem
       local item = {
         filepath = filepath,
         filepath_relative = relative_filepath,
       }
       table.insert(items, item)
     end
-    local data = { items = items } ---@type eve.ux.file_select.IData
+    local data = { items = items } ---@type eve.ux.select_file.IData
     return data
   end,
 }

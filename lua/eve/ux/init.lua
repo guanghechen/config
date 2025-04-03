@@ -5,11 +5,11 @@ local __mods = {
   SearchInput = "eve.ux.search.input",
   SearchMain = "eve.ux.search.main",
   SearchPreview = "eve.ux.search.preview",
+
   Select = "eve.ux.select",
+  FileSelect = "eve.ux.select_file",
 
-  FileSelect = "eve.ux.file_select",
   Setting = "eve.ux.setting",
-
   Nvimbar = "eve.ux.nvimbar",
   Printer = "eve.ux.printer",
   Terminal = "eve.ux.terminal",

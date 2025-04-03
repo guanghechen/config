@@ -13,23 +13,23 @@
 ---@field public show                   fun(self: eve.ux.IFileSelect): nil
 ---@field public toggle                 fun(self: eve.ux.IFileSelect): nil
 
----@alias eve.ux.file_select.IFetchData
----| fun(force: boolean): eve.ux.file_select.IData
+---@alias eve.ux.select_file.IFetchData
+---| fun(force: boolean): eve.ux.select_file.IData
 
----@alias eve.ux.file_select.IFetchPreviewData
----| fun(item: eve.ux.file_select.IItem): eve.ux.ISearchPreviewData|nil
+---@alias eve.ux.select_file.IFetchPreviewData
+---| fun(item: eve.ux.select_file.IItem): eve.ux.ISearchPreviewData|nil
 
----@alias eve.ux.file_select.IPatchPreviewData
----| fun(item: eve.ux.file_select.IItem, last_item: eve.ux.file_select.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
+---@alias eve.ux.select_file.IPatchPreviewData
+---| fun(item: eve.ux.select_file.IItem, last_item: eve.ux.select_file.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
----@alias eve.ux.file_select.IRenderItem
----| fun(item: eve.ux.file_select.IItem, match: eve.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
+---@alias eve.ux.select_file.IRenderItem
+---| fun(item: eve.ux.select_file.IItem, match: eve.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
 
----@class eve.ux.file_select.IData
----@field public items                  eve.ux.file_select.IRawItem[]
+---@class eve.ux.select_file.IData
+---@field public items                  eve.ux.select_file.IRawItem[]
 ---@field public uuid_present           ?string
 
----@class eve.ux.file_select.IRawItem
+---@class eve.ux.select_file.IRawItem
 ---
 ---@field public filepath               string
 ---@field public filepath_relative      string
@@ -38,7 +38,7 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class eve.ux.file_select.IItemData
+---@class eve.ux.select_file.IItemData
 ---@field public filename               string
 ---@field public filepath               string
 ---@field public filepath_relative      string
@@ -47,21 +47,21 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class eve.ux.file_select.IItem : eve.ux.select.IItem
----@field public data                   eve.ux.file_select.IItemData
+---@class eve.ux.select_file.IItem : eve.ux.select.IItem
+---@field public data                   eve.ux.select_file.IItemData
 
----@class eve.ux.file_select.IProvider
----@field public fetch_data             eve.ux.file_select.IFetchData
----@field public fetch_preview_data     ?eve.ux.file_select.IFetchPreviewData
----@field public patch_preview_data     ?eve.ux.file_select.IPatchPreviewData
----@field public render_item            ?eve.ux.file_select.IRenderItem
+---@class eve.ux.select_file.IProvider
+---@field public fetch_data             eve.ux.select_file.IFetchData
+---@field public fetch_preview_data     ?eve.ux.select_file.IFetchPreviewData
+---@field public patch_preview_data     ?eve.ux.select_file.IPatchPreviewData
+---@field public render_item            ?eve.ux.select_file.IRenderItem
 
 ---@class eve.ux.FileSelect : eve.ux.IFileSelect
 ---@field protected _get_select         fun(): eve.ux.ISelect
 local M = {}
 M.__index = M
 
----@class eve.ux.file_select.IProps
+---@class eve.ux.IFileSelectProps
 ---@field public case_sensitive         ?eve.std.collection.IObservable -- boolean>
 ---@field public cmp                    ?eve.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
@@ -82,14 +82,14 @@ M.__index = M
 ---@field public multiple               ?boolean
 ---@field public permanent              ?boolean
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
----@field public provider               eve.ux.file_select.IProvider
+---@field public provider               eve.ux.select_file.IProvider
 ---@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?eve.ux.search.IOnClose
 ---@field public on_confirm             ?eve.ux.select.IOnConfirm
 ---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
----@param props eve.ux.file_select.IProps
+---@param props eve.ux.IFileSelectProps
 ---@return eve.ux.FileSelect
 function M.new(props)
   local self = setmetatable({}, M)
@@ -113,7 +113,7 @@ function M.new(props)
   local multiple = props.multiple ---@type boolean|nil
   local permanent = props.permanent ---@type boolean|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
-  local provider = props.provider ---@type eve.ux.file_select.IProvider
+  local provider = props.provider ---@type eve.ux.select_file.IProvider
   local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
   local on_close = props.on_close ---@type eve.ux.search.IOnClose|nil
@@ -130,7 +130,7 @@ function M.new(props)
         local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
         for _, matched_item in ipairs(matched_items) do
           local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
-          ---@cast item                 eve.ux.file_select.IItem
+          ---@cast item                 eve.ux.select_file.IItem
 
           if item ~= nil then
             table.insert(quickfix_items, {
@@ -165,20 +165,20 @@ function M.new(props)
   end
 
   ---@type eve.ux.select.IProvider
-  local file_select_provider = {
+  local select_provider = {
     fetch_data = function(force)
-      local raw_data = provider.fetch_data(force) ---@type eve.ux.file_select.IData
-      local raw_items = raw_data.items ---@type eve.ux.file_select.IRawItem[]
+      local raw_data = provider.fetch_data(force) ---@type eve.ux.select_file.IData
+      local raw_items = raw_data.items ---@type eve.ux.select_file.IRawItem[]
       local uuid_present = raw_data.uuid_present ---@type string|nil
 
-      local items = {} ---@type eve.ux.file_select.IItem[]
+      local items = {} ---@type eve.ux.select_file.IItem[]
       for _, raw_item in ipairs(raw_items) do
         local filepath = raw_item.filepath ---@type string
         local filepath_relative = raw_item.filepath_relative ---@type string
         local filename = eve.path.basename(raw_item.filepath)
         local icon, icon_hl = eve.fn.fileicon(filename)
 
-        ---@type eve.ux.file_select.IItem
+        ---@type eve.ux.select_file.IItem
         local item = {
           group = raw_item.group or filepath,
           uuid = raw_item.uuid or filepath,
@@ -243,7 +243,7 @@ function M.new(props)
         multiple = multiple,
         permanent = permanent,
         preview_keymaps = preview_keymaps,
-        provider = file_select_provider,
+        provider = select_provider,
         statusline_items = statusline_items,
         title = title,
         on_close = on_close,
@@ -266,7 +266,7 @@ function M.new(props)
   return self
 end
 
----@param item                          eve.ux.file_select.IItem
+---@param item                          eve.ux.select_file.IItem
 ---@return eve.ux.ISearchPreviewData
 function M.fetch_preview_data(item)
   local filepath = item.data.filepath ---@type string
@@ -294,8 +294,8 @@ function M.fetch_preview_data(item)
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
 end
 
----@param item                          eve.ux.file_select.IItem
----@param last_item                     eve.ux.file_select.IItem
+---@param item                          eve.ux.select_file.IItem
+---@param last_item                     eve.ux.select_file.IItem
 ---@param last_data                     eve.ux.ISearchPreviewData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(item, last_item, last_data)
@@ -310,7 +310,7 @@ function M.patch_preview_data(item, last_item, last_data)
   }
 end
 
----@param item                          eve.ux.file_select.IItem
+---@param item                          eve.ux.select_file.IItem
 ---@param match                         eve.ux.select.IMatchedItem
 ---@return string
 ---@return eve.t.IHighlightInline[]
@@ -417,12 +417,12 @@ end
 
 ---@param cwd                           string
 ---@param filepaths                     string[]
----@return eve.ux.file_select.IRawItem[]
+---@return eve.ux.select_file.IRawItem[]
 function M.make_items_by_filepaths(cwd, filepaths)
-  local items = {} ---@type eve.ux.file_select.IRawItem[]
+  local items = {} ---@type eve.ux.select_file.IRawItem[]
   for _, filepath in ipairs(filepaths) do
     local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
-    ---@type eve.ux.file_select.IRawItem
+    ---@type eve.ux.select_file.IRawItem
     local item = {
       filepath = filepath,
       filepath_relative = relative_filepath,

@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.lsp" ---@type string
 
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@param callback                      fun(ok: boolean, data: eve.ux.file_select.IData|nil): nil
+---@param callback                      fun(ok: boolean, data: eve.ux.select_file.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
   local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
@@ -65,10 +65,10 @@ local function fetch_data(method, additional_params, callback)
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
 
-              local last_item = items[#items] ---@type eve.ux.file_select.IRawItem|nil
+              local last_item = items[#items] ---@type eve.ux.select_file.IRawItem|nil
               if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
                 local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
-                ---@type eve.ux.file_select.IRawItem
+                ---@type eve.ux.select_file.IRawItem
                 local item = {
                   group = filepath,
                   filepath = filepath,
@@ -102,7 +102,7 @@ local function fetch_data(method, additional_params, callback)
     end
 
     if #items == 1 then
-      local item = items[1] ---@type eve.ux.file_select.IRawItem
+      local item = items[1] ---@type eve.ux.select_file.IRawItem
       eve.editor.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true, nil)
       return
@@ -119,10 +119,10 @@ local function fetch_data(method, additional_params, callback)
     end)
 
     local k = 1 ---@type integer
-    local last_item = items[k] ---@type eve.ux.file_select.IRawItem
+    local last_item = items[k] ---@type eve.ux.select_file.IRawItem
     local N = #items ---@type integer
     for i = 2, N, 1 do
-      local item = items[i] ---@type eve.ux.file_select.IRawItem
+      local item = items[i] ---@type eve.ux.select_file.IRawItem
 
       if item.filepath ~= last_item.filepath or item.lnum ~= last_item.lnum then
         k = k + 1
@@ -133,7 +133,7 @@ local function fetch_data(method, additional_params, callback)
     for i = k + 1, N, 1 do
       items[i] = nil
     end
-    local data = { items = items, cwd = cwd } ---@type eve.ux.file_select.IData
+    local data = { items = items, cwd = cwd } ---@type eve.ux.select_file.IData
     callback(true, data)
   end)
 end
@@ -143,7 +143,7 @@ end
 ---@param additional_params             table<string, any>
 ---@return fun(): nil
 local function create_jump_or_list(title, method, additional_params)
-  local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type eve.ux.file_select.IData
+  local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type eve.ux.select_file.IData
 
   local select = nil ---@type eve.ux.IFileSelect|nil
   select = eve.ux.FileSelect.new({

@@ -35,40 +35,40 @@ local function select_files(params)
     end
   end
 
-  local file_select = nil ---@type eve.ux.IFileSelect|nil
-  local last_data = nil ---@type eve.ux.file_select.IData|nil
+  local widget = nil ---@type eve.ux.IFileSelect|nil
+  local last_data = nil ---@type eve.ux.select_file.IData|nil
 
-  ---@type eve.ux.file_select.IProvider
+  ---@type eve.ux.select_file.IProvider
   local provider = {
     fetch_data = function(force)
       if force or last_data == nil then
         local filepaths = fetch_filepaths() ---@type string[]
         table.sort(filepaths)
 
-        local items = eve.ux.FileSelect.make_items_by_filepaths(cwd, filepaths) ---@type eve.ux.file_select.IRawItem[]
-        last_data = { cwd = cwd, items = items } ---@type eve.ux.file_select.IData
+        local items = eve.ux.FileSelect.make_items_by_filepaths(cwd, filepaths) ---@type eve.ux.select_file.IRawItem[]
+        last_data = { cwd = cwd, items = items } ---@type eve.ux.select_file.IData
 
-        if file_select ~= nil then
+        if widget ~= nil then
           local width = 0 ---@type integer
           for _, filepath in ipairs(filepaths) do
             local w = vim.api.nvim_strwidth(filepath) ---@type integer
             width = width < w and w or width
           end
           width = math.max(width + 16, 60)
-          file_select:change_dimension({ height = #filepaths + 3, width = width + 16 })
+          widget:change_dimension({ height = #filepaths + 3, width = width + 16 })
         end
       end
 
       local present = get_present ~= nil and get_present() or nil ---@type string|nil
 
-      ---@type eve.ux.file_select.IData
+      ---@type eve.ux.select_file.IData
       local data = { items = last_data.items, uuid_present = present }
       return data
     end,
   }
 
   ---@type eve.ux.IFileSelect
-  local widget = eve.ux.FileSelect.new({
+  widget = eve.ux.FileSelect.new({
     cmp = eve.ux.Select.cmp_by_score,
     dimension = dimension,
     dirty_on_invisible = true,
