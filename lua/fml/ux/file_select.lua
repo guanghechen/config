@@ -1,11 +1,9 @@
-local Select = require("fml.ux.select")
-
 ---@class fml.ux.IFileSelect : eve.t.ux.IWidget
----@field public change_dimension       fun(self: fml.ux.IFileSelect, dimension: eve.ux.search.IRawDimension): nil
+---@field public change_dimension       fun(self: fml.ux.IFileSelect, dimension: eve.ux.IRawSearchDimension): nil
 ---@field public change_input_title     fun(self: fml.ux.IFileSelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.IFileSelect, title: string): nil
----@field public get_item               fun(self: fml.ux.IFileSelect, uuid: string): fml.ux.select.IItem|nil
----@field public get_matched_items      fun(self: fml.ux.IFileSelect): fml.ux.select.IMatchedItem[]
+---@field public get_item               fun(self: fml.ux.IFileSelect, uuid: string): eve.ux.select.IItem|nil
+---@field public get_matched_items      fun(self: fml.ux.IFileSelect): eve.ux.select.IMatchedItem[]
 ---@field public get_winnr_input        fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: fml.ux.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: fml.ux.IFileSelect): integer|nil
@@ -19,13 +17,13 @@ local Select = require("fml.ux.select")
 ---| fun(force: boolean): fml.ux.file_select.IData
 
 ---@alias fml.ux.file_select.IFetchPreviewData
----| fun(item: fml.ux.file_select.IItem): eve.ux.search.preview.IData|nil
+---| fun(item: fml.ux.file_select.IItem): eve.ux.ISearchPreviewData|nil
 
 ---@alias fml.ux.file_select.IPatchPreviewData
----| fun(item: fml.ux.file_select.IItem, last_item: fml.ux.file_select.IItem, last_data: eve.ux.search.preview.IData): eve.ux.search.preview.IData
+---| fun(item: fml.ux.file_select.IItem, last_item: fml.ux.file_select.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
 ---@alias fml.ux.file_select.IRenderItem
----| fun(item: fml.ux.file_select.IItem, match: fml.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
+---| fun(item: fml.ux.file_select.IItem, match: eve.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
 
 ---@class fml.ux.file_select.IData
 ---@field public items                  fml.ux.file_select.IRawItem[]
@@ -49,7 +47,7 @@ local Select = require("fml.ux.select")
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class fml.ux.file_select.IItem : fml.ux.select.IItem
+---@class fml.ux.file_select.IItem : eve.ux.select.IItem
 ---@field public data                   fml.ux.file_select.IItemData
 
 ---@class fml.ux.file_select.IProvider
@@ -59,16 +57,16 @@ local Select = require("fml.ux.select")
 ---@field public render_item            ?fml.ux.file_select.IRenderItem
 
 ---@class fml.ux.FileSelect : fml.ux.IFileSelect
----@field protected _get_select         fun(): fml.ux.ISelect
+---@field protected _get_select         fun(): eve.ux.ISelect
 local M = {}
 M.__index = M
 
 ---@class fml.ux.file_select.IProps
 ---@field public case_sensitive         ?eve.std.collection.IObservable -- boolean>
----@field public cmp                    ?fml.ux.select.IMatchedItemCmp
+---@field public cmp                    ?eve.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public dimension              ?eve.ux.search.IRawDimension
+---@field public dimension              ?eve.ux.IRawSearchDimension
 ---@field public dirty_on_invisible     ?boolean
 ---@field public preview_enabled        boolean
 ---@field public preview_wrap           ?boolean
@@ -88,7 +86,7 @@ M.__index = M
 ---@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?eve.ux.search.IOnClose
----@field public on_confirm             ?fml.ux.select.IOnConfirm
+---@field public on_confirm             ?eve.ux.select.IOnConfirm
 ---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
 ---@param props fml.ux.file_select.IProps
@@ -97,7 +95,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local case_sensitive = props.case_sensitive ---@type eve.std.collection.IObservable -- boolean>|nil
-  local cmp = props.cmp ---@type fml.ux.select.IMatchedItemCmp|nil
+  local cmp = props.cmp ---@type eve.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
   local dirty_on_invisible = props.dirty_on_invisible ---@type boolean|nil
@@ -119,19 +117,19 @@ function M.new(props)
   local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
   local on_close = props.on_close ---@type eve.ux.search.IOnClose|nil
-  local on_confirm_from_props = props.on_confirm ---@type fml.ux.select.IOnConfirm|nil
+  local on_confirm_from_props = props.on_confirm ---@type eve.ux.select.IOnConfirm|nil
   local on_preview_rendered = props.on_preview_rendered ---@type eve.ux.search.IOnPreviewRendered|nil
 
-  local _select = nil ---@type fml.ux.ISelect|nil
+  local _select = nil ---@type eve.ux.ISelect|nil
 
   if extend_preset_keymaps then
     ---@return nil
     local function send_to_qflist()
       if _select ~= nil then
         local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
-        local matched_items = _select:get_matched_items() ---@type fml.ux.select.IMatchedItem[]
+        local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
         for _, matched_item in ipairs(matched_items) do
-          local item = _select:get_item(matched_item.uuid) ---@type fml.ux.select.IItem|nil
+          local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
           ---@cast item                 fml.ux.file_select.IItem
 
           if item ~= nil then
@@ -166,7 +164,7 @@ function M.new(props)
     preview_keymaps = vim.list_extend(vim.list_slice(common_keymaps), preview_keymaps or {}) ---@type eve.t.IKeymap[]
   end
 
-  ---@type fml.ux.select.IProvider
+  ---@type eve.ux.select.IProvider
   local file_select_provider = {
     fetch_data = function(force)
       local raw_data = provider.fetch_data(force) ---@type fml.ux.file_select.IData
@@ -198,7 +196,7 @@ function M.new(props)
         table.insert(items, item)
       end
 
-      ---@type fml.ux.select.IData
+      ---@type eve.ux.select.IData
       return { items = items, uuid_present = uuid_present }
     end,
     fetch_preview_data = preview_enabled and function(item)
@@ -208,9 +206,9 @@ function M.new(props)
     render_item = provider.render_item or M.render_item,
   }
 
-  local dimension_from_props = props.dimension or {} ---@type eve.ux.search.IRawDimension
+  local dimension_from_props = props.dimension or {} ---@type eve.ux.IRawSearchDimension
 
-  ---@type eve.ux.search.IRawDimension
+  ---@type eve.ux.IRawSearchDimension
   local dimension = {
     height = dimension_from_props.height or 0.8,
     max_height = dimension_from_props.max_height or 1,
@@ -221,10 +219,10 @@ function M.new(props)
     width_preview = dimension_from_props.width_preview or (preview_enabled and 0.45 or 0),
   }
 
-  ---@return fml.ux.ISelect
+  ---@return eve.ux.ISelect
   local function get_select()
     if _select == nil then
-      _select = Select.new({
+      _select = eve.ux.Select.new({
         case_sensitive = case_sensitive,
         cmp = cmp,
         delay_fetch = delay_fetch,
@@ -269,7 +267,7 @@ function M.new(props)
 end
 
 ---@param item                          fml.ux.file_select.IItem
----@return eve.ux.search.preview.IData
+---@return eve.ux.ISearchPreviewData
 function M.fetch_preview_data(item)
   local filepath = item.data.filepath ---@type string
   local filename = item.data.filename ---@type string
@@ -278,7 +276,7 @@ function M.fetch_preview_data(item)
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
     local lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
 
-    ---@type eve.ux.search.preview.IData
+    ---@type eve.ux.ISearchPreviewData
     return {
       lines = lines,
       highlights = {},
@@ -292,16 +290,16 @@ function M.fetch_preview_data(item)
   local lines = { "  Not a text file, cannot preview." } ---@type string[]
   local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-  ---@type eve.ux.search.preview.IData
+  ---@type eve.ux.ISearchPreviewData
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
 end
 
 ---@param item                          fml.ux.file_select.IItem
 ---@param last_item                     fml.ux.file_select.IItem
----@param last_data                     eve.ux.search.preview.IData
+---@param last_data                     eve.ux.ISearchPreviewData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(item, last_item, last_data)
-  ---@type eve.ux.search.preview.IData
+  ---@type eve.ux.ISearchPreviewData
   return {
     lines = last_data.lines,
     highlights = {},
@@ -313,7 +311,7 @@ function M.patch_preview_data(item, last_item, last_data)
 end
 
 ---@param item                          fml.ux.file_select.IItem
----@param match                         fml.ux.select.IMatchedItem
+---@param match                         eve.ux.select.IMatchedItem
 ---@return string
 ---@return eve.t.IHighlightInline[]
 function M.render_item(item, match)
@@ -334,86 +332,86 @@ function M.render_item(item, match)
   return text, highlights
 end
 
----@param dimension                     eve.ux.search.IRawDimension
+---@param dimension                     eve.ux.IRawSearchDimension
 ---@return nil
 function M:change_dimension(dimension)
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:change_dimension(dimension)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:change_input_title(title)
 end
 
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:change_preview_title(title)
 end
 
 ---@return nil
 function M:close()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:close()
 end
 
 ---@return nil
 function M:focus()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:focus()
 end
 
 ---@return boolean
 function M:focused()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   return select:focused()
 end
 
 ---@param uuid                          string
----@return                              fml.ux.select.IItem|nil
+---@return                              eve.ux.select.IItem|nil
 function M:get_item(uuid)
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   return select:get_item(uuid)
 end
 
----@return                              fml.ux.select.IMatchedItem[]
+---@return                              eve.ux.select.IMatchedItem[]
 function M:get_matched_items()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   return select:get_matched_items()
 end
 
 ---@return integer|nil
 function M:get_winnr_main()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   return select:get_winnr_main()
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   return select:get_winnr_input()
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   return select:get_winnr_preview()
 end
 
 ---@return nil
 function M:mark_data_dirty()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:mark_data_dirty()
 end
 
 ---@param uuid                          string
 ---@return nil
 function M:mark_item_deleted(uuid)
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:mark_item_deleted(uuid)
 end
 
@@ -436,20 +434,20 @@ end
 
 ---@return nil
 function M:show()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:show()
 end
 
 ---@return nil
 function M:toggle()
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:toggle()
 end
 
 ---@param text                          string
 ---@return nil
 function M:reset_input(text)
-  local select = self._get_select() ---@type fml.ux.ISelect
+  local select = self._get_select() ---@type eve.ux.ISelect
   select:reset_input(text)
 end
 

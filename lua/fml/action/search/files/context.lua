@@ -106,7 +106,7 @@ eve.state.select.search_file_scope:subscribe(
   true
 )
 
-local _search = nil ---@type eve.ux.search.ISearch|nil
+local _search = nil ---@type eve.ux.ISearch|nil
 
 ---@class fml.action.search.files.context
 local M = {}
@@ -246,7 +246,7 @@ function M.edit_config()
   })
 end
 
----@return eve.ux.search.ISearch
+---@return eve.ux.ISearch
 function M.get_search()
   if _search == nil then
     local api = require("fml.action.search.files.api")
@@ -255,7 +255,7 @@ function M.get_search()
     local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
     local title = gen_title() ---@type string
 
-    ---@type eve.ux.search.IContext
+    ---@type eve.ux.ISearchContext
     local context = eve.ux.SearchContext.new({
       delay_fetch = 512,
       dimension = {
@@ -342,7 +342,7 @@ end
 
 ---@return nil
 function M.replace_file()
-  local search = M.get_search() ---@type eve.ux.search.ISearch
+  local search = M.get_search() ---@type eve.ux.ISearch
   local item = search.context:get_current() ---@type eve.ux.search.IItem|nil
   if item ~= nil then
     local api = require("fml.action.search.files.api")

@@ -10,7 +10,7 @@ local function focus()
   end
 
   local search_context = require("fml.action.search.files.context")
-  local search = search_context.get_search() ---@type eve.ux.search.ISearch
+  local search = search_context.get_search() ---@type eve.ux.ISearch
   search:show()
 end
 

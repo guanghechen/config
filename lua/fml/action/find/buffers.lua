@@ -1,5 +1,3 @@
-local Select = require("fml.ux.select")
-
 ---@class fml.action.find.buffers.IItemData
 ---@field public bufnr                  integer
 ---@field public buftype                string
@@ -10,7 +8,7 @@ local Select = require("fml.ux.select")
 ---@field public icon_hl                string
 
 local scopes = vim.list_slice(eve.state.select.find_buffer_scopes) ---@type eve.e.FindBufferScope[]
-local _select = nil ---@type fml.ux.ISelect|nil
+local _select = nil ---@type eve.ux.ISelect|nil
 
 ---@type eve.t.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
@@ -87,7 +85,7 @@ local main_keymaps = {
   },
 }
 
----@type fml.ux.select.IProvider
+---@type eve.ux.select.IProvider
 local provider = {
   fetch_data = function()
     local cwd = eve.path.cwd() ---@type string
@@ -122,7 +120,7 @@ local provider = {
       return true
     end
 
-    local items = {} ---@type fml.ux.select.IItem[]
+    local items = {} ---@type eve.ux.select.IItem[]
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
       if should_show(bufnr) then
@@ -161,7 +159,7 @@ local provider = {
       return a.data.bufnr < b.data.bufnr
     end)
 
-    ---@type fml.ux.select.IData
+    ---@type eve.ux.select.IData
     return { items = items }
   end,
   render_item = function(item, match)
@@ -185,8 +183,8 @@ local provider = {
   end,
 }
 
----@type fml.ux.ISelect
-local select = Select.new({
+---@type eve.ux.ISelect
+local select = eve.ux.Select.new({
   dimension = {
     height = 0.8,
     max_height = 1,

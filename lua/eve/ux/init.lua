@@ -7,6 +7,7 @@ local __mods = {
   SearchInput = "eve.ux.search.input",
   SearchMain = "eve.ux.search.main",
   SearchPreview = "eve.ux.search.preview",
+  Select = "eve.ux.select",
   Setting = "eve.ux.setting",
   Terminal = "eve.ux.terminal",
   Textarea = "eve.ux.textarea",
@@ -18,11 +19,12 @@ local __mods = {
 ---@field public Nvimbar                eve.ux.Nvimbar
 ---@field public Printer                eve.ux.Printer
 ---@field public Setting                eve.ux.Setting
----@field public Search                 eve.ux.search.Search
----@field public SearchContext          eve.ux.search.Context
----@field public SearchInput            eve.ux.search.Input
----@field public SearchMain             eve.ux.search.Main
----@field public SearchPreview          eve.ux.search.Preview
+---@field public Search                 eve.ux.Search
+---@field public SearchContext          eve.ux.SearchContext
+---@field public SearchInput            eve.ux.SearchInput
+---@field public SearchMain             eve.ux.SearchMain
+---@field public SearchPreview          eve.ux.SearchPreview
+---@field public Select                 eve.ux.Select
 ---@field public Terminal               eve.ux.Terminal
 ---@field public Textarea               eve.ux.Textarea
 local M = setmetatable({ __mods = __mods }, {

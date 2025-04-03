@@ -1,29 +1,29 @@
----@class eve.ux.search.IMain
----@field public context                eve.ux.search.IContext
----@field public create_buf_as_needed   fun(self: eve.ux.search.IMain): integer
----@field public destroy                fun(self: eve.ux.search.IMain): nil
----@field public render                 fun(self: eve.ux.search.IMain): nil
+---@class eve.ux.ISearchMain
+---@field public context                eve.ux.ISearchContext
+---@field public create_buf_as_needed   fun(self: eve.ux.ISearchMain): integer
+---@field public destroy                fun(self: eve.ux.ISearchMain): nil
+---@field public render                 fun(self: eve.ux.ISearchMain): nil
 
----@class eve.ux.search.Main : eve.ux.search.IMain
+---@class eve.ux.SearchMain : eve.ux.ISearchMain
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _render_scheduler   eve.std.collection.IScheduler
 local M = {}
 M.__index = M
 
----@class eve.ux.search.main.IProps
+---@class eve.ux.ISearchMainProps
 ---@field public delay_render           integer
 ---@field public keymaps                eve.t.IKeymap[]
----@field public context                eve.ux.search.IContext
+---@field public context                eve.ux.ISearchContext
 ---@field public on_rendered            ?eve.ux.search.IOnMainRendered
 
----@param props                         eve.ux.search.main.IProps
----@return eve.ux.search.Main
+---@param props                         eve.ux.ISearchMainProps
+---@return eve.ux.SearchMain
 function M.new(props)
   local self = setmetatable({}, M)
 
   local delay_render = props.delay_render ---@type integer
   local keymaps = props.keymaps ---@type eve.t.IKeymap[]
-  local context = props.context ---@type eve.ux.search.IContext
+  local context = props.context ---@type eve.ux.ISearchContext
   local on_rendered = props.on_rendered ---@type eve.ux.search.IOnMainRendered|nil
 
   local _last_items = nil ---@type eve.ux.search.IItem[]|nil
@@ -112,7 +112,7 @@ end
 ---@return integer
 ---@return boolean
 function M:create_buf_as_needed()
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
   if context.bufnr_main ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_main) then
     return context.bufnr_main, false
   end
@@ -136,7 +136,7 @@ end
 
 ---@return nil
 function M:destroy()
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
   local bufnr = context.bufnr_main ---@type integer|nil
   context.bufnr_main = nil
 

@@ -159,9 +159,9 @@ function M.prompt()
     multiple = false,
     title = prompt_actions.prompt,
     fetch_items = function()
-      local select_items = {} ---@type fml.ux.select.IItem[]
+      local select_items = {} ---@type eve.ux.select.IItem[]
       for name, action in pairs(prompt_actions.actions) do
-        ---@type fml.ux.select.IItem
+        ---@type eve.ux.select.IItem
         local item = {
           uuid = name,
           text = name,
@@ -178,7 +178,7 @@ function M.prompt()
       local data = item.data ---@type ghc.action.copilot_chat.prompt_actions.IItem
       local lines = vim.split(data.prompt or "", "\n", { plain = true }) ---@type string[]
 
-      ---@type eve.ux.search.preview.IData
+      ---@type eve.ux.ISearchPreviewData
       local result = {
         title = "Prompt",
         lines = lines,

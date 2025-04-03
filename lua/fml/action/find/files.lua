@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.find" ---@type string
 
 local FileSelect = require("fml.ux.file_select")
-local Select = require("fml.ux.select")
 
 local observable_truthy = eve.std.Observable.from_value(true)
 local _select = nil ---@type fml.ux.IFileSelect|nil
@@ -189,9 +188,9 @@ local actions = {
       local cwd = eve.path.cwd() ---@type string
       local select_cwd = state_cwd:snapshot() ---@type string
       local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
-      local matched_items = _select:get_matched_items() ---@type fml.ux.select.IMatchedItem[]
+      local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
       for _, matched_item in ipairs(matched_items) do
-        local item = _select:get_item(matched_item.uuid) ---@type fml.ux.select.IItem|nil
+        local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
         ---@cast item                   fml.ux.file_select.IItem
 
         if item ~= nil then
@@ -406,7 +405,7 @@ local states = eve.state.select.find_file ---@type eve.state.select.item.state
 ---@type fml.ux.IFileSelect
 local select = FileSelect.new({
   case_sensitive = states.flag_case_sensitive,
-  cmp = Select.cmp_by_score,
+  cmp = eve.ux.Select.cmp_by_score,
   dirty_on_invisible = false,
   preview_enabled = true,
   extend_preset_keymaps = false,

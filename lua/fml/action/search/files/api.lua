@@ -539,12 +539,12 @@ function M.fetch_data(input_text, force, callback)
 end
 
 ---@param search_item                   eve.ux.search.IItem
----@return eve.ux.search.preview.IData
+---@return eve.ux.ISearchPreviewData
 function M.fetch_preview_data(search_item)
   local preview_data, lnum, col = M.calc_preview_data(search_item.uuid) ---@type fml.action.search.files.IPreviewData
   _last_preview_data = preview_data
 
-  ---@type eve.ux.search.preview.IData
+  ---@type eve.ux.ISearchPreviewData
   return {
     filetype = preview_data.filetype,
     title = preview_data.title,
@@ -618,7 +618,7 @@ end
 
 ---@param search_item                   eve.ux.search.IItem
 ---@param last_search_item              eve.ux.search.IItem
----@param last_data                     eve.ux.search.preview.IData
+---@param last_data                     eve.ux.ISearchPreviewData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(search_item, last_search_item, last_data)
   local item = _item_map[search_item.uuid] ---@type fml.action.search.files.IItem|nil
@@ -675,7 +675,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
     end
   end
 
-  ---@type eve.ux.search.preview.IData
+  ---@type eve.ux.ISearchPreviewData
   local data = {
     lines = last_data.lines,
     highlights = highlights or last_data.highlights,

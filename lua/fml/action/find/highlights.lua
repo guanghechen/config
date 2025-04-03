@@ -1,13 +1,11 @@
-local Select = require("fml.ux.select")
-
----@class fml.action.find.highlights.IItem : fml.ux.select.IItem
+---@class fml.action.find.highlights.IItem : eve.ux.select.IItem
 ---@field public data                   integer
 
 local _hlnames ---@type string[]|nil
 local _hlgroups ---@type table<string, vim.api.keyset.get_hl_info>
-local _preview_data ---@type eve.ux.search.preview.IData|nil
+local _preview_data ---@type eve.ux.ISearchPreviewData|nil
 
----@type fml.ux.select.IProvider
+---@type eve.ux.select.IProvider
 local provider = {
   fetch_data = function(force)
     if force or _hlnames == nil then
@@ -23,13 +21,13 @@ local provider = {
       _preview_data = nil
     end
 
-    local items = {} ---@type fml.ux.select.IItem[]
+    local items = {} ---@type eve.ux.select.IItem[]
     for lnum, hlname in ipairs(_hlnames) do
       ---@type fml.action.find.highlights.IItem
       local item = { group = "H", uuid = hlname, text = hlname, data = lnum }
       table.insert(items, item)
     end
-    ---@type fml.ux.select.IData
+    ---@type eve.ux.select.IData
     return { items = items }
   end,
   fetch_preview_data = function(item)
@@ -82,7 +80,7 @@ local provider = {
         table.insert(highlights, highlight)
       end
 
-      ---@type eve.ux.search.preview.IData
+      ---@type eve.ux.ISearchPreviewData
       _preview_data = {
         lines = lines,
         highlights = highlights,
@@ -95,7 +93,7 @@ local provider = {
     return _preview_data
   end,
   patch_preview_data = function(item, _, last_data)
-    ---@type eve.ux.search.preview.IData
+    ---@type eve.ux.ISearchPreviewData
     local data = {
       lines = last_data.lines,
       highlights = last_data.highlights,
@@ -120,8 +118,8 @@ local provider = {
   end,
 }
 
----@type fml.ux.ISelect
-local select = Select.new({
+---@type eve.ux.ISelect
+local select = eve.ux.Select.new({
   dimension = {
     height = 0.8,
     max_height = 1,
@@ -139,7 +137,7 @@ local select = Select.new({
   on_confirm = function(widget, items)
     if #items == 1 then
       widget:hide()
-      local item = items[1] ---@type fml.ux.select.IItem
+      local item = items[1] ---@type eve.ux.select.IItem
       vim.fn.setreg("+", item.text)
     end
   end,

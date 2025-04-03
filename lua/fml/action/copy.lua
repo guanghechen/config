@@ -70,7 +70,7 @@ function M.copy_filepath(arg)
         return "relative"
       end,
       fetch_items = function()
-        local items = {} ---@type fml.ux.select.IItem[]
+        local items = {} ---@type eve.ux.select.IItem[]
         for _, candidate in ipairs(scopes) do
           table.insert(items, { uuid = candidate, text = candidate })
         end
@@ -79,7 +79,7 @@ function M.copy_filepath(arg)
       on_confirm = function(widget, items)
         if #items == 1 then
           widget:hide()
-          local item = items[1] ---@type fml.ux.select.IItem
+          local item = items[1] ---@type eve.ux.select.IItem
           local candidate = item.uuid ---@type string
           copy_current_filepath(candidate, filepath)
         end

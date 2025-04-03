@@ -36,24 +36,24 @@ local borders = {
   -- stylua: ignore end
 }
 
----@class eve.ux.search.ISearch : eve.t.ux.IWidget
----@field public context                eve.ux.search.IContext
----@field public change_input_title     fun(self: eve.ux.search.ISearch, title: string): nil
----@field public change_preview_title   fun(self: eve.ux.search.ISearch, title: string): nil
----@field public get_item_selected      fun(self: eve.ux.search.ISearch): eve.ux.search.IItem|nil, integer, string|nil
----@field public get_winnr_input        fun(self: eve.ux.search.ISearch): integer|nil
----@field public get_winnr_main         fun(self: eve.ux.search.ISearch): integer|nil
----@field public get_winnr_preview      fun(self: eve.ux.search.ISearch): integer|nil
----@field public mark_item_deleted      fun(self: eve.ux.search.ISearch, uuid: string): nil
----@field public reset_input            fun(self: eve.ux.search.ISearch, text: string): nil
----@field public show                   fun(self: eve.ux.search.ISearch): nil
----@field public toggle                 fun(self: eve.ux.search.ISearch): nil
+---@class eve.ux.ISearch : eve.t.ux.IWidget
+---@field public context                eve.ux.ISearchContext
+---@field public change_input_title     fun(self: eve.ux.ISearch, title: string): nil
+---@field public change_preview_title   fun(self: eve.ux.ISearch, title: string): nil
+---@field public get_item_selected      fun(self: eve.ux.ISearch): eve.ux.search.IItem|nil, integer, string|nil
+---@field public get_winnr_input        fun(self: eve.ux.ISearch): integer|nil
+---@field public get_winnr_main         fun(self: eve.ux.ISearch): integer|nil
+---@field public get_winnr_preview      fun(self: eve.ux.ISearch): integer|nil
+---@field public mark_item_deleted      fun(self: eve.ux.ISearch, uuid: string): nil
+---@field public reset_input            fun(self: eve.ux.ISearch, text: string): nil
+---@field public show                   fun(self: eve.ux.ISearch): nil
+---@field public toggle                 fun(self: eve.ux.ISearch): nil
 
 ---@alias eve.ux.search.IOnClose
 ---| fun(): nil
 
 ---@alias eve.ux.search.IOnConfirm
----| fun(widget: eve.ux.search.ISearch, items: eve.ux.search.IItem[]): nil
+---| fun(widget: eve.ux.ISearch, items: eve.ux.search.IItem[]): nil
 
 ---@alias eve.ux.search.IOnInvisible
 ---| fun(): nil
@@ -68,10 +68,10 @@ local borders = {
 ---| fun(): nil
 
 ---@alias eve.ux.search.IFetchPreviewData
----| fun(item: eve.ux.search.IItem): eve.ux.search.preview.IData|nil
+---| fun(item: eve.ux.search.IItem): eve.ux.ISearchPreviewData|nil
 
 ---@alias eve.ux.search.IPatchPreviewData
----| fun(item: eve.ux.search.IItem, last_item: eve.ux.search.IItem, last_data: eve.ux.search.preview.IData): eve.ux.search.preview.IData
+---| fun(item: eve.ux.search.IItem, last_item: eve.ux.search.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
 ---@alias eve.ux.search.IFetchDataCallback
 ---| fun(ok: true, data: eve.ux.search.IData|nil): nil
@@ -93,7 +93,7 @@ local borders = {
 ---@field public highlights             eve.t.IHighlightInline[]
 
 ---@class eve.ux.search.IProps
----@field public context                eve.ux.search.IContext
+---@field public context                eve.ux.ISearchContext
 ---@field public delay_render           ?integer
 ---@field public fetch_preview_data     ?eve.ux.search.IFetchPreviewData
 ---@field public input_keymaps          ?eve.t.IKeymap[]
@@ -106,22 +106,22 @@ local borders = {
 ---@field public on_confirm             eve.ux.search.IOnConfirm
 ---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
----@class eve.ux.search.Search : eve.ux.search.ISearch
----@field protected _input              eve.ux.search.IInput
----@field protected _main               eve.ux.search.IMain
----@field protected _preview            eve.ux.search.IPreview|nil
+---@class eve.ux.Search : eve.ux.ISearch
+---@field protected _input              eve.ux.ISearchInput
+---@field protected _main               eve.ux.ISearchMain
+---@field protected _preview            eve.ux.ISearchPreview|nil
 ---@field protected _on_close           ?eve.ux.search.IOnClose
 ---@field protected _on_invisible       ?eve.ux.search.IOnInvisible
 local M = {}
 M.__index = M
 
 ---@param props                         eve.ux.search.IProps
----@return eve.ux.search.Search
+---@return eve.ux.Search
 function M.new(props)
   local self = setmetatable({}, M)
 
   local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
-  local context = props.context ---@type eve.ux.search.IContext
+  local context = props.context ---@type eve.ux.ISearchContext
   local common_keymaps = eve.state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
@@ -511,13 +511,13 @@ function M.new(props)
     vim.list_extend(input_keymaps, additional_input_keymaps)
   end
 
-  ---@type eve.ux.search.IInput
+  ---@type eve.ux.ISearchInput
   local input = eve.ux.SearchInput.new({
     context = context,
     keymaps = input_keymaps,
   })
 
-  ---@type eve.ux.search.IMain
+  ---@type eve.ux.ISearchMain
   local main = eve.ux.SearchMain.new({
     context = context,
     keymaps = main_keymaps,
@@ -525,7 +525,7 @@ function M.new(props)
     delay_render = delay_render,
   })
 
-  ---@type eve.ux.search.IPreview|nil
+  ---@type eve.ux.ISearchPreview|nil
   local preview = nil
   if enable_preview and props.fetch_preview_data then
     preview = eve.ux.SearchPreview.new({
@@ -676,7 +676,7 @@ end
 
 ---@return nil
 function M:sync_main_cursor()
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
   local winnr_main = context.winnr_main ---@type integer|nil
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     local lnum = context:place_lnum_sign() ---@type integer|nil
@@ -688,8 +688,8 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local context = self.context ---@type eve.ux.search.IContext
-  local dimension = context.dimension ---@type eve.ux.search.IDimension
+  local context = self.context ---@type eve.ux.ISearchContext
+  local dimension = context.dimension ---@type eve.ux.ISearchDimension
 
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
@@ -913,7 +913,7 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
   context.cfg_input_title = title
   local winnr = context.winnr_input ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -927,7 +927,7 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
   context.cfg_preview_title = title
   local winnr = context.winnr_preview ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -940,7 +940,7 @@ end
 
 ---@return nil
 function M:close()
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
 
   self:hide()
 
@@ -980,7 +980,7 @@ end
 
 ---@return boolean
 function M:focused()
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   return winnr_cur == context.winnr_input or winnr_cur == context.winnr_main or winnr_cur == context.winnr_preview
 end
@@ -1008,7 +1008,7 @@ end
 
 ---@return nil
 function M:hide()
-  local context = self.context ---@type eve.ux.search.IContext
+  local context = self.context ---@type eve.ux.ISearchContext
   local winnr_input = context.winnr_input ---@type integer|nil
   local winnr_main = context.winnr_main ---@type integer|nil
   local winnr_preview = context.winnr_preview ---@type integer|nil

@@ -1,7 +1,6 @@
 local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
 local clp = require("eve.constant.lang.python")
-local Select = require("fml.ux.select")
 
 ---@param folder                        string
 ---@return string|nil
@@ -23,15 +22,15 @@ end
 ---@field public icon                   string
 ---@field public path                   string
 
----@class fml.action.lsp.python_venv.IItem : fml.ux.select.IItem
+---@class fml.action.lsp.python_venv.IItem : eve.ux.select.IItem
 ---@field public data                   fml.action.lsp.python_venv.IItemData
 
-local _select ---@type fml.ux.ISelect|nil
+local _select ---@type eve.ux.ISelect|nil
 
----@return fml.ux.ISelect
+---@return eve.ux.ISelect
 local function get_select()
   if _select == nil then
-    ---@type fml.ux.select.IProvider
+    ---@type eve.ux.select.IProvider
     local provider = {
       fetch_data = function()
         local items = {} ---@type fml.action.lsp.python_venv.IItem[]
@@ -249,13 +248,13 @@ local function get_select()
           end
         end
 
-        ---@type fml.ux.select.IData
+        ---@type eve.ux.select.IData
         return { items = items, uuid_present = eve.state.lsp.python_venv_path:snapshot() }
       end,
     }
 
-    ---@type fml.ux.ISelect
-    _select = Select.new({
+    ---@type eve.ux.ISelect
+    _select = eve.ux.Select.new({
       dimension = {
         height = 0.8,
         max_height = 1,

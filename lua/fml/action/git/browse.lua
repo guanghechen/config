@@ -274,9 +274,9 @@ function M.browse()
     multiple = false,
     title = "Select remote to browse",
     fetch_items = function()
-      local items = {} ---@type fml.ux.select.IItem[]
+      local items = {} ---@type eve.ux.select.IItem[]
       for _, remote in ipairs(remotes) do
-        local item = {uuid = remote.url, text = remote.name .. " | " .. remote.url, data = remote }---@type fml.ux.select.IItem
+        local item = {uuid = remote.url, text = remote.name .. " | " .. remote.url, data = remote }---@type eve.ux.select.IItem
         table.insert(items, item)
       end
       return items
@@ -284,7 +284,7 @@ function M.browse()
     on_confirm = function(widget, items)
       if #items == 1 then
         widget:close()
-        local item = items[1] ---@type fml.ux.select.IItem
+        local item = items[1] ---@type eve.ux.select.IItem
         open_remote(item.data)
       end
     end

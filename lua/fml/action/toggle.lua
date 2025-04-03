@@ -101,7 +101,7 @@ local group_items = {
             return fileformat_cur ---@type string
           end,
           fetch_items = function()
-            ---@type fml.ux.select.IItem[]
+            ---@type eve.ux.select.IItem[]
             local items = {
               { uuid = "dos", text = "dos  (CRLF)" },
               { uuid = "mac", text = "mac  (CR)" },
@@ -419,7 +419,7 @@ function M.list(arg)
       },
       multiple = false,
       fetch_items = function()
-        local items = {} ---@type fml.ux.select.IItem[]
+        local items = {} ---@type eve.ux.select.IItem[]
         for _, flag in ipairs(toggle_item_names) do
           local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
           items[#items + 1] = { uuid = flag, text = item.title, data = item }
@@ -456,7 +456,7 @@ function M.list(arg)
       end,
       on_confirm = function(widget, items)
         if #items == 1 then
-          local item = items[1] ---@type fml.ux.select.IItem
+          local item = items[1] ---@type eve.ux.select.IItem
           widget:close()
           item.data.action()
         end
@@ -486,7 +486,7 @@ function M.toggle_ai_provider(arg)
         return eve.state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
       end,
       fetch_items = function()
-        local items = {} ---@type fml.ux.select.IItem[]
+        local items = {} ---@type eve.ux.select.IItem[]
         for _, flight in ipairs(ai_providers) do
           items[#items + 1] = { uuid = flight, text = flight }
         end
@@ -502,7 +502,7 @@ function M.toggle_ai_provider(arg)
       end,
       on_confirm = function(widget, items)
         if #items == 1 then
-          local item = items[1] ---@type fml.ux.select.IItem
+          local item = items[1] ---@type eve.ux.select.IItem
           widget:close()
           eve.state.flight.ai_provider:next(item.uuid)
         end
@@ -588,7 +588,7 @@ function M.toggle_theme(arg)
         return theme
       end,
       fetch_items = function()
-        local items = {} ---@type fml.ux.select.IItem[]
+        local items = {} ---@type eve.ux.select.IItem[]
         for _, theme in ipairs(themes) do
           items[#items + 1] = { uuid = theme, text = theme }
         end
@@ -596,7 +596,7 @@ function M.toggle_theme(arg)
       end,
       on_confirm = function(widget, items)
         if #items == 1 then
-          local item = items[1] ---@type fml.ux.select.IItem
+          local item = items[1] ---@type eve.ux.select.IItem
           widget:close()
           apply_theme(item.uuid)
         end

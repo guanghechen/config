@@ -1,5 +1,3 @@
-local Select = require("fml.ux.select")
-
 ---@class fml.dressing.select.IOptions
 ---@field public prompt                 ?string
 ---@field public format_item            ?fun(item): string
@@ -9,7 +7,7 @@ local Select = require("fml.ux.select")
 ---@field public original_item          any
 
 ---@alias fml.dressing.select.IProvider
----| fun(items: any[], opts: fml.dressing.select.IOptions): fml.ux.select.IProvider, integer
+---| fun(items: any[], opts: fml.dressing.select.IOptions): eve.ux.select.IProvider, integer
 
 local codeaction_provider = require("fml.dressing.select.provider.codeaction")
 local fallback_provider = require("fml.dressing.select.provider.fallback")
@@ -38,14 +36,14 @@ function M.select(items, opts, on_choice)
   local provider, width = create_provider(items, opts)
   local confirmed = false ---@type boolean
 
-  local _selector = nil ---@type fml.ux.ISelect|nil
+  local _selector = nil ---@type eve.ux.ISelect|nil
   local winnr = vim.api.nvim_get_current_win()
   local context = states_by_title[title] ---@type eve.state.select.item.state|nil
 
   title = (#title > 1 and title:sub(1, 1) ~= " ") and " " .. title .. " " or title ---@type string
 
-  ---@type fml.ux.ISelect
-  _selector = Select.new({
+  ---@type eve.ux.ISelect
+  _selector = eve.ux.Select.new({
     dimension = {
       height = #items + 3,
       max_height = 0.8,
@@ -74,7 +72,7 @@ function M.select(items, opts, on_choice)
     on_confirm = function(widget, items_selected)
       if #items_selected == 1 then
         confirmed = true
-        local item = items_selected[1] ---@type fml.ux.select.IItem
+        local item = items_selected[1] ---@type eve.ux.select.IItem
         on_choice(item.data.original_item, tonumber(item.uuid))
 
         widget:close()

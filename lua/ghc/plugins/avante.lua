@@ -1,5 +1,3 @@
-local Select = require("fml.ux.select")
-
 local AI_PROVIDER_MAP = {
   aoai = "azure",
   copilot = "copilot",
@@ -14,11 +12,11 @@ local AI_PROVIDER_MAP = {
 ---@return fun(params: ghc.plugins.avante.file_selector.IParams): nil
 local function get_file_selector()
   local context = eve.state.select.select_avante
-  local _on_choice = eve.std.fn.noop ---@type fun(items: fml.ux.select.IItem[] | nil): nil
+  local _on_choice = eve.std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
   local _filepaths = {} ---@type string[]
   local _winnr = nil ---@type integer|nil
   local _confirmed = false ---@type boolean
-  local _select ---@type fml.ux.Select
+  local _select ---@type eve.ux.Select
 
   eve.state.observe({
     eve.state.select.select_avante.excludes,
@@ -109,7 +107,7 @@ local function get_file_selector()
     },
   }
 
-  _select = Select.new({
+  _select = eve.ux.Select.new({
     dimension = {
       height = 3,
       max_height = 0.8,
@@ -132,7 +130,7 @@ local function get_file_selector()
     provider = {
       fetch_data = function()
         local width = 0 ---@type integer
-        local items = {} ---@type fml.ux.select.IItem[]
+        local items = {} ---@type eve.ux.select.IItem[]
         local cwd = eve.path.cwd() ---@type string
         for index, filepath in ipairs(_filepaths) do
           local uuid = tostring(index) ---@type string
@@ -149,7 +147,7 @@ local function get_file_selector()
           end
 
           local data = { filepath = filepath, icon = icon, icon_hl = icon_hl }
-          local select_item = { uuid = uuid, text = text, data = data } ---@type fml.ux.select.IItem
+          local select_item = { uuid = uuid, text = text, data = data } ---@type eve.ux.select.IItem
           width = width < #text and #text or width ---@type integer
           items[#items + 1] = select_item
         end

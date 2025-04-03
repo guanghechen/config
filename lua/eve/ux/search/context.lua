@@ -1,6 +1,6 @@
 local __module_name__ = "eve.ux.search.context" ---@type string
 
----@class eve.ux.search.IRawDimension
+---@class eve.ux.IRawSearchDimension
 ---@field public height                 ?number
 ---@field public max_width              ?number
 ---@field public max_height             ?number
@@ -9,7 +9,7 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public width                  ?number
 ---@field public width_preview          ?number
 
----@class eve.ux.search.IDimension
+---@class eve.ux.ISearchDimension
 ---@field public height                 ?number
 ---@field public max_width              number
 ---@field public max_height             number
@@ -18,7 +18,7 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public width                  ?number
 ---@field public width_preview          ?number
 
----@class eve.ux.search.IContext
+---@class eve.ux.ISearchContext
 ---@field public dirtier_dimension      eve.std.collection.IDirtier
 ---@field public dirtier_data           eve.std.collection.IDirtier
 ---@field public dirtier_data_cache     eve.std.collection.IDirtier
@@ -48,7 +48,7 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public focused_pane_left      "input"|"main"
 ---@field public focused_pane_right     "preview"
 ---
----@field public dimension              eve.ux.search.IDimension
+---@field public dimension              eve.ux.ISearchDimension
 ---@field public enable_multiline_input boolean
 ---@field public item_max_width         integer
 ---@field public item_uuid_present      string|nil
@@ -59,42 +59,42 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public permanent              boolean
 ---@field public uuid                   string
 ---
----@field public focus_left             fun(self: eve.ux.search.IContext): nil
----@field public focus_right            fun(self: eve.ux.search.IContext): nil
----@field public focus_input            fun(self: eve.ux.search.IContext): nil
----@field public focus_main             fun(self: eve.ux.search.IContext): nil
----@field public focus_preview          fun(self: eve.ux.search.IContext): nil
+---@field public focus_left             fun(self: eve.ux.ISearchContext): nil
+---@field public focus_right            fun(self: eve.ux.ISearchContext): nil
+---@field public focus_input            fun(self: eve.ux.ISearchContext): nil
+---@field public focus_main             fun(self: eve.ux.ISearchContext): nil
+---@field public focus_preview          fun(self: eve.ux.ISearchContext): nil
 ---
----@field public change_dimension       fun(self: eve.ux.search.IContext, dimension: eve.ux.search.IRawDimension): nil
----@field public get_current            fun(self: eve.ux.search.IContext): eve.ux.search.IItem|nil, integer
----@field public get_current_lnum       fun(self: eve.ux.search.IContext): integer
----@field public get_current_uuid       fun(self: eve.ux.search.IContext): string|nil
----@field public get_selected_items     fun(self: eve.ux.search.IContext): eve.ux.search.IItem[]
----@field public has_item_deleted       fun(self: eve.ux.search.IContext, uuid: string): boolean
----@field public set_current            fun(self: eve.ux.search.IContext, lnum: integer): integer
----@field public locate                 fun(self: eve.ux.search.IContext, lnum: integer): integer
----@field public mark_all_items_deleted fun(self: eve.ux.search.IContext): nil
----@field public moveup                 fun(self: eve.ux.search.IContext): integer
----@field public movedown               fun(self: eve.ux.search.IContext): integer
----@field public place_lnum_sign        fun(self: eve.ux.search.IContext): integer|nil
----@field public place_selected_sign    fun(self: eve.ux.search.IContext): nil
----@field public reset_selected_items   fun(self: eve.ux.search.IContext): nil
----@field public set_item_deleted       fun(self: eve.ux.search.IContext, uuid: string): nil
----@field public set_item_selected      fun(self: eve.ux.search.IContext, uuid: string, selected: boolean): nil
----@field public show_state             fun(self: eve.ux.search.IContext): nil
----@field public toggle_item_selected   fun(self: eve.ux.search.IContext, lnum: integer): nil
----@field public toggle_items_selected  fun(self: eve.ux.search.IContext, lnums: integer[]): nil
+---@field public change_dimension       fun(self: eve.ux.ISearchContext, dimension: eve.ux.IRawSearchDimension): nil
+---@field public get_current            fun(self: eve.ux.ISearchContext): eve.ux.search.IItem|nil, integer
+---@field public get_current_lnum       fun(self: eve.ux.ISearchContext): integer
+---@field public get_current_uuid       fun(self: eve.ux.ISearchContext): string|nil
+---@field public get_selected_items     fun(self: eve.ux.ISearchContext): eve.ux.search.IItem[]
+---@field public has_item_deleted       fun(self: eve.ux.ISearchContext, uuid: string): boolean
+---@field public set_current            fun(self: eve.ux.ISearchContext, lnum: integer): integer
+---@field public locate                 fun(self: eve.ux.ISearchContext, lnum: integer): integer
+---@field public mark_all_items_deleted fun(self: eve.ux.ISearchContext): nil
+---@field public moveup                 fun(self: eve.ux.ISearchContext): integer
+---@field public movedown               fun(self: eve.ux.ISearchContext): integer
+---@field public place_lnum_sign        fun(self: eve.ux.ISearchContext): integer|nil
+---@field public place_selected_sign    fun(self: eve.ux.ISearchContext): nil
+---@field public reset_selected_items   fun(self: eve.ux.ISearchContext): nil
+---@field public set_item_deleted       fun(self: eve.ux.ISearchContext, uuid: string): nil
+---@field public set_item_selected      fun(self: eve.ux.ISearchContext, uuid: string, selected: boolean): nil
+---@field public show_state             fun(self: eve.ux.ISearchContext): nil
+---@field public toggle_item_selected   fun(self: eve.ux.ISearchContext, lnum: integer): nil
+---@field public toggle_items_selected  fun(self: eve.ux.ISearchContext, lnums: integer[]): nil
 
----@class eve.ux.search.Context : eve.ux.search.IContext
+---@class eve.ux.SearchContext : eve.ux.ISearchContext
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
 ---@field protected _uuids_selected     table<string, true>
 local M = {}
 M.__index = M
 
----@class eve.ux.search.state.IProps
+---@class eve.ux.ISearchStateProps
 ---@field public delay_fetch            integer
----@field public dimension              eve.ux.search.IRawDimension|nil
+---@field public dimension              eve.ux.IRawSearchDimension|nil
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             eve.ux.search.IFetchData
 ---@field public flag_selected          eve.std.collection.IObservable -- boolean>
@@ -106,8 +106,8 @@ M.__index = M
 ---@field public preview_wrap           boolean|nil
 ---@field public title                  string
 
----@param props                         eve.ux.search.state.IProps
----@return eve.ux.search.Context
+---@param props                         eve.ux.ISearchStateProps
+---@return eve.ux.SearchContext
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -130,8 +130,8 @@ function M.new(props)
   local cfg_preview_wrap = not not props.preview_wrap ---@type boolean
 
   local delay_fetch = props.delay_fetch ---@type integer
-  local raw_dimension = props.dimension or {} ---@type eve.ux.search.IRawDimension
-  ---@type eve.ux.search.IDimension
+  local raw_dimension = props.dimension or {} ---@type eve.ux.IRawSearchDimension
+  ---@type eve.ux.ISearchDimension
   local dimension = {
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,
@@ -325,12 +325,12 @@ function M:dispose()
   self.status:dispose()
 end
 
----@param raw_dimension                 eve.ux.search.IRawDimension
+---@param raw_dimension                 eve.ux.IRawSearchDimension
 ---@return nil
 function M:change_dimension(raw_dimension)
   local old_dimension = self.dimension
 
-  ---@type eve.ux.search.IDimension
+  ---@type eve.ux.ISearchDimension
   local dimension = {
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,

@@ -5,7 +5,7 @@
 ---@field public order_client           integer
 ---@field public order_type             integer
 
----@class fml.dressing.provider.codeaction.IItem : fml.ux.select.IItem
+---@class fml.dressing.provider.codeaction.IItem : eve.ux.select.IItem
 ---@field public data                   fml.dressing.provider.codeaction.IItemData
 
 local ACTION_TYPE_ORDERS = {
@@ -35,7 +35,7 @@ local LSP_CLIENT_NAME_ORDERS = {
 }
 
 ---@param items                         any[]
----@return fml.ux.select.IProvider
+---@return eve.ux.select.IProvider
 ---@return integer
 local function codeaction_provider(items)
   local width_order = #tostring(#items) ---@type integer
@@ -99,7 +99,7 @@ local function codeaction_provider(items)
     select_items[#select_items + 1] = select_item
   end
 
-  ---@type fml.ux.select.IProvider
+  ---@type eve.ux.select.IProvider
   local provider = {
     fetch_data = function()
       return { items = select_items }

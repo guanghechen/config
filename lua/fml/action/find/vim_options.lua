@@ -1,5 +1,3 @@
-local Select = require("fml.ux.select")
-
 ---@class fml.action.find.vim_options.IItemData
 ---@field public name                   string
 ---@field public type                   string
@@ -7,7 +5,7 @@ local Select = require("fml.ux.select")
 ---@field public value                  string|number|boolean
 ---@field public text                   string
 
----@class fml.action.find.vim_options.IItem : fml.ux.select.IItem
+---@class fml.action.find.vim_options.IItem : eve.ux.select.IItem
 ---@field public data                   fml.action.find.vim_options.IItemData
 
 local WIDTH_NAME = 25 ---@type integer
@@ -18,10 +16,10 @@ local OFFSET_TYPE = OFFSET_NAME + WIDTH_NAME ---@type integer
 local OFFSET_SCOPE = OFFSET_TYPE + WIDTH_TYPE ---@type integer
 local OFFSET_VALUE = OFFSET_SCOPE + WIDTH_SCOPE ---@type integer
 
----@type fml.ux.select.IProvider
+---@type eve.ux.select.IProvider
 local provider = {
   fetch_data = function()
-    local items = {} ---@type fml.ux.select.IItem[]
+    local items = {} ---@type eve.ux.select.IItem[]
 
     for name, info in pairs(vim.api.nvim_get_all_options_info()) do
       local ok, value = pcall(vim.api.nvim_get_option_value, name, {})
@@ -75,8 +73,8 @@ local provider = {
   end,
 }
 
----@type fml.ux.ISelect
-local select = Select.new({
+---@type eve.ux.ISelect
+local select = eve.ux.Select.new({
   dimension = {
     height = 0.8,
     max_height = 1,
@@ -93,7 +91,7 @@ local select = Select.new({
   on_confirm = function(widget, items)
     if #items == 1 then
       widget:hide()
-      local item = items[1] ---@type fml.ux.select.IItem
+      local item = items[1] ---@type eve.ux.select.IItem
       local data = item.data ---@type fml.action.find.vim_options.IItemData
       local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
       vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)

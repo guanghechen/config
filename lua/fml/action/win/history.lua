@@ -104,7 +104,7 @@ local function get_history_select()
       title = "Find Window History",
       on_confirm = function(widget, items)
         if #items == 1 then
-          local item = items[1] ---@type fml.ux.select.IItem
+          local item = items[1] ---@type eve.ux.select.IItem
           local item_index = tonumber(item.uuid) ---@type integer|nil
           local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
 
