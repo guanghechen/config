@@ -698,6 +698,9 @@ function M.encoding(position)
   local component = {
     name = "encoding",
     atomic = true,
+    condition = function(context)
+      return eve.editor.is_buf_sourcefile(context.bufnr)
+    end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local encoding = vim.bo[bufnr].fileencoding ---@type string
@@ -736,6 +739,9 @@ function M.fileformat(position)
   local component = {
     name = "fileformat",
     atomic = true,
+    condition = function(context)
+      return eve.editor.is_buf_sourcefile(context.bufnr)
+    end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local fileformat = vim.bo[bufnr].fileformat ---@type string
@@ -744,7 +750,11 @@ function M.fileformat(position)
       local text_fileformat = fileformat_text_map[fileformat] or fileformat ---@type string
 
       local text = string.format("%s %s", icon_fileformat, text_fileformat) ---@type string
-      local hl_text = btn(txt(text, hln_text), fn_toggle_fileformat)
+      local hl_text = txt(text, hln_text) ---@type string
+
+      if vim.bo[bufnr].buftype == "" then
+        hl_text = btn(hl_text, fn_toggle_fileformat)
+      end
       return text, hl_text, true
     end,
   }
@@ -761,6 +771,9 @@ function M.fileindent(position)
   local component = {
     name = "fileindent",
     atomic = true,
+    condition = function(context)
+      return eve.editor.is_buf_sourcefile(context.bufnr)
+    end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local shiftwidth = vim.bo[bufnr].shiftwidth ---@type integer
