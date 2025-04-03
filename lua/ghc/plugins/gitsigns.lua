@@ -1,5 +1,3 @@
-local Printer = require("fml.ux.printer")
-
 ---@class ghc.plugins.gitsigns.config
 local config = {
   win = {
@@ -161,8 +159,7 @@ local keymaps = {
       local width = 84 ---@type integer
       local separate_line = string.rep("─", width - 4) ---@type string
 
-      local printer = Printer.new({ name = "blame line", indent = "  " })
-
+      local printer = eve.ux.Printer.new({ name = "blame line", indent = "  " }) ---@type eve.ux.IPrinter
       printer
         :lf()
         :line(

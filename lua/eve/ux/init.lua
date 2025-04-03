@@ -1,6 +1,7 @@
 ---@class eve.ux.__mods
 local __mods = {
   Nvimbar = "eve.ux.nvimbar",
+  Printer = "eve.ux.printer",
   Terminal = "eve.ux.terminal",
   Textarea = "eve.ux.textarea",
 }
@@ -9,6 +10,7 @@ local __mods = {
 ---@field public __mods                 eve.ux.__mods
 ---
 ---@field public Nvimbar                eve.ux.Nvimbar
+---@field public Printer                eve.ux.Printer
 ---@field public Terminal               eve.ux.Terminal
 ---@field public Textarea               eve.ux.Textarea
 local M = setmetatable({ __mods = __mods }, {

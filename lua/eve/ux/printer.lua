@@ -7,11 +7,11 @@
 ---@field public lf                     fun(self: eve.ux.IPrinter): eve.ux.IPrinter
 ---@field public render                 fun(self: eve.ux.IPrinter, bufnr: integer): nil
 
----@class fml.ux.printer.IProps
+---@class eve.ux.printer.IProps
 ---@field public name                   string
 ---@field public indent                 ?string
 
----@class fml.ux.printer : eve.ux.IPrinter
+---@class eve.ux.Printer : eve.ux.IPrinter
 ---@field protected _indent              string
 ---@field protected _lines               string[]
 ---@field protected _highlights          eve.t.IHighlight[]
@@ -21,8 +21,8 @@
 local M = {}
 M.__index = M
 
----@param props                        fml.ux.printer.IProps
----@return fml.ux.printer
+---@param props                        eve.ux.printer.IProps
+---@return eve.ux.Printer
 function M.new(props)
   local name = props.name ---@type string
   local indent = props.indent or ""
@@ -47,7 +47,7 @@ end
 
 ---@param lines                         string[]
 ---@param highlights                    ?eve.t.IHighlight[]
----@return fml.ux.printer
+---@return eve.ux.Printer
 function M:lines(lines, highlights)
   if #lines < 1 then
     return self
@@ -94,7 +94,7 @@ end
 
 ---@param content                       string
 ---@param highlights                    ?eve.t.IHighlightInline[]
----@return fml.ux.printer
+---@return eve.ux.Printer
 function M:line(content, highlights)
   if highlights ~= nil and #highlights > 0 then
     local lnum = #self._lines + 1 ---@type integer
@@ -119,7 +119,7 @@ end
 
 ---@param content                       string
 ---@param highlights                    ?eve.t.IHighlightInline[]
----@return fml.ux.printer
+---@return eve.ux.Printer
 function M:inline(content, highlights)
   local lnum = self._offset_lnum ---@type integer
   local offset_col = self._offset_col ---@type integer
@@ -142,7 +142,7 @@ function M:inline(content, highlights)
   return self
 end
 
----@return fml.ux.printer
+---@return eve.ux.Printer
 function M:lf()
   self._lines[#self._lines + 1] = self._indent
   self._offset_lnum = #self._lines + 1

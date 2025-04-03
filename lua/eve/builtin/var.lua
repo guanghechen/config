@@ -21,7 +21,7 @@ M.Names = {
 ---@class eve.builtin.vars.Namespaces
 M.Namespaces = {
   hipairs = vim.api.nvim_create_namespace("fml.ux.hipairs"),
-  printer_default = vim.api.nvim_create_namespace("fml.ux.printer.default"),
+  printer_default = vim.api.nvim_create_namespace("eve.ux.printer.default"),
 
   search_input = vim.api.nvim_create_namespace("fml.ux.search.input"),
   search_main = vim.api.nvim_create_namespace("fml.ux.search.main"),
