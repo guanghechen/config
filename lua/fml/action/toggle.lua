@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
-local select = require("fml.fn.select")
-
 ---@type table<string, table<string, eve.std.collection.IObservable<boolean>>>
 local group_flags = {
   ---flight
@@ -87,7 +85,7 @@ local group_items = {
         local filepath = eve.path.relative(eve.path.cwd(), vim.api.nvim_buf_get_name(bufnr), false) ---@type string
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
-        select({
+        eve.ux.fn.select({
           title = string.format("Toggle fileformat (%s)", filepath),
           flag_fuzzy = true,
           flag_regex = false,
@@ -407,7 +405,7 @@ function M.list(arg)
     local item = toggle_item_map[flag_name] ---@type fml.action.toggle.IItem
     item.action()
   else
-    select({
+    eve.ux.fn.select({
       title = "Toggle Select",
       flag_fuzzy = true,
       flag_regex = false,
@@ -472,7 +470,7 @@ function M.toggle_ai_provider(arg)
   if vim.list_contains(ai_providers, ai_provider) then
     eve.state.flight.ai_provider:next(ai_provider)
   else
-    select({
+    eve.ux.fn.select({
       title = "Toggle ai provider",
       flag_fuzzy = true,
       flag_regex = false,
@@ -573,7 +571,7 @@ function M.toggle_theme(arg)
   if vim.list_contains(themes, theme_name) then
     apply_theme(theme_name)
   else
-    select({
+    eve.ux.fn.select({
       title = "Select theme",
       flag_fuzzy = true,
       flag_regex = false,

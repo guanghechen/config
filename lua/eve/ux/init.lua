@@ -18,6 +18,7 @@ local __mods = {
 
 ---@class eve.ux
 ---@field public __mods                 eve.ux.__mods
+---@field public fn                     eve.ux.fn
 ---
 ---@field public Setting                eve.ux.Setting
 ---@field public Search                 eve.ux.Search
@@ -33,7 +34,10 @@ local __mods = {
 ---@field public Printer                eve.ux.Printer
 ---@field public Terminal               eve.ux.Terminal
 ---@field public Textarea               eve.ux.Textarea
-local M = setmetatable({ __mods = __mods }, {
+local M = setmetatable({
+  __mods = __mods,
+  fn = require("eve.ux.fn"),
+}, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
     if m == nil then

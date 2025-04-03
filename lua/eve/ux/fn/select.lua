@@ -1,4 +1,4 @@
----@class fml.fn.select.IParams
+---@class eve.ux.fn.select.IParams
 ---@field public title                  string
 ---@field public dimension              ?eve.ux.IRawSearchDimension
 ---@field public flag_fuzzy             ?boolean
@@ -14,8 +14,8 @@
 ---@field public fetch_preview_data     ?eve.ux.select.IFetchPreviewData
 ---@field public patch_preview_data     ?eve.ux.select.IPatchPreviewData
 
----@param params                        fml.fn.select.IParams
----@return nil
+---@param params                        eve.ux.fn.select.IParams
+---@return eve.ux.ISelect
 local function select(params)
   local title = params.title ---@type string
   local dimension = params.dimension ---@type eve.ux.IRawSearchDimension|nil
@@ -54,22 +54,24 @@ local function select(params)
     patch_preview_data = patch_preview_data,
   }
 
-  eve.ux.Select
-    .new({
-      dimension = dimension,
-      extend_preset_keymaps = true,
-      flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
-      flag_regex = eve.std.Observable.from_value(flag_regex),
-      input = input,
-      multiple = multiple,
-      permanent = false,
-      preview_enabled = preview_enabled,
-      preview_wrap = preview_wrap,
-      provider = provider,
-      title = title,
-      on_confirm = on_confirm,
-    })
-    :show()
+  ---@type eve.ux.ISelect
+  local widget = eve.ux.Select.new({
+    dimension = dimension,
+    extend_preset_keymaps = true,
+    flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.std.Observable.from_value(flag_regex),
+    input = input,
+    multiple = multiple,
+    permanent = false,
+    preview_enabled = preview_enabled,
+    preview_wrap = preview_wrap,
+    provider = provider,
+    title = title,
+    on_confirm = on_confirm,
+  })
+
+  widget:show()
+  return widget
 end
 
 return select

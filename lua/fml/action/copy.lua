@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
-local select = require("fml.fn.select")
-
 ---@param candidate                     eve.builtin.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@return nil
@@ -56,7 +54,7 @@ function M.copy_filepath(arg)
   if vim.list_contains(scopes, scope) then
     copy_current_filepath(scope, filepath)
   else
-    select({
+    eve.ux.fn.select({
       title = "Copy current filepath",
       flag_fuzzy = true,
       flag_regex = false,

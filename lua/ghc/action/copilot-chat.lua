@@ -1,7 +1,5 @@
 local __module_name__ = "ghc.action.copilot-chat" ---@type string
 
-local select = require("fml.fn.select")
-
 if not eve.state.flight.ai:snapshot() then
   eve.reporter.error({
     from = __module_name__,
@@ -149,7 +147,7 @@ function M.prompt()
     return
   end
 
-  select({
+  eve.ux.fn.select({
     cfg_preview_wrap = true,
     dimension = {
       width = 40,

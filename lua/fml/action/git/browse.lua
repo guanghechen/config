@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.git" ---@type string
 
-local select = require("fml.fn.select")
-
 ---@alias fml.action.git.browse.TargetScope
 ---|"branch"
 ---|"file"
@@ -263,7 +261,7 @@ function M.browse()
     return
   end
 
-  select({
+  eve.ux.fn.select({
     dimension = {
       row = 5,
       width = 80,

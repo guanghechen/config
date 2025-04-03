@@ -31,6 +31,10 @@ local __mods = {
 
 ---@class eve
 ---@field public __mods                 eve.__mods
+---@field public std                    eve.std
+---@field public state                  eve.state
+---@field public ux                     eve.ux
+---
 ---@field public G                      eve.builtin.G
 ---@field public box                    eve.builtin.box
 ---@field public clipboard              eve.builtin.clipboard
@@ -58,11 +62,8 @@ local __mods = {
 ---@field public tmux                   eve.builtin.tmux
 ---@field public var                    eve.builtin.var
 ---@field public winpicker              eve.builtin.winpicker
----
----@field public std                    eve.std
----@field public state                  eve.state
----@field public ux                     eve.ux
 local M = setmetatable({
+  __mods = __mods,
   std = require("eve.std"),
   state = require("eve.state"),
   ux = require("eve.ux"),
