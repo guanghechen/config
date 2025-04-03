@@ -51,7 +51,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = eve.nvim.augroup("highlight_on_yank"),
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank()
   end,
 })
 
@@ -68,7 +68,14 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 --filetype------------------------------------------------------------------------------------------
 
 vim.filetype.add({
-  extension = { rasi = "rasi", rofi = "rasi", wofi = "rasi" },
+  extension = {
+    md = "markdown",
+    rasi = "rasi",
+    rofi = "rasi",
+    ts = "typescript",
+    tsx = "typescriptreact",
+    wofi = "rasi",
+  },
   filename = {
     [".eslintignore"] = "ignore",
     [".git-credentials"] = "git-credentials",
@@ -115,10 +122,7 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function(evt)
     local bufnr = evt.buf ---@type integer
     vim.api.nvim_buf_call(bufnr, function()
-      vim.opts.setup({
-        buf = bufnr,
-        ft = vim.filetype.match({ buf = bufnr }) or "",
-      })
+      vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
     end)
   end,
 })

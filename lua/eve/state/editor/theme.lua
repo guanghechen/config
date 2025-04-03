@@ -231,6 +231,11 @@ function M.reload_theme(force, reload_plugins)
   local theme = M.theme:snapshot() ---@type eve.e.Theme
   local transparency = M.transparency:snapshot() ---@type boolean
 
+  local scheme = M.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
+  if scheme ~= nil then
+    vim.o.background = scheme.variant == "dark" and "dark" or "light"
+  end
+
   local theme_path = get_theme_path() ---@type string
   if force or not eve.path.is_exist(theme_path) then
     M.apply_theme({

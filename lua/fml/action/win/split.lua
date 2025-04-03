@@ -16,9 +16,9 @@ function M.split_above()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not eve.editor.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
-    vim.opt.splitbelow = false
+    vim.o.splitbelow = false
     vim.cmd("split")
-    vim.opt.splitbelow = true
+    vim.o.splitbelow = true
     fork(winnr)
   end
 end
@@ -28,7 +28,7 @@ function M.split_right()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not eve.editor.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
-    vim.opt.splitright = true
+    vim.o.splitright = true
     vim.cmd("vsplit")
     fork(winnr)
   end
@@ -39,7 +39,7 @@ function M.split_below()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not eve.editor.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
-    vim.opt.splitbelow = true
+    vim.o.splitbelow = true
     vim.cmd("split")
     fork(winnr)
   end
@@ -50,9 +50,9 @@ function M.split_left()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if not eve.editor.is_win_floating(winnr) then
     vim.api.nvim_tabpage_set_win(0, winnr)
-    vim.opt.splitright = false
+    vim.o.splitright = false
     vim.cmd("vsplit")
-    vim.opt.splitright = true
+    vim.o.splitright = true
     fork(winnr)
   end
 end

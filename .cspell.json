@@ -346,6 +346,7 @@
     "linecount",
     "linehl",
     "linematch",
+    "linespace",
     "listchars",
     "lnum",
     "lnums",

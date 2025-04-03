@@ -1,21 +1,21 @@
 if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
-  vim.opt.shell = "/bin/bash"
+  vim.o.shell = "/bin/bash"
 elseif eve.env.IS_WIN then
-  vim.opt.shell = "pwsh"
+  vim.o.shell = "pwsh"
 
   -- Setting shell command flags
-  vim.opt.shellcmdflag =
+  vim.o.shellcmdflag =
     "-NoLogo -NonInteractive -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();$PSDefaultParameterValues['Out-File:Encoding']='utf8';$PSStyle.OutputRendering='plaintext';Remove-Alias -Force -ErrorAction SilentlyContinue tee;"
 
   -- Setting shell redirection
-  vim.opt.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
+  vim.o.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
 
   -- Setting shell pipe
-  vim.opt.shellpipe = '2>&1 | %%{ "$_" } | tee %s; exit $LastExitCode'
+  vim.o.shellpipe = '2>&1 | %%{ "$_" } | tee %s; exit $LastExitCode'
 
   -- Setting shell quote options
-  vim.opt.shellquote = ""
-  vim.opt.shellxquote = ""
+  vim.o.shellquote = ""
+  vim.o.shellxquote = ""
 end
 
 vim.g.mapleader = " "
@@ -24,54 +24,53 @@ vim.g.qf_disable_statusline = true
 
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
+vim.opt.listchars:append(eve.icon.listchars)
 
-vim.opt.foldenable = true
-vim.opt.foldlevel = 99
-vim.opt.foldmethod = "expr"
-vim.opt.foldtext = ""
-vim.opt.laststatus = 3 -- Keep only the global status bar.
-vim.opt.showtabline = 2
+vim.o.foldenable = true
+vim.o.foldlevel = 99
+vim.o.foldmethod = "expr"
+vim.o.foldtext = ""
+vim.o.laststatus = 3 -- Keep only the global status bar.
+vim.o.showtabline = 2
 
 ---! appearance
-vim.opt.autoindent = true
-vim.opt.autowrite = true
-vim.opt.backspace = table.concat({ "indent", "eol", "start" }, ",")
-vim.opt.breakindent = true
-vim.opt.colorcolumn = { 100, 120 }
-vim.opt.conceallevel = 0 -- Disable conceal.
-vim.opt.cursorline = true -- highlight the row of the cursor.
-vim.opt.cursorlineopt = "number,screenline"
-vim.opt.cursorcolumn = false -- true to highlight the column of the cursor.
-vim.opt.expandtab = true -- use spaces instead of tabs
-vim.opt.fillchars = eve.icon.fillchars
-vim.opt.guifont = { "Maple Mono NF CN" }
-vim.opt.linebreak = true -- Wrap lines at convenient points
-vim.opt.list = true -- Show some invisible characters (tabs...
-vim.opt.listchars:append(eve.icon.listchars)
-vim.opt.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
-vim.opt.number = true -- Print line number
-vim.opt.pumblend = 10 -- Popup blend
-vim.opt.pumheight = 10 -- Maximum number of entries in a popup
-vim.opt.relativenumber = true
-vim.opt.scrolloff = 4 -- Lines of context
-vim.opt.shiftround = true -- Round indent
-vim.opt.shiftwidth = 2
-vim.opt.showmode = false -- Dont show mode since we have a statusline
-vim.opt.sidescrolloff = 8 -- Columns of context
-vim.opt.smartindent = true -- Insert indents automatically
-vim.opt.smarttab = true
-vim.opt.smoothscroll = true
-vim.opt.softtabstop = 2 -- set the tab width
-vim.opt.tabstop = 2 -- set the tab width
-vim.opt.termguicolors = true
-vim.opt.timeout = true
-vim.opt.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) to quickly trigger which-key
--- vim.opt.winborder = "rounded"
-vim.opt.winminwidth = 10 -- Minimum window width
-vim.opt.wrap = false
+vim.o.autoindent = true
+vim.o.autowrite = true
+vim.o.backspace = table.concat({ "indent", "eol", "start" }, ",")
+vim.o.breakindent = true
+vim.o.colorcolumn = "100,120"
+vim.o.conceallevel = 0 -- Disable conceal.
+vim.o.cursorline = true -- highlight the row of the cursor.
+vim.o.cursorlineopt = "number,screenline"
+vim.o.cursorcolumn = false -- true to highlight the column of the cursor.
+vim.o.expandtab = true -- use spaces instead of tabs
+vim.o.fillchars = table.concat(eve.icon.fillchars, ",")
+vim.o.guifont = "Maple Mono NF CN"
+vim.o.linebreak = true -- Wrap lines at convenient points
+vim.o.list = true -- Show some invisible characters (tabs...
+vim.o.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
+vim.o.number = true -- Print line number
+vim.o.pumblend = 10 -- Popup blend
+vim.o.pumheight = 10 -- Maximum number of entries in a popup
+vim.o.relativenumber = true
+vim.o.scrolloff = 4 -- Lines of context
+vim.o.shiftround = true -- Round indent
+vim.o.shiftwidth = 2
+vim.o.showmode = false -- Dont show mode since we have a statusline
+vim.o.sidescrolloff = 8 -- Columns of context
+vim.o.smartindent = true -- Insert indents automatically
+vim.o.smarttab = true
+vim.o.smoothscroll = true
+vim.o.softtabstop = 2 -- set the tab width
+vim.o.tabstop = 2 -- set the tab width
+vim.o.timeout = true
+vim.o.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) to quickly trigger which-key
+vim.o.winborder = "rounded"
+vim.o.winminwidth = 10 -- Minimum window width
+vim.o.wrap = false
 
 ---! diff
-vim.opt.diffopt = table.concat({
+vim.o.diffopt = table.concat({
   "algorithm:histogram",
   "closeoff",
   "context:0",
@@ -90,21 +89,12 @@ vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 
 ---! encoding
-vim.opt.fileencoding = "utf-8"
-vim.opt.fileformat = "unix"
-vim.opt_global.fileencodings = "utf-8"
-
----! filetypes
-vim.filetype.add({
-  extension = {
-    ts = "typescript",
-    md = "markdown",
-    tsx = "typescriptreact",
-  },
-})
+vim.o.fileencoding = "utf-8"
+vim.o.fileencodings = "utf-8"
+vim.o.fileformat = "unix"
 
 ---! format
-vim.opt.formatoptions = table.concat({
+vim.o.formatoptions = table.concat({
   --  "c", -- Auto wrap using 'textwidth'
   "r", -- Auto insert comment leader
   "o", -- Auto insert comment leader after "o" or "O"
@@ -115,30 +105,30 @@ vim.opt.formatoptions = table.concat({
 }, "")
 
 ---! panel split
-vim.opt.splitbelow = true
-vim.opt.splitright = true
-vim.opt.splitkeep = "screen"
+vim.o.splitbelow = true
+vim.o.splitright = true
+vim.o.splitkeep = "screen"
 
 -- search
-vim.opt.grepformat = "%f:%l:%c:%m"
-vim.opt.grepprg = "rg --vimgrep"
-vim.opt.ignorecase = true
-vim.opt.smartcase = true -- Don't ignore case with capitals
+vim.o.grepformat = "%f:%l:%c:%m"
+vim.o.grepprg = "rg --vimgrep"
+vim.o.ignorecase = true
+vim.o.smartcase = true -- Don't ignore case with capitals
 
 -- spell
-vim.opt.spell = false
-vim.opt.spelllang = { "en" }
+vim.o.spell = false
+vim.o.spelllang = "en"
 
 -- misc
-vim.opt.completeopt = "menuone,noselect,popup"
-vim.opt.confirm = true -- Confirm to save changes before exiting modified buffer
-vim.opt.inccommand = "nosplit" -- preview incremental substitute
-vim.opt.jumpoptions = "view"
-vim.opt.updatetime = 200 -- Save swap file and trigger CursorHold
-vim.opt.undofile = true
-vim.opt.undolevels = 10000
-vim.opt.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
-vim.opt.wildmode = "longest:full,full" -- Command-line completion mode
+vim.o.completeopt = "menuone,noselect,popup"
+vim.o.confirm = true -- Confirm to save changes before exiting modified buffer
+vim.o.inccommand = "nosplit" -- preview incremental substitute
+vim.o.jumpoptions = "view"
+vim.o.updatetime = 200 -- Save swap file and trigger CursorHold
+vim.o.undofile = true
+vim.o.undolevels = 10000
+vim.o.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
+vim.o.wildmode = "longest:full,full" -- Command-line completion mode
 
-vim.opt.ruler = false -- Disable the default ruler
+vim.o.ruler = false -- Disable the default ruler
 vim.g.markdown_recommended_style = 0 -- fix markdown indentation settings

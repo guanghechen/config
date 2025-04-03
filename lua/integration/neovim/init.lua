@@ -1,13 +1,13 @@
 _G.eve = require("eve")
 eve.setup_patches()
 eve.setup_workspace()
+
 require("eve.option")
 require("eve.keymap")
 require("integration.neovim.autocmd")
 pcall(require, "integration.local.autocmd")
 
 eve.setup_state()
-
 require("integration.neovim.option")
 require("integration.neovim.keymap")
 pcall(require, "integration.local.option")
