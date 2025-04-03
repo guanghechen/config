@@ -1,5 +1,3 @@
-local select_files = require("fml.fn.select_files")
-
 ---@class fml.action.find
 local M = {}
 
@@ -7,7 +5,7 @@ local M = {}
 function M.find_pinned_files()
   local cwd = eve.path.cwd() ---@type string
 
-  select_files({
+  eve.ux.fn.select_files({
     cwd = cwd,
     title = "Find pinned files",
     flag_fuzzy = true,

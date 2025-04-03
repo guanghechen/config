@@ -1,4 +1,4 @@
----@class fml.fn.select_files.IParams
+---@class eve.ux.fn.select_files.IParams
 ---@field public cwd                    string
 ---@field public dimension              ?eve.ux.IRawSearchDimension
 ---@field public flag_fuzzy             ?boolean
@@ -9,8 +9,8 @@
 ---@field public fetch_filepaths        fun(): string[]
 ---@field public get_present            ?fun(): string|nil
 
----@param params                        fml.fn.select_files.IParams
----@return nil
+---@param params                        eve.ux.fn.select_files.IParams
+---@return eve.ux.IFileSelect
 local function select_files(params)
   local cwd = params.cwd ---@type string
   local dimension = params.dimension ---@type eve.ux.IRawSearchDimension|nil
@@ -67,23 +67,25 @@ local function select_files(params)
     end,
   }
 
-  file_select = eve.ux.FileSelect
-    .new({
-      cmp = eve.ux.Select.cmp_by_score,
-      dimension = dimension,
-      dirty_on_invisible = true,
-      preview_enabled = false,
-      extend_preset_keymaps = true,
-      flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
-      flag_regex = eve.std.Observable.from_value(flag_regex),
-      frecency = eve.state.frecency.files,
-      input = input,
-      multiple = multiple,
-      permanent = false,
-      provider = provider,
-      title = title,
-    })
-    :show()
+  ---@type eve.ux.IFileSelect
+  local widget = eve.ux.FileSelect.new({
+    cmp = eve.ux.Select.cmp_by_score,
+    dimension = dimension,
+    dirty_on_invisible = true,
+    preview_enabled = false,
+    extend_preset_keymaps = true,
+    flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
+    flag_regex = eve.std.Observable.from_value(flag_regex),
+    frecency = eve.state.frecency.files,
+    input = input,
+    multiple = multiple,
+    permanent = false,
+    provider = provider,
+    title = title,
+  })
+
+  widget:show()
+  return widget
 end
 
 return select_files
