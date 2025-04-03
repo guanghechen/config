@@ -3,7 +3,7 @@ local Select = require("fml.ux.select")
 
 ---@class fml.fn.select_files.IParams
 ---@field public cwd                    string
----@field public dimension              ?fml.ux.search.IRawDimension
+---@field public dimension              ?eve.ux.search.IRawDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
 ---@field public input                  ?eve.std.collection.IObservable -- string>
@@ -16,7 +16,7 @@ local Select = require("fml.ux.select")
 ---@return nil
 local function select_files(params)
   local cwd = params.cwd ---@type string
-  local dimension = params.dimension ---@type fml.ux.search.IRawDimension|nil
+  local dimension = params.dimension ---@type eve.ux.search.IRawDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
   local input = params.input ---@type eve.std.collection.IObservable -- string> | nil

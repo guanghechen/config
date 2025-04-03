@@ -1,11 +1,11 @@
----@class fml.ux.search.IPreview
----@field public context                fml.ux.search.IContext
----@field public create_buf_as_needed   fun(self: fml.ux.search.IPreview): integer
----@field public destroy                fun(self: fml.ux.search.IPreview): nil
----@field public get_current_location   fun(self: fml.ux.search.IPreview): integer|nil, integer|nil
----@field public render                 fun(self: fml.ux.search.IPreview): nil
+---@class eve.ux.search.IPreview
+---@field public context                eve.ux.search.IContext
+---@field public create_buf_as_needed   fun(self: eve.ux.search.IPreview): integer
+---@field public destroy                fun(self: eve.ux.search.IPreview): nil
+---@field public get_current_location   fun(self: eve.ux.search.IPreview): integer|nil, integer|nil
+---@field public render                 fun(self: eve.ux.search.IPreview): nil
 
----@class fml.ux.search.preview.IData
+---@class eve.ux.search.preview.IData
 ---@field public lines                  string[]
 ---@field public highlights             eve.t.IHighlight[]
 ---@field public filetype               string|nil
@@ -13,45 +13,45 @@
 ---@field public lnum                   integer|nil
 ---@field public col                    integer|nil
 
----@class fml.ux.search.preview.IWinOpts
+---@class eve.ux.search.preview.IWinOpts
 ---@field public title                  string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class fml.ux.search.Preview : fml.ux.search.IPreview
+---@class eve.ux.search.Preview : eve.ux.search.IPreview
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _render_scheduler   eve.std.collection.IScheduler
 local M = {}
 M.__index = M
 
----@class fml.ux.search.preview.IProps
+---@class eve.ux.search.preview.IProps
 ---@field public delay_render           integer
----@field public fetch_data             fml.ux.search.IFetchPreviewData
+---@field public fetch_data             eve.ux.search.IFetchPreviewData
 ---@field public keymaps                eve.t.IKeymap[]
----@field public patch_data             ?fml.ux.search.IPatchPreviewData
----@field public context                fml.ux.search.IContext
----@field public on_rendered            ?fml.ux.search.IOnPreviewRendered
----@field public update_win_config      fun(opts: fml.ux.search.preview.IWinOpts): nil
+---@field public patch_data             ?eve.ux.search.IPatchPreviewData
+---@field public context                eve.ux.search.IContext
+---@field public on_rendered            ?eve.ux.search.IOnPreviewRendered
+---@field public update_win_config      fun(opts: eve.ux.search.preview.IWinOpts): nil
 
----@param props                         fml.ux.search.preview.IProps
----@return fml.ux.search.Preview
+---@param props                         eve.ux.search.preview.IProps
+---@return eve.ux.search.Preview
 function M.new(props)
   local self = setmetatable({}, M)
 
   local delay_render = props.delay_render ---@type integer
-  local _fetch_data = props.fetch_data ---@type fml.ux.search.IFetchPreviewData
-  local _patch_data = props.patch_data ---@type fml.ux.search.IPatchPreviewData|nil
+  local _fetch_data = props.fetch_data ---@type eve.ux.search.IFetchPreviewData
+  local _patch_data = props.patch_data ---@type eve.ux.search.IPatchPreviewData|nil
   local keymaps = props.keymaps ---@type eve.t.IKeymap[]
-  local context = props.context ---@type fml.ux.search.IContext
-  local on_rendered = props.on_rendered ---@type fml.ux.search.IOnMainRendered|nil
-  local _update_win_config = props.update_win_config ---@type fun(opts: fml.ux.search.preview.IWinOpts): nil
+  local context = props.context ---@type eve.ux.search.IContext
+  local on_rendered = props.on_rendered ---@type eve.ux.search.IOnMainRendered|nil
+  local _update_win_config = props.update_win_config ---@type fun(opts: eve.ux.search.preview.IWinOpts): nil
 
-  local _last_item = nil ---@type fml.ux.search.IItem|nil
-  local _last_data = nil ---@type fml.ux.search.preview.IData|nil
+  local _last_item = nil ---@type eve.ux.search.IItem|nil
+  local _last_data = nil ---@type eve.ux.search.preview.IData|nil
   local _last_drawed_bufnr = nil ---@type integer|nil
 
-  ---@param item                          fml.ux.search.IItem|nil
-  ---@return fml.ux.search.preview.IData|nil
+  ---@param item                          eve.ux.search.IItem|nil
+  ---@return eve.ux.search.preview.IData|nil
   local function fetch_data(item)
     if item == nil then
       return nil
@@ -74,9 +74,9 @@ function M.new(props)
   local function render()
     local bufnr = self:create_buf_as_needed() ---@type integer
 
-    local last_data = _last_data ---@type fml.ux.search.preview.IData|nil
-    local item = context:get_current() ---@type fml.ux.search.IItem|nil
-    local data = fetch_data(item) ---@type fml.ux.search.preview.IData|nil
+    local last_data = _last_data ---@type eve.ux.search.preview.IData|nil
+    local item = context:get_current() ---@type eve.ux.search.IItem|nil
+    local data = fetch_data(item) ---@type eve.ux.search.preview.IData|nil
     _last_item = item
     _last_data = data
 
@@ -133,7 +133,7 @@ function M.new(props)
   end
 
   local _render_scheduler = eve.std.Scheduler.new({
-    name = "fml.ux.search.preview.render",
+    name = "eve.ux.search.preview.render",
     delay = delay_render,
     task = function(callback)
       render()
@@ -177,7 +177,7 @@ end
 
 ---@return integer
 function M:create_buf_as_needed()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   if context.bufnr_preview ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_preview) then
     return context.bufnr_preview
   end
@@ -201,7 +201,7 @@ end
 
 ---@return nil
 function M:destroy()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local bufnr = context.bufnr_preview ---@type integer|nil
   context.bufnr_preview = nil
 

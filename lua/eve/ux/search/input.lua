@@ -1,11 +1,11 @@
----@class fml.ux.search.IInput
----@field public context                fml.ux.search.IContext
----@field public create_buf_as_needed   fun(self: fml.ux.search.IInput): integer
----@field public destroy                fun(self: fml.ux.search.IInput): nil
----@field public reset_input            fun(self: fml.ux.search.IInput, input?: string): nil
----@field public set_virtual_text       fun(self: fml.ux.search.IInput): nil
+---@class eve.ux.search.IInput
+---@field public context                eve.ux.search.IContext
+---@field public create_buf_as_needed   fun(self: eve.ux.search.IInput): integer
+---@field public destroy                fun(self: eve.ux.search.IInput): nil
+---@field public reset_input            fun(self: eve.ux.search.IInput, input?: string): nil
+---@field public set_virtual_text       fun(self: eve.ux.search.IInput): nil
 
----@class fml.ux.search.Input : fml.ux.search.IInput
+---@class eve.ux.search.Input : eve.ux.search.IInput
 ---@field protected _autocmd_group      integer
 ---@field protected _extmark_nr         integer|nil
 ---@field protected _input_scheduler    eve.std.collection.IScheduler
@@ -15,16 +15,16 @@ M.__index = M
 
 local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 
----@class fml.ux.search.input.IProps
----@field public context                fml.ux.search.IContext
+---@class eve.ux.search.input.IProps
+---@field public context                eve.ux.search.IContext
 ---@field public keymaps                eve.t.IKeymap[]
 
----@param props                         fml.ux.search.input.IProps
----@return fml.ux.search.Input
+---@param props                         eve.ux.search.input.IProps
+---@return eve.ux.search.Input
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local context = props.context ---@type fml.ux.search.IContext
+  local context = props.context ---@type eve.ux.search.IContext
   local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
   local autocmd_group = eve.nvim.augroup(context.uuid .. ":search_input") ---@type integer
 
@@ -60,7 +60,7 @@ function M.new(props)
   end
 
   local input_scheduler = eve.std.Scheduler.new({
-    name = "fml.ux.search.input.on_change",
+    name = "eve.ux.search.input.on_change",
     delay = 32,
     task = function(callback)
       local bufnr = context.bufnr_input ---@type integer|nil
@@ -121,7 +121,7 @@ end
 
 ---@return integer
 function M:create_buf_as_needed()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   if context.bufnr_input ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_input) then
     return context.bufnr_input
   end
@@ -163,7 +163,7 @@ end
 
 ---@return nil
 function M:destroy()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local bufnr = context.bufnr_input ---@type integer|nil
   context.bufnr_input = nil
 
@@ -175,7 +175,7 @@ end
 
 ---@return nil
 function M:set_virtual_text()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local bufnr = context.bufnr_input ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local total = #context.items or 0 ---@type integer
@@ -198,7 +198,7 @@ end
 ---@param text                          string|nil
 ---@return nil
 function M:reset_input(text)
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local next_text = text or context.input:snapshot() ---@type string
   next_text = eve.string.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
   context.input:next(next_text)

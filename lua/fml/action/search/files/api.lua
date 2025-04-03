@@ -271,7 +271,7 @@ end
 
 ---@param input_text                  string
 ---@param force                       boolean
----@param callback                    fml.ux.search.IFetchDataCallback
+---@param callback                    eve.ux.search.IFetchDataCallback
 ---@return nil
 function M.fetch_data(input_text, force, callback)
   local cwd = context.search_cwd:snapshot() ---@type string
@@ -346,7 +346,7 @@ function M.fetch_data(input_text, force, callback)
     return
   end
 
-  local search_items = {} ---@type fml.ux.search.IItem[]
+  local search_items = {} ---@type eve.ux.search.IItem[]
   local fileitem_map = {} ---@type table<string, fml.action.search.files.IFileItem>
   local item_map = {} ---@type table<string, fml.action.search.files.IItem>
   for _, filepath in ipairs(result.item_orders) do
@@ -369,7 +369,7 @@ function M.fetch_data(input_text, force, callback)
       if not is_searching_current_buf then
         local text = icon .. " " .. filepath ---@type string
 
-        ---@type fml.ux.search.IItem
+        ---@type eve.ux.search.IItem
         local search_item = {
           group = filepath,
           uuid = file_item_uuid,
@@ -424,7 +424,7 @@ function M.fetch_data(input_text, force, callback)
 
             local text_prefix = "  " .. lnum .. ":" .. col .. " " ---@type string
             local width_prefix = string.len(text_prefix) ---@type integer
-            local search_item ---@type fml.ux.search.IItem
+            local search_item ---@type eve.ux.search.IItem
             if s_k == r_k then
               local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
               local text = text_prefix .. prettier_line .. eve.icon.listchars.eol ---@type string
@@ -440,7 +440,7 @@ function M.fetch_data(input_text, force, callback)
                 },
               }
 
-              ---@type fml.ux.search.IItem
+              ---@type eve.ux.search.IItem
               search_item = {
                 group = filepath,
                 parent = file_item_uuid,
@@ -458,7 +458,7 @@ function M.fetch_data(input_text, force, callback)
                 { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_search" },
               }
 
-              ---@type fml.ux.search.IItem
+              ---@type eve.ux.search.IItem
               search_item = {
                 group = filepath,
                 parent = file_item_uuid,
@@ -503,7 +503,7 @@ function M.fetch_data(input_text, force, callback)
               { coll = width_prefix + col, colr = width_prefix + col_end, hlname = "f_us_main_match" },
             }
 
-            ---@type fml.ux.search.IItem
+            ---@type eve.ux.search.IItem
             local search_item = {
               group = filepath,
               parent = file_item_uuid,
@@ -534,17 +534,17 @@ function M.fetch_data(input_text, force, callback)
   _fileitem_map = fileitem_map
   _item_map = item_map
 
-  local data = { items = search_items } ---@type fml.ux.search.IData
+  local data = { items = search_items } ---@type eve.ux.search.IData
   callback(true, data)
 end
 
----@param search_item                   fml.ux.search.IItem
----@return fml.ux.search.preview.IData
+---@param search_item                   eve.ux.search.IItem
+---@return eve.ux.search.preview.IData
 function M.fetch_preview_data(search_item)
   local preview_data, lnum, col = M.calc_preview_data(search_item.uuid) ---@type fml.action.search.files.IPreviewData
   _last_preview_data = preview_data
 
-  ---@type fml.ux.search.preview.IData
+  ---@type eve.ux.search.preview.IData
   return {
     filetype = preview_data.filetype,
     title = preview_data.title,
@@ -589,7 +589,7 @@ function M.get_filematch(filepath)
   return fileitem.filematch
 end
 
----@param items                         fml.ux.search.IItem[]
+---@param items                         eve.ux.search.IItem[]
 ---@param frecency                      eve.std.collection.IFrecency
 ---@return nil
 function M.open_files(items, frecency)
@@ -616,9 +616,9 @@ function M.open_files(items, frecency)
   end
 end
 
----@param search_item                   fml.ux.search.IItem
----@param last_search_item              fml.ux.search.IItem
----@param last_data                     fml.ux.search.preview.IData
+---@param search_item                   eve.ux.search.IItem
+---@param last_search_item              eve.ux.search.IItem
+---@param last_data                     eve.ux.search.preview.IData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(search_item, last_search_item, last_data)
   local item = _item_map[search_item.uuid] ---@type fml.action.search.files.IItem|nil
@@ -675,7 +675,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
     end
   end
 
-  ---@type fml.ux.search.preview.IData
+  ---@type eve.ux.search.preview.IData
   local data = {
     lines = last_data.lines,
     highlights = highlights or last_data.highlights,

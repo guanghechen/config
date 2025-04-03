@@ -158,7 +158,7 @@ local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
 local input_history = eve.state.select.find_file.input_history ---@type eve.std.collection.IHistory
 
 local main_width = 0.4 ---@type number
----@type fml.ux.search.IRawDimension
+---@type eve.ux.search.IRawDimension
 local dimension = {
   height = 0.8,
   max_height = 1,
@@ -195,7 +195,7 @@ local provider = {
       local lines = { "  Cannot found the file.  " } ---@type string[]
       local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-      ---@type fml.ux.search.preview.IData
+      ---@type eve.ux.search.preview.IData
       return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
     end
 
@@ -205,7 +205,7 @@ local provider = {
       local lines = { "  Cannot found the parent directory.  " } ---@type string[]
       local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-      ---@type fml.ux.search.preview.IData
+      ---@type eve.ux.search.preview.IData
       return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
     end
 
@@ -216,7 +216,7 @@ local provider = {
         local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
         local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
 
-        ---@type fml.ux.search.preview.IData
+        ---@type eve.ux.search.preview.IData
         return {
           lines = lines,
           highlights = {},
@@ -297,14 +297,14 @@ local provider = {
         title = eve.path.normalize(item.uuid)
       end
 
-      ---@type fml.ux.search.preview.IData
+      ---@type eve.ux.search.preview.IData
       return { lines = lines, highlights = highlights, filetype = nil, title = title }
     end
 
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
     local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-    ---@type fml.ux.search.preview.IData
+    ---@type eve.ux.search.preview.IData
     return { lines = lines, highlights = highlights, filetype = nil, title = item.text, lnum = 1, col = 0 }
   end,
   render_item = function(item, match)

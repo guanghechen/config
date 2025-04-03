@@ -1,10 +1,7 @@
 local __module_name__ = "fml.ux.select" ---@type string
 
-local Search = require("fml.ux.search.search")
-local SearchContext = require("fml.ux.search.context")
-
 ---@class fml.ux.ISelect : eve.t.ux.IWidget
----@field public change_dimension       fun(self: fml.ux.ISelect, dimension: fml.ux.search.IRawDimension): nil
+---@field public change_dimension       fun(self: fml.ux.ISelect, dimension: eve.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.ux.ISelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.ISelect, title: string): nil
 ---@field public get_item               fun(self: fml.ux.ISelect, uuid: string): fml.ux.select.IItem|nil
@@ -23,10 +20,10 @@ local SearchContext = require("fml.ux.search.context")
 ---| fun(force: boolean): fml.ux.select.IData
 
 ---@alias fml.ux.select.IFetchPreviewData
----| fun(item: fml.ux.select.IItem): fml.ux.search.preview.IData|nil
+---| fun(item: fml.ux.select.IItem): eve.ux.search.preview.IData|nil
 
 ---@alias fml.ux.select.IPatchPreviewData
----| fun(item: fml.ux.select.IItem, last_item: fml.ux.select.IItem, last_data: fml.ux.search.preview.IData): fml.ux.search.preview.IData
+---| fun(item: fml.ux.select.IItem, last_item: fml.ux.select.IItem, last_data: eve.ux.search.preview.IData): eve.ux.search.preview.IData
 
 ---@alias fml.ux.select.IMatchedItemCmp
 ---| fun(item1: fml.ux.select.IMatchedItem, item2: fml.ux.select.IMatchedItem): boolean
@@ -76,7 +73,7 @@ local SearchContext = require("fml.ux.search.context")
 ---@field protected _live_data_dirty    eve.std.collection.IObservable -- boolean>
 ---@field protected _matches            fml.ux.select.IMatchedItem[]
 ---@field protected _provider           fml.ux.select.IProvider
----@field protected _search             fml.ux.search.ISearch
+---@field protected _search             eve.ux.search.ISearch
 local M = {}
 M.__index = M
 
@@ -85,7 +82,7 @@ M.__index = M
 ---@field public cmp                    ?fml.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public dimension              ?fml.ux.search.IRawDimension
+---@field public dimension              ?eve.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
 ---@field public preview_enabled        boolean
 ---@field public preview_title          ?string
@@ -105,10 +102,10 @@ M.__index = M
 ---@field public provider               fml.ux.select.IProvider
 ---@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
----@field public on_close               ?fml.ux.search.IOnClose
+---@field public on_close               ?eve.ux.search.IOnClose
 ---@field public on_confirm             fml.ux.select.IOnConfirm
----@field public on_invisible           ?fml.ux.search.IOnInvisible
----@field public on_preview_rendered    ?fml.ux.search.IOnPreviewRendered
+---@field public on_invisible           ?eve.ux.search.IOnInvisible
+---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
 ---@param props                         fml.ux.select.IProps
 ---@return fml.ux.Select
@@ -116,7 +113,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local delay_fetch = props.delay_fetch or 128 ---@type integer
-  local dimension = props.dimension ---@type fml.ux.search.IRawDimension|nil
+  local dimension = props.dimension ---@type eve.ux.search.IRawDimension|nil
   local flag_fuzzy = props.flag_fuzzy or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable -- boolean>
   local flag_regex = props.flag_regex or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable -- boolean>
   local flag_selected = props.flag_selected or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable -- boolean>
@@ -130,7 +127,7 @@ function M.new(props)
 
   ---@param input_text                  string
   ---@param force                       boolean
-  ---@param callback                    fml.ux.search.IFetchDataCallback
+  ---@param callback                    eve.ux.search.IFetchDataCallback
   ---@return nil
   local function fetch_data(input_text, force, callback)
     vim.schedule(function()
@@ -139,8 +136,8 @@ function M.new(props)
     end)
   end
 
-  ---@type fml.ux.search.IContext
-  local context = SearchContext.new({
+  ---@type eve.ux.search.IContext
+  local context = eve.ux.SearchContext.new({
     delay_fetch = delay_fetch,
     dimension = dimension,
     enable_multiline_input = false,
@@ -169,9 +166,9 @@ function M.new(props)
   local provider = props.provider ---@type fml.ux.select.IProvider
   local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
   local on_confirm_from_props = props.on_confirm ---@type fml.ux.select.IOnConfirm
-  local on_close_from_props = props.on_close ---@type fml.ux.search.IOnClose|nil
-  local on_invisible_from_props = props.on_invisible ---@type fml.ux.search.IOnInvisible|nil
-  local on_preview_rendered = props.on_preview_rendered ---@type fml.ux.search.IOnPreviewRendered|nil
+  local on_close_from_props = props.on_close ---@type eve.ux.search.IOnClose|nil
+  local on_invisible_from_props = props.on_invisible ---@type eve.ux.search.IOnInvisible|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type eve.ux.search.IOnPreviewRendered|nil
 
   if statusline_items == nil or extend_preset_keymaps then
     ---@return nil
@@ -258,7 +255,7 @@ function M.new(props)
     input_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), input_keymaps or {})
     main_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), main_keymaps or {})
     preview_keymaps = vim.list_extend(vim.list_slice(preset_keymaps), preview_keymaps or {})
-  end ---@type fml.ux.search.IFetchPreviewData|nil
+  end ---@type eve.ux.search.IFetchPreviewData|nil
 
   local fetch_preview_data = nil
   if preview_enabled and provider.fetch_preview_data ~= nil then
@@ -269,7 +266,7 @@ function M.new(props)
     end
   end
 
-  ---@type fml.ux.search.IPatchPreviewData|nil
+  ---@type eve.ux.search.IPatchPreviewData|nil
   local patch_preview_data = nil
   if preview_enabled and provider.patch_preview_data ~= nil then
     patch_preview_data = function(item, last_item, data)
@@ -281,8 +278,8 @@ function M.new(props)
     end
   end
 
-  ---@param widget                      fml.ux.search.ISearch
-  ---@param items                       fml.ux.search.IItem[]
+  ---@param widget                      eve.ux.search.ISearch
+  ---@param items                       eve.ux.search.IItem[]
   ---@return nil
   ---@diagnostic disable-next-line: unused-local
   local function on_confirm(widget, items)
@@ -332,8 +329,8 @@ function M.new(props)
     end
   end
 
-  ---@type fml.ux.search.ISearch
-  local search = Search.new({
+  ---@type eve.ux.search.ISearch
+  local search = eve.ux.Search.new({
     context = context,
     delay_render = delay_render,
     fetch_preview_data = fetch_preview_data,
@@ -366,7 +363,7 @@ function M.new(props)
   return self
 end
 
----@param dimension                     fml.ux.search.IRawDimension
+---@param dimension                     eve.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
   self._search.context:change_dimension(dimension)
@@ -412,7 +409,7 @@ end
 
 ---@param input                         string
 ---@param force                         boolean
----@return fml.ux.search.IData
+---@return eve.ux.search.IData
 function M:fetch_data(input, force)
   local is_data_dirty = force or self._live_data_dirty:snapshot() ---@type boolean
   self._live_data_dirty:next(false)
@@ -442,17 +439,17 @@ function M:fetch_data(input, force)
 
   local item_map = self._item_map ---@type table<string, fml.ux.select.IItem>
   local matches = self:filter(input) ---@type fml.ux.select.IMatchedItem[]
-  local items = {} ---@type fml.ux.search.IItem[]
+  local items = {} ---@type eve.ux.search.IItem[]
   local render_item = self._provider.render_item or M.default_render_item ---@type fml.ux.select.IRenderItem
   for _, match in ipairs(matches) do
     local item = item_map[match.uuid] ---@type fml.ux.select.IItem
     local line, highlights = render_item(item, match)
-    ---@type fml.ux.search.IItem
+    ---@type eve.ux.search.IItem
     local search_item = { group = item.group, uuid = item.uuid, text = line, highlights = highlights }
     table.insert(items, search_item)
   end
 
-  ---@type fml.ux.search.IData
+  ---@type eve.ux.search.IData
   return { items = items, uuid_cursor = self._item_uuid_cursor, uuid_present = self._item_uuid_present }
 end
 
@@ -581,7 +578,7 @@ end
 ---@return fml.ux.select.IItem|nil
 ---@return integer
 function M:get_item_selected()
-  local _, lnum, uuid = self._search:get_item_selected() ---@type fml.ux.search.IItem|nil, integer, string|nil
+  local _, lnum, uuid = self._search:get_item_selected() ---@type eve.ux.search.IItem|nil, integer, string|nil
   local item = uuid ~= nil and self._item_map[uuid] or nil ---@type fml.ux.select.IItem|nil
   return item, lnum
 end

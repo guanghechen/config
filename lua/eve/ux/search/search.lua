@@ -1,7 +1,3 @@
-local SearchInput = require("fml.ux.search.input")
-local SearchMain = require("fml.ux.search.main")
-local SearchPreview = require("fml.ux.search.preview")
-
 local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 
 local highlights = {
@@ -40,92 +36,92 @@ local borders = {
   -- stylua: ignore end
 }
 
----@class fml.ux.search.ISearch : eve.t.ux.IWidget
----@field public context                fml.ux.search.IContext
----@field public change_input_title     fun(self: fml.ux.search.ISearch, title: string): nil
----@field public change_preview_title   fun(self: fml.ux.search.ISearch, title: string): nil
----@field public get_item_selected      fun(self: fml.ux.search.ISearch): fml.ux.search.IItem|nil, integer, string|nil
----@field public get_winnr_input        fun(self: fml.ux.search.ISearch): integer|nil
----@field public get_winnr_main         fun(self: fml.ux.search.ISearch): integer|nil
----@field public get_winnr_preview      fun(self: fml.ux.search.ISearch): integer|nil
----@field public mark_item_deleted      fun(self: fml.ux.search.ISearch, uuid: string): nil
----@field public reset_input            fun(self: fml.ux.search.ISearch, text: string): nil
----@field public show                   fun(self: fml.ux.search.ISearch): nil
----@field public toggle                 fun(self: fml.ux.search.ISearch): nil
+---@class eve.ux.search.ISearch : eve.t.ux.IWidget
+---@field public context                eve.ux.search.IContext
+---@field public change_input_title     fun(self: eve.ux.search.ISearch, title: string): nil
+---@field public change_preview_title   fun(self: eve.ux.search.ISearch, title: string): nil
+---@field public get_item_selected      fun(self: eve.ux.search.ISearch): eve.ux.search.IItem|nil, integer, string|nil
+---@field public get_winnr_input        fun(self: eve.ux.search.ISearch): integer|nil
+---@field public get_winnr_main         fun(self: eve.ux.search.ISearch): integer|nil
+---@field public get_winnr_preview      fun(self: eve.ux.search.ISearch): integer|nil
+---@field public mark_item_deleted      fun(self: eve.ux.search.ISearch, uuid: string): nil
+---@field public reset_input            fun(self: eve.ux.search.ISearch, text: string): nil
+---@field public show                   fun(self: eve.ux.search.ISearch): nil
+---@field public toggle                 fun(self: eve.ux.search.ISearch): nil
 
----@alias fml.ux.search.IOnClose
+---@alias eve.ux.search.IOnClose
 ---| fun(): nil
 
----@alias fml.ux.search.IOnConfirm
----| fun(widget: fml.ux.search.ISearch, items: fml.ux.search.IItem[]): nil
+---@alias eve.ux.search.IOnConfirm
+---| fun(widget: eve.ux.search.ISearch, items: eve.ux.search.IItem[]): nil
 
----@alias fml.ux.search.IOnInvisible
+---@alias eve.ux.search.IOnInvisible
 ---| fun(): nil
 
----@alias fml.ux.search.IOnMainRendered
+---@alias eve.ux.search.IOnMainRendered
 ---| fun(): nil
 
----@alias fml.ux.search.IOnPreviewRendered
+---@alias eve.ux.search.IOnPreviewRendered
 ---| fun(): nil
 
----@alias fml.ux.search.IOnResume
+---@alias eve.ux.search.IOnResume
 ---| fun(): nil
 
----@alias fml.ux.search.IFetchPreviewData
----| fun(item: fml.ux.search.IItem): fml.ux.search.preview.IData|nil
+---@alias eve.ux.search.IFetchPreviewData
+---| fun(item: eve.ux.search.IItem): eve.ux.search.preview.IData|nil
 
----@alias fml.ux.search.IPatchPreviewData
----| fun(item: fml.ux.search.IItem, last_item: fml.ux.search.IItem, last_data: fml.ux.search.preview.IData): fml.ux.search.preview.IData
+---@alias eve.ux.search.IPatchPreviewData
+---| fun(item: eve.ux.search.IItem, last_item: eve.ux.search.IItem, last_data: eve.ux.search.preview.IData): eve.ux.search.preview.IData
 
----@alias fml.ux.search.IFetchDataCallback
----| fun(ok: true, data: fml.ux.search.IData|nil): nil
+---@alias eve.ux.search.IFetchDataCallback
+---| fun(ok: true, data: eve.ux.search.IData|nil): nil
 ---| fun(ok: false, error: string|nil): nil
 
----@alias fml.ux.search.IFetchData
----| fun(input: string, force: boolean, callback: fml.ux.search.IFetchDataCallback): nil
+---@alias eve.ux.search.IFetchData
+---| fun(input: string, force: boolean, callback: eve.ux.search.IFetchDataCallback): nil
 
----@class fml.ux.search.IData
----@field public items                  fml.ux.search.IItem[]
+---@class eve.ux.search.IData
+---@field public items                  eve.ux.search.IItem[]
 ---@field public uuid_cursor            ?string
 ---@field public uuid_present           ?string
 
----@class fml.ux.search.IItem
+---@class eve.ux.search.IItem
 ---@field public group                  string|nil
 ---@field public parent                 string|nil
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public highlights             eve.t.IHighlightInline[]
 
----@class fml.ux.search.IProps
----@field public context                fml.ux.search.IContext
+---@class eve.ux.search.IProps
+---@field public context                eve.ux.search.IContext
 ---@field public delay_render           ?integer
----@field public fetch_preview_data     ?fml.ux.search.IFetchPreviewData
+---@field public fetch_preview_data     ?eve.ux.search.IFetchPreviewData
 ---@field public input_keymaps          ?eve.t.IKeymap[]
 ---@field public main_keymaps           ?eve.t.IKeymap[]
----@field public patch_preview_data     ?fml.ux.search.IPatchPreviewData
+---@field public patch_preview_data     ?eve.ux.search.IPatchPreviewData
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
 ---@field public statusline_items       eve.t.ux.widget.IRawStatuslineItem[]
----@field public on_close               ?fml.ux.search.IOnClose
----@field public on_invisible           ?fml.ux.search.IOnInvisible
----@field public on_confirm             fml.ux.search.IOnConfirm
----@field public on_preview_rendered    ?fml.ux.search.IOnPreviewRendered
+---@field public on_close               ?eve.ux.search.IOnClose
+---@field public on_invisible           ?eve.ux.search.IOnInvisible
+---@field public on_confirm             eve.ux.search.IOnConfirm
+---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
----@class fml.ux.search.Search : fml.ux.search.ISearch
----@field protected _input              fml.ux.search.IInput
----@field protected _main               fml.ux.search.IMain
----@field protected _preview            fml.ux.search.IPreview|nil
----@field protected _on_close           ?fml.ux.search.IOnClose
----@field protected _on_invisible       ?fml.ux.search.IOnInvisible
+---@class eve.ux.search.Search : eve.ux.search.ISearch
+---@field protected _input              eve.ux.search.IInput
+---@field protected _main               eve.ux.search.IMain
+---@field protected _preview            eve.ux.search.IPreview|nil
+---@field protected _on_close           ?eve.ux.search.IOnClose
+---@field protected _on_invisible       ?eve.ux.search.IOnInvisible
 local M = {}
 M.__index = M
 
----@param props                         fml.ux.search.IProps
----@return fml.ux.search.Search
+---@param props                         eve.ux.search.IProps
+---@return eve.ux.search.Search
 function M.new(props)
   local self = setmetatable({}, M)
 
   local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
-  local context = props.context ---@type fml.ux.search.IContext
+  local context = props.context ---@type eve.ux.search.IContext
   local common_keymaps = eve.state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
@@ -156,17 +152,17 @@ function M.new(props)
     end
   end
 
-  local on_confirm_from_props = props.on_confirm ---@type fml.ux.search.IOnConfirm
-  local on_close_from_props = props.on_close ---@type fml.ux.search.IOnClose|nil
-  local on_invisible_from_props = props.on_invisible ---@type fml.ux.search.IOnInvisible|nil
+  local on_confirm_from_props = props.on_confirm ---@type eve.ux.search.IOnConfirm
+  local on_close_from_props = props.on_close ---@type eve.ux.search.IOnClose|nil
+  local on_invisible_from_props = props.on_invisible ---@type eve.ux.search.IOnInvisible|nil
 
   ---@return nil
   local function on_confirm()
-    local selected_items = context:get_selected_items() ---@type fml.ux.search.IItem[]
+    local selected_items = context:get_selected_items() ---@type eve.ux.search.IItem[]
     if #selected_items < 1 then
-      local item = context:get_current() ---@type fml.ux.search.IItem|nil
+      local item = context:get_current() ---@type eve.ux.search.IItem|nil
       if item ~= nil then
-        selected_items = { item } ---@type fml.ux.search.IItem[]
+        selected_items = { item } ---@type eve.ux.search.IItem[]
       end
     end
 
@@ -193,7 +189,7 @@ function M.new(props)
     self:sync_main_cursor()
   end
 
-  ---@class fml.ux.search.search.actions
+  ---@class eve.ux.search.search.actions
   local actions = {
     focus_left = function()
       context:focus_left()
@@ -515,24 +511,24 @@ function M.new(props)
     vim.list_extend(input_keymaps, additional_input_keymaps)
   end
 
-  ---@type fml.ux.search.IInput
-  local input = SearchInput.new({
+  ---@type eve.ux.search.IInput
+  local input = eve.ux.SearchInput.new({
     context = context,
     keymaps = input_keymaps,
   })
 
-  ---@type fml.ux.search.IMain
-  local main = SearchMain.new({
+  ---@type eve.ux.search.IMain
+  local main = eve.ux.SearchMain.new({
     context = context,
     keymaps = main_keymaps,
     on_rendered = on_main_renderered,
     delay_render = delay_render,
   })
 
-  ---@type fml.ux.search.IPreview|nil
+  ---@type eve.ux.search.IPreview|nil
   local preview = nil
   if enable_preview and props.fetch_preview_data then
-    preview = SearchPreview.new({
+    preview = eve.ux.SearchPreview.new({
       context = context,
       keymaps = preview_keymaps,
       fetch_data = props.fetch_preview_data,
@@ -564,7 +560,7 @@ function M.new(props)
   self._on_invisible = on_invisible_from_props
 
   local draw_wins_scheduler = eve.std.Scheduler.new({
-    name = "fml.ux.search.search.draw",
+    name = "eve.ux.search.search.draw",
     delay = 64,
     task = function(callback)
       local status = context.status:snapshot() ---@type eve.e.WidgetStatus
@@ -680,7 +676,7 @@ end
 
 ---@return nil
 function M:sync_main_cursor()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local winnr_main = context.winnr_main ---@type integer|nil
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     local lnum = context:place_lnum_sign() ---@type integer|nil
@@ -692,8 +688,8 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local context = self.context ---@type fml.ux.search.IContext
-  local dimension = context.dimension ---@type fml.ux.search.IDimension
+  local context = self.context ---@type eve.ux.search.IContext
+  local dimension = context.dimension ---@type eve.ux.search.IDimension
 
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
@@ -917,7 +913,7 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   context.cfg_input_title = title
   local winnr = context.winnr_input ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -931,7 +927,7 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   context.cfg_preview_title = title
   local winnr = context.winnr_preview ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -944,7 +940,7 @@ end
 
 ---@return nil
 function M:close()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
 
   self:hide()
 
@@ -984,12 +980,12 @@ end
 
 ---@return boolean
 function M:focused()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   return winnr_cur == context.winnr_input or winnr_cur == context.winnr_main or winnr_cur == context.winnr_preview
 end
 
----@return fml.ux.search.IItem|nil
+---@return eve.ux.search.IItem|nil
 ---@return integer
 function M:get_item_selected()
   return self.context:get_current()
@@ -1012,7 +1008,7 @@ end
 
 ---@return nil
 function M:hide()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local winnr_input = context.winnr_input ---@type integer|nil
   local winnr_main = context.winnr_main ---@type integer|nil
   local winnr_preview = context.winnr_preview ---@type integer|nil

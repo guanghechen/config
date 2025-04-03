@@ -1,39 +1,39 @@
----@class fml.ux.search.IMain
----@field public context                fml.ux.search.IContext
----@field public create_buf_as_needed   fun(self: fml.ux.search.IMain): integer
----@field public destroy                fun(self: fml.ux.search.IMain): nil
----@field public render                 fun(self: fml.ux.search.IMain): nil
+---@class eve.ux.search.IMain
+---@field public context                eve.ux.search.IContext
+---@field public create_buf_as_needed   fun(self: eve.ux.search.IMain): integer
+---@field public destroy                fun(self: eve.ux.search.IMain): nil
+---@field public render                 fun(self: eve.ux.search.IMain): nil
 
----@class fml.ux.search.Main : fml.ux.search.IMain
+---@class eve.ux.search.Main : eve.ux.search.IMain
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _render_scheduler   eve.std.collection.IScheduler
 local M = {}
 M.__index = M
 
----@class fml.ux.search.main.IProps
+---@class eve.ux.search.main.IProps
 ---@field public delay_render           integer
 ---@field public keymaps                eve.t.IKeymap[]
----@field public context                fml.ux.search.IContext
----@field public on_rendered            ?fml.ux.search.IOnMainRendered
+---@field public context                eve.ux.search.IContext
+---@field public on_rendered            ?eve.ux.search.IOnMainRendered
 
----@param props                         fml.ux.search.main.IProps
----@return fml.ux.search.Main
+---@param props                         eve.ux.search.main.IProps
+---@return eve.ux.search.Main
 function M.new(props)
   local self = setmetatable({}, M)
 
   local delay_render = props.delay_render ---@type integer
   local keymaps = props.keymaps ---@type eve.t.IKeymap[]
-  local context = props.context ---@type fml.ux.search.IContext
-  local on_rendered = props.on_rendered ---@type fml.ux.search.IOnMainRendered|nil
+  local context = props.context ---@type eve.ux.search.IContext
+  local on_rendered = props.on_rendered ---@type eve.ux.search.IOnMainRendered|nil
 
-  local _last_items = nil ---@type fml.ux.search.IItem[]|nil
+  local _last_items = nil ---@type eve.ux.search.IItem[]|nil
   local _last_items_count = 0 ---@type integer
   local _last_drawed_bufnr = nil ---@type integer|nil
 
   ---@return nil
   local function render()
     local bufnr = self:create_buf_as_needed() ---@type integer
-    local last_items = _last_items ---@type fml.ux.search.IItem[]|nil
+    local last_items = _last_items ---@type eve.ux.search.IItem[]|nil
     local last_items_count = _last_items_count ---@type integer
     _last_items = context.items
     _last_items_count = #context.items
@@ -71,7 +71,7 @@ function M.new(props)
   end
 
   local render_scheduler = eve.std.Scheduler.new({
-    name = "fml.ux.search.main.render",
+    name = "eve.ux.search.main.render",
     delay = delay_render,
     task = function(callback)
       local ok, reason = pcall(render)
@@ -112,7 +112,7 @@ end
 ---@return integer
 ---@return boolean
 function M:create_buf_as_needed()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   if context.bufnr_main ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_main) then
     return context.bufnr_main, false
   end
@@ -136,7 +136,7 @@ end
 
 ---@return nil
 function M:destroy()
-  local context = self.context ---@type fml.ux.search.IContext
+  local context = self.context ---@type eve.ux.search.IContext
   local bufnr = context.bufnr_main ---@type integer|nil
   context.bufnr_main = nil
 

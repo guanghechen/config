@@ -178,7 +178,7 @@ function M.prompt()
       local data = item.data ---@type ghc.action.copilot_chat.prompt_actions.IItem
       local lines = vim.split(data.prompt or "", "\n", { plain = true }) ---@type string[]
 
-      ---@type fml.ux.search.preview.IData
+      ---@type eve.ux.search.preview.IData
       local result = {
         title = "Prompt",
         lines = lines,

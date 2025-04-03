@@ -1,8 +1,5 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local Search = require("fml.ux.search.search")
-local SearchContext = require("fml.ux.search.context")
-
 ---@return eve.e.SearchFileScope
 local function get_scope_carousel_next()
   local scopes = eve.state.select.search_file_scopes ---@type eve.e.SearchFileScope[]
@@ -109,7 +106,7 @@ eve.state.select.search_file_scope:subscribe(
   true
 )
 
-local _search = nil ---@type fml.ux.search.ISearch|nil
+local _search = nil ---@type eve.ux.search.ISearch|nil
 
 ---@class fml.action.search.files.context
 local M = {}
@@ -249,7 +246,7 @@ function M.edit_config()
   })
 end
 
----@return fml.ux.search.ISearch
+---@return eve.ux.search.ISearch
 function M.get_search()
   if _search == nil then
     local api = require("fml.action.search.files.api")
@@ -258,8 +255,8 @@ function M.get_search()
     local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
     local title = gen_title() ---@type string
 
-    ---@type fml.ux.search.IContext
-    local context = SearchContext.new({
+    ---@type eve.ux.search.IContext
+    local context = eve.ux.SearchContext.new({
       delay_fetch = 512,
       dimension = {
         height = 0.8,
@@ -278,7 +275,7 @@ function M.get_search()
       title = title,
     })
 
-    _search = Search.new({
+    _search = eve.ux.Search.new({
       context = context,
       fetch_preview_data = api.fetch_preview_data,
       input_keymaps = keybindings.input_keymaps,
@@ -345,8 +342,8 @@ end
 
 ---@return nil
 function M.replace_file()
-  local search = M.get_search() ---@type fml.ux.search.ISearch
-  local item = search.context:get_current() ---@type fml.ux.search.IItem|nil
+  local search = M.get_search() ---@type eve.ux.search.ISearch
+  local item = search.context:get_current() ---@type eve.ux.search.IItem|nil
   if item ~= nil then
     local api = require("fml.action.search.files.api")
     api.replace_file(item.uuid)

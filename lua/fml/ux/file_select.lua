@@ -1,7 +1,7 @@
 local Select = require("fml.ux.select")
 
 ---@class fml.ux.IFileSelect : eve.t.ux.IWidget
----@field public change_dimension       fun(self: fml.ux.IFileSelect, dimension: fml.ux.search.IRawDimension): nil
+---@field public change_dimension       fun(self: fml.ux.IFileSelect, dimension: eve.ux.search.IRawDimension): nil
 ---@field public change_input_title     fun(self: fml.ux.IFileSelect, title: string): nil
 ---@field public change_preview_title   fun(self: fml.ux.IFileSelect, title: string): nil
 ---@field public get_item               fun(self: fml.ux.IFileSelect, uuid: string): fml.ux.select.IItem|nil
@@ -19,10 +19,10 @@ local Select = require("fml.ux.select")
 ---| fun(force: boolean): fml.ux.file_select.IData
 
 ---@alias fml.ux.file_select.IFetchPreviewData
----| fun(item: fml.ux.file_select.IItem): fml.ux.search.preview.IData|nil
+---| fun(item: fml.ux.file_select.IItem): eve.ux.search.preview.IData|nil
 
 ---@alias fml.ux.file_select.IPatchPreviewData
----| fun(item: fml.ux.file_select.IItem, last_item: fml.ux.file_select.IItem, last_data: fml.ux.search.preview.IData): fml.ux.search.preview.IData
+---| fun(item: fml.ux.file_select.IItem, last_item: fml.ux.file_select.IItem, last_data: eve.ux.search.preview.IData): eve.ux.search.preview.IData
 
 ---@alias fml.ux.file_select.IRenderItem
 ---| fun(item: fml.ux.file_select.IItem, match: fml.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
@@ -68,7 +68,7 @@ M.__index = M
 ---@field public cmp                    ?fml.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
----@field public dimension              ?fml.ux.search.IRawDimension
+---@field public dimension              ?eve.ux.search.IRawDimension
 ---@field public dirty_on_invisible     ?boolean
 ---@field public preview_enabled        boolean
 ---@field public preview_wrap           ?boolean
@@ -87,9 +87,9 @@ M.__index = M
 ---@field public provider               fml.ux.file_select.IProvider
 ---@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
----@field public on_close               ?fml.ux.search.IOnClose
+---@field public on_close               ?eve.ux.search.IOnClose
 ---@field public on_confirm             ?fml.ux.select.IOnConfirm
----@field public on_preview_rendered    ?fml.ux.search.IOnPreviewRendered
+---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
 ---@param props fml.ux.file_select.IProps
 ---@return fml.ux.FileSelect
@@ -118,9 +118,9 @@ function M.new(props)
   local provider = props.provider ---@type fml.ux.file_select.IProvider
   local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
-  local on_close = props.on_close ---@type fml.ux.search.IOnClose|nil
+  local on_close = props.on_close ---@type eve.ux.search.IOnClose|nil
   local on_confirm_from_props = props.on_confirm ---@type fml.ux.select.IOnConfirm|nil
-  local on_preview_rendered = props.on_preview_rendered ---@type fml.ux.search.IOnPreviewRendered|nil
+  local on_preview_rendered = props.on_preview_rendered ---@type eve.ux.search.IOnPreviewRendered|nil
 
   local _select = nil ---@type fml.ux.ISelect|nil
 
@@ -208,9 +208,9 @@ function M.new(props)
     render_item = provider.render_item or M.render_item,
   }
 
-  local dimension_from_props = props.dimension or {} ---@type fml.ux.search.IRawDimension
+  local dimension_from_props = props.dimension or {} ---@type eve.ux.search.IRawDimension
 
-  ---@type fml.ux.search.IRawDimension
+  ---@type eve.ux.search.IRawDimension
   local dimension = {
     height = dimension_from_props.height or 0.8,
     max_height = dimension_from_props.max_height or 1,
@@ -269,7 +269,7 @@ function M.new(props)
 end
 
 ---@param item                          fml.ux.file_select.IItem
----@return fml.ux.search.preview.IData
+---@return eve.ux.search.preview.IData
 function M.fetch_preview_data(item)
   local filepath = item.data.filepath ---@type string
   local filename = item.data.filename ---@type string
@@ -278,7 +278,7 @@ function M.fetch_preview_data(item)
     local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
     local lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
 
-    ---@type fml.ux.search.preview.IData
+    ---@type eve.ux.search.preview.IData
     return {
       lines = lines,
       highlights = {},
@@ -292,16 +292,16 @@ function M.fetch_preview_data(item)
   local lines = { "  Not a text file, cannot preview." } ---@type string[]
   local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
 
-  ---@type fml.ux.search.preview.IData
+  ---@type eve.ux.search.preview.IData
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
 end
 
 ---@param item                          fml.ux.file_select.IItem
 ---@param last_item                     fml.ux.file_select.IItem
----@param last_data                     fml.ux.search.preview.IData
+---@param last_data                     eve.ux.search.preview.IData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(item, last_item, last_data)
-  ---@type fml.ux.search.preview.IData
+  ---@type eve.ux.search.preview.IData
   return {
     lines = last_data.lines,
     highlights = {},
@@ -334,7 +334,7 @@ function M.render_item(item, match)
   return text, highlights
 end
 
----@param dimension                     fml.ux.search.IRawDimension
+---@param dimension                     eve.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(dimension)
   local select = self._get_select() ---@type fml.ux.ISelect

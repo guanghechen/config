@@ -1,6 +1,6 @@
-local __module_name__ = "fml.ux.search.context" ---@type string
+local __module_name__ = "eve.ux.search.context" ---@type string
 
----@class fml.ux.search.IRawDimension
+---@class eve.ux.search.IRawDimension
 ---@field public height                 ?number
 ---@field public max_width              ?number
 ---@field public max_height             ?number
@@ -9,7 +9,7 @@ local __module_name__ = "fml.ux.search.context" ---@type string
 ---@field public width                  ?number
 ---@field public width_preview          ?number
 
----@class fml.ux.search.IDimension
+---@class eve.ux.search.IDimension
 ---@field public height                 ?number
 ---@field public max_width              number
 ---@field public max_height             number
@@ -18,7 +18,7 @@ local __module_name__ = "fml.ux.search.context" ---@type string
 ---@field public width                  ?number
 ---@field public width_preview          ?number
 
----@class fml.ux.search.IContext
+---@class eve.ux.search.IContext
 ---@field public dirtier_dimension      eve.std.collection.IDirtier
 ---@field public dirtier_data           eve.std.collection.IDirtier
 ---@field public dirtier_data_cache     eve.std.collection.IDirtier
@@ -48,55 +48,55 @@ local __module_name__ = "fml.ux.search.context" ---@type string
 ---@field public focused_pane_left      "input"|"main"
 ---@field public focused_pane_right     "preview"
 ---
----@field public dimension              fml.ux.search.IDimension
+---@field public dimension              eve.ux.search.IDimension
 ---@field public enable_multiline_input boolean
 ---@field public item_max_width         integer
 ---@field public item_uuid_present      string|nil
----@field public items                  fml.ux.search.IItem[]
----@field public items_valid_map        table<string, fml.ux.search.IItem>
----@field public items_original         fml.ux.search.IItem[]
+---@field public items                  eve.ux.search.IItem[]
+---@field public items_valid_map        table<string, eve.ux.search.IItem>
+---@field public items_original         eve.ux.search.IItem[]
 ---@field public multiple               boolean
 ---@field public permanent              boolean
 ---@field public uuid                   string
 ---
----@field public focus_left             fun(self: fml.ux.search.IContext): nil
----@field public focus_right            fun(self: fml.ux.search.IContext): nil
----@field public focus_input            fun(self: fml.ux.search.IContext): nil
----@field public focus_main             fun(self: fml.ux.search.IContext): nil
----@field public focus_preview          fun(self: fml.ux.search.IContext): nil
+---@field public focus_left             fun(self: eve.ux.search.IContext): nil
+---@field public focus_right            fun(self: eve.ux.search.IContext): nil
+---@field public focus_input            fun(self: eve.ux.search.IContext): nil
+---@field public focus_main             fun(self: eve.ux.search.IContext): nil
+---@field public focus_preview          fun(self: eve.ux.search.IContext): nil
 ---
----@field public change_dimension       fun(self: fml.ux.search.IContext, dimension: fml.ux.search.IRawDimension): nil
----@field public get_current            fun(self: fml.ux.search.IContext): fml.ux.search.IItem|nil, integer
----@field public get_current_lnum       fun(self: fml.ux.search.IContext): integer
----@field public get_current_uuid       fun(self: fml.ux.search.IContext): string|nil
----@field public get_selected_items     fun(self: fml.ux.search.IContext): fml.ux.search.IItem[]
----@field public has_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): boolean
----@field public set_current            fun(self: fml.ux.search.IContext, lnum: integer): integer
----@field public locate                 fun(self: fml.ux.search.IContext, lnum: integer): integer
----@field public mark_all_items_deleted fun(self: fml.ux.search.IContext): nil
----@field public moveup                 fun(self: fml.ux.search.IContext): integer
----@field public movedown               fun(self: fml.ux.search.IContext): integer
----@field public place_lnum_sign        fun(self: fml.ux.search.IContext): integer|nil
----@field public place_selected_sign    fun(self: fml.ux.search.IContext): nil
----@field public reset_selected_items   fun(self: fml.ux.search.IContext): nil
----@field public set_item_deleted       fun(self: fml.ux.search.IContext, uuid: string): nil
----@field public set_item_selected      fun(self: fml.ux.search.IContext, uuid: string, selected: boolean): nil
----@field public show_state             fun(self: fml.ux.search.IContext): nil
----@field public toggle_item_selected   fun(self: fml.ux.search.IContext, lnum: integer): nil
----@field public toggle_items_selected  fun(self: fml.ux.search.IContext, lnums: integer[]): nil
+---@field public change_dimension       fun(self: eve.ux.search.IContext, dimension: eve.ux.search.IRawDimension): nil
+---@field public get_current            fun(self: eve.ux.search.IContext): eve.ux.search.IItem|nil, integer
+---@field public get_current_lnum       fun(self: eve.ux.search.IContext): integer
+---@field public get_current_uuid       fun(self: eve.ux.search.IContext): string|nil
+---@field public get_selected_items     fun(self: eve.ux.search.IContext): eve.ux.search.IItem[]
+---@field public has_item_deleted       fun(self: eve.ux.search.IContext, uuid: string): boolean
+---@field public set_current            fun(self: eve.ux.search.IContext, lnum: integer): integer
+---@field public locate                 fun(self: eve.ux.search.IContext, lnum: integer): integer
+---@field public mark_all_items_deleted fun(self: eve.ux.search.IContext): nil
+---@field public moveup                 fun(self: eve.ux.search.IContext): integer
+---@field public movedown               fun(self: eve.ux.search.IContext): integer
+---@field public place_lnum_sign        fun(self: eve.ux.search.IContext): integer|nil
+---@field public place_selected_sign    fun(self: eve.ux.search.IContext): nil
+---@field public reset_selected_items   fun(self: eve.ux.search.IContext): nil
+---@field public set_item_deleted       fun(self: eve.ux.search.IContext, uuid: string): nil
+---@field public set_item_selected      fun(self: eve.ux.search.IContext, uuid: string, selected: boolean): nil
+---@field public show_state             fun(self: eve.ux.search.IContext): nil
+---@field public toggle_item_selected   fun(self: eve.ux.search.IContext, lnum: integer): nil
+---@field public toggle_items_selected  fun(self: eve.ux.search.IContext, lnums: integer[]): nil
 
----@class fml.ux.search.Context : fml.ux.search.IContext
+---@class eve.ux.search.Context : eve.ux.search.IContext
 ---@field protected _item_lnum_cur      integer
 ---@field protected _item_uuid_cur      string|nil
 ---@field protected _uuids_selected     table<string, true>
 local M = {}
 M.__index = M
 
----@class fml.ux.search.state.IProps
+---@class eve.ux.search.state.IProps
 ---@field public delay_fetch            integer
----@field public dimension              fml.ux.search.IRawDimension|nil
+---@field public dimension              eve.ux.search.IRawDimension|nil
 ---@field public enable_multiline_input boolean
----@field public fetch_data             fml.ux.search.IFetchData
+---@field public fetch_data             eve.ux.search.IFetchData
 ---@field public flag_selected          eve.std.collection.IObservable -- boolean>
 ---@field public input                  eve.std.collection.IObservable -- string>
 ---@field public input_history          eve.std.collection.IHistory|nil
@@ -106,8 +106,8 @@ M.__index = M
 ---@field public preview_wrap           boolean|nil
 ---@field public title                  string
 
----@param props                         fml.ux.search.state.IProps
----@return fml.ux.search.Context
+---@param props                         eve.ux.search.state.IProps
+---@return eve.ux.search.Context
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -130,8 +130,8 @@ function M.new(props)
   local cfg_preview_wrap = not not props.preview_wrap ---@type boolean
 
   local delay_fetch = props.delay_fetch ---@type integer
-  local raw_dimension = props.dimension or {} ---@type fml.ux.search.IRawDimension
-  ---@type fml.ux.search.IDimension
+  local raw_dimension = props.dimension or {} ---@type eve.ux.search.IRawDimension
+  ---@type eve.ux.search.IDimension
   local dimension = {
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,
@@ -142,7 +142,7 @@ function M.new(props)
     width_preview = raw_dimension.width_preview,
   }
   local enable_multiline_input = props.enable_multiline_input ---@type boolean
-  local fetch_data = props.fetch_data ---@type fml.ux.search.IFetchData
+  local fetch_data = props.fetch_data ---@type eve.ux.search.IFetchData
   local multiple = not not props.multiple ---@type boolean
   local permanent = not not props.permanent ---@type boolean
 
@@ -150,7 +150,7 @@ function M.new(props)
 
   ---@type eve.std.collection.IScheduler
   local fetch_scheduler = eve.std.Scheduler.new({
-    name = "fml.ux.search.state.fetch",
+    name = "eve.ux.search.state.fetch",
     delay = delay_fetch,
     task = function(callback)
       local input_cur = input:snapshot() ---@type string
@@ -163,9 +163,9 @@ function M.new(props)
           local item_uuid_cursor = data.uuid_cursor or data.uuid_present or self._item_uuid_cur ---@type string|nil
           local item_uuid_present = data.uuid_present ---@type string|nil
           local next_item_lnum = 1 ---@type integer
-          local next_items = data.items ---@type fml.ux.search.IItem[]
-          local next_items_original = data.items ---@type fml.ux.search.IItem[]
-          local next_items_valid_map = {} ---@type table<string, fml.ux.search.IItem>
+          local next_items = data.items ---@type eve.ux.search.IItem[]
+          local next_items_original = data.items ---@type eve.ux.search.IItem[]
+          local next_items_valid_map = {} ---@type table<string, eve.ux.search.IItem>
           local next_uuids_selected = {} ---@type table<string, true>
 
           for _, item in ipairs(next_items_original) do
@@ -182,7 +182,7 @@ function M.new(props)
           end
 
           if flag_selected:snapshot() then
-            next_items = {} ---@type fml.ux.search.IItem[]
+            next_items = {} ---@type eve.ux.search.IItem[]
             for _, item in ipairs(next_items_original) do
               if next_uuids_selected[item.uuid] then
                 table.insert(next_items, item)
@@ -222,8 +222,8 @@ function M.new(props)
 
   ---@return nil
   local function on_flag_selected_change()
-    local items_original = self.items_original ---@type fml.ux.search.IItem[]
-    local items = flag_selected:snapshot() and {} or items_original ---@type fml.ux.search.IItem[]
+    local items_original = self.items_original ---@type eve.ux.search.IItem[]
+    local items = flag_selected:snapshot() and {} or items_original ---@type eve.ux.search.IItem[]
 
     if flag_selected:snapshot() then
       for _, item in ipairs(items_original) do
@@ -294,9 +294,9 @@ function M.new(props)
   self.enable_multiline_input = enable_multiline_input
   self.item_max_width = 0
   self.item_uuid_present = nil
-  self.items = {} ---@type fml.ux.search.IItem[]
-  self.items_original = {} ---@type fml.ux.search.IItem[]
-  self.items_valid_map = {} ---@type table<string, fml.ux.search.IItem>
+  self.items = {} ---@type eve.ux.search.IItem[]
+  self.items_original = {} ---@type eve.ux.search.IItem[]
+  self.items_valid_map = {} ---@type table<string, eve.ux.search.IItem>
   self.multiple = multiple
   self.permanent = permanent
   self.uuid = uuid
@@ -325,12 +325,12 @@ function M:dispose()
   self.status:dispose()
 end
 
----@param raw_dimension                 fml.ux.search.IRawDimension
+---@param raw_dimension                 eve.ux.search.IRawDimension
 ---@return nil
 function M:change_dimension(raw_dimension)
   local old_dimension = self.dimension
 
-  ---@type fml.ux.search.IDimension
+  ---@type eve.ux.search.IDimension
   local dimension = {
     height = raw_dimension.height,
     max_width = raw_dimension.max_width or 0.8,
@@ -418,7 +418,7 @@ function M:focus_preview()
   end
 end
 
----@return fml.ux.search.IItem|nil
+---@return eve.ux.search.IItem|nil
 ---@return integer
 function M:get_current()
   local lnum = self._item_lnum_cur ---@type integer
@@ -435,12 +435,12 @@ function M:get_current_uuid()
   return self._item_uuid_cur
 end
 
----@return fml.ux.search.IItem[]
+---@return eve.ux.search.IItem[]
 function M:get_selected_items()
-  local selected = {} ---@type fml.ux.search.IItem[]
-  local items_valid_map = self.items_valid_map ---@type table<string, fml.ux.search.IItem>
+  local selected = {} ---@type eve.ux.search.IItem[]
+  local items_valid_map = self.items_valid_map ---@type table<string, eve.ux.search.IItem>
   for uuid in pairs(self._uuids_selected) do
-    local item = items_valid_map[uuid] ---@type fml.ux.search.IItem|nil
+    local item = items_valid_map[uuid] ---@type eve.ux.search.IItem|nil
     if item then
       table.insert(selected, item)
     end
@@ -457,7 +457,7 @@ end
 ---@param lnum                          integer
 ---@return integer
 function M:locate(lnum)
-  local items = self.items ---@type fml.ux.search.IItem[]
+  local items = self.items ---@type eve.ux.search.IItem[]
   local item_lnum_next = math.max(1, math.min(#items, lnum)) ---@type integer
   local item_uuid_next = items[item_lnum_next] and items[item_lnum_next].uuid or nil ---@type string|nil
   if self._item_lnum_cur ~= item_lnum_next or self._item_uuid_cur ~= item_uuid_next then
@@ -471,8 +471,8 @@ end
 
 ---@return nil
 function M:mark_all_items_deleted()
-  self.items = {} ---@type fml.ux.search.IItem[]
-  self.items_valid_map = {} ---@type table<string, fml.ux.search.IItem>
+  self.items = {} ---@type eve.ux.search.IItem[]
+  self.items_valid_map = {} ---@type table<string, eve.ux.search.IItem>
   self._uuids_selected = {} ---@type table<string, true>
   self._item_lnum_cur = 0 ---@type integer
   self._item_uuid_cur = nil ---@type string|nil
@@ -486,7 +486,7 @@ end
 
 ---@return integer
 function M:moveup()
-  local items = self.items ---@type fml.ux.search.IItem[]
+  local items = self.items ---@type eve.ux.search.IItem[]
   if #items <= 1 then
     return 0
   else
@@ -498,7 +498,7 @@ end
 
 ---@return integer
 function M:movedown()
-  local items = self.items ---@type fml.ux.search.IItem[]
+  local items = self.items ---@type eve.ux.search.IItem[]
   if #items <= 1 then
     return 0
   else
@@ -566,7 +566,7 @@ function M:place_selected_sign()
     vim.fn.sign_unplace(eve.sign.GROUP_SEARCH_MAIN_SELECTED, { buffer = bufnr })
 
     local selected = self._uuids_selected ---@type table<string, true>
-    local items = self.items ---@type fml.ux.search.IItem[]
+    local items = self.items ---@type eve.ux.search.IItem[]
     for lnum, item in ipairs(items) do
       if selected[item.uuid] then
         vim.fn.sign_place(
@@ -601,7 +601,7 @@ end
 ---@param uuid                          string
 ---@return nil
 function M:set_item_deleted(uuid)
-  local items_valid_map = self.items_valid_map ---@type table<string, fml.ux.search.IItem>
+  local items_valid_map = self.items_valid_map ---@type table<string, eve.ux.search.IItem>
   if not items_valid_map[uuid] then
     return
   end
@@ -617,7 +617,7 @@ function M:set_item_deleted(uuid)
   items_valid_map[uuid] = nil
   uuids_selected[uuid] = nil
 
-  local items = self.items ---@type fml.ux.search.IItem[]
+  local items = self.items ---@type eve.ux.search.IItem[]
   local parent_cur = items[lnum].parent ---@type string|nil
   if parent_cur ~= nil and lnum > 1 and items[lnum - 1].uuid == parent_cur then
     if lnum == #items or items[lnum + 1].parent ~= parent_cur then
@@ -630,9 +630,9 @@ function M:set_item_deleted(uuid)
   local N = #items ---@type integer
   local k = lnum ---@type integer
   for i = lnum + 1, N, 1 do
-    local item = items[i] ---@type fml.ux.search.IItem
+    local item = items[i] ---@type eve.ux.search.IItem
     if item.parent == nil or items_valid_map[item.parent] then
-      items_valid_map[item.uuid] = items[i] ---@type fml.ux.search.IItem
+      items_valid_map[item.uuid] = items[i] ---@type eve.ux.search.IItem
       items[k] = items[i]
       k = k + 1
     else
@@ -722,7 +722,7 @@ end
 ---@return nil
 function M:toggle_item_selected(lnum)
   if self.multiple then
-    local item = self.items[lnum] ---@type fml.ux.search.IItem
+    local item = self.items[lnum] ---@type eve.ux.search.IItem
     if item ~= nil then
       local uuids_selected = self._uuids_selected ---@type table<string, true>
       if uuids_selected[item.uuid] then
@@ -744,7 +744,7 @@ function M:toggle_items_selected(lnums)
     local dirty = false ---@type boolean
     local selected = false ---@type boolean
     for _, lnum in ipairs(lnums) do
-      local item = self.items[lnum] ---@type fml.ux.search.IItem|nil
+      local item = self.items[lnum] ---@type eve.ux.search.IItem|nil
       if item ~= nil and uuids_selected[item.uuid] then
         selected = true
         break
@@ -753,7 +753,7 @@ function M:toggle_items_selected(lnums)
 
     local value = selected == false and true or nil ---@type boolean|nil
     for _, lnum in ipairs(lnums) do
-      local item = self.items[lnum] ---@type fml.ux.search.IItem|nil
+      local item = self.items[lnum] ---@type eve.ux.search.IItem|nil
       if item ~= nil then
         dirty = true
         uuids_selected[item.uuid] = value

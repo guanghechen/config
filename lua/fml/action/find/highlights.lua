@@ -5,7 +5,7 @@ local Select = require("fml.ux.select")
 
 local _hlnames ---@type string[]|nil
 local _hlgroups ---@type table<string, vim.api.keyset.get_hl_info>
-local _preview_data ---@type fml.ux.search.preview.IData|nil
+local _preview_data ---@type eve.ux.search.preview.IData|nil
 
 ---@type fml.ux.select.IProvider
 local provider = {
@@ -82,7 +82,7 @@ local provider = {
         table.insert(highlights, highlight)
       end
 
-      ---@type fml.ux.search.preview.IData
+      ---@type eve.ux.search.preview.IData
       _preview_data = {
         lines = lines,
         highlights = highlights,
@@ -95,7 +95,7 @@ local provider = {
     return _preview_data
   end,
   patch_preview_data = function(item, _, last_data)
-    ---@type fml.ux.search.preview.IData
+    ---@type eve.ux.search.preview.IData
     local data = {
       lines = last_data.lines,
       highlights = last_data.highlights,
