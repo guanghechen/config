@@ -1,5 +1,3 @@
-local FileSelect = require("fml.ux.file_select")
-
 ---@class fml.fn.select_files.IParams
 ---@field public cwd                    string
 ---@field public dimension              ?eve.ux.IRawSearchDimension
@@ -37,18 +35,18 @@ local function select_files(params)
     end
   end
 
-  local file_select = nil ---@type fml.ux.IFileSelect|nil
-  local last_data = nil ---@type fml.ux.file_select.IData|nil
+  local file_select = nil ---@type eve.ux.IFileSelect|nil
+  local last_data = nil ---@type eve.ux.file_select.IData|nil
 
-  ---@type fml.ux.file_select.IProvider
+  ---@type eve.ux.file_select.IProvider
   local provider = {
     fetch_data = function(force)
       if force or last_data == nil then
         local filepaths = fetch_filepaths() ---@type string[]
         table.sort(filepaths)
 
-        local items = FileSelect.make_items_by_filepaths(cwd, filepaths) ---@type fml.ux.file_select.IRawItem[]
-        last_data = { cwd = cwd, items = items } ---@type fml.ux.file_select.IData
+        local items = eve.ux.FileSelect.make_items_by_filepaths(cwd, filepaths) ---@type eve.ux.file_select.IRawItem[]
+        last_data = { cwd = cwd, items = items } ---@type eve.ux.file_select.IData
 
         if file_select ~= nil then
           local width = 0 ---@type integer
@@ -63,27 +61,29 @@ local function select_files(params)
 
       local present = get_present ~= nil and get_present() or nil ---@type string|nil
 
-      ---@type fml.ux.file_select.IData
+      ---@type eve.ux.file_select.IData
       local data = { items = last_data.items, uuid_present = present }
       return data
     end,
   }
 
-  file_select = FileSelect.new({
-    cmp = eve.ux.Select.cmp_by_score,
-    dimension = dimension,
-    dirty_on_invisible = true,
-    preview_enabled = false,
-    extend_preset_keymaps = true,
-    flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
-    flag_regex = eve.std.Observable.from_value(flag_regex),
-    frecency = eve.state.frecency.files,
-    input = input,
-    multiple = multiple,
-    permanent = false,
-    provider = provider,
-    title = title,
-  }):show()
+  file_select = eve.ux.FileSelect
+    .new({
+      cmp = eve.ux.Select.cmp_by_score,
+      dimension = dimension,
+      dirty_on_invisible = true,
+      preview_enabled = false,
+      extend_preset_keymaps = true,
+      flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
+      flag_regex = eve.std.Observable.from_value(flag_regex),
+      frecency = eve.state.frecency.files,
+      input = input,
+      multiple = multiple,
+      permanent = false,
+      provider = provider,
+      title = title,
+    })
+    :show()
 end
 
 return select_files

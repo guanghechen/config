@@ -1,35 +1,35 @@
----@class fml.ux.IFileSelect : eve.t.ux.IWidget
----@field public change_dimension       fun(self: fml.ux.IFileSelect, dimension: eve.ux.IRawSearchDimension): nil
----@field public change_input_title     fun(self: fml.ux.IFileSelect, title: string): nil
----@field public change_preview_title   fun(self: fml.ux.IFileSelect, title: string): nil
----@field public get_item               fun(self: fml.ux.IFileSelect, uuid: string): eve.ux.select.IItem|nil
----@field public get_matched_items      fun(self: fml.ux.IFileSelect): eve.ux.select.IMatchedItem[]
----@field public get_winnr_input        fun(self: fml.ux.IFileSelect): integer|nil
----@field public get_winnr_main         fun(self: fml.ux.IFileSelect): integer|nil
----@field public get_winnr_preview      fun(self: fml.ux.IFileSelect): integer|nil
----@field public mark_data_dirty        fun(self: fml.ux.IFileSelect): nil
----@field public mark_item_deleted      fun(self: fml.ux.IFileSelect, uuid: string): nil
----@field public reset_input            fun(self: fml.ux.IFileSelect, text: string): nil
----@field public show                   fun(self: fml.ux.IFileSelect): nil
----@field public toggle                 fun(self: fml.ux.IFileSelect): nil
+---@class eve.ux.IFileSelect : eve.t.ux.IWidget
+---@field public change_dimension       fun(self: eve.ux.IFileSelect, dimension: eve.ux.IRawSearchDimension): nil
+---@field public change_input_title     fun(self: eve.ux.IFileSelect, title: string): nil
+---@field public change_preview_title   fun(self: eve.ux.IFileSelect, title: string): nil
+---@field public get_item               fun(self: eve.ux.IFileSelect, uuid: string): eve.ux.select.IItem|nil
+---@field public get_matched_items      fun(self: eve.ux.IFileSelect): eve.ux.select.IMatchedItem[]
+---@field public get_winnr_input        fun(self: eve.ux.IFileSelect): integer|nil
+---@field public get_winnr_main         fun(self: eve.ux.IFileSelect): integer|nil
+---@field public get_winnr_preview      fun(self: eve.ux.IFileSelect): integer|nil
+---@field public mark_data_dirty        fun(self: eve.ux.IFileSelect): nil
+---@field public mark_item_deleted      fun(self: eve.ux.IFileSelect, uuid: string): nil
+---@field public reset_input            fun(self: eve.ux.IFileSelect, text: string): nil
+---@field public show                   fun(self: eve.ux.IFileSelect): nil
+---@field public toggle                 fun(self: eve.ux.IFileSelect): nil
 
----@alias fml.ux.file_select.IFetchData
----| fun(force: boolean): fml.ux.file_select.IData
+---@alias eve.ux.file_select.IFetchData
+---| fun(force: boolean): eve.ux.file_select.IData
 
----@alias fml.ux.file_select.IFetchPreviewData
----| fun(item: fml.ux.file_select.IItem): eve.ux.ISearchPreviewData|nil
+---@alias eve.ux.file_select.IFetchPreviewData
+---| fun(item: eve.ux.file_select.IItem): eve.ux.ISearchPreviewData|nil
 
----@alias fml.ux.file_select.IPatchPreviewData
----| fun(item: fml.ux.file_select.IItem, last_item: fml.ux.file_select.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
+---@alias eve.ux.file_select.IPatchPreviewData
+---| fun(item: eve.ux.file_select.IItem, last_item: eve.ux.file_select.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
----@alias fml.ux.file_select.IRenderItem
----| fun(item: fml.ux.file_select.IItem, match: eve.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
+---@alias eve.ux.file_select.IRenderItem
+---| fun(item: eve.ux.file_select.IItem, match: eve.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
 
----@class fml.ux.file_select.IData
----@field public items                  fml.ux.file_select.IRawItem[]
+---@class eve.ux.file_select.IData
+---@field public items                  eve.ux.file_select.IRawItem[]
 ---@field public uuid_present           ?string
 
----@class fml.ux.file_select.IRawItem
+---@class eve.ux.file_select.IRawItem
 ---
 ---@field public filepath               string
 ---@field public filepath_relative      string
@@ -38,7 +38,7 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class fml.ux.file_select.IItemData
+---@class eve.ux.file_select.IItemData
 ---@field public filename               string
 ---@field public filepath               string
 ---@field public filepath_relative      string
@@ -47,21 +47,21 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class fml.ux.file_select.IItem : eve.ux.select.IItem
----@field public data                   fml.ux.file_select.IItemData
+---@class eve.ux.file_select.IItem : eve.ux.select.IItem
+---@field public data                   eve.ux.file_select.IItemData
 
----@class fml.ux.file_select.IProvider
----@field public fetch_data             fml.ux.file_select.IFetchData
----@field public fetch_preview_data     ?fml.ux.file_select.IFetchPreviewData
----@field public patch_preview_data     ?fml.ux.file_select.IPatchPreviewData
----@field public render_item            ?fml.ux.file_select.IRenderItem
+---@class eve.ux.file_select.IProvider
+---@field public fetch_data             eve.ux.file_select.IFetchData
+---@field public fetch_preview_data     ?eve.ux.file_select.IFetchPreviewData
+---@field public patch_preview_data     ?eve.ux.file_select.IPatchPreviewData
+---@field public render_item            ?eve.ux.file_select.IRenderItem
 
----@class fml.ux.FileSelect : fml.ux.IFileSelect
+---@class eve.ux.FileSelect : eve.ux.IFileSelect
 ---@field protected _get_select         fun(): eve.ux.ISelect
 local M = {}
 M.__index = M
 
----@class fml.ux.file_select.IProps
+---@class eve.ux.file_select.IProps
 ---@field public case_sensitive         ?eve.std.collection.IObservable -- boolean>
 ---@field public cmp                    ?eve.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
@@ -82,15 +82,15 @@ M.__index = M
 ---@field public multiple               ?boolean
 ---@field public permanent              ?boolean
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
----@field public provider               fml.ux.file_select.IProvider
+---@field public provider               eve.ux.file_select.IProvider
 ---@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?eve.ux.search.IOnClose
 ---@field public on_confirm             ?eve.ux.select.IOnConfirm
 ---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
----@param props fml.ux.file_select.IProps
----@return fml.ux.FileSelect
+---@param props eve.ux.file_select.IProps
+---@return eve.ux.FileSelect
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -113,7 +113,7 @@ function M.new(props)
   local multiple = props.multiple ---@type boolean|nil
   local permanent = props.permanent ---@type boolean|nil
   local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
-  local provider = props.provider ---@type fml.ux.file_select.IProvider
+  local provider = props.provider ---@type eve.ux.file_select.IProvider
   local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
   local on_close = props.on_close ---@type eve.ux.search.IOnClose|nil
@@ -130,7 +130,7 @@ function M.new(props)
         local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
         for _, matched_item in ipairs(matched_items) do
           local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
-          ---@cast item                 fml.ux.file_select.IItem
+          ---@cast item                 eve.ux.file_select.IItem
 
           if item ~= nil then
             table.insert(quickfix_items, {
@@ -167,18 +167,18 @@ function M.new(props)
   ---@type eve.ux.select.IProvider
   local file_select_provider = {
     fetch_data = function(force)
-      local raw_data = provider.fetch_data(force) ---@type fml.ux.file_select.IData
-      local raw_items = raw_data.items ---@type fml.ux.file_select.IRawItem[]
+      local raw_data = provider.fetch_data(force) ---@type eve.ux.file_select.IData
+      local raw_items = raw_data.items ---@type eve.ux.file_select.IRawItem[]
       local uuid_present = raw_data.uuid_present ---@type string|nil
 
-      local items = {} ---@type fml.ux.file_select.IItem[]
+      local items = {} ---@type eve.ux.file_select.IItem[]
       for _, raw_item in ipairs(raw_items) do
         local filepath = raw_item.filepath ---@type string
         local filepath_relative = raw_item.filepath_relative ---@type string
         local filename = eve.path.basename(raw_item.filepath)
         local icon, icon_hl = eve.fn.fileicon(filename)
 
-        ---@type fml.ux.file_select.IItem
+        ---@type eve.ux.file_select.IItem
         local item = {
           group = raw_item.group or filepath,
           uuid = raw_item.uuid or filepath,
@@ -266,7 +266,7 @@ function M.new(props)
   return self
 end
 
----@param item                          fml.ux.file_select.IItem
+---@param item                          eve.ux.file_select.IItem
 ---@return eve.ux.ISearchPreviewData
 function M.fetch_preview_data(item)
   local filepath = item.data.filepath ---@type string
@@ -294,8 +294,8 @@ function M.fetch_preview_data(item)
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
 end
 
----@param item                          fml.ux.file_select.IItem
----@param last_item                     fml.ux.file_select.IItem
+---@param item                          eve.ux.file_select.IItem
+---@param last_item                     eve.ux.file_select.IItem
 ---@param last_data                     eve.ux.ISearchPreviewData
 ---@diagnostic disable-next-line: unused-local
 function M.patch_preview_data(item, last_item, last_data)
@@ -310,7 +310,7 @@ function M.patch_preview_data(item, last_item, last_data)
   }
 end
 
----@param item                          fml.ux.file_select.IItem
+---@param item                          eve.ux.file_select.IItem
 ---@param match                         eve.ux.select.IMatchedItem
 ---@return string
 ---@return eve.t.IHighlightInline[]
@@ -417,12 +417,12 @@ end
 
 ---@param cwd                           string
 ---@param filepaths                     string[]
----@return fml.ux.file_select.IRawItem[]
+---@return eve.ux.file_select.IRawItem[]
 function M.make_items_by_filepaths(cwd, filepaths)
-  local items = {} ---@type fml.ux.file_select.IRawItem[]
+  local items = {} ---@type eve.ux.file_select.IRawItem[]
   for _, filepath in ipairs(filepaths) do
     local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
-    ---@type fml.ux.file_select.IRawItem
+    ---@type eve.ux.file_select.IRawItem
     local item = {
       filepath = filepath,
       filepath_relative = relative_filepath,

@@ -1,9 +1,7 @@
 local __module_name__ = "fml.action.find" ---@type string
 
-local FileSelect = require("fml.ux.file_select")
-
 local observable_truthy = eve.std.Observable.from_value(true)
-local _select = nil ---@type fml.ux.IFileSelect|nil
+local _select = nil ---@type eve.ux.IFileSelect|nil
 
 ---@param dirpath                       string
 ---@return string
@@ -191,7 +189,7 @@ local actions = {
       local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
       for _, matched_item in ipairs(matched_items) do
         local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
-        ---@cast item                   fml.ux.file_select.IItem
+        ---@cast item                   eve.ux.file_select.IItem
 
         if item ~= nil then
           local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
@@ -363,7 +361,7 @@ local main_keymaps = vim.list_slice(common_keymaps)
 ---@type eve.t.IKeymap[]
 local preview_keymaps = vim.list_slice(common_keymaps)
 
----@type fml.ux.file_select.IProvider
+---@type eve.ux.file_select.IProvider
 local provider = {
   fetch_data = function()
     local cwd = state_cwd:snapshot() ---@type string
@@ -385,25 +383,25 @@ local provider = {
     })
     table.sort(filepaths)
 
-    local items = {} ---@type fml.ux.file_select.IRawItem[]
+    local items = {} ---@type eve.ux.file_select.IRawItem[]
     for _, relative_filepath in ipairs(filepaths) do
       local filepath = eve.path.resolve(cwd, relative_filepath) ---@type string
-      ---@type fml.ux.file_select.IRawItem
+      ---@type eve.ux.file_select.IRawItem
       local item = {
         filepath = filepath,
         filepath_relative = relative_filepath,
       }
       table.insert(items, item)
     end
-    local data = { items = items } ---@type fml.ux.file_select.IData
+    local data = { items = items } ---@type eve.ux.file_select.IData
     return data
   end,
 }
 
 local states = eve.state.select.find_file ---@type eve.state.select.item.state
 
----@type fml.ux.IFileSelect
-local select = FileSelect.new({
+---@type eve.ux.IFileSelect
+local select = eve.ux.FileSelect.new({
   case_sensitive = states.flag_case_sensitive,
   cmp = eve.ux.Select.cmp_by_score,
   dirty_on_invisible = false,

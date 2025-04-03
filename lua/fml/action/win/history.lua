@@ -1,10 +1,8 @@
 local __module_name__ = "fml.action.win" ---@type string
 
-local FileSelect = require("fml.ux.file_select")
+local _history_select = nil ---@type eve.ux.FileSelect|nil
 
-local _history_select = nil ---@type fml.ux.FileSelect|nil
-
----@return fml.ux.FileSelect
+---@return eve.ux.FileSelect
 local function get_history_select()
   if _history_select == nil then
     local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
@@ -16,11 +14,11 @@ local function get_history_select()
       return eve.string.pad_start(tostring(ordinal), ORDINAL_WIDTH, " ")
     end
 
-    ---@type fml.ux.file_select.IProvider
+    ---@type eve.ux.file_select.IProvider
     local provider = {
       fetch_data = function()
         local cwd = eve.path.cwd() ---@type string
-        local items = {} ---@type fml.ux.file_select.IRawItem[]
+        local items = {} ---@type eve.ux.file_select.IRawItem[]
         local uuid_present = "0" ---@type string
         local width = 0 ---@type integer
 
@@ -32,7 +30,7 @@ local function get_history_select()
             message = "Cannot find window.",
             details = { winnr_source = winnr_sourcefile },
           })
-          ---@type fml.ux.file_select.IData
+          ---@type eve.ux.file_select.IData
           return { cwd = cwd, items = {} }
         else
           local _, present_ordinal = meta.filepath_history:present() ---@type string|nil, integer|nil
@@ -43,7 +41,7 @@ local function get_history_select()
           for filepath, ordinal in meta.filepath_history:iterator_reverse() do
             local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
             local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-            ---@type fml.ux.file_select.IRawItem
+            ---@type eve.ux.file_select.IRawItem
             local item = {
               uuid = uuid,
               filepath = filepath,
@@ -63,7 +61,7 @@ local function get_history_select()
           _history_select:change_dimension({ height = #items + 3, width = width + 16 })
         end
 
-        ---@type fml.ux.file_select.IData
+        ---@type eve.ux.file_select.IData
         return { cwd = cwd, items = items, uuid_present = uuid_present }
       end,
       render_item = function(item, match)
@@ -93,7 +91,7 @@ local function get_history_select()
       end,
     }
 
-    _history_select = FileSelect.new({
+    _history_select = eve.ux.FileSelect.new({
       dimension = { height = 3 },
       dirty_on_invisible = true,
       preview_enabled = false,
@@ -131,7 +129,7 @@ local M = {}
 
 ---@return nil
 function M.history()
-  local select = get_history_select() ---@type fml.ux.FileSelect
+  local select = get_history_select() ---@type eve.ux.FileSelect
   select:show()
 end
 
