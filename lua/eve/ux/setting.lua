@@ -1,12 +1,12 @@
-local __module_name__ = "fml.ux.setting" ---@type string
+local __module_name__ = "eve.ux.setting" ---@type string
 
----@class fml.ux.ISetting
+---@class eve.ux.ISetting
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
----@field public open                   fun(self: fml.ux.ISetting, params: fml.ux.setting.IOpenParams): nil
----@field public close                  fun(self: fml.ux.ISetting): nil
+---@field public open                   fun(self: eve.ux.ISetting, params: eve.ux.setting.IOpenParams): nil
+---@field public close                  fun(self: eve.ux.ISetting): nil
 
----@class fml.ux.setting.IOpenParams
+---@class eve.ux.setting.IOpenParams
 ---@field public initial_value          eve.t.T
 ---@field public row                    ?number
 ---@field public col                    ?number
@@ -15,12 +15,12 @@ local __module_name__ = "fml.ux.setting" ---@type string
 ---@field public win_cursor_row         ?integer
 ---@field public win_cursor_col         ?integer
 
----@class fml.ux.Setting : fml.ux.ISetting, eve.ux.Textarea
+---@class eve.ux.Setting : eve.ux.ISetting, eve.ux.Textarea
 local M = {}
 M.__index = M
 setmetatable(M, eve.ux.Textarea)
 
----@class fml.ux.setting.IProps
+---@class eve.ux.setting.IProps
 ---@field public position               eve.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
@@ -35,8 +35,8 @@ setmetatable(M, eve.ux.Textarea)
 ---@field public on_close               ?fun(): nil
 ---@field public on_confirm             fun(value: eve.t.T): boolean
 
----@param props                         fml.ux.setting.IProps
----@return fml.ux.Setting
+---@param props                         eve.ux.setting.IProps
+---@return eve.ux.Setting
 function M.new(props)
   local position = props.position ---@type eve.e.BoxPosition
   local width = props.width ---@type number|nil
@@ -109,12 +109,12 @@ function M.new(props)
   })
 
   local self = setmetatable(textarea, M)
-  ---@cast self                         fml.ux.Setting
+  ---@cast self                         eve.ux.Setting
 
   return self
 end
 
----@param params                        fml.ux.setting.IOpenParams
+---@param params                        eve.ux.setting.IOpenParams
 ---@return nil
 function M:open(params)
   local lines = eve.json.stringify_prettier_lines(params.initial_value) ---@type string[]

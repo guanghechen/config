@@ -2,7 +2,6 @@ local __module_name__ = "fml.action.find" ---@type string
 
 local FileSelect = require("fml.ux.file_select")
 local Select = require("fml.ux.select")
-local Setting = require("fml.ux.setting")
 
 local observable_truthy = eve.std.Observable.from_value(true)
 local _select = nil ---@type fml.ux.IFileSelect|nil
@@ -119,7 +118,7 @@ local actions = {
       excludes = s_excludes,
     }
 
-    local setting = Setting.new({
+    local setting = eve.ux.Setting.new({
       position = "center",
       width = 100,
       title = "Edit Configuration (find files)",

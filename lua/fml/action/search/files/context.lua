@@ -1,6 +1,5 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
-local Setting = require("fml.ux.setting")
 local Search = require("fml.ux.search.search")
 local SearchContext = require("fml.ux.search.context")
 
@@ -179,7 +178,7 @@ function M.edit_config()
     excludes = s_excludes,
   }
 
-  local setting = Setting.new({
+  local setting = eve.ux.Setting.new({
     position = "center",
     width = 100,
     title = "Edit Configuration (search files)",
