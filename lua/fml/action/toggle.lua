@@ -175,10 +175,22 @@ local group_items = {
               { uuid = "unix", text = "unix (LF)" },
             },
             item_present_uuid = fileformat_cur,
-            on_select = function(item)
-              if item ~= nil and item.uuid ~= fileformat_cur then
-                vim.bo[bufnr].fileformat = item.uuid
+            on_select = function(widget, item)
+              if
+                item == nil
+                or fileformat_cur == item.uuid
+                or not vim.api.nvim_win_is_valid(winnr_command)
+                or not vim.api.nvim_buf_is_valid(bufnr)
+              then
+                return
               end
+
+              vim.api.nvim_tabpage_set_win(0, winnr_command)
+              vim.api.nvim_win_set_buf(winnr_command, bufnr)
+              widget:destroy()
+
+              vim.bo[bufnr].fileformat = item.uuid ---@type string
+              vim.cmd(string.format("e ++ff=%s | set ff=%s | w!", fileformat_cur, item.uuid))
             end,
           })
           :show()

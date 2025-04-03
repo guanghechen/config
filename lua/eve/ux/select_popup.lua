@@ -8,7 +8,7 @@
 ---@field public keymaps                eve.t.IKeymap[]|nil
 ---@field public items                  eve.ux.ISelectPopupItem[]
 ---@field public item_present_uuid      string|nil
----@field public on_select              fun(item: eve.ux.ISelectPopupItem|nil): nil
+---@field public on_select              fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem|nil): nil
 
 ---@class eve.ux.ISelectPopup
 ---@field public create_buf_as_needed   fun(self: eve.ux.ISelectPopup): integer
@@ -22,7 +22,7 @@
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _items              eve.ux.ISelectPopupItem[]
 ---@field protected _item_index_present integer
----@field protected _on_select          fun(item: eve.ux.ISelectPopupItem)
+---@field protected _on_select          fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem)
 local M = {}
 M.__index = M
 
@@ -45,7 +45,7 @@ function M.new(props)
 
   local items = props.items ---@type eve.ux.ISelectPopupItem[]
   local item_present_uuid = props.item_present_uuid ---@type string|nil
-  local on_select = props.on_select ---@type fun(item: eve.ux.ISelectPopupItem|nil): nil
+  local on_select = props.on_select ---@type fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem|nil): nil
 
   local width = 0 ---@type integer
   local item_present_index = 1 ---@type integer
@@ -81,7 +81,7 @@ function M.new(props)
       aliases = { "<D-q>", "<M-q>", "<Esc>" },
       desc = "select_popup: noop",
       callback = function()
-        on_select(nil)
+        on_select(self, nil)
         self:destroy()
       end,
     },
@@ -90,7 +90,7 @@ function M.new(props)
       key = "q",
       desc = "select_popup: quit",
       callback = function()
-        on_select(nil)
+        on_select(self, nil)
         self:destroy()
       end,
     },
@@ -116,8 +116,8 @@ function M.new(props)
         ---@diagnostic disable-next-line: invisible
         local winnr = self._winnr ---@type integer|nil
         if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-          on_select(nil)
           self:destroy()
+          on_select(self, nil)
           return
         end
 
@@ -125,7 +125,7 @@ function M.new(props)
         local index = cursor[1] ---@type integer
         local item = items[index] ---@type eve.ux.ISelectPopupItem
 
-        on_select(item)
+        on_select(self, item)
         self:destroy()
       end,
     },
