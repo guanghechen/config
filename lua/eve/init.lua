@@ -61,8 +61,11 @@ local __mods = {
 ---
 ---@field public std                    eve.std
 ---@field public state                  eve.state
+---@field public ux                     eve.ux
 local M = setmetatable({
   std = require("eve.std"),
+  state = require("eve.state"),
+  ux = require("eve.ux"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
@@ -73,8 +76,6 @@ local M = setmetatable({
   end,
 })
 _G.eve = M
-
-M.state = require("eve.state") ---@type eve.state
 
 ---@return eve.state.storage
 function M.get_default_storage()
@@ -122,7 +123,7 @@ end
 
 ---@return nil
 function M.setup_patches()
-  vim.hl = vim.hl or vim.highlight      --- vim.hl has been renamed to vim.highlight
+  vim.hl = vim.hl or vim.highlight --- vim.hl has been renamed to vim.highlight
   table.unpack = table.unpack or unpack --- table.unpack is introduced in Lua 5.2
 end
 

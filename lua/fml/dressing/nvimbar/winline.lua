@@ -1,10 +1,10 @@
-local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
-local position = "f_wl" ---@type fml.ux.nvimbar.Position
+local txt = eve.ux.Nvimbar.txt
+local position = "f_wl" ---@type eve.ux.nvimbar.Position
 
 ---@param winnr                         integer
----@return fml.ux.INvimbar|nil
+---@return eve.ux.INvimbar|nil
 local function resolve_winline_scheduler(winnr)
   local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
   if meta == nil then
@@ -12,8 +12,8 @@ local function resolve_winline_scheduler(winnr)
   end
 
   if meta.winline == nil then
-    local winline ---@type fml.ux.INvimbar
-    winline = Nvimbar.new({
+    local winline ---@type eve.ux.INvimbar
+    winline = eve.ux.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
       comp_sep_hlname = position .. "_bg",
@@ -116,7 +116,7 @@ local function render(winnr)
         text = "<NVIM_HOME>" .. text:sub(#eve.env.HOME_NVIM_CONFIG + 1)
       end
       local winbar = "diffview://" .. text
-      vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
+      vim.wo[winnr].winbar = txt(winbar, "f_wl_text")
     end
     return
   end
@@ -127,7 +127,7 @@ local function render(winnr)
       text = "<NVIM_HOME>" .. text:sub(#eve.env.HOME_NVIM_CONFIG + 1)
     end
     local winbar = "gitsigns://" .. text
-    vim.wo[winnr].winbar = Nvimbar.txt(winbar, "f_wl_text")
+    vim.wo[winnr].winbar = txt(winbar, "f_wl_text")
     return
   end
 
@@ -136,14 +136,14 @@ local function render(winnr)
     return
   end
 
-  local winline = resolve_winline_scheduler(winnr) ---@type fml.ux.INvimbar|nil
+  local winline = resolve_winline_scheduler(winnr) ---@type eve.ux.INvimbar|nil
   if winline ~= nil then
     winline:render()
     return
   end
 
   if not eve.filetype.is_not_sourcefile(filetype) then
-    vim.wo[winnr].winbar = Nvimbar.txt(filepath, "f_wl_text")
+    vim.wo[winnr].winbar = txt(filepath, "f_wl_text")
     return
   end
 end

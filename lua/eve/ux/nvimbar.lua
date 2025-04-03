@@ -1,14 +1,14 @@
-local __module_name__ = "fml.ux.nvimbar" ---@type string
+local __module_name__ = "eve.ux.nvimbar" ---@type string
 
----@alias fml.ux.nvimbar.Position
+---@alias eve.ux.nvimbar.Position
 ---| 'f_sl'
 ---| 'f_tl'
 ---| 'f_wl'
 
----@class fml.ux.nvimbar.IPresetContext
+---@class eve.ux.nvimbar.IPresetContext
 ---@field public winnr                  ?integer
 
----@class fml.ux.nvimbar.IContext
+---@class eve.ux.nvimbar.IContext
 ---@field public tabnr                  integer
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
@@ -22,16 +22,16 @@ local __module_name__ = "fml.ux.nvimbar" ---@type string
 ---@field public mode_name              string
 ---@field public git_branch             string|nil
 
----@class fml.ux.nvimbar.IRawComponent
+---@class eve.ux.nvimbar.IRawComponent
 ---@field public atomic                 boolean
 ---@field public name                   string
 ---@field public tight                  ?boolean
----@field public condition              ?fun(context: fml.ux.nvimbar.IContext, remain_width: integer): boolean
----@field public render                 fun(context: fml.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
----@field public will_change            ?fun(context: fml.ux.nvimbar.IContext, prev_context: fml.ux.nvimbar.IContext|nil, remain_width: integer): boolean
+---@field public condition              ?fun(context: eve.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public render                 fun(context: eve.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
+---@field public will_change            ?fun(context: eve.ux.nvimbar.IContext, prev_context: eve.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
----@class fml.ux.nvimbar.IComponent
----@field public last_render_context    fml.ux.nvimbar.IContext|nil
+---@class eve.ux.nvimbar.IComponent
+---@field public last_render_context    eve.ux.nvimbar.IContext|nil
 ---@field public last_result_full       boolean
 ---@field public last_result_hltext     string
 ---@field public last_result_text       string
@@ -41,15 +41,15 @@ local __module_name__ = "fml.ux.nvimbar" ---@type string
 ---@field public position               eve.e.NvimbarCompPosition
 ---@field public priority               integer
 ---@field public tight                  boolean
----@field public condition              fun(context: fml.ux.nvimbar.IContext, remain_width: integer): boolean
----@field public render                 fun(context: fml.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
----@field public will_change            fun(context: fml.ux.nvimbar.IContext, prev_context: fml.ux.nvimbar.IContext|nil, remain_width: integer): boolean
+---@field public condition              fun(context: eve.ux.nvimbar.IContext, remain_width: integer): boolean
+---@field public render                 fun(context: eve.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
+---@field public will_change            fun(context: eve.ux.nvimbar.IContext, prev_context: eve.ux.nvimbar.IContext|nil, remain_width: integer): boolean
 
----@class fml.ux.nvimbar.IItem
+---@class eve.ux.nvimbar.IItem
 ---@field public name                   string
 ---@field public position               eve.e.NvimbarCompPosition
 
----@class fml.ux.nvimbar.IProps
+---@class eve.ux.nvimbar.IProps
 ---@field public name                   string
 ---@field public comp_sep               string
 ---@field public comp_sep_hlname        string
@@ -57,34 +57,34 @@ local __module_name__ = "fml.ux.nvimbar" ---@type string
 ---@field public render_delay           ?integer
 ---@field public silent                 ?fun(): boolean
 ---@field public get_max_width          fun(): integer
----@field public get_preset_context     ?fun(): fml.ux.nvimbar.IPresetContext
----@field public is_active              fun(context: fml.ux.nvimbar.IContext): boolean
+---@field public get_preset_context     ?fun(): eve.ux.nvimbar.IPresetContext
+---@field public is_active              fun(context: eve.ux.nvimbar.IContext): boolean
 ---@field public pre_task               ?fun(callback: fun(err: string|false|nil): nil): nil
 ---@field public trigger_rerender       ?fun(): nil
 ---@field public validate               ?fun(): string|nil
 
----@class fml.ux.INvimbar
+---@class eve.ux.INvimbar
 ---@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
 ---@field public txt                    fun(text: string, hlname: string): string
----@field public cancel_render          fun(self: fml.ux.INvimbar): fml.ux.INvimbar
----@field public dispose                fun(self: fml.ux.INvimbar): boolean
----@field public place                  fun(self: fml.ux.INvimbar, position: eve.e.NvimbarCompPosition, component: fml.ux.nvimbar.IRawComponent, priority?: integer): fml.ux.INvimbar
----@field public render                 fun(self: fml.ux.INvimbar): string
----@field public render_immediately     fun(self: fml.ux.INvimbar): string
----@field public snapshot               fun(self: fml.ux.INvimbar): string
+---@field public cancel_render          fun(self: eve.ux.INvimbar): eve.ux.INvimbar
+---@field public dispose                fun(self: eve.ux.INvimbar): boolean
+---@field public place                  fun(self: eve.ux.INvimbar, position: eve.e.NvimbarCompPosition, component: eve.ux.nvimbar.IRawComponent, priority?: integer): eve.ux.INvimbar
+---@field public render                 fun(self: eve.ux.INvimbar): string
+---@field public render_immediately     fun(self: eve.ux.INvimbar): string
+---@field public snapshot               fun(self: eve.ux.INvimbar): string
 
----@class fml.ux.Nvimbar : fml.ux.INvimbar
+---@class eve.ux.Nvimbar : eve.ux.INvimbar
 ---@field public name                   string
 ---@field private _disposed             boolean
 ---@field private _sep                  string
 ---@field private _sep_active           string
 ---@field private _sep_width            integer
----@field private _components           fml.ux.nvimbar.IComponent[]
+---@field private _components           eve.ux.nvimbar.IComponent[]
 ---@field private _orders               integer[]
 ---@field private _render_scheduler     eve.std.collection.IScheduler
 ---@field private _get_max_width        fun(): integer
----@field public  _get_preset_context   fun(): fml.ux.nvimbar.IPresetContext
----@field private _is_active            fun(context: fml.ux.nvimbar.IContext): boolean
+---@field public  _get_preset_context   fun(): eve.ux.nvimbar.IPresetContext
+---@field private _is_active            fun(context: eve.ux.nvimbar.IContext): boolean
 local M = {}
 M.__index = M
 
@@ -141,8 +141,8 @@ local function decode_int(text)
   return num
 end
 
----@param preset_context                fml.ux.nvimbar.IPresetContext
----@return fml.ux.nvimbar.IContext
+---@param preset_context                eve.ux.nvimbar.IPresetContext
+---@return eve.ux.nvimbar.IContext
 local function build_context(preset_context)
   local m = modes_map[vim.api.nvim_get_mode().mode]
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -157,7 +157,7 @@ local function build_context(preset_context)
   local git = vim.b[bufnr].gitsigns_status_dict
   local git_branch = git and git.head or nil ---@type string|nil
 
-  ---@type fml.ux.nvimbar.IContext
+  ---@type eve.ux.nvimbar.IContext
   local context = {
     tabnr = tabnr,
     winnr = winnr,
@@ -175,8 +175,8 @@ local function build_context(preset_context)
   return context
 end
 
----@param props                         fml.ux.nvimbar.IProps
----@return fml.ux.Nvimbar
+---@param props                         eve.ux.nvimbar.IProps
+---@return eve.ux.Nvimbar
 function M.new(props)
   local name = props.name ---@type string
   local comp_sep = props.comp_sep ---@type string
@@ -186,12 +186,12 @@ function M.new(props)
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
 
-  ---@type fun(): fml.ux.nvimbar.IPresetContext
+  ---@type fun(): eve.ux.nvimbar.IPresetContext
   local get_preset_context = props.get_preset_context or function()
     return {}
   end
 
-  local is_active = props.is_active ---@type fun(context: fml.ux.nvimbar.IContext): boolean
+  local is_active = props.is_active ---@type fun(context: eve.ux.nvimbar.IContext): boolean
   local pre_task = props.pre_task ---@type fun(callback: fun(err: string|false|nil): nil): nil
   local trigger_rerender = props.trigger_rerender or eve.std.fn.noop ---@type fun(): nil
   local validate = props.validate or eve.std.fn.noop ---@type fun(): string|nil
@@ -200,13 +200,13 @@ function M.new(props)
 
   local _render_scheduler ---@type eve.std.collection.IScheduler
   _render_scheduler = eve.std.Scheduler.new({
-    name = "fml.ux.nvimbar#" .. name,
+    name = "eve.ux.nvimbar#" .. name,
     delay = render_delay,
     silent = silent,
     task = function(callback)
       local validate_message = validate() ---@type string|nil
       if validate_message ~= nil then
-        callback("rejected", nil, "[fml.ux.nvimbar#" .. name .. "] Invalid: " .. validate_message)
+        callback("rejected", nil, "[eve.ux.nvimbar#" .. name .. "] Invalid: " .. validate_message)
         return
       end
 
@@ -236,7 +236,7 @@ function M.new(props)
           if err == false then
             handle(true)
           elseif err ~= nil then
-            callback("rejected", nil, "[fml.ux.nvimbar#" .. name .. "] " .. err)
+            callback("rejected", nil, "[eve.ux.nvimbar#" .. name .. "] " .. err)
           else
             handle(false)
           end
@@ -342,9 +342,9 @@ function M:render_immediately()
 end
 
 ---@param position                      eve.e.NvimbarCompPosition
----@param raw_component                 fml.ux.nvimbar.IRawComponent
+---@param raw_component                 eve.ux.nvimbar.IRawComponent
 ---@param priority                      ?integer
----@return fml.ux.Nvimbar
+---@return eve.ux.Nvimbar
 function M:place(position, raw_component, priority)
   priority = priority or 1 ---@type integer
   local name = raw_component.name ---@type string
@@ -359,11 +359,11 @@ function M:place(position, raw_component, priority)
     return self
   end
 
-  local components = self._components ---@type fml.ux.nvimbar.IComponent[]
+  local components = self._components ---@type eve.ux.nvimbar.IComponent[]
   local orders = self._orders ---@type integer[]
   local k = #components ---@type integer
 
-  ---@type fml.ux.nvimbar.IComponent
+  ---@type eve.ux.nvimbar.IComponent
   local component = {
     last_result_full = false,
     last_render_context = nil,
@@ -402,8 +402,8 @@ end
 ---@param force                         boolean
 ---@return string
 function M:render_sync(force)
-  local preset_context = self._get_preset_context() ---@type fml.ux.nvimbar.IPresetContext
-  local context = build_context(preset_context) ---@type fml.ux.nvimbar.IContext
+  local preset_context = self._get_preset_context() ---@type eve.ux.nvimbar.IPresetContext
+  local context = build_context(preset_context) ---@type eve.ux.nvimbar.IContext
 
   local sep = self._is_active(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer
@@ -414,7 +414,7 @@ function M:render_sync(force)
   local wr = width_sep ---@type integer
   local width_remain = width_full - wl - wc - wr ---@type integer
 
-  local components = self._components ---@type fml.ux.nvimbar.IComponent[]
+  local components = self._components ---@type eve.ux.nvimbar.IComponent[]
   local orders = self._orders ---@type integer[]
   local hltexts = {} ---@type string[]
 
@@ -422,7 +422,7 @@ function M:render_sync(force)
   local hl, hc, hr = false, false, false ---@type boolean, boolean, boolean
   for _, order in ipairs(orders) do
     hltexts[order] = ""
-    local component = components[order] ---@type fml.ux.nvimbar.IComponent
+    local component = components[order] ---@type eve.ux.nvimbar.IComponent
     local ok, hltext, width = pcall(function()
       if not component.condition(context, width_remain) then
         return "", 0
@@ -504,7 +504,7 @@ function M:render_sync(force)
   local tl, tc, tr = "", "", "" ---@type string, string, string
   for i = 1, N, 1 do
     local hltext = hltexts[i] ---@type string
-    local component = components[i] ---@type fml.ux.nvimbar.IComponent
+    local component = components[i] ---@type eve.ux.nvimbar.IComponent
     local position = component.position ---@type eve.e.NvimbarCompPosition
     if position == "left" then
       tl = tl .. hltext

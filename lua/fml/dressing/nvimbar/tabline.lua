@@ -1,11 +1,10 @@
-local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
 local dirtier = eve.state.status.dirtier_tabline ---@type eve.std.collection.IDirtier
-local position = "f_tl" ---@type fml.ux.nvimbar.Position
+local position = "f_tl" ---@type eve.ux.nvimbar.Position
 
-local tabline ---@type fml.ux.INvimbar
-tabline = Nvimbar.new({
+local tabline ---@type eve.ux.INvimbar
+tabline = eve.ux.Nvimbar.new({
   name = "tabline",
   comp_sep = "",
   comp_sep_hlname = position .. "_bg",

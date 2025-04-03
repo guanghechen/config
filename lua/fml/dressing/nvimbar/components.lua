@@ -1,15 +1,14 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local Nvimbar = require("fml.ux.nvimbar")
-
-local btn = Nvimbar.btn
-local txt = Nvimbar.txt
+local btn = eve.ux.Nvimbar.btn
+local txt = eve.ux.Nvimbar.txt
+local decode_btn_args = eve.ux.Nvimbar.decode_btn_args
 
 ---@class fml.dressing.nvimbar.components
 local M = {}
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.ai(position)
   ---@param provider                    eve.e.AiProvider
   ---@return string
@@ -43,7 +42,7 @@ function M.ai(position)
     vim.cmd(eve.command.definitions.toggle.ai_provider.uuid)
   end)
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "ai",
     atomic = true,
@@ -75,8 +74,8 @@ function M.ai(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string
   local hln_buf_order = position .. "_buf_order" ---@type string
@@ -215,7 +214,7 @@ function M.bufs(position)
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "bufs",
     atomic = false,
@@ -338,8 +337,8 @@ function M.bufs(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.copilot(position)
   local hln_text = position .. "_text" ---@type string
   local hln_copilot = position .. "_copilot" ---@type string
@@ -365,7 +364,7 @@ function M.copilot(position)
 
   local last_status = nil ---@type string|nil
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "copilot",
     atomic = true,
@@ -392,13 +391,13 @@ function M.copilot(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.cwd(position)
   local hln_text_prefix = position .. "_m_text_fill_" ---@type string
   local hln_sep_prefix = position .. "_m_sep_fill_" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "cwd",
     atomic = true,
@@ -422,14 +421,14 @@ function M.cwd(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.debug_render_count(position)
   local hln_text = position .. "_debug_render_count_text" ---@type string
   local hln_sep = position .. "_debug_render_count_sep" ---@type string
   local count = 0 ---@type integer
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "debug_render_count",
     atomic = true,
@@ -454,12 +453,12 @@ function M.debug_render_count(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.devmode(position)
   local hln_devmode = position .. "_devmode" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "devmode",
     atomic = true,
@@ -476,8 +475,8 @@ function M.devmode(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.diagnostics(position)
   local hln_diagnostics_error = position .. "_diagnostics_error" ---@type string
   local hln_diagnostics_warn = position .. "_diagnostics_warn" ---@type string
@@ -520,7 +519,7 @@ function M.diagnostics(position)
     })
   end)
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "diagnostics",
     atomic = true,
@@ -552,8 +551,8 @@ function M.diagnostics(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.dirpath(position)
   local hln_blur_sep = position .. "_dirpath_blur_sep" ---@type string
   local hln_blur_text = position .. "_dirpath_blur_text" ---@type string
@@ -571,7 +570,7 @@ function M.dirpath(position)
     vim.cmd(eve.command.definitions.find.explorer.uuid .. " " .. vim.fn.fnameescape(dirpath))
   end) or ""
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath",
     atomic = true,
@@ -603,8 +602,8 @@ function M.dirpath(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.dirpath_prominent(position)
   local hln_icon = position .. "_dirpath_prominent_icon" ---@type string
   local hln_text = position .. "_dirpath_prominent_text" ---@type string
@@ -616,7 +615,7 @@ function M.dirpath_prominent(position)
   local width_icon = vim.api.nvim_strwidth(icon) ---@type integer
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "dirpath_prominent",
     atomic = false,
@@ -689,12 +688,12 @@ function M.dirpath_prominent(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.encoding(position)
   local hln_text = position .. "_text" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "encoding",
     atomic = true,
@@ -713,8 +712,8 @@ function M.encoding(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.fileformat(position)
   local hln_text = position .. "_text" ---@type string
 
@@ -735,7 +734,7 @@ function M.fileformat(position)
     vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileformat_local")
   end) or ""
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "fileformat",
     atomic = true,
@@ -761,13 +760,13 @@ function M.fileformat(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.fileindent(position)
   local hln_text = position .. "_text" ---@type string
   local icon_shiftwidth = eve.icon.ui.Tab ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "fileindent",
     atomic = true,
@@ -786,13 +785,13 @@ function M.fileindent(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.filename(position)
   local hln_blur_text = position .. "_filename_blur_text" ---@type string
   local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "filename",
     atomic = true,
@@ -821,12 +820,12 @@ function M.filename(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.filepath(position)
   local hln_text = position .. "_text" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "filepath",
     atomic = true,
@@ -849,12 +848,12 @@ function M.filepath(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.filesize(position)
   local hln_text = position .. "_text" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "filesize",
     atomic = true,
@@ -870,8 +869,8 @@ function M.filesize(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.filestatus(position)
   local hln_text = position .. "_text" ---@type string
 
@@ -897,7 +896,7 @@ function M.filestatus(position)
     return #text > 0 and text:sub(1) or ""
   end
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "filestatus",
     atomic = true,
@@ -914,12 +913,12 @@ function M.filestatus(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.filetype(position)
   local hln_text = position .. "_text" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "filetype",
     atomic = true,
@@ -938,12 +937,12 @@ function M.filetype(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.git(position)
   local hln_text = position .. "_git_text" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "git",
     atomic = true,
@@ -959,8 +958,8 @@ function M.git(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.lsp(position)
   local hln_text = position .. "_text" ---@type string
 
@@ -990,7 +989,7 @@ function M.lsp(position)
     return " " .. client_names
   end
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp",
     atomic = true,
@@ -1003,12 +1002,12 @@ function M.lsp(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.lsp_message(position)
   local hln_text = position .. "_text" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp_message",
     atomic = true,
@@ -1024,8 +1023,8 @@ function M.lsp_message(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.lsp_symbols(position)
   local hln_lsp_icon = position .. "_lsp_icon" ---@type string
   local hln_lsp_sep = position .. "_lsp_sep" ---@type string
@@ -1036,7 +1035,7 @@ function M.lsp_symbols(position)
 
   ---@type string
   local fn_goto_lsp_pos = eve.G.register_anonymous_fn(function(num)
-    local args = Nvimbar.decode_btn_args(tostring(num)) ---@type integer[]
+    local args = decode_btn_args(tostring(num)) ---@type integer[]
     if #args == 3 then
       local winnr = args[1] ---@type integer|nil
       local row = args[2] ---@type integer|nil
@@ -1050,7 +1049,7 @@ function M.lsp_symbols(position)
     end
   end) or ""
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "lsp_symbols",
     atomic = false,
@@ -1095,15 +1094,15 @@ function M.lsp_symbols(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.mode(position)
   local hln_text_prefix = position .. "_m_text_fill_" ---@type string
   local hln_sep_prefix = position .. "_mode_sep_" ---@type string
 
   local icon = " " .. eve.icon.app.Vim .. " " ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "mode",
     atomic = true,
@@ -1126,8 +1125,8 @@ function M.mode(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.python_env(position)
   local hln_text = position .. "_text" ---@type string
 
@@ -1161,7 +1160,7 @@ function M.python_env(position)
     vim.cmd(eve.command.definitions.lsp.select_python_venv.uuid)
   end)
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "python_env",
     atomic = true,
@@ -1189,10 +1188,10 @@ function M.python_env(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
+---@param position                      eve.ux.nvimbar.Position
 ---@param filetype                      string
----@param get_title                     fun(context: fml.ux.nvimbar.IContext): string
----@return fml.ux.nvimbar.IRawComponent
+---@param get_title                     fun(context: eve.ux.nvimbar.IContext): string
+---@return eve.ux.nvimbar.IRawComponent
 function M.sidebar(position, filetype, get_title)
   local hln_blank = position .. "_sidebar_blank" ---@type string
   local hln_split = position .. "_sidebar_split" ---@type string
@@ -1213,7 +1212,7 @@ function M.sidebar(position, filetype, get_title)
     return 0
   end
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "sidebar_" .. filetype,
     atomic = true,
@@ -1261,12 +1260,12 @@ function M.sidebar(position, filetype, get_title)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.noice_command(position)
   local hln_noice_command = position .. "_noice_command" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "noice_command",
     atomic = true,
@@ -1287,12 +1286,12 @@ function M.noice_command(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.noice_mode(position)
   local hln_noice_mode = position .. "_noice_mode" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "noice_mode",
     atomic = true,
@@ -1313,8 +1312,8 @@ function M.noice_mode(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.pos(position)
   local hln_sep = position .. "_pos_sep" ---@type string
   local hln_text_anchor = position .. "_pos_text_anchor" ---@type string
@@ -1342,7 +1341,7 @@ function M.pos(position)
     end
   end
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "pos",
     atomic = true,
@@ -1360,12 +1359,12 @@ function M.pos(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.readonly(position)
   local hln_readonly = position .. "_readonly" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "readonly",
     atomic = true,
@@ -1381,8 +1380,8 @@ function M.readonly(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.tabs(position)
   local hln_toggle = position .. "_tab_toggle" ---@type string
   local hln_tab_item = position .. "_tab_item" ---@type string
@@ -1405,7 +1404,7 @@ function M.tabs(position)
     eve.state.status.dirtier_tabline:mark_dirty()
   end) or ""
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "tabs",
     atomic = true,
@@ -1451,8 +1450,8 @@ function M.tabs(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.username(position)
   local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
   local hln_sep_prefix = position .. "_m_text_fill_" ---@type string
@@ -1465,7 +1464,7 @@ function M.username(position)
     invalid = true
   end, true)
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "username",
     atomic = true,
@@ -1495,8 +1494,8 @@ function M.username(position)
   return component
 end
 
----@param position                      fml.ux.nvimbar.Position
----@return fml.ux.nvimbar.IRawComponent
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
 function M.widget(position)
   local hln_flag = position .. "_flag" ---@type string
   local hln_flag_sep = position .. "_flag_sep" ---@type string
@@ -1507,7 +1506,7 @@ function M.widget(position)
   local hln_flag_popup = position .. "_flag_popup" ---@type string
   local hln_flag_popup_sep = position .. "_flag_popup_sep" ---@type string
 
-  ---@type fml.ux.nvimbar.IRawComponent
+  ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "widget",
     atomic = true,

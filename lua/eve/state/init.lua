@@ -26,6 +26,12 @@ local __mods = {
   select = "eve.state.workspace.select",
 }
 
+---@class eve.state.__lazy
+---@field public _disposables           eve.std.collection.BatchDisposable|nil
+local __lazy = {
+  _disposables = nil,
+}
+
 ---@class eve.state.state.IWatchChangeParams
 ---@field public on_theme_changed       ?fun(): nil
 
@@ -92,14 +98,18 @@ local __mods = {
 ---@field private _disposables          eve.std.collection.BatchDisposable
 local M = setmetatable({
   _storage = {},
-  _disposables = eve.std.BatchDisposable.new(),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
+    if m ~= nil then
+      return require(m)
     end
-    return require(m)
+
+    if k == "_disposables" then
+      __lazy._disposables = __lazy._disposables or eve.std.BatchDisposable.new() ---@type eve.std.collection.BatchDisposable
+      return __lazy._disposables
+    end
+    return rawget(t, k)
   end,
 })
 

@@ -1,11 +1,10 @@
-local Nvimbar = require("fml.ux.nvimbar")
 local c = require("fml.dressing.nvimbar.components")
 
 local dirtier = eve.state.status.dirtier_statusline ---@type eve.std.collection.IDirtier
-local position = "f_sl" ---@type fml.ux.nvimbar.Position
+local position = "f_sl" ---@type eve.ux.nvimbar.Position
 
-local statusline ---@type fml.ux.INvimbar
-statusline = Nvimbar.new({
+local statusline ---@type eve.ux.INvimbar
+statusline = eve.ux.Nvimbar.new({
   name = "statusline",
   comp_sep = "  ",
   comp_sep_hlname = position .. "_bg",

@@ -7,7 +7,7 @@ local __module_name__ = "eve.state.session.win"
 ---@class eve.state.win.meta.state
 ---@field public filepath_history       eve.std.collection.IAdvanceHistory
 ---@field public lsp_symbols            eve.state.buf.lsp.ISymbol[]
----@field public winline                fml.ux.INvimbar|nil
+---@field public winline                eve.ux.INvimbar|nil
 ---@field public winline_bufnr          integer
 
 ---@class eve.state.win.data

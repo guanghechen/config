@@ -166,7 +166,7 @@ local function gen_hlgroup_map(context)
     tab_toggle = { fg = c.bg1, bg = c.green },
   }
 
-  local positions = { "f_sl", "f_tl", "f_wl" } ---@type fml.ux.nvimbar.Position[]
+  local positions = { "f_sl", "f_tl", "f_wl" } ---@type eve.ux.nvimbar.Position[]
 
   ---@class eve.constant.hlgroup.nvimbar : table<string, eve.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
