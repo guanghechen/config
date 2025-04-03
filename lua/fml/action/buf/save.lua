@@ -29,6 +29,20 @@ function M.save()
   local count_new_file = #bufnrs_new_file ---@type integer
   local count_ready = 0 ---@type integer
 
+  if count_modified < 1 then
+    return
+  end
+
+  local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() or eve.editor.pick_sourcefile_win() ---@type integer|nil
+  if winnr_sourcefile == nil then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "save",
+      message = "Cannot find a valid sourcefile winnr",
+    })
+    return
+  end
+
   ---@return nil
   local function check()
     if count_ready == count_new_file then
@@ -40,19 +54,13 @@ function M.save()
         end
       end
 
+      local winnrs = vim.api.nvim_list_wins() ---@type integer[]
+      for _, winnr in ipairs(winnrs) do
+        eve.state.status.dirty_winline_nr:next(winnr)
+      end
       eve.state.status.dirtier_statusline:mark_dirty()
       eve.state.status.dirtier_tabline:mark_dirty()
     end
-  end
-
-  local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() or eve.editor.pick_sourcefile_win() ---@type integer|nil
-  if winnr_sourcefile == nil then
-    eve.reporter.error({
-      from = __module_name__,
-      subject = "save",
-      message = "Cannot find a valid sourcefile winnr",
-    })
-    return
   end
 
   for _, bufnr in ipairs(bufnrs_new_file) do
@@ -118,9 +126,7 @@ function M.save()
     end)
   end
 
-  if count_modified > 0 then
-    check()
-  end
+  check()
 end
 
 return M
