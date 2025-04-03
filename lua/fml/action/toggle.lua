@@ -1,5 +1,8 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
+---@class fml.action.toggle.ISelectItem : eve.ux.ISelectPopupItem
+---@field public data                   { from: string, to: string }
+
 ---@type table<string, integer>
 local group_priorities = {
   ["local"] = 1,
@@ -158,39 +161,46 @@ local group_items = {
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
         local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
-        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
         eve.ux.SelectPopup
           .new({
             wincfg = {
               relative = "editor",
               width = 40,
-              row = vim.o.lines - 6,
+              row = vim.o.lines - 9,
               col = vim.o.columns - 48,
               title = string.format(" Toggle fileformat (%s) ", filename),
             },
             items = {
-              { uuid = "dos", text = "dos  (CRLF)" },
-              { uuid = "mac", text = "mac  (CR)" },
-              { uuid = "unix", text = "unix (LF)" },
+              -- stylua: ignore start
+              { uuid = "dos  -> mac",   text = "dos  -> mac  │ CRLF -> CR",    data = { from = "dos",  to = "mac"  } },
+              { uuid = "dos  -> unix",  text = "dos  -> unix │ CRLF -> LF",    data = { from = "dos",  to = "unix" } },
+              { uuid = "mac  -> dos",   text = "mac  -> dos  │ CR   -> CRLF",  data = { from = "mac",  to = "dos"  } },
+              { uuid = "mac  -> unix",  text = "mac  -> unix │ CR   -> LF",    data = { from = "mac",  to = "unix" } },
+              { uuid = "unix -> dos",   text = "unix -> dos  │ LF   -> CRLF",  data = { from = "unix", to = "dos"  } },
+              { uuid = "unix -> mac",   text = "unix -> mac  │ LF   -> LF",    data = { from = "unix", to = "mac"  } },
+              -- stylua: ignore end
             },
-            item_present_uuid = fileformat_cur,
+            item_present_uuid = "dos  -> unix",
             on_select = function(widget, item)
               if
                 item == nil
-                or fileformat_cur == item.uuid
                 or not vim.api.nvim_win_is_valid(winnr_command)
                 or not vim.api.nvim_buf_is_valid(bufnr)
               then
                 return
               end
 
+              ---@cast item fml.action.toggle.ISelectItem
+
+              local from = item.data.from ---@type string
+              local to = item.data.to ---@type string
               vim.api.nvim_tabpage_set_win(0, winnr_command)
               vim.api.nvim_win_set_buf(winnr_command, bufnr)
               widget:destroy()
 
-              vim.bo[bufnr].fileformat = item.uuid ---@type string
-              vim.cmd(string.format("e ++ff=%s | set ff=%s | w!", fileformat_cur, item.uuid))
+              vim.cmd(string.format("e ++ff=%s | set ff=%s | w!", from, to))
+              vim.bo[bufnr].fileformat = to ---@type string
             end,
           })
           :show()
