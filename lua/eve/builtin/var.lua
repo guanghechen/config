@@ -26,6 +26,8 @@ M.Namespaces = {
   search_input = vim.api.nvim_create_namespace("eve.ux.search.input"),
   search_main = vim.api.nvim_create_namespace("eve.ux.search.main"),
   search_preview = vim.api.nvim_create_namespace("eve.ux.search.preview"),
+
+  select_popup = vim.api.nvim_create_namespace("eve.ux.select_popup"),
 }
 
 return M

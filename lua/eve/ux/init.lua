@@ -8,6 +8,7 @@ local __mods = {
 
   Select = "eve.ux.select",
   FileSelect = "eve.ux.select_file",
+  SelectPopup = "eve.ux.select_popup",
 
   Setting = "eve.ux.setting",
   Nvimbar = "eve.ux.nvimbar",
@@ -27,8 +28,9 @@ local __mods = {
 ---@field public SearchMain             eve.ux.SearchMain
 ---@field public SearchPreview          eve.ux.SearchPreview
 ---
----@field public FileSelect             eve.ux.FileSelect
 ---@field public Select                 eve.ux.Select
+---@field public FileSelect             eve.ux.FileSelect
+---@field public SelectPopup            eve.ux.SelectPopup
 ---
 ---@field public Nvimbar                eve.ux.Nvimbar
 ---@field public Printer                eve.ux.Printer

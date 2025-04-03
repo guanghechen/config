@@ -82,46 +82,31 @@ local group_items = {
         end
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-        local filepath = eve.path.relative(eve.path.cwd(), vim.api.nvim_buf_get_name(bufnr), false) ---@type string
+        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
-        eve.ux.fn.select({
-          title = string.format("Toggle fileformat (%s)", filepath),
-          flag_fuzzy = true,
-          flag_regex = false,
-          dimension = {
-            row = 3,
-            width = 64,
-            max_height = math.max(math.floor(vim.o.lines * 0.6), 24),
-          },
-          multiple = false,
-          get_present = function()
-            return fileformat_cur ---@type string
-          end,
-          fetch_items = function()
-            ---@type eve.ux.select.IItem[]
-            local items = {
+        eve.ux.SelectPopup
+          .new({
+            wincfg = {
+              relative = "editor",
+              width = 40,
+              row = vim.o.lines - 6,
+              col = vim.o.columns - 48,
+              title = string.format(" Toggle fileformat (%s) ", filename),
+            },
+            items = {
               { uuid = "dos", text = "dos  (CRLF)" },
               { uuid = "mac", text = "mac  (CR)" },
               { uuid = "unix", text = "unix (LF)" },
-            }
-            return items
-          end,
-          render_item = function(item, match)
-            local highlights = {} ---@type eve.t.IHighlightInline[]
-            for _, piece in ipairs(match.matches) do
-              highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-            end
-            return item.text, highlights
-          end,
-          on_confirm = function(widget, items)
-            widget:close()
-            if #items == 1 and vim.api.nvim_buf_is_valid(bufnr) then
-              local fileformat = items[1].uuid ---@type string
-              vim.bo[bufnr].fileformat = fileformat
-            end
-          end,
-        })
+            },
+            item_present_uuid = fileformat_cur,
+            on_select = function(item)
+              if item ~= nil and item.uuid ~= fileformat_cur then
+                vim.bo[bufnr].fileformat = item.uuid
+              end
+            end,
+          })
+          :show()
       end,
     },
     hipatterns = {
