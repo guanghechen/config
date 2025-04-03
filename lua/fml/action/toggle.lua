@@ -1,5 +1,14 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
+---@type table<string, integer>
+local group_priorities = {
+  ["local"] = 1,
+  ux = 2,
+  flight = 3,
+  lsp = 4,
+  plugin = 5,
+}
+
 ---@type table<string, table<string, eve.std.collection.IObservable<boolean>>>
 local group_flags = {
   ---flight
@@ -63,7 +72,73 @@ local group_items = {
       end,
     },
   },
-  _local = {
+  ["local"] = {
+    fileencoding = {
+      title = "fileencoding",
+      snapshot = function()
+        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return "unknown", "String"
+        end
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer|nil
+        local encoding = vim.bo[bufnr].fileencoding ---@type string
+        return encoding, "String"
+      end,
+      action = function()
+        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return
+        end
+
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
+        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
+        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
+      end,
+    },
+    fileencoding_reopen = {
+      title = "fileencoding (reopen)",
+      snapshot = function()
+        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return "unknown", "String"
+        end
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer|nil
+        local encoding = vim.bo[bufnr].fileencoding ---@type string
+        return encoding, "String"
+      end,
+      action = function()
+        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return
+        end
+
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
+        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
+        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
+      end,
+    },
+    fileencoding_resave = {
+      title = "fileencoding (resave)",
+      snapshot = function()
+        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return "unknown", "String"
+        end
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer|nil
+        local encoding = vim.bo[bufnr].fileencoding ---@type string
+        return encoding, "String"
+      end,
+      action = function()
+        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return
+        end
+
+        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
+        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
+        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
+      end,
+    },
     fileformat = {
       title = "fileformat",
       snapshot = function()
@@ -226,7 +301,7 @@ local group_items = {
       end,
     },
   },
-  theme = {
+  ux = {
     theme = {
       title = "theme",
       snapshot = function()
@@ -280,13 +355,7 @@ local toggle_item_names = {} ---@type string[]
 
 do
   for g, flags in pairs(group_flags) do
-    local group = g ---@type string|nil
-    if g == "misc" then
-      group = nil
-    elseif g:sub(1, 1) == "_" then
-      group = g:sub(2)
-    end
-
+    local group = g ~= "misc" and g or nil ---@type string|nil
     for name, observable in pairs(flags) do
       local title = name ---@type string
       name = group and name .. "_" .. group or name ---@type string
@@ -328,19 +397,9 @@ do
     local vx = toggle_item_map[x] ---@type fml.action.toggle.IItem
     local vy = toggle_item_map[y] ---@type fml.action.toggle.IItem
 
-    if vx.group == vy.group then
-      return vx.title < vy.title
-    end
-
-    if vx.group == nil then
-      return false
-    end
-
-    if vy.group == nil then
-      return true
-    end
-
-    return vx.group < vy.group
+    local px = group_priorities[vx.group] or 1000000 ---@type integer
+    local py = group_priorities[vy.group] or 1000000 ---@type integer
+    return px == py and vx.title < vy.title or px < py
   end)
 end
 

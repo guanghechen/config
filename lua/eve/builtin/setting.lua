@@ -27,6 +27,21 @@ M.themes = {
 
 ---@class eve.builtin.setting.togglers
 M.togglers = {
+  "fileencoding_local",
+  "fileencoding_reopen_local",
+  "fileencoding_resave_local",
+  "fileformat_local",
+  "hipatterns_local",
+  "markdown_local",
+  "relativenumber_local",
+  "wrap_local",
+
+  "relativenumber_ux",
+  "transparency_ux",
+  "theme_ux",
+  "theme_variant_ux",
+  "username_ux",
+
   "ai_flight",
   "ai_provider_flight",
   "autoformat_flight",
@@ -40,25 +55,18 @@ M.togglers = {
   "dressing_winsep_fixed_flight",
   "dressing_winsep_float_flight",
   "gitdiff_expand_all_flight",
-  "fileformat_local",
-  "hipatterns_local",
-  "markdown_local",
-  "relativenumber_local",
-  "wrap_local",
+
   "code_lens_lsp",
   "inlay_hints_lsp",
   "python_debug_host_lsp",
   "python_debug_port_lsp",
   "python_venv_lsp",
   "spellcheck_lsp",
+
   "render_markdown_plugin",
   "smear_cursor_plugin",
   "treesitter_context_plugin",
-  "theme_theme",
-  "theme_variant_theme",
-  "relativenumber_ux",
-  "transparency_ux",
-  "username_ux",
+
   "maximize",
 }
 

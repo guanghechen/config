@@ -71,16 +71,17 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<Left>",
-      aliases = { "<right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
+      aliases = { "<Right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
       desc = "select_popup: noop",
       callback = eve.std.fn.noop,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>q",
-      aliases = { "<D-q>", "<M-q>" },
+      aliases = { "<D-q>", "<M-q>", "<Esc>" },
       desc = "select_popup: noop",
       callback = function()
+        on_select(nil)
         self:destroy()
       end,
     },
@@ -89,6 +90,7 @@ function M.new(props)
       key = "q",
       desc = "select_popup: quit",
       callback = function()
+        on_select(nil)
         self:destroy()
       end,
     },
@@ -114,6 +116,7 @@ function M.new(props)
         ---@diagnostic disable-next-line: invisible
         local winnr = self._winnr ---@type integer|nil
         if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+          on_select(nil)
           self:destroy()
           return
         end
@@ -121,8 +124,8 @@ function M.new(props)
         local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
         local index = cursor[1] ---@type integer
         local item = items[index] ---@type eve.ux.ISelectPopupItem
-        on_select(item)
 
+        on_select(item)
         self:destroy()
       end,
     },

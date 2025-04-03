@@ -217,8 +217,8 @@ return {
             actions.prev_entry,
             { desc = "Bring the cursor to the previous file entry" },
           },
-          { "n", "<down>", actions.next_entry, { desc = "Bring the cursor to the next file entry" } },
-          { "n", "<cr>", actions.select_entry, { desc = "Open the diff for the selected entry" } },
+          { "n", "<Down>", actions.next_entry, { desc = "Bring the cursor to the next file entry" } },
+          { "n", "<Cr>", actions.select_entry, { desc = "Open the diff for the selected entry" } },
           { "n", "<LeftRelease>", actions.select_entry, { desc = "Open the diff for the selected entry" } },
           { "n", "S", actions.toggle_stage_entry, { desc = "Stage / unstage the selected entry" } },
           {
@@ -315,19 +315,19 @@ return {
           },
           {
             "n",
-            "<up>",
+            "<Up>",
             actions.prev_entry,
             { desc = "Bring the cursor to the previous file entry" },
           },
           {
             "n",
-            "<down>",
+            "<Down>",
             actions.next_entry,
             { desc = "Bring the cursor to the next file entry" },
           },
           {
             "n",
-            "<cr>",
+            "<Cr>",
             actions.select_entry,
             { desc = "Open the diff for the selected entry" },
           },

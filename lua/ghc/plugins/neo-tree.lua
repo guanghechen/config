@@ -321,8 +321,8 @@ return {
           ["D"] = "none",
         },
         fuzzy_finder_mappings = { -- define keymaps for filter popup window in fuzzy_finder_mode
-          ["<down>"] = "move_cursor_down",
-          ["<up>"] = "move_cursor_up",
+          ["<Down>"] = "move_cursor_down",
+          ["<Up>"] = "move_cursor_up",
         },
       },
     },
