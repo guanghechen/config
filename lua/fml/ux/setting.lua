@@ -1,7 +1,5 @@
 local __module_name__ = "fml.ux.setting" ---@type string
 
-local Textarea = require("fml.ux.textarea")
-
 ---@class fml.ux.ISetting
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
@@ -17,10 +15,10 @@ local Textarea = require("fml.ux.textarea")
 ---@field public win_cursor_row         ?integer
 ---@field public win_cursor_col         ?integer
 
----@class fml.ux.Setting : fml.ux.ISetting, fml.ux.Textarea
+---@class fml.ux.Setting : fml.ux.ISetting, eve.ux.Textarea
 local M = {}
 M.__index = M
-setmetatable(M, Textarea)
+setmetatable(M, eve.ux.Textarea)
 
 ---@class fml.ux.setting.IProps
 ---@field public position               eve.e.BoxPosition
@@ -93,7 +91,7 @@ function M.new(props)
     return on_confirm_from_props(data)
   end
 
-  local textarea = Textarea.new({
+  local textarea = eve.ux.Textarea.new({
     position = position,
     width = width,
     height = height,
@@ -120,7 +118,7 @@ end
 ---@return nil
 function M:open(params)
   local lines = eve.json.stringify_prettier_lines(params.initial_value) ---@type string[]
-  ---@type fml.ux.textarea.IOpenParams
+  ---@type eve.ux.textarea.IOpenParams
   local opts = {
     initial_lines = lines,
     row = params.row,
@@ -130,7 +128,7 @@ function M:open(params)
     win_cursor_col = params.win_cursor_col,
     win_cursor_row = params.win_cursor_row,
   }
-  Textarea.open(self, opts)
+  eve.ux.Textarea.open(self, opts)
 end
 
 return M

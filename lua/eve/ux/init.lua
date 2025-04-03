@@ -2,6 +2,7 @@
 local __mods = {
   Nvimbar = "eve.ux.nvimbar",
   Terminal = "eve.ux.terminal",
+  Textarea = "eve.ux.textarea",
 }
 
 ---@class eve.ux
@@ -9,6 +10,7 @@ local __mods = {
 ---
 ---@field public Nvimbar                eve.ux.Nvimbar
 ---@field public Terminal               eve.ux.Terminal
+---@field public Textarea               eve.ux.Textarea
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

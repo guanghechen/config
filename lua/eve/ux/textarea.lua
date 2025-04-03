@@ -1,4 +1,4 @@
-local __module_name__ = "fml.ux.textarea" ---@type string
+local __module_name__ = "eve.ux.textarea" ---@type string
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({
@@ -10,15 +10,15 @@ local WIN_HIGHLIGHT = table.concat({
   "Normal:f_ut_normal",
 }, ",")
 
----@class fml.ux.ITextarea
+---@class eve.ux.ITextarea
 ---@field public get_bufnr              fun(): integer|nil
 ---@field public get_winnr              fun(): integer|nil
 ---@field public on_close               fun(): nil
 ---@field public on_confirm             fun(): nil
----@field public open                   fun(self: fml.ux.ITextarea, params: fml.ux.textarea.IOpenParams): nil
----@field public close                  fun(self: fml.ux.ITextarea): nil
+---@field public open                   fun(self: eve.ux.ITextarea, params: eve.ux.textarea.IOpenParams): nil
+---@field public close                  fun(self: eve.ux.ITextarea): nil
 
----@class fml.ux.textarea.IOpenParams
+---@class eve.ux.textarea.IOpenParams
 ---@field public initial_lines          string[]
 ---@field public row                    ?number
 ---@field public col                    ?number
@@ -33,7 +33,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@field public win_cursor_row         ?integer
 ---@field public win_cursor_col         ?integer
 
----@class fml.ux.Textarea : fml.ux.ITextarea
+---@class eve.ux.Textarea : eve.ux.ITextarea
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected position            eve.e.BoxPosition
@@ -50,7 +50,7 @@ local WIN_HIGHLIGHT = table.concat({
 local M = {}
 M.__index = M
 
----@class fml.ux.textarea.IProps
+---@class eve.ux.textarea.IProps
 ---@field public position               eve.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
@@ -66,8 +66,8 @@ M.__index = M
 ---@field public on_close               ?fun(): nil
 ---@field public on_confirm             fun(lines: string[]): boolean
 
----@param props                         fml.ux.textarea.IProps
----@return fml.ux.Textarea
+---@param props                         eve.ux.textarea.IProps
+---@return eve.ux.Textarea
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -181,7 +181,7 @@ function M:get_winnr()
   return self._winnr
 end
 
----@param params                        fml.ux.textarea.IOpenParams
+---@param params                        eve.ux.textarea.IOpenParams
 ---@return nil
 function M:open(params)
   ---@type eve.builtin.box.IRestriction
