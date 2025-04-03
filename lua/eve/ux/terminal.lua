@@ -7,28 +7,28 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_terminal_bg",
 }, ",")
 
----@class fml.ux.ITerminal : eve.t.ux.IWidget
+---@class eve.ux.ITerminal : eve.t.ux.IWidget
 ---@field public title                  string|nil
----@field public get_winnr              fun(self: fml.ux.ITerminal): integer|nil
----@field public get_bufnr              fun(self: fml.ux.ITerminal): integer|nil
----@field public is_visible             fun(self: fml.ux.ITerminal): boolean
----@field public show                   fun(self: fml.ux.ITerminal): nil
----@field public toggle                 fun(self: fml.ux.ITerminal): nil
----@field public update                 fun(self: fml.ux.ITerminal, props: fml.ux.terminal.IProps): nil
+---@field public get_winnr              fun(self: eve.ux.ITerminal): integer|nil
+---@field public get_bufnr              fun(self: eve.ux.ITerminal): integer|nil
+---@field public is_visible             fun(self: eve.ux.ITerminal): boolean
+---@field public show                   fun(self: eve.ux.ITerminal): nil
+---@field public toggle                 fun(self: eve.ux.ITerminal): nil
+---@field public update                 fun(self: eve.ux.ITerminal, props: eve.ux.terminal.IProps): nil
 
----@class fml.ux.terminal.IDimension
+---@class eve.ux.terminal.IDimension
 ---@field public height                 ?number
 ---@field public max_width              number
 ---@field public max_height             number
 ---@field public width                  ?number
 
----@class fml.ux.terminal.IRawDimension
+---@class eve.ux.terminal.IRawDimension
 ---@field public height                 ?number
 ---@field public max_width              ?number
 ---@field public max_height             ?number
 ---@field public width                  ?number
 
----@class fml.ux.Terminal : fml.ux.ITerminal
+---@class eve.ux.Terminal : eve.ux.ITerminal
 ---@field protected _bufnr              integer|nil
 ---@field protected _cmd                string
 ---@field protected _cmd_cwd            string
@@ -42,7 +42,7 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
 local M = {}
 M.__index = M
 
----@class fml.ux.terminal.IProps
+---@class eve.ux.terminal.IProps
 ---@field public cmd                    ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
@@ -51,8 +51,8 @@ M.__index = M
 ---@field public title                  string|nil
 ---@field public on_exit                ?fun(): nil
 
----@param props                         fml.ux.terminal.IProps
----@return fml.ux.Terminal
+---@param props                         eve.ux.terminal.IProps
+---@return eve.ux.Terminal
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -260,7 +260,7 @@ function M:toggle()
   end
 end
 
----@param props                         fml.ux.terminal.IProps
+---@param props                         eve.ux.terminal.IProps
 ---@return nil
 function M:update(props)
   local cmd = eve.shell.format_command(props.cmd) ---@type string

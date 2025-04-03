@@ -1,8 +1,6 @@
 local __module_name__ = "fml.action.term" ---@type string
 
-local Terminal = require("fml.ux.terminal")
-
-local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
+local terminal_map = {} ---@type table<string, eve.ux.ITerminal>
 
 ---@class fml.action.term.IProps
 ---@field public name                   string
@@ -20,7 +18,7 @@ local terminal_map = {} ---@type table<string, fml.ux.ITerminal>
 local M = {}
 
 ---@param props                        fml.action.term.IProps
----@return fml.ux.ITerminal
+---@return eve.ux.ITerminal
 function M.new(props)
   local name = props.name ---@type string
   local cmd = props.cmd or vim.env.SHELL or vim.o.shell ---@type string
@@ -29,7 +27,7 @@ function M.new(props)
   local permanent = props.permanent ---@type boolean|nil
   local title = props.title ---@type string|nil
 
-  local terminal = terminal_map[name] ---@type fml.ux.ITerminal|nil
+  local terminal = terminal_map[name] ---@type eve.ux.ITerminal|nil
   if terminal ~= nil then
     eve.reporter.error({
       from = __module_name__,
@@ -40,8 +38,8 @@ function M.new(props)
     return terminal
   end
 
-  ---@type fml.ux.ITerminal
-  terminal = Terminal.new({
+  ---@type eve.ux.ITerminal
+  terminal = eve.ux.Terminal.new({
     cmd = cmd,
     cwd = cwd,
     env = env,
@@ -55,11 +53,11 @@ function M.new(props)
 end
 
 ---@param params                        fml.action.term.toggle.IParams
----@return fml.ux.ITerminal
+---@return eve.ux.ITerminal
 function M.toggle(params)
   local name = params.name ---@type string
 
-  local terminal = terminal_map[name] ---@type fml.ux.ITerminal|nil
+  local terminal = terminal_map[name] ---@type eve.ux.ITerminal|nil
   if terminal == nil then
     terminal = M.new(params)
   else

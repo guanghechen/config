@@ -1,8 +1,6 @@
 local __module_name__ = "fml.action.code" ---@type string
 
-local Terminal = require("fml.ux.terminal")
-
-local code_runner_terminals = {} ---@type table<string, fml.ux.ITerminal>
+local code_runner_terminals = {} ---@type table<string, eve.ux.ITerminal>
 
 ---@class fml.action.code.IRunner
 ---@field public run                    fun(filepath: string, force: boolean): nil
@@ -32,7 +30,7 @@ local runners = {
   },
   mjs = {
     run = function(filepath)
-      ---@param terminal                fml.ux.ITerminal
+      ---@param terminal                eve.ux.ITerminal
       ---@return nil
       local function handle(terminal)
         local bufnr = terminal:get_bufnr() ---@type integer|nil
@@ -43,9 +41,9 @@ local runners = {
         end
       end
 
-      local terminal = code_runner_terminals.mjs ---@type fml.ux.ITerminal|nil
+      local terminal = code_runner_terminals.mjs ---@type eve.ux.ITerminal|nil
       if terminal == nil then
-        terminal = Terminal.new({
+        terminal = eve.ux.Terminal.new({
           cwd = eve.path.cwd(),
           permanent = false,
           title = "code run (mjs)",

@@ -6,7 +6,7 @@ local toggle_term = require("fml.action.term.toggle").toggle
 ---@return nil
 local function open_yazi(name, cwd, filepath)
   local tempname = eve.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
-  local terminal ---@type fml.ux.ITerminal|nil
+  local terminal ---@type eve.ux.ITerminal|nil
 
   local dirpath = eve.path.dirname(filepath) ---@type string
   local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string
