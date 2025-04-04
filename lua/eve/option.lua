@@ -89,8 +89,9 @@ vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 
 ---! encoding
+vim.o.encoding = "utf-8"
 vim.o.fileencoding = "utf-8"
-vim.o.fileencodings = "utf-8"
+vim.o.fileencodings = "utf-8,gbk,latin1"
 vim.o.fileformat = "unix"
 
 ---! format

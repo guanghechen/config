@@ -128,12 +128,7 @@ local group_items = {
                   vim.api.nvim_tabpage_set_win(0, winnr_command)
                 end
                 if vim.api.nvim_buf_is_valid(bufnr) then
-                  vim.api.nvim_buf_call(bufnr, function()
-                    vim.bo[bufnr].fileencoding = encoding ---@type string
-                    vim.bo[bufnr].modified = false
-                    vim.bo[bufnr].readonly = false
-                    vim.cmd("e ++enc=" .. encoding)
-                  end)
+                  vim.cmd("e ++enc=" .. encoding)
                 end
               end
             end,
