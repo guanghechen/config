@@ -12,8 +12,10 @@ function M.spellcheck_register()
     eve.state.status.lint_schedule_nr:next(bufnr)
   end)
 
-  local workspace = eve.path.workspace() ---@type string
-  local filepath = eve.path.join(workspace, ".cspell.json")
+  local filepath_buf = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local filepath = eve.path.locate_nearest_filepath(filepath_buf, { ".cspell.json" })
+    or eve.path.join(eve.path.workspace(), ".cspell.json")
+
   if not eve.fs.is_exists(filepath) then
     local data = {
       version = "0.2",
@@ -49,7 +51,7 @@ function M.spellcheck_register()
     eve.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
-      message = "Added word (" .. word .. ")to cspell.json file.",
+      message = string.format("Added word (%s) to cspell.json file.", word),
     })
     return
   end

@@ -411,6 +411,26 @@ function M.locate_context_filepath(filename)
   return M.normalize(filepath)
 end
 
+---@param dirpath                       string
+---@param candidate_filenames           string[]
+---@return string|nil
+function M.locate_nearest_filepath(dirpath, candidate_filenames)
+  local pieces = M.split(dirpath) ---@type string[]
+  for i = #pieces, 1, -1 do
+    local basepath = table.concat(pieces, SEP, 1, i) ---@type string
+    local stat = vim.uv.fs_stat(basepath)
+    if stat ~= nil and stat.type == "directory" then
+      for _, filename in ipairs(candidate_filenames) do
+        local filepath = basepath .. SEP .. filename ---@type string
+        if M.is_exist(filepath) then
+          return filepath
+        end
+      end
+    end
+  end
+  return nil
+end
+
 ---@param filename                      string
 ---@return string
 function M.locate_workspace_filepath(filename)
