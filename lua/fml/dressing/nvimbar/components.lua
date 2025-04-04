@@ -694,7 +694,7 @@ function M.encoding(position)
   local hln_text = position .. "_text" ---@type string
 
   ---@type string
-  local fn_toggle_fileencoding = eve.G.register_anonymous_fn(function()
+  local fn_on_fileencoding_clicked = eve.G.register_anonymous_fn(function()
     vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileencoding_local")
   end) or ""
 
@@ -714,7 +714,7 @@ function M.encoding(position)
 
       local buftype = vim.bo[bufnr].buftype ---@type string
       if buftype == "" or buftype == "nowrite" then
-        hl_text = btn(hl_text, fn_toggle_fileencoding)
+        hl_text = btn(hl_text, fn_on_fileencoding_clicked)
       end
       return text, hl_text, true
     end,
@@ -740,7 +740,7 @@ function M.fileformat(position)
   }
 
   ---@type string
-  local fn_toggle_fileformat = eve.G.register_anonymous_fn(function()
+  local fn_on_fileformat_clicked = eve.G.register_anonymous_fn(function()
     vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileformat_local")
   end) or ""
 
@@ -762,7 +762,7 @@ function M.fileformat(position)
       local hl_text = txt(text, hln_text) ---@type string
 
       if vim.bo[bufnr].buftype == "" then
-        hl_text = btn(hl_text, fn_toggle_fileformat)
+        hl_text = btn(hl_text, fn_on_fileformat_clicked)
       end
       return text, hl_text, true
     end,
@@ -835,6 +835,66 @@ end
 function M.filepath(position)
   local hln_text = position .. "_text" ---@type string
 
+  ---@type string
+  local fn_on_filepath_clicked = eve.G.register_anonymous_fn(function()
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+
+    eve.ux.SelectPopup
+      .new({
+        wincfg = {
+          relative = "editor",
+          width = 28,
+          row = vim.o.lines - 4,
+          col = 36,
+        },
+        items = {
+          -- stylua: ignore start
+          { uuid = "absolute", text = "copy absolute filepath", },
+          { uuid = "relative", text = "copy relative filepath", },
+          { uuid = "filename", text = "copy filename",          },
+          -- stylua: ignore end
+        },
+        on_select = function(widget, item)
+          widget:destroy()
+
+          if item ~= nil then
+            if item.uuid == "absolute" then
+              local content = filepath ---@type string
+
+              vim.fn.setreg("+", content)
+              eve.reporter.info({
+                from = __module_name__,
+                message = "Copied absolute filepath: " .. content,
+              })
+            elseif item.uuid == "relative" then
+              local cwd = eve.path.cwd() ---@type string
+              local content = eve.path.relative(cwd, filepath, true) ---@type string
+
+              vim.fn.setreg("+", content)
+              eve.reporter.info({
+                from = __module_name__,
+                message = "Copied relative filepath: " .. content,
+              })
+            elseif item.uuid == "filename" then
+              local content = eve.path.basename(filepath) ---@type string
+              vim.fn.setreg("+", content)
+              eve.reporter.info({
+                from = __module_name__,
+                message = "Copied filename: " .. content,
+              })
+            else
+              eve.reporter.warn({
+                from = __module_name__,
+                message = "Unknown item uuid: " .. item.uuid,
+              })
+            end
+          end
+        end,
+      })
+      :show()
+  end) or ""
+
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "filepath",
@@ -851,7 +911,7 @@ function M.filepath(position)
       local filepath = meta_buf and meta_buf.relpath or context.filepath
 
       local text = context.fileicon .. " " .. filepath ---@type string
-      local hl_text = txt(text, hln_text)
+      local hl_text = btn(txt(text, hln_text), fn_on_filepath_clicked) ---@type string
       return text, hl_text, true
     end,
   }
