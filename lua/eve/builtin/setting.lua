@@ -28,8 +28,6 @@ M.themes = {
 ---@class eve.builtin.setting.togglers
 M.togglers = {
   "fileencoding_local",
-  "fileencoding_reopen_local",
-  "fileencoding_resave_local",
   "fileformat_local",
   "hipatterns_local",
   "markdown_local",

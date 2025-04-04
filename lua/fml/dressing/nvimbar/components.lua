@@ -698,10 +698,6 @@ function M.encoding(position)
     vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileencoding_local")
   end) or ""
 
-  local fn_toggle_fileencoding_reopen = eve.G.register_anonymous_fn(function()
-    vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileencoding_reopen_local")
-  end) or ""
-
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "encoding",
@@ -713,14 +709,12 @@ function M.encoding(position)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
       local encoding = vim.bo[bufnr].fileencoding ---@type string
 
-      local text = encoding ---@type string
+      local text = #encoding > 0 and encoding or "unknown" ---@type string
       local hl_text = txt(text, hln_text)
 
       local buftype = vim.bo[bufnr].buftype ---@type string
-      if buftype == "" then
+      if buftype == "" or buftype == "nowrite" then
         hl_text = btn(hl_text, fn_toggle_fileencoding)
-      elseif buftype == "nowrite" then
-        hl_text = btn(hl_text, fn_toggle_fileencoding_reopen)
       end
       return text, hl_text, true
     end,

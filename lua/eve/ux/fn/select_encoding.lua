@@ -3,6 +3,7 @@
 
 ---@class eve.ux.fn.select_encoding.IParams
 ---@field public present                string|nil
+---@field public title                  string|nil
 ---@field public on_select              fun(encoding: string|nil): nil
 
 ---@class eve.ux.fn.select_encoding.fileencodings
@@ -58,11 +59,13 @@ local fileencodings = {
 
 local items = {} ---@type eve.ux.fn.select_encoding.IItem[]
 for _, fileencoding in ipairs(fileencodings) do
+  local text = string.format("%s     %s", eve.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
+
   ---@type eve.ux.fn.select_encoding.IItem
   local item = {
     uuid = fileencoding.encoding,
-    text = fileencoding.title,
-    text_lower = fileencoding.title,
+    text = text,
+    text_lower = text:lower(),
     data = fileencoding,
   }
   table.insert(items, item)
@@ -74,22 +77,18 @@ end
 ---@return eve.t.IHighlightInline[]
 local function render_item(item, match)
   local highlights = {} ---@type eve.t.IHighlightInline[]
-  if match ~= nil then
-    for _, piece in ipairs(match.matches) do
-      ---@type eve.t.IHighlightInline[]
-      local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-      table.insert(highlights, highlight)
-    end
+  for _, piece in ipairs(match.matches) do
+    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" } ---@type eve.t.IHighlightInline[]
+    table.insert(highlights, highlight)
   end
-
-  local text = string.format("%s     %s", eve.string.pad_end(item.text, 40, " "), item.data.encoding)
-  return text, highlights
+  return item.text, highlights
 end
 
 ---@param params                        eve.ux.fn.select_encoding.IParams
 ---@return eve.ux.ISelect
 local function select_encoding(params)
   local present = params.present ---@type string|nil
+  local title = params.title or "Select encoding" ---@type string
   local on_select = params.on_select ---@type fun(encoding: string|nil): nil
 
   ---@type eve.ux.select.IProvider
@@ -111,12 +110,14 @@ local function select_encoding(params)
       row = 3,
     },
     extend_preset_keymaps = true,
+    flag_fuzzy = eve.std.Observable.from_value(true),
+    flag_regex = eve.std.Observable.from_value(false),
     multiple = false,
     permanent = false,
     preview_enabled = false,
     preview_wrap = false,
     provider = provider,
-    title = "Select encoding",
+    title = title,
     on_close = function()
       if not settled then
         settled = true
@@ -127,7 +128,6 @@ local function select_encoding(params)
       ---@cast selected_items eve.ux.fn.select_encoding.IItem[]
 
       settled = true
-      widget:close()
 
       if #selected_items == 1 then
         local item = selected_items[1] ---@type eve.ux.fn.select_encoding.IItem
@@ -135,6 +135,8 @@ local function select_encoding(params)
       else
         on_select(nil)
       end
+
+      widget:close()
     end,
   })
 

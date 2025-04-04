@@ -58,6 +58,7 @@ function M.new(props)
 
   ---@type vim.api.keyset.win_config
   local wincfg = vim.tbl_extend("force", {
+    title = "",
     title_pos = "center",
     width = width + 8,
     height = #items,
@@ -103,7 +104,9 @@ function M.new(props)
         ---@diagnostic disable-next-line: invisible
         if self._winnr == winnr then
           local cursor = vim.fn.getmousepos()
-          vim.api.nvim_win_set_cursor(winnr, { cursor.line, 0 })
+          pcall(function()
+            vim.api.nvim_win_set_cursor(winnr, { cursor.line, 0 })
+          end)
         end
       end,
     },
@@ -138,7 +141,6 @@ function M.new(props)
   self._items = items ---@type eve.ux.ISelectPopupItem[]
   self._item_index_present = item_present_index ---@type integer
   self._on_select = on_select ---@type fun(item: eve.ux.ISelectPopupItem|nil): nil
-
   return self
 end
 

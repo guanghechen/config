@@ -1,8 +1,5 @@
 local __module_name__ = "fml.action.toggle" ---@type string
 
----@class fml.action.toggle.ISelectItem : eve.ux.ISelectPopupItem
----@field public data                   { from: string, to: string }
-
 ---@type table<string, integer>
 local group_priorities = {
   ["local"] = 1,
@@ -94,52 +91,105 @@ local group_items = {
         end
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
+        local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
-        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
-      end,
-    },
-    fileencoding_reopen = {
-      title = "fileencoding (reopen)",
-      snapshot = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
-          return "unknown", "String"
-        end
-        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer|nil
-        local encoding = vim.bo[bufnr].fileencoding ---@type string
-        return encoding, "String"
-      end,
-      action = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
+        if buftype ~= "" and buftype ~= "nowrite" then
+          eve.reporter.error({
+            from = __module_name__,
+            subject = "fileencoding_local",
+            message = "Unsupported buftype",
+            details = { winnr_command = winnr_command, bufnr = bufnr, buftype = buftype, filename = filename },
+          })
           return
         end
 
-        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
-        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
-      end,
-    },
-    fileencoding_resave = {
-      title = "fileencoding (resave)",
-      snapshot = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
-          return "unknown", "String"
-        end
-        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer|nil
-        local encoding = vim.bo[bufnr].fileencoding ---@type string
-        return encoding, "String"
-      end,
-      action = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
+        if vim.bo[bufnr].modified then
+          eve.reporter.error({
+            from = __module_name__,
+            subject = "fileencoding_local",
+            message = "File is modified without save, please save it first.",
+            details = { winnr_command = winnr_command, bufnr = bufnr, filename = filename },
+          })
           return
         end
 
-        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
-        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
+        local cwd_name = eve.path.basename(eve.path.cwd()) ---@type string
+        local offset_right = #cwd_name + 4 ---@type integer
+        local fileencoding_cur = vim.bo[bufnr].fileencoding ---@type string
+
+        ---@return nil
+        local function reopen()
+          eve.ux.fn.select_encoding({
+            present = fileencoding_cur,
+            title = string.format("Reopen with encoding (%s)", filename),
+            on_select = function(encoding)
+              if encoding ~= nil then
+                if vim.api.nvim_win_is_valid(winnr_command) then
+                  vim.api.nvim_tabpage_set_win(0, winnr_command)
+                end
+                if vim.api.nvim_buf_is_valid(bufnr) then
+                  vim.api.nvim_buf_call(bufnr, function()
+                    vim.bo[bufnr].fileencoding = encoding ---@type string
+                    vim.bo[bufnr].modified = false
+                    vim.bo[bufnr].readonly = false
+                    vim.cmd("e ++enc=" .. encoding)
+                  end)
+                end
+              end
+            end,
+          })
+        end
+
+        ---@return nil
+        local function resave()
+          eve.ux.fn.select_encoding({
+            present = fileencoding_cur,
+            title = string.format("Resave with encoding (%s)", filename),
+            on_select = function(encoding)
+              if encoding ~= nil then
+                if vim.api.nvim_win_is_valid(winnr_command) then
+                  vim.api.nvim_tabpage_set_win(0, winnr_command)
+                end
+                if vim.api.nvim_buf_is_valid(bufnr) then
+                  vim.api.nvim_buf_call(bufnr, function()
+                    vim.bo[bufnr].fileencoding = encoding ---@type string
+                    vim.cmd.write()
+                  end)
+                end
+              end
+            end,
+          })
+        end
+
+        if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
+          reopen()
+        else
+          eve.ux.SelectPopup
+            .new({
+              wincfg = {
+                relative = "editor",
+                width = 12,
+                row = vim.o.lines - 4,
+                col = vim.o.columns - offset_right - 24,
+              },
+              items = {
+                { uuid = "reopen", text = "reopen" },
+                { uuid = "resave", text = "resave" },
+              },
+              on_select = function(widget, item)
+                widget:destroy()
+
+                if item ~= nil then
+                  if item.uuid == "reopen" then
+                    reopen()
+                  else
+                    resave()
+                  end
+                end
+              end,
+            })
+            :show()
+        end
       end,
     },
     fileformat = {
@@ -160,50 +210,124 @@ local group_items = {
         end
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
+        local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
-
-        eve.ux.SelectPopup
-          .new({
-            wincfg = {
-              relative = "editor",
-              width = 40,
-              row = vim.o.lines - 9,
-              col = vim.o.columns - 48,
-              title = string.format(" Toggle fileformat (%s) ", filename),
-            },
-            items = {
-              -- stylua: ignore start
-              { uuid = "dos  -> mac",   text = "dos  -> mac  │ CRLF -> CR",    data = { from = "dos",  to = "mac"  } },
-              { uuid = "dos  -> unix",  text = "dos  -> unix │ CRLF -> LF",    data = { from = "dos",  to = "unix" } },
-              { uuid = "mac  -> dos",   text = "mac  -> dos  │ CR   -> CRLF",  data = { from = "mac",  to = "dos"  } },
-              { uuid = "mac  -> unix",  text = "mac  -> unix │ CR   -> LF",    data = { from = "mac",  to = "unix" } },
-              { uuid = "unix -> dos",   text = "unix -> dos  │ LF   -> CRLF",  data = { from = "unix", to = "dos"  } },
-              { uuid = "unix -> mac",   text = "unix -> mac  │ LF   -> LF",    data = { from = "unix", to = "mac"  } },
-              -- stylua: ignore end
-            },
-            item_present_uuid = "dos  -> unix",
-            on_select = function(widget, item)
-              if
-                item == nil
-                or not vim.api.nvim_win_is_valid(winnr_command)
-                or not vim.api.nvim_buf_is_valid(bufnr)
-              then
-                return
-              end
-
-              ---@cast item fml.action.toggle.ISelectItem
-
-              local from = item.data.from ---@type string
-              local to = item.data.to ---@type string
-              vim.api.nvim_tabpage_set_win(0, winnr_command)
-              vim.api.nvim_win_set_buf(winnr_command, bufnr)
-              widget:destroy()
-
-              vim.cmd(string.format("e ++ff=%s | set ff=%s | w!", from, to))
-              vim.bo[bufnr].fileformat = to ---@type string
-            end,
+        if buftype ~= "" and buftype ~= "nowrite" then
+          eve.reporter.error({
+            from = __module_name__,
+            subject = "fileformat_local",
+            message = "Unsupported buftype",
+            details = { winnr_command = winnr_command, bufnr = bufnr, buftype = buftype, filename = filename },
           })
-          :show()
+          return
+        end
+
+        if vim.bo[bufnr].modified then
+          eve.reporter.error({
+            from = __module_name__,
+            subject = "fileformat_local",
+            message = "File is modified without save, please save it first.",
+            details = { winnr_command = winnr_command, bufnr = bufnr, filename = filename },
+          })
+          return
+        end
+
+        local cwd_name = eve.path.basename(eve.path.cwd()) ---@type string
+        local offset_right = #cwd_name + 4 ---@type integer
+        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
+
+        ---@return nil
+        local function reopen()
+          eve.ux.SelectPopup
+            .new({
+              wincfg = {
+                relative = "editor",
+                width = 12,
+                row = vim.o.lines - 5,
+                col = vim.o.columns - offset_right - 12,
+              },
+              items = {
+                { uuid = "dos", text = "dos" },
+                { uuid = "mac", text = "mac" },
+                { uuid = "unix", text = "unix" },
+              },
+              item_present_uuid = fileformat_cur,
+              on_select = function(widget, item)
+                if item ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+                  vim.bo[bufnr].fileformat = item.uuid ---@type string
+                end
+                widget:destroy()
+              end,
+            })
+            :show()
+        end
+
+        ---@return nil
+        local function resave()
+          eve.ux.SelectPopup
+            .new({
+              wincfg = {
+                relative = "editor",
+                width = 12,
+                row = vim.o.lines - 5,
+                col = vim.o.columns - offset_right - 12,
+              },
+              items = {
+                { uuid = "dos", text = "dos" },
+                { uuid = "mac", text = "mac" },
+                { uuid = "unix", text = "unix" },
+              },
+              item_present_uuid = fileformat_cur,
+              on_select = function(widget, item)
+                if
+                  item == nil
+                  or not vim.api.nvim_win_is_valid(winnr_command)
+                  or not vim.api.nvim_buf_is_valid(bufnr)
+                then
+                  return
+                end
+
+                vim.api.nvim_tabpage_set_win(0, winnr_command)
+                widget:destroy()
+
+                vim.api.nvim_buf_call(bufnr, function()
+                  vim.cmd(string.format("e ++ff=%s | set ff=%s | w!", fileformat_cur, item.uuid))
+                  vim.bo[bufnr].fileformat = item.uuid ---@type string
+                end)
+              end,
+            })
+            :show()
+        end
+
+        if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
+          reopen()
+        else
+          eve.ux.SelectPopup
+            .new({
+              wincfg = {
+                relative = "editor",
+                width = 12,
+                row = vim.o.lines - 4,
+                col = vim.o.columns - offset_right - 12,
+              },
+              items = {
+                { uuid = "reopen", text = "reopen" },
+                { uuid = "resave", text = "resave" },
+              },
+              on_select = function(widget, item)
+                widget:destroy()
+
+                if item ~= nil then
+                  if item.uuid == "reopen" then
+                    reopen()
+                  else
+                    resave()
+                  end
+                end
+              end,
+            })
+            :show()
+        end
       end,
     },
     hipatterns = {
