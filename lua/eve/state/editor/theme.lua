@@ -245,7 +245,15 @@ function M.reload_theme(force, reload_plugins)
       filepath = theme_path,
     })
   else
-    dofile(theme_path)
+    local ok, err = pcall(dofile, theme_path)
+    if not ok then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "reload_theme",
+        message = "Bad theme file.",
+        details = { force = force, reload_plugins = reload_plugins, theme_path = theme_path, error = err },
+      })
+    end
 
     -- local scheme = M.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
     -- if scheme ~= nil then
