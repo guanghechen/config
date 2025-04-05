@@ -29,6 +29,15 @@
       "matches": ["http://localhost/*"],
       "js": ["inject/localhost-yozora.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://search.bilibili.com/*",
+        "https://space.bilibili.com/*",
+        "https://www.bilibili.com/*"
+      ],
+      "js": ["inject/bilibili.js"],
+      "run_at": "document_start"
     }
   ],
   "host_permissions": ["http://localhost/*", "https://localhost/*"]

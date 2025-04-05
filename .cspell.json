@@ -1,5 +1,10 @@
 {
-  "version": "0.2",
   "language": "en",
-  "words": ["guanghechen", "viewmodel", "yozora"]
+  "version": "0.2",
+  "words": [
+    "guanghechen",
+    "tsuki",
+    "viewmodel",
+    "yozora"
+  ]
 }
