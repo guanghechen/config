@@ -1,11 +1,37 @@
 local __module_name__ = "fml.action.lint" ---@type string
 
+---@return string|nil
+local function get_strict_word_under_cursor()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_get_current_line()
+
+  local start_col = col
+  local end_col = col
+
+  while start_col > 0 and line:sub(start_col, start_col):match("[%w]") do
+    start_col = start_col - 1
+  end
+  if not line:sub(start_col, start_col):match("[%w]") then
+    start_col = start_col + 1
+  end
+
+  while end_col <= #line and line:sub(end_col + 1, end_col + 1):match("[%w]") do
+    end_col = end_col + 1
+  end
+
+  local word = line:sub(start_col, end_col)
+  return word:match("^[a-zA-Z0-9]+$") and word:lower() or nil
+end
+
 ---@class fml.action.lint
 local M = {}
 
 ---@return nil
 function M.spellcheck_register()
-  local word = vim.fn.expand("<cword>"):lower() ---@type string
+  local word = get_strict_word_under_cursor() ---@type string|nil
+  if word == nil or #word < 1 then
+    return
+  end
 
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   vim.schedule(function()
