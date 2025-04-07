@@ -213,13 +213,6 @@ function M.locate_symbols(winnr, callback)
     return
   end
 
-  local ok, cmp = pcall(require, "cmp")
-  ---@diagnostic disable-next-line: undefined-field
-  if ok and cmp.visible() then
-    callback(false)
-    return
-  end
-
   local callback_called = false ---@type boolean
 
   ---@param err                         string|false|nil

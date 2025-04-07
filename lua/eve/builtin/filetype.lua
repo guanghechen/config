@@ -7,7 +7,6 @@ M.AVANTE_INPUT = "AvanteInput"
 M.AVANTE_SELECTED_FILES = "AvanteSelectedFiles"
 M.BIGFILE = "bigfile"
 M.COPILOT_CHAT = "copilot-chat"
-M.CMP_MENU = "cmp_menu"
 M.CHECKHEALTH = "checkhealth"
 M.DAP_FLOAT = "dap-float"
 M.DAP_REPL = "dap-repl"
@@ -49,58 +48,59 @@ M.YOZORA_VIEWER = "yozora-viewer"
 local filetypes = {
   -- stylua: ignore 
   cmp_code = {
-    ["assembly"]         = true,
-    ["bash"]             = true,
-    ["clojure"]          = true,
-    ["conf"]             = true,
-    ["cpp"]              = true,
-    ["csharp"]           = true,
-    ["css"]              = true,
-    ["dart"]             = true,
-    ["dockerfile"]       = true,
-    ["elixir"]           = true,
-    ["erlang"]           = true,
-    ["fortran"]          = true,
-    ["fsharp"]           = true,
-    ["go"]               = true,
-    ["groovy"]           = true,
-    ["haskell"]          = true,
-    ["html"]             = true,
-    ["ini"]              = true,
-    ["java"]             = true,
-    ["javascript"]       = true,
-    ["javascriptreact"]  = true,
-    ["json"]             = true,
-    ["julia"]            = true,
-    ["kotlin"]           = true,
-    ["lua"]              = true,
-    ["makefile"]         = true,
-    ["markdown"]         = true,
-    ["nim"]              = true,
-    ["objective-c"]      = true,
-    ["pascal"]           = true,
-    ["perl"]             = true,
-    ["php"]              = true,
-    ["powershell"]       = true,
-    ["python"]           = true,
-    ["r"]                = true,
-    ["ruby"]             = true,
-    ["rust"]             = true,
-    ["scala"]            = true,
-    ["shell"]            = true,
-    ["sql"]              = true,
-    ["swift"]            = true,
-    ["tmux"]             = true,
-    ["toml"]             = true,
-    ["typescript"]       = true,
-    ["typescriptreact"]  = true,
-    ["vue"]              = true,
-    ["xml"]              = true,
-    ["yaml"]             = true,
-    [M.AVANTE_INPUT]     = true,
-    [M.COPILOT_CHAT]     = true,
+    assembly         = true,
+    bash             = true,
+    clojure          = true,
+    conf             = true,
+    cpp              = true,
+    csharp           = true,
+    css              = true,
+    dart             = true,
+    dockerfile       = true,
+    elixir           = true,
+    erlang           = true,
+    fortran          = true,
+    fsharp           = true,
+    go               = true,
+    groovy           = true,
+    haskell          = true,
+    html             = true,
+    ini              = true,
+    java             = true,
+    javascript       = true,
+    javascriptreact  = true,
+    json             = true,
+    julia            = true,
+    kotlin           = true,
+    lua              = true,
+    makefile         = true,
+    markdown         = true,
+    nim              = true,
+    ['objective-c']  = true,
+    pascal           = true,
+    perl             = true,
+    php              = true,
+    powershell       = true,
+    python           = true,
+    r                = true,
+    ruby             = true,
+    rust             = true,
+    scala            = true,
+    shell            = true,
+    sql              = true,
+    swift            = true,
+    text             = true,
+    tmux             = true,
+    toml             = true,
+    typescript       = true,
+    typescriptreact  = true,
+    vue              = true,
+    xml              = true,
+    yaml             = true,
   },
   cmp_search = {
+    [M.AVANTE_INPUT] = true,
+    [M.COPILOT_CHAT] = true,
     [M.SEARCH_INPUT] = true,
   },
   disable_autopairs = {
@@ -246,7 +246,6 @@ local filetypes = {
     [M.YOZORA_VIEWER] = true,
   },
   no_flash = {
-    [M.CMP_MENU] = true,
     [M.FLASH_PROMPT] = true,
     [M.NOICE] = true,
     [M.NOTIFY] = true,
@@ -405,16 +404,6 @@ local extnames = {
 }
 
 ---@return string[]
-function M.get_cmp_code_filetypes()
-  return vim.tbl_keys(filetypes.cmp_code)
-end
-
----@return string[]
-function M.get_cmp_search_filetypes()
-  return vim.tbl_keys(filetypes.cmp_search)
-end
-
----@return string[]
 function M.get_disable_autopairs_filetypes()
   return vim.tbl_keys(filetypes.disable_autopairs)
 end
@@ -442,6 +431,17 @@ end
 ---@return string[]
 function M.get_quitable_with_q_filetypes()
   return vim.tbl_keys(filetypes.quitable_with_q)
+end
+
+---@return boolean
+function M.is_cmp_enabled(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  if filetypes.cmp_code[filetype] or filetypes.cmp_search[filetype] then
+    return true
+  end
+  return false
 end
 
 function M.is_no_customized_winline_filetype(filetype)

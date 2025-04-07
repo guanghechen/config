@@ -54,13 +54,10 @@ local conds = {
 local raw_specs = {
   { name = "aerial.nvim", main = "aerial", cond = conds.not_vscode },
   { name = "avante.nvim", main = "avante", cond = conds.ai },
-  { name = "cmp-buffer", main = "cmp_buffer", cond = conds.cmp },
-  { name = "cmp-nvim-lsp", main = "cmp_nvim_lsp", cond = conds.cmp },
-  { name = "cmp-path", main = "cmp_path", cond = conds.cmp },
+  { name = "blink.cmp", main = "blink.cmp", cond = conds.cmp },
   { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
   { name = "copilot.lua", main = "copilot", cond = conds.ai },
   { name = "copilot-chat.nvim", main = "CopilotChat", cond = conds.ai },
-  { name = "copilot-cmp", main = "copilot_cmp", cond = conds.ai },
   { name = "diffview.nvim", main = "diffview", cond = conds.not_vscode },
   { name = "flash.nvim", main = "flash", cond = conds.common },
   { name = "friendly-snippets", cond = conds.not_vscode },
@@ -76,7 +73,6 @@ local raw_specs = {
   { name = "neo-tree.nvim", main = "neo-tree", cond = conds.not_vscode },
   { name = "noice.nvim", main = "noice", cond = conds.not_vscode },
   { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
-  { name = "nvim-cmp", main = "cmp", cond = conds.cmp },
   { name = "nvim-dap", main = "dap", cond = conds.dap },
   { name = "nvim-dap-ui", main = "dapui", cond = conds.dap },
   { name = "nvim-dap-virtual-text", main = "nvim-dap-virtual-text", cond = conds.dap },
@@ -84,7 +80,6 @@ local raw_specs = {
   { name = "nvim-lspconfig", main = "lspconfig", cond = conds.lsp },
   { name = "nvim-nio", main = "nio", cond = conds.not_vscode },
   { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
-  { name = "nvim-snippets", main = "snippets", cond = conds.not_vscode },
   { name = "nvim-treesitter", main = "nvim-treesitter", cond = conds.common },
   { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.common },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.common },
@@ -125,9 +120,6 @@ end
 
 ---@type string[]
 local no_details_module_names = {
-  "cmp-buffer", --
-  "cmp-nvim-lsp",
-  "cmp-path",
   "friendly-snippets",
   "nui.nvim",
   "nvim-nio",

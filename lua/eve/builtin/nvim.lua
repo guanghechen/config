@@ -54,6 +54,14 @@ function M.bindkeys(keymaps, keymap_override)
   end
 end
 
+---@return nil
+function M.create_undo()
+  local mode = vim.api.nvim_get_mode().mode ---@type string
+  if mode == "i" then
+    vim.api.nvim_feedkeys(eve.setting.feedkeys.UNDO, "n", false)
+  end
+end
+
 ---@return table<string, integer>
 function M.filepath2bufnr()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

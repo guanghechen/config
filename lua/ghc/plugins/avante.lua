@@ -249,7 +249,6 @@ return {
   dependencies = {
     "plenary.nvim",
     "nui.nvim",
-    "nvim-cmp",
     "mini.icons",
     "copilot.lua",
     "render-markdown.nvim",

@@ -6,6 +6,11 @@ return {
   opts = {
     suggestion = {
       enabled = false,
+      auto_trigger = true,
+      hide_during_completion = true,
+      keymap = {
+        accept = false,
+      },
     },
     panel = {
       enabled = false,
