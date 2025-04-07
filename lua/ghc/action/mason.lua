@@ -6,7 +6,7 @@ function M.get_mason_ensure_installed()
   return {
     -- lsp --
     "bash-language-server", -- bashls
-    "clangd", -- clangd
+    -- "clangd", -- clangd
     "css-lsp", -- cssls
     "dockerfile-language-server", -- docker
     "docker-compose-language-service", -- docker_compose_language_service
@@ -33,7 +33,7 @@ function M.get_mason_ensure_installed()
 
     -- formatter --
     "black",
-    "prettier",
+    -- "prettier",
     "shfmt",
     "stylua",
   }
