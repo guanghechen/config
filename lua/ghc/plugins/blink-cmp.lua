@@ -9,6 +9,15 @@ local function ai_accept()
   end
 end
 
+---@type table<string, string[]>
+local sources_per_filetype = {}
+for _, cmp_code in eve.filetype.get_cmp_code_filetypes() do
+  sources_per_filetype[cmp_code] = { "copilot", "lsp", "path", "snippets", "buffer" }
+end
+for _, cmp_search in eve.filetype.get_cmp_search_filetypes() do
+  sources_per_filetype[cmp_search] = { "path", "buffer" }
+end
+
 return {
   name = "blink.cmp",
   build = "cargo build --release",
@@ -124,13 +133,16 @@ return {
       preset = "default",
     },
     sources = {
-      default = { "lsp", "path", "snippets", "buffer" },
-      per_filetype = {
-        [eve.filetype.AVANTE_INPUT] = { "path", "buffer" },
-        [eve.filetype.COPILOT_CHAT] = { "path", "buffer" },
-        [eve.filetype.SEARCH_INPUT] = { "path", "buffer" },
+      default = {},
+      per_filetype = sources_per_filetype,
+      providers = {
+        copilot = {
+          name = "copilot",
+          module = "ghc.cmp.copilot",
+          score_offset = 100,
+          async = true,
+        },
       },
-      providers = {},
     },
   },
 }

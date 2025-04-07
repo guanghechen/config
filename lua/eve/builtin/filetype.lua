@@ -404,6 +404,16 @@ local extnames = {
 }
 
 ---@return string[]
+function M.get_cmp_code_filetypes()
+  return vim.tbl_keys(filetypes.cmp_code)
+end
+
+---@return string[]
+function M.get_cmp_search_filetypes()
+  return vim.tbl_keys(filetypes.cmp_search)
+end
+
+---@return string[]
 function M.get_disable_autopairs_filetypes()
   return vim.tbl_keys(filetypes.disable_autopairs)
 end
