@@ -57,7 +57,10 @@ export const apps = [
         scheme.variant === "light"
           ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
           : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
-      content += '\n\n' + `background_image ${backgroundImagePath}\n`
+
+      if (scheme.theme === 'gruvbox-dark' || scheme.theme === 'gruvbox-light') {
+        content += '\n\n' + `background_image ${backgroundImagePath}\n`
+      }
       await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },

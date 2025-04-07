@@ -1,17 +1,25 @@
 {
-  "version": "0.2",
   "language": "en",
+  "version": "0.2",
   "words": [
+    "alacritty",
     "catppuccin",
+    "flowerlit",
+    "ghostty",
     "gruvbox",
+    "guanghechen",
+    "lazygit",
     "miniforge",
     "msvc",
     "msys",
+    "nvchad",
     "nvim",
+    "nvim_appname",
     "pacman",
     "pwsh",
     "rustup",
     "usermod",
+    "wezterm",
     "winget"
   ]
 }
