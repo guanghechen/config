@@ -86,9 +86,27 @@ return {
         end
       end)
     end
+
+    ---@type string[]
+    local enabled = {
+      "clangd",
+      "eslint",
+      "html",
+      "jsonls",
+      "lua_ls",
+      "pyright",
+      "ruff",
+      "rust_analyzer",
+      "tailwindcss",
+      "vtsls",
+      "yamlls",
+    }
+    for _, server in ipairs(enabled) do
+      local config = require("ghc.lsp." .. server)
+      require("lspconfig")[server].setup(config)
+    end
   end,
   dependencies = {
     "mason.nvim",
-    "mason-lspconfig.nvim",
   },
 }

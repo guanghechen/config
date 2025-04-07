@@ -1,5 +1,3 @@
-local locate_mason_pkg_path = require("ghc.lsp.common").locate_mason_pkg_path
-
 ---@param config {type?:string, args?:string[]|fun():string[]?}
 local function get_args(config)
   local args = type(config.args) == "function" and (config.args() or {}) or config.args or {} --[[@as string[] | string ]]
@@ -35,7 +33,7 @@ local function setup_node()
         command = "node",
         -- 💀 Make sure to update this path to point to your installation
         args = {
-          locate_mason_pkg_path("js-debug-adapter", "/js-debug/src/dapDebugServer.js"),
+          eve.lsp.locate_mason_pkg_path("js-debug-adapter", "/js-debug/src/dapDebugServer.js"),
           "${port}",
         },
       },

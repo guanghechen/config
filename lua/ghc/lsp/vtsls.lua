@@ -1,10 +1,4 @@
-local __module_name__ = "ghc.lsp.lang.typescript" ---@type string
-
-local get_capabilities = require("ghc.lsp.common").get_capabilities
-local handlers = require("ghc.lsp.common").handlers
-local basic_on_attach = require("ghc.lsp.common").on_attach
-local locate_mason_pkg_path = require("ghc.lsp.common").locate_mason_pkg_path
-local on_init = require("ghc.lsp.common").on_init
+local __module_name__ = "ghc.lsp.vtsls" ---@type string
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
@@ -61,7 +55,7 @@ local function on_attach(client, bufnr)
     end)
   end
 
-  basic_on_attach(client, bufnr)
+  eve.lsp.on_attach(client, bufnr)
 
   ---@type eve.t.IKeymap[]
   local keymaps = {
@@ -190,87 +184,84 @@ local function on_attach(client, bufnr)
 end
 
 local plugins = {
-  vue = locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
+  vue = eve.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
 
-return function()
-  local capabilities = get_capabilities()
+local capabilities = eve.lsp.get_capabilities()
 
-  return {
-    capabilities = capabilities,
-    handlers = handlers,
-    on_attach = on_attach,
-    on_init = on_init,
-    filetypes = {
-      "javascript",
-      "javascriptreact",
-      "javascript.jsx",
-      "typescript",
-      "typescriptreact",
-      "typescript.tsx",
-      "vue",
-    },
-    root_dir = function(filename)
-      local util = require("lspconfig.util")
-      return util.root_pattern(".git")(filename)
-        or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
-    end,
-    settings = {
+return {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  on_init = eve.lsp.on_init,
+  filetypes = {
+    "javascript",
+    "javascriptreact",
+    "javascript.jsx",
+    "typescript",
+    "typescriptreact",
+    "typescript.tsx",
+    "vue",
+  },
+  root_dir = function(filename)
+    local util = require("lspconfig.util")
+    return util.root_pattern(".git")(filename)
+      or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
+  end,
+  settings = {
+    complete_function_calls = true,
+    vtsls = {
       complete_function_calls = true,
       vtsls = {
-        complete_function_calls = true,
-        vtsls = {
-          enableMoveToFileCodeAction = true,
-          autoUseWorkspaceTsdk = true,
-          experimental = {
-            maxInlayHintLength = 30,
-            completion = {
-              enableServerSideFuzzyMatch = true,
+        enableMoveToFileCodeAction = true,
+        autoUseWorkspaceTsdk = true,
+        experimental = {
+          maxInlayHintLength = 30,
+          completion = {
+            enableServerSideFuzzyMatch = true,
+          },
+        },
+        tsserver = {
+          globalPlugins = vim.tbl_filter(function(v)
+            return not not v
+          end, {
+            plugins.vue and {
+              name = "@vue/typescript-plugin",
+              location = plugins.vue,
+              languages = { "vue" },
+              configNamespace = "typescript",
+              enableForWorkspaceTypeScriptVersions = true,
             },
-          },
-          tsserver = {
-            globalPlugins = vim.tbl_filter(function(v)
-              return not not v
-            end, {
-              plugins.vue and {
-                name = "@vue/typescript-plugin",
-                location = plugins.vue,
-                languages = { "vue" },
-                configNamespace = "typescript",
-                enableForWorkspaceTypeScriptVersions = true,
-              },
-            }),
-          },
+          }),
         },
-        typescript = {
-          updateImportsOnFileMove = { enabled = "always" },
-          suggest = {
-            completeFunctionCalls = true,
-          },
-          inlayHints = {
-            enumMemberValues = { enabled = true },
-            functionLikeReturnTypes = { enabled = true },
-            parameterNames = { enabled = "literals" },
-            parameterTypes = { enabled = true },
-            propertyDeclarationTypes = { enabled = true },
-            variableTypes = { enabled = false },
-          },
+      },
+      typescript = {
+        updateImportsOnFileMove = { enabled = "always" },
+        suggest = {
+          completeFunctionCalls = true,
         },
-        javascript = {
-          updateImportsOnFileMove = { enabled = "always" },
-          suggest = {
-            completeFunctionCalls = true,
-          },
-          inlayHints = {
-            enumMemberValues = { enabled = true },
-            functionLikeReturnTypes = { enabled = true },
-            parameterNames = { enabled = "literals" },
-            parameterTypes = { enabled = true },
-            propertyDeclarationTypes = { enabled = true },
-            variableTypes = { enabled = false },
-          },
+        inlayHints = {
+          enumMemberValues = { enabled = true },
+          functionLikeReturnTypes = { enabled = true },
+          parameterNames = { enabled = "literals" },
+          parameterTypes = { enabled = true },
+          propertyDeclarationTypes = { enabled = true },
+          variableTypes = { enabled = false },
+        },
+      },
+      javascript = {
+        updateImportsOnFileMove = { enabled = "always" },
+        suggest = {
+          completeFunctionCalls = true,
+        },
+        inlayHints = {
+          enumMemberValues = { enabled = true },
+          functionLikeReturnTypes = { enabled = true },
+          parameterNames = { enabled = "literals" },
+          parameterTypes = { enabled = true },
+          propertyDeclarationTypes = { enabled = true },
+          variableTypes = { enabled = false },
         },
       },
     },
-  }
-end
+  },
+}

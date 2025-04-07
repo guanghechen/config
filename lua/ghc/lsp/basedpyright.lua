@@ -1,0 +1,12 @@
+local capabilities = eve.lsp.get_capabilities()
+
+return {
+  capabilities = capabilities,
+  on_attach = eve.lsp.on_attach,
+  on_init = eve.lsp.on_init,
+  settings = {
+    basedpyright = {
+      enabled = true,
+    },
+  },
+}
