@@ -15,7 +15,8 @@ function M.ai(position)
   local function get_status(provider)
     if provider == "copilot" then
       if package.loaded["copilot"] then
-        return require("copilot.api").status.data.status or ""
+        local status = require("copilot.status").data.status or ""
+        return status == "Normal" and "" or status
       end
     end
     return ""
@@ -29,7 +30,7 @@ function M.ai(position)
 
     if provider == "copilot" then
       if package.loaded["copilot"] then
-        status = require("copilot.api").status.data or "NIL"
+        status = require("copilot.status").data.status or "NIL"
       end
     end
 
