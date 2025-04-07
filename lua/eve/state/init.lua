@@ -300,7 +300,6 @@ function M.watch_changes(params)
 
   M.observe({
     M.plugin.render_markdown,
-    M.plugin.smear_cursor,
     M.plugin.treesitter_context,
     M.option.relativenumber,
     M.theme.theme,

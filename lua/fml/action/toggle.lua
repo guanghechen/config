@@ -44,7 +44,6 @@ local group_flags = {
   ---plugin
   plugin = {
     render_markdown = eve.state.plugin.render_markdown,
-    smear_cursor = eve.state.plugin.smear_cursor,
     treesitter_context = eve.state.plugin.treesitter_context,
   },
 }

@@ -62,7 +62,6 @@ M.togglers = {
   "spellcheck_lsp",
 
   "render_markdown_plugin",
-  "smear_cursor_plugin",
   "treesitter_context_plugin",
 
   "maximize",

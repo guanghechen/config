@@ -39,7 +39,6 @@
   "plenary.nvim": { "branch": "nvim@plenary.nvim", "commit": "857c5ac632080dba10aae49dba902ce3abf91b35" },
   "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "a615baed85137a8c6fc8e95f5545f64d33f5f384" },
   "schema-store.nvim": { "branch": "nvim@schema-store.nvim", "commit": "c61a74033522c3efbb8465fe6e9c75b27f5c3667" },
-  "smear-cursor.nvim": { "branch": "nvim@smear-cursor.nvim", "commit": "483ec950ebe77ef92f3e7543945285ffb49093b6" },
   "trouble.nvim": { "branch": "nvim@trouble.nvim", "commit": "85bedb7eb7fa331a2ccbecb9202d8abba64d37b3" },
   "which-key.nvim": { "branch": "nvim@which-key.nvim", "commit": "370ec46f710e058c9c1646273e6b225acf47cbed" }
 }

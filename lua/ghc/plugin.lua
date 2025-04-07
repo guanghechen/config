@@ -45,12 +45,6 @@ local conds = {
   not_vscode = function()
     return not vim.g.vscode
   end,
-  smear_cursor = function()
-    return not vim.g.vscode
-      and not vim.g.neovide
-      and eve.state.plugin.smear_cursor:snapshot()
-      and (eve.env.IS_WSL or eve.env.IS_WIN)
-  end,
   treesitter_context = function()
     return not vim.g.vscode and eve.state.plugin.treesitter_context:snapshot()
   end,
@@ -97,7 +91,6 @@ local raw_specs = {
   { name = "plenary.nvim", main = "plenary", cond = conds.common },
   { name = "render-markdown.nvim", main = "render-markdown", cond = conds.not_vscode },
   { name = "schema-store.nvim", main = "schemastore", cond = conds.lsp },
-  { name = "smear-cursor.nvim", main = "smear_cursor", cond = conds.smear_cursor },
   { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },
   { name = "which-key.nvim", main = "which-key", cond = conds.common },
 }
