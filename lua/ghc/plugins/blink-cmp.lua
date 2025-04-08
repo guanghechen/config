@@ -11,10 +11,10 @@ end
 
 ---@type table<string, string[]>
 local sources_per_filetype = {}
-for _, cmp_code in eve.filetype.get_cmp_code_filetypes() do
+for _, cmp_code in ipairs(eve.filetype.get_cmp_code_filetypes()) do
   sources_per_filetype[cmp_code] = { "copilot", "lsp", "path", "snippets", "buffer" }
 end
-for _, cmp_search in eve.filetype.get_cmp_search_filetypes() do
+for _, cmp_search in ipairs(eve.filetype.get_cmp_search_filetypes()) do
   sources_per_filetype[cmp_search] = { "path", "buffer" }
 end
 
@@ -124,7 +124,7 @@ return {
     signature = {
       enabled = true,
       window = {
-        border = "padded",
+        border = "rounded",
         winblend = 50,
         show_documentation = false,
       },

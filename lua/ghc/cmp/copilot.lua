@@ -180,7 +180,7 @@ M.__index = M
 
 ---The constructor for the completion provider
 function M.new()
-  local self = {}
+  local self = setmetatable({}, M)
 
   ---@type ghc.cmp.copilot.config
   local config = {

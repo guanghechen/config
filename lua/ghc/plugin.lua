@@ -150,6 +150,7 @@ for index = 1, #specs, 1 do
       from = __module_name__,
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. spec_basic.name,
+      details = { basic = spec_basic, error = spec_module },
     })
   end
 end
