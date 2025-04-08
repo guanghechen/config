@@ -1,13 +1,25 @@
-local function ai_accept()
-  local enabled = eve.state.flight.ai:snapshot() ---@type boolean
-  if enabled and package.loaded["copilot"] then
-    if require("copilot.suggestion").is_visible() then
-      eve.nvim.create_undo()
-      require("copilot.suggestion").accept()
+---@class ghc.plugins.blink_cmp.actions
+local actions = {
+  ---@return boolean|nil
+  ai_accept = function()
+    local enabled = eve.state.flight.ai:snapshot() ---@type boolean
+    if enabled and package.loaded["copilot"] then
+      if require("copilot.suggestion").is_visible() then
+        eve.nvim.create_undo()
+        require("copilot.suggestion").accept()
+        return true
+      end
+    end
+  end,
+  ---@return boolean|nil
+  tab_fallback = function()
+    local mode = vim.api.nvim_get_mode().mode ---@type string
+    if mode == "i" then
+      vim.fn.feedkeys("\t", "n")
       return true
     end
-  end
-end
+  end,
+}
 
 ---@type table<string, string[]>
 local sources_per_filetype = {}
@@ -110,16 +122,21 @@ return {
     },
     keymap = {
       preset = "none",
-      ["<Tab>"] = { "select_next", "snippet_forward", ai_accept, "fallback" },
-      ["<S-Tab>"] = { "select_prev", "snippet_backward", ai_accept, "fallback" },
+      ["<CR>"] = { "accept", "fallback" },
+      ["<Tab>"] = { "select_next", "snippet_forward", actions.ai_accept, actions.tab_fallback, "fallback" },
+      ["<S-Tab>"] = { "select_prev", "snippet_backward", actions.ai_accept, actions.tab_fallback, "fallback" },
+
       ["<Up>"] = { "select_prev", "fallback" },
       ["<Down>"] = { "select_next", "fallback" },
-      ["<C-p>"] = { "select_prev", "fallback_to_mappings" },
-      ["<C-n>"] = { "select_next", "fallback_to_mappings" },
+      ["<C-k>"] = { "select_prev", "fallback_to_mappings" },
+      ["<C-j>"] = { "select_next", "fallback_to_mappings" },
+      ["<C-h>"] = { "hide" },
+      ["<C-l>"] = { "select_and_accept" },
+
+      ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+      ["<C-p>"] = { "show_signature", "hide_signature", "fallback" },
       ["<C-b>"] = { "scroll_documentation_up", "fallback" },
       ["<C-f>"] = { "scroll_documentation_down", "fallback" },
-      ["<C-k>"] = { "show_signature", "hide_signature", "fallback" },
-      ["<CR>"] = { "accept", "fallback" },
     },
     signature = {
       enabled = true,
