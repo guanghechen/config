@@ -69,6 +69,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 
 vim.filetype.add({
   extension = {
+    log = "text",
     md = "markdown",
     rasi = "rasi",
     rofi = "rasi",
@@ -80,6 +81,7 @@ vim.filetype.add({
     [".eslintignore"] = "ignore",
     [".git-credentials"] = "git-credentials",
     [".prettierignore"] = "ignore",
+    ["log"] = "text",
     ["vimrc"] = "vim",
   },
   pattern = {
