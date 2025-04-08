@@ -23,7 +23,7 @@ local actions = {
 
 ---@type table<string, string[]>
 local sources_per_filetype = {
-  [eve.filetype.AVANTE_INPUT] = { "avante_mentions", "avante_files", "avante_commands", "path", "buffer" },
+  [eve.filetype.AVANTE_INPUT] = { "avante_mentions", "avante_commands", "path", "buffer" },
   [eve.filetype.COPILOT_CHAT] = { "path", "buffer" },
   [eve.filetype.SEARCH_INPUT] = { "path" },
 }
@@ -175,12 +175,6 @@ return {
           name = "avante_commands",
           module = "blink.compat.source",
           score_offset = 90,
-          opts = {},
-        },
-        avante_files = {
-          name = "avante_files",
-          module = "blink.compat.source",
-          score_offset = 100,
           opts = {},
         },
         avante_mentions = {
