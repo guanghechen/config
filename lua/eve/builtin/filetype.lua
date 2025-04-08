@@ -100,8 +100,8 @@ local filetypes = {
   },
   cmp_others = {
     [M.AVANTE_INPUT] = true,
-    [M.COPILOT_CHAT] = true,
-    [M.SEARCH_INPUT] = true,
+    -- [M.COPILOT_CHAT] = true,
+    -- [M.SEARCH_INPUT] = true,
   },
   disable_autopairs = {
     [M.AERIAL] = true,
