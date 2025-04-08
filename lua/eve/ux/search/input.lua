@@ -76,7 +76,6 @@ function M.new(props)
   })
 
   self.context = context
-  self._autocmd_group = autocmd_group
   self._extmark_nr = nil
   self._input_scheduler = input_scheduler
   self._keymaps = keymaps
@@ -142,7 +141,7 @@ function M:create_buf_as_needed()
   vim.fn.sign_place(bufnr, "", eve.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
-    group = self._autocmd_group,
+    group = eve.nvim.augroup(context.uuid .. ":search_input:text_changed"),
     buffer = bufnr,
     callback = function()
       vim.fn.sign_place(bufnr, "", eve.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
@@ -150,12 +149,11 @@ function M:create_buf_as_needed()
     end,
   })
   vim.api.nvim_create_autocmd({ "BufDelete" }, {
-    group = self._autocmd_group,
+    group = eve.nvim.augroup(context.uuid .. ":search_input:buf_deleted"),
     buffer = bufnr,
     once = true,
     callback = function()
       context.bufnr_input = nil
-      vim.api.nvim_del_augroup_by_id(self._autocmd_group)
     end,
   })
   return bufnr
