@@ -101,10 +101,12 @@ local function gen_hlgroup_map(context)
     BlinkCmpKindUnit = { fg = c.purple, bg = item_kind_bg },
     BlinkCmpKindValue = { fg = c.aqua, bg = item_kind_bg },
     BlinkCmpKindVariable = { fg = c.purple, bg = item_kind_bg },
+    BlinkCmpLabel = { fg = c.fg4, italic = true, bg = item_kind_bg },
     BlinkCmpMenu = { fg = c.fg4, italic = true },
     BlinkCmpMenuBorder = { link = "FloatBorder" },
     BlinkCmpSignatureHelp = { bg = t and "none" or c.bg0 },
     BlinkCmpSignatureHelpBorder = { link = "FloatBorder" },
+    BlinkCmpSource = { fg = c.fg3, bg = item_kind_bg },
 
     ---! diffview.nvim
     DiffviewFilePanelDeletions = { fg = c.red, bold = true },

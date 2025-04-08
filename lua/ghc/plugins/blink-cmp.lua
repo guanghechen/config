@@ -23,21 +23,9 @@ local actions = {
 
 ---@type table<string, string[]>
 local sources_per_filetype = {
-  [eve.filetype.AVANTE_INPUT] = {
-    "avante_mentions",
-    "avante_files",
-    "avante_commands",
-    "path",
-    "buffer",
-  },
-  [eve.filetype.COPILOT_CHAT] = {
-    "path",
-    "buffer",
-  },
-  [eve.filetype.SEARCH_INPUT] = {
-    "path",
-    "buffer",
-  },
+  [eve.filetype.AVANTE_INPUT] = { "avante_mentions", "avante_files", "avante_commands", "path", "buffer" },
+  [eve.filetype.COPILOT_CHAT] = { "path", "buffer" },
+  [eve.filetype.SEARCH_INPUT] = { "path" },
 }
 for _, cmp_code in ipairs(eve.filetype.get_cmp_code_filetypes()) do
   if sources_per_filetype[cmp_code] == nil then
@@ -106,10 +94,16 @@ return {
         draw = {
           treesitter = { "lsp" },
           columns = {
-            { "kind_icon", "label", "label_description", gap = 1 },
-            { "kind" },
+            -- { "kind_icon", "source_name" },
+            { "kind_icon" },
+            { "label", "label_description", gap = 1 },
           },
           components = {
+            kind = {
+              highlight = function(ctx)
+                return "BlinkCmpKind" .. ctx.kind
+              end,
+            },
             kind_icon = {
               text = function(ctx)
                 return eve.icon.kind[ctx.kind] .. " "
@@ -118,9 +112,17 @@ return {
                 return "BlinkCmpKind" .. ctx.kind
               end,
             },
-            kind = {
-              highlight = function(ctx)
-                return "BlinkCmpKind" .. ctx.kind
+            label = {
+              highlight = function()
+                return "BlinkCmpLabel"
+              end,
+            },
+            source_name = {
+              text = function(ctx)
+                return ctx.source_name:lower()
+              end,
+              highlight = function()
+                return "BlinkCmpSource"
               end,
             },
           },
