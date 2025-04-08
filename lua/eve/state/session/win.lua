@@ -213,6 +213,12 @@ function M.locate_symbols(winnr, callback)
     return
   end
 
+  local ok, cmp = pcall(require, "blink.cmp")
+  if ok and cmp.is_visible() then
+    callback(false)
+    return
+  end
+
   local callback_called = false ---@type boolean
 
   ---@param err                         string|false|nil
