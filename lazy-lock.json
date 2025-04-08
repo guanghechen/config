@@ -2,6 +2,7 @@
   "aerial.nvim": { "branch": "nvim@aerial.nvim", "commit": "44684bf429dc40e97a6d00ffa09043ac3f692186" },
   "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "1c36cfc8120681ffe3261cba83f00338630da606" },
   "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "9632d20905f2b9b8d874846e50fb2d26367e56eb" },
+  "blink.compat": { "branch": "nvim@blink.compat", "commit": "2ed6d9a28b07fa6f3bface818470605f8896408c" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "eebc724d12c5579d733d1f801386e0ceb909d001" },
   "copilot-chat.nvim": { "branch": "nvim@copilot-chat.nvim", "commit": "16f041ecc954975416b1e33f8ca2e1df2b86a625" },
   "copilot.lua": { "branch": "nvim@copilot.lua", "commit": "d92ef312b853f5a8b219683f01c95ae86749da7f" },

@@ -55,6 +55,7 @@ local raw_specs = {
   { name = "aerial.nvim", main = "aerial", cond = conds.not_vscode },
   { name = "avante.nvim", main = "avante", cond = conds.ai },
   { name = "blink.cmp", main = "blink.cmp", cond = conds.cmp },
+  { name = "blink.compat", main = "blink.compat", cond = conds.cmp },
   { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
   { name = "copilot.lua", main = "copilot", cond = conds.ai },
   { name = "copilot-chat.nvim", main = "CopilotChat", cond = conds.ai },

@@ -22,12 +22,27 @@ local actions = {
 }
 
 ---@type table<string, string[]>
-local sources_per_filetype = {}
+local sources_per_filetype = {
+  [eve.filetype.AVANTE_INPUT] = {
+    "avante_mentions",
+    "avante_files",
+    "avante_commands",
+    "path",
+    "buffer",
+  },
+  [eve.filetype.COPILOT_CHAT] = {
+    "path",
+    "buffer",
+  },
+  [eve.filetype.SEARCH_INPUT] = {
+    "path",
+    "buffer",
+  },
+}
 for _, cmp_code in ipairs(eve.filetype.get_cmp_code_filetypes()) do
-  sources_per_filetype[cmp_code] = { "copilot", "lsp", "path", "snippets", "buffer" }
-end
-for _, cmp_search in ipairs(eve.filetype.get_cmp_search_filetypes()) do
-  sources_per_filetype[cmp_search] = { "path", "buffer" }
+  if sources_per_filetype[cmp_code] == nil then
+    sources_per_filetype[cmp_code] = { "copilot", "lsp", "path", "snippets", "buffer" }
+  end
 end
 
 return {
@@ -35,6 +50,7 @@ return {
   build = "cargo build --release",
   event = { "InsertEnter" },
   dependencies = {
+    "blink.compat",
     "friendly-snippets",
   },
   opts = {
@@ -153,11 +169,41 @@ return {
       default = {},
       per_filetype = sources_per_filetype,
       providers = {
+        avante_commands = {
+          name = "avante_commands",
+          module = "blink.compat.source",
+          score_offset = 90,
+          opts = {},
+        },
+        avante_files = {
+          name = "avante_files",
+          module = "blink.compat.source",
+          score_offset = 100,
+          opts = {},
+        },
+        avante_mentions = {
+          name = "avante_mentions",
+          module = "blink.compat.source",
+          score_offset = 100,
+          opts = {},
+        },
         copilot = {
           name = "copilot",
           module = "ghc.cmp.copilot",
           score_offset = 100,
           async = true,
+        },
+        path = {
+          score_offset = 95,
+        },
+        lsp = {
+          score_offset = 90,
+        },
+        snippets = {
+          score_offset = 90,
+        },
+        buffer = {
+          score_offset = 85,
         },
       },
     },

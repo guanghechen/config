@@ -98,11 +98,6 @@ local filetypes = {
     xml              = true,
     yaml             = true,
   },
-  cmp_search = {
-    [M.AVANTE_INPUT] = true,
-    [M.COPILOT_CHAT] = true,
-    [M.SEARCH_INPUT] = true,
-  },
   disable_autopairs = {
     [M.AERIAL] = true,
     [M.AVANTE] = true,
@@ -406,11 +401,6 @@ local extnames = {
 ---@return string[]
 function M.get_cmp_code_filetypes()
   return vim.tbl_keys(filetypes.cmp_code)
-end
-
----@return string[]
-function M.get_cmp_search_filetypes()
-  return vim.tbl_keys(filetypes.cmp_search)
 end
 
 ---@return string[]

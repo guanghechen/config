@@ -247,6 +247,7 @@ return {
     "<leader>ar",
   },
   dependencies = {
+    "blink.cmp",
     "plenary.nvim",
     "nui.nvim",
     "mini.icons",
