@@ -44,7 +44,7 @@ M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
 M.YOZORA_VIEWER = "yozora-viewer"
 
----@type table<string, table<string, true>>
+---@class eve.builtin.filetype.filetypes
 local filetypes = {
   -- stylua: ignore 
   cmp_code = {
@@ -97,6 +97,11 @@ local filetypes = {
     vue              = true,
     xml              = true,
     yaml             = true,
+  },
+  cmp_others = {
+    [M.AVANTE_INPUT] = true,
+    [M.COPILOT_CHAT] = true,
+    [M.SEARCH_INPUT] = true,
   },
   disable_autopairs = {
     [M.AERIAL] = true,
@@ -438,7 +443,7 @@ function M.is_cmp_enabled(filetype)
   if filetype == nil or #filetype < 1 then
     return false
   end
-  if filetypes.cmp_code[filetype] or filetypes.cmp_search[filetype] then
+  if filetypes.cmp_code[filetype] or filetypes.cmp_others[filetype] then
     return true
   end
   return false
