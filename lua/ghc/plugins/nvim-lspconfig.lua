@@ -89,8 +89,11 @@ return {
 
     ---@type string[]
     local enabled = {
+      "bashls",
       "clangd",
       "cssls",
+      "docker_compose_language_service",
+      "dockerls",
       "eslint",
       "html",
       "jsonls",
@@ -99,12 +102,22 @@ return {
       "ruff",
       "rust_analyzer",
       "tailwindcss",
+      "taplo",
       "vtsls",
       "yamlls",
     }
     for _, server in ipairs(enabled) do
-      local config = require("ghc.lsp." .. server)
-      require("lspconfig")[server].setup(config)
+      local module_name = "ghc.lsp." .. server
+      local has_config, config_or_err = pcall(require, module_name)
+      if has_config then
+        require("lspconfig")[server].setup(config_or_err)
+      else
+        if string.match(config_or_err, "module '" .. module_name:gsub("%.", "%%.") .. "' not found") then
+          require("lspconfig")[server].setup({})
+        else
+          error(config_or_err)
+        end
+      end
     end
   end,
   dependencies = {
