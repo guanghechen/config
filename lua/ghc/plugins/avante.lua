@@ -276,7 +276,9 @@ return {
         },
       },
       web_search_engine = {
-        provider = "google",
+        -- provider = "google",
+        provider = "tavily",
+        proxy = vim.env.https_proxy or vim.env.HTTPS_PROXY,
       },
 
       provider = provider_name,
