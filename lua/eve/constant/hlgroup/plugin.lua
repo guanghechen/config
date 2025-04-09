@@ -6,7 +6,7 @@ local function gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   ---@type string
-  local item_kind_bg = "none"
+  local item_kind_bg = t and "none" or c.bg0
 
   return {
     ---! aerial.nvim
@@ -105,6 +105,7 @@ local function gen_hlgroup_map(context)
     BlinkCmpMenu = { fg = c.fg4, italic = true },
     BlinkCmpMenuBorder = { link = "FloatBorder" },
     BlinkCmpSignatureHelp = { bg = t and "none" or c.bg0 },
+    BlinkCmpSignatureHelpActiveParameter = {},
     BlinkCmpSignatureHelpBorder = { link = "FloatBorder" },
     BlinkCmpSource = { fg = c.fg3, bg = item_kind_bg },
 
@@ -229,8 +230,39 @@ local function gen_hlgroup_map(context)
 
     ---! noice.nvim
     NoiceCmdlineIcon = { fg = c.green, bg = "none" },
-    NoiceCmdlinePopup = { bg = "none" },
-    NoiceCmdlinePopupBorder = { fg = c.green, bg = "none" },
+    NoiceCmdlinePopup = { bg = c.bg0 },
+    NoiceCmdlinePopupBorder = { fg = c.green, bg = c.bg0 },
+    NoiceCompletionItemKindClass = { fg = c.aqua, bg = item_kind_bg },
+    NoiceCompletionItemKindCodeium = { fg = c.green, bg = item_kind_bg },
+    NoiceCompletionItemKindColor = { fg = c.fg1, bg = item_kind_bg },
+    NoiceCompletionItemKindConstant = { fg = c.orange, bg = item_kind_bg },
+    NoiceCompletionItemKindConstructor = { fg = c.blue, bg = item_kind_bg },
+    NoiceCompletionItemKindCopilot = { fg = c.green, bg = item_kind_bg },
+    NoiceCompletionItemKindEnum = { fg = c.blue, bg = item_kind_bg },
+    NoiceCompletionItemKindEnumMember = { fg = c.purple, bg = item_kind_bg },
+    NoiceCompletionItemKindEvent = { fg = c.yellow, bg = item_kind_bg },
+    NoiceCompletionItemKindField = { fg = c.red, bg = item_kind_bg },
+    NoiceCompletionItemKindFile = { fg = c.fg1, bg = item_kind_bg },
+    NoiceCompletionItemKindFolder = { fg = c.fg1, bg = item_kind_bg },
+    NoiceCompletionItemKindFunction = { fg = c.blue, bg = item_kind_bg },
+    NoiceCompletionItemKindIdentifier = { fg = c.red, bg = item_kind_bg },
+    NoiceCompletionItemKindInterface = { fg = c.green, bg = item_kind_bg },
+    NoiceCompletionItemKindKeyword = { fg = c.fg1, bg = item_kind_bg },
+    NoiceCompletionItemKindMethod = { fg = c.blue, bg = item_kind_bg },
+    NoiceCompletionItemKindModule = { fg = c.yellow, bg = item_kind_bg },
+    NoiceCompletionItemKindOperator = { fg = c.fg1, bg = item_kind_bg },
+    NoiceCompletionItemKindProperty = { fg = c.red, bg = item_kind_bg },
+    NoiceCompletionItemKindReference = { fg = c.fg1, bg = item_kind_bg },
+    NoiceCompletionItemKindSnippet = { fg = c.red, bg = item_kind_bg },
+    NoiceCompletionItemKindStruct = { fg = c.purple, bg = item_kind_bg },
+    NoiceCompletionItemKindStructure = { fg = c.purple, bg = item_kind_bg },
+    NoiceCompletionItemKindTabNine = { fg = c.orange, bg = item_kind_bg },
+    NoiceCompletionItemKindText = { fg = c.green, bg = item_kind_bg },
+    NoiceCompletionItemKindType = { fg = c.yellow, bg = item_kind_bg },
+    NoiceCompletionItemKindTypeParameter = { fg = c.red, bg = item_kind_bg },
+    NoiceCompletionItemKindUnit = { fg = c.purple, bg = item_kind_bg },
+    NoiceCompletionItemKindValue = { fg = c.aqua, bg = item_kind_bg },
+    NoiceCompletionItemKindVariable = { fg = c.purple, bg = item_kind_bg },
 
     ---! nvim-dap
     DapBreakpoint = { fg = c.red },

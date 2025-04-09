@@ -22,6 +22,8 @@ local __module_name__ = "eve.state.editor.theme" ---@type string
 ---@field public transparency           eve.std.collection.IObservable -- boolean>
 ---@field public username               eve.std.collection.IObservable -- boolean>
 ---
+---@field public get_float_winblend     fun(): integer
+---
 ---@field public apply_integration      fun(params: eve.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.theme.ILoadThemeParams): nil
 ---@field public get_scheme             fun(theme: eve.e.Theme): eve.t.theme.IScheme | nil
@@ -103,6 +105,11 @@ local _defaults = M.defaults() ---@type eve.state.theme.data
 M.theme = eve.std.Observable.from_value(_defaults.theme)
 M.transparency = eve.std.Observable.from_value(_defaults.transparency)
 M.username = eve.std.Observable.from_value(_defaults.username)
+
+---@return integer
+function M.get_float_winblend()
+  return M.transparency:snapshot() and 20 or 10 ---@type integer
+end
 
 ---@param params                        eve.theme.ILoadIntegrationParams
 ---@return nil

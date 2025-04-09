@@ -695,7 +695,7 @@ function M:create_wins_as_needed()
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
-  local winblend = eve.state.theme.transparency:snapshot() and 0 or 10 ---@type integer
+  local winblend = eve.state.theme.get_float_winblend() ---@type integer
 
   local match_count = #context.items ---@type integer
   local has_preview = vim.o.columns > 140 and self._preview ~= nil ---@type boolean

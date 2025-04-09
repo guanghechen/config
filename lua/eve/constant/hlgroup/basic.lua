@@ -144,7 +144,7 @@ local function gen_hlgroup_map(context)
     Directory = { fg = c.blue, bold = true },
     Exception = { fg = c.red },
     FloatTitle = { fg = c.bg0, bg = c.red },
-    FloatBorder = { fg = c.bg4, bg = t and c.bg0 or "none", bold = true },
+    FloatBorder = { fg = c.bg4, bg = t and "none" or c.bg0, bold = true },
     FoldColumn = { fg = c.fg4, bg = t and "none" or c.bg1 },
     Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },
