@@ -293,7 +293,7 @@ return {
         auto_suggestions_respect_ignore = true,
         auto_set_highlight_group = false,
         enable_token_counting = false,
-        enable_cursor_planning_mode = true,
+        enable_cursor_planning_mode = false,
         enable_claude_text_editor_tool_mode = false,
         jump_result_buffer_on_finish = false,
         minimize_diff = true,
