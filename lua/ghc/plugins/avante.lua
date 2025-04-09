@@ -293,9 +293,11 @@ return {
         auto_suggestions_respect_ignore = true,
         auto_set_highlight_group = false,
         enable_token_counting = false,
-        enable_cursor_planning_mode = false,
-        jump_result_buffer_on_finish = true,
+        enable_cursor_planning_mode = true,
+        enable_claude_text_editor_tool_mode = false,
+        jump_result_buffer_on_finish = false,
         minimize_diff = true,
+        support_paste_from_clipboard = false,
         use_cwd_as_project_root = true,
       },
 
