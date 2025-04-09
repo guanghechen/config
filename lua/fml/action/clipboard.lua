@@ -12,8 +12,11 @@ function M.paste()
   local dirpath = vim.fn.fnamemodify(filepath, ":h") ---@type string
 
   if eve.clipboard.has_image() then
-    local placeholder = eve.path.join(dirpath, os.date("%Y-%m-%d") .. ".png") ---@type string
-    local image_path = vim.fn.input("New image path", placeholder) ---@type string
+    local cwd = eve.path.cwd() ---@type string
+    local filepath_default = eve.path.join(dirpath, os.date("%Y-%m-%d") .. ".png") ---@type string
+    local placeholder = eve.path.relative(filepath_default, cwd, false) ---@type string
+    local image_path_relative = vim.fn.input("New image path", placeholder) ---@type string
+    local image_path = eve.path.resolve(cwd, image_path_relative) ---@type string
 
     eve.clipboard.paste_image(image_path)
 
