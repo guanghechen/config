@@ -90,6 +90,7 @@ return {
     ---@type string[]
     local enabled = {
       "clangd",
+      "cssls",
       "eslint",
       "html",
       "jsonls",
