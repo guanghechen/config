@@ -350,6 +350,17 @@ local function gen_hlgroup_map(context)
     TreesitterContextLineNumber = { fg = c.orange },
     TreesitterContextLineNumberBottom = { underline = true },
 
+    ---! render-markdown.nvim
+    RenderMarkdownH1Bg = { bg = "none" },
+    RenderMarkdownH2Bg = { bg = "none" },
+    RenderMarkdownH3Bg = { bg = "none" },
+    RenderMarkdownH4Bg = { bg = "none" },
+    RenderMarkdownH5Bg = { bg = "none" },
+    RenderMarkdownH6Bg = { bg = "none" },
+    RenderMarkdownCode = { bg = c.bg2 },
+    RenderMarkdownCodeInline = { fg = c.orange, bg = c.bg4 },
+    RenderMarkdownCodeBorder = { fg = c.aqua, bg = c.bg2 },
+
     ---! trouble.nvim
     TroubleCode = { fg = c.fg1 },
     TroubleCount = { fg = c.purple },

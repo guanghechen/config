@@ -3,18 +3,23 @@ return {
   ft = eve.filetype.get_markdown_filetypes(),
   cmd = { "RenderMarkdown" },
   opts = {
-    file_types = eve.filetype.get_markdown_filetypes(),
+    checkbox = {
+      enabled = false,
+    },
     code = {
       sign = false,
       width = "block",
       right_pad = 1,
     },
+    completions = {
+      blink = {
+        enabled = true,
+      },
+    },
+    file_types = eve.filetype.get_markdown_filetypes(),
     heading = {
       sign = false,
       icons = {},
-    },
-    checkbox = {
-      enabled = false,
     },
   },
   config = function(_, opts)
