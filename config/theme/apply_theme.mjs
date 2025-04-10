@@ -1,3 +1,4 @@
+import { settings } from "../_shared/setting.mjs";
 import { apps } from "./_config.mjs";
 import { themes } from "./_env.mjs";
 import { apply_theme_per_app, load_theme_scheme } from "./_util.mjs";
@@ -8,7 +9,8 @@ await handle();
  * @return {Promise<void>}
  */
 async function handle() {
-  const theme = process.argv[2]?.toLowerCase();
+  const data = await settings.load()
+  const theme = process.argv[2]?.toLowerCase() || data.theme;
   if (!themes.includes(theme)) {
     console.error("[apply_theme] Cannot find the given theme:", theme);
     return;
@@ -25,6 +27,9 @@ async function handle() {
   );
 
   if (errors.length > 0) {
-    console.error("Errors encountered:", errors)
+    console.error("[apply_theme] Errors encountered:", errors)
+  } else {
+    data.theme = theme
+    await settings.save(data)
   }
 }
