@@ -660,7 +660,7 @@ command
   .implement({
     uuid = K.toggle.relativenumber.uuid,
     action = function()
-      require("fml.action.toggle").list("ux_relativenumber")
+      require("fml.action.toggle").list("relativenumber_ux")
     end,
   })
   .implement({
@@ -672,19 +672,19 @@ command
   .implement({
     uuid = K.toggle.theme_variant.uuid,
     action = function()
-      require("fml.action.toggle").list("theme_variant")
+      require("fml.action.toggle").list("theme_variant_ux")
     end,
   })
   .implement({
     uuid = K.toggle.transparency.uuid,
     action = function()
-      require("fml.action.toggle").list("ux_transparency")
+      require("fml.action.toggle").list("transparency_ux")
     end,
   })
   .implement({
     uuid = K.toggle.username.uuid,
     action = function()
-      require("fml.action.toggle").list("ux_username")
+      require("fml.action.toggle").list("username_ux")
     end,
   })
 
