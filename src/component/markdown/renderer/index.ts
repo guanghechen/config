@@ -36,6 +36,7 @@ import { DeleteRenderer } from './delete'
 import { EmphasisRenderer } from './emphasis'
 import { FootnoteReferenceRenderer } from './footnoteReference'
 import { HeadingRenderer } from './heading'
+import { HtmlRenderer } from './html'
 import { ImageRenderer } from './image'
 import { ImageReferenceRenderer } from './imageReference'
 import { InlineCodeRenderer } from './inlineCode'
@@ -81,7 +82,7 @@ export const defaultNodeRendererMap: Readonly<INodeRendererMap> = {
   [FootnoteType]: () => null,
   [FootnoteReferenceType]: FootnoteReferenceRenderer,
   [HeadingType]: HeadingRenderer,
-  [HtmlType]: () => null,
+  [HtmlType]: HtmlRenderer,
   [ImageType]: ImageRenderer,
   [ImageReferenceType]: ImageReferenceRenderer,
   [InlineCodeType]: InlineCodeRenderer,
