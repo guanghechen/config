@@ -18,6 +18,7 @@ function M.paste()
     local image_path_relative = vim.fn.input("New image path", placeholder) ---@type string
     local image_path = eve.path.resolve(cwd, image_path_relative) ---@type string
 
+    eve.path.mkdir_if_nonexist(eve.path.dirname(image_path))
     eve.clipboard.paste_image(image_path)
 
     local filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
