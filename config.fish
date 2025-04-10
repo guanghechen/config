@@ -19,8 +19,6 @@ end
 # set -gx AZURE_OPENAI_ENDPOINT
 # set -gx AZURE_OPENAI_API_KEY
 #
-# set -gx GUANGHECHEN_PREFER_THEME gruvbox-light
-# 
 # set -gx YOZORA_WORKSPACE_BLOCK
 # set -gx YOZORA_WORKSPACE_NOTE
 #
