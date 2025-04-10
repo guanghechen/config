@@ -183,10 +183,9 @@ local function gen_hlgroup_map(context)
     Visual = { bg = cs.mix(c.bg0, c.purple, 65), blend = 0, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
-    WinBar = { fg = c.blue, bg = "none" },
+    WinBar = { fg = c.blue, bg = cs.mix(c.bg0, c.purple, 10) },
     WinBarNC = { fg = c.blue, bg = "none" },
     WinSeparator = { fg = c.bg2, bg = t and "none" or c.bg0 },
-    WinSeparatorActive = { fg = c.brightOrange, bg = t and "none" or c.bg0 },
   }
 
   if theme == "gruvbox" then
