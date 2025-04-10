@@ -30,7 +30,7 @@ function M.paste_image(filepath)
   if exit_code ~= 0 and #output > 0 then
     eve.reporter.error({
       from = __module_name__,
-      subject = "check_have_img",
+      subject = "paste_image",
       message = "Failed to run command.",
       details = { cmd = cmd, exit_code = exit_code, output = output, shell_error = vim.v.shell_error },
     })
