@@ -25,7 +25,7 @@ local highlights = {
     "Normal:f_us_preview_normal",
   }, ","),
   input_active = table.concat({
-    "FloatBorder:FloatBorderActive",
+    "FloatBorder:FloatActiveBorder",
     "FloatTitle:f_us_input_title",
     "Normal:f_us_input_normal",
   }, ","),
@@ -34,7 +34,7 @@ local highlights = {
     "CursorColumn:f_us_main_current",
     "CursorLine:f_us_main_current",
     "CursorLineNr:f_us_main_current",
-    "FloatBorder:FloatBorderActive",
+    "FloatBorder:FloatActiveBorder",
     "Normal:f_us_main_normal",
   }, ","),
   preview_active = table.concat({
@@ -42,7 +42,7 @@ local highlights = {
     "CursorColumn:f_us_preview_current",
     "CursorLine:f_us_preview_current",
     "CursorLineNr:f_us_preview_current",
-    "FloatBorder:FloatBorderActive",
+    "FloatBorder:FloatActiveBorder",
     "FloatTitle:f_us_preview_title",
     "Normal:f_us_preview_normal",
   }, ","),

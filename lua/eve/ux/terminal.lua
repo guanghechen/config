@@ -3,7 +3,8 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "CursorColumn:f_us_terminal_current",
   "CursorLine:f_us_terminal_current",
   "CursorLineNr:f_us_terminal_current",
-  "FloatBorder:FloatBorderActive",
+  "FloatBorder:FloatActiveBorder",
+  "FloatTitle:FloatActiveTitle",
   "Normal:f_us_terminal_bg",
 }, ",")
 

@@ -112,12 +112,9 @@ local function gen_hlgroup_map(context)
     f_us_vo_value = { fg = c.fg1 },
 
     ---winsep
-    f_winsep_left_border = { fg = c.purple, bold = true },
-    f_winsep_top_border = { fg = c.purple, bold = true },
-    f_winsep_right_border = { fg = c.purple, bold = true },
-    f_winsep_bottom_border = { fg = c.purple, bold = true },
-    f_winsep_fixed = { fg = c.purple, bold = true },
-    f_winsep_float = { fg = cs.mix(c.bg0, c.purple, 70), bg = t and c.bg0 or "none", bold = false },
+    f_winsep_border = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
+    f_winsep_normal = { fg = c.purple, bold = true },
+    f_winsep_title = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
   }
 end
 

@@ -55,12 +55,10 @@ vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
       if eve.editor.is_win_floating(winnr) then
         local winhighlight = vim.wo[winnr].winhighlight
         if winnr == winnr_cur then
-          local winhighlight_next = winhighlight
-            :gsub("FloatBorder:FloatBorderActive", "FloatBorder:FloatBorder")
-            :gsub("FloatBorder:FloatBorder", "FloatBorder:FloatBorderActive")
+          local winhighlight_next = winhighlight:gsub("FloatBorder:FloatBorder", "FloatBorder:FloatActiveBorder")
           vim.wo[winnr].winhighlight = winhighlight_next
         else
-          local winhighlight_next = winhighlight:gsub("FloatBorder:FloatBorderActive", "FloatBorder:FloatBorder")
+          local winhighlight_next = winhighlight:gsub("FloatBorder:FloatActiveBorder", "FloatBorder:FloatBorder")
           vim.wo[winnr].winhighlight = winhighlight_next
         end
       end

@@ -1,30 +1,35 @@
 ---@class fml.dressing.winsep.line.highlights
 local config = {
+  zindex = 10,
   h = {
     border = { " ", " ", "╭", "│", "╰", " ", " ", " " },
     winhighlight = table.concat({
-      "FloatBorder:f_winsep_left_border",
+      "FloatBorder:f_winsep_border",
+      "FloatTitle:f_winsep_title",
       "NormalFloat:f_winsep_normal",
     }, ","),
   },
   k = {
     border = { " ", " ", " ", " ", "╮", "─", "╭", " " },
     winhighlight = table.concat({
-      "FloatBorder:f_winsep_top_border",
+      "FloatBorder:f_winsep_border",
+      "FloatTitle:f_winsep_title",
       "NormalFloat:f_winsep_normal",
     }, ","),
   },
   l = {
     border = { "╮", " ", " ", " ", " ", " ", "╯", "│" },
     winhighlight = table.concat({
-      "FloatBorder:f_winsep_right_border",
+      "FloatBorder:f_winsep_border",
+      "FloatTitle:f_winsep_title",
       "NormalFloat:f_winsep_normal",
     }, ","),
   },
   j = {
     border = { "╰", "─", "╯", " ", " ", " ", " ", " " },
     winhighlight = table.concat({
-      "FloatBorder:f_winsep_bottom_border",
+      "FloatBorder:f_winsep_border",
+      "FloatTitle:f_winsep_title",
       "NormalFloat:f_winsep_normal",
     }, ","),
   },
@@ -38,8 +43,8 @@ local config = {
 
 ---@class fml.dressing.winsep.line.IProps
 ---@field public direction              fml.dressing.winsep.line.Direction
----@field public zindex                 integer
 ---@field public winhighlight           ?string
+---@field public zindex                 ?integer
 
 ---@class fml.dressing.winsep.Line
 ---@field public _cfg                   vim.api.keyset.win_config
@@ -58,7 +63,7 @@ function M.new(props)
 
   local direction = props.direction ---@type fml.dressing.winsep.line.Direction
   local winhighlight = props.winhighlight or config[direction].winhighlight ---@type string
-  local zindex = props.zindex ---@type integer
+  local zindex = props.zindex or config.zindex ---@type integer
 
   ---@type vim.api.keyset.win_config
   local cfg = {

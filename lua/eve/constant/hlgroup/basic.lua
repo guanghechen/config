@@ -134,7 +134,6 @@ local function gen_hlgroup_map(context)
     ---misc
     Added = { fg = c.green },
     Bold = { bold = true },
-    Border = { fg = c.bg2, bg = t and c.bg0 or "none", bold = false },
     Changed = { fg = c.yellow },
     ColorColumn = { bg = c.bg1 },
     Comment = { fg = c.grey, italic = true },
@@ -144,10 +143,11 @@ local function gen_hlgroup_map(context)
     DevIconDefault = { fg = c.red },
     Directory = { fg = c.blue, bold = true },
     Exception = { fg = c.red },
-    FloatTitle = { fg = c.red, bg = t and c.bg0 or "none", bold = true },
+    FloatActiveBorder = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
+    FloatActiveTitle = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
     FloatBorder = { fg = c.bg2, bg = t and c.bg0 or "none", bold = true },
-    FloatBorderActive = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
     FloatNormal = { fg = c.fg1, bg = c.bg1, blend = t and 50 or nil },
+    FloatTitle = { fg = c.red, bg = t and c.bg0 or "none", bold = true },
     FoldColumn = { fg = c.fg4, bg = t and "none" or c.bg1 },
     Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },
@@ -185,7 +185,7 @@ local function gen_hlgroup_map(context)
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
     WinBar = { fg = c.blue, bg = "none" },
     WinBarNC = { fg = c.blue, bg = "none" },
-    WinSeparator = { fg = c.bg4, bg = t and "none" or c.bg0 },
+    WinSeparator = { fg = c.bg2, bg = t and "none" or c.bg0 },
     WinSeparatorActive = { fg = c.brightOrange, bg = t and "none" or c.bg0 },
   }
 

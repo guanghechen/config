@@ -6,7 +6,7 @@ local WIN_HIGHLIGHT = table.concat({
   "CursorColumn:f_ut_current",
   "CursorLine:f_ut_current",
   "CursorLineNr:f_ut_current",
-  "FloatBorder:FloatBorderActive",
+  "FloatBorder:FloatActiveBorder",
   "Normal:f_ut_normal",
 }, ",")
 

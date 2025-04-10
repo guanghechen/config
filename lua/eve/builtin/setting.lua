@@ -50,8 +50,7 @@ M.togglers = {
   "dressing_illumniate_flight",
   "dressing_input_flight",
   "dressing_select_flight",
-  "dressing_winsep_fixed_flight",
-  "dressing_winsep_float_flight",
+  "dressing_winsep_flight",
   "gitdiff_expand_all_flight",
 
   "code_lens_lsp",

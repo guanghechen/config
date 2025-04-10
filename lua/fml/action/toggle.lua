@@ -22,8 +22,7 @@ local group_flags = {
     dressing_illumniate = eve.state.flight.dressing_illumniate,
     dressing_input = eve.state.flight.dressing_input,
     dressing_select = eve.state.flight.dressing_select,
-    dressing_winsep_fixed = eve.state.flight.dressing_winsep_fixed,
-    dressing_winsep_float = eve.state.flight.dressing_winsep_float,
+    dressing_winsep = eve.state.flight.dressing_winsep,
     gitdiff_expand_all = eve.state.flight.gitdiff_expand_all,
   },
 

@@ -10,8 +10,7 @@
 ---@field public dressing_illumniate    boolean
 ---@field public dressing_input         boolean
 ---@field public dressing_select        boolean
----@field public dressing_winsep_fixed  boolean
----@field public dressing_winsep_float  boolean
+---@field public dressing_winsep        boolean
 ---
 ---@field public gitdiff_expand_all     boolean
 
@@ -27,8 +26,7 @@
 ---@field public dressing_illumniate    eve.std.collection.IObservable -- boolean>
 ---@field public dressing_input         eve.std.collection.IObservable -- boolean>
 ---@field public dressing_select        eve.std.collection.IObservable -- boolean>
----@field public dressing_winsep_fixed  eve.std.collection.IObservable -- boolean>
----@field public dressing_winsep_float  eve.std.collection.IObservable -- boolean>
+---@field public dressing_winsep        eve.std.collection.IObservable -- boolean>
 ---
 ---@field public gitdiff_expand_all     eve.std.collection.IObservable -- boolean>
 
@@ -61,8 +59,7 @@ function M.defaults()
     dressing_illumniate = true,
     dressing_input = true,
     dressing_select = true,
-    dressing_winsep_fixed = true,
-    dressing_winsep_float = false,
+    dressing_winsep = true,
 
     gitdiff_expand_all = is_git_repo,
   }
@@ -104,11 +101,8 @@ function M.normalize(data)
     if type(data.dressing_select) == "boolean" then
       resolved.dressing_select = data.dressing_select
     end
-    if type(data.dressing_winsep_fixed) == "boolean" then
-      resolved.dressing_winsep_fixed = data.dressing_winsep_fixed
-    end
-    if type(data.dressing_winsep_float) == "boolean" then
-      resolved.dressing_winsep_float = data.dressing_winsep_float
+    if type(data.dressing_winsep) == "boolean" then
+      resolved.dressing_winsep = data.dressing_winsep
     end
 
     if type(data.gitdiff_expand_all) == "boolean" then
@@ -133,8 +127,7 @@ function M.dump()
     dressing_illumniate = M.dressing_illumniate:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
     dressing_select = M.dressing_select:snapshot(),
-    dressing_winsep_fixed = M.dressing_winsep_fixed:snapshot(),
-    dressing_winsep_float = M.dressing_winsep_float:snapshot(),
+    dressing_winsep = M.dressing_winsep:snapshot(),
 
     gitdiff_expand_all = M.gitdiff_expand_all:snapshot(),
   }
@@ -156,8 +149,7 @@ function M.load(raw_data)
   M.dressing_illumniate:next(data.dressing_illumniate)
   M.dressing_input:next(data.dressing_input)
   M.dressing_select:next(data.dressing_select)
-  M.dressing_winsep_fixed:next(data.dressing_winsep_fixed)
-  M.dressing_winsep_float:next(data.dressing_winsep_float)
+  M.dressing_winsep:next(data.dressing_winsep)
 
   M.gitdiff_expand_all:next(data.gitdiff_expand_all)
 end
@@ -176,8 +168,7 @@ M.dressing_hipairs = eve.std.Observable.from_value(_defaults.dressing_hipairs)
 M.dressing_illumniate = eve.std.Observable.from_value(_defaults.dressing_illumniate)
 M.dressing_input = eve.std.Observable.from_value(_defaults.dressing_input)
 M.dressing_select = eve.std.Observable.from_value(_defaults.dressing_select)
-M.dressing_winsep_fixed = eve.std.Observable.from_value(_defaults.dressing_winsep_fixed)
-M.dressing_winsep_float = eve.std.Observable.from_value(_defaults.dressing_winsep_float)
+M.dressing_winsep = eve.std.Observable.from_value(_defaults.dressing_winsep, eve.std.fn.falsy)
 
 M.gitdiff_expand_all = eve.std.Observable.from_value(_defaults.gitdiff_expand_all)
 
