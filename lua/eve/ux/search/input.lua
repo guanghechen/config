@@ -26,8 +26,6 @@ function M.new(props)
 
   local context = props.context ---@type eve.ux.ISearchContext
   local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
-  local autocmd_group = eve.nvim.augroup(context.uuid .. ":search_input") ---@type integer
-
   local actions = {
     apply_prev_input = function()
       if input_history == nil then

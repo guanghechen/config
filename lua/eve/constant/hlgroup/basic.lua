@@ -5,7 +5,7 @@ local function gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type eve.e.Theme
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
-  local bg_main = c.bg0 ---@type string
+  local bg_main = t and "none" or c.bg0 ---@type string
 
   ---@type table<string, eve.t.theme.IHlgroup>
   local hlgroup_map = {
@@ -143,7 +143,7 @@ local function gen_hlgroup_map(context)
     DevIconDefault = { fg = c.red },
     Directory = { fg = c.blue, bold = true },
     Exception = { fg = c.red },
-    FloatTitle = { fg = c.bg0, bg = c.red },
+    FloatTitle = { fg = c.red, bg = t and "none" or c.bg0 },
     FloatBorder = { fg = c.bg4, bg = t and "none" or c.bg0, bold = true },
     FoldColumn = { fg = c.fg4, bg = t and "none" or c.bg1 },
     Folded = { fg = c.fg4 },

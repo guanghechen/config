@@ -12,6 +12,16 @@
 
 local ctx = { opts = {} } ---@type fml.dressing.input.IContext
 
+---@type string
+local WIN_HIGHLIGHT = table.concat({
+  "Cursor:f_ui_current",
+  "CursorColumn:f_ui_current",
+  "CursorLine:f_ui_current",
+  "CursorLineNr:f_ui_current",
+  "FloatBorder:f_ui_border",
+  "Normal:f_ui_normal",
+}, ",")
+
 ---@class fml.dressing.input
 local M = {}
 
@@ -52,6 +62,7 @@ function M.input(opts, on_confirm)
   vim.bo[bufnr].swapfile = false
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
 
+  local winblend = eve.state.theme.get_float_winblend() ---@type integer
   local relative = opts.relative or "cursor"
   local width = opts.width or 60 ---@type integer
   local row = relative == "editor" and 3 or (parent_row < 5 and 2 or 2) ---@type integer
@@ -75,7 +86,9 @@ function M.input(opts, on_confirm)
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false
   vim.wo[winnr].signcolumn = "no"
+  vim.wo[winnr].winblend = winblend
   vim.wo[winnr].winfixbuf = true
+  vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
   vim.api.nvim_win_set_cursor(winnr, { 1, #default + 1 })
 
   ---@type fml.dressing.input.IContext

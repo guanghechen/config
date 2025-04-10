@@ -57,6 +57,11 @@ local function gen_hlgroup_map(context)
     f_ghp_border = { fg = c.bg1, bg = c.bg1 },
     f_ghp_normal = { bg = c.bg1 },
 
+    ---input
+    f_ui_current = { bg = t and c.bg0 or "none" },
+    f_ui_border = { fg = c.purple, bg = t and c.bg0 or "none" },
+    f_ui_normal = { bg = t and c.bg0 or "none" },
+
     ---search
     f_us_border = { fg = c.bg2, bg = t and c.bg0 or "none" },
     f_us_border_active = { fg = c.purple, bg = t and c.bg0 or "none" },
@@ -104,7 +109,7 @@ local function gen_hlgroup_map(context)
     ---textarea
     f_ut_current = { bg = c.bg3 },
     f_ut_border = { fg = c.brightOrange },
-    f_ut_normal = { bg = c.bg1 },
+    f_ut_normal = { bg = t and "none" or c.bg0 },
 
     ---vim options
     f_us_vo_name = { fg = c.purple },
