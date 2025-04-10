@@ -148,6 +148,7 @@ local filetypes = {
   },
   markdown = {
     ["markdown"] = true,
+    [M.NOTIFY] = true,
     [M.AVANTE] = true,
     [M.YOZORA_VIEWER] = true,
   },

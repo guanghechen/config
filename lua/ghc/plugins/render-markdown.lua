@@ -12,14 +12,16 @@ return {
       right_pad = 1,
     },
     completions = {
-      blink = {
-        enabled = true,
-      },
+      blink = { enabled = true },
+      lsp = { enabled = true },
     },
     file_types = eve.filetype.get_markdown_filetypes(),
     heading = {
       sign = false,
       icons = {},
+    },
+    quote = {
+      repeat_linebreak = true,
     },
   },
   config = function(_, opts)
