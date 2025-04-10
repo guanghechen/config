@@ -272,16 +272,15 @@ function M.refresh()
   end
 end
 
----@param params                        eve.state.state.IWatchChangeParams
 ---@return nil
-function M.watch_changes(params)
+function M.watch_changes()
   M.observe({
     M.theme.theme,
     M.theme.transparency,
   }, function()
-    if params.on_theme_changed then
-      params.on_theme_changed()
-    end
+    vim.defer_fn(function()
+      eve.state.theme.reload_theme(false, true)
+    end, 50)
   end, true)
 
   M.observe({
