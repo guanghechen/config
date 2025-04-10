@@ -33,7 +33,7 @@ local config = {
     "CursorColumn:f_us_main_current",
     "CursorLine:f_us_main_current",
     "CursorLineNr:f_us_main_current",
-    "FloatBorder:f_us_border",
+    "FloatBorder:FloatBorderActive",
     "Normal:f_us_main_normal",
   }, ","),
 }

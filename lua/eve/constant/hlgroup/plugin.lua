@@ -281,7 +281,7 @@ local function gen_hlgroup_map(context)
     DapUICurrentFrameName = { fg = c.green, bold = true },
     DapUIDecoration = { fg = c.aqua },
     DapUIEndofBuffer = { link = "EndofBuffer" },
-    DapUIFloatBorder = { fg = c.aqua },
+    DapUIFloatBorder = { link = "FloatBorder" },
     DapUIFloatNormal = { link = "NormalFloat" },
     DapUIFrameName = { link = "Normal" },
     DapUILineNumber = { fg = c.aqua },

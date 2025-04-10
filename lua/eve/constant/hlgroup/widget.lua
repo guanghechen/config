@@ -54,20 +54,16 @@ local function gen_hlgroup_map(context)
 
     ---git hunk preview
     f_ghp_cursor = { bg = c.bg3 },
-    f_ghp_border = { fg = c.bg1, bg = c.bg1 },
     f_ghp_normal = { bg = c.bg1 },
 
     ---input
     f_ui_current = { bg = t and c.bg0 or "none" },
-    f_ui_border = { fg = c.purple, bg = t and c.bg0 or "none" },
     f_ui_normal = { bg = t and c.bg0 or "none" },
 
     ---search
-    f_us_border = { fg = c.bg2, bg = t and c.bg0 or "none" },
-    f_us_border_active = { fg = c.purple, bg = t and c.bg0 or "none" },
     f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or "none" },
     f_us_input_prompt = { fg = c.red, bg = t and c.bg0 or "none" },
-    f_us_input_title = { fg = c.red, bg = t and c.bg0 or "none" },
+    f_us_input_title = { fg = c.red, bg = t and c.bg0 or "none", bold = true },
     f_us_main_bg = { bg = bg_main },
     f_us_main_current = { bg = c.bg3 },
     f_us_main_match = { fg = c.blue },
@@ -84,7 +80,7 @@ local function gen_hlgroup_map(context)
     f_us_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
     f_us_preview_replace = { fg = c.bg1, bg = c.diffAdd },
     f_us_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
-    f_us_preview_title = { fg = c.green, bg = t and c.bg0 or "none" },
+    f_us_preview_title = { fg = c.green, bg = t and c.bg0 or "none", bold = true },
     f_us_match = { fg = c.bg1, bg = c.yellow },
     f_us_match_cur = { fg = c.bg1, bg = c.red, bold = true, underline = true },
 
@@ -103,12 +99,10 @@ local function gen_hlgroup_map(context)
 
     ---terminal
     f_us_terminal_bg = { bg = c.bg0 },
-    f_us_terminal_border = { fg = c.purple, bg = c.bg0 },
     f_us_terminal_current = { bg = c.bg2 },
 
     ---textarea
     f_ut_current = { bg = c.bg3 },
-    f_ut_border = { fg = c.brightOrange },
     f_ut_normal = { bg = t and "none" or c.bg0 },
 
     ---vim options

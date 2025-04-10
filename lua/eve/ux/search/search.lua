@@ -1,8 +1,9 @@
 local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 
+---@class eve.ux.search.search.highlights
 local highlights = {
   input = table.concat({
-    "FloatBorder:f_us_border",
+    "FloatBorder:FloatBorder",
     "FloatTitle:f_us_input_title",
     "Normal:f_us_input_normal",
   }, ","),
@@ -11,7 +12,7 @@ local highlights = {
     "CursorColumn:f_us_main_current",
     "CursorLine:f_us_main_current",
     "CursorLineNr:f_us_main_current",
-    "FloatBorder:f_us_border",
+    "FloatBorder:FloatBorder",
     "Normal:f_us_main_normal",
   }, ","),
   preview = table.concat({
@@ -19,7 +20,29 @@ local highlights = {
     "CursorColumn:f_us_preview_current",
     "CursorLine:f_us_preview_current",
     "CursorLineNr:f_us_preview_current",
-    "FloatBorder:f_us_border",
+    "FloatBorder:FloatBorder",
+    "FloatTitle:f_us_preview_title",
+    "Normal:f_us_preview_normal",
+  }, ","),
+  input_active = table.concat({
+    "FloatBorder:FloatBorderActive",
+    "FloatTitle:f_us_input_title",
+    "Normal:f_us_input_normal",
+  }, ","),
+  main_active = table.concat({
+    "Cursor:f_us_main_current",
+    "CursorColumn:f_us_main_current",
+    "CursorLine:f_us_main_current",
+    "CursorLineNr:f_us_main_current",
+    "FloatBorder:FloatBorderActive",
+    "Normal:f_us_main_normal",
+  }, ","),
+  preview_active = table.concat({
+    "Cursor:f_us_preview_current",
+    "CursorColumn:f_us_preview_current",
+    "CursorLine:f_us_preview_current",
+    "CursorLineNr:f_us_preview_current",
+    "FloatBorder:FloatBorderActive",
     "FloatTitle:f_us_preview_title",
     "Normal:f_us_preview_normal",
   }, ","),
@@ -787,7 +810,7 @@ function M:create_wins_as_needed()
 
     vim.wo[winnr_main].cursorline = match_count > 0
     vim.wo[winnr_main].winblend = winblend
-    vim.wo[winnr_main].winhighlight = highlights.main
+    vim.wo[winnr_main].winhighlight = context.focused_pane == "main" and highlights.main_active or highlights.main
     vim.wo[winnr_main].winfixbuf = true
     self:sync_main_cursor()
   else
@@ -849,7 +872,8 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].number = true
     vim.wo[winnr_preview].cursorline = match_count > 0
     vim.wo[winnr_preview].winblend = winblend
-    vim.wo[winnr_preview].winhighlight = highlights.preview
+    vim.wo[winnr_preview].winhighlight = context.focused_pane == "preview" and highlights.preview_active
+      or highlights.preview
     vim.wo[winnr_preview].winfixbuf = true
     vim.wo[winnr_preview].wrap = context.cfg_preview_wrap
   end
@@ -883,7 +907,7 @@ function M:create_wins_as_needed()
   end
 
   vim.wo[winnr_input].winblend = winblend
-  vim.wo[winnr_input].winhighlight = highlights.input
+  vim.wo[winnr_input].winhighlight = context.focused_pane == "input" and highlights.input_active or highlights.input
   vim.wo[winnr_input].winfixbuf = true
 
   vim.schedule(function()

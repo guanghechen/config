@@ -8,7 +8,7 @@ local config = {
         "CursorColumn:f_ghp_cursor",
         "CursorLine:f_ghp_cursor",
         "CursorLineNr:f_ghp_cursor",
-        "FloatBorder:f_ghp_border",
+        "FloatBorder:FloatBorderActive",
         "Normal:f_ghp_normal",
       }, ","),
     },
