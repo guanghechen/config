@@ -57,6 +57,8 @@ local function gen_hlgroup_map(context)
     AvanteConflictIncoming = { bg = c.diffAdd, bold = true },
     AvanteConflictIncomingLabel = { bg = cs.mix(c.bg0, c.diffAdd, 40) },
     AvanteInlineHint = { fg = c.bg1, bg = c.pink, bold = true, italic = true },
+    AvantePromptInput = { fg = c.fg1, bg = c.bg0 },
+    AvantePromptInputBorder = { link = "FloatActiveBorder" },
     AvanteReversedSubtitle = { fg = c.yellow },
     AvanteReversedThirdTitle = { fg = c.blue },
     AvanteReversedTitle = { fg = c.aqua },
