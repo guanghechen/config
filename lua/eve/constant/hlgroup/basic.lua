@@ -180,7 +180,7 @@ local function gen_hlgroup_map(context)
     UnderLined = { fg = c.blue, underline = true },
     VertSplit = { fg = c.bg2 },
     VertSplitActive = { fg = c.brightOrange },
-    Visual = { bg = cs.mix(bg_main, c.brightAqua, 40), blend = 50, reverse = false },
+    Visual = { bg = cs.mix(c.bg0, c.purple, 65), blend = 0, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
     WinBar = { fg = c.blue, bg = "none" },
