@@ -4,7 +4,7 @@ local __module_name__ = "eve.builtin.im.mac" ---@type string
 local M = {}
 
 local app_home = eve.path.locate_app_config_home("guanghechen")
-local script_path = eve.path.join(app_home, "osx/script/im-select/im-select")
+local script_path = eve.path.join(app_home, "bin/im-select/osx/im-select")
 
 ---@return eve.builtin.im.InputMethod|nil
 function M.get_input_method()
