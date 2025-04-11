@@ -1,12 +1,18 @@
 if eve.env.IS_MAC then
   vim.defer_fn(function()
-    local previous_mode = nil ---@type eve.e.VimMode|nil
+    local previous_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
+    local previous_input_method = previous_mode == "i" and eve.im.get_input_method() or nil ---@type eve.builtin.im.InputMethod|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
       group = eve.nvim.augroup("auto_toggle_im"),
       callback = function()
         local current_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
-        if previous_mode == "i" and current_mode == "n" then
-          eve.im.set_input_method("English")
+        if current_mode ~= previous_mode then
+          if previous_mode == "i" then
+            previous_input_method = eve.im.get_input_method() ---@type eve.builtin.im.InputMethod|nil
+            eve.im.set_input_method("English")
+          elseif current_mode == "i" then
+            eve.im.set_input_method(previous_input_method or "English")
+          end
         end
         previous_mode = current_mode
       end,

@@ -6,10 +6,10 @@ local M = {}
 
 if eve.env.IS_MAC then
   M = require("eve.builtin.clipboard.mac")
-elseif eve.env.IS_NIX then
-  M = require("eve.builtin.clipboard.nix")
 elseif eve.env.IS_WSL then
   M = require("eve.builtin.clipboard.wsl")
+elseif eve.env.IS_NIX then
+  M = require("eve.builtin.clipboard.nix")
 elseif eve.env.IS_WIN then
   M = require("eve.builtin.clipboard.win")
 end
