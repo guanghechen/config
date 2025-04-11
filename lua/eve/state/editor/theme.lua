@@ -108,7 +108,7 @@ M.username = eve.std.Observable.from_value(_defaults.username)
 
 ---@return integer
 function M.get_float_winblend()
-  return M.transparency:snapshot() and 20 or 10 ---@type integer
+  return M.transparency:snapshot() and 15 or 0 ---@type integer
 end
 
 ---@param params                        eve.theme.ILoadIntegrationParams
