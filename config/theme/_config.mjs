@@ -89,6 +89,7 @@ export const apps = [
         "nvim",
         ["--headless", "-u", theme_config_filepath, "+q"],
         {
+          NVIM_APPNAME: app.name,
           GHC_THEME: scheme.theme,
         }
       );
