@@ -36,6 +36,7 @@ vim.schedule(function()
   require("fml.dressing.commentstring")
   require("fml.dressing.hipairs")
   require("fml.dressing.illumniate")
+  require("fml.dressing.im")
   if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
     require("fml.dressing.image")
   end

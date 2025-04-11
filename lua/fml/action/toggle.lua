@@ -2,15 +2,21 @@ local __module_name__ = "fml.action.toggle" ---@type string
 
 ---@type table<string, integer>
 local group_priorities = {
-  ["local"] = 1,
-  ux = 2,
-  flight = 3,
-  lsp = 4,
-  plugin = 5,
+  behavior = 1,
+  ["local"] = 2,
+  ux = 3,
+  flight = 4,
+  lsp = 5,
+  plugin = 6,
 }
 
 ---@type table<string, table<string, eve.std.collection.IObservable<boolean>>>
 local group_flags = {
+  ---behavior
+  behavior = {
+    auto_im = eve.state.behavior.auto_im,
+  },
+
   ---flight
   flight = {
     ai = eve.state.flight.ai,

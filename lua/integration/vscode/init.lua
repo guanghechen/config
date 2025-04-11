@@ -18,5 +18,6 @@ pcall(require, "integration.local.plugin")
 
 vim.schedule(function()
   require("fml.dressing.commentstring")
+  require("fml.dressing.im")
   pcall(require, "integration.local.dressing")
 end)

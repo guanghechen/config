@@ -27,6 +27,8 @@ M.themes = {
 
 ---@class eve.builtin.setting.togglers
 M.togglers = {
+  "auto_im_behavior",
+
   "fileencoding_local",
   "fileformat_local",
   "hipatterns_local",

@@ -2,6 +2,7 @@ local __module_name__ = "eve.state" ---@type string
 
 ---@class eve.state.__mods
 local __mods = {
+  behavior = "eve.state.editor.behavior",
   theme = "eve.state.editor.theme",
 
   --------------------------------------------------------------------------------------------------
@@ -43,6 +44,7 @@ local __lazy = {
 ---@field public nvim_session_autosaved ?string
 
 ---@class eve.state.data
+---@field public behavior               eve.state.behavior.data
 ---@field public theme                  eve.state.theme.data
 ---
 ---@field public buf                    eve.state.buf.data
@@ -76,6 +78,7 @@ local __lazy = {
 ---@field public watch_changes          fun(params: eve.state.state.IWatchChangeParams): nil
 
 ---@class eve.state : eve.state.state
+---@field public behavior               eve.state.behavior
 ---@field public theme                  eve.state.theme
 ---
 ---@field public buf                    eve.state.buf
@@ -117,6 +120,7 @@ local M = setmetatable({
 function M.dump()
   ---@type eve.state.data
   local data = {
+    behavior = M.behavior.dump(),
     theme = M.theme.dump(),
 
     buf = M.buf.dump(),
@@ -149,6 +153,7 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.editor) ~= 0
       and eve.fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
     ) or {}
+    M.behavior.load(data_editor.behavior)
     M.theme.load(data_editor.theme)
   end
 
@@ -189,6 +194,7 @@ end
 function M.save(storage)
   if storage.editor then
     local data = {
+      behavior = M.behavior.dump(),
       theme = M.theme.dump(),
     }
     eve.fs.write_json(storage.editor, data, true)
@@ -298,14 +304,22 @@ function M.watch_changes()
   end, true)
 
   M.observe({
-    M.plugin.render_markdown,
-    M.plugin.treesitter_context,
-    M.option.relativenumber,
+    M.behavior.auto_im,
     M.theme.theme,
     M.theme.transparency,
     M.theme.username,
   }, function()
     M.status.ticker_editor:tick()
+    M.status.dirtier_statusline:mark_dirty()
+    M.status.dirtier_tabline:mark_dirty()
+    vim.cmd.redraw()
+  end, true)
+
+  M.observe({
+    M.plugin.render_markdown,
+    M.plugin.treesitter_context,
+    M.option.relativenumber,
+  }, function()
     M.status.dirtier_statusline:mark_dirty()
     M.status.dirtier_tabline:mark_dirty()
     vim.cmd.redraw()
