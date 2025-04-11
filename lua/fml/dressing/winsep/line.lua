@@ -1,6 +1,6 @@
 ---@class fml.dressing.winsep.line.highlights
 local config = {
-  zindex = 10,
+  zindex = 1,
   h = {
     border = { " ", " ", "╭", "│", "╰", " ", " ", " " },
     winhighlight = table.concat({
