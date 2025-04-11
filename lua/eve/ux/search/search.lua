@@ -721,8 +721,10 @@ function M:create_wins_as_needed()
   local winblend = eve.state.theme.get_float_winblend() ---@type integer
 
   local match_count = #context.items ---@type integer
-  local has_preview = vim.o.columns > 140 and self._preview ~= nil ---@type boolean
-  local has_main = match_count > 0 or has_preview ---@type boolean
+  local has_preview = self._preview ~= nil ---@type boolean
+
+  local show_preview = has_preview and vim.o.columns > 140 ---@type boolean
+  local show_main = match_count > 0 or has_preview ---@type boolean
 
   ---@type number
   local max_height = dimension.max_height <= 1 and math.floor(dimension.max_height * screen_height)
@@ -764,7 +766,7 @@ function M:create_wins_as_needed()
   end
   width_preview = math.min(max_width - width - 2, math.max(10, width_preview))
 
-  if not has_preview then
+  if not show_preview then
     width = width + width_preview
     width_preview = 0
   end
@@ -777,7 +779,7 @@ function M:create_wins_as_needed()
 
   local winnr_main_new_created = false ---@type boolean
 
-  if has_main then
+  if show_main then
     ---@type vim.api.keyset.win_config
     local wincfg_main = {
       relative = "editor",
@@ -789,7 +791,7 @@ function M:create_wins_as_needed()
       col = col,
       focusable = true,
       title = "",
-      border = has_preview and borders.main_with_preview or borders.main,
+      border = show_preview and borders.main_with_preview or borders.main,
       style = "minimal",
     }
 
@@ -820,11 +822,11 @@ function M:create_wins_as_needed()
     end
   end
 
-  if not has_preview and winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
+  if not show_preview and winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
     vim.api.nvim_win_close(winnr_preview, true)
     winnr_preview = nil
     context.winnr_preview = nil
-  elseif has_preview and self._preview then
+  elseif show_preview and self._preview then
     ---@type vim.api.keyset.win_config
     local wincfg_preview = {
       relative = "editor",
@@ -889,7 +891,7 @@ function M:create_wins_as_needed()
     focusable = true,
     title = " " .. context.cfg_input_title .. " ",
     title_pos = "center",
-    border = has_main and (has_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
+    border = show_main and (show_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
     style = "minimal",
   }
   if winnr_input == nil or not vim.api.nvim_win_is_valid(winnr_input) then
