@@ -169,10 +169,9 @@ end
 ---@return nil
 function M.setup_theme()
   eve.state.theme.reload_theme(false, false)
-  vim.defer_fn(function()
+  vim.schedule(function()
     eve.state.watch_changes()
-    eve.state.theme.reload_theme(false, false)
-  end, 100)
+  end)
 end
 
 return M
