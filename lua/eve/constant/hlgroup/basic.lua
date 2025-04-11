@@ -147,7 +147,7 @@ local function gen_hlgroup_map(context)
     FloatActiveTitle = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
     FloatBorder = { fg = c.bg2, bg = t and c.bg0 or "none", bold = true },
     FloatNormal = { fg = c.fg1, bg = c.bg1, blend = t and 50 or nil },
-    FloatTitle = { fg = c.red, bg = t and c.bg0 or "none", bold = true },
+    FloatTitle = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
     FoldColumn = { fg = c.fg4, bg = t and "none" or c.bg1 },
     Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },

@@ -62,7 +62,7 @@ local function gen_hlgroup_map(context)
     AvanteReversedSubtitle = { fg = c.yellow },
     AvanteReversedThirdTitle = { fg = c.blue },
     AvanteReversedTitle = { fg = c.aqua },
-    AvantePopupHint = { fg = c.fg1, bg = c.bg1, bold = true },
+    AvantePopupHint = { fg = c.aqua, bg = "none", bold = true },
     AvanteSidebarWinSeparator = { fg = c.bg2 },
     AvanteSidebarWinHorizontalSeparator = { fg = c.blue },
     AvanteSubtitle = { fg = c.bg0, bg = c.yellow, bold = true },
