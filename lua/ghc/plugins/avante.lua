@@ -270,6 +270,10 @@ return {
         model = "claude-3.7-sonnet",
       },
       vendors = {
+        copilot2 = {
+          __inherited_from = "copilot",
+          model = "claude-3.5-sonnet",
+        },
         deepseek = {
           __inherited_from = "openai",
           api_key_name = "DEEPSEEK_API_KEY",
