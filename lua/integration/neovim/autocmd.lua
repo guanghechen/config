@@ -1,4 +1,4 @@
-if eve.env.IS_MAC then
+if not eve.env.IS_NIX then
   vim.defer_fn(function()
     local previous_mode = vim.fn.mode() ---@type eve.e.VimMode|nil
     local previous_input_method = previous_mode == "i" and eve.im.get_input_method() or nil ---@type eve.builtin.im.InputMethod|nil

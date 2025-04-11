@@ -10,6 +10,9 @@ M.IS_WSL = vim.fn.has("wsl") == 1 ---@type boolean
 M.IS_NIX = not M.IS_WSL and os_name == "Linux" ---@type boolean
 M.IS_TMUX = vim.env.TMUX ~= nil ---@type boolean
 
+M.IS_X64 = jit.arch == "x64" ---@type boolean
+M.IS_X86 = jit.arch == "x86" ---@type boolean
+
 M.PATH_ENV_SEP = M.IS_WIN and ";" or ":" ---@type string
 M.PATH_SEP = M.IS_WIN and "\\" or "/" ---@type string
 M.USERNAME = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
