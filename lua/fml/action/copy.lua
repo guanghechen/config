@@ -21,6 +21,14 @@ local function copy_current_filepath(candidate, filepath)
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
+  elseif candidate == "filename" then
+    local content = eve.path.basename(filepath) ---@type string
+
+    vim.fn.setreg("+", content)
+    eve.reporter.info({
+      from = __module_name__,
+      message = "Copied current buffer filename to system clipboard!",
+    })
   else
     eve.reporter.error({
       from = __module_name__,
@@ -106,6 +114,17 @@ function M.copy_filepath_relative()
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   copy_current_filepath("relative", filepath)
+end
+
+---@return nil
+function M.copy_filepath_filename()
+  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  if bufnr_sourcefile == nil then
+    return
+  end
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
+  copy_current_filepath("filename", filepath)
 end
 
 return M

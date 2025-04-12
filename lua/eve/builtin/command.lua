@@ -3,6 +3,7 @@ local __module_name__ = "eve.builtin.command" ---@type string
 ---@alias eve.builtin.command.definitions.copy.Scope
 ---| "absolute"
 ---| "relative"
+---| "filename"
 
 ---@class eve.builtin.command.IDefinition
 ---@field public uuid                   string
@@ -294,7 +295,7 @@ M.definitions.code = {
 M.definitions.copy = {
   char_under_cursor = def("Fcopycharundercursor", "copy: char under cursor"),
 
-  filepath = defc("Fcopyfilepath", "copy: current filepath", "?", { "absolute", "relative" }),
+  filepath = defc("Fcopyfilepath", "copy: current filepath", "?", { "absolute", "relative", "filename" }),
   filepath_absolute = def("Fcopyfilepathabsolute", "copy: current filepath (absolute)"),
   filepath_relative = def("Fcopyfilepathrelative", "copy: current filepath (relative)"),
 }
