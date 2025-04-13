@@ -249,6 +249,18 @@ return {
           sidebar.file_selector:add_selected_file(relative_path)
           sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
         end,
+        copy_filepath = function(state)
+          local node = state.tree:get_node()
+          local filepath = node:get_id()
+          eve.ux.fn.select_copy_filepath({
+            filepath = filepath,
+            winopts = {
+              relative = "cursor",
+              row = 1,
+              col = 4,
+            },
+          })
+        end,
         open_ghc_file_explorer = function(state)
           local node = state.tree:get_node()
           local filepath = node:get_id() ---@type string
@@ -307,6 +319,7 @@ return {
           ["h"] = "close_node",
           ["l"] = "open",
           ["oa"] = "avante_add_files",
+          ["oc"] = "copy_filepath",
           ["oe"] = "open_ghc_file_explorer",
           ["of"] = "open_ghc_file_finder",
           ["or"] = "open_ghc_replacer",
