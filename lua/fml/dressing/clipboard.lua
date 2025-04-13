@@ -55,7 +55,77 @@ vim.paste = function(lines, phase)
     return convert_streaming_paste(lines, phase)
   end
 
-  if #lines > 2 or #lines == 0 then
+  if #lines > 1 or #lines == 0 then
+    local filepaths = {} ---@type string[]
+    local dirpaths = {} ---@type string[]
+    local is_all_paths = true ---@type boolean
+    for _, line in ipairs(lines) do
+      local text = line
+        :match("^%s*(.-)%s*$") -- remove leading and trailing whitespace
+        :match('^"?(.-)"?$') -- remove double quotes
+        :match("^'?(.-)'?$") -- remove single quotes
+        :gsub("file://", "") -- remove "file://"
+        :gsub("%c", "") -- remove control characters
+      if #text > 0 then
+        if eve.path.is_exist_filepath(text) then
+          table.insert(filepaths, text)
+        elseif eve.path.is_exist_dirpath(text) then
+          table.insert(dirpaths, text)
+        else
+          is_all_paths = false
+          break
+        end
+      end
+    end
+
+    if is_all_paths then
+      local cwd = eve.path.cwd() ---@type string
+      local dirpath = cwd ---@type string
+
+      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+      local buftype = vim.bo[bufnr].buftype ---@type string
+      if buftype == "" then
+        local filepath_cur = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        dirpath = eve.path.dirname(filepath_cur) ---@type string
+      end
+
+      local placeholder = eve.path.relative(cwd, dirpath, false) ---@type string
+      if placeholder == "" then
+        placeholder = "." ---@type string
+      end
+
+      vim.ui.input({
+        prompt = string.format(" Copy files (%d) ", #filepaths + #dirpaths),
+        default = placeholder,
+        relative = "editor",
+      }, function(dirpath_container_relative)
+        if dirpath_container_relative == nil or dirpath_container_relative == "" then
+          return
+        end
+
+        local dirpath_container = eve.path.resolve(cwd, dirpath_container_relative) ---@type string
+        eve.path.mkdir_if_nonexist(dirpath_container)
+
+        local ok = pcall(function()
+          for _, filepath_source in ipairs(filepaths) do
+            local basename_source = eve.path.basename(filepath_source) ---@type string
+            local filepath_target = eve.path.join(dirpath_container, basename_source) ---@type string
+            eve.fs.copy_file(filepath_source, filepath_target)
+          end
+          for _, dirpath_source in ipairs(dirpaths) do
+            local basename_source = eve.path.basename(dirpath_source) ---@type string
+            local dirpath_target = eve.path.join(dirpath_container, basename_source) ---@type string
+            eve.fs.copy_directory(dirpath_source, dirpath_target)
+          end
+        end)
+
+        if not ok then
+          fallback(lines, phase)
+        end
+      end)
+      return true
+    end
+
     return original_vim_paste(lines, phase)
   end
 
@@ -72,8 +142,8 @@ vim.paste = function(lines, phase)
     :match("^'?(.-)'?$") -- remove single quotes
     :gsub("file://", "") -- remove "file://"
     :gsub("%c", "") -- remove control characters
-  local is_filepath = eve.path.is_exist_filepath(text) ---@type boolean
-  local is_dirpath = eve.path.is_exist_dirpath(text) ---@type boolean
+  local is_filepath = #text > 0 and eve.path.is_exist_filepath(text) ---@type boolean
+  local is_dirpath = #text > 0 and eve.path.is_exist_dirpath(text) ---@type boolean
   if is_filepath or is_dirpath then
     local cwd = eve.path.cwd() ---@type string
     local dirpath = cwd ---@type string
@@ -89,8 +159,12 @@ vim.paste = function(lines, phase)
 
     local basename_source = eve.path.basename(filepath_source) ---@type string
     local filepath_default = eve.path.join(dirpath, basename_source) ---@type string
-    local placeholder = eve.path.relative(cwd, filepath_default, false) ---@type string
     local suffix = is_dirpath and eve.env.PATH_SEP or "" ---@type string
+
+    local placeholder = eve.path.relative(cwd, filepath_default, false) ---@type string
+    if placeholder == "" then
+      placeholder = "." ---@type string
+    end
 
     vim.ui.input({
       prompt = string.format(" Copy %s to ", eve.path.relative(cwd, filepath_source, false) .. suffix),
