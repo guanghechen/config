@@ -173,7 +173,7 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "markdown",
   callback = function()
     vim.opt_local.backupcopy = "yes" -- disable atomic writing
-    vim.opt_local.formatoptions:append("t")
+    vim.opt_local.formatoptions:append({ "o", "t" })
     vim.opt_local.linebreak = true
     vim.opt_local.shiftwidth = 2
     vim.opt_local.softtabstop = 2 -- set the tab width
@@ -181,6 +181,12 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.textwidth = 0
     vim.opt_local.wrap = true
     vim.opt_local.wrapmargin = 0
+    vim.opt_local.comments = {
+      "n:>", -- blockquote
+      "b:-", -- unordered list
+      "b:*", -- unordered list
+      "n:1.", -- numbered list
+    }
   end,
 })
 

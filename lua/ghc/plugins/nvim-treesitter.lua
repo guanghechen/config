@@ -35,7 +35,10 @@ return {
         end
       end,
     },
-    indent = { enable = true },
+    indent = {
+      enable = true,
+      disable = { "markdown" },
+    },
     matchup = { enable = true },
     ensure_installed = {
       "bash",

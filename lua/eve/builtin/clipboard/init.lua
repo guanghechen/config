@@ -27,18 +27,12 @@ end
 function M.insert_markup(alt, src)
   local content = src ---@type string
   local filetype = vim.bo.filetype ---@type string
+
   if filetype == "markdown" then
     content = string.format("![%s](%s)", alt, src)
   end
 
-  local lines = vim.split(content, "\n")
-  if lines[1] and lines[1]:match("^%s*$") then
-    table.remove(lines, 1)
-  end
-  if lines[#lines] and lines[#lines]:match("^%s*$") then
-    table.remove(lines)
-  end
-
+  local lines = vim.split(content, "\n", { plain = true }) ---@type string[]
   vim.api.nvim_put(lines, "l", true, true)
   return true
 end
@@ -58,7 +52,10 @@ function M.paste_image(filepath_target)
         end
         local filename = eve.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string
-        M.insert_markup(alt, src)
+
+        vim.schedule(function()
+          M.insert_markup(alt, src)
+        end)
       end
     end
   end
@@ -131,7 +128,10 @@ function M.paste_image_from_path(filepath_source, filepath_target)
         end
         local filename = eve.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string
-        M.insert_markup(alt, src)
+
+        vim.schedule(function()
+          M.insert_markup(alt, src)
+        end)
       end
     end
   end
