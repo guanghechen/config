@@ -36,8 +36,19 @@ end
 
 ---@param filepath_source               string
 ---@param filepath_target               string
----@return nil
-function M.copy_file(filepath_source, filepath_target)
+---@param force                         ?boolean
+---@return boolean                      Whether the file was copied
+function M.copy_file(filepath_source, filepath_target, force)
+  force = force or false
+
+  -- Check if target already exists and confirm overwrite if not forced
+  if not force and M.is_exists(filepath_target) then
+    local choice = vim.fn.confirm(string.format("File already exists: %s\nOverwrite?", filepath_target), "&Yes\n&No", 2)
+    if choice ~= 1 then
+      return false
+    end
+  end
+
   local fin = assert(io.open(filepath_source, "rb"))
   local content = fin:read("*all")
   fin:close()
@@ -47,12 +58,26 @@ function M.copy_file(filepath_source, filepath_target)
   local fout = assert(io.open(filepath_target, "wb"))
   fout:write(content)
   fout:close()
+
+  return true
 end
 
 ---@param dirpath_source                string
 ---@param dirpath_target                string
+---@param force                         ?boolean
 ---@return boolean
-function M.copy_directory(dirpath_source, dirpath_target)
+function M.copy_directory(dirpath_source, dirpath_target, force)
+  force = force or false
+
+  -- Check if target already exists and confirm overwrite if not forced
+  if not force and M.is_exists(dirpath_target) then
+    local choice =
+      vim.fn.confirm(string.format("Directory already exists: %s\nOverwrite contents?", dirpath_target), "&Yes\n&No", 2)
+    if choice ~= 1 then
+      return false
+    end
+  end
+
   vim.fn.mkdir(dirpath_target, "p")
 
   local handle = vim.uv.fs_scandir(dirpath_source)
@@ -77,10 +102,10 @@ function M.copy_directory(dirpath_source, dirpath_target)
     local target_path = dirpath_target .. eve.env.PATH_SEP .. name
 
     if type == "directory" then
-      success = success and M.copy_directory(source_path, target_path)
+      success = success and M.copy_directory(source_path, target_path, force)
     else
       pcall(function()
-        M.copy_file(source_path, target_path)
+        M.copy_file(source_path, target_path, force)
       end)
     end
   end
