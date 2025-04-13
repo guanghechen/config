@@ -51,11 +51,6 @@
 ---| "cursor"
 ---| "center"
 
----@alias eve.e.FileType
----| "file"
----| "directory"
----| "other"
-
 ---@alias eve.e.NvimbarCompPosition
 ---| "left"
 ---| "center"

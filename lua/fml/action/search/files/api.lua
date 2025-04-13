@@ -287,7 +287,7 @@ function M.fetch_data(input_text, force, callback)
   end
 
   local is_searching_current_buf = specified_filepath ~= nil ---@type boolean
-  if eve.fs.is_file_or_dir(cwd) ~= "directory" then
+  if not eve.path.is_exist_dirpath(cwd) then
     eve.reporter.error({
       from = __module_name__,
       subject = "fetch_data",

@@ -463,12 +463,11 @@ local M = {}
 function M.find_explorer(specified_filepath)
   local dirpath_resolved = false ---@type boolean
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
-    if is_file_or_dir == "directory" then
+    if eve.path.is_exist_dirpath(specified_filepath) then
       local dirpath = eve.path.normalize(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
-    elseif is_file_or_dir == "file" then
+    elseif eve.path.is_exist_filepath(specified_filepath) then
       local dirpath = eve.path.dirname(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
@@ -480,10 +479,9 @@ function M.find_explorer(specified_filepath)
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then
-        local doctype = eve.fs.is_file_or_dir(filepath) ---@type eve.e.FileType|nil
-        if doctype == "directory" then
+        if eve.path.is_exist_dirpath(filepath) then
           state_cwd:next(filepath, { force = true })
-        elseif doctype == "file" then
+        elseif eve.path.is_exist_filepath(filepath) == "file" then
           state_cwd:next(eve.path.dirname(filepath), { force = true })
         end
       end

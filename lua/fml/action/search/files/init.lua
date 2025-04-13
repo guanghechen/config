@@ -44,12 +44,11 @@ function M.search_files_in_directory(specified_filepath)
   local next_scope = "D" ---@type eve.e.SearchFileScope
 
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
-    if is_file_or_dir == "directory" then
+    if eve.path.is_exist_dirpath(specified_filepath) then
       local dirpath = eve.path.normalize(specified_filepath) ---@type string
       context.search_cwd:next(dirpath)
       silent = true
-    elseif is_file_or_dir == "file" then
+    elseif eve.path.is_exist_filepath(specified_filepath) then
       local dirpath = eve.path.dirname(specified_filepath) ---@type string
       context.search_cwd:next(dirpath, { force = true })
       silent = true
@@ -99,12 +98,11 @@ function M.replace_files_in_directory(specified_filepath)
   local next_scope = "D" ---@type eve.e.SearchFileScope
 
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
-    if is_file_or_dir == "directory" then
+    if eve.path.is_exist_dirpath(specified_filepath) then
       local dirpath = eve.path.normalize(specified_filepath) ---@type string
       context.search_cwd:next(dirpath)
       silent = true
-    elseif is_file_or_dir == "file" then
+    elseif eve.path.is_exist_filepath(specified_filepath) then
       local dirpath = eve.path.dirname(specified_filepath) ---@type string
       context.search_cwd:next(dirpath, { force = true })
       silent = true

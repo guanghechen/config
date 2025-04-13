@@ -180,7 +180,7 @@ end
 function M.find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
     local filepath = dirpath .. eve.env.PATH_SEP .. filename ---@type string
-    if eve.fs.is_file_or_dir(filepath) == "file" then
+    if eve.path.is_exist_filepath(filepath) then
       return filepath
     end
   end

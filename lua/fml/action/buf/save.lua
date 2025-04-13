@@ -78,7 +78,6 @@ function M.save()
       end
 
       local next_filepath = eve.path.resolve(cwd, text) ---@type string
-      local filetype = eve.fs.is_file_or_dir(next_filepath)
 
       ---@return nil
       local on_save = function()
@@ -89,7 +88,7 @@ function M.save()
         check()
       end
 
-      if filetype == "file" then
+      if eve.path.is_exist_filepath(next_filepath) then
         vim.ui.select(
           { "Yes", "No" },
           { prompt = "The file is already existed, do you want to override it?" },
@@ -102,7 +101,7 @@ function M.save()
         return false
       end
 
-      if filetype == "directory" then
+      if eve.path.is_exist_dirpath(next_filepath) then
         eve.reporter.error({
           from = __module_name__,
           subject = "save",

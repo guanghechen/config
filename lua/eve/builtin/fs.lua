@@ -61,25 +61,6 @@ function M.is_exists(filepath)
   return stat ~= nil
 end
 
----@param filepath                      string
----@return eve.e.FileType|nil
-function M.is_file_or_dir(filepath)
-  local stat = vim.uv.fs_stat(filepath)
-  if stat == nil then
-    return nil
-  end
-
-  if stat.type == "directory" then
-    return "directory"
-  end
-
-  if stat.type == "file" then
-    return "file"
-  end
-
-  return "other"
-end
-
 ---@param params                        eve.builtin.fs.IReadFileParams
 ---@return string|nil
 function M.read_file(params)

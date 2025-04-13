@@ -80,7 +80,7 @@ local function gen_title()
   local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if eve.fs.is_file_or_dir(filepath) == "file" then
+    if eve.path.is_exist_filepath(filepath) then
       local relative_filepath = eve.path.relative(cwd, filepath, false)
       return mode .. "in " .. relative_filepath ---@type string
     end

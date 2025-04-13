@@ -443,12 +443,11 @@ end
 function M.find_files_directory(specified_filepath)
   local silent = false ---@type boolean
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    local is_file_or_dir = eve.fs.is_file_or_dir(specified_filepath) ---@type eve.e.FileType|nil
-    if is_file_or_dir == "directory" then
+    if eve.path.is_exist_dirpath(specified_filepath) then
       local dirpath = eve.path.normalize(specified_filepath) ---@type string
       state_cwd:next(dirpath)
       silent = true
-    elseif is_file_or_dir == "file" then
+    elseif eve.path.is_exist_filepath(specified_filepath) then
       local dirpath = eve.path.dirname(specified_filepath) ---@type string
       state_cwd:next(dirpath)
       silent = true

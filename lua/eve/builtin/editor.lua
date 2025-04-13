@@ -275,7 +275,7 @@ function M.is_valid_filepath(filepath)
   if filepath == nil or filepath == "" or filepath == eve.setting.BUF_UNTITLED then
     return false
   end
-  return eve.fs.is_file_or_dir(filepath) == "file"
+  return eve.path.is_exist_filepath(filepath)
 end
 
 ---@param winnr_source                  integer|nil
