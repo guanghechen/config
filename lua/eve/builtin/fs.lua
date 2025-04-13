@@ -30,6 +30,19 @@ local function default_watch_on_error(filepath, err, unwatch)
   unwatch()
 end
 
+---@param filepath_source               string
+---@param filepath_target               string
+---@return nil
+function M.copy_file(filepath_source, filepath_target)
+  local fin = assert(io.open(filepath_source, "rb"))
+  local content = fin:read("*all")
+  fin:close()
+
+  local fout = assert(io.open(filepath_target, "wb"))
+  fout:write(content)
+  fout:close()
+end
+
 ---@param filepath                      string
 ---@return nil
 function M.edit_file(filepath)
