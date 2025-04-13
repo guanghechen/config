@@ -52,6 +52,81 @@ return {
 
         neotree_state.commands.open(neotree_state)
       end,
+      show_file_info = function()
+        local state = require("neo-tree.sources.manager").get_state("filesystem")
+        local node = state.tree:get_node()
+
+        if not node or node.type ~= "file" then
+          return
+        end
+
+        local filepath = node.path
+        local stat = vim.loop.fs_stat(filepath)
+        if not stat then
+          vim.notify("Failed to get file stats", vim.log.levels.ERROR)
+          return
+        end
+
+        -- Format file info
+        local size = string.format("%.2f KB", stat.size / 1024)
+        local created = os.date("%Y-%m-%d %H:%M:%S", stat.ctime.sec)
+        local modified = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec)
+        local mode = string.format("%o", stat.mode)
+
+        local filepath_relative = eve.path.relative(eve.path.cwd(), filepath, false) ---@type string
+        local filename = eve.path.basename(filepath) ---@type string
+        local icon = eve.fn.fileicon(filename)
+
+        local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+        vim.bo[bufnr].bufhidden = "wipe"
+        vim.bo[bufnr].buflisted = false
+        vim.bo[bufnr].buftype = "nofile"
+        vim.bo[bufnr].filetype = "markdown"
+        vim.bo[bufnr].swapfile = false
+
+        ---@type eve.t.IKeymap[]
+        local keymaps = {
+          {
+            modes = { "n" },
+            key = "q",
+            callback = function()
+              vim.cmd.close()
+              pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+            end,
+            desc = "quit",
+          },
+        }
+        eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
+        eve.ux.Printer
+          .new({ name = "File info", indent = "" })
+          :line("Size:      " .. size)
+          :line("Created:   " .. created)
+          :line("Modified:  " .. modified)
+          :line("Mode:      " .. mode)
+          :render(bufnr)
+
+        vim.bo[bufnr].modifiable = false
+        vim.bo[bufnr].readonly = true
+
+        local wincfg = {
+          relative = "cursor",
+          width = vim.api.nvim_strwidth(filepath_relative) + 12,
+          height = 4,
+          row = 1,
+          col = 4,
+          style = "minimal",
+          border = "rounded",
+          title_pos = "center",
+          title = " " .. icon .. " " .. filepath_relative .. " ",
+        }
+        local winnr = vim.api.nvim_open_win(bufnr, true, wincfg) ---@type integer
+        vim.wo[winnr].number = false
+        vim.wo[winnr].relativenumber = false
+        vim.wo[winnr].signcolumn = "yes"
+        vim.wo[winnr].winfixbuf = true
+        vim.wo[winnr].wrap = false
+      end,
     },
     default_component_configs = {
       container = {
@@ -203,9 +278,11 @@ return {
           },
         },
 
+        ["oc"] = "copy_filepath",
+        ["oi"] = "show_file_info",
+
         ---Sort
         ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-        ["oc"] = "copy_filepath",
         ["od"] = { "order_by_diagnostics", nowait = false },
         ["og"] = { "order_by_git_status", nowait = false },
         ["om"] = { "order_by_modified", nowait = false },
