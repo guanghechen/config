@@ -42,9 +42,50 @@ function M.copy_file(filepath_source, filepath_target)
   local content = fin:read("*all")
   fin:close()
 
+  vim.fn.mkdir(eve.path.dirname(filepath_target), "p")
+
   local fout = assert(io.open(filepath_target, "wb"))
   fout:write(content)
   fout:close()
+end
+
+---@param dirpath_source                string
+---@param dirpath_target                string
+---@return boolean
+function M.copy_directory(dirpath_source, dirpath_target)
+  vim.fn.mkdir(dirpath_target, "p")
+
+  local handle = vim.uv.fs_scandir(dirpath_source)
+  if not handle then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "copy_directory",
+      message = "Failed to open source directory.",
+      details = { dir_source = dirpath_source },
+    })
+    return false
+  end
+
+  local success = true
+  while true do
+    local name, type = vim.uv.fs_scandir_next(handle)
+    if not name then
+      break
+    end
+
+    local source_path = dirpath_source .. eve.env.PATH_SEP .. name
+    local target_path = dirpath_target .. eve.env.PATH_SEP .. name
+
+    if type == "directory" then
+      success = success and M.copy_directory(source_path, target_path)
+    else
+      pcall(function()
+        M.copy_file(source_path, target_path)
+      end)
+    end
+  end
+
+  return success
 end
 
 ---@param filepath                      string

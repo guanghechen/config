@@ -72,7 +72,9 @@ vim.paste = function(lines, phase)
     :match("^'?(.-)'?$") -- remove single quotes
     :gsub("file://", "") -- remove "file://"
     :gsub("%c", "") -- remove control characters
-  if eve.path.is_exist_filepath(text) then
+  local is_filepath = eve.path.is_exist_filepath(text) ---@type boolean
+  local is_dirpath = eve.path.is_exist_dirpath(text) ---@type boolean
+  if is_filepath or is_dirpath then
     local cwd = eve.path.cwd() ---@type string
     local dirpath = cwd ---@type string
     local filepath_source = eve.path.normalize(text)
@@ -85,13 +87,14 @@ vim.paste = function(lines, phase)
       dirpath = eve.path.dirname(filepath_cur) ---@type string
     end
 
-    local filename_default = eve.path.basename(filepath_source) ---@type string
-    local filepath_default = eve.path.join(dirpath, filename_default) ---@type string
+    local basename_source = eve.path.basename(filepath_source) ---@type string
+    local filepath_default = eve.path.join(dirpath, basename_source) ---@type string
     local placeholder = eve.path.relative(cwd, filepath_default, false) ---@type string
+    local suffix = is_dirpath and eve.env.PATH_SEP or "" ---@type string
 
     vim.ui.input({
-      prompt = string.format(" Copy %s to ", eve.path.relative(cwd, filepath_source, false)),
-      default = placeholder,
+      prompt = string.format(" Copy %s to ", eve.path.relative(cwd, filepath_source, false) .. suffix),
+      default = placeholder .. suffix,
       relative = "editor",
     }, function(filepath_target_relative)
       if filepath_target_relative == nil or filepath_target_relative == "" then
@@ -99,15 +102,19 @@ vim.paste = function(lines, phase)
       end
 
       local filepath_target = eve.path.resolve(cwd, filepath_target_relative) ---@type string
-      local extname = eve.path.extname(filepath_target_relative) ---@type string
       eve.path.mkdir_if_nonexist(eve.path.dirname(filepath_target))
 
       local ok = pcall(function()
-        eve.fs.copy_file(filepath_source, filepath_target)
+        if is_filepath then
+          eve.fs.copy_file(filepath_source, filepath_target)
+        elseif is_dirpath then
+          eve.fs.copy_directory(filepath_source, filepath_target)
+        end
       end)
 
       if ok then
-        if not eve.filetype.is_not_sourcefile(filetype) then
+        if is_filepath and not eve.filetype.is_not_sourcefile(filetype) then
+          local extname = eve.path.extname(filepath_target_relative) ---@type string
           if IMAGE_EXTENSIONS[extname] then
             local src = eve.path.relative(dirpath, filepath_target, true) ---@type string
             if #src > 1 then
