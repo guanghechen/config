@@ -33,7 +33,7 @@ function M.has_image()
 end
 
 ---@return string|nil
-function M.get_image_base64()
+function M.get_image_as_base64()
   local cmd = format_command("xclip -selection clipboard -o -t image/png | base64 | tr -d '\n'") ---@type string
   local output = vim.fn.system(cmd) ---@type string
 
@@ -41,7 +41,7 @@ function M.get_image_base64()
   if exit_code ~= 0 then
     eve.reporter.error({
       from = __module_name__,
-      subject = "get_image_base64",
+      subject = "get_image_as_base64",
       message = "Failed to run command.",
       details = {
         cmd = cmd,
@@ -81,33 +81,6 @@ function M.paste_image(filepath)
   end
 
   return true
-end
-
----@param filepath                      string
----@return string|nil
-function M.read_as_base64(filepath)
-  local cmd = format_command(string.format("cat '%s' | base64 | tr -d '\n'", filepath))
-
-  local output = vim.fn.system(cmd) ---@type string
-
-  local exit_code = vim.v.shell_error
-  if exit_code ~= 0 then
-    eve.reporter.error({
-      from = __module_name__,
-      subject = "read_as_base64",
-      message = "Failed to run command.",
-      details = {
-        cmd = cmd,
-        exit_code = exit_code,
-        filepath = filepath,
-        output = output,
-        shell_error = vim.v.shell_error,
-      },
-    })
-    return nil
-  end
-
-  return output
 end
 
 function M.get_clipboard()

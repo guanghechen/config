@@ -6,9 +6,9 @@ local MAX_BASE64_SIZE = 24 * 1024 ---@type number
 
 ---@class eve.builtin.clipboard
 ---@field public has_image              fun(): boolean
+---@field public get_image_as_base64    fun(): string|nil
 ---@field public paste_image            fun(filepath: string): boolean
 ---@field public get_clipboard          fun(): table|nil
----@field public read_as_base64         fun(filepath: string): string|nil
 local M = {}
 
 if eve.env.IS_MAC then
@@ -59,9 +59,9 @@ function M.paste_image_as_base64(source_filepath)
 
   local base64 = nil ---@type string|nil
   if source_filepath then
-    base64 = M.read_as_base64(source_filepath)
+    base64 = eve.fs.read_file_as_base64({ filepath = source_filepath, silent = false })
   else
-    base64 = M.get_image_base64()
+    base64 = M.get_image_as_base64()
   end
 
   if base64 == nil or type(base64) ~= "string" or #base64 < 1 then

@@ -4,6 +4,10 @@ local __module_name__ = "eve.builtin.fs" ---@type string
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
+---@class eve.builtin.fs.IReadFileAsBase64Params
+---@field public filepath               string
+---@field public silent                 ?boolean
+
 ---@class eve.builtin.fs.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
@@ -99,6 +103,29 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
+---@param params                        eve.builtin.fs.IReadFileAsBase64Params
+---@return string|nil
+function M.read_file_as_base64(params)
+  local filepath = params.filepath ---@type string
+  local silent = not not params.silent ---@type boolean
+  local file = io.open(filepath, "r")
+  if not file then
+    if not silent then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "read_file_as_base64",
+        message = "Failed to open filepath.",
+        details = { filepath = filepath },
+      })
+    end
+    return nil
+  end
+
+  local content = file:read("*a") -- Read the entire content of the file
+  file:close()
+  return eve.std.base64.encode(content)
+end
+
 ---@param params                        eve.builtin.fs.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
@@ -109,7 +136,7 @@ function M.read_file_as_lines(params)
     if not silent then
       eve.reporter.error({
         from = __module_name__,
-        subject = "read_file",
+        subject = "read_file_as_lines",
         message = "Failed to open filepath.",
         details = { filepath = filepath },
       })

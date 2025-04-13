@@ -1,5 +1,6 @@
 ---@class eve.std.__mods
 local __mods = {
+  base64 = "eve.std.lib.base64",
   color = "eve.std.lib.color",
   md5 = "eve.std.lib.md5",
 
@@ -28,6 +29,7 @@ local __mods = {
 ---@class eve.std
 ---@field public __mods                 eve.std.__mods
 ---
+---@field public base64                 eve.std.lib.base64
 ---@field public color                  eve.std.lib.color
 ---@field public md5                    eve.std.lib.md5
 ---
