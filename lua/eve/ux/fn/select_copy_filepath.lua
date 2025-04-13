@@ -1,0 +1,66 @@
+local __module_name__ = "eve.ux.fn.select_copy_filepath" ---@type string
+
+---@class eve.ux.fn.select_copy_filepath.IParams
+---@field public filepath               string
+---@field public winopts                vim.api.keyset.win_config|nil
+
+---@param params                        eve.ux.fn.select_copy_filepath.IParams
+---@return nil
+local function select_copy_filepath(params)
+  local filepath = params.filepath ---@type string
+  local winopts = params.winopts or {} ---@type vim.api.keyset.win_config
+
+  eve.ux.SelectPopup
+    .new({
+      wincfg = vim.tbl_extend("force", {
+        width = 16,
+        title = "Copy filepath",
+      }, winopts),
+      items = {
+          -- stylua: ignore start
+          { uuid = "absolute", text = "absolute", },
+          { uuid = "relative", text = "relative", },
+          { uuid = "filename", text = "filename",          },
+        -- stylua: ignore end
+      },
+      on_select = function(widget, item)
+        widget:destroy()
+
+        if item ~= nil then
+          if item.uuid == "absolute" then
+            local content = filepath ---@type string
+
+            vim.fn.setreg("+", content)
+            eve.reporter.info({
+              from = __module_name__,
+              message = "Copied absolute filepath: " .. content,
+            })
+          elseif item.uuid == "relative" then
+            local cwd = eve.path.cwd() ---@type string
+            local content = eve.path.relative(cwd, filepath, true) ---@type string
+
+            vim.fn.setreg("+", content)
+            eve.reporter.info({
+              from = __module_name__,
+              message = "Copied relative filepath: " .. content,
+            })
+          elseif item.uuid == "filename" then
+            local content = eve.path.basename(filepath) ---@type string
+            vim.fn.setreg("+", content)
+            eve.reporter.info({
+              from = __module_name__,
+              message = "Copied filename: " .. content,
+            })
+          else
+            eve.reporter.warn({
+              from = __module_name__,
+              message = "Unknown item uuid: " .. item.uuid,
+            })
+          end
+        end
+      end,
+    })
+    :show()
+end
+
+return select_copy_filepath
