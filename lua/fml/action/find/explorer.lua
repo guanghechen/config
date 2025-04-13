@@ -481,7 +481,7 @@ function M.find_explorer(specified_filepath)
       if #filepath > 0 then
         if eve.path.is_exist_dirpath(filepath) then
           state_cwd:next(filepath, { force = true })
-        elseif eve.path.is_exist_filepath(filepath) == "file" then
+        elseif eve.path.is_exist_filepath(filepath) then
           state_cwd:next(eve.path.dirname(filepath), { force = true })
         end
       end
