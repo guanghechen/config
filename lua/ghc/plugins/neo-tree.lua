@@ -1,27 +1,3 @@
----@return nil
-local function recursively_toggle_all(neotree_state)
-  local node = neotree_state.tree:get_node()
-  if not node then
-    return
-  end
-
-  if node.type == "directory" then
-    if node:is_expanded() then
-      neotree_state.commands.close_all_subnodes(neotree_state)
-    else
-      neotree_state.commands.expand_all_nodes(neotree_state, node)
-    end
-    return
-  end
-
-  neotree_state.commands.open(neotree_state)
-end
-
----@return nil
-local function refresh_filesystem(neotree_state)
-  require("neo-tree.sources.manager").refresh(neotree_state.name)
-end
-
 -- Sorts files and directories alphabetically with directories first.
 local function sort_function(a, b)
   if a.type == b.type then
@@ -46,6 +22,37 @@ return {
     sort_case_insensitive = true, -- used when sorting files and directories in the tree
     sort_function = sort_function,
     sources = { "filesystem", "buffers", "git_status", "document_symbols" },
+    commands = {
+      copy_filepath = function(state)
+        local node = state.tree:get_node()
+        local filepath = node:get_id()
+        eve.ux.fn.select_copy_filepath({
+          filepath = filepath,
+          winopts = {
+            relative = "cursor",
+            row = 1,
+            col = 4,
+          },
+        })
+      end,
+      recursively_toggle_all = function(neotree_state)
+        local node = neotree_state.tree:get_node()
+        if not node then
+          return
+        end
+
+        if node.type == "directory" then
+          if node:is_expanded() then
+            neotree_state.commands.close_all_subnodes(neotree_state)
+          else
+            neotree_state.commands.expand_all_nodes(neotree_state, node)
+          end
+          return
+        end
+
+        neotree_state.commands.open(neotree_state)
+      end,
+    },
     default_component_configs = {
       container = {
         enable_character_fade = true,
@@ -174,7 +181,7 @@ return {
         -- Tree node toggle collapse
         ["<2-LeftMouse>"] = "open",
         ["<cr>"] = "open",
-        ["z"] = recursively_toggle_all,
+        ["z"] = "recursively_toggle_all",
 
         -- Add / Copy / Move
         ["a"] = {
@@ -198,7 +205,7 @@ return {
 
         ---Sort
         ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-        ["oc"] = { "order_by_created", nowait = false },
+        ["oc"] = "copy_filepath",
         ["od"] = { "order_by_diagnostics", nowait = false },
         ["og"] = { "order_by_git_status", nowait = false },
         ["om"] = { "order_by_modified", nowait = false },
@@ -249,18 +256,6 @@ return {
           sidebar.file_selector:add_selected_file(relative_path)
           sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
         end,
-        copy_filepath = function(state)
-          local node = state.tree:get_node()
-          local filepath = node:get_id()
-          eve.ux.fn.select_copy_filepath({
-            filepath = filepath,
-            winopts = {
-              relative = "cursor",
-              row = 1,
-              col = 4,
-            },
-          })
-        end,
         open_ghc_file_explorer = function(state)
           local node = state.tree:get_node()
           local filepath = node:get_id() ---@type string
@@ -280,6 +275,9 @@ return {
           local node = state.tree:get_node()
           local filepath = node:get_id() ---@type string
           vim.cmd(eve.command.definitions.search.files_in_directory.uuid .. " " .. filepath)
+        end,
+        refresh_filesystem = function(neotree_state)
+          require("neo-tree.sources.manager").refresh(neotree_state.name)
         end,
       },
       filtered_items = {
@@ -319,14 +317,13 @@ return {
           ["h"] = "close_node",
           ["l"] = "open",
           ["oa"] = "avante_add_files",
-          ["oc"] = "copy_filepath",
           ["oe"] = "open_ghc_file_explorer",
           ["of"] = "open_ghc_file_finder",
           ["or"] = "open_ghc_replacer",
           ["os"] = "open_ghc_searcher",
-          ["<C-a>r"] = refresh_filesystem,
-          ["<D-r"] = refresh_filesystem,
-          ["<M-r>"] = refresh_filesystem,
+          ["<C-a>r"] = "refresh_filesystem",
+          ["<D-r"] = "refresh_filesystem",
+          ["<M-r>"] = "refresh_filesystem",
           ["<bs>"] = "navigate_up",
           ["."] = "set_root",
           ["H"] = "toggle_hidden",
