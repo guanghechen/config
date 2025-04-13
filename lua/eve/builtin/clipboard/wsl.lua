@@ -65,7 +65,7 @@ end
 
 ---@param filepath                    string
 ---@return  boolean
-function M.paste_image(filepath)
+function M.paste_image_from_clipboard(filepath)
   local cmd = format_command(
     string.format(
       "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetImage().Save('%s')",
@@ -78,7 +78,7 @@ function M.paste_image(filepath)
   if exit_code ~= 0 then
     eve.reporter.error({
       from = __module_name__,
-      subject = "paste_image",
+      subject = "paste_image_from_clipboard",
       message = "Failed to run command.",
       details = {
         cmd = cmd,

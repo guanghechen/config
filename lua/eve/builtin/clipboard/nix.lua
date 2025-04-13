@@ -59,7 +59,7 @@ end
 
 ---@param filepath                      string
 ---@return  boolean
-function M.paste_image(filepath)
+function M.paste_image_from_clipboard(filepath)
   local cmd = format_command(string.format('xclip -selection clipboard -o -t image/png > "%s"', filepath))
   local output = vim.fn.system(cmd) ---@type string|nil
   local exit_code = vim.v.shell_error
@@ -67,7 +67,7 @@ function M.paste_image(filepath)
   if exit_code ~= 0 then
     eve.reporter.error({
       from = __module_name__,
-      subject = "paste_image",
+      subject = "paste_image_from_clipboard",
       message = "Failed to run command.",
       details = {
         cmd = cmd,

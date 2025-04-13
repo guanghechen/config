@@ -32,6 +32,7 @@ if eve.path.is_repo_git() then
 end
 
 vim.schedule(function()
+  require("fml.dressing.clipboard")
   require("fml.dressing.commentstring")
   require("fml.dressing.hipairs")
   require("fml.dressing.illumniate")

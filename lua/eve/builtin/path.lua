@@ -91,6 +91,20 @@ function M.is_exist(filepath)
   return stat ~= nil and not vim.tbl_isempty(stat)
 end
 
+---@param dirpath                       string
+---@return boolean
+function M.is_exist_dirpath(dirpath)
+  local stat = vim.uv.fs_stat(dirpath)
+  return stat ~= nil and stat.type == "directory"
+end
+
+---@param filepath                      string
+---@return boolean
+function M.is_exist_filepath(filepath)
+  local stat = vim.uv.fs_stat(filepath)
+  return stat ~= nil and stat.type == "file"
+end
+
 ---@param filepath                      string
 ---@return boolean
 function M.is_git_ignored(filepath)
