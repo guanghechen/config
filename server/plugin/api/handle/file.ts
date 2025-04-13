@@ -6,14 +6,26 @@ import parseMarkdown from '../../../util/parseMarkdown'
 import type { IApiHandle, IApiHandleData } from '../types'
 
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
+  '.avi': 'video/x-msvideo',
+  '.bmp': 'image/bmp',
+  '.gif': 'image/gif',
   '.html': 'text/html',
-  '.md': 'application/json',
+  '.ico': 'image/x-icon',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
   '.json': 'application/json',
+  '.md': 'application/json',
+  '.mkv': 'video/x-matroska',
+  '.mov': 'video/quicktime',
+  '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
+  '.ogg': 'audio/ogg',
   '.pdf': 'application/pdf',
   '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.svg': 'image/svg',
+  '.svg': 'image/svg+xml',
+  '.wav': 'audio/wav',
+  '.webm': 'video/webm',
+  '.webp': 'image/webp',
 }
 
 export const fetchFile: IApiHandle = async params => {
