@@ -1,3 +1,5 @@
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ruff
+
 local function on_attach(client, bufnr)
   client.server_capabilities.hoverProvider = false
   eve.lsp.on_attach(client, bufnr)

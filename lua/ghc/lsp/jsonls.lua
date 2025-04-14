@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/master/lua/lspconfig/server_configurations/jsonls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#jsonls
 
 local capabilities = eve.lsp.get_capabilities()
 
