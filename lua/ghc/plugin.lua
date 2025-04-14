@@ -82,7 +82,7 @@ local raw_specs = {
   { name = "nvim-nio", main = "nio", cond = conds.not_vscode },
   { name = "nvim-notify", main = "notify", cond = conds.not_vscode },
   { name = "nvim-treesitter", main = "nvim-treesitter", cond = conds.common },
-  { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.common },
+  { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.treesitter_context },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.common },
   { name = "plenary.nvim", main = "plenary", cond = conds.common },
   { name = "render-markdown.nvim", main = "render-markdown", cond = conds.not_vscode },
