@@ -24,15 +24,7 @@ tabline = eve.ux.Nvimbar.new({
 })
 
 tabline
-  :place(
-    "left",
-    c.sidebar(position, eve.filetype.NEOTREE, function(context)
-      local cwd_name = context.cwd:match("([^/\\]+)[/\\]*$") or context.cwd ---@type string
-      local title = eve.icon.filetype.FolderRootOpened .. " " .. cwd_name ---@type string
-      return title
-    end),
-    95
-  )
+  :place("left", c.neotree(position, "left"), 95)
   :place(
     "left",
     c.sidebar(position, eve.filetype.DIFFVIEW_FILES, function()

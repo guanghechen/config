@@ -14,7 +14,7 @@ return {
     sort_case_insensitive = true,
     sources = { "filesystem", "buffers", "git_status", "document_symbols" },
     source_selector = {
-      winbar = true,
+      winbar = false,
       statusline = false,
       show_scrolled_off_parent_node = false,
       show_separator_on_edge = true,
