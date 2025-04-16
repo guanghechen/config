@@ -130,11 +130,10 @@ return {
       },
     },
     fuzzy = {
-      implementation = "rust",
+      implementation = "prefer_rust_with_warning",
       sorts = {
-        "exact",
-        -- "defaults",
         "score",
+        "exact",
         "sort_text",
       },
     },
@@ -174,32 +173,32 @@ return {
         avante_commands = {
           name = "avante_commands",
           module = "blink.compat.source",
-          score_offset = 90,
+          score_offset = 120,
           opts = {},
         },
         avante_mentions = {
           name = "avante_mentions",
           module = "blink.compat.source",
-          score_offset = 100,
+          score_offset = 120,
           opts = {},
+        },
+        buffer = {
+          score_offset = 100,
         },
         copilot = {
           name = "copilot",
           module = "ghc.cmp.copilot",
-          score_offset = 100,
+          score_offset = 200,
           async = true,
         },
-        path = {
-          score_offset = 95,
-        },
         lsp = {
-          score_offset = 90,
+          score_offset = 150,
+        },
+        path = {
+          score_offset = 120,
         },
         snippets = {
-          score_offset = 90,
-        },
-        buffer = {
-          score_offset = 85,
+          score_offset = 120,
         },
       },
     },
