@@ -72,13 +72,37 @@ local function should_show_tabline()
   return meta == nil or #meta.bufs > 1
 end
 
+local last_showtabline = 0 ---@type integer
 dirtier:subscribe(eve.std.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
+      if last_showtabline == 0 then
+        for winnr, winline in pairs(eve.state.win.winline_map) do
+          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+          if vim.bo[bufnr].filetype == eve.filetype.NEOTREE then
+            if not eve.editor.is_win_floating(winnr) then
+              winline:dispose()
+              eve.state.win.winline_map[winnr] = nil
+              vim.wo[winnr].winbar = nil
+              break
+            end
+          end
+        end
+      end
+
       vim.o.showtabline = 2
+      last_showtabline = 2
       tabline:render()
     else
+      if last_showtabline ~= 0 then
+        local winnrs = vim.api.nvim_list_wins() ---@type integer[]
+        for _, winnr in ipairs(winnrs) do
+          eve.state.status.dirty_winline_nr:next(winnr)
+        end
+      end
+
       vim.o.showtabline = 0
+      last_showtabline = 0
     end
   end,
 }))

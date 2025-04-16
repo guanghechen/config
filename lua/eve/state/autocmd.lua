@@ -111,6 +111,7 @@ vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
       eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
       eve.state.editor.on_win_enter(winnr)
 
+      eve.state.status.dirty_winline_nr:next(winnr)
       eve.state.status.dirtier_statusline:mark_dirty()
       eve.state.status.dirtier_tabline:mark_dirty()
     end)
@@ -125,6 +126,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
       eve.state.status.maximized_winnrs[winnr] = nil
     end
 
+    eve.state.win.on_win_closed(winnr)
     eve.state.status.dirtier_statusline:mark_dirty()
     eve.state.status.dirtier_tabline:mark_dirty()
   end,

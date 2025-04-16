@@ -4,15 +4,14 @@ local txt = eve.ux.Nvimbar.txt
 local position = "f_wl" ---@type eve.ux.nvimbar.Position
 
 ---@param winnr                         integer
+---@param source                        "sourcefile"|"neotree"
 ---@return eve.ux.INvimbar|nil
-local function resolve_winline_scheduler(winnr)
+local function resolve_winline_scheduler(winnr, source)
   local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
-  if meta == nil then
-    return
-  end
+  local winline_map = eve.state.win.winline_map ---@type table<integer, eve.ux.INvimbar|nil>
 
-  if meta.winline == nil then
-    local winline ---@type eve.ux.INvimbar
+  local winline = winline_map[winnr] ---@type eve.ux.INvimbar|nil
+  if winline == nil then
     winline = eve.ux.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
@@ -37,6 +36,10 @@ local function resolve_winline_scheduler(winnr)
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
+        if winline == nil then
+          return
+        end
+
         -- Quick rerender the winline before the pre_task done to make the ui quick refresh.
         if vim.api.nvim_win_is_valid(winnr) then
           local result = winline:render_immediately()
@@ -59,6 +62,10 @@ local function resolve_winline_scheduler(winnr)
         end
       end,
       trigger_rerender = function()
+        if winline == nil then
+          return
+        end
+
         if vim.api.nvim_win_is_valid(winnr) then
           local result = winline:snapshot() ---@type string
           vim.wo[winnr].winbar = result
@@ -71,38 +78,55 @@ local function resolve_winline_scheduler(winnr)
       end,
     })
 
-    winline
+    if source == "neotree" then
+      local is_floating = eve.editor.is_win_floating(winnr) ---@type boolean
+      winline:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
+    else
+      winline
+        ---
+        :place("left", c.dirpath(position), 95)
+        :place("left", c.filename(position), 100)
+        :place("left", c.lsp_symbols(position), 90)
+        ---
+        :place("center", c.debug_render_count(position), 100)
       ---
-      :place("left", c.dirpath(position), 95)
-      :place("left", c.filename(position), 100)
-      :place("left", c.lsp_symbols(position), 90)
-      ---
-      :place("center", c.debug_render_count(position), 100)
-    ---
-    -- :place("right", c.dirpath_prominent(position), 100)
-    meta.winline = winline
+      -- :place("right", c.dirpath_prominent(position), 100)
+    end
+    winline_map[winnr] = winline
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  if meta.winline_bufnr ~= bufnr then
-    meta.lsp_symbols = {}
-    meta.winline_bufnr = bufnr
-    vim.wo[winnr].winbar = meta.winline:render_immediately()
+  if meta ~= nil then
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    if meta.winline_bufnr ~= bufnr then
+      meta.winline_bufnr = bufnr
+      meta.lsp_symbols = {}
+      vim.wo[winnr].winbar = winline:render_immediately()
+    end
   end
-
-  return meta.winline
+  return winline
 end
 
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or not eve.editor.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
+  if winnr == nil or not eve.editor.is_win_valid(winnr) then
     return
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if eve.filetype.is_no_customized_winline_filetype(filetype) then
+  if filetype == eve.filetype.NEOTREE then
+    if vim.o.showtabline == 0 or eve.editor.is_win_floating(winnr) then
+      local winline = resolve_winline_scheduler(winnr, "neotree") ---@type eve.ux.INvimbar|nil
+      if winline ~= nil then
+        winline:render()
+        return
+      end
+    end
+    return
+  end
+
+  if not eve.editor.is_win_sourcefile(winnr) or eve.filetype.is_no_customized_winline_filetype(filetype) then
     return
   end
 
@@ -136,7 +160,7 @@ local function render(winnr)
     return
   end
 
-  local winline = resolve_winline_scheduler(winnr) ---@type eve.ux.INvimbar|nil
+  local winline = resolve_winline_scheduler(winnr, "sourcefile") ---@type eve.ux.INvimbar|nil
   if winline ~= nil then
     winline:render()
     return
