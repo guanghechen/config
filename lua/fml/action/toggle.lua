@@ -594,6 +594,10 @@ function M.list(arg)
     local item = toggle_item_map[flag_name] ---@type fml.action.toggle.IItem
     item.action()
   else
+    local w_p_title = 24 ---@type integer
+    local w_p_group = 12 ---@type integer
+    local offset = w_p_title + w_p_group + 2 ---@type integer
+
     eve.ux.fn.select({
       title = "Toggle Select",
       flag_fuzzy = true,
@@ -609,7 +613,19 @@ function M.list(arg)
         local items = {} ---@type eve.ux.select.IItem[]
         for _, flag in ipairs(toggle_item_names) do
           local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
-          items[#items + 1] = { uuid = flag, text = item.title, data = item }
+
+          local text_group = item.group or "" ---@type string
+          local text_flag = item.snapshot()
+
+          ---@type string
+          local text = string.format(
+            "%s %s %s",
+            eve.string.pad_end(text_group, w_p_group, " "),
+            eve.string.pad_end(item.title, w_p_title, " "),
+            text_flag
+          )
+
+          items[#items + 1] = { uuid = flag, text = text, data = item }
         end
         return items
       end,
@@ -617,17 +633,6 @@ function M.list(arg)
         local flag_item = item.data ---@type fml.action.toggle.IItem
         local text_group = flag_item.group or "" ---@type string
         local text_flag, hln_flag = flag_item.snapshot()
-
-        local w_p_title = 24 ---@type integer
-        local w_p_group = 12 ---@type integer
-        local offset = w_p_title + w_p_group + 2 ---@type integer
-
-        local text = string.format(
-          "%s %s %s",
-          eve.string.pad_end(text_group, w_p_group, " "),
-          eve.string.pad_end(flag_item.title, w_p_title, " "),
-          text_flag
-        ) ---@type string
 
         ---@type eve.t.IHighlightInline[]
         local highlights = {
@@ -639,7 +644,7 @@ function M.list(arg)
           highlights[#highlights + 1] =
             { coll = w_p_group + 1 + piece.l, colr = w_p_group + 1 + piece.r, hlname = "f_us_main_match" }
         end
-        return text, highlights
+        return item.text, highlights
       end,
       on_confirm = function(widget, items)
         if #items == 1 then
