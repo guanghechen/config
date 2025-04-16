@@ -12,7 +12,6 @@ end
 ---@class ghc.action.neo_tree.ICreateWidgetParams
 ---@field public name                   string
 ---@field public source                 string
----@field public position               "float"|"left"|"right"
 ---@field public cwd                    fun(): string
 
 ---@param params                        ghc.action.neo_tree.ICreateWidgetParams
@@ -20,15 +19,32 @@ end
 local function create_widget(params)
   local name = params.name ---@type string
   local source = params.source ---@type string
-  local position = params.position ---@type "float"|"left"|"right"
+
+  ---@return integer|nil
+  ---@return integer|nil
+  local function locate_neotree_winnr()
+    local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
+    for _, winnr in ipairs(winnrs) do
+      if eve.editor.is_win_floating(winnr) then
+        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+        local filetype = vim.bo[bufnr].filetype ---@type string
+        if filetype == eve.filetype.NEOTREE then
+          return winnr, bufnr
+        end
+      end
+    end
+    return nil
+  end
 
   return eve.state.widget.wrap({
     name = name,
     close = function()
-      require("neo-tree.command").execute({
-        source = source,
-        action = "close",
-      })
+      local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil
+      if winnr ~= nil and bufnr ~= nil then
+        local next_source = vim.b[bufnr].neo_tree_source ---@type string
+        source = next_source
+        vim.api.nvim_win_close(winnr, true)
+      end
     end,
     focus = function()
       local cwd = params.cwd() ---@type string
@@ -36,62 +52,41 @@ local function create_widget(params)
         action = "focus",
         source = source,
         dir = cwd,
-        position = position,
+        position = "float",
         reveal = check_could_reveal(cwd),
         toggle = false,
       })
     end,
     focused = function()
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local filetype = vim.bo[bufnr].filetype ---@type string
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      return filetype == eve.filetype.NEOTREE and vim.b[bufnr].neo_tree_source == source and filepath:match(source)
+      local winnr = locate_neotree_winnr() ---@type integer|nil
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      return winnr == winnr_current
     end,
     hide = function()
-      require("neo-tree.command").execute({
-        source = source,
-        action = "close",
-      })
+      local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil
+      if winnr ~= nil and bufnr ~= nil then
+        local next_source = vim.b[bufnr].neo_tree_source ---@type string
+        source = next_source
+        vim.api.nvim_win_close(winnr, true)
+      end
     end,
     resize = function() end,
     status = function()
-      local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
-      for _, winnr in ipairs(winnrs) do
-        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        local filetype = vim.bo[bufnr].filetype ---@type string
-        if filetype == eve.filetype.NEOTREE and vim.b[bufnr].neo_tree_source == source then
-          return "visible"
-        end
-      end
-      return "hidden"
+      local winnr = locate_neotree_winnr() ---@type integer|nil
+      return winnr == nil and "hidden" or "visible"
     end,
   })
 end
 
 local widgets = {
-  fs_cwd = create_widget({
-    name = "fs-cwd",
-    source = "filesystem",
-    position = "float",
-    cwd = eve.path.cwd,
-  }),
-  fs_workspace = create_widget({
-    name = "fs-workspace",
-    source = "filesystem",
-    position = "float",
-    cwd = eve.path.workspace,
-  }),
   git_cwd = create_widget({
     name = "git-cwd",
     source = "git_status",
-    position = "float",
     cwd = eve.path.cwd,
   }),
   git_workspace = create_widget({
     name = "git-workspace",
     source = "git_status",
-    position = "float",
     cwd = eve.path.workspace,
   }),
 }

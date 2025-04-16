@@ -1,11 +1,3 @@
--- Sorts files and directories alphabetically with directories first.
-local function sort_function(a, b)
-  if a.type == b.type then
-    return a.path < b.path
-  end
-  return a.type < b.type
-end
-
 return {
   name = "neo-tree.nvim",
   cmd = "Neotree",
@@ -19,12 +11,75 @@ return {
     enable_diagnostics = true,
     open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "Outline" },
     popup_border_style = "rounded",
-    sort_case_insensitive = true, -- used when sorting files and directories in the tree
-    sort_function = sort_function,
+    sort_case_insensitive = true,
     sources = { "filesystem", "buffers", "git_status", "document_symbols" },
+    source_selector = {
+      winbar = true,
+      statusline = false,
+      show_scrolled_off_parent_node = false,
+      show_separator_on_edge = true,
+      content_layout = "center",
+      tabs_layout = "center",
+      padding = 2,
+      highlight_background = "NeoTreeWinbar",
+      highlight_separator = "NeoTreeTabSeparator",
+      highlight_separator_active = "NeoTreeTabSeparatorActive",
+      highlight_tab = "NeoTreeTab",
+      highlight_tab_active = "NeoTreeTabActive",
+      separator = {
+        left = eve.icon.symbols.sep_left,
+        right = eve.icon.symbols.sep_right,
+      },
+      sources = {
+        {
+          source = "filesystem",
+          display_name = string.format(" %s Files ", eve.icon.filetype.File),
+        },
+        {
+          source = "buffers",
+          display_name = string.format(" %s Buffers ", eve.icon.ui.Buffer),
+        },
+        {
+          source = "git_status",
+          display_name = string.format(" %s Git ", eve.icon.git.Git),
+        },
+      },
+    },
+    sort_function = function(a, b)
+      if a.type == b.type then
+        return a.path < b.path
+      end
+      return a.type < b.type
+    end,
     commands = {
+      avante_add_files = function(state)
+        local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
+        local filepath = node:get_id()
+        local relative_path = require("avante.utils").relative_path(filepath)
+        local sidebar = require("avante").get()
+        if not sidebar then
+          return
+        end
+
+        local open = sidebar:is_open()
+        -- ensure avante sidebar is open
+        if not open then
+          require("avante.api").ask()
+          sidebar = require("avante").get()
+        end
+        sidebar.file_selector:add_selected_file(relative_path)
+        sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
+      end,
       copy_filepath = function(state)
         local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
         local filepath = node:get_id()
         eve.ux.fn.select_copy_filepath({
           filepath = filepath,
@@ -35,9 +90,45 @@ return {
           },
         })
       end,
+      open_ghc_file_explorer = function(state)
+        local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
+        local filepath = node:get_id() ---@type string
+        vim.cmd(eve.command.definitions.find.explorer.uuid .. " " .. filepath)
+      end,
+      open_ghc_file_finder = function(state)
+        local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
+        local filepath = node:get_id() ---@type string
+        vim.cmd(eve.command.definitions.find.files_directory.uuid .. " " .. filepath)
+      end,
+      open_ghc_replacer = function(state)
+        local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
+        local filepath = node:get_id() ---@type string
+        vim.cmd(eve.command.definitions.replace.files_in_directory.uuid .. " " .. filepath)
+      end,
+      open_ghc_searcher = function(state)
+        local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
+        local filepath = node:get_id() ---@type string
+        vim.cmd(eve.command.definitions.search.files_in_directory.uuid .. " " .. filepath)
+      end,
       recursively_toggle_all = function(neotree_state)
         local node = neotree_state.tree:get_node()
-        if not node then
+        if not node or (node.type ~= "file" and node.type ~= "directory") then
           return
         end
 
@@ -51,6 +142,9 @@ return {
         end
 
         neotree_state.commands.open(neotree_state)
+      end,
+      refresh_filesystem = function(neotree_state)
+        require("neo-tree.sources.manager").refresh(neotree_state.name)
       end,
       show_file_info = function()
         local state = require("neo-tree.sources.manager").get_state("filesystem")
@@ -147,32 +241,27 @@ return {
         },
       },
       indent = {
-        indent_size = 2,
-        padding = 1, -- extra padding on left hand side
-        with_markers = true,
-        indent_marker = "│",
-        last_indent_marker = "└",
-        highlight = "NeoTreeIndentMarker",
-        with_expanders = true,
         expander_collapsed = eve.icon.ui.ArrowClosed,
         expander_expanded = eve.icon.ui.ArrowOpen,
-        expander_highlight = "NeoTreeExpander",
+        indent_size = 2,
+        indent_marker = "│",
+        last_indent_marker = "╰",
+        padding = 1,
+        with_expanders = true,
+        with_markers = true,
       },
       icon = {
         folder_closed = eve.icon.filetype.Folder,
         folder_open = eve.icon.filetype.FolderOpen,
         folder_empty = eve.icon.filetype.FolderEmpty,
         default = eve.icon.filetype.File,
-        highlight = "NeoTreeFileIcon",
       },
       modified = {
         symbol = eve.icon.ui.Modified,
-        highlight = "NeoTreeModified",
       },
       name = {
         trailing_slash = false,
         use_git_status_colors = true,
-        highlight = "NeoTreeFileName",
       },
       git_status = {
         symbols = {
@@ -181,7 +270,6 @@ return {
           modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
           deleted = eve.icon.git.Remove, -- this can only be used in the git_status source
           renamed = eve.icon.git.Rename, -- this can only be used in the git_status source
-          -- Status type
           untracked = eve.icon.git.Untracked,
           ignored = eve.icon.git.Ignore,
           unstaged = eve.icon.git.Unstaged,
@@ -210,13 +298,9 @@ return {
         event = "neo_tree_popup_input_ready",
         ---@param args { bufnr: integer, winid: integer }
         handler = function(args)
-          vim.cmd("stopinsert")
-
-          ---@type eve.t.IKeymap[]
-          local keymaps = {
-            { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert },
-          }
+          local keymaps = { { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert } } ---@type eve.t.IKeymap[]
           eve.nvim.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
+          vim.cmd.stopinsert()
         end,
       },
     },
@@ -278,8 +362,15 @@ return {
           },
         },
 
+        ["<leader>["] = "prev_source",
+        ["<leader>]"] = "next_source",
+        ["oa"] = "avante_add_files",
         ["oc"] = "copy_filepath",
+        ["oe"] = "open_ghc_file_explorer",
+        ["of"] = "open_ghc_file_finder",
         ["oi"] = "show_file_info",
+        ["or"] = "open_ghc_replacer",
+        ["os"] = "open_ghc_searcher",
 
         ---Sort
         ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
@@ -287,7 +378,6 @@ return {
         ["og"] = { "order_by_git_status", nowait = false },
         ["om"] = { "order_by_modified", nowait = false },
         ["on"] = { "order_by_name", nowait = false },
-        ["os"] = { "order_by_size", nowait = false },
         ["ot"] = { "order_by_type", nowait = false },
 
         -- Misc
@@ -318,45 +408,6 @@ return {
     filesystem = {
       bind_to_cwd = false,
       use_libuv_file_watcher = true,
-      commands = {
-        avante_add_files = function(state)
-          local node = state.tree:get_node()
-          local filepath = node:get_id()
-          local relative_path = require("avante.utils").relative_path(filepath)
-          local sidebar = require("avante").get()
-          local open = sidebar:is_open()
-          -- ensure avante sidebar is open
-          if not open then
-            require("avante.api").ask()
-            sidebar = require("avante").get()
-          end
-          sidebar.file_selector:add_selected_file(relative_path)
-          sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
-        end,
-        open_ghc_file_explorer = function(state)
-          local node = state.tree:get_node()
-          local filepath = node:get_id() ---@type string
-          vim.cmd(eve.command.definitions.find.explorer.uuid .. " " .. filepath)
-        end,
-        open_ghc_file_finder = function(state)
-          local node = state.tree:get_node()
-          local filepath = node:get_id() ---@type string
-          vim.cmd(eve.command.definitions.find.files_directory.uuid .. " " .. filepath)
-        end,
-        open_ghc_replacer = function(state)
-          local node = state.tree:get_node()
-          local filepath = node:get_id() ---@type string
-          vim.cmd(eve.command.definitions.replace.files_in_directory.uuid .. " " .. filepath)
-        end,
-        open_ghc_searcher = function(state)
-          local node = state.tree:get_node()
-          local filepath = node:get_id() ---@type string
-          vim.cmd(eve.command.definitions.search.files_in_directory.uuid .. " " .. filepath)
-        end,
-        refresh_filesystem = function(neotree_state)
-          require("neo-tree.sources.manager").refresh(neotree_state.name)
-        end,
-      },
       filtered_items = {
         visible = false, -- when true, they will just be displayed differently than normal items
         hide_dotfiles = false,
@@ -393,11 +444,6 @@ return {
         mappings = {
           ["h"] = "close_node",
           ["l"] = "open",
-          ["oa"] = "avante_add_files",
-          ["oe"] = "open_ghc_file_explorer",
-          ["of"] = "open_ghc_file_finder",
-          ["or"] = "open_ghc_replacer",
-          ["os"] = "open_ghc_searcher",
           ["<C-a>r"] = "refresh_filesystem",
           ["<D-r"] = "refresh_filesystem",
           ["<M-r>"] = "refresh_filesystem",
