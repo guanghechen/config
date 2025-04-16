@@ -598,10 +598,31 @@ function M.list(arg)
     local w_p_group = 12 ---@type integer
     local offset = w_p_title + w_p_group + 2 ---@type integer
 
-    eve.ux.fn.select({
+    local select = nil ---@type eve.ux.Select|nil
+
+    ---@type eve.t.IKeymap[]
+    local main_keymaps = {
+      {
+        modes = { "n" },
+        key = "l",
+        aliases = { "h", "<Left>", "<Right>" },
+        callback = function()
+          if select then
+            local uuid = select.context:get_current_uuid() ---@type string|nil
+            local item = uuid and toggle_item_map[uuid] or nil ---@type fml.action.toggle.IItem|nil
+            if item then
+              item.action()
+              select:mark_data_dirty()
+            end
+          end
+        end,
+      },
+    }
+
+    select = eve.ux.Select.new({
       title = "Toggle Select",
-      flag_fuzzy = true,
-      flag_regex = false,
+      flag_fuzzy = eve.std.Observable.from_value(true),
+      flag_regex = eve.std.Observable.from_value(false),
       input = eve.std.Observable.from_value(flag_name),
       dimension = {
         row = 3,
@@ -609,43 +630,48 @@ function M.list(arg)
         max_height = math.max(math.floor(vim.o.lines * 0.6), 24),
       },
       multiple = false,
-      fetch_items = function()
-        local items = {} ---@type eve.ux.select.IItem[]
-        for _, flag in ipairs(toggle_item_names) do
-          local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
+      permanent = false,
+      preview_enabled = false,
+      extend_preset_keymaps = true,
+      main_keymaps = main_keymaps,
+      provider = {
+        fetch_data = function()
+          local items = {} ---@type eve.ux.select.IItem[]
+          for _, flag in ipairs(toggle_item_names) do
+            local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
 
-          local text_group = item.group or "" ---@type string
-          local text_flag = item.snapshot()
+            local text_group = item.group or "" ---@type string
+            local text_flag = item.snapshot()
 
-          ---@type string
-          local text = string.format(
-            "%s %s %s",
-            eve.string.pad_end(text_group, w_p_group, " "),
-            eve.string.pad_end(item.title, w_p_title, " "),
-            text_flag
-          )
+            ---@type string
+            local text = string.format(
+              "%s %s %s",
+              eve.string.pad_end(text_group, w_p_group, " "),
+              eve.string.pad_end(item.title, w_p_title, " "),
+              text_flag
+            )
 
-          items[#items + 1] = { uuid = flag, text = text, data = item }
-        end
-        return items
-      end,
-      render_item = function(item, match)
-        local flag_item = item.data ---@type fml.action.toggle.IItem
-        local text_group = flag_item.group or "" ---@type string
-        local text_flag, hln_flag = flag_item.snapshot()
+            items[#items + 1] = { uuid = flag, text = text, data = item }
+          end
+          return { items = items }
+        end,
+        render_item = function(item, match)
+          local flag_item = item.data ---@type fml.action.toggle.IItem
+          local text_group = flag_item.group or "" ---@type string
+          local text_flag, hln_flag = flag_item.snapshot()
 
-        ---@type eve.t.IHighlightInline[]
-        local highlights = {
-          { coll = 0, colr = #text_group + 1, hlname = "Special" },
-          { coll = offset, colr = offset + #text_flag, hlname = hln_flag },
-        }
+          ---@type eve.t.IHighlightInline[]
+          local highlights = {
+            { coll = 0, colr = #text_group + 1, hlname = "Special" },
+            { coll = offset, colr = offset + #text_flag, hlname = hln_flag },
+          }
 
-        for _, piece in ipairs(match.matches) do
-          highlights[#highlights + 1] =
-            { coll = w_p_group + 1 + piece.l, colr = w_p_group + 1 + piece.r, hlname = "f_us_main_match" }
-        end
-        return item.text, highlights
-      end,
+          for _, piece in ipairs(match.matches) do
+            highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
+          end
+          return item.text, highlights
+        end,
+      },
       on_confirm = function(widget, items)
         if #items == 1 then
           local item = items[1] ---@type eve.ux.select.IItem
@@ -654,6 +680,7 @@ function M.list(arg)
         end
       end,
     })
+    select:show()
   end
 end
 

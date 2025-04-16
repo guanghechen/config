@@ -1,6 +1,7 @@
 local __module_name__ = "eve.ux.select" ---@type string
 
 ---@class eve.ux.ISelect : eve.t.ux.IWidget
+---@field public context                eve.ux.ISearchContext
 ---@field public change_dimension       fun(self: eve.ux.ISelect, dimension: eve.ux.IRawSearchDimension): nil
 ---@field public change_input_title     fun(self: eve.ux.ISelect, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.ISelect, title: string): nil
@@ -360,6 +361,7 @@ function M.new(props)
   self._matches = {}
   self._provider = provider
   self._search = search
+  self.context = search.context
   return self
 end
 
