@@ -4,16 +4,25 @@ local AI_PROVIDER_MAP = {
   deepseek = "deepseek",
 }
 
+---@class ghc.plugins.avante.file_selector.Item
+---@field public id                     string
+---@field public title                  string
+
 ---@class ghc.plugins.avante.file_selector.IParams
 ---@field public title                  string
----@field public filepaths              string[]
----@field public handler                fun(filepaths: string[]|nil): nil
+---@field public items                  ghc.plugins.avante.file_selector.Item[]
+---@field public default_item_id        string | nil
+---@field public provider_opts          table | nil
+---@field public on_select              fun(item_ids: string[] | nil): nil
+---@field public selected_item_ids      string[] | nil
+---@field public get_preview_content    fun(item_id: string): (string, string) | nil
 
 ---@return fun(params: ghc.plugins.avante.file_selector.IParams): nil
 local function get_file_selector()
   local context = eve.state.select.select_avante
   local _on_choice = eve.std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
   local _filepaths = {} ---@type string[]
+  local _filepath_default = nil ---@type string|nil
   local _winnr = nil ---@type integer|nil
   local _confirmed = false ---@type boolean
   local _select ---@type eve.ux.Select
@@ -132,8 +141,7 @@ local function get_file_selector()
         local width = 0 ---@type integer
         local items = {} ---@type eve.ux.select.IItem[]
         local cwd = eve.path.cwd() ---@type string
-        for index, filepath in ipairs(_filepaths) do
-          local uuid = tostring(index) ---@type string
+        for _, filepath in ipairs(_filepaths) do
           local text = filepath ---@type string
           local icon = "" ---@type string
           local icon_hl = nil ---@type string|nil
@@ -147,7 +155,7 @@ local function get_file_selector()
           end
 
           local data = { filepath = filepath, icon = icon, icon_hl = icon_hl }
-          local select_item = { uuid = uuid, text = text, data = data } ---@type eve.ux.select.IItem
+          local select_item = { uuid = filepath, text = text, data = data } ---@type eve.ux.select.IItem
           width = width < #text and #text or width ---@type integer
           items[#items + 1] = select_item
         end
@@ -160,7 +168,10 @@ local function get_file_selector()
             width = math.max(60, width + 10),
           })
         end)
-        return { items = items }
+
+        ---@type eve.ux.select.IData
+        local result = { items = items, uuid_cursor = _filepath_default }
+        return result
       end,
       render_item = function(item, match)
         local icon_width = string.len(item.data.icon .. " ") ---@type integer
@@ -204,20 +215,24 @@ local function get_file_selector()
   ---@param params                      ghc.plugins.avante.file_selector.IParams
   ---@return nil
   local function file_selector(params)
-    local handler = params.handler ---@type fun(filepaths: string[]|nil): nil
-    -- _filepaths = resolve_filepaths(params.filepaths) ---@type string[]
-    _filepaths = params.filepaths ---@type string[]
+    local handler = params.on_select ---@type fun(item_ids: string[] | nil): nil
+
+    _filepaths = {} ---@type string[]
+    _filepath_default = params.default_item_id or nil ---@type string|nil
+    for _, item in ipairs(params.items) do
+      table.insert(_filepaths, item.id)
+    end
     _select:change_input_title(params.title)
 
     _on_choice = function(items)
       if items == nil then
         handler(nil)
       else
-        local filepaths_selected = {} ---@type string[]
+        local uuids_selected = {} ---@type string[]
         for _, item in ipairs(items) do
-          table.insert(filepaths_selected, item.data.filepath)
+          table.insert(uuids_selected, item.uuid)
         end
-        handler(filepaths_selected)
+        handler(uuids_selected)
       end
     end
 
@@ -229,6 +244,38 @@ local function get_file_selector()
   end
   return file_selector
 end
+
+local selector_provider_opts = {
+  get_filepaths = function(params)
+    local cwd = eve.path.cwd() ---@type string
+    local selected_filepaths = params.selected_filepaths ---@type string[]
+
+    local workspace = eve.path.workspace() ---@type string
+    local flag_exclude = eve.state.select.select_avante.flag_exclude:snapshot() ---@type boolean
+    local flag_gitignore = eve.state.select.select_avante.flag_gitignore:snapshot() ---@type boolean
+    local excludes = flag_exclude and eve.state.select.select_avante.excludes:snapshot() or {} ---@type string[]
+
+    ---@type string[]
+    local filepaths = eve.oxi.find({
+      workspace = workspace,
+      cwd = cwd,
+      flag_case_sensitive = false,
+      flag_gitignore = flag_gitignore,
+      flag_regex = false,
+      search_pattern = "",
+      search_paths = "",
+      exclude_patterns = table.concat(excludes, ","),
+    })
+    table.sort(filepaths)
+
+    return vim
+      .iter(filepaths)
+      :filter(function(filepath)
+        return not vim.tbl_contains(selected_filepaths, filepath)
+      end)
+      :totable()
+  end,
+}
 
 return {
   "avante.nvim",
@@ -307,39 +354,12 @@ return {
         use_cwd_as_project_root = true,
       },
 
-      file_selector = {
+      selector = {
         provider = get_file_selector(),
-        provider_opts = {
-          get_filepaths = function(params)
-            local cwd = eve.path.cwd() ---@type string
-            local selected_filepaths = params.selected_filepaths ---@type string[]
-
-            local workspace = eve.path.workspace() ---@type string
-            local flag_exclude = eve.state.select.select_avante.flag_exclude:snapshot() ---@type boolean
-            local flag_gitignore = eve.state.select.select_avante.flag_gitignore:snapshot() ---@type boolean
-            local excludes = flag_exclude and eve.state.select.select_avante.excludes:snapshot() or {} ---@type string[]
-
-            ---@type string[]
-            local filepaths = eve.oxi.find({
-              workspace = workspace,
-              cwd = cwd,
-              flag_case_sensitive = false,
-              flag_gitignore = flag_gitignore,
-              flag_regex = false,
-              search_pattern = "",
-              search_paths = "",
-              exclude_patterns = table.concat(excludes, ","),
-            })
-            table.sort(filepaths)
-
-            return vim
-              .iter(filepaths)
-              :filter(function(filepath)
-                return not vim.tbl_contains(selected_filepaths, filepath)
-              end)
-              :totable()
-          end,
-        },
+        provider_opts = selector_provider_opts,
+      },
+      file_selector = {
+        provider_opts = selector_provider_opts,
       },
 
       mappings = {
