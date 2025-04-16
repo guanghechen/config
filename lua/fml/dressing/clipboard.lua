@@ -35,14 +35,17 @@ end
 
 ---@param lines                         string[]
 ---@param phase                         integer
+---@param silent                        boolean
 ---@return nil
-local function fallback(lines, phase)
-  eve.reporter.warn({
-    from = __module_name__,
-    subject = "fallback",
-    message = "Did not handle paste, calling original vim.paste",
-    details = { lines = lines, filetype = vim.bo.filetype },
-  })
+local function fallback(lines, phase, silent)
+  if not silent then
+    eve.reporter.warn({
+      from = __module_name__,
+      subject = "fallback",
+      message = "Did not handle paste, calling original vim.paste",
+      details = { lines = lines, filetype = vim.bo.filetype },
+    })
+  end
   return original_vim_paste(lines, phase)
 end
 
@@ -120,7 +123,7 @@ vim.paste = function(lines, phase)
         end)
 
         if not ok then
-          fallback(lines, phase)
+          fallback(lines, phase, false)
         end
       end)
       return true
@@ -202,11 +205,11 @@ vim.paste = function(lines, phase)
           end
         end
       else
-        fallback(lines, phase)
+        fallback(lines, phase, false)
       end
     end)
     return true
   end
 
-  fallback(lines, phase)
+  fallback(lines, phase, true)
 end
