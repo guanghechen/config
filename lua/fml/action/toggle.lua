@@ -235,14 +235,15 @@ local group_items = {
         local offset_right = #cwd_name + 4 ---@type integer
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
+        ---@param callback              fun(widget: eve.ux.ISelectPopup, fileformat_next: string|nil): nil
         ---@return nil
-        local function reopen()
+        local function select_fileformat(callback)
           eve.ux.SelectPopup
             .new({
               wincfg = {
                 relative = "editor",
                 width = 12,
-                row = vim.o.lines - 5,
+                row = vim.o.lines - 6,
                 col = vim.o.columns - offset_right - 12,
               },
               items = {
@@ -253,79 +254,35 @@ local group_items = {
               item_present_uuid = fileformat_cur,
               on_select = function(widget, item)
                 if item ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-                  vim.bo[bufnr].fileformat = item.uuid ---@type string
+                  callback(widget, item.uuid)
+                else
+                  callback(widget, nil)
                 end
-                widget:destroy()
-              end,
-            })
-            :show()
-        end
-
-        ---@return nil
-        local function resave()
-          eve.ux.SelectPopup
-            .new({
-              wincfg = {
-                relative = "editor",
-                width = 12,
-                row = vim.o.lines - 5,
-                col = vim.o.columns - offset_right - 12,
-              },
-              items = {
-                { uuid = "dos", text = "dos" },
-                { uuid = "mac", text = "mac" },
-                { uuid = "unix", text = "unix" },
-              },
-              item_present_uuid = fileformat_cur,
-              on_select = function(widget, item)
-                if
-                  item == nil
-                  or not vim.api.nvim_win_is_valid(winnr_command)
-                  or not vim.api.nvim_buf_is_valid(bufnr)
-                then
-                  return
-                end
-
-                vim.api.nvim_tabpage_set_win(0, winnr_command)
-                widget:destroy()
-
-                vim.api.nvim_buf_call(bufnr, function()
-                  vim.cmd(string.format("e ++ff=%s | set ff=%s | w!", fileformat_cur, item.uuid))
-                  vim.bo[bufnr].fileformat = item.uuid ---@type string
-                end)
               end,
             })
             :show()
         end
 
         if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
-          reopen()
+          select_fileformat(function(widget, fileformat_next)
+            if fileformat_next ~= nil then
+              vim.bo[bufnr].fileformat = fileformat_next ---@type string
+              widget:destroy()
+            end
+          end)
         else
-          eve.ux.SelectPopup
-            .new({
-              wincfg = {
-                relative = "editor",
-                width = 12,
-                row = vim.o.lines - 4,
-                col = vim.o.columns - offset_right - 12,
-              },
-              items = {
-                { uuid = "reopen", text = "reopen" },
-                { uuid = "resave", text = "resave" },
-              },
-              on_select = function(widget, item)
-                widget:destroy()
+          select_fileformat(function(widget, fileformat_next)
+            if fileformat_next ~= nil then
+              local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+              vim.bo[bufnr].fileformat = fileformat_next ---@type string
+              widget:destroy()
 
-                if item ~= nil then
-                  if item.uuid == "reopen" then
-                    reopen()
-                  else
-                    resave()
-                  end
-                end
-              end,
-            })
-            :show()
+              for i, line in ipairs(lines) do
+                lines[i] = line:gsub("\r$", "")
+              end
+              vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines) ---@type string[]
+            end
+          end)
         end
       end,
     },
