@@ -11,8 +11,7 @@ return {
     answer_header = " " .. eve.icon.kind.Copilot .. " Copilot ",
     question_header = " " .. eve.icon.os.current .. " " .. username .. " ",
 
-    -- model = "claude-3.7-sonnet",
-    model = "o3-mini",
+    model = "o4-mini",
 
     -- proxy = os.getenv("http_proxy"),
     window = {
