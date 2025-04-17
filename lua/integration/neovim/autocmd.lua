@@ -118,6 +118,7 @@ vim.filetype.add({
     [".*/hypr/.+%.conf"] = "hyprlang",
     ["%.env%.[%w_.-]+"] = "sh",
     ["untitled%-(%d+)"] = "text",
+    [".*rc"] = "ini",
   },
 })
 
