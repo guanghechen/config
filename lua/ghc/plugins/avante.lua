@@ -306,17 +306,24 @@ return {
     local ai_provider = eve.state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
     local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot" ---@type string
     return {
+      azure = {
+        endpoint = vim.env.AZURE_OPENAI_ENDPOINT,
+        deployment = vim.env.AZURE_OPENAI_DEPLOYMENT,
+        model = vim.env.AZURE_OPENAI_MODEL,
+        api_key_name = "AZURE_OPENAI_API_KEY",
+        api_version = vim.env.AZURE_OPENAI_API_VERSION,
+      },
       copilot = {
         model = "claude-3.7-sonnet",
       },
       vendors = {
         aoai2 = {
           __inherited_from = "azure",
-          deployment = "o4-mini",
-          model = "o4-mini",
-          endpoint = vim.env.AZURE_ENDPOINT_OPENAI_GPT_O4_MINI,
-          api_key_name = "AZURE_KEY_OPENAI_GPT_O4_MINI",
-          api_version = "2024-12-01-preview",
+          deployment = vim.env.AZURE_OPENAI_O4_MINI_DEPLOYMENT,
+          model = vim.env.AZURE_OPENAI_O4_MINI_MODEL,
+          endpoint = vim.env.AZURE_OPENAI_O4_MINI_ENDPOINT,
+          api_key_name = "AZURE_OPENAI_O4_MINI_API_KEY",
+          api_version = vim.env.AZURE_OPENAI_O4_MINI_API_VERSION,
         },
         copilot2 = {
           __inherited_from = "copilot",
