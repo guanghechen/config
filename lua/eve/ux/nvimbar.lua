@@ -68,6 +68,7 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field public txt                    fun(text: string, hlname: string): string
 ---@field public cancel_render          fun(self: eve.ux.INvimbar): eve.ux.INvimbar
 ---@field public dispose                fun(self: eve.ux.INvimbar): boolean
+---@field public is_disposed            fun(self: eve.ux.INvimbar): boolean Check if the disposable disposed.
 ---@field public place                  fun(self: eve.ux.INvimbar, position: eve.e.NvimbarCompPosition, component: eve.ux.nvimbar.IRawComponent, priority?: integer): eve.ux.INvimbar
 ---@field public render                 fun(self: eve.ux.INvimbar): string
 ---@field public render_immediately     fun(self: eve.ux.INvimbar): string

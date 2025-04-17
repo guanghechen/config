@@ -142,6 +142,17 @@ local filetypes = {
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
   },
+  has_external_winline = {
+    [M.AVANTE] = true,
+    [M.AVANTE_INPUT] = true,
+    [M.AVANTE_SELECTED_FILES] = true,
+    [M.DAP_REPL] = true,
+    [M.DAP_UI_BREAKPOINTS] = true,
+    [M.DAP_UI_CONSOLE] = true,
+    [M.DAP_UI_SCOPES] = true,
+    [M.DAP_UI_STACKS] = true,
+    [M.DAP_UI_WATCHES] = true,
+  },
   hipattern = {
     [M.AVANTE] = true,
     [M.AVANTE_INPUT] = true,
@@ -193,17 +204,6 @@ local filetypes = {
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
-  },
-  no_customized_winline = {
-    [M.AVANTE] = true,
-    [M.AVANTE_INPUT] = true,
-    [M.AVANTE_SELECTED_FILES] = true,
-    [M.DAP_REPL] = true,
-    [M.DAP_UI_BREAKPOINTS] = true,
-    [M.DAP_UI_CONSOLE] = true,
-    [M.DAP_UI_SCOPES] = true,
-    [M.DAP_UI_STACKS] = true,
-    [M.DAP_UI_WATCHES] = true,
   },
   no_ibl = {
     [M.AERIAL] = true,
@@ -439,6 +439,13 @@ function M.get_quitable_with_q_filetypes()
   return vim.tbl_keys(filetypes.quitable_with_q)
 end
 
+function M.has_external_winline(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.has_external_winline[filetype]
+end
+
 ---@return boolean
 function M.is_cmp_enabled(filetype)
   if filetype == nil or #filetype < 1 then
@@ -448,13 +455,6 @@ function M.is_cmp_enabled(filetype)
     return true
   end
   return false
-end
-
-function M.is_no_customized_winline_filetype(filetype)
-  if filetype == nil or #filetype < 1 then
-    return false
-  end
-  return filetypes.no_customized_winline[filetype]
 end
 
 ---@return boolean

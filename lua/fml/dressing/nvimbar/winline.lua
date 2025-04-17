@@ -36,17 +36,15 @@ local function resolve_winline_scheduler(winnr, source)
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
-        if winline == nil then
+        if winline == nil or winline:is_disposed() or not vim.api.nvim_win_is_valid(winnr) then
           return
         end
 
         -- Quick rerender the winline before the pre_task done to make the ui quick refresh.
-        if vim.api.nvim_win_is_valid(winnr) then
-          local result = winline:render_immediately()
-          vim.wo[winnr].winbar = result
-        end
+        local result = winline:render_immediately()
+        vim.wo[winnr].winbar = result
 
-        if vim.api.nvim_win_is_valid(winnr) then
+        if source == "sourcefile" then
           eve.state.win.locate_symbols(winnr, function(err)
             if err == nil then
               callback()
@@ -62,7 +60,7 @@ local function resolve_winline_scheduler(winnr, source)
         end
       end,
       trigger_rerender = function()
-        if winline == nil then
+        if winline == nil or winline:is_disposed() then
           return
         end
 
@@ -115,23 +113,21 @@ local function render(winnr)
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
+  if eve.filetype.has_external_winline(filetype) then
+    return
+  end
+
   if filetype == eve.filetype.NEOTREE then
     if vim.o.showtabline == 0 or eve.editor.is_win_floating(winnr) then
       local winline = resolve_winline_scheduler(winnr, "neotree") ---@type eve.ux.INvimbar|nil
       if winline ~= nil then
         winline:render()
-        return
       end
     end
     return
   end
 
-  if not eve.editor.is_win_sourcefile(winnr) or eve.filetype.is_no_customized_winline_filetype(filetype) then
-    return
-  end
-
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-
   if filepath:sub(1, 11) == "diffview://" then
     local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
     if should_show_winline then
@@ -144,7 +140,6 @@ local function render(winnr)
     end
     return
   end
-
   if filepath:sub(1, 11) == "gitsigns://" then
     local text = filepath:sub(12) ---@type string
     if text:sub(1, #eve.env.HOME_NVIM_CONFIG) == eve.env.HOME_NVIM_CONFIG then
@@ -157,6 +152,10 @@ local function render(winnr)
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "nofile" then
+    return
+  end
+
+  if not eve.editor.is_win_sourcefile(winnr) then
     return
   end
 
