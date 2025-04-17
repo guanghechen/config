@@ -364,6 +364,8 @@ return {
 
         ["<leader>["] = "prev_source",
         ["<leader>]"] = "next_source",
+        ["[["] = "prev_source",
+        ["]]"] = "next_source",
         ["oa"] = "avante_add_files",
         ["oc"] = "copy_filepath",
         ["oe"] = "open_ghc_file_explorer",
