@@ -1,3 +1,5 @@
+local sources = { "filesystem", "buffers", "git_status" } ---@type string[]
+
 return {
   name = "neo-tree.nvim",
   cmd = "Neotree",
@@ -12,7 +14,7 @@ return {
     open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "Outline" },
     popup_border_style = "rounded",
     sort_case_insensitive = true,
-    sources = { "filesystem", "buffers", "git_status", "document_symbols" },
+    sources = sources,
     source_selector = {
       winbar = false,
       statusline = false,
@@ -88,6 +90,42 @@ return {
             row = 1,
             col = 4,
           },
+        })
+      end,
+      goto_next_source = function(state)
+        local source = vim.b[eve.var.Names.NEO_TREE_SOURCE] ---@type string|nil
+        if type(source) ~= "string" then
+          return
+        end
+
+        local index = eve.table.find_index(sources, source) ---@type integer |nil
+        if index == nil then
+          return
+        end
+
+        local next_source = sources[index == #sources and 1 or index + 1] ---@type string
+        require("neo-tree.command").execute({
+          source = next_source,
+          position = state.current_position,
+          action = "focus",
+        })
+      end,
+      goto_prev_source = function(state)
+        local source = vim.b[eve.var.Names.NEO_TREE_SOURCE] ---@type string|nil
+        if type(source) ~= "string" then
+          return
+        end
+
+        local index = eve.table.find_index(sources, source) ---@type integer |nil
+        if index == nil then
+          return
+        end
+
+        local next_source = sources[index == 1 and #sources or index - 1] ---@type string
+        require("neo-tree.command").execute({
+          source = next_source,
+          position = state.current_position,
+          action = "focus",
         })
       end,
       open_ghc_file_explorer = function(state)
@@ -362,10 +400,10 @@ return {
           },
         },
 
-        ["<leader>["] = "prev_source",
-        ["<leader>]"] = "next_source",
-        ["[["] = "prev_source",
-        ["]]"] = "next_source",
+        ["<leader>["] = "goto_prev_source",
+        ["<leader>]"] = "goto_next_source",
+        ["[["] = "goto_prev_source",
+        ["]]"] = "goto_next_source",
         ["oa"] = "avante_add_files",
         ["oc"] = "copy_filepath",
         ["oe"] = "open_ghc_file_explorer",

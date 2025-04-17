@@ -41,7 +41,7 @@ local function create_widget(params)
     close = function()
       local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil
       if winnr ~= nil and bufnr ~= nil then
-        local next_source = vim.b[bufnr].neo_tree_source ---@type string
+        local next_source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
         source = next_source
         vim.api.nvim_win_close(winnr, true)
       end
@@ -65,7 +65,7 @@ local function create_widget(params)
     hide = function()
       local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil
       if winnr ~= nil and bufnr ~= nil then
-        local next_source = vim.b[bufnr].neo_tree_source ---@type string
+        local next_source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
         source = next_source
         vim.api.nvim_win_close(winnr, true)
       end

@@ -1243,7 +1243,7 @@ function M.neotree(position, neotree_position)
       end
 
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local source = vim.b[bufnr].neo_tree_source ---@type string
+      local source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
 
       local hln_active_text = hln_active_text_prefix .. context.mode ---@type string
       local hln_active_sep = hln_active_sep_prefix .. context.mode ---@type string

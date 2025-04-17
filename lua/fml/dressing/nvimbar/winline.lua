@@ -36,15 +36,24 @@ local function resolve_winline_scheduler(winnr, source)
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
-        if winline == nil or winline:is_disposed() or not vim.api.nvim_win_is_valid(winnr) then
+        if winline == nil or winline:is_disposed() then
           return
         end
 
-        -- Quick rerender the winline before the pre_task done to make the ui quick refresh.
-        local result = winline:render_immediately()
-        vim.wo[winnr].winbar = result
+        if not vim.api.nvim_win_is_valid(winnr) then
+          if winline_map[winnr] == winline then
+            winline_map[winnr] = nil
+          end
+          winline:dispose()
+          winline = nil
+          return
+        end
 
         if source == "sourcefile" then
+          -- Quick rerender the winline before the pre_task done to make the ui quick refresh.
+          local result = winline:render_immediately()
+          vim.wo[winnr].winbar = result
+
           eve.state.win.locate_symbols(winnr, function(err)
             if err == nil then
               callback()
@@ -57,17 +66,27 @@ local function resolve_winline_scheduler(winnr, source)
               callback(err)
             end
           end)
+          return
         end
+
+        callback()
       end,
       trigger_rerender = function()
         if winline == nil or winline:is_disposed() then
           return
         end
 
-        if vim.api.nvim_win_is_valid(winnr) then
-          local result = winline:snapshot() ---@type string
-          vim.wo[winnr].winbar = result
+        if not vim.api.nvim_win_is_valid(winnr) then
+          if winline_map[winnr] == winline then
+            winline_map[winnr] = nil
+          end
+          winline:dispose()
+          winline = nil
+          return
         end
+
+        local result = winline:snapshot() ---@type string
+        vim.wo[winnr].winbar = result
       end,
       validate = function()
         if not vim.api.nvim_win_is_valid(winnr) then
@@ -123,6 +142,8 @@ local function render(winnr)
       if winline ~= nil then
         winline:render()
       end
+    else
+      vim.wo[winnr].winbar = nil
     end
     return
   end

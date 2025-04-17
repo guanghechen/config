@@ -76,6 +76,8 @@ local last_showtabline = 0 ---@type integer
 dirtier:subscribe(eve.std.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
+      vim.o.showtabline = 2
+
       if last_showtabline == 0 then
         local filetype = eve.filetype.NEOTREE ---@type string
         local winnrs = vim.api.nvim_list_wins() ---@type integer[]
@@ -85,8 +87,8 @@ dirtier:subscribe(eve.std.Subscriber.new({
             if not eve.editor.is_win_floating(winnr) then
               local winline = eve.state.win.winline_map[winnr] ---@type eve.ux.INvimbar|nil
               if winline ~= nil then
-                winline:dispose()
                 eve.state.win.winline_map[winnr] = nil
+                winline:dispose()
               end
               vim.wo[winnr].winbar = nil
             end
@@ -94,10 +96,11 @@ dirtier:subscribe(eve.std.Subscriber.new({
         end
       end
 
-      vim.o.showtabline = 2
       last_showtabline = 2
       tabline:render()
     else
+      vim.o.showtabline = 0
+
       if last_showtabline ~= 0 then
         local winnrs = vim.api.nvim_list_wins() ---@type integer[]
         for _, winnr in ipairs(winnrs) do
@@ -105,7 +108,6 @@ dirtier:subscribe(eve.std.Subscriber.new({
         end
       end
 
-      vim.o.showtabline = 0
       last_showtabline = 0
     end
   end,
