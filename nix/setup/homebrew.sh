@@ -29,7 +29,7 @@ brew install yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jst
 
 ### Install hardware utilities (cpu/memo/disk/network)
 printf "\n\e[34m  [setup homebrew] installing hardware utilities (cpu/memo/disk/network)...\e[0m\n"
-brew install btop fastfetch
+brew install btop fastfetch httpie
 
 ### Install usual tools
 printf "\n\e[34m  [setup homebrew] installing usual tools...\n"

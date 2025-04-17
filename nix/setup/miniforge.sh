@@ -42,7 +42,7 @@ else
   printf "\n\e[34m  [setup miniforge] creating 'lemon' env with conda...\e[0m\n"
   conda create --yes --name lemon python=3.12
   conda activate lemon
-  pip install debugpy httpie ipython you-get
+  pip install debugpy httpie ipython you-get shell-gpt[litellm]
 fi
 
 ### Setup ipython
