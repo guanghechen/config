@@ -863,6 +863,12 @@ function M.filepath(position)
     end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local filetype = vim.bo[bufnr].filetype ---@type string
+
+      if filetype == eve.filetype.NEOTREE then
+        return "", "", true
+      end
+
       local meta_buf = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
       local filepath = meta_buf and meta_buf.relpath or context.filepath
 
