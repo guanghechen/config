@@ -280,13 +280,11 @@ end
 
 ---@return nil
 function M.watch_changes()
-  M.observe({
-    M.theme.theme,
-    M.theme.transparency,
-  }, function()
-    vim.defer_fn(function()
-      eve.state.theme.reload_theme(false, true)
-    end, 50)
+  M.observe({ M.theme.theme }, function()
+    eve.state.theme.reload_theme(false, true)
+  end, true)
+  M.observe({ M.theme.transparency }, function()
+    eve.state.theme.reload_theme(true, true)
   end, true)
 
   M.observe({
