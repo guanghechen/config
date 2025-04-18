@@ -378,6 +378,10 @@ return {
         -- Tree node toggle collapse
         ["<2-LeftMouse>"] = "open",
         ["<cr>"] = "open",
+        ["<Left>"] = "open",
+        ["<Right>"] = "open",
+        ["h"] = "close_node",
+        ["l"] = "open",
         ["z"] = "recursively_toggle_all",
 
         -- Add / Copy / Move
@@ -482,8 +486,6 @@ return {
       group_empty_dirs = true, -- when true, empty folders will be grouped together
       window = {
         mappings = {
-          ["h"] = "close_node",
-          ["l"] = "open",
           ["<C-a>r"] = "refresh_filesystem",
           ["<D-r"] = "refresh_filesystem",
           ["<M-r>"] = "refresh_filesystem",
