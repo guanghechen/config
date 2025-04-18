@@ -14,7 +14,7 @@ clone_or_update_config_repo() {
     "nvim"
     "pm2"
     "ripgrep"
-    "shell_gpt",
+    "shell_gpt"
     "tmux"
     "tsuki"
     "yazi"
