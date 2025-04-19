@@ -364,7 +364,7 @@ function M.bufs(position)
         return bufid == N
       end
 
-      local max_delta = math.min(9, math.max(left_remain_count, right_remain_count)) ---@type integer
+      local max_delta = math.max(left_remain_count, right_remain_count) ---@type integer
       local left_done = false ---@type boolean
       local right_done = false ---@type boolean
       for delta = 1, max_delta, 1 do
