@@ -114,9 +114,9 @@ function M.gen_hlgroup_map(context)
     f_us_vo_value = { fg = c.fg1 },
 
     ---winsep
-    f_winsep_border = { link = "FloatActiveBorder" },
-    f_winsep_normal = { fg = c.purple, bold = true },
-    f_winsep_title = { link = "FloatActiveTitle" },
+    f_winsep_border = { link = t and "ms_b_bg0" or "ms_b_none" },
+    f_winsep_normal = { link = "ms_b_none" },
+    f_winsep_title = { link = "ms_b_none" },
   }
 end
 

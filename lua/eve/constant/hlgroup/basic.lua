@@ -74,7 +74,7 @@ function M.gen_hlgroup_map(context)
     LspReferenceText = { bold = true, underline = true, sp = c.purple },
     LspReferenceWrite = { bold = true, underline = true, sp = c.purple },
     LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
-    RenamerBorder = { fg = c.red },
+    RenamerBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
     RenamerTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
 
     ---msg
@@ -146,8 +146,8 @@ function M.gen_hlgroup_map(context)
     DevIconDefault = { fg = c.red },
     Directory = { fg = c.blue, bold = true },
     Exception = { fg = c.red },
-    FloatActiveBorder = { fg = c.purple, bg = t and c.bg0 or c.none, bold = true },
-    FloatActiveTitle = { fg = c.purple, bg = t and c.bg0 or c.none, bold = true },
+    FloatActiveBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
+    FloatActiveTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
     FloatBorder = { fg = c.bg2, bg = t and c.bg0 or c.none, bold = true },
     FloatNormal = { fg = c.fg1, bg = c.bg1, blend = t and 50 or nil },
     FloatTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
