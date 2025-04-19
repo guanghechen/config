@@ -455,10 +455,9 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
----@diagnostic disable-next-line: unused-local
 function M.cwd(position)
-  local hln_text = "m_fill_b" ---@type string
-  local hln_sep = "m_stroke_b" ---@type string
+  local hln_text = position .. "_cwd_text" ---@type string
+  local hln_sep = position .. "_cwd_sep" ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
@@ -859,7 +858,7 @@ end
 ---@return eve.ux.nvimbar.IRawComponent
 function M.filename(position)
   local hln_blur_text = position .. "_filename_blur_text" ---@type string
-  local hln_text = "m_stroke_b" ---@type string
+  local hln_text = "ms_b_none" ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
@@ -1186,10 +1185,9 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
----@diagnostic disable-next-line: unused-local
 function M.mode(position)
-  local hln_text = "m_fill_b" ---@type string
-  local hln_sep = "m_stroke_b" ---@type string
+  local hln_text = position .. "_mode_text" ---@type string
+  local hln_sep = position .. "_mode_sep" ---@type string
 
   local icon = " " .. eve.icon.app.Vim .. " " ---@type string
 
@@ -1222,8 +1220,8 @@ function M.neotree(position, neotree_position)
   local hln_sep = position .. "_neotree_sep" ---@type string
   local hln_blank = position .. "_neotree_blank" ---@type string
   local hln_split = position .. "_neotree_split" ---@type string
-  local hln_active_text = "m_fill_b" ---@type string
-  local hln_active_sep = "m_stroke_b" ---@type string
+  local hln_active_text = "mf_b_bg0" ---@type string
+  local hln_active_sep = "ms_b_none" ---@type string
 
   local right_split = position == "f_wl" and "" or " " ---@type string -- "│"
   local title_filesystem = string.format("%s Files", eve.icon.filetype.File) ---@type string
@@ -1404,8 +1402,8 @@ end
 function M.sidebar(position, filetype, get_title)
   local hln_blank = position .. "_sidebar_blank" ---@type string
   local hln_split = position .. "_sidebar_split" ---@type string
-  local hln_sep = "m_stroke_b" ---@type string
-  local hln_text = "m_fill_b" ---@type string
+  local hln_sep = "ms_b_none" ---@type string
+  local hln_text = "mf_b_bg0" ---@type string
 
   ---@return integer
   local function get_pane_width()
@@ -1658,10 +1656,9 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
----@diagnostic disable-next-line: unused-local
 function M.username(position)
-  local hln_text = "m_stroke_b" ---@type string
-  local hln_sep = "m_fill_b" ---@type string
+  local hln_text = position .. "_username_text" ---@type string
+  local hln_sep = position .. "_username_sep" ---@type string
 
   local text_with_icon = " " .. eve.icon.os.current .. " " .. eve.env.USERNAME ---@type string
   local text_icon_only = eve.icon.os.current .. " " ---@type string

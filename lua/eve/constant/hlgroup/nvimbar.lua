@@ -10,18 +10,6 @@ function M.gen_hlgroup_map(context)
   local bg_bufc = t and c.none or c.bg0 ---@type string
   local bg_pos = t and c.bg0 or c.bg2 ---@type string
 
-  local mc = {
-    command = c.green,
-    confirm = c.brightAqua,
-    insert = c.purple,
-    normal = c.aqua,
-    nterminal = c.yellow,
-    replace = c.brightYellow,
-    select = c.orange,
-    terminal = c.green,
-    visual = c.orange,
-  }
-
   local bgs = {
     f_sl = c.none,
     f_tl = c.none,
@@ -49,11 +37,11 @@ function M.gen_hlgroup_map(context)
     buf_order = { fg = c.fg4, bg = "bg_bar" },
     buf_text = { fg = c.fg4, bg = "bg_bar" },
     bufc = { fg = c.fg2, bg = bg_bufc },
-    bufc_indicator = { link = "m_stroke_b" },
+    bufc_indicator = { link = t and "ms_b_none" or "ms_b_bg0" },
     bufc_mod = { fg = c.green, bg = bg_bufc },
     bufc_pinned = { fg = c.fg0, bg = bg_bufc },
-    bufc_order = { link = "m_stroke_bi" },
-    bufc_text = { link = "m_stroke_bi" },
+    bufc_order = { link = t and "ms_bi_none" or "ms_bi_bg0" },
+    bufc_text = { link = t and "ms_bi_none" or "ms_bi_bg0" },
     bufc_error = { fg = c.red, bg = bg_bufc, bold = true, italic = true },
     bufc_warn = { fg = c.yellow, bg = bg_bufc, bold = true, italic = true },
     bufc_hint = { fg = c.purple, bg = bg_bufc, bold = true, italic = true },
@@ -62,6 +50,8 @@ function M.gen_hlgroup_map(context)
     copilot_Inactive = { fg = c.red, bg = "bg_bar" },
     copilot_Normal = { fg = c.fg1, bg = "bg_bar" },
     copilot_Warning = { fg = c.yellow, bg = "bg_bar" },
+    cwd_text = { link = "mf_b_bg0" },
+    cwd_sep = { link = "ms_b_none" },
     debug_render_count_text = { fg = c.bg0, bg = c.orange, bold = true },
     debug_render_count_sep = { fg = c.orange, bg = c.bg1, bold = true },
     devmode = { fg = c.bg0, bg = c.yellow, bold = true },
@@ -127,15 +117,8 @@ function M.gen_hlgroup_map(context)
     lsp_icon_Variable = { fg = c.brightPurple, bg = "bg_bar" },
     lsp_sep = { fg = c.fg3, bg = "bg_bar" },
     lsp_text = { fg = c.fg3, bg = "bg_bar" },
-    mode_sep_command = { fg = mc.command, bg = bg_pos, bold = true },
-    mode_sep_confirm = { fg = mc.confirm, bg = bg_pos, bold = true },
-    mode_sep_insert = { fg = mc.insert, bg = bg_pos, bold = true },
-    mode_sep_normal = { fg = mc.normal, bg = bg_pos, bold = true },
-    mode_sep_nterminal = { fg = mc.nterminal, bg = bg_pos, bold = true },
-    mode_sep_replace = { fg = mc.replace, bg = bg_pos, bold = true },
-    mode_sep_select = { fg = mc.select, bg = bg_pos, bold = true },
-    mode_sep_terminal = { fg = mc.terminal, bg = bg_pos, bold = true },
-    mode_sep_visual = { fg = mc.visual, bg = bg_pos, bold = true },
+    mode_text = { link = "mf_b_bg0" },
+    mode_sep = { link = t and "ms_b_none" or "ms_b_bg2" },
     neotree_blank = { fg = c.fg1, bg = "bg_bar" },
     neotree_sep = { fg = bg_pos, bg = bg_pos, bold = true },
     neotree_split = { fg = c.bg4, bg = "bg_bar" },
@@ -153,6 +136,8 @@ function M.gen_hlgroup_map(context)
     tab_item = { fg = c.fg1, bg = "bg_bar" },
     tab_item_cur = { fg = c.red, bg = bg_bufc },
     tab_toggle = { fg = c.bg1, bg = c.green },
+    username_text = { link = t and "ms_b_bg0" or "ms_b_none" },
+    username_sep = { link = t and "mf_b_bg0" or "mf_b_none" },
   }
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type eve.ux.nvimbar.Position[]

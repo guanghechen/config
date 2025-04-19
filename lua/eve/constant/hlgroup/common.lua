@@ -41,6 +41,30 @@ local modes_map = {
 ---@class eve.constant.hlgroup.common
 local M = {}
 
+---@type string[]
+local colors = {
+  "none",
+  "bg0",
+  "bg1",
+  "bg2",
+  "bg3",
+  "bg4",
+  "fg0",
+  "fg1",
+  "fg2",
+  "fg3",
+  "fg4",
+  "red",
+  "green",
+  "yellow",
+  "blue",
+  "purple",
+  "aqua",
+  "orange",
+  "grey",
+  "pink",
+}
+
 ---@return string
 ---@return string
 function M.resolve_mode()
@@ -53,10 +77,6 @@ end
 ---@return table<string, eve.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
-  local t = context.transparency ---@type boolean
-  local bg_main = t and c.none or c.bg0 ---@type string
-  local bg_pos = t and c.bg0 or c.bg2 ---@type string
-
   local mc = {
     command = c.green,
     confirm = c.brightAqua,
@@ -69,102 +89,35 @@ function M.gen_hlgroup_map(context)
     visual = c.orange,
   }
 
-  ---@type table<string, eve.t.theme.IHlgroup>
-  local hlgroup_map = {
-    -- stylua: ignore start
-    m_fill_command            = { fg = c.bg0,        bg = mc.command,   },
-    m_fill_confirm            = { fg = c.bg0,        bg = mc.confirm,   },
-    m_fill_insert             = { fg = c.bg0,        bg = mc.insert,    },
-    m_fill_normal             = { fg = c.bg0,        bg = mc.normal,    },
-    m_fill_nterminal          = { fg = c.bg0,        bg = mc.nterminal, },
-    m_fill_replace            = { fg = c.bg0,        bg = mc.replace,   },
-    m_fill_select             = { fg = c.bg0,        bg = mc.select,    },
-    m_fill_terminal           = { fg = c.bg0,        bg = mc.terminal,  },
-    m_fill_visual             = { fg = c.bg0,        bg = mc.visual,    },
-    m_fill_b_command          = { fg = c.bg0,        bg = mc.command,   bold = true },
-    m_fill_b_confirm          = { fg = c.bg0,        bg = mc.confirm,   bold = true },
-    m_fill_b_insert           = { fg = c.bg0,        bg = mc.insert,    bold = true },
-    m_fill_b_normal           = { fg = c.bg0,        bg = mc.normal,    bold = true },
-    m_fill_b_nterminal        = { fg = c.bg0,        bg = mc.nterminal, bold = true },
-    m_fill_b_replace          = { fg = c.bg0,        bg = mc.replace,   bold = true },
-    m_fill_b_select           = { fg = c.bg0,        bg = mc.select,    bold = true },
-    m_fill_b_terminal         = { fg = c.bg0,        bg = mc.terminal,  bold = true },
-    m_fill_b_visual           = { fg = c.bg0,        bg = mc.visual,    bold = true },
-    m_fill_bi_command         = { fg = c.bg0,        bg = mc.command,   bold = true, italic = true },
-    m_fill_bi_confirm         = { fg = c.bg0,        bg = mc.confirm,   bold = true, italic = true },
-    m_fill_bi_insert          = { fg = c.bg0,        bg = mc.insert,    bold = true, italic = true },
-    m_fill_bi_normal          = { fg = c.bg0,        bg = mc.normal,    bold = true, italic = true },
-    m_fill_bi_nterminal       = { fg = c.bg0,        bg = mc.nterminal, bold = true, italic = true },
-    m_fill_bi_replace         = { fg = c.bg0,        bg = mc.replace,   bold = true, italic = true },
-    m_fill_bi_select          = { fg = c.bg0,        bg = mc.select,    bold = true, italic = true },
-    m_fill_bi_terminal        = { fg = c.bg0,        bg = mc.terminal,  bold = true, italic = true },
-    m_fill_bi_visual          = { fg = c.bg0,        bg = mc.visual,    bold = true, italic = true },
-    m_fill_i_command          = { fg = c.bg0,        bg = mc.command,   italic = true },
-    m_fill_i_confirm          = { fg = c.bg0,        bg = mc.confirm,   italic = true },
-    m_fill_i_insert           = { fg = c.bg0,        bg = mc.insert,    italic = true },
-    m_fill_i_normal           = { fg = c.bg0,        bg = mc.normal,    italic = true },
-    m_fill_i_nterminal        = { fg = c.bg0,        bg = mc.nterminal, italic = true },
-    m_fill_i_replace          = { fg = c.bg0,        bg = mc.replace,   italic = true },
-    m_fill_i_select           = { fg = c.bg0,        bg = mc.select,    italic = true },
-    m_fill_i_terminal         = { fg = c.bg0,        bg = mc.terminal,  italic = true },
-    m_fill_i_visual           = { fg = c.bg0,        bg = mc.visual,    italic = true },
-    m_stroke_command          = { fg = mc.command,   bg = bg_main },
-    m_stroke_confirm          = { fg = mc.confirm,   bg = bg_main },
-    m_stroke_insert           = { fg = mc.insert,    bg = bg_main },
-    m_stroke_normal           = { fg = mc.normal,    bg = bg_main },
-    m_stroke_nterminal        = { fg = mc.nterminal, bg = bg_main },
-    m_stroke_replace          = { fg = mc.replace,   bg = bg_main },
-    m_stroke_select           = { fg = mc.select,    bg = bg_main },
-    m_stroke_terminal         = { fg = mc.terminal,  bg = bg_main },
-    m_stroke_visual           = { fg = mc.visual,    bg = bg_main },
-    m_stroke_b_command        = { fg = mc.command,   bg = bg_main, bold = true },
-    m_stroke_b_confirm        = { fg = mc.confirm,   bg = bg_main, bold = true },
-    m_stroke_b_insert         = { fg = mc.insert,    bg = bg_main, bold = true },
-    m_stroke_b_normal         = { fg = mc.normal,    bg = bg_main, bold = true },
-    m_stroke_b_nterminal      = { fg = mc.nterminal, bg = bg_main, bold = true },
-    m_stroke_b_replace        = { fg = mc.replace,   bg = bg_main, bold = true },
-    m_stroke_b_select         = { fg = mc.select,    bg = bg_main, bold = true },
-    m_stroke_b_terminal       = { fg = mc.terminal,  bg = bg_main, bold = true },
-    m_stroke_b_visual         = { fg = mc.visual,    bg = bg_main, bold = true },
-    m_stroke_bi_command       = { fg = mc.command,   bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_confirm       = { fg = mc.confirm,   bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_insert        = { fg = mc.insert,    bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_normal        = { fg = mc.normal,    bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_nterminal     = { fg = mc.nterminal, bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_replace       = { fg = mc.replace,   bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_select        = { fg = mc.select,    bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_terminal      = { fg = mc.terminal,  bg = bg_main, bold = true, italic = true },
-    m_stroke_bi_visual        = { fg = mc.visual,    bg = bg_main, bold = true, italic = true },
-    m_stroke_i_command        = { fg = mc.command,   bg = bg_main, italic = true },
-    m_stroke_i_confirm        = { fg = mc.confirm,   bg = bg_main, italic = true },
-    m_stroke_i_insert         = { fg = mc.insert,    bg = bg_main, italic = true },
-    m_stroke_i_normal         = { fg = mc.normal,    bg = bg_main, italic = true },
-    m_stroke_i_nterminal      = { fg = mc.nterminal, bg = bg_main, italic = true },
-    m_stroke_i_replace        = { fg = mc.replace,   bg = bg_main, italic = true },
-    m_stroke_i_select         = { fg = mc.select,    bg = bg_main, italic = true },
-    m_stroke_i_terminal       = { fg = mc.terminal,  bg = bg_main, italic = true },
-    m_stroke_i_visual         = { fg = mc.visual,    bg = bg_main, italic = true },
-    m_pos_stroke_command      = { fg = mc.command,   bg = bg_pos,  bold = true },
-    m_pos_stroke_confirm      = { fg = mc.confirm,   bg = bg_pos,  bold = true },
-    m_pos_stroke_insert       = { fg = mc.insert,    bg = bg_pos,  bold = true },
-    m_pos_stroke_normal       = { fg = mc.normal,    bg = bg_pos,  bold = true },
-    m_pos_stroke_nterminal    = { fg = mc.nterminal, bg = bg_pos,  bold = true },
-    m_pos_stroke_replace      = { fg = mc.replace,   bg = bg_pos,  bold = true },
-    m_pos_stroke_select       = { fg = mc.select,    bg = bg_pos,  bold = true },
-    m_pos_stroke_terminal     = { fg = mc.terminal,  bg = bg_pos,  bold = true },
-    m_pos_stroke_visual       = { fg = mc.visual,    bg = bg_pos,  bold = true },
+  local hlgroup_map = {} ---@type table<string, eve.t.theme.IHlgroup>
+  for _, color in ipairs(colors) do
+    for mode, mode_color in pairs(mc) do
+      local suffix = string.format("_%s_%s", color, mode) ---@type string
 
-    m_fill      = { link = "m_fill_normal" },
-    m_fill_b    = { link = "m_fill_b_normal" },
-    m_fill_bi   = { link = "m_fill_bi_normal" },
-    m_fill_i    = { link = "m_fill_i_normal" },
-    m_stroke    = { link = "m_stroke_normal" },
-    m_stroke_b  = { link = "m_stroke_b_normal" },
-    m_stroke_bi = { link = "m_stroke_bi_normal" },
-    m_stroke_i  = { link = "m_stroke_i_normal" },
-    m_pos_sep   = { link = "m_pos_sep_normal" },
+      -- stylua: ignore start
+      hlgroup_map["mf" .. suffix]     = { fg = c[color], bg = mode_color }
+      hlgroup_map["mf_b" .. suffix]   = { fg = c[color], bg = mode_color, bold = true }
+      hlgroup_map["mf_bi" .. suffix]  = { fg = c[color], bg = mode_color, bold = true, italic = true }
+      hlgroup_map["mf_i" .. suffix]   = { fg = c[color], bg = mode_color, italic = true }
+
+      hlgroup_map["ms" .. suffix]     = { fg = mode_color, bg = c[color] }
+      hlgroup_map["ms_b" .. suffix]   = { fg = mode_color, bg = c[color], bold = true }
+      hlgroup_map["ms_bi" .. suffix]  = { fg = mode_color, bg = c[color], bold = true, italic = true }
+      hlgroup_map["ms_i" .. suffix]   = { fg = mode_color, bg = c[color], italic = true }
+      -- stylua: ignore end
+    end
+
+    -- stylua: ignore start
+    hlgroup_map["mf_"     .. color] = { link = "mf_"    .. color .. "_normal" }
+    hlgroup_map["mf_b_"   .. color] = { link = "mf_b_"  .. color .. "_normal" }
+    hlgroup_map["mf_bi_"  .. color] = { link = "mf_bi_" .. color .. "_normal" }
+    hlgroup_map["mf_i_"   .. color] = { link = "mf_i_"  .. color .. "_normal" }
+    hlgroup_map["ms_"     .. color] = { link = "ms_"    .. color .. "_normal" }
+    hlgroup_map["ms_b_"   .. color] = { link = "ms_b_"  .. color .. "_normal" }
+    hlgroup_map["ms_bi_"  .. color] = { link = "ms_bi_" .. color .. "_normal" }
+    hlgroup_map["ms_i_"   .. color] = { link = "ms_i_"  .. color .. "_normal" }
     -- stylua: ignore end
-  }
+  end
 
   return hlgroup_map
 end
@@ -172,17 +125,19 @@ end
 ---@return nil
 function M.on_mode_changed()
   local mode = M.resolve_mode() ---@type string
-  -- stylua: ignore start
-  vim.api.nvim_set_hl(0, "m_fill",      { link = "m_fill_"      .. mode })
-  vim.api.nvim_set_hl(0, "m_fill_b",    { link = "m_fill_b_"    .. mode })
-  vim.api.nvim_set_hl(0, "m_fill_bi",   { link = "m_fill_bi_"   .. mode })
-  vim.api.nvim_set_hl(0, "m_fill_i",    { link = "m_fill_i_"    .. mode })
-  vim.api.nvim_set_hl(0, "m_stroke",    { link = "m_stroke_"    .. mode })
-  vim.api.nvim_set_hl(0, "m_stroke_b",  { link = "m_stroke_b_"  .. mode })
-  vim.api.nvim_set_hl(0, "m_stroke_bi", { link = "m_stroke_bi_" .. mode })
-  vim.api.nvim_set_hl(0, "m_stroke_i",  { link = "m_stroke_i_"  .. mode })
-  vim.api.nvim_set_hl(0, "m_pos_stoke", { link = "m_pos_stoke_" .. mode })
-  -- stylua: ignore end
+
+  for _, color in ipairs(colors) do
+    -- stylua: ignore start
+    vim.api.nvim_set_hl(0, "mf_"    .. color, { link = "mf_"    .. color .. "_" .. mode })
+    vim.api.nvim_set_hl(0, "mf_b_"  .. color, { link = "mf_b_"  .. color .. "_" .. mode })
+    vim.api.nvim_set_hl(0, "mf_bi_" .. color, { link = "mf_bi_" .. color .. "_" .. mode })
+    vim.api.nvim_set_hl(0, "mf_i_"  .. color, { link = "mf_i_"  .. color .. "_" .. mode })
+    vim.api.nvim_set_hl(0, "ms_"    .. color, { link = "ms_"    .. color .. "_" .. mode })
+    vim.api.nvim_set_hl(0, "ms_b_"  .. color, { link = "ms_b_"  .. color .. "_" .. mode })
+    vim.api.nvim_set_hl(0, "ms_bi_" .. color, { link = "ms_bi_" .. color .. "_" .. mode })
+    vim.api.nvim_set_hl(0, "ms_i_"  .. color, { link = "ms_i_"  .. color .. "_" .. mode })
+    -- stylua: ignore end
+  end
 end
 
 return M

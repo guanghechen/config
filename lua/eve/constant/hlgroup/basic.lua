@@ -75,7 +75,7 @@ function M.gen_hlgroup_map(context)
     LspReferenceWrite = { bold = true, underline = true, sp = c.purple },
     LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
     RenamerBorder = { fg = c.red },
-    RenamerTitle = { link = "m_stroke_b" },
+    RenamerTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
 
     ---msg
     ErrorMsg = { fg = c.bg0, bg = c.red, bold = true },
@@ -150,7 +150,7 @@ function M.gen_hlgroup_map(context)
     FloatActiveTitle = { fg = c.purple, bg = t and c.bg0 or c.none, bold = true },
     FloatBorder = { fg = c.bg2, bg = t and c.bg0 or c.none, bold = true },
     FloatNormal = { fg = c.fg1, bg = c.bg1, blend = t and 50 or nil },
-    FloatTitle = { link = "m_stroke_b" },
+    FloatTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
     FoldColumn = { fg = c.fg4, bg = t and c.none or c.bg1 },
     Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },
@@ -178,7 +178,7 @@ function M.gen_hlgroup_map(context)
     TabLine = { fg = c.fg2, bg = c.none, reverse = false },
     TabLineFill = { link = "TabLine" },
     TabLineSel = { link = "TabLine" },
-    Title = { link = "m_stroke_b" },
+    Title = { link = t and "ms_b_none" or "ms_b_bg0" },
     TooLong = { fg = c.red },
     UnderLined = { fg = c.blue, underline = true },
     VertSplit = { fg = c.bg2 },
