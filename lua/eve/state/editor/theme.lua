@@ -41,8 +41,8 @@ local M = {}
 
 ---@type eve.e.ThemeIntegration[]
 local integrations = {
-  "basic",
   "common",
+  "basic",
   "nvimbar",
   "widget",
   "treesitter",
