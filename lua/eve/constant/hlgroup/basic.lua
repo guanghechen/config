@@ -5,7 +5,7 @@ local function gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type eve.e.Theme
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
-  local bg_main = t and "none" or c.bg0 ---@type string
+  local bg_main = t and c.none or c.bg0 ---@type string
 
   ---@type table<string, eve.t.theme.IHlgroup>
   local hlgroup_map = {
@@ -36,7 +36,7 @@ local function gen_hlgroup_map(context)
     DiagnosticVirtualTextHint = { fg = c.purple },
     DiagnosticVirtualTextInfo = { fg = c.green },
     DiagnosticVirtualTextWarn = { fg = c.yellow },
-    DiagnosticOk = { fg = c.green, bg = t and "none" or c.bg1 },
+    DiagnosticOk = { fg = c.green, bg = t and c.none or c.bg1 },
     DiagnosticSignError = { fg = c.red },
     DiagnosticSignHint = { fg = c.purple },
     DiagnosticSignInfo = { fg = c.green },
@@ -143,19 +143,19 @@ local function gen_hlgroup_map(context)
     DevIconDefault = { fg = c.red },
     Directory = { fg = c.blue, bold = true },
     Exception = { fg = c.red },
-    FloatActiveBorder = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
-    FloatActiveTitle = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
-    FloatBorder = { fg = c.bg2, bg = t and c.bg0 or "none", bold = true },
+    FloatActiveBorder = { fg = c.purple, bg = t and c.bg0 or c.none, bold = true },
+    FloatActiveTitle = { fg = c.purple, bg = t and c.bg0 or c.none, bold = true },
+    FloatBorder = { fg = c.bg2, bg = t and c.bg0 or c.none, bold = true },
     FloatNormal = { fg = c.fg1, bg = c.bg1, blend = t and 50 or nil },
-    FloatTitle = { fg = c.purple, bg = t and c.bg0 or "none", bold = true },
-    FoldColumn = { fg = c.fg4, bg = t and "none" or c.bg1 },
+    FloatTitle = { fg = c.purple, bg = t and c.bg0 or c.none, bold = true },
+    FoldColumn = { fg = c.fg4, bg = t and c.none or c.bg1 },
     Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },
     Italic = { italic = true },
     LineNr = { fg = c.bg4 },
     MatchParen = { bg = c.bg3, bold = true },
     MatchWord = { fg = c.fg1, bg = c.bg4 },
-    Normal = { fg = c.fg1, bg = t and "none" or c.bg0 },
+    Normal = { fg = c.fg1, bg = t and c.none or c.bg0 },
     NormalFloat = { link = "FloatNormal" },
     NormalNC = { link = "Normal" },
     NvimInternalError = { fg = c.red },
@@ -167,12 +167,12 @@ local function gen_hlgroup_map(context)
     QuickFixLine = { fg = c.purple },
     Removed = { fg = c.red },
     Search = { fg = c.bg0, bg = c.yellow, reverse = false },
-    SignColumn = { bg = "none" },
+    SignColumn = { bg = c.none },
     SpecialKey = { fg = c.bg4 },
-    StatusLine = { fg = c.fg2, bg = t and "none" or c.bg1, reverse = false },
+    StatusLine = { fg = c.fg2, bg = t and c.none or c.bg1, reverse = false },
     StatusLineNC = { link = "StatusLine" },
-    Substitute = { fg = c.bg1, bg = c.yellow, sp = "none" },
-    TabLine = { fg = c.fg2, bg = t and "none" or c.bg1, reverse = false },
+    Substitute = { fg = c.bg1, bg = c.yellow, sp = c.none },
+    TabLine = { fg = c.fg2, bg = t and c.none or c.bg1, reverse = false },
     TabLineFill = { link = "TabLine" },
     TabLineSel = { link = "TabLine" },
     Title = { fg = c.blue, bold = true },
@@ -183,9 +183,9 @@ local function gen_hlgroup_map(context)
     Visual = { bg = cs.mix(c.bg0, c.purple, 65), blend = 0, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
-    WinBar = { fg = c.blue, bg = "none" },
-    WinBarNC = { fg = c.blue, bg = "none" },
-    WinSeparator = { fg = c.bg2, bg = t and "none" or c.bg0 },
+    WinBar = { fg = c.blue, bg = c.none },
+    WinBarNC = { fg = c.blue, bg = c.none },
+    WinSeparator = { fg = c.bg2, bg = t and c.none or c.bg0 },
   }
 
   if theme == "gruvbox" then

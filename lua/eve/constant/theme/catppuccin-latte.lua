@@ -4,6 +4,8 @@ local M = {
   variant = "light",
   -- stylua: ignore start
   palette = {
+    none =            "none",
+
     bg0 =             "#EFF1F5",
     bg1 =             "#DCE0E8",
     bg2 =             "#CCD0DA",

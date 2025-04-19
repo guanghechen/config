@@ -6,7 +6,7 @@ local function gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   ---@type string
-  local item_kind_bg = t and "none" or c.bg0
+  local item_kind_bg = t and c.none or c.bg0
 
   return {
     ---! aerial.nvim
@@ -19,7 +19,7 @@ local function gen_hlgroup_map(context)
     AerialGuide6 = { fg = cs.mix(c.bg2, c.orange, 60) },
     AerialGuide7 = { fg = cs.mix(c.bg2, c.red, 60) },
     AerialLine = { fg = c.yellow },
-    AerialNormal = { bg = t and "none" or c.bg1 },
+    AerialNormal = { bg = t and c.none or c.bg1 },
     AerialNormalNC = { link = "AerialNormal" },
     AerialCursorLine = { bg = c.bg2 },
     AerialCursorLineNr = { link = "AerialCursorLine" },
@@ -56,13 +56,13 @@ local function gen_hlgroup_map(context)
     AvanteConflictCurrentLabel = { bg = cs.mix(c.bg0, c.diffDel, 40) },
     AvanteConflictIncoming = { bg = c.diffAdd, bold = true },
     AvanteConflictIncomingLabel = { bg = cs.mix(c.bg0, c.diffAdd, 40) },
-    AvanteInlineHint = { fg = c.pink, bg = "none", bold = true, italic = true },
+    AvanteInlineHint = { fg = c.pink, bg = c.none, bold = true, italic = true },
     AvantePromptInput = { fg = c.fg1, bg = c.bg0 },
     AvantePromptInputBorder = { link = "FloatActiveBorder" },
     AvanteReversedSubtitle = { fg = c.yellow },
     AvanteReversedThirdTitle = { fg = c.blue },
     AvanteReversedTitle = { fg = c.aqua },
-    AvantePopupHint = { fg = c.aqua, bg = "none", bold = true },
+    AvantePopupHint = { fg = c.aqua, bg = c.none, bold = true },
     AvanteSidebarWinSeparator = { fg = c.bg2 },
     AvanteSidebarWinHorizontalSeparator = { fg = c.blue },
     AvanteSubtitle = { fg = c.bg0, bg = c.yellow, bold = true },
@@ -72,9 +72,9 @@ local function gen_hlgroup_map(context)
     AvanteToBeDeletedWOStrikethrough = { bg = c.diffDel },
 
     ---! cmp
-    BlinkCmpDoc = { bg = t and "none" or c.bg0 },
+    BlinkCmpDoc = { bg = t and c.none or c.bg0 },
     BlinkCmpDocBorder = { link = "FloatBorder" },
-    BlinkCmpDocSeparator = { fg = c.bg4, bg = "none" },
+    BlinkCmpDocSeparator = { fg = c.bg4, bg = c.none },
     BlinkCmpGhostText = { link = "Comment", default = true },
     BlinkCmpKindClass = { fg = c.aqua, bg = item_kind_bg },
     BlinkCmpKindCodeium = { fg = c.green, bg = item_kind_bg },
@@ -110,7 +110,7 @@ local function gen_hlgroup_map(context)
     BlinkCmpLabel = { fg = c.fg4, italic = true, bg = item_kind_bg },
     BlinkCmpMenu = { fg = c.fg4, italic = true },
     BlinkCmpMenuBorder = { link = "FloatBorder" },
-    BlinkCmpSignatureHelp = { bg = t and "none" or c.bg0 },
+    BlinkCmpSignatureHelp = { bg = t and c.none or c.bg0 },
     BlinkCmpSignatureHelpActiveParameter = {},
     BlinkCmpSignatureHelpBorder = { link = "FloatBorder" },
     BlinkCmpSource = { fg = c.fg3, bg = item_kind_bg },
@@ -121,12 +121,12 @@ local function gen_hlgroup_map(context)
     DiffviewStatusModified = { fg = c.green, bold = true },
 
     ---! flash.nvim
-    FlashBackdrop = { fg = c.bg4, bg = "none" },
-    FlashCurrent = { fg = c.orange, bg = t and "none" or c.bg2, italic = true },
-    FlashLabel = { fg = c.blue, bg = t and "none" or c.bg0, bold = true },
-    FlashMatch = { fg = c.yellow, bg = t and "none" or c.bg1, italic = true },
+    FlashBackdrop = { fg = c.bg4, bg = c.none },
+    FlashCurrent = { fg = c.orange, bg = t and c.none or c.bg2, italic = true },
+    FlashLabel = { fg = c.blue, bg = t and c.none or c.bg0, bold = true },
+    FlashMatch = { fg = c.yellow, bg = t and c.none or c.bg1, italic = true },
     FlashPrompt = { fg = c.yellow, bg = c.bg2 },
-    FlashPromptIcon = { fg = c.orange, bg = t and "none" or c.bg2 },
+    FlashPromptIcon = { fg = c.orange, bg = t and c.none or c.bg2 },
 
     ---! gitsigns.nvim
     GitSignsAdd = { fg = c.green },
@@ -165,7 +165,7 @@ local function gen_hlgroup_map(context)
     ["@ibl.scope.underline.7"] = { fg = cs.mix(c.bg0, c.orange, 32) },
 
     ---! lazy.nvim
-    LazyButton = { fg = c.fg2, bg = "none" },
+    LazyButton = { fg = c.fg2, bg = c.none },
     LazyButtonActive = { fg = c.bg1, bg = c.green, bold = true },
     LazyCommit = { fg = c.green },
     LazyCommitIssue = { fg = c.orange },
@@ -238,13 +238,13 @@ local function gen_hlgroup_map(context)
     NeoTreeRootName = { fg = c.fg1, bold = true },
     NeoTreeTab = { fg = c.fg4, bg = c.bg0, bold = true },
     NeoTreeTabActive = { fg = c.bg1, bg = c.aqua, bold = true },
-    NeoTreeTabSeparator = { fg = c.bg0, bg = "none" },
-    NeoTreeTabSeparatorActive = { fg = c.aqua, bg = "none" },
+    NeoTreeTabSeparator = { fg = c.bg0, bg = c.none },
+    NeoTreeTabSeparatorActive = { fg = c.aqua, bg = c.none },
     NeoTreeTitleBar = { fg = c.fg4 },
-    NeoTreeWinbar = { fg = "none", bg = "none" },
+    NeoTreeWinbar = { fg = c.none, bg = c.none },
 
     ---! noice.nvim
-    NoiceCmdlineIcon = { fg = c.green, bg = "none" },
+    NoiceCmdlineIcon = { fg = c.green, bg = c.none },
     NoiceCmdlinePopup = { bg = c.bg0 },
     NoiceCmdlinePopupBorder = { fg = c.green, bg = c.bg0 },
     NoiceCompletionItemKindClass = { fg = c.aqua, bg = item_kind_bg },
@@ -335,11 +335,11 @@ local function gen_hlgroup_map(context)
     NvimDapVirtualTextChanged = { fg = c.fg0, bg = cs.mix(c.bg0, c.orange, 30), italic = true },
 
     ---! nvim-notify
-    NotifyERRORBorder = { fg = c.red, bg = t and c.bg0 or "none" },
-    NotifyWARNBorder = { fg = c.yellow, bg = t and c.bg0 or "none" },
-    NotifyINFOBorder = { fg = c.green, bg = t and c.bg0 or "none" },
-    NotifyDEBUGBorder = { fg = c.orange, bg = t and c.bg0 or "none" },
-    NotifyTRACEBorder = { fg = c.bg4, bg = t and c.bg0 or "none" },
+    NotifyERRORBorder = { fg = c.red, bg = t and c.bg0 or c.none },
+    NotifyWARNBorder = { fg = c.yellow, bg = t and c.bg0 or c.none },
+    NotifyINFOBorder = { fg = c.green, bg = t and c.bg0 or c.none },
+    NotifyDEBUGBorder = { fg = c.orange, bg = t and c.bg0 or c.none },
+    NotifyTRACEBorder = { fg = c.bg4, bg = t and c.bg0 or c.none },
 
     NotifyERRORBody = { fg = c.fg1, bg = c.bg0 },
     NotifyWARNBody = { fg = c.fg1, bg = c.bg0 },
@@ -369,12 +369,12 @@ local function gen_hlgroup_map(context)
     RenderMarkdownCode = { bg = c.bg2 },
     RenderMarkdownCodeInline = { fg = c.orange, bg = c.bg4 },
     RenderMarkdownCodeBorder = { fg = c.aqua, bg = c.bg2 },
-    RenderMarkdownH1Bg = { bg = "none" },
-    RenderMarkdownH2Bg = { bg = "none" },
-    RenderMarkdownH3Bg = { bg = "none" },
-    RenderMarkdownH4Bg = { bg = "none" },
-    RenderMarkdownH5Bg = { bg = "none" },
-    RenderMarkdownH6Bg = { bg = "none" },
+    RenderMarkdownH1Bg = { bg = c.none },
+    RenderMarkdownH2Bg = { bg = c.none },
+    RenderMarkdownH3Bg = { bg = c.none },
+    RenderMarkdownH4Bg = { bg = c.none },
+    RenderMarkdownH5Bg = { bg = c.none },
+    RenderMarkdownH6Bg = { bg = c.none },
     RenderMarkdownQuote = { fg = c.fg1, bg = c.bg2 },
     RenderMarkdownList = { fg = c.blue, bold = true },
     RenderMarkdownListMarker = { fg = c.orange },

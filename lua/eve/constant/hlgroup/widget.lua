@@ -1,12 +1,11 @@
 ---@param context                       eve.t.theme.IContext
 ---@return table<string, eve.t.theme.IHlgroup>
 local function gen_hlgroup_map(context)
-  local cs = eve.std.color
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
 
-  local bg_main = t and c.bg0 or "none" ---@type string
-  local bg_preview = t and c.bg0 or "none" ---@type string
+  local bg_main = t and c.bg0 or c.none ---@type string
+  local bg_preview = t and c.bg0 or c.none ---@type string
 
   return {
     ---common
@@ -14,7 +13,7 @@ local function gen_hlgroup_map(context)
     f_lnum_warn = { fg = c.yellow },
     f_lnum_info = { fg = c.green },
     f_lnum_hint = { fg = c.purple },
-    f_transparent = { bg = "none" },
+    f_transparent = { bg = c.none },
 
     ---buffers
     f_buf_nr = { fg = c.fg4 },
@@ -31,14 +30,14 @@ local function gen_hlgroup_map(context)
     f_hipairs_7 = { fg = c.orange, bold = true, italic = true },
 
     ---diff
-    f_diff_add_left = { bg = c.diffDel, fg = "none" },
-    f_diff_add_right = { bg = c.diffAdd, fg = "none" },
-    f_diff_del_left = { bg = c.diffDel, fg = "none" },
-    f_diff_del_right = { bg = c.diffDel, fg = "none" },
-    f_diff_mod_left = { bg = c.diffDel, fg = "none" },
-    f_diff_mod_right = { bg = c.diffAdd, fg = "none" },
-    f_diff_word_left = { bg = c.diffDelInline, fg = "none" },
-    f_diff_word_right = { bg = c.diffAddInline, fg = "none" },
+    f_diff_add_left = { bg = c.diffDel, fg = c.none },
+    f_diff_add_right = { bg = c.diffAdd, fg = c.none },
+    f_diff_del_left = { bg = c.diffDel, fg = c.none },
+    f_diff_del_right = { bg = c.diffDel, fg = c.none },
+    f_diff_mod_left = { bg = c.diffDel, fg = c.none },
+    f_diff_mod_right = { bg = c.diffAdd, fg = c.none },
+    f_diff_word_left = { bg = c.diffDelInline, fg = c.none },
+    f_diff_word_right = { bg = c.diffAddInline, fg = c.none },
 
     ---file explorer
     f_fe_date = { fg = c.fg4 },
@@ -57,18 +56,18 @@ local function gen_hlgroup_map(context)
     f_ghp_normal = { bg = c.bg1 },
 
     ---input
-    f_ui_current = { bg = t and c.bg0 or "none" },
-    f_ui_normal = { bg = t and c.bg0 or "none" },
+    f_ui_current = { bg = t and c.bg0 or c.none },
+    f_ui_normal = { bg = t and c.bg0 or c.none },
 
     ---search
-    f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or "none" },
-    f_us_input_prompt = { fg = c.red, bg = t and c.bg0 or "none" },
-    f_us_input_title = { fg = c.red, bg = t and c.bg0 or "none", bold = true },
+    f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },
+    f_us_input_prompt = { fg = c.red, bg = t and c.bg0 or c.none },
+    f_us_input_title = { fg = c.red, bg = t and c.bg0 or c.none, bold = true },
     f_us_main_bg = { bg = bg_main },
     f_us_main_current = { bg = c.bg3 },
     f_us_main_match = { fg = c.blue },
     f_us_main_match_lnum = { fg = c.fg4 },
-    f_us_main_present = { fg = c.blue, bg = "none" },
+    f_us_main_present = { fg = c.blue, bg = c.none },
     f_us_main_present_cur = { fg = c.blue, bg = c.bg3 },
     f_us_main_normal = { bg = bg_main },
     f_us_main_replace = { fg = c.green },
@@ -80,21 +79,21 @@ local function gen_hlgroup_map(context)
     f_us_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
     f_us_preview_replace = { fg = c.bg1, bg = c.diffAdd },
     f_us_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
-    f_us_preview_title = { fg = c.green, bg = t and c.bg0 or "none", bold = true },
+    f_us_preview_title = { fg = c.green, bg = t and c.bg0 or c.none, bold = true },
     f_us_match = { fg = c.bg1, bg = c.yellow },
     f_us_match_cur = { fg = c.bg1, bg = c.red, bold = true, underline = true },
 
     ---select codeaction
-    f_us_codeaction_order = { fg = c.red, bg = "none" },
-    f_us_codeaction_content = { fg = c.fg1, bg = "none" },
-    f_us_codeaction_client_name = { fg = c.fg4, bg = "none" },
+    f_us_codeaction_order = { fg = c.red, bg = c.none },
+    f_us_codeaction_content = { fg = c.fg1, bg = c.none },
+    f_us_codeaction_client_name = { fg = c.fg4, bg = c.none },
 
     ---signs
-    fs_input_prompt = { fg = c.red, bg = t and c.bg0 or "none" },
+    fs_input_prompt = { fg = c.red, bg = t and c.bg0 or c.none },
     fs_main_current = { bg = c.bg3 },
-    fs_main_present = { fg = c.blue, bg = "none" },
+    fs_main_present = { fg = c.blue, bg = c.none },
     fs_main_present_cur = { fg = c.blue, bg = c.bg3 },
-    fs_main_selected = { fg = c.purple, bg = "none" },
+    fs_main_selected = { fg = c.purple, bg = c.none },
     fs_main_selected_cur = { fg = c.purple, bg = c.bg3 },
 
     ---terminal
@@ -103,7 +102,7 @@ local function gen_hlgroup_map(context)
 
     ---textarea
     f_ut_current = { bg = c.bg3 },
-    f_ut_normal = { bg = t and "none" or c.bg0 },
+    f_ut_normal = { bg = t and c.none or c.bg0 },
 
     ---vim options
     f_us_vo_name = { fg = c.purple },

@@ -75,14 +75,14 @@ function M:compile(params)
     table.insert(hlgroup_strs, hlgroup_str)
   end
 
-  local code = "return string.dump(function()\nlocal hls={"
-    .. table.concat(hlgroup_strs, ",")
-    .. "}\n"
-    .. "for k, v in pairs(hls) do\n"
-    .. "vim.api.nvim_set_hl("
-    .. nsnr
-    .. ",k,v)\n"
-    .. "end\nend, true)\n"
+  local code = string.format(
+    "return string.dump(function()\nlocal hls={%s}\n"
+      .. "for k, v in pairs(hls) do\n"
+      .. "vim.api.nvim_set_hl(%s,k,v)\n"
+      .. "end\nend, true)\n",
+    table.concat(hlgroup_strs, ","),
+    nsnr
+  )
 
   local dirpath = vim.fn.fnamemodify(filepath, ":p:h") ---@type string
   local dirpath_stat = vim.uv.fs_stat(filepath)

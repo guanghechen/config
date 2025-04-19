@@ -4,7 +4,7 @@ local function gen_hlgroup_map(context)
   local cs = eve.std.color
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
-  local bg_bufc = t and "none" or c.bg0 ---@type string
+  local bg_bufc = t and c.none or c.bg0 ---@type string
   local bg_pos = t and c.bg0 or c.bg2 ---@type string
 
   local mc = {
@@ -20,9 +20,9 @@ local function gen_hlgroup_map(context)
   }
 
   local bgs = {
-    f_sl = t and "none" or c.bg1,
-    f_tl = t and "none" or c.bg1,
-    f_wl = "none",
+    f_sl = t and c.none or c.bg1,
+    f_tl = t and c.none or c.bg1,
+    f_wl = c.none,
   }
 
   ---@type table<string, eve.t.theme.IHlgroup>

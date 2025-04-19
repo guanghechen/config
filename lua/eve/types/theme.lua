@@ -1,4 +1,6 @@
 ---@class eve.t.theme.IPalette
+---@field public none                   string
+---
 ---@field public bg0                    string
 ---@field public bg1                    string
 ---@field public bg2                    string

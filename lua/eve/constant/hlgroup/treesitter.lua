@@ -73,7 +73,7 @@ local function gen_hlgroup_map(context)
     ["@modifier"] = { fg = c.red },
     ["@module"] = { fg = c.fg1 },
     ["@namespace"] = { fg = c.fg1 },
-    ["@none"] = { fg = "none", bg = "none" },
+    ["@none"] = { fg = c.none, bg = c.none },
     ["@number"] = { link = "Number" },
     ["@number.float"] = { link = "Float" },
     ["@operator"] = { link = "Operator" },
