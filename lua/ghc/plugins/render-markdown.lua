@@ -3,6 +3,9 @@ return {
   ft = eve.filetype.get_markdown_filetypes(),
   cmd = { "RenderMarkdown" },
   opts = {
+    bullet = {
+      icons = { "", "", "", "⟡" },
+    },
     checkbox = {
       enabled = false,
     },

@@ -369,6 +369,7 @@ function M.gen_hlgroup_map(context)
     TreesitterContextLineNumberBottom = { underline = true },
 
     ---! render-markdown.nvim
+    RenderMarkdownBullet = { fg = c.fg4 },
     RenderMarkdownCode = { bg = c.bg2 },
     RenderMarkdownCodeInline = { fg = c.orange, bg = c.bg4 },
     RenderMarkdownCodeBorder = { fg = c.aqua, bg = c.bg2 },
