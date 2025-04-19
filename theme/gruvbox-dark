@@ -1,23 +1,23 @@
 palette =  0=#282828
-palette =  1=#FB4934
-palette =  2=#B8BB26
-palette =  3=#FABD2F
-palette =  4=#83A598
-palette =  5=#D3869B
-palette =  6=#8EC07C
+palette =  1=#CC241D
+palette =  2=#98971A
+palette =  3=#D79921
+palette =  4=#458588
+palette =  5=#B16286
+palette =  6=#689D6A
 palette =  7=#EBDBB2
 palette =  8=#282828
-palette =  9=#CC241D
-palette = 10=#98971A
-palette = 11=#D79921
-palette = 12=#458588
-palette = 13=#B16286
-palette = 14=#689D6A
+palette =  9=#FB4934
+palette = 10=#B8BB26
+palette = 11=#FABD2F
+palette = 12=#83A598
+palette = 13=#D3869B
+palette = 14=#8EC07C
 palette = 15=#EBDBB2
 
 background = #282828
 foreground = #EBDBB2
-selection-background = #D65D0E
+selection-background = #FE8019
 selection-foreground = #EBDBB2
 cursor-color = #D3869B
 
