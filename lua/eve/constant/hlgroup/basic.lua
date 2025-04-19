@@ -158,7 +158,7 @@ function M.gen_hlgroup_map(context)
     LineNr = { fg = c.bg4 },
     MatchParen = { bg = c.bg3, bold = true },
     MatchWord = { fg = c.fg1, bg = c.bg4 },
-    Normal = { fg = c.fg1, bg = c.bg0 },
+    Normal = { fg = c.fg1, bg = t and c.none or c.bg0 },
     NormalFloat = { link = "FloatNormal" },
     NormalNC = { link = "Normal" },
     NvimInternalError = { fg = c.red },
