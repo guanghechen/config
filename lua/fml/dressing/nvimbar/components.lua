@@ -203,10 +203,10 @@ function M.bufs(position)
 
   ---@param buf                           eve.state.tab.buf.state
   ---@param index                         integer
-  ---@param total                         integer
+  ---@param order                         integer
   ---@return string
   ---@return string
-  local function render_buf(buf, index, total)
+  local function render_buf(buf, index, order)
     local bufnr = buf.bufnr ---@type integer
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
@@ -238,7 +238,7 @@ function M.bufs(position)
     local hln_title = hln_buf_text ---@type string
     local filename, fileicon = resolve_buf_info(bufnr)
     local text_indicator = index == 1 and " " or "▏" ---@type string
-    local text_order = total < 2 and "" or (eve.icon.todigit_subscript(index) .. ".") ---@type string
+    local text_order = eve.icon.todigit_subscript(order) .. "." ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
     local text_mod = is_mod and "  " or "  " ---@type string
@@ -296,7 +296,7 @@ function M.bufs(position)
       if bufid_middle == bufid_sourcefile then
         text, hl_text = render_bufc(bufs[bufid_middle], bufid_middle, N)
       else
-        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, N)
+        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_middle)
       end
 
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
@@ -311,9 +311,10 @@ function M.bufs(position)
       remain_width = remain_width - left_omitter_width - right_omitter_width ---@type integer
 
       ---@param bufid                   integer
+      ---@param order                   integer
       ---@return boolean
-      local function render_left(bufid)
-        local t, hl_t = render_buf(bufs[bufid], bufid, N)
+      local function render_left(bufid, order)
+        local t, hl_t = render_buf(bufs[bufid], bufid, order)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == 1 and remain_width + left_omitter_width >= w then
@@ -336,9 +337,10 @@ function M.bufs(position)
       end
 
       ---@param bufid                   integer
+      ---@param order                   integer
       ---@return boolean
-      local function render_right(bufid)
-        local t, hl_t = render_buf(bufs[bufid], bufid, N)
+      local function render_right(bufid, order)
+        local t, hl_t = render_buf(bufs[bufid], bufid, order)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == N and remain_width + right_omitter_width >= w then
@@ -360,17 +362,17 @@ function M.bufs(position)
         return bufid == N
       end
 
-      local max_delta = math.max(left_remain_count, right_remain_count) ---@type integer
+      local max_delta = math.min(9, math.max(left_remain_count, right_remain_count)) ---@type integer
       local left_done = false ---@type boolean
       local right_done = false ---@type boolean
       for delta = 1, max_delta, 1 do
         if not left_done then
           local bufid = bufid_middle - delta ---@type integer
-          left_done = bufid < 1 or render_left(bufid) ---@type boolean
+          left_done = bufid < 1 or render_left(bufid, delta) ---@type boolean
         end
         if not right_done then
           local bufid = bufid_middle + delta ---@type integer
-          right_done = bufid > N or render_right(bufid) ---@type boolean
+          right_done = bufid > N or render_right(bufid, delta) ---@type boolean
         end
       end
 
