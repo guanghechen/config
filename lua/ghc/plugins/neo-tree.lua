@@ -166,10 +166,6 @@ return {
       end,
       recursively_toggle_all = function(neotree_state)
         local node = neotree_state.tree:get_node()
-        if not node or (node.type ~= "file" and node.type ~= "directory") then
-          return
-        end
-
         if node.type == "directory" then
           if node:is_expanded() then
             neotree_state.commands.close_all_subnodes(neotree_state)
@@ -178,8 +174,6 @@ return {
           end
           return
         end
-
-        neotree_state.commands.open(neotree_state)
       end,
       refresh_filesystem = function(neotree_state)
         require("neo-tree.sources.manager").refresh(neotree_state.name)
