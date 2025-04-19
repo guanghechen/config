@@ -1,0 +1,48 @@
+---@type eve.t.theme.IScheme
+local M = {
+  theme = "rose-pine-main",
+  variant = "dark",
+  -- stylua: ignore start
+  palette = {
+    none =            "none",
+
+    bg0 =             "#191724",
+    bg1 =             "#1f1d2e",
+    bg2 =             "#26233a",
+    bg3 =             "#403d52",
+    bg4 =             "#524f67",
+
+    fg0 =             "#e0def4",
+    fg1 =             "#e0def4",
+    fg2 =             "#908caa",
+    fg3 =             "#6e6a86",
+    fg4 =             "#6e6a86",
+
+    red =             "#eb6f92",
+    green =           "#95b1ac",
+    yellow =          "#f6c177",
+    blue =            "#31748f",
+    purple =          "#c4a7e7",
+    aqua =            "#9ccfd8",
+    orange =          "#ebbcba",
+
+    brightRed =       "#eb6f92",
+    brightGreen =     "#95b1ac",
+    brightYellow =    "#f6c177",
+    brightBlue =      "#31748f",
+    brightPurple =    "#c4a7e7",
+    brightAqua =      "#9ccfd8",
+    brightOrange =    "#ebbcba",
+
+    grey =            "#908caa",
+    pink =            "#eb6f92",
+
+    diffDel =         "#362434",
+    diffDelInline =   "#44242e",
+    diffAdd =         "#2a3440",
+    diffAddInline =   "#25404f",
+  },
+  -- stylua: ignore end
+}
+
+return M

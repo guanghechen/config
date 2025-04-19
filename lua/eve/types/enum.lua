@@ -32,6 +32,9 @@
 ---|"nord"
 ---|"one-half-light"
 ---|"one-half-dark"
+---|"rose-pine-main"
+---|"rose-pine-moon"
+---|"rose-pine-dawn"
 
 ---@alias eve.e.ThemeVariant
 ---|"dark"

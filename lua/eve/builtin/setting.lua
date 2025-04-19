@@ -23,6 +23,9 @@ M.themes = {
   "nord",
   "one-half-dark",
   "one-half-light",
+  "rose-pine-main",
+  "rose-pine-moon",
+  "rose-pine-dawn",
 }
 
 ---@class eve.builtin.setting.togglers
