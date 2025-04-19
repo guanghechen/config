@@ -1,0 +1,43 @@
+{
+  "theme": "rose-pine-dawn",
+  "variant": "light",
+  "opposite": "rose-pine-main",
+  "palette": {
+    "bg0":            "#faf4ed",
+    "bg1":            "#fffaf3",
+    "bg2":            "#f2e9e1",
+    "bg3":            "#dfdad9",
+    "bg4":            "#cecacd",
+
+    "fg0":            "#464261",
+    "fg1":            "#464261",
+    "fg2":            "#797593",
+    "fg3":            "#9893a5",
+    "fg4":            "#9893a5",
+
+    "red":            "#b4637a",
+    "green":          "#6d8f89",
+    "yellow":         "#ea9d34",
+    "blue":           "#286983",
+    "purple":         "#907aa9",
+    "aqua":           "#56949f",
+    "orange":         "#d7827e",
+
+    "brightRed":      "#b4637a",
+    "brightGreen":    "#6d8f89",
+    "brightYellow":   "#ea9d34",
+    "brightBlue":     "#286983",
+    "brightPurple":   "#907aa9",
+    "brightAqua":     "#56949f",
+    "brightOrange":   "#d7827e",
+
+    "grey":           "#9893a5",
+    "pink":           "#b4637a",
+
+    "diffDel":        "#f5d8e0",
+    "diffDelInline":  "#f0c6d2",
+    "diffAdd":        "#e4ebe4",
+    "diffAddInline":  "#d5e0d5"
+  }
+}
+
