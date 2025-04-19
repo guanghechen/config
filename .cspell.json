@@ -18,6 +18,7 @@
     "pacman",
     "pwsh",
     "rustup",
+    "stylua",
     "usermod",
     "wezterm",
     "winget"
