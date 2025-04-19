@@ -1,0 +1,39 @@
+# rose-pine-dawn
+
+# Primary colors
+[colors.primary]
+background  = "#FAF4ED"
+foreground  = "#464261"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#B4637A"
+text        = "#FFFAF3"
+
+# Selection colors
+[colors.selection]
+background  = "#D7827E"
+text        = "#FFFAF3"
+
+# Normal colors
+[colors.normal]
+black       = "#FAF4ED"
+red         = "#B4637A"
+green       = "#6D8F89"
+yellow      = "#EA9D34"
+blue        = "#286983"
+magenta     = "#907AA9"
+cyan        = "#56949F"
+white       = "#9893A5"
+
+# Bright colors
+[colors.bright]
+black       = "#9893A5"
+red         = "#B4637A"
+green       = "#6D8F89"
+yellow      = "#EA9D34"
+blue        = "#286983"
+magenta     = "#907AA9"
+cyan        = "#56949F"
+white       = "#464261"
+

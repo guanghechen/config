@@ -1,0 +1,39 @@
+# rose-pine-moon
+
+# Primary colors
+[colors.primary]
+background  = "#232136"
+foreground  = "#E0DEF4"
+
+# Cursor colors
+[colors.cursor]
+cursor      = "#EB6F92"
+text        = "#2A273F"
+
+# Selection colors
+[colors.selection]
+background  = "#EA9A97"
+text        = "#2A273F"
+
+# Normal colors
+[colors.normal]
+black       = "#232136"
+red         = "#EB6F92"
+green       = "#95B1AC"
+yellow      = "#F6C177"
+blue        = "#3E8FB0"
+magenta     = "#C4A7E7"
+cyan        = "#9CCFD8"
+white       = "#6E6A86"
+
+# Bright colors
+[colors.bright]
+black       = "#908CAA"
+red         = "#EB6F92"
+green       = "#95B1AC"
+yellow      = "#F6C177"
+blue        = "#3E8FB0"
+magenta     = "#C4A7E7"
+cyan        = "#9CCFD8"
+white       = "#E0DEF4"
+
