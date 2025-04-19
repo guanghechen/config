@@ -90,4 +90,4 @@ if test -f "$HOME/.config/fish/local/config.fish"
   source "$HOME/.config/fish/local/config.fish"
 end
 
-complete -c ghc-theme-apply -a "catppuccin-latte catppuccin-mocha gruvbox-dark gruvbox-light nord one-half-dark one-half-light"
+complete -c ghc-theme-apply -a "catppuccin-latte catppuccin-mocha gruvbox-dark gruvbox-light nord one-half-dark one-half-light rose-pine-main rose-pine-moon rose-pine-dawn"
