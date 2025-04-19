@@ -52,8 +52,6 @@ end
 ---@param context                       eve.t.theme.IContext
 ---@return table<string, eve.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local cs = eve.std.color
-  local theme = context.scheme.theme ---@type eve.e.Theme
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_main = t and c.none or c.bg0 ---@type string

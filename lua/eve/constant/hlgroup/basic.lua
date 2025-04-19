@@ -75,7 +75,7 @@ function M.gen_hlgroup_map(context)
     LspReferenceWrite = { bold = true, underline = true, sp = c.purple },
     LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
     RenamerBorder = { fg = c.red },
-    RenamerTitle = { fg = c.bg0, bg = c.red },
+    RenamerTitle = { link = "m_stroke_b" },
 
     ---msg
     ErrorMsg = { fg = c.bg0, bg = c.red, bold = true },
@@ -178,7 +178,7 @@ function M.gen_hlgroup_map(context)
     TabLine = { fg = c.fg2, bg = c.none, reverse = false },
     TabLineFill = { link = "TabLine" },
     TabLineSel = { link = "TabLine" },
-    Title = { c = "m_stroke_b" },
+    Title = { link = "m_stroke_b" },
     TooLong = { fg = c.red },
     UnderLined = { fg = c.blue, underline = true },
     VertSplit = { fg = c.bg2 },

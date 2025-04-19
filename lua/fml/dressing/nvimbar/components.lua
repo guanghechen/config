@@ -79,16 +79,16 @@ end
 ---@return eve.ux.nvimbar.IRawComponent
 function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string
-  local hln_buf_order = position .. "_buf_order" ---@type string
   local hln_buf_indicator = position .. "_buf_indicator" ---@type string
+  local hln_buf_order = position .. "_buf_order" ---@type string
   local hln_buf_mod = position .. "_buf_mod" ---@type string
   local hln_buf_omitter = position .. "_buf_omitter" ---@type string
   local hln_buf_omitter_sep = position .. "_buf_omitter_sep" ---@type string
   local hln_buf_pinned = position .. "_buf_pinned" ---@type string
-  local hln_buf_sep = position .. "_buf_sep" ---@type string
   local hln_buf_text = position .. "_buf_text" ---@type string
 
   local hln_bufc = position .. "_bufc" ---@type string
+  local hln_bufc_indicator = position .. "_bufc_indicator" ---@type string
   local hln_bufc_order = position .. "_bufc_order" ---@type string
   local hln_bufc_mod = position .. "_bufc_mod" ---@type string
   local hln_bufc_pinned = position .. "_bufc_pinned" ---@type string
@@ -129,16 +129,85 @@ function M.bufs(position)
     return filename, fileicon, fileicon_hl
   end
 
+  ---@param buf                         eve.state.tab.buf.state
+  ---@param index                       integer
+  ---@param total                       integer
+  ---@return string
+  ---@return string
+  local function render_bufc(buf, index, total)
+    local bufnr = buf.bufnr ---@type integer
+    local is_pinned = buf.pinned ---@type boolean
+    local is_mod = vim.bo[bufnr].modified ---@type boolean
+
+    local count_error = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type integer
+    local count_warn = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type integer
+    local count_hint = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT }) ---@type integer
+    local count_info = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO }) ---@type integer
+
+    local text_diagnostic = "" ---@type string
+    local hl_text_diagnostic = "" ---@type string
+
+    local slots = 0 ---@type integer
+    if count_error > 0 then
+      local text = " " .. eve.icon.diagnostic.Error .. " " .. count_error ---@type string
+      text_diagnostic = text_diagnostic .. text ---@type string
+      hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_error) ---@type string
+      slots = slots + 1
+    end
+    if count_warn > 0 then
+      local text = " " .. eve.icon.diagnostic.Warning .. " " .. count_warn ---@type string
+      text_diagnostic = text_diagnostic .. text
+      hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_warn) ---@type string
+      slots = slots + 1
+    end
+    if count_hint > 0 and slots < 2 then
+      local text = " " .. eve.icon.diagnostic.Hint .. " " .. count_hint ---@type string
+      text_diagnostic = text_diagnostic .. text ---@type string
+      hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_hint)
+      slots = slots + 1
+    end
+    if count_info > 0 and slots < 2 then
+      local text = " " .. eve.icon.diagnostic.Information .. " " .. count_info ---@type string
+      text_diagnostic = text_diagnostic .. text ---@type string
+      hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_info)
+      slots = slots + 1
+    end
+
+    local filename, fileicon, fileicon_hl = resolve_buf_info(bufnr)
+    local text_indicator = "▎" ---@type string
+    local text_order = total < 2 and "" or (eve.icon.todigit_subscript(index) .. ".") ---@type string
+    local text_icon = fileicon .. " " ---@type string
+    local text_title = filename ---@type string
+    local text_mod = is_mod and "  " or "  " ---@type string
+    local text_pinned = is_mod and "  " or "  " ---@type string
+    local text_status = is_pinned and text_pinned or text_mod ---@type string
+
+    local hln_icon = hln_bufc .. "_" .. fileicon_hl ---@type string
+    local hln_status = is_pinned and hln_bufc_pinned or hln_bufc_mod ---@type string
+
+    local hl_text_indicator = txt(text_indicator, hln_bufc_indicator)
+    local hl_text_order = #text_order > 0 and txt(text_order, hln_bufc_order) or "" ---@type string
+    local hl_text_icon = txt(text_icon, hln_icon)
+    local hl_text_title = txt(text_title, hln_bufc_text)
+    local hl_text_status = txt(text_status, hln_status) ---@type string
+
+    local text = text_indicator .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status
+    local hl_text = hl_text_indicator
+      .. hl_text_order
+      .. hl_text_icon
+      .. hl_text_title
+      .. hl_text_diagnostic
+      .. hl_text_status
+    return text, btn(hl_text, fn_active_buf, bufnr)
+  end
+
   ---@param buf                           eve.state.tab.buf.state
   ---@param index                         integer
-  ---@param current                       integer|nil
   ---@param total                         integer
   ---@return string
   ---@return string
-  local function render_buf(buf, index, current, total)
+  local function render_buf(buf, index, total)
     local bufnr = buf.bufnr ---@type integer
-    local is_first = index == 1 ---@type boolean
-    local is_current = index == current ---@type boolean
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
 
@@ -166,23 +235,9 @@ function M.bufs(position)
       slots = slots + 1
     end
 
-    local hl_title = hln_buf_text ---@type string
-    if is_current then
-      if count_error > 0 then
-        hl_title = hln_bufc_error ---@type string
-      elseif count_warn > 0 then
-        hl_title = hln_bufc_warn ---@type string
-      elseif count_hint > 0 then
-        hl_title = hln_bufc_hint ---@type string
-      elseif count_info > 0 then
-        hl_title = hln_bufc_info ---@type string
-      else
-        hl_title = hln_bufc_text ---@type string
-      end
-    end
-
-    local filename, fileicon, fileicon_hl = resolve_buf_info(bufnr)
-    local text_indicator_or_sep = is_current and "▎" or (is_first and " " or "▏") ---@type string
+    local hln_title = hln_buf_text ---@type string
+    local filename, fileicon = resolve_buf_info(bufnr)
+    local text_indicator = index == 1 and " " or "▏" ---@type string
     local text_order = total < 2 and "" or (eve.icon.todigit_subscript(index) .. ".") ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
@@ -190,28 +245,27 @@ function M.bufs(position)
     local text_pinned = is_mod and "  " or "  " ---@type string
     local text_status = is_pinned and text_pinned or text_mod ---@type string
 
-    local hln_indicator_or_sep = is_current and hln_buf_indicator or hln_buf_sep ---@type string
-    local hln_order = is_current and hln_bufc_order or hln_buf_order ---@type string
-    -- local hln_icon = (is_current and hln_bufc or hln_buf) .. "_" .. fileicon_hl ---@type string
-    local hln_icon = (is_current and hln_bufc .. "_" .. fileicon_hl) or hln_buf ---@type string
-    local hln_mod = is_current and hln_bufc_mod or hln_buf_mod ---@type string
-    local hln_pinned = is_current and hln_bufc_pinned or hln_buf_pinned ---@type string
+    local hln_order = hln_buf_order ---@type string
+    local hln_text = hln_buf_text ---@type string
+    local hln_icon = hln_buf ---@type string
+    local hln_mod = hln_buf_mod ---@type string
+    local hln_pinned = hln_buf_pinned ---@type string
     local hln_status = is_pinned and hln_pinned or hln_mod ---@type string
 
-    local hl_text_indicator = txt(text_indicator_or_sep, hln_indicator_or_sep)
+    local hl_text_indicator = txt(text_indicator, hln_buf_indicator)
     local hl_order = #text_order > 0 and txt(text_order, hln_order) or "" ---@type string
     local hl_text_icon = txt(text_icon, hln_icon)
-    local hl_text_title = txt(text_title, hl_title)
-    local hl_text_diagnostic = txt(text_diagnostic, hl_title) ---@type string
+    local hl_text_title = txt(text_title, hln_text)
+    local hl_text_diagnostic = txt(text_diagnostic, hln_title) ---@type string
     local hl_text_status = txt(text_status, hln_status) ---@type string
 
-    local text = text_indicator_or_sep .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status ---@type string
+    local text = text_indicator .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status
     local hl_text = hl_text_indicator
       .. hl_order
       .. hl_text_icon
       .. hl_text_title
       .. hl_text_diagnostic
-      .. hl_text_status ---@type string
+      .. hl_text_status
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
@@ -237,7 +291,14 @@ function M.bufs(position)
       local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] or 1) ---@type integer
       vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
 
-      local text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_sourcefile, N)
+      local text ---@type string
+      local hl_text ---@type string
+      if bufid_middle == bufid_sourcefile then
+        text, hl_text = render_bufc(bufs[bufid_middle], bufid_middle, N)
+      else
+        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, N)
+      end
+
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
       if remain_width < 0 then
         return "", "", false
@@ -252,7 +313,7 @@ function M.bufs(position)
       ---@param bufid                   integer
       ---@return boolean
       local function render_left(bufid)
-        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_sourcefile, N)
+        local t, hl_t = render_buf(bufs[bufid], bufid, N)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == 1 and remain_width + left_omitter_width >= w then
@@ -277,7 +338,7 @@ function M.bufs(position)
       ---@param bufid                   integer
       ---@return boolean
       local function render_right(bufid)
-        local t, hl_t = render_buf(bufs[bufid], bufid, bufid_sourcefile, N)
+        local t, hl_t = render_buf(bufs[bufid], bufid, N)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == N and remain_width + right_omitter_width >= w then
