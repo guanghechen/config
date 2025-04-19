@@ -78,14 +78,14 @@ end
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local mc = {
-    command = c.green,
+    command = c.blue,
     confirm = c.brightAqua,
     insert = c.purple,
     normal = c.aqua,
     nterminal = c.yellow,
     replace = c.brightYellow,
     select = c.orange,
-    terminal = c.green,
+    terminal = c.blue,
     visual = c.orange,
   }
 
