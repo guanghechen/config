@@ -38,6 +38,20 @@ for i = 1, 49, 1 do
     end,
   })
 end
+for i = 1, 9, 1 do
+  command.implement({
+    uuid = K.buf["focus_left_" .. tostring(i)].uuid,
+    action = function()
+      require("fml.action.buf.focus").focus_left(i)
+    end,
+  })
+  command.implement({
+    uuid = K.buf["focus_right_" .. tostring(i)].uuid,
+    action = function()
+      require("fml.action.buf.focus").focus_right(i)
+    end,
+  })
+end
 
 command
   .implement({
