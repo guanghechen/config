@@ -28,7 +28,7 @@ function M.focus(bufid)
   end
 
   local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
-  local bufid_next = eve.std.fn.navigate_circular(0, bufid, #bufs) ---@type integer
+  local bufid_next = eve.std.fn.navigate_limit(0, bufid, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
