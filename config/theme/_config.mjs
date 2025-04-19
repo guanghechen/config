@@ -8,6 +8,7 @@ import { render_template, safe_exec } from "./_util.mjs";
 export const apps = [
   {
     name: "alacritty",
+    kind: "terminal",
     themes: "theme/",
     extname: ".toml",
     local: "local/theme.toml",
@@ -24,6 +25,7 @@ export const apps = [
   },
   {
     name: "ghostty",
+    kind: "terminal",
     themes: "theme/",
     extname: "",
     local: "local/theme",
@@ -44,6 +46,7 @@ export const apps = [
   },
   {
     name: "kitty",
+    kind: "terminal",
     themes: "theme/",
     extname: ".conf",
     local: "local/theme.conf",
@@ -66,6 +69,7 @@ export const apps = [
   },
   {
     name: "lazygit",
+    kind: "other",
     themes: "theme/",
     extname: ".yml",
     local: "local/theme.yml",
@@ -74,6 +78,7 @@ export const apps = [
   },
   {
     name: "nvim",
+    kind: "neovim",
     themes: "lua/eve/constant/theme/",
     extname: ".lua",
     local: null,
@@ -97,6 +102,7 @@ export const apps = [
   },
   {
     name: "nvim-nvchad",
+    kind: "neovim",
     themes: "lua/eve/constant/theme/",
     extname: ".lua",
     local: null,
@@ -120,6 +126,7 @@ export const apps = [
   },
   {
     name: "tmux",
+    kind: "terminal",
     themes: "theme/",
     extname: ".tmux.conf",
     local: "local/theme.tmux.conf",
@@ -138,6 +145,7 @@ export const apps = [
   },
   {
     name: "wezterm",
+    kind: "terminal",
     themes: "theme/",
     extname: ".lua",
     local: "local/theme.lua",
@@ -185,6 +193,7 @@ return config
   },
   {
     name: "windows_terminal",
+    kind: "terminal",
     themes: null,
     extname: ".json",
     local: process.env.f_windows_terminal_settings,

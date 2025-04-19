@@ -11,7 +11,7 @@ export const themes = readdirSync(HOME_THEME_SCHEME).map((p) =>
 );
 
 /**
- * @typedef {Object} ITehemePalette
+ * @typedef {Object} IThemePalette
  * @property {string}                   bg0
  * @property {string}                   bg1
  * @property {string}                   bg2
@@ -52,10 +52,11 @@ export const themes = readdirSync(HOME_THEME_SCHEME).map((p) =>
  * @property {string}                   theme
  * @property {'light'|'dark'|'neutral'} variant
  * @property {string}                   opposite
- * @property {ITehemePalette}           palette
+ * @property {IThemePalette}            palette
  *
  * @typedef {Object} IAppConfig
  * @property {string}                   name
+ * @property {"terminal"|"neovim"|"other"} kind
  * @property {string|null}              themes
  * @property {string}                   extname
  * @property {string|null}              local
