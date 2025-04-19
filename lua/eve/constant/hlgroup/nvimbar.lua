@@ -1,6 +1,9 @@
+---@class eve.constant.hlgroup.nvimbar
+local M = {}
+
 ---@param context                       eve.t.theme.IContext
 ---@return eve.constant.hlgroup.nvimbar
-local function gen_hlgroup_map(context)
+function M.gen_hlgroup_map(context)
   local cs = eve.std.color
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
@@ -20,32 +23,14 @@ local function gen_hlgroup_map(context)
   }
 
   local bgs = {
-    f_sl = t and c.none or c.bg1,
-    f_tl = t and c.none or c.bg1,
+    f_sl = c.none,
+    f_tl = c.none,
     f_wl = c.none,
   }
 
   ---@type table<string, eve.t.theme.IHlgroup>
   local hlgroup_map = {
     bg = { fg = "bg_bar", bg = "bg_bar" },
-    m_text_fill_command = { fg = c.bg0, bg = mc.command, bold = true },
-    m_text_fill_confirm = { fg = c.bg0, bg = mc.confirm, bold = true },
-    m_text_fill_insert = { fg = c.bg0, bg = mc.insert, bold = true },
-    m_text_fill_normal = { fg = c.bg0, bg = mc.normal, bold = true },
-    m_text_fill_nterminal = { fg = c.bg0, bg = mc.nterminal, bold = true },
-    m_text_fill_replace = { fg = c.bg0, bg = mc.replace, bold = true },
-    m_text_fill_select = { fg = c.bg0, bg = mc.select, bold = true },
-    m_text_fill_terminal = { fg = c.bg0, bg = mc.terminal, bold = true },
-    m_text_fill_visual = { fg = c.bg0, bg = mc.visual, bold = true },
-    m_sep_fill_command = { fg = mc.command, bg = "bg_bar", bold = true },
-    m_sep_fill_confirm = { fg = mc.confirm, bg = "bg_bar", bold = true },
-    m_sep_fill_insert = { fg = mc.insert, bg = "bg_bar", bold = true },
-    m_sep_fill_normal = { fg = mc.normal, bg = "bg_bar", bold = true },
-    m_sep_fill_nterminal = { fg = mc.nterminal, bg = "bg_bar", bold = true },
-    m_sep_fill_replace = { fg = mc.replace, bg = "bg_bar", bold = true },
-    m_sep_fill_select = { fg = mc.select, bg = "bg_bar", bold = true },
-    m_sep_fill_terminal = { fg = mc.terminal, bg = "bg_bar", bold = true },
-    m_sep_fill_visual = { fg = mc.visual, bg = "bg_bar", bold = true },
     text = { fg = c.fg2, bg = "bg_bar" },
 
     ------------------------------------------------------------------------------------------------
@@ -205,4 +190,4 @@ local function gen_hlgroup_map(context)
   return results
 end
 
-return gen_hlgroup_map
+return M

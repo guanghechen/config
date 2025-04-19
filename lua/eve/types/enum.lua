@@ -43,6 +43,7 @@
 
 ---@alias eve.e.ThemeIntegration
 ---|"basic"
+---|"common"
 ---|"nvimbar"
 ---|"widget"
 ---|"treesitter"

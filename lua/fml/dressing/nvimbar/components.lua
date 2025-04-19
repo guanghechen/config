@@ -394,9 +394,10 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
+---@diagnostic disable-next-line: unused-local
 function M.cwd(position)
-  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
-  local hln_sep_prefix = position .. "_m_sep_fill_" ---@type string
+  local hln_text = "m_text" ---@type string
+  local hln_sep = "m_sep" ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
@@ -404,12 +405,9 @@ function M.cwd(position)
     atomic = true,
     tight = true,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.mode ~= prev_context.mode or context.cwd ~= prev_context.cwd
+      return prev_context == nil or context.cwd ~= prev_context.cwd
     end,
     render = function(context)
-      local hln_text = hln_text_prefix .. context.mode ---@type string
-      local hln_sep = hln_sep_prefix .. context.mode ---@type string
-
       local cwd_name = eve.path.basename(context.cwd) ---@type string
       local text = eve.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
@@ -800,7 +798,7 @@ end
 ---@return eve.ux.nvimbar.IRawComponent
 function M.filename(position)
   local hln_blur_text = position .. "_filename_blur_text" ---@type string
-  local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
+  local hln_text = "m_sep" ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
@@ -819,7 +817,6 @@ function M.filename(position)
       local text_fileicon = context.fileicon .. " " ---@type string
       local hl_text_fileicon = txt(text_fileicon, context.fileicon_hl) ---@type string
 
-      local hln_text = hln_text_prefix .. context.mode ---@type string
       local text_filename = context.filename .. text_mod ---@type string
       local hl_text_filename = txt(text_filename, hln_text)
 
@@ -890,7 +887,7 @@ function M.filesize(position)
     name = "filesize",
     atomic = true,
     will_change = function(context, prev_context)
-      return prev_context == nil or context.filepath ~= prev_context.filepath or context.mode ~= prev_context.mode
+      return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
       local text = eve.oxi.get_filesize(context.filepath) or "" ---@type string
@@ -1128,9 +1125,10 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
+---@diagnostic disable-next-line: unused-local
 function M.mode(position)
-  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
-  local hln_sep_prefix = position .. "_mode_sep_" ---@type string
+  local hln_text = "m_text" ---@type string
+  local hln_sep = "m_pos_sep" ---@type string
 
   local icon = " " .. eve.icon.app.Vim .. " " ---@type string
 
@@ -1143,9 +1141,6 @@ function M.mode(position)
       return prev_context == nil or context.mode ~= prev_context.mode
     end,
     render = function(context)
-      local hln_text = hln_text_prefix .. context.mode ---@type string
-      local hln_sep = hln_sep_prefix .. context.mode ---@type string
-
       local text = icon .. context.mode_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
@@ -1166,8 +1161,8 @@ function M.neotree(position, neotree_position)
   local hln_sep = position .. "_neotree_sep" ---@type string
   local hln_blank = position .. "_neotree_blank" ---@type string
   local hln_split = position .. "_neotree_split" ---@type string
-  local hln_active_text_prefix = position .. "_m_text_fill_" ---@type string
-  local hln_active_sep_prefix = position .. "_m_sep_fill_" ---@type string
+  local hln_active_text = "m_text" ---@type string
+  local hln_active_sep = "m_sep" ---@type string
 
   local right_split = position == "f_wl" and "" or " " ---@type string -- "│"
   local title_filesystem = string.format("%s Files", eve.icon.filetype.File) ---@type string
@@ -1245,8 +1240,6 @@ function M.neotree(position, neotree_position)
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
 
-      local hln_active_text = hln_active_text_prefix .. context.mode ---@type string
-      local hln_active_sep = hln_active_sep_prefix .. context.mode ---@type string
       local hl_sep_active_left = txt(sep_left, hln_active_sep) ---@type string
       local hl_sep_active_right = txt(sep_right, hln_active_sep) ---@type string
       local hl_active_filesystem = hl_sep_active_left .. txt(title_filesystem, hln_active_text) .. hl_sep_active_right ---@type string
@@ -1350,8 +1343,8 @@ end
 function M.sidebar(position, filetype, get_title)
   local hln_blank = position .. "_sidebar_blank" ---@type string
   local hln_split = position .. "_sidebar_split" ---@type string
-  local hln_sep_prefix = position .. "_m_sep_fill_" ---@type string
-  local hln_text_prefix = position .. "_m_text_fill_" ---@type string
+  local hln_sep = "m_sep" ---@type string
+  local hln_text = "m_text" ---@type string
 
   ---@return integer
   local function get_pane_width()
@@ -1383,9 +1376,6 @@ function M.sidebar(position, filetype, get_title)
         local hl_text = txt(text, hln_blank)
         return text, hl_text, true
       end
-
-      local hln_text = hln_text_prefix .. context.mode ---@type string
-      local hln_sep = hln_sep_prefix .. context.mode ---@type string
 
       local text_title = title ---@type string
       local hl_text_title = txt(text_title, hln_text) ---@type string
@@ -1607,9 +1597,10 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
+---@diagnostic disable-next-line: unused-local
 function M.username(position)
-  local hln_text_prefix = position .. "_m_sep_fill_" ---@type string
-  local hln_sep_prefix = position .. "_m_text_fill_" ---@type string
+  local hln_text = "m_sep" ---@type string
+  local hln_sep = "m_text" ---@type string
 
   local text_with_icon = " " .. eve.icon.os.current .. " " .. eve.env.USERNAME ---@type string
   local text_icon_only = eve.icon.os.current .. " " ---@type string
@@ -1623,13 +1614,10 @@ function M.username(position)
   local component = {
     name = "username",
     atomic = true,
-    will_change = function(context, prev_context)
-      return invalid or prev_context == nil or context.mode ~= prev_context.mode
+    will_change = function()
+      return invalid
     end,
-    render = function(context)
-      local hln_sep = hln_sep_prefix .. context.mode ---@type string
-      local hln_text = hln_text_prefix .. context.mode ---@type string
-
+    render = function()
       invalid = false
       local show_username = eve.state.theme.username:snapshot() ---@type boolean
       if not show_username then

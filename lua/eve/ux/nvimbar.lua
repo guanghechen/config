@@ -89,45 +89,6 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 local M = {}
 M.__index = M
 
-local modes_map = {
-  ["n"] = { "normal", "NORMAL" },
-  ["no"] = { "normal", "NORMAL (no)" },
-  ["nov"] = { "normal", "NORMAL (nov)" },
-  ["noV"] = { "normal", "NORMAL (noV)" },
-  ["noCTRL-V"] = { "normal", "NORMAL" },
-  ["niI"] = { "normal", "NORMAL i" },
-  ["niR"] = { "normal", "NORMAL r" },
-  ["niV"] = { "normal", "NORMAL v" },
-  ["nt"] = { "nterminal", "NTERMINAL" },
-  ["ntT"] = { "nterminal", "NTERMINAL (ntT)" },
-  ["v"] = { "visual", "VISUAL" },
-  ["vs"] = { "visual", "V-CHAR (Ctrl O)" },
-  ["V"] = { "visual", "V-LINE" },
-  ["Vs"] = { "visual", "V-LINE" },
-  [""] = { "visual", "V-BLOCK" },
-  ["i"] = { "insert", "INSERT" },
-  ["ic"] = { "insert", "INSERT (completion)" },
-  ["ix"] = { "insert", "INSERT completion" },
-  ["t"] = { "terminal", "TERMINAL" },
-  ["R"] = { "replace", "REPLACE" },
-  ["Rc"] = { "replace", "REPLACE (Rc)" },
-  ["Rx"] = { "replace", "REPLACEa (Rx)" },
-  ["Rv"] = { "replace", "V-REPLACE" },
-  ["Rvc"] = { "replace", "V-REPLACE (Rvc)" },
-  ["Rvx"] = { "replace", "V-REPLACE (Rvx)" },
-  ["s"] = { "select", "SELECT" },
-  ["S"] = { "select", "S-LINE" },
-  [""] = { "select", "S-BLOCK" },
-  ["c"] = { "command", "COMMAND" },
-  ["cv"] = { "command", "COMMAND" },
-  ["ce"] = { "command", "COMMAND" },
-  ["r"] = { "confirm", "PROMPT" },
-  ["rm"] = { "confirm", "MORE" },
-  ["r?"] = { "confirm", "CONFIRM" },
-  ["x"] = { "confirm", "CONFIRM" },
-  ["!"] = { "terminal", "SHELL" },
-}
-
 ---@param num                           integer
 ---@return string
 local function encode_int(num)
@@ -145,7 +106,7 @@ end
 ---@param preset_context                eve.ux.nvimbar.IPresetContext
 ---@return eve.ux.nvimbar.IContext
 local function build_context(preset_context)
-  local m = modes_map[vim.api.nvim_get_mode().mode]
+  local mode, mode_name = eve.constant.hlgroup.common.resolve_mode()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = preset_context.winnr or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -169,8 +130,8 @@ local function build_context(preset_context)
     fileicon = fileicon,
     fileicon_hl = fileicon_hl,
     filetype = filetype,
-    mode = m[1],
-    mode_name = m[2],
+    mode = mode,
+    mode_name = mode_name,
     git_branch = git_branch,
   }
   return context

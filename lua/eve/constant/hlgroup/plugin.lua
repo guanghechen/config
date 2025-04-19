@@ -1,6 +1,9 @@
+---@class eve.constant.hlgroup.plugin
+local M = {}
+
 ---@param context                       eve.t.theme.IContext
 ---@return table<string, eve.t.theme.IHlgroup>
-local function gen_hlgroup_map(context)
+function M.gen_hlgroup_map(context)
   local cs = eve.std.color
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
@@ -426,4 +429,4 @@ local function gen_hlgroup_map(context)
   }
 end
 
-return gen_hlgroup_map
+return M

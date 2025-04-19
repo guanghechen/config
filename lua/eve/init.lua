@@ -31,6 +31,7 @@ local __mods = {
 
 ---@class eve
 ---@field public __mods                 eve.__mods
+---@field public constant               eve.constant
 ---@field public std                    eve.std
 ---@field public state                  eve.state
 ---@field public ux                     eve.ux
@@ -64,6 +65,7 @@ local __mods = {
 ---@field public winpicker              eve.builtin.winpicker
 local M = setmetatable({
   __mods = __mods,
+  constant = require("eve.constant"),
   std = require("eve.std"),
   state = require("eve.state"),
   ux = require("eve.ux"),

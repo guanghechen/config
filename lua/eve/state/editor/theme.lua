@@ -42,6 +42,7 @@ local M = {}
 ---@type eve.e.ThemeIntegration[]
 local integrations = {
   "basic",
+  "common",
   "nvimbar",
   "widget",
   "treesitter",
@@ -136,8 +137,8 @@ function M.apply_integration(params)
       scheme = scheme,
       transparency = transparency,
     }
-    local gen_hlgroup_map = require("eve.constant.hlgroup." .. integration)
-    local hlgroup_map = gen_hlgroup_map(themeContext)
+    local h = require("eve.constant.hlgroup." .. integration)
+    local hlgroup_map = h.gen_hlgroup_map(themeContext)
     local uxTheme = eve.std.Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
@@ -154,10 +155,10 @@ function M.apply_theme(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    local gen_nvimbar_hlgroup_map = require("eve.constant.hlgroup.nvimbar")
+    local h_nvimbar = require("eve.constant.hlgroup.nvimbar")
 
     ---@type eve.constant.hlgroup.nvimbar
-    local nvimbar_hlgroup_map = gen_nvimbar_hlgroup_map({
+    local nvimbar_hlgroup_map = h_nvimbar.gen_hlgroup_map({
       theme = theme,
       scheme = scheme,
       transparency = transparency,
@@ -165,9 +166,9 @@ function M.apply_theme(params)
 
     local uxTheme = eve.std.Theme.new()
     for _, integration in ipairs(integrations) do
-      local gen_hlgroup_map = require("eve.constant.hlgroup." .. integration)
+      local h = require("eve.constant.hlgroup." .. integration)
       ---@return table<string, eve.t.theme.IHlgroup>
-      local hlgroup_map = gen_hlgroup_map({ scheme = scheme, transparency = transparency })
+      local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
         local additional = {} ---@type table<string, eve.t.theme.IHlgroup>

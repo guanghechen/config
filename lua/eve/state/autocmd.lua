@@ -135,10 +135,8 @@ vim.api.nvim_create_autocmd("WinClosed", {
 vim.api.nvim_create_autocmd("ModeChanged", {
   group = eve.nvim.augroup("state_on_mode_changed"),
   callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    eve.state.status.dirty_winline_nr:next(winnr)
+    eve.constant.hlgroup.common.on_mode_changed()
     eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
   end,
 })
 
