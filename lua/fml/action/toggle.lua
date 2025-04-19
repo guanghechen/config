@@ -15,6 +15,7 @@ local group_flags = {
   ---behavior
   behavior = {
     auto_im = eve.state.behavior.auto_im,
+    bufs_relative = eve.state.behavior.bufs_relative,
   },
 
   ---flight

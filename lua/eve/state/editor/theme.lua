@@ -13,13 +13,11 @@ local __module_name__ = "eve.state.editor.theme" ---@type string
 ---@field public nsnr                   ?integer
 
 ---@class eve.state.theme.data
----@field public auto_im                boolean
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
 ---@field public username               boolean
 
 ---@class eve.state.theme.state
----@field public auto_im                eve.std.collection.IObservable -- boolean>
 ---@field public theme                  eve.std.collection.IObservable -- eve.e.Theme>
 ---@field public transparency           eve.std.collection.IObservable -- boolean>
 ---@field public username               eve.std.collection.IObservable -- boolean>
@@ -58,7 +56,6 @@ end
 function M.defaults()
   ---@type eve.state.theme.data
   return {
-    auto_im = true,
     theme = "catppuccin-mocha",
     transparency = false,
     username = true,
@@ -70,9 +67,6 @@ end
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.state.theme.data
   if type(data) == "table" then
-    if type(data.auto_im) == "boolean" then
-      resolved.auto_im = data.auto_im
-    end
     if type(data.theme) == "string" and vim.list_contains(eve.setting.themes, data.theme) then
       resolved.theme = data.theme
     end
@@ -92,7 +86,6 @@ end
 function M.dump()
   ---@type eve.state.theme.data
   return {
-    auto_im = M.auto_im:snapshot(),
     theme = M.theme:snapshot(),
     transparency = M.transparency:snapshot(),
     username = M.username:snapshot(),
@@ -102,7 +95,6 @@ end
 ---@param raw_data                      any
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.state.theme.data
-  M.auto_im:next(data.auto_im)
   M.theme:next(data.theme)
   M.transparency:next(data.transparency)
   M.username:next(data.username)
@@ -111,7 +103,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.state.theme.data
-M.auto_im = eve.std.Observable.from_value(_defaults.auto_im)
 M.theme = eve.std.Observable.from_value(_defaults.theme)
 M.transparency = eve.std.Observable.from_value(_defaults.transparency)
 M.username = eve.std.Observable.from_value(_defaults.username)

@@ -303,6 +303,7 @@ function M.watch_changes()
 
   M.observe({
     M.behavior.auto_im,
+    M.behavior.bufs_relative,
     M.theme.theme,
     M.theme.transparency,
     M.theme.username,

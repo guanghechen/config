@@ -286,6 +286,8 @@ function M.bufs(position)
         return "", "", false
       end
 
+      local prefer_relative_bufs = eve.state.behavior.bufs_relative:snapshot() ---@type boolean
+
       local N = #bufs ---@type integer
       local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
       local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] or 1) ---@type integer
@@ -314,7 +316,7 @@ function M.bufs(position)
       ---@param order                   integer
       ---@return boolean
       local function render_left(bufid, order)
-        local t, hl_t = render_buf(bufs[bufid], bufid, order)
+        local t, hl_t = render_buf(bufs[bufid], bufid, prefer_relative_bufs and order or bufid)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == 1 and remain_width + left_omitter_width >= w then
@@ -340,7 +342,7 @@ function M.bufs(position)
       ---@param order                   integer
       ---@return boolean
       local function render_right(bufid, order)
-        local t, hl_t = render_buf(bufs[bufid], bufid, order)
+        local t, hl_t = render_buf(bufs[bufid], bufid, prefer_relative_bufs and order or bufid)
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == N and remain_width + right_omitter_width >= w then
