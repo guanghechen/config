@@ -11,30 +11,30 @@ local config = {
     cursor_border = "#EBDBB2",
 
     -- Selection colors
-    selection_bg  = "#D79921",
+    selection_bg  = "#B57614",
     selection_fg  = "#EBDBB2",
 
     -- Normal colors
     ansi = {
       "#FBF1C7",
-      "#9D0006",
-      "#79740E",
-      "#B57614",
-      "#076678",
-      "#8F3F71",
-      "#427B58",
-      "#7C6F64",
-    },
-
-    -- Bright colors
-    brights = {
-      "#928374",
       "#CC241D",
       "#98971A",
       "#D79921",
       "#458588",
       "#B16286",
       "#689D6A",
+      "#7C6F64",
+    },
+
+    -- Bright colors
+    brights = {
+      "#928374",
+      "#9D0006",
+      "#79740E",
+      "#B57614",
+      "#076678",
+      "#8F3F71",
+      "#427B58",
       "#3C3836",
     },
   },
