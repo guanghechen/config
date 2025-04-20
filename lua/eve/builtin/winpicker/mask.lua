@@ -66,17 +66,18 @@ function M:show(winnr)
 
   ---@type vim.api.keyset.win_config
   local wincfg_hint = {
+    anchor = "NW",
     relative = "win",
     win = winnr,
-    anchor = "NW",
-    focusable = true,
-    title = "",
     row = row,
     col = col,
     width = width,
     height = height,
     border = "rounded",
     style = "minimal",
+    focusable = true,
+    noautocmd = true,
+    title = "",
   }
 
   local winnr_hint = self.winnr_hint ---@type integer|nil

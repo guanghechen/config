@@ -75,7 +75,7 @@ function M.gen_hlgroup_map(context)
     LspReferenceWrite = { bold = true, underline = true, sp = c.purple },
     LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
     RenamerBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
-    RenamerTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
+    RenamerTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
 
     ---msg
     ErrorMsg = { fg = c.bg0, bg = c.red, bold = true },
@@ -147,10 +147,10 @@ function M.gen_hlgroup_map(context)
     Directory = { fg = c.blue, bold = true },
     Exception = { fg = c.red },
     FloatActiveBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
-    FloatActiveTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
+    FloatActiveTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
     FloatBorder = { fg = c.bg2, bg = t and c.bg0 or c.none, bold = true },
     FloatNormal = { fg = c.fg1, bg = c.bg1, blend = t and 50 or nil },
-    FloatTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
+    FloatTitle = { fg = c.fg4, bg = t and c.bg0 or c.none },
     FoldColumn = { fg = c.fg4, bg = t and c.none or c.bg1 },
     Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },

@@ -65,7 +65,7 @@ end
 local _defaults = M.defaults() ---@type eve.state.editor.data
 M.winnr_command = eve.std.Observable.from_value(_defaults.winnr_command)
 M.winnr_fixed = eve.std.Observable.from_value(_defaults.winnr_fixed)
-M.winnr_sourcefile = eve.std.Observable.from_value(_defaults.winnr_sourcefile)
+M.winnr_sourcefile = eve.std.Observable.from_value(_defaults.winnr_sourcefile, eve.std.fn.falsy)
 
 ---@return nil
 function M.focus_win_fixed()
