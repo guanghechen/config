@@ -67,15 +67,15 @@ function M.new(props)
 
   ---@type vim.api.keyset.win_config
   local cfg = {
-    relative = "editor",
     zindex = zindex,
-    width = 1,
-    height = 1,
+    relative = "editor",
     row = 0,
     col = 0,
-    focusable = false,
-    border = "none", -- config[direction].border,
+    width = 1,
+    height = 1,
+    border = "none",
     style = "minimal",
+    focusable = false,
   }
 
   self._cfg = cfg
@@ -192,11 +192,11 @@ end
 ---@return nil
 function M:show()
   local winhighlight = self._winhighlight ---@type string
-  local cfg = self._cfg ---@type vim.api.keyset.win_config
 
   local bufnr = self:create_buf_as_needed() ---@type integer
   local winnr = self._winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    local cfg = vim.tbl_deep_extend("force", { noautocmd = true }, self._cfg) ---@type vim.api.keyset.win_config
     winnr = vim.api.nvim_open_win(bufnr, false, cfg)
     self._winnr = winnr
 
@@ -206,6 +206,7 @@ function M:show()
     vim.wo[winnr].wrap = false
     vim.wo[winnr].list = false
   else
+    local cfg = self._cfg ---@type vim.api.keyset.win_config
     vim.wo[winnr].winfixbuf = false
     vim.api.nvim_win_set_config(winnr, cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)

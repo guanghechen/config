@@ -906,7 +906,8 @@ function M.filepath(position)
       filepath = filepath,
       winopts = {
         relative = "editor",
-        row = vim.o.lines - 4,
+        anchor = "SW",
+        row = vim.o.lines - 1,
         col = 36,
       },
     })

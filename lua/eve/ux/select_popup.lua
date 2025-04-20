@@ -63,9 +63,9 @@ function M.new(props)
     title_pos = "center",
     width = width + 8,
     height = #items,
-    focusable = true,
     border = "rounded",
     style = "minimal",
+    focusable = true,
   }, props.wincfg or {})
 
   ---@type eve.t.IKeymap[]

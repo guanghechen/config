@@ -66,7 +66,7 @@ function M:show(winnr)
 
   ---@type vim.api.keyset.win_config
   local wincfg_hint = {
-    anchor = "NW",
+    zindex = 1000,
     relative = "win",
     win = winnr,
     row = row,
@@ -75,13 +75,13 @@ function M:show(winnr)
     height = height,
     border = "rounded",
     style = "minimal",
-    focusable = true,
-    noautocmd = true,
+    focusable = false,
     title = "",
   }
 
   local winnr_hint = self.winnr_hint ---@type integer|nil
   if winnr_hint == nil or not vim.api.nvim_win_is_valid(winnr_hint) then
+    wincfg_hint.noautocmd = true
     winnr_hint = vim.api.nvim_open_win(bufnr_hint, true, wincfg_hint) ---@type integer
     self.winnr_hint = winnr_hint
 

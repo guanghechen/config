@@ -30,6 +30,7 @@ local config = {
 
     ---@type vim.api.keyset.win_config
     local wincfg = {
+      zindex = 2,
       relative = "editor",
       row = row,
       col = col,

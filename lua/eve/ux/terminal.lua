@@ -111,16 +111,15 @@ function M:create_win_as_needed()
   ---@type vim.api.keyset.win_config
   local wincfg = {
     relative = "editor",
-    anchor = "NW",
-    height = height,
-    width = width,
     row = row,
     col = col,
+    height = height,
+    width = width,
+    border = "rounded",
+    style = "minimal",
     focusable = true,
     title = self.title and " " .. self.title .. " " or nil,
     title_pos = self.title and "center" or nil,
-    border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-    style = "minimal",
   }
 
   local winnr = self._winnr ---@type integer|nil

@@ -168,9 +168,10 @@ local group_items = {
             .new({
               wincfg = {
                 relative = "editor",
+                anchor = "SE",
                 width = 12,
-                row = vim.o.lines - 4,
-                col = vim.o.columns - offset_right - 24,
+                row = vim.o.lines - 1,
+                col = vim.o.columns - offset_right,
               },
               items = {
                 { uuid = "reopen", text = "reopen" },
@@ -243,9 +244,10 @@ local group_items = {
             .new({
               wincfg = {
                 relative = "editor",
+                anchor = "SE",
                 width = 12,
-                row = vim.o.lines - 6,
-                col = vim.o.columns - offset_right - 12,
+                row = vim.o.lines - 1,
+                col = vim.o.columns - offset_right,
               },
               items = {
                 { uuid = "dos", text = "dos" },
@@ -721,15 +723,15 @@ function M.toggle_maximize()
     local winnr = vim.api.nvim_open_win(bufnr, false, {
       relative = "editor",
       anchor = "NW",
-      width = vim.o.columns - 2,
-      height = vim.o.lines - 4,
       row = 1,
       col = 0,
+      width = vim.o.columns - 2,
+      height = vim.o.lines - 4,
+      border = "rounded",
+      style = "minimal",
       focusable = true,
       title = " MAXIMIZED ",
       title_pos = "center",
-      border = "rounded",
-      style = "minimal",
     })
     vim.wo[winnr].number = true
     vim.wo[winnr].relativenumber = true

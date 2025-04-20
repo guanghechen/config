@@ -6,6 +6,11 @@ M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
   focusable = function(winnr)
+    local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+    if not config.focusable then
+      return false
+    end
+
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     return not eve.filetype.is_not_focusable_filetype(filetype)
@@ -13,7 +18,7 @@ M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
   projectable = function(winnr)
-    if vim.wo[winnr].winfixbuf or M.is_win_floating(winnr) then
+    if vim.wo[winnr].winfixbuf then
       return false
     end
 
@@ -31,7 +36,7 @@ M.winpicker_filters = {
   ---@param winnr                       integer
   ---@return boolean
   swappable = function(winnr)
-    if vim.wo[winnr].winfixbuf or M.is_win_floating(winnr) then
+    if vim.wo[winnr].winfixbuf then
       return false
     end
 

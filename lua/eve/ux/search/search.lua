@@ -783,19 +783,19 @@ function M:create_wins_as_needed()
     ---@type vim.api.keyset.win_config
     local wincfg_main = {
       relative = "editor",
-      anchor = "NW",
+      row = row + input_height_with_borders,
+      col = col,
       height = has_preview and height - input_height_with_borders
         or math.min(match_count + 1, height - input_height_with_borders),
       width = width,
-      row = row + input_height_with_borders,
-      col = col,
-      focusable = true,
-      title = "",
       border = show_preview and borders.main_with_preview or borders.main,
       style = "minimal",
+      focusable = true,
+      title = "",
     }
 
     if winnr_main == nil or not vim.api.nvim_win_is_valid(winnr_main) then
+      wincfg_main.noautocmd = true
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       context.winnr_main = winnr_main
       winnr_main_new_created = true
@@ -830,20 +830,20 @@ function M:create_wins_as_needed()
     ---@type vim.api.keyset.win_config
     local wincfg_preview = {
       relative = "editor",
-      anchor = "NW",
-      height = height,
-      width = width_preview,
       row = row,
       col = col + width + 1,
+      height = height,
+      width = width_preview,
+      border = borders.preview,
+      style = "minimal",
       focusable = true,
       title = " " .. context.cfg_preview_title .. " ",
       title_pos = "center",
-      border = borders.preview,
-      style = "minimal",
     }
 
     local bufnr_preview = self._preview:create_buf_as_needed() ---@type integer
     if winnr_preview == nil or not vim.api.nvim_win_is_valid(winnr_preview) then
+      wincfg_preview.noautocmd = true
       winnr_preview = vim.api.nvim_open_win(bufnr_preview, true, wincfg_preview)
       context.winnr_preview = winnr_preview
 
@@ -883,16 +883,15 @@ function M:create_wins_as_needed()
   ---@type vim.api.keyset.win_config
   local wincfg_input = {
     relative = "editor",
-    anchor = "NW",
-    height = input_height,
-    width = width,
     row = row,
     col = col,
+    height = input_height,
+    width = width,
+    border = show_main and (show_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
+    style = "minimal",
     focusable = true,
     title = " " .. context.cfg_input_title .. " ",
     title_pos = "center",
-    border = show_main and (show_preview and borders.input_with_preview or borders.input) or borders.input_without_main,
-    style = "minimal",
   }
   if winnr_input == nil or not vim.api.nvim_win_is_valid(winnr_input) then
     winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_input)

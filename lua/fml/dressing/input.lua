@@ -71,17 +71,16 @@ function M.input(opts, on_confirm)
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     zindex = parent_win_cfg.zindex and parent_win_cfg.zindex + 1 or nil,
     relative = relative,
-    anchor = "NW",
-    focusable = true,
     row = row,
     col = col,
     width = width,
     height = 1,
-    title = "  " .. prompt .. " ",
-    title_pos = "center",
     border = "rounded",
     style = "minimal",
+    focusable = true,
     noautocmd = true,
+    title = "  " .. prompt .. " ",
+    title_pos = "center",
   })
   vim.wo[winnr].cursorline = false
   vim.wo[winnr].number = false
