@@ -2,6 +2,7 @@
 local __mods = {
   base64 = "eve.std.lib.base64",
   color = "eve.std.lib.color",
+  easing = "eve.std.lib.easing",
   md5 = "eve.std.lib.md5",
 
   fn = "eve.std.fn",
@@ -31,6 +32,7 @@ local __mods = {
 ---
 ---@field public base64                 eve.std.lib.base64
 ---@field public color                  eve.std.lib.color
+---@field public easing                 eve.std.lib.easing
 ---@field public md5                    eve.std.lib.md5
 ---
 ---@field public fn                     eve.std.fn
