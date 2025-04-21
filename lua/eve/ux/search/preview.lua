@@ -119,6 +119,14 @@ function M.new(props)
         end
       end
 
+      if filetype == "markdown" then
+        local ok, render_markdown_state = pcall(require, "render-markdown.state")
+        if ok and render_markdown_state then
+          render_markdown_state.on.attach({ buf = bufnr })
+          require("render-markdown.manager").update(bufnr, "Initial")
+        end
+      end
+
       local nsnr = eve.var.Namespaces.search_preview ---@type integer
       for _, hl in ipairs(data.highlights) do
         local row = hl.lnum - 1 ---@type integer
