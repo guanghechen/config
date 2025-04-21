@@ -82,7 +82,7 @@ function M:show(winnr)
   local winnr_hint = self.winnr_hint ---@type integer|nil
   if winnr_hint == nil or not vim.api.nvim_win_is_valid(winnr_hint) then
     wincfg_hint.noautocmd = true
-    winnr_hint = vim.api.nvim_open_win(bufnr_hint, true, wincfg_hint) ---@type integer
+    winnr_hint = vim.api.nvim_open_win(bufnr_hint, false, wincfg_hint) ---@type integer
     self.winnr_hint = winnr_hint
 
     vim.wo[winnr_hint].number = false
