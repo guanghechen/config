@@ -14,6 +14,7 @@ local __mods = {
   im = "eve.builtin.im",
   json = "eve.builtin.json",
   lsp = "eve.builtin.lsp",
+  notifier = "eve.builtin.notifier",
   nvim = "eve.builtin.nvim",
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
@@ -50,6 +51,7 @@ local __mods = {
 ---@field public im                     eve.builtin.im
 ---@field public json                   eve.builtin.json
 ---@field public lsp                    eve.builtin.lsp
+---@field public notifier               eve.builtin.notifier
 ---@field public nvim                   eve.builtin.nvim
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
