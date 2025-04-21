@@ -1,8 +1,8 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local btn = eve.ux.Nvimbar.btn
-local txt = eve.ux.Nvimbar.txt
-local decode_btn_args = eve.ux.Nvimbar.decode_btn_args
+local btn = eve.nvim.btn
+local txt = eve.nvim.txt
+local decode_btn_args = eve.nvim.decode_btn_args
 
 ---@class fml.dressing.nvimbar.components
 local M = {}

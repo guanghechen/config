@@ -89,20 +89,6 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 local M = {}
 M.__index = M
 
----@param num                           integer
----@return string
-local function encode_int(num)
-  local text = string.format("%o", num) ---@type string
-  return text
-end
-
----@param text                          string
----@return integer|nil
-local function decode_int(text)
-  local num = tonumber(text, 8) ---@type integer|nil
-  return num
-end
-
 ---@param preset_context                eve.ux.nvimbar.IPresetContext
 ---@return eve.ux.nvimbar.IContext
 local function build_context(preset_context)
@@ -209,8 +195,8 @@ function M.new(props)
 
   self.name = name
   self._disposed = false
-  self._sep = M.txt(comp_sep, comp_sep_hlname)
-  self._sep_active = M.txt(comp_sep, comp_sep_hlname_active)
+  self._sep = eve.nvim.txt(comp_sep, comp_sep_hlname)
+  self._sep_active = eve.nvim.txt(comp_sep, comp_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(comp_sep)
   self._components = {}
   self._orders = {}
@@ -231,51 +217,6 @@ function M:dispose()
   if not self._disposed then
     self._disposed = true
   end
-end
-
----@param text                          string
----@param callback                      string
----@param args                          ?integer|integer[]
-function M.btn(text, callback, args)
-  local args_str = args or "" ---@type integer|integer[]|string
-  if type(args) == "table" then
-    args_str = M.encode_btn_args(args)
-  end
-  return "%" .. args_str .. "@v:lua." .. callback .. "@" .. text .. "%T"
-end
-
----@param text                          string
----@param hlname                        string
----@return string
-function M.txt(text, hlname)
-  return "%#" .. hlname .. "#" .. text:gsub("%%", "%%%%")
-end
-
----@param args                          integer[]
----@return string
-function M.encode_btn_args(args)
-  local result = "" ---@type string
-  for i, num in ipairs(args) do
-    if i > 1 then
-      result = result .. "9"
-    end
-    result = result .. encode_int(num)
-  end
-  return result
-end
-
----@param text                          string
----@return integer[]
-function M.decode_btn_args(text)
-  local argv = vim.split(text, "9", { plain = true }) ---@type string[]
-  local result = {} ---@type integer[]
-  for _, arg in ipairs(argv) do
-    local num = decode_int(arg)
-    if num ~= nil then
-      table.insert(result, num)
-    end
-  end
-  return result
 end
 
 ---@return nil

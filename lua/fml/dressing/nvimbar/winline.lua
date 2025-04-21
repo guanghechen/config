@@ -1,6 +1,6 @@
 local c = require("fml.dressing.nvimbar.components")
 
-local txt = eve.ux.Nvimbar.txt
+local txt = eve.nvim.txt
 local position = "f_wl" ---@type eve.ux.nvimbar.Position
 
 ---@param winnr                         integer

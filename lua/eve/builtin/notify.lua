@@ -1,4 +1,4 @@
----@alias eve.eve.notify.LevelEnum
+---@alias eve.builtin.notify.LevelEnum
 ---| 'TRACE'
 ---| 'DEBUG'
 ---| 'INFO'
@@ -6,7 +6,7 @@
 ---| 'ERROR'
 ---| 'OFF'
 
----@class eve.ux.notify.ITask
+---@class eve.builtin.notify.ITask
 ---@field public group                  string
 ---@field public level                  string
 ---@field public title                  string
@@ -16,15 +16,15 @@
 ---@field public timeout                integer
 ---@field public timestamp              integer
 
----@class eve.ux.notify.IWindow
+---@class eve.builtin.notify.IWindow
 ---@field public group                  string
 ---@field public winnr                  integer|nil
 ---@field public bufnr                  integer|nil
 ---@field public tick                   integer
----@field public task                   eve.ux.notify.ITask|nil
+---@field public task                   eve.builtin.notify.ITask|nil
 ---@field public row                    integer
 
-local txt = eve.ux.Nvimbar.txt
+local txt = eve.nvim.txt
 
 ---@class eve.eve.notify.Levels
 local Levels = {
@@ -87,9 +87,9 @@ local function is_blocking()
 end
 
 local __TASKS__ = eve.std.CircularQueue.new({ capacity = 100 })
-local __WINS__ = {} ---@type eve.ux.notify.IWindow[]
+local __WINS__ = {} ---@type eve.builtin.notify.IWindow[]
 
----@class eve.ux.notify
+---@class eve.builtin.notify
 local M = {}
 
 ---@param group                         string
@@ -106,7 +106,7 @@ function M.notify(group, level, title, message, timeout)
     width = width < line_width and line_width or width
   end
 
-  ---@type eve.ux.notify.ITask
+  ---@type eve.builtin.notify.ITask
   local task = {
     group = group,
     level = level,
@@ -122,7 +122,7 @@ function M.notify(group, level, title, message, timeout)
 end
 
 ---@protected
----@param win                           eve.ux.notify.IWindow
+---@param win                           eve.builtin.notify.IWindow
 ---@return integer
 function M.create_buf_as_needed(win)
   local bufnr = win.bufnr ---@type integer|nil
@@ -164,7 +164,7 @@ function M.create_buf_as_needed(win)
     eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
   end
 
-  local task = win.task ---@type eve.ux.notify.ITask
+  local task = win.task ---@type eve.builtin.notify.ITask
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, task.lines)
   if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
     local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
@@ -177,10 +177,10 @@ function M.create_buf_as_needed(win)
 end
 
 ---@protected
----@param win                           eve.ux.notify.IWindow
+---@param win                           eve.builtin.notify.IWindow
 ---@return integer
 function M.create_win_as_needed(win)
-  local task = win.task ---@type eve.ux.notify.ITask
+  local task = win.task ---@type eve.builtin.notify.ITask
   local width = math.min(82, vim.o.columns, task.width) ---@type integer
   local height = math.min(10, vim.o.lines, task.height) ---@type integer
 
@@ -226,7 +226,7 @@ function M.create_win_as_needed(win)
 end
 
 ---@protected
----@param win                           eve.ux.notify.IWindow
+---@param win                           eve.builtin.notify.IWindow
 ---@return nil
 function M.destroy_win(win)
   if win.winnr ~= nil and vim.api.nvim_win_is_valid(win.winnr) then
@@ -242,7 +242,7 @@ function M.destroy_win(win)
 end
 
 ---@protected
----@param task                          eve.ux.notify.ITask
+---@param task                          eve.builtin.notify.ITask
 ---@param width                         integer
 ---@return string
 function M.gen_winbar(task, width)
@@ -262,23 +262,23 @@ function M.gen_winbar(task, width)
 end
 
 ---@protected
----@param next_task                     eve.ux.notify.ITask|nil
+---@param next_task                     eve.builtin.notify.ITask|nil
 ---@return boolean
 function M.relayout(next_task)
   local group = next_task ~= nil and next_task.group or nil ---@type string|nil
-  local win_task = nil ---@type eve.ux.notify.IWindow|nil
+  local win_task = nil ---@type eve.builtin.notify.IWindow|nil
   local row = 1 ---@type integer
 
-  local invalid_wins = {} ---@type eve.ux.notify.IWindow[]
-  local requeue_tasks = {} ---@type eve.ux.notify.ITask[]
-  local wins = __WINS__ ---@type eve.ux.notify.IWindow[]
-  __WINS__ = {} ---@type eve.ux.notify.IWindow[]
+  local invalid_wins = {} ---@type eve.builtin.notify.IWindow[]
+  local requeue_tasks = {} ---@type eve.builtin.notify.ITask[]
+  local wins = __WINS__ ---@type eve.builtin.notify.IWindow[]
+  __WINS__ = {} ---@type eve.builtin.notify.IWindow[]
   for _, win in ipairs(wins) do
     local winnr = win.winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       if win.group == group then
-        win_task = win ---@type eve.ux.notify.IWindow
-        win.task = next_task ---@type eve.ux.notify.ITask|nil
+        win_task = win ---@type eve.builtin.notify.IWindow
+        win.task = next_task ---@type eve.builtin.notify.ITask|nil
       end
 
       win.row = row ---@type integer
@@ -295,7 +295,7 @@ function M.relayout(next_task)
 
   if not win_task and next_task ~= nil then
     if row + next_task.height + 3 < vim.o.lines then
-      ---@type eve.ux.notify.IWindow
+      ---@type eve.builtin.notify.IWindow
       local win = {
         group = next_task.group,
         winnr = nil,
@@ -304,7 +304,7 @@ function M.relayout(next_task)
         task = next_task,
         row = row,
       }
-      win_task = win ---@type eve.ux.notify.IWindow
+      win_task = win ---@type eve.builtin.notify.IWindow
       __WINS__[#__WINS__ + 1] = win
     else
       requeue_tasks[#requeue_tasks + 1] = next_task
@@ -312,12 +312,12 @@ function M.relayout(next_task)
   end
 
   for index = #requeue_tasks, 1, -1 do
-    local task = requeue_tasks[index] ---@type eve.ux.notify.ITask
+    local task = requeue_tasks[index] ---@type eve.builtin.notify.ITask
     __TASKS__:enqueue_front(task)
   end
 
   for _, win in ipairs(__WINS__) do
-    ---@cast win eve.ux.notify.IWindow
+    ---@cast win eve.builtin.notify.IWindow
     if win == win_task then
       win.tick = win.tick + 1
 
@@ -351,7 +351,7 @@ end
 function M.schedule()
   if is_blocking() then
     while true do
-      local task = __TASKS__:dequeue() ---@type eve.ux.notify.ITask|nil
+      local task = __TASKS__:dequeue() ---@type eve.builtin.notify.ITask|nil
       if task == nil or not M.relayout(task) then
         break
       end
