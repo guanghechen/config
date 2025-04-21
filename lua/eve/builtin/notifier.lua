@@ -89,29 +89,54 @@ local config = {
 ---@type string[]
 local blocking_modes = { "ic", "ix", "c", "no", "r%?", "rm" }
 
----@protected
----@return boolean
-local function is_blocking()
-  return true
-  -- local mode = vim.api.nvim_get_mode() ---@type vim.api.keyset.get_mode
-  -- if mode.blocking then
-  --   return true
-  -- end
-  --
-  -- for _, m in ipairs(blocking_modes) do
-  --   if mode.mode:find(m) == 1 then
-  --     return true
-  --   end
-  -- end
-  -- return false
-end
-
 local __TASKS__ = eve.std.CircularQueue.new({ capacity = 100 })
+local __TASK_HISTORY__ = eve.std.CircularQueue.new({ capacity = 200 })
 local __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
 
 ---@class eve.builtin.notifier
 local M = {}
 
+---@protected
+---@return boolean
+function M.is_blocking()
+  local mode = vim.api.nvim_get_mode() ---@type vim.api.keyset.get_mode
+  if mode.blocking then
+    return true
+  end
+
+  for _, m in ipairs(blocking_modes) do
+    if mode.mode:find(m) == 1 then
+      return true
+    end
+  end
+  return false
+end
+
+---@return nil
+function M.dismiss_all()
+  local wins = __WINS__ ---@type eve.builtin.notifier.IWindow[]
+  __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
+  for _, win in ipairs(wins) do
+    M.destroy_win(win)
+  end
+end
+
+---@return nil
+function M.pause()
+  eve.state.status.notification_paused:next(true)
+end
+
+
+---@return nil
+function M.resume()
+  eve.state.status.notification_paused:next(false)
+  M.schedule()
+end
+
+---@return eve.builtin.notifier.ITask[]
+function M.resolve_history()
+  return __TASK_HISTORY__:collect()
+end
 
 ---@param level                         number
 ---@return eve.builtin.notifier.LevelEnum
@@ -150,7 +175,17 @@ function M.notify(level, group, title, message, timeout)
     timeout = timeout,
     timestamp = os.time(),
   }
-  __TASKS__:enqueue(task)
+
+  local notification_paused = eve.state.status.notification_paused:snapshot() ---@type boolean
+  local notification_level = eve.state.status.notification_level:snapshot() ---@type eve.builtin.notifier.LevelEnum
+  local notification_priority = Levels[notification_level] ---@type integer
+  local priority = Levels[level] ---@type integer
+
+  __TASK_HISTORY__:enqueue(task)
+  if not notification_paused or priority >= notification_priority then
+    __TASKS__:enqueue(task)
+  end
+
   M.schedule()
 end
 
@@ -197,15 +232,6 @@ end
 ---@return nil
 function M.error(group, title, message, timeout)
   return M.notify("ERROR", group, title, message, timeout)
-end
-
----@return nil
-function M.dismiss_all()
-  local wins = __WINS__ ---@type eve.builtin.notifier.IWindow[]
-  __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
-  for _, win in ipairs(wins) do
-    M.destroy_win(win)
-  end
 end
 
 ---@protected
@@ -445,17 +471,19 @@ end
 ---@protected
 ---@return nil
 function M.schedule()
+  local notification_paused = eve.state.status.notification_paused:snapshot() ---@type boolean
+  if notification_paused then
+    return
+  end
   vim.schedule(M.handle)
 end
 
 ---@protected
 ---@return nil
 function M.handle()
-  if is_blocking() then
-    local task = __TASKS__:dequeue() ---@type eve.builtin.notifier.ITask|nil
-    if task ~= nil and M.relayout(task) then
-      M.schedule()
-    end
+  local task = __TASKS__:dequeue() ---@type eve.builtin.notifier.ITask|nil
+  if task ~= nil and M.relayout(task) then
+    M.schedule()
   end
 end
 

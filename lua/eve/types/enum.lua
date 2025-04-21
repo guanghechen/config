@@ -60,12 +60,6 @@
 ---| "center"
 ---| "right"
 
----@alias eve.e.ReportLevel
----| "DEBUG"
----| "INFO"
----| "WARN"
----| "ERROR"
-
 ---@alias eve.e.TermPosition
 ---| "bottom"
 ---| "right"
