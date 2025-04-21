@@ -310,6 +310,12 @@ command
     end,
   })
   .implement({
+    uuid = K.find.notifications.uuid,
+    action = function()
+      require("fml.action.find.notification").find_notifications()
+    end,
+  })
+  .implement({
     uuid = K.find.pinned_files.uuid,
     action = function()
       require("fml.action.find.pinned_files").find_pinned_files()
