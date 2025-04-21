@@ -795,7 +795,6 @@ function M:create_wins_as_needed()
     }
 
     if winnr_main == nil or not vim.api.nvim_win_is_valid(winnr_main) then
-      wincfg_main.noautocmd = true
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       context.winnr_main = winnr_main
       winnr_main_new_created = true
@@ -843,7 +842,6 @@ function M:create_wins_as_needed()
 
     local bufnr_preview = self._preview:create_buf_as_needed() ---@type integer
     if winnr_preview == nil or not vim.api.nvim_win_is_valid(winnr_preview) then
-      wincfg_preview.noautocmd = true
       winnr_preview = vim.api.nvim_open_win(bufnr_preview, true, wincfg_preview)
       context.winnr_preview = winnr_preview
 

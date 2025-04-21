@@ -62,6 +62,18 @@ function M.gen_hlgroup_map(context)
     f_ui_current = { bg = t and c.bg0 or c.none },
     f_ui_normal = { bg = t and c.bg0 or c.none },
 
+    ---notify
+    f_notify_border_trace = { fg = c.fg4, bg = t and c.bg0 or c.none },
+    f_notify_border_debug = { fg = c.fg2, bg = t and c.bg0 or c.none },
+    f_notify_border_info = { fg = c.blue, bg = t and c.bg0 or c.none },
+    f_notify_border_warn = { fg = c.yellow, bg = t and c.bg0 or c.none },
+    f_notify_border_error = { fg = c.red, bg = t and c.bg0 or c.none },
+    f_notify_winbar_trace = { fg = c.fg4, bg = t and c.bg0 or c.none },
+    f_notify_winbar_debug = { fg = c.fg2, bg = t and c.bg0 or c.none },
+    f_notify_winbar_info = { fg = c.blue, bg = t and c.bg0 or c.none },
+    f_notify_winbar_warn = { fg = c.yellow, bg = t and c.bg0 or c.none },
+    f_notify_winbar_error = { fg = c.red, bg = t and c.bg0 or c.none },
+
     ---search
     f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },
     f_us_input_prompt = { fg = c.red, bg = t and c.bg0 or c.none },

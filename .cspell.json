@@ -359,6 +359,7 @@
     "lnums",
     "loadstring",
     "loclist",
+    "loglevel",
     "lspconfig",
     "lspinfo",
     "luafile",

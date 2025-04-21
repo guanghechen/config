@@ -250,6 +250,15 @@ M.kind = {
   Watch = "󰥔",
 }
 
+---@class eve.builtin.icon.log
+M.loglevel = {
+  TRACE = "",
+  DEBUG = "",
+  INFO = "",
+  WARN = "",
+  ERROR = "",
+}
+
 ---@class eve.builtin.icon.ui
 M.ui = {
   Accepted = "",

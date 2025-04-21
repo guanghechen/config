@@ -9,6 +9,7 @@
 ---@field public dequeue                fun(self: eve.std.collection.ICircularQueue): eve.t.T|nil
 ---@field public dequeue_back           fun(self: eve.std.collection.ICircularQueue): eve.t.T|nil
 ---@field public enqueue                fun(self: eve.std.collection.ICircularQueue, element: eve.t.T): nil
+---@field public enqueue_front          fun(self: eve.std.collection.ICircularQueue, element: eve.t.T): nil
 ---@field public fork                   fun(self: eve.std.collection.ICircularQueue, filter: eve.t.IFilter): eve.std.collection.ICircularQueue
 ---@field public front                  fun(self: eve.std.collection.ICircularQueue): eve.t.T|nil
 ---@field public iterator               fun(self: eve.std.collection.ICircularQueue): fun(): eve.t.T|nil
@@ -201,6 +202,19 @@ function M:enqueue(element)
     self._size = self._size + 1
   else
     self._start = self._start == self._capacity and 1 or self._start + 1
+  end
+end
+
+---@param element                       eve.t.T
+---@return nil
+function M:enqueue_front(element)
+  self._start = self._start == 1 and self._capacity or self._start - 1
+  self._elements[self._start] = element
+
+  if self._size < self._capacity then
+    self._size = self._size + 1
+  else
+    self._end = self._end == 1 and self._capacity or self._end - 1
   end
 end
 
