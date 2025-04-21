@@ -31,6 +31,29 @@ local Levels = {
   ERROR = vim.log.levels.ERROR,
 }
 
+---@class eve.builtin.notifier.LevelMap
+local LevelMap = {
+  TRACE = "TRACE",
+  DEBUG = "DEBUG",
+  INFO  = "INFO",
+  WARN  = "WARN",
+  ERROR = "ERROR",
+  [vim.log.levels.TRACE] = "TRACE",
+  [vim.log.levels.DEBUG] = "DEBUG",
+  [vim.log.levels.INFO]  = "INFO",
+  [vim.log.levels.WARN]  = "WARN",
+  [vim.log.levels.ERROR] = "ERROR",
+}
+
+---@class eve.builtin.notifier.LevelTitleMap 
+local LevelTitleMap = {
+  TRACE = "Trace",
+  DEBUG = "Debug",
+  INFO  = "Information",
+  WARN  = "Warning",
+  ERROR = "Error",
+}
+
 local config = {
   winhighlight = {
     TRACE = table.concat({
@@ -89,6 +112,19 @@ local __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
 ---@class eve.builtin.notifier
 local M = {}
 
+
+---@param level                         number
+---@return eve.builtin.notifier.LevelEnum
+function M.resolve_level(level)
+  return LevelMap[level] or "INFO"
+end
+
+---@param level                         eve.builtin.notifier.LevelEnum
+---@return string
+function M.resolve_title(level)
+  return LevelTitleMap[level]
+end
+
 ---@param level                         eve.builtin.notifier.LevelEnum
 ---@param group                         string|nil
 ---@param title                         string
@@ -97,9 +133,9 @@ local M = {}
 ---@return nil
 function M.notify(level, group, title, message, timeout)
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
-  local width = vim.api.nvim_strwidth(message) + 12 ---@type integer
+  local width = vim.api.nvim_strwidth(message) + 14 ---@type integer
   for _, line in ipairs(lines) do
-    local line_width = vim.api.nvim_strwidth(line) + 12 ---@type integer
+    local line_width = vim.api.nvim_strwidth(line) + 4 ---@type integer
     width = width < line_width and line_width or width
   end
 
@@ -163,6 +199,15 @@ function M.error(group, title, message, timeout)
   return M.notify("ERROR", group, title, message, timeout)
 end
 
+---@return nil
+function M.dismiss_all()
+  local wins = __WINS__ ---@type eve.builtin.notifier.IWindow[]
+  __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
+  for _, win in ipairs(wins) do
+    M.destroy_win(win)
+  end
+end
+
 ---@protected
 ---@param win                           eve.builtin.notifier.IWindow
 ---@return integer
@@ -219,7 +264,7 @@ end
 function M.create_win_as_needed(win)
   local task = win.task ---@type eve.builtin.notifier.ITask
   local width = math.min(82, vim.o.columns, task.width) ---@type integer
-  local height = math.min(10, vim.o.lines, task.height) ---@type integer
+  local height = math.min(42, vim.o.lines - 4, task.height) ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -243,6 +288,8 @@ function M.create_win_as_needed(win)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr
 
+    vim.wo[winnr].conceallevel = 2
+    vim.wo[winnr].concealcursor = "n"
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false

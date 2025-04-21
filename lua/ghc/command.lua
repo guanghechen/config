@@ -154,9 +154,6 @@ command
 command.implement({
   uuid = K.ux.dismiss_notifications.uuid,
   action = function()
-    require("notify").dismiss({
-      silent = true,
-      pending = true,
-    })
+    eve.notifier.dismiss_all()
   end,
 })

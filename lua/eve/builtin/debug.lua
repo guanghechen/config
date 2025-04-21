@@ -41,8 +41,7 @@ function M.log(...)
     end
     text = #text > 0 and text:sub(1) or "" ---@type string
   end
-
-  vim.notify(text, vim.log.levels.INFO, { title = "debug" })
+  eve.notifier.debug(nil, "Debug", text, 5000)
 end
 
 ---@param opts                          eve.builtin.debug.ICmdParams
@@ -97,23 +96,9 @@ function M.cmd(opts)
   if opts.notify ~= false then
     vim.schedule(function()
       local id = opts.group and ("eve.builtin.debug.cmd." .. cmd) or nil
-      local level = opts.level or vim.log.levels.INFO
+      local level = eve.notifier.resolve_level(opts.level or vim.log.levels.INFO)
       local title = opts.title or id or "Cmd Debug"
-      vim.notify(msg, level, {
-        title = title,
-        on_open = function(winnr)
-          vim.wo[winnr].conceallevel = 2
-          vim.wo[winnr].concealcursor = "n"
-          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-            local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
-            local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-            if has_ts_parser then
-              vim.treesitter.start(bufnr, lang)
-            end
-          end
-        end,
-      })
+      eve.notifier.notify(level, id, title, msg, 5000)
     end)
   end
   return msg

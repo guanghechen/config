@@ -46,7 +46,7 @@ M.YOZORA_VIEWER = "yozora-viewer"
 
 ---@class eve.builtin.filetype.filetypes
 local filetypes = {
-  -- stylua: ignore 
+  -- stylua: ignore start
   cmp_code = {
     assembly         = true,
     bash             = true,
@@ -98,6 +98,7 @@ local filetypes = {
     xml              = true,
     yaml             = true,
   },
+  -- stylua: ignore end
   cmp_others = {
     [M.AVANTE_INPUT] = true,
     -- [M.COPILOT_CHAT] = true,

@@ -2,6 +2,9 @@ return {
   name = "noice.nvim",
   lazy = false,
   opts = {
+    notify = {
+      enabled = false,
+    },
     lsp = {
       progress = {
         enabled = false,
@@ -12,10 +15,6 @@ return {
       },
     },
     routes = {
-      {
-        view = "notify",
-        filter = { event = "msg_showmode" },
-      },
       {
         view = "mini",
         filter = {
@@ -44,8 +43,8 @@ return {
     end
     require("noice").setup(opts)
   end,
-  -- stylua: ignore
   keys = {
+    -- stylua: ignore start
     { "<leader>sn",  "",                                                                            desc = "+noice" },
     { "<leader>snl", function() require("noice").cmd("last") end,                                   desc = "Noice Last Message" },
     { "<leader>snh", function() require("noice").cmd("history") end,                                desc = "Noice History" },
@@ -53,9 +52,9 @@ return {
     { "<leader>snd", function() require("noice").cmd("dismiss") end,                                desc = "Dismiss All" },
     { "<C-f>",       function() if not require("noice.lsp").scroll(4) then return "<C-f>" end end,  desc = "Scroll Forward",  silent = true, expr = true, mode = { "i", "n", "s" } },
     { "<C-b>",       function() if not require("noice.lsp").scroll(-4) then return "<C-b>" end end, desc = "Scroll Backward", silent = true, expr = true, mode = { "i", "n", "s" } },
+    -- stylua: ignore end
   },
   dependencies = {
     "nui.nvim",
-    "nvim-notify",
   },
 }

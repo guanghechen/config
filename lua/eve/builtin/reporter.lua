@@ -15,22 +15,8 @@ local Levels = {
 ---@class eve.builtin.reporter
 local M = {}
 
----@param level                         eve.e.ReportLevel|nil
----@return integer
-local function resolve_level(level)
-  if level == nil then
-    return Levels.INFO
-  end
-
-  local result = Levels[level]
-  if result == nil then
-    return Levels.INFO
-  end
-  return result
-end
-
 ---@param options                       eve.builtin.reporter.IOptions
----@param level                         integer
+---@param level                         eve.builtin.notifier.LevelEnum
 ---@return nil
 local function log(options, level)
   local title = options.from ---@type string
@@ -49,50 +35,27 @@ local function log(options, level)
     end
   end
 
-  vim.schedule(function()
-    vim.notify(text, level, {
-      title = title,
-      on_open = function(winnr)
-        vim.wo[winnr].conceallevel = 2
-        vim.wo[winnr].concealcursor = "n"
-        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-          local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
-          local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-          if has_ts_parser then
-            vim.treesitter.start(bufnr, lang)
-          end
-        end
-      end,
-    })
-  end)
-end
-
----@param options                       eve.builtin.reporter.IOptions
----@param level                         ?eve.e.ReportLevel
-function M.log(options, level)
-  local level_value = resolve_level(level) ---@type integer
-  log(options, level_value)
+  eve.notifier.notify(level, nil, title, text, 3000)
 end
 
 ---@param options                       eve.builtin.reporter.IOptions
 function M.debug(options)
-  log(options, Levels.DEBUG)
+  log(options, "DEBUG")
 end
 
 ---@param options                       eve.builtin.reporter.IOptions
 function M.info(options)
-  log(options, Levels.INFO)
+  log(options, "INFO")
 end
 
 ---@param options                       eve.builtin.reporter.IOptions
 function M.warn(options)
-  log(options, Levels.WARN)
+  log(options, "WARN")
 end
 
 ---@param options                       eve.builtin.reporter.IOptions
 function M.error(options)
-  log(options, Levels.ERROR)
+  log(options, "ERROR")
 end
 
 return M

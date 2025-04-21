@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.plugins.neo-tree" ---@type string
+
 local sources = { "filesystem", "buffers", "git_status" } ---@type string[]
 
 return {
@@ -186,10 +188,15 @@ return {
           return
         end
 
-        local filepath = node.path
+        local filepath = node.path ---@type string
         local stat = vim.loop.fs_stat(filepath)
         if not stat then
-          vim.notify("Failed to get file stats", vim.log.levels.ERROR)
+          eve.reporter.error({
+            from = __module_name__,
+            subject = "show_file_info",
+            message = "Failed to get file stats",
+            details = { filepath = filepath, node = node },
+          })
           return
         end
 

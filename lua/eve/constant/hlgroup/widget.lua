@@ -74,11 +74,11 @@ function M.gen_hlgroup_map(context)
     f_notify_normal_info  = { fg = c.fg2,     bg = t and c.bg0 or c.none },
     f_notify_normal_warn  = { fg = c.fg2,     bg = t and c.bg0 or c.none },
     f_notify_normal_error = { fg = c.fg2,     bg = t and c.bg0 or c.none },
-    f_notify_winbar_trace = { fg = c.fg2,     bg = c.none, sp = c.bg2,     underline = true },
-    f_notify_winbar_debug = { fg = c.green,   bg = c.none, sp = c.green,     underline = true },
-    f_notify_winbar_info  = { fg = c.blue,    bg = c.none, sp = c.blue,    underline = true },
-    f_notify_winbar_warn  = { fg = c.yellow,  bg = c.none, sp = c.yellow,  underline = true },
-    f_notify_winbar_error = { fg = c.red,     bg = c.none, sp = c.red,     underline = true },
+    f_notify_winbar_trace = { fg = c.fg2,     bg = c.none, sp = c.bg2,    bold = true, underline = true },
+    f_notify_winbar_debug = { fg = c.green,   bg = c.none, sp = c.green,  bold = true, underline = true },
+    f_notify_winbar_info  = { fg = c.blue,    bg = c.none, sp = c.blue,   bold = true, underline = true },
+    f_notify_winbar_warn  = { fg = c.yellow,  bg = c.none, sp = c.yellow, bold = true, underline = true },
+    f_notify_winbar_error = { fg = c.red,     bg = c.none, sp = c.red,    bold = true, underline = true },
     -- stylua: ignore end
 
     ---search

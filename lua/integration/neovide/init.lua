@@ -42,6 +42,7 @@ vim.schedule(function()
     require("fml.dressing.image")
   end
   require("fml.dressing.input")
+  require("fml.dressing.notifier")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
   require("fml.dressing.winsep")

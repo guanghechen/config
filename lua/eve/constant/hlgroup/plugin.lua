@@ -337,19 +337,6 @@ function M.gen_hlgroup_map(context)
     NvimDapVirtualText = { fg = c.fg2, bg = cs.mix(c.bg0, c.orange, 30), italic = true },
     NvimDapVirtualTextChanged = { fg = c.fg0, bg = cs.mix(c.bg0, c.orange, 30), italic = true },
 
-    ---! nvim-notify
-    NotifyERRORBorder = { fg = c.red, bg = t and c.bg0 or c.none },
-    NotifyWARNBorder = { fg = c.yellow, bg = t and c.bg0 or c.none },
-    NotifyINFOBorder = { fg = c.green, bg = t and c.bg0 or c.none },
-    NotifyDEBUGBorder = { fg = c.orange, bg = t and c.bg0 or c.none },
-    NotifyTRACEBorder = { fg = c.bg4, bg = t and c.bg0 or c.none },
-
-    NotifyERRORBody = { fg = c.fg1, bg = c.bg0 },
-    NotifyWARNBody = { fg = c.fg1, bg = c.bg0 },
-    NotifyINFOBody = { fg = c.fg1, bg = c.bg0 },
-    NotifyDEBUGBody = { fg = c.fg1, bg = c.bg0 },
-    NotifyTRACEBody = { fg = c.fg1, bg = c.bg0 },
-
     NotifyERRORIcon = { fg = c.red },
     NotifyWARNIcon = { fg = c.yellow },
     NotifyINFOIcon = { fg = c.green },
