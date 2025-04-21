@@ -6,9 +6,11 @@
 ---| 'ERROR'
 
 ---@class eve.builtin.notifier.ITask
+---@field public uuid                   string
 ---@field public group                  string|nil
 ---@field public level                  string
 ---@field public title                  string
+---@field public content                string
 ---@field public lines                  string[]
 ---@field public width                  integer
 ---@field public height                 integer
@@ -57,32 +59,32 @@ local LevelTitleMap = {
 local config = {
   winhighlight = {
     TRACE = table.concat({
-      "FloatBorder:f_notify_border_trace",
-      "Normal:f_notify_normal_trace",
+      "FloatBorder:f_un_border_trace",
+      "Normal:f_un_normal_trace",
     }, ","),
     DEBUG = table.concat({
-      "FloatBorder:f_notify_border_debug",
-      "Normal:f_notify_normal_debug",
+      "FloatBorder:f_un_border_debug",
+      "Normal:f_un_normal_debug",
     }, ","),
     INFO = table.concat({
-      "FloatBorder:f_notify_border_info",
-      "Normal:f_notify_normal_info",
+      "FloatBorder:f_un_border_info",
+      "Normal:f_un_normal_info",
     }, ","),
     WARN = table.concat({
-      "FloatBorder:f_notify_border_warn",
-      "Normal:f_notify_normal_warn",
+      "FloatBorder:f_un_border_warn",
+      "Normal:f_un_normal_warn",
     }, ","),
     ERROR = table.concat({
-      "FloatBorder:f_notify_border_error",
-      "Normal:f_notify_normal_error",
+      "FloatBorder:f_un_border_error",
+      "Normal:f_un_normal_error",
     }, ","),
   },
   winbar = {
-    TRACE = "f_notify_winbar_trace",
-    DEBUG = "f_notify_winbar_debug",
-    INFO = "f_notify_winbar_info",
-    WARN = "f_notify_winbar_warn",
-    ERROR = "f_notify_winbar_error",
+    TRACE = "f_un_winbar_trace",
+    DEBUG = "f_un_winbar_debug",
+    INFO = "f_un_winbar_info",
+    WARN = "f_un_winbar_warn",
+    ERROR = "f_un_winbar_error",
   },
 }
 
@@ -121,21 +123,20 @@ function M.dismiss_all()
   end
 end
 
+---@return eve.builtin.notifier.ITask[]
+function M.history()
+  return __TASK_HISTORY__:collect()
+end
+
 ---@return nil
 function M.pause()
   eve.state.status.notification_paused:next(true)
 end
 
-
 ---@return nil
 function M.resume()
   eve.state.status.notification_paused:next(false)
   M.schedule()
-end
-
----@return eve.builtin.notifier.ITask[]
-function M.resolve_history()
-  return __TASK_HISTORY__:collect()
 end
 
 ---@param level                         number
@@ -148,6 +149,15 @@ end
 ---@return string
 function M.resolve_title(level)
   return LevelTitleMap[level]
+end
+
+---@return nil
+function M.schedule()
+  local notification_paused = eve.state.status.notification_paused:snapshot() ---@type boolean
+  if notification_paused then
+    return
+  end
+  vim.schedule(M.handle)
 end
 
 ---@param level                         eve.builtin.notifier.LevelEnum
@@ -164,14 +174,24 @@ function M.notify(level, group, title, message, timeout)
     width = width < line_width and line_width or width
   end
 
+  local md5 = eve.std.md5.new()
+    :update(level)
+    :update(group or "")
+    :update(title)
+    :update(message)
+    :finish()
+  local uuid = eve.std.md5.tohex(md5) ---@type string
+
   ---@type eve.builtin.notifier.ITask
   local task = {
+    uuid = uuid,
     group = group,
     level = level,
     title = title,
+    content = message,
     lines = lines,
     width = width,
-    height = #lines,
+    height = #lines + 1,
     timeout = timeout,
     timestamp = os.time(),
   }
@@ -257,7 +277,6 @@ function M.create_buf_as_needed(win)
         desc = "notify: close",
         callback = function()
           if vim.api.nvim_buf_is_valid(bufnr) then
-            vim.cmd.close()
             pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
             M.schedule()
           end
@@ -270,7 +289,7 @@ function M.create_buf_as_needed(win)
     vim.bo[bufnr].readonly = false
   end
 
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, win.task.lines)
+  vim.api.nvim_buf_set_lines(bufnr, 1, -1, false, win.task.lines)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
@@ -369,8 +388,8 @@ function M.gen_winbar(task, width)
     width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   end
 
-  local text_blank = string.rep(" ", width - width_title - 12) ---@type string
-  local text = string.format(" %s %s%s%s ", eve.icon.loglevel[task.level], text_title, text_blank, text_time)
+  local text_blank = string.rep(" ", width - width_title - 10) ---@type string
+  local text = string.format("%s %s%s%s", eve.icon.loglevel[task.level], text_title, text_blank, text_time)
   return eve.nvim.txt(text, config.winbar[task.level])
 end
 
@@ -443,9 +462,14 @@ function M.relayout(next_task)
 
   for _, win in ipairs(__WINS__) do
     if win ~= win_task then
+      local task = win.task ---@type eve.builtin.notifier.ITask
+      local width = math.min(82, vim.o.columns, task.width) ---@type integer
+      local height = math.min(42, vim.o.lines - 4, task.height) ---@type integer
       local wincfg = vim.api.nvim_win_get_config(win.winnr) ---@type vim.api.keyset.win_config
+
       wincfg.row = win.row
-      wincfg.noautocmd = nil
+      wincfg.width = width
+      wincfg.height = height + 1
       vim.api.nvim_win_set_config(win.winnr, wincfg)
     end
   end
@@ -470,23 +494,12 @@ end
 
 ---@protected
 ---@return nil
-function M.schedule()
-  local notification_paused = eve.state.status.notification_paused:snapshot() ---@type boolean
-  if notification_paused then
-    return
-  end
-  vim.schedule(M.handle)
-end
-
----@protected
----@return nil
 function M.handle()
   local task = __TASKS__:dequeue() ---@type eve.builtin.notifier.ITask|nil
   if task ~= nil and M.relayout(task) then
     M.schedule()
   end
 end
-
 
 vim.api.nvim_create_autocmd("WinEnter", {
   callback = function()

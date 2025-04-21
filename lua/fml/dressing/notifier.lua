@@ -14,3 +14,7 @@ vim.notify = function(msg, level0, opts)
   local title = opts.title or eve.notifier.resolve_title(level) ---@type string
   eve.notifier.notify(level, nil, title, msg, timeout)
 end
+
+eve.state.observe({ eve.state.status.notification_level, eve.state.status.notification_paused }, function()
+  eve.notifier.schedule()
+end)
