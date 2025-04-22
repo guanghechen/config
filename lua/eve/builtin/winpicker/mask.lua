@@ -85,6 +85,9 @@ function M:show(winnr)
     winnr_hint = vim.api.nvim_open_win(bufnr_hint, false, wincfg_hint) ---@type integer
     self.winnr_hint = winnr_hint
 
+    vim.w[winnr_hint][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr_hint][eve.var.Names.FLAG_SOURCEFILE] = false
+
     vim.wo[winnr_hint].number = false
     vim.wo[winnr_hint].relativenumber = false
     vim.wo[winnr_hint].signcolumn = "no"

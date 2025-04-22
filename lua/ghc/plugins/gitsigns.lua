@@ -216,6 +216,10 @@ local keymaps = {
         border = "rounded",
       }
       local winnr = vim.api.nvim_open_win(bufnr, true, opts)
+
+      vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+      vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
       vim.wo[winnr].wrap = false
       vim.wo[winnr].number = false
       vim.wo[winnr].relativenumber = false

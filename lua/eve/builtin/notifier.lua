@@ -292,7 +292,10 @@ function M.create_win_as_needed(win)
     wincfg.noautocmd = true
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr
+
     vim.w[winnr][eve.var.Names.WIN_TYPE_NOTIFIER] = true
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].conceallevel = 2
     vim.wo[winnr].concealcursor = "n"

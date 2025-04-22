@@ -201,6 +201,9 @@ function M:create_win_as_needed()
 
     winnr_new_created = true
 
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false
     vim.wo[winnr].signcolumn = "yes"

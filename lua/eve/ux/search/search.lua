@@ -806,6 +806,9 @@ function M:create_wins_as_needed()
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       context.winnr_main = winnr_main
 
+      vim.w[winnr_main][eve.var.Names.WINLINE_DISABLED] = true
+      vim.w[winnr_main][eve.var.Names.FLAG_SOURCEFILE] = false
+
       vim.wo[winnr_main].number = false
       vim.wo[winnr_main].relativenumber = false
       vim.wo[winnr_main].signcolumn = "yes"
@@ -859,6 +862,9 @@ function M:create_wins_as_needed()
         vim.api.nvim_win_set_cursor(winnr_preview, { preview_lnum, preview_col })
       end
 
+      vim.w[winnr_preview][eve.var.Names.WINLINE_DISABLED] = true
+      vim.w[winnr_preview][eve.var.Names.FLAG_SOURCEFILE] = false
+
       vim.wo[winnr_preview].number = true
       vim.wo[winnr_preview].list = true
       vim.wo[winnr_preview].listchars = string.format(
@@ -902,6 +908,9 @@ function M:create_wins_as_needed()
   if winnr_input == nil or not vim.api.nvim_win_is_valid(winnr_input) then
     winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_input)
     context.winnr_input = winnr_input
+
+    vim.w[winnr_input][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr_input][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr_input].number = false
     vim.wo[winnr_input].relativenumber = false

@@ -34,6 +34,9 @@ function M.show(task)
     wincfg.noautocmd = true
     winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
 
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
     vim.wo[winnr].number = false

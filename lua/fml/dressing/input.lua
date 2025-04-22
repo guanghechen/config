@@ -82,6 +82,10 @@ function M.input(opts, on_confirm)
     title = "  " .. prompt .. " ",
     title_pos = "center",
   })
+
+  vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+  vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
   vim.wo[winnr].cursorline = false
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false

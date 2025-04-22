@@ -126,6 +126,10 @@ function M:create_win_as_needed()
   local bufnr = self:create_buf_as_needed() ---@type integer
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
+
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
     vim.wo[winnr].number = false

@@ -734,6 +734,10 @@ function M.toggle_maximize()
       title = " MAXIMIZED ",
       title_pos = "center",
     })
+
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
     vim.wo[winnr].number = true
     vim.wo[winnr].relativenumber = true
     vim.wo[winnr].signcolumn = "yes"
