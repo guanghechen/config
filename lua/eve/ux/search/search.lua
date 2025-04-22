@@ -899,7 +899,7 @@ function M:create_wins_as_needed()
 
     vim.wo[winnr_input].number = false
     vim.wo[winnr_input].relativenumber = false
-    vim.wo[winnr_input].signcolumn = "yes:1"
+    vim.wo[winnr_input].signcolumn = "yes"
     vim.wo[winnr_input].spell = false
     vim.wo[winnr_input].wrap = false
   else
