@@ -72,7 +72,6 @@ local raw_specs = {
   { name = "mini.pairs", main = "mini.pairs", cond = conds.common },
   { name = "mini.surround", main = "mini.surround", cond = conds.common },
   { name = "neo-tree.nvim", main = "neo-tree", cond = conds.not_vscode },
-  { name = "noice.nvim", main = "noice", cond = conds.not_vscode },
   { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
   { name = "nvim-dap", main = "dap", cond = conds.dap },
   { name = "nvim-dap-ui", main = "dapui", cond = conds.dap },

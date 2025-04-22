@@ -49,7 +49,7 @@ statusline
   :place("right", c.ai(position), 95)
   -- :place("right", c.copilot(position), 95)
   :place("right", c.diagnostics(position), 95)
-  :place("right", c.noice_mode(position), 95)
+  :place("right", c.recording(position), 95)
 
 dirtier:subscribe(eve.std.Subscriber.new({
   on_next = function()

@@ -1471,58 +1471,6 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
-function M.noice_command(position)
-  local hln_noice_command = position .. "_noice_command" ---@type string
-
-  ---@type eve.ux.nvimbar.IRawComponent
-  local component = {
-    name = "noice_command",
-    atomic = true,
-    condition = function()
-      return not not package.loaded["noice"]
-    end,
-    render = function()
-      local noice_status = require("noice").api.status
-      local text = noice_status.command.get() or "" ---@type string
-      if text == nil and #text == 0 then
-        return "", "", true
-      end
-
-      local hl_text = txt(text, hln_noice_command)
-      return text, hl_text, true
-    end,
-  }
-  return component
-end
-
----@param position                      eve.ux.nvimbar.Position
----@return eve.ux.nvimbar.IRawComponent
-function M.noice_mode(position)
-  local hln_noice_mode = position .. "_noice_mode" ---@type string
-
-  ---@type eve.ux.nvimbar.IRawComponent
-  local component = {
-    name = "noice_mode",
-    atomic = true,
-    condition = function()
-      return not not package.loaded["noice"]
-    end,
-    render = function()
-      local noice_status = require("noice").api.status
-      local text = noice_status.mode.get() or "" ---@type string
-      if text == nil or #text == 0 then
-        return "", "", true
-      end
-
-      local hl_text = txt(text, hln_noice_mode) ---@type string
-      return text, hl_text, true
-    end,
-  }
-  return component
-end
-
----@param position                      eve.ux.nvimbar.Position
----@return eve.ux.nvimbar.IRawComponent
 function M.pos(position)
   local hln_sep = position .. "_pos_sep" ---@type string
   local hln_text_anchor = position .. "_pos_text_anchor" ---@type string
@@ -1583,6 +1531,29 @@ function M.readonly(position)
     render = function()
       local text = eve.icon.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
+function M.recording(position)
+  local hln_text = position .. "_recording" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "recording",
+    atomic = true,
+    render = function()
+      local reg = vim.fn.reg_recording()
+      if reg == "" then
+        return "", "", true
+      end
+
+      local text = "Recording @" .. reg
+      local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
   }

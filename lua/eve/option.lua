@@ -48,7 +48,6 @@ vim.o.fillchars = table.concat(eve.icon.fillchars, ",")
 vim.o.guifont = "Maple Mono NF CN"
 vim.o.linebreak = true -- Wrap lines at convenient points
 vim.o.list = true -- Show some invisible characters (tabs...
-vim.o.lazyredraw = false -- Close since this could make the `folke/noice.nvim` experience issues.
 vim.o.number = true -- Print line number
 vim.o.pumblend = 10 -- Popup blend
 vim.o.pumheight = 10 -- Maximum number of entries in a popup

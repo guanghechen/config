@@ -387,7 +387,6 @@
     "noautocmd",
     "nocombine",
     "nofile",
-    "noice",
     "noinsert",
     "nonblank",
     "nonexist",

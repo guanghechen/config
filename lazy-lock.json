@@ -20,7 +20,6 @@
   "mini.pairs": { "branch": "nvim@mini.pairs", "commit": "69864a2efb36c030877421634487fd90db1e4298" },
   "mini.surround": { "branch": "nvim@mini.surround", "commit": "5aab42fcdcf31fa010f012771eda5631c077840a" },
   "neo-tree.nvim": { "branch": "nvim@neo-tree.nvim", "commit": "1ef260eb4f54515fe121a2267b477efb054d108a" },
-  "noice.nvim": { "branch": "nvim@noice.nvim", "commit": "0427460c2d7f673ad60eb02b35f5e9926cf67c59" },
   "nui.nvim": { "branch": "nvim@nui.nvim", "commit": "8d3bce9764e627b62b07424e0df77f680d47ffdb" },
   "nvim-dap": { "branch": "nvim@nvim-dap", "commit": "98bf130702eaafad8567c0e3ea1171c2552d58bb" },
   "nvim-dap-ui": { "branch": "nvim@nvim-dap-ui", "commit": "851f6f00480dc9366f37b6b91f3aeadb3b6ba04f" },
