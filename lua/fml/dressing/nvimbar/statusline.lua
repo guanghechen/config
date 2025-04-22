@@ -66,7 +66,7 @@ vim.api.nvim_create_autocmd("ModeChanged", {
     if m:sub(1, 2) == "c:" or m:sub(#m - 1, #m) == ":c" then
       local result = statusline:render_immediately()
       vim.o.statusline = result
-      vim.cmd("redraw")
+      vim.api.nvim__redraw({ flush = true })
     end
     statusline:render()
   end,
