@@ -41,7 +41,13 @@ function M.log(...)
     end
     text = #text > 0 and text:sub(1) or "" ---@type string
   end
-  eve.notifier.debug(nil, "Debug", text, 5000)
+  vim.notify(text, vim.log.levels.DEBUG, {
+    group = nil,
+    title = "Debug",
+    message = text,
+    timeout = 5000,
+    anonymous = false,
+  })
 end
 
 ---@param opts                          eve.builtin.debug.ICmdParams
@@ -96,9 +102,15 @@ function M.cmd(opts)
   if opts.notify ~= false then
     vim.schedule(function()
       local id = opts.group and ("eve.builtin.debug.cmd." .. cmd) or nil
-      local level = eve.notifier.resolve_level(opts.level or vim.log.levels.INFO)
+      local level = opts.level or vim.log.levels.INFO
       local title = opts.title or id or "Cmd Debug"
-      eve.notifier.notify(level, id, title, msg, 5000)
+      vim.notify(msg, level, {
+        group = id,
+        title = title,
+        message = msg,
+        timeout = 5000,
+        anonymous = false,
+      })
     end)
   end
   return msg

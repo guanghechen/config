@@ -10,9 +10,12 @@ vim.notify = function(msg, level0, opts)
   opts = opts or {}
 
   local level = eve.notifier.resolve_level(level0) ---@type eve.builtin.notifier.LevelEnum
-  local timeout = opts.timeout or 3000 ---@type integer
+  local group = type(opts.group) == "string" and opts.group or nil ---@type string|nil
   local title = opts.title or eve.notifier.resolve_title(level) ---@type string
-  eve.notifier.notify(level, nil, title, msg, timeout)
+  local message = type(opts.message) == "string" and opts.message or msg ---@type string
+  local anonymous = type(opts.anonymous) == "boolean" and opts.anonymous or false ---@type boolean
+  local timeout = opts.timeout or 3000 ---@type integer
+  eve.notifier.notify(level, group, title, message, timeout, anonymous)
 end
 
 eve.state.observe({ eve.state.status.notification_level, eve.state.status.notification_paused }, function()

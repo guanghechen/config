@@ -35,7 +35,13 @@ local function log(options, level)
     end
   end
 
-  eve.notifier.notify(level, nil, title, text, 3000)
+  vim.notify(text, vim.log.levels[level], {
+    group = nil,
+    title = title,
+    timeout = 3000,
+    message = text,
+    anonymous = false,
+  })
 end
 
 ---@param options                       eve.builtin.reporter.IOptions

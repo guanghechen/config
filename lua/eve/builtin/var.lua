@@ -17,6 +17,7 @@ M.Names = {
   NEO_TREE_SOURCE = "neo_tree_source",
   TAB_TYPE = "eve_tab_type",
   WINLINE_DISABLED = "eve_winline_disabled",
+  WIN_TYPE_NOTIFIER = "eve_wintype_notifier",
 }
 
 ---@class eve.builtin.vars.Namespaces

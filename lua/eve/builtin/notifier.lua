@@ -165,8 +165,9 @@ end
 ---@param title                         string
 ---@param message                       string
 ---@param timeout                       integer
+---@param anonymous                     boolean|nil
 ---@return nil
-function M.notify(level, group, title, message, timeout)
+function M.notify(level, group, title, message, timeout, anonymous)
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
   local width = vim.api.nvim_strwidth(message) + 14 ---@type integer
   for _, line in ipairs(lines) do
@@ -201,7 +202,10 @@ function M.notify(level, group, title, message, timeout)
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 
-  __TASK_HISTORY__:enqueue(task)
+  if anonymous ~= true then
+    __TASK_HISTORY__:enqueue(task)
+  end
+
   if not notification_paused or priority >= notification_priority then
     __TASKS__:enqueue(task)
   end
@@ -332,6 +336,7 @@ function M.create_win_as_needed(win)
     wincfg.noautocmd = true
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr
+    vim.w[winnr][eve.var.Names.WIN_TYPE_NOTIFIER] = true
 
     vim.wo[winnr].conceallevel = 2
     vim.wo[winnr].concealcursor = "n"
@@ -504,13 +509,22 @@ end
 vim.api.nvim_create_autocmd("WinEnter", {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    for _, win in ipairs(__WINS__) do
-      if win.winnr == winnr then
-        win.tick = win.tick + 1
-        break
+    if vim.w[winnr][eve.var.Names.WIN_TYPE_NOTIFIER] then
+      for _, win in ipairs(__WINS__) do
+        if win.winnr == winnr then
+          win.tick = win.tick + 1
+          break
+        end
       end
     end
   end,
+})
+
+vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
+  group = eve.nvim.augroup("notifier_on_resize"),
+  callback = function()
+    M.schedule()
+  end
 })
 
 return M

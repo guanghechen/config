@@ -75,7 +75,7 @@ select = eve.ux.Select.new({
     for _, item in ipairs(items) do
       local data = item.data ---@type fml.action.find.notification.IItemData
       local task = data.task ---@type eve.builtin.notifier.ITask
-      eve.notifier.notify(task.level, task.group, task.title, task.content, task.timeout)
+      eve.notifier.notify(task.level, task.group, task.title, task.content, task.timeout, true)
     end
   end,
 })
