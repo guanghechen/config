@@ -403,8 +403,8 @@ end
 ---@param next_task                     eve.builtin.notifier.ITask|nil
 ---@return boolean
 function M.relayout(next_task)
-  local invalid_wins = {} ---@type eve.builtin.notifier.IWindow[]
   local requeue_tasks = {} ---@type eve.builtin.notifier.ITask[]
+  local invalid_wins = {} ---@type eve.builtin.notifier.IWindow[]
   local wins = __WINS__ ---@type eve.builtin.notifier.IWindow[]
   __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
 
@@ -419,8 +419,8 @@ function M.relayout(next_task)
     end
 
     if not room_enough then
-      invalid_wins[#invalid_wins + 1] = win
       requeue_tasks[#requeue_tasks + 1] = win.task
+      invalid_wins[#invalid_wins + 1] = win
       goto continue
     end
 
@@ -429,22 +429,24 @@ function M.relayout(next_task)
       win.task = next_task ---@type eve.builtin.notifier.ITask|nil
     end
 
-    local next_row = row + win.task.height + 3  ---@type integer
+    local height = math.min(42, vim.o.lines - 4, win.task.height) ---@type integer
+    local next_row = row + height + 3  ---@type integer
     if next_row > vim.o.lines then
-      room_enough = false
-      invalid_wins[#invalid_wins + 1] = win
       requeue_tasks[#requeue_tasks + 1] = win.task
+      invalid_wins[#invalid_wins + 1] = win
+      room_enough = false
       goto continue
     end
 
     win.row = row ---@type integer
-    __WINS__[#__WINS__ + 1] = win
     row = next_row ---@type integer
+    __WINS__[#__WINS__ + 1] = win
     ::continue::
   end
 
   if win_task == nil and next_task ~= nil then
-    if room_enough and row + next_task.height + 3 <= vim.o.lines then
+    local height = math.min(42, vim.o.lines - 4, next_task.height) ---@type integer
+    if room_enough and row + height + 3 <= vim.o.lines then
       ---@type eve.builtin.notifier.IWindow
       local win = {
         winnr = nil,
