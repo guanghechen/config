@@ -14,6 +14,7 @@
 ---@field public lines                  string[]
 ---@field public width                  integer
 ---@field public height                 integer
+---@field public times                  integer
 ---@field public timeout                integer
 ---@field public timestamp              integer
 
@@ -23,6 +24,7 @@
 ---@field public tick                   integer
 ---@field public task                   eve.builtin.notifier.ITask
 ---@field public row                    integer
+---@field public dirty                  boolean
 
 ---@class eve.builtin.notifier.Levels
 local Levels = {
@@ -171,7 +173,7 @@ end
 function M.notify(level, group, title, message, timeout, anonymous, silent)
   local timestamp = os.time() ---@type integer
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
-  local width = vim.api.nvim_strwidth(message) + 14 ---@type integer
+  local width = vim.api.nvim_strwidth(title) + 14 ---@type integer
   for _, line in ipairs(lines) do
     local line_width = vim.api.nvim_strwidth(line) + 4 ---@type integer
     width = width < line_width and line_width or width
@@ -195,6 +197,7 @@ function M.notify(level, group, title, message, timeout, anonymous, silent)
     lines = lines,
     width = width,
     height = #lines + 1,
+    times = 1,
     timeout = timeout,
     timestamp = timestamp,
   }
@@ -209,10 +212,39 @@ function M.notify(level, group, title, message, timeout, anonymous, silent)
   end
 
   if silent ~= true and not notification_paused and priority >= notification_priority then
-    __TASKS__:enqueue(task)
-  end
+    local inserted = false ---@type boolean
+    if not inserted then
+      for t, index in __TASKS__:iterator() do
+        if t.uuid == uuid then
+          inserted = true
+          task.times = t.times + 1
+          __TASKS__:update(index, task)
+          break
+        end
+      end
+    end
 
-  M.schedule()
+    if not inserted then
+      for _, w in ipairs(__WINS__) do
+        if
+          w.task.uuid == uuid and
+          w.winnr ~= nil and
+          w.bufnr ~= nil and
+          vim.api.nvim_win_is_valid(w.winnr) and
+          vim.api.nvim_buf_is_valid(w.bufnr)
+        then
+          inserted = true
+          __TASKS__:enqueue_front(task)
+          break
+        end
+      end
+    end
+
+    if not inserted then
+      __TASKS__:enqueue(task)
+    end
+    M.schedule()
+  end
 end
 
 ---@protected
@@ -269,7 +301,11 @@ end
 ---@return integer
 function M.create_win_as_needed(win)
   local task = win.task ---@type eve.builtin.notifier.ITask
-  local width = math.min(82, vim.o.columns, task.width) ---@type integer
+  local extra_width = 0 ---@type integer
+  if task.times > 1 then
+    extra_width = vim.api.nvim_strwidth(string.format(" (x%d) ", task.times)) ---@type integer
+  end
+  local width = math.min(82, vim.o.columns, task.width + extra_width) ---@type integer
   local height = math.min(42, vim.o.lines - 4, task.height) ---@type integer
 
   ---@type vim.api.keyset.win_config
@@ -303,7 +339,7 @@ function M.create_win_as_needed(win)
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "yes"
+    vim.wo[winnr].signcolumn = "no"
     vim.wo[winnr].spell= false
     vim.wo[winnr].wrap = false
   else
@@ -344,8 +380,10 @@ end
 ---@param width                         integer
 ---@return string
 function M.gen_winbar(task, width)
-  local text_title = task.title or "" ---@type string
   local text_time = os.date("%H:%M:%S", task.timestamp)
+  local text_title = task.times > 1
+    and string.format("%s (x%d) ", task.title, task.times)
+    or task.title
 
   local max_width_title = width - 14 ---@type integer
   local width_title = vim.api.nvim_strwidth(text_title) ---@type integer
@@ -354,8 +392,8 @@ function M.gen_winbar(task, width)
     width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   end
 
-  local text_blank = string.rep(" ", width - width_title - 14) ---@type string
-  local text = string.format("  %s %s%s%s  ", eve.icon.loglevel[task.level], text_title, text_blank, text_time)
+  local text_blank = string.rep(" ", width - width_title - 10) ---@type string
+  local text = string.format("%s %s%s%s", eve.icon.loglevel[task.level], text_title, text_blank, text_time)
   return eve.nvim.txt(text, config.winbar[task.level])
 end
 
@@ -369,7 +407,6 @@ function M.relayout(next_task)
   __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
 
   local win_task = nil ---@type eve.builtin.notifier.IWindow|nil
-  local group = next_task ~= nil and next_task.group or nil ---@type string|nil
   local row = 1 ---@type integer
   local room_enough = true---@type boolean
   for _, win in ipairs(wins) do
@@ -384,9 +421,17 @@ function M.relayout(next_task)
       goto continue
     end
 
-    if group ~= nil and win.task.group == group then
-      win_task = win ---@type eve.builtin.notifier.IWindow
-      win.task = next_task ---@type eve.builtin.notifier.ITask|nil
+    if next_task ~= nil then
+      if win.task.uuid == next_task.uuid then
+        next_task.times = next_task.times + win.task.times ---@type integer
+        win.task = next_task ---@type eve.builtin.notifier.ITask|nil
+        win.dirty = true
+        win_task = win ---@type eve.builtin.notifier.IWindow
+      elseif win.task.group ~= nil and win.task.group == next_task.group then
+        win.task = next_task ---@type eve.builtin.notifier.ITask|nil
+        win.dirty = true
+        win_task = win ---@type eve.builtin.notifier.IWindow
+      end
     end
 
     local height = math.min(42, vim.o.lines - 4, win.task.height) ---@type integer
@@ -414,6 +459,7 @@ function M.relayout(next_task)
         tick = 0,
         task = next_task,
         row = row,
+        dirty = true,
       }
       win_task = win ---@type eve.builtin.notifier.IWindow
       __WINS__[#__WINS__ + 1] = win
@@ -428,10 +474,28 @@ function M.relayout(next_task)
     __TASKS__:enqueue_front(task)
   end
 
+  for _, win in ipairs(invalid_wins) do
+    M.destroy_win(win)
+  end
+
   for _, win in ipairs(__WINS__) do
-    if win ~= win_task then
+    if win.dirty then
+      win.tick = win.tick + 1
+      local winnr = M.create_win_as_needed(win) ---@type integer
+      local tick = win.tick ---@type integer
+      vim.defer_fn(function()
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and win.tick == tick then
+          vim.api.nvim_win_close(winnr, true)
+          M.schedule()
+        end
+      end, win.task.timeout)
+    else
       local task = win.task ---@type eve.builtin.notifier.ITask
-      local width = math.min(82, vim.o.columns, task.width) ---@type integer
+      local extra_width = 0 ---@type integer
+      if task.times > 1 then
+        extra_width = vim.api.nvim_strwidth(string.format(" (x%d) ", task.times)) ---@type integer
+      end
+      local width = math.min(82, vim.o.columns, task.width + extra_width) ---@type integer
       local height = math.min(42, vim.o.lines - 4, task.height) ---@type integer
       local wincfg = vim.api.nvim_win_get_config(win.winnr) ---@type vim.api.keyset.win_config
       local winbar = wincfg.width ~= width and M.gen_winbar(task, width) or vim.wo[win.winnr].winbar
@@ -444,21 +508,6 @@ function M.relayout(next_task)
     end
   end
 
-  if win_task ~= nil then
-    win_task.tick = win_task.tick + 1
-    local winnr = M.create_win_as_needed(win_task) ---@type integer
-    local tick = win_task.tick ---@type integer
-    vim.defer_fn(function()
-      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and win_task.tick == tick then
-        vim.api.nvim_win_close(winnr, true)
-        M.schedule()
-      end
-    end, win_task.task.timeout)
-  end
-
-  for _, win in ipairs(invalid_wins) do
-    M.destroy_win(win)
-  end
   return room_enough and win_task ~= nil
 end
 
