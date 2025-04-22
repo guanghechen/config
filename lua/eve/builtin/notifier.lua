@@ -472,11 +472,13 @@ function M.relayout(next_task)
       local width = math.min(82, vim.o.columns, task.width) ---@type integer
       local height = math.min(42, vim.o.lines - 4, task.height) ---@type integer
       local wincfg = vim.api.nvim_win_get_config(win.winnr) ---@type vim.api.keyset.win_config
+      local winbar = wincfg.width ~= width and M.gen_winbar(task, width) or vim.wo[win.winnr].winbar
 
       wincfg.row = win.row
       wincfg.width = width
       wincfg.height = height + 1
       vim.api.nvim_win_set_config(win.winnr, wincfg)
+      vim.wo[win.winnr].winbar = winbar
     end
   end
 
@@ -508,6 +510,7 @@ function M.handle()
 end
 
 vim.api.nvim_create_autocmd("WinEnter", {
+  group = eve.nvim.augroup("notifier_on_win_enter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if vim.w[winnr][eve.var.Names.WIN_TYPE_NOTIFIER] then
