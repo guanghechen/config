@@ -189,6 +189,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 })
 
 vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
+  group = eve.nvim.augroup("state_on_recording"),
   callback = function()
     eve.state.status.dirtier_statusline:mark_dirty()
   end,
