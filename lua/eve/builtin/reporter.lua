@@ -11,6 +11,8 @@ local Levels = {
 ---@field subject                       ?string
 ---@field message                       ?string
 ---@field details                       ?any
+---@field anonymous                     ?boolean
+---@field silent                        ?boolean
 
 ---@class eve.builtin.reporter
 local M = {}
@@ -21,6 +23,8 @@ local M = {}
 local function log(options, level)
   local title = options.from ---@type string
   local text = options.message or "" ---@type string
+  local anonymous = options.anonymous or false ---@type boolean
+  local silent = options.silent or false ---@type boolean
 
   if options.subject ~= nil then
     title = title .. " │ " .. options.subject
@@ -40,7 +44,8 @@ local function log(options, level)
     title = title,
     timeout = 3000,
     message = text,
-    anonymous = false,
+    anonymous = anonymous,
+    silent = silent,
   })
 end
 

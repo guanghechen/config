@@ -9,6 +9,7 @@ eve.setup_state({ editor = eve.get_default_storage().editor })
 require("integration.neovim.keymap")
 
 require("fml.dressing.notifier")
+require("fml.dressing.ui_attach")
 require("fml.dressing.nvimbar.statusline")
 require("fml.dressing.nvimbar.tabline")
 require("fml.dressing.nvimbar.winline")

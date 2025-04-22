@@ -14,6 +14,7 @@ pcall(require, "integration.local.option")
 pcall(require, "integration.local.keymap")
 
 require("fml.dressing.notifier")
+require("fml.dressing.ui_attach")
 require("fml.dressing.nvimbar.statusline")
 require("fml.dressing.nvimbar.tabline")
 require("fml.dressing.nvimbar.winline")
@@ -38,9 +39,7 @@ vim.schedule(function()
   require("fml.dressing.hipairs")
   require("fml.dressing.illumniate")
   require("fml.dressing.im")
-  if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
-    require("fml.dressing.image")
-  end
+  require("fml.dressing.image")
   require("fml.dressing.input")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
