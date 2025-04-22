@@ -165,9 +165,10 @@ end
 ---@param title                         string
 ---@param message                       string
 ---@param timeout                       integer
----@param anonymous                     boolean|nil
+---@param anonymous                     boolean
+---@param silent                        boolean
 ---@return nil
-function M.notify(level, group, title, message, timeout, anonymous)
+function M.notify(level, group, title, message, timeout, anonymous, silent)
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
   local width = vim.api.nvim_strwidth(message) + 14 ---@type integer
   for _, line in ipairs(lines) do
@@ -206,56 +207,11 @@ function M.notify(level, group, title, message, timeout, anonymous)
     __TASK_HISTORY__:enqueue(task)
   end
 
-  if not notification_paused or priority >= notification_priority then
+  if silent ~= true and not notification_paused and priority >= notification_priority then
     __TASKS__:enqueue(task)
   end
 
   M.schedule()
-end
-
----@param group                         string|nil
----@param title                         string
----@param message                       string
----@param timeout                       integer
----@return nil
-function M.trace(group, title, message, timeout)
-  return M.notify("TRACE", group, title, message, timeout)
-end
-
----@param group                         string|nil
----@param title                         string
----@param message                       string
----@param timeout                       integer
----@return nil
-function M.debug(group, title, message, timeout)
-  return M.notify("DEBUG", group, title, message, timeout)
-end
-
----@param group                         string|nil
----@param title                         string
----@param message                       string
----@param timeout                       integer
----@return nil
-function M.info(group, title, message, timeout)
-  return M.notify("INFO", group, title, message, timeout)
-end
-
----@param group                         string|nil
----@param title                         string
----@param message                       string
----@param timeout                       integer
----@return nil
-function M.warn(group, title, message, timeout)
-  return M.notify("WARN", group, title, message, timeout)
-end
-
----@param group                         string|nil
----@param title                         string
----@param message                       string
----@param timeout                       integer
----@return nil
-function M.error(group, title, message, timeout)
-  return M.notify("ERROR", group, title, message, timeout)
 end
 
 ---@protected
