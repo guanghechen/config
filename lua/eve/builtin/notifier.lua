@@ -380,21 +380,19 @@ end
 ---@param width                         integer
 ---@return string
 function M.gen_winbar(task, width)
-  local text_time = os.date("%H:%M:%S", task.timestamp)
-  local text_title = task.times > 1
-    and string.format("%s (x%d) ", task.title, task.times)
-    or task.title
-
   local max_width_title = width - 14 ---@type integer
+  local text_title = task.times > 1 and string.format("%s (x%d) ", task.title, task.times) or task.title ---@type string
   local width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   if width_title > max_width_title then
     text_title = text_title:sub(1, max_width_title)
     width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   end
 
-  local text_blank = string.rep(" ", width - width_title - 10) ---@type string
-  local text = string.format("%s %s%s%s", eve.icon.loglevel[task.level], text_title, text_blank, text_time)
-  return eve.nvim.txt(text, config.winbar[task.level])
+  local text_left = string.format("%s %s", eve.icon.loglevel[task.level], text_title) ---@type string
+  local text_right = string.format("%s", os.date("%H:%M:%S", task.timestamp)) ---@type string
+  local hlname = config.winbar[task.level] ---@type string
+  local hl_text = eve.nvim.txt(text_left, hlname) .. "%=%=" .. eve.nvim.txt(text_right, hlname)
+  return hl_text
 end
 
 ---@protected
