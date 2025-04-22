@@ -311,7 +311,9 @@ function M.watch_changes()
     M.status.ticker_editor:tick()
     M.status.dirtier_statusline:mark_dirty()
     M.status.dirtier_tabline:mark_dirty()
-    vim.cmd.redraw()
+    vim.schedule(function()
+      vim.cmd("redraw!")
+    end)
   end, true)
 
   M.observe({
@@ -321,7 +323,9 @@ function M.watch_changes()
   }, function()
     M.status.dirtier_statusline:mark_dirty()
     M.status.dirtier_tabline:mark_dirty()
-    vim.cmd.redraw()
+    vim.schedule(function()
+      vim.cmd("redraw!")
+    end)
   end, true)
 
   ---@type eve.std.collection.IObservable[]

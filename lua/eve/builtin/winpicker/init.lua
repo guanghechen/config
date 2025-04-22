@@ -108,7 +108,7 @@ function M.pick_window(filter, winnr_source, split_as_needed)
       mask:show(winnr)
     end
 
-    vim.cmd.redraw()
+    vim.cmd("redraw")
 
     local char = get_user_input_char() ---@type string|nil
     if char ~= nil then
@@ -125,7 +125,7 @@ function M.pick_window(filter, winnr_source, split_as_needed)
   for _, mask in pairs(masks) do
     mask:hide()
   end
-  vim.cmd.redraw()
+  vim.cmd("redraw!")
 
   --- Refocus the original window if no window selected.
   if winnr_target == nil then

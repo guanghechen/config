@@ -35,7 +35,7 @@ function M.refresh_all()
   eve.state.status.suppress_warning:next(true)
   eve.state.status.dirtier_statusline:mark_dirty()
   eve.state.status.dirtier_tabline:mark_dirty()
-  vim.cmd.redraw()
+  vim.cmd("redraw!")
 
   eve.reporter.info({
     from = __module_name__,

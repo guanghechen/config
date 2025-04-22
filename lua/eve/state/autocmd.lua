@@ -136,7 +136,6 @@ vim.api.nvim_create_autocmd("ModeChanged", {
   group = eve.nvim.augroup("state_on_mode_changed"),
   callback = function()
     eve.constant.hlgroup.common.on_mode_changed()
-    eve.state.status.dirtier_statusline:mark_dirty()
   end,
 })
 
