@@ -802,6 +802,7 @@ function M:create_wins_as_needed()
       vim.wo[winnr_main].number = false
       vim.wo[winnr_main].relativenumber = false
       vim.wo[winnr_main].signcolumn = "yes"
+      vim.wo[winnr_main].spell = false
       vim.wo[winnr_main].wrap = false
     else
       vim.wo[winnr_main].winfixbuf = false
@@ -852,8 +853,6 @@ function M:create_wins_as_needed()
       end
 
       vim.wo[winnr_preview].number = true
-      vim.wo[winnr_preview].relativenumber = false
-      vim.wo[winnr_preview].signcolumn = "yes"
       vim.wo[winnr_preview].list = true
       vim.wo[winnr_preview].listchars = string.format(
         "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
@@ -863,6 +862,9 @@ function M:create_wins_as_needed()
         eve.icon.listchars.space,
         eve.icon.listchars.trail
       )
+      vim.wo[winnr_preview].relativenumber = false
+      vim.wo[winnr_preview].spell = false
+      vim.wo[winnr_preview].signcolumn = "yes"
     else
       vim.wo[winnr_preview].winfixbuf = false
       vim.api.nvim_win_set_config(winnr_preview, wincfg_preview)
@@ -898,6 +900,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_input].number = false
     vim.wo[winnr_input].relativenumber = false
     vim.wo[winnr_input].signcolumn = "yes:1"
+    vim.wo[winnr_input].spell = false
     vim.wo[winnr_input].wrap = false
   else
     vim.wo[winnr_input].winfixbuf = false

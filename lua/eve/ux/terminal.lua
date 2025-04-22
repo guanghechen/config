@@ -127,10 +127,11 @@ function M:create_win_as_needed()
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
     vim.wo[winnr].cursorline = false
+    vim.wo[winnr].list = false
     vim.wo[winnr].number = false
     vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].spell = false
     vim.wo[winnr].wrap = true
-    vim.wo[winnr].list = false
     self._winnr = winnr
   else
     vim.wo[winnr].winfixbuf = false

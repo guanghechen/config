@@ -88,6 +88,7 @@ function M:show(winnr)
     vim.wo[winnr_hint].number = false
     vim.wo[winnr_hint].relativenumber = false
     vim.wo[winnr_hint].signcolumn = "no"
+    vim.wo[winnr_hint].spell = false
     vim.wo[winnr_hint].wrap = false
   else
     vim.wo[winnr_hint].winfixbuf = false

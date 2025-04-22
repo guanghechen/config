@@ -478,6 +478,7 @@ function M.hover()
       vim.wo[winnr].number = false
       vim.wo[winnr].relativenumber = false
       vim.wo[winnr].signcolumn = "no"
+      vim.wo[winnr].spell = false
       vim.wo[winnr].cursorline = false
       vim.wo[winnr].winblend = winblend
       vim.wo[winnr].wrap = false
@@ -492,6 +493,7 @@ function M.hover()
       vim.wo[winnr].number = false
       vim.wo[winnr].relativenumber = false
       vim.wo[winnr].signcolumn = "no"
+      vim.wo[winnr].spell = false
       vim.wo[winnr].cursorline = false
       vim.wo[winnr].winblend = winblend
       vim.wo[winnr].wrap = false

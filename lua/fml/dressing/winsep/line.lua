@@ -201,10 +201,11 @@ function M:show()
     self._winnr = winnr
 
     vim.wo[winnr].cursorline = false
+    vim.wo[winnr].list = false
     vim.wo[winnr].number = false
     vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].spell = false
     vim.wo[winnr].wrap = false
-    vim.wo[winnr].list = false
   else
     local cfg = self._cfg ---@type vim.api.keyset.win_config
     vim.wo[winnr].winfixbuf = false

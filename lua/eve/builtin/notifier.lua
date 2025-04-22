@@ -343,7 +343,8 @@ function M.create_win_as_needed(win)
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].signcolumn = "yes:1"
+    vim.wo[winnr].spell= false
     vim.wo[winnr].wrap = false
   else
     vim.wo[winnr].winfixbuf = false
@@ -393,8 +394,8 @@ function M.gen_winbar(task, width)
     width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   end
 
-  local text_blank = string.rep(" ", width - width_title - 10) ---@type string
-  local text = string.format("%s %s%s%s", eve.icon.loglevel[task.level], text_title, text_blank, text_time)
+  local text_blank = string.rep(" ", width - width_title - 12) ---@type string
+  local text = string.format(" %s %s%s%s ", eve.icon.loglevel[task.level], text_title, text_blank, text_time)
   return eve.nvim.txt(text, config.winbar[task.level])
 end
 

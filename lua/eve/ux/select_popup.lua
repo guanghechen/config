@@ -204,6 +204,7 @@ function M:create_win_as_needed()
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false
     vim.wo[winnr].signcolumn = "yes"
+    vim.wo[winnr].spell = false
     vim.wo[winnr].wrap = false
   else
     vim.wo[winnr].winfixbuf = false
