@@ -169,6 +169,7 @@ end
 ---@param silent                        boolean
 ---@return nil
 function M.notify(level, group, title, message, timeout, anonymous, silent)
+  local timestamp = os.time() ---@type integer
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
   local width = vim.api.nvim_strwidth(message) + 14 ---@type integer
   for _, line in ipairs(lines) do
@@ -195,7 +196,7 @@ function M.notify(level, group, title, message, timeout, anonymous, silent)
     width = width,
     height = #lines + 1,
     timeout = timeout,
-    timestamp = os.time(),
+    timestamp = timestamp,
   }
 
   local notification_paused = eve.state.status.notification_paused:snapshot() ---@type boolean
