@@ -719,6 +719,16 @@ function M:create_wins_as_needed()
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
   local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local focused_pane = "input" ---@type "input"|"main"|"preview"
+
+  if context.focused_pane == "main" then
+    if context.winnr_main ~= nil and vim.api.nvim_win_is_valid(context.winnr_main) then
+      focused_pane = "main"
+    end
+  elseif context.focused_pane == "preview" then
+    focused_pane = "preview"
+  end
+  context.focused_pane = focused_pane
 
   local match_count = #context.items ---@type integer
   local has_preview = self._preview ~= nil ---@type boolean
@@ -777,8 +787,6 @@ function M:create_wins_as_needed()
   local winnr_main = context.winnr_main ---@type integer|nil
   local winnr_preview = context.winnr_preview ---@type integer|nil
 
-  local winnr_main_new_created = false ---@type boolean
-
   if show_main then
     ---@type vim.api.keyset.win_config
     local wincfg_main = {
@@ -797,7 +805,6 @@ function M:create_wins_as_needed()
     if winnr_main == nil or not vim.api.nvim_win_is_valid(winnr_main) then
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       context.winnr_main = winnr_main
-      winnr_main_new_created = true
 
       vim.wo[winnr_main].number = false
       vim.wo[winnr_main].relativenumber = false
@@ -812,7 +819,7 @@ function M:create_wins_as_needed()
 
     vim.wo[winnr_main].cursorline = match_count > 0
     vim.wo[winnr_main].winblend = winblend
-    vim.wo[winnr_main].winhighlight = context.focused_pane == "main" and highlights.main_active or highlights.main
+    vim.wo[winnr_main].winhighlight = focused_pane == "main" and highlights.main_active or highlights.main
     vim.wo[winnr_main].winfixbuf = true
     self:sync_main_cursor()
   else
@@ -874,8 +881,7 @@ function M:create_wins_as_needed()
     vim.wo[winnr_preview].number = true
     vim.wo[winnr_preview].cursorline = match_count > 0
     vim.wo[winnr_preview].winblend = winblend
-    vim.wo[winnr_preview].winhighlight = context.focused_pane == "preview" and highlights.preview_active
-      or highlights.preview
+    vim.wo[winnr_preview].winhighlight = focused_pane == "preview" and highlights.preview_active or highlights.preview
     vim.wo[winnr_preview].winfixbuf = true
     vim.wo[winnr_preview].wrap = context.cfg_preview_wrap
   end
@@ -909,26 +915,20 @@ function M:create_wins_as_needed()
   end
 
   vim.wo[winnr_input].winblend = winblend
-  vim.wo[winnr_input].winhighlight = context.focused_pane == "input" and highlights.input_active or highlights.input
+  vim.wo[winnr_input].winhighlight = focused_pane == "input" and highlights.input_active or highlights.input
   vim.wo[winnr_input].winfixbuf = true
 
   vim.schedule(function()
     local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-    if context.focused_pane == "input" then
+    if focused_pane == "input" then
       if winnr_input ~= nil and winnr_cur ~= winnr_input then
         vim.api.nvim_tabpage_set_win(0, winnr_input)
       end
-    elseif context.focused_pane == "main" then
-      if winnr_main_new_created then
-        if winnr_input ~= nil and winnr_cur ~= winnr_input then
-          vim.api.nvim_tabpage_set_win(0, winnr_input)
-        end
-      else
-        if winnr_main ~= nil and winnr_cur ~= winnr_main then
-          vim.api.nvim_tabpage_set_win(0, winnr_main)
-        end
+    elseif focused_pane == "main" then
+      if winnr_main ~= nil and winnr_cur ~= winnr_main then
+        vim.api.nvim_tabpage_set_win(0, winnr_main)
       end
-    elseif context.focused_pane == "preview" then
+    elseif focused_pane == "preview" then
       if winnr_preview ~= nil and winnr_cur ~= winnr_preview then
         vim.api.nvim_tabpage_set_win(0, winnr_preview)
       end
