@@ -65,7 +65,7 @@ function M.gen_hlgroup_map(context)
     AvanteReversedSubtitle = { fg = c.yellow },
     AvanteReversedThirdTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
     AvanteReversedTitle = { link = t and "ms_b_none" or "ms_b_bg0" },
-    AvantePopupHint = { fg = c.aqua, bg = c.none, bold = true },
+    AvantePopupHint = { link = t and "ms_b_none" or "ms_b_bg0" },
     AvanteSidebarWinSeparator = { fg = c.bg2 },
     AvanteSidebarWinHorizontalSeparator = { fg = c.blue },
     AvanteSubtitle = { fg = c.bg1, bg = c.yellow, bold = true },
