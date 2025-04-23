@@ -580,9 +580,9 @@ end
 ---@return eve.ux.select.IItem|nil
 ---@return integer
 function M:get_item_selected()
-  local _, lnum, uuid = self._search:get_item_selected() ---@type eve.ux.search.IItem|nil, integer, string|nil
-  local item = uuid ~= nil and self._item_map[uuid] or nil ---@type eve.ux.select.IItem|nil
-  return item, lnum
+  local item, lnum = self._search:get_item_selected() ---@type eve.ux.search.IItem|nil, integer
+  local select_item = item ~= nil and self._item_map[item.uuid] or nil ---@type eve.ux.select.IItem|nil
+  return select_item, lnum
 end
 
 ---@return                              eve.ux.select.IMatchedItem[]

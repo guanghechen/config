@@ -63,7 +63,7 @@ local borders = {
 ---@field public context                eve.ux.ISearchContext
 ---@field public change_input_title     fun(self: eve.ux.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.ISearch, title: string): nil
----@field public get_item_selected      fun(self: eve.ux.ISearch): eve.ux.search.IItem|nil, integer, string|nil
+---@field public get_item_selected      fun(self: eve.ux.ISearch): eve.ux.search.IItem|nil, integer
 ---@field public get_winnr_input        fun(self: eve.ux.ISearch): integer|nil
 ---@field public get_winnr_main         fun(self: eve.ux.ISearch): integer|nil
 ---@field public get_winnr_preview      fun(self: eve.ux.ISearch): integer|nil
