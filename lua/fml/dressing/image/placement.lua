@@ -108,7 +108,7 @@ function M.new(bufnr, src, opts)
   end
 
   local update = self.update
-  self.update = eve.fn.debounce(function()
+  self.update = eve.std.timer.debounce(function()
     update(self)
   end, 10)
   return self

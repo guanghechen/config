@@ -1,18 +1,6 @@
 ---@class eve.builtin.fn
 local M = {}
 
----@generic T
----@param fn                            T
----@param delay                         ?integer
----@return T
-function M.debounce(fn, delay)
-  local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
-  local duration = delay or 20 ---@type integer
-  return function()
-    timer:start(duration, 0, vim.schedule_wrap(fn))
-  end
-end
-
 local spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" } ---@type string[]
 -- local spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" } ---@type string[]
 

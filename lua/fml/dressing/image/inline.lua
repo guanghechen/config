@@ -15,7 +15,7 @@ function M.new(buf)
   self.idx = {}
   local group = eve.nvim.augroup("fml.dressing.image.inline." .. buf)
 
-  local update = eve.fn.debounce(function()
+  local update = eve.std.timer.debounce(function()
     self:update()
   end, 100)
 
