@@ -51,12 +51,12 @@ local runners = {
         code_runner_terminals.mjs = terminal
 
         terminal:show()
-        vim.defer_fn(function()
+        eve.std.timer.set_timeout(function()
           handle(terminal)
         end, 1500)
       else
         terminal:show()
-        vim.defer_fn(function()
+        eve.std.timer.set_timeout(function()
           handle(terminal)
         end, 100)
       end

@@ -3,7 +3,7 @@ local f = function(delay, ...)
   if delay == 0 then
     eve.notifier.notify(unpack(args))
   else
-    vim.defer_fn(function()
+    eve.std.timer.set_timeout(function()
       eve.notifier.notify(unpack(args))
     end, delay)
   end

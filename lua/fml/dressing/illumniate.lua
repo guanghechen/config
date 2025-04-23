@@ -9,7 +9,6 @@ local __module_name__ = "fml.dressing.illumniate" ---@type string
 local illuminate_group = eve.nvim.augroup("fml.dressing.illumniate") ---@type integer
 local ns = vim.api.nvim_create_namespace("vim_lsp_references") ---@type integer
 local ns2 = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
-local timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil
 
 ---@class fml.dressing.illumniate.IConfig
 local config = {
@@ -93,21 +92,19 @@ eve.state.observe({ eve.state.flight.dressing_illumniate }, function()
         end
 
         local _, reference_cur = get_reference_words()
-        if not reference_cur and timer then
+        if not reference_cur then
           local buf = vim.api.nvim_get_current_buf()
-          timer:start(config.debounce, 0, function()
-            vim.schedule(function()
-              if vim.api.nvim_buf_is_valid(buf) then
-                vim.api.nvim_buf_call(buf, function()
-                  if not is_enabled(nil, true) then
-                    return
-                  end
-                  vim.lsp.buf.document_highlight()
-                  vim.lsp.buf.clear_references()
-                end)
-              end
-            end)
-          end)
+          eve.std.timer.set_timeout(function()
+            if vim.api.nvim_buf_is_valid(buf) then
+              vim.api.nvim_buf_call(buf, function()
+                if not is_enabled(nil, true) then
+                  return
+                end
+                vim.lsp.buf.document_highlight()
+                vim.lsp.buf.clear_references()
+              end)
+            end
+          end, config.debounce)
         end
       end,
     })

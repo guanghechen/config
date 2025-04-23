@@ -7,6 +7,7 @@ local __mods = {
 
   fn = "eve.std.fn",
   is = "eve.std.is",
+  timer = "eve.std.timer",
 
   BatchDisposable = "eve.std.collection.batch_disposable",
   BatchHandler = "eve.std.collection.batch_handler",
@@ -37,6 +38,7 @@ local __mods = {
 ---
 ---@field public fn                     eve.std.fn
 ---@field public is                     eve.std.is
+---@field public timer                  eve.std.timer
 ---
 ---@field public BatchDisposable        eve.std.collection.BatchDisposable
 ---@field public BatchHandler           eve.std.collection.BatchHandler

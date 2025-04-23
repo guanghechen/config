@@ -191,7 +191,7 @@ function M.prompt()
         widget:close()
 
         local data = items[1].data ---@type ghc.action.copilot_chat.prompt_actions.IItem
-        vim.defer_fn(function()
+        eve.std.timer.set_timeout(function()
           chat:focus()
           require("CopilotChat").ask(data.prompt, data)
         end, 100)

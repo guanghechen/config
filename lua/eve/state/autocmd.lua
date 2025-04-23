@@ -164,7 +164,6 @@ vim.api.nvim_create_autocmd("CursorHold", {
   end,
 })
 
-local lsp_progress_spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" }
 vim.api.nvim_create_autocmd("LspProgress", {
   group = eve.nvim.augroup("state_on_lsp_progress"),
   callback = function(args)
@@ -172,8 +171,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
     local progress = ""
 
     if data.percentage then
-      local idx = math.max(1, math.floor(data.percentage / 10))
-      local icon = lsp_progress_spinners[idx]
+      local icon = eve.fn.spinner() ---@type string
       progress = icon .. " " .. data.percentage .. "%% "
     end
 

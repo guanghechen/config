@@ -1,5 +1,5 @@
 if not eve.env.IS_NIX then
-  vim.defer_fn(function()
+  eve.std.timer.set_timeout(function()
     local previous_mode = "n" ---@type eve.e.VimMode
     local previous_input_method = nil ---@type eve.builtin.im.InputMethod|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {

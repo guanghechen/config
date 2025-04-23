@@ -168,7 +168,7 @@ function M:execute()
 
   self._tick_resolving = tick
 
-  vim.defer_fn(function()
+  eve.std.timer.set_timeout(function()
     lock_release_tried = true
     release_lock()
   end, self._delay)

@@ -510,7 +510,7 @@ function M.handle()
 
       local tick = win.tick ---@type integer
       local winnr = M.create_win_as_needed(win) ---@type integer
-      vim.defer_fn(function()
+      eve.std.timer.set_timeout(function()
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and win.tick == tick then
           vim.api.nvim_win_close(winnr, true)
           M.schedule()

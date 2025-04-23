@@ -111,7 +111,7 @@ function M.setup_breakpoints()
 
   eve.editor.open_filepaths(0, filepaths)
 
-  vim.defer_fn(function()
+  eve.std.timer.set_timeout(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
       local bufnr = eve.state.buf.locate_by_filepath(breakpoint.filepath) ---@type integer|nil

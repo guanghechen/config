@@ -271,7 +271,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.hover()
 
-        vim.defer_fn(function()
+        eve.std.timer.set_timeout(function()
           vim.lsp.buf.hover()
         end, 100)
       end,
@@ -283,7 +283,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.declaration()
 
-        vim.defer_fn(function()
+        eve.std.timer.set_timeout(function()
           vim.lsp.buf.declaration()
         end, 100)
       end,
@@ -295,7 +295,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.signature_help()
 
-        vim.defer_fn(function()
+        eve.std.timer.set_timeout(function()
           vim.lsp.buf.signature_help()
         end, 100)
       end,

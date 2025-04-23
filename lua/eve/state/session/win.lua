@@ -307,7 +307,7 @@ function M.locate_symbols(winnr, callback)
     safe_callback()
   end
 
-  vim.defer_fn(function()
+  eve.std.timer.set_timeout(function()
     safe_callback("Request document symbols timeout")
   end, 10000)
 

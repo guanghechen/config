@@ -39,11 +39,10 @@ local did_setup = false
 local function setup()
   if not did_setup then
     did_setup = true
-    local timer = assert(vim.uv.new_timer())
-    timer:start(config.refresh, config.refresh, function()
+    eve.std.timer.set_interval(function()
       sign_cache = {}
       cache = {}
-    end)
+    end, config.refresh)
   end
 end
 
