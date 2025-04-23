@@ -1,3 +1,5 @@
+local BLOCKING_MODES = { "ic", "ix", "c", "no", "r%?", "rm" } ---@type string[]
+
 ---@param num                           integer
 ---@return string
 local function encode_int(num)
@@ -133,6 +135,22 @@ function M.filepath2bufnr()
     end
   end
   return filepath2bufnr
+end
+
+---@return boolean
+function M.is_blocking()
+  local mode = vim.api.nvim_get_mode()
+  if mode.blocking then
+    return true
+  end
+
+  for _, m in ipairs(BLOCKING_MODES) do
+    if mode.mode:find(m) == 1 then
+      return true
+    end
+  end
+
+  return false
 end
 
 ---@param hlname                        string

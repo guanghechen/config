@@ -39,12 +39,13 @@ local function process_queue()
     return
   end
 
-  processing = true
   timer:stop()
 
-  local task = tasks:dequeue() ---@type fml.dressing.ui_attach.ITask|nil
-  pcall(process_task, task)
-
+  processing = true
+  while tasks:size() > 0 do
+    local task = tasks:dequeue() ---@type fml.dressing.ui_attach.ITask
+    pcall(process_task, task)
+  end
   processing = false
 end
 
