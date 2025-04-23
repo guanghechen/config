@@ -9,20 +9,26 @@ M.NR_SEARCH_MAIN_SELECTED = 2335
 
 M.GROUP_SEARCH_MAIN_SELECTED = "GROUP_SEARCH_MAIN_SELECTED"
 
-M.DAP_BREAKPOINT = "DapBreakpoint"
-M.DAP_BREAKPOINT_CONDITION = "DapBreakpointCondition"
-M.DAP_BREAKPOINT_REJECTED = "DapBreakpointRejected"
-M.DAP_LOG_POINT = "DapLogPoint"
-M.DAP_STOPPED = "DapStopped"
+-- stylua: ignore start
+M.CMDLINE_PROMPT            = "CmdlinePrompt"
 
-M.SEARCH_INPUT_CURSOR = "SIGN_SEARCH_INPUT_CURSOR"
-M.SEARCH_MAIN_CURRENT = "SIGN_SEARCH_MAIN_CURRENT"
-M.SEARCH_MAIN_PRESENT = "SIGN_SEARCH_MAIN_PRESENT"
-M.SEARCH_MAIN_PRESENT_CUR = "SIGN_SEARCH_MAIN_PRESENT_CUR"
-M.SEARCH_MAIN_SELECTED = "SIGN_SEARCH_MAIN_SELECTED"
-M.SEARCH_MAIN_SELECTED_CUR = "SEARCH_MAIN_SELECTED_CUR"
+M.DAP_BREAKPOINT            = "DapBreakpoint"
+M.DAP_BREAKPOINT_CONDITION  = "DapBreakpointCondition"
+M.DAP_BREAKPOINT_REJECTED   = "DapBreakpointRejected"
+M.DAP_LOG_POINT             = "DapLogPoint"
+M.DAP_STOPPED               = "DapStopped"
+
+M.SEARCH_INPUT_CURSOR       = "SignSearchInputCursor"
+M.SEARCH_MAIN_CURRENT       = "SignSearchMainCurrent"
+M.SEARCH_MAIN_PRESENT       = "SignSearchMainPresent"
+M.SEARCH_MAIN_PRESENT_CUR   = "SignSearchMainPresentCur"
+M.SEARCH_MAIN_SELECTED      = "SignSearchMainSelected"
+M.SEARCH_MAIN_SELECTED_CUR  = "SearchMainSelectedCur"
+-- stylua: ignore end
 
 -- stylua: ignore start
+sd(M.CMDLINE_PROMPT,              { text = eve.icon.ui.Cmdline,              texthl = "fs_cmdline_prompt"    })
+
 sd(M.DAP_BREAKPOINT,              { text = eve.icon.dap.Breakpoint,          texthl = "DapBreakpoint",          linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
 sd(M.DAP_BREAKPOINT_CONDITION,    { text = eve.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition", linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
 sd(M.DAP_BREAKPOINT_REJECTED,     { text = eve.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",  linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
@@ -30,7 +36,7 @@ sd(M.DAP_LOG_POINT,               { text = eve.icon.dap.LogPoint,            tex
 sd(M.DAP_STOPPED,                 { text = eve.icon.dap.Stopped,             texthl = "DapStopped",             linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
 sd(M.SEARCH_INPUT_CURSOR,         { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"      })
-sd(M.SEARCH_MAIN_CURRENT,         { text = ' ',                           texthl = "fs_main_current"      })
+sd(M.SEARCH_MAIN_CURRENT,         { text = ' ',                              texthl = "fs_main_current"      })
 sd(M.SEARCH_MAIN_PRESENT,         { text = eve.icon.ui.ArrowPresent,         texthl = "fs_main_present"      })
 sd(M.SEARCH_MAIN_PRESENT_CUR,     { text = eve.icon.ui.ArrowPresent,         texthl = "fs_main_present_cur"  })
 sd(M.SEARCH_MAIN_SELECTED,        { text = eve.icon.ui.Selected,             texthl = "fs_main_selected"     })

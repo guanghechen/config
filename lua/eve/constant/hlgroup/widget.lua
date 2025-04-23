@@ -58,6 +58,11 @@ function M.gen_hlgroup_map(context)
     f_ghp_cursor = { bg = c.bg3 },
     f_ghp_normal = { bg = c.bg1 },
 
+    ---cmdline
+    f_uc_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },
+    f_uc_border = { link = "FloatActiveBorder" },
+    f_uc_prompt = { fg = c.aqua, bg = t and c.none or c.bg0 },
+
     ---input
     f_ui_current = { bg = t and c.bg0 or c.none },
     f_ui_normal = { bg = t and c.bg0 or c.none },
@@ -126,6 +131,7 @@ function M.gen_hlgroup_map(context)
     f_us_codeaction_client_name = { fg = c.fg4, bg = c.none },
 
     ---signs
+    fs_cmdline_prompt = { fg = c.aqua },
     fs_input_prompt = { fg = c.red, bg = t and c.bg0 or c.none },
     fs_main_current = { bg = c.bg3 },
     fs_main_present = { fg = c.blue, bg = c.none },

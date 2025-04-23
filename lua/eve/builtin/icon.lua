@@ -277,6 +277,7 @@ M.ui = {
   Close = "󰅖",
   Close_alt = "",
   CloudDownload = "",
+  Cmdline = "",
   CodeAction = "󰌵",
   Comment = "󰅺",
   Dashboard = "",
@@ -315,6 +316,7 @@ M.ui = {
   Tab = "",
   Table = "",
   Telescope = "",
+  Terminal = "",
   Window = "",
 }
 

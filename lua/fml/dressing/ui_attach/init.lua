@@ -1,8 +1,22 @@
 local __module_name__ = "fml.dressing.ui_attach" ---@type string
 
+local config = require("fml.dressing.ui_attach.config") ---@type fml.dressing.ui_attach.config
+
+---@class fml.dressing.ui_attach.cmdline_show.IContentItem
+---@field public text                   string
+---@field public hlname                 string
+
+---@class fml.dressing.ui_attach.cmdline_show.IParams
+---@field public content                string[][]
+---@field public pos                    integer Cursor position in the command line (0-based)
+---@field public firstc                 string  Command line prefix character, e.g., ':', '/', '?'
+---@field public prompt                 string  Prompt text (optional)
+---@field public indent                 integer Indentation level (optional)
+---@field public level                  integer Nesting level, 0 means top level
+---@field public type                   string  Command line type, e.g., 'cmd', 'search_forward', 'search_backward', etc.
+
 ---@class fml.dressing.ui_attach.ITask
 ---@field public event                  string
----@field public kind                   string
 ---@field public args                   any[]
 
 ---@alias fml.dressing.ui_attach.IHandleTask
@@ -13,16 +27,18 @@ if timer == nil then
   return
 end
 
-local ns = vim.api.nvim_create_namespace("fml_cmdline") ---@type integer
 local tasks = eve.std.CircularQueue.new({ capacity = 500 })
 local processing = false ---@type boolean
 
 local handlers = {
-  cmdline_show = function(task)
-    require("fml.dressing.ui_attach.cmdline").show(task)
-  end,
   cmdline_hide = function(task)
     require("fml.dressing.ui_attach.cmdline").hide(task)
+  end,
+  cmdline_pos = function(task)
+    require("fml.dressing.ui_attach.cmdline").pos(task)
+  end,
+  cmdline_show = function(task)
+    require("fml.dressing.ui_attach.cmdline").show(task)
   end,
 }
 
@@ -35,7 +51,7 @@ end
 
 ---@return nil
 local function process_queue()
-  if processing then
+  if processing or tasks:size() < 1 then
     return
   end
 
@@ -47,21 +63,22 @@ local function process_queue()
     pcall(process_task, task)
   end
   processing = false
+
+  vim.api.nvim__redraw({ flush = true })
 end
 
 local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 
 ---@param event                         string
----@param kind                          string
 ---@param ...                           any
 ---@return boolean|nil
-local function ui_attach_callback(event, kind, ...)
+local function ui_attach_callback(event, ...)
   if vim.v.exiting ~= vim.NIL then
     return
   end
 
   -- HACK: special case for return prompts
-  if event == "msg_show" and kind == "return_prompt" then
+  if event == "msg_show" then
     vim.api.nvim_input("<cr>")
     return true
   end
@@ -71,7 +88,7 @@ local function ui_attach_callback(event, kind, ...)
     eve.reporter.warn({
       from = __module_name__,
       message = "Unknown event.",
-      details = { event = event, kind = kind, extra = { ... } },
+      details = { event = event, args = { ... } },
     })
     return
   end
@@ -79,7 +96,6 @@ local function ui_attach_callback(event, kind, ...)
   ---@type fml.dressing.ui_attach.ITask
   local task = {
     event = event,
-    kind = kind,
     args = { ... },
   }
   tasks:enqueue(task)
@@ -98,9 +114,9 @@ local flag_dressing_cmdline = eve.state.flight.dressing_cmdline:snapshot() ---@t
 local flag_dressing_messages = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
 local flag_dressing_popupmenu = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
 if flag_dressing_cmdline or flag_dressing_messages or flag_dressing_popupmenu then
-  vim.ui_attach(ns, {
+  vim.ui_attach(config.ns, {
     ext_cmdline = flag_dressing_cmdline,
-    ext_messages = flag_dressing_messages,
-    ext_popupmenu = flag_dressing_popupmenu,
+    ext_messages = false,
+    ext_popupmenu = false,
   }, ui_attach_callback)
 end
