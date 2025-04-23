@@ -107,23 +107,27 @@ function M.new(props)
     end
 
     if has_highlights_changed and data ~= nil then
-      require("nvim-treesitter") --- load nvim-treesitter if not loaded
-
       vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
-      local filetype = data and data.filetype or nil ---@type string|nil
-      if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-        local lang = vim.treesitter.language.get_lang(filetype) or filetype
-        local loaded = vim.treesitter.language.add(lang)
-        if loaded then
-          vim.treesitter.start(bufnr, lang)
-        end
-      end
 
+      local filetype = data and data.filetype or nil ---@type string|nil
+      local handled = false ---@type boolean
       if filetype == "markdown" then
         local ok, render_markdown_state = pcall(require, "render-markdown.state")
         if ok and render_markdown_state then
+          handled = true
           render_markdown_state.on.attach({ buf = bufnr })
           require("render-markdown.manager").update(bufnr, "Initial")
+        end
+      end
+
+      if not handled then
+        require("nvim-treesitter") --- load nvim-treesitter if not loaded
+        if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+          local lang = vim.treesitter.language.get_lang(filetype) or filetype
+          local loaded = vim.treesitter.language.add(lang)
+          if loaded then
+            vim.treesitter.start(bufnr, lang)
+          end
         end
       end
 

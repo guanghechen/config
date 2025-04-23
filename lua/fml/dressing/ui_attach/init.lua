@@ -87,7 +87,7 @@ local function ui_attach_callback(event, ...)
   if handler == nil then
     eve.reporter.warn({
       from = __module_name__,
-      message = "Unknown event.",
+      message = event,
       details = { event = event, args = { ... } },
     })
     return
@@ -99,6 +99,8 @@ local function ui_attach_callback(event, ...)
     args = { ... },
   }
   tasks:enqueue(task)
+
+  eve.debug.log_silent(event, { task = task })
 
   if vim.in_fast_event() then
     timer:start(0, 0, schedule_process)

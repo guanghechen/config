@@ -25,20 +25,22 @@ function M.hide(task)
   local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   states[level] = nil
 
-  if state ~= nil then
-    local bufnr = state.bufnr ---@type integer|nil
-    if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-      bufnr = nil
-    end
-    state.bufnr = nil
+  -- eve.debug.log_silent("cmdline_hide", { level = level, state = state })
 
+  if state ~= nil then
     local winnr = state.winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
       winnr = nil
     end
     state.winnr = nil
+
+    local bufnr = state.bufnr ---@type integer|nil
+    if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+      bufnr = nil
+    end
+    state.bufnr = nil
   end
 end
 
