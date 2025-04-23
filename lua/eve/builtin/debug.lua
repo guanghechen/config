@@ -13,40 +13,53 @@
 ---@class eve.builtin.debug
 local M = {}
 
----@param value any|nil
-local function better_stringify(value)
-  if value == nil then
+---@param message                       unknown|nil
+---@return string
+local function format_message(message)
+  if message == nil then
     return "nil"
   end
 
-  if type(value) == "string" then
-    return value
+  if type(message) == "string" then
+    return message
   end
 
-  return vim.inspect(value)
+  if type(message) == "boolean" then
+    return message and "true" or "false"
+  end
+
+  if type(message) == "number" then
+    return tostring(message)
+  end
+
+  return string.format("```json\n%s\n```", vim.inspect(message))
 end
 
-function M.log(...)
-  local elements = { ... } ---@type any[]
-  if #elements <= 0 then
-    return
-  end
-
-  local text = "" ---@type string
-  if #elements == 1 then
-    text = better_stringify(elements[1])
-  else
-    for _, element in ipairs(elements) do
-      text = text .. " " .. better_stringify(element) ---@type string
-    end
-    text = #text > 0 and text:sub(1) or "" ---@type string
-  end
+---@param title                         string
+---@param message                       unknown
+function M.log(title, message)
+  local text = format_message(message)
   vim.notify(text, vim.log.levels.DEBUG, {
     group = nil,
-    title = "Debug",
+    title = title,
     message = text,
     timeout = 5000,
     anonymous = false,
+    silent = false,
+  })
+end
+
+---@param title                         string
+---@param message                       unknown
+function M.log_silent(title, message)
+  local text = format_message(message)
+  vim.notify(text, vim.log.levels.DEBUG, {
+    group = nil,
+    title = title,
+    message = text,
+    timeout = 5000,
+    anonymous = false,
+    silent = true,
   })
 end
 
