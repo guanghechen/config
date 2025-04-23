@@ -72,40 +72,36 @@ function M.show(task)
   local prefix = string.format(" %s  ", eve.icon.ui.Cmdline) ---@type string
   local offset = #prefix ---@type integer
 
-  ---@type fml.dressing.ui_attach.cmdline.IState
-  local last = states[level]
-
-  ---@type fml.dressing.ui_attach.cmdline.IState
-  local state = {
-    content = content,
-    pos = pos,
-    firstc = firstc,
-    prompt = prompt,
-    indent = indent,
-    level = level,
-    type = type,
-    prefix = prefix,
-    offset = offset,
-    bufnr = nil,
-    winnr = nil,
-  }
-
-  states[level] = state
-  local dirty = last == nil or not vim.deep_equal(last, state) ---@type boolean
-
-  if dirty then
-    M._show(state)
+  local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  if state == nil then
+    ---@type fml.dressing.ui_attach.cmdline.IState
+    state = {
+      content = content,
+      pos = pos,
+      firstc = firstc,
+      prompt = prompt,
+      indent = indent,
+      level = level,
+      type = type,
+      prefix = prefix,
+      offset = offset,
+      bufnr = nil,
+      winnr = nil,
+    }
+    states[level] = state
+  else
+    state.content = content
+    state.pos = pos
+    state.firstc = firstc
+    state.prompt = prompt
+    state.indent = indent
+    state.level = level
+    state.type = type
+    state.prefix = prefix
+    state.offset = offset
   end
 
-  ---! hide others
-  for _, s in ipairs(states) do
-    if s ~= state then
-      if s.winnr ~= nil and vim.api.nvim_win_is_valid(s.winnr) then
-        vim.api.nvim_win_close(s.winnr, true)
-        s.winnr = nil
-      end
-    end
-  end
+  M._show(state)
 end
 
 ---@param state                         fml.dressing.ui_attach.cmdline.IState
@@ -131,6 +127,7 @@ function M._show(state)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
+    zindex = state.level,
     relative = "editor",
     width = width,
     height = 1,
