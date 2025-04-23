@@ -101,6 +101,10 @@ function M.gen_hlgroup_map(context)
     f_un_winbar_error = { fg = c.red,     bg = c.none, sp = c.red,    bold = true, underline = true },
     -- stylua: ignore end
 
+    ---popupmenu
+    f_up_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },
+    f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },
+
     ---search
     f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },
     f_us_input_prompt = { fg = c.red, bg = t and c.bg0 or c.none },
