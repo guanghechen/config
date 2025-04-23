@@ -40,6 +40,9 @@ local handlers = {
   cmdline_show = function(task)
     require("fml.dressing.ui_attach.cmdline").show(task)
   end,
+  msg_showcmd = function(task)
+    require("fml.dressing.ui_attach.messages").showcmd(task)
+  end,
 }
 
 ---@param task                          fml.dressing.ui_attach.ITask
@@ -54,8 +57,6 @@ local function process_queue()
   if processing or tasks:size() < 1 then
     return
   end
-
-  timer:stop()
 
   processing = true
   while tasks:size() > 0 do
@@ -84,6 +85,12 @@ local function ui_attach_callback(event, ...)
   }
   eve.debug.log_silent(event, { task = task })
 
+  -- HACK: special case for return prompts
+  if event == "msg_show" and task.args[1] == "return_prompt" then
+    vim.api.nvim_input("<cr>")
+    return true
+  end
+
   local handler = handlers[event]
   if handler == nil then
     eve.reporter.warn({
@@ -97,6 +104,7 @@ local function ui_attach_callback(event, ...)
   tasks:enqueue(task)
 
   if vim.in_fast_event() then
+    timer:stop()
     timer:start(0, 0, schedule_process)
   else
     process_queue()
@@ -112,7 +120,7 @@ local flag_dressing_popupmenu = eve.state.flight.dressing_cmdline:snapshot() ---
 if flag_dressing_cmdline or flag_dressing_messages or flag_dressing_popupmenu then
   vim.ui_attach(config.ns, {
     ext_cmdline = flag_dressing_cmdline,
-    ext_messages = false,
-    ext_popupmenu = false,
+    ext_messages = flag_dressing_cmdline,
+    ext_popupmenu = flag_dressing_cmdline,
   }, ui_attach_callback)
 end

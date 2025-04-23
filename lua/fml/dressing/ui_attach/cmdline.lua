@@ -19,7 +19,7 @@ local states = {} ---@type fml.dressing.ui_attach.cmdline.IState[]
 local M = {}
 
 ---@param task                          fml.dressing.ui_attach.ITask
----@return boolean|nil
+---@return nil
 function M.hide(task)
   local level = unpack(task.args) ---@type integer
   local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
@@ -27,23 +27,19 @@ function M.hide(task)
 
   if state ~= nil then
     local winnr = state.winnr ---@type integer|nil
+    local bufnr = state.bufnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
-      winnr = nil
     end
-    state.winnr = nil
 
-    local bufnr = state.bufnr ---@type integer|nil
     if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_delete(bufnr, { force = true })
-      bufnr = nil
     end
-    state.bufnr = nil
   end
 end
 
 ---@param task                          fml.dressing.ui_attach.ITask
----@return boolean|nil
+---@return nil
 function M.pos(task)
   local pos, level = unpack(task.args) ---@type integer
   local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
@@ -61,7 +57,7 @@ function M.pos(task)
 end
 
 ---@param task                          fml.dressing.ui_attach.ITask
----@return boolean|nil
+---@return nil
 function M.show(task)
   ---@diagnostic disable-next-line: unused-local
   local content, pos, firstc, prompt, indent, level, type = unpack(task.args)
@@ -97,6 +93,10 @@ function M.show(task)
   states[level] = state
   local dirty = last == nil or not vim.deep_equal(last, state) ---@type boolean
 
+  if dirty then
+    M._show(state)
+  end
+
   ---! hide others
   for _, s in ipairs(states) do
     if s ~= state then
@@ -105,10 +105,6 @@ function M.show(task)
         s.winnr = nil
       end
     end
-  end
-
-  if dirty then
-    M._show(state)
   end
 end
 

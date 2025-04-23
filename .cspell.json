@@ -462,6 +462,7 @@
     "shiftround",
     "shiftwidth",
     "shortmess",
+    "showcmd",
     "showmode",
     "showtabline",
     "sidescrolloff",
