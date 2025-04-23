@@ -77,30 +77,24 @@ local function ui_attach_callback(event, ...)
     return
   end
 
-  -- HACK: special case for return prompts
-  if event == "msg_show" then
-    vim.api.nvim_input("<cr>")
-    return true
-  end
+  ---@type fml.dressing.ui_attach.ITask
+  local task = {
+    event = event,
+    args = { ... },
+  }
+  eve.debug.log_silent(event, { task = task })
 
   local handler = handlers[event]
   if handler == nil then
     eve.reporter.warn({
       from = __module_name__,
       message = event,
-      details = { event = event, args = { ... } },
+      details = { task = task },
     })
     return
   end
 
-  ---@type fml.dressing.ui_attach.ITask
-  local task = {
-    event = event,
-    args = { ... },
-  }
   tasks:enqueue(task)
-
-  eve.debug.log_silent(event, { task = task })
 
   if vim.in_fast_event() then
     timer:start(0, 0, schedule_process)

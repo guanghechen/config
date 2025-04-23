@@ -25,8 +25,6 @@ function M.hide(task)
   local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   states[level] = nil
 
-  -- eve.debug.log_silent("cmdline_hide", { level = level, state = state })
-
   if state ~= nil then
     local winnr = state.winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
