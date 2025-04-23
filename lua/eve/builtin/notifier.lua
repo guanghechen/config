@@ -17,6 +17,7 @@
 ---@field public times                  integer
 ---@field public timeout                integer
 ---@field public timestamp              integer
+---@field public lang               ?string
 
 ---@class eve.builtin.notifier.IWindow
 ---@field public winnr                  integer|nil
@@ -288,6 +289,7 @@ function M.create_buf_as_needed(win)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
+  require("nvim-treesitter") --- load nvim-treesitter if not loaded
   if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
     local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
     local has_ts_parser = pcall(vim.treesitter.language.add, lang)
@@ -336,7 +338,7 @@ function M.create_win_as_needed(win)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
-    vim.wo[winnr].conceallevel = 2
+    vim.wo[winnr].conceallevel = 0
     vim.wo[winnr].concealcursor = "n"
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].number = false

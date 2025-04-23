@@ -13,9 +13,9 @@ vim.notify = function(msg, level0, opts)
   local group = type(opts.group) == "string" and opts.group or nil ---@type string|nil
   local title = opts.title or eve.notifier.resolve_title(level) ---@type string
   local message = type(opts.message) == "string" and opts.message or msg ---@type string
+  local timeout = opts.timeout or 3000 ---@type integer
   local anonymous = type(opts.anonymous) == "boolean" and opts.anonymous or false ---@type boolean
   local silent = type(opts.silent) == "boolean" and opts.silent or false ---@type boolean
-  local timeout = opts.timeout or 3000 ---@type integer
   eve.notifier.notify(level, group, title, message, timeout, anonymous, silent)
 end
 
