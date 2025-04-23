@@ -43,6 +43,7 @@ local group_flags = {
 
   ---ux
   ux = {
+    notification_paused = eve.state.status.notification_paused,
     relativenumber = eve.state.option.relativenumber,
     username = eve.state.theme.username,
     transparency = eve.state.theme.transparency,

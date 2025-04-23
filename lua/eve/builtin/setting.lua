@@ -40,6 +40,7 @@ M.togglers = {
   "relativenumber_local",
   "wrap_local",
 
+  "notification_paused_ux",
   "relativenumber_ux",
   "transparency_ux",
   "theme_ux",
