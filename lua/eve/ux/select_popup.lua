@@ -201,6 +201,7 @@ function M:create_win_as_needed()
 
     winnr_new_created = true
 
+    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_SELECT_POPUP
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 

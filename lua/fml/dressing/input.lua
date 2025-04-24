@@ -83,6 +83,7 @@ function M.input(opts, on_confirm)
     title_pos = "center",
   })
 
+  vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_INPUT
   vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
   vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 

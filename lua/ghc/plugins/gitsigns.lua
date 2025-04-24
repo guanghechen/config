@@ -217,6 +217,7 @@ local keymaps = {
       }
       local winnr = vim.api.nvim_open_win(bufnr, true, opts)
 
+      vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_BOARD
       vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
       vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 

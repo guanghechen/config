@@ -806,6 +806,7 @@ function M:create_wins_as_needed()
       winnr_main = vim.api.nvim_open_win(bufnr_main, true, wincfg_main)
       context.winnr_main = winnr_main
 
+      vim.w[winnr_main][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_SEARCH_MAIN
       vim.w[winnr_main][eve.var.Names.WINLINE_DISABLED] = true
       vim.w[winnr_main][eve.var.Names.FLAG_SOURCEFILE] = false
 
@@ -862,6 +863,7 @@ function M:create_wins_as_needed()
         vim.api.nvim_win_set_cursor(winnr_preview, { preview_lnum, preview_col })
       end
 
+      vim.w[winnr_preview][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_SEARCH_PREVIEW
       vim.w[winnr_preview][eve.var.Names.WINLINE_DISABLED] = true
       vim.w[winnr_preview][eve.var.Names.FLAG_SOURCEFILE] = false
 
@@ -909,6 +911,7 @@ function M:create_wins_as_needed()
     winnr_input = vim.api.nvim_open_win(bufnr_input, true, wincfg_input)
     context.winnr_input = winnr_input
 
+    vim.w[winnr_input][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_SEARCH_INPUT
     vim.w[winnr_input][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr_input][eve.var.Names.FLAG_SOURCEFILE] = false
 

@@ -234,7 +234,7 @@ function M:open(params)
 
   if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
     ---@type integer
-    self._winnr = vim.api.nvim_open_win(self._bufnr, true, {
+    local winnr = vim.api.nvim_open_win(self._bufnr, true, {
       relative = "editor",
       anchor = "NW",
       row = rect.row,
@@ -247,7 +247,9 @@ function M:open(params)
       border = "rounded",
       style = "minimal",
     })
-    vim.api.nvim_win_set_cursor(self._winnr, { text_cursor_row, text_cursor_col })
+    self._winnr = winnr
+    vim.api.nvim_win_set_cursor(winnr, { text_cursor_row, text_cursor_col })
+    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_TEXTAREA
   end
 
   for key, value in pairs(self.win_opts) do
