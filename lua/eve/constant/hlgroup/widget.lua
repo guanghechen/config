@@ -59,9 +59,9 @@ function M.gen_hlgroup_map(context)
     f_ghp_normal = { bg = c.bg1 },
 
     ---cmdline
-    f_uc_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },
     f_uc_border = { link = "FloatActiveBorder" },
-    f_uc_prompt = { fg = c.aqua, bg = t and c.none or c.bg0 },
+    f_uc_normal = { fg = c.fg2, bg = t and c.bg0 or c.none },
+    f_uc_prompt = { fg = c.aqua, bg = t and c.bg0 or c.none },
 
     ---input
     f_ui_current = { bg = t and c.bg0 or c.none },
