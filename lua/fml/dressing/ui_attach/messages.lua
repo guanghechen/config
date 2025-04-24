@@ -60,7 +60,7 @@ function M.history_show(task)
     local row = lnum - 1 ---@type integer
     for _, item in ipairs(entry[2]) do
       local _, text_chunk, hlid = unpack(item) ---@type integer, string, integer
-      local hlname = eve.state.theme.get_hlname_by_id(nsnrs.attach, hlid)
+      local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
       local offset_next = offset + #text_chunk ---@type integer
       vim.hl.range(bufnr, nsnrs.attach, hlname, { row, offset }, { row, offset_next })
       offset = offset_next ---@type integer
@@ -126,7 +126,7 @@ function M.show(task)
   local lnum, col_offset = 1, 0 ---@type integer, integer
   for _, item in ipairs(content) do
     local _, text, hlid = unpack(item) ---@type integer, string, integer
-    local hlname = eve.state.theme.get_hlname_by_id(nsnrs.attach, hlid)
+    local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
     local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
     for i, line in ipairs(lines) do
       if i > 1 then
@@ -154,13 +154,14 @@ function M.show(task)
   end
   last_msg_group = group
 
+  local anonymous = kind ~= "echo" and not history ---@type boolean
   vim.notify(message, level, {
     group = group,
     title = title,
     timeout = 3000,
     message = message,
     highlights = highlights,
-    anonymous = kind ~= "echo" and not history,
+    anonymous = anonymous,
     silent = false,
   })
 end

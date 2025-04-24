@@ -23,7 +23,6 @@ local __module_name__ = "eve.state.editor.theme" ---@type string
 ---@field public username               eve.std.collection.IObservable -- boolean>
 ---
 ---@field public get_float_winblend     fun(): integer
----@field public get_hlname_by_id       fun(nsnr: integer, hlid: integer): string
 ---
 ---@field public apply_integration      fun(params: eve.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.theme.ILoadThemeParams): nil
@@ -47,8 +46,6 @@ local integrations = {
   "treesitter",
   "plugin",
 }
-
-local hlid_2_name_maps = {} ---@type table<integer, table<integer, string>>
 
 ---@return string
 local function get_theme_path()
@@ -115,31 +112,6 @@ function M.get_float_winblend()
   return M.transparency:snapshot() and 15 or 0 ---@type integer
 end
 
----@param nsnr                          integer
----@param hlid                          integer
----@return string
-function M.get_hlname_by_id(nsnr, hlid)
-  if hlid == 0 then
-    return "Normal"
-  end
-
-  local hlid_2_name = hlid_2_name_maps[nsnr] ---@type table<integer, string>
-  if hlid_2_name == nil then
-    hlid_2_name = {}
-    hlid_2_name_maps[nsnr] = hlid_2_name
-    local hlgroups = vim.api.nvim_get_hl(nsnr, { create = false }) ---@type table<string, vim.api.keyset.get_hl_info>
-    for hlname in pairs(hlgroups) do
-      local id = vim.fn.hlID(hlname) ---@type integer
-      hlid_2_name[id] = hlname
-    end
-  end
-
-  if nsnr == 0 then
-    return hlid_2_name[hlid] or "Normal"
-  end
-  return hlid_2_name[hlid] or M.get_hlname_by_id(0, hlid)
-end
-
 ---@param params                        eve.theme.ILoadIntegrationParams
 ---@return nil
 function M.apply_integration(params)
@@ -171,8 +143,6 @@ function M.apply_theme(params)
   local transparency = params.transparency ---@type boolean
   local persistent = params.persistent ---@type boolean
   local nsnr = params.nsnr or 0 ---@type integer
-
-  hlid_2_name_maps[nsnr] = nil
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then

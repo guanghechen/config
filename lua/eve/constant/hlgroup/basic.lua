@@ -22,7 +22,7 @@ function M.gen_hlgroup_map(context)
     lCursor = { link = "Cursor" },
 
     ---diagnostic
-    Error = { fg = c.bg0, bg = c.red },
+    Error = { fg = c.red, bold = true },
     DiagnosticError = { fg = c.red },
     DiagnosticHint = { fg = c.purple },
     DiagnosticInfo = { fg = c.green },
@@ -78,7 +78,7 @@ function M.gen_hlgroup_map(context)
     RenamerTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
 
     ---msg
-    ErrorMsg = { fg = c.bg0, bg = c.red, bold = true },
+    ErrorMsg = { fg = c.red, bold = true },
     ModeMsg = { fg = c.yellow, bold = true },
     MoreMsg = { fg = c.yellow, bold = true },
     MsgArea = { fg = c.orange, bg = c.bg2 },
