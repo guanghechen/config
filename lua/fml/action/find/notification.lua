@@ -100,8 +100,7 @@ select = eve.ux.Select.new({
   on_confirm = function(widget, items)
     widget:hide()
     for _, item in ipairs(items) do
-      local data = item.data ---@type fml.action.find.notification.IItemData
-      local task = data.task ---@type eve.builtin.notifier.ITask
+      local task = item.data ---@type eve.builtin.notifier.ITask
       eve.notifier.notify({
         group = task.group,
         level = task.level,
