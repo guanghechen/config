@@ -2,6 +2,7 @@
 local __mods = {
   G = "eve.builtin.G",
   box = "eve.builtin.box",
+  buf = "eve.builtin.buf",
   clipboard = "eve.builtin.clipboard",
   command = "eve.builtin.command",
   debug = "eve.builtin.debug",
@@ -24,9 +25,11 @@ local __mods = {
   shell = "eve.builtin.shell",
   sign = "eve.builtin.sign",
   string = "eve.builtin.string",
+  tab = "eve.builtin.tab",
   table = "eve.builtin.table",
   tmux = "eve.builtin.tmux",
   var = "eve.builtin.var",
+  win = "eve.builtin.win",
   winpicker = "eve.builtin.winpicker",
 }
 
@@ -39,6 +42,7 @@ local __mods = {
 ---
 ---@field public G                      eve.builtin.G
 ---@field public box                    eve.builtin.box
+---@field public buf                    eve.builtin.buf
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public command                eve.builtin.command
 ---@field public debug                  eve.builtin.debug
@@ -61,9 +65,11 @@ local __mods = {
 ---@field public shell                  eve.builtin.shell
 ---@field public sign                   eve.builtin.sign
 ---@field public string                 eve.builtin.string
+---@field public tab                    eve.builtin.tab
 ---@field public table                  eve.builtin.table
 ---@field public tmux                   eve.builtin.tmux
 ---@field public var                    eve.builtin.var
+---@field public win                    eve.builtin.win
 ---@field public winpicker              eve.builtin.winpicker
 local M = setmetatable({
   __mods = __mods,
