@@ -145,7 +145,7 @@ function M.on_win_enter(winnr)
     return
   end
 
-  if eve.editor.is_win_fixed(winnr) then
+  if eve.win.is_fixed(winnr) then
     M.winnr_fixed:next(winnr)
   end
   if eve.editor.is_win_sourcefile(winnr) then

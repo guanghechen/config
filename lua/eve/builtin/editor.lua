@@ -103,7 +103,7 @@ function M.find_winnr_fixed(filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and M.is_win_fixed(winnr) then
+    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and eve.win.is_fixed(winnr) then
       return winnr
     end
   end
@@ -207,19 +207,6 @@ function M.is_buf_sourcefile(bufnr)
 
   vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = true
   return true
-end
-
----@param bufnr                         integer
----@return boolean
-function M.is_buf_editable(bufnr)
-  return vim.bo[bufnr].buftype == "" and vim.bo[bufnr].modifiable and not vim.bo[bufnr].readonly
-end
-
----@param winnr                         integer
----@return boolean
-function M.is_win_fixed(winnr)
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  return config == nil or config.relative == ""
 end
 
 ---@param winnr                         integer
