@@ -10,9 +10,10 @@ local __mods = {
   FileSelect = "eve.ux.select_file",
   SelectPopup = "eve.ux.select_popup",
 
-  Setting = "eve.ux.setting",
+  Board = "eve.ux.board",
   Nvimbar = "eve.ux.nvimbar",
   Printer = "eve.ux.printer",
+  Setting = "eve.ux.setting",
   Terminal = "eve.ux.terminal",
   Textarea = "eve.ux.textarea",
 }
@@ -21,7 +22,6 @@ local __mods = {
 ---@field public __mods                 eve.ux.__mods
 ---@field public fn                     eve.ux.fn
 ---
----@field public Setting                eve.ux.Setting
 ---@field public Search                 eve.ux.Search
 ---@field public SearchContext          eve.ux.SearchContext
 ---@field public SearchInput            eve.ux.SearchInput
@@ -32,8 +32,10 @@ local __mods = {
 ---@field public FileSelect             eve.ux.FileSelect
 ---@field public SelectPopup            eve.ux.SelectPopup
 ---
+---@field public Board                  eve.ux.Board
 ---@field public Nvimbar                eve.ux.Nvimbar
 ---@field public Printer                eve.ux.Printer
+---@field public Setting                eve.ux.Setting
 ---@field public Terminal               eve.ux.Terminal
 ---@field public Textarea               eve.ux.Textarea
 local M = setmetatable({
