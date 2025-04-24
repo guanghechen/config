@@ -102,18 +102,24 @@ function M.show(task)
   end
 
   local level = kind_2_level_map[kind] or vim.log.levels.INFO
-  local group = replace_last and last_msg_group or string.format("%s_%d", task.event, os.time()) ---@type string
-
-  local text = "" ---@type string
+  local title = string.format("%s | %s", task.event, kind) ---@type string
+  local message = "" ---@type string
   for _, piece in ipairs(content) do
-    text = text .. piece[2] ---@type string
+    message = message .. piece[2] ---@type string
   end
 
-  vim.notify(text, level, {
+  local group = replace_last and last_msg_group or nil ---@type string|nil
+  if group == nil then
+    local md5 = eve.std.md5.new():update(tostring(level)):update(title):update(message):finish()
+    group = eve.std.md5.tohex(md5) ---@type string
+  end
+  last_msg_group = group
+
+  vim.notify(message, level, {
     group = group,
-    title = task.event,
+    title = title,
     timeout = 3000,
-    message = text,
+    message = message,
     anonymous = not history,
     silent = false,
   })
