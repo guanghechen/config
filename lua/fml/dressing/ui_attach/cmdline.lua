@@ -125,7 +125,7 @@ function M._show(state)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = state.level,
+    zindex = 1000 + state.level * 100,
     relative = "editor",
     width = width,
     height = 1,
