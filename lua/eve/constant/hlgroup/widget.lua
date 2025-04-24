@@ -67,6 +67,9 @@ function M.gen_hlgroup_map(context)
     f_ui_current = { bg = t and c.bg0 or c.none },
     f_ui_normal = { bg = t and c.bg0 or c.none },
 
+    ---message
+    f_um_search_count = { fg = c.yellow, bg = t and c.bg0 or c.none },
+
     ---notify
     -- stylua: ignore start
     f_un_border_trace = { fg = c.fg2,     bg = t and c.bg0 or c.none },

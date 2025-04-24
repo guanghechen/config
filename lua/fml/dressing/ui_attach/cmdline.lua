@@ -169,11 +169,11 @@ function M._show(state)
   for _, piece in ipairs(content) do
     line = line .. piece[2]
   end
-  vim.api.nvim_buf_clear_namespace(bufnr, config.ns, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr_attach, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line })
 
   ---! apply highlights
-  vim.hl.range(bufnr, config.ns, "f_uc_prompt", { 1, 0 }, { 1, offset })
+  vim.hl.range(bufnr, config.nsnr_attach, "f_uc_prompt", { 1, 0 }, { 1, offset })
 
   vim.api.nvim_win_set_cursor(winnr, { 1, pos + offset })
   vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })

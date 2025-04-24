@@ -1,3 +1,5 @@
+local config = require("fml.dressing.ui_attach.config") ---@type fml.dressing.ui_attach.config
+
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
   emsg = vim.log.levels.ERROR,
@@ -83,6 +85,23 @@ function M.show(task)
   ---@cast replace_last                 boolean
   ---@cast history                      boolean
 
+  if kind == "search_count" or kind == "search_cmd" then
+    local line = vim.fn.line(".") - 1
+    local virt_text = {} ---@type string[][]
+    for _, piece in ipairs(content) do
+      local text = vim.trim(piece[2]) ---@type string
+      table.insert(virt_text, { text, "f_um_search_count" })
+    end
+
+    vim.api.nvim_buf_clear_namespace(0, config.nsnr_search_count, 0, -1)
+    vim.api.nvim_buf_set_extmark(0, config.nsnr_search_count, line, -1, {
+      virt_text = virt_text,
+      virt_text_pos = "eol",
+      hl_mode = "combine",
+    })
+    return
+  end
+
   local level = kind_2_level_map[kind] or vim.log.levels.INFO
   local group = replace_last and last_msg_group or string.format("%s_%d", task.event, os.time()) ---@type string
 
@@ -111,6 +130,11 @@ end
 ---@param task                          fml.dressing.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
-function M.clear(task) end
+function M.clear(task)
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr_search_count, 0, -1)
+  end
+end
 
 return M

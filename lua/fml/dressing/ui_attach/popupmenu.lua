@@ -108,7 +108,7 @@ function M.show(task)
     lines[#lines + 1] = line
   end
 
-  vim.api.nvim_buf_clear_namespace(bufnr, config.ns, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr_attach, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim__redraw({ win = winnr, flush = true })
 end

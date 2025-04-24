@@ -137,7 +137,7 @@ local flag_dressing_cmdline = eve.state.flight.dressing_cmdline:snapshot() ---@t
 local flag_dressing_messages = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
 local flag_dressing_popupmenu = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
 if flag_dressing_cmdline or flag_dressing_messages or flag_dressing_popupmenu then
-  vim.ui_attach(config.ns, {
+  vim.ui_attach(config.nsnr_attach, {
     ext_cmdline = flag_dressing_cmdline,
     ext_messages = flag_dressing_cmdline,
     ext_popupmenu = flag_dressing_cmdline,
