@@ -55,7 +55,7 @@ function M.new(props)
       end
 
       return M[key]
-    end
+    end,
   })
 
   self._permanent = permanent
@@ -63,12 +63,10 @@ function M.new(props)
   return self
 end
 
+---@return nil
+function M:show() end
 
 ---@return nil
-function M:show()
-end
-
----@return nil
-function M:hide()
+function M:hide() end
 
 return M

@@ -271,7 +271,7 @@ function M.load(raw_data)
     or eve.std.AdvanceHistory.new({
       name = "tabs",
       capacity = eve.setting.TAB_HISTORY_CAPACITY,
-      validate = eve.editor.is_tab_valid,
+      validate = eve.tab.is_valid,
     })
 
   local stack = {} ---@type integer[]
@@ -329,13 +329,13 @@ M.__meta_map__ = {} ---@type table<integer, eve.state.tab.meta.state>
 M.tab_history = eve.std.AdvanceHistory.new({
   name = "tabs",
   capacity = eve.setting.TAB_HISTORY_CAPACITY,
-  validate = eve.editor.is_tab_valid,
+  validate = eve.tab.is_valid,
 })
 
 ---@param tabnr                         integer|nil
 ---@return eve.state.tab.meta.state|nil
 function M.get(tabnr)
-  if tabnr ~= nil and eve.editor.is_tab_valid(tabnr) then
+  if tabnr ~= nil and eve.tab.is_valid(tabnr) then
     return M.__meta_map__[tabnr]
   end
 end
@@ -344,7 +344,7 @@ end
 ---@param meta                          eve.state.tab.meta.state
 ---@return eve.state.tab.meta.state|nil
 function M.set(tabnr, meta)
-  if tabnr ~= nil and eve.editor.is_tab_valid(tabnr) then
+  if tabnr ~= nil and eve.tab.is_valid(tabnr) then
     M.__meta_map__[tabnr] = meta
     return meta
   end
@@ -361,7 +361,7 @@ end
 ---@param tabnr                         integer|nil
 ---@return eve.state.tab.meta.state|nil
 function M.resolve(tabnr)
-  if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
+  if tabnr == nil or not eve.tab.is_valid(tabnr) then
     return nil
   end
 
@@ -392,7 +392,7 @@ end
 ---@param tabnr                         integer|nil
 ---@return nil
 function M.refresh(tabnr)
-  if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
+  if tabnr == nil or not eve.tab.is_valid(tabnr) then
     return
   end
 
@@ -426,7 +426,7 @@ function M.refresh_all()
 
   local invalid_tabnrs = {} ---@type integer[]
   for tabnr in pairs(M.__meta_map__) do
-    if tabnr == nil or not eve.editor.is_tab_valid(tabnr) then
+    if tabnr == nil or not eve.tab.is_valid(tabnr) then
       table.insert(invalid_tabnrs, tabnr)
     end
   end

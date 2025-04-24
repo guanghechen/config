@@ -221,12 +221,6 @@ function M.is_buf_valid(bufnr)
   return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
 end
 
----@param tabnr                         integer
----@return boolean
-function M.is_tab_valid(tabnr)
-  return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
-end
-
 ---@param winnr                         integer
 ---@return boolean
 function M.is_win_fixed(winnr)
