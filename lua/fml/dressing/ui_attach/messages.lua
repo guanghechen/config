@@ -1,5 +1,3 @@
-local config = require("fml.dressing.ui_attach.config") ---@type fml.dressing.ui_attach.config
-
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
   emsg = vim.log.levels.ERROR,
@@ -93,8 +91,8 @@ function M.show(task)
       table.insert(virt_text, { text, "f_um_search_count" })
     end
 
-    vim.api.nvim_buf_clear_namespace(0, config.nsnr_search_count, 0, -1)
-    vim.api.nvim_buf_set_extmark(0, config.nsnr_search_count, line, -1, {
+    vim.api.nvim_buf_clear_namespace(0, eve.constant.nsnr.search_count, 0, -1)
+    vim.api.nvim_buf_set_extmark(0, eve.constant.nsnr.search_count, line, -1, {
       virt_text = virt_text,
       virt_text_pos = "eol",
       hl_mode = "combine",
@@ -133,7 +131,7 @@ end
 function M.clear(task)
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr_search_count, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr, eve.constant.nsnr.search_count, 0, -1)
   end
 end
 
