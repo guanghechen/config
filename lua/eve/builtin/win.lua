@@ -45,6 +45,20 @@ function M.find_fixed(tabnr, filetype)
   return nil
 end
 
+---@param tabnr                         integer
+---@param filetype                      string
+---@return integer|nil
+function M.find_floating(tabnr, filetype)
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+  for _, winnr in pairs(winnrs) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    if vim.bo[bufnr].filetype == filetype and M.is_floating(winnr) then
+      return winnr
+    end
+  end
+  return nil
+end
+
 ----------------------------------------------------------------------------------------------------
 
 ---@param winnr                         integer
