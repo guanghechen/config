@@ -1258,7 +1258,7 @@ function M.neotree(position, neotree_position)
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == filetype then
-        if not eve.editor.is_win_floating(winnr) then
+        if not eve.win.is_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr), winnr
         end
       end
@@ -1416,7 +1416,7 @@ function M.sidebar(position, filetype, get_title)
     for _, winnr in ipairs(winnrs) do
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if vim.bo[bufnr].filetype == filetype then
-        if not eve.editor.is_win_floating(winnr) then
+        if not eve.win.is_floating(winnr) then
           return vim.api.nvim_win_get_width(winnr)
         end
       end

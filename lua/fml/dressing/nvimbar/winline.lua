@@ -96,7 +96,7 @@ local function resolve_winline_scheduler(winnr, source)
     })
 
     if source == "neotree" then
-      local is_floating = eve.editor.is_win_floating(winnr) ---@type boolean
+      local is_floating = eve.win.is_floating(winnr) ---@type boolean
       winline:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
     else
       winline
@@ -137,7 +137,7 @@ local function render(winnr)
   end
 
   if filetype == eve.filetype.NEOTREE then
-    if vim.o.showtabline == 0 or eve.editor.is_win_floating(winnr) then
+    if vim.o.showtabline == 0 or eve.win.is_floating(winnr) then
       local winline = resolve_winline_scheduler(winnr, "neotree") ---@type eve.ux.INvimbar|nil
       if winline ~= nil then
         winline:render()

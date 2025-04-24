@@ -116,7 +116,7 @@ function M.find_winnr_floating(filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype and M.is_win_floating(winnr) then
+    if vim.bo[bufnr].filetype == filetype and eve.win.is_floating(winnr) then
       return winnr
     end
   end
@@ -211,20 +211,13 @@ end
 
 ---@param winnr                         integer
 ---@return boolean
-function M.is_win_floating(winnr)
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  return config.relative ~= nil and config.relative ~= ""
-end
-
----@param winnr                         integer
----@return boolean
 function M.is_win_sourcefile(winnr)
   local is_sourcefile = vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] ---@type boolean|nil
   if is_sourcefile ~= nil then
     return is_sourcefile
   end
 
-  if M.is_win_floating(winnr) then
+  if eve.win.is_floating(winnr) then
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
     return false
   end

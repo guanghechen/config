@@ -36,7 +36,7 @@ vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
     local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
     local winnrs = vim.api.nvim_list_wins() ---@type integer[]
     for _, winnr in ipairs(winnrs) do
-      if eve.editor.is_win_floating(winnr) then
+      if eve.win.is_floating(winnr) then
         local winhighlight = vim.wo[winnr].winhighlight
         if winnr == winnr_cur then
           local winhighlight_next = winhighlight:gsub("FloatBorder:FloatBorder", "FloatBorder:FloatActiveBorder")
