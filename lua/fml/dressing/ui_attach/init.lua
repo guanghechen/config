@@ -1,5 +1,12 @@
 local __module_name__ = "fml.dressing.ui_attach" ---@type string
 
+local flag_dressing_cmdline = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
+local flag_dressing_messages = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
+local flag_dressing_popupmenu = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
+if not flag_dressing_cmdline and not flag_dressing_messages and not flag_dressing_popupmenu then
+  return
+end
+
 ---@class fml.dressing.ui_attach.cmdline_show.IContentItem
 ---@field public text                   string
 ---@field public hlname                 string
@@ -131,13 +138,26 @@ local function ui_attach_callback(event, ...)
   return true
 end
 
-local flag_dressing_cmdline = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
-local flag_dressing_messages = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
-local flag_dressing_popupmenu = eve.state.flight.dressing_cmdline:snapshot() ---@type boolean
-if flag_dressing_cmdline or flag_dressing_messages or flag_dressing_popupmenu then
-  vim.ui_attach(eve.constant.nsnr.attach, {
-    ext_cmdline = flag_dressing_cmdline,
-    ext_messages = flag_dressing_cmdline,
-    ext_popupmenu = flag_dressing_cmdline,
-  }, ui_attach_callback)
-end
+eve.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
+  local searching = eve.state.status.searching:snapshot() ---@type boolean
+  if searching then
+    eve.state.status.searching:next(false)
+    vim.schedule(function()
+      vim.cmd.noh()
+      local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+      for _, bufnr in ipairs(bufnrs) do
+        vim.api.nvim_buf_clear_namespace(bufnr, eve.constant.nsnr.search_count, 0, -1)
+      end
+    end)
+  end
+  if vim.snippet then
+    vim.snippet.stop()
+  end
+  return "<esc>"
+end, "system: clear search highlights", true)
+
+vim.ui_attach(eve.constant.nsnr.attach, {
+  ext_cmdline = flag_dressing_cmdline,
+  ext_messages = flag_dressing_cmdline,
+  ext_popupmenu = flag_dressing_cmdline,
+}, ui_attach_callback)

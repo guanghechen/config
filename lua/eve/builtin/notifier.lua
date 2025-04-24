@@ -181,24 +181,26 @@ local scheduler = eve.std.Scheduler.new({
       end
 
       processing = true
-      local ok, error = pcall(M.handle)
-      processing = false
+      vim.schedule(function()
+        local ok, error = pcall(M.handle)
+        processing = false
 
-      if not ok then
-        vim.schedule(function()
-          M.notify({
-            group = nil,
-            level = "ERROR",
-            title = "Notifier Interval Error on handle",
-            content = vim.inspect(error),
-            timeout = 100000,
-            anonymous = false,
-            silent = true,
-          })
-        end)
-      end
+        if not ok then
+          vim.schedule(function()
+            M.notify({
+              group = nil,
+              level = "ERROR",
+              title = "Notifier Interval Error on handle",
+              content = vim.inspect(error),
+              timeout = 100000,
+              anonymous = false,
+              silent = true,
+            })
+          end)
+        end
 
-      callback("fulfilled")
+        callback("fulfilled")
+      end)
     end
   end,
 })
@@ -355,10 +357,10 @@ function M.create_buf_as_needed(win)
     }
     eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
   else
-    vim.bo[bufnr].modifiable = true
     vim.bo[bufnr].readonly = false
   end
 
+  vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 1, -1, false, win.task.lines)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

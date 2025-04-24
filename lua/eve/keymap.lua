@@ -43,17 +43,7 @@ mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add abo
 
 ---! enhancement
 mk({ "i", "n", "s" }, "<esc>", function()
-  local searching = eve.state.status.searching:snapshot() ---@type boolean
-  if searching then
-    eve.state.status.searching:next(false)
-    vim.schedule(function()
-      vim.cmd.noh()
-      local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-      for _, bufnr in ipairs(bufnrs) do
-        vim.api.nvim_buf_clear_namespace(bufnr, eve.constant.nsnr.search_count, 0, -1)
-      end
-    end)
-  end
+  vim.cmd.noh()
   if vim.snippet then
     vim.snippet.stop()
   end
