@@ -10,8 +10,6 @@ M.NR_SEARCH_MAIN_SELECTED = 2335
 M.GROUP_SEARCH_MAIN_SELECTED = "GROUP_SEARCH_MAIN_SELECTED"
 
 -- stylua: ignore start
-M.CMDLINE_PROMPT            = "CmdlinePrompt"
-
 M.DAP_BREAKPOINT            = "DapBreakpoint"
 M.DAP_BREAKPOINT_CONDITION  = "DapBreakpointCondition"
 M.DAP_BREAKPOINT_REJECTED   = "DapBreakpointRejected"
@@ -27,8 +25,6 @@ M.SEARCH_MAIN_SELECTED_CUR  = "SearchMainSelectedCur"
 -- stylua: ignore end
 
 -- stylua: ignore start
-sd(M.CMDLINE_PROMPT,              { text = eve.icon.ui.Cmdline,              texthl = "fs_cmdline_prompt"    })
-
 sd(M.DAP_BREAKPOINT,              { text = eve.icon.dap.Breakpoint,          texthl = "DapBreakpoint",          linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
 sd(M.DAP_BREAKPOINT_CONDITION,    { text = eve.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition", linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
 sd(M.DAP_BREAKPOINT_REJECTED,     { text = eve.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",  linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })

@@ -43,6 +43,12 @@ local handlers = {
   msg_clear = function(task)
     require("fml.dressing.ui_attach.messages").clear(task)
   end,
+  msg_history_clear = function(task)
+    require("fml.dressing.ui_attach.messages").history_clear(task)
+  end,
+  msg_history_show = function(task)
+    require("fml.dressing.ui_attach.messages").history_show(task)
+  end,
   msg_show = function(task)
     require("fml.dressing.ui_attach.messages").show(task)
   end,

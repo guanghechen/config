@@ -119,7 +119,7 @@ function M._show(state)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = eve.filetype.CMDLINE
+    vim.bo[bufnr].filetype = eve.filetype.UX_CMDLINE
     vim.bo[bufnr].swapfile = false
   end
 
@@ -156,9 +156,12 @@ function M._show(state)
     vim.wo[winnr].spell = false
     vim.wo[winnr].wrap = false
     vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
+    vim.wo[winnr].winfixbuf = true
   else
+    vim.wo[winnr].winfixbuf = false
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_config(winnr, wincfg)
+    vim.wo[winnr].winfixbuf = true
   end
 
   local line = state.prefix ---@type string

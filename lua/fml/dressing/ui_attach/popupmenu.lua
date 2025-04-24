@@ -61,7 +61,7 @@ function M.show(task)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = eve.filetype.CMDLINE
+    vim.bo[bufnr].filetype = eve.filetype.UX_CMDLINE
     vim.bo[bufnr].swapfile = false
   end
 
