@@ -84,6 +84,7 @@ function M.show(task)
   ---@cast history                      boolean
 
   if kind == "search_count" or kind == "search_cmd" then
+    eve.state.status.searching:next(true)
     local line = vim.fn.line(".") - 1
     local virt_text = {} ---@type string[][]
     for _, piece in ipairs(content) do
@@ -129,10 +130,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.clear(task)
-  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  for _, bufnr in ipairs(bufnrs) do
-    vim.api.nvim_buf_clear_namespace(bufnr, eve.constant.nsnr.search_count, 0, -1)
-  end
+  eve.state.status.searching:next(true)
 end
 
 return M

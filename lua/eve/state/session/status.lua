@@ -13,6 +13,7 @@
 ---@field public maximized_winnrs       table<integer, boolean>
 ---@field public notification_paused    boolean
 ---@field public notification_level     eve.builtin.notifier.LevelEnum
+---@field public searching              boolean
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
@@ -31,6 +32,7 @@
 ---@field public maximized_winnrs       table<integer, boolean>
 ---@field public notification_paused    eve.std.collection.IObservable -- boolean>
 ---@field public notification_level     eve.std.collection.IObservable -- eve.builtin.notifier.LevelEnum>
+---@field public searching              eve.std.collection.IObservable -- boolean>
 ---@field public suppress_warning       eve.std.collection.IObservable -- boolean>
 ---@field public tmux_zen_mode          eve.std.collection.IObservable -- boolean>
 
@@ -59,6 +61,7 @@ function M.defaults()
     maximized_winnrs = {},
     notification_paused = false,
     notification_level = "TRACE",
+    searching = false,
     suppress_warning = false,
     tmux_zen_mode = eve.tmux.is_tmux_pane_zoomed(),
   }
@@ -95,6 +98,7 @@ function M.dump()
     maximized_winnrs = vim.tbl_extend("force", {}, M.maximized_winnrs),
     notification_paused = M.notification_paused:snapshot(),
     notification_level = M.notification_level:snapshot(),
+    searching = M.searching:snapshot(),
     suppress_warning = M.suppress_warning:snapshot(),
     tmux_zen_mode = M.tmux_zen_mode:snapshot(),
   }
@@ -120,6 +124,7 @@ function M.load(raw_data)
   M.maximized_winnrs = data.maximized_winnrs
   M.notification_paused:next(data.notification_paused)
   M.notification_level:next(data.notification_level)
+  M.searching:next(data.searching)
   M.suppress_warning:next(data.suppress_warning)
   M.tmux_zen_mode:next(eve.tmux.is_tmux_pane_zoomed())
 end
@@ -141,6 +146,7 @@ M.lsp_msg = eve.std.Observable.from_value(_defaults.lsp_msg)
 M.maximized_winnrs = _defaults.maximized_winnrs
 M.notification_paused = eve.std.Observable.from_value(_defaults.notification_paused)
 M.notification_level = eve.std.Observable.from_value(_defaults.notification_level)
+M.searching = eve.std.Observable.from_value(_defaults.searching)
 M.suppress_warning = eve.std.Observable.from_value(_defaults.suppress_warning)
 M.tmux_zen_mode = eve.std.Observable.from_value(_defaults.tmux_zen_mode)
 
