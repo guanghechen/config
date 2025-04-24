@@ -52,6 +52,7 @@ function M.history_show(task)
   end
 
   vim.bo[bufnr].modifiable = true
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.attach, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.bo[bufnr].modifiable = false
 
@@ -67,23 +68,47 @@ function M.history_show(task)
     end
   end
 
+  local win_width = math.floor(vim.o.columns * 0.8) ---@type integer
+  local win_height = math.floor(vim.o.lines * 0.8) ---@type integer
+
+  ---@type vim.api.keyset.win_config
+  local wincfg = {
+    zindex = 100,
+    relative = "editor",
+    width = win_width,
+    height = win_height,
+    row = math.floor((vim.o.lines - win_height) / 2),
+    col = math.floor((vim.o.columns - win_width) / 2),
+    style = "minimal",
+    border = "rounded",
+    title = "message history",
+    title_pos = "center",
+    focusable = true,
+  }
+
   local winnr = history_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    vim.cmd("botright 10split")
-    winnr = vim.api.nvim_get_current_win()
+    wincfg.noautocmd = true
+    winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
     history_winnr = winnr
 
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
+    vim.wo[winnr].cursorline = true
     vim.wo[winnr].number = true
     vim.wo[winnr].relativenumber = true
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].spell = false
     vim.wo[winnr].winfixbuf = true
+    vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
     vim.wo[winnr].wrap = false
   else
     vim.wo[winnr].winfixbuf = false
     vim.api.nvim_win_set_buf(winnr, bufnr)
+    vim.api.nvim_win_set_config(winnr, wincfg)
     vim.wo[winnr].winfixbuf = true
   end
 end
