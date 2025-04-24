@@ -26,10 +26,30 @@ local provider = {
   end,
   fetch_preview_data = function(item)
     local task = item.data ---@type eve.builtin.notifier.ITask
+    local lines = vim.list_extend({
+      string.format("## %s", task.title),
+      "",
+      string.format("- **timestamp**: %s (%d)", os.date("%H:%M:%S", task.timestamp), task.timestamp),
+      "",
+      "## Content",
+      "",
+    }, task.lines) ---@type string[]
+
+    if task.highlights then
+      lines[#lines + 1] = "" ---@type string
+      lines[#lines + 1] = "## Highlight" ---@type string
+      lines[#lines + 1] = "" ---@type string
+      lines[#lines + 1] = "--------------------------------" ---@type string
+
+      for _, hl in ipairs(task.highlights) do
+        local text = string.format("%3d %5d %5d   %s", hl.lnum, hl.coll, hl.colr, hl.hlname) ---@type string
+        lines[#lines + 1] = text ---@type string
+      end
+    end
 
     ---@type eve.ux.ISearchPreviewData
     local result = {
-      lines = task.lines,
+      lines = lines,
       filetype = "markdown",
       highlights = {},
       title = "message",
