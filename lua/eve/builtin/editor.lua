@@ -124,18 +124,6 @@ function M.get_visual_lnum_range()
   return lnum_2, lnum_1
 end
 
----@param tabnr                         integer
----@return string[]
-function M.get_visible_bufnrs(tabnr)
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  local bufnrs = {} ---@type table<integer, boolean>
-  for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    bufnrs[bufnr] = true
-  end
-  return bufnrs
-end
-
 ---@param bufnr                         integer
 ---@return boolean
 function M.is_buf_sourcefile(bufnr)
