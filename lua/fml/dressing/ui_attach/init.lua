@@ -40,6 +40,12 @@ local handlers = {
   cmdline_show = function(task)
     require("fml.dressing.ui_attach.cmdline").show(task)
   end,
+  msg_clear = function(task)
+    require("fml.dressing.ui_attach.messages").clear(task)
+  end,
+  msg_show = function(task)
+    require("fml.dressing.ui_attach.messages").show(task)
+  end,
   msg_showcmd = function(task)
     require("fml.dressing.ui_attach.messages").showcmd(task)
   end,
@@ -80,6 +86,8 @@ local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 ---@param ...                           any
 ---@return boolean|nil
 local function ui_attach_callback(event, ...)
+  eve.debug.log_silent(event, { event, ... })
+
   if vim.v.exiting ~= vim.NIL then
     return
   end
@@ -89,7 +97,6 @@ local function ui_attach_callback(event, ...)
     event = event,
     args = { ... },
   }
-  eve.debug.log_silent(event, { task = task })
 
   -- HACK: special case for return prompts
   if event == "msg_show" and task.args[1] == "return_prompt" then
@@ -101,7 +108,7 @@ local function ui_attach_callback(event, ...)
   if handler == nil then
     eve.reporter.warn({
       from = __module_name__,
-      message = event,
+      message = string.format("unhandled | %s", event),
       details = { task = task },
     })
     return
