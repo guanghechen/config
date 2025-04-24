@@ -12,6 +12,14 @@
 
 ---@class eve.builtin.debug
 local M = {}
+setmetatable(M, {
+  ---@param title                         string
+  ---@param message                       unknown
+  ---@return nil
+  __call = function(self, title, message)
+    self.log(title, message)
+  end,
+})
 
 ---@param message                       unknown|nil
 ---@return string
@@ -36,9 +44,9 @@ local function format_message(message)
 end
 
 ---@param title                         string
----@param message                       unknown
+---@param message                       unknown|nil
 function M.log(title, message)
-  local text = format_message(message)
+  local text = message == nil and title or format_message(message) ---@type string
   vim.notify(text, vim.log.levels.DEBUG, {
     group = nil,
     title = title,
