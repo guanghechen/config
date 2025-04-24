@@ -46,11 +46,19 @@ end
 ---@param title                         string
 ---@param message                       unknown|nil
 function M.log(title, message)
-  local text = message == nil and title or format_message(message) ---@type string
-  vim.notify(text, vim.log.levels.DEBUG, {
+  local text_title, text_content = "", "" ---@type string, string
+  if type(title) == "string" then
+    text_title = title
+    text_content = format_message(message)
+  else
+    text_title = "debug"
+    text_content = format_message(title)
+  end
+
+  vim.notify(text_content, vim.log.levels.DEBUG, {
     group = nil,
-    title = title,
-    message = text,
+    title = text_title,
+    message = text_content,
     timeout = 5000,
     anonymous = false,
     silent = false,
@@ -60,11 +68,19 @@ end
 ---@param title                         string
 ---@param message                       unknown
 function M.log_silent(title, message)
-  local text = format_message(message)
-  vim.notify(text, vim.log.levels.DEBUG, {
+  local text_title, text_content = "", "" ---@type string, string
+  if type(title) == "string" then
+    text_title = title
+    text_content = format_message(message)
+  else
+    text_title = "debug"
+    text_content = format_message(title)
+  end
+
+  vim.notify(text_content, vim.log.levels.DEBUG, {
     group = nil,
-    title = title,
-    message = text,
+    title = text_title,
+    message = text_content,
     timeout = 5000,
     anonymous = false,
     silent = true,
