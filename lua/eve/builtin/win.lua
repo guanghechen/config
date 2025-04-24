@@ -1,4 +1,4 @@
----@alias eve.builtin.win.Wintype
+---@alias eve.builtin.win.TypeEnum
 ---| "ux-board"
 ---| "ux-cmdline"
 ---| "ux-input"
@@ -18,15 +18,16 @@
 local M = {}
 
 ---@param winnr                         integer
----@param wintype                       eve.builtin.win.Wintype
+---@param wintype                       eve.builtin.win.TypeEnum
 ---@return nil
-function M.set_wintype(winnr, wintype)
-  vim.w[winnr].eve_wintype = wintype
+function M.set_type(winnr, wintype)
+  vim.w[winnr].eve_type = wintype
 end
 
----@return eve.builtin.win.Wintype
-function M.get_wintype(winnr)
-  return vim.w[winnr].eve_wintype
+---@param winnr                         integer
+---@return eve.builtin.win.TypeEnum
+function M.get_type(winnr)
+  return vim.w[winnr].eve_type
 end
 
 ----------------------------------------------------------------------------------------------------

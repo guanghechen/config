@@ -21,7 +21,7 @@ function M.new_with_buf()
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  eve.editor.set_tabtype(tabnr, eve.var.TabTypes.NORMAL)
+  eve.tab.set_type(tabnr, eve.tab.Types.NORMAL)
 
   local bufs = {} ---@type eve.state.tab.buf.state[]
   if eve.editor.is_buf_sourcefile(bufnr) then

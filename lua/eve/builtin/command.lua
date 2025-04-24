@@ -19,12 +19,12 @@ local __module_name__ = "eve.builtin.command" ---@type string
 
 ---@class eve.builtin.command.ICommand
 ---@field public uuid                   string
----@field public tabtype                eve.e.TabTypeEnum
+---@field public tabtype                eve.builtin.tab.TypeEnum|nil
 ---@field public action                 fun(args?: string): nil
 
 ---@class eve.builtin.command.IImplementation
 ---@field public uuid                   string
----@field public tabtype                ?eve.e.TabTypeEnum
+---@field public tabtype                ?eve.builtin.tab.TypeEnum
 ---@field public action                 fun(args?: string): nil
 
 local definition_map = {} ---@type table<string, eve.builtin.command.IDefinition>
@@ -98,7 +98,7 @@ end
 ---@return eve.builtin.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtype = implementation.tabtype or eve.var.TabTypes.ALL ---@type string
+  local tabtype = implementation.tabtype ---@type eve.builtin.tab.TypeEnum|nil
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type eve.builtin.command.IDefinition|nil
   if definition == nil then
@@ -111,7 +111,7 @@ function M.implement(implementation)
     return M
   end
 
-  local key = tabtype == eve.var.TabTypes.ALL and uuid or (uuid .. ":" .. tabtype) ---@type string
+  local key = tabtype == nil and uuid or (uuid .. ":" .. tabtype) ---@type string
   if command_map[key] ~= nil then
     eve.reporter.error({
       from = __module_name__,
@@ -138,7 +138,7 @@ end
 ---@return nil
 function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = eve.editor.resolve_tabtype(tabnr, false) ---@type eve.e.TabTypeEnum
+  local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] or command_map[uuid] ---@type eve.builtin.command.ICommand|nil
 

@@ -8,7 +8,7 @@
 
 ---@class eve.state.tab.meta.data
 ---@field public tabid                  integer
----@field public tabtype                eve.e.TabTypeEnum
+---@field public tabtype                eve.builtin.tab.TypeEnum
 ---@field public bufs                   eve.state.tab.buf.data[]
 
 ---@class eve.state.tab.meta.state
@@ -71,7 +71,7 @@ function Meta:dump(tabid)
   ---@type eve.state.tab.meta.data
   local data = {
     tabid = tabid,
-    tabtype = eve.editor.resolve_tabtype(self.tabnr, false),
+    tabtype = eve.tab.resolve_type(self.tabnr, false),
     bufs = {},
   }
 
@@ -311,7 +311,7 @@ function M.load(raw_data)
         end
       end
 
-      eve.editor.set_tabtype(tabnr, data_tab.tabtype or eve.var.TabTypes.NORMAL)
+      eve.tab.set_type(tabnr, data_tab.tabtype or eve.tab.Types.NORMAL)
 
       ---@type eve.state.tab.meta.state
       local meta = Meta.new(tabnr, bufs)
@@ -414,7 +414,7 @@ function M.refresh(tabnr)
   end
 
   meta:rearrange_bufs()
-  eve.editor.resolve_tabtype(tabnr, true)
+  eve.tab.calc_type(tabnr, true)
 end
 
 ---@return nil

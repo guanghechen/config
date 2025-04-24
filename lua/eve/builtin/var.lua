@@ -1,13 +1,6 @@
 ---@class eve.builtin.var
 local M = {}
 
----@class eve.builtin.var.TabTypes
-M.TabTypes = {
-  ALL = "all",
-  DIFFVIEW = "diffview",
-  NORMAL = "normal",
-}
-
 ---@class eve.builtin.var.WinTypes
 M.WinTypes = {
   UX_BOARD = "ux_board",
