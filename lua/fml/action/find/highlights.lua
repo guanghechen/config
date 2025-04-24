@@ -1,5 +1,9 @@
+---@class fml.action.find.highlights.IItemData
+---@field public lnum                   integer
+---@field public hlid                   integer
+
 ---@class fml.action.find.highlights.IItem : eve.ux.select.IItem
----@field public data                   integer
+---@field public data                   fml.action.find.highlights.IItemData
 
 local _hlnames ---@type string[]|nil
 local _hlgroups ---@type table<string, vim.api.keyset.get_hl_info>
@@ -23,8 +27,14 @@ local provider = {
 
     local items = {} ---@type eve.ux.select.IItem[]
     for lnum, hlname in ipairs(_hlnames) do
+      ---@type fml.action.find.highlights.IItemData
+      local data = {
+        lnum = lnum,
+        hlid = vim.fn.hlID(hlname),
+      }
+
       ---@type fml.action.find.highlights.IItem
-      local item = { group = "H", uuid = hlname, text = hlname, data = lnum }
+      local item = { group = "H", uuid = hlname, text = hlname, data = data }
       table.insert(items, item)
     end
     ---@type eve.ux.select.IData
@@ -86,7 +96,7 @@ local provider = {
         highlights = highlights,
         filetype = "text",
         title = "Highlights Preview",
-        lnum = item.data,
+        lnum = item.data.lnum,
         col = 0,
       }
     end
@@ -99,19 +109,19 @@ local provider = {
       highlights = last_data.highlights,
       filetype = last_data.filetype,
       title = last_data.title,
-      lnum = item.data,
+      lnum = item.data.lnum,
       col = 0,
     }
     return data
   end,
   render_item = function(item, match)
-    local text_prefix = "xxx   " ---@type string
-    local width_prefix = string.len(text_prefix) ---@type integer
-    local text = text_prefix .. item.text
-    local highlights = { { coll = 0, colr = 3, hlname = item.text } } ---@type eve.t.IHighlightInline[]
+    local text = string.format("%s xxx   %s", eve.string.pad_end(tostring(item.data.hlid), 5, " "), item.text) ---@type string
+    local highlights = { { coll = 6, colr = 9, hlname = item.text } } ---@type eve.t.IHighlightInline[]
+
+    local offset = 12 ---@type integer
     for _, piece in ipairs(match.matches) do
       ---@type eve.t.IHighlightInline[]
-      local highlight = { coll = width_prefix + piece.l, colr = width_prefix + piece.r, hlname = "f_us_main_match" }
+      local highlight = { coll = offset + piece.l, colr = offset + piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end
     return text, highlights
