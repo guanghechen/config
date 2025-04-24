@@ -65,7 +65,7 @@ local chat = eve.state.widget.wrap({
     if not widget:focused() then
       require("CopilotChat").open()
       vim.schedule(function()
-        local winnr = eve.win.find_floating(0, eve.filetype.COPILOT_CHAT) ---@type integer|nil
+        local winnr = eve.win.find_floating_by_filetype(0, eve.filetype.COPILOT_CHAT) ---@type integer|nil
         if winnr == nil then
           return
         end

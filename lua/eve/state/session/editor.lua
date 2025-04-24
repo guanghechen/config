@@ -131,7 +131,7 @@ end
 
 ---@return nil
 function M.on_refresh()
-  local winnr_fixed = eve.win.find_fixed(0) or 0 ---@type integer
+  local winnr_fixed = eve.win.find_fixed_by_filetype(0) or 0 ---@type integer
   M.winnr_fixed:next(winnr_fixed or 0)
 
   local winnr_sourcefile = eve.editor.find_winnr_sourcefile() or 0 ---@type integer
