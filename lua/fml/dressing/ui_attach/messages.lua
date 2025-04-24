@@ -25,12 +25,12 @@ end
 ---@return nil
 function M.history_show(task)
   local entries = unpack(task.args)
-  ---@cast entries                      [string, [integer, string, integer]][]
+  ---@cast entries                      [string, [integer, string, integer][]][]
 
   local lines = {} ---@type string[]
   for _, entry in ipairs(entries) do
-    local kind, content = entry[1], entry[2]
-    local text = kind or "" ---@type string
+    local content = entry[2] ---@type [integer, string, integer][]
+    local text = "" ---@type string
     for _, item in ipairs(content) do
       text = text .. item[2]
     end
@@ -52,6 +52,18 @@ function M.history_show(task)
   vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.bo[bufnr].modifiable = false
+
+  for lnum, entry in ipairs(entries) do
+    local offset = 0 ---@type integer
+    local row = lnum - 1 ---@type integer
+    for _, item in ipairs(entry[2]) do
+      local _, text_chunk, hlid = unpack(item) ---@type integer, string, integer
+      local hlname = eve.state.theme.get_hlname_by_id(eve.constant.nsnr.attach, hlid)
+      local offset_next = offset + #text_chunk ---@type integer
+      vim.hl.range(bufnr, eve.constant.nsnr.attach, hlname, { row, offset }, { row, offset_next })
+      offset = offset_next ---@type integer
+    end
+  end
 
   local winnr = history_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then

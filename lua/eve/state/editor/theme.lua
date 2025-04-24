@@ -134,7 +134,10 @@ function M.get_hlname_by_id(nsnr, hlid)
     end
   end
 
-  return hlid_2_name[hlid] or "Normal"
+  if nsnr == 0 then
+    return hlid_2_name[hlid] or "Normal"
+  end
+  return hlid_2_name[hlid] or M.get_hlname_by_id(0, hlid)
 end
 
 ---@param params                        eve.theme.ILoadIntegrationParams
