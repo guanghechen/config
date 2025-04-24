@@ -1,3 +1,5 @@
+local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
+
 ---@class fml.dressing.ui_attach.popupmenu.IState
 ---@field public items                  string[][]
 ---@field public selected               integer
@@ -106,7 +108,7 @@ function M.show(task)
     lines[#lines + 1] = line
   end
 
-  vim.api.nvim_buf_clear_namespace(bufnr, eve.constant.nsnr.attach, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.attach, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim__redraw({ win = winnr, flush = true })
 end

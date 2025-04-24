@@ -1,3 +1,5 @@
+local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
+
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
   emsg = vim.log.levels.ERROR,
@@ -58,9 +60,9 @@ function M.history_show(task)
     local row = lnum - 1 ---@type integer
     for _, item in ipairs(entry[2]) do
       local _, text_chunk, hlid = unpack(item) ---@type integer, string, integer
-      local hlname = eve.state.theme.get_hlname_by_id(eve.constant.nsnr.attach, hlid)
+      local hlname = eve.state.theme.get_hlname_by_id(nsnrs.attach, hlid)
       local offset_next = offset + #text_chunk ---@type integer
-      vim.hl.range(bufnr, eve.constant.nsnr.attach, hlname, { row, offset }, { row, offset_next })
+      vim.hl.range(bufnr, nsnrs.attach, hlname, { row, offset }, { row, offset_next })
       offset = offset_next ---@type integer
     end
   end
@@ -104,8 +106,8 @@ function M.show(task)
       table.insert(virt_text, { text, "f_um_search_count" })
     end
 
-    vim.api.nvim_buf_clear_namespace(0, eve.constant.nsnr.search_count, 0, -1)
-    vim.api.nvim_buf_set_extmark(0, eve.constant.nsnr.search_count, line, -1, {
+    vim.api.nvim_buf_clear_namespace(0, nsnrs.search_count, 0, -1)
+    vim.api.nvim_buf_set_extmark(0, nsnrs.search_count, line, -1, {
       virt_text = virt_text,
       virt_text_pos = "eol",
       hl_mode = "combine",
@@ -116,8 +118,33 @@ function M.show(task)
   local level = kind_2_level_map[kind] or vim.log.levels.INFO
   local title = string.format("%s | %s", task.event, kind) ---@type string
   local message = "" ---@type string
-  for _, piece in ipairs(content) do
-    message = message .. piece[2] ---@type string
+  for _, item in ipairs(content) do
+    message = message .. item[2] ---@type string
+  end
+
+  local highlights = {} ---@type eve.t.IHighlight[]
+  local lnum, col_offset = 1, 0 ---@type integer, integer
+  for _, item in ipairs(content) do
+    local _, text, hlid = unpack(item) ---@type integer, string, integer
+    local hlname = eve.state.theme.get_hlname_by_id(nsnrs.attach, hlid)
+    local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
+    for i, line in ipairs(lines) do
+      if i > 1 then
+        lnum = lnum + 1
+        col_offset = 0
+      end
+      if #line > 0 then
+        ---@type eve.t.IHighlight
+        local highlight = {
+          lnum = lnum,
+          coll = col_offset,
+          colr = col_offset + #line,
+          hlname = hlname,
+        }
+        highlights[#highlights + 1] = highlight
+        col_offset = col_offset + #line
+      end
+    end
   end
 
   local group = replace_last and last_msg_group or nil ---@type string|nil
@@ -132,7 +159,8 @@ function M.show(task)
     title = title,
     timeout = 3000,
     message = message,
-    anonymous = not history,
+    highlights = highlights,
+    anonymous = kind ~= "echo" and not history,
     silent = false,
   })
 end
