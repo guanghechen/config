@@ -126,7 +126,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or not eve.editor.is_win_valid(winnr) then
+  if winnr == nil or not eve.win.is_valid(winnr) then
     return
   end
 

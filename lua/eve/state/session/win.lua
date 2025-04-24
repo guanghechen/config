@@ -78,7 +78,7 @@ M.winline_map = {} ---@type table<integer, eve.ux.INvimbar>
 ---@param winnr                         integer|nil
 ---@return eve.state.win.meta.state|nil
 function M.get(winnr)
-  if winnr ~= nil and eve.editor.is_win_valid(winnr) then
+  if winnr ~= nil and eve.win.is_valid(winnr) then
     return M.__meta_map__[winnr]
   end
 end
@@ -87,7 +87,7 @@ end
 ---@param meta                          eve.state.win.meta.state
 ---@return eve.state.win.meta.state|nil
 function M.set(winnr, meta)
-  if winnr ~= nil and eve.editor.is_win_valid(winnr) then
+  if winnr ~= nil and eve.win.is_valid(winnr) then
     M.__meta_map__[winnr] = meta
     return meta
   end
@@ -124,7 +124,7 @@ end
 ---@param winnr                         integer|nil
 ---@return eve.state.win.meta.state|nil
 function M.resolve(winnr)
-  if winnr == nil or not eve.editor.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
+  if winnr == nil or not eve.win.is_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
     return nil
   end
 
@@ -197,7 +197,7 @@ end
 ---@param callback                      fun(err: string|false|nil): nil
 ---@return nil
 function M.locate_symbols(winnr, callback)
-  if winnr == nil or not eve.editor.is_win_valid(winnr) then
+  if winnr == nil or not eve.win.is_valid(winnr) then
     callback(false)
     return
   end
@@ -328,7 +328,7 @@ function M.on_buf_enter(winnr, bufnr)
     return
   end
 
-  if not eve.editor.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
+  if not eve.win.is_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
     return
   end
 

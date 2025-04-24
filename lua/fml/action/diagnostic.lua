@@ -82,7 +82,7 @@ function M.line()
   })
 
   vim.schedule(function()
-    if winnr ~= nil and eve.editor.is_win_valid(winnr) then
+    if winnr ~= nil and eve.win.is_valid(winnr) then
       vim.api.nvim_set_current_win(winnr)
     end
   end)

@@ -452,7 +452,7 @@ function M.on_buf_enter(tabnr, winnr, bufnr)
     return
   end
 
-  if not eve.editor.is_win_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
+  if not eve.win.is_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
     return
   end
 

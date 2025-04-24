@@ -4,7 +4,7 @@ local M = {}
 ---@return nil
 function M.mark_sourcefile()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  if eve.editor.is_win_valid(winnr) then
+  if eve.win.is_valid(winnr) then
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = true
   end
 

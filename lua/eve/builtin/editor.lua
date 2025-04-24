@@ -65,7 +65,7 @@ end
 ---@param winnr_source                  integer|nil
 ---@return integer|nil
 function M.pick_sourcefile_win(winnr_source)
-  if winnr_source ~= nil and M.is_win_valid(winnr_source) and M.winpicker_filters.sourcefile(winnr_source) then
+  if winnr_source ~= nil and eve.win.is_valid(winnr_source) and M.winpicker_filters.sourcefile(winnr_source) then
     return winnr_source
   end
 
@@ -254,12 +254,6 @@ function M.is_win_sourcefile(winnr)
   end
 
   return true
-end
-
----@param winnr                         integer
----@return boolean
-function M.is_win_valid(winnr)
-  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
 end
 
 ---@param filepath                      string|nil

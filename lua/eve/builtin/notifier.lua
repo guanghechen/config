@@ -411,7 +411,7 @@ function M.create_win_as_needed(win)
   local bufnr = M.create_buf_as_needed(win) ---@type integer
   local winnr = win.winnr ---@type integer|nil
 
-  if winnr == nil or not eve.editor.is_win_valid(winnr) then
+  if winnr == nil or not eve.win.is_valid(winnr) then
     wincfg.noautocmd = true
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr

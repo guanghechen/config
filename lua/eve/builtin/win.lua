@@ -29,4 +29,10 @@ function M.get_wintype(winnr)
   return vim.w[winnr].eve_wintype
 end
 
+---@param winnr                         integer
+---@return boolean
+function M.is_valid(winnr)
+  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
+end
+
 return M
