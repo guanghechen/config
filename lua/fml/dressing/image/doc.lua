@@ -448,7 +448,7 @@ function M.hover()
     local bufnr = 0 ---@type integer
     local winnr = 0 ---@type integer
 
-    if hover and eve.editor.is_buf_valid(hover.bufnr) then
+    if hover and eve.buf.is_valid(hover.bufnr) then
       bufnr = hover.bufnr
     else
       bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

@@ -125,7 +125,7 @@ function Meta:rearrange_bufs()
   local k = 1 ---@type integer
   for i = 1, N, 1 do
     local buf = bufs[i] ---@type eve.state.tab.buf.state
-    if buf ~= nil and eve.editor.is_buf_valid(buf.bufnr) then
+    if buf ~= nil and eve.buf.is_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
     end
@@ -448,7 +448,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.on_buf_enter(tabnr, winnr, bufnr)
-  if not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
+  if not eve.buf.is_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
     return
   end
 

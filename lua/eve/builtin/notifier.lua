@@ -331,7 +331,7 @@ end
 ---@return integer
 function M.create_buf_as_needed(win)
   local bufnr = win.bufnr ---@type integer|nil
-  if bufnr == nil or not eve.editor.is_buf_valid(bufnr) then
+  if bufnr == nil or not eve.buf.is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     win.bufnr = bufnr
 

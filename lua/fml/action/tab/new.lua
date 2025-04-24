@@ -34,7 +34,7 @@ function M.new_with_buf()
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   vim.schedule(function()
-    if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
+    if bufnr ~= nil and eve.buf.is_valid(bufnr) then
       vim.api.nvim_win_set_buf(winnr, bufnr)
     end
   end)

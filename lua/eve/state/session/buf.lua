@@ -133,7 +133,7 @@ M.__meta_map__ = {} ---@type table<integer, eve.state.buf.meta.state>
 ---@param bufnr                         integer|nil
 ---@return eve.state.buf.meta.state|nil
 function M.get(bufnr)
-  if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
+  if bufnr ~= nil and eve.buf.is_valid(bufnr) then
     return M.__meta_map__[bufnr]
   end
 end
@@ -142,7 +142,7 @@ end
 ---@param meta                          eve.state.buf.meta.state
 ---@return nil
 function M.set(bufnr, meta)
-  if bufnr ~= nil and eve.editor.is_buf_valid(bufnr) then
+  if bufnr ~= nil and eve.buf.is_valid(bufnr) then
     M.__meta_map__[bufnr] = meta
     return meta
   end
@@ -159,7 +159,7 @@ end
 ---@param bufnr                         integer|nil
 ---@return eve.state.buf.meta.state|nil
 function M.resolve(bufnr)
-  if bufnr == nil or not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
+  if bufnr == nil or not eve.buf.is_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
     return nil
   end
 
@@ -194,7 +194,7 @@ end
 ---@param bufnr                         integer|nil
 ---@return nil
 function M.refresh(bufnr)
-  if bufnr == nil or not eve.editor.is_buf_valid(bufnr) then
+  if bufnr == nil or not eve.buf.is_valid(bufnr) then
     return nil
   end
 
@@ -233,7 +233,7 @@ function M.refresh_all()
 
   local invalid_bufnrs = {} ---@type integer[]
   for bufnr in pairs(M.__meta_map__) do
-    if not eve.editor.is_buf_valid(bufnr) then
+    if not eve.buf.is_valid(bufnr) then
       invalid_bufnrs[#invalid_bufnrs + 1] = bufnr
     end
   end

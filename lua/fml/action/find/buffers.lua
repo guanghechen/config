@@ -58,7 +58,7 @@ local main_keymaps = {
       end
 
       local bufnr = item.data.bufnr ---@type integer
-      if not eve.editor.is_buf_valid(bufnr) then
+      if not eve.buf.is_valid(bufnr) then
         _select:mark_item_deleted(item.uuid)
         return
       end

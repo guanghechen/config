@@ -324,7 +324,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.on_buf_enter(winnr, bufnr)
-  if not eve.editor.is_buf_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
+  if not eve.buf.is_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
     return
   end
 
