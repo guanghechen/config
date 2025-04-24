@@ -29,6 +29,7 @@ return {
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   config = function()
     vim.diagnostic.config({
+      current_line = true,
       virtual_lines = {
         current_line = true,
         format = function(diagnostic)
