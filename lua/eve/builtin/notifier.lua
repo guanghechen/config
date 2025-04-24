@@ -12,12 +12,11 @@
 ---@field public title                  string
 ---@field public content                string
 ---@field public lines                  string[]
----@field public width                  integer
----@field public height                 integer
 ---@field public times                  integer
 ---@field public timeout                integer
 ---@field public timestamp              integer
----@field public lang               ?string
+---@field public width                  ?integer
+---@field public lang                   ?string
 
 ---@class eve.builtin.notifier.IWindow
 ---@field public winnr                  integer|nil
@@ -95,6 +94,32 @@ local __TASKS__ = eve.std.CircularQueue.new({ capacity = 50 })
 local __TASK_HISTORY__ = eve.std.CircularQueue.new({ capacity = 200 })
 local __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
 local processing = false ---@type boolean
+
+---@param task                          eve.builtin.notifier.ITask
+---@return integer
+local function measure_task_width(task)
+  if task.width == nil then
+    local width = vim.api.nvim_strwidth(task.title) + 14 ---@type integer
+    for _, line in ipairs(task.lines) do
+      local line_width = vim.api.nvim_strwidth(line) + 4 ---@type integer
+      width = width < line_width and line_width or width
+    end
+    task.width = width
+  end
+
+  local width = task.width ---@type integer
+  if task.times > 1 then
+    width = width + vim.api.nvim_strwidth(string.format(" (x%d) ", task.times)) ---@type integer
+  end
+  return math.min(width, 82, vim.o.columns - 4) ---@type integer
+end
+
+---@param task                          eve.builtin.notifier.ITask
+---@return integer
+local function measure_task_height(task)
+  local height = #task.lines + 1 ---@type integer
+  return math.min(height, 42, vim.o.lines - 4) ---@type integer
+end
 
 ---@class eve.builtin.notifier
 local M = {}
@@ -178,12 +203,6 @@ end
 function M.notify(level, group, title, message, timeout, anonymous, silent)
   local timestamp = os.time() ---@type integer
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
-  local width = vim.api.nvim_strwidth(title) + 14 ---@type integer
-  for _, line in ipairs(lines) do
-    local line_width = vim.api.nvim_strwidth(line) + 4 ---@type integer
-    width = width < line_width and line_width or width
-  end
-
   local md5 = eve.std.md5.new():update(level):update(group or ""):update(title):update(message):finish()
   local uuid = eve.std.md5.tohex(md5) ---@type string
 
@@ -195,8 +214,6 @@ function M.notify(level, group, title, message, timeout, anonymous, silent)
     title = title,
     content = message,
     lines = lines,
-    width = width,
-    height = #lines + 1,
     times = 1,
     timeout = timeout,
     timestamp = timestamp,
@@ -305,12 +322,8 @@ end
 ---@return integer
 function M.create_win_as_needed(win)
   local task = win.task ---@type eve.builtin.notifier.ITask
-  local extra_width = 0 ---@type integer
-  if task.times > 1 then
-    extra_width = vim.api.nvim_strwidth(string.format(" (x%d) ", task.times)) ---@type integer
-  end
-  local width = math.min(82, vim.o.columns, task.width + extra_width) ---@type integer
-  local height = math.min(42, vim.o.lines - 4, task.height) ---@type integer
+  local width = measure_task_width(task) ---@type integer
+  local height = measure_task_height(task) ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -444,7 +457,7 @@ function M.handle()
         end
       end
 
-      local height = math.min(42, vim.o.lines - 4, win.task.height) ---@type integer
+      local height = measure_task_height(win.task) ---@type integer
       local next_row = row + height + 3 ---@type integer
       if next_row > vim.o.lines then
         break
@@ -456,7 +469,7 @@ function M.handle()
     end
 
     if n == N and not consumed and candidate ~= nil then
-      local height = math.min(42, vim.o.lines - 4, candidate.height) ---@type integer
+      local height = measure_task_height(candidate) ---@type integer
       if row + height + 3 <= vim.o.lines then
         ---@type eve.builtin.notifier.IWindow
         local win = {
@@ -519,12 +532,8 @@ function M.handle()
         end
       end, task.timeout)
     else
-      local extra_width = 0 ---@type integer
-      if task.times > 1 then
-        extra_width = vim.api.nvim_strwidth(string.format(" (x%d) ", task.times)) ---@type integer
-      end
-      local width = math.min(82, vim.o.columns, task.width + extra_width) ---@type integer
-      local height = math.min(42, vim.o.lines - 4, task.height) ---@type integer
+      local width = measure_task_width(task) ---@type integer
+      local height = measure_task_height(task) ---@type integer
       local wincfg = vim.api.nvim_win_get_config(win.winnr) ---@type vim.api.keyset.win_config
       local winbar = wincfg.width ~= width and M.gen_winbar(task, width) or vim.wo[win.winnr].winbar
 
