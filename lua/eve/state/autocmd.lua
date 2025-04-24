@@ -199,7 +199,7 @@ vim.api.nvim_create_autocmd("VimResized", {
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr_cur) ---@type integer
-    local winnr_fixed = eve.editor.find_winnr_fixed() or winnr_cur ---@type integer
+    local winnr_fixed = eve.win.find_fixed(tabnr_cur) or winnr_cur ---@type integer
 
     if winnr_cur ~= winnr_fixed then
       vim.api.nvim_tabpage_set_win(tabnr_cur, winnr_fixed)
