@@ -169,7 +169,7 @@ end
 
 ---@return nil
 function M.toggle()
-  if eve.editor.find_winnr(eve.filetype.NEOTREE) ~= nil then
+  if eve.win.find_by_filetype(0, eve.filetype.NEOTREE) ~= nil then
     require("neo-tree.command").execute({
       action = "close",
       source = "filesystem",
