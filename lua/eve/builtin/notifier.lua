@@ -11,12 +11,22 @@
 ---@field public level                  string
 ---@field public title                  string
 ---@field public content                string
+---@field public highlights             eve.t.IHighlight[]|nil
 ---@field public lines                  string[]
 ---@field public times                  integer
 ---@field public timeout                integer
 ---@field public timestamp              integer
----@field public width                  ?integer
----@field public lang                   ?string
+---@field public width                  integer|nil
+
+---@class eve.builtin.notifier.INotifyParams
+---@field public group                  string|nil
+---@field public level                  string
+---@field public title                  string
+---@field public content                string
+---@field public highlights             eve.t.IHighlight[]|nil
+---@field public timeout                integer
+---@field public anonymous              boolean
+---@field public silent                 boolean
 
 ---@class eve.builtin.notifier.IWindow
 ---@field public winnr                  integer|nil
@@ -124,6 +134,7 @@ end
 ---@class eve.builtin.notifier
 local M = {}
 setmetatable(M, {
+  ---@param self                          eve.builtin.notifier
   ---@param msg                           string
   ---@param level0                        integer
   ---@param opts                          any
@@ -134,11 +145,27 @@ setmetatable(M, {
     local level = eve.notifier.resolve_level(level0) ---@type eve.builtin.notifier.LevelEnum
     local group = type(opts.group) == "string" and opts.group or nil ---@type string|nil
     local title = opts.title or eve.notifier.resolve_title(level) ---@type string
-    local message = type(opts.message) == "string" and opts.message or msg ---@type string
+    local content = msg ---@type string
+    if type(opts.message) == "string" then
+      content = opts.message
+    elseif type(opts.content) == "string" then
+      content = opts.content
+    end
+    local highlights = type(opts.highlights) == "table" and opts.highlights or nil ---@type eve.t.IHighlight[]|nil
     local timeout = opts.timeout or 3000 ---@type integer
     local anonymous = type(opts.anonymous) == "boolean" and opts.anonymous or false ---@type boolean
     local silent = type(opts.silent) == "boolean" and opts.silent or false ---@type boolean
-    self.notify(level, group, title, message, timeout, anonymous, silent)
+
+    self.notify({
+      level = level,
+      group = group,
+      title = title,
+      content = content,
+      highlights = highlights,
+      timeout = timeout,
+      anonymous = anonymous,
+      silent = silent,
+    })
   end,
 })
 
@@ -159,7 +186,15 @@ local scheduler = eve.std.Scheduler.new({
 
       if not ok then
         vim.schedule(function()
-          M.notify("ERROR", nil, "Notifier Interval Error on handle", vim.inspect(error), 100000, false, true)
+          M.notify({
+            group = nil,
+            level = "ERROR",
+            title = "Notifier Interval Error on handle",
+            content = vim.inspect(error),
+            timeout = 100000,
+            anonymous = false,
+            silent = true,
+          })
         end)
       end
 
@@ -210,18 +245,21 @@ function M.resolve_title(level)
   return LevelTitleMap[level]
 end
 
----@param level                         eve.builtin.notifier.LevelEnum
----@param group                         string|nil
----@param title                         string
----@param message                       string
----@param timeout                       integer
----@param anonymous                     boolean
----@param silent                        boolean
+---@param params                        eve.builtin.notifier.INotifyParams
 ---@return nil
-function M.notify(level, group, title, message, timeout, anonymous, silent)
+function M.notify(params)
+  local group = params.group ---@type string|nil
+  local level = params.level ---@type string
+  local title = params.title ---@type string
+  local content = params.content ---@type string
+  local highlights = params.highlights ---@type eve.t.IHighlight[]|nil
+  local timeout = params.timeout ---@type integer
+  local anonymous = params.anonymous ---@type boolean
+  local silent = params.silent ---@type boolean
+
   local timestamp = os.time() ---@type integer
-  local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
-  local md5 = eve.std.md5.new():update(level):update(group or ""):update(title):update(message):finish()
+  local lines = vim.split(content, "\n", { plain = true }) ---@type string[]
+  local md5 = eve.std.md5.new():update(level):update(group or ""):update(title):update(content):finish()
   local uuid = eve.std.md5.tohex(md5) ---@type string
 
   ---@type eve.builtin.notifier.ITask
@@ -230,7 +268,8 @@ function M.notify(level, group, title, message, timeout, anonymous, silent)
     group = group,
     level = level,
     title = title,
-    content = message,
+    content = content,
+    highlights = highlights,
     lines = lines,
     times = 1,
     timeout = timeout,
@@ -332,6 +371,16 @@ function M.create_buf_as_needed(win)
       vim.treesitter.start(bufnr, lang)
     end
   end
+
+  if win.task.highlights then
+    local nsnr = eve.constant.nsnr.notify ---@type integer
+    vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+    for _, hl in ipairs(win.task.highlights) do
+      local row = hl.lnum ---@type integer
+      vim.hl.range(bufnr, nsnr, hl.hlname, { row, hl.coll }, { row, hl.colr })
+    end
+  end
+
   return bufnr
 end
 
