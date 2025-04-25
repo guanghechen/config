@@ -264,14 +264,17 @@ function M._show_confirm(state, msg_show_task)
 
   ---! resolve the lines and highlights
   do
-    local content = msg_show_task.args[2] ---@type [integer, string, integer][]
-    for _, item in ipairs(content) do
-      message = message .. item[2] ---@type string
-    end
-
     local lnum, col_offset = 1, 0 ---@type integer, integer
-    for _, item in ipairs(content) do
+    local content = msg_show_task.args[2] ---@type [integer, string, integer][]
+    for index, item in ipairs(content) do
       local _, text, hlid = unpack(item) ---@type integer, string, integer
+      if index == 1 then
+        text = text:match("^%s*(.*)") ---@type string
+      elseif index == #content then
+        text = text:match("(.*%S)") ---@type string
+      end
+
+      message = message .. text ---@type string
       local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
       local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
       for i, line in ipairs(lines) do
@@ -298,43 +301,6 @@ function M._show_confirm(state, msg_show_task)
 
   ---! make the lines more compact
   do
-    local first_non_blankline_lnum = #lines ---@type integer
-    local last_non_blankline_lnum = 1 ---@type integer
-
-    for index = 1, #lines, 1 do
-      if lines[index] ~= "" then
-        first_non_blankline_lnum = index
-        break
-      end
-    end
-    for index = #lines, 1, -1 do
-      if lines[index] ~= "" then
-        last_non_blankline_lnum = index
-        break
-      end
-    end
-
-    if first_non_blankline_lnum > 1 then
-      for index = 1, #highlights, 1 do
-        if highlights[index].lnum >= first_non_blankline_lnum then
-          highlights = vim.list_slice(highlights, index, #highlights) ---@type eve.t.IHighlight[]
-          break
-        end
-      end
-      for _, hl in ipairs(highlights) do
-        hl.lnum = hl.lnum - first_non_blankline_lnum + 1 ---@type integer
-      end
-    end
-    if last_non_blankline_lnum < #lines then
-      for index = #highlights, 1, -1 do
-        if highlights[index].lnum <= first_non_blankline_lnum then
-          highlights = vim.list_slice(highlights, 1, index) ---@type eve.t.IHighlight[]
-          break
-        end
-      end
-    end
-    lines = vim.list_slice(lines, first_non_blankline_lnum, last_non_blankline_lnum)
-
     for _, hl in ipairs(highlights) do
       hl.coll = hl.coll + 1
       hl.colr = hl.colr + 1
@@ -366,7 +332,7 @@ function M._show_confirm(state, msg_show_task)
       line = string.rep(" ", line_offset) .. line
     end
 
-    local lnum = #lines + 2 ---@type integer
+    local lnum = #lines + 1 ---@type integer
     local offset = line_offset ---@type integer
     for index, button in ipairs(buttons) do
       local w = vim.api.nvim_strwidth(button) ---@type integer
@@ -381,7 +347,6 @@ function M._show_confirm(state, msg_show_task)
       offset = offset + w + 2
     end
 
-    lines[#lines + 1] = ""
     lines[#lines + 1] = line
     lines[#lines + 1] = ""
   end
