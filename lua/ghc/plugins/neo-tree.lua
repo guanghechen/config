@@ -547,7 +547,7 @@ return {
     package.loaded["window-picker"] = {
       pick_window = function()
         local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-        return eve.editor.pick_projectable_win(winnr_source)
+        return eve.win.pick_projectable(winnr_source)
       end,
     }
 

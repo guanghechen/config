@@ -45,17 +45,17 @@ end
 local M = {}
 
 ---@param filter                        fun(winnr: integer): boolean
----@param winnr_source                  integer|nil
+---@param winnr_candidate               integer|nil
 ---@param split_as_needed               boolean
 ---@return integer|nil
-function M.pick_window(filter, winnr_source, split_as_needed)
+function M.pick_window(filter, winnr_candidate, split_as_needed)
   local winnr_original = vim.api.nvim_get_current_win() ---@type integer
 
   local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
   local N = 0 ---@type integer
   for i = 1, #winnrs, 1 do
     local winnr = winnrs[i] ---@type integer
-    if winnr ~= winnr_source and filter(winnr) then
+    if winnr ~= winnr_candidate and filter(winnr) then
       N = N + 1 ---@type integer
       winnrs[N] = winnr
     end

@@ -736,7 +736,7 @@ function M.toggle_maximize()
       title_pos = "center",
     })
 
-    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_MAXIMIZE
+    eve.win.set_type(winnr, eve.win.Types.MAXIMIZE)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
@@ -745,7 +745,6 @@ function M.toggle_maximize()
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].wrap = false
 
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = eve.editor.is_win_sourcefile(winnr_command)
     eve.state.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(tabnr, winnr)

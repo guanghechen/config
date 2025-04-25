@@ -176,7 +176,7 @@ local function render(winnr)
     return
   end
 
-  if not eve.editor.is_win_sourcefile(winnr) then
+  if not eve.win.is_sourcefile(winnr) then
     return
   end
 

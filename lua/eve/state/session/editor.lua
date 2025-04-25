@@ -131,10 +131,11 @@ end
 
 ---@return nil
 function M.on_refresh()
-  local winnr_fixed = eve.win.find_fixed_by_filetype(0) or 0 ---@type integer
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_fixed = eve.win.find_fixed_by_filetype(tabnr) or 0 ---@type integer
   M.winnr_fixed:next(winnr_fixed or 0)
 
-  local winnr_sourcefile = eve.editor.find_winnr_sourcefile() or 0 ---@type integer
+  local winnr_sourcefile = eve.win.find_sourcefile_by_filetype(tabnr) or 0 ---@type integer
   M.winnr_sourcefile:next(winnr_sourcefile)
 end
 
@@ -148,7 +149,7 @@ function M.on_win_enter(winnr)
   if eve.win.is_fixed(winnr) then
     M.winnr_fixed:next(winnr)
   end
-  if eve.editor.is_win_sourcefile(winnr) then
+  if eve.win.is_sourcefile(winnr) then
     M.winnr_sourcefile:next(winnr)
   end
 end

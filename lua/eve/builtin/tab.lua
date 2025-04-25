@@ -11,16 +11,16 @@ local Types = {
 ---@class eve.builtin.tab
 local M = {}
 
-M.Types = Types
+M.Types = vim.deepcopy(Types)
 
 ---@param tabnr                         integer
----@return eve.builtin.tab.TypeEnum
+---@return eve.builtin.tab.TypeEnum|nil
 function M.get_type(tabnr)
   return vim.t[tabnr].eve_type
 end
 
 ---@param tabnr                         integer
----@param tabtype                       eve.builtin.tab.TypeEnum
+---@param tabtype                       eve.builtin.tab.TypeEnum|nil
 ---@return nil
 function M.set_type(tabnr, tabtype)
   vim.t[tabnr].eve_type = tabtype

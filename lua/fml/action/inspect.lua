@@ -166,7 +166,10 @@ function M.inspect_window()
         buftype = buftype or vim.NIL,
         filetype = filetype or vim.NIL,
         filepath = filepath or vim.NIL,
-        sourcefile = eve.editor.is_win_sourcefile(winnr),
+        focusable = eve.win.is_focusable(winnr),
+        projectable = eve.win.is_projectable(winnr),
+        sourcefile = eve.win.is_sourcefile(winnr),
+        swappable = eve.win.is_swappable(winnr),
       },
       z_meta = {
         buf = meta_buf,

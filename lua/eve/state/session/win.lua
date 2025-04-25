@@ -124,7 +124,7 @@ end
 ---@param winnr                         integer|nil
 ---@return eve.state.win.meta.state|nil
 function M.resolve(winnr)
-  if winnr == nil or not eve.win.is_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
+  if winnr == nil or not eve.win.is_valid(winnr) or not eve.win.is_sourcefile(winnr) then
     return nil
   end
 
@@ -324,11 +324,11 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.on_buf_enter(winnr, bufnr)
-  if not eve.buf.is_valid(bufnr) or not eve.editor.is_buf_sourcefile(bufnr) then
+  if not eve.buf.is_valid(bufnr) or not eve.buf.is_sourcefile(bufnr) then
     return
   end
 
-  if not eve.win.is_valid(winnr) or not eve.editor.is_win_sourcefile(winnr) then
+  if not eve.win.is_valid(winnr) or not eve.win.is_sourcefile(winnr) then
     return
   end
 
