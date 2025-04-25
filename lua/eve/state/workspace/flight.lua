@@ -57,7 +57,7 @@ function M.defaults()
     autosave = is_git_repo,
     devmode = is_home_config_dir,
 
-    dressing_cmdline = false,
+    dressing_cmdline = true,
     dressing_hipairs = true,
     dressing_illumniate = true,
     dressing_input = true,
