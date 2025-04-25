@@ -11,13 +11,8 @@ local provider = {
     local tasks = eve.notifier.history() ---@type eve.builtin.notifier.ITask[]
     for index = #tasks, 1, -1 do
       local task = tasks[index] ---@type eve.builtin.notifier.ITask
-      local text = string.format(
-        "%s %s %s %s",
-        os.date("%H:%M:%S", task.timestamp),
-        eve.icon.loglevel[task.level],
-        eve.string.pad_end(task.level, 5, " "),
-        task.title
-      )
+      local text =
+        string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), eve.icon.loglevel[task.level], task.title)
       local item = { uuid = tostring(index), text = text, data = task } ---@type eve.ux.select.IItem
       items[#items + 1] = item
     end
@@ -29,7 +24,11 @@ local provider = {
     local lines = vim.list_extend({
       string.format("## %s", task.title),
       "",
+      string.format("- **uuid**:      %s", task.uuid),
+      string.format("- **group**:     %s", task.group or "NIL"),
+      string.format("- **level**:     %s", task.level),
       string.format("- **timestamp**: %s (%d)", os.date("%H:%M:%S", task.timestamp), task.timestamp),
+      string.format("- **timeout**:   %d", task.timeout),
       "",
       "## Content",
       "",
@@ -62,8 +61,7 @@ local provider = {
     local highlights = {
       { coll = 0, colr = 8, hlname = "f_un_icon_" .. suffix },
       { coll = 9, colr = 12, hlname = "f_un_icon_" .. suffix },
-      { coll = 13, colr = 18, hlname = "f_un_level_" .. suffix },
-      { coll = 19, colr = -1, hlname = "f_un_title_" .. suffix },
+      { coll = 13, colr = -1, hlname = "f_un_title_" .. suffix },
     }
 
     for _, piece in ipairs(match.matches) do
