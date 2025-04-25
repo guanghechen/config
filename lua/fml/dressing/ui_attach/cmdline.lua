@@ -1,19 +1,37 @@
 local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 
 ---@class fml.dressing.ui_attach.cmdline.IState
----@field public content                [integer, string][]
 ---@field public pos                    integer
 ---@field public firstc                 string
 ---@field public prompt                 string
 ---@field public indent                 integer
 ---@field public level                  integer
+---@field public icon                   string
 ---@field public type                   string
----@field public prefix                 string
----@field public offset                 integer
+---@field public language               string|nil
+---@field public concealable            boolean
+---@field public first                  string
+---@field public second                 string
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
 local _cmdline_states = {} ---@type fml.dressing.ui_attach.cmdline.IState[]
+-- stylua: ignore start
+local _cmdline_title_map = {
+  ["command"]         = string.format(" %s Command ", eve.icon.ui.Cmdline),
+  ["command_help"]    = string.format(" %s Command | help ", eve.icon.ui.Cmdline),
+  ["command_lua"]     = string.format(" %s Command | lua ", eve.icon.ui.Cmdline),
+  ["search_forward"]  = string.format(" %s Search Forward ", eve.icon.ui.Search),
+  ["search_backward"] = string.format(" %s Search Backward ", eve.icon.ui.Search),
+}
+local _cmdline_type_map = {
+  ['command']         = string.format(" %s  ", eve.icon.ui.Cmdline),
+  ["command_help"]    = string.format(" %s  ", ""),
+  ["command_lua"]     = string.format(" %s  ", ""),
+  ["search_forward"]  = string.format(" %s ", eve.icon.ui.SearchForward),
+  ["search_backward"] = string.format(" %s ", eve.icon.ui.SearchBackward),
+}
+-- stylua: ignore end
 
 ---@class fml.dressing.ui_attach.cmdline
 local M = {}
@@ -48,14 +66,7 @@ function M.pos(task)
   local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
-
-    local winnr = state.winnr ---@type integer|nil
-    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_set_cursor(state.winnr, { 1, pos + state.offset })
-      vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
-    else
-      M._show(state)
-    end
+    M._show(state)
   end
 end
 
@@ -63,45 +74,84 @@ end
 ---@return nil
 function M.show(task)
   ---@diagnostic disable-next-line: unused-local
-  local content, pos, firstc, prompt, indent, level, type = unpack(task.args)
+  local content, pos, firstc, prompt, indent, level = unpack(task.args)
   ---@cast content                      [integer, string][] -- [integer, text: string][]
   ---@cast pos                          integer             -- Cursor position in the command line (0-based)
   ---@cast firstc                       string              -- Command line prefix character, e.g., ':', '/', '?'
   ---@cast prompt                       string              -- Prompt text (optional)
   ---@cast indent                       integer             -- Indentation level (optional)
   ---@cast level                        integer             -- Nesting level, 0 means top level
-  ---@cast type                         string              -- Command line type, e.g., 'cmd', 'search_forward', 'search_backward', etc.
 
-  local prefix = string.format(" %s  ", eve.icon.ui.Cmdline) ---@type string
-  local offset = #prefix ---@type integer
+  local typ = "command" ---@type string
+  local language = nil ---@type string|nil
+  if firstc == ":" then
+    typ = "command" ---@type string
+    language = "vim" ---@type string
+  elseif firstc == "/" then
+    typ = "search_forward" ---@type string
+    language = "regex" ---@type string
+  elseif firstc == "?" then
+    typ = "search_backward" ---@type string
+    language = "regex" ---@type string
+  end
+
+  local text = "" ---@type string
+  for _, piece in ipairs(content) do
+    text = text .. piece[2]
+  end
+
+  local concealable = false ---@type boolean
+  local first = text ---@type string
+  local second = "" ---@type string
+
+  if typ == "command" then
+    local f, s = text:match("^(%S+) (.*)$")
+    if f == "lua" then
+      typ = "command_lua" ---@type string
+      language = "lua" ---@type string
+      concealable = true
+    elseif f == "h" or f == "he" or f == "hel" or f == "help" then
+      typ = "command_help" ---@type string
+      concealable = true
+    end
+
+    first = f and (f .. " ") or text ---@type string
+    second = s or "" ---@type string
+  end
+
+  local icon = _cmdline_type_map[typ] ---@type string
 
   local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   if state == nil then
     ---@type fml.dressing.ui_attach.cmdline.IState
     state = {
-      content = content,
       pos = pos,
       firstc = firstc,
       prompt = prompt,
       indent = indent,
       level = level,
-      type = type,
-      prefix = prefix,
-      offset = offset,
+      icon = icon,
+      type = typ,
+      language = language,
+      concealable = concealable,
+      first = first,
+      second = second,
       bufnr = nil,
       winnr = nil,
     }
     _cmdline_states[level] = state
   else
-    state.content = content
     state.pos = pos
     state.firstc = firstc
     state.prompt = prompt
     state.indent = indent
     state.level = level
-    state.type = type
-    state.prefix = prefix
-    state.offset = offset
+    state.icon = icon
+    state.type = typ
+    state.language = language
+    state.concealable = concealable
+    state.first = first
+    state.second = second
   end
 
   M._show(state)
@@ -110,10 +160,6 @@ end
 ---@param state                         fml.dressing.ui_attach.cmdline.IState
 ---@return nil
 function M._show(state)
-  local content = state.content ---@type [integer, string][]
-  local prompt = state.prompt ---@type string
-  local pos = state.pos ---@type integer
-
   local bufnr = state.bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -127,6 +173,7 @@ function M._show(state)
   end
 
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
+  local title = _cmdline_title_map[state.type] ---@type string
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -138,7 +185,7 @@ function M._show(state)
     col = math.floor((vim.o.columns - width) / 2),
     style = "minimal",
     border = "rounded",
-    title = string.format(" %s  %s ", eve.icon.ui.Cmdline, #prompt > 0 and prompt or "Cmdline"),
+    title = title,
     title_pos = "center",
     focusable = false,
   }
@@ -168,15 +215,27 @@ function M._show(state)
     vim.wo[winnr].winfixbuf = true
   end
 
-  local line = state.prefix ---@type string
-  local offset = state.offset ---@type integer
-  for _, piece in ipairs(content) do
-    line = line .. piece[2]
-  end
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line .. " " })
+  local hln_icon = "f_uc_icon_" .. state.type ---@type string
+  local concealed = state.concealable and state.pos >= #state.first ---@type boolean
+  local line = concealed and string.format("%s%s ", state.icon, state.second)
+    or string.format("%s%s%s ", state.icon, state.first, state.second)
 
-  vim.api.nvim_win_set_cursor(winnr, { 1, pos + offset })
+  vim.bo[bufnr].syntax = nil
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line })
+
+  if state.language ~= nil and not vim.b[bufnr].ts_highlight then
+    vim.bo[bufnr].syntax = state.language
+  end
+
+  vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, 0 }, { 0, #state.icon })
+  if not concealed then
+    local offset = #state.icon ---@type integer
+    vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, offset }, { 0, offset + #state.first })
+  end
+
+  local pos = concealed and (state.pos + #state.icon - #state.first) or (state.pos + #state.icon)
+  vim.api.nvim_win_set_cursor(winnr, { 1, pos })
   vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
 end
 

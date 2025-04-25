@@ -60,8 +60,12 @@ function M.gen_hlgroup_map(context)
 
     ---cmdline
     f_uc_border = { link = "FloatActiveBorder" },
-    f_uc_normal = { fg = c.fg2, bg = t and c.bg0 or c.none },
-    f_uc_prompt = { fg = c.aqua, bg = t and c.bg0 or c.none },
+    f_uc_icon_command = { fg = c.aqua, bg = t and c.bg0 or c.none },
+    f_uc_icon_command_help = { fg = c.purple, bg = t and c.bg0 or c.none },
+    f_uc_icon_command_lua = { fg = c.blue, bg = t and c.bg0 or c.none },
+    f_uc_icon_search_forward = { fg = c.yellow, bg = t and c.bg0 or c.none },
+    f_uc_icon_search_backward = { fg = c.yellow, bg = t and c.bg0 or c.none },
+    f_uc_type_lua = { fg = c.blue, bg = t and c.bg0 or c.none },
 
     ---input
     f_ui_current = { bg = t and c.bg0 or c.none },
