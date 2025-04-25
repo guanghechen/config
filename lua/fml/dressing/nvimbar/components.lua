@@ -204,9 +204,10 @@ function M.bufs(position)
   ---@param buf                           eve.state.tab.buf.state
   ---@param index                         integer
   ---@param order                         integer
+  ---@param marker                        string
   ---@return string
   ---@return string
-  local function render_buf(buf, index, order)
+  local function render_buf(buf, index, order, marker)
     local bufnr = buf.bufnr ---@type integer
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
@@ -238,7 +239,7 @@ function M.bufs(position)
     local hln_title = hln_buf_text ---@type string
     local filename, fileicon = resolve_buf_info(bufnr)
     local text_indicator = index == 1 and " " or "▏" ---@type string
-    local text_order = eve.icon.todigit_subscript(order) .. "." ---@type string
+    local text_order = eve.icon.todigit_subscript(order) .. marker ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
     local text_mod = is_mod and "  " or "  " ---@type string
@@ -286,19 +287,19 @@ function M.bufs(position)
         return "", "", false
       end
 
-      local prefer_relative_bufs = eve.state.behavior.bufs_relative:snapshot() ---@type boolean
-
       local N = #bufs ---@type integer
       local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
       local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] or 1) ---@type integer
       vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
+
+      local relative_orders = bufid_middle == bufid_sourcefile and eve.state.behavior.bufs_relative:snapshot() ---@type boolean
 
       local text ---@type string
       local hl_text ---@type string
       if bufid_middle == bufid_sourcefile then
         text, hl_text = render_bufc(bufs[bufid_middle], bufid_middle, N)
       else
-        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_middle)
+        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_middle, ".")
       end
 
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
@@ -316,7 +317,8 @@ function M.bufs(position)
       ---@param order                   integer
       ---@return boolean
       local function render_left(bufid, order)
-        local t, hl_t = render_buf(bufs[bufid], bufid, prefer_relative_bufs and order or bufid)
+        local t, hl_t =
+          render_buf(bufs[bufid], bufid, relative_orders and order or bufid, relative_orders and "₋" or ".")
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == 1 and remain_width + left_omitter_width >= w then
@@ -342,7 +344,8 @@ function M.bufs(position)
       ---@param order                   integer
       ---@return boolean
       local function render_right(bufid, order)
-        local t, hl_t = render_buf(bufs[bufid], bufid, prefer_relative_bufs and order or bufid)
+        local t, hl_t =
+          render_buf(bufs[bufid], bufid, relative_orders and order or bufid, relative_orders and "₊" or ".")
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == N and remain_width + right_omitter_width >= w then

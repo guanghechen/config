@@ -414,7 +414,7 @@ function M.refresh(tabnr)
   end
 
   meta:rearrange_bufs()
-  eve.tab.calc_type(tabnr, true)
+  eve.tab.resolve_type(tabnr, true)
 end
 
 ---@return nil
