@@ -142,7 +142,7 @@ function M.show(task)
   end
 
   local level = kind_2_level_map[kind] or vim.log.levels.INFO
-  local title = string.format("%s | %s", task.event, kind) ---@type string
+  local title = #kind > 0 and string.format("%s | %s", task.event, kind) or task.event ---@type string
   local message = "" ---@type string
   for _, item in ipairs(content) do
     message = message .. item[2] ---@type string
