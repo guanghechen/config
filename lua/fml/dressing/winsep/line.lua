@@ -200,7 +200,7 @@ function M:show()
     winnr = vim.api.nvim_open_win(bufnr, false, cfg)
     self._winnr = winnr
 
-    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_WINSEP
+    eve.win.set_type(winnr, eve.win.Types.WINSEP)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 

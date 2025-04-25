@@ -248,8 +248,9 @@ function M:open(params)
       style = "minimal",
     })
     self._winnr = winnr
+
+    eve.win.set_type(winnr, eve.win.Types.TEXTAREA)
     vim.api.nvim_win_set_cursor(winnr, { text_cursor_row, text_cursor_col })
-    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_TEXTAREA
   end
 
   for key, value in pairs(self.win_opts) do

@@ -127,7 +127,7 @@ function M:create_win_as_needed()
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
 
-    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_TERMINAL
+    eve.win.set_type(winnr, eve.win.Types.TERMINAL)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 

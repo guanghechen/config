@@ -94,7 +94,7 @@ function M.history_show(task)
 
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
-    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_BOARD
+    eve.win.set_type(winnr, eve.win.Types.BOARD)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 

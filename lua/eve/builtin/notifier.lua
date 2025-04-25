@@ -416,7 +416,7 @@ function M.create_win_as_needed(win)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr
 
-    vim.w[winnr][eve.var.Names.WINTYPE] = eve.var.WinTypes.UX_NOTIFY
+    eve.win.set_type(winnr, eve.win.Types.NOTIFY)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
     vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
@@ -619,8 +619,8 @@ vim.api.nvim_create_autocmd("WinEnter", {
   group = eve.nvim.augroup("notifier_on_win_enter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local wintype = vim.w[winnr][eve.var.Names.WINTYPE] ---@type string
-    if wintype == eve.var.WinTypes.UX_NOTIFY then
+    local wintype = eve.win.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
+    if wintype == eve.win.Types.NOTIFY then
       for _, win in ipairs(__WINS__) do
         if win.winnr == winnr then
           win.tick = win.tick + 1
