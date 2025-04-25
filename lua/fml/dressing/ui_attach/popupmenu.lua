@@ -1,7 +1,7 @@
 local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 
 ---@class fml.dressing.ui_attach.popupmenu.IState
----@field public lines                  string[]
+---@field public items                  string[][]
 ---@field public selected               integer
 ---@field public row                    integer
 ---@field public col                    integer
@@ -66,34 +66,10 @@ function M.show(task)
   ---@cast col                          integer
   ---@cast grid                         integer
 
-  local lines = {} ---@type string[]
-  local length = 0 ---@type integer
-  for _, item in ipairs(items) do
-    local word, kind, menu, info = unpack(item) ---@type string, string, string, string
-    local line = word ---@type string
-    if type(kind) == "string" and #kind > 0 then
-      line = line .. " " .. kind
-    end
-    if type(menu) == "string" and #menu > 0 then
-      line = line .. " " .. menu
-    end
-    if type(info) == "string" and #info > 0 then
-      line = line .. " " .. info
-    end
-
-    lines[#lines + 1] = line ---@type string
-    length = length < #line and #line or length ---@type integer
-  end
-
-  length = length + 2 ---@type integer
-  for index, line in ipairs(lines) do
-    lines[index] = eve.string.pad_end(line, length, " ") ---@type string
-  end
-
   if _popupmenu_state == nil then
     ---@type fml.dressing.ui_attach.popupmenu.IState
     _popupmenu_state = {
-      lines = lines,
+      items = items,
       selected = selected,
       row = row,
       col = col,
@@ -102,7 +78,7 @@ function M.show(task)
       winnr = nil,
     }
   else
-    _popupmenu_state.lines = lines ---@type string[]
+    _popupmenu_state.items = items ---@type string[][]
     _popupmenu_state.selected = selected ---@type integer
     _popupmenu_state.row = row ---@type integer
     _popupmenu_state.col = col ---@type integer
@@ -128,7 +104,7 @@ function M._show(state)
   end
 
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
-  local height = math.min(math.floor(vim.o.lines * 0.8), #state.lines)
+  local height = math.min(math.floor(vim.o.lines * 0.8), #state.items)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -165,9 +141,26 @@ function M._show(state)
     vim.api.nvim_win_set_config(winnr, wincfg)
   end
 
+  local lines = {} ---@type string[]
+  for _, item in ipairs(state.items) do
+    local word, kind, menu, info = unpack(item) ---@type string, string, string, string
+    local line = word ---@type string
+    if type(kind) == "string" and #kind > 0 then
+      line = line .. " " .. kind
+    end
+    if type(menu) == "string" and #menu > 0 then
+      line = line .. " " .. menu
+    end
+    if type(info) == "string" and #info > 0 then
+      line = line .. " " .. info
+    end
+
+    lines[#lines + 1] = eve.string.pad_end(line, width, " ") ---@type string
+  end
+
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu, 0, -1)
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu_selected, 0, -1)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.lines)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
   if state.selected >= 0 then
     local row = state.selected ---@type integer
