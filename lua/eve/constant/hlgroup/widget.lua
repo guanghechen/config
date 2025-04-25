@@ -107,6 +107,7 @@ function M.gen_hlgroup_map(context)
     ---popupmenu
     f_up_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },
     f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },
+    f_up_selected = { fg = c.bg1, bg = c.blue },
 
     ---search
     f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },

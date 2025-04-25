@@ -1,7 +1,7 @@
 local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 
 ---@class fml.dressing.ui_attach.popupmenu.IState
----@field public items                  string[][]
+---@field public lines                  string[]
 ---@field public selected               integer
 ---@field public row                    integer
 ---@field public col                    integer
@@ -9,17 +9,21 @@ local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
-local state = nil ---@type fml.dressing.ui_attach.popupmenu.IState|nil
+local _popupmenu_state = nil ---@type fml.dressing.ui_attach.popupmenu.IState|nil
 
 ---@class fml.dressing.ui_attach.popupmenu
 local M = {}
 
 ---@param task                          fml.dressing.ui_attach.ITask
 ---@return nil
+---@diagnostic disable-next-line: unused-local
 function M.hide(task)
-  if state ~= nil then
-    local winnr = state.winnr ---@type integer|nil
-    local bufnr = state.bufnr ---@type integer|nil
+  if _popupmenu_state ~= nil then
+    local winnr = _popupmenu_state.winnr ---@type integer|nil
+    local bufnr = _popupmenu_state.bufnr ---@type integer|nil
+    _popupmenu_state.winnr = nil
+    _popupmenu_state.bufnr = nil
+
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
     end
@@ -32,12 +36,64 @@ end
 
 ---@param task                          fml.dressing.ui_attach.ITask
 ---@return nil
+function M.select(task)
+  if _popupmenu_state == nil then
+    return
+  end
+
+  local bufnr = _popupmenu_state.bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local selected = unpack(task.args) ---@type integer
+
+  _popupmenu_state.selected = selected ---@type integer
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu_selected, 0, -1)
+  if selected >= 0 then
+    local row = selected ---@type integer
+    vim.hl.range(bufnr, nsnrs.popupmenu_selected, "f_up_selected", { row, 0 }, { row, -1 })
+  end
+end
+
+---@param task                          fml.dressing.ui_attach.ITask
+---@return nil
 function M.show(task)
-  local items, selected, row, col, grid = unpack(task)
-  if state == nil then
+  local items, selected, row, col, grid = unpack(task.args)
+  ---@cast items                        string[][]
+  ---@cast selected                     integer
+  ---@cast row                          integer
+  ---@cast col                          integer
+  ---@cast grid                         integer
+
+  local lines = {} ---@type string[]
+  local length = 0 ---@type integer
+  for _, item in ipairs(items) do
+    local word, kind, menu, info = unpack(item) ---@type string, string, string, string
+    local line = word ---@type string
+    if type(kind) == "string" and #kind > 0 then
+      line = line .. " " .. kind
+    end
+    if type(menu) == "string" and #menu > 0 then
+      line = line .. " " .. menu
+    end
+    if type(info) == "string" and #info > 0 then
+      line = line .. " " .. info
+    end
+
+    lines[#lines + 1] = line ---@type string
+    length = length < #line and #line or length ---@type integer
+  end
+
+  length = length + 2 ---@type integer
+  for index, line in ipairs(lines) do
+    lines[index] = eve.string.pad_end(line, length, " ") ---@type string
+  end
+
+  if _popupmenu_state == nil then
     ---@type fml.dressing.ui_attach.popupmenu.IState
-    state = {
-      items = items,
+    _popupmenu_state = {
+      lines = lines,
       selected = selected,
       row = row,
       col = col,
@@ -46,13 +102,19 @@ function M.show(task)
       winnr = nil,
     }
   else
-    state.items = items ---@type string[]
-    state.selected = selected ---@type integer
-    state.row = row ---@type integer
-    state.col = col ---@type integer
-    state.grid = grid ---@type integer
+    _popupmenu_state.lines = lines ---@type string[]
+    _popupmenu_state.selected = selected ---@type integer
+    _popupmenu_state.row = row ---@type integer
+    _popupmenu_state.col = col ---@type integer
+    _popupmenu_state.grid = grid ---@type integer
   end
 
+  M._show(_popupmenu_state)
+end
+
+---@param state                       fml.dressing.ui_attach.popupmenu.IState
+---@return nil
+function M._show(state)
   local bufnr = state.bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -61,19 +123,20 @@ function M.show(task)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = eve.filetype.UX_CMDLINE
+    vim.bo[bufnr].filetype = eve.filetype.UX_POPUPMENU
     vim.bo[bufnr].swapfile = false
   end
 
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
+  local height = math.min(math.floor(vim.o.lines * 0.8), #state.lines)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = 10,
+    zindex = 2000,
     relative = "editor",
     width = width,
-    height = math.min(40, vim.o.lines - 8, #state.items),
-    row = 5,
+    height = height,
+    row = 6,
     col = math.floor((vim.o.columns - width) / 2),
     style = "minimal",
     border = "rounded",
@@ -102,15 +165,15 @@ function M.show(task)
     vim.api.nvim_win_set_config(winnr, wincfg)
   end
 
-  local lines = {} ---@type string[]
-  for _, item in ipairs(state.items) do
-    local word, kind, menu, info = unpack(item) ---@type string, string, string, string
-    local line = string.format("%s %s %s %s", word, kind or "", menu or "", info or "") ---@type string
-    lines[#lines + 1] = line
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu_selected, 0, -1)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, state.lines)
+
+  if state.selected >= 0 then
+    local row = state.selected ---@type integer
+    vim.hl.range(bufnr, nsnrs.popupmenu_selected, "f_up_selected", { row, 0 }, { row, -1 })
   end
 
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.attach, 0, -1)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim__redraw({ win = winnr, flush = true })
 end
 

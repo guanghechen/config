@@ -13,7 +13,7 @@ local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
-local states = {} ---@type fml.dressing.ui_attach.cmdline.IState[]
+local _cmdline_states = {} ---@type fml.dressing.ui_attach.cmdline.IState[]
 
 ---@class fml.dressing.ui_attach.cmdline
 local M = {}
@@ -22,12 +22,15 @@ local M = {}
 ---@return nil
 function M.hide(task)
   local level = unpack(task.args) ---@type integer
-  local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
-  states[level] = nil
+  local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  _cmdline_states[level] = nil
 
   if state ~= nil then
     local winnr = state.winnr ---@type integer|nil
     local bufnr = state.bufnr ---@type integer|nil
+    state.winnr = nil
+    state.bufnr = nil
+
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
     end
@@ -42,7 +45,7 @@ end
 ---@return nil
 function M.pos(task)
   local pos, level = unpack(task.args) ---@type integer
-  local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
 
@@ -72,7 +75,7 @@ function M.show(task)
   local prefix = string.format(" %s  ", eve.icon.ui.Cmdline) ---@type string
   local offset = #prefix ---@type integer
 
-  local state = states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   if state == nil then
     ---@type fml.dressing.ui_attach.cmdline.IState
     state = {
@@ -88,7 +91,7 @@ function M.show(task)
       bufnr = nil,
       winnr = nil,
     }
-    states[level] = state
+    _cmdline_states[level] = state
   else
     state.content = content
     state.pos = pos
@@ -170,7 +173,7 @@ function M._show(state)
   for _, piece in ipairs(content) do
     line = line .. piece[2]
   end
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.attach, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line .. " " })
 
   vim.api.nvim_win_set_cursor(winnr, { 1, pos + offset })

@@ -63,6 +63,9 @@ local handlers = {
   popupmenu_hide = function(task)
     require("fml.dressing.ui_attach.popupmenu").hide(task)
   end,
+  popupmenu_select = function(task)
+    require("fml.dressing.ui_attach.popupmenu").select(task)
+  end,
   popupmenu_show = function(task)
     require("fml.dressing.ui_attach.popupmenu").show(task)
   end,
@@ -94,23 +97,21 @@ end
 local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 
 ---@param event                         string
+---@param kind                          unknown
 ---@param ...                           any
 ---@return boolean|nil
-local function ui_attach_callback(event, ...)
-  eve.debug.log_silent(event, { event, ... })
+local function ui_attach_callback(event, kind, ...)
+  local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+  if devmode then
+    eve.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
+  end
 
   if vim.v.exiting ~= vim.NIL then
     return
   end
 
-  ---@type fml.dressing.ui_attach.ITask
-  local task = {
-    event = event,
-    args = { ... },
-  }
-
   -- HACK: special case for return prompts
-  if event == "msg_show" and task.args[1] == "return_prompt" then
+  if event == "msg_show" and kind == "return_prompt" then
     vim.api.nvim_input("<cr>")
     return true
   end
@@ -120,11 +121,16 @@ local function ui_attach_callback(event, ...)
     eve.reporter.warn({
       from = __module_name__,
       message = string.format("unhandled | %s", event),
-      details = { task = task },
+      details = { event, kind, ... },
     })
     return
   end
 
+  ---@type fml.dressing.ui_attach.ITask
+  local task = {
+    event = event,
+    args = { kind, ... },
+  }
   tasks:enqueue(task)
 
   if vim.in_fast_event() then

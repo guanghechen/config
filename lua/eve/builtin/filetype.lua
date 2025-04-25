@@ -41,6 +41,7 @@ M.TROUBLE = "Trouble"
 M.UX_CMDLINE = "ux-cmdline"
 M.UX_INPUT = "ux-input"
 M.UX_MESSAGE_HISTORY = "ux-message-history"
+M.UX_POPUPMENU = "ux-popupmenu"
 M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
 M.YOZORA_VIEWER = "yozora-viewer"
@@ -139,8 +140,10 @@ local filetypes = {
     [M.TEMP_VIEWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_CMDLINE] = true,
     [M.UX_INPUT] = true,
     [M.UX_MESSAGE_HISTORY] = true,
+    [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
   },
@@ -200,8 +203,10 @@ local filetypes = {
     [M.TEMP_VIEWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_CMDLINE] = true,
     [M.UX_INPUT] = true,
     [M.UX_MESSAGE_HISTORY] = true,
+    [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
@@ -241,8 +246,10 @@ local filetypes = {
     [M.TEMP_VIEWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_CMDLINE] = true,
     [M.UX_INPUT] = true,
     [M.UX_MESSAGE_HISTORY] = true,
+    [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
@@ -255,6 +262,8 @@ local filetypes = {
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
+    [M.UX_CMDLINE] = true,
+    [M.UX_POPUPMENU] = true,
   },
   no_sourcefile = {
     [M.AERIAL] = true,
@@ -292,8 +301,10 @@ local filetypes = {
     [M.TEMP_VIEWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_CMDLINE] = true,
     [M.UX_INPUT] = true,
     [M.UX_MESSAGE_HISTORY] = true,
+    [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
@@ -301,6 +312,8 @@ local filetypes = {
   no_window_picker_focusable = {
     [M.LSPINFO] = true,
     [M.PLENARY_TEST_POPUP] = true,
+    [M.UX_CMDLINE] = true,
+    [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
   },
   no_window_picker_projectable = {
@@ -339,8 +352,10 @@ local filetypes = {
     [M.TEMP_VIEWER] = true,
     [M.TERM] = true,
     [M.TROUBLE] = true,
+    [M.UX_CMDLINE] = true,
     [M.UX_INPUT] = true,
     [M.UX_MESSAGE_HISTORY] = true,
+    [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
@@ -369,12 +384,6 @@ local filetypes = {
     [M.UX_MESSAGE_HISTORY] = true,
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
-  },
-  winsep_float = {
-    [M.SEARCH_INPUT] = true,
-    [M.SEARCH_MAIN] = true,
-    [M.SEARCH_PREVIEW] = true,
-    [M.SELECT_POPUP] = true,
   },
 }
 
@@ -488,12 +497,6 @@ function M.is_printable_file(filename)
   end
 
   return true
-end
-
----@param filetype                      string|nil
----@return boolean
-function M.is_winsep_float(filetype)
-  return filetype ~= nil and filetypes.winsep_float[filetype]
 end
 
 ---@param filetype                      string|nil
