@@ -65,6 +65,8 @@ function M.gen_hlgroup_map(context)
     f_uc_icon_command_lua = { fg = c.blue, bg = t and c.bg0 or c.none },
     f_uc_icon_search_forward = { fg = c.yellow, bg = t and c.bg0 or c.none },
     f_uc_icon_search_backward = { fg = c.yellow, bg = t and c.bg0 or c.none },
+    f_uc_option = { fg = c.fg1, bg = c.bg1 },
+    f_uc_option_current = { fg = c.bg0, bg = c.pink, bold = true },
     f_uc_type_lua = { fg = c.blue, bg = t and c.bg0 or c.none },
 
     ---input

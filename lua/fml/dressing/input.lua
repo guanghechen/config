@@ -79,7 +79,7 @@ function M.input(opts, on_confirm)
     style = "minimal",
     focusable = true,
     noautocmd = true,
-    title = "  " .. prompt .. " ",
+    title = string.format(" %s %s ", eve.icon.ui.Edit, prompt),
     title_pos = "center",
   })
 

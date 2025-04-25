@@ -1,3 +1,5 @@
+local states = require("fml.dressing.ui_attach.state")
+
 local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 
 local kind_2_level_map = {
@@ -7,11 +9,6 @@ local kind_2_level_map = {
   info = vim.log.levels.INFO,
   debug = vim.log.levels.DEBUG,
 }
-
-local last_msg_group = nil ---@type string|nil
-
-local history_bufnr = nil ---@type integer|nil
-local history_winnr = nil ---@type integer|nil
 
 ---@class fml.dressing.ui_attach.messages
 local M = {}
@@ -39,10 +36,10 @@ function M.history_show(task)
     table.insert(lines, text)
   end
 
-  local bufnr = history_bufnr ---@type integer|nil
+  local bufnr = states.message.history_bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    history_bufnr = bufnr
+    states.message.history_bufnr = bufnr
 
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
@@ -86,11 +83,11 @@ function M.history_show(task)
     focusable = true,
   }
 
-  local winnr = history_winnr ---@type integer|nil
+  local winnr = states.message.history_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     wincfg.noautocmd = true
     winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
-    history_winnr = winnr
+    states.message.history_winnr = winnr
 
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
@@ -119,7 +116,7 @@ end
 function M.show(task)
   local kind, content, replace_last, history = unpack(task.args)
   ---@cast kind                         string
-  ---@cast content                      [integer, string][]
+  ---@cast content                      [integer, string, integer][]
   ---@cast replace_last                 boolean
   ---@cast history                      boolean
 
@@ -138,6 +135,11 @@ function M.show(task)
       virt_text_pos = "eol",
       hl_mode = "combine",
     })
+    return
+  end
+
+  if kind == "confirm" then
+    states.message.confirming_task = task
     return
   end
 
@@ -173,12 +175,12 @@ function M.show(task)
     end
   end
 
-  local group = replace_last and last_msg_group or nil ---@type string|nil
+  local group = replace_last and states.message.last_group or nil ---@type string|nil
   if group == nil then
     local md5 = eve.std.md5.new():update(tostring(level)):update(title):update(message):finish()
     group = eve.std.md5.tohex(md5) ---@type string
   end
-  last_msg_group = group
+  states.message.last_group = group
 
   local anonymous = kind ~= "echo" and not history ---@type boolean
   vim.notify(message, level, {

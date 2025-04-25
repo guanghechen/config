@@ -1,15 +1,6 @@
+local states = require("fml.dressing.ui_attach.state")
+
 local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
-
----@class fml.dressing.ui_attach.popupmenu.IState
----@field public items                  string[][]
----@field public selected               integer
----@field public row                    integer
----@field public col                    integer
----@field public grid                   integer
----@field public bufnr                  integer|nil
----@field public winnr                  integer|nil
-
-local _popupmenu_state = nil ---@type fml.dressing.ui_attach.popupmenu.IState|nil
 
 ---@class fml.dressing.ui_attach.popupmenu
 local M = {}
@@ -18,11 +9,11 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.hide(task)
-  if _popupmenu_state ~= nil then
-    local winnr = _popupmenu_state.winnr ---@type integer|nil
-    local bufnr = _popupmenu_state.bufnr ---@type integer|nil
-    _popupmenu_state.winnr = nil
-    _popupmenu_state.bufnr = nil
+  if states.popupmenu ~= nil then
+    local winnr = states.popupmenu.winnr ---@type integer|nil
+    local bufnr = states.popupmenu.bufnr ---@type integer|nil
+    states.popupmenu.winnr = nil
+    states.popupmenu.bufnr = nil
 
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
@@ -37,18 +28,18 @@ end
 ---@param task                          fml.dressing.ui_attach.ITask
 ---@return nil
 function M.select(task)
-  if _popupmenu_state == nil then
+  if states.popupmenu == nil then
     return
   end
 
-  local bufnr = _popupmenu_state.bufnr ---@type integer|nil
+  local bufnr = states.popupmenu.bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
   local selected = unpack(task.args) ---@type integer
 
-  _popupmenu_state.selected = selected ---@type integer
+  states.popupmenu.selected = selected ---@type integer
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu_selected, 0, -1)
   if selected >= 0 then
     local row = selected ---@type integer
@@ -66,9 +57,9 @@ function M.show(task)
   ---@cast col                          integer
   ---@cast grid                         integer
 
-  if _popupmenu_state == nil then
+  if states.popupmenu == nil then
     ---@type fml.dressing.ui_attach.popupmenu.IState
-    _popupmenu_state = {
+    states.popupmenu = {
       items = items,
       selected = selected,
       row = row,
@@ -78,14 +69,14 @@ function M.show(task)
       winnr = nil,
     }
   else
-    _popupmenu_state.items = items ---@type string[][]
-    _popupmenu_state.selected = selected ---@type integer
-    _popupmenu_state.row = row ---@type integer
-    _popupmenu_state.col = col ---@type integer
-    _popupmenu_state.grid = grid ---@type integer
+    states.popupmenu.items = items ---@type string[][]
+    states.popupmenu.selected = selected ---@type integer
+    states.popupmenu.row = row ---@type integer
+    states.popupmenu.col = col ---@type integer
+    states.popupmenu.grid = grid ---@type integer
   end
 
-  M._show(_popupmenu_state)
+  M._show(states.popupmenu)
 end
 
 ---@param state                       fml.dressing.ui_attach.popupmenu.IState

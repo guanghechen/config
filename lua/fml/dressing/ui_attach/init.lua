@@ -7,26 +7,6 @@ if not flag_dressing_cmdline and not flag_dressing_messages and not flag_dressin
   return
 end
 
----@class fml.dressing.ui_attach.cmdline_show.IContentItem
----@field public text                   string
----@field public hlname                 string
-
----@class fml.dressing.ui_attach.cmdline_show.IParams
----@field public content                string[][]
----@field public pos                    integer Cursor position in the command line (0-based)
----@field public firstc                 string  Command line prefix character, e.g., ':', '/', '?'
----@field public prompt                 string  Prompt text (optional)
----@field public indent                 integer Indentation level (optional)
----@field public level                  integer Nesting level, 0 means top level
----@field public type                   string  Command line type, e.g., 'cmd', 'search_forward', 'search_backward', etc.
-
----@class fml.dressing.ui_attach.ITask
----@field public event                  string
----@field public args                   any[]
-
----@alias fml.dressing.ui_attach.IHandleTask
----| fun(task: fml.dressing.ui_attach.ITask): nil
-
 local timer = vim.uv.new_timer()
 if timer == nil then
   return
@@ -87,6 +67,19 @@ local function process_queue()
   processing = true
   while tasks:size() > 0 do
     local task = tasks:dequeue() ---@type fml.dressing.ui_attach.ITask
+
+    ---! Optimization: merge adjacent cmdline_hide and cmdline_show events.
+    if task.event == "cmdline_hide" then
+      local next_task = tasks:dequeue() ---@type fml.dressing.ui_attach.ITask
+      if next_task ~= nil then
+        if next_task.event == "cmdline_show" and task.args[1] == next_task.args[1] then
+          task = next_task
+        else
+          tasks:enqueue_front(next_task)
+        end
+      end
+    end
+
     pcall(process_task, task)
   end
   processing = false
@@ -102,7 +95,7 @@ local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 ---@return boolean|nil
 local function ui_attach_callback(event, kind, ...)
   local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
-  if devmode then
+  if devmode and event ~= "msg_showcmd" then
     eve.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
   end
 

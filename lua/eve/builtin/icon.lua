@@ -281,6 +281,7 @@ M.ui = {
   CodeAction = "󰌵",
   Comment = "󰅺",
   Dashboard = "",
+  Edit = "",
   Emoji = "󰱫",
   Fire = "",
   Gear = "",

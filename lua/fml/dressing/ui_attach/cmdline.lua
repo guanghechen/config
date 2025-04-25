@@ -1,21 +1,7 @@
+local states = require("fml.dressing.ui_attach.state")
+
 local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 
----@class fml.dressing.ui_attach.cmdline.IState
----@field public pos                    integer
----@field public firstc                 string
----@field public prompt                 string
----@field public indent                 integer
----@field public level                  integer
----@field public icon                   string
----@field public type                   string
----@field public language               string|nil
----@field public concealable            boolean
----@field public first                  string
----@field public second                 string
----@field public bufnr                  integer|nil
----@field public winnr                  integer|nil
-
-local _cmdline_states = {} ---@type fml.dressing.ui_attach.cmdline.IState[]
 -- stylua: ignore start
 local _cmdline_title_map = {
   ["command"]         = string.format(" %s Command ", eve.icon.ui.Cmdline),
@@ -28,6 +14,7 @@ local _cmdline_type_map = {
   ['command']         = string.format(" %s  ", eve.icon.ui.Cmdline),
   ["command_help"]    = string.format(" %s  ", ""),
   ["command_lua"]     = string.format(" %s  ", ""),
+  ["confirm"]    = string.format(" %s  ", eve.icon.ui.Cmdline),
   ["search_forward"]  = string.format(" %s ", eve.icon.ui.SearchForward),
   ["search_backward"] = string.format(" %s ", eve.icon.ui.SearchBackward),
 }
@@ -40,8 +27,8 @@ local M = {}
 ---@return nil
 function M.hide(task)
   local level = unpack(task.args) ---@type integer
-  local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
-  _cmdline_states[level] = nil
+  local state = states.cmdline[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  states.cmdline[level] = nil
 
   if state ~= nil then
     local winnr = state.winnr ---@type integer|nil
@@ -63,7 +50,7 @@ end
 ---@return nil
 function M.pos(task)
   local pos, level = unpack(task.args) ---@type integer
-  local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
     M._show(state)
@@ -74,25 +61,32 @@ end
 ---@return nil
 function M.show(task)
   ---@diagnostic disable-next-line: unused-local
-  local content, pos, firstc, prompt, indent, level = unpack(task.args)
+  local content, pos, firstc, prompt, indent, level, hlid = unpack(task.args)
   ---@cast content                      [integer, string][] -- [integer, text: string][]
   ---@cast pos                          integer             -- Cursor position in the command line (0-based)
   ---@cast firstc                       string              -- Command line prefix character, e.g., ':', '/', '?'
   ---@cast prompt                       string              -- Prompt text (optional)
   ---@cast indent                       integer             -- Indentation level (optional)
   ---@cast level                        integer             -- Nesting level, 0 means top level
+  ---@cast hlid                         integer             -- hlgroup id
 
-  local typ = "command" ---@type string
+  local msg_show_task = states.message.confirming_task ---@type fml.dressing.ui_attach.ITask|nil
+  prompt = vim.trim(prompt):gsub(":$", "") ---@type string
+
+  local typ = states.message.confirming_task ~= nil and "confirm" or "command" ---@type string
   local language = nil ---@type string|nil
   if firstc == ":" then
     typ = "command" ---@type string
     language = "vim" ---@type string
+    states.message.confirming_task = nil
   elseif firstc == "/" then
     typ = "search_forward" ---@type string
     language = "regex" ---@type string
+    states.message.confirming_task = nil
   elseif firstc == "?" then
     typ = "search_backward" ---@type string
     language = "regex" ---@type string
+    states.message.confirming_task = nil
   end
 
   local text = "" ---@type string
@@ -121,7 +115,7 @@ function M.show(task)
 
   local icon = _cmdline_type_map[typ] ---@type string
 
-  local state = _cmdline_states[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
   if state == nil then
     ---@type fml.dressing.ui_attach.cmdline.IState
     state = {
@@ -130,6 +124,7 @@ function M.show(task)
       prompt = prompt,
       indent = indent,
       level = level,
+      hlid = hlid,
       icon = icon,
       type = typ,
       language = language,
@@ -139,13 +134,14 @@ function M.show(task)
       bufnr = nil,
       winnr = nil,
     }
-    _cmdline_states[level] = state
+    states.cmdline[level] = state
   else
     state.pos = pos
     state.firstc = firstc
     state.prompt = prompt
     state.indent = indent
     state.level = level
+    state.hlid = hlid
     state.icon = icon
     state.type = typ
     state.language = language
@@ -154,7 +150,11 @@ function M.show(task)
     state.second = second
   end
 
-  M._show(state)
+  if typ == "confirm" and msg_show_task ~= nil then
+    M._show_confirm(state, msg_show_task)
+  else
+    M._show(state)
+  end
 end
 
 ---@param state                         fml.dressing.ui_attach.cmdline.IState
@@ -173,7 +173,8 @@ function M._show(state)
   end
 
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
-  local title = _cmdline_title_map[state.type] ---@type string
+  local title = #state.prompt > 0 and string.format(" %s %s ", eve.icon.ui.Edit, state.prompt)
+    or _cmdline_title_map[state.type] ---@type string
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -216,6 +217,8 @@ function M._show(state)
   end
 
   local hln_icon = "f_uc_icon_" .. state.type ---@type string
+  local hln_basic = vim.fn.synIDattr(state.hlid, "name") ---@type string
+
   local concealed = state.concealable and state.pos >= #state.first ---@type boolean
   local line = concealed and string.format("%s%s ", state.icon, state.second)
     or string.format("%s%s%s ", state.icon, state.first, state.second)
@@ -229,6 +232,7 @@ function M._show(state)
   end
 
   vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, 0 }, { 0, #state.icon })
+  vim.hl.range(bufnr, nsnrs.cmdline, hln_basic, { 0, #state.icon }, { 0, -1 })
   if not concealed then
     local offset = #state.icon ---@type integer
     vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, offset }, { 0, offset + #state.first })
@@ -237,6 +241,206 @@ function M._show(state)
   local pos = concealed and (state.pos + #state.icon - #state.first) or (state.pos + #state.icon)
   vim.api.nvim_win_set_cursor(winnr, { 1, pos })
   vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
+end
+
+---@param state                         fml.dressing.ui_attach.cmdline.IState
+---@param msg_show_task                 fml.dressing.ui_attach.ITask
+---@return nil
+function M._show_confirm(state, msg_show_task)
+  local bufnr = state.bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+    state.bufnr = bufnr
+
+    vim.bo[bufnr].bufhidden = "wipe"
+    vim.bo[bufnr].buflisted = false
+    vim.bo[bufnr].buftype = "nofile"
+    vim.bo[bufnr].filetype = eve.filetype.UX_CMDLINE
+    vim.bo[bufnr].swapfile = false
+  end
+
+  local message = "" ---@type string
+  local highlights = {} ---@type eve.t.IHighlight[]
+
+  ---! resolve the lines and highlights
+  do
+    local content = msg_show_task.args[2] ---@type [integer, string, integer][]
+    for _, item in ipairs(content) do
+      message = message .. item[2] ---@type string
+    end
+
+    local lnum, col_offset = 1, 0 ---@type integer, integer
+    for _, item in ipairs(content) do
+      local _, text, hlid = unpack(item) ---@type integer, string, integer
+      local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
+      local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
+      for i, line in ipairs(lines) do
+        if i > 1 then
+          lnum = lnum + 1
+          col_offset = 0
+        end
+        if #line > 0 then
+          ---@type eve.t.IHighlight
+          local highlight = {
+            lnum = lnum,
+            coll = col_offset,
+            colr = col_offset + #line,
+            hlname = hlname,
+          }
+          highlights[#highlights + 1] = highlight
+          col_offset = col_offset + #line
+        end
+      end
+    end
+  end
+
+  local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
+
+  ---! make the lines more compact
+  do
+    local first_non_blankline_lnum = #lines ---@type integer
+    local last_non_blankline_lnum = 1 ---@type integer
+
+    for index = 1, #lines, 1 do
+      if lines[index] ~= "" then
+        first_non_blankline_lnum = index
+        break
+      end
+    end
+    for index = #lines, 1, -1 do
+      if lines[index] ~= "" then
+        last_non_blankline_lnum = index
+        break
+      end
+    end
+
+    if first_non_blankline_lnum > 1 then
+      for index = 1, #highlights, 1 do
+        if highlights[index].lnum >= first_non_blankline_lnum then
+          highlights = vim.list_slice(highlights, index, #highlights) ---@type eve.t.IHighlight[]
+          break
+        end
+      end
+      for _, hl in ipairs(highlights) do
+        hl.lnum = hl.lnum - first_non_blankline_lnum + 1 ---@type integer
+      end
+    end
+    if last_non_blankline_lnum < #lines then
+      for index = #highlights, 1, -1 do
+        if highlights[index].lnum <= first_non_blankline_lnum then
+          highlights = vim.list_slice(highlights, 1, index) ---@type eve.t.IHighlight[]
+          break
+        end
+      end
+    end
+    lines = vim.list_slice(lines, first_non_blankline_lnum, last_non_blankline_lnum)
+
+    for _, hl in ipairs(highlights) do
+      hl.coll = hl.coll + 1
+      hl.colr = hl.colr + 1
+    end
+    for index, line in ipairs(lines) do
+      lines[index] = string.format(" %s ", line)
+    end
+  end
+
+  local width = 10 --@type integer
+  for _, line in ipairs(lines) do
+    local w = vim.api.nvim_strwidth(line) ---@type integer
+    width = width < w and w or width ---@type integer
+  end
+  width = math.min(width, math.floor(vim.o.columns * 0.8), 80) ---@type integer
+
+  ---! format the confirmation buttons.
+  do
+    local buttons = {} ---@type string[]
+    for token in vim.trim(state.prompt):gsub(":$", ""):gmatch("%s*([^,]+)%s*,?") do
+      local button = string.format(" %s ", token) ---@type string
+      table.insert(buttons, button)
+    end
+
+    local line = table.concat(buttons, "  ") ---@type string
+    local width_blank = width - vim.api.nvim_strwidth(line) ---@type integer
+    local line_offset = math.max(0, math.floor((width - width_blank) / 2)) ---@type integer
+    if line_offset > 0 then
+      line = string.rep(" ", line_offset) .. line
+    end
+
+    local lnum = #lines + 2 ---@type integer
+    local offset = line_offset ---@type integer
+    for index, button in ipairs(buttons) do
+      local w = vim.api.nvim_strwidth(button) ---@type integer
+      ---@type eve.t.IHighlight
+      local highlight = {
+        lnum = lnum,
+        coll = offset,
+        colr = offset + w,
+        hlname = index == 1 and "f_uc_option_current" or "f_uc_option",
+      }
+      table.insert(highlights, highlight)
+      offset = offset + w + 2
+    end
+
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = line
+    lines[#lines + 1] = ""
+  end
+
+  local height = math.min(math.floor(vim.o.lines * 0.8), #lines) ---@type integer
+
+  ---@type vim.api.keyset.win_config
+  local wincfg = {
+    zindex = 1000 + state.level * 100,
+    relative = "editor",
+    width = width,
+    height = height,
+    row = 3,
+    col = math.floor((vim.o.columns - width) / 2),
+    style = "minimal",
+    title = " Confirm ",
+    title_pos = "center",
+    border = "rounded",
+    focusable = false,
+  }
+
+  local winnr = state.winnr ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    wincfg.noautocmd = true
+    winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
+    state.winnr = winnr
+
+    eve.win.set_type(winnr, eve.win.Types.CMDLINE)
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
+
+    vim.wo[winnr].cursorline = false
+    vim.wo[winnr].list = false
+    vim.wo[winnr].number = false
+    vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].spell = false
+    vim.wo[winnr].wrap = true
+    vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
+    vim.wo[winnr].winfixbuf = true
+  else
+    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_win_set_buf(winnr, bufnr)
+    vim.api.nvim_win_set_config(winnr, wincfg)
+    vim.wo[winnr].winfixbuf = true
+  end
+
+  vim.bo[bufnr].syntax = nil
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+  for _, hl in ipairs(highlights) do
+    local row = hl.lnum - 1 ---@type integer
+    vim.hl.range(bufnr, nsnrs.cmdline, hl.hlname, { row, hl.coll }, { row, hl.colr })
+  end
+
+  if state.language ~= nil and not vim.b[bufnr].ts_highlight then
+    vim.bo[bufnr].syntax = "markdown"
+  end
+  vim.api.nvim__redraw({ cursor = false, win = winnr, flush = true })
 end
 
 return M
