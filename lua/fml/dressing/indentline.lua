@@ -77,7 +77,7 @@ local function get_extmarks(indent, state)
   for i = 1 + offset, indent do
     local col = (i - 1) * sw - state.leftcol
     if col >= 0 then
-      local level = (i - 1) % 7 + 1 ---@type integer
+      local level = (i - 1) % 8 ---@type integer
       local hlname = "indentline_" .. level ---@type string
       table.insert(extmarks_cachemap[key], {
         virt_text = { { "│", hlname } },

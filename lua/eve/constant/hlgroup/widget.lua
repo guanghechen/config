@@ -34,6 +34,7 @@ function M.gen_hlgroup_map(context)
     f_hipairs_7 = { fg = c.orange, bold = true, italic = true },
 
     ---indentline
+    indentline_0 = { fg = c.bg1 },
     indentline_1 = { fg = cs.mix(c.bg0, c.red, 20) },
     indentline_2 = { fg = cs.mix(c.bg0, c.green, 20) },
     indentline_3 = { fg = cs.mix(c.bg0, c.yellow, 20) },
