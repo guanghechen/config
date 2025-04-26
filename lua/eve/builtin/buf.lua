@@ -88,4 +88,28 @@ function M.is_valid(bufnr)
   return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
 end
 
+---@param cwd                           string
+---@param existed_paths                 ?table<string, boolean>
+---@return string|nil
+function M.pick_filepath(cwd, existed_paths)
+  if existed_paths == nil then
+    existed_paths = {} ---@type table<string, boolean>
+
+    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+    for _, bufnr in ipairs(bufnrs) do
+      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local filepath = eve.path.resolve(cwd, filename) ---@type string
+      existed_paths[filepath] = true
+    end
+  end
+
+  for i = 1, 100 do
+    local filepath = eve.path.join(cwd, eve.setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+    if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
+      return filepath
+    end
+  end
+  return nil
+end
+
 return M

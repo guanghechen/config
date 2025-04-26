@@ -14,7 +14,6 @@
 ---@field public filename               string
 ---@field public filepath               string
 ---@field public relpath                string
----@field public relpath_pieces         string[]
 
 ---@class eve.state.buf.data
 ---@field public list                   eve.state.buf.meta.data[]
@@ -29,7 +28,6 @@
 ---@field public refresh_all            fun(): nil
 ---
 ---@field public locate_by_filepath     fun(filepath: string|nil): integer|nil
----@field public pick_filepath          fun(cwd: string, existed_paths?: table<string, boolean>): string|nil
 
 ---@class eve.state.buf : eve.state.buf.state
 ---@field public defaults               fun(): eve.state.buf.data
@@ -119,7 +117,6 @@ function M.load(raw_data)
         filename = filename,
         filepath = item.filepath,
         relpath = relpath,
-        relpath_pieces = relpath_pieces,
       }
       M.set(bufnr, meta)
     end
@@ -185,7 +182,6 @@ function M.resolve(bufnr)
     filename = filename,
     filepath = filepath,
     relpath = relpath,
-    relpath_pieces = relpath_pieces,
   }
   M.__meta_map__[bufnr] = meta
   return meta
@@ -220,7 +216,6 @@ function M.refresh(bufnr)
     meta.filename = filename
     meta.filepath = filepath
     meta.relpath = relpath
-    meta.relpath_pieces = relpath_pieces
   end
 end
 
@@ -256,30 +251,6 @@ function M.locate_by_filepath(filepath)
     local buf_filepath = meta and meta.filepath or vim.api.nvim_buf_get_name(bufnr) ---@type string
     if buf_filepath == filepath then
       return bufnr
-    end
-  end
-  return nil
-end
-
----@param cwd                           string
----@param existed_paths                 ?table<string, boolean>
----@return string|nil
-function M.pick_filepath(cwd, existed_paths)
-  if existed_paths == nil then
-    existed_paths = {} ---@type table<string, boolean>
-
-    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-    for _, bufnr in ipairs(bufnrs) do
-      local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = eve.path.resolve(cwd, filename) ---@type string
-      existed_paths[filepath] = true
-    end
-  end
-
-  for i = 1, 100 do
-    local filepath = eve.path.join(cwd, eve.setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
-    if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
-      return filepath
     end
   end
   return nil

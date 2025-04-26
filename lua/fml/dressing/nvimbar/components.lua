@@ -647,16 +647,17 @@ function M.dirpath(position)
         return "", "", true
       end
 
+      relpath_pieces = vim.split(meta.relpath, eve.env.PATH_SEP, { plain = true }) ---@type string[]
+
       local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
       local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
       local hl_text_sep = winnr_sourcefile == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
 
-      relpath_pieces = meta.relpath_pieces
       local text = "" ---@type string
       local hl_text = "" ---@type string
-      local N = #meta.relpath_pieces - 1 ---@type integer
+      local N = #relpath_pieces - 1 ---@type integer
       for i = 1, N, 1 do
-        local piece = meta.relpath_pieces[i] ---@type string
+        local piece = relpath_pieces[i] ---@type string
         local hl_text_piece = btn(txt(piece, hln_text), fn_open_explorer, i) ---@type string
 
         text = text .. piece .. sep
@@ -700,8 +701,9 @@ function M.dirpath_prominent(position)
         return "", "", false
       end
 
+      local relpath_pieces = vim.split(meta.relpath, eve.env.PATH_SEP, { plain = true }) ---@type string[]
       local cwd_name = eve.path.basename(context.cwd) ---@type string
-      local N = #meta.relpath_pieces - 1 ---@type integer
+      local N = #relpath_pieces - 1 ---@type integer
       if N < 1 then
         local text = cwd_name .. " " ---@type string
         local hl_text = hl_icon .. txt(text, hln_text) ---@type string
@@ -709,7 +711,7 @@ function M.dirpath_prominent(position)
         return text, hl_text, true
       end
 
-      local is_absolute = meta.relpath_pieces[1] == "" ---@type boolean
+      local is_absolute = relpath_pieces[1] == "" ---@type boolean
       local left_text = is_absolute and "" or cwd_name ---@type string
 
       local remain_count = is_absolute and N - 1 or N ---@type integer
@@ -724,7 +726,7 @@ function M.dirpath_prominent(position)
       local right_text = "" ---@type string
       local _start_index = is_absolute and 2 or 1 ---@type integer
       for i = N, _start_index, -1 do
-        local piece = meta.relpath_pieces[i] ---@type string
+        local piece = relpath_pieces[i] ---@type string
         local w = vim.api.nvim_strwidth(piece) + width_sep ---@type integer
         if remain_width <= w then
           break
