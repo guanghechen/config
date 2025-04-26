@@ -29,6 +29,7 @@ local __mods = {
   table = "eve.builtin.table",
   tmux = "eve.builtin.tmux",
   var = "eve.builtin.var",
+  widget = "eve.builtin.widget",
   win = "eve.builtin.win",
   winpicker = "eve.builtin.winpicker",
 }
@@ -69,6 +70,7 @@ local __mods = {
 ---@field public table                  eve.builtin.table
 ---@field public tmux                   eve.builtin.tmux
 ---@field public var                    eve.builtin.var
+---@field public widget                 eve.builtin.widget
 ---@field public win                    eve.builtin.win
 ---@field public winpicker              eve.builtin.winpicker
 local M = setmetatable({

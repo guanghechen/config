@@ -12,7 +12,6 @@ local __mods = {
   qflist = "eve.state.session.qflist",
   status = "eve.state.session.status",
   tab = "eve.state.session.tab",
-  widget = "eve.state.session.widget",
   win = "eve.state.session.win",
 
   --------------------------------------------------------------------------------------------------
@@ -86,7 +85,6 @@ local __lazy = {
 ---@field public qflist                 eve.state.qflist
 ---@field public status                 eve.state.status
 ---@field public tab                    eve.state.tab
----@field public widget                 eve.state.widget
 ---@field public win                    eve.state.win
 ---
 ---@field public bookmark               eve.state.bookmark
@@ -128,7 +126,6 @@ function M.dump()
     qflist = M.qflist.dump(),
     status = M.status.dump(),
     tab = M.tab.dump(),
-    widget = M.widget.dump(),
     win = M.win.dump(),
 
     bookmark = M.bookmark.dump(),
@@ -185,7 +182,6 @@ function M.load(storage, initialize)
     M.status.load(data_session.status)
     M.tab.load(data_session.tab)
     M.win.load(data_session.win)
-    M.widget.load(data_session.widget)
   end
 end
 

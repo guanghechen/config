@@ -1,96 +1,14 @@
----@class eve.state.widget.data
----@field public history                eve.std.collection.history.ISerializedData
+---@type fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
+local equals = eve.std.fn.equals_shallow
 
----@class eve.state.widget.state
----@field public history                eve.std.collection.IHistory
----
----@field public backward               fun(): nil
----@field public forward                fun(): nil
----
----@field public close_present          fun(): nil
----@field public equals                 fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
----@field public get_keymaps            fun(widget: eve.t.ux.IWidget): eve.t.IKeymap[]
----@field public get_widget_current     fun(): eve.t.ux.IWidget|nil, integer|nil
----@field public get_widget_visible     fun(): eve.t.ux.IWidget|nil, integer|nil
----@field public open                   fun(widget: eve.t.ux.IWidget): nil
----@field public resize                 fun(): nil
----@field public resume                 fun(): eve.t.ux.IWidget|nil
----@field public wrap                   fun(raw_widget: eve.t.ux.IRawWidget): eve.t.ux.IWidget
-
----@class eve.state.widget : eve.state.widget.state
----@field public defaults                fun(): eve.state.widget.data
----@field public dump                    fun(): eve.state.widget.data
----@field public load                    fun(data: unknown): nil
----@field public normalize               fun(data: unknown): eve.state.widget.data
+---@class eve.builtin.widget
 local M = {}
 
----@return eve.state.widget.data
-function M.defaults()
-  ---@type eve.state.widget.data
-  return {
-    history = { present = 0, stack = {} },
-  }
-end
-
----@param data                        any
----@return eve.state.widget.data
-function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.state.widget.data
-  if type(data) == "table" then
-    if type(data.history) == "table" then
-      if type(data.history.present) == "number" then
-        resolved.history.present = data.history.present
-      end
-      if type(data.history.stack) == "table" then
-        resolved.history.stack = data.history.stack
-      end
-    end
-  end
-
-  ---@type eve.state.widget.data
-  return resolved
-end
-
----@return eve.state.widget.data
-function M.dump()
-  ---@type eve.std.collection.history.ISerializedData
-  local history = M.history and M.history:dump() or { present = 0, stack = {} }
-
-  local stack = {} ---@type string[]
-  for _, widget in ipairs(history.stack) do
-    table.insert(stack, widget.name)
-  end
-
-  ---@type eve.state.widget.data
-  return {
-    history = { present = history.present, stack = stack },
-  }
-end
-
----@param raw_data                      any
----@return nil
-function M.load(raw_data)
-  ---@diagnostic disable-next-line: unused-local
-  local data = M.normalize(raw_data) ---@type eve.state.widget.data
-
-  ---@type eve.std.collection.IHistory
-  local history = M.history or eve.std.History.new({
-    name = "widget",
-    capacity = 100,
-  })
-  M.history = history
-end
-
-----------------------------------------------------------------------------------------------------
-
----@type fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
-M.equals = eve.std.fn.equals_shallow
-
----@type eve.std.collection.IHistory
+---@type eve.std.collection.History
 M.history = eve.std.History.new({
   name = "widget",
-  capacity = 20,
-  equals = eve.std.fn.equals_shallow,
+  capacity = 100,
+  equals = equals,
 })
 
 ---@return nil
@@ -104,7 +22,7 @@ function M.backward()
   local is_bottom = false ---@type boolean
   while not is_bottom do
     widget, is_bottom = M.history:backward()
-    if widget ~= nil and not M.equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
+    if widget ~= nil and not equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
       present:hide()
       widget:focus()
       break
@@ -123,7 +41,7 @@ function M.forward()
   local is_top = false ---@type boolean
   while not is_top do
     widget, is_top = M.history:forward() ---@type eve.t.ux.IWidget|nil, boolean
-    if widget ~= nil and not M.equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
+    if widget ~= nil and not equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
       present:hide()
       widget:focus()
       break
@@ -236,7 +154,7 @@ function M.open(widget)
     return
   end
 
-  if not M.equals(present, widget) then
+  if not equals(present, widget) then
     if M.history:size() == M.history:capacity() then
       local bottom_widget = M.history:bottom() ---@type eve.t.ux.IWidget
       bottom_widget:close()
@@ -297,7 +215,7 @@ function M.wrap(raw_widget)
         return
       end
 
-      if not M.equals(present, widget) then
+      if not equals(present, widget) then
         if M.history:size() == M.history:capacity() then
           local bottom_widget = M.history:bottom() ---@type eve.t.ux.IWidget
           bottom_widget:close()

@@ -36,7 +36,7 @@ local function create_widget(params)
     return nil
   end
 
-  return eve.state.widget.wrap({
+  return eve.widget.wrap({
     name = name,
     close = function()
       local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil

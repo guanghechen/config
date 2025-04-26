@@ -57,7 +57,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local keymaps = eve.state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  local keymaps = eve.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
   local cmd = eve.shell.format_command(props.cmd) ---@type string
@@ -247,7 +247,7 @@ end
 
 ---@return nil
 function M:show()
-  eve.state.widget.open(self)
+  eve.widget.open(self)
 end
 
 ---@return eve.e.WidgetStatus

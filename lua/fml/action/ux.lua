@@ -16,11 +16,11 @@ function M.resume_last_widget()
     return
   end
 
-  if eve.state.widget.resume() then
-    local widget, widget_index = eve.state.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
+  if eve.widget.resume() then
+    local widget, widget_index = eve.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
     if widget ~= nil and widget_index ~= nil then
       widget:focus()
-      eve.state.widget.history:go(widget_index)
+      eve.widget.history:go(widget_index)
     else
       local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
       if winnr_command ~= nil then

@@ -46,7 +46,7 @@ local config = {
 }
 
 ---@type eve.t.ux.IWidget
-local chat = eve.state.widget.wrap({
+local chat = eve.widget.wrap({
   name = "copilot-chat",
   close = function()
     local winnr = config.winnr ---@type integer|nil
@@ -90,7 +90,7 @@ local chat = eve.state.widget.wrap({
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         if not vim.b[bufnr].fml_key_bound then
           vim.b[bufnr].fml_key_bound = true
-          local keymaps = eve.state.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
+          local keymaps = eve.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
           eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
         end
 

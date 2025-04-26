@@ -247,7 +247,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 
     vim.api.nvim_tabpage_set_win(tabnr_cur, winnr_cur)
     vim.schedule(function()
-      eve.state.widget.resize()
+      eve.widget.resize()
 
       eve.state.status.dirtier_statusline:mark_dirty()
       eve.state.status.dirtier_tabline:mark_dirty()

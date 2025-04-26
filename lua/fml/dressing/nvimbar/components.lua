@@ -1691,7 +1691,7 @@ function M.widget(position)
     name = "widget",
     atomic = true,
     render = function()
-      local widget = eve.state.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
+      local widget = eve.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
       if widget == nil then
         return "", "", true
       end

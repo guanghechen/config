@@ -145,7 +145,7 @@ function M.new(props)
 
   local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
   local context = props.context ---@type eve.ux.ISearchContext
-  local common_keymaps = eve.state.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  local common_keymaps = eve.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
 
@@ -1092,7 +1092,7 @@ end
 
 ---@return nil
 function M:show()
-  eve.state.widget.open(self)
+  eve.widget.open(self)
 end
 
 ---@return eve.e.WidgetStatus
