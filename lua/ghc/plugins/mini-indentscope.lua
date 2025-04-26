@@ -10,13 +10,4 @@ return {
       try_as_border = true,
     },
   },
-  init = function()
-    vim.api.nvim_create_autocmd("FileType", {
-      group = eve.nvim.augroup("disable_miniindentscope"),
-      pattern = eve.filetype.get_no_ibl_filetypes(),
-      callback = function()
-        vim.b.miniindentscope_disable = true
-      end,
-    })
-  end,
 }

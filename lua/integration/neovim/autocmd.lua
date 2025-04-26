@@ -254,15 +254,3 @@ vim.api.nvim_create_autocmd("FileType", {
     end
   end,
 })
-
---- Disable autopairs
-vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("disable_autopairs"),
-  pattern = eve.filetype.get_disable_autopairs_filetypes(),
-  callback = function(event)
-    local bufnr = event.buf ---@type integer|nil
-    if bufnr ~= nil then
-      vim.b[bufnr].minipairs_disable = true
-    end
-  end,
-})

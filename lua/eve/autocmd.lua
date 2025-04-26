@@ -1,5 +1,21 @@
+vim.api.nvim_create_autocmd("FileType", {
+  group = eve.nvim.augroup("bootstrap_on_FileType"),
+  callback = function(event)
+    local bufnr = event.buf ---@type integer|nil
+    if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+
+    local filetype = vim.bo[bufnr].filetype ---@type string
+    if eve.filetype.is_not_sourcefile(filetype) then
+      vim.b[bufnr].miniindentscope_disable = true
+      vim.b[bufnr].minipairs_disable = true
+    end
+  end,
+})
+
 vim.api.nvim_create_autocmd("WinNew", {
-  group = eve.nvim.augroup("state_on_win_new"),
+  group = eve.nvim.augroup("bootstrap_on_WinNew"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
 

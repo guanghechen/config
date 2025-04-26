@@ -5,6 +5,7 @@ local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
   emsg = vim.log.levels.ERROR,
+  lua_error = vim.log.levels.ERROR,
   warn = vim.log.levels.WARN,
   info = vim.log.levels.INFO,
   debug = vim.log.levels.DEBUG,

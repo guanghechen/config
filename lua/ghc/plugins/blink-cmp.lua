@@ -27,7 +27,7 @@ local sources_per_filetype = {
   [eve.filetype.COPILOT_CHAT] = { "copilot", "snippets", "path", "buffer" },
   [eve.filetype.SEARCH_INPUT] = { "path" },
 }
-for _, cmp_code in ipairs(eve.filetype.get_cmp_code_filetypes()) do
+for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do
   if sources_per_filetype[cmp_code] == nil then
     sources_per_filetype[cmp_code] = { "copilot", "lsp", "path", "snippets", "buffer" }
   end

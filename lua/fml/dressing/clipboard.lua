@@ -190,7 +190,7 @@ vim.paste = function(lines, phase)
       end)
 
       if ok then
-        if is_filepath and not eve.filetype.is_not_sourcefile(filetype) then
+        if is_filepath and eve.filetype.is_sourcefile(filetype) then
           local extname = eve.path.extname(filepath_target_relative) ---@type string
           if IMAGE_EXTENSIONS[extname] then
             local src = eve.path.relative(dirpath, filepath_target, true) ---@type string

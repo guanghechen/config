@@ -186,7 +186,7 @@ local function render(winnr)
     return
   end
 
-  if not eve.filetype.is_not_sourcefile(filetype) then
+  if eve.filetype.is_sourcefile(filetype) then
     vim.wo[winnr].winbar = txt(filepath, "f_wl_text")
     return
   end

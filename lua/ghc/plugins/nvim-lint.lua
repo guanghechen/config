@@ -91,7 +91,7 @@ return {
         end
 
         local filetype = vim.bo[bufnr].filetype ---@type string
-        if eve.filetype.is_not_plain_file(filetype) then
+        if eve.filetype.is_not_sourcefile(filetype) then
           return "done"
         end
 

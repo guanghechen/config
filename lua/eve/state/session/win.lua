@@ -124,7 +124,7 @@ end
 ---@param winnr                         integer|nil
 ---@return eve.state.win.meta.state|nil
 function M.resolve(winnr)
-  if winnr == nil or not eve.win.is_valid(winnr) or not eve.win.is_sourcefile(winnr) then
+  if winnr == nil or not eve.win.is_valid(winnr) or eve.win.is_sourcefile(winnr) then
     return nil
   end
 

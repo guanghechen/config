@@ -43,7 +43,7 @@ function M.paste_image(filepath_target)
   local ok = M.paste_image_from_clipboard(filepath_target)
   if ok then
     local filetype = vim.bo.filetype ---@type string
-    if not eve.filetype.is_not_sourcefile(filetype) then
+    if eve.filetype.is_sourcefile(filetype) then
       local filepath_current = vim.api.nvim_buf_get_name(0) ---@type string
       local src = eve.path.relative(eve.path.dirname(filepath_current), filepath_target, true) ---@type string
       if #src > 1 then

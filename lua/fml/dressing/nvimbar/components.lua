@@ -769,7 +769,7 @@ function M.encoding(position)
     name = "encoding",
     atomic = true,
     condition = function(context)
-      return eve.editor.is_buf_sourcefile(context.bufnr)
+      return eve.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
@@ -815,7 +815,7 @@ function M.fileformat(position)
     name = "fileformat",
     atomic = true,
     condition = function(context)
-      return eve.editor.is_buf_sourcefile(context.bufnr)
+      return eve.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
@@ -847,7 +847,7 @@ function M.fileindent(position)
     name = "fileindent",
     atomic = true,
     condition = function(context)
-      return eve.editor.is_buf_sourcefile(context.bufnr)
+      return eve.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
       local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer

@@ -49,7 +49,7 @@ M.YOZORA_VIEWER = "yozora-viewer"
 ---@class eve.builtin.filetype.filetypes
 local filetypes = {
   -- stylua: ignore start
-  cmp_code = {
+  code = {
     assembly         = true,
     bash             = true,
     clojure          = true,
@@ -96,6 +96,7 @@ local filetypes = {
     toml             = true,
     typescript       = true,
     typescriptreact  = true,
+    vim              = true,
     vue              = true,
     xml              = true,
     yaml             = true,
@@ -105,47 +106,6 @@ local filetypes = {
     [M.AVANTE_INPUT] = true,
     -- [M.COPILOT_CHAT] = true,
     -- [M.SEARCH_INPUT] = true,
-  },
-  disable_autopairs = {
-    [M.AERIAL] = true,
-    [M.AVANTE] = true,
-    [M.AVANTE_SELECTED_FILES] = true,
-    [M.CHECKHEALTH] = true,
-    [M.COPILOT_CHAT] = true,
-    [M.DAP_FLOAT] = true,
-    [M.DAP_REPL] = true,
-    [M.DAP_UI_BREAKPOINTS] = true,
-    [M.DAP_UI_CONSOLE] = true,
-    [M.DAP_UI_HOVER] = true,
-    [M.DAP_UI_SCOPES] = true,
-    [M.DAP_UI_STACKS] = true,
-    [M.DAP_UI_WATCHES] = true,
-    [M.DIFFVIEW_FILE_HISTORY] = true,
-    [M.DIFFVIEW_FILES] = true,
-    [M.GITCOMMIT] = true,
-    [M.HELP] = true,
-    [M.LAZY] = true,
-    [M.MAN] = true,
-    [M.MASON] = true,
-    [M.NEOTREE] = true,
-    [M.NEOTREE_POPUP] = true,
-    [M.NOTIFY] = true,
-    [M.LSPINFO] = true,
-    [M.PLENARY_TEST_POPUP] = true,
-    [M.QUICKFIX] = true,
-    [M.SEARCH_INPUT] = true,
-    [M.SEARCH_MAIN] = true,
-    [M.SELECT_POPUP] = true,
-    [M.STARTUPTIME] = true,
-    [M.TEMP_VIEWER] = true,
-    [M.TERM] = true,
-    [M.TROUBLE] = true,
-    [M.UX_CMDLINE] = true,
-    [M.UX_INPUT] = true,
-    [M.UX_MESSAGE_HISTORY] = true,
-    [M.UX_POPUPMENU] = true,
-    [M.WINSEP] = true,
-    [M.WINPICKER_MASK] = true,
   },
   has_external_winline = {
     [M.AVANTE] = true,
@@ -211,49 +171,6 @@ local filetypes = {
     [M.WINPICKER_MASK] = true,
     [M.YOZORA_VIEWER] = true,
   },
-  no_ibl = {
-    [M.AERIAL] = true,
-    [M.AVANTE] = true,
-    [M.AVANTE_INPUT] = true,
-    [M.AVANTE_SELECTED_FILES] = true,
-    [M.CHECKHEALTH] = true,
-    [M.COPILOT_CHAT] = true,
-    [M.DAP_FLOAT] = true,
-    [M.DAP_REPL] = true,
-    [M.DAP_UI_BREAKPOINTS] = true,
-    [M.DAP_UI_CONSOLE] = true,
-    [M.DAP_UI_HOVER] = true,
-    [M.DAP_UI_SCOPES] = true,
-    [M.DAP_UI_STACKS] = true,
-    [M.DAP_UI_WATCHES] = true,
-    [M.DIFFVIEW_FILE_HISTORY] = true,
-    [M.DIFFVIEW_FILES] = true,
-    [M.GITCOMMIT] = true,
-    [M.HELP] = true,
-    [M.LAZY] = true,
-    [M.MAN] = true,
-    [M.MASON] = true,
-    [M.NEOTREE] = true,
-    [M.NEOTREE_POPUP] = true,
-    [M.NOTIFY] = true,
-    [M.LSPINFO] = true,
-    [M.PLENARY_TEST_POPUP] = true,
-    [M.QUICKFIX] = true,
-    [M.SEARCH_INPUT] = true,
-    [M.SEARCH_MAIN] = true,
-    [M.SELECT_POPUP] = true,
-    [M.STARTUPTIME] = true,
-    [M.TEMP_VIEWER] = true,
-    [M.TERM] = true,
-    [M.TROUBLE] = true,
-    [M.UX_CMDLINE] = true,
-    [M.UX_INPUT] = true,
-    [M.UX_MESSAGE_HISTORY] = true,
-    [M.UX_POPUPMENU] = true,
-    [M.WINSEP] = true,
-    [M.WINPICKER_MASK] = true,
-    [M.YOZORA_VIEWER] = true,
-  },
   no_flash = {
     [M.FLASH_PROMPT] = true,
     [M.NOTIFY] = true,
@@ -264,50 +181,6 @@ local filetypes = {
     [M.YOZORA_VIEWER] = true,
     [M.UX_CMDLINE] = true,
     [M.UX_POPUPMENU] = true,
-  },
-  no_sourcefile = {
-    [M.AERIAL] = true,
-    [M.AVANTE] = true,
-    [M.AVANTE_INPUT] = true,
-    [M.AVANTE_SELECTED_FILES] = true,
-    [M.CHECKHEALTH] = true,
-    [M.COPILOT_CHAT] = true,
-    [M.DAP_FLOAT] = true,
-    [M.DAP_REPL] = true,
-    [M.DAP_UI_BREAKPOINTS] = true,
-    [M.DAP_UI_CONSOLE] = true,
-    [M.DAP_UI_HOVER] = true,
-    [M.DAP_UI_SCOPES] = true,
-    [M.DAP_UI_STACKS] = true,
-    [M.DAP_UI_WATCHES] = true,
-    [M.DIFFVIEW_FILE_HISTORY] = true,
-    [M.DIFFVIEW_FILES] = true,
-    [M.GITCOMMIT] = true,
-    [M.HELP] = true,
-    [M.LAZY] = true,
-    [M.MAN] = true,
-    [M.MASON] = true,
-    [M.NEOTREE] = true,
-    [M.NEOTREE_POPUP] = true,
-    [M.NOTIFY] = true,
-    [M.LSPINFO] = true,
-    [M.PLENARY_TEST_POPUP] = true,
-    [M.QUICKFIX] = true,
-    [M.SEARCH_INPUT] = true,
-    [M.SEARCH_MAIN] = true,
-    [M.SEARCH_PREVIEW] = true,
-    [M.SELECT_POPUP] = true,
-    [M.STARTUPTIME] = true,
-    [M.TEMP_VIEWER] = true,
-    [M.TERM] = true,
-    [M.TROUBLE] = true,
-    [M.UX_CMDLINE] = true,
-    [M.UX_INPUT] = true,
-    [M.UX_MESSAGE_HISTORY] = true,
-    [M.UX_POPUPMENU] = true,
-    [M.WINSEP] = true,
-    [M.WINPICKER_MASK] = true,
-    [M.YOZORA_VIEWER] = true,
   },
   quitable_with_q = {
     [M.AERIAL] = true,
@@ -362,14 +235,32 @@ local extnames = {
   },
 }
 
----@return string[]
-function M.get_cmp_code_filetypes()
-  return vim.tbl_keys(filetypes.cmp_code)
+---@param filetype                      string|nil
+---@return boolean
+function M.is_sourcefile(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.not_sourcefile[filetype] ~= true
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_not_sourcefile(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.not_sourcefile[filetype] == true
 end
 
 ---@return string[]
-function M.get_disable_autopairs_filetypes()
-  return vim.tbl_keys(filetypes.disable_autopairs)
+function M.list_not_sourcefile_filetypes()
+  return vim.tbl_keys(filetypes.not_sourcefile)
+end
+
+---@return string[]
+function M.list_code_filetypes()
+  return vim.tbl_keys(filetypes.code)
 end
 
 ---@return string[]
@@ -380,11 +271,6 @@ end
 ---@return string[]
 function M.get_markdown_filetypes()
   return vim.tbl_keys(filetypes.markdown)
-end
-
----@return string[]
-function M.get_no_ibl_filetypes()
-  return vim.tbl_keys(filetypes.no_ibl)
 end
 
 ---@return string[]
@@ -409,27 +295,10 @@ function M.is_cmp_enabled(filetype)
   if filetype == nil or #filetype < 1 then
     return false
   end
-  if filetypes.cmp_code[filetype] or filetypes.cmp_others[filetype] then
+  if filetypes.code[filetype] or filetypes.cmp_others[filetype] then
     return true
   end
   return false
-end
-
----@return boolean
-function M.is_no_ibl_filetype(filetype)
-  if filetype == nil or #filetype < 1 then
-    return true
-  end
-  return filetypes.no_ibl[filetype]
-end
-
----@param filetype                      string|nil
----@return boolean
-function M.is_not_sourcefile(filetype)
-  if filetype == nil or #filetype < 1 then
-    return true
-  end
-  return filetypes.not_sourcefile[filetype]
 end
 
 ---@param filename                      string
@@ -446,18 +315,6 @@ function M.is_printable_file(filename)
   end
 
   return true
-end
-
----@param filetype                      string|nil
----@return boolean
-function M.is_not_plain_file(filetype)
-  return filetype == nil or #filetype < 1 or filetypes.not_sourcefile[filetype]
-end
-
----@param filetype                      string|nil
----@return boolean
-function M.is_not_sourcefile_filetype(filetype)
-  return filetype == nil or filetypes.no_sourcefile[filetype]
 end
 
 return M

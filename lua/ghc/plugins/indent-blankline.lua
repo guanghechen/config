@@ -28,7 +28,7 @@ return {
       highlight = "IblScopeChar",
     },
     exclude = {
-      filetypes = eve.filetype.get_no_ibl_filetypes(),
+      filetypes = eve.filetype.list_not_sourcefile_filetypes(),
     },
   },
   config = function(_, opts)

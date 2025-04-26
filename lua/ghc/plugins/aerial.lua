@@ -44,7 +44,7 @@ return {
     ignore = {
       buftypes = "special",
       wintypes = "special",
-      filetypes = eve.filetype.get_no_ibl_filetypes(),
+      filetypes = eve.filetype.list_not_sourcefile_filetypes(),
       diff_windows = true,
       unlisted_buffers = true,
     },
