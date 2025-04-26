@@ -262,13 +262,6 @@ function M.reload_theme(force, reload_plugins)
     -- M.set_term_colors(scheme)
     -- end
   end
-
-  ---! Reload the plugins to trigger it to apply the new highlights.
-  if reload_plugins then
-    pcall(function()
-      vim.cmd("Lazy reload indent-blankline.nvim")
-    end)
-  end
 end
 
 --- Set the term color with the specific value (hex).

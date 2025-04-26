@@ -63,7 +63,6 @@ local raw_specs = {
   { name = "flash.nvim", main = "flash", cond = conds.common },
   { name = "friendly-snippets", cond = conds.not_vscode },
   { name = "gitsigns.nvim", main = "gitsigns", cond = conds.not_vscode },
-  { name = "indent-blankline.nvim", main = "ibl", cond = conds.not_vscode },
   { name = "mason.nvim", main = "mason", cond = conds.lsp },
   { name = "mini.ai", main = "mini.ai", cond = conds.common },
   { name = "mini.hipatterns", main = "mini.hipatterns", cond = conds.not_vscode },

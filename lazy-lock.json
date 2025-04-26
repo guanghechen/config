@@ -10,7 +10,6 @@
   "flash.nvim": { "branch": "nvim@flash.nvim", "commit": "3c942666f115e2811e959eabbdd361a025db8b63" },
   "friendly-snippets": { "branch": "nvim@friendly-snippets", "commit": "fc8f183479a472df60aa86f00e295462f2308178" },
   "gitsigns.nvim": { "branch": "nvim@gitsigns.nvim", "commit": "2149fc2009d1117d58e86e56836f70c969f60a82" },
-  "indent-blankline.nvim": { "branch": "nvim@indent-blankline.nvim", "commit": "005b56001b2cb30bfa61b7986bc50657816ba4ba" },
   "lazy.nvim": { "branch": "nvim@ghc-lazy.nvim", "commit": "ba004b6d038045c6011329fde21468daaf398fe6" },
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "fc98833b6da5de5a9c5b1446ac541577059555be" },
   "mini.ai": { "branch": "nvim@mini.ai", "commit": "e139eb1101beb0250fea322f8c07a42f0f175688" },

@@ -4,6 +4,7 @@ local M = {}
 ---@param context                       eve.t.theme.IContext
 ---@return table<string, eve.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
+  local cs = eve.std.color
   local c = context.scheme.palette ---@type eve.t.theme.IPalette
   local t = context.transparency ---@type boolean
 
@@ -31,6 +32,15 @@ function M.gen_hlgroup_map(context)
     f_hipairs_5 = { fg = c.purple, bold = true, italic = true },
     f_hipairs_6 = { fg = c.aqua, bold = true, italic = true },
     f_hipairs_7 = { fg = c.orange, bold = true, italic = true },
+
+    ---indentline
+    indentline_1 = { fg = cs.mix(c.bg0, c.red, 20) },
+    indentline_2 = { fg = cs.mix(c.bg0, c.green, 20) },
+    indentline_3 = { fg = cs.mix(c.bg0, c.yellow, 20) },
+    indentline_4 = { fg = cs.mix(c.bg0, c.blue, 20) },
+    indentline_5 = { fg = cs.mix(c.bg0, c.purple, 20) },
+    indentline_6 = { fg = cs.mix(c.bg0, c.aqua, 20) },
+    indentline_7 = { fg = cs.mix(c.bg0, c.orange, 20) },
 
     ---diff
     f_diff_add_left = { bg = c.diffDel, fg = c.none },

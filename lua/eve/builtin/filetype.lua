@@ -253,6 +253,18 @@ function M.is_not_sourcefile(filetype)
   return filetypes.not_sourcefile[filetype] == true
 end
 
+---@param filetype                      string|nil
+---@return boolean
+function M.is_not_indentline(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  if filetype == M.SEARCH_PREVIEW then
+    return false
+  end
+  return filetypes.not_sourcefile[filetype] == true
+end
+
 ---@return string[]
 function M.list_not_sourcefile_filetypes()
   return vim.tbl_keys(filetypes.not_sourcefile)
