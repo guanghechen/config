@@ -205,8 +205,8 @@ local actions = {
       if #quickfix_items > 0 then
         _select:close()
 
-        eve.state.qflist.push(quickfix_items)
-        eve.state.qflist.open_qflist(false)
+        eve.qflist.push(quickfix_items)
+        eve.qflist.open_qflist(false)
       end
     end
   end,

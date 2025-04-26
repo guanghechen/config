@@ -9,7 +9,6 @@ local __mods = {
 
   buf = "eve.state.session.buf",
   editor = "eve.state.session.editor",
-  qflist = "eve.state.session.qflist",
   status = "eve.state.session.status",
   tab = "eve.state.session.tab",
   win = "eve.state.session.win",
@@ -82,7 +81,6 @@ local __lazy = {
 ---
 ---@field public buf                    eve.state.buf
 ---@field public editor                 eve.state.editor
----@field public qflist                 eve.state.qflist
 ---@field public status                 eve.state.status
 ---@field public tab                    eve.state.tab
 ---@field public win                    eve.state.win
@@ -123,7 +121,6 @@ function M.dump()
 
     buf = M.buf.dump(),
     editor = M.editor.dump(),
-    qflist = M.qflist.dump(),
     status = M.status.dump(),
     tab = M.tab.dump(),
     win = M.win.dump(),
@@ -178,7 +175,6 @@ function M.load(storage, initialize)
     ) or {}
     M.buf.load(data_session.buf)
     M.editor.load(data_session.editor)
-    M.qflist.load(data_session.qflist)
     M.status.load(data_session.status)
     M.tab.load(data_session.tab)
     M.win.load(data_session.win)

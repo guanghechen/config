@@ -372,8 +372,8 @@ function M.send_to_qflist()
   if #quickfix_items > 0 then
     M.close()
 
-    eve.state.qflist.push(quickfix_items)
-    eve.state.qflist.open_qflist(true)
+    eve.qflist.push(quickfix_items)
+    eve.qflist.open_qflist(true)
   end
 end
 

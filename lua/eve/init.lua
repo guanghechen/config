@@ -19,6 +19,7 @@ local __mods = {
   nvim = "eve.builtin.nvim",
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
+  qflist = "eve.builtin.qflist",
   reporter = "eve.builtin.reporter",
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
@@ -60,6 +61,7 @@ local __mods = {
 ---@field public nvim                   eve.builtin.nvim
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
+---@field public qflist                 eve.builtin.qflist
 ---@field public reporter               eve.builtin.reporter
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting

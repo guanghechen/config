@@ -140,7 +140,7 @@ function M.history_backward()
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "quickfix" then
-    eve.state.qflist.backward()
+    eve.qflist.backward()
     return
   end
 
@@ -168,7 +168,7 @@ function M.history_forward()
 
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "quickfix" then
-    eve.state.qflist.forward()
+    eve.qflist.forward()
     return
   end
 
