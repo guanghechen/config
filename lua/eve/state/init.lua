@@ -7,7 +7,6 @@ local __mods = {
 
   --------------------------------------------------------------------------------------------------
 
-  buf = "eve.state.session.buf",
   editor = "eve.state.session.editor",
   status = "eve.state.session.status",
   tab = "eve.state.session.tab",
@@ -45,7 +44,6 @@ local __lazy = {
 ---@field public behavior               eve.state.behavior.data
 ---@field public theme                  eve.state.theme.data
 ---
----@field public buf                    eve.state.buf.data
 ---@field public editor                 eve.state.editor.data
 ---@field public status                 eve.state.status.data
 ---@field public tab                    eve.state.tab.data
@@ -79,7 +77,6 @@ local __lazy = {
 ---@field public behavior               eve.state.behavior
 ---@field public theme                  eve.state.theme
 ---
----@field public buf                    eve.state.buf
 ---@field public editor                 eve.state.editor
 ---@field public status                 eve.state.status
 ---@field public tab                    eve.state.tab
@@ -119,7 +116,6 @@ function M.dump()
     behavior = M.behavior.dump(),
     theme = M.theme.dump(),
 
-    buf = M.buf.dump(),
     editor = M.editor.dump(),
     status = M.status.dump(),
     tab = M.tab.dump(),
@@ -173,7 +169,6 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.session) ~= 0
       and eve.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
-    M.buf.load(data_session.buf)
     M.editor.load(data_session.editor)
     M.status.load(data_session.status)
     M.tab.load(data_session.tab)
@@ -194,7 +189,6 @@ function M.save(storage)
 
   if storage.session then
     local data = {
-      buf = M.buf.dump(),
       tab = M.tab.dump(),
       win = M.win.dump(),
     }
@@ -259,7 +253,6 @@ end
 
 ---@return nil
 function M.refresh()
-  M.buf.refresh_all()
   M.win.refresh_all()
   M.tab.refresh_all()
   M.editor.on_refresh()

@@ -82,7 +82,6 @@ function M.save()
       ---@return nil
       local on_save = function()
         vim.api.nvim_buf_set_name(bufnr, next_filepath)
-        eve.state.buf.refresh(bufnr)
 
         count_ready = count_ready + 1
         check()

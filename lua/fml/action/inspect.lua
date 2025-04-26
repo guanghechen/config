@@ -6,7 +6,7 @@ local M = {}
 ---@return nil
 function M.inspect_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
+  local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
 
   if meta == nil then
     eve.reporter.info({
@@ -151,7 +151,7 @@ function M.inspect_window()
 
   local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
   local meta_win = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
-  local meta_buf = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
+  local meta_buf = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
 
   eve.reporter.info({
     from = __module_name__,

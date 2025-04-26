@@ -113,22 +113,6 @@ function M.bufs(position)
     vim.cmd(eve.command.definitions.buf.focus_right.uuid)
   end) or ""
 
-  ---@param bufnr                       integer
-  ---@return string
-  ---@return string
-  ---@return string
-  local function resolve_buf_info(bufnr)
-    local buf_meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
-    if buf_meta then
-      return buf_meta.filename, buf_meta.fileicon, buf_meta.fileicon_hl
-    end
-
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local filename = eve.path.basename(filepath) ---@type string
-    local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
-    return filename, fileicon, fileicon_hl
-  end
-
   ---@param buf                         eve.state.tab.buf.state
   ---@param index                       integer
   ---@param total                       integer
@@ -136,6 +120,11 @@ function M.bufs(position)
   ---@return string
   local function render_bufc(buf, index, total)
     local bufnr = buf.bufnr ---@type integer
+    local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
+    if meta == nil then
+      return "", ""
+    end
+
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
 
@@ -173,7 +162,9 @@ function M.bufs(position)
       slots = slots + 1
     end
 
-    local filename, fileicon, fileicon_hl = resolve_buf_info(bufnr)
+    local filename = meta.filename ---@type string
+    local fileicon = meta.fileicon ---@type string
+    local fileicon_hln = meta.fileicon_hln ---@type string
     local text_indicator = "▎" ---@type string
     local text_order = total < 2 and "" or (eve.icon.todigit_subscript(index) .. ".") ---@type string
     local text_icon = fileicon .. " " ---@type string
@@ -182,7 +173,7 @@ function M.bufs(position)
     local text_pinned = is_mod and "  " or "  " ---@type string
     local text_status = is_pinned and text_pinned or text_mod ---@type string
 
-    local hln_icon = hln_bufc .. "_" .. fileicon_hl ---@type string
+    local hln_icon = hln_bufc .. "_" .. fileicon_hln ---@type string
     local hln_status = is_pinned and hln_bufc_pinned or hln_bufc_mod ---@type string
 
     local hl_text_indicator = txt(text_indicator, hln_bufc_indicator)
@@ -209,6 +200,11 @@ function M.bufs(position)
   ---@return string
   local function render_buf(buf, index, order, marker)
     local bufnr = buf.bufnr ---@type integer
+    local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
+    if meta == nil then
+      return "", ""
+    end
+
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
 
@@ -236,8 +232,10 @@ function M.bufs(position)
       slots = slots + 1
     end
 
+    local filename = meta.filename ---@type string
+    local fileicon = meta.fileicon ---@type string
     local hln_title = hln_buf_text ---@type string
-    local filename, fileicon = resolve_buf_info(bufnr)
+
     local text_indicator = index == 1 and " " or "▏" ---@type string
     local text_order = eve.icon.todigit_subscript(order) .. marker ---@type string
     local text_icon = fileicon .. " " ---@type string
@@ -641,14 +639,12 @@ function M.dirpath(position)
     name = "dirpath",
     atomic = true,
     render = function(context)
-      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
+      local meta = eve.buf.resolve(context.bufnr) ---@type eve.builtin.buf.IMetaData|nil
       if meta == nil then
         return "", "", true
       end
 
       relpath_pieces = vim.split(meta.relpath, eve.env.PATH_SEP, { plain = true }) ---@type string[]
-
       local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
       local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
       local hl_text_sep = winnr_sourcefile == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
@@ -694,9 +690,7 @@ function M.dirpath_prominent(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context, remain_width)
-      local winnr = context.winnr ---@type integer
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local meta = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
+      local meta = eve.buf.resolve(context.bufnr) ---@type eve.builtin.buf.IMetaData|nil
       if meta == nil then
         return "", "", false
       end
@@ -774,7 +768,7 @@ function M.encoding(position)
       return eve.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
-      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local bufnr = context.bufnr ---@type integer
       local encoding = vim.bo[bufnr].fileencoding ---@type string
 
       local text = #encoding > 0 and encoding or "unknown" ---@type string
@@ -820,7 +814,7 @@ function M.fileformat(position)
       return eve.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
-      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
+      local bufnr = context.bufnr ---@type integer
       local fileformat = vim.bo[bufnr].fileformat ---@type string
 
       local icon_fileformat = fileformat_icon_map[fileformat] or eve.icon.os.current ---@type string
@@ -852,9 +846,7 @@ function M.fileindent(position)
       return eve.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
-      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local shiftwidth = vim.bo[bufnr].shiftwidth ---@type integer
-
+      local shiftwidth = vim.bo[context.bufnr].shiftwidth ---@type integer
       local text = string.format("%s %d", icon_shiftwidth, shiftwidth) ---@type string
       local hl_text = txt(text, hln_text)
       return text, hl_text, true
@@ -929,17 +921,13 @@ function M.filepath(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
-      local bufnr = vim.api.nvim_win_get_buf(context.winnr) ---@type integer
-      local filetype = vim.bo[bufnr].filetype ---@type string
-
-      if filetype == eve.filetype.NEOTREE then
+      local meta = eve.buf.resolve(context.bufnr) ---@type eve.builtin.buf.IMetaData|nil
+      if meta == nil then
         return "", "", true
       end
 
-      local meta_buf = eve.state.buf.resolve(bufnr) ---@type eve.state.buf.meta.state|nil
-      local filepath = meta_buf and meta_buf.relpath or context.filepath
-
-      local text = context.fileicon .. " " .. filepath ---@type string
+      local relpath = meta.relpath ---@type string
+      local text = context.fileicon .. " " .. relpath ---@type string
       local hl_text = btn(txt(text, hln_text), fn_on_filepath_clicked) ---@type string
       return text, hl_text, true
     end,
@@ -1160,7 +1148,7 @@ function M.lsp_symbols(position)
         return "", "", false
       end
 
-      local symbols = meta.lsp_symbols ---@type eve.state.buf.lsp.ISymbol[]|nil
+      local symbols = meta.lsp_symbols ---@type eve.state.win.lsp.ISymbol[]|nil
       if symbols == nil or #symbols < 1 then
         return "", "", false
       end

@@ -1,12 +1,18 @@
 local __module_name__ = "eve.state.session.win"
 
+---@class eve.state.win.lsp.ISymbol
+---@field public kind                   string
+---@field public name                   string
+---@field public row                    integer
+---@field public col                    integer
+
 ---@class eve.state.win.meta.data
 ---@field public winnr                  integer
 ---@field public filepath_history       eve.std.collection.history.ISerializedData
 
 ---@class eve.state.win.meta.state
 ---@field public filepath_history       eve.std.collection.IAdvanceHistory
----@field public lsp_symbols            eve.state.buf.lsp.ISymbol[]
+---@field public lsp_symbols            eve.state.win.lsp.ISymbol[]
 ---@field public winline_bufnr          integer
 
 ---@class eve.state.win.data
@@ -281,7 +287,7 @@ function M.locate_symbols(winnr, callback)
     local cursor_pos = { line = row - 1, character = col }
     local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
 
-    local pieces = meta.lsp_symbols ---@type eve.state.buf.lsp.ISymbol[]
+    local pieces = meta.lsp_symbols ---@type eve.state.win.lsp.ISymbol[]
     local N = #pieces ---@type integer
     local k = 0 ---@type integer
     if symbol_path then
@@ -289,7 +295,7 @@ function M.locate_symbols(winnr, callback)
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
         local name = symbol.name
         local position = symbol.range and symbol.range.start or symbol.location.range.start
-        ---@type eve.state.buf.lsp.ISymbol
+        ---@type eve.state.win.lsp.ISymbol
         local piece = {
           kind = kind,
           name = name,

@@ -189,6 +189,7 @@
     "buflisted",
     "bufnr",
     "bufnrs",
+    "bufpath",
     "bufs",
     "buftype",
     "buftypes",

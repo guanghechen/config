@@ -70,7 +70,6 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
               vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
               vim.bo[bufnr].swapfile = false
               vim.api.nvim_buf_set_name(bufnr, new_filepath)
-              eve.state.buf.refresh(bufnr)
             end
           end
         end
