@@ -68,38 +68,6 @@ end
 
 ---@param bufnr                         integer
 ---@return boolean
-function M.is_focusable(bufnr)
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  if buftype_attrs.focusable[buftype] ~= true then
-    return false
-  end
-
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if eve.filetype.is_not_focusable_filetype(filetype) then
-    return false
-  end
-
-  return true
-end
-
----@param bufnr                         integer
----@return boolean
-function M.is_projectable(bufnr)
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  if buftype_attrs.projectable[buftype] ~= true then
-    return false
-  end
-
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if eve.filetype.is_not_projectable_filetype(filetype) then
-    return false
-  end
-
-  return true
-end
-
----@param bufnr                         integer
----@return boolean
 function M.is_sourcefile(bufnr)
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype_attrs.sourcefile[buftype] ~= true then
@@ -108,17 +76,6 @@ function M.is_sourcefile(bufnr)
 
   local filetype = vim.bo[bufnr].filetype ---@type string
   if eve.filetype.is_not_sourcefile_filetype(filetype) then
-    return false
-  end
-
-  return true
-end
-
----@param bufnr                         integer
----@return boolean
-function M.is_swappable(bufnr)
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  if buftype_attrs.swappable[buftype] ~= true then
     return false
   end
 
