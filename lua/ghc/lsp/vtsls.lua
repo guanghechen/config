@@ -5,7 +5,7 @@ local __module_name__ = "ghc.lsp.vtsls" ---@type string
 ---@return nil
 local function on_attach(client, bufnr)
   client.commands["_typescript.moveToFileRefactoring"] = function(lsp_command)
-    local action, uri, range = table.unpack(lsp_command.arguments)
+    local action, uri, range = unpack(lsp_command.arguments)
     ---@cast action                     string
     ---@cast uri                        string
     ---@cast range                      lsp.Range

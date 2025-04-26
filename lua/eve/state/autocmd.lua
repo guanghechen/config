@@ -6,6 +6,40 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   end,
 })
 
+vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
+  group = eve.nvim.augroup("state_on_win_enter_xxxx"),
+  callback = function(arg)
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local bufname = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    local buftype = vim.bo[bufnr].buftype ---@type string
+    local filetype = vim.bo[bufnr].filetype ---@type string
+
+    vim.schedule(function()
+      local bufnr2 = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local bufname2 = vim.api.nvim_buf_get_name(bufnr2) ---@type string
+      local buftype2 = vim.bo[bufnr2].buftype ---@type string
+      local filetype2 = vim.bo[bufnr2].filetype ---@type string
+      eve.debug.log_silent({
+        arg = arg,
+        winnr = winnr,
+        b1 = {
+          bufnr = bufnr,
+          bufname = bufname,
+          buftype = buftype,
+          filetype = filetype,
+        },
+        b2 = {
+          bufnr = bufnr2,
+          bufname = bufname2,
+          buftype = buftype2,
+          filetype = filetype2,
+        },
+      })
+    end)
+  end,
+})
+
 vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
   group = eve.nvim.augroup("state_on_vim_enter_or_session_load_post"),
   callback = function()

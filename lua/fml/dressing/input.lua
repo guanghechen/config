@@ -47,7 +47,7 @@ end
 function M.input(opts, on_confirm)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
   local parent_win_cfg = vim.api.nvim_win_get_config(parent_winnr) ---@type vim.api.keyset.win_config
-  local parent_row = table.unpack(vim.api.nvim_win_get_cursor(parent_winnr))
+  local parent_row = unpack(vim.api.nvim_win_get_cursor(parent_winnr))
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
   local prompt = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string

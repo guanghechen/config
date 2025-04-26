@@ -20,18 +20,30 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end
     vim.b[bufnr].eve_last_loc = true
 
-    local filetype = vim.bo[bufnr].filetype ---@type string
-    if not eve.filetype.is_not_sourcefile(filetype) then
-      local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
-      local count = vim.api.nvim_buf_line_count(bufnr)
-      if mark[1] > 0 and mark[1] <= count then
-        pcall(vim.api.nvim_win_set_cursor, 0, mark)
-      end
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    if vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+      return
+    end
+
+    local mark = vim.api.nvim_buf_get_mark(bufnr, '"')
+    if mark == nil or type(mark[1]) ~= "number" then
+      return
+    end
+
+    local count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+    if count <= 1 then
+      return
+    end
+
+    if mark[1] > 0 and mark[1] <= count then
+      vim.schedule(function()
+        pcall(vim.api.nvim_win_set_cursor, winnr, mark)
+      end)
     end
   end,
 })
 
-vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
+vim.api.nvim_create_autocmd({ "WinEnter" }, {
   callback = function()
     local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
     local winnrs = vim.api.nvim_list_wins() ---@type integer[]
@@ -62,7 +74,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   group = eve.nvim.augroup("check_file_change"),
   callback = function()
-    if vim.o.buftype ~= "nofile" then
+    if vim.bo.buftype == "" or vim.bo.buftype == "nowrite" then
       vim.cmd.checktime()
     end
   end,
@@ -215,7 +227,9 @@ vim.api.nvim_create_autocmd("TermOpen", {
     vim.opt_local.number = false -- Disable line numbers
     vim.opt_local.relativenumber = false -- Disable relative numbers
     vim.opt_local.signcolumn = "no" -- Hide sign column
-    vim.cmd("startinsert") -- Start in insert mode
+    vim.schedule(function()
+      vim.cmd.startinsert() -- Start in insert mode
+    end)
   end,
 })
 

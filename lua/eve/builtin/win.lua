@@ -1,35 +1,43 @@
 ---@alias eve.builtin.win.TypeEnum
----| "ux-board"
----| "ux-cmdline"
----| "ux-input"
----| "ux-maximize"
----| "ux-notify"
----| "ux-popupmenu"
----| "ux-search-input"
----| "ux-search-main"
----| "ux-search-preview"
----| "ux-select-popup"
----| "ux-terminal"
----| "ux-textarea"
----| "ux-winpicker"
----| "ux-winsep"
+---| "ux:board"
+---| "ux:cmdline"
+---| "ux:input"
+---| "ux:maximize"
+---| "ux:notify"
+---| "ux:popupmenu"
+---| "ux:search-input"
+---| "ux:search-main"
+---| "ux:search-preview"
+---| "ux:select-popup"
+---| "ux:terminal"
+---| "ux:textarea"
+---| "ux:winpicker"
+---| "ux:winsep"
+---
+---| "plugin:avante"
+---| "plugin:neotree"
 
 ---@class eve.builtin.win.Types
 local Types = {
-  BOARD = "ux-board",
-  CMDLINE = "ux-cmdline",
-  INPUT = "ux-input",
-  MAXIMIZE = "ux-maximize",
-  NOTIFY = "ux-notify",
-  POPUPMENU = "ux-popupmenu",
-  SEARCH_INPUT = "ux-search-input",
-  SEARCH_MAIN = "ux-search-main",
-  SEARCH_PREVIEW = "ux-search-preview",
-  SELECT_POPUP = "ux-select-popup",
-  TERMINAL = "ux-terminal",
-  TEXTAREA = "ux-textarea",
-  WINPICKER = "ux-winpicker",
-  WINSEP = "ux-winsep",
+  -- stylua: ignore start
+  BOARD           = "ux:board",
+  CMDLINE         = "ux:cmdline",
+  INPUT           = "ux:input",
+  MAXIMIZE        = "ux:maximize",
+  NOTIFY          = "ux:notify",
+  POPUPMENU       = "ux:popupmenu",
+  SEARCH_INPUT    = "ux:search-input",
+  SEARCH_MAIN     = "ux:search-main",
+  SEARCH_PREVIEW  = "ux:search-preview",
+  SELECT_POPUP    = "ux:select-popup",
+  TERMINAL        = "ux:terminal",
+  TEXTAREA        = "ux:textarea",
+  WINPICKER       = "ux:winpicker",
+  WINSEP          = "ux:winsep",
+
+  AVANTE          = "plugin:avante",
+  NEOTREE         = "plugin:neotree",
+  -- stylua: ignore end
 }
 
 local wintype_attrs = {
@@ -45,11 +53,12 @@ local wintype_attrs = {
     [Types.SELECT_POPUP] = true,
     [Types.TERMINAL] = true,
     [Types.TEXTAREA] = true,
+
+    [Types.AVANTE] = true,
+    [Types.NEOTREE] = true,
   },
   projectable = {},
-  sourcefile = {
-    [Types.MAXIMIZE] = true,
-  },
+  sourcefile = {},
   swappable = {},
 }
 
@@ -157,8 +166,7 @@ function M.is_focusable(winnr)
     return false
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  return eve.buf.is_focusable(bufnr)
+  return true
 end
 
 ---@param winnr                       integer
@@ -177,8 +185,7 @@ function M.is_projectable(winnr)
     return false
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  return eve.buf.is_projectable(bufnr)
+  return true
 end
 
 ---@param winnr                         integer
@@ -197,8 +204,7 @@ function M.is_sourcefile(winnr)
     return false
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  return eve.buf.is_sourcefile(bufnr)
+  return true
 end
 
 ---@param winnr                       integer
@@ -213,8 +219,7 @@ function M.is_swappable(winnr)
     return false
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  return eve.buf.is_sourcefile(bufnr)
+  return true
 end
 
 ---@param winnr                         integer
