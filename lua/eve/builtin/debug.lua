@@ -13,8 +13,8 @@
 ---@class eve.builtin.debug
 local M = {}
 setmetatable(M, {
-  ---@param title                         string
-  ---@param message                       unknown
+  ---@param title                         string|unknown
+  ---@param message                       unknown|nil
   ---@return nil
   __call = function(self, title, message)
     self.log(title, message)
@@ -43,7 +43,7 @@ local function format_message(message)
   return string.format("```json\n%s\n```", vim.inspect(message))
 end
 
----@param title                         string
+---@param title                         string|unknown
 ---@param message                       unknown|nil
 function M.log(title, message)
   local text_title, text_content = "", "" ---@type string, string
@@ -65,8 +65,8 @@ function M.log(title, message)
   })
 end
 
----@param title                         string
----@param message                       unknown
+---@param title                         string|unknown
+---@param message                       unknown|nil
 function M.log_silent(title, message)
   local text_title, text_content = "", "" ---@type string, string
   if type(title) == "string" then
