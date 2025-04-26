@@ -47,6 +47,10 @@ vim.api.nvim_create_autocmd("WinNew", {
     end
 
     vim.schedule(function()
+      if not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local filetype = vim.bo[bufnr].filetype ---@type string
 

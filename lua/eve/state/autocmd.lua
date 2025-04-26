@@ -7,7 +7,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 })
 
 vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
-  group = eve.nvim.augroup("state_on_win_enter_xxxx"),
+  group = eve.nvim.augroup("state_on_WinNew_WinEnter"),
   callback = function(arg)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -16,6 +16,10 @@ vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
     local filetype = vim.bo[bufnr].filetype ---@type string
 
     vim.schedule(function()
+      if not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+
       local bufnr2 = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local bufname2 = vim.api.nvim_buf_get_name(bufnr2) ---@type string
       local buftype2 = vim.bo[bufnr2].buftype ---@type string
