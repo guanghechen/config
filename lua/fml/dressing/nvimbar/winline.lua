@@ -1,3 +1,4 @@
+local states = require("fml.dressing.nvimbar.state")
 local c = require("fml.dressing.nvimbar.components")
 
 local txt = eve.nvim.txt
@@ -6,13 +7,12 @@ local position = "f_wl" ---@type eve.ux.nvimbar.Position
 ---@param winnr                         integer
 ---@param source                        "sourcefile"|"neotree"
 ---@return eve.ux.INvimbar|nil
-local function resolve_winline_scheduler(winnr, source)
-  local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
-  local winline_map = eve.state.win.winline_map ---@type table<integer, eve.ux.INvimbar|nil>
-
-  local winline = winline_map[winnr] ---@type eve.ux.INvimbar|nil
-  if winline == nil then
-    winline = eve.ux.Nvimbar.new({
+local function resolve_nvimbar(winnr, source)
+  local winline_map = states.winline_map ---@type table<integer, fml.dressing.nvimbar.state.IWinline>
+  local winline = winline_map[winnr] ---@type fml.dressing.nvimbar.state.IWinline|nil
+  if winline == nil or winline.nvimbar:is_disposed() then
+    local nvimbar = nil ---@type eve.ux.INvimbar|nil
+    nvimbar = eve.ux.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
       comp_sep_hlname = position .. "_bg",
@@ -36,22 +36,19 @@ local function resolve_winline_scheduler(winnr, source)
         return winnr_cur > 0 and winnr_cur == context.winnr
       end,
       pre_task = function(callback)
-        if winline == nil or winline:is_disposed() then
+        if nvimbar == nil or nvimbar:is_disposed() then
           return
         end
 
         if not vim.api.nvim_win_is_valid(winnr) then
-          if winline_map[winnr] == winline then
-            winline_map[winnr] = nil
-          end
-          winline:dispose()
-          winline = nil
+          nvimbar:dispose()
+          nvimbar = nil
           return
         end
 
         if source == "sourcefile" then
-          -- Quick rerender the winline before the pre_task done to make the ui quick refresh.
-          local result = winline:render_immediately()
+          -- Quick rerender the nvimbar before the pre_task done to make the ui quick refresh.
+          local result = nvimbar:render_immediately()
           vim.wo[winnr].winbar = result
 
           eve.state.win.locate_symbols(winnr, function(err)
@@ -72,20 +69,17 @@ local function resolve_winline_scheduler(winnr, source)
         callback()
       end,
       trigger_rerender = function()
-        if winline == nil or winline:is_disposed() then
+        if nvimbar == nil or nvimbar:is_disposed() then
           return
         end
 
         if not vim.api.nvim_win_is_valid(winnr) then
-          if winline_map[winnr] == winline then
-            winline_map[winnr] = nil
-          end
-          winline:dispose()
-          winline = nil
+          nvimbar:dispose()
+          nvimbar = nil
           return
         end
 
-        local result = winline:snapshot() ---@type string
+        local result = nvimbar:snapshot() ---@type string
         vim.wo[winnr].winbar = result
       end,
       validate = function()
@@ -97,9 +91,9 @@ local function resolve_winline_scheduler(winnr, source)
 
     if source == "neotree" then
       local is_floating = eve.win.is_floating(winnr) ---@type boolean
-      winline:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
+      nvimbar:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
     else
-      winline
+      nvimbar
         ---
         :place("left", c.dirpath(position), 95)
         :place("left", c.filename(position), 100)
@@ -109,18 +103,32 @@ local function resolve_winline_scheduler(winnr, source)
       ---
       -- :place("right", c.dirpath_prominent(position), 100)
     end
+
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    if winline == nil then
+      ---@type fml.dressing.nvimbar.state.IWinline
+      winline = {
+        bufnr = bufnr,
+        nvimbar = nvimbar,
+      }
+    else
+      winline.bufnr = bufnr
+      winline.nvimbar = nvimbar
+    end
     winline_map[winnr] = winline
   end
 
+  local nvimbar = winline.nvimbar ---@type eve.ux.INvimbar
+  local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
   if meta ~= nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if meta.winline_bufnr ~= bufnr then
-      meta.winline_bufnr = bufnr
+    if winline.bufnr ~= bufnr then
+      winline.bufnr = bufnr
       meta.lsp_symbols = {}
-      vim.wo[winnr].winbar = winline:render_immediately()
+      vim.wo[winnr].winbar = nvimbar:render_immediately()
     end
   end
-  return winline
+  return nvimbar
 end
 
 ---@param winnr                         integer|nil
@@ -138,9 +146,9 @@ local function render(winnr)
 
   if filetype == eve.filetype.NEOTREE then
     if vim.o.showtabline == 0 or eve.win.is_floating(winnr) then
-      local winline = resolve_winline_scheduler(winnr, "neotree") ---@type eve.ux.INvimbar|nil
-      if winline ~= nil then
-        winline:render()
+      local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type eve.ux.INvimbar|nil
+      if nvimbar ~= nil then
+        nvimbar:render()
       end
     else
       vim.wo[winnr].winbar = nil
@@ -180,9 +188,9 @@ local function render(winnr)
     return
   end
 
-  local winline = resolve_winline_scheduler(winnr, "sourcefile") ---@type eve.ux.INvimbar|nil
-  if winline ~= nil then
-    winline:render()
+  local nvimbar = resolve_nvimbar(winnr, "sourcefile") ---@type eve.ux.INvimbar|nil
+  if nvimbar ~= nil then
+    nvimbar:render()
     return
   end
 

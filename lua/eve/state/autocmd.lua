@@ -163,7 +163,6 @@ vim.api.nvim_create_autocmd("WinClosed", {
       eve.state.status.maximized_winnrs[winnr] = nil
     end
 
-    eve.state.win.on_win_closed(winnr)
     eve.state.status.dirtier_statusline:mark_dirty()
     eve.state.status.dirtier_tabline:mark_dirty()
   end,

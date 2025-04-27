@@ -85,11 +85,6 @@ dirtier:subscribe(eve.std.Subscriber.new({
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
           if vim.bo[bufnr].filetype == filetype then
             if not eve.win.is_floating(winnr) then
-              local winline = eve.state.win.winline_map[winnr] ---@type eve.ux.INvimbar|nil
-              if winline ~= nil then
-                eve.state.win.winline_map[winnr] = nil
-                winline:dispose()
-              end
               vim.wo[winnr].winbar = nil
             end
           end

@@ -13,14 +13,12 @@ local __module_name__ = "eve.state.session.win"
 ---@class eve.state.win.meta.state
 ---@field public filepath_history       eve.std.collection.IAdvanceHistory
 ---@field public lsp_symbols            eve.state.win.lsp.ISymbol[]
----@field public winline_bufnr          integer
 
 ---@class eve.state.win.data
 ---@field public list                   eve.state.win.meta.data[]
 
 ---@class eve.state.win.state
 ---@field public __meta_map__           table<integer, eve.state.win.meta.state>
----@field public winline_map            table<integer, eve.ux.INvimbar>
 ---@field public get                    fun(winnr: integer|nil): eve.state.win.meta.state|nil
 ---@field public set                    fun(winnr: integer|nil, meta: eve.state.win.meta.state): eve.state.win.meta.state|nil
 ---@field public del                    fun(winnr: integer|nil): nil
@@ -79,7 +77,6 @@ function M.load(raw_data) end
 ----------------------------------------------------------------------------------------------------
 
 M.__meta_map__ = {} ---@type table<integer, eve.state.win.meta.state>
-M.winline_map = {} ---@type table<integer, eve.ux.INvimbar>
 
 ---@param winnr                         integer|nil
 ---@return eve.state.win.meta.state|nil
@@ -108,7 +105,6 @@ function M.del(winnr)
       M.__meta_map__[winnr] = nil
       meta.filepath_history:clear()
     end
-    M.on_win_closed(winnr)
   end
 end
 
@@ -121,7 +117,6 @@ function M.fork(winnr)
     local meta_forked = {
       filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
       lsp_symbols = vim.list_slice(meta.lsp_symbols),
-      winline_bufnr = meta.winline_bufnr,
     }
     return meta_forked
   end
@@ -156,7 +151,6 @@ function M.resolve(winnr)
   meta = {
     filepath_history = filepath_history,
     lsp_symbols = {},
-    winline_bufnr = 0,
   }
   M.__meta_map__[winnr] = meta
   return meta
@@ -342,17 +336,6 @@ function M.on_buf_enter(winnr, bufnr)
   if meta ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     meta.filepath_history:push(filepath)
-  end
-end
-
----@param winnr                         integer|nil
-function M.on_win_closed(winnr)
-  if winnr ~= nil then
-    local winline = M.winline_map[winnr] ---@type eve.ux.INvimbar|nil
-    if winline ~= nil then
-      M.winline_map[winnr] = nil
-      winline:dispose()
-    end
   end
 end
 
