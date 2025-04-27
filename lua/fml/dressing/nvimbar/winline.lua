@@ -1,8 +1,137 @@
+local __module_name__ = "fml.dressing.nvimbar.winline"
+
 local states = require("fml.dressing.nvimbar.state")
 local c = require("fml.dressing.nvimbar.components")
 
 local txt = eve.nvim.txt
 local position = "f_wl" ---@type eve.ux.nvimbar.Position
+
+---@param winnr                         integer|nil
+---@param callback                      fun(err: string|false|nil): nil
+---@return nil
+local function locate_symbols(winnr, callback)
+  if winnr == nil or not eve.win.is_valid(winnr) then
+    callback(false)
+    return
+  end
+
+  ---! Make the request to the LSP server
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if
+    vim.b[bufnr][eve.var.Names.WINLINE_DISABLED]
+    or not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
+  then
+    callback(false)
+    return
+  end
+
+  local ok, cmp = pcall(require, "blink.cmp")
+  if ok and cmp.is_visible() then
+    callback(false)
+    return
+  end
+
+  local callback_called = false ---@type boolean
+
+  ---@param err                         string|false|nil
+  ---@return nil
+  local function safe_callback(err)
+    if not callback_called then
+      callback_called = true
+      callback(err)
+      return
+    end
+  end
+
+  local cursor = vim.api.nvim_win_get_cursor(winnr) or { 1, 1 } ---@type integer[]
+  local row = cursor[1] or 1 ---@type integer
+  local col = cursor[2] or 1 ---@type integer
+
+  -- Handle the lsp request response.
+  ---@param err                         any|nil
+  ---@param symbols                     any[]
+  ---@return nil
+  local function handler(err, symbols)
+    if not vim.api.nvim_win_is_valid(winnr) then
+      safe_callback(false)
+      return
+    end
+
+    if err then
+      if type(err) == "table" then
+        if err.message == "Content modified." then
+          safe_callback(false)
+          return
+        end
+
+        if err.message == "trying to get AST for non-added document" then
+          if vim.api.nvim_buf_is_valid(bufnr) then
+            vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] = true
+          end
+        end
+      end
+      if eve.state.status.suppress_warning:snapshot() then
+        safe_callback(false)
+        return
+      end
+
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "locate_symbols",
+        message = "Failed to request document symbols",
+        details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
+      })
+      safe_callback(err.message or "Failed to request document symbols")
+      return
+    end
+
+    local winline = states.winline_map[winnr] ---@type fml.dressing.nvimbar.state.IWinline
+    if winline == nil or winline.lsp_symbols == nil or type(symbols) ~= "table" then
+      safe_callback(false)
+      return
+    end
+
+    local cursor_pos = { line = row - 1, character = col }
+    local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
+    local pieces = winline.lsp_symbols ---@type fml.dressing.nvimbar.state.ILspSymbol[]
+
+    local N = #pieces ---@type integer
+    local k = 0 ---@type integer
+    if symbol_path then
+      for _, symbol in ipairs(symbol_path) do
+        local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+        local name = symbol.name
+        local pos = symbol.range and symbol.range.start or symbol.location.range.start
+        ---@type fml.dressing.nvimbar.state.ILspSymbol
+        local piece = {
+          kind = kind,
+          name = name,
+          row = pos.line + 1,
+          col = pos.character + 1,
+        }
+
+        k = k + 1
+        pieces[k] = piece
+      end
+    end
+    for i = k + 1, N, 1 do
+      pieces[i] = nil
+    end
+    safe_callback()
+  end
+
+  eve.std.timer.set_timeout(function()
+    safe_callback("Request document symbols timeout")
+  end, 10000)
+
+  ---! Make the request to the LSP server
+  vim.lsp.buf_request(
+    bufnr,
+    "textDocument/documentSymbol",
+    { textDocument = vim.lsp.util.make_text_document_params() },
+    handler
+  )
+end
 
 ---@param winnr                         integer
 ---@param source                        "sourcefile"|"neotree"
@@ -51,7 +180,7 @@ local function resolve_nvimbar(winnr, source)
           local result = nvimbar:render_immediately()
           vim.wo[winnr].winbar = result
 
-          eve.state.win.locate_symbols(winnr, function(err)
+          locate_symbols(winnr, function(err)
             if err == nil then
               callback()
               return
@@ -89,10 +218,13 @@ local function resolve_nvimbar(winnr, source)
       end,
     })
 
-    if source == "neotree" then
-      local is_floating = eve.win.is_floating(winnr) ---@type boolean
-      nvimbar:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
-    else
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    winline = winline or { bufnr = bufnr, nvimbar = nvimbar } ---@type fml.dressing.nvimbar.state.IWinline
+
+    winline.nvimbar = nvimbar
+    winline_map[winnr] = winline
+
+    if source == "sourcefile" then
       nvimbar
         ---
         :place("left", c.dirpath(position), 95)
@@ -102,29 +234,21 @@ local function resolve_nvimbar(winnr, source)
         :place("center", c.debug_render_count(position), 100)
       ---
       -- :place("right", c.dirpath_prominent(position), 100)
-    end
 
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if winline == nil then
-      ---@type fml.dressing.nvimbar.state.IWinline
-      winline = {
-        bufnr = bufnr,
-        nvimbar = nvimbar,
-      }
+      winline.lsp_symbols = winline.lsp_symbols or {}
+    elseif source == "neotree" then
+      local is_floating = eve.win.is_floating(winnr) ---@type boolean
+      nvimbar:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
     else
-      winline.bufnr = bufnr
-      winline.nvimbar = nvimbar
     end
-    winline_map[winnr] = winline
   end
 
   local nvimbar = winline.nvimbar ---@type eve.ux.INvimbar
-  local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
-  if meta ~= nil then
+  if winline.lsp_symbols ~= nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if winline.bufnr ~= bufnr then
       winline.bufnr = bufnr
-      meta.lsp_symbols = {}
+      winline.lsp_symbols = {}
       vim.wo[winnr].winbar = nvimbar:render_immediately()
     end
   end

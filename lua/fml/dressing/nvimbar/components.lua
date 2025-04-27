@@ -1,5 +1,6 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
+local states = require("fml.dressing.nvimbar.state")
 local btn = eve.nvim.btn
 local txt = eve.nvim.txt
 local decode_btn_args = eve.nvim.decode_btn_args
@@ -1143,12 +1144,12 @@ function M.lsp_symbols(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
-      local meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
-      if meta == nil then
+      local winline = states.winline_map[winnr] ---@type fml.dressing.nvimbar.state.IWinline|nil
+      if winline == nil then
         return "", "", false
       end
 
-      local symbols = meta.lsp_symbols ---@type eve.state.win.lsp.ISymbol[]|nil
+      local symbols = winline.lsp_symbols ---@type fml.dressing.nvimbar.state.ILspSymbol[]|nil
       if symbols == nil or #symbols < 1 then
         return "", "", false
       end

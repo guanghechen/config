@@ -1,18 +1,9 @@
-local __module_name__ = "eve.state.session.win"
-
----@class eve.state.win.lsp.ISymbol
----@field public kind                   string
----@field public name                   string
----@field public row                    integer
----@field public col                    integer
-
 ---@class eve.state.win.meta.data
 ---@field public winnr                  integer
 ---@field public filepath_history       eve.std.collection.history.ISerializedData
 
 ---@class eve.state.win.meta.state
 ---@field public filepath_history       eve.std.collection.IAdvanceHistory
----@field public lsp_symbols            eve.state.win.lsp.ISymbol[]
 
 ---@class eve.state.win.data
 ---@field public list                   eve.state.win.meta.data[]
@@ -116,7 +107,6 @@ function M.fork(winnr)
     ---@type eve.state.win.meta.state
     local meta_forked = {
       filepath_history = meta.filepath_history:fork({ name = "win_filepath" }),
-      lsp_symbols = vim.list_slice(meta.lsp_symbols),
     }
     return meta_forked
   end
@@ -150,7 +140,6 @@ function M.resolve(winnr)
   ---@type eve.state.win.meta.state
   meta = {
     filepath_history = filepath_history,
-    lsp_symbols = {},
   }
   M.__meta_map__[winnr] = meta
   return meta
@@ -191,133 +180,6 @@ function M.refresh_tabpage_wins(tabnr)
       M.refresh(winnr)
     end
   end
-end
-
----@param winnr                         integer|nil
----@param callback                      fun(err: string|false|nil): nil
----@return nil
-function M.locate_symbols(winnr, callback)
-  if winnr == nil or not eve.win.is_valid(winnr) then
-    callback(false)
-    return
-  end
-
-  ---! Make the request to the LSP server
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  if
-    vim.b[bufnr][eve.var.Names.WINLINE_DISABLED]
-    or not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
-  then
-    callback(false)
-    return
-  end
-
-  local ok, cmp = pcall(require, "blink.cmp")
-  if ok and cmp.is_visible() then
-    callback(false)
-    return
-  end
-
-  local callback_called = false ---@type boolean
-
-  ---@param err                         string|false|nil
-  ---@return nil
-  local function safe_callback(err)
-    if not callback_called then
-      callback_called = true
-      callback(err)
-      return
-    end
-  end
-
-  local cursor = vim.api.nvim_win_get_cursor(winnr) or { 1, 1 } ---@type integer[]
-  local row = cursor[1] or 1 ---@type integer
-  local col = cursor[2] or 1 ---@type integer
-
-  -- Handle the lsp request response.
-  ---@param err                         any|nil
-  ---@param symbols                     any[]
-  ---@return nil
-  local function handler(err, symbols)
-    if not vim.api.nvim_win_is_valid(winnr) then
-      safe_callback(false)
-      return
-    end
-
-    if err then
-      if type(err) == "table" then
-        if err.message == "Content modified." then
-          safe_callback(false)
-          return
-        end
-
-        if err.message == "trying to get AST for non-added document" then
-          if vim.api.nvim_buf_is_valid(bufnr) then
-            vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] = true
-          end
-        end
-      end
-      if eve.state.status.suppress_warning:snapshot() then
-        safe_callback(false)
-        return
-      end
-
-      eve.reporter.error({
-        from = __module_name__,
-        subject = "locate_symbols",
-        message = "Failed to request document symbols",
-        details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
-      })
-      safe_callback(err.message or "Failed to request document symbols")
-      return
-    end
-
-    local meta = M.resolve(winnr) ---@type eve.state.win.meta.state|nil
-    if meta == nil or type(symbols) ~= "table" then
-      safe_callback(false)
-      return
-    end
-
-    local cursor_pos = { line = row - 1, character = col }
-    local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
-
-    local pieces = meta.lsp_symbols ---@type eve.state.win.lsp.ISymbol[]
-    local N = #pieces ---@type integer
-    local k = 0 ---@type integer
-    if symbol_path then
-      for _, symbol in ipairs(symbol_path) do
-        local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
-        local name = symbol.name
-        local position = symbol.range and symbol.range.start or symbol.location.range.start
-        ---@type eve.state.win.lsp.ISymbol
-        local piece = {
-          kind = kind,
-          name = name,
-          row = position.line + 1,
-          col = position.character + 1,
-        }
-
-        k = k + 1
-        pieces[k] = piece
-      end
-    end
-    for i = k + 1, N, 1 do
-      pieces[i] = nil
-    end
-    safe_callback()
-  end
-
-  eve.std.timer.set_timeout(function()
-    safe_callback("Request document symbols timeout")
-  end, 10000)
-
-  ---! Make the request to the LSP server
-  vim.lsp.buf_request(
-    bufnr,
-    "textDocument/documentSymbol",
-    { textDocument = vim.lsp.util.make_text_document_params() },
-    handler
-  )
 end
 
 ---@param winnr                         integer

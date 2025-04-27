@@ -1,5 +1,12 @@
+---@class fml.dressing.nvimbar.state.ILspSymbol
+---@field public kind                   string
+---@field public name                   string
+---@field public row                    integer
+---@field public col                    integer
+
 ---@class fml.dressing.nvimbar.state.IWinline
 ---@field public bufnr                  integer
+---@field public lsp_symbols            fml.dressing.nvimbar.state.ILspSymbol[]|nil
 ---@field public nvimbar                eve.ux.INvimbar
 
 ---@class fml.dressing.nvimbar.state
