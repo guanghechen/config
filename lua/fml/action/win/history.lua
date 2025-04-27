@@ -50,12 +50,12 @@ local function get_history_select()
         return { items = {} }
       end
 
-      local _, present_ordinal = meta.filepath_history:present() ---@type eve.builtin.win.IFilepathHistoryItem|nil, integer|nil
+      local _, present_ordinal = meta.history:present() ---@type eve.builtin.win.IFilepathHistoryItem|nil, integer|nil
       if present_ordinal ~= nil then
         uuid_present = gen_uuid_from_ordinal(present_ordinal)
       end
 
-      for history_item, ordinal in meta.filepath_history:iterator_reverse() do
+      for history_item, ordinal in meta.history:iterator_reverse() do
         local bufnr = history_item.bufnr ---@type integer|nil
         if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
           local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
@@ -63,8 +63,6 @@ local function get_history_select()
           local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
           local filename = eve.path.basename(filepath) ---@type string
           local icon, icon_hln = eve.fn.fileicon(filename) ---@type string, string
-
-          local text = string.format("%2d %s %s", ordinal, icon, relative_filepath) ---@type string
 
           ---@type fml.action.win.history.IItemData
           local data = {
@@ -76,7 +74,7 @@ local function get_history_select()
           }
 
           ---@type eve.ux.select.IItem
-          local item = { uuid = uuid, text = text, data = data }
+          local item = { uuid = uuid, text = relative_filepath, data = data }
           items[#items + 1] = item
 
           goto continue
@@ -170,7 +168,7 @@ local function get_history_select()
           if item_index ~= nil and winnr_sourcefile ~= nil then
             local meta = eve.win.resolve(winnr_sourcefile) ---@type eve.builtin.win.IMetaData|nil
             if meta ~= nil then
-              meta.filepath_history:go(item_index)
+              meta.history:go(item_index)
             end
           end
 
@@ -181,7 +179,7 @@ local function get_history_select()
             if data.bufnr ~= nil and vim.api.nvim_buf_is_valid(data.bufnr) then
               vim.api.nvim_win_set_buf(winnr_sourcefile, data.bufnr)
             elseif data.filepath ~= nil then
-              local bufnr_target = eve.buf.open_filepath(data.filepath) ---@type integer|nil
+              local bufnr_target = eve.buf.loadfile(data.filepath) ---@type integer|nil
               if bufnr_target ~= nil then
                 data.bufnr = bufnr_target ---@type integer
                 vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr_target)
@@ -226,7 +224,7 @@ function M.history_backward()
     return
   end
 
-  local history = meta.filepath_history ---@type eve.std.collection.IHistory|nil
+  local history = meta.history ---@type eve.std.collection.IHistory|nil
   if history == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -254,7 +252,7 @@ function M.history_backward()
     end
 
     if item.filepath ~= nil then
-      bufnr_target = eve.buf.open_filepath(item.filepath) ---@type integer|nil
+      bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
       if bufnr_target ~= nil then
         item.bufnr = bufnr_target ---@type integer
         break
@@ -293,7 +291,7 @@ function M.history_forward()
     return
   end
 
-  local history = meta.filepath_history ---@type eve.std.collection.IHistory|nil
+  local history = meta.history ---@type eve.std.collection.IHistory|nil
   if history == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -321,7 +319,7 @@ function M.history_forward()
     end
 
     if item.filepath ~= nil and eve.path.is_exist_filepath(item.filepath) then
-      bufnr_target = vim.fn.bufadd(item.filepath) ---@type integer
+      bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
       if bufnr_target ~= nil then
         item.bufnr = bufnr_target ---@type integer
         break

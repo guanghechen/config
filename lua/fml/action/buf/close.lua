@@ -32,7 +32,7 @@ function M.close()
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer|nil
-  local history = meta.filepath_history ---@type eve.std.collection.IHistory|nil
+  local history = meta.history ---@type eve.std.collection.IHistory|nil
   if history == nil then
     return
   end
@@ -40,8 +40,12 @@ function M.close()
   local bufnr_target = nil ---@type integer|nil
   while true do
     local item, is_bot = history:backward()
-    ---@cast item eve.builtin.win.IFilepathHistoryItem
+    ---@cast item eve.builtin.win.IFilepathHistoryItem|nil
     ---@cast is_bot boolean
+
+    if item == nil then
+      break
+    end
 
     if item.bufnr ~= nil and vim.api.nvim_buf_is_valid(item.bufnr) then
       bufnr_target = item.bufnr ---@type integer
@@ -49,7 +53,7 @@ function M.close()
       break
     end
 
-    bufnr_target = eve.buf.open_filepath(item.filepath) ---@type integer|nil
+    bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
     if bufnr_target ~= nil then
       item.bufnr = bufnr_target ---@type integer
       break

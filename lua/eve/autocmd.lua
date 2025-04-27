@@ -68,7 +68,7 @@ vim.api.nvim_create_autocmd("WinNew", {
 })
 
 vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-  group = eve.nvim.augroup("state_on_buf_win_enter"),
+  group = eve.nvim.augroup("bootstrap_on_BufWinEnter"),
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -82,3 +82,45 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     end)
   end,
 })
+
+----------------------------------------------------------------------------------------------------
+
+if 1 == 0 then
+  vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
+    group = eve.nvim.augroup("debug_on_WinNew_WinEnter"),
+    callback = function(arg)
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local bufname = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local buftype = vim.bo[bufnr].buftype ---@type string
+      local filetype = vim.bo[bufnr].filetype ---@type string
+
+      vim.schedule(function()
+        if not vim.api.nvim_win_is_valid(winnr) then
+          return
+        end
+
+        local bufnr2 = vim.api.nvim_win_get_buf(winnr) ---@type integer
+        local bufname2 = vim.api.nvim_buf_get_name(bufnr2) ---@type string
+        local buftype2 = vim.bo[bufnr2].buftype ---@type string
+        local filetype2 = vim.bo[bufnr2].filetype ---@type string
+        eve.debug.log_silent({
+          arg = arg,
+          winnr = winnr,
+          b1 = {
+            bufnr = bufnr,
+            bufname = bufname,
+            buftype = buftype,
+            filetype = filetype,
+          },
+          b2 = {
+            bufnr = bufnr2,
+            bufname = bufname2,
+            buftype = buftype2,
+            filetype = filetype2,
+          },
+        })
+      end)
+    end,
+  })
+end

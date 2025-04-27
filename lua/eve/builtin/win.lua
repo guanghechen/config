@@ -45,7 +45,7 @@ local Types = {
 ---@field public filepath               string|nil
 
 ---@class eve.builtin.win.IMetaData
----@field public filepath_history       eve.std.collection.IHistory|nil
+---@field public history                eve.std.collection.IHistory|nil
 
 local wintype_attrs = {
   focusable = {
@@ -69,7 +69,7 @@ local wintype_attrs = {
   swappable = {},
 }
 
-local filepath_history_map = {} ---@type table<integer, eve.std.collection.IHistory>
+local history_map = {} ---@type table<integer, eve.std.collection.IHistory>
 
 ---@class eve.builtin.win
 local M = {}
@@ -286,18 +286,18 @@ function M.fork(winnr_source, winnr_target)
     return nil
   end
 
-  local filepath_history = meta_source.filepath_history ---@type eve.std.collection.IHistory
-  local filepath_history_forked = filepath_history:fork({ name = "win_filepath" }) ---@type eve.std.collection.IHistory
+  local history = meta_source.history ---@type eve.std.collection.IHistory
+  local history_forked = history:fork({ name = "win_filepath" }) ---@type eve.std.collection.IHistory
 
-  local filepath_history_target = filepath_history_map[winnr_target] ---@type eve.std.collection.IHistory|nil
-  if filepath_history_target ~= nil then
-    filepath_history_map[winnr_target]:clear()
+  local history_target = history_map[winnr_target] ---@type eve.std.collection.IHistory|nil
+  if history_target ~= nil then
+    history_map[winnr_target]:clear()
   end
-  filepath_history_map[winnr_target] = filepath_history_forked
+  history_map[winnr_target] = history_forked
 
   ---@type eve.builtin.win.IMetaData|nil
   local meta_target = {
-    filepath_history = filepath_history_forked,
+    history = history_forked,
   }
   return meta_target
 end
@@ -318,18 +318,23 @@ function M.resolve(winnr)
     return nil
   end
 
-  local filepath_history = filepath_history_map[winnr] ---@type eve.std.collection.IHistory|nil
-  if filepath_history == nil then
-    filepath_history = eve.std.History.new({
+  local history = history_map[winnr] ---@type eve.std.collection.IHistory|nil
+  if history == nil then
+    history = eve.std.History.new({
       name = "win#bufs",
       capacity = eve.setting.WIN_BUF_HISTORY_CAPACITY,
+      ---@param x                       eve.builtin.win.IFilepathHistoryItem
+      ---@param y                       eve.builtin.win.IFilepathHistoryItem
+      equals = function(x, y)
+        return x == y or (x.bufnr == y.bufnr and x.filepath == y.filepath)
+      end,
     })
-    filepath_history_map[winnr] = filepath_history
+    history_map[winnr] = history
   end
 
   ---@type eve.builtin.win.IMetaData
   local meta = {
-    filepath_history = filepath_history,
+    history = history,
   }
   return meta
 end
@@ -337,10 +342,10 @@ end
 ---@param winnr                         integer
 ---@return nil
 function M.on_close(winnr)
-  local filepath_history = filepath_history_map[winnr] ---@type eve.std.collection.IHistory|nil
-  if filepath_history ~= nil then
-    filepath_history:clear()
-    filepath_history_map[winnr] = nil
+  local history = history_map[winnr] ---@type eve.std.collection.IHistory|nil
+  if history ~= nil then
+    history:clear()
+    history_map[winnr] = nil
   end
 end
 
@@ -348,12 +353,20 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.on_buf_enter(winnr, bufnr)
-  local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
-  if meta ~= nil then
-    local filepath = meta.filepath ---@type string
-    local filepath_history = M.resolve(winnr).filepath_history ---@type eve.std.collection.IHistory
-    filepath_history:push(filepath)
+  local meta_win = M.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
+  if meta_win == nil then
+    return
   end
+
+  local meta_buf = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
+  if meta_buf == nil then
+    return
+  end
+
+  local filepath = meta_buf.filepath ---@type string
+  local history = meta_win.history ---@type eve.std.collection.IHistory
+  local item = { bufnr = bufnr, filepath = filepath } ---@type eve.builtin.win.IFilepathHistoryItem
+  history:push(item)
 end
 
 return M
