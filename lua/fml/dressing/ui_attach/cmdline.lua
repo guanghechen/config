@@ -299,23 +299,12 @@ function M._show_confirm(state, msg_show_task)
 
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
 
-  ---! make the lines more compact
-  do
-    for _, hl in ipairs(highlights) do
-      hl.coll = hl.coll + 1
-      hl.colr = hl.colr + 1
-    end
-    for index, line in ipairs(lines) do
-      lines[index] = string.format(" %s ", line)
-    end
-  end
-
   local width = 10 --@type integer
   for _, line in ipairs(lines) do
     local w = vim.api.nvim_strwidth(line) ---@type integer
     width = width < w and w or width ---@type integer
   end
-  width = math.min(width, math.floor(vim.o.columns * 0.8), 80) ---@type integer
+  local width_message = width ---@type integer
 
   ---! format the confirmation buttons.
   do
@@ -325,7 +314,12 @@ function M._show_confirm(state, msg_show_task)
       table.insert(buttons, button)
     end
 
-    local line = table.concat(buttons, "  ") ---@type string
+    local line = "  " .. table.concat(buttons, "  ") .. "  " ---@type string
+    local line_width = vim.api.nvim_strwidth(line) ---@type integer
+
+    width = math.max(width, line_width) ---@type integer
+    width = math.min(width, math.floor(vim.o.columns * 0.8), 80) ---@type integer
+
     local width_blank = width - vim.api.nvim_strwidth(line) ---@type integer
     local line_offset = math.max(0, math.floor((width - width_blank) / 2)) ---@type integer
     if line_offset > 0 then
@@ -349,6 +343,21 @@ function M._show_confirm(state, msg_show_task)
 
     lines[#lines + 1] = line
     lines[#lines + 1] = ""
+  end
+
+  ---! make the lines more compact
+  do
+    if width_message <= width then
+      local offset_left = math.floor((width - width_message) / 2) ---@type integer
+      local padding_left = string.rep(" ", offset_left) ---@type string
+      for _, hl in ipairs(highlights) do
+        hl.coll = hl.coll + offset_left
+        hl.colr = hl.colr + offset_left
+      end
+      for index, line in ipairs(lines) do
+        lines[index] = string.format("%s%s", padding_left, line)
+      end
+    end
   end
 
   local height = math.min(math.floor(vim.o.lines * 0.8), #lines) ---@type integer
