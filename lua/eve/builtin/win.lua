@@ -40,6 +40,13 @@ local Types = {
   -- stylua: ignore end
 }
 
+---@class eve.builtin.win.IFilepathHistoryItem
+---@field public bufnr                  integer|nil
+---@field public filepath               string|nil
+
+---@class eve.builtin.win.IMetaData
+---@field public filepath_history       eve.std.collection.IHistory|nil
+
 local wintype_attrs = {
   focusable = {
     [Types.BOARD] = true,
@@ -61,6 +68,8 @@ local wintype_attrs = {
   sourcefile = {},
   swappable = {},
 }
+
+local filepath_history_map = {} ---@type table<integer, eve.std.collection.IHistory>
 
 ---@class eve.builtin.win
 local M = {}
@@ -255,6 +264,96 @@ end
 ---@return integer|nil
 function M.pick_swappable(winnr_candidate)
   return eve.winpicker.pick_window(M.is_swappable, winnr_candidate, false) ---@type integer|nil
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@param winnr_source                  integer
+---@param winnr_target                  integer
+---@return eve.builtin.win.IMetaData|nil
+function M.fork(winnr_source, winnr_target)
+  if
+    winnr_source < 1
+    or winnr_target < 1
+    or not vim.api.nvim_win_is_valid(winnr_source)
+    or not vim.api.nvim_win_is_valid(winnr_target)
+  then
+    return nil
+  end
+
+  local meta_source = M.resolve(winnr_source) ---@type eve.builtin.win.IMetaData|nil
+  if meta_source == nil then
+    return nil
+  end
+
+  local filepath_history = meta_source.filepath_history ---@type eve.std.collection.IHistory
+  local filepath_history_forked = filepath_history:fork({ name = "win_filepath" }) ---@type eve.std.collection.IHistory
+
+  local filepath_history_target = filepath_history_map[winnr_target] ---@type eve.std.collection.IHistory|nil
+  if filepath_history_target ~= nil then
+    filepath_history_map[winnr_target]:clear()
+  end
+  filepath_history_map[winnr_target] = filepath_history_forked
+
+  ---@type eve.builtin.win.IMetaData|nil
+  local meta_target = {
+    filepath_history = filepath_history_forked,
+  }
+  return meta_target
+end
+
+---@param winnr                         integer|nil
+---@return eve.builtin.win.IMetaData|nil
+function M.resolve(winnr)
+  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    return nil
+  end
+
+  local wintype = M.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
+  if wintype ~= nil then
+    return nil
+  end
+
+  if M.is_floating(winnr) then
+    return nil
+  end
+
+  local filepath_history = filepath_history_map[winnr] ---@type eve.std.collection.IHistory|nil
+  if filepath_history == nil then
+    filepath_history = eve.std.History.new({
+      name = "win#bufs",
+      capacity = eve.setting.WIN_BUF_HISTORY_CAPACITY,
+    })
+    filepath_history_map[winnr] = filepath_history
+  end
+
+  ---@type eve.builtin.win.IMetaData
+  local meta = {
+    filepath_history = filepath_history,
+  }
+  return meta
+end
+
+---@param winnr                         integer
+---@return nil
+function M.on_close(winnr)
+  local filepath_history = filepath_history_map[winnr] ---@type eve.std.collection.IHistory|nil
+  if filepath_history ~= nil then
+    filepath_history:clear()
+    filepath_history_map[winnr] = nil
+  end
+end
+
+---@param winnr                         integer
+---@param bufnr                         integer
+---@return nil
+function M.on_buf_enter(winnr, bufnr)
+  local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
+  if meta ~= nil then
+    local filepath = meta.filepath ---@type string
+    local filepath_history = M.resolve(winnr).filepath_history ---@type eve.std.collection.IHistory
+    filepath_history:push(filepath)
+  end
 end
 
 return M

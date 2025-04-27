@@ -801,12 +801,6 @@ command
 --[win] picker--------------------------------------------------------------------------------------
 command
   .implement({
-    uuid = K.win.mark_sourcefile.uuid,
-    action = function()
-      require("fml.action.win.picker").mark_sourcefile()
-    end,
-  })
-  .implement({
     uuid = K.win.focus.uuid,
     action = function()
       require("fml.action.win.picker").focus()

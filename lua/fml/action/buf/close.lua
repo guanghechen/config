@@ -19,34 +19,52 @@ end
 ---@class fml.action.buf
 local M = {}
 
----@param bufnr                         integer|nil
 ---@return nil
-function M.close(bufnr)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  if bufnr ~= nil then
-    if eve.buf.is_valid(bufnr) then
-      close(tabnr, { bufnr })
-    end
-    return
-  end
-
-  bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
-  if bufnr == nil then
-    return
-  end
-
+function M.close()
   local winnr = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
-  local win_meta = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
+  if winnr == nil then
+    return
+  end
 
-  ---! Set the buf to the last buf in the history before closing the current buf to avoid unexpected behaviors.
-  if winnr ~= nil and win_meta ~= nil then
-    local last_filepath = win_meta.filepath_history:backward() ---@type string|nil
-    local bufnr_last = eve.buf.locate_by_filepath(last_filepath) ---@type integer|nil
-    if bufnr_last ~= nil and vim.api.nvim_buf_is_valid(bufnr_last) then
-      vim.api.nvim_win_set_buf(winnr, bufnr_last)
+  local meta = eve.win.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
+  if meta == nil then
+    return
+  end
+
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer|nil
+  local history = meta.filepath_history ---@type eve.std.collection.IHistory|nil
+  if history == nil then
+    return
+  end
+
+  local bufnr_target = nil ---@type integer|nil
+  while true do
+    local item, is_bot = history:backward()
+    ---@cast item eve.builtin.win.IFilepathHistoryItem
+    ---@cast is_bot boolean
+
+    if item.bufnr ~= nil and vim.api.nvim_buf_is_valid(item.bufnr) then
+      bufnr_target = item.bufnr ---@type integer
+      item.filepath = vim.api.nvim_buf_get_name(bufnr_target) ---@type string
+      break
+    end
+
+    bufnr_target = eve.buf.open_filepath(item.filepath) ---@type integer|nil
+    if bufnr_target ~= nil then
+      item.bufnr = bufnr_target ---@type integer
+      break
+    end
+
+    if is_bot then
+      break
     end
   end
 
+  if bufnr_target ~= nil then
+    vim.api.nvim_win_set_buf(winnr, bufnr_target)
+  end
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   close(tabnr, { bufnr })
 end
 

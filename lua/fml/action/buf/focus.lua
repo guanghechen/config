@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.buf" ---@type string
+local __module_name__ = "fml.action.buf.focus" ---@type string
 
 ---@class fml.action.buf
 local M = {}

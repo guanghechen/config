@@ -96,6 +96,24 @@ function M.locate_by_filepath(filepath)
   return nil
 end
 
+---@param filepath                      string
+---@return integer|nil
+function M.open_filepath(filepath)
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    local bufpath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    if bufpath == filepath then
+      return bufnr
+    end
+  end
+
+  if eve.path.is_exist_filepath(filepath) then
+    local bufnr = vim.fn.bufadd(filepath) ---@type integer
+    vim.fn.bufload(bufnr)
+    return bufnr
+  end
+end
+
 ---@param cwd                           string
 ---@param existed_paths                 ?table<string, boolean>
 ---@return string|nil
@@ -120,9 +138,13 @@ function M.pick_filepath(cwd, existed_paths)
   return nil
 end
 
----@param bufnr                         integer
+---@param bufnr                         integer|nil
 ---@return eve.builtin.buf.IMetaData|nil
 function M.resolve(bufnr)
+  if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return nil
+  end
+
   if not vim.bo[bufnr].buflisted then
     return nil
   end

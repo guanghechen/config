@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.win" ---@type string
+local __module_name__ = "fml.action.win.focus" ---@type string
 
 ---@return nil
 local function vim_navigate_window_prev()

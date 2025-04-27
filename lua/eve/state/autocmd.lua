@@ -127,12 +127,7 @@ vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     local bufnr = arg.buf ---@type integer
 
     vim.schedule(function()
-      eve.state.win.on_buf_enter(winnr, bufnr)
       eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
-
-      eve.state.status.dirty_winline_nr:next(winnr)
-      eve.state.status.dirtier_statusline:mark_dirty()
-      eve.state.status.dirtier_tabline:mark_dirty()
     end)
   end,
 })

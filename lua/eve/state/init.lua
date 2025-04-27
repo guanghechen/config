@@ -10,7 +10,6 @@ local __mods = {
   editor = "eve.state.session.editor",
   status = "eve.state.session.status",
   tab = "eve.state.session.tab",
-  win = "eve.state.session.win",
 
   --------------------------------------------------------------------------------------------------
 
@@ -47,7 +46,6 @@ local __lazy = {
 ---@field public editor                 eve.state.editor.data
 ---@field public status                 eve.state.status.data
 ---@field public tab                    eve.state.tab.data
----@field public win                    eve.state.win.data
 ---
 ---@field public bookmark               eve.state.bookmark.data
 ---@field public flight                 eve.state.flight.data
@@ -80,7 +78,6 @@ local __lazy = {
 ---@field public editor                 eve.state.editor
 ---@field public status                 eve.state.status
 ---@field public tab                    eve.state.tab
----@field public win                    eve.state.win
 ---
 ---@field public bookmark               eve.state.bookmark
 ---@field public flight                 eve.state.flight
@@ -119,7 +116,6 @@ function M.dump()
     editor = M.editor.dump(),
     status = M.status.dump(),
     tab = M.tab.dump(),
-    win = M.win.dump(),
 
     bookmark = M.bookmark.dump(),
     flight = M.flight.dump(),
@@ -172,7 +168,6 @@ function M.load(storage, initialize)
     M.editor.load(data_session.editor)
     M.status.load(data_session.status)
     M.tab.load(data_session.tab)
-    M.win.load(data_session.win)
   end
 end
 
@@ -190,7 +185,6 @@ function M.save(storage)
   if storage.session then
     local data = {
       tab = M.tab.dump(),
-      win = M.win.dump(),
     }
     eve.fs.write_json(storage.session, data, true)
   end
@@ -253,7 +247,6 @@ end
 
 ---@return nil
 function M.refresh()
-  M.win.refresh_all()
   M.tab.refresh_all()
   M.editor.on_refresh()
 

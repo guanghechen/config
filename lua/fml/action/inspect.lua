@@ -150,7 +150,7 @@ function M.inspect_window()
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
   local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  local meta_win = eve.state.win.resolve(winnr) ---@type eve.state.win.meta.state|nil
+  local meta_win = eve.win.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
   local meta_buf = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
 
   eve.reporter.info({
@@ -170,6 +170,7 @@ function M.inspect_window()
         projectable = eve.win.is_projectable(winnr),
         sourcefile = eve.win.is_sourcefile(winnr),
         swappable = eve.win.is_swappable(winnr),
+        winbar = vim.wo[winnr].winbar,
       },
       z_meta = {
         buf = meta_buf,
