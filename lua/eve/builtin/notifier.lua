@@ -499,8 +499,8 @@ function M.handle()
       __WINS__[N] = win
     end
   end
-  while #__WINS__ > N do
-    __WINS__[#__WINS__] = nil
+  for index = #__WINS__, N + 1, -1 do
+    __WINS__[index] = nil
   end
 
   while true do
@@ -561,22 +561,16 @@ function M.handle()
     end
 
     if n < N then
-      for index = n + 1, N, 1 do
-        local win = __WINS__[index] ---@type eve.builtin.notifier.IWindow
-        table.insert(invalid_wins, win)
-      end
       for index = N, n + 1, -1 do
         local win = __WINS__[index] ---@type eve.builtin.notifier.IWindow
+        __WINS__[index] = nil
         __TASKS__:enqueue_front(win.task)
-      end
-
-      while #__WINS__ > n do
-        __WINS__[#__WINS__] = nil
+        invalid_wins[#invalid_wins + 1] = win ---@type eve.builtin.notifier.IWindow
       end
       break
     end
 
-    if candidate == nil then
+    if not consumed or candidate == nil then
       break
     end
   end
@@ -630,7 +624,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
+vim.api.nvim_create_autocmd({ "VimResized" }, {
   group = eve.nvim.augroup("notifier_on_resize"),
   callback = function()
     M.schedule()
