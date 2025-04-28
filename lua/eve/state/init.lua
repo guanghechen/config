@@ -401,7 +401,7 @@ function M.watch_changes()
     true
   )
 
-  ---! Save when leave the eve.editor.
+  ---! Save when leave the editor.
   M.add_disposable(eve.std.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean

@@ -6,7 +6,6 @@ local __mods = {
   clipboard = "eve.builtin.clipboard",
   command = "eve.builtin.command",
   debug = "eve.builtin.debug",
-  editor = "eve.builtin.editor",
   env = "eve.builtin.env",
   filetype = "eve.builtin.filetype",
   fn = "eve.builtin.fn",
@@ -48,7 +47,6 @@ local __mods = {
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public command                eve.builtin.command
 ---@field public debug                  eve.builtin.debug
----@field public editor                 eve.builtin.editor
 ---@field public env                    eve.builtin.env
 ---@field public filetype               eve.builtin.filetype
 ---@field public fn                     eve.builtin.fn

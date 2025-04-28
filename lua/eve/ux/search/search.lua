@@ -239,7 +239,7 @@ function M.new(props)
       context:toggle_item_selected(lnum)
     end,
     toggle_visual_selected = function()
-      local s_lnum, t_lnum = eve.editor.get_visual_lnum_range() ---@type integer, integer
+      local s_lnum, t_lnum = eve.buf.retrieve_visual_lnum_range() ---@type integer, integer
       local lnums = {} ---@type integer[]
       for lnum = s_lnum, t_lnum, 1 do
         table.insert(lnums, lnum)
