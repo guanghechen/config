@@ -253,7 +253,7 @@ function M.new(props)
 
           for _, item in ipairs(items) do
             local filepath = item.data.filepath ---@type string
-            eve.editor.open_filepath(winnr_sourcefile, filepath, item.data.lnum, item.data.col)
+            eve.win.open_filepath(winnr_sourcefile, filepath, item.data.lnum, item.data.col)
           end
         end,
         on_preview_rendered = on_preview_rendered,

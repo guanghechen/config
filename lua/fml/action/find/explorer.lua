@@ -437,7 +437,7 @@ local select = eve.ux.Select.new({
 
       widget:hide()
       for _, filepath in ipairs(filepaths) do
-        eve.editor.open_filepath(winnr_sourcefile, filepath)
+        eve.win.open_filepath(winnr_sourcefile, filepath)
       end
       return
     end

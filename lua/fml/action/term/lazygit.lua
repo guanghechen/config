@@ -73,7 +73,7 @@ local function edit_lazygit_file_in_buffer(cwd)
     return
   end
 
-  eve.editor.open_filepath(winnr_sourcefile, relative_filepath)
+  eve.win.open_filepath(winnr_sourcefile, relative_filepath)
 end
 
 ---@param name                          string

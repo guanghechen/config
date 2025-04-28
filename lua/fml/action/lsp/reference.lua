@@ -103,7 +103,7 @@ local function fetch_data(method, additional_params, callback)
 
     if #items == 1 then
       local item = items[1] ---@type eve.ux.select_file.IRawItem
-      eve.editor.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
+      eve.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true, nil)
       return
     end

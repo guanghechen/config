@@ -254,7 +254,7 @@ end
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_sourcefile(winnr_candidate)
-  if winnr_candidate ~= nil and eve.win.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
+  if winnr_candidate ~= nil and M.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
   return eve.winpicker.pick_window(M.is_sourcefile, winnr_candidate, true) ---@type integer|nil
@@ -300,6 +300,69 @@ function M.fork(winnr_source, winnr_target)
     history = history_forked,
   }
   return meta_target
+end
+
+---@param winnr_source                  integer|nil
+---@param filepath                      string
+---@param lnum                          ?integer
+---@param col                           ?integer
+---@return boolean
+function M.open_filepath(winnr_source, filepath, lnum, col)
+  local bufnr = eve.buf.loadfile(filepath) ---@type integer|nil
+  if bufnr == nil then
+    return false
+  end
+
+  local winnr = M.pick_sourcefile(winnr_source) ---@type integer|nil
+  if winnr == nil then
+    return false
+  end
+
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.schedule(function()
+    vim.cmd.stopinsert()
+
+    if lnum ~= nil and col ~= nil then
+      pcall(function()
+        vim.api.nvim_win_set_cursor(winnr, { lnum, col })
+      end)
+    end
+  end)
+  return true
+end
+
+---@param winnr_source                  integer|nil
+---@param filepaths                     string[]
+---@return nil
+function M.open_filepaths(winnr_source, filepaths)
+  if #filepaths < 1 then
+    return
+  end
+
+  ---@type integer|nil
+  local winnr = (
+    winnr_source ~= nil
+    and winnr_source > 0
+    and vim.api.nvim_win_is_valid(winnr_source)
+    and M.is_sourcefile(winnr_source)
+  )
+      and winnr_source
+    or eve.winpicker.pick_window(M.is_sourcefile, winnr_source, true)
+
+  if winnr == nil then
+    return
+  end
+
+  for _, filepath in ipairs(filepaths) do
+    local bufnr = eve.buf.loadfile(filepath) ---@type integer|nil
+    if bufnr ~= nil then
+      vim.api.nvim_win_set_buf(winnr, bufnr)
+    end
+  end
+
+  vim.schedule(function()
+    vim.cmd.stopinsert()
+  end)
 end
 
 ---@param winnr                         integer|nil

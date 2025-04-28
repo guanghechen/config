@@ -611,7 +611,7 @@ function M.open_files(items, frecency)
       local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
       frecency:access(relative_filepath)
 
-      eve.editor.open_filepath(winnr_sourcefile, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
+      eve.win.open_filepath(winnr_sourcefile, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
     end
   end
 end

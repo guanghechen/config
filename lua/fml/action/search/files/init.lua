@@ -53,7 +53,7 @@ function M.search_files_in_directory(specified_filepath)
       context.search_cwd:next(dirpath, { force = true })
       silent = true
 
-      eve.editor.open_filepath(nil, specified_filepath)
+      eve.win.open_filepath(nil, specified_filepath)
       next_scope = "B"
     end
   end
@@ -107,7 +107,7 @@ function M.replace_files_in_directory(specified_filepath)
       context.search_cwd:next(dirpath, { force = true })
       silent = true
 
-      eve.editor.open_filepath(nil, specified_filepath)
+      eve.win.open_filepath(nil, specified_filepath)
       next_scope = "B"
     end
   end
