@@ -5,7 +5,8 @@ local __module_name__ = "fml.action.lsp" ---@type string
 ---@param callback                      fun(ok: boolean, data: eve.ux.select_file.IData|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
-  local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil then
     callback(false, nil)
     return

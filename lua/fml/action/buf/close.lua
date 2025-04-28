@@ -21,7 +21,8 @@ local M = {}
 
 ---@return nil
 function M.close()
-  local winnr = eve.status.get_winnr_sourcefile() ---@type integer|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr == nil then
     return
   end

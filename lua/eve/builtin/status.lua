@@ -1,7 +1,6 @@
 ---@class eve.builtin.status
 ---@field public winnr_command          eve.std.collection.IObservable -- integer|nil>
 ---@field public winnr_fixed            eve.std.collection.IObservable -- integer|nil>
----@field public winnr_sourcefile       eve.std.collection.IObservable -- integer|nil>
 ---
 ---@field public ticker_editor          eve.std.collection.ITicker
 ---@field public ticker_session         eve.std.collection.ITicker
@@ -25,7 +24,6 @@
 local M = {
   winnr_command = eve.std.Observable.from_value(0),
   winnr_fixed = eve.std.Observable.from_value(0),
-  winnr_sourcefile = eve.std.Observable.from_value(0),
 
   ticker_editor = eve.std.Ticker.new({ start = 0 }),
   ticker_workspace = eve.std.Ticker.new({ start = 0 }),
@@ -52,7 +50,6 @@ local M = {
 function M.reset()
   M.winnr_command:next(0)
   M.winnr_fixed:next(0)
-  M.winnr_sourcefile:next(0)
 
   M.ticker_editor:next(0)
   M.ticker_session:next(0)
@@ -83,15 +80,6 @@ function M.focus_win_fixed()
 end
 
 ---@return integer|nil
-function M.get_bufnr_sourcefile()
-  local winnr_sourcefile = M.get_winnr_sourcefile() ---@type integer|nil
-  if winnr_sourcefile == nil then
-    return nil
-  end
-  return vim.api.nvim_win_get_buf(winnr_sourcefile)
-end
-
----@return integer|nil
 function M.get_winnr_command()
   local winnr_command = M.winnr_command:snapshot() ---@type integer
   if winnr_command ~= 0 and eve.win.is_valid(winnr_command) then
@@ -113,17 +101,6 @@ function M.get_winnr_fixed()
   end
 end
 
----@return integer|nil
-function M.get_winnr_sourcefile()
-  local winnr_sourcefile = M.winnr_sourcefile:snapshot() ---@type integer
-  if winnr_sourcefile ~= 0 and eve.win.is_valid(winnr_sourcefile) then
-    return winnr_sourcefile
-  else
-    M.winnr_sourcefile:next(0)
-    return nil
-  end
-end
-
 ---@param winnr                         integer|nil
 ---@return nil
 function M.set_winnr_command(winnr)
@@ -141,9 +118,6 @@ function M.on_refresh()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_fixed = eve.win.find_fixed_by_filetype(tabnr) or 0 ---@type integer
   M.winnr_fixed:next(winnr_fixed or 0)
-
-  local winnr_sourcefile = eve.win.find_sourcefile_by_filetype(tabnr) or 0 ---@type integer
-  M.winnr_sourcefile:next(winnr_sourcefile)
 end
 
 ---@param winnr                         integer
@@ -155,10 +129,6 @@ function M.on_win_enter(winnr)
 
   if eve.win.is_fixed(winnr) then
     M.winnr_fixed:next(winnr)
-  end
-
-  if eve.win.is_sourcefile(winnr) then
-    M.winnr_sourcefile:next(winnr)
   end
 end
 

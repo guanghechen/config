@@ -82,7 +82,7 @@ function M.resolve(tabnr, force)
       ---@cast buf                      eve.builtin.tab.IBufItem
       local bufnr = buf.bufnr ---@type integer
       local pinned = buf.pinned ---@type boolean
-      if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buflisted and not bufnr_set[bufnr] then
+      if not bufnr_set[bufnr] and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buflisted then
         bufnr_set[bufnr] = true
         bufs[#bufs + 1] = { bufnr = bufnr, pinned = pinned }
       end
@@ -276,6 +276,17 @@ function M.retrieve_buf_sourcefile(tabnr)
   end
 end
 
+---@param tabnr                         integer|nil
+---@return integer|nil
+function M.retrieve_winnr_sourcefile(tabnr)
+  if tabnr ~= nil and tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr) then
+    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+    if meta ~= nil then
+      return meta.winnr_sourcefile
+    end
+  end
+end
+
 ---@param tabnr                         integer
 ---@return nil
 function M.on_buf_delete(tabnr)
@@ -295,13 +306,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.on_buf_enter(tabnr, bufnr)
-  if
-    tabnr < 1
-    or bufnr < 1
-    or not vim.api.nvim_buf_is_valid(bufnr)
-    or not vim.bo[bufnr].buflisted
-    or not vim.api.nvim_tabpage_is_valid(tabnr)
-  then
+  if tabnr < 1 or bufnr < 1 or not vim.bo[bufnr].buflisted then
     return
   end
 
@@ -353,21 +358,20 @@ function M.on_bufs_close(tabnr, bufnrs)
   end
 end
 
----@parma tabnr                         integer
+---@param tabnr                         integer
 ---@param winnr                         integer
+---@return nil
 function M.on_win_enter(tabnr, winnr)
   if tabnr < 1 or winnr < 1 then
     return
   end
 
-  vim.schedule(function()
-    if vim.api.nvim_tabpage_is_valid(tabnr) and vim.api.nvim_win_is_valid(winnr) and eve.win.is_sourcefile(winnr) then
-      local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
-      if meta ~= nil then
-        meta.winnr_sourcefile = winnr
-      end
+  if eve.win.is_sourcefile(winnr) then
+    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+    if meta ~= nil then
+      meta.winnr_sourcefile = winnr
     end
-  end)
+  end
 end
 
 return M

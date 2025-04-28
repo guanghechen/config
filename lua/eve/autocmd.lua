@@ -16,13 +16,12 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = arg.buf ---@type integer
 
-    vim.schedule(function()
-      eve.win.on_buf_enter(winnr, bufnr)
-      eve.tab.on_buf_enter(tabnr, bufnr)
-      eve.status.dirty_winline_nr:next(winnr)
-      eve.status.dirtier_statusline:mark_dirty()
-      eve.status.dirtier_tabline:mark_dirty()
-    end)
+    eve.win.on_buf_enter(winnr, bufnr)
+    eve.tab.on_buf_enter(tabnr, bufnr)
+
+    eve.status.dirty_winline_nr:next(winnr)
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end,
 })
 
@@ -153,8 +152,8 @@ vim.api.nvim_create_autocmd("WinEnter", {
   group = eve.nvim.augroup("bootstrap_on_WinEnter"),
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local bufnr = arg.buf ---@type integer
+    local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
     eve.tab.on_win_enter(tabnr, winnr)
     eve.tab.on_buf_enter(tabnr, bufnr)
@@ -168,9 +167,9 @@ vim.api.nvim_create_autocmd("WinEnter", {
 
 vim.api.nvim_create_autocmd("WinNew", {
   group = eve.nvim.augroup("bootstrap_on_WinNew"),
-  callback = function()
+  callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
 
     if eve.win.is_fixed(winnr) then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer

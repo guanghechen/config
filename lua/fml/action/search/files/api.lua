@@ -279,9 +279,10 @@ function M.fetch_data(input_text, force, callback)
 
   local specified_filepath ---@type string|nil
   if scope == "B" then
-    local bufnr = eve.status.get_bufnr_sourcefile() ---@type integer|nil
-    if bufnr ~= nil then
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+    if bufnr_sourcefile ~= nil then
+      local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
       specified_filepath = vim.fn.filereadable(filepath) == 1 and filepath or nil ---@type string|nil
     end
   end
@@ -605,7 +606,8 @@ function M.open_files(items, frecency)
 
   if #file_items > 0 then
     context.hide()
-    local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     for _, file_item in ipairs(file_items) do
       local absolute_filepath = eve.path.resolve(cwd, file_item.filepath) ---@type string
       local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string

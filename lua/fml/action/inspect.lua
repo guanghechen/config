@@ -95,6 +95,7 @@ end
 function M.inspect_tab()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
   if meta == nil then
     eve.reporter.info({
@@ -105,7 +106,7 @@ function M.inspect_tab()
           tabnr = tabnr,
           winnr_command = eve.status.get_winnr_command(),
           winnr_fixed = eve.status.get_winnr_fixed(),
-          winnr_sourcefile = eve.status.get_winnr_sourcefile(),
+          winnr_sourcefile = winnr_sourcefile,
         },
         meta = vim.NIL,
       },
@@ -121,7 +122,7 @@ function M.inspect_tab()
         tabnr = tabnr,
         winnr_command = eve.status.get_winnr_command(),
         winnr_fixed = eve.status.get_winnr_fixed(),
-        winnr_sourcefile = eve.status.get_winnr_sourcefile(),
+        winnr_sourcefile = winnr_sourcefile,
       },
       meta = meta,
     },

@@ -38,8 +38,19 @@ end
 ---@param cwd                           string
 ---@return nil
 local function edit_lazygit_file_in_buffer(cwd)
-  local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
-  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "edit_lazygit_file_in_buffer",
+      message = "No valid sourcefile window found.",
+      details = { cwd = cwd, tabnr = tabnr, winnr_sourcefile = winnr_sourcefile },
+    })
+    return
+  end
+
+  local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer|nil
   if bufnr_sourcefile == nil then
     eve.reporter.error({
       from = __module_name__,

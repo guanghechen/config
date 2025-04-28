@@ -77,22 +77,26 @@ local function gen_title()
   end
 
   local cwd = eve.path.cwd() ---@type string
-  local bufnr = eve.status.get_bufnr_sourcefile() ---@type integer|nil
-  if bufnr ~= nil then
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+  if bufnr_sourcefile ~= nil then
+    local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
     if eve.path.is_exist_filepath(filepath) then
       local relative_filepath = eve.path.relative(cwd, filepath, false)
       return mode .. "in " .. relative_filepath ---@type string
     end
   end
-  return mode .. "in buf#" .. tostring(bufnr) ---@type string
+  return mode .. "in buf#" .. tostring(bufnr_sourcefile) ---@type string
 end
 
 eve.state.select.search_file_scope:subscribe(
   eve.std.Subscriber.new({
     on_next = function(scope, prev_scope)
-      local bufnr = eve.status.get_bufnr_sourcefile() ---@type integer|nil
-      local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+      local current_buf_dirpath = bufnr_sourcefile ~= nil
+          and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
+        or eve.path.cwd() ---@type string
       local current_search_cwd = state_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
       if current_search_cwd ~= next_search_cwd then

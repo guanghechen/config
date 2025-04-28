@@ -5,7 +5,8 @@ local M = {}
 
 ---@return nil
 function M.refresh_all()
-  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
   local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd.checktime()
