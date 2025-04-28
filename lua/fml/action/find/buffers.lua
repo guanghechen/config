@@ -72,12 +72,12 @@ local main_keymaps = {
 
       local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
       for _, tabnr in ipairs(tabnrs) do
-        eve.state.tab.on_bufs_close(tabnr, { bufnr })
+        eve.tab.on_bufs_close(tabnr, { bufnr })
       end
 
-      local unrefereced_bufnrs = eve.state.tab.get_unrefereced_bufnrs() ---@type integer[]
-      if #unrefereced_bufnrs > 0 then
-        for _, unreferenced_bufnr in ipairs(unrefereced_bufnrs) do
+      local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+      if #bufnrs_unreferenced > 0 then
+        for _, unreferenced_bufnr in ipairs(bufnrs_unreferenced) do
           vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
         end
         _select:mark_item_deleted(item.uuid)
@@ -93,7 +93,6 @@ local provider = {
     local cwd = eve.path.cwd() ---@type string
     local scope = eve.state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
 
     ---@param bufnr                     integer
     ---@return boolean
@@ -108,7 +107,7 @@ local provider = {
       end
 
       if scope == "F" then
-        return meta_tab and meta_tab:find_buf(bufnr) ~= nil or false
+        return eve.tab.has_buf(tabnr, bufnr)
       end
 
       if

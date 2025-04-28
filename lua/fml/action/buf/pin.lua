@@ -4,17 +4,17 @@ local M = {}
 ---@return nil
 function M.toggle_pin()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab == nil then
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  if meta == nil then
     return
   end
 
-  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
+  local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
-  local buf = meta_tab.bufs[bufid_sourcefile] ---@type eve.state.tab.buf.state
+  local buf = meta.bufs[bufid_sourcefile] ---@type eve.builtin.tab.IBufItem
   local filepath = vim.api.nvim_buf_get_name(buf.bufnr) ---@type string
 
   local pinned_list = eve.state.bookmark.pinned:snapshot() ---@type string[]
@@ -29,7 +29,7 @@ function M.toggle_pin()
     pinned_list[k] = nil
   end
 
-  meta_tab:toggle_pin(buf.bufnr)
+  eve.tab.add_buf(tabnr, buf.bufnr, not buf.pinned)
   eve.state.status.dirtier_tabline:mark_dirty()
 end
 

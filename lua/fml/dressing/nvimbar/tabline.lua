@@ -68,7 +68,7 @@ local function should_show_tabline()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.state.tab.resolve(tabnr)
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
   return meta == nil or #meta.bufs > 1
 end
 

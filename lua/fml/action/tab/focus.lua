@@ -4,7 +4,6 @@ local function go(tabnr)
   local tabnr_from = vim.api.nvim_get_current_tabpage() ---@type integer
   if tabnr_from ~= tabnr then
     vim.api.nvim_set_current_tabpage(tabnr)
-    eve.state.tab.tab_history:push(tabnr)
   end
 end
 

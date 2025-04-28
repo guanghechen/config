@@ -92,10 +92,6 @@ M.sessions = {
   }, ","),
 }
 
----! Tab settings
-
-M.TAB_HISTORY_CAPACITY = 100
-
 ---! Window settings
 
 M.WIN_HISTORY_CAPACITY = 99

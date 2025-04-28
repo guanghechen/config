@@ -96,10 +96,7 @@ end
 ---@return nil
 function M.inspect_tab()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-
-  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-  local tabid = eve.table.find_index(tabnrs, tabnr) or 1 ---@type integer
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
 
   if meta == nil then
     eve.reporter.info({
@@ -128,7 +125,7 @@ function M.inspect_tab()
         winnr_fixed = eve.state.editor.get_winnr_fixed(),
         winnr_sourcefile = eve.state.editor.get_winnr_sourcefile(),
       },
-      meta = meta:dump(tabid),
+      meta = meta,
     },
   })
 end
@@ -149,7 +146,7 @@ function M.inspect_window()
   local filetype = vim.bo[bufnr].filetype ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
-  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+  local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
   local meta_win = eve.win.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
   local meta_buf = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
 

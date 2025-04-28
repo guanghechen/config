@@ -17,6 +17,13 @@
 ---| "plugin:avante"
 ---| "plugin:neotree"
 
+---@class eve.builtin.win.IFilepathHistoryItem
+---@field public bufnr                  integer|nil
+---@field public filepath               string|nil
+
+---@class eve.builtin.win.IMetaData
+---@field public history                eve.std.collection.IHistory|nil
+
 ---@class eve.builtin.win.Types
 local Types = {
   -- stylua: ignore start
@@ -39,13 +46,6 @@ local Types = {
   NEOTREE         = "plugin:neotree",
   -- stylua: ignore end
 }
-
----@class eve.builtin.win.IFilepathHistoryItem
----@field public bufnr                  integer|nil
----@field public filepath               string|nil
-
----@class eve.builtin.win.IMetaData
----@field public history                eve.std.collection.IHistory|nil
 
 local wintype_attrs = {
   focusable = {
@@ -76,17 +76,20 @@ local M = {}
 
 M.Types = vim.deepcopy(Types)
 
+---@param winnr                         integer|nil
+---@return eve.builtin.win.TypeEnum|nil
+function M.get_type(winnr)
+  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    return nil
+  end
+  return vim.w[winnr].eve_type
+end
+
 ---@param winnr                         integer
 ---@param wintype                       eve.builtin.win.TypeEnum|nil
 ---@return nil
 function M.set_type(winnr, wintype)
   vim.w[winnr].eve_type = wintype
-end
-
----@param winnr                         integer
----@return eve.builtin.win.TypeEnum|nil
-function M.get_type(winnr)
-  return vim.w[winnr].eve_type
 end
 
 ----------------------------------------------------------------------------------------------------

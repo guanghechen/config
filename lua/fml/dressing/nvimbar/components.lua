@@ -114,7 +114,7 @@ function M.bufs(position)
     vim.cmd(eve.command.definitions.buf.focus_right.uuid)
   end) or ""
 
-  ---@param buf                         eve.state.tab.buf.state
+  ---@param buf                         eve.builtin.tab.IBufItem
   ---@param index                       integer
   ---@param total                       integer
   ---@return string
@@ -193,7 +193,7 @@ function M.bufs(position)
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
-  ---@param buf                           eve.state.tab.buf.state
+  ---@param buf                         eve.builtin.tab.IBufItem
   ---@param index                         integer
   ---@param order                         integer
   ---@param marker                        string
@@ -276,22 +276,20 @@ function M.bufs(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
+      local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
       if meta_tab == nil then
         return "", "", false
       end
 
-      local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
+      local bufs = meta_tab.bufs ---@type eve.builtin.tab.IBufItem[]
       if #bufs < 1 then
         return "", "", false
       end
 
-      local N = #bufs ---@type integer
-      local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
-      local bufid_middle = math.min(N, bufid_sourcefile or vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] or 1) ---@type integer
-      vim.t[tabnr][eve.var.Names.BUFID_MIDDLE] = bufid_middle --- Remember the last middle bufid.
-
+      local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+      local bufid_middle = bufid_sourcefile or 1 ---@type integer
       local relative_orders = bufid_middle == bufid_sourcefile and eve.state.behavior.bufs_relative:snapshot() ---@type boolean
+      local N = #bufs ---@type integer
 
       local text ---@type string
       local hl_text ---@type string

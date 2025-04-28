@@ -247,11 +247,15 @@ end
 
 ---@return nil
 function M.refresh()
-  M.tab.refresh_all()
+  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+  for _, tabnr in ipairs(tabnrs) do
+    eve.tab.resolve(tabnr, true)
+  end
+
   M.editor.on_refresh()
 
-  local unrefereced_bufnrs = M.tab.get_unrefereced_bufnrs() ---@type integer[]
-  for _, bufnr in ipairs(unrefereced_bufnrs) do
+  local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs_unreferenced) do
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end

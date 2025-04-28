@@ -8,10 +8,10 @@ local function close(tabnr, bufnrs)
     return
   end
 
-  eve.state.tab.on_bufs_close(tabnr, bufnrs)
+  eve.tab.on_bufs_close(tabnr, bufnrs)
 
-  local unrefereced_bufnrs = eve.state.tab.get_unrefereced_bufnrs() ---@type integer[]
-  for _, bufnr in ipairs(unrefereced_bufnrs) do
+  local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs_unreferenced) do
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end
@@ -75,8 +75,8 @@ end
 ---@return nil
 function M.close_to_leftest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab == nil then
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  if meta == nil then
     eve.reporter.error({
       from = __module_name__,
       subject = "close_to_leftest",
@@ -86,17 +86,17 @@ function M.close_to_leftest()
     return
   end
 
-  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
+  local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
-  local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
+  local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
   local bufnrs_visible = eve.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile - 1, 1, -1 do
-    local buf = bufs[i] ---@type eve.state.tab.buf.state
+    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
       table.insert(bufnrs_to_remove, buf.bufnr)
     end
@@ -108,8 +108,8 @@ end
 ---@return nil
 function M.close_to_rightest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab == nil then
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  if meta == nil then
     eve.reporter.error({
       from = __module_name__,
       subject = "close_to_rightest",
@@ -119,17 +119,17 @@ function M.close_to_rightest()
     return
   end
 
-  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
+  local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
-  local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
+  local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
   local bufnrs_visible = eve.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile + 1, #bufs, 1 do
-    local buf = bufs[i] ---@type eve.state.tab.buf.state
+    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
       table.insert(bufnrs_to_remove, buf.bufnr)
     end
@@ -141,8 +141,8 @@ end
 ---@return nil
 function M.close_others()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab == nil then
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  if meta == nil then
     eve.reporter.error({
       from = __module_name__,
       subject = "close_others",
@@ -155,7 +155,7 @@ function M.close_others()
   local bufnrs_to_remove = {} ---@type integer[]
   local bufnrs_visible = eve.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
-  for _, buf in ipairs(meta_tab.bufs) do
+  for _, buf in ipairs(meta.bufs) do
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
       table.insert(bufnrs_to_remove, buf.bufnr)
     end

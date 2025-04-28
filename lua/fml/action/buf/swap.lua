@@ -7,8 +7,8 @@ local M = {}
 ---@return nil
 function M.swap_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab == nil then
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  if meta == nil then
     eve.reporter.error({
       from = __module_name__,
       subject = "swap_left",
@@ -18,28 +18,28 @@ function M.swap_left(step)
     return
   end
 
-  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
+  local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
+  local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
   local bufid_next = eve.std.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
   if bufid_sourcefile == bufid_next then
     return
   end
 
-  local buf_sourcefile = bufs[bufid_sourcefile] ---@type eve.state.tab.buf.state
-  local buf_next = bufs[bufid_next] ---@type eve.state.tab.buf.state
+  local buf_sourcefile = bufs[bufid_sourcefile] ---@type eve.builtin.tab.IBufItem
+  local buf_next = bufs[bufid_next] ---@type eve.builtin.tab.IBufItem
 
   ---! Don't swap the two buffers if their's pinned status not equal.
   if buf_sourcefile.pinned ~= buf_next.pinned then
     return
   end
 
-  meta_tab.bufs[bufid_next] = buf_sourcefile
-  meta_tab.bufs[bufid_sourcefile] = buf_next
+  meta.bufs[bufid_next] = buf_sourcefile
+  meta.bufs[bufid_sourcefile] = buf_next
   eve.state.status.dirtier_statusline:mark_dirty()
   eve.state.status.dirtier_tabline:mark_dirty()
 end
@@ -48,8 +48,8 @@ end
 ---@return nil
 function M.swap_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta_tab = eve.state.tab.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta_tab == nil then
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  if meta == nil then
     eve.reporter.error({
       from = __module_name__,
       subject = "swap_right",
@@ -59,28 +59,28 @@ function M.swap_right(step)
     return
   end
 
-  local bufid_sourcefile = meta_tab:get_bufid_sourcefile() ---@type integer|nil
+  local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local bufs = meta_tab.bufs ---@type eve.state.tab.buf.state[]
+  local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
   local bufid_next = eve.std.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
   if bufid_sourcefile == bufid_next then
     return
   end
 
-  local buf_sourcefile = bufs[bufid_sourcefile] ---@type eve.state.tab.buf.state
-  local buf_next = bufs[bufid_next] ---@type eve.state.tab.buf.state
+  local buf_sourcefile = bufs[bufid_sourcefile] ---@type eve.builtin.tab.IBufItem
+  local buf_next = bufs[bufid_next] ---@type eve.builtin.tab.IBufItem
 
   ---! Don't swap the two buffers if their's pinned status not equal.
   if buf_sourcefile.pinned ~= buf_next.pinned then
     return
   end
 
-  meta_tab.bufs[bufid_next] = buf_sourcefile
-  meta_tab.bufs[bufid_sourcefile] = buf_next
+  meta.bufs[bufid_next] = buf_sourcefile
+  meta.bufs[bufid_sourcefile] = buf_next
   eve.state.status.dirtier_statusline:mark_dirty()
   eve.state.status.dirtier_tabline:mark_dirty()
 end

@@ -47,9 +47,6 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
 vim.api.nvim_create_autocmd("TabEnter", {
   group = eve.nvim.augroup("state_on_tab_enter"),
   callback = function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-
-    eve.state.tab.tab_history:push(tabnr)
     eve.state.status.dirtier_statusline:mark_dirty()
     eve.state.status.dirtier_tabline:mark_dirty()
   end,
@@ -58,39 +55,11 @@ vim.api.nvim_create_autocmd("TabEnter", {
 vim.api.nvim_create_autocmd("TabClosed", {
   group = eve.nvim.augroup("state_on_tab_closed"),
   callback = function()
-    local tabnr_last = eve.state.tab.tab_history:present() ---@type integer|nil
     vim.schedule(function()
-      if tabnr_last ~= nil and vim.api.nvim_tabpage_is_valid(tabnr_last) then
-        vim.api.nvim_set_current_tabpage(tabnr_last)
-      end
       eve.state.refresh()
     end)
     eve.state.status.dirtier_statusline:mark_dirty()
     eve.state.status.dirtier_tabline:mark_dirty()
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "BufDelete" }, {
-  group = eve.nvim.augroup("state_on_buf_delete"),
-  callback = function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    vim.schedule(function()
-      eve.state.status.dirtier_tabline:mark_dirty()
-      eve.state.tab.on_buf_delete(tabnr)
-    end)
-  end,
-})
-
-vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-  group = eve.nvim.augroup("state_on_buf_win_enter"),
-  callback = function(arg)
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    local bufnr = arg.buf ---@type integer
-
-    vim.schedule(function()
-      eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
-    end)
   end,
 })
 
@@ -102,7 +71,7 @@ vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
     local bufnr = arg.buf ---@type integer
 
     vim.schedule(function()
-      eve.state.tab.on_buf_enter(tabnr, winnr, bufnr)
+      eve.tab.on_buf_enter(tabnr, bufnr)
       eve.state.editor.on_win_enter(winnr)
 
       eve.state.status.dirty_winline_nr:next(winnr)
