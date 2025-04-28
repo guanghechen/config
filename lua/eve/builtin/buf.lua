@@ -34,16 +34,6 @@ local buftype_attrs = {
     [Types.NOFILE] = true,
     [Types.NOWRITE] = true,
   },
-  swappable = {
-    [Types.EMPTY] = true,
-    [Types.ACWRITE] = true,
-    [Types.HELP] = true,
-    [Types.NOFILE] = true,
-    [Types.NOWRITE] = true,
-    [Types.QUICKFIX] = true,
-    [Types.TERMINAL] = true,
-    [Types.PROMPT] = true,
-  },
 }
 
 ---@class eve.builtin.buf
@@ -180,6 +170,22 @@ function M.resolve(bufnr)
     fileicon_hln = fileicon_hln,
   }
   return meta
+end
+
+---@return string
+function M.retrieve_selected_text()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  if buftype == Types.TERMINAL or buftype == Types.PROMPT then
+    return ""
+  end
+
+  local saved_reg = vim.fn.getreg("v")
+  vim.cmd([[noautocmd sil norm! "vy]])
+
+  local selected_text = vim.fn.getreg("v")
+  vim.fn.setreg("v", saved_reg)
+  return selected_text or ""
 end
 
 return M

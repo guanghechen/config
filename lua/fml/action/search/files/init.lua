@@ -2,7 +2,7 @@ local context = require("fml.action.search.files.context")
 
 ---@return nil
 local function focus()
-  local selected_text = eve.editor.get_selected_text() ---@type string
+  local selected_text = eve.buf.retrieve_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
     eve.state.select.search_file.flag_regex:next(false)

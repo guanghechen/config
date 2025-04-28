@@ -93,7 +93,7 @@ function M.toggle_cwd()
     name = "cwd",
     cwd = cwd,
     permanent = true,
-    selected_text = eve.editor.get_selected_text(),
+    selected_text = eve.buf.retrieve_selected_text(),
   })
 end
 
@@ -111,7 +111,7 @@ function M.toggle_directory()
     name = "directory",
     cwd = cwd,
     permanent = true,
-    selected_text = eve.editor.get_selected_text(),
+    selected_text = eve.buf.retrieve_selected_text(),
   })
 end
 
@@ -123,7 +123,7 @@ function M.toggle_workspace()
     name = "workspace",
     cwd = cwd,
     permanent = true,
-    selected_text = eve.editor.get_selected_text(),
+    selected_text = eve.buf.retrieve_selected_text(),
   })
 end
 
