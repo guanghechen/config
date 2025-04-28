@@ -94,12 +94,10 @@ local theme = setmetatable({
 ---@class eve.constant
 ---@field public hlgroup                eve.constant.hlgroup
 ---@field public lang                   eve.constant.lang
----@field public nsnr                   eve.constant.nsnr
 ---@field public theme                  eve.constant.theme
 local M = {
   hlgroup = hlgroup,
   lang = lang,
-  nsnr = require("eve.constant.nsnr"),
   theme = theme,
 }
 

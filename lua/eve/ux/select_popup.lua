@@ -162,7 +162,7 @@ function M:create_buf_as_needed()
   end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local nsnr = eve.var.Namespaces.select_popup ---@type integer
+  local nsnr = eve.var.nsnr.select_popup ---@type integer
   for lnum, item in ipairs(self._items) do
     if item.highlights ~= nil then
       for _, hl in ipairs(item.highlights) do

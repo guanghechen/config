@@ -1,6 +1,6 @@
 local states = require("fml.dressing.ui_attach.state")
 
-local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
+local nsnrs = eve.var.nsnr ---@type eve.var.nsnr
 
 -- stylua: ignore start
 local _cmdline_title_map = {

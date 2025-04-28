@@ -23,7 +23,6 @@ local __mods = {
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
   shell = "eve.builtin.shell",
-  sign = "eve.builtin.sign",
   status = "eve.builtin.status",
   string = "eve.builtin.string",
   tab = "eve.builtin.tab",
@@ -65,7 +64,6 @@ local __mods = {
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting
 ---@field public shell                  eve.builtin.shell
----@field public sign                   eve.builtin.sign
 ---@field public status                 eve.builtin.status
 ---@field public string                 eve.builtin.string
 ---@field public tab                    eve.builtin.tab

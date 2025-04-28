@@ -128,7 +128,7 @@ function M.clear(bufnr)
   if viewport ~= nil then
     local top = math.max(0, viewport.top - 1) ---@type integer
     local bot = math.min(vim.api.nvim_buf_line_count(bufnr), viewport.bot)
-    local nsnr = eve.var.Namespaces.hipairs ---@type integer
+    local nsnr = eve.var.nsnr.hipairs ---@type integer
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, top, bot)
     vim.b[bufnr].hipairs_viewport = nil
   end
@@ -189,7 +189,7 @@ function M.render(winnr)
         bot = outermost_surround.right.row,
       }
 
-      local nsnr = eve.var.Namespaces.hipairs ---@type integer
+      local nsnr = eve.var.nsnr.hipairs ---@type integer
       for index, pair in ipairs(surrounds) do
         local left = pair.left ---@type fml.dressing.hipairs.IPos
         local right = pair.right ---@type fml.dressing.hipairs.IPos

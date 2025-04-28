@@ -136,13 +136,13 @@ function M:create_buf_as_needed()
   local input = context.input:snapshot() ---@type string
   local lines = eve.oxi.parse_lines(input) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })
-  vim.fn.sign_place(bufnr, "", eve.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
+  vim.fn.sign_place(bufnr, "", eve.var.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     group = eve.nvim.augroup(context.uuid .. ":search_input:text_changed"),
     buffer = bufnr,
     callback = function()
-      vim.fn.sign_place(bufnr, "", eve.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
+      vim.fn.sign_place(bufnr, "", eve.var.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
       self._input_scheduler:schedule()
     end,
   })
@@ -178,13 +178,14 @@ function M:set_virtual_text()
     local lnum = context:get_current_lnum() or 1 ---@type integer
     lnum = lnum > total and total or lnum
 
+    local nsnr = eve.var.nsnr.search_input ---@type integer
     if self._extmark_nr then
-      vim.api.nvim_buf_del_extmark(bufnr, eve.var.Namespaces.search_input, self._extmark_nr)
+      vim.api.nvim_buf_del_extmark(bufnr, nsnr, self._extmark_nr)
       self._extmark_nr = nil
     end
 
     ---! Set the extmark with the right-aligned virtual text
-    self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, eve.var.Namespaces.search_input, 0, 0, {
+    self._extmark_nr = vim.api.nvim_buf_set_extmark(bufnr, nsnr, 0, 0, {
       virt_text = { { "" .. lnum .. " / " .. total, "Comment" } },
       virt_text_pos = "right_align",
     })

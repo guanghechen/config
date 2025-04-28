@@ -375,7 +375,7 @@ function M.create_buf_as_needed(win)
   end
 
   if win.task.highlights then
-    local nsnr = eve.constant.nsnr.notify ---@type integer
+    local nsnr = eve.var.nsnr.notify ---@type integer
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
     for _, hl in ipairs(win.task.highlights) do
       local row = hl.lnum ---@type integer

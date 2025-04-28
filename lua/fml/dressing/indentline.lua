@@ -93,7 +93,7 @@ local function get_extmarks(indent, state)
   return extmarks_cachemap[key]
 end
 
-local nsnr = eve.constant.nsnr.indentline ---@type integer
+local nsnr = eve.var.nsnr.indentline ---@type integer
 vim.api.nvim_set_decoration_provider(nsnr, {
   on_win = function(_, winnr, bufnr, top, bottom)
     local filetype = vim.bo[bufnr].filetype ---@type string

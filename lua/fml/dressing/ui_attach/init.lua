@@ -139,7 +139,7 @@ eve.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
       vim.cmd.noh()
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
       for _, bufnr in ipairs(bufnrs) do
-        vim.api.nvim_buf_clear_namespace(bufnr, eve.constant.nsnr.search_count, 0, -1)
+        vim.api.nvim_buf_clear_namespace(bufnr, eve.var.nsnr.search_count, 0, -1)
       end
     end)
   end
@@ -149,7 +149,7 @@ eve.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
   return "<esc>"
 end, "system: clear search highlights", true)
 
-vim.ui_attach(eve.constant.nsnr.attach, {
+vim.ui_attach(eve.var.nsnr.attach, {
   ext_cmdline = true,
   ext_messages = true,
   ext_popupmenu = true,

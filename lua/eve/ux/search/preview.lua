@@ -119,7 +119,7 @@ function M.new(props)
         end
       end
 
-      local nsnr = eve.var.Namespaces.search_preview ---@type integer
+      local nsnr = eve.var.nsnr.search_preview ---@type integer
       for _, hl in ipairs(data.highlights) do
         local row = hl.lnum - 1 ---@type integer
         vim.hl.range(bufnr, nsnr, hl.hlname, { row, hl.coll }, { row, hl.colr })
