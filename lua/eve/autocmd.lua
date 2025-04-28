@@ -176,7 +176,8 @@ vim.api.nvim_create_autocmd("WinNew", {
       local filetype = vim.bo[bufnr].filetype ---@type string
 
       if filetype == "Avante" or filetype == "AvanteInput" or filetype == "AvanteSelectedFiles" then
-        local winnr_k = vim.fn.winnr("k") ---@type integer
+        local winid_k = vim.fn.winnr("k") ---@type integer
+        local winnr_k = vim.fn.win_getid(winid_k) ---@type integer
         if winnr_k ~= nil and winnr_k ~= winnr then
           local bufnr_k = vim.api.nvim_win_get_buf(winnr_k) ---@type integer
           local filetype_k = vim.bo[bufnr_k].filetype ---@type string
@@ -186,7 +187,8 @@ vim.api.nvim_create_autocmd("WinNew", {
           end
         end
 
-        local winnr_j = vim.fn.winnr("j") ---@type integer
+        local winid_j = vim.fn.winnr("j") ---@type integer
+        local winnr_j = vim.fn.win_getid(winid_j) ---@type integer
         if winnr_j ~= nil and winnr_j ~= winnr then
           local bufnr_j = vim.api.nvim_win_get_buf(winnr_j) ---@type integer
           local filetype_j = vim.bo[bufnr_j].filetype ---@type string

@@ -310,6 +310,7 @@
     "getcurpos",
     "getcwd",
     "getfsize",
+    "getid",
     "getline",
     "getmousepos",
     "getreg",
