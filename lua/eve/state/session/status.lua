@@ -10,6 +10,8 @@
 ---@field public lint_schedule_nr       integer
 ---
 ---@field public lsp_msg                string
+---@field public recording_msg          string
+---
 ---@field public maximized_winnrs       table<integer, boolean>
 ---@field public notification_paused    boolean
 ---@field public notification_level     eve.builtin.notifier.LevelEnum
@@ -29,6 +31,8 @@
 ---@field public lint_schedule_nr       eve.std.collection.IObservable -- integer>
 ---
 ---@field public lsp_msg                eve.std.collection.IObservable -- string>
+---@field public recording_msg          eve.std.collection.IObservable -- string>
+---
 ---@field public maximized_winnrs       table<integer, boolean>
 ---@field public notification_paused    eve.std.collection.IObservable -- boolean>
 ---@field public notification_level     eve.std.collection.IObservable -- eve.builtin.notifier.LevelEnum>
@@ -58,6 +62,8 @@ function M.defaults()
     lint_schedule_nr = 0,
 
     lsp_msg = "",
+    recording_msg = "",
+
     maximized_winnrs = {},
     notification_paused = false,
     notification_level = "TRACE",
@@ -95,6 +101,8 @@ function M.dump()
     lint_schedule_nr = M.lint_schedule_nr:snapshot(),
 
     lsp_msg = M.lsp_msg:snapshot(),
+    recording_msg = M.recording_msg:snapshot(),
+
     maximized_winnrs = vim.tbl_extend("force", {}, M.maximized_winnrs),
     notification_paused = M.notification_paused:snapshot(),
     notification_level = M.notification_level:snapshot(),
@@ -121,6 +129,8 @@ function M.load(raw_data)
   M.lint_schedule_nr:next(data.lint_schedule_nr)
 
   M.lsp_msg:next(data.lsp_msg)
+  M.recording_msg:next(data.recording_msg)
+
   M.maximized_winnrs = data.maximized_winnrs
   M.notification_paused:next(data.notification_paused)
   M.notification_level:next(data.notification_level)
@@ -143,6 +153,8 @@ M.dirty_winline_nr = eve.std.Observable.from_value(_defaults.dirty_winline_nr, e
 M.lint_schedule_nr = eve.std.Observable.from_value(_defaults.lint_schedule_nr, eve.std.fn.falsy)
 
 M.lsp_msg = eve.std.Observable.from_value(_defaults.lsp_msg)
+M.recording_msg = eve.std.Observable.from_value(_defaults.recording_msg)
+
 M.maximized_winnrs = _defaults.maximized_winnrs
 M.notification_paused = eve.std.Observable.from_value(_defaults.notification_paused)
 M.notification_level = eve.std.Observable.from_value(_defaults.notification_level)

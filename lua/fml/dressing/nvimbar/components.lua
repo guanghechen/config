@@ -1541,12 +1541,12 @@ function M.recording(position)
     name = "recording",
     atomic = true,
     render = function()
-      local reg = vim.fn.reg_recording()
-      if reg == "" then
+      local recording_msg = eve.state.status.recording_msg:snapshot() ---@type string
+      if recording_msg == "" then
         return "", "", true
       end
 
-      local text = "Recording @" .. reg
+      local text = recording_msg
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,

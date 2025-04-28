@@ -178,13 +178,6 @@ vim.api.nvim_create_autocmd("LspProgress", {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
-  group = eve.nvim.augroup("state_on_recording"),
-  callback = function()
-    eve.state.status.dirtier_statusline:mark_dirty()
-  end,
-})
-
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd("VimResized", {
   group = eve.nvim.augroup("state_on_vim_resized"),

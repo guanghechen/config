@@ -33,6 +33,9 @@ local handlers = {
   msg_showcmd = function(task)
     require("fml.dressing.ui_attach.messages").showcmd(task)
   end,
+  msg_showmode = function(task)
+    require("fml.dressing.ui_attach.messages").showmode(task)
+  end,
   popupmenu_hide = function(task)
     require("fml.dressing.ui_attach.popupmenu").hide(task)
   end,

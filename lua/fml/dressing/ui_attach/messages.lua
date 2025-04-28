@@ -17,6 +17,13 @@ local M = {}
 ---@param task                          fml.dressing.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
+function M.clear(task)
+  eve.state.status.searching:next(true)
+end
+
+---@param task                          fml.dressing.ui_attach.ITask
+---@return nil
+---@diagnostic disable-next-line: unused-local
 function M.history_clear(task)
   --- nothing need to do
 end
@@ -202,11 +209,16 @@ function M.showcmd(task)
   eve.state.status.dirtier_statusline:mark_dirty()
 end
 
----@param task                          fml.dressing.ui_attach.ITask
----@return nil
----@diagnostic disable-next-line: unused-local
-function M.clear(task)
-  eve.state.status.searching:next(true)
+function M.showmode(task)
+  local contents = unpack(task.args)
+  ---@cast contents                     [integer, string, integer][]
+
+  local text = "" ---@type string
+  for _, item in ipairs(contents) do
+    local _, piece = unpack(item) ---@type integer, string
+    text = text .. piece
+  end
+  eve.state.status.recording_msg:next(text)
 end
 
 return M

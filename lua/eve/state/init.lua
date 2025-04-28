@@ -363,6 +363,7 @@ function M.watch_changes()
 
   M.observe({
     M.status.lsp_msg,
+    M.status.recording_msg,
   }, function()
     M.status.dirtier_statusline:mark_dirty()
   end)
