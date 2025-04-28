@@ -26,7 +26,7 @@ local function select_files(params)
     ---@return string|nil
     get_present = function()
       local present_filepath = nil ---@type string|nil
-      local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+      local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
       if bufnr_sourcefile ~= nil then
         local absolute_filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
         present_filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string

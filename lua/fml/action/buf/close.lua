@@ -21,7 +21,7 @@ local M = {}
 
 ---@return nil
 function M.close()
-  local winnr = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
+  local winnr = eve.status.get_winnr_sourcefile() ---@type integer|nil
   if winnr == nil then
     return
   end

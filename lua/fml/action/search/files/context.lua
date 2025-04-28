@@ -77,7 +77,7 @@ local function gen_title()
   end
 
   local cwd = eve.path.cwd() ---@type string
-  local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if eve.path.is_exist_filepath(filepath) then
@@ -91,7 +91,7 @@ end
 eve.state.select.search_file_scope:subscribe(
   eve.std.Subscriber.new({
     on_next = function(scope, prev_scope)
-      local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+      local bufnr = eve.status.get_bufnr_sourcefile() ---@type integer|nil
       local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string
       local current_search_cwd = state_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string

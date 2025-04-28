@@ -7,7 +7,6 @@ local __mods = {
 
   --------------------------------------------------------------------------------------------------
 
-  editor = "eve.state.session.editor",
   tab = "eve.state.session.tab",
 
   --------------------------------------------------------------------------------------------------
@@ -42,7 +41,6 @@ local __lazy = {
 ---@field public behavior               eve.state.behavior.data
 ---@field public theme                  eve.state.theme.data
 ---
----@field public editor                 eve.state.editor.data
 ---@field public tab                    eve.state.tab.data
 ---
 ---@field public bookmark               eve.state.bookmark.data
@@ -73,7 +71,6 @@ local __lazy = {
 ---@field public behavior               eve.state.behavior
 ---@field public theme                  eve.state.theme
 ---
----@field public editor                 eve.state.editor
 ---@field public tab                    eve.state.tab
 ---
 ---@field public bookmark               eve.state.bookmark
@@ -110,7 +107,6 @@ function M.dump()
     behavior = M.behavior.dump(),
     theme = M.theme.dump(),
 
-    editor = M.editor.dump(),
     tab = M.tab.dump(),
 
     bookmark = M.bookmark.dump(),
@@ -162,7 +158,6 @@ function M.load(storage, initialize)
       and eve.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
     eve.status.reset()
-    M.editor.load(data_session.editor)
     M.tab.load(data_session.tab)
   end
 end
@@ -248,7 +243,7 @@ function M.refresh()
     eve.tab.resolve(tabnr, true)
   end
 
-  M.editor.on_refresh()
+  eve.status.on_refresh()
 
   local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs_unreferenced) do

@@ -212,7 +212,7 @@ local M = {}
 
 ---@return nil
 function M.browse()
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

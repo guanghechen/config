@@ -15,7 +15,7 @@ end
 
 ---@return nil
 function M.history_file()
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end
@@ -27,7 +27,7 @@ end
 
 ---@return nil
 function M.fs_cwd()
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

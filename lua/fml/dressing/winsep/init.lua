@@ -94,7 +94,7 @@ local scheduler = eve.std.Scheduler.new({
   end,
   task = function(callback)
     if eve.state.flight.dressing_winsep:snapshot() then
-      local winnr = eve.state.editor.get_winnr_fixed() ---@type integer|nil
+      local winnr = eve.status.get_winnr_fixed() ---@type integer|nil
       local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
       if winnr == winnr_cur then
         winsep:show(winnr_cur)
@@ -120,6 +120,6 @@ eve.state.observe({ eve.state.flight.dressing_winsep }, function()
   end
 end, false)
 
-eve.state.observe({ eve.state.editor.winnr_fixed }, function()
+eve.state.observe({ eve.status.winnr_fixed }, function()
   scheduler:schedule()
 end, false)

@@ -212,7 +212,7 @@ local select = eve.ux.Select.new({
     widget:hide()
 
     if #items > 0 then
-      local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() or eve.win.pick_sourcefile() ---@type integer|nil
+      local winnr_sourcefile = eve.status.get_winnr_sourcefile() or eve.win.pick_sourcefile() ---@type integer|nil
       if winnr_sourcefile ~= nil then
         for _, item in ipairs(items) do
           local data = item.data ---@type fml.action.find.buffers.IItemData

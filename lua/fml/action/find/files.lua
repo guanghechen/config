@@ -52,7 +52,7 @@ local function gen_title()
 end
 
 eve.state.observe({ eve.state.select.find_file_scope }, function()
-  local bufnr = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   local current_buf_dirpath = bufnr ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr)) or eve.path.cwd() ---@type string
   local current_find_cwd = state_cwd:snapshot() ---@type string
   local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string

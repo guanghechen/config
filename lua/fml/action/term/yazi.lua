@@ -57,7 +57,7 @@ end
 ---@return nil
 function M.yazi_reveal()
   local cwd = eve.path.cwd() ---@type string
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     open_yazi("yazi_cwd", cwd, cwd)
   else

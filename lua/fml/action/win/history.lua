@@ -28,7 +28,7 @@ local function get_history_select()
       local items = {} ---@type eve.ux.select.IItem[]
       local uuid_present = "0" ---@type string
 
-      local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
+      local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
       if winnr_sourcefile == nil then
         eve.reporter.error({
           from = __module_name__,
@@ -163,7 +163,7 @@ local function get_history_select()
         if #items == 1 then
           local item = items[1] ---@type eve.ux.select.IItem
           local item_index = tonumber(item.uuid) ---@type integer|nil
-          local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
+          local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
 
           if item_index ~= nil and winnr_sourcefile ~= nil then
             local meta = eve.win.resolve(winnr_sourcefile) ---@type eve.builtin.win.IMetaData|nil

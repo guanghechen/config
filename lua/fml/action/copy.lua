@@ -51,7 +51,7 @@ end
 ---@param arg                           unknown|nil
 ---@return nil
 function M.copy_filepath(arg)
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end
@@ -96,7 +96,7 @@ end
 
 ---@return nil
 function M.copy_filepath_absolute()
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end
@@ -107,7 +107,7 @@ end
 
 ---@return nil
 function M.copy_filepath_relative()
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end
@@ -118,7 +118,7 @@ end
 
 ---@return nil
 function M.copy_filepath_filename()
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

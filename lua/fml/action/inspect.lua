@@ -105,9 +105,9 @@ function M.inspect_tab()
       details = {
         base = {
           tabnr = tabnr,
-          winnr_command = eve.state.editor.get_winnr_command(),
-          winnr_fixed = eve.state.editor.get_winnr_fixed(),
-          winnr_sourcefile = eve.state.editor.get_winnr_sourcefile(),
+          winnr_command = eve.status.get_winnr_command(),
+          winnr_fixed = eve.status.get_winnr_fixed(),
+          winnr_sourcefile = eve.status.get_winnr_sourcefile(),
         },
         meta = vim.NIL,
       },
@@ -121,9 +121,9 @@ function M.inspect_tab()
     details = {
       base = {
         tabnr = tabnr,
-        winnr_command = eve.state.editor.get_winnr_command(),
-        winnr_fixed = eve.state.editor.get_winnr_fixed(),
-        winnr_sourcefile = eve.state.editor.get_winnr_sourcefile(),
+        winnr_command = eve.status.get_winnr_command(),
+        winnr_fixed = eve.status.get_winnr_fixed(),
+        winnr_sourcefile = eve.status.get_winnr_sourcefile(),
       },
       meta = meta,
     },

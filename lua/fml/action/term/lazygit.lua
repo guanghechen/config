@@ -38,8 +38,8 @@ end
 ---@param cwd                           string
 ---@return nil
 local function edit_lazygit_file_in_buffer(cwd)
-  local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
-  local bufnr_sourcefile = eve.state.editor.get_bufnr_sourcefile() ---@type integer|nil
+  local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
+  local bufnr_sourcefile = eve.status.get_bufnr_sourcefile() ---@type integer|nil
   if bufnr_sourcefile == nil then
     eve.reporter.error({
       from = __module_name__,

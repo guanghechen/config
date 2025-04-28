@@ -82,7 +82,7 @@ local group_items = {
     fileencoding = {
       title = "fileencoding",
       snapshot = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "String"
         end
@@ -91,7 +91,7 @@ local group_items = {
         return encoding, "String"
       end,
       action = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -197,7 +197,7 @@ local group_items = {
     fileformat = {
       title = "fileformat",
       snapshot = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "String"
         end
@@ -206,7 +206,7 @@ local group_items = {
         return fileformat, "String"
       end,
       action = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -296,7 +296,7 @@ local group_items = {
         return "unknown", "Boolean"
       end,
       action = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command ~= nil then
           local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
           require("mini.hipatterns").toggle(bufnr)
@@ -312,7 +312,7 @@ local group_items = {
         local ok, render_markdown = pcall(require, "render-markdown")
         if ok then
           eve.state.plugin.render_markdown:next(true)
-          eve.state.editor.focus_win_fixed()
+          eve.status.focus_win_fixed()
           render_markdown.buf_toggle()
         end
       end,
@@ -320,7 +320,7 @@ local group_items = {
     relativenumber = {
       title = "relativenumber",
       snapshot = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "Boolean"
         end
@@ -329,7 +329,7 @@ local group_items = {
         return flag and "true" or "false", "Boolean"
       end,
       action = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -341,7 +341,7 @@ local group_items = {
     wrap = {
       title = "wrap",
       snapshot = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "Boolean"
         end
@@ -350,7 +350,7 @@ local group_items = {
         return flag and "true" or "false", "Boolean"
       end,
       action = function()
-        local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -693,7 +693,7 @@ end
 
 ---@return nil
 function M.toggle_maximize()
-  local winnr_command = eve.state.editor.get_winnr_command() ---@type integer|nil
+  local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
   if winnr_command == nil then
     return
   end

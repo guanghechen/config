@@ -644,7 +644,7 @@ function M.dirpath(position)
       end
 
       relpath_pieces = vim.split(meta.relpath, eve.env.PATH_SEP, { plain = true }) ---@type string[]
-      local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
+      local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
       local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
       local hl_text_sep = winnr_sourcefile == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
 
@@ -682,7 +682,7 @@ function M.dirpath_prominent(position)
     name = "dirpath_prominent",
     atomic = false,
     condition = function(context)
-      local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
+      local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
       return context.winnr == winnr_sourcefile
     end,
     will_change = function(context, prev_context)
@@ -865,7 +865,7 @@ function M.filename(position)
     name = "filename",
     atomic = true,
     render = function(context)
-      local winnr_sourcefile = eve.state.editor.get_winnr_sourcefile() ---@type integer|nil
+      local winnr_sourcefile = eve.status.get_winnr_sourcefile() ---@type integer|nil
       local is_mod = vim.bo[context.bufnr].modified ---@type boolean
       local text_mod = is_mod and " " or "" ---@type string
       if context.winnr ~= winnr_sourcefile then
