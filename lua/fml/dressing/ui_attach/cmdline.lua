@@ -258,6 +258,14 @@ function M._show_confirm(state, msg_show_task)
     vim.bo[bufnr].swapfile = false
   end
 
+  local buttons = {} ---@type string[]
+  for token in vim.trim(state.prompt):gsub(":$", ""):gmatch("%s*([^,]+)%s*,?") do
+    local button = string.format(" %s ", token) ---@type string
+    table.insert(buttons, button)
+  end
+  local buttons_line = "  " .. table.concat(buttons, "  ") .. "  " ---@type string
+  local button_line_width = vim.api.nvim_strwidth(buttons_line) ---@type integer
+
   local message = "" ---@type string
   local highlights = {} ---@type eve.t.IHighlight[]
 
@@ -296,70 +304,55 @@ function M._show_confirm(state, msg_show_task)
     end
   end
 
+  local message_width = 0 ---@type integer
   local lines = vim.split(message, "\n", { plain = true }) ---@type string[]
 
-  local width = 10 --@type integer
-  for _, line in ipairs(lines) do
-    local w = vim.api.nvim_strwidth(line) ---@type integer
-    width = width < w and w or width ---@type integer
-  end
-  local width_message = width ---@type integer
-
-  ---! format the confirmation buttons.
   do
-    local buttons = {} ---@type string[]
-    for token in vim.trim(state.prompt):gsub(":$", ""):gmatch("%s*([^,]+)%s*,?") do
-      local button = string.format(" %s ", token) ---@type string
-      table.insert(buttons, button)
+    for _, line in ipairs(lines) do
+      local width = vim.api.nvim_strwidth(line) ---@type integer
+      message_width = message_width < width and width or message_width ---@type integer
+    end
+    message_width = message_width + 2 ---@type integer
+    local message_padding_width = math.floor((button_line_width - message_width) / 2) ---@type integer
+    message_padding_width = math.max(1, message_padding_width)
+    local message_padding = string.rep(" ", message_padding_width) ---@type string
+
+    for index, line in ipairs(lines) do
+      lines[index] = string.format("%s%s", message_padding, line) ---@type string
     end
 
-    local line = "  " .. table.concat(buttons, "  ") .. "  " ---@type string
-    local line_width = vim.api.nvim_strwidth(line) ---@type integer
+    local buttons_padding_width = 0 ---@type integer
+    if button_line_width < message_width then
+      buttons_padding_width = math.floor((message_width - button_line_width) / 2) ---@type integer
+      local buttons_padding = string.rep(" ", buttons_padding_width) ---@type string
+      buttons_line = string.format("%s%s", buttons_padding, buttons_line)
+    end
 
-    width = math.max(width, line_width) ---@type integer
-    width = math.min(width, math.floor(vim.o.columns * 0.8), 80) ---@type integer
-
-    local width_blank = width - vim.api.nvim_strwidth(line) ---@type integer
-    local line_offset = math.max(0, math.floor((width - width_blank) / 2)) ---@type integer
-    if line_offset > 0 then
-      line = string.rep(" ", line_offset) .. line
+    for _, hl in ipairs(highlights) do
+      hl.coll = hl.coll + message_padding_width
+      hl.colr = hl.colr + message_padding_width
     end
 
     local lnum = #lines + 1 ---@type integer
-    local offset = line_offset ---@type integer
+    local buttons_offset = buttons_padding_width + 2 ---@type integer
     for index, button in ipairs(buttons) do
       local w = vim.api.nvim_strwidth(button) ---@type integer
       ---@type eve.t.IHighlight
       local highlight = {
         lnum = lnum,
-        coll = offset,
-        colr = offset + w,
+        coll = buttons_offset,
+        colr = buttons_offset + w,
         hlname = index == 1 and "f_uc_option_current" or "f_uc_option",
       }
       table.insert(highlights, highlight)
-      offset = offset + w + 2
+      buttons_offset = buttons_offset + w + 2
     end
 
-    lines[#lines + 1] = line
-    lines[#lines + 1] = ""
-  end
-
-  ---! make the lines more compact
-  do
-    if width_message <= width then
-      local offset_left = math.floor((width - width_message) / 2) ---@type integer
-      local padding_left = string.rep(" ", offset_left) ---@type string
-      for _, hl in ipairs(highlights) do
-        hl.coll = hl.coll + offset_left
-        hl.colr = hl.colr + offset_left
-      end
-      for index, line in ipairs(lines) do
-        lines[index] = string.format("%s%s", padding_left, line)
-      end
-    end
+    lines[#lines + 1] = buttons_line
   end
 
   local height = math.min(math.floor(vim.o.lines * 0.8), #lines) ---@type integer
+  local width = math.max(button_line_width, message_width) ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
