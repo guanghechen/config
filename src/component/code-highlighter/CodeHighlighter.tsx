@@ -59,7 +59,6 @@ export class CodeHighlighter extends React.Component<IProps, IState> {
     const { linenoWidth, tokens } = this.state
 
     const countOfLines: number = tokens.length
-    const visibleLines: number = maxLines > 0 ? Math.min(maxLines, countOfLines) : countOfLines
 
     // Sync lineno width.
     const style: React.CSSProperties = {
@@ -70,7 +69,10 @@ export class CodeHighlighter extends React.Component<IProps, IState> {
             maxHeight: 0,
           }
         : {
-            maxHeight: `calc(1.6em * ${visibleLines + 0.8} + 6px)`,
+            maxHeight:
+              maxLines > 0
+                ? `calc(1.6em * ${Math.min(maxLines, countOfLines) + 0.8} + 6px)`
+                : undefined,
             minHeight: '100%',
           }),
     }

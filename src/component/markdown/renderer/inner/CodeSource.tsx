@@ -52,7 +52,10 @@ export const CodeSource: React.FC<IProps> = props => {
       {expanded && (
         <div
           className={cn(
-            'group relative box-border block max-h-[40rem] overflow-auto rounded-[4px]  pb-2 font-[var(--fontFamilyCode)]',
+            'group relative box-border block pb-2 font-[var(--fontFamilyCode)]',
+            {
+              'max-h-[40rem] overflow-auto rounded-[4px]': meta.overflow,
+            },
             PRESET_CLASSES.scrollbar,
           )}
         >

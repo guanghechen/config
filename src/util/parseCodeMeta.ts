@@ -21,6 +21,10 @@ export interface ICodeMetaData {
    */
   collapsed?: boolean
   /**
+   * Wheter if enable overflow when expand the code.
+   */
+  overflow?: boolean
+  /**
    * Whether to display the line numbers.
    */
   showlineno: boolean
@@ -75,6 +79,9 @@ export function parseCodeMeta(
     switch (key) {
       case 'collapsed':
         result.collapsed = convertToBoolean(val)
+        break
+      case 'overflow':
+        result.overflow = val === undefined ? true : convertToBoolean(val)
         break
       case 'highlight':
       case 'highlights': {
