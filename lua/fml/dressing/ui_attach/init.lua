@@ -79,8 +79,6 @@ local function process_queue()
     pcall(process_task, task)
   end
   processing = false
-
-  vim.api.nvim__redraw({ flush = true })
 end
 
 local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
