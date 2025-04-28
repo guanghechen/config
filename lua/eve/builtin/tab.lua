@@ -281,6 +281,16 @@ end
 
 ---@param tabnr                         integer|nil
 ---@return integer|nil
+function M.retrieve_bufnr_sourcefile(tabnr)
+  local winnr_sourcefile = M.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
+    return
+  end
+  return vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
+end
+
+---@param tabnr                         integer|nil
+---@return integer|nil
 function M.retrieve_winnr_sourcefile(tabnr)
   if tabnr ~= nil and tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr) then
     local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil

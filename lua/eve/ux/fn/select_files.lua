@@ -27,7 +27,7 @@ local function select_files(params)
     get_present = function()
       local present_filepath = nil ---@type string|nil
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+      local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
       if bufnr_sourcefile ~= nil then
         local absolute_filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
         present_filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string

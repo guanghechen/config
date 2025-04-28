@@ -78,7 +78,7 @@ local function gen_title()
 
   local cwd = eve.path.cwd() ---@type string
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+  local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
     if eve.path.is_exist_filepath(filepath) then
@@ -93,7 +93,7 @@ eve.state.select.search_file_scope:subscribe(
   eve.std.Subscriber.new({
     on_next = function(scope, prev_scope)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+      local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
       local current_buf_dirpath = bufnr_sourcefile ~= nil
           and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
         or eve.path.cwd() ---@type string

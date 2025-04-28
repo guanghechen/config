@@ -53,7 +53,7 @@ end
 
 eve.state.observe({ eve.state.select.find_file_scope }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local _, bufnr_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+  local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   local current_buf_dirpath = bufnr_sourcefile ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
     or eve.path.cwd() ---@type string
   local current_find_cwd = state_cwd:snapshot() ---@type string
