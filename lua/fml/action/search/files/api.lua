@@ -605,14 +605,12 @@ function M.open_files(items, frecency)
   end
 
   if #file_items > 0 then
-    context.hide()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     for _, file_item in ipairs(file_items) do
       local absolute_filepath = eve.path.resolve(cwd, file_item.filepath) ---@type string
       local relative_filepath = eve.path.relative(workspace, absolute_filepath, true) ---@type string
       frecency:access(relative_filepath)
-
       eve.win.open_filepath(winnr_sourcefile, absolute_filepath, file_item.lnum, file_item.col) ---@type boolean
     end
   end
