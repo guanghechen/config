@@ -199,7 +199,6 @@ function M._show(state)
 
     eve.win.set_type(winnr, eve.win.Types.CMDLINE)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
@@ -385,7 +384,6 @@ function M._show_confirm(state, msg_show_task)
 
     eve.win.set_type(winnr, eve.win.Types.CMDLINE)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false

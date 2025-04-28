@@ -202,7 +202,6 @@ function M:show()
 
     eve.win.set_type(winnr, eve.win.Types.WINSEP)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false

@@ -40,7 +40,7 @@ function M:create_buf_as_needed()
   local bufnr_hint = self.bufnr_hint ---@type integer|nil
   if bufnr_hint == nil or not vim.api.nvim_buf_is_valid(bufnr_hint) then
     bufnr_hint = vim.api.nvim_create_buf(false, true) ---@type integer
-    vim.bo[bufnr_hint].bufhidden = "wipe"
+    vim.bo[bufnr_hint].bufhidden = "hide"
     vim.bo[bufnr_hint].buflisted = false
     vim.bo[bufnr_hint].buftype = "nofile"
     vim.bo[bufnr_hint].filetype = eve.filetype.WINPICKER_MASK
@@ -87,7 +87,6 @@ function M:show(winnr)
 
     eve.win.set_type(winnr_hint, eve.win.Types.WINPICKER)
     vim.w[winnr_hint][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr_hint][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr_hint].number = false
     vim.wo[winnr_hint].relativenumber = false

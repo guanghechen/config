@@ -737,7 +737,6 @@ function M.toggle_maximize()
 
     eve.win.set_type(winnr, eve.win.Types.MAXIMIZE)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].number = true
     vim.wo[winnr].relativenumber = true

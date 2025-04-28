@@ -203,7 +203,6 @@ function M:create_win_as_needed()
 
     eve.win.set_type(winnr, eve.win.Types.SELECT_POPUP)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false

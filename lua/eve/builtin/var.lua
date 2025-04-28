@@ -6,7 +6,6 @@ M.Names = {
   BUF_DISABLE_AUTO_FORMAT = "eve_buf_disable_auto_format",
   BUF_DISABLE_LINT = "eve_buf_disable_lint",
   BUFID_MIDDLE = "eve_bufid_middle",
-  FLAG_SOURCEFILE = "eve_is_sourcefile",
   NEO_TREE_SOURCE = "neo_tree_source",
   WINLINE_DISABLED = "eve_winline_disabled",
 }

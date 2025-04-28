@@ -101,7 +101,6 @@ function M.history_show(task)
 
     eve.win.set_type(winnr, eve.win.Types.BOARD)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].cursorline = true
     vim.wo[winnr].number = true

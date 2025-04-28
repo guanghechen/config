@@ -418,7 +418,6 @@ function M.create_win_as_needed(win)
 
     eve.win.set_type(winnr, eve.win.Types.NOTIFY)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr].conceallevel = 0
     vim.wo[winnr].concealcursor = "n"

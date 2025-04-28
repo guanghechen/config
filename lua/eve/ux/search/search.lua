@@ -808,7 +808,6 @@ function M:create_wins_as_needed()
 
       eve.win.set_type(winnr_main, eve.win.Types.SEARCH_MAIN)
       vim.w[winnr_main][eve.var.Names.WINLINE_DISABLED] = true
-      vim.w[winnr_main][eve.var.Names.FLAG_SOURCEFILE] = false
 
       vim.wo[winnr_main].number = false
       vim.wo[winnr_main].relativenumber = false
@@ -865,7 +864,6 @@ function M:create_wins_as_needed()
 
       eve.win.set_type(winnr_preview, eve.win.Types.SEARCH_PREVIEW)
       vim.w[winnr_preview][eve.var.Names.WINLINE_DISABLED] = true
-      vim.w[winnr_preview][eve.var.Names.FLAG_SOURCEFILE] = false
 
       vim.wo[winnr_preview].number = true
       vim.wo[winnr_preview].list = true
@@ -913,7 +911,6 @@ function M:create_wins_as_needed()
 
     eve.win.set_type(winnr_input, eve.win.Types.SEARCH_INPUT)
     vim.w[winnr_input][eve.var.Names.WINLINE_DISABLED] = true
-    vim.w[winnr_input][eve.var.Names.FLAG_SOURCEFILE] = false
 
     vim.wo[winnr_input].number = false
     vim.wo[winnr_input].relativenumber = false

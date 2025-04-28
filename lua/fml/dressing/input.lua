@@ -85,7 +85,6 @@ function M.input(opts, on_confirm)
 
   eve.win.set_type(winnr, eve.win.Types.INPUT)
   vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-  vim.w[winnr][eve.var.Names.FLAG_SOURCEFILE] = false
 
   vim.wo[winnr].cursorline = false
   vim.wo[winnr].number = false
