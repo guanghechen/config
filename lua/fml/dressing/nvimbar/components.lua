@@ -1090,27 +1090,6 @@ end
 
 ---@param position                      eve.ux.nvimbar.Position
 ---@return eve.ux.nvimbar.IRawComponent
-function M.lsp_message(position)
-  local hln_text = position .. "_text" ---@type string
-
-  ---@type eve.ux.nvimbar.IRawComponent
-  local component = {
-    name = "lsp_message",
-    atomic = true,
-    condition = function()
-      return not not rawget(vim, "lsp") and #eve.status.lsp_msg:snapshot() > 0
-    end,
-    render = function()
-      local text = eve.status.lsp_msg:snapshot() ---@type string
-      local hl_text = txt(text, hln_text) ---@type string
-      return text, hl_text, true
-    end,
-  }
-  return component
-end
-
----@param position                      eve.ux.nvimbar.Position
----@return eve.ux.nvimbar.IRawComponent
 function M.lsp_symbols(position)
   local hln_lsp_icon = position .. "_lsp_icon" ---@type string
   local hln_lsp_sep = position .. "_lsp_sep" ---@type string
@@ -1202,6 +1181,72 @@ function M.mode(position)
 
       text = text .. eve.icon.symbols.sep_right ---@type string
       hl_text = hl_text .. txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
+function M.msg_command(position)
+  local hln_text = position .. "_msg_command" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "msg_command",
+    atomic = true,
+    render = function()
+      local text = eve.status.msg_command:snapshot() ---@type string
+      if text == "" then
+        return "", "", true
+      end
+
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
+function M.msg_lsp(position)
+  local hln_text = position .. "_msg_lsp" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "msg_lsp",
+    atomic = true,
+    render = function()
+      local text = eve.status.msg_lsp:snapshot() ---@type string
+      if text == "" then
+        return "", "", true
+      end
+
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.Position
+---@return eve.ux.nvimbar.IRawComponent
+function M.msg_mode(position)
+  local hln_text = position .. "_msg_mode" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "msg_mode",
+    atomic = true,
+    render = function()
+      local text = eve.status.msg_mode:snapshot() ---@type string
+      if text == "" then
+        return "", "", true
+      end
+
+      local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
   }
@@ -1523,29 +1568,6 @@ function M.readonly(position)
     render = function()
       local text = eve.icon.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
-      return text, hl_text, true
-    end,
-  }
-  return component
-end
-
----@param position                      eve.ux.nvimbar.Position
----@return eve.ux.nvimbar.IRawComponent
-function M.recording(position)
-  local hln_text = position .. "_recording" ---@type string
-
-  ---@type eve.ux.nvimbar.IRawComponent
-  local component = {
-    name = "recording",
-    atomic = true,
-    render = function()
-      local recording_msg = eve.status.recording_msg:snapshot() ---@type string
-      if recording_msg == "" then
-        return "", "", true
-      end
-
-      local text = recording_msg
-      local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
   }

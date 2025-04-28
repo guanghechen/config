@@ -205,6 +205,19 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.showcmd(task)
+  local contents = unpack(task.args)
+  ---@cast contents                     [integer, string, integer][]
+
+  if #contents < 1 then
+    return
+  end
+
+  local text = "" ---@type string
+  for _, item in ipairs(contents) do
+    local _, piece = unpack(item) ---@type integer, string
+    text = text .. piece
+  end
+  eve.status.msg_command:next(text)
   eve.status.dirtier_statusline:mark_dirty()
 end
 
@@ -217,7 +230,7 @@ function M.showmode(task)
     local _, piece = unpack(item) ---@type integer, string
     text = text .. piece
   end
-  eve.status.recording_msg:next(text)
+  eve.status.msg_mode:next(text)
 end
 
 return M

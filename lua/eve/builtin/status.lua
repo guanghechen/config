@@ -12,8 +12,9 @@
 ---
 ---@field public lint_schedule_nr       eve.std.collection.IObservable -- integer>
 ---
----@field public lsp_msg                eve.std.collection.IObservable -- string>
----@field public recording_msg          eve.std.collection.IObservable -- string>
+---@field public msg_command            eve.std.collection.IObservable -- string>
+---@field public msg_lsp                eve.std.collection.IObservable -- string>
+---@field public msg_mode               eve.std.collection.IObservable -- string>
 ---
 ---@field public maximized_winnrs       table<integer, boolean>
 ---@field public notification_paused    eve.std.collection.IObservable -- boolean>
@@ -35,8 +36,9 @@ local M = {
 
   lint_schedule_nr = eve.std.Observable.from_value(0, eve.std.fn.falsy),
 
-  lsp_msg = eve.std.Observable.from_value(""),
-  recording_msg = eve.std.Observable.from_value(""),
+  msg_command = eve.std.Observable.from_value(""),
+  msg_lsp = eve.std.Observable.from_value(""),
+  msg_mode = eve.std.Observable.from_value(""),
 
   maximized_winnrs = {},
   notification_paused = eve.std.Observable.from_value(false),
@@ -60,8 +62,10 @@ function M.reset()
   M.dirty_winline_nr:next(0)
 
   M.lint_schedule_nr:next(0)
-  M.lsp_msg:next("")
-  M.recording_msg:next("")
+
+  M.msg_command:next("")
+  M.msg_lsp:next("")
+  M.msg_mode:next("")
 
   M.maximized_winnrs = {}
   M.notification_paused:next(false)

@@ -357,8 +357,8 @@ function M.watch_changes()
   end, true)
 
   M.observe({
-    eve.status.lsp_msg,
-    eve.status.recording_msg,
+    eve.status.msg_lsp,
+    eve.status.msg_mode,
   }, function()
     eve.status.dirtier_statusline:mark_dirty()
   end)

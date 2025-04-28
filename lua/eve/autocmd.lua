@@ -73,8 +73,8 @@ vim.api.nvim_create_autocmd("LspProgress", {
     end
 
     local str = progress .. (data.message or "") .. " " .. (data.title or "")
-    local lsp_msg = data.kind == "end" and "" or str ---@type string
-    eve.status.lsp_msg:next(lsp_msg)
+    local msg_lsp = data.kind == "end" and "" or str ---@type string
+    eve.status.msg_lsp:next(msg_lsp)
 
     if data.kind == "end" then
       eve.status.suppress_warning:next(false)

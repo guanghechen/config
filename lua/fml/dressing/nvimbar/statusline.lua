@@ -44,12 +44,13 @@ statusline
   :place("right", c.encoding(position), 100)
   :place("right", c.filetype(position), 95)
   :place("right", c.python_env(position), 100)
-  :place("right", c.lsp_message(position), 90)
   :place("right", c.lsp(position), 100)
   :place("right", c.ai(position), 95)
   -- :place("right", c.copilot(position), 95)
   :place("right", c.diagnostics(position), 95)
-  :place("right", c.recording(position), 95)
+  :place("right", c.msg_mode(position), 95)
+  :place("right", c.msg_command(position), 80)
+  :place("right", c.msg_lsp(position), 90)
 
 dirtier:subscribe(eve.std.Subscriber.new({
   on_next = function()
