@@ -63,7 +63,7 @@ local main_keymaps = {
         return
       end
 
-      if not eve.editor.is_buf_sourcefile(bufnr) then
+      if not vim.bo[bufnr].buflisted then
         vim.api.nvim_buf_delete(bufnr, { force = true })
         _select:mark_item_deleted(item.uuid)
         _select:mark_data_dirty()

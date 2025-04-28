@@ -272,8 +272,7 @@ function M.watch_changes()
     local winnrs = vim.api.nvim_list_wins() ---@type integer[]
     vim.o.relativenumber = flag
     for _, winnr in ipairs(winnrs) do
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if eve.editor.is_buf_sourcefile(bufnr) then
+      if vim.wo[winnr].number then
         vim.wo[winnr].relativenumber = flag
       end
     end

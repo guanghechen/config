@@ -303,7 +303,7 @@ function M.load(raw_data)
       for _, winnr in ipairs(winnrs) do
         if eve.win.is_sourcefile(winnr) then
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
+          if not bufnr_set[bufnr] and vim.bo[bufnr].buflisted then
             local buf = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
             bufs[#bufs + 1] = buf
             bufnr_set[bufnr] = true
@@ -376,7 +376,7 @@ function M.resolve(tabnr)
   for _, winnr in ipairs(winnrs) do
     if eve.win.is_sourcefile(winnr) then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if not bufnr_set[bufnr] and eve.editor.is_buf_sourcefile(bufnr) then
+      if not bufnr_set[bufnr] and vim.bo[bufnr].buflisted then
         bufnr_set[bufnr] = true
         bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
       end
@@ -407,7 +407,7 @@ function M.refresh(tabnr)
   for _, winnr in ipairs(winnrs) do
     if eve.win.is_sourcefile(winnr) then
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      if not meta:find_buf(bufnr) and eve.editor.is_buf_sourcefile(bufnr) then
+      if not meta:find_buf(bufnr) and vim.bo[bufnr].buflisted then
         bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
       end
     end
@@ -505,7 +505,7 @@ function M.get_unrefereced_bufnrs(bufnrs)
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   local bufnrs_to_remove = {} ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    if eve.editor.is_buf_sourcefile(bufnr) then
+    if vim.bo[bufnr].buflisted then
       local has_copy = false ---@type boolean
       for _, tabnr in ipairs(tabnrs) do
         local meta_tab = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
@@ -520,18 +520,6 @@ function M.get_unrefereced_bufnrs(bufnrs)
     end
   end
   return bufnrs_to_remove
-end
-
----@param tabnr                         integer
----@return eve.state.tab.buf.state[]
-function M.list_valid_bufs(tabnr)
-  local meta = M.resolve(tabnr) ---@type eve.state.tab.meta.state|nil
-  if meta == nil or #meta.bufs < 1 then
-    return {}
-  end
-
-  meta:rearrange_bufs()
-  return meta.bufs
 end
 
 return M

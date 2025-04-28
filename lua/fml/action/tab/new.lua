@@ -17,14 +17,13 @@ function M.new_with_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
 
   vim.cmd("$tabnew")
-  vim.bo.buflisted = false
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   eve.tab.set_type(tabnr, eve.tab.Types.NORMAL)
 
   local bufs = {} ---@type eve.state.tab.buf.state[]
-  if eve.editor.is_buf_sourcefile(bufnr) then
+  if vim.bo[bufnr].buflisted then
     bufs[#bufs + 1] = { bufnr = bufnr, pinned = false } ---@type eve.state.tab.buf.state
   end
 

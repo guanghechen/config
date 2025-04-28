@@ -28,40 +28,6 @@ function M.get_visual_lnum_range()
   return lnum_2, lnum_1
 end
 
----@param bufnr                         integer
----@return boolean
-function M.is_buf_sourcefile(bufnr)
-  local is_sourcefile = vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] ---@type boolean|nil
-  if is_sourcefile ~= nil then
-    return is_sourcefile
-  end
-
-  if not vim.bo[bufnr].buflisted then
-    return false
-  end
-
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  if buftype == "nofile" then
-    return false
-  end
-
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if #filetype < 1 then
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local flag = vim.fn.filereadable(filepath) == 1
-    vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = flag
-    return flag
-  end
-
-  if eve.filetype.is_not_sourcefile(filetype) then
-    vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = false
-    return false
-  end
-
-  vim.b[bufnr][eve.var.Names.FLAG_SOURCEFILE] = true
-  return true
-end
-
 ---@param filepath                      string|nil
 ---@return boolean
 function M.is_valid_filepath(filepath)
