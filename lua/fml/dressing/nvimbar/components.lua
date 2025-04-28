@@ -1098,10 +1098,10 @@ function M.lsp_message(position)
     name = "lsp_message",
     atomic = true,
     condition = function()
-      return not not rawget(vim, "lsp") and #eve.state.status.lsp_msg:snapshot() > 0
+      return not not rawget(vim, "lsp") and #eve.status.lsp_msg:snapshot() > 0
     end,
     render = function()
-      local text = eve.state.status.lsp_msg:snapshot() ---@type string
+      local text = eve.status.lsp_msg:snapshot() ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,
@@ -1539,7 +1539,7 @@ function M.recording(position)
     name = "recording",
     atomic = true,
     render = function()
-      local recording_msg = eve.state.status.recording_msg:snapshot() ---@type string
+      local recording_msg = eve.status.recording_msg:snapshot() ---@type string
       if recording_msg == "" then
         return "", "", true
       end
@@ -1573,7 +1573,7 @@ function M.tabs(position)
   local fn_toggle_tabs_folded = eve.G.register_anonymous_fn(function()
     folded = not folded
     dirty = true
-    eve.state.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end) or ""
 
   ---@type eve.ux.nvimbar.IRawComponent

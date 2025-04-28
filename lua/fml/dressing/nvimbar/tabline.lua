@@ -1,6 +1,6 @@
 local c = require("fml.dressing.nvimbar.components")
 
-local dirtier = eve.state.status.dirtier_tabline ---@type eve.std.collection.IDirtier
+local dirtier = eve.status.dirtier_tabline ---@type eve.std.collection.IDirtier
 local position = "f_tl" ---@type eve.ux.nvimbar.Position
 
 local tabline ---@type eve.ux.INvimbar
@@ -99,7 +99,7 @@ dirtier:subscribe(eve.std.Subscriber.new({
       if last_showtabline ~= 0 then
         local winnrs = vim.api.nvim_list_wins() ---@type integer[]
         for _, winnr in ipairs(winnrs) do
-          eve.state.status.dirty_winline_nr:next(winnr)
+          eve.status.dirty_winline_nr:next(winnr)
         end
       end
 

@@ -42,7 +42,7 @@ local group_flags = {
 
   ---ux
   ux = {
-    notification_paused = eve.state.status.notification_paused,
+    notification_paused = eve.status.notification_paused,
     relativenumber = eve.state.option.relativenumber,
     username = eve.state.theme.username,
     transparency = eve.state.theme.transparency,
@@ -698,8 +698,8 @@ function M.toggle_maximize()
     return
   end
 
-  if eve.state.status.maximized_winnrs[winnr_command] then
-    eve.state.status.maximized_winnrs[winnr_command] = nil
+  if eve.status.maximized_winnrs[winnr_command] then
+    eve.status.maximized_winnrs[winnr_command] = nil
     vim.api.nvim_win_close(winnr_command, true)
     return
   end
@@ -708,7 +708,7 @@ function M.toggle_maximize()
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   local winnr_maximized = nil ---@type integer|nil
   for _, winnr in ipairs(winnrs) do
-    if eve.state.status.maximized_winnrs[winnr] then
+    if eve.status.maximized_winnrs[winnr] then
       winnr_maximized = winnr
       break
     end
@@ -744,7 +744,7 @@ function M.toggle_maximize()
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].wrap = false
 
-    eve.state.status.maximized_winnrs[winnr] = true
+    eve.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
   end

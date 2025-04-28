@@ -11,7 +11,7 @@ end
 ---@return nil
 function M.resume_last_widget()
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  if eve.state.status.maximized_winnrs[winnr_cur] then
+  if eve.status.maximized_winnrs[winnr_cur] then
     eve.command.execute(eve.command.definitions.toggle.maximize.uuid)
     return
   end

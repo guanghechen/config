@@ -32,9 +32,9 @@ function M.refresh_all()
   end
 
   pcall(vim.cmd.LspRestart)
-  eve.state.status.suppress_warning:next(true)
-  eve.state.status.dirtier_statusline:mark_dirty()
-  eve.state.status.dirtier_tabline:mark_dirty()
+  eve.status.suppress_warning:next(true)
+  eve.status.dirtier_statusline:mark_dirty()
+  eve.status.dirtier_tabline:mark_dirty()
   vim.cmd("redraw!")
 
   eve.reporter.info({

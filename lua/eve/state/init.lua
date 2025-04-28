@@ -8,7 +8,6 @@ local __mods = {
   --------------------------------------------------------------------------------------------------
 
   editor = "eve.state.session.editor",
-  status = "eve.state.session.status",
   tab = "eve.state.session.tab",
 
   --------------------------------------------------------------------------------------------------
@@ -44,7 +43,6 @@ local __lazy = {
 ---@field public theme                  eve.state.theme.data
 ---
 ---@field public editor                 eve.state.editor.data
----@field public status                 eve.state.status.data
 ---@field public tab                    eve.state.tab.data
 ---
 ---@field public bookmark               eve.state.bookmark.data
@@ -76,7 +74,6 @@ local __lazy = {
 ---@field public theme                  eve.state.theme
 ---
 ---@field public editor                 eve.state.editor
----@field public status                 eve.state.status
 ---@field public tab                    eve.state.tab
 ---
 ---@field public bookmark               eve.state.bookmark
@@ -114,7 +111,6 @@ function M.dump()
     theme = M.theme.dump(),
 
     editor = M.editor.dump(),
-    status = M.status.dump(),
     tab = M.tab.dump(),
 
     bookmark = M.bookmark.dump(),
@@ -165,8 +161,8 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.session) ~= 0
       and eve.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
+    eve.status.reset()
     M.editor.load(data_session.editor)
-    M.status.load(data_session.status)
     M.tab.load(data_session.tab)
   end
 end
@@ -289,9 +285,9 @@ function M.watch_changes()
     M.theme.transparency,
     M.theme.username,
   }, function()
-    M.status.ticker_editor:tick()
-    M.status.dirtier_statusline:mark_dirty()
-    M.status.dirtier_tabline:mark_dirty()
+    eve.status.ticker_editor:tick()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -302,8 +298,8 @@ function M.watch_changes()
     M.plugin.treesitter_context,
     M.option.relativenumber,
   }, function()
-    M.status.dirtier_statusline:mark_dirty()
-    M.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -345,15 +341,15 @@ function M.watch_changes()
     table.insert(select_states, select_item.excludes)
   end
   M.observe(select_states, function()
-    M.status.ticker_workspace:tick()
-    M.status.dirtier_statusline:mark_dirty()
+    eve.status.ticker_workspace:tick()
+    eve.status.dirtier_statusline:mark_dirty()
   end, true)
 
   ---! Trigger tabline redraw.
   M.observe({
     M.flight.devmode,
   }, function()
-    M.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end, true)
 
   M.observe({
@@ -366,10 +362,10 @@ function M.watch_changes()
   end, true)
 
   M.observe({
-    M.status.lsp_msg,
-    M.status.recording_msg,
+    eve.status.lsp_msg,
+    eve.status.recording_msg,
   }, function()
-    M.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_statusline:mark_dirty()
   end)
 
   local editor_states_save_scheduler = eve.std.Scheduler.new({
@@ -396,7 +392,7 @@ function M.watch_changes()
       callback("fulfilled")
     end,
   })
-  M.status.ticker_editor:subscribe(
+  eve.status.ticker_editor:subscribe(
     eve.std.Subscriber.new({
       on_next = function()
         editor_states_save_scheduler:schedule()

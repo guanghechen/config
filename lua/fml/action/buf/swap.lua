@@ -40,8 +40,8 @@ function M.swap_left(step)
 
   meta.bufs[bufid_next] = buf_sourcefile
   meta.bufs[bufid_sourcefile] = buf_next
-  eve.state.status.dirtier_statusline:mark_dirty()
-  eve.state.status.dirtier_tabline:mark_dirty()
+  eve.status.dirtier_statusline:mark_dirty()
+  eve.status.dirtier_tabline:mark_dirty()
 end
 
 ---@param step                          integer|nil
@@ -81,8 +81,8 @@ function M.swap_right(step)
 
   meta.bufs[bufid_next] = buf_sourcefile
   meta.bufs[bufid_sourcefile] = buf_next
-  eve.state.status.dirtier_statusline:mark_dirty()
-  eve.state.status.dirtier_tabline:mark_dirty()
+  eve.status.dirtier_statusline:mark_dirty()
+  eve.status.dirtier_tabline:mark_dirty()
 end
 
 return M

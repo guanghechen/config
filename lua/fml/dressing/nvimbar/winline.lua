@@ -70,7 +70,7 @@ local function locate_symbols(winnr, callback)
           end
         end
       end
-      if eve.state.status.suppress_warning:snapshot() then
+      if eve.status.suppress_warning:snapshot() then
         safe_callback(false)
         return
       end
@@ -324,7 +324,7 @@ local function render(winnr)
   end
 end
 
-eve.state.status.dirty_winline_nr:subscribe(
+eve.status.dirty_winline_nr:subscribe(
   eve.std.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)

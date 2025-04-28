@@ -4,7 +4,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     vim.schedule(function()
       eve.tab.on_buf_delete(tabnr)
-      eve.state.status.dirtier_tabline:mark_dirty()
+      eve.status.dirtier_tabline:mark_dirty()
     end)
   end,
 })
@@ -19,9 +19,9 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     vim.schedule(function()
       eve.win.on_buf_enter(winnr, bufnr)
       eve.tab.on_buf_enter(tabnr, bufnr)
-      eve.state.status.dirty_winline_nr:next(winnr)
-      eve.state.status.dirtier_statusline:mark_dirty()
-      eve.state.status.dirtier_tabline:mark_dirty()
+      eve.status.dirty_winline_nr:next(winnr)
+      eve.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_tabline:mark_dirty()
     end)
   end,
 })

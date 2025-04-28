@@ -18,7 +18,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.clear(task)
-  eve.state.status.searching:next(true)
+  eve.status.searching:next(true)
 end
 
 ---@param task                          fml.dressing.ui_attach.ITask
@@ -129,7 +129,7 @@ function M.show(task)
   ---@cast history                      boolean
 
   if kind == "search_count" or kind == "search_cmd" then
-    eve.state.status.searching:next(true)
+    eve.status.searching:next(true)
     local line = vim.fn.line(".") - 1
     local virt_text = {} ---@type string[][]
     for _, piece in ipairs(content) do
@@ -206,7 +206,7 @@ end
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.showcmd(task)
-  eve.state.status.dirtier_statusline:mark_dirty()
+  eve.status.dirtier_statusline:mark_dirty()
 end
 
 function M.showmode(task)
@@ -218,7 +218,7 @@ function M.showmode(task)
     local _, piece = unpack(item) ---@type integer, string
     text = text .. piece
   end
-  eve.state.status.recording_msg:next(text)
+  eve.status.recording_msg:next(text)
 end
 
 return M

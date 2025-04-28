@@ -175,7 +175,7 @@ local scheduler = eve.std.Scheduler.new({
   delay = 256,
   task = function(callback)
     if not processing then
-      local notification_paused = eve.state.status.notification_paused:snapshot() ---@type boolean
+      local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
       if notification_paused then
         return
       end
@@ -226,12 +226,12 @@ end
 
 ---@return nil
 function M.pause()
-  eve.state.status.notification_paused:next(true)
+  eve.status.notification_paused:next(true)
 end
 
 ---@return nil
 function M.resume()
-  eve.state.status.notification_paused:next(false)
+  eve.status.notification_paused:next(false)
   M.schedule()
 end
 
@@ -278,8 +278,8 @@ function M.notify(params)
     timestamp = timestamp,
   }
 
-  local notification_paused = eve.state.status.notification_paused:snapshot() ---@type boolean
-  local notification_level = eve.state.status.notification_level:snapshot() ---@type eve.builtin.notifier.LevelEnum
+  local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
+  local notification_level = eve.status.notification_level:snapshot() ---@type eve.builtin.notifier.LevelEnum
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 

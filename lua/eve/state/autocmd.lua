@@ -1,5 +1,5 @@
 vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = eve.nvim.augroup("state_on_vim_leave_pre"),
+  group = eve.nvim.augroup("state_on_VimLeavePre"),
   once = true,
   callback = function()
     eve.state.dispose()
@@ -37,8 +37,8 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
         end
       end
 
-      eve.state.status.dirtier_statusline:mark_dirty()
-      eve.state.status.dirtier_tabline:mark_dirty()
+      eve.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_tabline:mark_dirty()
       eve.state.refresh()
     end)
   end,
@@ -47,8 +47,8 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
 vim.api.nvim_create_autocmd("TabEnter", {
   group = eve.nvim.augroup("state_on_tab_enter"),
   callback = function()
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end,
 })
 
@@ -58,8 +58,8 @@ vim.api.nvim_create_autocmd("TabClosed", {
     vim.schedule(function()
       eve.state.refresh()
     end)
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end,
 })
 
@@ -74,9 +74,9 @@ vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
       eve.tab.on_buf_enter(tabnr, bufnr)
       eve.state.editor.on_win_enter(winnr)
 
-      eve.state.status.dirty_winline_nr:next(winnr)
-      eve.state.status.dirtier_statusline:mark_dirty()
-      eve.state.status.dirtier_tabline:mark_dirty()
+      eve.status.dirty_winline_nr:next(winnr)
+      eve.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_tabline:mark_dirty()
     end)
   end,
 })
@@ -86,11 +86,11 @@ vim.api.nvim_create_autocmd("WinClosed", {
   callback = function(args)
     local winnr = type(args.file) == "string" and tonumber(args.file) or nil ---@type integer|nil
     if type(winnr) == "number" then
-      eve.state.status.maximized_winnrs[winnr] = nil
+      eve.status.maximized_winnrs[winnr] = nil
     end
 
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end,
 })
 
@@ -104,16 +104,16 @@ vim.api.nvim_create_autocmd("ModeChanged", {
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
   group = eve.nvim.augroup("state_on_diagnostic_changed"),
   callback = function()
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end,
 })
 
 vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
   group = eve.nvim.augroup("state_on_content_changed"),
   callback = function()
-    eve.state.status.dirtier_statusline:mark_dirty()
-    eve.state.status.dirtier_tabline:mark_dirty()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
   end,
 })
 
@@ -121,8 +121,8 @@ vim.api.nvim_create_autocmd("CursorHold", {
   group = eve.nvim.augroup("state_on_cursor_hold"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    eve.state.status.dirty_winline_nr:next(winnr)
-    eve.state.status.dirtier_statusline:mark_dirty()
+    eve.status.dirty_winline_nr:next(winnr)
+    eve.status.dirtier_statusline:mark_dirty()
   end,
 })
 
@@ -139,10 +139,10 @@ vim.api.nvim_create_autocmd("LspProgress", {
 
     local str = progress .. (data.message or "") .. " " .. (data.title or "")
     local lsp_msg = data.kind == "end" and "" or str ---@type string
-    eve.state.status.lsp_msg:next(lsp_msg)
+    eve.status.lsp_msg:next(lsp_msg)
 
     if data.kind == "end" then
-      eve.state.status.suppress_warning:next(false)
+      eve.status.suppress_warning:next(false)
     end
   end,
 })
@@ -166,12 +166,12 @@ vim.api.nvim_create_autocmd("VimResized", {
     vim.schedule(function()
       eve.widget.resize()
 
-      eve.state.status.dirtier_statusline:mark_dirty()
-      eve.state.status.dirtier_tabline:mark_dirty()
+      eve.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_tabline:mark_dirty()
 
       if eve.env.IS_TMUX then
         local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
-        eve.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+        eve.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
       end
     end)
   end,
@@ -181,7 +181,7 @@ vim.api.nvim_create_autocmd("WinResized", {
   group = eve.nvim.augroup("state_on_win_resized"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    eve.state.status.dirty_winline_nr:next(winnr)
-    eve.state.status.dirtier_tabline:mark_dirty()
+    eve.status.dirty_winline_nr:next(winnr)
+    eve.status.dirtier_tabline:mark_dirty()
   end,
 })

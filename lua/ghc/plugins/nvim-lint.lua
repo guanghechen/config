@@ -157,7 +157,7 @@ return {
       end,
     })
 
-    eve.state.observe({ eve.state.status.lint_schedule_nr }, function()
+    eve.state.observe({ eve.status.lint_schedule_nr }, function()
       vim.schedule(function()
         lint_scheduler:execute_immediately()
       end)

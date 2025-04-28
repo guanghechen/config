@@ -177,7 +177,7 @@ function M.new(props)
       local flag = case_sensitive:snapshot() ---@type boolean
       case_sensitive:next(not flag)
       self:mark_search_state_dirty()
-      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -185,7 +185,7 @@ function M.new(props)
       local flag = flag_fuzzy:snapshot() ---@type boolean
       flag_fuzzy:next(not flag)
       self:mark_search_state_dirty()
-      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -193,7 +193,7 @@ function M.new(props)
       local flag = flag_regex:snapshot() ---@type boolean
       flag_regex:next(not flag)
       self:mark_search_state_dirty()
-      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_statusline:mark_dirty()
     end
 
     ---@return nil
@@ -201,7 +201,7 @@ function M.new(props)
       local flag = flag_selected:snapshot() ---@type boolean
       flag_selected:next(not flag)
       -- self:mark_search_state_dirty() -- toggle selected state should not mark the data dirty
-      eve.state.status.dirtier_statusline:mark_dirty()
+      eve.status.dirtier_statusline:mark_dirty()
     end
 
     ---@type eve.t.ux.widget.IRawStatuslineItem[]

@@ -35,7 +35,7 @@ function M.spellcheck_register()
 
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   vim.schedule(function()
-    eve.state.status.lint_schedule_nr:next(bufnr)
+    eve.status.lint_schedule_nr:next(bufnr)
   end)
 
   local filepath_buf = vim.api.nvim_buf_get_name(bufnr) ---@type string

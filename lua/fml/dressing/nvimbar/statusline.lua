@@ -1,6 +1,6 @@
 local c = require("fml.dressing.nvimbar.components")
 
-local dirtier = eve.state.status.dirtier_statusline ---@type eve.std.collection.IDirtier
+local dirtier = eve.status.dirtier_statusline ---@type eve.std.collection.IDirtier
 local position = "f_sl" ---@type eve.ux.nvimbar.Position
 
 local statusline ---@type eve.ux.INvimbar

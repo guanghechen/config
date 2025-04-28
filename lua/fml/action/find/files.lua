@@ -454,7 +454,7 @@ function M.find_files_directory(specified_filepath)
     end
   end
   eve.state.select.find_file_scope:next("D", { silent = silent })
-  eve.state.status.dirtier_statusline:mark_dirty()
+  eve.status.dirtier_statusline:mark_dirty()
   select:show()
 end
 

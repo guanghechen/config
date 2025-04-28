@@ -134,9 +134,9 @@ local function ui_attach_callback(event, kind, ...)
 end
 
 eve.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
-  local searching = eve.state.status.searching:snapshot() ---@type boolean
+  local searching = eve.status.searching:snapshot() ---@type boolean
   if searching then
-    eve.state.status.searching:next(false)
+    eve.status.searching:next(false)
     vim.schedule(function()
       vim.cmd.noh()
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
