@@ -124,7 +124,7 @@ function M.setup_breakpoints()
   eve.std.timer.set_timeout(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
-      local bufnr = eve.buf.locate_by_filepath(breakpoint.filepath) ---@type integer|nil
+      local bufnr = eve.buf.loadfile(breakpoint.filepath) ---@type integer|nil
       if bufnr ~= nil then
         bps.set({
           condition = breakpoint.condition,

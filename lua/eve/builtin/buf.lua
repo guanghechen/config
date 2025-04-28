@@ -79,9 +79,13 @@ function M.is_valid(bufnr)
   return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
 end
 
----@param filepath                      string
+---@param filepath                      string|nil
 ---@return integer|nil
 function M.loadfile(filepath)
+  if filepath == nil or #filepath < 1 then
+    return nil
+  end
+
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
     local bufpath = vim.api.nvim_buf_get_name(bufnr) ---@type string
@@ -96,23 +100,6 @@ function M.loadfile(filepath)
     vim.fn.bufload(bufnr)
     return bufnr
   end
-end
-
----@param filepath                      string|nil
----@return integer|nil
-function M.locate_by_filepath(filepath)
-  if filepath == nil or #filepath < 1 then
-    return nil
-  end
-
-  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  for _, bufnr in ipairs(bufnrs) do
-    local buf_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if buf_filepath == filepath then
-      return bufnr
-    end
-  end
-  return nil
 end
 
 ---@param cwd                           string
