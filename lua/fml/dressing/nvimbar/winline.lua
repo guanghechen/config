@@ -96,7 +96,7 @@ local function locate_symbols(winnr, callback)
     local pieces = winline.lsp_symbols ---@type fml.dressing.nvimbar.state.ILspSymbol[]
 
     local N = #pieces ---@type integer
-    local k = 0 ---@type integer
+    local k = 1 ---@type integer
     if symbol_path then
       for _, symbol in ipairs(symbol_path) do
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
@@ -110,11 +110,11 @@ local function locate_symbols(winnr, callback)
           col = pos.character + 1,
         }
 
-        k = k + 1
         pieces[k] = piece
+        k = k + 1
       end
     end
-    for i = k + 1, N, 1 do
+    for i = N, k, -1 do
       pieces[i] = nil
     end
     safe_callback()

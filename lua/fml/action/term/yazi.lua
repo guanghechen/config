@@ -33,7 +33,7 @@ local function open_yazi(name, cwd, filepath)
             k = k + 1
           end
         end
-        for i = k, N, 1 do
+        for i = N, k, -1 do
           filepaths[i] = nil
         end
 

@@ -145,7 +145,7 @@ return {
             k = k + 1
           end
         end
-        for i = k, #names, 1 do
+        for i = #names, k, -1 do
           names[i] = nil
         end
 

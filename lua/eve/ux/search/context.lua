@@ -656,7 +656,7 @@ function M:set_item_deleted(uuid)
       uuids_selected[item.uuid] = nil
     end
   end
-  for i = k, N, 1 do
+  for i = N, k, -1 do
     items[i] = nil
   end
 

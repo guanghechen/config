@@ -290,13 +290,13 @@ function M.split_prettier(root_pieces, from_pieces, to)
   end
 
   if is_under then
-    local k = 0 ---@type integer
+    local k = 1 ---@type integer
     local N = #to_pieces ---@type integer
     for i = #from_pieces + 1, N, 1 do
-      k = k + 1
       to_pieces[k] = to_pieces[i]
+      k = k + 1
     end
-    for i = k + 1, N, 1 do
+    for i = N, k, -1 do
       to_pieces[i] = nil
     end
   end

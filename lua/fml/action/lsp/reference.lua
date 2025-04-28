@@ -119,19 +119,19 @@ local function fetch_data(method, additional_params, callback)
       return a.filepath < b.filepath
     end)
 
-    local k = 1 ---@type integer
-    local last_item = items[k] ---@type eve.ux.select_file.IRawItem
+    local last_item = items[1] ---@type eve.ux.select_file.IRawItem
     local N = #items ---@type integer
+    local k = 2 ---@type integer
     for i = 2, N, 1 do
       local item = items[i] ---@type eve.ux.select_file.IRawItem
 
       if item.filepath ~= last_item.filepath or item.lnum ~= last_item.lnum then
-        k = k + 1
-        items[k] = item
         last_item = item
+        items[k] = item
+        k = k + 1
       end
     end
-    for i = k + 1, N, 1 do
+    for i = N, k, -1 do
       items[i] = nil
     end
     local data = { items = items, cwd = cwd } ---@type eve.ux.select_file.IData
