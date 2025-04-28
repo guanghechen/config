@@ -25,7 +25,6 @@ local group_flags = {
     autoload = eve.state.flight.autoload,
     autosave = eve.state.flight.autosave,
     devmode = eve.state.flight.devmode,
-    dressing_cmdline = eve.state.flight.dressing_cmdline,
     dressing_hipairs = eve.state.flight.dressing_hipairs,
     dressing_illumniate = eve.state.flight.dressing_illumniate,
     dressing_input = eve.state.flight.dressing_input,
