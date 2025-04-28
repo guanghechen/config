@@ -12,6 +12,7 @@
 ---
 ---@field public lint_schedule_nr       eve.std.collection.IObservable -- integer>
 ---
+---@field public msg_changes            eve.std.collection.IObservable -- string>
 ---@field public msg_command            eve.std.collection.IObservable -- string>
 ---@field public msg_lsp                eve.std.collection.IObservable -- string>
 ---@field public msg_mode               eve.std.collection.IObservable -- string>
@@ -36,6 +37,7 @@ local M = {
 
   lint_schedule_nr = eve.std.Observable.from_value(0, eve.std.fn.falsy),
 
+  msg_changes = eve.std.Observable.from_value(""),
   msg_command = eve.std.Observable.from_value(""),
   msg_lsp = eve.std.Observable.from_value(""),
   msg_mode = eve.std.Observable.from_value(""),
@@ -63,6 +65,7 @@ function M.reset()
 
   M.lint_schedule_nr:next(0)
 
+  M.msg_changes:next("")
   M.msg_command:next("")
   M.msg_lsp:next("")
   M.msg_mode:next("")

@@ -50,6 +50,7 @@ statusline
   :place("right", c.diagnostics(position), 95)
   :place("right", c.msg_mode(position), 95)
   :place("right", c.msg_command(position), 80)
+  :place("right", c.msg_changes(position), 85)
   :place("right", c.msg_lsp(position), 90)
 
 dirtier:subscribe(eve.std.Subscriber.new({

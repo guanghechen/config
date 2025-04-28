@@ -1,5 +1,12 @@
 local states = require("fml.dressing.ui_attach.state")
 
+local KIND_MAP = {
+  CHANGES = {
+    undo = true,
+    bufwrite = true,
+  },
+}
+
 local nsnrs = eve.constant.nsnr ---@type eve.constant.nsnr
 
 local kind_2_level_map = {
@@ -127,6 +134,11 @@ function M.show(task)
   ---@cast replace_last                 boolean
   ---@cast history                      boolean
 
+  if kind == "confirm" then
+    states.message.confirming_task = task
+    return
+  end
+
   if kind == "search_count" or kind == "search_cmd" then
     eve.status.searching:next(true)
     local line = vim.fn.line(".") - 1
@@ -145,16 +157,15 @@ function M.show(task)
     return
   end
 
-  if kind == "confirm" then
-    states.message.confirming_task = task
-    return
-  end
-
   local level = kind_2_level_map[kind] or vim.log.levels.INFO
   local title = #kind > 0 and string.format("%s | %s", task.event, kind) or task.event ---@type string
   local message = "" ---@type string
   for _, item in ipairs(content) do
     message = message .. item[2] ---@type string
+  end
+
+  if KIND_MAP.CHANGES[kind] == true then
+    eve.status.msg_changes:next(message)
   end
 
   local highlights = {} ---@type eve.t.IHighlight[]
@@ -189,7 +200,8 @@ function M.show(task)
   end
   states.message.last_group = group
 
-  local anonymous = kind ~= "echo" and not history ---@type boolean
+  local anonymous = KIND_MAP.CHANGES[kind] ~= true and kind ~= "echo" and not history ---@type boolean
+  local silent = KIND_MAP.CHANGES[kind] == true ---@type boolean
   vim.notify(message, level, {
     group = group,
     title = title,
@@ -197,7 +209,7 @@ function M.show(task)
     message = message,
     highlights = highlights,
     anonymous = anonymous,
-    silent = false,
+    silent = silent,
   })
 end
 

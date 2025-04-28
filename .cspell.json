@@ -194,6 +194,7 @@
     "bufs",
     "buftype",
     "buftypes",
+    "bufwrite",
     "bugreport",
     "cachemap",
     "catppuccin",
