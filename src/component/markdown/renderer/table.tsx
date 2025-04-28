@@ -23,9 +23,9 @@ export class TableRenderer extends React.Component<Table> {
       row.children.map((cell, index) => <NodesRenderer key={index} nodes={cell.children} />),
     )
     return (
-      <table className="yozora-table box-border overflow-auto w-full p-0 border-collapse rounded-md border-spacing-0 border border-solid border-gray-200 dark:border-gray-700 mx-auto mb-5 leading-relaxed [font-variation-settings:_'opsz'_40,_'wght'_410]">
+      <table className="yozora-table box-border overflow-auto w-full p-0 border-collapse rounded-lg border-spacing-0 border border-gray-200 dark:border-gray-700 mx-auto mb-5 leading-relaxed [font-variation-settings:_'opsz'_40,_'wght'_410] bg-white dark:bg-gray-850">
         <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700 bg-sky-50 dark:bg-sky-900/30">
+          <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             {ths.map((children, index) => (
               <Th key={index} align={aligns[index]}>
                 {children}
@@ -37,13 +37,13 @@ export class TableRenderer extends React.Component<Table> {
           {tds.map((row, rowIndex) => (
             <tr
               key={rowIndex}
-              className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 last:border-b-0"
+              className="border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-150 last:border-b-0"
             >
               {row.map((children, index) => (
                 <td
                   key={index}
                   align={aligns[index]}
-                  className="p-2.5 border-r border-gray-200 dark:border-gray-700 last:border-r-0"
+                  className="p-3 border-r border-gray-200 dark:border-gray-700 last:border-r-0"
                 >
                   {children}
                 </td>
@@ -80,7 +80,7 @@ class Th extends React.Component<IThProps> {
       <th
         ref={this.ref}
         align={align}
-        className="p-2.5 border-l border-gray-200 dark:border-gray-700 break-all whitespace-normal overflow-hidden text-ellipsis last:border-r-0"
+        className="p-3 font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis border-r border-gray-200 dark:border-gray-700 last:border-r-0"
       >
         {children}
       </th>
