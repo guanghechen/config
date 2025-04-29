@@ -53,6 +53,7 @@ M.togglers = {
   "autoload_flight",
   "autosave_flight",
   "devmode_flight",
+  "dressing_clipboard_flight",
   "dressing_hipairs_flight",
   "dressing_illumniate_flight",
   "dressing_input_flight",

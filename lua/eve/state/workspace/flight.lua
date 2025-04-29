@@ -6,6 +6,7 @@
 ---@field public autosave               boolean
 ---@field public devmode                boolean
 ---
+---@field public dressing_clipboard     boolean
 ---@field public dressing_hipairs       boolean
 ---@field public dressing_illumniate    boolean
 ---@field public dressing_input         boolean
@@ -22,6 +23,7 @@
 ---@field public autosave               eve.std.collection.IObservable -- boolean>
 ---@field public devmode                eve.std.collection.IObservable -- boolean>
 ---
+---@field public dressing_clipboard     eve.std.collection.IObservable -- boolean>
 ---@field public dressing_hipairs       eve.std.collection.IObservable -- boolean>
 ---@field public dressing_illumniate    eve.std.collection.IObservable -- boolean>
 ---@field public dressing_input         eve.std.collection.IObservable -- boolean>
@@ -55,6 +57,7 @@ function M.defaults()
     autosave = is_git_repo,
     devmode = is_home_config_dir,
 
+    dressing_clipboard = false,
     dressing_hipairs = true,
     dressing_illumniate = true,
     dressing_input = true,
@@ -89,6 +92,9 @@ function M.normalize(data)
       resolved.devmode = data.devmode
     end
 
+    if type(data.dressing_clipboard) == "boolean" then
+      resolved.dressing_clipboard = data.dressing_clipboard
+    end
     if type(data.dressing_hipairs) == "boolean" then
       resolved.dressing_hipairs = data.dressing_hipairs
     end
@@ -123,6 +129,7 @@ function M.dump()
     autosave = M.autosave:snapshot(),
     devmode = M.devmode:snapshot(),
 
+    dressing_clipboard = M.dressing_clipboard:snapshot(),
     dressing_hipairs = M.dressing_hipairs:snapshot(),
     dressing_illumniate = M.dressing_illumniate:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
@@ -145,6 +152,7 @@ function M.load(raw_data)
   M.autosave:next(data.autosave)
   M.devmode:next(data.devmode)
 
+  M.dressing_clipboard:next(data.dressing_clipboard)
   M.dressing_hipairs:next(data.dressing_hipairs)
   M.dressing_illumniate:next(data.dressing_illumniate)
   M.dressing_input:next(data.dressing_input)
@@ -164,6 +172,7 @@ M.autoload = eve.std.Observable.from_value(_defaults.autoload)
 M.autosave = eve.std.Observable.from_value(_defaults.autosave)
 M.devmode = eve.std.Observable.from_value(_defaults.devmode)
 
+M.dressing_clipboard = eve.std.Observable.from_value(_defaults.dressing_clipboard)
 M.dressing_hipairs = eve.std.Observable.from_value(_defaults.dressing_hipairs)
 M.dressing_illumniate = eve.std.Observable.from_value(_defaults.dressing_illumniate)
 M.dressing_input = eve.std.Observable.from_value(_defaults.dressing_input)

@@ -265,21 +265,24 @@ function M:collapse(uuid, value, recursive)
 end
 
 ---@param uuid                          string
+---@return boolean
+function M:has(uuid)
+  self:health()
+  return self._node_map[uuid] ~= nil
+end
+
+---@param uuid                          string
 ---@param parent_uuid                   string
 ---@param data                          unknown
 ---@param collapsed                     ?boolean
----@param ignore_if_exist               ?boolean
 ---@return eve.ux.view.Treeview
-function M:insert_container(uuid, parent_uuid, data, collapsed, ignore_if_exist)
+function M:insert_container(uuid, parent_uuid, data, collapsed)
   self:health()
 
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
 
   local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node ~= nil then
-    if ignore_if_exist then
-      return self
-    end
     return self:update_container(uuid, parent_uuid, data, collapsed)
   end
 

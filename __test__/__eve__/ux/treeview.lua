@@ -3,6 +3,8 @@
 ---@field public filetype               string
 ---@field public basename               string
 
+local filepaths = vim.split(vim.trim(vim.fn.system("fd '.lua' lua/ ")), "\n", { plain = true }) ---@type string[]
+
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
   keymaps = {
@@ -14,6 +16,16 @@ local treeview = eve.ux.view.Treeview.new({
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
       end,
       desc = "quit",
+    },
+    {
+      modes = { "n" },
+      key = "z",
+      callback = function(bufnr, lnum, treeview)
+        local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
+        if node ~= nil and node.type == "container" then
+          treeview:collapse(node.uuid, "toggle", true):render(bufnr)
+        end
+      end,
     },
     {
       modes = { "i", "n", "v" },
@@ -59,19 +71,6 @@ local treeview = eve.ux.view.Treeview.new({
   end,
 })
 
----@type string[]
-local filepaths = {
-  "lua/dressing/hipairs.lua",
-  "lua/dressing/input.lua",
-  "lua/dressing/ui_attach.lua",
-  "lua/plugin/avante.lua",
-  "lua/plugin/neo-tree.lua",
-  "lua/plugin/mini-icon.lua",
-  "lua/autocmd.lua",
-  "lua/keymaps.lua",
-  "lua/options.lua",
-}
-
 for _, filepath in ipairs(filepaths) do
   local pieces = eve.path.split(filepath) ---@type string[]
   local parent_uuid = nil ---@type string
@@ -81,13 +80,15 @@ for _, filepath in ipairs(filepaths) do
     local basename = pieces[index] ---@type string
     uuid = index == 1 and pieces[1] or (uuid .. eve.env.PATH_SEP .. basename) ---@type string
 
-    ---@type __test__.ux.treeview.IData
-    local data = {
-      uuid = uuid,
-      filetype = filetype,
-      basename = basename,
-    }
-    treeview:insert_container(uuid, parent_uuid or uuid, data, false, true)
+    if not treeview:has(uuid) then
+      ---@type __test__.ux.treeview.IData
+      local data = {
+        uuid = uuid,
+        filetype = filetype,
+        basename = basename,
+      }
+      treeview:insert_container(uuid, parent_uuid or uuid, data, false)
+    end
     parent_uuid = uuid
   end
 
@@ -116,8 +117,8 @@ treeview
   :bindkeys({ bufnr = bufnr, silent = true, noremap = true, nowait = true })
   :render(bufnr)
 local max_height, max_width = treeview:measure() ---@type integer, integer
-local height = math.min(vim.o.lines - 8, max_height + 1) ---@type integer
-local width = math.min(vim.o.columns - 20, max_width + 2) ---@type integer
+local height = math.min(40, vim.o.lines - 8, max_height + 1) ---@type integer
+local width = math.min(100, vim.o.columns - 20, max_width + 2) ---@type integer
 local row = 3 ---@type integer
 local col = math.floor((vim.o.columns - width) / 2) ---@type integer
 

@@ -309,6 +309,7 @@ function M.watch_changes()
     M.flight.autoload,
     M.flight.autosave,
     M.flight.devmode,
+    M.flight.dressing_clipboard,
     M.flight.dressing_hipairs,
     M.flight.dressing_illumniate,
     M.flight.dressing_input,
