@@ -262,7 +262,7 @@ function M.is_not_indentline(filetype)
   if filetype == M.SEARCH_PREVIEW then
     return false
   end
-  return filetypes.not_sourcefile[filetype] == true
+  return filetypes.code[filetype] ~= true
 end
 
 ---@return string[]
