@@ -164,8 +164,8 @@ function M:render(bufnr)
   self._uuid2lnum = {} ---@type table<string, integer>
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-  self:render_recursively(self._node_root, 0, 1, bufnr)
+  local lnum = self:render_recursively(self._node_root, 0, 1, bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, lnum, -1, false, {})
   return self
 end
 
