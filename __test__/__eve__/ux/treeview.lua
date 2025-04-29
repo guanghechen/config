@@ -53,21 +53,32 @@ local treeview = eve.ux.view.Treeview.new({
   ---@return eve.t.IHighlightInline[]|nil
   renderer = function(node)
     local data = node.data ---@type __test__.ux.treeview.IData
+    local highlights = {} ---@type eve.t.IHighlightInline[]
+    local icon, icon_hln ---@type string, string
+
     if node.type == "container" then
       if node.collapsed then
-        return string.format("%s %s", eve.icon.filetype.Folder, data.basename)
+        icon = eve.icon.filetype.Folder
+        icon_hln = "Directory"
+      else
+        icon = eve.icon.filetype.FolderOpen
+        icon_hln = "Directory"
       end
-      return string.format("%s %s", eve.icon.filetype.FolderOpen, data.basename)
+    else
+      icon, icon_hln = eve.fn.fileicon(data.basename)
     end
 
-    local fileicon = eve.fn.fileicon(data.basename)
-    return string.format("%s %s", fileicon, data.basename)
+    local text = string.format("%s %s", icon, data.basename) ---@type string
+    local offset = vim.api.nvim_strwidth(icon) + 1 ---@type integer
+    local highlight = { coll = 0, colr = offset, hlname = icon_hln } ---@type eve.t.IHighlightInline
+    highlights[#highlights + 1] = highlight
+    return text, highlights
   end,
-  ---@param left                        __test__.ux.treeview.IData
-  ---@param right                       __test__.ux.treeview.IData
+  ---@param left                        eve.ux.view.treeview.INode
+  ---@param right                       eve.ux.view.treeview.INode
   ---@return boolean
   sorter = function(left, right)
-    return left.basename < right.basename
+    return left.data.basename < right.data.basename
   end,
 })
 
@@ -87,7 +98,7 @@ for _, filepath in ipairs(filepaths) do
         filetype = filetype,
         basename = basename,
       }
-      treeview:insert_container(uuid, parent_uuid or uuid, data, false)
+      treeview:insert_container(uuid, parent_uuid or uuid, data, index > 2)
     end
     parent_uuid = uuid
   end
@@ -117,12 +128,14 @@ treeview
   :bindkeys({ bufnr = bufnr, silent = true, noremap = true, nowait = true })
   :render(bufnr)
 local max_height, max_width = treeview:measure() ---@type integer, integer
+max_width = math.max(48, max_width) ---@type integer
 local height = math.min(40, vim.o.lines - 8, max_height + 1) ---@type integer
 local width = math.min(100, vim.o.columns - 20, max_width + 2) ---@type integer
 local row = 3 ---@type integer
 local col = math.floor((vim.o.columns - width) / 2) ---@type integer
 
 local wincfg = {
+  zindex = 1000,
   relative = "editor",
   width = width,
   height = height,
@@ -139,8 +152,11 @@ eve.win.set_type(winnr, eve.win.Types.BOARD)
 vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
 
 vim.wo[winnr].number = false
+vim.wo[winnr].cursorline = true
 vim.wo[winnr].relativenumber = false
 vim.wo[winnr].signcolumn = "no"
 vim.wo[winnr].spell = false
 vim.wo[winnr].winfixbuf = true
 vim.wo[winnr].wrap = false
+vim.wo[winnr].winblend = 10
+vim.wo[winnr].winhighlight = "Normal:FloatNormal,FloatBorder:FloatActiveBorder,CursorLine:CursorLine"

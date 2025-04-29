@@ -149,7 +149,7 @@ function M.gen_hlgroup_map(context)
     FloatActiveBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
     FloatActiveTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
     FloatBorder = { fg = c.bg2, bg = t and c.bg0 or c.none, bold = true },
-    FloatNormal = { fg = c.fg1, bg = c.bg1, blend = t and 50 or nil },
+    FloatNormal = { fg = c.fg1, bg = c.bg0 },
     FloatTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
     FoldColumn = { fg = c.fg4, bg = t and c.none or c.bg1 },
     Folded = { fg = c.fg4 },

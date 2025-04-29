@@ -165,7 +165,7 @@ function M:render(bufnr)
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   local lnum = self:render_recursively(self._node_root, 0, 1, bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, lnum, -1, false, {})
+  vim.api.nvim_buf_set_lines(bufnr, lnum - 1, -1, false, {})
   return self
 end
 
@@ -651,6 +651,11 @@ function M:render_recursively(parent, depth, lnum, bufnr)
 
   local next_depth = depth + 1 ---@type integer
   local indent = string.rep(" ", depth * 2) ---@type string
+  local offset = #indent + 2 ---@type integer
+
+  if parent.dirty_orders then
+    self:sort_container_node(parent)
+  end
 
   for _, uuid in ipairs(parent.children) do
     local child = self._node_map[uuid] ---@type eve.ux.view.treeview.INode
@@ -661,14 +666,25 @@ function M:render_recursively(parent, depth, lnum, bufnr)
     end
 
     local collapsed = " " ---@type string
-    if child.type == "container" then
+    if child.type == "container" and #child.children > 0 then
       collapsed = child.collapsed and eve.icon.fillchars.foldclose or eve.icon.fillchars.foldopen ---@type string
     end
     local text = string.format("%s%s %s", indent, collapsed, child.text) ---@type string
 
+    local row = lnum - 1 ---@type integer
     lnum2uuid[lnum] = child.uuid
     uuid2lnum[child.uuid] = lnum
-    vim.api.nvim_buf_set_lines(bufnr, lnum - 1, lnum, false, { text })
+    vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
+
+    if child.highlights ~= nil then
+      for _, highlight in ipairs(child.highlights) do
+        local hlname = highlight.hlname ---@type string
+        local colr = highlight.colr ---@type integer
+        local coll = highlight.coll ---@type integer
+        vim.hl.range(bufnr, self.nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+      end
+    end
+
     lnum = lnum + 1 ---@type integer
 
     if child.type == "container" and not child.collapsed then
@@ -706,12 +722,8 @@ end
 ---@param parent                        eve.ux.view.treeview.IContainerNode
 ---@return nil
 function M:sort_container_node(parent)
-  if not parent.dirty_orders then
-    return self
-  end
-
   parent.dirty_orders = false
-  if parent.children > 1 then
+  if #parent.children > 1 then
     table.sort(parent.children, function(uuid_left, uuid_right)
       local left_node = self._node_map[uuid_left] ---@type eve.ux.view.treeview.INode
       local right_node = self._node_map[uuid_right] ---@type eve.ux.view.treeview.INode
