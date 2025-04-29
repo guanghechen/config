@@ -356,6 +356,15 @@ function M.create_buf_as_needed(win)
       },
     }
     eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
+    require("nvim-treesitter") --- load nvim-treesitter if not loaded
+    if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+      local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
+      local has_ts_parser = pcall(vim.treesitter.language.add, lang)
+      if has_ts_parser then
+        vim.treesitter.start(bufnr, lang)
+      end
+    end
   else
     vim.bo[bufnr].readonly = false
   end
@@ -364,15 +373,6 @@ function M.create_buf_as_needed(win)
   vim.api.nvim_buf_set_lines(bufnr, 1, -1, false, win.task.lines)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
-
-  require("nvim-treesitter") --- load nvim-treesitter if not loaded
-  if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-    local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
-    local has_ts_parser = pcall(vim.treesitter.language.add, lang)
-    if has_ts_parser then
-      vim.treesitter.start(bufnr, lang)
-    end
-  end
 
   if win.task.highlights then
     local nsnr = eve.var.nsnr.notify ---@type integer

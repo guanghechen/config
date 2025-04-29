@@ -110,12 +110,15 @@ function M.new(props)
       vim.api.nvim_buf_clear_namespace(bufnr, 0, 0, -1)
 
       local filetype = data and data.filetype or nil ---@type string|nil
-      require("nvim-treesitter") --- load nvim-treesitter if not loaded
-      if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-        local lang = vim.treesitter.language.get_lang(filetype) or filetype
-        local loaded = vim.treesitter.language.add(lang)
-        if loaded then
-          vim.treesitter.start(bufnr, lang)
+      if filetype ~= nil then
+        require("nvim-treesitter") --- load nvim-treesitter if not loaded
+        if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+          local lang = vim.treesitter.language.get_lang(filetype) or filetype
+          local loaded = vim.treesitter.language.add(lang)
+          if loaded then
+            vim.treesitter.stop(bufnr)
+            vim.treesitter.start(bufnr, lang)
+          end
         end
       end
 

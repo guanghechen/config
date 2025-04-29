@@ -95,6 +95,7 @@ function M:render(bufnr)
     local lang = vim.treesitter.language.get_lang(filetype) or filetype
     local loaded = vim.treesitter.language.add(lang)
     if loaded then
+      vim.treesitter.stop(bufnr)
       vim.treesitter.start(bufnr, lang)
     end
   end
