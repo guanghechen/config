@@ -69,6 +69,11 @@ function M:dispose()
   self._offset_col = nil
 end
 
+---@return boolean
+function M:isdisposed()
+  return self._disposed
+end
+
 ---@return nil
 function M:health()
   if self._disposed then

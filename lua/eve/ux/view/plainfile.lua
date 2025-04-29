@@ -55,10 +55,15 @@ function M:dispose()
   self._max_width = nil
 end
 
+---@return boolean
+function M:isdisposed()
+  return self._disposed
+end
+
 ---@return nil
 function M:health()
   if self._disposed then
-    local message = string.format("Filer (%s) has been disposed.", self.name) ---@type string
+    local message = string.format("Plainfile (%s) has been disposed.", self.name) ---@type string
     error(message)
   end
 end
