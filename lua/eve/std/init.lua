@@ -17,7 +17,6 @@ local __mods = {
   Disposable = "eve.std.collection.disposable",
   Frecency = "eve.std.collection.frecency",
   History = "eve.std.collection.history",
-  AdvanceHistory = "eve.std.collection.history_advance",
   Observable = "eve.std.collection.observable",
   Promise = "eve.std.collection.promise",
   Scheduler = "eve.std.collection.scheduler",
@@ -48,7 +47,6 @@ local __mods = {
 ---@field public Disposable             eve.std.collection.Disposable
 ---@field public Frecency               eve.std.collection.Frecency
 ---@field public History                eve.std.collection.History
----@field public AdvanceHistory         eve.std.collection.AdvanceHistory
 ---@field public Observable             eve.std.collection.Observable
 ---@field public Promise                eve.std.collection.Promise
 ---@field public Scheduler              eve.std.collection.Scheduler
