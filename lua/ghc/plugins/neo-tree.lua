@@ -231,13 +231,14 @@ return {
         }
         eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-        eve.ux.Printer
+        eve.ux.view.Printer
           .new({ name = "File info", indent = "" })
           :line("Size:      " .. size)
           :line("Created:   " .. created)
           :line("Modified:  " .. modified)
           :line("Mode:      " .. mode)
           :render(bufnr)
+          :dispose()
 
         vim.bo[bufnr].modifiable = false
         vim.bo[bufnr].readonly = true

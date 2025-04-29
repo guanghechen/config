@@ -160,8 +160,14 @@ local keymaps = {
       local width = 84 ---@type integer
       local separate_line = string.rep("─", width - 4) ---@type string
 
-      local printer = eve.ux.Printer.new({ name = "blame line", indent = "  " }) ---@type eve.ux.IPrinter
-      printer
+      local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+      vim.bo[bufnr].buflisted = false
+      vim.bo[bufnr].buftype = "nofile"
+      vim.bo[bufnr].filetype = eve.filetype.TEMP_VIEWER
+      vim.bo[bufnr].swapfile = false
+
+      local printer = eve.ux.view.Printer
+        .new({ name = "blame line", indent = "  " })
         :lf()
         :line(
           string.format("%s, %s (%s)", author_name, eve.std.fn.time_ago(author_timestamp or os.time()), author_date),
@@ -177,13 +183,6 @@ local keymaps = {
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
         :line(string.format("Changes added in %s | <remote url>", commit_hash), {})
         :lf()
-
-      local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-      vim.bo[bufnr].buflisted = false
-      vim.bo[bufnr].buftype = "nofile"
-      vim.bo[bufnr].filetype = eve.filetype.TEMP_VIEWER
-      vim.bo[bufnr].swapfile = false
-      printer:render(bufnr)
 
       ---@type eve.t.IKeymap[]
       local keymaps = {
@@ -205,7 +204,9 @@ local keymaps = {
       }
       eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-      local height = printer:count_lines() ---@type integer
+      local height = printer:measure() ---@type integer
+      printer:render(bufnr):dispose()
+
       local opts = {
         relative = "cursor",
         width = width,

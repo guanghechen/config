@@ -12,7 +12,6 @@ local __mods = {
 
   Board = "eve.ux.board",
   Nvimbar = "eve.ux.nvimbar",
-  Printer = "eve.ux.printer",
   Setting = "eve.ux.setting",
   Terminal = "eve.ux.terminal",
   Textarea = "eve.ux.textarea",
@@ -21,6 +20,7 @@ local __mods = {
 ---@class eve.ux
 ---@field public __mods                 eve.ux.__mods
 ---@field public fn                     eve.ux.fn
+---@field public view                   eve.ux.view
 ---
 ---@field public Search                 eve.ux.Search
 ---@field public SearchContext          eve.ux.SearchContext
@@ -34,13 +34,13 @@ local __mods = {
 ---
 ---@field public Board                  eve.ux.Board
 ---@field public Nvimbar                eve.ux.Nvimbar
----@field public Printer                eve.ux.Printer
 ---@field public Setting                eve.ux.Setting
 ---@field public Terminal               eve.ux.Terminal
 ---@field public Textarea               eve.ux.Textarea
 local M = setmetatable({
   __mods = __mods,
   fn = require("eve.ux.fn"),
+  view = require("eve.ux.view"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

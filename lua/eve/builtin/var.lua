@@ -26,7 +26,6 @@ M.nsnr = {
   select_popup          = cn("ux_select_popup"),
   popupmenu             = cn("ux_popupmenu"),
   popupmenu_selected    = cn("ux_popupmenu_selected"),
-  printer_default       = cn("ux_printer_default"),
   -- stylua: ignore end
 }
 
