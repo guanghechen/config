@@ -5,10 +5,10 @@
 
 ---@class eve.ux.view.Printer : eve.ux.view.IView
 ---@field protected _disposed           boolean
+---@field protected _highlights         eve.t.IHighlight[]
 ---@field protected _indent             string
 ---@field protected _lines              string[]
 ---@field protected _max_width          integer
----@field protected _highlights         eve.t.IHighlight[]
 ---@field protected _offset_indent      integer
 ---@field protected _offset_lnum        integer
 ---@field protected _offset_col         integer
@@ -28,10 +28,11 @@ function M.new(props)
 
   self.name = name
   self.nsnr = nsnr
+  self._disposed = false
+  self._highlights = {}
   self._indent = indent
   self._lines = {}
   self._max_width = vim.api.nvim_strwidth(indent)
-  self._highlights = {}
   self._offset_indent = #indent
   self._offset_lnum = 1
   self._offset_col = #indent
@@ -43,9 +44,9 @@ function M:clear()
   self:health()
 
   local indent = self._indent ---@type string
+  self._highlights = {}
   self._lines = {}
   self._max_width = vim.api.nvim_strwidth(indent)
-  self._highlights = {}
   self._offset_indent = #indent
   self._offset_lnum = 1
   self._offset_col = #indent
@@ -59,10 +60,10 @@ function M:dispose()
   end
 
   self._disposed = true ---@type boolean
+  self._highlights = nil
   self._indent = nil
   self._lines = nil
   self._max_width = nil
-  self._highlights = nil
   self._offset_indent = nil
   self._offset_lnum = nil
   self._offset_col = nil

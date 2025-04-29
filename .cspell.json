@@ -425,6 +425,7 @@
     "oneline",
     "osname",
     "pipenv",
+    "plainfile",
     "pmenu",
     "pngpaste",
     "popupmenu",

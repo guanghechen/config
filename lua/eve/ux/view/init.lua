@@ -8,12 +8,14 @@
 
 ---@class eve.ux.view.__mods
 local __mods = {
+  Plainfile = "eve.ux.view.plainfile",
   Printer = "eve.ux.view.printer",
 }
 
 ---@class eve.ux.view
 ---@field public __mods                 eve.ux.view.__mods
 ---
+---@field public Plainfile              eve.ux.view.Plainfile
 ---@field public Printer                eve.ux.view.Printer
 local M = setmetatable({
   __mods = __mods,
