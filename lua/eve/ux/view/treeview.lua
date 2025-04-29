@@ -12,7 +12,23 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---| fun(node: eve.ux.view.treeview.INode): string, eve.t.IHighlightInline[]|nil
 
 ---@alias eve.ux.view.treeview.INodeSorter
----| fun(left: unknown, right: unknown): boolean
+---| fun(left: eve.ux.view.treeview.INode, right: eve.ux.view.treeview.INode): boolean
+
+---@class eve.ux.view.treeview.IKeymapDefaults
+---@field public bufnr                  integer
+---@field public nowait                 ?boolean
+---@field public noremap                ?boolean
+---@field public silent                 ?boolean
+
+---@class eve.ux.view.treeview.IKeymap
+---@field public modes                  eve.e.VimMode[]
+---@field public key                    string
+---@field public aliases                string[]|nil
+---@field public callback               fun(bufnr: integer, lnum: integer, treeview: eve.ux.view.Treeview): nil
+---@field public desc                   string|nil
+---@field public nowait                 boolean|nil
+---@field public noremap                boolean|nil
+---@field public silent                 boolean|nil
 
 ---@class eve.ux.view.treeview.IContainerNode
 ---@field public type                   'container'
@@ -36,12 +52,15 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@class eve.ux.view.ITreeviewProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
+---@field public keymaps                eve.ux.view.treeview.IKeymap[]|nil
 ---@field public renderer               eve.ux.view.treeview.INodeRenderer
 ---@field public sorter                 eve.ux.view.treeview.INodeSorter
 
 ---@class eve.ux.view.Treeview : eve.ux.view.IView
 ---@field protected _disposed           boolean
----@field protected _lnum2uuid        table<integer, string>
+---@field protected _keymaps            eve.ux.view.treeview.IKeymap[]
+---@field protected _lnum2uuid          table<integer, string>
+---@field protected _uuid2lnum          table<string, integer>
 ---@field protected _node_map           table<string, eve.ux.view.treeview.INode>
 ---@field protected _node_root          eve.ux.view.treeview.IContainerNode
 ---@field protected _renderer           eve.ux.view.treeview.INodeRenderer
@@ -56,6 +75,7 @@ local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_treeview") ---@type 
 function M.new(props)
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
+  local keymaps = props.keymaps or {} ---@type eve.ux.view.treeview.IKeymap[]
   local renderer = props.renderer ---@type eve.ux.view.treeview.INodeRenderer
   local sorter = props.sorter ---@type eve.ux.view.treeview.INodeSorter
 
@@ -75,7 +95,9 @@ function M.new(props)
   self.name = name
   self.nsnr = nsnr
   self._disposed = false
+  self._keymaps = keymaps
   self._lnum2uuid = {}
+  self._uuid2lnum = {}
   self._node_map = {}
   self._node_root = root
   self._renderer = renderer
@@ -88,6 +110,7 @@ function M:clear()
   self:health()
 
   self._lnum2uuid = {}
+  self._uuid2lnum = {}
   self._node_map = {}
   self._node_root.children = {}
   self._node_root.dirty_orders = false
@@ -102,6 +125,7 @@ function M:dispose()
 
   self._disposed = true
   self._lnum2uuid = nil
+  self._uuid2lnum = nil
   self._node_map = nil
   self._node_root = nil
   self._renderer = nil
@@ -137,6 +161,7 @@ function M:render(bufnr)
 
   local nsnr = self.nsnr ---@type integer
   self._lnum2uuid = {} ---@type table<integer, string>
+  self._uuid2lnum = {} ---@type table<string, integer>
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -145,6 +170,55 @@ function M:render(bufnr)
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@param defaults                      eve.ux.view.treeview.IKeymapDefaults
+---@return eve.ux.view.Treeview
+function M:bindkeys(defaults)
+  local keymaps = self._keymaps ---@type eve.ux.view.treeview.IKeymap[]
+  local treeview = self
+
+  local bufnr = defaults.bufnr ---@type integer
+  for _, keymap in ipairs(keymaps) do
+    local nowait = keymap.nowait ---@type boolean|nil
+    local noremap = keymap.noremap ---@type boolean|nil
+    local silent = keymap.silent ---@type boolean|nil
+
+    if nowait == nil then
+      nowait = defaults.nowait ---@type boolean|nil
+    end
+    if noremap == nil then
+      noremap = defaults.noremap ---@type boolean|nil
+    end
+    if silent == nil then
+      silent = defaults.silent ---@type boolean|nil
+    end
+
+    ---@return nil
+    local function callback()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+      keymap.callback(bufnr, lnum, treeview)
+    end
+
+    ---@type vim.keymap.set.Opts
+    local opts = {
+      buffer = bufnr,
+      nowait = nowait,
+      noremap = noremap,
+      silent = silent,
+      desc = keymap.desc,
+    }
+    vim.keymap.set(keymap.modes, keymap.key, callback, opts)
+
+    if keymap.aliases ~= nil then
+      for _, alias in ipairs(keymap.aliases) do
+        vim.keymap.set(keymap.modes, alias, callback, opts)
+      end
+    end
+  end
+
+  return self
+end
 
 ---@param uuid                          string
 ---@param value                         "collapsed"|"expanded"|"toggle"
@@ -570,6 +644,8 @@ end
 ---@return integer
 function M:render_recursively(parent, depth, lnum, bufnr)
   local lnum2uuid = self._lnum2uuid ---@type table<integer, string>
+  local uuid2lnum = self._uuid2lnum ---@type table<string, integer>
+
   local next_depth = depth + 1 ---@type integer
   local indent = string.rep(" ", depth * 2) ---@type string
 
@@ -588,6 +664,7 @@ function M:render_recursively(parent, depth, lnum, bufnr)
     local text = string.format("%s%s %s", indent, collapsed, child.text) ---@type string
 
     lnum2uuid[lnum] = child.uuid
+    uuid2lnum[child.uuid] = lnum
     vim.api.nvim_buf_set_lines(bufnr, lnum - 1, lnum, false, { text })
     lnum = lnum + 1 ---@type integer
 
@@ -636,7 +713,7 @@ function M:sort_container_node(parent)
       local left_node = self._node_map[uuid_left] ---@type eve.ux.view.treeview.INode
       local right_node = self._node_map[uuid_right] ---@type eve.ux.view.treeview.INode
       if left_node.type == right_node.type then
-        return self._sorter(left_node.data, right_node.data)
+        return self._sorter(left_node, right_node)
       end
       return left_node.type == "container"
     end)

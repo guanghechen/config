@@ -3,16 +3,39 @@
 ---@field public filetype               string
 ---@field public basename               string
 
-local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-vim.bo[bufnr].bufhidden = "wipe"
-vim.bo[bufnr].buflisted = false
-vim.bo[bufnr].buftype = "nofile"
-vim.bo[bufnr].filetype = "treeview"
-vim.bo[bufnr].swapfile = false
-vim.b[bufnr].miniindentscope_disable = true
-
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
+  keymaps = {
+    {
+      modes = { "n" },
+      key = "q",
+      callback = function(bufnr)
+        vim.cmd.close()
+        pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+      end,
+      desc = "quit",
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<CR>",
+      aliases = { "<Left>", "<Right>", "h", "l", "o" },
+      callback = function(bufnr, lnum, treeview)
+        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        if node == nil then
+          return
+        end
+
+        if node.type == "container" then
+          treeview:collapse(node.uuid, "toggle", false):render(bufnr)
+          return
+        end
+
+        local data = node.data ---@type __test__.ux.treeview.IData
+        eve.debug.log("click on filepath: %s", data)
+      end,
+      desc = "open file",
+    },
+  },
   ---@param node                        eve.ux.view.treeview.INode
   ---@return string
   ---@return eve.t.IHighlightInline[]|nil
@@ -80,13 +103,23 @@ for _, filepath in ipairs(filepaths) do
   treeview:insert_leaf(uuid, parent_uuid, data)
 end
 
+local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+vim.bo[bufnr].bufhidden = "wipe"
+vim.bo[bufnr].buflisted = false
+vim.bo[bufnr].buftype = "nofile"
+vim.bo[bufnr].filetype = "treeview"
+vim.bo[bufnr].swapfile = false
+vim.b[bufnr].miniindentscope_disable = true
+
+treeview
+  --
+  :bindkeys({ bufnr = bufnr, silent = true, noremap = true, nowait = true })
+  :render(bufnr)
 local max_height, max_width = treeview:measure() ---@type integer, integer
 local height = math.min(vim.o.lines - 8, max_height + 1) ---@type integer
 local width = math.min(vim.o.columns - 20, max_width + 2) ---@type integer
 local row = 3 ---@type integer
 local col = math.floor((vim.o.columns - width) / 2) ---@type integer
-
-treeview:render(bufnr)
 
 local wincfg = {
   relative = "editor",
@@ -110,38 +143,3 @@ vim.wo[winnr].signcolumn = "no"
 vim.wo[winnr].spell = false
 vim.wo[winnr].winfixbuf = true
 vim.wo[winnr].wrap = false
-
----@type eve.t.IKeymap[]
-local keymaps = {
-  {
-    modes = { "n" },
-    key = "q",
-    callback = function()
-      vim.cmd.close()
-      pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
-    end,
-    desc = "quit",
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<CR>",
-    aliases = { "<Left>", "<Right>", "h", "l", "o" },
-    callback = function()
-      local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-      local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
-      if node == nil then
-        return
-      end
-
-      if node.type == "container" then
-        treeview:collapse(node.uuid, "toggle", false):render(bufnr)
-        return
-      end
-
-      local data = node.data ---@type __test__.ux.treeview.IData
-      eve.debug.log("click on filepath: %s", data)
-    end,
-    desc = "open file",
-  },
-}
-eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
