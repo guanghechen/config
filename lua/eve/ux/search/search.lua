@@ -726,7 +726,9 @@ function M:create_wins_as_needed()
       focused_pane = "main"
     end
   elseif context.focused_pane == "preview" then
-    focused_pane = "preview"
+    if context.winnr_preview ~= nil and vim.api.nvim_win_is_valid(context.winnr_preview) then
+      focused_pane = "preview"
+    end
   end
   context.focused_pane = focused_pane
 
