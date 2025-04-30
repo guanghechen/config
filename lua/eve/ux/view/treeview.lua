@@ -264,16 +264,14 @@ function M:render(bufnr, root_uuid, included_uuid_set)
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
 
   local row = 0 ---@type integer
-  local recursive ---@type fun(parent: eve.ux.view.treeview.IContainerNode, depth: integer, indent: string, offset: integer): nil
+  local recursive ---@type fun(parent: eve.ux.view.treeview.IContainerNode, depth: integer, indent: string): nil
 
   ---@param uuid                        string
   ---@param next_depth                  integer
   ---@param indent                      string
   ---@param next_indent                 string
-  ---@param offset                      integer
-  ---@param next_offset                 integer
   ---@return nil
-  local function render(uuid, next_depth, indent, next_indent, offset, next_offset)
+  local function render(uuid, next_depth, indent, next_indent)
     local node = node_map[uuid] ---@type eve.ux.view.treeview.INode
     if node.text == nil then
       local text, highlights = self._renderer(node)
@@ -281,18 +279,16 @@ function M:render(bufnr, root_uuid, included_uuid_set)
       node.highlights = highlights
     end
 
-    local collapsed = " " ---@type string
-    if node.type == "container" and #node.children > 0 then
-      collapsed = node.collapsed and eve.icon.fillchars.foldclose or eve.icon.fillchars.foldopen ---@type string
-    end
-    local text = string.format("%s%s %s", indent, collapsed, node.text) ---@type string
-
     local lnum = row + 1 ---@type integer
     lnum2uuid[lnum] = node.uuid
     uuid2lnum[node.uuid] = lnum
+
+    local text = indent .. node.text ---@type string
     vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
 
     if node.highlights ~= nil then
+      local offset = #indent ---@type integer
+      vim.hl.range(bufnr, nsnr, "f_utw_indent", { row, 0 }, { row, offset })
       for _, highlight in ipairs(node.highlights) do
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
@@ -304,7 +300,7 @@ function M:render(bufnr, root_uuid, included_uuid_set)
     row = row + 1 ---@type integer
     if node.type == "container" and not node.collapsed then
       if not node.collapsed then
-        recursive(node, next_depth, next_indent, next_offset)
+        recursive(node, next_depth, next_indent)
       end
     end
   end
@@ -313,46 +309,72 @@ function M:render(bufnr, root_uuid, included_uuid_set)
     ---@param parent                    eve.ux.view.treeview.IContainerNode
     ---@param depth                     integer
     ---@param indent                    string
-    ---@param offset                    integer
     ---@return nil
-    recursive = function(parent, depth, indent, offset)
+    recursive = function(parent, depth, indent)
+      local N = #parent.children ---@type integer
+      if N < 1 then
+        return
+      end
+
       local next_depth = depth + 1 ---@type integer
-      local next_indent = indent .. "  " ---@type string
-      local next_offset = offset + 2 ---@type integer
+      local child_nested_indent = indent .. "│ " ---@type string
+      local last_child_nested_indent = indent .. "  " ---@type string
+      local child_indent = indent .. "├─" ---@type string
+      local last_child_indent = indent .. "╰─" ---@type string
 
       if parent.dirty_orders then
         self:sort_container_node(parent)
       end
 
-      for _, uuid in ipairs(parent.children) do
-        render(uuid, next_depth, indent, next_indent, offset, next_offset)
+      for index = 1, N - 1, 1 do
+        local uuid = parent.children[index] ---@type string
+        render(uuid, next_depth, child_indent, child_nested_indent)
       end
+      local uuid = parent.children[N] ---@type string
+      render(uuid, next_depth, last_child_indent, last_child_nested_indent)
     end
   else
     ---@param parent                    eve.ux.view.treeview.IContainerNode
     ---@param depth                     integer
     ---@param indent                    string
-    ---@param offset                    integer
     ---@return nil
-    recursive = function(parent, depth, indent, offset)
+    recursive = function(parent, depth, indent)
+      local N = -1 ---@type integer
+      for index = #parent.children, 1, -1 do
+        local uuid = parent.children[index] ---@type string
+        if included_uuid_set[uuid] then
+          N = index
+          break
+        end
+      end
+
+      if N < 1 then
+        return
+      end
+
       local next_depth = depth + 1 ---@type integer
-      local next_indent = indent .. "  " ---@type string
-      local next_offset = offset + 2 ---@type integer
+      local child_nested_indent = indent .. "│ " ---@type string
+      local last_child_nested_indent = indent .. "  " ---@type string
+      local child_indent = indent .. "├─" ---@type string
+      local last_child_indent = indent .. "╰─" ---@type string
 
       if parent.dirty_orders then
         self:sort_container_node(parent)
       end
 
-      for _, uuid in ipairs(parent.children) do
+      for index = 1, N - 1, 1 do
+        local uuid = parent.children[index] ---@type string
         if included_uuid_set[uuid] then
-          render(uuid, next_depth, indent, next_indent, offset, next_offset)
+          render(uuid, next_depth, child_indent, child_nested_indent)
         end
       end
+      local uuid = parent.children[N] ---@type string
+      render(uuid, next_depth, last_child_indent, last_child_nested_indent)
     end
   end
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  recursive(root, 0, self._indent, #self._indent + 2)
+  recursive(root, 0, self._indent)
   vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
   return self
 end

@@ -171,6 +171,9 @@ function M.gen_hlgroup_map(context)
     f_ut_current = { bg = c.bg3 },
     f_ut_normal = { bg = t and c.none or c.bg0 },
 
+    ---treeview
+    f_utw_indent = { fg = c.bg2 },
+
     ---vim options
     f_us_vo_name = { fg = c.purple },
     f_us_vo_type = { fg = c.orange },

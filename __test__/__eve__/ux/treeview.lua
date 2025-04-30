@@ -6,6 +6,7 @@
 
 local relative_filepaths = vim.split(vim.trim(vim.fn.system("fd '.lua' lua/ ")), "\n", { plain = true }) ---@type string[]
 
+require("plenary.reload").reload_module("eve.ux.view.treeview")
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
   indent = " ",
