@@ -1,9 +1,10 @@
 ---@class __test__.ux.treeview.IData
 ---@field public uuid                   string
+---@field public filepath               string
 ---@field public filetype               string
 ---@field public basename               string
 
-local filepaths = vim.split(vim.trim(vim.fn.system("fd '.lua' lua/ ")), "\n", { plain = true }) ---@type string[]
+local relative_filepaths = vim.split(vim.trim(vim.fn.system("fd '.lua' lua/ ")), "\n", { plain = true }) ---@type string[]
 
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
@@ -11,15 +12,16 @@ local treeview = eve.ux.view.Treeview.new({
     {
       modes = { "n" },
       key = "q",
+      desc = "filetree: quit",
       callback = function(bufnr)
         vim.cmd.close()
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
       end,
-      desc = "quit",
     },
     {
       modes = { "n" },
       key = "z",
+      desc = "filetree: toggle collapsed (recursively)",
       callback = function(bufnr, lnum, treeview)
         local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
         if node ~= nil and node.type == "container" then
@@ -30,7 +32,8 @@ local treeview = eve.ux.view.Treeview.new({
     {
       modes = { "i", "n", "v" },
       key = "<CR>",
-      aliases = { "<Left>", "<Right>", "h", "l", "o" },
+      aliases = { "<Right>", "l", "o" },
+      desc = "filetree: open",
       callback = function(bufnr, lnum, treeview)
         local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
         if node == nil then
@@ -38,14 +41,40 @@ local treeview = eve.ux.view.Treeview.new({
         end
 
         if node.type == "container" then
-          treeview:collapse(node.uuid, "toggle", false):render(bufnr)
+          treeview:collapse(node.uuid, "expanded", false):render(bufnr)
+        else
+          local data = node.data ---@type __test__.ux.treeview.IData
+          vim.cmd.close()
+          pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+
+          vim.schedule(function()
+            eve.debug.log(string.format("open file %s", data.filepath))
+            -- eve.win.open_filepath(nil, data.filepath)
+          end)
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<Backspace>",
+      aliases = { "<Left>", "h", "c" },
+      desc = "filetree: close",
+      callback = function(bufnr, lnum, treeview)
+        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        if node == nil then
           return
         end
 
-        local data = node.data ---@type __test__.ux.treeview.IData
-        eve.debug.log("click on filepath: %s", data)
+        if node.type == "container" and not node.collapsed then
+          treeview:collapse(node.uuid, "collapsed", false):render(bufnr)
+        else
+          local lnum_parent = treeview:retrieve_lnum(node.parent) ---@type integer|nil
+          treeview:collapse(node.parent, "collapsed", false):render(bufnr)
+          if lnum_parent ~= nil then
+            vim.api.nvim_win_set_cursor(0, { lnum_parent, 0 })
+          end
+        end
       end,
-      desc = "open file",
     },
   },
   ---@param node                        eve.ux.view.treeview.INode
@@ -59,18 +88,17 @@ local treeview = eve.ux.view.Treeview.new({
     if node.type == "container" then
       if node.collapsed then
         icon = eve.icon.filetype.Folder
-        icon_hln = "Directory"
+        icon_hln = "MiniIconsBlue"
       else
         icon = eve.icon.filetype.FolderOpen
-        icon_hln = "Directory"
+        icon_hln = "MiniIconsBlue"
       end
     else
       icon, icon_hln = eve.fn.fileicon(data.basename)
     end
 
     local text = string.format("%s %s", icon, data.basename) ---@type string
-    local offset = vim.api.nvim_strwidth(icon) + 1 ---@type integer
-    local highlight = { coll = 0, colr = offset, hlname = icon_hln } ---@type eve.t.IHighlightInline
+    local highlight = { coll = 0, colr = #icon + 1, hlname = icon_hln } ---@type eve.t.IHighlightInline
     highlights[#highlights + 1] = highlight
     return text, highlights
   end,
@@ -82,19 +110,23 @@ local treeview = eve.ux.view.Treeview.new({
   end,
 })
 
-for _, filepath in ipairs(filepaths) do
-  local pieces = eve.path.split(filepath) ---@type string[]
+local cwd = eve.path.cwd() ---@type string
+for _, relative_filepath in ipairs(relative_filepaths) do
+  local pieces = eve.path.split(relative_filepath) ---@type string[]
   local parent_uuid = nil ---@type string
   local uuid = "" ---@type string
+  local filepath = cwd --@type string
   for index = 1, #pieces - 1, 1 do
     local filetype = "directory" ---@type string
     local basename = pieces[index] ---@type string
     uuid = index == 1 and pieces[1] or (uuid .. eve.env.PATH_SEP .. basename) ---@type string
+    filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
 
     if not treeview:has(uuid) then
       ---@type __test__.ux.treeview.IData
       local data = {
         uuid = uuid,
+        filepath = filepath,
         filetype = filetype,
         basename = basename,
       }
@@ -106,9 +138,12 @@ for _, filepath in ipairs(filepaths) do
   local filetype = "lua" ---@type string
   local filename = pieces[#pieces] ---@type string
   uuid = uuid .. eve.env.PATH_SEP .. filename ---@type string
+  filepath = filepath .. eve.env.PATH_SEP .. filename ---@type string
+
   ---@type __test__.ux.treeview.IData
   local data = {
     uuid = uuid,
+    filepath = filepath,
     filetype = filetype,
     basename = filename,
   }

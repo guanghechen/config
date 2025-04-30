@@ -650,6 +650,13 @@ function M:retrieve_by_uuid(uuid, silent)
 end
 
 ---@param uuid                          string
+---@return integer|nil
+function M:retrieve_lnum(uuid)
+  self:health()
+  return self._uuid2lnum[uuid] ---@type integer|nil
+end
+
+---@param uuid                          string
 ---@param parent_uuid                   string|nil
 ---@param data                          unknown
 ---@param collapsed                     ?boolean

@@ -282,6 +282,7 @@
     "filereadable",
     "filesize",
     "filestatus",
+    "filetree",
     "fillchars",
     "findstart",
     "firstc",
