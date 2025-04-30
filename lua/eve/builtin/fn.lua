@@ -12,6 +12,29 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param dirname                       string
+---@return string
+---@return string
+function M.diricon(dirname)
+  if #dirname == 0 then
+    return eve.icon.filetype.Folder, "MiniIconsBlue"
+  end
+
+  if dirname:sub(#dirname, #dirname) == "/" then
+    return eve.icon.filetype.Folder, "MiniIconsBlue"
+  end
+
+  local name = (not dirname or dirname == "") and eve.setting.BUF_UNTITLED or dirname
+  local ok, mini_icons = pcall(require, "mini.icons")
+  if ok and name ~= eve.setting.BUF_UNTITLED then
+    local icon, icon_hl, is_default = mini_icons.get("directory", dirname)
+    if not is_default then
+      return icon, icon_hl
+    end
+  end
+  return eve.icon.filetype.Folder, "MiniIconsBlue"
+end
+
 ---@param filename                      string
 ---@return string
 ---@return string

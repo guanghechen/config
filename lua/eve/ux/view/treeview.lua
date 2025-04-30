@@ -499,6 +499,8 @@ function M:collapse(uuid, value, recursive)
   end
 
   node.collapsed = collapsed
+  node.text = nil
+  node.highlights = nil
   if recursive then
     self:update_collapse_recursively(node, collapsed)
   end
@@ -957,9 +959,12 @@ end
 ---@param collapsed                     boolean
 ---@return nil
 function M:update_collapse_recursively(parent, collapsed)
-  parent.collapsed = collapsed
   for _, uuid in ipairs(parent.children) do
     local child = self._node_map[uuid] ---@type eve.ux.view.treeview.INode
+    child.collapsed = collapsed
+    child.text = nil
+    child.highlights = nil
+
     if child.type == "container" then
       self:update_collapse_recursively(child, collapsed)
     end

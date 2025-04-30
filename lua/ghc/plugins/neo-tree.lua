@@ -298,7 +298,7 @@ return {
       icon = {
         folder_closed = eve.icon.filetype.Folder,
         folder_open = eve.icon.filetype.FolderOpen,
-        folder_empty = eve.icon.filetype.FolderEmpty,
+        folder_empty = eve.icon.filetype.FolderEmptyOpen,
         default = eve.icon.filetype.File,
       },
       modified = {

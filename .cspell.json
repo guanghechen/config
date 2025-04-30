@@ -247,6 +247,7 @@
     "diffopt",
     "diffthis",
     "diffview",
+    "diricon",
     "diritem",
     "dirpaths",
     "dockerls",

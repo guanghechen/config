@@ -117,12 +117,13 @@ local treeview = eve.ux.view.Treeview.new({
     local icon, icon_hln ---@type string, string
 
     if node.type == "container" then
-      if node.collapsed then
-        icon = eve.icon.filetype.Folder
-        icon_hln = "MiniIconsBlue"
-      else
-        icon = eve.icon.filetype.FolderOpen
-        icon_hln = "MiniIconsBlue"
+      icon, icon_hln = eve.fn.diricon(data.basename)
+      if not node.collapsed then
+        if #node.children < 1 then
+          icon = eve.icon.filetype.FolderEmptyOpen
+        else
+          icon = eve.icon.filetype.FolderOpen
+        end
       end
     else
       icon, icon_hln = eve.fn.fileicon(data.basename)
@@ -187,7 +188,7 @@ vim.bo[bufnr].buflisted = false
 vim.bo[bufnr].buftype = "nofile"
 vim.bo[bufnr].filetype = "treeview"
 vim.bo[bufnr].swapfile = false
--- vim.b[bufnr].miniindentscope_disable = true
+vim.b[bufnr].miniindentscope_disable = true
 
 treeview
   --
