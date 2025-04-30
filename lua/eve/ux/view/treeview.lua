@@ -145,27 +145,210 @@ function M:health()
   end
 end
 
+---@param root_uuid                     string|nil
+---@param included_uuid_set             table<string, boolean>|nil
 ---@return integer
 ---@return integer
-function M:measure()
+function M:measure(root_uuid, included_uuid_set)
   self:health()
 
-  local height, max_width = self:measure_recursively(self._node_root, 0) ---@type integer, integer
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  if root.type ~= "container" then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "measure",
+      message = "The root node is not a container node",
+      details = { root_uuid = root_uuid, included_uuid_set = included_uuid_set },
+    })
+    return 0, 0
+  end
+
+  if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
+    return 0, 0
+  end
+
+  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+
+  local height = 0 ---@type integer
+  local max_width = 0 ---@type integer
+  local INDENT_WIDTH_UINT = 2 ---@type integer
+  local recursive ---@type fun(parent: eve.ux.view.treeview.IContainerNode, depth: integer, indent_width: integer): nil
+
+  ---@param uuid                        string
+  ---@param next_depth                  integer
+  ---@param indent_width                integer
+  ---@param next_indent_width           integer
+  ---@return nil
+  local function measure(uuid, next_depth, indent_width, next_indent_width)
+    local node = node_map[uuid] ---@type eve.ux.view.treeview.INode
+    if node.text == nil then
+      local text, highlights = self._renderer(node)
+      node.text = text
+      node.highlights = highlights
+    end
+    height = height + 1 ---@type integer
+    max_width = math.max(max_width, indent_width + vim.api.nvim_strwidth(node.text)) ---@type integer
+
+    if node.type == "container" and not node.collapsed then
+      recursive(node, next_depth, next_indent_width) ---@type integer, integer
+    end
+  end
+
+  if included_uuid_set == nil then
+    ---@param parent                    eve.ux.view.treeview.IContainerNode
+    ---@param depth                     integer
+    ---@param indent_width              integer
+    ---@return nil
+    recursive = function(parent, depth, indent_width)
+      local next_depth = depth + 1 ---@type integer
+      local next_indent_width = indent_width + INDENT_WIDTH_UINT ---@type integer
+      for _, uuid in ipairs(parent.children) do
+        measure(uuid, next_depth, indent_width, next_indent_width)
+      end
+    end
+  else
+    ---@param parent                    eve.ux.view.treeview.IContainerNode
+    ---@param depth                     integer
+    ---@param indent_width              integer
+    ---@return nil
+    recursive = function(parent, depth, indent_width)
+      local next_depth = depth + 1 ---@type integer
+      local next_indent_width = indent_width + 2 ---@type integer
+      for _, uuid in ipairs(parent.children) do
+        if included_uuid_set[uuid] then
+          measure(uuid, next_depth, indent_width, next_indent_width)
+        end
+      end
+    end
+  end
+
+  recursive(root, 0, INDENT_WIDTH_UINT)
   return height, max_width
 end
 
 ---@param bufnr                         integer
+---@param root_uuid                     string|nil
+---@param included_uuid_set             table<string, boolean>|nil
 ---@return eve.ux.view.Treeview
-function M:render(bufnr)
+function M:render(bufnr, root_uuid, included_uuid_set)
   self:health()
+
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  if root.type ~= "container" then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "measure",
+      message = "The root node is not a container node",
+      details = { root_uuid = root_uuid, included_uuid_set = included_uuid_set },
+    })
+    return self
+  end
 
   local nsnr = self.nsnr ---@type integer
   self._lnum2uuid = {} ---@type table<integer, string>
   self._uuid2lnum = {} ---@type table<string, integer>
 
+  if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
+    vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+    return self
+  end
+
+  local lnum2uuid = self._lnum2uuid ---@type table<integer, string>
+  local uuid2lnum = self._uuid2lnum ---@type table<string, integer>
+  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+
+  local row = 0 ---@type integer
+  local recursive ---@type fun(parent: eve.ux.view.treeview.IContainerNode, depth: integer, indent: string, offset: integer): nil
+
+  ---@param uuid                        string
+  ---@param next_depth                  integer
+  ---@param indent                      string
+  ---@param next_indent                 string
+  ---@param offset                      integer
+  ---@param next_offset                 integer
+  ---@return nil
+  local function render(uuid, next_depth, indent, next_indent, offset, next_offset)
+    local node = node_map[uuid] ---@type eve.ux.view.treeview.INode
+    if node.text == nil then
+      local text, highlights = self._renderer(node)
+      node.text = text
+      node.highlights = highlights
+    end
+
+    local collapsed = " " ---@type string
+    if node.type == "container" and #node.children > 0 then
+      collapsed = node.collapsed and eve.icon.fillchars.foldclose or eve.icon.fillchars.foldopen ---@type string
+    end
+    local text = string.format("%s%s %s", indent, collapsed, node.text) ---@type string
+
+    local lnum = row + 1 ---@type integer
+    lnum2uuid[lnum] = node.uuid
+    uuid2lnum[node.uuid] = lnum
+    vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
+
+    if node.highlights ~= nil then
+      for _, highlight in ipairs(node.highlights) do
+        local hlname = highlight.hlname ---@type string
+        local colr = highlight.colr ---@type integer
+        local coll = highlight.coll ---@type integer
+        vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+      end
+    end
+
+    row = row + 1 ---@type integer
+    if node.type == "container" and not node.collapsed then
+      if not node.collapsed then
+        recursive(node, next_depth, next_indent, next_offset)
+      end
+    end
+  end
+
+  if included_uuid_set == nil then
+    ---@param parent                    eve.ux.view.treeview.IContainerNode
+    ---@param depth                     integer
+    ---@param indent                    string
+    ---@param offset                    integer
+    ---@return nil
+    recursive = function(parent, depth, indent, offset)
+      local next_depth = depth + 1 ---@type integer
+      local next_indent = indent .. "  " ---@type string
+      local next_offset = offset + 2 ---@type integer
+
+      if parent.dirty_orders then
+        self:sort_container_node(parent)
+      end
+
+      for _, uuid in ipairs(parent.children) do
+        render(uuid, next_depth, indent, next_indent, offset, next_offset)
+      end
+    end
+  else
+    ---@param parent                    eve.ux.view.treeview.IContainerNode
+    ---@param depth                     integer
+    ---@param indent                    string
+    ---@param offset                    integer
+    ---@return nil
+    recursive = function(parent, depth, indent, offset)
+      local next_depth = depth + 1 ---@type integer
+      local next_indent = indent .. "  " ---@type string
+      local next_offset = offset + 2 ---@type integer
+
+      if parent.dirty_orders then
+        self:sort_container_node(parent)
+      end
+
+      for _, uuid in ipairs(parent.children) do
+        if included_uuid_set[uuid] then
+          render(uuid, next_depth, indent, next_indent, offset, next_offset)
+        end
+      end
+    end
+  end
+
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  local lnum = self:render_recursively(self._node_root, 0, 1, bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, lnum - 1, -1, false, {})
+  recursive(root, 0, "", 2)
+  vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
   return self
 end
 
@@ -218,6 +401,37 @@ function M:bindkeys(defaults)
   end
 
   return self
+end
+
+---@param included_uuids                string[]
+---@return table<string, boolean>
+function M:calc_include_uuid_set(included_uuids)
+  self:health()
+
+  local uuids = {} ---@type table<string, boolean>
+  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+  for _, uuid in ipairs(included_uuids) do
+    local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+    if node == nil then
+      eve.reporter.warn({
+        from = __module_name__,
+        subject = "calc_include_uuid_set",
+        message = "The node isn't exist",
+        details = { uuid = uuid },
+      })
+      goto continue
+    end
+
+    uuids[uuid] = true
+
+    while not uuids[node.parent] do
+      uuids[node.parent] = true
+      node = node_map[node.parent]
+    end
+
+    ::continue::
+  end
+  return uuids
 end
 
 ---@param uuid                          string
@@ -341,6 +555,41 @@ function M:insert_leaf(uuid, parent_uuid, data)
   return self
 end
 
+---@param uuid                          string
+---@return eve.ux.view.Treeview
+function M:remove(uuid)
+  self:health()
+
+  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+  local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+
+  if node == nil then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "remove",
+      message = "The node isn't exist",
+      details = { uuid = uuid },
+    })
+    return self
+  end
+
+  local parent = self:retrieve_parent(uuid, node.parent) ---@type eve.ux.view.treeview.IContainerNode|nil
+  if parent == nil then
+    return self
+  end
+
+  parent.children = vim.tbl_filter(function(child_uuid)
+    return child_uuid ~= uuid
+  end, parent.children)
+
+  node_map[uuid] = nil
+  if node.type == "container" then
+    self:remove_recursively(node)
+  end
+
+  return self
+end
+
 ---@param lnum                          integer
 ---@param silent                        boolean|nil
 ---@return eve.ux.view.treeview.INode|nil
@@ -398,41 +647,6 @@ function M:retrieve_by_uuid(uuid, silent)
     return nil
   end
   return node
-end
-
----@param uuid                          string
----@return eve.ux.view.Treeview
-function M:remove(uuid)
-  self:health()
-
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-  local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
-
-  if node == nil then
-    eve.reporter.error({
-      from = __module_name__,
-      subject = "remove",
-      message = "The node isn't exist",
-      details = { uuid = uuid },
-    })
-    return self
-  end
-
-  local parent = self:retrieve_parent(uuid, node.parent) ---@type eve.ux.view.treeview.IContainerNode|nil
-  if parent == nil then
-    return self
-  end
-
-  parent.children = vim.tbl_filter(function(child_uuid)
-    return child_uuid ~= uuid
-  end, parent.children)
-
-  node_map[uuid] = nil
-  if node.type == "container" then
-    self:remove_recursively(node)
-  end
-
-  return self
 end
 
 ---@param uuid                          string
@@ -596,41 +810,9 @@ end
 
 ---@protected
 ---@param parent                        eve.ux.view.treeview.IContainerNode
----@param depth                         integer
----@return integer
----@return integer
-function M:measure_recursively(parent, depth)
-  local next_depth = depth + 1 ---@type integer
-  local height = 0 ---@type integer
-  local max_width = 0 ---@type integer
-  local width_indent = depth * 2 + 2 ---@type integer
-
-  for _, uuid in ipairs(parent.children) do
-    local child = self._node_map[uuid] ---@type eve.ux.view.treeview.INode
-    if child.text == nil then
-      local text, highlights = self._renderer(child)
-      child.text = text
-      child.highlights = highlights
-    end
-    height = height + 1 ---@type integer
-    max_width = math.max(max_width, width_indent + vim.api.nvim_strwidth(child.text)) ---@type integer
-
-    if child.type == "container" and not child.collapsed then
-      local h, w = self:measure_recursively(child, next_depth) ---@type integer, integer
-      height = height + h ---@type integer
-      max_width = max_width < w and w or max_width ---@type integer
-    end
-  end
-  return height, max_width
-end
-
----@protected
----@param parent                        eve.ux.view.treeview.IContainerNode
 ---@return nil
 function M:remove_recursively(parent)
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-  node_map[parent.uuid] = nil
-
   for _, uuid in ipairs(parent.children) do
     local child = node_map[uuid] ---@type eve.ux.view.treeview.INode
     node_map[uuid] = nil
@@ -644,8 +826,9 @@ end
 ---@param depth                         integer
 ---@param lnum                          integer
 ---@param bufnr                         integer
+---@param included_uuid_set             table<string, boolean>|nil
 ---@return integer
-function M:render_recursively(parent, depth, lnum, bufnr)
+function M:render_recursively(parent, depth, lnum, bufnr, included_uuid_set)
   local lnum2uuid = self._lnum2uuid ---@type table<integer, string>
   local uuid2lnum = self._uuid2lnum ---@type table<string, integer>
 
@@ -689,7 +872,7 @@ function M:render_recursively(parent, depth, lnum, bufnr)
 
     if child.type == "container" and not child.collapsed then
       if not child.collapsed then
-        lnum = self:render_recursively(child, next_depth, lnum, bufnr)
+        lnum = self:render_recursively(child, next_depth, lnum, bufnr, included_uuid_set)
       end
     end
   end
