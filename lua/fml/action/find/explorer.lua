@@ -435,6 +435,9 @@ local select = eve.ux.Select.new({
     if #filepaths > 0 then
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+        vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+      end
 
       widget:hide()
       for _, filepath in ipairs(filepaths) do

@@ -114,7 +114,7 @@ function M.gen_hlgroup_map(context)
     BlinkCmpMenu = { fg = c.fg4, italic = true },
     BlinkCmpMenuBorder = { link = "FloatBorder" },
     BlinkCmpSignatureHelp = { bg = t and c.none or c.bg0 },
-    BlinkCmpSignatureHelpActiveParameter = {},
+    BlinkCmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
     BlinkCmpSignatureHelpBorder = { link = "FloatBorder" },
     BlinkCmpSource = { fg = c.fg3, bg = item_kind_bg },
 

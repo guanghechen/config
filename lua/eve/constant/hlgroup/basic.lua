@@ -73,7 +73,8 @@ function M.gen_hlgroup_map(context)
     LspReferenceRead = { bold = true, underline = true, sp = c.purple },
     LspReferenceText = { bold = true, underline = true, sp = c.purple },
     LspReferenceWrite = { bold = true, underline = true, sp = c.purple },
-    LspSignatureActiveParameter = { fg = c.bg1, bg = c.green },
+    LspSignatureActiveParameter = { italic = true, bold = true, underline = true, sp = c.pink },
+
     RenamerBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
     RenamerTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
 
@@ -138,7 +139,7 @@ function M.gen_hlgroup_map(context)
     Added = { fg = c.green },
     Bold = { bold = true },
     Changed = { fg = c.yellow },
-    ColorColumn = { bg = c.bg1 },
+    ColorColumn = { fg = c.fg2, bg = cs.mix(c.bg0, c.red, 10) },
     Comment = { fg = c.grey, italic = true },
     Conceal = { fg = c.blue },
     CurSearch = { fg = c.bg0, bg = c.orange },
@@ -164,7 +165,7 @@ function M.gen_hlgroup_map(context)
     NvimInternalError = { fg = c.red },
     Pmenu = { fg = c.fg1, bg = c.bg2 },
     PmenuSbar = { bg = c.bg2 },
-    PmenuSel = { fg = c.fg1, bg = cs.mix(c.bg0, c.blue, 70), bold = true },
+    PmenuSel = { fg = c.fg1, bg = cs.mix(c.bg0, c.blue, 70), bold = true, italic = true },
     PmenuThumb = { bg = cs.mix(c.bg0, c.blue, 60) },
     Question = { fg = c.blue, bold = true },
     QuickFixLine = { fg = c.purple },
