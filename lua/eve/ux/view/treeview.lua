@@ -52,12 +52,14 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@class eve.ux.view.ITreeviewProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
+---@field public indent                 ?string
 ---@field public keymaps                eve.ux.view.treeview.IKeymap[]|nil
 ---@field public renderer               eve.ux.view.treeview.INodeRenderer
 ---@field public sorter                 eve.ux.view.treeview.INodeSorter
 
 ---@class eve.ux.view.Treeview : eve.ux.view.IView
 ---@field protected _disposed           boolean
+---@field protected _indent             string
 ---@field protected _keymaps            eve.ux.view.treeview.IKeymap[]
 ---@field protected _lnum2uuid          table<integer, string>
 ---@field protected _uuid2lnum          table<string, integer>
@@ -75,6 +77,7 @@ local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_treeview") ---@type 
 function M.new(props)
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
+  local indent = props.indent or "  " ---@type string
   local keymaps = props.keymaps or {} ---@type eve.ux.view.treeview.IKeymap[]
   local renderer = props.renderer ---@type eve.ux.view.treeview.INodeRenderer
   local sorter = props.sorter ---@type eve.ux.view.treeview.INodeSorter
@@ -95,6 +98,7 @@ function M.new(props)
   self.name = name
   self.nsnr = nsnr
   self._disposed = false
+  self._indent = indent
   self._keymaps = keymaps
   self._lnum2uuid = {}
   self._uuid2lnum = {}
@@ -124,6 +128,7 @@ function M:dispose()
   end
 
   self._disposed = true
+  self._indent = nil
   self._lnum2uuid = nil
   self._uuid2lnum = nil
   self._node_map = nil
@@ -170,7 +175,7 @@ function M:measure(root_uuid, included_uuid_set)
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
 
   local height = 0 ---@type integer
-  local max_width = 0 ---@type integer
+  local max_width = vim.api.nvim_strwidth(self._indent) ---@type integer
   local INDENT_WIDTH_UINT = 2 ---@type integer
   local recursive ---@type fun(parent: eve.ux.view.treeview.IContainerNode, depth: integer, indent_width: integer): nil
 
@@ -347,7 +352,7 @@ function M:render(bufnr, root_uuid, included_uuid_set)
   end
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  recursive(root, 0, "", 2)
+  recursive(root, 0, self._indent, #self._indent + 2)
   vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
   return self
 end

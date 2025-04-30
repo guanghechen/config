@@ -8,6 +8,7 @@ local relative_filepaths = vim.split(vim.trim(vim.fn.system("fd '.lua' lua/ ")),
 
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
+  indent = " ",
   keymaps = {
     {
       modes = { "n" },
@@ -24,8 +25,37 @@ local treeview = eve.ux.view.Treeview.new({
       desc = "filetree: toggle collapsed (recursively)",
       callback = function(bufnr, lnum, treeview)
         local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
-        if node ~= nil and node.type == "container" then
+        if node == nil then
+          return
+        end
+
+        if node.type == "container" then
           treeview:collapse(node.uuid, "toggle", true):render(bufnr)
+        else
+          local data = node.data ---@type __test__.ux.treeview.IData
+          vim.cmd.close()
+          pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+
+          vim.schedule(function()
+            eve.debug.log(string.format("open file %s", data.filepath))
+            -- eve.win.open_filepath(nil, data.filepath)
+          end)
+        end
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "<2-LeftMouse>",
+      desc = "filetree: toggle",
+      callback = function(bufnr, lnum, treeview)
+        local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
+        if node == nil then
+          return
+        end
+
+        if node.type == "container" then
+          treeview:collapse(node.uuid, "toggle", false):render(bufnr)
+        else
         end
       end,
     },
@@ -156,7 +186,7 @@ vim.bo[bufnr].buflisted = false
 vim.bo[bufnr].buftype = "nofile"
 vim.bo[bufnr].filetype = "treeview"
 vim.bo[bufnr].swapfile = false
-vim.b[bufnr].miniindentscope_disable = true
+-- vim.b[bufnr].miniindentscope_disable = true
 
 treeview
   --
