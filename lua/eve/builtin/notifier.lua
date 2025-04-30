@@ -357,7 +357,6 @@ function M.create_buf_as_needed(win)
     }
     eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-    require("nvim-treesitter") --- load nvim-treesitter if not loaded
     if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
       local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
       local has_ts_parser = pcall(vim.treesitter.language.add, lang)

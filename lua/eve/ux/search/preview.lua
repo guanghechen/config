@@ -111,7 +111,6 @@ function M.new(props)
 
       local filetype = data and data.filetype or nil ---@type string|nil
       if filetype ~= nil then
-        require("nvim-treesitter") --- load nvim-treesitter if not loaded
         if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
           local lang = vim.treesitter.language.get_lang(filetype) or filetype
           local loaded = vim.treesitter.language.add(lang)

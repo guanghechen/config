@@ -90,7 +90,6 @@ function M:render(bufnr)
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  require("nvim-treesitter") --- load nvim-treesitter if not loaded
   if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
     local lang = vim.treesitter.language.get_lang(filetype) or filetype
     local loaded = vim.treesitter.language.add(lang)
