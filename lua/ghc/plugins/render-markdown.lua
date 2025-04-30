@@ -4,10 +4,10 @@ return {
   cmd = { "RenderMarkdown" },
   opts = {
     bullet = {
-      icons = { "", "", "", "⟡" },
+      icons = { "", "", "", "⟡" },
     },
     checkbox = {
-      enabled = false,
+      enabled = true,
     },
     code = {
       sign = false,

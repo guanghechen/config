@@ -120,7 +120,7 @@ function M.gen_hlgroup_map(context)
     mode_text = { link = "mf_b_bg0" },
     mode_sep = { link = t and "ms_b_none" or "ms_b_bg2" },
     msg_changes = { fg = c.fg3, bg = "bg_bar" },
-    msg_command = { fg = c.aqua, bg = "bg_bar" },
+    msg_command = { fg = c.pink, bg = "bg_bar" },
     msg_lsp = { fg = c.fg4, bg = "bg_bar" },
     msg_mode = { fg = c.yellow, bg = "bg_bar" },
     neotree_blank = { fg = c.fg1, bg = "bg_bar" },

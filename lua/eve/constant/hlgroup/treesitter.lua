@@ -73,7 +73,7 @@ function M.gen_hlgroup_map(context)
     ["@markup.link"] = { link = "Underlined" },
     ["@markup.link.label"] = { link = "SpecialChar" },
     ["@markup.list"] = { fg = c.blue },
-    ["@markup.list.checked"] = { fg = c.bg1, bg = c.blue, blend = 10 },
+    ["@markup.list.checked"] = { fg = c.blue, blend = 10 },
     ["@markup.list.unchecked"] = { fg = c.fg4 },
     ["@markup.link.url"] = { fg = c.orange, underline = true },
     ["@markup.math"] = { link = "Special" },
