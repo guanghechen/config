@@ -16,7 +16,8 @@ local treeview = eve.ux.view.Treeview.new({
       key = "q",
       desc = "filetree: quit",
       callback = function(bufnr)
-        vim.cmd.close()
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        vim.api.nvim_win_close(winnr, true)
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
       end,
     },
@@ -34,7 +35,9 @@ local treeview = eve.ux.view.Treeview.new({
           treeview:collapse(node.uuid, "toggle", true):render(bufnr)
         else
           local data = node.data ---@type __test__.ux.treeview.IData
-          vim.cmd.close()
+          local winnr = vim.api.nvim_get_current_win() ---@type integer
+          vim.api.nvim_win_close(winnr, true)
+
           pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
 
           vim.schedule(function()
@@ -75,7 +78,8 @@ local treeview = eve.ux.view.Treeview.new({
           treeview:collapse(node.uuid, "expanded", false):render(bufnr)
         else
           local data = node.data ---@type __test__.ux.treeview.IData
-          vim.cmd.close()
+          local winnr = vim.api.nvim_get_current_win() ---@type integer
+          vim.api.nvim_win_close(winnr, true)
           pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
 
           vim.schedule(function()

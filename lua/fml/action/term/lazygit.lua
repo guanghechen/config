@@ -35,9 +35,10 @@ local function get_filepath_from_lazygit(cwd)
 end
 
 ---https://github.com/kdheepak/lazygit.nvim/issues/22#issuecomment-1815426074
+---@param winnr                         integer
 ---@param cwd                           string
 ---@return nil
-local function edit_lazygit_file_in_buffer(cwd)
+local function edit_lazygit_file_in_buffer(winnr, cwd)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -72,7 +73,7 @@ local function edit_lazygit_file_in_buffer(cwd)
   end
 
   vim.fn.chansend(channel_id, "\15") -- \15 is <C-o>
-  vim.cmd("close") -- Close Lazygit
+  vim.api.nvim_win_close(winnr, true)
 
   local relative_filepath = get_filepath_from_lazygit(cwd)
   if not relative_filepath then
@@ -104,9 +105,12 @@ local function open_lazygit(name, cwd, args)
   })
 
   local bufnr = terminal:get_bufnr() ---@type integer|nil
+  local winnr = terminal:get_winnr() ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and terminal:status() == "visible" then
     local function edit()
-      edit_lazygit_file_in_buffer(cwd)
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        edit_lazygit_file_in_buffer(winnr, cwd)
+      end
     end
     vim.keymap.set("t", "<C-e>", edit, { buffer = bufnr, noremap = true, silent = true })
   end
