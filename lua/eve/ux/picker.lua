@@ -1,27 +1,27 @@
 ---@class eve.ux.IPickerProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
----@field public finder_input           eve.std.collection.Observable -- string>
+---@field public finder_input           eve.std.collection.Observable
 ---@field public finder_multiline       ?boolean
----@field public result_lnum            eve.std.collection.Observable -- integer>
+---@field public result_lnum            eve.std.collection.Observable
 ---@field public preview_visible        ?boolean
 
 ---@class eve.ux.Picker
 ---@field protected _finder_bufnr       integer|nil
 ---@field protected _finder_winnr       integer|nil
----@field protected _finder_input       eve.std.collection.Observable -- string>
+---@field protected _finder_input       eve.std.collection.Observable
 ---@field protected _finder_multiline   boolean
 ---
 ---@field protected _result_bufnr       integer|nil
 ---@field protected _result_winnr       integer|nil
----@field protected _result_lnum        eve.std.collection.Observable -- integer>
+---@field protected _result_lnum        eve.std.collection.Observable
 ---
 ---@field protected _preview_bufnr      integer|nil
 ---@field protected _preview_winnr      integer|nil
 ---
 ---@field public name                   string
 ---@field public nsnr                   integer
----@field public with_preview           boolean
+---@field public preview_visible        boolean
 local M = {}
 M.__index = M
 
@@ -32,15 +32,15 @@ local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_picker") ---@type in
 function M.new(props)
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
-  local finder_input = props.finder_input ---@type eve.std.collection.Observable -- string>
+  local finder_input = props.finder_input ---@type eve.std.collection.Observable
   local finder_multiline = not not props.finder_multiline ---@type boolean
-  local result_lnum = props.result_lnum ---@type eve.std.collection.Observable -- integer>
+  local result_lnum = props.result_lnum ---@type eve.std.collection.Observable
   local preview_visible = not not props.preview_visible ---@type boolean
 
   local self = setmetatable({}, M)
   self.name = name
   self.nsnr = nsnr
-  self.with_preview = preview_visible
+  self.preview_visible = preview_visible
   self._finder_bufnr = nil
   self._finder_winnr = nil
   self._finder_input = finder_input
@@ -71,7 +71,7 @@ end
 function M:resize()
   local finder_bufnr, result_bufnr, preview_bufnr = self:create_bufs() ---@type integer, integer, integer|nil
 
-  local has_preview = self.with_preview and vim.o.columns > 140 ---@type boolean
+  local has_preview = self.preview_visible and vim.o.columns > 140 ---@type boolean
   local max_width = math.max(vim.o.columns * 0.9, vim.o.columns - 20) ---@type integer
   local max_height = math.max(vim.o.lines * 0.9, vim.o.lines - 10) ---@type integer
   local width = math.min(200, max_width) ---@type integer
@@ -111,7 +111,7 @@ function M:create_bufs()
   local finder_bufnr = self._finder_bufnr ---@type integer|nil
   local result_bufnr = self._result_bufnr ---@type integer|nil
   local preview_bufnr = self._preview_bufnr ---@type integer|nil
-  local has_preview = self.with_preview ---@type boolean
+  local has_preview = self.preview_visible ---@type boolean
 
   if finder_bufnr == nil or not vim.api.nvim_buf_is_valid(finder_bufnr) then
     finder_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -123,6 +123,16 @@ function M:create_bufs()
     vim.bo[finder_bufnr].swapfile = false
     vim.bo[finder_bufnr].modifiable = false
     vim.bo[finder_bufnr].readonly = true
+
+    vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+      buffer = finder_bufnr,
+      callback = function()
+        vim.fn.sign_place(finder_bufnr, "", eve.var.sign.SEARCH_INPUT_CURSOR, finder_bufnr, { lnum = 1, priority = 10 })
+        local lines = vim.api.nvim_buf_get_lines(finder_bufnr, 0, -1, false) ---@type string[]
+        local content = table.concat(lines, "\n") ---@type string
+        self._finder_input:next(content)
+      end,
+    })
   end
 
   if result_bufnr == nil or not vim.api.nvim_buf_is_valid(result_bufnr) then
@@ -177,18 +187,6 @@ function M:get_finder_winnr()
     return nil
   end
   return winnr
-end
-
----@return string|nil
-function M:get_finder_content()
-  local bufnr = self._finder_bufnr ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    self._finder_bufnr = nil
-    return nil
-  end
-
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  return table.concat(lines, "\n") ---@type string
 end
 
 ---@return integer|nil
