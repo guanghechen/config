@@ -69,7 +69,7 @@ function M.gen_hlgroup_map(context)
     DiffIndexLine = { link = "diffChanged" },
 
     ---lsp
-    LspInlayHint = { fg = c.fg4, bg = c.bg1 },
+    LspInlayHint = { fg = c.fg4, bg = c.bg1, italic = true },
     LspReferenceRead = { bold = true, underline = true, sp = c.purple },
     LspReferenceText = { bold = true, underline = true, sp = c.purple },
     LspReferenceWrite = { bold = true, underline = true, sp = c.purple },

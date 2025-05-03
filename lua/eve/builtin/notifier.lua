@@ -608,7 +608,7 @@ function M.handle()
 end
 
 vim.api.nvim_create_autocmd("WinEnter", {
-  group = eve.nvim.augroup("notifier_on_win_enter"),
+  group = eve.nvim.augroup("notifier_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local wintype = eve.win.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
@@ -623,8 +623,8 @@ vim.api.nvim_create_autocmd("WinEnter", {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "VimResized" }, {
-  group = eve.nvim.augroup("notifier_on_resize"),
+vim.api.nvim_create_autocmd("VimResized", {
+  group = eve.nvim.augroup("notifier_on_VimResized"),
   callback = function()
     M.schedule()
   end,

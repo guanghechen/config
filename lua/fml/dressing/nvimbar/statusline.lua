@@ -62,7 +62,7 @@ dirtier:subscribe(eve.std.Subscriber.new({
 }))
 
 vim.api.nvim_create_autocmd("ModeChanged", {
-  group = eve.nvim.augroup("statusline_on_mode_changed"),
+  group = eve.nvim.augroup("statusline_on_ModeChanged"),
   callback = function(evt)
     local m = evt.match ---@type string
     if m:sub(1, 2) == "c:" or m:sub(#m - 1, #m) == ":c" then

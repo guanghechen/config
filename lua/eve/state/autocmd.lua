@@ -7,7 +7,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 })
 
 vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
-  group = eve.nvim.augroup("state_on_vim_enter_or_session_load_post"),
+  group = eve.nvim.augroup("state_on_VimEnter"),
   callback = function()
     vim.schedule(function()
       local cwd = eve.path.cwd() ---@type string

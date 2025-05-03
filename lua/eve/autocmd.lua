@@ -62,7 +62,7 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_autocmd("LspProgress", {
-  group = eve.nvim.augroup("state_on_LspProgress"),
+  group = eve.nvim.augroup("bootstrap_on_LspProgress"),
   callback = function(args)
     local data = args.data.params.value
     local progress = ""

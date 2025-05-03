@@ -134,7 +134,6 @@ function M.on_supports_method(method, callback)
   supports_method[method] = supports_method[method] or setmetatable({}, { __mode = "k" })
 
   return vim.api.nvim_create_autocmd("User", {
-    group = eve.nvim.augroup("trigger_lsp_supports_method"),
     pattern = "LspSupportsMethod",
     callback = function(args)
       local bufnr = args.data.buffer ---@type number

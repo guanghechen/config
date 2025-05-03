@@ -80,14 +80,14 @@ return {
 
     -- reset hl groups when colorscheme changes
     vim.api.nvim_create_autocmd("ColorScheme", {
-      group = eve.nvim.augroup("mini-hipatterns_reset_colorscheme"),
+      group = eve.nvim.augroup("mini-hipatterns_on_ColorScheme"),
       callback = function()
         highlighted = {}
       end,
     })
 
     vim.api.nvim_create_autocmd("FileType", {
-      group = eve.nvim.augroup("mini-hipatterns_auto_enable"),
+      group = eve.nvim.augroup("mini-hipatterns_on_FileType"),
       pattern = { eve.filetype.AVANTE, eve.filetype.AVANTE_INPUT },
       callback = function(arg)
         require("mini.hipatterns").enable(arg.buf)

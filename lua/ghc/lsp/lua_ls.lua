@@ -37,8 +37,6 @@ return {
       runtime = {
         version = "LuaJIT",
       },
-      semantic = { enable = false },
-      telemetry = { enable = false },
       workspace = {
         library = {
           vim.fn.expand("$VIMRUNTIME/lua"),

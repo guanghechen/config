@@ -105,7 +105,7 @@ local scheduler = eve.std.Scheduler.new({
 })
 
 vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
-  group = eve.nvim.augroup("winsep_refresh_on_resize"),
+  group = eve.nvim.augroup("winsep_on_resize"),
   callback = function()
     scheduler:schedule()
   end,

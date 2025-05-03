@@ -15,7 +15,7 @@ local M = {}
 M.winline_map = {} ---@type table<integer, fml.dressing.nvimbar.state.IWinline>
 
 vim.api.nvim_create_autocmd("WinClosed", {
-  group = eve.nvim.augroup("dressing_nvimbar_on_WinClosed"),
+  group = eve.nvim.augroup("nvimbar_on_WinClosed"),
   callback = function(args)
     local winnr = tonumber(args.file) ---@type integer|nil
     if winnr ~= nil then

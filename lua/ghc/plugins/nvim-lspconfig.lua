@@ -64,7 +64,6 @@ return {
     end
 
     -- inlay hints
-    ---@diagnostic disable-next-line: unused-local
     eve.lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local enable_inlay_hints = eve.state.lsp.inlay_hints:snapshot() ---@type boolean
@@ -73,11 +72,10 @@ return {
     end)
 
     -- code lens
-    if vim.lsp.codelens then
-      ---@diagnostic disable-next-line: unused-local
-      eve.lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
+    eve.lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
+      if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local enable_code_lens = eve.state.lsp.code_lens:snapshot() ---@type boolean
-        if enable_code_lens and vim.bo[bufnr].buftype == "" then
+        if enable_code_lens then
           vim.lsp.codelens.refresh()
           --- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
           vim.api.nvim_create_autocmd({ "InsertLeave" }, {
@@ -85,8 +83,8 @@ return {
             callback = vim.lsp.codelens.refresh,
           })
         end
-      end)
-    end
+      end
+    end)
 
     ---@type string[]
     local enabled = {
