@@ -182,6 +182,7 @@ end
 function M.setup_theme()
   eve.state.theme.reload_theme(false, false)
   vim.schedule(function()
+    eve.state.theme.reload_theme(false, false)
     eve.state.watch_changes()
   end)
 end
