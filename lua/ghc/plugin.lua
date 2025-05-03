@@ -25,6 +25,9 @@ local conds = {
   common = function()
     return true
   end,
+  disabled = function()
+    return false
+  end,
   ---@return boolean
   ai = function()
     return not vim.g.vscode and eve.state.flight.ai:snapshot()
@@ -52,40 +55,42 @@ local conds = {
 
 ---@type ghc.plugin.IRawSpec[]
 local raw_specs = {
-  { name = "aerial.nvim", main = "aerial", cond = conds.not_vscode },
-  { name = "avante.nvim", main = "avante", cond = conds.ai },
-  { name = "blink.cmp", main = "blink.cmp", cond = conds.cmp },
-  { name = "blink.compat", main = "blink.compat", cond = conds.cmp },
-  { name = "conform.nvim", main = "conform", cond = conds.not_vscode },
-  { name = "copilot.lua", main = "copilot", cond = conds.ai },
-  { name = "copilot-chat.nvim", main = "CopilotChat", cond = conds.ai },
-  { name = "diffview.nvim", main = "diffview", cond = conds.not_vscode },
-  { name = "flash.nvim", main = "flash", cond = conds.common },
-  { name = "friendly-snippets", cond = conds.not_vscode },
-  { name = "gitsigns.nvim", main = "gitsigns", cond = conds.not_vscode },
-  { name = "mason.nvim", main = "mason", cond = conds.lsp },
-  { name = "mini.ai", main = "mini.ai", cond = conds.common },
-  { name = "mini.hipatterns", main = "mini.hipatterns", cond = conds.not_vscode },
-  { name = "mini.icons", main = "mini.icons", cond = conds.not_vscode },
-  { name = "mini.indentscope", main = "mini.indentscope", cond = conds.not_vscode },
-  { name = "mini.pairs", main = "mini.pairs", cond = conds.common },
-  { name = "mini.surround", main = "mini.surround", cond = conds.common },
-  { name = "neo-tree.nvim", main = "neo-tree", cond = conds.not_vscode },
-  { name = "nui.nvim", main = "nui", cond = conds.not_vscode },
-  { name = "nvim-dap", main = "dap", cond = conds.dap },
-  { name = "nvim-dap-ui", main = "dapui", cond = conds.dap },
-  { name = "nvim-dap-virtual-text", main = "nvim-dap-virtual-text", cond = conds.dap },
-  { name = "nvim-lint", main = "lint", cond = conds.lsp },
-  { name = "nvim-lspconfig", main = "lspconfig", cond = conds.lsp },
-  { name = "nvim-nio", main = "nio", cond = conds.not_vscode },
-  { name = "nvim-treesitter", main = "nvim-treesitter", cond = conds.common },
-  { name = "nvim-treesitter-context", main = "treesitter-context", cond = conds.treesitter_context },
-  { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects", cond = conds.common },
-  { name = "plenary.nvim", main = "plenary", cond = conds.common },
-  { name = "render-markdown.nvim", main = "render-markdown", cond = conds.not_vscode },
-  { name = "schema-store.nvim", main = "schemastore", cond = conds.lsp },
-  { name = "trouble.nvim", main = "trouble", cond = conds.not_vscode },
-  { name = "which-key.nvim", main = "which-key", cond = conds.common },
+  -- stylua: ignore start
+  { name = "aerial.nvim",                 main = "aerial",                        cond = conds.not_vscode         },
+  { name = "avante.nvim",                 main = "avante",                        cond = conds.ai                 },
+  { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                },
+  { name = "blink.compat",                main = "blink.compat",                  cond = conds.cmp                },
+  { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode         },
+  { name = "copilot.lua",                 main = "copilot",                       cond = conds.ai                 },
+  { name = "copilot-chat.nvim",           main = "CopilotChat",                   cond = conds.ai                 },
+  { name = "diffview.nvim",               main = "diffview",                      cond = conds.not_vscode         },
+  { name = "flash.nvim",                  main = "flash",                         cond = conds.common             },
+  { name = "friendly-snippets",                                                   cond = conds.not_vscode         },
+  { name = "gitsigns.nvim",               main = "gitsigns",                      cond = conds.not_vscode         },
+  { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                },
+  { name = "mini.ai",                     main = "mini.ai",                       cond = conds.common             },
+  { name = "mini.hipatterns",             main = "mini.hipatterns",               cond = conds.not_vscode         },
+  { name = "mini.icons",                  main = "mini.icons",                    cond = conds.not_vscode         },
+  { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode         },
+  { name = "mini.pairs",                  main = "mini.pairs",                    cond = conds.common             },
+  { name = "mini.surround",               main = "mini.surround",                 cond = conds.common             },
+  { name = "neo-tree.nvim",               main = "neo-tree",                      cond = conds.not_vscode         },
+  { name = "nui.nvim",                    main = "nui",                           cond = conds.not_vscode         },
+  { name = "nvim-dap",                    main = "dap",                           cond = conds.dap                },
+  { name = "nvim-dap-ui",                 main = "dapui",                         cond = conds.dap                },
+  { name = "nvim-dap-virtual-text",       main = "nvim-dap-virtual-text",         cond = conds.dap                },
+  { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                },
+  { name = "nvim-lspconfig",              main = "lspconfig",                     cond = conds.lsp                },
+  { name = "nvim-nio",                    main = "nio",                           cond = conds.not_vscode         },
+  { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.common             },
+  { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context },
+  { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.common             },
+  { name = "plenary.nvim",                main = "plenary",                       cond = conds.common             },
+  { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode         },
+  { name = "schema-store.nvim",           main = "schemastore",                   cond = conds.lsp                },
+  { name = "trouble.nvim",                main = "trouble",                       cond = conds.not_vscode         },
+  { name = "which-key.nvim",              main = "which-key",                     cond = conds.common             },
+  -- stylua: ignore end
 }
 
 ---@type ghc.plugin.ISpec[]
