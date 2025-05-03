@@ -3,8 +3,8 @@
 ---@field public bufs_relative          boolean
 
 ---@class eve.state.behavior.state
----@field public auto_im                eve.std.collection.IObservable -- boolean>
----@field public bufs_relative          eve.std.collection.IObservable -- boolean>
+---@field public auto_im                eve.std.collection.IObservable
+---@field public bufs_relative          eve.std.collection.IObservable
 
 ---@class eve.state.behavior : eve.state.behavior.state
 ---@field public defaults               fun(): eve.state.behavior.data

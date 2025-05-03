@@ -18,9 +18,9 @@ local __module_name__ = "eve.status.theme" ---@type string
 ---@field public username               boolean
 
 ---@class eve.state.theme.state
----@field public theme                  eve.std.collection.IObservable -- eve.e.Theme>
----@field public transparency           eve.std.collection.IObservable -- boolean>
----@field public username               eve.std.collection.IObservable -- boolean>
+---@field public theme                  eve.std.collection.IObservable
+---@field public transparency           eve.std.collection.IObservable
+---@field public username               eve.std.collection.IObservable
 ---
 ---@field public get_float_winblend     fun(): integer
 ---

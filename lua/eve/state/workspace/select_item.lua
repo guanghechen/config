@@ -11,15 +11,15 @@
 ---@field public input_history          eve.std.collection.history.ISerializedData
 
 ---@class eve.state.select.item.state
----@field public flag_case_sensitive    eve.std.collection.IObservable -- boolean>
----@field public flag_exclude           eve.std.collection.IObservable -- boolean>
----@field public flag_fuzzy             eve.std.collection.IObservable -- boolean>
----@field public flag_gitignore         eve.std.collection.IObservable -- boolean>
----@field public flag_regex             eve.std.collection.IObservable -- boolean>
----@field public flag_selected          eve.std.collection.IObservable -- boolean>
----@field public includes               eve.std.collection.IObservable -- string[]>
----@field public excludes               eve.std.collection.IObservable -- string[]>
----@field public input                  eve.std.collection.IObservable -- string>
+---@field public flag_case_sensitive    eve.std.collection.IObservable
+---@field public flag_exclude           eve.std.collection.IObservable
+---@field public flag_fuzzy             eve.std.collection.IObservable
+---@field public flag_gitignore         eve.std.collection.IObservable
+---@field public flag_regex             eve.std.collection.IObservable
+---@field public flag_selected          eve.std.collection.IObservable
+---@field public includes               eve.std.collection.IObservable
+---@field public excludes               eve.std.collection.IObservable
+---@field public input                  eve.std.collection.IObservable
 ---@field public input_history          eve.std.collection.IHistory
 
 ---@class eve.state.select.item

@@ -2,7 +2,7 @@
 ---@field public relativenumber         boolean
 
 ---@class eve.state.option.state
----@field public relativenumber         eve.std.collection.IObservable -- boolean>
+---@field public relativenumber         eve.std.collection.IObservable
 
 ---@class eve.state.option : eve.state.option.state
 ---@field public defaults               fun(): eve.state.option.data

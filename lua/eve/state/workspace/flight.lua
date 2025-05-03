@@ -16,21 +16,21 @@
 ---@field public gitdiff_expand_all     boolean
 
 ---@class eve.state.flight.state
----@field public ai                     eve.std.collection.IObservable -- boolean>
----@field public ai_provider            eve.std.collection.IObservable -- eve.e.AiProvider>
----@field public autoformat             eve.std.collection.IObservable -- boolean>
----@field public autoload               eve.std.collection.IObservable -- boolean>
----@field public autosave               eve.std.collection.IObservable -- boolean>
----@field public devmode                eve.std.collection.IObservable -- boolean>
+---@field public ai                     eve.std.collection.IObservable
+---@field public ai_provider            eve.std.collection.IObservable
+---@field public autoformat             eve.std.collection.IObservable
+---@field public autoload               eve.std.collection.IObservable
+---@field public autosave               eve.std.collection.IObservable
+---@field public devmode                eve.std.collection.IObservable
 ---
----@field public dressing_clipboard     eve.std.collection.IObservable -- boolean>
----@field public dressing_hipairs       eve.std.collection.IObservable -- boolean>
----@field public dressing_illumniate    eve.std.collection.IObservable -- boolean>
----@field public dressing_input         eve.std.collection.IObservable -- boolean>
----@field public dressing_select        eve.std.collection.IObservable -- boolean>
----@field public dressing_winsep        eve.std.collection.IObservable -- boolean>
+---@field public dressing_clipboard     eve.std.collection.IObservable
+---@field public dressing_hipairs       eve.std.collection.IObservable
+---@field public dressing_illumniate    eve.std.collection.IObservable
+---@field public dressing_input         eve.std.collection.IObservable
+---@field public dressing_select        eve.std.collection.IObservable
+---@field public dressing_winsep        eve.std.collection.IObservable
 ---
----@field public gitdiff_expand_all     eve.std.collection.IObservable -- boolean>
+---@field public gitdiff_expand_all     eve.std.collection.IObservable
 
 ---@class eve.state.flight : eve.state.flight.state
 ---@field public defaults               fun(): eve.state.flight.data

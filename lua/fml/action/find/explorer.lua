@@ -113,7 +113,7 @@ local function fetch_diritem(dirpath, force)
   return diritem
 end
 
-local state_cwd = eve.std.Observable.from_value(eve.path.cwd()) ---@type eve.std.collection.IObservable -- string>
+local state_cwd = eve.std.Observable.from_value(eve.path.cwd()) ---@type eve.std.collection.IObservable
 local _select = nil ---@type eve.ux.ISelect|nil
 
 ---@return string

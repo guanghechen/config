@@ -1,6 +1,6 @@
 ---@class eve.builtin.status
----@field public winnr_command          eve.std.collection.IObservable -- integer|nil>
----@field public winnr_fixed            eve.std.collection.IObservable -- integer|nil>
+---@field public winnr_command          eve.std.collection.IObservable
+---@field public winnr_fixed            eve.std.collection.IObservable
 ---
 ---@field public ticker_editor          eve.std.collection.ITicker
 ---@field public ticker_session         eve.std.collection.ITicker
@@ -8,21 +8,21 @@
 ---
 ---@field public dirtier_statusline     eve.std.collection.IDirtier
 ---@field public dirtier_tabline        eve.std.collection.IDirtier
----@field public dirty_winline_nr       eve.std.collection.IObservable -- integer>
+---@field public dirty_winline_nr       eve.std.collection.IObservable
 ---
----@field public lint_schedule_nr       eve.std.collection.IObservable -- integer>
+---@field public lint_schedule_nr       eve.std.collection.IObservable
 ---
----@field public msg_changes            eve.std.collection.IObservable -- string>
----@field public msg_command            eve.std.collection.IObservable -- string>
----@field public msg_lsp                eve.std.collection.IObservable -- string>
----@field public msg_mode               eve.std.collection.IObservable -- string>
+---@field public msg_changes            eve.std.collection.IObservable
+---@field public msg_command            eve.std.collection.IObservable
+---@field public msg_lsp                eve.std.collection.IObservable
+---@field public msg_mode               eve.std.collection.IObservable
 ---
 ---@field public maximized_winnrs       table<integer, boolean>
----@field public notification_paused    eve.std.collection.IObservable -- boolean>
----@field public notification_level     eve.std.collection.IObservable -- eve.builtin.notifier.LevelEnum>
----@field public searching              eve.std.collection.IObservable -- boolean>
----@field public suppress_warning       eve.std.collection.IObservable -- boolean>
----@field public tmux_zen_mode          eve.std.collection.IObservable -- boolean>
+---@field public notification_paused    eve.std.collection.IObservable
+---@field public notification_level     eve.std.collection.IObservable
+---@field public searching              eve.std.collection.IObservable
+---@field public suppress_warning       eve.std.collection.IObservable
+---@field public tmux_zen_mode          eve.std.collection.IObservable
 local M = {
   winnr_command = eve.std.Observable.from_value(0),
   winnr_fixed = eve.std.Observable.from_value(0),

@@ -15,13 +15,13 @@
 ---@field public spellcheck             boolean
 
 ---@class eve.state.lsp.state
----@field public breakpoints            eve.std.collection.IObservable -- eve.state.lsp.IBreakpointData[]>
----@field public code_lens              eve.std.collection.IObservable -- boolean>
----@field public inlay_hints            eve.std.collection.IObservable -- boolean>
----@field public python_debug_host      eve.std.collection.IObservable -- string>
----@field public python_debug_port      eve.std.collection.IObservable -- integer>
----@field public python_venv_path       eve.std.collection.IObservable -- string|nil>
----@field public spellcheck             eve.std.collection.IObservable -- boolean>
+---@field public breakpoints            eve.std.collection.IObservable
+---@field public code_lens              eve.std.collection.IObservable
+---@field public inlay_hints            eve.std.collection.IObservable
+---@field public python_debug_host      eve.std.collection.IObservable
+---@field public python_debug_port      eve.std.collection.IObservable
+---@field public python_venv_path       eve.std.collection.IObservable
+---@field public spellcheck             eve.std.collection.IObservable
 ---
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil

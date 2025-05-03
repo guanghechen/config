@@ -3,7 +3,7 @@
 ---@field public dimension              ?eve.ux.IRawSearchDimension
 ---@field public flag_fuzzy             ?boolean
 ---@field public flag_regex             ?boolean
----@field public input                  ?eve.std.collection.IObservable -- string>
+---@field public input                  ?eve.std.collection.IObservable
 ---@field public multiple               ?boolean
 ---@field public preview_wrap           ?boolean
 ---@field public fetch_items            fun(): eve.ux.select.IItem[]
@@ -21,7 +21,7 @@ local function select(params)
   local dimension = params.dimension ---@type eve.ux.IRawSearchDimension|nil
   local flag_fuzzy = not not params.flag_fuzzy ---@type boolean
   local flag_regex = not not params.flag_regex ---@type boolean
-  local input = params.input ---@type eve.std.collection.IObservable -- string> | nil
+  local input = params.input ---@type eve.std.collection.IObservable | nil
   local multiple = params.multiple ---@type boolean|nil
   local preview_wrap = params.preview_wrap ---@type boolean|nil
   local fetch_items = params.fetch_items ---@type fun(): eve.ux.select.IItem[]

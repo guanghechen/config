@@ -1,4 +1,4 @@
----@class eve.std.collection.IDirtier : eve.std.collection.IObservable -- boolean>
+---@class eve.std.collection.IDirtier : eve.std.collection.IObservable
 ---@field public is_clean               fun(self: eve.std.collection.IDirtier): boolean
 ---@field public is_dirty               fun(self: eve.std.collection.IDirtier): boolean
 ---@field public mark_clean             fun(self: eve.std.collection.IDirtier): nil

@@ -3,8 +3,8 @@
 ---@field public treesitter_context     boolean
 
 ---@class eve.state.plugin.state
----@field public render_markdown        eve.std.collection.IObservable -- boolean>
----@field public treesitter_context     eve.std.collection.IObservable -- boolean>
+---@field public render_markdown        eve.std.collection.IObservable
+---@field public treesitter_context     eve.std.collection.IObservable
 
 ---@class eve.state.plugin : eve.state.plugin.state
 ---@field public defaults               fun(): eve.state.plugin.data

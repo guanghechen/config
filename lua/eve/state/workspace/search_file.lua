@@ -5,10 +5,10 @@
 ---@field public replacement            string
 
 ---@class eve.state.search_file.state
----@field public flag_replace           eve.std.collection.IObservable -- boolean>
----@field public max_filesize           eve.std.collection.IObservable -- string>
----@field public max_matches            eve.std.collection.IObservable -- integer>
----@field public replacement            eve.std.collection.IObservable -- string>
+---@field public flag_replace           eve.std.collection.IObservable
+---@field public max_filesize           eve.std.collection.IObservable
+---@field public max_matches            eve.std.collection.IObservable
+---@field public replacement            eve.std.collection.IObservable
 
 ---@class eve.state.search_file : eve.state.search_file.state
 ---@field public defaults               fun(): eve.state.search_file.data

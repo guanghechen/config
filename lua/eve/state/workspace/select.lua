@@ -28,9 +28,9 @@ local select_item = require("eve.state.workspace.select_item")
 ---@field public search_file            eve.state.select.item.state
 ---@field public select_avante          eve.state.select.item.state
 ---
----@field public find_buffer_scope      eve.std.collection.IObservable -- eve.e.FindBufferScope>
----@field public find_file_scope        eve.std.collection.IObservable -- eve.e.FindFileScope>
----@field public search_file_scope      eve.std.collection.IObservable -- eve.e.SearchFileScope>
+---@field public find_buffer_scope      eve.std.collection.IObservable
+---@field public find_file_scope        eve.std.collection.IObservable
+---@field public search_file_scope      eve.std.collection.IObservable
 
 ---@class eve.state.select : eve.state.select.state
 ---@field public keys                   string[]

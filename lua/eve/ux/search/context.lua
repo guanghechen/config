@@ -26,12 +26,12 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public dirtier_preview        eve.std.collection.IDirtier
 ---@field public dirtier_selected       eve.std.collection.IDirtier
 ---
----@field public flag_selected          eve.std.collection.IObservable -- boolean>
----@field public input                  eve.std.collection.IObservable -- string>
+---@field public flag_selected          eve.std.collection.IObservable
+---@field public input                  eve.std.collection.IObservable
 ---@field public input_history          eve.std.collection.IHistory|nil
----@field public input_line_count       eve.std.collection.IObservable -- integer>
----@field public state_has_matched      eve.std.collection.IObservable -- boolean>
----@field public status                 eve.std.collection.IObservable -- eve.e.WidgetStatus>
+---@field public input_line_count       eve.std.collection.IObservable
+---@field public state_has_matched      eve.std.collection.IObservable
+---@field public status                 eve.std.collection.IObservable
 ---
 ---@field public bufnr_input            integer|nil
 ---@field public bufnr_main             integer|nil
@@ -97,8 +97,8 @@ M.__index = M
 ---@field public dimension              eve.ux.IRawSearchDimension|nil
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             eve.ux.search.IFetchData
----@field public flag_selected          eve.std.collection.IObservable -- boolean>
----@field public input                  eve.std.collection.IObservable -- string>
+---@field public flag_selected          eve.std.collection.IObservable
+---@field public input                  eve.std.collection.IObservable
 ---@field public input_history          eve.std.collection.IHistory|nil
 ---@field public multiple               boolean|nil
 ---@field public permanent              boolean|nil
@@ -118,11 +118,11 @@ function M.new(props)
   local dirtier_preview = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
   local dirtier_selected = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
 
-  local flag_selected = props.flag_selected ---@type eve.std.collection.IObservable -- boolean>
-  local input = props.input ---@type eve.std.collection.IObservable -- string>
+  local flag_selected = props.flag_selected ---@type eve.std.collection.IObservable
+  local input = props.input ---@type eve.std.collection.IObservable
   local input_history = props.input_history ---@type eve.std.collection.IHistory|nil
-  local input_line_count = eve.std.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.std.collection.IObservable -- integer>
-  local state_has_matched = eve.std.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.std.collection.IObservable -- boolean>
+  local input_line_count = eve.std.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.std.collection.IObservable
+  local state_has_matched = eve.std.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.std.collection.IObservable
   local status = eve.std.Observable.from_value("hidden")
 
   local cfg_input_title = props.title ---@type string
