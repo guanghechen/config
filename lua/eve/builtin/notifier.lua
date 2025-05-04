@@ -286,43 +286,45 @@ function M.notify(params)
     __TASK_HISTORY__:enqueue(task)
   end
 
-  if silent ~= true and not notification_paused and priority >= notification_priority then
-    local inserted = false ---@type boolean
-    if not inserted then
-      for t, index in __TASKS__:iterator() do
-        if t.uuid == uuid then
-          inserted = true
-          task.times = t.times + 1
-          __TASKS__:update(index, task)
-          break
-        elseif t.group ~= nil and t.group == task.group then
-          inserted = true
-          __TASKS__:update(index, task)
+  vim.schedule(function()
+    if silent ~= true and not notification_paused and priority >= notification_priority then
+      local inserted = false ---@type boolean
+      if not inserted then
+        for t, index in __TASKS__:iterator() do
+          if t.uuid == uuid then
+            inserted = true
+            task.times = t.times + 1
+            __TASKS__:update(index, task)
+            break
+          elseif t.group ~= nil and t.group == task.group then
+            inserted = true
+            __TASKS__:update(index, task)
+          end
         end
       end
-    end
 
-    if not inserted then
-      for _, w in ipairs(__WINS__) do
-        if
-          (w.task.uuid == uuid or (w.task.group ~= nil and w.task.group == task.group))
-          and w.winnr ~= nil
-          and w.bufnr ~= nil
-          and vim.api.nvim_win_is_valid(w.winnr)
-          and vim.api.nvim_buf_is_valid(w.bufnr)
-        then
-          inserted = true
-          __TASKS__:enqueue_front(task)
-          break
+      if not inserted then
+        for _, w in ipairs(__WINS__) do
+          if
+            (w.task.uuid == uuid or (w.task.group ~= nil and w.task.group == task.group))
+            and w.winnr ~= nil
+            and w.bufnr ~= nil
+            and vim.api.nvim_win_is_valid(w.winnr)
+            and vim.api.nvim_buf_is_valid(w.bufnr)
+          then
+            inserted = true
+            __TASKS__:enqueue_front(task)
+            break
+          end
         end
       end
-    end
 
-    if not inserted then
-      __TASKS__:enqueue(task)
+      if not inserted then
+        __TASKS__:enqueue(task)
+      end
+      M.schedule()
     end
-    M.schedule()
-  end
+  end)
 end
 
 ---@protected

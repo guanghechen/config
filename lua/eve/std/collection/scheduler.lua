@@ -31,6 +31,7 @@ local __module_name__ = "eve.std.collection.scheduler" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _timer_task         uv.uv_timer_t
 ---@field protected _timer_timeout      uv.uv_timer_t
+---@field protected _tick_freezed       integer
 ---@field protected _tick_pending       integer
 ---@field protected _tick_running       integer
 ---@field protected _tick_settled       integer
@@ -39,7 +40,7 @@ local __module_name__ = "eve.std.collection.scheduler" ---@type string
 ---@field protected _timeout            integer
 ---
 ---@field protected _silent             fun(): boolean
----@field protected _task               fun(): nil
+---@field protected _task               eve.std.collection.scheduler.ITask
 ---
 ---@field protected _context            unknown|nil
 ---@field protected _value              eve.std.collection.Observable
@@ -70,6 +71,7 @@ function M.new(props)
   self._disposed = false
   self._timer_task = timer_task
   self._timer_timeout = timer_timeout
+  self._tick_freezed = 0
   self._tick_pending = 0
   self._tick_running = 0
   self._tick_settled = 0
@@ -77,10 +79,8 @@ function M.new(props)
   self._delay = delay
   self._timeout = timeout
 
+  self._task = task
   self._silent = silent
-  self._task = function()
-    self:__run__(task)
-  end
 
   self._context = nil
   self._value = value
@@ -91,18 +91,14 @@ end
 function M:cancel()
   self:__health__()
 
-  local tick = self._tick_pending + 1 ---@type integer
-
   self._timer_task:stop()
   self._timer_timeout:stop()
+
+  local tick = self._tick_pending + 1 ---@type integer
+  self._tick_freezed = tick ---@type integer
   self._tick_pending = tick ---@type integer
   self._tick_running = tick ---@type integer
   self._tick_settled = tick ---@type integer
-end
-
----@return boolean
-function M:isdisposed()
-  return self._disposed
 end
 
 ---@return nil
@@ -120,6 +116,7 @@ function M:dispose()
 
   self._timer_task = nil
   self._timer_timeout = nil
+  self._tick_freezed = 0
   self._tick_pending = 0
   self._tick_running = 0
   self._tick_settled = 0
@@ -132,10 +129,9 @@ function M:dispose()
   self._value = nil
 end
 
----@return unknown|nil
-function M:snapshot()
-  self:__health__()
-  return self._value:snapshot()
+---@return boolean
+function M:isdisposed()
+  return self._disposed
 end
 
 ---@param opts                          ?eve.std.collection.scheduler.IScheduleOpts
@@ -153,29 +149,21 @@ function M:schedule(opts)
     self._tick_pending = self._tick_pending + 1 ---@type integer
   end
 
-  if immediate then
-    self._timer_timeout:stop()
-    self._timer_task:stop()
-    self._task()
-    return self
-  end
-
   if self.mode == "debounce" then
-    self._timer_timeout:stop()
-    self._timer_task:stop()
-    self._timer_task:start(self._delay, 0, self._task)
-    return self
+    return self:__schedule_debounce__(immediate)
   end
 
   if self.mode == "throttle" then
-    if self._tick_running == self._tick_settled then
-      self._timer_timeout:stop()
-      self._timer_task:start(self._delay, 0, self._task)
-    end
-    return self
+    return self:__schedule_throttle__(immediate)
   end
 
   error(string.format("[%s] Invalid schedule mode: %s", self.name, self.mode))
+end
+
+---@return unknown|nil
+function M:snapshot()
+  self:__health__()
+  return self._value:snapshot()
 end
 
 ---@protected
@@ -185,6 +173,7 @@ function M:__details__()
   local mode = self.mode ---@type eve.std.collection.scheduler.ScheduleModeEnum
   local context = self._context ---@type unknown|nil
   local disposed = self._disposed ---@type boolean
+  local tick_freezed = self._tick_freezed ---@type integer
   local tick_pending = self._tick_pending ---@type integer
   local tick_running = self._tick_running ---@type integer
   local tick_settled = self._tick_settled ---@type integer
@@ -200,6 +189,7 @@ function M:__details__()
     context = context,
     disposed = disposed,
     tick = {
+      freezed = tick_freezed,
       pending = tick_pending,
       running = tick_running,
       settled = tick_settled,
@@ -212,6 +202,7 @@ function M:__details__()
 end
 
 ---@protected
+---@return nil
 function M:__health__()
   if self._disposed then
     local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
@@ -219,9 +210,9 @@ function M:__health__()
   end
 end
 
----@param task                          eve.std.collection.scheduler.ITask
+---@protected
 ---@return nil
-function M:__run__(task)
+function M:__run__()
   if self._disposed then
     return
   end
@@ -272,18 +263,65 @@ function M:__run__(task)
   callback = vim.schedule_wrap(callback) ---@type eve.std.collection.scheduler.ITaskCallback
 
   vim.schedule(function()
+    local task = self._task ---@type eve.std.collection.scheduler.ITask
     local ok, result = pcall(task, self, context, callback)
-    local timeout = self._timeout ---@type integer
 
+    local timeout = self._timeout ---@type integer
     if timeout == 0 or not ok or result ~= nil then
       callback(ok, result)
       return
     end
 
     self._timer_timeout:start(timeout, 0, function()
-      callback(false, "timeout")
+      callback(false, "cancelled -- timed out")
     end)
   end)
+end
+
+---@protected
+---@param immediate                     boolean
+---@return eve.std.collection.Scheduler
+function M:__schedule_debounce__(immediate)
+  if immediate then
+    self._timer_timeout:stop()
+    self._timer_task:stop()
+    self:__run__()
+    return self
+  end
+
+  self._timer_timeout:stop()
+  self._timer_task:start(self._delay, 0, function()
+    self:__run__()
+  end)
+  return self
+end
+
+---@protected
+---@param immediate                     boolean
+---@return eve.std.collection.Scheduler
+function M:__schedule_throttle__(immediate)
+  local tick = self._tick_pending ---@type integer
+
+  if immediate then
+    self._tick_freezed = self._tick_settled
+    self._timer_timeout:stop()
+    self._timer_task:start(self._delay, 0, function()
+      self._tick_freezed = tick
+      self:schedule({ rescheduled = true })
+    end)
+    self:__run__()
+    return self
+  end
+
+  if self._tick_running == self._tick_freezed and self._tick_running == self._tick_settled then
+    self._timer_timeout:stop()
+    self._timer_task:start(self._delay, 0, function()
+      self._tick_freezed = tick
+      self:schedule({ rescheduled = true })
+    end)
+    self:__run__()
+  end
+  return self
 end
 
 return M
