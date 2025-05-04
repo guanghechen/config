@@ -91,7 +91,10 @@ vim.api.nvim_create_autocmd("ModeChanged", {
 
 vim.api.nvim_create_autocmd("TabClosed", {
   group = eve.nvim.augroup("bootstrap_on_TabClosed"),
-  callback = function()
+  callback = function(args)
+    local tabnr = type(args.file) == "string" and tonumber(args.file) or nil ---@type integer|nil
+    eve.tab.on_close(tabnr)
+
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
   end,
@@ -110,14 +113,14 @@ vim.api.nvim_create_autocmd("VimResized", {
   group = eve.nvim.augroup("bootstrap_on_VimResized"),
   callback = function()
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
-    local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr_cur) ---@type integer
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    eve.tab.focus_win_fixed(tabnr)
 
-    eve.status.focus_win_fixed()
     vim.cmd("tabdo wincmd =")
-    vim.cmd("tabnext " .. tabnr_cur)
+    vim.cmd("tabnext " .. tabnr)
 
-    vim.api.nvim_tabpage_set_win(tabnr_cur, winnr_cur)
+    vim.api.nvim_tabpage_set_win(tabnr, winnr)
     vim.schedule(function()
       eve.widget.resize()
 
@@ -137,7 +140,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
   callback = function(args)
     local winnr = type(args.file) == "string" and tonumber(args.file) or nil ---@type integer|nil
     if type(winnr) == "number" then
-      eve.status.maximized_winnrs[winnr] = nil
+      eve.win.on_close(winnr)
     end
 
     eve.status.dirtier_statusline:mark_dirty()
@@ -150,21 +153,32 @@ vim.api.nvim_create_autocmd("WinEnter", {
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
 
     if eve.win.is_sourcefile(winnr) then
-      local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
       if meta ~= nil then
-        meta.winnr_sourcefile = winnr
+        meta.winnr_sourcefile:next(winnr)
       end
     end
 
     if eve.win.is_fixed(winnr) then
-      eve.status.winnr_fixed:next(winnr)
+      if meta ~= nil then
+        meta.winnr_fixed:next(winnr)
+      end
     else
-      eve.status.winnr_float:next(winnr)
+      if meta ~= nil then
+        local winnr_float_last = meta.winnr_float:snapshot() ---@type integer|nil
+        if winnr_float_last ~= nil and winnr_float_last > 0 and vim.api.nvim_win_is_valid(winnr_float_last) then
+          local winhighlight = vim.wo[winnr_float_last].winhighlight ---@type string
+          local winhighlight_next = winhighlight:gsub("FloatBorder:FloatActiveBorder", "FloatBorder:FloatBorder")
+          vim.wo[winnr_float_last].winhighlight = winhighlight_next
+        end
+        meta.winnr_float:next(winnr)
+      end
+      local winhighlight = vim.wo[winnr].winhighlight ---@type string
+      local winhighlight_next = winhighlight:gsub("FloatBorder:FloatBorder", "FloatBorder:FloatActiveBorder") ---@type string
+      vim.wo[winnr].winhighlight = winhighlight_next
     end
-    eve.tab.on_buf_enter(tabnr, bufnr)
 
     eve.status.dirty_winline_nr:next(winnr)
     eve.status.dirtier_statusline:mark_dirty()

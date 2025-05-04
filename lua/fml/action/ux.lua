@@ -10,8 +10,9 @@ end
 
 ---@return nil
 function M.resume_last_widget()
-  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  if eve.status.maximized_winnrs[winnr_cur] then
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local wintype = eve.win.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
+  if wintype == eve.win.Types.MAXIMIZE then
     eve.command.execute(eve.command.definitions.toggle.maximize.uuid)
     return
   end

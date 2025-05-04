@@ -129,7 +129,7 @@ function M.find_floating_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype and M.is_floating(winnr) then
+    if vim.bo[bufnr].filetype == filetype and M.is_float(winnr) then
       return winnr
     end
   end
@@ -160,7 +160,7 @@ end
 
 ---@param winnr                         integer
 ---@return boolean
-function M.is_floating(winnr)
+function M.is_float(winnr)
   local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   return config.relative ~= nil and config.relative ~= ""
 end
@@ -193,7 +193,7 @@ function M.is_projectable(winnr)
     return false
   end
 
-  if M.is_floating(winnr) then
+  if M.is_float(winnr) then
     return false
   end
 
@@ -212,7 +212,7 @@ function M.is_sourcefile(winnr)
     return false
   end
 
-  if M.is_floating(winnr) then
+  if M.is_float(winnr) then
     return false
   end
 
@@ -227,7 +227,7 @@ function M.is_swappable(winnr)
     return wintype_attrs.swappable[wintype] == true
   end
 
-  if M.is_floating(winnr) then
+  if M.is_float(winnr) then
     return false
   end
 
@@ -380,7 +380,7 @@ function M.resolve(winnr)
     return nil
   end
 
-  if M.is_floating(winnr) then
+  if M.is_float(winnr) then
     return nil
   end
 

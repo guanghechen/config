@@ -10,7 +10,7 @@ function M.refresh_all()
   local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd.checktime()
-  eve.state.refresh()
+  eve.tab.refresh()
 
   pcall(function()
     require("gitsigns").refresh()

@@ -312,8 +312,9 @@ local group_items = {
       action = function()
         local ok, render_markdown = pcall(require, "render-markdown")
         if ok then
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          eve.tab.focus_win_fixed(tabnr)
           eve.state.plugin.render_markdown:next(true)
-          eve.status.focus_win_fixed()
           render_markdown.buf_toggle()
         end
       end,
@@ -699,8 +700,8 @@ function M.toggle_maximize()
     return
   end
 
-  if eve.status.maximized_winnrs[winnr_command] then
-    eve.status.maximized_winnrs[winnr_command] = nil
+  local wintype_command = eve.win.get_type(winnr_command) ---@type eve.builtin.win.TypeEnum|nil
+  if wintype_command == eve.win.Types.MAXIMIZE then
     vim.api.nvim_win_close(winnr_command, true)
     return
   end
@@ -709,7 +710,8 @@ function M.toggle_maximize()
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   local winnr_maximized = nil ---@type integer|nil
   for _, winnr in ipairs(winnrs) do
-    if eve.status.maximized_winnrs[winnr] then
+    local wintype = eve.win.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
+    if wintype == eve.win.Types.MAXIMIZE then
       winnr_maximized = winnr
       break
     end
@@ -744,7 +746,6 @@ function M.toggle_maximize()
     vim.wo[winnr].signcolumn = "yes"
     vim.wo[winnr].wrap = false
 
-    eve.status.maximized_winnrs[winnr] = true
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
   end

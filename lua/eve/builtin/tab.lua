@@ -7,8 +7,10 @@
 ---@field public pinned                 boolean
 
 ---@class eve.builtin.tab.IMetaData
----@field public bufs                   eve.builtin.tab.IBufItem
----@field public winnr_sourcefile       integer|nil
+---@field public bufs                   eve.builtin.tab.IBufItem[]
+---@field public winnr_fixed            eve.std.collection.IObservable
+---@field public winnr_float            eve.std.collection.IObservable
+---@field public winnr_sourcefile       eve.std.collection.IObservable
 ---@field public tabtype                eve.builtin.tab.TypeEnum
 
 ---@class eve.builtin.tab.Types
@@ -43,6 +45,33 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param tabnr                         integer
+---@return nil
+function M.focus_win_fixed(tabnr)
+  local winnr_fixed = M.retrieve_winnr_fixed(tabnr) ---@type integer|nil
+  if winnr_fixed ~= nil then
+    vim.api.nvim_tabpage_set_win(tabnr, winnr_fixed)
+  end
+end
+
+---@param tabnr                         integer
+---@return nil
+function M.focus_win_float(tabnr)
+  local winnr_float = M.retrieve_winnr_float(tabnr) ---@type integer|nil
+  if winnr_float ~= nil then
+    vim.api.nvim_tabpage_set_win(tabnr, winnr_float)
+  end
+end
+
+---@param tabnr                         integer
+---@return nil
+function M.focus_win_sourcefile(tabnr)
+  local winnr_sourcefile = M.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile ~= nil then
+    vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+  end
+end
+
+---@param tabnr                         integer
 ---@return boolean
 function M.is_valid(tabnr)
   return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
@@ -58,6 +87,83 @@ function M.list_visible_bufnrs(tabnr)
     bufnrs[bufnr] = true
   end
   return bufnrs
+end
+
+---@param bufnrs                        integer[]|nil
+---@return integer[]
+function M.retrieve_unreferenced_bufnrs(bufnrs)
+  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+  local bufnr_set = {} ---@type table<integer, true>
+  for _, tabnr in ipairs(tabnrs) do
+    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+    if meta ~= nil then
+      for _, buf in ipairs(meta.bufs) do
+        bufnr_set[buf.bufnr] = true
+      end
+    end
+  end
+
+  bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
+  local bufnrs_unreferenced = {} ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    if vim.bo[bufnr].buflisted and not bufnr_set[bufnr] then
+      bufnrs_unreferenced[#bufnrs_unreferenced + 1] = bufnr
+    end
+  end
+  return bufnrs_unreferenced
+end
+
+---@param tabnr                         integer|nil
+---@return eve.builtin.tab.IBufItem|nil
+---@return integer|nil
+function M.retrieve_buf_sourcefile(tabnr)
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  if meta == nil then
+    return
+  end
+
+  local winnr = meta.winnr_sourcefile:snapshot() ---@type integer
+  if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  for index, buf in ipairs(meta.bufs) do
+    if buf.bufnr == bufnr then
+      return buf, index
+    end
+  end
+end
+
+---@param tabnr                         integer|nil
+---@return integer|nil
+function M.retrieve_bufnr_sourcefile(tabnr)
+  local winnr_sourcefile = M.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
+    return
+  end
+  return vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
+end
+
+---@param tabnr                         integer|nil
+---@return integer|nil
+function M.retrieve_winnr_fixed(tabnr)
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  return meta ~= nil and meta.winnr_fixed:snapshot() or nil ---@type integer|nil
+end
+
+---@param tabnr                         integer|nil
+---@return integer|nil
+function M.retrieve_winnr_float(tabnr)
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  return meta ~= nil and meta.winnr_float:snapshot() or nil ---@type integer|nil
+end
+
+---@param tabnr                         integer|nil
+---@return integer|nil
+function M.retrieve_winnr_sourcefile(tabnr)
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  return meta ~= nil and meta.winnr_sourcefile:snapshot() or nil ---@type integer|nil
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -135,6 +241,19 @@ function M.rearrange_bufs(bufs)
   end
 end
 
+---@return nil
+function M.refresh()
+  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+  for _, tabnr in ipairs(tabnrs) do
+    M.resolve(tabnr, true)
+  end
+
+  local bufnrs_unreferenced = M.retrieve_unreferenced_bufnrs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs_unreferenced) do
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+end
+
 ---@param bufs                          eve.builtin.tab.IBufItem[]
 ---@return nil
 function M.refresh_bufs(bufs)
@@ -189,17 +308,16 @@ function M.resolve(tabnr, force)
 
   local tabtype = M.resolve_type(tabnr, force) ---@type eve.builtin.tab.TypeEnum
 
-  local winnr_sourcefile = meta and meta.winnr_sourcefile or nil ---@type integer|nil
-  if winnr_sourcefile == nil or winnr_sourcefile < 0 or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
-    winnr_sourcefile = vim.api.nvim_tabpage_get_win(tabnr)
-  end
-  if not eve.win.is_sourcefile(winnr_sourcefile) then
-    winnr_sourcefile = nil
-  end
+  local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+  local winnr_fixed = eve.std.Observable.from_value(eve.win.is_fixed(winnr) and winnr or 0) ---@type eve.std.collection.IObservable
+  local winnr_float = eve.std.Observable.from_value(eve.win.is_float(winnr) and winnr or 0) ---@type eve.std.collection.IObservable
+  local winnr_sourcefile = eve.std.Observable.from_value(eve.win.is_sourcefile(winnr) and winnr or 0)
 
   ---@type eve.builtin.tab.IMetaData
   meta = {
     bufs = bufs,
+    winnr_fixed = winnr_fixed,
+    winnr_float = winnr_float,
     winnr_sourcefile = winnr_sourcefile,
     tabtype = tabtype,
   }
@@ -231,73 +349,6 @@ function M.resolve_type(tabnr, force)
   tabtype = tabtype or Types.NORMAL ---@type eve.builtin.tab.TypeEnum
   M.set_type(tabnr, tabtype)
   return tabtype
-end
-
----@param bufnrs                        integer[]|nil
----@return integer[]
-function M.retrieve_unreferenced_bufnrs(bufnrs)
-  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-  local bufnr_set = {} ---@type table<integer, true>
-  for _, tabnr in ipairs(tabnrs) do
-    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
-    if meta ~= nil then
-      for _, buf in ipairs(meta.bufs) do
-        bufnr_set[buf.bufnr] = true
-      end
-    end
-  end
-
-  bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
-  local bufnrs_unreferenced = {} ---@type integer[]
-  for _, bufnr in ipairs(bufnrs) do
-    if vim.bo[bufnr].buflisted and not bufnr_set[bufnr] then
-      bufnrs_unreferenced[#bufnrs_unreferenced + 1] = bufnr
-    end
-  end
-  return bufnrs_unreferenced
-end
-
----@param tabnr                         integer|nil
----@return eve.builtin.tab.IBufItem|nil
----@return integer|nil
-function M.retrieve_buf_sourcefile(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
-  if meta == nil then
-    return
-  end
-
-  local winnr = meta.winnr_sourcefile ---@type integer|nil
-  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    return
-  end
-
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  for index, buf in ipairs(meta.bufs) do
-    if buf.bufnr == bufnr then
-      return buf, index
-    end
-  end
-end
-
----@param tabnr                         integer|nil
----@return integer|nil
-function M.retrieve_bufnr_sourcefile(tabnr)
-  local winnr_sourcefile = M.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
-    return
-  end
-  return vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
-end
-
----@param tabnr                         integer|nil
----@return integer|nil
-function M.retrieve_winnr_sourcefile(tabnr)
-  if tabnr ~= nil and tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr) then
-    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
-    if meta ~= nil then
-      return meta.winnr_sourcefile
-    end
-  end
 end
 
 ---@param tabnr                         integer
@@ -369,6 +420,24 @@ function M.on_bufs_close(tabnr, bufnrs)
   for i = N, k, -1 do
     bufs[i] = nil
   end
+end
+
+---@param tabnr                         integer|nil
+---@return nil
+function M.on_close(tabnr)
+  if tabnr == nil then
+    return
+  end
+
+  local meta = meta_map[tabnr] ---@type eve.builtin.tab.IMetaData|nil
+  if meta ~= nil then
+    meta_map[tabnr] = nil
+    meta.winnr_fixed:dispose()
+    meta.winnr_float:dispose()
+    meta.winnr_sourcefile:dispose()
+  end
+
+  M.refresh()
 end
 
 return M

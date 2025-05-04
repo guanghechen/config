@@ -43,25 +43,6 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   end,
 })
 
-vim.api.nvim_create_autocmd({ "WinEnter" }, {
-  callback = function()
-    local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-    local winnrs = vim.api.nvim_list_wins() ---@type integer[]
-    for _, winnr in ipairs(winnrs) do
-      if eve.win.is_floating(winnr) then
-        local winhighlight = vim.wo[winnr].winhighlight
-        if winnr == winnr_cur then
-          local winhighlight_next = winhighlight:gsub("FloatBorder:FloatBorder", "FloatBorder:FloatActiveBorder")
-          vim.wo[winnr].winhighlight = winhighlight_next
-        else
-          local winhighlight_next = winhighlight:gsub("FloatBorder:FloatActiveBorder", "FloatBorder:FloatBorder")
-          vim.wo[winnr].winhighlight = winhighlight_next
-        end
-      end
-    end
-  end,
-})
-
 --- Highlight on yank.
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = eve.nvim.augroup("highlight_on_yank"),

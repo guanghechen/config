@@ -114,15 +114,6 @@ local scheduler = eve.std.Scheduler.new({
   end,
 })
 
-vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
-  group = eve.nvim.augroup("winsep_on_resize"),
-  callback = function()
-    local winnr = eve.status.winnr_fixed:snapshot() ---@type integer|nil
-    local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
-    scheduler:schedule({ context = context })
-  end,
-})
-
 eve.state.observe({ eve.state.flight.dressing_winsep }, function()
   local enabled = eve.state.flight.dressing_winsep:snapshot() ---@type boolean
   if not enabled then
@@ -130,13 +121,33 @@ eve.state.observe({ eve.state.flight.dressing_winsep }, function()
     return
   end
 
-  local winnr = eve.status.winnr_fixed:snapshot() ---@type integer|nil
-  local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
-  scheduler:schedule({ context = context })
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
+  if winnr_fixed ~= nil then
+    local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
+    scheduler:schedule({ context = context })
+  end
 end, false)
 
-eve.state.observe({ eve.status.winnr_fixed }, function()
-  local winnr = eve.status.winnr_fixed:snapshot() ---@type integer|nil
-  local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
-  scheduler:schedule({ context = context })
-end, false)
+vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
+  group = eve.nvim.augroup("winsep_on_resize"),
+  callback = function()
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
+    if winnr_fixed ~= nil then
+      local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
+      scheduler:schedule({ context = context })
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("WinEnter", {
+  group = eve.nvim.augroup("winsep_on_WinEnter"),
+  callback = function()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    if eve.win.is_fixed(winnr) then
+      local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
+      scheduler:schedule({ context = context })
+    end
+  end,
+})

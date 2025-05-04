@@ -237,19 +237,6 @@ function M.observe(observables, callback, ignore_initial)
 end
 
 ---@return nil
-function M.refresh()
-  local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-  for _, tabnr in ipairs(tabnrs) do
-    eve.tab.resolve(tabnr, true)
-  end
-
-  local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
-  for _, bufnr in ipairs(bufnrs_unreferenced) do
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
-end
-
----@return nil
 function M.watch_changes()
   M.observe({ M.theme.theme }, function()
     eve.state.theme.reload_theme(false, true)

@@ -1,6 +1,7 @@
 _G.eve = require("eve")
 eve.setup_patches()
 eve.setup_workspace()
+
 require("eve.option")
 require("eve.keymap")
 require("eve.autocmd")
@@ -8,7 +9,6 @@ require("integration.neovim.autocmd")
 pcall(require, "integration.local.autocmd")
 
 eve.setup_state()
-
 require("integration.neovide.option")
 require("integration.neovide.keymap")
 pcall(require, "integration.local.option")
@@ -31,7 +31,7 @@ require("ghc.command")
 if eve.path.is_repo_git() then
   if eve.state.flight.autoload:snapshot() then
     eve.session.load_session(eve.state.get_storage().nvim_session_autosaved)
-    vim.schedule(eve.state.refresh)
+    vim.schedule(eve.tab.refresh)
   end
 end
 

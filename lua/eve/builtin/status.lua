@@ -1,7 +1,5 @@
 ---@class eve.builtin.status
 ---@field public winnr_command          eve.std.collection.IObservable
----@field public winnr_fixed            eve.std.collection.IObservable
----@field public winnr_float            eve.std.collection.IObservable
 ---
 ---@field public ticker_editor          eve.std.collection.ITicker
 ---@field public ticker_session         eve.std.collection.ITicker
@@ -18,7 +16,6 @@
 ---@field public msg_lsp                eve.std.collection.IObservable
 ---@field public msg_mode               eve.std.collection.IObservable
 ---
----@field public maximized_winnrs       table<integer, boolean>
 ---@field public notification_paused    eve.std.collection.IObservable
 ---@field public notification_level     eve.std.collection.IObservable
 ---@field public searching              eve.std.collection.IObservable
@@ -26,8 +23,6 @@
 ---@field public tmux_zen_mode          eve.std.collection.IObservable
 local M = {
   winnr_command = eve.std.Observable.from_value(0),
-  winnr_fixed = eve.std.Observable.from_value(0),
-  winnr_float = eve.std.Observable.from_value(0),
 
   ticker_editor = eve.std.Ticker.new({ start = 0 }),
   ticker_workspace = eve.std.Ticker.new({ start = 0 }),
@@ -44,7 +39,6 @@ local M = {
   msg_lsp = eve.std.Observable.from_value(""),
   msg_mode = eve.std.Observable.from_value(""),
 
-  maximized_winnrs = {},
   notification_paused = eve.std.Observable.from_value(false),
   notification_level = eve.std.Observable.from_value("TRACE"),
   searching = eve.std.Observable.from_value(false),
@@ -55,8 +49,6 @@ local M = {
 ---@return nil
 function M.reset()
   M.winnr_command:next(0)
-  M.winnr_fixed:next(0)
-  M.winnr_float:next(0)
 
   M.ticker_editor:next(0)
   M.ticker_session:next(0)
@@ -73,22 +65,11 @@ function M.reset()
   M.msg_lsp:next("")
   M.msg_mode:next("")
 
-  M.maximized_winnrs = {}
   M.notification_paused:next(false)
   M.notification_level:next("TRACE")
   M.searching:next(false)
   M.suppress_warning:next(false)
   M.tmux_zen_mode:next(true)
-end
-
----@return nil
-function M.focus_win_fixed()
-  local winnr_fixed = M.winnr_fixed:snapshot() ---@type integer
-  if winnr_fixed > 0 and eve.win.is_valid(winnr_fixed) then
-    vim.api.nvim_set_current_win(winnr_fixed)
-  else
-    M.winnr_fixed:next(0)
-  end
 end
 
 ---@return integer|nil

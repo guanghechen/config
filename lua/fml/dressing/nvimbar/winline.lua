@@ -237,7 +237,7 @@ local function resolve_nvimbar(winnr, source)
 
       winline.lsp_symbols = winline.lsp_symbols or {}
     elseif source == "neotree" then
-      local is_floating = eve.win.is_floating(winnr) ---@type boolean
+      local is_floating = eve.win.is_float(winnr) ---@type boolean
       nvimbar:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
     else
     end
@@ -269,7 +269,7 @@ local function render(winnr)
   end
 
   if filetype == eve.filetype.NEOTREE then
-    if vim.o.showtabline == 0 or eve.win.is_floating(winnr) then
+    if vim.o.showtabline == 0 or eve.win.is_float(winnr) then
       local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type eve.ux.INvimbar|nil
       if nvimbar ~= nil then
         nvimbar:render()

@@ -38,16 +38,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
 
       eve.status.dirtier_statusline:mark_dirty()
       eve.status.dirtier_tabline:mark_dirty()
-      eve.state.refresh()
-    end)
-  end,
-})
-
-vim.api.nvim_create_autocmd("TabClosed", {
-  group = eve.nvim.augroup("state_on_TabClosed"),
-  callback = function()
-    vim.schedule(function()
-      eve.state.refresh()
+      eve.tab.refresh()
     end)
   end,
 })
