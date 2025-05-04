@@ -1,9 +1,4 @@
----@class eve.ux.ISearchPreview
----@field public context                eve.ux.ISearchContext
----@field public create_buf_as_needed   fun(self: eve.ux.ISearchPreview): integer
----@field public destroy                fun(self: eve.ux.ISearchPreview): nil
----@field public get_current_location   fun(self: eve.ux.ISearchPreview): integer|nil, integer|nil
----@field public render                 fun(self: eve.ux.ISearchPreview): nil
+local __module_name__ = "eve.ux.search.preview" ---@type string
 
 ---@class eve.ux.ISearchPreviewData
 ---@field public lines                  string[]
@@ -18,9 +13,11 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class eve.ux.SearchPreview : eve.ux.ISearchPreview
+---@class eve.ux.SearchPreview
+---@field public context                eve.ux.ISearchContext
+---@field public get_current_location   fun(): integer|nil, integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
----@field protected _render_scheduler   eve.std.collection.IScheduler
+---@field protected _scheduler          eve.std.collection.Scheduler
 local M = {}
 M.__index = M
 
@@ -134,12 +131,16 @@ function M.new(props)
     _update_win_config({ title = title, lnum = lnum, col = col })
   end
 
-  local _render_scheduler = eve.std.Scheduler.new({
-    name = "eve.ux.search.preview.render",
+  ---@type eve.std.collection.Scheduler
+  local scheduler = eve.std.Scheduler.new({
+    name = string.format("%s | %s", context.uuid, __module_name__),
+    mode = "throttle",
     delay = delay_render,
-    task = function(callback)
+    timeout = 0,
+    silent = eve.std.fn.falsy,
+    value = eve.std.Observable.from_value(true),
+    task = function()
       render()
-      callback("fulfilled")
 
       context.dirtier_preview:mark_clean()
       if on_rendered then
@@ -148,18 +149,19 @@ function M.new(props)
     end,
   })
 
-  self.context = context
-  self._keymaps = keymaps
-  self._render_scheduler = _render_scheduler
-
   ---@return integer|nil
   ---@return integer|nil
-  self.get_current_location = function()
+  local function get_current_location()
     if _last_data == nil then
       return nil
     end
     return _last_data.lnum, _last_data.col
   end
+
+  self.context = context
+  self.get_current_location = get_current_location
+  self._keymaps = keymaps
+  self._scheduler = scheduler
 
   context.dirtier_preview:subscribe(
     eve.std.Subscriber.new({
@@ -168,7 +170,7 @@ function M.new(props)
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_preview_dirty then
-          _render_scheduler:schedule()
+          scheduler:schedule()
         end
       end,
     }),
@@ -198,12 +200,12 @@ function M:create_buf_as_needed()
 end
 
 ---@return nil
-function M:destroy()
+function M:dispose()
   local context = self.context ---@type eve.ux.ISearchContext
   local bufnr = context.bufnr_preview ---@type integer|nil
   context.bufnr_preview = nil
 
-  self._render_scheduler:cancel()
+  self._scheduler:cancel()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end

@@ -1,12 +1,9 @@
----@class eve.ux.ISearchMain
----@field public context                eve.ux.ISearchContext
----@field public create_buf_as_needed   fun(self: eve.ux.ISearchMain): integer
----@field public destroy                fun(self: eve.ux.ISearchMain): nil
----@field public render                 fun(self: eve.ux.ISearchMain): nil
+local __module_name__ = "eve.ux.search.main" ---@type string
 
----@class eve.ux.SearchMain : eve.ux.ISearchMain
+---@class eve.ux.SearchMain
+---@field public context                eve.ux.ISearchContext
 ---@field protected _keymaps            eve.t.IKeymap[]
----@field protected _render_scheduler   eve.std.collection.IScheduler
+---@field protected _scheduler          eve.std.collection.Scheduler
 local M = {}
 M.__index = M
 
@@ -70,27 +67,27 @@ function M.new(props)
     context:place_lnum_sign()
   end
 
-  local render_scheduler = eve.std.Scheduler.new({
-    name = "eve.ux.search.main.render",
+  local scheduler = eve.std.Scheduler.new({
+    name = string.format("%s | %s", context.uuid, __module_name__),
+    mode = "throttle",
     delay = delay_render,
-    task = function(callback)
-      local ok, reason = pcall(render)
-      if ok then
-        callback("fulfilled")
-      else
-        callback("rejected", nil, reason)
-      end
+    timeout = 3000,
+    silent = eve.std.fn.falsy,
+    value = eve.std.Observable.from_value(true),
+    task = function()
+      render()
 
       context.dirtier_main:mark_clean()
       if on_rendered then
         on_rendered()
       end
+      return true
     end,
   })
 
   self.context = context
   self._keymaps = keymaps
-  self._render_scheduler = render_scheduler
+  self._scheduler = scheduler
 
   context.dirtier_main:subscribe(
     eve.std.Subscriber.new({
@@ -99,7 +96,7 @@ function M.new(props)
         local status = context.status:snapshot() ---@type eve.e.WidgetStatus
         local visible = status == "visible" ---@type boolean
         if visible and is_main_dirty then
-          render_scheduler:schedule()
+          scheduler:schedule()
         end
       end,
     }),
@@ -131,12 +128,12 @@ function M:create_buf_as_needed()
 end
 
 ---@return nil
-function M:destroy()
+function M:dispose()
   local context = self.context ---@type eve.ux.ISearchContext
   local bufnr = context.bufnr_main ---@type integer|nil
   context.bufnr_main = nil
 
-  self._render_scheduler:cancel()
+  self._scheduler:dispose()
   self.context.dirtier_main:mark_clean()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })

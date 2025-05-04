@@ -1,3 +1,5 @@
+local __module_name__ = "eve.ux.search.search" ---@type string
+
 local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 
 ---@class eve.ux.search.search.highlights
@@ -130,9 +132,9 @@ local borders = {
 ---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
 
 ---@class eve.ux.Search : eve.ux.ISearch
----@field protected _input              eve.ux.ISearchInput
----@field protected _main               eve.ux.ISearchMain
----@field protected _preview            eve.ux.ISearchPreview|nil
+---@field protected _input              eve.ux.SearchInput
+---@field protected _main               eve.ux.SearchMain
+---@field protected _preview            eve.ux.SearchPreview|nil
 ---@field protected _on_close           ?eve.ux.search.IOnClose
 ---@field protected _on_invisible       ?eve.ux.search.IOnInvisible
 local M = {}
@@ -534,13 +536,13 @@ function M.new(props)
     vim.list_extend(input_keymaps, additional_input_keymaps)
   end
 
-  ---@type eve.ux.ISearchInput
+  ---@type eve.ux.SearchInput
   local input = eve.ux.SearchInput.new({
     context = context,
     keymaps = input_keymaps,
   })
 
-  ---@type eve.ux.ISearchMain
+  ---@type eve.ux.SearchMain
   local main = eve.ux.SearchMain.new({
     context = context,
     keymaps = main_keymaps,
@@ -548,7 +550,7 @@ function M.new(props)
     delay_render = delay_render,
   })
 
-  ---@type eve.ux.ISearchPreview|nil
+  ---@type eve.ux.SearchPreview|nil
   local preview = nil
   if enable_preview and props.fetch_preview_data then
     preview = eve.ux.SearchPreview.new({
@@ -582,17 +584,21 @@ function M.new(props)
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
-  local draw_wins_scheduler = eve.std.Scheduler.new({
-    name = "eve.ux.search.search.draw",
+  ---@type eve.std.collection.Scheduler
+  local scheduler = eve.std.Scheduler.new({
+    name = string.format("%s | %s", context.uuid, __module_name__),
+    mode = "throttle",
     delay = 64,
-    task = function(callback)
+    timeout = 0,
+    silent = eve.std.fn.falsy,
+    value = eve.std.Observable.from_value(true),
+    task = function()
       local status = context.status:snapshot() ---@type eve.e.WidgetStatus
       local visible = status == "visible" ---@type boolean
       if visible then
         self:create_wins_as_needed()
         self.context.dirtier_dimension:mark_clean()
       end
-      callback("fulfilled")
     end,
   })
 
@@ -601,7 +607,7 @@ function M.new(props)
     local status = context.status:snapshot() ---@type eve.e.WidgetStatus
     local visible = status == "visible" ---@type boolean
     if visible then
-      draw_wins_scheduler:schedule()
+      scheduler:schedule()
     end
   end
 
@@ -859,7 +865,7 @@ function M:create_wins_as_needed()
       context.winnr_preview = winnr_preview
 
       ---@type integer|nil, integer|nil
-      local preview_lnum, preview_col = self._preview:get_current_location()
+      local preview_lnum, preview_col = self._preview.get_current_location()
       if preview_lnum ~= nil and preview_col ~= nil then
         vim.api.nvim_win_set_cursor(winnr_preview, { preview_lnum, preview_col })
       end
@@ -983,11 +989,11 @@ function M:close()
 
   if not context.permanent then
     self.context.status:next("closed")
-    self._input:destroy()
-    self._main:destroy()
+    self._input:dispose()
+    self._main:dispose()
 
     if self._preview ~= nil then
-      self._preview:destroy()
+      self._preview:dispose()
     end
 
     if self._on_close ~= nil then

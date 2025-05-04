@@ -112,11 +112,8 @@ vim.api.nvim_create_autocmd("VimResized", {
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr_cur = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_cur = vim.api.nvim_tabpage_get_win(tabnr_cur) ---@type integer
-    local winnr_fixed = eve.win.find_fixed_by_filetype(tabnr_cur) or winnr_cur ---@type integer
 
-    if winnr_cur ~= winnr_fixed then
-      vim.api.nvim_tabpage_set_win(tabnr_cur, winnr_fixed)
-    end
+    eve.status.focus_win_fixed()
     vim.cmd("tabdo wincmd =")
     vim.cmd("tabnext " .. tabnr_cur)
 
@@ -155,9 +152,19 @@ vim.api.nvim_create_autocmd("WinEnter", {
     local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
-    eve.tab.on_win_enter(tabnr, winnr)
+    if eve.win.is_sourcefile(winnr) then
+      local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+      if meta ~= nil then
+        meta.winnr_sourcefile = winnr
+      end
+    end
+
+    if eve.win.is_fixed(winnr) then
+      eve.status.winnr_fixed:next(winnr)
+    else
+      eve.status.winnr_float:next(winnr)
+    end
     eve.tab.on_buf_enter(tabnr, bufnr)
-    eve.status.on_win_enter(winnr)
 
     eve.status.dirty_winline_nr:next(winnr)
     eve.status.dirtier_statusline:mark_dirty()

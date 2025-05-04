@@ -148,11 +148,15 @@ function M.new(props)
 
   local uuid = eve.oxi.uuid() ---@type string
 
-  ---@type eve.std.collection.IScheduler
+  ---@type eve.std.collection.Scheduler
   local fetch_scheduler = eve.std.Scheduler.new({
-    name = "eve.ux.search.state.fetch",
+    name = string.format("%s | %s", uuid, __module_name__),
+    mode = "throttle",
     delay = delay_fetch,
-    task = function(callback)
+    timeout = 200000,
+    silent = eve.std.fn.falsy,
+    value = eve.std.Observable.from_value(true),
+    task = function(_, _, callback)
       local input_cur = input:snapshot() ---@type string
       local force = dirtier_data_cache:is_dirty() ---@type boolean
       dirtier_data_cache:mark_clean()
@@ -211,10 +215,10 @@ function M.new(props)
           self.dirtier_preview:mark_dirty()
           self.dirtier_selected:mark_dirty()
 
-          callback("fulfilled")
+          callback(true, true)
         else
           self.dirtier_data:mark_clean()
-          callback("rejected", nil, data)
+          callback(false, "")
         end
       end)
     end,

@@ -1,14 +1,10 @@
----@class eve.ux.ISearchInput
----@field public context                eve.ux.ISearchContext
----@field public create_buf_as_needed   fun(self: eve.ux.ISearchInput): integer
----@field public destroy                fun(self: eve.ux.ISearchInput): nil
----@field public reset_input            fun(self: eve.ux.ISearchInput, input?: string): nil
----@field public set_virtual_text       fun(self: eve.ux.ISearchInput): nil
+local __module_name__ = "eve.ux.search.input" ---@type string
 
----@class eve.ux.SearchInput : eve.ux.ISearchInput
+---@class eve.ux.SearchInput
+---@field public context                eve.ux.ISearchContext
 ---@field protected _autocmd_group      integer
 ---@field protected _extmark_nr         integer|nil
----@field protected _input_scheduler    eve.std.collection.IScheduler
+---@field protected _scheduler          eve.std.collection.Scheduler
 ---@field protected _keymaps            eve.t.IKeymap[]
 local M = {}
 M.__index = M
@@ -57,10 +53,14 @@ function M.new(props)
     })
   end
 
-  local input_scheduler = eve.std.Scheduler.new({
-    name = "eve.ux.search.input.on_change",
+  local scheduler = eve.std.Scheduler.new({
+    name = string.format("%s | %s", context.uuid, __module_name__),
+    mode = "throttle",
     delay = 32,
-    task = function(callback)
+    timeout = 3000,
+    silent = eve.std.fn.falsy,
+    value = eve.std.Observable.from_value(true),
+    task = function()
       local bufnr = context.bufnr_input ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         if vim.api.nvim_buf_is_valid(bufnr) then
@@ -69,14 +69,14 @@ function M.new(props)
           self.context.input:next(next_input)
         end
       end
-      callback("fulfilled")
+      return true
     end,
   })
 
   self.context = context
   self._extmark_nr = nil
-  self._input_scheduler = input_scheduler
   self._keymaps = keymaps
+  self._scheduler = scheduler
 
   context.dirtier_preview:subscribe(
     eve.std.Subscriber.new({
@@ -142,19 +142,19 @@ function M:create_buf_as_needed()
     buffer = bufnr,
     callback = function()
       vim.fn.sign_place(bufnr, "", eve.var.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
-      self._input_scheduler:schedule()
+      self._scheduler:schedule()
     end,
   })
   return bufnr
 end
 
 ---@return nil
-function M:destroy()
+function M:dispose()
   local context = self.context ---@type eve.ux.ISearchContext
   local bufnr = context.bufnr_input ---@type integer|nil
   context.bufnr_input = nil
 
-  self._input_scheduler:cancel()
+  self._scheduler:dispose()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end

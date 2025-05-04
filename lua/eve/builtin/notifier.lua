@@ -1,3 +1,5 @@
+local __module_name__ = "eve.builtin.notifier" ---@type string
+
 ---@alias eve.builtin.notifier.LevelEnum
 ---| 'TRACE'
 ---| 'DEBUG'
@@ -103,7 +105,6 @@ local config = {
 local __TASKS__ = eve.std.CircularQueue.new({ capacity = 50 })
 local __TASK_HISTORY__ = eve.std.CircularQueue.new({ capacity = 200 })
 local __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
-local processing = false ---@type boolean
 
 ---@param task                          eve.builtin.notifier.ITask
 ---@return integer
@@ -171,37 +172,35 @@ setmetatable(M, {
 
 ---@type eve.std.collection.Scheduler
 local scheduler = eve.std.Scheduler.new({
-  name = "eve.notifier.schedule",
+  name = __module_name__,
+  mode = "throttle",
   delay = 256,
-  task = function(callback)
-    if not processing then
-      local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
-      if notification_paused then
-        return
-      end
-
-      processing = true
-      vim.schedule(function()
-        local ok, error = pcall(M.handle)
-        processing = false
-
-        if not ok then
-          vim.schedule(function()
-            M.notify({
-              group = nil,
-              level = "ERROR",
-              title = "Notifier Interval Error on handle",
-              content = vim.inspect(error),
-              timeout = 100000,
-              anonymous = false,
-              silent = true,
-            })
-          end)
-        end
-
-        callback("fulfilled")
-      end)
+  timeout = 3000,
+  silent = eve.std.fn.truthy,
+  value = eve.std.Observable.from_value(true),
+  task = function()
+    local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
+    if notification_paused then
+      return true
     end
+
+    local ok, error = pcall(M.handle)
+    if ok then
+      return true
+    end
+
+    vim.schedule(function()
+      M.notify({
+        group = nil,
+        level = "ERROR",
+        title = "Notifier Interval Error on handle",
+        content = vim.inspect(error),
+        timeout = 100000,
+        anonymous = false,
+        silent = true,
+      })
+    end)
+    return false
   end,
 })
 

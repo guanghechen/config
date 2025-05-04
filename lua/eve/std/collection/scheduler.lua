@@ -1,240 +1,289 @@
 local __module_name__ = "eve.std.collection.scheduler" ---@type string
 
----@class eve.std.collection.IScheduler
----@field public name                   string
----@field public cancel                 fun(self: eve.std.collection.IScheduler): nil
----@field public execute_immediately    fun(self: eve.std.collection.IScheduler): nil
----@field public schedule               fun(self: eve.std.collection.IScheduler): nil
----@field public snapshot               fun(self: eve.std.collection.IScheduler): unknown|nil
----@field public subscribe              fun(self: eve.std.collection.IScheduler, subscriber: eve.std.collection.ISubscriber, ignoreInitial: boolean): eve.std.collection.IUnsubscribable
+---@alias eve.std.collection.scheduler.ScheduleModeEnum
+---| "debounce"
+---| "throttle"
+
+---@alias eve.std.collection.scheduler.ITaskCallback
+---| fun(ok: boolean, result: unknown|nil): nil
 
 ---@alias eve.std.collection.scheduler.ITask
----| fun(callback: eve.std.collection.promise.IOnFinally): nil
+---| fun(scheduler: eve.std.collection.Scheduler, context: unknown|nil, callback: eve.std.collection.scheduler.ITaskCallback): unknown|nil
+
+---@class eve.std.collection.scheduler.IScheduleOpts
+---@field public immediate              ?boolean
+---@field public rescheduled            ?boolean
+---@field public context                ?unknown
 
 ---@class eve.std.collection.scheduler.IProps
 ---@field public name                   string
+---@field public mode                   eve.std.collection.scheduler.ScheduleModeEnum
 ---@field public task                   eve.std.collection.scheduler.ITask
----@field public delay                  ?integer
+---@field public value                  eve.std.collection.Observable
+---@field public delay                  integer
+---@field public timeout                integer
 ---@field public silent                 ?fun(): boolean
----@field public equals                 ?fun(a: unknown, b: unknown): boolean
 
----@class eve.std.collection.Scheduler : eve.std.collection.IScheduler
+---@class eve.std.collection.Scheduler
 ---@field public name                   string
+---@field public mode                   eve.std.collection.scheduler.ScheduleModeEnum
+---
+---@field protected _disposed           boolean
+---@field protected _timer_task         uv.uv_timer_t
+---@field protected _timer_timeout      uv.uv_timer_t
+---@field protected _tick_pending       integer
+---@field protected _tick_running       integer
+---@field protected _tick_settled       integer
 ---
 ---@field protected _delay              integer
----@field protected _immediate          boolean
+---@field protected _timeout            integer
+---
 ---@field protected _silent             fun(): boolean
+---@field protected _task               fun(): nil
 ---
----@field protected _task               eve.std.collection.scheduler.ITask
----@field protected _value              eve.std.collection.IObservable
----
----@field protected _tick_alive         integer
----@field protected _tick_scheduled     integer
----@field protected _tick_resolving     integer
----@field protected _tick_resolved      integer
----@field protected _tick_settled       integer
+---@field protected _context            unknown|nil
+---@field protected _value              eve.std.collection.Observable
 local M = {}
 M.__index = M
 
 ---@param props                         eve.std.collection.scheduler.IProps
 ---@return eve.std.collection.Scheduler
 function M.new(props)
-  local self = setmetatable({}, M)
+  local timer_task = vim.uv.new_timer()
+  local timer_timeout = vim.uv.new_timer()
+
+  assert(timer_task ~= nil)
+  assert(timer_timeout ~= nil)
 
   local name = props.name ---@type string
-  local silent = props.silent or eve.std.fn.falsy ---@type fun(): boolean
-  local delay = props.delay or 32 ---@type integer
+  local mode = props.mode ---@type eve.std.collection.scheduler.ScheduleModeEnum
   local task = props.task ---@type eve.std.collection.scheduler.ITask
-  local equals = props.equals ---@type (fun(a: unknown, b: unknown): boolean)|nil
+  local value = props.value ---@type eve.std.collection.Observable
+  local delay = props.delay ---@type integer
+  local timeout = props.timeout ---@type integer
+  local silent = props.silent or eve.std.fn.falsy ---@type fun(): boolean
 
+  local self = setmetatable({}, M)
   self.name = name
+  self.mode = mode
 
-  self._delay = delay
-  self._immediate = false
-  self._silent = silent
-
-  self._task = task
-  self._value = eve.std.Observable.from_value(nil, equals)
-
-  self._tick_alive = 0
-  self._tick_scheduled = 1
-  self._tick_resolving = 0
-  self._tick_resolved = 0
+  self._disposed = false
+  self._timer_task = timer_task
+  self._timer_timeout = timer_timeout
+  self._tick_pending = 0
+  self._tick_running = 0
   self._tick_settled = 0
 
+  self._delay = delay
+  self._timeout = timeout
+
+  self._silent = silent
+  self._task = function()
+    self:__run__(task)
+  end
+
+  self._context = nil
+  self._value = value
   return self
 end
 
 ---@return nil
 function M:cancel()
-  self._tick_alive = self._tick_scheduled + 1
+  self:__health__()
+
+  local tick = self._tick_pending + 1 ---@type integer
+
+  self._timer_task:stop()
+  self._timer_timeout:stop()
+  self._tick_pending = tick ---@type integer
+  self._tick_running = tick ---@type integer
+  self._tick_settled = tick ---@type integer
+end
+
+---@return boolean
+function M:isdisposed()
+  return self._disposed
+end
+
+---@return nil
+function M:dispose()
+  if self._disposed then
+    return
+  end
+  self._disposed = true
+
+  self._timer_task:stop()
+  self._timer_task:close()
+  self._timer_timeout:stop()
+  self._timer_timeout:close()
+  self._value:dispose()
+
+  self._timer_task = nil
+  self._timer_timeout = nil
+  self._tick_pending = 0
+  self._tick_running = 0
+  self._tick_settled = 0
+
+  self._delay = 0
+  self._silent = nil
+  self._timeout = 0
+
+  self._context = nil
+  self._value = nil
 end
 
 ---@return unknown|nil
 function M:snapshot()
+  self:__health__()
   return self._value:snapshot()
 end
 
----@param subscriber                    eve.std.collection.ISubscriber
----@param ignoreInitial                 boolean
----@return eve.std.collection.IUnsubscribable
-function M:subscribe(subscriber, ignoreInitial)
-  return self._value:subscribe(subscriber, ignoreInitial)
-end
+---@param opts                          ?eve.std.collection.scheduler.IScheduleOpts
+---@return eve.std.collection.Scheduler
+function M:schedule(opts)
+  self:__health__()
 
----@return nil
-function M:schedule()
-  local tick = self._tick_scheduled + 1 ---@type integer
-  self._tick_scheduled = tick
+  opts = opts or {} ---@type eve.std.collection.scheduler.IScheduleOpts
+  local immediate = not not opts.immediate ---@type boolean
+  local rescheduled = not not opts.rescheduled ---@type boolean
+  local context = opts.context ---@type unknown|nil
 
-  if self._tick_settled < self._tick_resolving then
-    self._immediate = true
-    return
+  self._context = context
+  if not rescheduled then
+    self._tick_pending = self._tick_pending + 1 ---@type integer
   end
 
-  self:execute()
-end
-
----@return nil
-function M:execute()
-  local tick = self._tick_scheduled ---@type integer
-  if tick < self._tick_alive or tick <= self._tick_resolving then
-    return
+  if immediate then
+    self._timer_timeout:stop()
+    self._timer_task:stop()
+    self._task()
+    return self
   end
 
-  if self._tick_settled < self._tick_resolving then
-    self._immediate = true
-    return
+  if self.mode == "debounce" then
+    self._timer_timeout:stop()
+    self._timer_task:stop()
+    self._timer_task:start(self._delay, 0, self._task)
+    return self
   end
 
-  local task_completed = false ---@type boolean
-  local lock_released = false ---@type boolean
-  local lock_release_tried = false ---@type boolean
-
-  ---@return nil
-  local release_lock = function()
-    if task_completed and not lock_released then
-      lock_released = true
-      if self._tick_settled < tick then
-        self._tick_settled = tick
-
-        if self._immediate then
-          self._immediate = false
-          self:execute()
-        end
-      end
+  if self.mode == "throttle" then
+    if self._tick_running == self._tick_settled then
+      self._timer_timeout:stop()
+      self._timer_task:start(self._delay, 0, self._task)
     end
+    return self
   end
 
-  ---@param settled                     eve.std.collection.promise.ISettled
-  ---@param value                       unknown
-  ---@param reason                      unknown
-  ---@return nil
-  local function callback(settled, value, reason)
-    if not task_completed then
-      task_completed = true
+  error(string.format("[%s] Invalid schedule mode: %s", self.name, self.mode))
+end
 
-      if settled == "fulfilled" then
-        if self._tick_resolved < tick then
-          self._tick_resolved = tick
-          self._value:next(value)
-        end
+---@protected
+---@return table
+function M:__details__()
+  local name = self.name ---@type string
+  local mode = self.mode ---@type eve.std.collection.scheduler.ScheduleModeEnum
+  local context = self._context ---@type unknown|nil
+  local disposed = self._disposed ---@type boolean
+  local tick_pending = self._tick_pending ---@type integer
+  local tick_running = self._tick_running ---@type integer
+  local tick_settled = self._tick_settled ---@type integer
+
+  local delay = self._delay ---@type integer
+  local timeout = self._timeout ---@type integer
+  local silent = self._silent() ---@type boolean
+  local value = self._value:snapshot() ---@type unknown|nil
+
+  return {
+    name = name,
+    mode = mode,
+    context = context,
+    disposed = disposed,
+    tick = {
+      pending = tick_pending,
+      running = tick_running,
+      settled = tick_settled,
+    },
+    delay = delay,
+    timeout = timeout,
+    silent = silent,
+    value = value,
+  }
+end
+
+---@protected
+function M:__health__()
+  if self._disposed then
+    local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
+    error(message)
+  end
+end
+
+---@param task                          eve.std.collection.scheduler.ITask
+---@return nil
+function M:__run__(task)
+  if self._disposed then
+    return
+  end
+
+  local tick = self._tick_pending ---@type integer
+  if tick <= self._tick_running then
+    return
+  end
+  self._tick_running = tick
+
+  local settled = false ---@type boolean
+  local context = self._context ---@type unknown|nil
+
+  ---@param ok                          boolean
+  ---@param result                      unknown
+  ---@return nil
+  local function callback(ok, result)
+    if settled or self._disposed then
+      return
+    end
+    settled = true
+
+    if tick > self._tick_settled then
+      self._tick_settled = tick
+
+      if ok then
+        self._value:next(result)
       else
         local silent = self._silent() ---@type boolean
-        if not silent then
+        if silent then
+          local name = self.name ---@type string
+          local message = result and string.format("[%s] failed | %s", name, result)
+            or string.format("[%s] failed", name) ---@type string
           eve.reporter.error({
             from = __module_name__,
-            subject = "execute",
-            message = "Task failed.",
-            details = {
-              name = self.name,
-              reason = reason,
-
-              tick = tick,
-              tick_scheduled = self._tick_scheduled,
-              tick_resolving = self._tick_resolving,
-              tick_resolved = self._tick_settled,
-              tick_settled = self._tick_settled,
-            },
-          })
-        end
-      end
-
-      if lock_release_tried then
-        release_lock()
-      end
-    end
-  end
-
-  self._tick_resolving = tick
-
-  eve.std.timer.set_timeout(function()
-    lock_release_tried = true
-    release_lock()
-  end, self._delay)
-
-  local ok, reasonOrResult = pcall(self._task, callback)
-  if not ok then
-    callback("rejected", nil, reasonOrResult)
-  elseif reasonOrResult ~= nil then
-    ---! Only trigger when the reasonOrResult is not nil,
-    ---! otherwise, the task should call the `callback` by itself.
-    callback("fulfilled", reasonOrResult, nil)
-  end
-end
-
----@return nil
-function M:execute_immediately()
-  self._immediate = false ---@type boolean
-  self._tick_scheduled = self._tick_scheduled + 1 ---@type integer
-
-  local tick = self._tick_scheduled + 1 ---@type integer
-  local task_completed = false ---@type boolean
-
-  ---@param settled                     eve.std.collection.promise.ISettled
-  ---@param value                       unknown
-  ---@param reason                      unknown
-  ---@return nil
-  local function callback(settled, value, reason)
-    if not task_completed then
-      task_completed = true
-
-      if settled == "fulfilled" then
-        if self._tick_resolved < tick then
-          self._tick_resolved = tick
-          self._value:next(value)
-        end
-      else
-        local silent = self._silent() ---@type boolean
-        if not silent then
-          eve.reporter.error({
-            from = __module_name__,
-            subject = "execute",
-            message = "Task failed.",
-            details = {
-              name = self.name,
-              reason = reason,
-
-              tick = tick,
-              tick_scheduled = self._tick_scheduled,
-              tick_resolving = self._tick_resolving,
-              tick_resolved = self._tick_settled,
-              tick_settled = self._tick_settled,
-            },
+            message = message,
+            details = self:__details__(),
           })
         end
       end
     end
+
+    if tick == self._tick_running and tick < self._tick_pending then
+      self:schedule({ rescheduled = true })
+    end
   end
 
-  local ok, reasonOrResult = pcall(self._task, callback)
-  if not ok then
-    callback("rejected", nil, reasonOrResult)
-  elseif reasonOrResult ~= nil then
-    ---! Only trigger when the reasonOrResult is not nil,
-    ---! otherwise, the task should call the `callback` by itself.
-    callback("fulfilled", reasonOrResult, nil)
-  end
+  callback = vim.schedule_wrap(callback) ---@type eve.std.collection.scheduler.ITaskCallback
+
+  vim.schedule(function()
+    local ok, result = pcall(task, self, context, callback)
+    local timeout = self._timeout ---@type integer
+
+    if timeout == 0 or not ok or result ~= nil then
+      callback(ok, result)
+      return
+    end
+
+    self._timer_timeout:start(timeout, 0, function()
+      callback(false, "timeout")
+    end)
+  end)
 end
 
 return M

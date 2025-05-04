@@ -371,20 +371,4 @@ function M.on_bufs_close(tabnr, bufnrs)
   end
 end
 
----@param tabnr                         integer
----@param winnr                         integer
----@return nil
-function M.on_win_enter(tabnr, winnr)
-  if tabnr < 1 or winnr < 1 then
-    return
-  end
-
-  if eve.win.is_sourcefile(winnr) then
-    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
-    if meta ~= nil then
-      meta.winnr_sourcefile = winnr
-    end
-  end
-end
-
 return M

@@ -1,4 +1,9 @@
+local __module_name__ = "fml.dressing.winsep" ---@type string
+
 local Line = require("fml.dressing.winsep.line")
+
+---@class fml.dressing.winsep.IScheduleContext
+---@field public winnr                  integer|nil
 
 ---@class fml.dressing.Winsep
 ---@field public left                   fml.dressing.winsep.Line
@@ -85,41 +90,53 @@ local winsep = {
   end,
 }
 
+---@type eve.std.collection.Scheduler
 local scheduler = eve.std.Scheduler.new({
-  name = "winsep_refresh fixed",
-  delay = 20,
-  silent = function()
-    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
-    return not devmode
-  end,
-  task = function(callback)
-    if eve.state.flight.dressing_winsep:snapshot() then
-      local winnr = eve.status.get_winnr_fixed() ---@type integer|nil
-      local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-      if winnr == winnr_cur then
-        winsep:show(winnr_cur)
-      end
+  name = __module_name__,
+  mode = "throttle",
+  delay = 64,
+  timeout = 0,
+  silent = eve.std.fn.falsy,
+  value = eve.std.Observable.from_value(true),
+  task = function(_, context)
+    local enabled = eve.state.flight.dressing_winsep:snapshot() ---@type boolean
+    if not enabled then
+      return
     end
-    callback("fulfilled")
+
+    context = context or {} ---@type fml.dressing.winsep.IScheduleContext
+    local winnr = context.winnr ---@type integer|nil
+    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+      return
+    end
+
+    winsep:show(winnr)
   end,
 })
 
 vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
   group = eve.nvim.augroup("winsep_on_resize"),
   callback = function()
-    scheduler:schedule()
+    local winnr = eve.status.winnr_fixed:snapshot() ---@type integer|nil
+    local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
+    scheduler:schedule({ context = context })
   end,
 })
 
 eve.state.observe({ eve.state.flight.dressing_winsep }, function()
   local enabled = eve.state.flight.dressing_winsep:snapshot() ---@type boolean
-  if enabled then
-    scheduler:schedule()
-  else
+  if not enabled then
     winsep:hide()
+    return
   end
+
+  local winnr = eve.status.winnr_fixed:snapshot() ---@type integer|nil
+  local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
+  scheduler:schedule({ context = context })
 end, false)
 
 eve.state.observe({ eve.status.winnr_fixed }, function()
-  scheduler:schedule()
+  local winnr = eve.status.winnr_fixed:snapshot() ---@type integer|nil
+  local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
+  scheduler:schedule({ context = context })
 end, false)

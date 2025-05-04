@@ -1,5 +1,8 @@
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
+---@class ghc.plugins.nvim_lint.IScheduleContext
+---@field public bufnr                  ?integer
+
 local config = {
   excluded = {
     ".git/",
@@ -54,6 +57,8 @@ local linters_by_ft = {
 
 local linters = {}
 
+local scheduler = nil ---@type eve.std.collection.Scheduler|nil
+
 return {
   name = "nvim-lint",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
@@ -72,39 +77,49 @@ return {
     end
     lint.linters_by_ft = linters_by_ft
 
-    local lint_scheduler = eve.std.Scheduler.new({
+    if scheduler ~= nil then
+      scheduler:dispose()
+    end
+
+    ---@type eve.std.collection.Scheduler
+    scheduler = eve.std.Scheduler.new({
       name = __module_name__,
-      delay = 100,
-      silent = function()
-        local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
-        return devmode
-      end,
-      task = function()
+      mode = "debounce",
+      delay = 128,
+      timeout = 0,
+      silent = eve.std.fn.falsy,
+      value = eve.std.Observable.from_value(true),
+      task = function(_, context)
         local spellcheck = eve.state.lsp.spellcheck:snapshot() ---@type boolean
         if not spellcheck then
           return
         end
 
-        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+        context = context or {} ---@type ghc.plugins.nvim_lint.IScheduleContext
+        local bufnr = context.bufnr ---@type integer|nil
+        if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
+
         if vim.b[bufnr][eve.var.Names.BUF_DISABLE_LINT] then
-          return "done"
+          return true
         end
 
         local filetype = vim.bo[bufnr].filetype ---@type string
         if eve.filetype.is_not_sourcefile(filetype) then
-          return "done"
+          return
         end
 
         local workspace = eve.path.workspace() ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local filepath_relative = eve.path.relative(workspace, filepath, true) ---@type string
         if eve.path.is_absolute(filepath_relative) then
-          return "done"
+          return true
         end
 
         for _, pattern in ipairs(config.excluded) do
           if vim.fn.match(filepath, pattern) ~= -1 then
-            return "done"
+            return
           end
         end
 
@@ -153,29 +168,30 @@ return {
         if #names > 0 then
           lint.try_lint(names)
         end
-        return "done"
       end,
     })
 
     eve.state.observe({ eve.status.lint_schedule_nr }, function()
-      vim.schedule(function()
-        lint_scheduler:execute_immediately()
-      end)
+      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+      local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
+      scheduler:schedule({ context = context })
     end)
 
     vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
       group = eve.nvim.augroup("nvim-lint-on-file-load-save"),
       callback = function()
-        vim.schedule(function()
-          lint_scheduler:execute_immediately()
-        end)
+        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+        local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
+        scheduler:schedule({ context = context })
       end,
     })
 
     vim.api.nvim_create_autocmd({ "InsertLeave" }, {
       group = eve.nvim.augroup("nvim-lint-on-insert-leave"),
       callback = function()
-        lint_scheduler:schedule()
+        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+        local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
+        scheduler:schedule({ context = context })
       end,
     })
   end,

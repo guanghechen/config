@@ -82,7 +82,7 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field private _sep_width            integer
 ---@field private _components           eve.ux.nvimbar.IComponent[]
 ---@field private _orders               integer[]
----@field private _render_scheduler     eve.std.collection.IScheduler
+---@field private _render_scheduler     eve.std.collection.Scheduler
 ---@field private _get_max_width        fun(): integer
 ---@field public  _get_preset_context   fun(): eve.ux.nvimbar.IPresetContext
 ---@field private _is_active            fun(context: eve.ux.nvimbar.IContext): boolean
@@ -146,29 +146,32 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  local _render_scheduler ---@type eve.std.collection.IScheduler
-  _render_scheduler = eve.std.Scheduler.new({
-    name = "eve.ux.nvimbar#" .. name,
+  ---@type eve.std.collection.Scheduler
+  local _render_scheduler = eve.std.Scheduler.new({
+    name = string.format("%s | %s", name, __module_name__),
+    mode = "throttle",
     delay = render_delay,
+    timeout = 20000,
+    value = eve.std.Observable.from_value(""),
     silent = silent,
-    task = function(callback)
+    task = function(scheduler, context, callback)
       local validate_message = validate() ---@type string|nil
       if validate_message ~= nil then
-        callback("rejected", nil, "[eve.ux.nvimbar#" .. name .. "] Invalid: " .. validate_message)
+        callback(false, string.format("[%s | %s] Invalid: %s", name, __module_name__, validate_message))
         return
       end
 
       ---@param cancelled               boolean
       ---@return nil
       local function handle(cancelled)
-        local last_result = _render_scheduler:snapshot() ---@type string|nil
+        local last_result = scheduler:snapshot() ---@type string|nil
         if cancelled then
-          callback("fulfilled", last_result)
+          callback(true, last_result)
           return
         end
 
-        local result = self:render_sync(false)
-        callback("fulfilled", result)
+        local result = self:__render__(false) ---@type string
+        callback(true, result)
 
         --- Trigger rerender need called after the callback executed,
         --- so we can get the latest value from the :snapshot()
@@ -183,10 +186,10 @@ function M.new(props)
         pre_task(function(err)
           if err == false then
             handle(true)
-          elseif err ~= nil then
-            callback("rejected", nil, "[eve.ux.nvimbar#" .. name .. "] " .. err)
-          else
+          elseif err == nil then
             handle(false)
+          else
+            callback(false, string.format("[%s | %s] error: %s", name, __module_name__, err))
           end
         end)
       end
@@ -241,7 +244,7 @@ function M:render_immediately()
     return "!!!Invalid. This nvimbar has been disposed."
   end
 
-  return self:render_sync(true) ---@type string
+  return self:__render__(true) ---@type string
 end
 
 ---@param position                      eve.e.NvimbarCompPosition
@@ -304,7 +307,7 @@ end
 
 ---@param force                         boolean
 ---@return string
-function M:render_sync(force)
+function M:__render__(force)
   local preset_context = self._get_preset_context() ---@type eve.ux.nvimbar.IPresetContext
   local context = build_context(preset_context) ---@type eve.ux.nvimbar.IContext
 

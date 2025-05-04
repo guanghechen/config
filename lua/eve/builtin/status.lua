@@ -1,6 +1,7 @@
 ---@class eve.builtin.status
 ---@field public winnr_command          eve.std.collection.IObservable
 ---@field public winnr_fixed            eve.std.collection.IObservable
+---@field public winnr_float            eve.std.collection.IObservable
 ---
 ---@field public ticker_editor          eve.std.collection.ITicker
 ---@field public ticker_session         eve.std.collection.ITicker
@@ -26,6 +27,7 @@
 local M = {
   winnr_command = eve.std.Observable.from_value(0),
   winnr_fixed = eve.std.Observable.from_value(0),
+  winnr_float = eve.std.Observable.from_value(0),
 
   ticker_editor = eve.std.Ticker.new({ start = 0 }),
   ticker_workspace = eve.std.Ticker.new({ start = 0 }),
@@ -54,6 +56,7 @@ local M = {
 function M.reset()
   M.winnr_command:next(0)
   M.winnr_fixed:next(0)
+  M.winnr_float:next(0)
 
   M.ticker_editor:next(0)
   M.ticker_session:next(0)
@@ -80,9 +83,11 @@ end
 
 ---@return nil
 function M.focus_win_fixed()
-  local winnr_fixed = M.get_winnr_fixed()
-  if winnr_fixed ~= nil then
+  local winnr_fixed = M.winnr_fixed:snapshot() ---@type integer
+  if winnr_fixed > 0 and eve.win.is_valid(winnr_fixed) then
     vim.api.nvim_set_current_win(winnr_fixed)
+  else
+    M.winnr_fixed:next(0)
   end
 end
 
@@ -97,17 +102,6 @@ function M.get_winnr_command()
   end
 end
 
----@return integer|nil
-function M.get_winnr_fixed()
-  local winnr_fixed = M.winnr_fixed:snapshot() ---@type integer
-  if winnr_fixed ~= 0 and eve.win.is_valid(winnr_fixed) then
-    return winnr_fixed
-  else
-    M.winnr_fixed:next(0)
-    return nil
-  end
-end
-
 ---@param winnr                         integer|nil
 ---@return nil
 function M.set_winnr_command(winnr)
@@ -117,25 +111,6 @@ function M.set_winnr_command(winnr)
   end
   if eve.win.is_valid(winnr) then
     M.winnr_command:next(winnr)
-  end
-end
-
----@return nil
-function M.on_refresh()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_fixed = eve.win.find_fixed_by_filetype(tabnr) or 0 ---@type integer
-  M.winnr_fixed:next(winnr_fixed or 0)
-end
-
----@param winnr                         integer
----@return nil
-function M.on_win_enter(winnr)
-  if not eve.win.is_valid(winnr) then
-    return
-  end
-
-  if eve.win.is_fixed(winnr) then
-    M.winnr_fixed:next(winnr)
   end
 end
 

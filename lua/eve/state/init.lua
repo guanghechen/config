@@ -243,8 +243,6 @@ function M.refresh()
     eve.tab.resolve(tabnr, true)
   end
 
-  eve.status.on_refresh()
-
   local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs_unreferenced) do
     vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -364,18 +362,18 @@ function M.watch_changes()
     eve.status.dirtier_statusline:mark_dirty()
   end)
 
-  local editor_states_save_scheduler = eve.std.Scheduler.new({
-    name = "eve.state#editor/save",
-    delay = 200,
-    task = function(callback)
+  local scheduler = eve.std.Scheduler.new({
+    name = __module_name__,
+    mode = "throttle",
+    delay = 256,
+    timeout = 3000,
+    silent = eve.std.fn.falsy,
+    value = eve.std.Observable.from_value(true),
+    task = function()
       if M._storage.editor then
         local raw_data = eve.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
-        local data = {
-          theme = M.theme.normalize(raw_data.theme),
-        }
-        local snapshot = {
-          theme = M.theme.dump(),
-        }
+        local data = { theme = M.theme.normalize(raw_data.theme) }
+        local snapshot = { theme = M.theme.dump() }
 
         if
           data.theme.theme ~= snapshot.theme.theme
@@ -385,13 +383,13 @@ function M.watch_changes()
           M.save({ editor = M._storage.editor })
         end
       end
-      callback("fulfilled")
+      return true
     end,
   })
   eve.status.ticker_editor:subscribe(
     eve.std.Subscriber.new({
       on_next = function()
-        editor_states_save_scheduler:schedule()
+        scheduler:schedule()
       end,
     }),
     true
