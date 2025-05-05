@@ -89,7 +89,11 @@ end
 
 ---@return nil
 function M:hide()
-  if self._winnr ~= nil and vim.api.nvim_win_is_valid(self._winnr) then
+  if self._winnr == nil then
+    return
+  end
+
+  if vim.api.nvim_win_is_valid(self._winnr) then
     vim.api.nvim_win_close(self._winnr, true)
   end
   self._winnr = nil

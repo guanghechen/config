@@ -140,6 +140,7 @@ function M.on_supports_method(method, callback)
 
   return vim.api.nvim_create_autocmd("User", {
     pattern = "LspSupportsMethod",
+    group = eve.nvim.augroup("on_supports_method:" .. method),
     callback = function(args)
       local bufnr = args.data.buffer ---@type number
       local client = vim.lsp.get_client_by_id(args.data.client_id)

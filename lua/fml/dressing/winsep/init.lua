@@ -101,16 +101,15 @@ local scheduler = eve.std.Scheduler.new({
   task = function(_, context)
     local enabled = eve.state.flight.dressing_winsep:snapshot() ---@type boolean
     if not enabled then
+      winsep:hide()
       return
     end
 
     context = context or {} ---@type fml.dressing.winsep.IScheduleContext
     local winnr = context.winnr ---@type integer|nil
-    if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-      return
+    if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+      winsep:show(winnr)
     end
-
-    winsep:show(winnr)
   end,
 })
 

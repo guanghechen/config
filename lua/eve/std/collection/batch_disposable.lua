@@ -2,7 +2,7 @@ local __module_name__ = "eve.std.collection.batch_disposable" ---@type string
 
 ---@class eve.std.collection.IBatchDisposable : eve.std.collection.IDisposable
 ---@field public dispose_all            fun(disposables: eve.std.collection.IDisposable[]): nil
----@field public add_disposable         fun(self: eve.std.collection.IBatchDisposable, disposable: eve.std.collection.IDisposable): nil
+---@field public add_disposable         fun(self: eve.std.collection.IBatchDisposable, disposable: eve.std.collection.IDisposable): eve.std.collection.IBatchDisposable
 
 ---@class eve.std.collection.BatchDisposable : eve.std.collection.IBatchDisposable
 local M = {}
@@ -69,18 +69,19 @@ function M:dispose()
 end
 
 ---@param disposable eve.std.collection.IDisposable
----@return nil
+---@return eve.std.collection.IBatchDisposable
 function M:add_disposable(disposable)
   if disposable:is_disposed() then
-    return
+    return self
   end
 
   if self._disposed then
     disposable:dispose()
-    return
+    return self
   end
 
   table.insert(self._disposables, disposable)
+  return self
 end
 
 return M

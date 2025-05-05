@@ -21,12 +21,6 @@ local __mods = {
   select = "eve.state.workspace.select",
 }
 
----@class eve.state.__lazy
----@field public _disposables           eve.std.collection.BatchDisposable|nil
-local __lazy = {
-  _disposables = nil,
-}
-
 ---@class eve.state.state.IWatchChangeParams
 ---@field public on_theme_changed       ?fun(): nil
 
@@ -60,8 +54,6 @@ local __lazy = {
 ---@field public get_storage            fun(): eve.state.storage
 ---@field public set_storage            fun(storage: eve.state.storage): nil
 ---
----@field public add_disposable         fun(disposable: eve.std.collection.IDisposable): nil
----@field public dispose                fun(): nil
 ---@field public observe                fun(observables: eve.std.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
@@ -82,7 +74,6 @@ local __lazy = {
 ---@field public search_file            eve.state.search_file
 ---@field public select                 eve.state.select
 ---@field private _storage              eve.state.storage
----@field private _disposables          eve.std.collection.BatchDisposable
 local M = setmetatable({
   _storage = {},
 }, {
@@ -90,11 +81,6 @@ local M = setmetatable({
     local m = __mods[k] ---@type string|nil
     if m ~= nil then
       return require(m)
-    end
-
-    if k == "_disposables" then
-      __lazy._disposables = __lazy._disposables or eve.std.BatchDisposable.new() ---@type eve.std.collection.BatchDisposable
-      return __lazy._disposables
     end
     return rawget(t, k)
   end,
@@ -208,17 +194,6 @@ end
 ---@return nil
 function M.set_storage(storage)
   M._storage = storage
-end
-
----@param disposable                    eve.std.collection.IDisposable
----@return nil
-function M.add_disposable(disposable)
-  M._disposables:add_disposable(disposable)
-end
-
----@return nil
-function M.dispose()
-  M._disposables:dispose()
 end
 
 ---@param observables                   eve.std.collection.IObservable[]
@@ -380,7 +355,7 @@ function M.watch_changes()
   )
 
   ---! Save when leave the editor.
-  M.add_disposable(eve.std.Disposable.new({
+  eve.status.add_disposable(eve.std.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -419,7 +394,7 @@ function M.watch_changes()
         })
       end,
     })
-    M.add_disposable(eve.std.Disposable.new({ on_dispose = unwatch }))
+    eve.status.add_disposable(eve.std.Disposable.new({ on_dispose = unwatch }))
   end
 end
 

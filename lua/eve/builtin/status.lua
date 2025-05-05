@@ -1,4 +1,7 @@
 ---@class eve.builtin.status
+---@field protected _disposables        eve.std.collection.BatchDisposable
+---
+---
 ---@field public winnr_command          eve.std.collection.IObservable
 ---
 ---@field public dirtier_statusline     eve.std.collection.IDirtier
@@ -18,6 +21,8 @@
 ---@field public suppress_warning       eve.std.collection.IObservable
 ---@field public tmux_zen_mode          eve.std.collection.IObservable
 local M = {
+  _disposables = eve.std.BatchDisposable.new(),
+
   winnr_command = eve.std.Observable.from_value(0),
 
   dirtier_statusline = eve.std.Dirtier.new({ dirty = true }),
@@ -37,6 +42,33 @@ local M = {
   suppress_warning = eve.std.Observable.from_value(false),
   tmux_zen_mode = eve.std.Observable.from_value(true),
 }
+
+M._disposables
+  :add_disposable(M.winnr_command)
+  :add_disposable(M.dirtier_statusline)
+  :add_disposable(M.dirtier_tabline)
+  :add_disposable(M.dirty_winline_nr)
+  :add_disposable(M.lint_schedule_nr)
+  :add_disposable(M.msg_changes)
+  :add_disposable(M.msg_command)
+  :add_disposable(M.msg_lsp)
+  :add_disposable(M.msg_mode)
+  :add_disposable(M.notification_paused)
+  :add_disposable(M.notification_level)
+  :add_disposable(M.searching)
+  :add_disposable(M.suppress_warning)
+  :add_disposable(M.tmux_zen_mode)
+
+---@param disposable                    eve.std.collection.IDisposable
+---@return nil
+function M.add_disposable(disposable)
+  M._disposables:add_disposable(disposable)
+end
+
+---@return nil
+function M.dispose()
+  M._disposables:dispose()
+end
 
 ---@return nil
 function M.reset()
