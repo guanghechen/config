@@ -66,9 +66,10 @@ vim.api.nvim_create_autocmd("ModeChanged", {
   callback = function(evt)
     local m = evt.match ---@type string
     if m:sub(1, 2) == "c:" or m:sub(#m - 1, #m) == ":c" then
-      statusline:render(true)
       vim.schedule(function()
-        vim.api.nvim__redraw({ flush = true })
+        local result = statusline:render(true) ---@type string
+        vim.o.statusline = result
+        vim.api.nvim__redraw({ statusline = true, flush = true })
       end)
     end
     statusline:render()

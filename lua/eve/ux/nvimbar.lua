@@ -64,6 +64,7 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 
 ---@class eve.ux.Nvimbar
 ---@field public name                   string
+---@field protected _value              eve.std.collection.Observable
 ---@field protected _disposed           boolean
 ---@field protected _sep                string
 ---@field protected _sep_active         string
@@ -121,6 +122,7 @@ function M.new(props)
   local delay = props.delay or 20 ---@type integer
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
+  local value = eve.std.Observable.from_value("") ---@type eve.std.collection.Observable
 
   ---@type fun(): eve.ux.nvimbar.IPresetContext
   local get_preset_context = props.get_preset_context or function()
@@ -139,7 +141,7 @@ function M.new(props)
     mode = "throttle",
     delay = delay,
     timeout = 0,
-    value = eve.std.Observable.from_value(""),
+    value = value,
     silent = silent,
     task = function(scheduler, _, callback)
       local validate_message = validate() ---@type string|nil
@@ -165,6 +167,7 @@ function M.new(props)
   })
 
   self.name = name
+  self._value = value
   self._disposed = false
   self._sep = eve.nvim.txt(comp_sep, comp_sep_hlname)
   self._sep_active = eve.nvim.txt(comp_sep, comp_sep_hlname_active)
@@ -191,6 +194,7 @@ function M:dispose()
   self._disposed = true
 
   self._scheduler:dispose()
+  self._value:dispose()
 
   self._sep = nil
   self._sep_active = nil
@@ -214,9 +218,14 @@ end
 function M:render(immediate)
   self:__health__()
 
-  local scheduler = self._scheduler
-  scheduler:schedule({ immediate = immediate })
-  return scheduler:snapshot() or ""
+  if immediate then
+    local result = self:__render__(false) ---@type string
+    self._value:next(result)
+    return result
+  end
+
+  self._scheduler:schedule()
+  return self._scheduler:snapshot() or ""
 end
 
 ---@param position                      eve.e.NvimbarCompPosition
