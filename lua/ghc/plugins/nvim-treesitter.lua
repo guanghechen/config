@@ -4,7 +4,7 @@
 return {
   name = "nvim-treesitter",
   lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
-  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
+  event = "VeryLazy",
   build = ":TSUpdate",
   cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
   keys = {
@@ -21,25 +21,14 @@ return {
     require("nvim-treesitter.query_predicates")
   end,
   opts = {
-    auto_install = true,
     highlight = {
       enable = not vim.g.vscode,
-      use_languagetree = true,
       additional_vim_regex_highlighting = false,
-      ---@diagnostic disable-next-line: unused-local
-      disable = function(lang, bufnr)
-        local max_filesize = vim.g.bigfile_size or (300 * 1024) -- 300 KB
-        local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
-        if ok and stats and stats.size > max_filesize then
-          return true
-        end
-      end,
     },
     indent = {
       enable = true,
       disable = { "markdown" },
     },
-    matchup = { enable = true },
     ensure_installed = {
       "bash",
       "c",
@@ -125,9 +114,6 @@ return {
       },
     },
   },
-  config = function(_, opts)
-    require("nvim-treesitter.configs").setup(opts)
-  end,
   dependencies = {
     "nvim-treesitter-textobjects",
   },
