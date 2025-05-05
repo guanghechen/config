@@ -1,10 +1,6 @@
 ---@class eve.builtin.status
 ---@field public winnr_command          eve.std.collection.IObservable
 ---
----@field public ticker_editor          eve.std.collection.ITicker
----@field public ticker_session         eve.std.collection.ITicker
----@field public ticker_workspace       eve.std.collection.ITicker
----
 ---@field public dirtier_statusline     eve.std.collection.IDirtier
 ---@field public dirtier_tabline        eve.std.collection.IDirtier
 ---@field public dirty_winline_nr       eve.std.collection.IObservable
@@ -23,10 +19,6 @@
 ---@field public tmux_zen_mode          eve.std.collection.IObservable
 local M = {
   winnr_command = eve.std.Observable.from_value(0),
-
-  ticker_editor = eve.std.Ticker.new({ start = 0 }),
-  ticker_workspace = eve.std.Ticker.new({ start = 0 }),
-  ticker_session = eve.std.Ticker.new({ start = 0 }),
 
   dirtier_statusline = eve.std.Dirtier.new({ dirty = true }),
   dirtier_tabline = eve.std.Dirtier.new({ dirty = true }),
@@ -49,10 +41,6 @@ local M = {
 ---@return nil
 function M.reset()
   M.winnr_command:next(0)
-
-  M.ticker_editor:next(0)
-  M.ticker_session:next(0)
-  M.ticker_workspace:next(0)
 
   M.dirtier_statusline:mark_dirty()
   M.dirtier_tabline:mark_dirty()

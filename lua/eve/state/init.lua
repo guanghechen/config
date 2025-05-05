@@ -238,6 +238,9 @@ end
 
 ---@return nil
 function M.watch_changes()
+  local ticker_editor = eve.std.Ticker.new({ start = 0 })
+  local ticker_workspace = eve.std.Ticker.new({ start = 0 })
+
   M.observe({ M.theme.theme }, function()
     eve.state.theme.reload_theme(false, true)
   end, true)
@@ -265,7 +268,7 @@ function M.watch_changes()
     M.theme.transparency,
     M.theme.username,
   }, function()
-    eve.status.ticker_editor:tick()
+    ticker_editor:tick()
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
@@ -322,14 +325,8 @@ function M.watch_changes()
     table.insert(select_states, select_item.excludes)
   end
   M.observe(select_states, function()
-    eve.status.ticker_workspace:tick()
+    ticker_workspace:tick()
     eve.status.dirtier_statusline:mark_dirty()
-  end, true)
-
-  ---! Trigger tabline redraw.
-  M.observe({
-    M.flight.devmode,
-  }, function()
     eve.status.dirtier_tabline:mark_dirty()
   end, true)
 
@@ -373,7 +370,7 @@ function M.watch_changes()
       return true
     end,
   })
-  eve.status.ticker_editor:subscribe(
+  ticker_editor:subscribe(
     eve.std.Subscriber.new({
       on_next = function()
         scheduler:schedule()

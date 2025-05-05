@@ -1631,7 +1631,6 @@ function M.tabs(position)
   local hln_tab_item = position .. "_tab_item" ---@type string
   local hln_tab_item_cur = position .. "_tab_item_cur" ---@type string
 
-  local dirty = true ---@type boolean
   local folded = false ---@type boolean
   local last_tab_cur = 0 ---@type integer
   local last_tab_count = 0 ---@type integer
@@ -1644,7 +1643,6 @@ function M.tabs(position)
   ---@type string
   local fn_toggle_tabs_folded = eve.G.register_anonymous_fn(function()
     folded = not folded
-    dirty = true
     eve.status.dirtier_tabline:mark_dirty()
   end) or ""
 
@@ -1658,12 +1656,9 @@ function M.tabs(position)
       local changed = last_tab_cur ~= tab_cur or last_tab_count ~= tab_count ---@type boolean
       last_tab_cur = tab_cur
       last_tab_count = tab_count
-      dirty = dirty or changed
-      return dirty
+      return changed
     end,
     render = function()
-      dirty = false
-
       if last_tab_count <= 1 then
         return "", "", true
       end

@@ -265,8 +265,13 @@ function M.refresh_bufs(bufs)
       k = k + 1
     end
   end
-  for i = N, k, -1 do
-    bufs[i] = nil
+
+  if k <= N then
+    for i = N, k, -1 do
+      bufs[i] = nil
+    end
+  else
+    eve.status.dirtier_tabline:mark_dirty()
   end
 end
 
@@ -407,18 +412,20 @@ function M.on_bufs_close(tabnr, bufnrs)
   end
 
   local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local N = #bufs ---@type integer
-
-  local k = 1 ---@type integer
+  local k, N = 1, #bufs ---@type integer, integer
   for i = 1, N, 1 do
     local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
-    if not vim.list_contains(bufnrs, buf.bufnr) then
+    if not vim.list_contains(bufnrs, buf.bufnr) and vim.api.nvim_buf_is_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
     end
   end
-  for i = N, k, -1 do
-    bufs[i] = nil
+  if k <= N then
+    for i = N, k, -1 do
+      bufs[i] = nil
+    end
+  else
+    eve.status.dirtier_tabline:mark_dirty()
   end
 end
 

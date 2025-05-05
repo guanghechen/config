@@ -36,9 +36,9 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
         end
       end
 
+      eve.tab.refresh()
       eve.status.dirtier_statusline:mark_dirty()
       eve.status.dirtier_tabline:mark_dirty()
-      eve.tab.refresh()
     end)
   end,
 })

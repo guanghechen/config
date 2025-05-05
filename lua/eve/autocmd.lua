@@ -2,10 +2,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
   group = eve.nvim.augroup("bootstrap_on_BufDelete"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    vim.schedule(function()
-      eve.tab.on_buf_delete(tabnr)
-      eve.status.dirtier_tabline:mark_dirty()
-    end)
+    eve.tab.on_buf_delete(tabnr)
   end,
 })
 
