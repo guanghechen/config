@@ -88,6 +88,15 @@ vim.api.nvim_create_autocmd("ModeChanged", {
   end,
 })
 
+vim.api.nvim_create_autocmd("OptionSet", {
+  group = eve.nvim.augroup("bootstrap_on_OptionSet_modified"),
+  pattern = "modified",
+  callback = function()
+    eve.status.dirtier_statusline:mark_dirty()
+    eve.status.dirtier_tabline:mark_dirty()
+  end,
+})
+
 vim.api.nvim_create_autocmd("TabClosed", {
   group = eve.nvim.augroup("bootstrap_on_TabClosed"),
   callback = function(event)
@@ -121,15 +130,16 @@ vim.api.nvim_create_autocmd("VimResized", {
 
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
     vim.schedule(function()
-      eve.widget.resize()
+      if eve.env.IS_TMUX then
+        vim.schedule(function()
+          local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
+          eve.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+        end)
+      end
 
+      eve.widget.resize()
       eve.status.dirtier_statusline:mark_dirty()
       eve.status.dirtier_tabline:mark_dirty()
-
-      if eve.env.IS_TMUX then
-        local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
-        eve.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
-      end
     end)
   end,
 })
@@ -244,7 +254,6 @@ vim.api.nvim_create_autocmd("WinResized", {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     eve.status.dirty_winline_nr:next(winnr)
-    eve.status.dirtier_tabline:mark_dirty()
   end,
 })
 

@@ -42,11 +42,3 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
     end)
   end,
 })
-
-vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "BufWritePost" }, {
-  group = eve.nvim.augroup("state_on_content_changed"),
-  callback = function()
-    eve.status.dirtier_statusline:mark_dirty()
-    eve.status.dirtier_tabline:mark_dirty()
-  end,
-})
