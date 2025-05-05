@@ -3,13 +3,13 @@ local c = require("fml.dressing.nvimbar.components")
 local dirtier = eve.status.dirtier_statusline ---@type eve.std.collection.IDirtier
 local position = "f_sl" ---@type eve.ux.nvimbar.Position
 
-local statusline ---@type eve.ux.INvimbar
+local statusline ---@type eve.ux.Nvimbar
 statusline = eve.ux.Nvimbar.new({
   name = "statusline",
   comp_sep = "  ",
   comp_sep_hlname = position .. "_bg",
   comp_sep_hlname_active = position .. "_bg",
-  render_delay = 256,
+  delay = 256,
   silent = function()
     local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
     return not devmode
@@ -18,7 +18,7 @@ statusline = eve.ux.Nvimbar.new({
     return vim.o.columns
   end,
   is_active = eve.std.fn.falsy,
-  trigger_rerender = function()
+  on_fulfilled = function()
     local result = statusline:snapshot() or "" ---@type string
     vim.o.statusline = result
     dirtier:mark_clean()
@@ -66,9 +66,10 @@ vim.api.nvim_create_autocmd("ModeChanged", {
   callback = function(evt)
     local m = evt.match ---@type string
     if m:sub(1, 2) == "c:" or m:sub(#m - 1, #m) == ":c" then
-      local result = statusline:render_immediately()
-      vim.o.statusline = result
-      vim.api.nvim__redraw({ flush = true })
+      statusline:render(true)
+      vim.schedule(function()
+        vim.api.nvim__redraw({ flush = true })
+      end)
     end
     statusline:render()
   end,

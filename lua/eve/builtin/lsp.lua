@@ -55,8 +55,13 @@ end
 
 ---! Find the symbol path recursively
 ---@param cursor                      eve.builtin.lsp.ISymbolPos
----@param symbols                     any[]
+---@param symbols                     any[]|nil
+---@return any[]|nil
 function M.find_symbol_path(cursor, symbols)
+  if symbols == nil then
+    return
+  end
+
   for _, symbol in ipairs(symbols) do
     if symbol.location then
       local range = symbol.location.range

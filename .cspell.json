@@ -351,6 +351,7 @@
     "indentline",
     "indentscope",
     "inputmethod",
+    "isactive",
     "isdirectory",
     "isdisposed",
     "islist",

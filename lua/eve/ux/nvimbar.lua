@@ -54,38 +54,26 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field public comp_sep               string
 ---@field public comp_sep_hlname        string
 ---@field public comp_sep_hlname_active string
----@field public render_delay           ?integer
+---@field public delay           ?integer
 ---@field public silent                 ?fun(): boolean
 ---@field public get_max_width          fun(): integer
 ---@field public get_preset_context     ?fun(): eve.ux.nvimbar.IPresetContext
 ---@field public is_active              fun(context: eve.ux.nvimbar.IContext): boolean
----@field public pre_task               ?fun(callback: fun(err: string|false|nil): nil): nil
----@field public trigger_rerender       ?fun(): nil
+---@field public on_fulfilled           ?fun(result: string): nil
 ---@field public validate               ?fun(): string|nil
 
----@class eve.ux.INvimbar
----@field public btn                    fun(text: string, callback: string, args?: integer|integer[]): string
----@field public txt                    fun(text: string, hlname: string): string
----@field public cancel_render          fun(self: eve.ux.INvimbar): eve.ux.INvimbar
----@field public dispose                fun(self: eve.ux.INvimbar): boolean
----@field public is_disposed            fun(self: eve.ux.INvimbar): boolean Check if the disposable disposed.
----@field public place                  fun(self: eve.ux.INvimbar, position: eve.e.NvimbarCompPosition, component: eve.ux.nvimbar.IRawComponent, priority?: integer): eve.ux.INvimbar
----@field public render                 fun(self: eve.ux.INvimbar): string
----@field public render_immediately     fun(self: eve.ux.INvimbar): string
----@field public snapshot               fun(self: eve.ux.INvimbar): string
-
----@class eve.ux.Nvimbar : eve.ux.INvimbar
+---@class eve.ux.Nvimbar
 ---@field public name                   string
----@field private _disposed             boolean
----@field private _sep                  string
----@field private _sep_active           string
----@field private _sep_width            integer
----@field private _components           eve.ux.nvimbar.IComponent[]
----@field private _orders               integer[]
----@field private _render_scheduler     eve.std.collection.Scheduler
----@field private _get_max_width        fun(): integer
----@field public  _get_preset_context   fun(): eve.ux.nvimbar.IPresetContext
----@field private _is_active            fun(context: eve.ux.nvimbar.IContext): boolean
+---@field protected _disposed           boolean
+---@field protected _sep                string
+---@field protected _sep_active         string
+---@field protected _sep_width          integer
+---@field protected _components         eve.ux.nvimbar.IComponent[]
+---@field protected _orders             integer[]
+---@field protected _scheduler          eve.std.collection.Scheduler
+---@field protected _get_max_width      fun(): integer
+---@field protected _get_preset_context fun(): eve.ux.nvimbar.IPresetContext
+---@field protected _isactive          fun(context: eve.ux.nvimbar.IContext): boolean
 local M = {}
 M.__index = M
 
@@ -130,7 +118,7 @@ function M.new(props)
   local comp_sep = props.comp_sep ---@type string
   local comp_sep_hlname = props.comp_sep_hlname ---@type string
   local comp_sep_hlname_active = props.comp_sep_hlname_active ---@type string
-  local render_delay = props.render_delay or 20 ---@type integer
+  local delay = props.delay or 20 ---@type integer
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
 
@@ -139,58 +127,38 @@ function M.new(props)
     return {}
   end
 
-  local is_active = props.is_active ---@type fun(context: eve.ux.nvimbar.IContext): boolean
-  local pre_task = props.pre_task ---@type fun(callback: fun(err: string|false|nil): nil): nil
-  local trigger_rerender = props.trigger_rerender or eve.std.fn.noop ---@type fun(): nil
+  local isactive = props.is_active ---@type fun(context: eve.ux.nvimbar.IContext): boolean
+  local on_fulfilled = props.on_fulfilled or eve.std.fn.noop ---@type fun(result: string): nil
   local validate = props.validate or eve.std.fn.noop ---@type fun(): string|nil
 
   local self = setmetatable({}, M)
 
   ---@type eve.std.collection.Scheduler
-  local _render_scheduler = eve.std.Scheduler.new({
+  local scheduler = eve.std.Scheduler.new({
     name = string.format("%s | %s", name, __module_name__),
     mode = "throttle",
-    delay = render_delay,
-    timeout = 20000,
+    delay = delay,
+    timeout = 0,
     value = eve.std.Observable.from_value(""),
     silent = silent,
-    task = function(scheduler, context, callback)
+    task = function(scheduler, _, callback)
       local validate_message = validate() ---@type string|nil
       if validate_message ~= nil then
         callback(false, string.format("[%s | %s] Invalid: %s", name, __module_name__, validate_message))
         return
       end
 
-      ---@param cancelled               boolean
-      ---@return nil
-      local function handle(cancelled)
-        local last_result = scheduler:snapshot() ---@type string|nil
-        if cancelled then
-          callback(true, last_result)
-          return
-        end
+      local last_result = scheduler:snapshot() ---@type string|nil
 
-        local result = self:__render__(false) ---@type string
-        callback(true, result)
+      ---@diagnostic disable-next-line: invisible
+      local result = self:__render__(false) ---@type string
+      callback(true, result)
 
-        --- Trigger rerender need called after the callback executed,
-        --- so we can get the latest value from the :snapshot()
-        if last_result ~= result then
-          trigger_rerender()
-        end
-      end
-
-      if pre_task == nil then
-        handle(false)
-      else
-        pre_task(function(err)
-          if err == false then
-            handle(true)
-          elseif err == nil then
-            handle(false)
-          else
-            callback(false, string.format("[%s | %s] error: %s", name, __module_name__, err))
-          end
+      --- Trigger rerender need called after the callback executed,
+      --- so we can get the latest value from the :snapshot()
+      if last_result ~= result then
+        vim.schedule(function()
+          on_fulfilled(result)
         end)
       end
     end,
@@ -203,48 +171,52 @@ function M.new(props)
   self._sep_width = vim.api.nvim_strwidth(comp_sep)
   self._components = {}
   self._orders = {}
-  self._render_scheduler = _render_scheduler
+  self._scheduler = scheduler
   self._get_max_width = get_max_width
   self._get_preset_context = get_preset_context
-  self._is_active = is_active
+  self._isactive = isactive
   return self
 end
 
 ---@return boolean
-function M:is_disposed()
+function M:isdisposed()
   return self._disposed
 end
 
 ---@return nil
 function M:dispose()
-  if not self._disposed then
-    self._disposed = true
+  if self._disposed then
+    return
   end
+  self._disposed = true
+
+  self._scheduler:dispose()
+
+  self._sep = nil
+  self._sep_active = nil
+  self._sep_width = nil
+  self._components = nil
+  self._orders = nil
+  self._scheduler = nil
+  self._get_max_width = nil
+  self._get_preset_context = nil
+  self._isactive = nil
 end
 
 ---@return nil
 function M:cancel_render()
-  self._render_scheduler:cancel()
+  self:__health__()
+  self._scheduler:cancel()
 end
 
+---@param immediate                     ?boolean
 ---@return string
-function M:render()
-  if self._disposed then
-    return "!!!Invalid. This nvimbar has been disposed."
-  end
+function M:render(immediate)
+  self:__health__()
 
-  local scheduler = self._render_scheduler
-  scheduler:schedule()
+  local scheduler = self._scheduler
+  scheduler:schedule({ immediate = immediate })
   return scheduler:snapshot() or ""
-end
-
----@return string
-function M:render_immediately()
-  if self._disposed then
-    return "!!!Invalid. This nvimbar has been disposed."
-  end
-
-  return self:__render__(true) ---@type string
 end
 
 ---@param position                      eve.e.NvimbarCompPosition
@@ -252,6 +224,8 @@ end
 ---@param priority                      ?integer
 ---@return eve.ux.Nvimbar
 function M:place(position, raw_component, priority)
+  self:__health__()
+
   priority = priority or 1 ---@type integer
   local name = raw_component.name ---@type string
 
@@ -302,16 +276,27 @@ end
 
 ---@return string
 function M:snapshot()
-  return self._render_scheduler:snapshot() or ""
+  self:__health__()
+  return self._scheduler:snapshot() or ""
 end
 
+---@protected
+---@return nil
+function M:__health__()
+  if self._disposed then
+    local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
+    error(message)
+  end
+end
+
+---@protected
 ---@param force                         boolean
 ---@return string
 function M:__render__(force)
   local preset_context = self._get_preset_context() ---@type eve.ux.nvimbar.IPresetContext
   local context = build_context(preset_context) ---@type eve.ux.nvimbar.IContext
 
-  local sep = self._is_active(context) and self._sep_active or self._sep ---@type string
+  local sep = self._isactive(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer
   local width_full = self._get_max_width() ---@type integer
 

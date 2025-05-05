@@ -3,13 +3,13 @@ local c = require("fml.dressing.nvimbar.components")
 local dirtier = eve.status.dirtier_tabline ---@type eve.std.collection.IDirtier
 local position = "f_tl" ---@type eve.ux.nvimbar.Position
 
-local tabline ---@type eve.ux.INvimbar
+local tabline ---@type eve.ux.Nvimbar
 tabline = eve.ux.Nvimbar.new({
   name = "tabline",
   comp_sep = "",
   comp_sep_hlname = position .. "_bg",
   comp_sep_hlname_active = position .. "_bg",
-  render_delay = 256,
+  delay = 256,
   silent = function()
     local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
     return not devmode
@@ -18,7 +18,7 @@ tabline = eve.ux.Nvimbar.new({
     return vim.o.columns
   end,
   is_active = eve.std.fn.falsy,
-  trigger_rerender = function()
+  on_fulfilled = function()
     vim.o.tabline = tabline:snapshot()
   end,
 })

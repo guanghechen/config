@@ -241,16 +241,17 @@ function M:__run__()
       if ok then
         self._value:next(result)
       else
-        local silent = self._silent() ---@type boolean
-        if silent then
-          local name = self.name ---@type string
-          local message = result and string.format("[%s] failed | %s", name, result)
-            or string.format("[%s] failed", name) ---@type string
-          eve.reporter.error({
-            from = __module_name__,
-            message = message,
-            details = self:__details__(),
-          })
+        if result ~= nil then
+          local silent = self._silent() ---@type boolean
+          if silent then
+            local name = self.name ---@type string
+            local message = string.format("[%s] failed | %s", name, result) ---@type string
+            eve.reporter.error({
+              from = __module_name__,
+              message = message,
+              details = self:__details__(),
+            })
+          end
         end
       end
     end

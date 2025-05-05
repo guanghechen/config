@@ -1,3 +1,5 @@
+local __module_name__ = "eve.builtin.win"
+
 ---@alias eve.builtin.win.TypeEnum
 ---| "ux:board"
 ---| "ux:cmdline"
@@ -23,8 +25,9 @@
 
 ---@class eve.builtin.win.IWinline
 ---@field public bufnr                  integer
+---@field public locate_scheduler       eve.std.collection.Scheduler|nil
 ---@field public lsp_symbols            eve.t.ILspSymbol[]|nil
----@field public nvimbar                eve.ux.INvimbar
+---@field public nvimbar                eve.ux.Nvimbar
 
 ---@class eve.builtin.win.IMeta
 ---@field public history                eve.std.collection.IHistory|nil
@@ -350,6 +353,108 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param winnr                         integer|nil
+---@param callback                      fun(ok: boolean, symbols: eve.t.ILspSymbol[]|nil): nil
+---@return nil
+function M.locate_symbols(winnr, callback)
+  if winnr == nil or not eve.win.is_valid(winnr) then
+    callback(false)
+    return
+  end
+
+  ---! Make the request to the LSP server
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if
+    vim.b[bufnr][eve.var.Names.WINLINE_DISABLED]
+    or not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol")
+  then
+    callback(false)
+    return
+  end
+
+  local ok, cmp = pcall(require, "blink.cmp")
+  if ok and cmp.is_visible() then
+    callback(false)
+    return
+  end
+
+  local row, col = unpack(vim.api.nvim_win_get_cursor(winnr)) ---@type integer, integer
+
+  -- Handle the lsp request response.
+  ---@param err                         any|nil
+  ---@param symbols                     any[]
+  ---@return nil
+  local function handler(err, symbols)
+    if not vim.api.nvim_win_is_valid(winnr) then
+      callback(false)
+      return
+    end
+
+    if err then
+      if type(err) == "table" then
+        if err.message == "Content modified." then
+          callback(false)
+          return
+        end
+
+        if err.message == "trying to get AST for non-added document" then
+          if vim.api.nvim_buf_is_valid(bufnr) then
+            vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] = true
+          end
+          callback(false)
+          return
+        end
+      end
+
+      if eve.status.suppress_warning:snapshot() then
+        callback(false)
+        return
+      end
+
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "locate_symbols",
+        message = "Failed to request document symbols",
+        details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
+      })
+      callback(false)
+      return
+    end
+
+    local cursor_pos = { line = row - 1, character = col }
+    local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
+    local lsp_symbols = {} ---@type eve.t.ILspSymbol[]
+
+    local k = 1 ---@type integer
+    if symbol_path then
+      for _, symbol in ipairs(symbol_path) do
+        local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+        local name = symbol.name
+        local pos = symbol.range and symbol.range.start or symbol.location.range.start
+        ---@type eve.t.ILspSymbol
+        local lsp_symbol = {
+          kind = kind,
+          name = name,
+          row = pos.line + 1,
+          col = pos.character + 1,
+        }
+
+        lsp_symbols[k] = lsp_symbol
+        k = k + 1
+      end
+    end
+    callback(true, lsp_symbols)
+  end
+
+  ---! Make the request to the LSP server
+  vim.lsp.buf_request(
+    bufnr,
+    "textDocument/documentSymbol",
+    { textDocument = vim.lsp.util.make_text_document_params() },
+    handler
+  )
+end
+
 ---@param winnr_source                  integer|nil
 ---@param filepath                      string
 ---@param lnum                          ?integer
@@ -423,13 +528,24 @@ function M.on_close(winnr)
   end
 
   local meta = meta_map[winnr] ---@type eve.builtin.win.IMeta|nil
-  if meta ~= nil then
-    meta_map[winnr] = nil
-    if meta.history ~= nil then
-      meta.history:clear()
-    end
-    if meta.winline ~= nil then
+  if meta == nil then
+    return
+  end
+
+  meta_map[winnr] = nil
+
+  if meta.history ~= nil then
+    meta.history:clear()
+  end
+
+  if meta.winline ~= nil then
+    if meta.winline.nvimbar ~= nil then
       meta.winline.nvimbar:dispose()
+    end
+
+    if meta.winline.locate_scheduler ~= nil then
+      meta.winline.locate_scheduler:dispose()
+      meta.winline.locate_scheduler = nil
     end
   end
 end
@@ -446,6 +562,13 @@ function M.on_buf_enter(winnr, bufnr)
   local meta_buf = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
   if meta_buf == nil then
     return
+  end
+
+  if meta_win.winline ~= nil and meta_win.winline.lsp_symbols ~= nil then
+    if meta_win.winline.bufnr ~= bufnr then
+      meta_win.winline.bufnr = bufnr
+      meta_win.winline.lsp_symbols = {}
+    end
   end
 
   local filepath = meta_buf.filepath ---@type string
