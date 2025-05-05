@@ -6,25 +6,7 @@ local M = {}
 ---@return nil
 function M.inspect_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
-
-  if meta == nil then
-    eve.reporter.info({
-      from = __module_name__,
-      subject = "inspect_buf",
-      details = {
-        base = {
-          bufnr = bufnr,
-          buflisted = vim.bo[bufnr].buflisted,
-          buftype = vim.bo[bufnr].buftype,
-          filetype = vim.bo[bufnr].filetype,
-          filepath = vim.api.nvim_buf_get_name(bufnr),
-        },
-        meta = vim.NIL,
-      },
-    })
-    return
-  end
+  local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
 
   eve.reporter.info({
     from = __module_name__,
@@ -37,7 +19,7 @@ function M.inspect_buf()
         filetype = vim.bo[bufnr].filetype,
         filepath = vim.api.nvim_buf_get_name(bufnr),
       },
-      meta = meta,
+      meta = meta or vim.NIL,
     },
   })
 end
@@ -94,7 +76,7 @@ end
 ---@return nil
 function M.inspect_tab()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
 
   if meta == nil then
     eve.reporter.info({
@@ -143,9 +125,9 @@ function M.inspect_window()
   local filetype = vim.bo[bufnr].filetype ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
-  local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
-  local meta_win = eve.win.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
-  local meta_buf = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
+  local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta_win = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta_buf = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
 
   eve.reporter.info({
     from = __module_name__,

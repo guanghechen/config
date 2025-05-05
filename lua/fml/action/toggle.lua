@@ -696,22 +696,21 @@ end
 ---@return nil
 function M.toggle_maximize()
   local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
-  if winnr_command == nil then
+  if winnr_command == nil or winnr_command < 1 or not vim.api.nvim_win_is_valid(winnr_command) then
     return
   end
 
-  local wintype_command = eve.win.get_type(winnr_command) ---@type eve.builtin.win.TypeEnum|nil
-  if wintype_command == eve.win.Types.MAXIMIZE then
+  local meta_command = eve.win.resolve(winnr_command, false) ---@type eve.builtin.win.IMeta|nil
+  if meta_command ~= nil and meta_command.wintype == eve.win.Types.MAXIMIZE then
     vim.api.nvim_win_close(winnr_command, true)
-    return
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   local winnr_maximized = nil ---@type integer|nil
   for _, winnr in ipairs(winnrs) do
-    local wintype = eve.win.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
-    if wintype == eve.win.Types.MAXIMIZE then
+    local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+    if meta ~= nil and meta.wintype == eve.win.Types.MAXIMIZE then
       winnr_maximized = winnr
       break
     end

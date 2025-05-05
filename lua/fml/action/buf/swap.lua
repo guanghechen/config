@@ -7,7 +7,7 @@ local M = {}
 ---@return nil
 function M.swap_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -48,7 +48,7 @@ end
 ---@return nil
 function M.swap_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,

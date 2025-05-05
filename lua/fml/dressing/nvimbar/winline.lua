@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.nvimbar.winline"
 
-local states = require("fml.dressing.nvimbar.state")
 local c = require("fml.dressing.nvimbar.components")
 
 local txt = eve.nvim.txt
@@ -85,7 +84,8 @@ local function locate_symbols(winnr, callback)
       return
     end
 
-    local winline = states.winline_map[winnr] ---@type fml.dressing.nvimbar.state.IWinline
+    local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+    local winline = meta ~= nil and meta.winline or nil ---@type eve.builtin.win.IWinline|nil
     if winline == nil or winline.lsp_symbols == nil or type(symbols) ~= "table" then
       safe_callback(false)
       return
@@ -93,7 +93,7 @@ local function locate_symbols(winnr, callback)
 
     local cursor_pos = { line = row - 1, character = col }
     local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
-    local pieces = winline.lsp_symbols ---@type fml.dressing.nvimbar.state.ILspSymbol[]
+    local pieces = winline.lsp_symbols ---@type eve.t.ILspSymbol[]
 
     local N = #pieces ---@type integer
     local k = 1 ---@type integer
@@ -102,7 +102,7 @@ local function locate_symbols(winnr, callback)
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
         local name = symbol.name
         local pos = symbol.range and symbol.range.start or symbol.location.range.start
-        ---@type fml.dressing.nvimbar.state.ILspSymbol
+        ---@type eve.t.ILspSymbol
         local piece = {
           kind = kind,
           name = name,
@@ -137,8 +137,8 @@ end
 ---@param source                        "sourcefile"|"neotree"
 ---@return eve.ux.INvimbar|nil
 local function resolve_nvimbar(winnr, source)
-  local winline_map = states.winline_map ---@type table<integer, fml.dressing.nvimbar.state.IWinline>
-  local winline = winline_map[winnr] ---@type fml.dressing.nvimbar.state.IWinline|nil
+  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local winline = meta ~= nil and meta.winline or nil ---@type eve.builtin.win.IWinline|nil
   if winline == nil or winline.nvimbar:is_disposed() then
     local nvimbar = nil ---@type eve.ux.INvimbar|nil
     nvimbar = eve.ux.Nvimbar.new({
@@ -219,10 +219,10 @@ local function resolve_nvimbar(winnr, source)
     })
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    winline = winline or { bufnr = bufnr, nvimbar = nvimbar } ---@type fml.dressing.nvimbar.state.IWinline
+    winline = winline or { bufnr = bufnr, nvimbar = nvimbar } ---@type eve.builtin.win.IWinline
 
     winline.nvimbar = nvimbar
-    winline_map[winnr] = winline
+    meta.winline = winline
 
     if source == "sourcefile" then
       nvimbar

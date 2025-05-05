@@ -612,8 +612,8 @@ vim.api.nvim_create_autocmd("WinEnter", {
   group = eve.nvim.augroup("notifier_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local wintype = eve.win.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
-    if wintype == eve.win.Types.NOTIFY then
+    local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+    if meta ~= nil and meta.wintype == eve.win.Types.NOTIFY then
       for _, win in ipairs(__WINS__) do
         if win.winnr == winnr then
           win.tick = win.tick + 1

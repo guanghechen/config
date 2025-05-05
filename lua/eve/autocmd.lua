@@ -1,17 +1,19 @@
 vim.api.nvim_create_autocmd("BufDelete", {
   group = eve.nvim.augroup("bootstrap_on_BufDelete"),
-  callback = function()
+  callback = function(event)
+    local bufnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     eve.tab.on_buf_delete(tabnr)
+    eve.buf.on_close(bufnr)
   end,
 })
 
 vim.api.nvim_create_autocmd("BufWinEnter", {
   group = eve.nvim.augroup("bootstrap_on_BufWinEnter"),
-  callback = function(arg)
+  callback = function(event)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    local bufnr = arg.buf ---@type integer
+    local bufnr = event.buf ---@type integer
 
     eve.win.on_buf_enter(winnr, bufnr)
     eve.tab.on_buf_enter(tabnr, bufnr)
@@ -60,8 +62,8 @@ vim.api.nvim_create_autocmd("FileType", {
 
 vim.api.nvim_create_autocmd("LspProgress", {
   group = eve.nvim.augroup("bootstrap_on_LspProgress"),
-  callback = function(args)
-    local data = args.data.params.value
+  callback = function(event)
+    local data = event.data.params.value
     local progress = ""
 
     if data.percentage then
@@ -88,8 +90,8 @@ vim.api.nvim_create_autocmd("ModeChanged", {
 
 vim.api.nvim_create_autocmd("TabClosed", {
   group = eve.nvim.augroup("bootstrap_on_TabClosed"),
-  callback = function(args)
-    local tabnr = type(args.file) == "string" and tonumber(args.file) or nil ---@type integer|nil
+  callback = function(event)
+    local tabnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
     eve.tab.on_close(tabnr)
 
     eve.status.dirtier_statusline:mark_dirty()
@@ -134,11 +136,9 @@ vim.api.nvim_create_autocmd("VimResized", {
 
 vim.api.nvim_create_autocmd("WinClosed", {
   group = eve.nvim.augroup("bootstrap_on_WinClosed"),
-  callback = function(args)
-    local winnr = type(args.file) == "string" and tonumber(args.file) or nil ---@type integer|nil
-    if type(winnr) == "number" then
-      eve.win.on_close(winnr)
-    end
+  callback = function(event)
+    local winnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
+    eve.win.on_close(winnr)
 
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
@@ -150,7 +150,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+    local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
 
     if eve.win.is_sourcefile(winnr) then
       if meta ~= nil then

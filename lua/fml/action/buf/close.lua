@@ -27,7 +27,7 @@ function M.close()
     return
   end
 
-  local meta = eve.win.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
+  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil then
     return
   end
@@ -69,14 +69,13 @@ function M.close()
     vim.api.nvim_win_set_buf(winnr, bufnr_target)
   end
 
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   close(tabnr, { bufnr })
 end
 
 ---@return nil
 function M.close_to_leftest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -109,7 +108,7 @@ end
 ---@return nil
 function M.close_to_rightest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -142,7 +141,7 @@ end
 ---@return nil
 function M.close_others()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,

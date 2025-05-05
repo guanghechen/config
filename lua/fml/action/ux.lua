@@ -11,8 +11,8 @@ end
 ---@return nil
 function M.resume_last_widget()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local wintype = eve.win.get_type(winnr) ---@type eve.builtin.win.TypeEnum|nil
-  if wintype == eve.win.Types.MAXIMIZE then
+  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  if meta ~= nil and meta.wintype == eve.win.Types.MAXIMIZE then
     eve.command.execute(eve.command.definitions.toggle.maximize.uuid)
     return
   end

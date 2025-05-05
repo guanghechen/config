@@ -213,15 +213,6 @@ function M:open(params)
     vim.b[bufnr][eve.var.Names.BUF_DISABLE_LINT] = true
     eve.nvim.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-    vim.api.nvim_create_autocmd("BufDelete", {
-      once = true,
-      buffer = bufnr,
-      callback = function()
-        self._bufnr = nil
-        self:close()
-      end,
-    })
-
     vim.schedule(function()
       vim.cmd("stopinsert")
     end)

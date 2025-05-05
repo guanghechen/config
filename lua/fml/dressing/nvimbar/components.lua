@@ -1,6 +1,5 @@
 local __module_name__ = "fml.dressing.nvimbar.components" ---@type string
 
-local states = require("fml.dressing.nvimbar.state")
 local btn = eve.nvim.btn
 local txt = eve.nvim.txt
 local decode_btn_args = eve.nvim.decode_btn_args
@@ -121,7 +120,7 @@ function M.bufs(position)
   ---@return string
   local function render_bufc(buf, index, total)
     local bufnr = buf.bufnr ---@type integer
-    local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
+    local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
     if meta == nil then
       return "", ""
     end
@@ -201,7 +200,7 @@ function M.bufs(position)
   ---@return string
   local function render_buf(buf, index, order, marker)
     local bufnr = buf.bufnr ---@type integer
-    local meta = eve.buf.resolve(bufnr) ---@type eve.builtin.buf.IMetaData|nil
+    local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
     if meta == nil then
       return "", ""
     end
@@ -276,7 +275,7 @@ function M.bufs(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+      local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
       if meta_tab == nil then
         return "", "", false
       end
@@ -638,7 +637,7 @@ function M.dirpath(position)
     name = "dirpath",
     atomic = true,
     render = function(context)
-      local meta = eve.buf.resolve(context.bufnr) ---@type eve.builtin.buf.IMetaData|nil
+      local meta = eve.buf.resolve(context.bufnr, false) ---@type eve.builtin.buf.IMeta|nil
       if meta == nil then
         return "", "", true
       end
@@ -689,7 +688,7 @@ function M.dirpath_prominent(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context, remain_width)
-      local meta = eve.buf.resolve(context.bufnr) ---@type eve.builtin.buf.IMetaData|nil
+      local meta = eve.buf.resolve(context.bufnr, false) ---@type eve.builtin.buf.IMeta|nil
       if meta == nil then
         return "", "", false
       end
@@ -920,7 +919,7 @@ function M.filepath(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
-      local meta = eve.buf.resolve(context.bufnr) ---@type eve.builtin.buf.IMetaData|nil
+      local meta = eve.buf.resolve(context.bufnr, false) ---@type eve.builtin.buf.IMeta|nil
       if meta == nil then
         return "", "", true
       end
@@ -1121,12 +1120,13 @@ function M.lsp_symbols(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
-      local winline = states.winline_map[winnr] ---@type fml.dressing.nvimbar.state.IWinline|nil
+      local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+      local winline = meta ~= nil and meta.winline or nil ---@type eve.builtin.win.IWinline|nil
       if winline == nil then
         return "", "", false
       end
 
-      local symbols = winline.lsp_symbols ---@type fml.dressing.nvimbar.state.ILspSymbol[]|nil
+      local symbols = winline.lsp_symbols ---@type eve.t.ILspSymbol[]|nil
       if symbols == nil or #symbols < 1 then
         return "", "", false
       end

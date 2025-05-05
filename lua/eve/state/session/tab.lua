@@ -62,7 +62,7 @@ function M.dump()
   local list = {} ---@type eve.state.tab.meta.data[]
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
-    local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+    local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
     if meta ~= nil then
       local tabtype = meta.tabtype ---@type  eve.builtin.tab.TypeEnum
       local bufs = {} ---@type eve.state.tab.buf.data[]
@@ -100,7 +100,7 @@ function M.load(raw_data)
       goto continue
     end
 
-    local meta = eve.tab.resolve(tabnr, true) ---@type eve.builtin.tab.IMetaData|nil
+    local meta = eve.tab.resolve(tabnr, true) ---@type eve.builtin.tab.IMeta|nil
     if meta == nil then
       goto continue
     end

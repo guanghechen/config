@@ -42,6 +42,12 @@
 ---@field public callback               fun(): nil
 ---@field public desc                   string|nil
 
+---@class eve.t.ILspSymbol
+---@field public kind                   string
+---@field public name                   string
+---@field public row                    integer
+---@field public col                    integer
+
 ---@class eve.t.IMatchLocation
 ---@field public offset                 integer
 ---@field public lnum                   integer

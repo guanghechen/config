@@ -40,7 +40,7 @@ local function get_history_select()
         return { items = {} }
       end
 
-      local meta = eve.win.resolve(winnr_sourcefile) ---@type eve.builtin.win.IMetaData|nil
+      local meta = eve.win.resolve(winnr_sourcefile, false) ---@type eve.builtin.win.IMeta|nil
       if meta == nil then
         eve.reporter.error({
           from = __module_name__,
@@ -168,7 +168,7 @@ local function get_history_select()
           local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
           if item_index ~= nil and winnr_sourcefile ~= nil then
-            local meta = eve.win.resolve(winnr_sourcefile) ---@type eve.builtin.win.IMetaData|nil
+            local meta = eve.win.resolve(winnr_sourcefile, false) ---@type eve.builtin.win.IMeta|nil
             if meta ~= nil then
               meta.history:go(item_index)
             end
@@ -215,7 +215,7 @@ function M.history_backward()
     return
   end
 
-  local meta = eve.win.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
+  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -282,19 +282,8 @@ function M.history_forward()
     return
   end
 
-  local meta = eve.win.resolve(winnr) ---@type eve.builtin.win.IMetaData|nil
-  if meta == nil then
-    eve.reporter.error({
-      from = __module_name__,
-      subject = "history_forward",
-      message = "No history found.",
-      details = { winnr = winnr, bufnr = bufnr, buftype = buftype },
-    })
-    return
-  end
-
-  local history = meta.history ---@type eve.std.collection.IHistory|nil
-  if history == nil then
+  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  if meta == nil or meta.history == nil then
     eve.reporter.error({
       from = __module_name__,
       subject = "history_forward",
@@ -305,6 +294,7 @@ function M.history_forward()
   end
 
   local bufnr_target = nil ---@type integer|nil
+  local history = meta.history ---@type eve.std.collection.IHistory
   while true do
     local item, is_top = history:forward()
     ---@cast item                       eve.builtin.win.IFilepathHistoryItem|nil

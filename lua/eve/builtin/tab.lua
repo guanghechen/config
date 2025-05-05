@@ -6,7 +6,7 @@
 ---@field public bufnr                  integer
 ---@field public pinned                 boolean
 
----@class eve.builtin.tab.IMetaData
+---@class eve.builtin.tab.IMeta
 ---@field public bufs                   eve.builtin.tab.IBufItem[]
 ---@field public winnr_fixed            eve.std.collection.IObservable
 ---@field public winnr_float            eve.std.collection.IObservable
@@ -19,7 +19,7 @@ local Types = {
   NORMAL = "normal",
 }
 
-local meta_map = {} ---@type table<integer, eve.builtin.tab.IMetaData>
+local meta_map = {} ---@type table<integer, eve.builtin.tab.IMeta>
 
 ---@class eve.builtin.tab
 local M = {}
@@ -95,7 +95,7 @@ function M.retrieve_unreferenced_bufnrs(bufnrs)
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   local bufnr_set = {} ---@type table<integer, true>
   for _, tabnr in ipairs(tabnrs) do
-    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
     if meta ~= nil then
       for _, buf in ipairs(meta.bufs) do
         bufnr_set[buf.bufnr] = true
@@ -117,7 +117,7 @@ end
 ---@return eve.builtin.tab.IBufItem|nil
 ---@return integer|nil
 function M.retrieve_buf_sourcefile(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     return
   end
@@ -148,21 +148,21 @@ end
 ---@param tabnr                         integer|nil
 ---@return integer|nil
 function M.retrieve_winnr_fixed(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   return meta ~= nil and meta.winnr_fixed:snapshot() or nil ---@type integer|nil
 end
 
 ---@param tabnr                         integer|nil
 ---@return integer|nil
 function M.retrieve_winnr_float(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   return meta ~= nil and meta.winnr_float:snapshot() or nil ---@type integer|nil
 end
 
 ---@param tabnr                         integer|nil
 ---@return integer|nil
 function M.retrieve_winnr_sourcefile(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   return meta ~= nil and meta.winnr_sourcefile:snapshot() or nil ---@type integer|nil
 end
 
@@ -171,7 +171,7 @@ end
 ---@param tabnr                         integer
 ---@param bufnr                         integer
 ---@param pinned                        boolean|nil
----@return eve.builtin.tab.IMetaData|nil
+---@return eve.builtin.tab.IMeta|nil
 function M.add_buf(tabnr, bufnr, pinned)
   if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not vim.bo[bufnr].buflisted then
     return
@@ -277,13 +277,13 @@ end
 
 ---@param tabnr                         integer|nil
 ---@param force                         boolean
----@return eve.builtin.tab.IMetaData|nil
+---@return eve.builtin.tab.IMeta|nil
 function M.resolve(tabnr, force)
   if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
     return nil
   end
 
-  local meta = meta_map[tabnr] ---@type eve.builtin.tab.IMetaData|nil
+  local meta = meta_map[tabnr] ---@type eve.builtin.tab.IMeta|nil
   if meta ~= nil and not force then
     return meta
   end
@@ -318,7 +318,7 @@ function M.resolve(tabnr, force)
   local winnr_float = eve.std.Observable.from_value(eve.win.is_float(winnr) and winnr or 0) ---@type eve.std.collection.IObservable
   local winnr_sourcefile = eve.std.Observable.from_value(eve.win.is_sourcefile(winnr) and winnr or 0)
 
-  ---@type eve.builtin.tab.IMetaData
+  ---@type eve.builtin.tab.IMeta
   meta = {
     bufs = bufs,
     winnr_fixed = winnr_fixed,
@@ -363,7 +363,7 @@ function M.on_buf_delete(tabnr)
     return
   end
 
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     return
   end
@@ -379,7 +379,7 @@ function M.on_buf_enter(tabnr, bufnr)
     return
   end
 
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     return
   end
@@ -406,7 +406,7 @@ function M.on_bufs_close(tabnr, bufnrs)
     return
   end
 
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMetaData|nil
+  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
     return
   end
@@ -436,7 +436,7 @@ function M.on_close(tabnr)
     return
   end
 
-  local meta = meta_map[tabnr] ---@type eve.builtin.tab.IMetaData|nil
+  local meta = meta_map[tabnr] ---@type eve.builtin.tab.IMeta|nil
   if meta ~= nil then
     meta_map[tabnr] = nil
     meta.winnr_fixed:dispose()
