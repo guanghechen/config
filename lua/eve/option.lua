@@ -63,6 +63,7 @@ vim.o.smoothscroll = true
 vim.o.softtabstop = 2 -- set the tab width
 vim.o.syntax = "off"
 vim.o.tabstop = 2 -- set the tab width
+vim.o.termguicolors = true
 vim.o.timeout = true
 vim.o.timeoutlen = vim.g.vscode and 1000 and 300 -- Lower than default (1000) to quickly trigger which-key
 -- vim.o.winborder = "rounded"
