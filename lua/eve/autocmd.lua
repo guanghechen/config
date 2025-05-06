@@ -203,17 +203,16 @@ vim.api.nvim_create_autocmd("WinClosed", {
 vim.api.nvim_create_autocmd("WinEnter", {
   group = eve.nvim.augroup("bootstrap_on_WinEnter"),
   callback = function()
-    vim.schedule(function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-      local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
 
+    vim.schedule(function()
+      local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
       if eve.win.is_sourcefile(winnr) then
         if meta ~= nil then
           meta.winnr_sourcefile:next(winnr)
         end
       end
-
       if eve.win.is_fixed(winnr) then
         if meta ~= nil then
           meta.winnr_fixed:next(winnr)
@@ -299,8 +298,10 @@ vim.api.nvim_create_autocmd("WinNew", {
 vim.api.nvim_create_autocmd("WinResized", {
   group = eve.nvim.augroup("bootstrap_on_WinResized"),
   callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    eve.status.dirty_winline_nr:next(winnr)
+    vim.schedule(function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      eve.status.dirty_winline_nr:next(winnr)
+    end)
   end,
 })
 
