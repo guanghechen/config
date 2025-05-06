@@ -150,6 +150,13 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
       eve.status.dirtier_statusline:mark_dirty()
       eve.status.dirtier_tabline:mark_dirty()
     end)
+
+    if eve.env.IS_TMUX then
+      vim.schedule(function()
+        local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
+        eve.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
+      end)
+    end
   end,
 })
 

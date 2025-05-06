@@ -1,3 +1,15 @@
+---@class eve.builtin.status.data
+---@field public msg_changes            string
+---@field public msg_command            string
+---@field public msg_lsp                string
+---@field public msg_mode               string
+---
+---@field public notification_paused    boolean
+---@field public notification_level     string
+---@field public searching              boolean
+---@field public suppress_warning       boolean
+---@field public tmux_zen_mode          boolean
+
 ---@class eve.builtin.status
 ---@field protected _disposables        eve.std.collection.BatchDisposable
 ---
@@ -68,6 +80,23 @@ end
 ---@return nil
 function M.dispose()
   M._disposables:dispose()
+end
+
+---@return eve.builtin.status.data
+function M.dump()
+  ---@type eve.builtin.status.data
+  local data = {
+    msg_changes = M.msg_changes:snapshot(),
+    msg_command = M.msg_command:snapshot(),
+    msg_lsp = M.msg_lsp:snapshot(),
+    msg_mode = M.msg_mode:snapshot(),
+    notification_paused = M.notification_paused:snapshot(),
+    notification_level = M.notification_level:snapshot(),
+    searching = M.searching:snapshot(),
+    suppress_warning = M.suppress_warning:snapshot(),
+    tmux_zen_mode = M.tmux_zen_mode:snapshot(),
+  }
+  return data
 end
 
 ---@return nil

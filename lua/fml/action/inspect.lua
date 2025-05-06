@@ -50,6 +50,7 @@ function M.inspect_state()
         lsp = full_state.lsp,
         options = full_state.option,
         plugins = full_state.plugin,
+        status = eve.status.dump(),
       },
     },
   })
