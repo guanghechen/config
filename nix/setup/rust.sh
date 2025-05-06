@@ -16,4 +16,6 @@ if [ -f "$HOME/.cargo/config.toml" ]; then
 else
   printf "\n\e[34m  [setup rust] setting up ~/.cargo/config.toml...\e[0m\n"
   cp $HOME/.config/guanghechen/config/cargo.toml $HOME/.cargo/config.toml
+
+  cargo install inferno
 fi
