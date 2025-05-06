@@ -268,4 +268,8 @@ function M.statuscolumn()
   return ""
 end
 
+vim.schedule(function()
+  vim.o.statuscolumn = "%!v:lua.require'fml.dressing.statuscolumn'.statuscolumn()"
+end)
+
 return M
