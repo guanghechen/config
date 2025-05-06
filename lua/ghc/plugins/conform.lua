@@ -167,4 +167,10 @@ return {
       }
     end,
   },
+  config = function(_, opts)
+    require("conform").setup(opts)
+
+    -- better format: https://github.com/stevearc/conform.nvim/issues/372#issuecomment-2066778074
+    vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+  end,
 }
