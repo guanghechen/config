@@ -214,6 +214,10 @@ vim.api.nvim_create_autocmd("WinEnter", {
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
 
     vim.schedule(function()
+      if not vim.api.nvim_tabpage_is_valid(tabnr) or not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+
       local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
       if eve.win.is_sourcefile(winnr) then
         if meta ~= nil then
