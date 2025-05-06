@@ -20,6 +20,7 @@ $optinal_config_repo_branch = @(
   "kitty",
   "neovide",
   "nvim-nvchad",
+  "nvim-debug",
   "wezterm"
 )
 
