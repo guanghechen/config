@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.lint" ---@type string
 
 ---@return string|nil
 local function get_strict_word_under_cursor()
-  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local _, col = unpack(vim.api.nvim_win_get_cursor(0))
   local line = vim.api.nvim_get_current_line()
 
   local start_col = col

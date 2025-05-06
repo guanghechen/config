@@ -407,7 +407,7 @@ end
 ---@param filename                      string
 ---@return string
 function M.locate_config_filepath(filename)
-  return M.join(HOME_NVIM_CONFIG, "/config/" .. filename)
+  return M.join(HOME_NVIM_CONFIG, filename)
 end
 
 ---@param filename                      string

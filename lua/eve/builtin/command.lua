@@ -403,6 +403,12 @@ M.definitions.lsp = {
   select_python_venv = def("Flspselectpythonvenv", "lsp: select python venv"),
 }
 
+---@class eve.builtin.command.definitions.profile
+M.definitions.profile = {
+  start = def("Fprofilestart", "profile: start"),
+  stop = def("Fprofilestop", "profile: stop"),
+}
+
 ---@class eve.builtin.command.definitions.refresh
 M.definitions.refresh = {
   all = def("Frefreshall", "refresh: all"),

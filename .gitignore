@@ -7,3 +7,7 @@ local/
 local/
 target/
 tmp/
+
+profile.log
+profile.svg
+
