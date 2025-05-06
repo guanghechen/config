@@ -30,11 +30,19 @@ local winsep = {
     local row = win_pos[1] ---@type integer
     local col = win_pos[2] ---@type integer
 
-    local fn_winnr = vim.fn.winnr() ---@type integer
-    local h_exist = fn_winnr ~= vim.fn.winnr("h") ---@type boolean
-    local k_exist = fn_winnr ~= vim.fn.winnr("k") ---@type boolean
-    local l_exist = fn_winnr ~= vim.fn.winnr("l") ---@type boolean
-    local j_exist = fn_winnr ~= vim.fn.winnr("j") ---@type boolean
+    local fn_winnr ---@type integer
+    local h_exist ---@type boolean
+    local k_exist ---@type boolean
+    local l_exist ---@type boolean
+    local j_exist ---@type boolean
+
+    vim.api.nvim_win_call(winnr, function()
+      fn_winnr = vim.fn.winnr() ---@type integer
+      h_exist = fn_winnr ~= vim.fn.winnr("h") ---@type boolean
+      k_exist = fn_winnr ~= vim.fn.winnr("k") ---@type boolean
+      l_exist = fn_winnr ~= vim.fn.winnr("l") ---@type boolean
+      j_exist = fn_winnr ~= vim.fn.winnr("j") ---@type boolean
+    end)
 
     if vim.wo[winnr].winbar == "" then
       height = height - 1
@@ -93,8 +101,8 @@ local winsep = {
 ---@type eve.std.collection.Scheduler
 local scheduler = eve.std.Scheduler.new({
   name = __module_name__,
-  mode = "throttle",
-  delay = 64,
+  mode = "debounce",
+  delay = 32,
   timeout = 0,
   silent = eve.std.fn.falsy,
   value = eve.std.Observable.from_value(true),
@@ -114,29 +122,21 @@ local scheduler = eve.std.Scheduler.new({
 })
 
 eve.state.observe({ eve.state.flight.dressing_winsep }, function()
-  local enabled = eve.state.flight.dressing_winsep:snapshot() ---@type boolean
-  if not enabled then
-    winsep:hide()
-    return
-  end
-
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
-  if winnr_fixed ~= nil then
-    local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
-    scheduler:schedule({ context = context })
-  end
-end, false)
+  local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
+  scheduler:schedule({ context = context })
+end, true)
 
 vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
   group = eve.nvim.augroup("winsep_on_resize"),
   callback = function()
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
-    if winnr_fixed ~= nil then
+    vim.schedule(function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
       local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
       scheduler:schedule({ context = context })
-    end
+    end)
   end,
 })
 
