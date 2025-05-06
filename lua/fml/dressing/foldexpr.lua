@@ -21,4 +21,8 @@ function M.foldexpr()
   return vim.b[bufnr].ts_folds and vim.treesitter.foldexpr() or "0"
 end
 
+vim.schedule(function()
+  vim.o.foldexpr = "v:lua.require'fml.dressing.foldexpr'.foldexpr()"
+end)
+
 return M
