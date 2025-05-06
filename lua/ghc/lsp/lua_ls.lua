@@ -12,12 +12,12 @@ return {
       completion = {
         callSnippet = "Replace",
       },
+      doc = {
+        privateName = { "^_" },
+      },
       diagnostics = {
         disable = { "different-requires" },
         globals = { "vim" },
-      },
-      doc = {
-        privateName = { "^_" },
       },
       format = {
         enable = true,
@@ -35,18 +35,18 @@ return {
         arrayIndex = "Disable",
       },
       runtime = {
+        path = { "?.lua", "?/init.lua" },
+        pathStrict = true,
         version = "LuaJIT",
       },
       workspace = {
+        checkThirdParty = false,
         library = {
-          vim.fn.expand("$VIMRUNTIME/lua"),
-          vim.fn.expand("$VIMRUNTIME/lua/vim/lsp"),
-          vim.fn.stdpath("data") .. "/lazy/lazy.nvim/lua/lazy",
+          eve.path.join(vim.env.VIMRUNTIME, "lua"),
+          eve.path.join(eve.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
+          eve.path.join(eve.env.HOME_NVIM_CONFIG, "lua"),
           "${3rd}/luv/library",
         },
-        checkThirdParty = false,
-        maxPreload = 100000,
-        preloadFileSize = 10000,
       },
     },
   },

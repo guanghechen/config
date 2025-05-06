@@ -1,6 +1,7 @@
 local SEP = eve.env.PATH_SEP ---@type string
 local HOME_NVIM_CACHE = eve.env.HOME_NVIM_CACHE ---@type string
 local HOME_NVIM_CONFIG = eve.env.HOME_NVIM_CONFIG ---@type string
+local HOME_NVIM_DATA = eve.env.HOME_NVIM_DATA ---@type string
 local HOME_CONTEXT = eve.env.HOME_CONTEXT ---@type string
 
 ---@class eve.builtin.path.reposcope_map
@@ -388,8 +389,7 @@ end
 ---@param app                           string
 ---@return string
 function M.locate_app_config_home(app)
-  local filepath = M.join(HOME_NVIM_CONFIG, "../" .. app)
-  return M.normalize(filepath)
+  return M.join(HOME_NVIM_CONFIG, "../" .. app)
 end
 
 ---@param filename                      string
@@ -401,28 +401,31 @@ function M.locate_cache_filepath(filename)
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
   M.mkdir_if_nonexist(dirpath)
-  return M.normalize(filepath)
+  return filepath
 end
 
 ---@param filename                      string
 ---@return string
 function M.locate_config_filepath(filename)
-  local filepath = M.join(HOME_NVIM_CONFIG, "/config/" .. filename)
-  return M.normalize(filepath)
+  return M.join(HOME_NVIM_CONFIG, "/config/" .. filename)
+end
+
+---@param filename                      string
+---@return string
+function M.locate_data_filepath(filename)
+  return M.join(HOME_NVIM_DATA, filename)
 end
 
 ---@param filename                      string
 ---@return string
 function M.locate_script_filepath(filename)
-  local filepath = M.join(HOME_NVIM_CONFIG, "/script/" .. filename)
-  return M.normalize(filepath)
+  return M.join(HOME_NVIM_CONFIG, "/script/" .. filename)
 end
 
 ---@param filename                      string
 ---@return string
 function M.locate_context_filepath(filename)
-  local filepath = M.join(HOME_CONTEXT, filename)
-  return M.normalize(filepath)
+  return M.join(HOME_CONTEXT, filename)
 end
 
 ---@param dirpath                       string

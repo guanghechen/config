@@ -58,7 +58,7 @@ function M.defaults()
   ---@type eve.state.lsp.data
   return {
     breakpoints = {},
-    code_lens = is_git_repo,
+    code_lens = false,
     inlay_hints = is_git_repo,
     python_debug_host = "127.0.0.1",
     python_debug_port = 9527,
