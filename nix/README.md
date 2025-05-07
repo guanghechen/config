@@ -12,6 +12,7 @@
   git clone https://github.com/neovim/neovim.git
   git checkout v0.11.0
   make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="$HOME/.app/neovim/"
+  # make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="/opt/me/app/neovim/"
   make install 
   ```
 
