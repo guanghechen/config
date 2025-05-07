@@ -112,7 +112,6 @@ function M:dispose()
   self._timer_task:close()
   self._timer_timeout:stop()
   self._timer_timeout:close()
-  self._value:dispose()
 
   self._timer_task = nil
   self._timer_timeout = nil

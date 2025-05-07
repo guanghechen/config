@@ -86,6 +86,15 @@ local M = {}
 
 M.Types = vim.deepcopy(Types)
 
+---@param winnr                         integer|nil
+---@return nil
+function M.close(winnr)
+  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+  vim.api.nvim_win_close(winnr, true)
+end
+
 ---@param tabnr                         integer
 ---@param filetype                      string
 ---@return integer|nil

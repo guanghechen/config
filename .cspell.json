@@ -359,6 +359,7 @@
     "isdisposed",
     "islist",
     "isort",
+    "isvisible",
     "iwhite",
     "jobstart",
     "jsonls",

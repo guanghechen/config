@@ -19,9 +19,6 @@ M.nsnr = {
   hipairs               = cn("ux_hipairs"),
   indentline            = cn("ux_indentline"),
   notify                = cn("ux_notify"),
-  picker_finder         = cn("ux:picker:finder"),
-  picker_result         = cn("ux:picker:result"),
-  picker_preview        = cn("ux:picker:preview"),
   search_count          = cn("ux_search_count"),
   search_input          = cn("ux_search_input"),
   search_main           = cn("ux_search_main"),
@@ -46,6 +43,9 @@ M.sign = {
   DAP_BREAKPOINT_REJECTED   = "DapBreakpointRejected",
   DAP_LOG_POINT             = "DapLogPoint",
   DAP_STOPPED               = "DapStopped",
+
+  PICKER_FINDER_PROMPT      = "PickerFinderPrompt",
+  PICKER_RESULT_PRESENT     = "PickerResultPresent",
 
   SEARCH_INPUT_CURSOR       = "SearchInputCursor",
   SEARCH_MAIN_CURRENT       = "SearchMainCurrent",

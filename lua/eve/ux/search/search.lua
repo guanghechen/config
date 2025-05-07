@@ -50,6 +50,7 @@ local highlights = {
   }, ","),
 }
 
+---@class eve.ux.search.search.borders
 local borders = {
   -- stylua: ignore start
   input =               { "╭", "─", "╮", "│", "┤", "─", "├", "│" },

@@ -43,6 +43,15 @@ local M = {}
 
 M.Types = vim.deepcopy(Types)
 
+---@param bufnr                         integer|nil
+---@return nil
+function M.close(bufnr)
+  if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end
+
 ---@param bufnr                         integer
 ---@return boolean
 function M.is_editable(bufnr)

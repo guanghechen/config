@@ -121,6 +121,15 @@ function M.gen_hlgroup_map(context)
     f_un_winbar_error = { fg = c.red,     bg = c.none, sp = c.red,    bold = true, underline = true },
     -- stylua: ignore end
 
+    ---picker
+    f_picker_finder_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },
+    f_picker_finder_title = { link = t and "ms_b_bg0" or "ms_b_none" },
+    f_picker_preview_current = { bg = c.bg2 },
+    f_picker_preview_normal = { bg = bg_preview },
+    f_picker_preview_title = { fg = c.green, bg = t and c.bg0 or c.none, bold = true },
+    f_picker_result_current = { bg = c.bg3 },
+    f_picker_result_normal = { bg = bg_main },
+
     ---popupmenu
     f_up_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },
     f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },
