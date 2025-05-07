@@ -54,6 +54,7 @@ if test -f /opt/homebrew/bin/brew
   set -gx HOMEBREW_CELLAR               "/opt/homebrew/Cellar"
   set -gx HOMEBREW_REPOSITORY           "/opt/homebrew"
   set -gx HOMEBREW_SHELLENV_PREFIX      "/opt/homebrew"
+  set -gx NVIM_BINPATH                  "/opt/homebrew/bin/nvim"
   set -gx VIM                           "/opt/homebrew/share/nvim"
   set -gx VIMRUNTIME                    "/opt/homebrew/share/nvim/runtime"
 else if test -f /home/linuxbrew/.linuxbrew/bin/brew
@@ -61,12 +62,17 @@ else if test -f /home/linuxbrew/.linuxbrew/bin/brew
   set -gx HOMEBREW_CELLAR               "/home/linuxbrew/.linuxbrew/Cellar"
   set -gx HOMEBREW_REPOSITORY           "/home/linuxbrew/.linuxbrew"
   set -gx HOMEBREW_SHELLENV_PREFIX      "/home/linuxbrew/.linuxbrew"
+  set -gx NVIM_BINPATH                  "/home/linuxbrew/.linuxbrew/bin/nvim"
   set -gx VIM                           "/home/linuxbrew/.linuxbrew/share/nvim"
   set -gx VIMRUNTIME                    "/home/linuxbrew/.linuxbrew/share/nvim/runtime"
 end
 fish_add_path "/usr/local/bin/"
 fish_add_path "$HOMEBREW_PREFIX/bin/"
 fish_add_path "$HOME/.local/bin/"
+
+if test -f "$HOME/.config/fish/local/config.fish"
+  source "$HOME/.config/fish/local/config.fish"
+end
 
 ## setup vpn
 if test -e /proc/version
@@ -81,13 +87,9 @@ else
   set -gx ghc_vpn_host_ip '127.0.0.1'
 end
 
-source ~/.config/fish/conf.d/theme.fish
-source ~/.config/fish/conf.d/alias.fish
 source ~/.config/fish/conf.d/app.fish
+source ~/.config/fish/conf.d/theme.fish
 source ~/.config/fish/conf.d/fzf.fish
-
-if test -f "$HOME/.config/fish/local/config.fish"
-  source "$HOME/.config/fish/local/config.fish"
-end
+source ~/.config/fish/conf.d/alias.fish
 
 complete -c ghc-theme-apply -a "catppuccin-latte catppuccin-mocha gruvbox-dark gruvbox-light nord one-half-dark one-half-light rose-pine-main rose-pine-moon rose-pine-dawn"

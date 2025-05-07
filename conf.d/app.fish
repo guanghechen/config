@@ -27,6 +27,14 @@ if test -f "$HOME/.app/miniforge3/bin/conda"
   # end
 end
 
+### neovim
+if test -f "$HOME/.app/neovim/bin/nvim"
+  set -gx NVIM_BINPATH                  "$HOME/.app/neovim/bin/nvim"
+  set -gx VIM                           "$HOME/.app/neovim/share/nvim"
+  set -gx VIMRUNTIME                    "$HOME/.app/neovim/share/nvim/runtime"
+  fish_add_path "$HOME/.app/neovim/bin/" $PATH
+end
+
 ### tmux
 if test -n "$TMUX"
   set -x TERM tmux-256color

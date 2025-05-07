@@ -42,11 +42,14 @@ else
 end
 
 ### nvim
-alias vim="$HOMEBREW_PREFIX/bin/nvim"
-alias vi="$HOMEBREW_PREFIX/bin/nvim"
-alias nvchad="NVIM_APPNAME=nvim-nvchad $HOMEBREW_PREFIX/bin/nvim"
-alias nvdebug="NVIM_APPNAME=nvim-debug $HOMEBREW_PREFIX/bin/nvim"
-alias lazyvim="NVIM_APPNAME=nvim-lazy $HOMEBREW_PREFIX/bin/nvim"
+if set -q NVIM_BINPATH; and test -n "$NVIM_BINPATH"
+    alias vim="$NVIM_BINPATH"
+    alias vi="$NVIM_BINPATH"
+    alias nvchad="NVIM_APPNAME=nvim-nvchad $NVIM_BINPATH"
+    alias nvchad-debug="NVIM_APPNAME=nvim-nvchad-debug $NVIM_BINPATH"
+    alias nvdebug="NVIM_APPNAME=nvim-debug $NVIM_BINPATH"
+    alias lazyvim="NVIM_APPNAME=nvim-lazy $NVIM_BINPATH"
+end
 
 ### tmux
 alias tnew='tmux new -s' # Create a new tmux session
