@@ -135,7 +135,8 @@ function M:create_buf_as_needed()
 
   local input = context.input:snapshot() ---@type string
   local lines = eve.oxi.parse_lines(input) ---@type string[]
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })
+  lines = #lines < 1 and { "" } or (#lines > 1 and not context.enable_multiline_input) and { lines[1] } or lines ---@type string[]
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.fn.sign_place(bufnr, "", eve.var.sign.SEARCH_INPUT_CURSOR, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
@@ -187,15 +188,24 @@ end
 ---@return nil
 function M:reset_input(text)
   local context = self.context ---@type eve.ux.ISearchContext
+  local bufnr = context.bufnr_input ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
   local next_text = text or context.input:snapshot() ---@type string
   next_text = eve.string.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
   context.input:next(next_text)
 
-  local bufnr = context.bufnr_input ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lines = eve.oxi.parse_lines(next_text) ---@type string[]
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, context.enable_multiline_input and lines or { lines[1] })
+  local old_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+  local old_text = table.concat(old_lines, "\n") ---@type string
+  if next_text == old_text then
+    return
   end
+
+  local lines = eve.oxi.parse_lines(next_text) ---@type string[]
+  lines = #lines < 1 and { "" } or (#lines > 1 and not context.enable_multiline_input) and { lines[1] } or lines ---@type string[]
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 end
 
 return M
