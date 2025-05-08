@@ -1,5 +1,13 @@
 # List Demonstrations in Markdown
 
+## Basic Task Lists
+
+
+- [x] Simple bullet item 1
+- [ ] Simple bullet item 2
+- [-] Simple bullet item 2
+- [X] Simple bullet item 3
+
 ## Basic Unordered Lists
 
 * Simple bullet item 1
