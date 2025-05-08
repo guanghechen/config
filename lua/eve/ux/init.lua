@@ -12,6 +12,7 @@ local __mods = {
 
   Board = "eve.ux.board",
   Nvimbar = "eve.ux.nvimbar",
+  Picker = "eve.ux.picker",
   Setting = "eve.ux.setting",
   Terminal = "eve.ux.terminal",
   Textarea = "eve.ux.textarea",
@@ -34,6 +35,7 @@ local __mods = {
 ---
 ---@field public Board                  eve.ux.Board
 ---@field public Nvimbar                eve.ux.Nvimbar
+---@field public Picker                 eve.ux.Picker
 ---@field public Setting                eve.ux.Setting
 ---@field public Terminal               eve.ux.Terminal
 ---@field public Textarea               eve.ux.Textarea

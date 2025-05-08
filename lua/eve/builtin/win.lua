@@ -5,6 +5,9 @@ local __module_name__ = "eve.builtin.win"
 ---| "ux:cmdline"
 ---| "ux:input"
 ---| "ux:maximize"
+---| "ux:picker-finder"
+---| "ux:picker-preview"
+---| "ux:picker-result"
 ---| "ux:notify"
 ---| "ux:popupmenu"
 ---| "ux:search-input"
@@ -42,6 +45,9 @@ local Types = {
   INPUT           = "ux:input",
   MAXIMIZE        = "ux:maximize",
   NOTIFY          = "ux:notify",
+  PICKER_FINDER   = "ux:picker-finder",
+  PICKER_PREVIEW  = "ux:picker-preview",
+  PICKER_RESULT   = "ux:picker-result",
   POPUPMENU       = "ux:popupmenu",
   SEARCH_INPUT    = "ux:search-input",
   SEARCH_MAIN     = "ux:search-main",

@@ -24,28 +24,6 @@ local highlights = {
     "FloatTitle:f_picker_preview_title",
     "Normal:f_picker_preview_normal",
   }, ","),
-  finder_active = table.concat({
-    "FloatBorder:FloatActiveBorder",
-    "FloatTitle:f_picker_finder_title",
-    "Normal:f_picker_finder_normal",
-  }, ","),
-  result_active = table.concat({
-    "Cursor:f_picker_result_current",
-    "CursorColumn:f_picker_result_current",
-    "CursorLine:f_picker_result_current",
-    "CursorLineNr:f_picker_result_current",
-    "FloatBorder:FloatActiveBorder",
-    "Normal:f_picker_result_normal",
-  }, ","),
-  preview_active = table.concat({
-    "Cursor:f_picker_preview_current",
-    "CursorColumn:f_picker_preview_current",
-    "CursorLine:f_picker_preview_current",
-    "CursorLineNr:f_picker_preview_current",
-    "FloatBorder:FloatActiveBorder",
-    "FloatTitle:f_picker_preview_title",
-    "Normal:f_picker_preview_normal",
-  }, ","),
 }
 
 ---@class eve.ux.picker.borders
@@ -60,11 +38,10 @@ local borders = {
   -- stylua: ignore end
 }
 
----@class eve.ux.picker.IWinPosition
----@field public width                  integer
----@field public height                 integer
----@field public row                    integer
----@field public col                    integer
+---@alias eve.ux.picker.PaneEnum
+---| "finder"
+---| "preview"
+---| "result"
 
 ---@alias eve.ux.picker.IResultRender
 ---| fun(self: eve.ux.Picker, input: string): integer, integer?
@@ -72,14 +49,30 @@ local borders = {
 ---@alias eve.ux.picker.IPreviewRender
 ---| fun(self: eve.ux.Picker, input: string): string
 
+---@class eve.ux.picker.IWinOptions
+---@field public number                 ?boolean
+---@field public wrap                   ?boolean
+
+---@class eve.ux.picker.IWinPosition
+---@field public width                  integer
+---@field public height                 integer
+---@field public row                    integer
+---@field public col                    integer
+
 ---@class eve.ux.IPickerProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
----@field public title                  string
+---
 ---@field public finder_input           ?string
 ---@field public finder_multiline       ?boolean
----@field public preview_render         ?eve.ux.picker.IResultRender
+---@field public finder_title           string
+---@field public finder_win_opts        ?eve.ux.picker.IWinOptions
+---
 ---@field public result_render          eve.ux.picker.IResultRender
+---@field public result_win_opts        ?eve.ux.picker.IWinOptions
+---
+---@field public preview_render         ?eve.ux.picker.IResultRender
+---@field public preview_win_opts       ?eve.ux.picker.IWinOptions
 
 ---@class eve.ux.Picker
 ---@field public name                   string
@@ -87,6 +80,7 @@ local borders = {
 ---
 ---@field protected _disposed           boolean
 ---@field protected _visible            boolean
+---@field protected _pane_focused       eve.ux.picker.PaneEnum
 ---
 ---@field protected _scheduler_finder   eve.std.collection.Scheduler
 ---@field protected _scheduler_preview  eve.std.collection.Scheduler|nil
@@ -95,20 +89,23 @@ local borders = {
 ---@field protected _finder_bufnr       integer|nil
 ---@field protected _finder_winnr       integer|nil
 ---@field protected _finder_title       string
+---@field protected _finder_winopts     eve.ux.picker.IWinOptions
 ---@field protected _finder_input       eve.std.collection.Observable
 ---@field protected _finder_line_count  eve.std.collection.Observable
 ---@field protected _finder_multiline   boolean
 ---
----@field protected _preview_bufnr      integer|nil
----@field protected _preview_winnr      integer|nil
----@field protected _preview_title      string|nil
----@field protected _preview_render     eve.ux.picker.IPreviewRender|nil
----
 ---@field protected _result_bufnr       integer|nil
 ---@field protected _result_winnr       integer|nil
+---@field protected _result_winopts     eve.ux.picker.IWinOptions
 ---@field protected _result_lnum        eve.std.collection.Observable
 ---@field protected _result_total       eve.std.collection.Observable
 ---@field protected _result_render      eve.ux.picker.IResultRender
+---
+---@field protected _preview_bufnr      integer|nil
+---@field protected _preview_winnr      integer|nil
+---@field protected _preview_title      string|nil
+---@field protected _preview_winopts    eve.ux.picker.IWinOptions
+---@field protected _preview_render     eve.ux.picker.IPreviewRender|nil
 local M = {}
 M.__index = M
 
@@ -119,12 +116,15 @@ local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_picker") ---@type in
 function M.new(props)
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
-  local title = string.format(" %s ", vim.trim(props.title)) ---@type string
   local initial_input = props.finder_input or "" ---@type string
   local initial_input_lines = vim.split(initial_input, "\n", { plain = true }) ---@type string[]
   local finder_multiline = not not props.finder_multiline ---@type boolean
+  local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
+  local finder_winopts = vim.tbl_deep_extend("force", { number = false, wrap = false }, props.finder_win_opts) ---@type eve.ux.picker.IWinOptions
   local preview_render = props.preview_render ---@type eve.ux.picker.IPreviewRender|nil
+  local preview_winopts = vim.tbl_deep_extend("force", { number = true, wrap = false }, props.preview_win_opts) ---@type eve.ux.picker.IWinOptions
   local result_render = props.result_render ---@type eve.ux.picker.IResultRender
+  local result_winopts = vim.tbl_deep_extend("force", { number = false, wrap = false }, props.result_win_opts) ---@type eve.ux.picker.IWinOptions
 
   local finder_input = eve.std.Observable.from_value(initial_input) ---@type eve.std.collection.Observable
   local finder_count = eve.std.Observable.from_value(#initial_input_lines) ---@type eve.std.collection.Observable
@@ -272,8 +272,9 @@ function M.new(props)
   self.name = name
   self.nsnr = nsnr
 
-  self._disposed = false
-  self._visible = false
+  self._disposed = false ---@type boolean
+  self._visible = false ---@type boolean
+  self._pane_focused = "finder" ---@type eve.ux.picker.PaneEnum
 
   self._scheduler_finder = scheduler_finder
   self._scheduler_preview = scheduler_preview
@@ -281,19 +282,24 @@ function M.new(props)
 
   self._finder_bufnr = nil
   self._finder_winnr = nil
+  self._finder_title = finder_title
+  self._finder_winopts = finder_winopts
   self._finder_input = finder_input
   self._finder_line_count = finder_count
   self._finder_multiline = finder_multiline
-  self._finder_title = title
 
   self._result_bufnr = nil
   self._result_winnr = nil
+  self._result_winopts = result_winopts
   self._result_lnum = result_lnum
   self._result_total = result_total
+  self._result_render = result_render
 
   self._preview_bufnr = nil
   self._preview_winnr = nil
   self._preview_title = nil
+  self._preview_winopts = preview_winopts
+  self._preview_render = preview_render
   return self
 end
 
@@ -322,15 +328,15 @@ function M:dispose()
   end
 
   self._scheduler_finder = nil
-  self._scheduler_preview = nil
   self._scheduler_result = nil
+  self._scheduler_preview = nil
 
   eve.win.close(self._finder_winnr)
-  eve.win.close(self._preview_winnr)
-  eve.win.close(self._result_winnr)
   eve.buf.close(self._finder_bufnr)
-  eve.buf.close(self._preview_bufnr)
+  eve.win.close(self._result_winnr)
   eve.buf.close(self._result_bufnr)
+  eve.win.close(self._preview_winnr)
+  eve.buf.close(self._preview_bufnr)
 
   self._finder_input:dispose()
   self._finder_line_count:dispose()
@@ -339,21 +345,24 @@ function M:dispose()
 
   self._finder_bufnr = nil
   self._finder_winnr = nil
+  self._finder_title = nil
+  self._finder_winopts = nil
   self._finder_input = nil
   self._finder_line_count = nil
   self._finder_multiline = nil
-  self._finder_title = nil
-
-  self._preview_bufnr = nil
-  self._preview_winnr = nil
-  self._preview_render = nil
-  self._preview_title = nil
 
   self._result_bufnr = nil
   self._result_winnr = nil
+  self._result_winopts = nil
   self._result_lnum = nil
   self._result_total = nil
   self._result_render = nil
+
+  self._preview_bufnr = nil
+  self._preview_winnr = nil
+  self._preview_title = nil
+  self._preview_winopts = nil
+  self._preview_render = nil
 end
 
 ---@return nil
@@ -371,61 +380,50 @@ function M:close()
 end
 
 ---@return nil
-function M:open()
+function M:focus()
   self:__health__()
 
   self._visible = true
-  self._scheduler_finder:schedule()
-  self._scheduler_result:schedule()
-
-  local finder_winnr = self._finder_winnr ---@type integer|nil
-  local result_winnr = self._result_winnr ---@type integer|nil
-  local preview_winnr = self._preview_winnr ---@type integer|nil
-
-  local finder_bufnr, result_bufnr, preview_bufnr = self:__create_bufs__() ---@type integer, integer, integer|nil
-  if finder_winnr == nil or not vim.api.nvim_win_is_valid(finder_winnr) then
-  end
+  self:__create_wins__()
+  self:__focus_pane__()
 end
 
 ---@return nil
 function M:resize()
-  local finder_bufnr, result_bufnr, preview_bufnr = self:__create_bufs__() ---@type integer, integer, integer|nil
+  self:__health__()
 
-  local has_preview = self.preview_visible and vim.o.columns > 140 ---@type boolean
-  local max_width = math.max(vim.o.columns * 0.9, vim.o.columns - 20) ---@type integer
-  local max_height = math.max(vim.o.lines * 0.9, vim.o.lines - 10) ---@type integer
-  local width = math.min(200, max_width) ---@type integer
-  local height = math.min(56, max_height) ---@type integer
-  local row = math.floor((vim.o.columns - width) / 2) ---@type integer
-  local col = math.floor((vim.o.lines - height) / 2) ---@type integer
-
-  local finder_width = has_preview and math.floor(width / 2) or width ---@type integer
-  local preview_width = width - finder_width ---@type integer
-
-  ---@type vim.api.keyset.win_config
-  local wincfg_finder = {
-    relative = "editor",
-    row = row,
-    col = col,
-  }
-
-  ---@type vim.api.keyset.win_config
-  local wincfg_result = {
-    relative = "win",
-  }
-
-  ---@type vim.api.keyset.win_config|nil
-  local wincfg_preview = nil
-  if has_preview then
-    ---@type vim.api.keyset.win_config
-    wincfg_preview = {}
+  if not self._visible then
+    return
   end
 
-  return wincfg_finder, wincfg_result, wincfg_preview
+  local finder_winnr, result_winnr, preview_winnr = self:__create_wins__() ---@type integer, integer, integer|nil
+  local finder_position, result_position, preview_position = self:__resize__() ---@type eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition|nil
+
+  local finder_wincfg = vim.api.nvim_win_get_config(finder_winnr) ---@type vim.api.keyset.win_config
+  finder_wincfg.row = finder_position.row
+  finder_wincfg.col = finder_position.col
+  finder_wincfg.width = finder_position.width
+  finder_wincfg.height = finder_position.height
+
+  local result_wincfg = vim.api.nvim_win_get_config(result_winnr) ---@type vim.api.keyset.win_config
+  result_wincfg.row = result_position.row
+  result_wincfg.col = result_position.col
+  result_wincfg.width = result_position.width
+  result_wincfg.height = result_position.height
+
+  if preview_winnr ~= nil and preview_position ~= nil then
+    local preview_wincfg = vim.api.nvim_win_get_config(preview_winnr) ---@type vim.api.keyset.win_config
+    preview_wincfg.row = preview_position.row
+    preview_wincfg.col = preview_position.col
+    preview_wincfg.width = preview_position.width
+    preview_wincfg.height = preview_position.height
+  end
 end
 
 ---@return integer|nil
 function M:get_finder_bufnr()
+  self:__health__()
+
   local bufnr = self._finder_bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     self._finder_bufnr = nil
@@ -436,6 +434,8 @@ end
 
 ---@return integer|nil
 function M:get_finder_winnr()
+  self:__health__()
+
   local winnr = self._finder_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     self._finder_winnr = nil
@@ -446,6 +446,8 @@ end
 
 ---@return integer|nil
 function M:get_result_bufnr()
+  self:__health__()
+
   local bufnr = self._result_bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     self._result_bufnr = nil
@@ -456,6 +458,8 @@ end
 
 ---@return integer|nil
 function M:get_result_winnr()
+  self:__health__()
+
   local winnr = self._result_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     self._result_winnr = nil
@@ -466,6 +470,8 @@ end
 
 ---@return integer|nil
 function M:get_preview_bufnr()
+  self:__health__()
+
   local bufnr = self._preview_bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     self._preview_bufnr = nil
@@ -476,6 +482,8 @@ end
 
 ---@return integer|nil
 function M:get_preview_winnr()
+  self:__health__()
+
   local winnr = self._preview_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     self._preview_winnr = nil
@@ -499,7 +507,7 @@ function M:set_finder_content(content)
     return
   end
 
-  local bufnr = self:get_finder_bufnr() ---@type integer|nil
+  local bufnr = self._finder_bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
@@ -513,6 +521,41 @@ function M:set_finder_content(content)
   self._finder_line_count:next(#lines)
 
   self._scheduler_finder:schedule()
+end
+
+---@param title                         string
+---@return nil
+function M:set_finder_title(title)
+  self:__health__()
+  self._finder_title = string.format(" %s ", vim.trim(title)) ---@type string
+
+  local finder_winnr = self._finder_winnr ---@type integer|nil
+  if finder_winnr ~= nil and vim.api.nvim_win_is_valid(finder_winnr) then
+    local wincfg = vim.api.nvim_win_get_config(finder_winnr) ---@type vim.api.keyset.win_config
+    wincfg.title = self._finder_title
+    vim.api.nvim_win_set_config(finder_winnr, wincfg)
+  else
+    M:__create_wins__()
+  end
+end
+
+---@param title                         string
+---@return nil
+function M:set_preview_title(title)
+  self:__health__()
+  self._preview_title = string.format(" %s ", vim.trim(title)) ---@type string
+
+  local should_preview_show = M:__should_show_preview__() ---@type boolean
+  if should_preview_show then
+    local preview_winnr = self._preview_winnr ---@type integer|nil
+    if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
+      local wincfg = vim.api.nvim_win_get_config(preview_winnr) ---@type vim.api.keyset.win_config
+      wincfg.title = self._preview_title
+      vim.api.nvim_win_set_config(preview_winnr, wincfg)
+    else
+      M:__create_wins__()
+    end
+  end
 end
 
 ---@protected
@@ -591,7 +634,7 @@ end
 ---@return integer
 ---@return integer|nil
 function M:__create_wins__()
-  local should_show_preview = vim.o.columns > 160 and self._scheduler_preview ~= nil ---@type boolean
+  local should_show_preview = M:__should_show_preview__() ---@type boolean
   local finder_winnr = self._finder_winnr ---@type integer|nil
   local result_winnr = self._result_winnr ---@type integer|nil
   local preview_winnr = self._preview_winnr ---@type integer|nil
@@ -621,6 +664,7 @@ function M:__create_wins__()
     return finder_winnr, result_winnr, preview_winnr
   end
 
+  local winblend = eve.state.theme.get_float_winblend() ---@type integer
   local finder_bufnr, result_bufnr, preview_bufnr = self:__create_bufs__() ---@type integer, integer, integer|nil
   local finder_position, result_position, preview_position = self:__resize__() ---@type eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition|nil
 
@@ -637,8 +681,21 @@ function M:__create_wins__()
     title_pos = "center",
   }
   if finder_winnr == nil then
-    finder_winnr = vim.api.nvim_open_win(finder_bufnr, true, finder_wincfg)
+    finder_wincfg.noautocmd = true
+    finder_winnr = vim.api.nvim_open_win(finder_bufnr, false, finder_wincfg)
     self._finder_winnr = finder_winnr
+    self._pane_focused = "finder"
+
+    local winopts = self._finder_winopts ---@type eve.ux.picker.IWinOptions
+    eve.win.set_type(finder_winnr, eve.win.Types.PICKER_FINDER)
+    vim.wo[finder_winnr].number = winopts.number
+    vim.wo[finder_winnr].relativenumber = false
+    vim.wo[finder_winnr].signcolumn = "yes"
+    vim.wo[finder_winnr].spell = false
+    vim.wo[finder_winnr].winblend = winblend
+    vim.wo[finder_winnr].winfixbuf = true
+    vim.wo[finder_winnr].winhighlight = highlights.finder
+    vim.wo[finder_winnr].wrap = winopts.wrap
   else
     vim.api.nvim_win_set_config(finder_winnr, finder_wincfg)
     vim.api.nvim_win_set_buf(finder_winnr, finder_bufnr)
@@ -653,21 +710,35 @@ function M:__create_wins__()
     border = should_show_preview and borders.result_with_preview or borders.result,
     style = "minimal",
     focusable = true,
-    noautocmd = true,
   }
   if result_winnr == nil then
+    result_wincfg.noautocmd = true
     result_winnr = vim.api.nvim_open_win(result_bufnr, false, result_wincfg)
     self._result_winnr = result_winnr
+    self._pane_focused = "finder"
+
+    local winopts = self._result_winopts ---@type eve.ux.picker.IWinOptions
+    eve.win.set_type(result_winnr, eve.win.Types.PICKER_RESULT)
+    vim.wo[result_winnr].number = winopts.number
+    vim.wo[result_winnr].signcolumn = "yes"
+    vim.wo[result_winnr].spell = false
+    vim.wo[result_winnr].winblend = winblend
+    vim.wo[result_winnr].winfixbuf = true
+    vim.wo[result_winnr].winhighlight = highlights.result
+    vim.wo[result_winnr].wrap = winopts.wrap
   else
     vim.api.nvim_win_set_config(result_winnr, result_wincfg)
+
+    vim.wo[result_winnr].winfixbuf = false
     vim.api.nvim_win_set_buf(result_winnr, result_bufnr)
+    vim.wo[result_winnr].winfixbuf = true
   end
 
   if should_show_preview then
     ---@cast preview_bufnr              integer
     ---@cast preview_position           eve.ux.picker.IWinPosition
 
-    local wincfg = {
+    local preview_wincfg = {
       relative = "editor",
       row = preview_position.row,
       col = preview_position.col,
@@ -676,21 +747,73 @@ function M:__create_wins__()
       border = borders.preview,
       style = "minimal",
       focusable = true,
-      noautocmd = true,
       title = self._preview_title,
       title_pos = "center",
     }
 
     if preview_winnr == nil then
-      preview_winnr = vim.api.nvim_open_win(preview_bufnr, false, wincfg)
+      preview_wincfg.noautocmd = true
+      preview_winnr = vim.api.nvim_open_win(preview_bufnr, false, preview_wincfg)
       self._preview_winnr = preview_winnr
+      self._pane_focused = "finder"
+
+      local winopts = self._preview_winopts ---@type eve.ux.picker.IWinOptions
+      eve.win.set_type(preview_winnr, eve.win.Types.PICKER_PREVIEW)
+      vim.wo[preview_winnr].list = true
+      vim.wo[preview_winnr].listchars = string.format(
+        "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
+        eve.icon.listchars.eol,
+        eve.icon.listchars.lead,
+        eve.icon.listchars.nbsp,
+        eve.icon.listchars.space,
+        eve.icon.listchars.trail
+      )
+      vim.wo[preview_winnr].number = winopts.number
+      vim.wo[preview_winnr].relativenumber = false
+      vim.wo[preview_winnr].spell = false
+      vim.wo[preview_winnr].signcolumn = "yes"
+      vim.wo[preview_winnr].winblend = winblend
+      vim.wo[preview_winnr].winfixbuf = true
+      vim.wo[preview_winnr].winhighlight = highlights.preview
+      vim.wo[preview_winnr].wrap = winopts.wrap
     else
-      vim.api.nvim_win_set_config(preview_winnr, wincfg)
+      vim.api.nvim_win_set_config(preview_winnr, preview_wincfg)
+
+      vim.wo[preview_winnr].winfixbuf = false
       vim.api.nvim_win_set_buf(preview_winnr, preview_bufnr)
+      vim.wo[preview_winnr].winfixbuf = true
     end
   end
 
   return finder_winnr, result_winnr, preview_winnr
+end
+
+---@protected
+---@return nil
+function M:__focus_pane__()
+  local pane_focused = self._pane_focused ---@type eve.ux.picker.PaneEnum
+  local winnr ---@type integer|nil
+
+  if pane_focused == "finder" then
+    local finder_winnr = self._finder_winnr ---@type integer|nil
+    if finder_winnr ~= nil and vim.api.nvim_win_is_valid(finder_winnr) then
+      winnr = finder_winnr
+    end
+  elseif pane_focused == "preview" then
+    local preview_winnr = self._preview_winnr ---@type integer|nil
+    if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
+      winnr = preview_winnr
+    end
+  elseif pane_focused == "result" then
+    local result_winnr = self._result_winnr ---@type integer|nil
+    if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
+      winnr = result_winnr
+    end
+  end
+
+  if winnr ~= nil then
+    vim.api.nvim_set_current_win(winnr)
+  end
 end
 
 ---@protected
@@ -701,6 +824,9 @@ function M:__health__()
     error(message)
   end
 end
+
+---@return nil
+function M:__result_movedown__() end
 
 ---@return eve.ux.picker.IWinPosition
 ---@return eve.ux.picker.IWinPosition
