@@ -182,6 +182,7 @@ function M.gen_hlgroup_map(context)
 
     ---treeview
     f_utw_indent = { fg = c.bg2 },
+    f_utw_indent_float = { fg = c.bg4 },
 
     ---vim options
     f_us_vo_name = { fg = c.purple },

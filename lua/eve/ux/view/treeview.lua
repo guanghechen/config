@@ -14,22 +14,6 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@alias eve.ux.view.treeview.INodeSorter
 ---| fun(left: eve.ux.view.treeview.INode, right: eve.ux.view.treeview.INode): boolean
 
----@class eve.ux.view.treeview.IKeymapDefaults
----@field public bufnr                  integer
----@field public nowait                 ?boolean
----@field public noremap                ?boolean
----@field public silent                 ?boolean
-
----@class eve.ux.view.treeview.IKeymap
----@field public modes                  eve.e.VimMode[]
----@field public key                    string
----@field public aliases                string[]|nil
----@field public callback               fun(bufnr: integer, lnum: integer, treeview: eve.ux.view.Treeview): nil
----@field public desc                   string|nil
----@field public nowait                 boolean|nil
----@field public noremap                boolean|nil
----@field public silent                 boolean|nil
-
 ---@class eve.ux.view.treeview.IContainerNode
 ---@field public type                   'container'
 ---@field public uuid                   string
@@ -53,14 +37,14 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 ---@field public indent                 ?string
----@field public keymaps                eve.ux.view.treeview.IKeymap[]|nil
+---@field public indent_hln             ?string
 ---@field public renderer               eve.ux.view.treeview.INodeRenderer
 ---@field public sorter                 eve.ux.view.treeview.INodeSorter
 
 ---@class eve.ux.view.Treeview : eve.ux.view.IView
 ---@field protected _disposed           boolean
 ---@field protected _indent             string
----@field protected _keymaps            eve.ux.view.treeview.IKeymap[]
+---@field protected _indent_hln         string
 ---@field protected _lnum2uuid          table<integer, string>
 ---@field protected _uuid2lnum          table<string, integer>
 ---@field protected _node_map           table<string, eve.ux.view.treeview.INode>
@@ -78,7 +62,7 @@ function M.new(props)
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
   local indent = props.indent or "  " ---@type string
-  local keymaps = props.keymaps or {} ---@type eve.ux.view.treeview.IKeymap[]
+  local indent_hln = props.indent_hln or "f_utw_indent" ---@type string
   local renderer = props.renderer ---@type eve.ux.view.treeview.INodeRenderer
   local sorter = props.sorter ---@type eve.ux.view.treeview.INodeSorter
 
@@ -99,10 +83,10 @@ function M.new(props)
   self.nsnr = nsnr
   self._disposed = false
   self._indent = indent
-  self._keymaps = keymaps
+  self._indent_hln = indent_hln
   self._lnum2uuid = {}
   self._uuid2lnum = {}
-  self._node_map = {}
+  self._node_map = { [root.uuid] = root }
   self._node_root = root
   self._renderer = renderer
   self._sorter = sorter
@@ -113,9 +97,10 @@ end
 function M:clear()
   self:health()
 
+  local root = self._node_root ---@type eve.ux.view.treeview.IContainerNode
   self._lnum2uuid = {}
   self._uuid2lnum = {}
-  self._node_map = {}
+  self._node_map = { [root.uuid] = root }
   self._node_root.children = {}
   self._node_root.dirty_orders = false
   return self
@@ -288,7 +273,7 @@ function M:render(bufnr, root_uuid, included_uuid_set)
 
     if node.highlights ~= nil then
       local offset = #indent ---@type integer
-      vim.hl.range(bufnr, nsnr, "f_utw_indent", { row, 0 }, { row, offset })
+      vim.hl.range(bufnr, nsnr, self._indent_hln, { row, 0 }, { row, offset })
       for _, highlight in ipairs(node.highlights) do
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
@@ -380,55 +365,6 @@ function M:render(bufnr, root_uuid, included_uuid_set)
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@param defaults                      eve.ux.view.treeview.IKeymapDefaults
----@return eve.ux.view.Treeview
-function M:bindkeys(defaults)
-  local keymaps = self._keymaps ---@type eve.ux.view.treeview.IKeymap[]
-  local treeview = self
-
-  local bufnr = defaults.bufnr ---@type integer
-  for _, keymap in ipairs(keymaps) do
-    local nowait = keymap.nowait ---@type boolean|nil
-    local noremap = keymap.noremap ---@type boolean|nil
-    local silent = keymap.silent ---@type boolean|nil
-
-    if nowait == nil then
-      nowait = defaults.nowait ---@type boolean|nil
-    end
-    if noremap == nil then
-      noremap = defaults.noremap ---@type boolean|nil
-    end
-    if silent == nil then
-      silent = defaults.silent ---@type boolean|nil
-    end
-
-    ---@return nil
-    local function callback()
-      local winnr = vim.api.nvim_get_current_win() ---@type integer
-      local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-      keymap.callback(bufnr, lnum, treeview)
-    end
-
-    ---@type vim.keymap.set.Opts
-    local opts = {
-      buffer = bufnr,
-      nowait = nowait,
-      noremap = noremap,
-      silent = silent,
-      desc = keymap.desc,
-    }
-    vim.keymap.set(keymap.modes, keymap.key, callback, opts)
-
-    if keymap.aliases ~= nil then
-      for _, alias in ipairs(keymap.aliases) do
-        vim.keymap.set(keymap.modes, alias, callback, opts)
-      end
-    end
-  end
-
-  return self
-end
 
 ---@param included_uuids                string[]
 ---@return table<string, boolean>

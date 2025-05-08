@@ -1,7 +1,118 @@
+---@diagnostic disable: invisible
 local __module_name__ = "eve.ux.picker" ---@type string
 
+---@alias eve.ux.picker.PaneEnum
+---| "finder"
+---| "preview"
+---| "result"
+
+---@alias eve.ux.picker.IResultRender
+---| fun(self: eve.ux.Picker, bufnr: integer, input: string): integer, integer?
+
+---@alias eve.ux.picker.IPreviewRender
+---| fun(self: eve.ux.Picker, bufnr: integer, input: string): string
+
+---@alias eve.ux.picker.IOnDispose
+---| fun(): nil
+
+---@alias eve.ux.picker.IOnFinderChange
+---| fun(self: eve.ux.Picker, bufnr: integer, input: string): nil
+
+---@class eve.ux.picker.IFlagItem
+---@field public type                   "enum"|"boolean"
+---@field public desc                   string
+---@field public callback               fun(self: eve.ux.Picker): nil
+---@field public snapshot               fun(self: eve.ux.Picker): string
+
+---@class eve.ux.picker.IInternalKeymap
+---@field public mode                   eve.e.VimMode
+---@field public key                    string
+---@field public opts                   vim.keymap.set.Opts
+---@field public callback               fun(self: eve.ux.Picker, bufnr: integer): nil
+
+---@class eve.ux.picker.IKeymap
+---@field public disabled               boolean|nil
+---@field public modes                  eve.e.VimMode[]
+---@field public aliases                string[]|nil
+---@field public key                    string
+---@field public callback               fun(self: eve.ux.Picker, bufnr: integer): nil
+---
+---@field public desc                   string
+---@field public nowait                 boolean|nil
+---@field public noremap                boolean|nil
+---@field public silent                 boolean|nil
+
+---@class eve.ux.picker.IWinOptions
+---@field public number                 ?boolean
+---@field public wrap                   ?boolean
+
+---@class eve.ux.picker.IWinPosition
+---@field public width                  integer
+---@field public height                 integer
+---@field public row                    integer
+---@field public col                    integer
+
+---@class eve.ux.picker.borders
+---@field public finder                 string[]
+---@field public finder_with_preview    string[]
+---@field public finder_without_result  string[]
+---@field public result                 string[]
+---@field public result_with_preview    string[]
+---@field public preview                string[]
+
 ---@class eve.ux.picker.highlights
-local highlights = {
+---@field public finder                 string
+---@field public result                 string
+---@field public preview                string
+
+---@class eve.ux.picker.keymaps_common
+---@field public close                  eve.ux.picker.IKeymap
+
+---@class eve.ux.picker.keymaps_finder
+---@field public focus_down             eve.ux.picker.IKeymap
+---@field public focus_left             eve.ux.picker.IKeymap
+---@field public focus_right            eve.ux.picker.IKeymap
+---@field public focus_up               eve.ux.picker.IKeymap
+
+---@class eve.ux.picker.keymaps_result
+---@field public focus_down             eve.ux.picker.IKeymap
+---@field public focus_left             eve.ux.picker.IKeymap
+---@field public focus_right            eve.ux.picker.IKeymap
+---@field public focus_up               eve.ux.picker.IKeymap
+
+---@class eve.ux.picker.keymaps_preview
+---@field public focus_down             eve.ux.picker.IKeymap
+---@field public focus_left             eve.ux.picker.IKeymap
+---@field public focus_right            eve.ux.picker.IKeymap
+---@field public focus_up               eve.ux.picker.IKeymap
+
+---@class eve.ux.picker.keymaps
+---@field public common                 eve.ux.picker.keymaps_common
+---@field public finder                 eve.ux.picker.keymaps_finder
+---@field public result                 eve.ux.picker.keymaps_result
+---@field public preview                eve.ux.picker.keymaps_preview
+
+---@class eve.ux.picker.winopts
+---@field public finder                 eve.ux.picker.IWinOptions
+---@field public result                 eve.ux.picker.IWinOptions
+---@field public preview                eve.ux.picker.IWinOptions
+
+----------------------------------------------------------------------------------------------------
+
+---@type eve.ux.picker.borders
+local __borders__ = {
+  -- stylua: ignore start
+  finder                = { "╭", "─", "╮", "│", "┤", "─", "├", "│" },
+  finder_with_preview   = { "╭", "─", "┬", "│", "┤", "─", "├", "│" },
+  finder_without_result = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+  result                = { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
+  result_with_preview   = { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
+  preview               = { "┬", "─", "╮", "│", "╯", "─", "┴", "│" },
+  -- stylua: ignore end
+}
+
+---@type eve.ux.picker.highlights
+local __highlights__ = {
   finder = table.concat({
     "FloatBorder:FloatBorder",
     "FloatTitle:f_picker_finder_title",
@@ -26,61 +137,245 @@ local highlights = {
   }, ","),
 }
 
----@class eve.ux.picker.borders
-local borders = {
-  -- stylua: ignore start
-  finder                = { "╭", "─", "╮", "│", "┤", "─", "├", "│" },
-  finder_with_preview   = { "╭", "─", "┬", "│", "┤", "─", "├", "│" },
-  finder_without_result = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-  result                = { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
-  result_with_preview   = { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
-  preview               = { "┬", "─", "╮", "│", "╯", "─", "┴", "│" },
-  -- stylua: ignore end
+---@type eve.ux.picker.keymaps
+local __keymaps__ = {
+  common = {
+    close = {
+      modes = { "n" },
+      key = "q",
+      desc = "picker: close",
+      callback = function(self)
+        self:close()
+      end,
+    },
+  },
+  finder = {
+    focus_down = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      desc = "picker#finder: focus down",
+      callback = function(self)
+        self:__focus_pane__("result")
+      end,
+    },
+    focus_left = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>h",
+      aliases = { "<D-h>", "<M-h>" },
+      desc = "picker#finder: focus left",
+      callback = function(self)
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("h")
+          return
+        end
+
+        if self._preview_render ~= nil then
+          self:__focus_pane__("preview")
+          return
+        end
+      end,
+    },
+    focus_right = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>l",
+      aliases = { "<D-l>", "<M-l>" },
+      desc = "picker#finder: focus right",
+      callback = function(self)
+        if self._preview_render ~= nil then
+          self:__focus_pane__("preview")
+          return
+        end
+
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("l")
+          return
+        end
+      end,
+    },
+    focus_up = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      desc = "picker#finder: focus up",
+      callback = function(self)
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("k")
+          return
+        end
+
+        self:__focus_pane__("result")
+      end,
+    },
+  },
+  result = {
+    focus_down = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      desc = "picker#result: focus down",
+      callback = function(self)
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("j")
+          return
+        end
+
+        self:__focus_pane__("finder")
+      end,
+    },
+    focus_left = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>h",
+      aliases = { "<D-h>", "<M-h>" },
+      desc = "picker#result: focus left",
+      callback = function(self)
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("h")
+          return
+        end
+
+        if self._preview_render ~= nil then
+          self:__focus_pane__("preview")
+          return
+        end
+      end,
+    },
+    focus_right = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>l",
+      aliases = { "<D-l>", "<M-l>" },
+      desc = "picker#result: focus right",
+      callback = function(self)
+        if self._preview_render ~= nil then
+          self:__focus_pane__("preview")
+          return
+        end
+
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("l")
+          return
+        end
+      end,
+    },
+    focus_up = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      desc = "picker#result: focus up",
+      callback = function(self)
+        self:__focus_pane__("finder")
+      end,
+    },
+  },
+  preview = {
+    focus_down = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      desc = "picker#preview: focus down",
+      callback = function()
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("j")
+          return
+        end
+      end,
+    },
+    focus_left = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>h",
+      aliases = { "<D-h>", "<M-h>" },
+      desc = "picker#result: focus left",
+      callback = function(self)
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.picker.PaneEnum
+        self:__focus_pane__(pane_focused)
+      end,
+    },
+    focus_right = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>l",
+      aliases = { "<D-l>", "<M-l>" },
+      desc = "picker#result: focus right",
+      callback = function(self)
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("l")
+          return
+        end
+
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.picker.PaneEnum
+        self:__focus_pane__(pane_focused)
+      end,
+    },
+    focus_up = {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      desc = "picker#preview: focus up",
+      callback = function()
+        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          eve.tmux.change_pane("k")
+          return
+        end
+      end,
+    },
+  },
 }
 
----@alias eve.ux.picker.PaneEnum
----| "finder"
----| "preview"
----| "result"
+---@type eve.ux.picker.winopts
+local __winopts__ = {
+  finder = {
+    number = false,
+    wrap = false,
+  },
+  result = {
+    number = false,
+    wrap = false,
+  },
+  preview = {
+    number = true,
+    wrap = false,
+  },
+}
 
----@alias eve.ux.picker.IResultRender
----| fun(self: eve.ux.Picker, input: string): integer, integer?
-
----@alias eve.ux.picker.IPreviewRender
----| fun(self: eve.ux.Picker, input: string): string
-
----@class eve.ux.picker.IWinOptions
----@field public number                 ?boolean
----@field public wrap                   ?boolean
-
----@class eve.ux.picker.IWinPosition
----@field public width                  integer
----@field public height                 integer
----@field public row                    integer
----@field public col                    integer
+----------------------------------------------------------------------------------------------------
 
 ---@class eve.ux.IPickerProps
+---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public nsnr                   ?integer
+---@field public permanent              boolean
+---@field public flags                  ?eve.ux.picker.IFlagItem[]
+---@field public flags_start_index      ?0|1
 ---
 ---@field public finder_input           ?string
+---@field public finder_keymaps         ?eve.ux.picker.IKeymap[]
 ---@field public finder_multiline       ?boolean
 ---@field public finder_title           string
 ---@field public finder_win_opts        ?eve.ux.picker.IWinOptions
 ---
+---@field public result_keymaps         ?eve.ux.picker.IKeymap[]
 ---@field public result_render          eve.ux.picker.IResultRender
 ---@field public result_win_opts        ?eve.ux.picker.IWinOptions
 ---
+---@field public preview_keymaps        ?eve.ux.picker.IKeymap[]
 ---@field public preview_render         ?eve.ux.picker.IResultRender
 ---@field public preview_win_opts       ?eve.ux.picker.IWinOptions
+---
+---@field public on_dispose             ?eve.ux.picker.IOnDispose
+---@field public on_finder_change       eve.ux.picker.IOnFinderChange
 
 ---@class eve.ux.Picker
+---@field public uuid                   string
 ---@field public name                   string
 ---@field public nsnr                   integer
+---@field public permanent              boolean
 ---
 ---@field protected _disposed           boolean
 ---@field protected _visible            boolean
+---@field protected _augroup_CursorMoved integer
 ---@field protected _pane_focused       eve.ux.picker.PaneEnum
+---@field protected _pane_last_focused  eve.ux.picker.PaneEnum
+---@field protected _flags              eve.ux.picker.IFlagItem[]
+---@field protected _flags_start_index  0|1
 ---
 ---@field protected _scheduler_finder   eve.std.collection.Scheduler
 ---@field protected _scheduler_preview  eve.std.collection.Scheduler|nil
@@ -88,6 +383,7 @@ local borders = {
 ---
 ---@field protected _finder_bufnr       integer|nil
 ---@field protected _finder_winnr       integer|nil
+---@field protected _finder_keymaps     eve.ux.picker.IInternalKeymap[]
 ---@field protected _finder_title       string
 ---@field protected _finder_winopts     eve.ux.picker.IWinOptions
 ---@field protected _finder_input       eve.std.collection.Observable
@@ -96,6 +392,7 @@ local borders = {
 ---
 ---@field protected _result_bufnr       integer|nil
 ---@field protected _result_winnr       integer|nil
+---@field protected _result_keymaps     eve.ux.picker.IInternalKeymap[]
 ---@field protected _result_winopts     eve.ux.picker.IWinOptions
 ---@field protected _result_lnum        eve.std.collection.Observable
 ---@field protected _result_total       eve.std.collection.Observable
@@ -103,9 +400,13 @@ local borders = {
 ---
 ---@field protected _preview_bufnr      integer|nil
 ---@field protected _preview_winnr      integer|nil
+---@field protected _preview_keymaps    eve.ux.picker.IInternalKeymap[]
 ---@field protected _preview_title      string|nil
 ---@field protected _preview_winopts    eve.ux.picker.IWinOptions
 ---@field protected _preview_render     eve.ux.picker.IPreviewRender|nil
+---
+---@field protected _on_dispose         eve.ux.picker.IOnDispose
+---@field protected _on_finder_change   eve.ux.picker.IOnFinderChange
 local M = {}
 M.__index = M
 
@@ -114,23 +415,36 @@ local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_picker") ---@type in
 ---@param props                         eve.ux.IPickerProps
 ---@return eve.ux.Picker
 function M.new(props)
+  local uuid = props.uuid or eve.oxi.uuid() ---@type string
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
+  local permanent = not not props.permanent ---@type boolean
+  local flags = vim.list_slice(props.flags or {}) ---@type eve.ux.picker.IFlagItem[]
+  local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
+  local augroup_CursorMoved = eve.nvim.augroup(string.format("picker:CursorMoved%s#%s", name, uuid))
+
   local initial_input = props.finder_input or "" ---@type string
   local initial_input_lines = vim.split(initial_input, "\n", { plain = true }) ---@type string[]
-  local finder_multiline = not not props.finder_multiline ---@type boolean
-  local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
-  local finder_winopts = vim.tbl_deep_extend("force", { number = false, wrap = false }, props.finder_win_opts) ---@type eve.ux.picker.IWinOptions
-  local preview_render = props.preview_render ---@type eve.ux.picker.IPreviewRender|nil
-  local preview_winopts = vim.tbl_deep_extend("force", { number = true, wrap = false }, props.preview_win_opts) ---@type eve.ux.picker.IWinOptions
-  local result_render = props.result_render ---@type eve.ux.picker.IResultRender
-  local result_winopts = vim.tbl_deep_extend("force", { number = false, wrap = false }, props.result_win_opts) ---@type eve.ux.picker.IWinOptions
-
   local finder_input = eve.std.Observable.from_value(initial_input) ---@type eve.std.collection.Observable
+  local finder_keymaps = props.finder_keymaps or {} ---@type eve.ux.picker.IKeymap[]
   local finder_count = eve.std.Observable.from_value(#initial_input_lines) ---@type eve.std.collection.Observable
   local finder_prompt_nr = nil ---@type integer|nil
+  local finder_multiline = not not props.finder_multiline ---@type boolean
+  local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
+  local finder_winopts = vim.tbl_deep_extend("force", {}, __winopts__.finder, props.finder_win_opts or {}) ---@type eve.ux.picker.IWinOptions
+
+  local result_keymaps = props.result_keymaps or {} ---@type eve.ux.picker.IKeymap[]
   local result_lnum = eve.std.Observable.from_value(0) ---@type eve.std.collection.Observable
   local result_total = eve.std.Observable.from_value(0) ---@type eve.std.collection.Observable
+  local result_render = props.result_render ---@type eve.ux.picker.IResultRender
+  local result_winopts = vim.tbl_deep_extend("force", {}, __winopts__.result, props.result_win_opts or {}) ---@type eve.ux.picker.IWinOptions
+
+  local preview_keymaps = props.preview_keymaps or {} ---@type eve.ux.picker.IKeymap[]
+  local preview_render = props.preview_render ---@type eve.ux.picker.IPreviewRender|nil
+  local preview_winopts = vim.tbl_deep_extend("force", {}, __winopts__.preview, props.preview_win_opts or {}) ---@type eve.ux.picker.IWinOptions
+
+  local on_dispose = props.on_dispose or eve.std.fn.noop ---@type eve.ux.picker.IOnDispose
+  local on_finder_change = props.on_finder_change ---@type eve.ux.picker.IOnFinderChange
 
   local self = setmetatable({}, M)
 
@@ -194,7 +508,7 @@ function M.new(props)
         vim.bo[bufnr].readonly = false
 
         local input = finder_input:snapshot() ---@type string
-        local ok, preview_title = pcall(preview_render, self, input) ---@type boolean, string|nil
+        local ok, preview_title = pcall(preview_render, self, bufnr, input) ---@type boolean, string|nil
         if not ok then
           eve.reporter.error({
             from = __module_name__,
@@ -206,7 +520,6 @@ function M.new(props)
           })
         else
           if preview_title ~= nil then
-            ---@diagnostic disable-next-line: invisible
             self._preview_title = string.format(" %s ", vim.trim(preview_title))
           end
         end
@@ -235,7 +548,7 @@ function M.new(props)
       vim.bo[bufnr].readonly = false
 
       local input = finder_input:snapshot() ---@type string
-      local ok, lnum, lnum_present = pcall(result_render, self, input) ---@type boolean, integer, integer|nil
+      local ok, lnum, lnum_present = pcall(result_render, self, bufnr, input) ---@type boolean, integer, integer|nil
       if not ok then
         eve.reporter.error({
           from = __module_name__,
@@ -266,15 +579,28 @@ function M.new(props)
       if scheduler_preview ~= nil then
         scheduler_preview:schedule()
       end
+
+      vim.schedule(function()
+        local winnr = self._result_winnr ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          vim.wo[winnr].cursorline = total > 0
+        end
+      end)
     end,
   })
 
+  self.uuid = uuid
   self.name = name
   self.nsnr = nsnr
+  self.permanent = permanent
+  self._flags = flags
+  self._flags_start_index = flags_start_index
 
   self._disposed = false ---@type boolean
   self._visible = false ---@type boolean
+  self._augroup_CursorMoved = augroup_CursorMoved
   self._pane_focused = "finder" ---@type eve.ux.picker.PaneEnum
+  self._pane_last_focused = "finder" ---@type eve.ux.picker.PaneEnum
 
   self._scheduler_finder = scheduler_finder
   self._scheduler_preview = scheduler_preview
@@ -282,6 +608,7 @@ function M.new(props)
 
   self._finder_bufnr = nil
   self._finder_winnr = nil
+  self._finder_keymaps = self:__resolve_finder__keymaps__(finder_keymaps)
   self._finder_title = finder_title
   self._finder_winopts = finder_winopts
   self._finder_input = finder_input
@@ -290,6 +617,7 @@ function M.new(props)
 
   self._result_bufnr = nil
   self._result_winnr = nil
+  self._result_keymaps = self:__resolve_result__keymaps__(result_keymaps)
   self._result_winopts = result_winopts
   self._result_lnum = result_lnum
   self._result_total = result_total
@@ -297,9 +625,25 @@ function M.new(props)
 
   self._preview_bufnr = nil
   self._preview_winnr = nil
+  self._preview_keymaps = self:__resolve_preview__keymaps__(preview_keymaps)
   self._preview_title = nil
   self._preview_winopts = preview_winopts
   self._preview_render = preview_render
+
+  self._on_dispose = on_dispose ---@type eve.ux.picker.IOnDispose
+  self._on_finder_change = on_finder_change ---@type eve.ux.picker.IOnFinderChange
+
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    group = augroup_CursorMoved,
+    callback = function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if winnr == self._result_winnr then
+        local row = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+        result_lnum:next(row)
+      end
+    end,
+  })
+
   return self
 end
 
@@ -320,6 +664,15 @@ function M:dispose()
   end
   self._disposed = true
   self._visible = false
+
+  local augroup_cursor = self._augroup_CursorMoved ---@type integer
+  local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDispose
+
+  self._augroup_CursorMoved = nil
+  self._pane_focused = nil
+  self._pane_last_focused = nil
+  self._flags = nil
+  self._flags_start_index = nil
 
   self._scheduler_finder:dispose()
   self._scheduler_result:dispose()
@@ -345,6 +698,7 @@ function M:dispose()
 
   self._finder_bufnr = nil
   self._finder_winnr = nil
+  self._finder_keymaps = nil
   self._finder_title = nil
   self._finder_winopts = nil
   self._finder_input = nil
@@ -353,6 +707,7 @@ function M:dispose()
 
   self._result_bufnr = nil
   self._result_winnr = nil
+  self._result_keymaps = nil
   self._result_winopts = nil
   self._result_lnum = nil
   self._result_total = nil
@@ -360,14 +715,26 @@ function M:dispose()
 
   self._preview_bufnr = nil
   self._preview_winnr = nil
+  self._preview_keymaps = nil
   self._preview_title = nil
   self._preview_winopts = nil
   self._preview_render = nil
+
+  self._on_dispose = nil
+  self._on_finder_change = nil
+
+  pcall(vim.api.nvim_clear_autocmds, { group = augroup_cursor })
+  pcall(on_dispose)
 end
 
 ---@return nil
 function M:close()
   self:__health__()
+
+  if not self.permanent then
+    self:dispose()
+    return
+  end
 
   self._visible = false
   eve.win.close(self._finder_winnr)
@@ -379,13 +746,15 @@ function M:close()
   self._result_winnr = nil
 end
 
+---@param pane                         eve.ux.picker.PaneEnum|nil
 ---@return nil
-function M:focus()
+function M:focus(pane)
   self:__health__()
 
   self._visible = true
-  self:__create_wins__()
-  self:__focus_pane__()
+  local has_new_created = self:__create_wins__()
+  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type eve.ux.picker.PaneEnum
+  self:__focus_pane__(pane or pane_focused)
 end
 
 ---@return nil
@@ -396,7 +765,7 @@ function M:resize()
     return
   end
 
-  local finder_winnr, result_winnr, preview_winnr = self:__create_wins__() ---@type integer, integer, integer|nil
+  local has_new_created, finder_winnr, result_winnr, preview_winnr = self:__create_wins__() ---@type boolean, integer, integer, integer|nil
   local finder_position, result_position, preview_position = self:__resize__() ---@type eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition|nil
 
   local finder_wincfg = vim.api.nvim_win_get_config(finder_winnr) ---@type vim.api.keyset.win_config
@@ -417,6 +786,10 @@ function M:resize()
     preview_wincfg.col = preview_position.col
     preview_wincfg.width = preview_position.width
     preview_wincfg.height = preview_position.height
+  end
+
+  if has_new_created then
+    self:__focus_pane__("finder")
   end
 end
 
@@ -454,6 +827,12 @@ function M:get_result_bufnr()
     return nil
   end
   return bufnr
+end
+
+---@return integer
+function M:get_result_lnum()
+  self:__health__()
+  return self._result_lnum:snapshot()
 end
 
 ---@return integer|nil
@@ -572,10 +951,29 @@ function M:__create_bufs__()
     finder_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     self._finder_bufnr = finder_bufnr
 
+    vim.b[finder_bufnr].miniindentscope_disable = true
     vim.bo[finder_bufnr].buflisted = false
     vim.bo[finder_bufnr].buftype = "nofile"
     vim.bo[finder_bufnr].filetype = eve.filetype.UX_PICKER_FINDER
     vim.bo[finder_bufnr].swapfile = false
+
+    local keymaps = self._finder_keymaps ---@type eve.ux.picker.IInternalKeymap[]
+    for _, keymap in ipairs(keymaps) do
+      ---@return nil
+      local function callback()
+        keymap.callback(self, finder_bufnr)
+      end
+
+      ---@type vim.keymap.set.Opts
+      local opts = {
+        buffer = finder_bufnr,
+        desc = keymap.opts.desc,
+        nowait = keymap.opts.nowait,
+        noremap = keymap.opts.noremap,
+        silent = keymap.opts.silent,
+      }
+      vim.keymap.set(keymap.mode, keymap.key, callback, opts)
+    end
 
     vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
       buffer = finder_bufnr,
@@ -585,6 +983,7 @@ function M:__create_bufs__()
         self._finder_input:next(content)
         self._finder_line_count:next(#lines)
         self._scheduler_finder:schedule()
+        self._on_finder_change(self, finder_bufnr, content)
       end,
     })
 
@@ -595,6 +994,25 @@ function M:__create_bufs__()
     result_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     self._result_bufnr = result_bufnr
 
+    local keymaps = self._result_keymaps ---@type eve.ux.picker.IInternalKeymap[]
+    for _, keymap in ipairs(keymaps) do
+      ---@return nil
+      local function callback()
+        keymap.callback(self, result_bufnr)
+      end
+
+      ---@type vim.keymap.set.Opts
+      local opts = {
+        buffer = result_bufnr,
+        desc = keymap.opts.desc,
+        nowait = keymap.opts.nowait,
+        noremap = keymap.opts.noremap,
+        silent = keymap.opts.silent,
+      }
+      vim.keymap.set(keymap.mode, keymap.key, callback, opts)
+    end
+
+    vim.b[result_bufnr].miniindentscope_disable = true
     vim.bo[result_bufnr].buflisted = false
     vim.bo[result_bufnr].buftype = "nofile"
     vim.bo[result_bufnr].filetype = eve.filetype.UX_PICKER_RESULT
@@ -610,6 +1028,25 @@ function M:__create_bufs__()
       preview_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
       self._preview_bufnr = preview_bufnr
 
+      local keymaps = self._preview_keymaps ---@type eve.ux.picker.IInternalKeymap[]
+      for _, keymap in ipairs(keymaps) do
+        ---@return nil
+        local function callback()
+          keymap.callback(self, result_bufnr)
+        end
+
+        ---@type vim.keymap.set.Opts
+        local opts = {
+          buffer = preview_bufnr,
+          desc = keymap.opts.desc,
+          nowait = keymap.opts.nowait,
+          noremap = keymap.opts.noremap,
+          silent = keymap.opts.silent,
+        }
+        vim.keymap.set(keymap.mode, keymap.key, callback, opts)
+      end
+
+      vim.b[preview_bufnr].miniindentscope_disable = true
       vim.bo[preview_bufnr].buflisted = false
       vim.bo[preview_bufnr].buftype = "nofile"
       vim.bo[preview_bufnr].filetype = eve.filetype.UX_PICKER_PREVIEW
@@ -630,6 +1067,7 @@ function M:__create_bufs__()
 end
 
 ---@protected
+---@return boolean
 ---@return integer
 ---@return integer
 ---@return integer|nil
@@ -661,7 +1099,7 @@ function M:__create_wins__()
   end
 
   if finder_winnr ~= nil and result_winnr ~= nil and (preview_winnr ~= nil or not should_show_preview) then
-    return finder_winnr, result_winnr, preview_winnr
+    return false, finder_winnr, result_winnr, preview_winnr
   end
 
   local winblend = eve.state.theme.get_float_winblend() ---@type integer
@@ -674,7 +1112,7 @@ function M:__create_wins__()
     col = finder_position.col,
     width = finder_position.width,
     height = finder_position.height,
-    border = borders.finder,
+    border = __borders__.finder,
     style = "minimal",
     focusable = true,
     title = self._finder_title,
@@ -684,30 +1122,31 @@ function M:__create_wins__()
     finder_wincfg.noautocmd = true
     finder_winnr = vim.api.nvim_open_win(finder_bufnr, false, finder_wincfg)
     self._finder_winnr = finder_winnr
-    self._pane_focused = "finder"
+
+    eve.win.set_type(finder_winnr, eve.win.Types.PICKER_FINDER)
 
     local winopts = self._finder_winopts ---@type eve.ux.picker.IWinOptions
-    eve.win.set_type(finder_winnr, eve.win.Types.PICKER_FINDER)
     vim.wo[finder_winnr].number = winopts.number
     vim.wo[finder_winnr].relativenumber = false
     vim.wo[finder_winnr].signcolumn = "yes"
     vim.wo[finder_winnr].spell = false
     vim.wo[finder_winnr].winblend = winblend
     vim.wo[finder_winnr].winfixbuf = true
-    vim.wo[finder_winnr].winhighlight = highlights.finder
+    vim.wo[finder_winnr].winhighlight = __highlights__.finder
     vim.wo[finder_winnr].wrap = winopts.wrap
   else
     vim.api.nvim_win_set_config(finder_winnr, finder_wincfg)
     vim.api.nvim_win_set_buf(finder_winnr, finder_bufnr)
   end
+  vim.wo[finder_winnr].cursorline = false
 
   local result_wincfg = {
     relative = "editor",
     row = result_position.row,
-    col = result_bufnr,
+    col = result_position.col,
     width = result_position.width,
     height = result_position.height,
-    border = should_show_preview and borders.result_with_preview or borders.result,
+    border = should_show_preview and __borders__.result_with_preview or __borders__.result,
     style = "minimal",
     focusable = true,
   }
@@ -715,16 +1154,16 @@ function M:__create_wins__()
     result_wincfg.noautocmd = true
     result_winnr = vim.api.nvim_open_win(result_bufnr, false, result_wincfg)
     self._result_winnr = result_winnr
-    self._pane_focused = "finder"
+
+    eve.win.set_type(result_winnr, eve.win.Types.PICKER_RESULT)
 
     local winopts = self._result_winopts ---@type eve.ux.picker.IWinOptions
-    eve.win.set_type(result_winnr, eve.win.Types.PICKER_RESULT)
     vim.wo[result_winnr].number = winopts.number
     vim.wo[result_winnr].signcolumn = "yes"
     vim.wo[result_winnr].spell = false
     vim.wo[result_winnr].winblend = winblend
     vim.wo[result_winnr].winfixbuf = true
-    vim.wo[result_winnr].winhighlight = highlights.result
+    vim.wo[result_winnr].winhighlight = __highlights__.result
     vim.wo[result_winnr].wrap = winopts.wrap
   else
     vim.api.nvim_win_set_config(result_winnr, result_wincfg)
@@ -733,6 +1172,7 @@ function M:__create_wins__()
     vim.api.nvim_win_set_buf(result_winnr, result_bufnr)
     vim.wo[result_winnr].winfixbuf = true
   end
+  vim.wo[finder_winnr].cursorline = self._result_total:snapshot() > 0
 
   if should_show_preview then
     ---@cast preview_bufnr              integer
@@ -744,7 +1184,7 @@ function M:__create_wins__()
       col = preview_position.col,
       width = preview_position.width,
       height = preview_position.height,
-      border = borders.preview,
+      border = __borders__.preview,
       style = "minimal",
       focusable = true,
       title = self._preview_title,
@@ -755,10 +1195,10 @@ function M:__create_wins__()
       preview_wincfg.noautocmd = true
       preview_winnr = vim.api.nvim_open_win(preview_bufnr, false, preview_wincfg)
       self._preview_winnr = preview_winnr
-      self._pane_focused = "finder"
+
+      eve.win.set_type(preview_winnr, eve.win.Types.PICKER_PREVIEW)
 
       local winopts = self._preview_winopts ---@type eve.ux.picker.IWinOptions
-      eve.win.set_type(preview_winnr, eve.win.Types.PICKER_PREVIEW)
       vim.wo[preview_winnr].list = true
       vim.wo[preview_winnr].listchars = string.format(
         "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
@@ -774,7 +1214,7 @@ function M:__create_wins__()
       vim.wo[preview_winnr].signcolumn = "yes"
       vim.wo[preview_winnr].winblend = winblend
       vim.wo[preview_winnr].winfixbuf = true
-      vim.wo[preview_winnr].winhighlight = highlights.preview
+      vim.wo[preview_winnr].winhighlight = __highlights__.preview
       vim.wo[preview_winnr].wrap = winopts.wrap
     else
       vim.api.nvim_win_set_config(preview_winnr, preview_wincfg)
@@ -783,15 +1223,16 @@ function M:__create_wins__()
       vim.api.nvim_win_set_buf(preview_winnr, preview_bufnr)
       vim.wo[preview_winnr].winfixbuf = true
     end
+    vim.wo[preview_winnr].cursorline = true
   end
 
-  return finder_winnr, result_winnr, preview_winnr
+  return true, finder_winnr, result_winnr, preview_winnr
 end
 
 ---@protected
+---@param pane_focused                  eve.ux.picker.PaneEnum
 ---@return nil
-function M:__focus_pane__()
-  local pane_focused = self._pane_focused ---@type eve.ux.picker.PaneEnum
+function M:__focus_pane__(pane_focused)
   local winnr ---@type integer|nil
 
   if pane_focused == "finder" then
@@ -811,6 +1252,11 @@ function M:__focus_pane__()
     end
   end
 
+  if pane_focused ~= self._pane_focused then
+    self._pane_last_focused = self._pane_focused
+    self._pane_focused = pane_focused
+  end
+
   if winnr ~= nil then
     vim.api.nvim_set_current_win(winnr)
   end
@@ -825,6 +1271,128 @@ function M:__health__()
   end
 end
 
+---@param keymaps                       eve.ux.picker.IKeymap[]
+---@return eve.ux.picker.IInternalKeymap[]
+function M:__resolve_keymaps__(keymaps)
+  local kms = {} ---@type table<string, eve.ux.picker.IInternalKeymap>
+
+  for _, keymap in ipairs(keymaps) do
+    if not keymap.disabled then
+      ---@type vim.keymap.set.Opts
+      local opts = {
+        desc = keymap.desc,
+        nowait = keymap.nowait,
+        noremap = keymap.noremap,
+        silent = keymap.silent,
+      }
+      if opts.nowait == nil then
+        opts.nowait = true
+      end
+      if opts.noremap == nil then
+        opts.noremap = true
+      end
+      if opts.silent == nil then
+        opts.silent = true
+      end
+
+      for _, mode in ipairs(keymap.modes) do
+        local key = string.format("%s:%s", mode, keymap.key) ---@type string
+
+        ---@class eve.ux.picker.IInternalKeymap
+        local ikeymap = {
+          mode = mode,
+          key = keymap.key,
+          opts = opts,
+          callback = keymap.callback,
+        }
+        kms[key] = ikeymap
+
+        if keymap.aliases ~= nil then
+          for _, alias in ipairs(keymap.aliases) do
+            local key_alias = string.format("%s:%s", mode, alias) ---@type string
+            ---@class eve.ux.picker.IInternalKeymap
+            local ikeymap_alias = {
+              mode = mode,
+              key = alias,
+              opts = opts,
+              callback = keymap.callback,
+            }
+            kms[key_alias] = ikeymap_alias
+          end
+        end
+      end
+    end
+  end
+
+  local ikeymaps = {} ---@type eve.ux.picker.IInternalKeymap[]
+  for _, ikeymap in pairs(kms) do
+    ikeymaps[#ikeymaps + 1] = ikeymap
+  end
+  return ikeymaps
+end
+
+---@return eve.ux.picker.IKeymap[]
+function M:__resolve_common__keymaps__()
+  local keymaps = {} ---@type eve.ux.picker.IKeymap[]
+  for _, keymap in pairs(__keymaps__.common) do
+    keymaps[#keymaps + 1] = keymap
+  end
+
+  local index = self._flags_start_index ---@type integer
+  for _, item in ipairs(self._flags) do
+    ---@type eve.ux.picker.IKeymap
+    local keymap = {
+      modes = { "n" },
+      key = string.format("<leader>%d", index),
+      desc = item.desc,
+      callback = function(picker)
+        item.callback(picker)
+      end,
+    }
+    keymaps[#keymaps + 1] = keymap
+    index = index + 1
+  end
+  return keymaps
+end
+
+---@param keymaps                       eve.ux.picker.IKeymap[]
+---@return eve.ux.picker.IInternalKeymap[]
+function M:__resolve_finder__keymaps__(keymaps)
+  local kms = self:__resolve_common__keymaps__() ---@type eve.ux.picker.IKeymap[]
+  for _, keymap in pairs(__keymaps__.finder) do
+    kms[#kms + 1] = keymap
+  end
+  for _, keymap in ipairs(keymaps) do
+    kms[#kms + 1] = keymap
+  end
+  return M:__resolve_keymaps__(kms)
+end
+
+---@param keymaps                       eve.ux.picker.IKeymap[]
+---@return eve.ux.picker.IInternalKeymap[]
+function M:__resolve_result__keymaps__(keymaps)
+  local kms = self:__resolve_common__keymaps__() ---@type eve.ux.picker.IKeymap[]
+  for _, keymap in pairs(__keymaps__.result) do
+    kms[#kms + 1] = keymap
+  end
+  for _, keymap in ipairs(keymaps) do
+    kms[#kms + 1] = keymap
+  end
+  return M:__resolve_keymaps__(kms)
+end
+---@param keymaps                       eve.ux.picker.IKeymap[]
+---@return eve.ux.picker.IInternalKeymap[]
+function M:__resolve_preview__keymaps__(keymaps)
+  local kms = self:__resolve_common__keymaps__() ---@type eve.ux.picker.IKeymap[]
+  for _, keymap in pairs(__keymaps__.preview) do
+    kms[#kms + 1] = keymap
+  end
+  for _, keymap in ipairs(keymaps) do
+    kms[#kms + 1] = keymap
+  end
+  return M:__resolve_keymaps__(kms)
+end
+
 ---@return nil
 function M:__result_movedown__() end
 
@@ -833,13 +1401,13 @@ function M:__result_movedown__() end
 ---@return eve.ux.picker.IWinPosition|nil
 function M:__resize__()
   local should_show_preview = M:__should_show_preview__() ---@type boolean
-  local max_width = math.max(vim.o.columns * 0.9, vim.o.columns - 20) ---@type integer
-  local max_height = math.max(vim.o.lines * 0.9, vim.o.lines - 10) ---@type integer
+  local max_height = math.max(math.floor(vim.o.lines * 0.9), vim.o.lines - 10) ---@type integer
+  local max_width = math.max(math.floor(vim.o.columns * 0.9), vim.o.columns - 20) ---@type integer
 
-  local width = math.min(200, max_width) ---@type integer
-  local height = math.min(56, max_height) ---@type integer
-  local row = math.floor((vim.o.columns - width) / 2) ---@type integer
-  local col = math.floor((vim.o.lines - height) / 2) ---@type integer
+  local height = math.min(max_height - 3, 56) ---@type integer
+  local width = math.min(max_width - 3, should_show_preview and 160 or 80) ---@type integer
+  local row = math.floor((vim.o.lines - height) / 2) ---@type integer
+  local col = math.floor((vim.o.columns - width) / 2) ---@type integer
 
   local finder_width = should_show_preview and math.floor(width / 2) or width ---@type integer
   local finder_height = 1 ---@type integer
@@ -855,16 +1423,16 @@ function M:__resize__()
   local finder_position = {
     row = row,
     col = col,
-    width = finder_width,
     height = finder_height,
+    width = finder_width,
   }
 
   ---@type eve.ux.picker.IWinPosition
   local result_position = {
-    row = row + finder_height,
+    row = row + finder_height + 1,
     col = col,
-    width = finder_width,
     height = height - finder_height,
+    width = finder_width,
   }
 
   local preview_position = nil ---@type eve.ux.picker.IWinPosition|nil
@@ -873,11 +1441,10 @@ function M:__resize__()
     preview_position = {
       row = row,
       col = col + finder_width + 1,
-      width = preview_width,
       height = height,
+      width = preview_width,
     }
   end
-
   return finder_position, result_position, preview_position
 end
 
