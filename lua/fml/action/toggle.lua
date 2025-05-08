@@ -703,6 +703,7 @@ function M.toggle_maximize()
   local meta_command = eve.win.resolve(winnr_command, false) ---@type eve.builtin.win.IMeta|nil
   if meta_command ~= nil and meta_command.wintype == eve.win.Types.MAXIMIZE then
     vim.api.nvim_win_close(winnr_command, true)
+    return
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
