@@ -128,13 +128,17 @@ local picker = eve.ux.Picker.new({
           treeview:collapse(node.uuid, "toggle", true)
           self:mark_result_dirty()
         else
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+          end
+
           local data = node.data ---@type __test__.ux.picker.IData
           self:close()
 
-          vim.schedule(function()
-            eve.debug.log(string.format("open file %s", data.filepath))
-            -- eve.win.open_filepath(nil, data.filepath)
-          end)
+          local filepath = data.filepath ---@type string
+          eve.win.open_filepath(winnr_sourcefile, filepath)
         end
       end,
     },
@@ -143,16 +147,35 @@ local picker = eve.ux.Picker.new({
       key = "<2-LeftMouse>",
       desc = "filetree: toggle",
       callback = function(self)
-        local lnum = self:get_result_lnum() ---@type integer
-        local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
-        if node == nil then
+        local result_winnr = self:get_result_winnr() ---@type integer|nil
+        if result_winnr == nil then
           return
         end
 
-        if node.type == "container" then
-          treeview:collapse(node.uuid, "toggle", false)
-          self:mark_result_dirty()
-        else
+        local cursor = vim.fn.getmousepos()
+        if cursor.winid == result_winnr then
+          local lnum = cursor.line ---@type integer
+          local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
+          if node == nil then
+            return
+          end
+
+          if node.type == "container" then
+            treeview:collapse(node.uuid, "toggle", false)
+            self:mark_result_dirty()
+          else
+            local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+            local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+            if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+              vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+            end
+
+            local data = node.data ---@type __test__.ux.picker.IData
+            self:close()
+
+            local filepath = data.filepath ---@type string
+            eve.win.open_filepath(winnr_sourcefile, filepath)
+          end
         end
       end,
     },
@@ -172,13 +195,17 @@ local picker = eve.ux.Picker.new({
           treeview:collapse(node.uuid, "expanded", false)
           self:mark_result_dirty()
         else
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+          end
+
           local data = node.data ---@type __test__.ux.picker.IData
           self:close()
 
-          vim.schedule(function()
-            eve.debug.log(string.format("open file %s", data.filepath))
-            -- eve.win.open_filepath(nil, data.filepath)
-          end)
+          local filepath = data.filepath ---@type string
+          eve.win.open_filepath(winnr_sourcefile, filepath)
         end
       end,
     },
@@ -201,9 +228,8 @@ local picker = eve.ux.Picker.new({
           local lnum_parent = treeview:retrieve_lnum(node.parent) ---@type integer|nil
           treeview:collapse(node.parent, "collapsed", false)
           self:mark_result_dirty()
-
           if lnum_parent ~= nil then
-            vim.api.nvim_win_set_cursor(0, { lnum_parent, 0 })
+            self:set_result_lnum(lnum_parent)
           end
         end
       end,
@@ -217,7 +243,6 @@ local picker = eve.ux.Picker.new({
   end,
   result_render = function(self, bufnr, input)
     treeview:render(bufnr, cwd)
-    return 2
   end,
 })
 

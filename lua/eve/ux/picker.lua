@@ -19,10 +19,13 @@ local __module_name__ = "eve.ux.picker" ---@type string
 ---| fun(self: eve.ux.Picker, bufnr: integer, input: string): nil
 
 ---@alias eve.ux.picker.IResultRender
----| fun(self: eve.ux.Picker, bufnr: integer, input: string): integer, integer?
+---| fun(self: eve.ux.Picker, bufnr: integer, input: string): integer?, integer?
 
 ---@alias eve.ux.picker.IPreviewRender
 ---| fun(self: eve.ux.Picker, bufnr: integer, input: string): string
+
+---@alias eve.ux.picker.ICheckKeymapDisabled
+---| fun(self: eve.ux.Picker): boolean
 
 ---@class eve.ux.picker.IFlagItem
 ---@field public type                   "enum"|"boolean"
@@ -37,7 +40,7 @@ local __module_name__ = "eve.ux.picker" ---@type string
 ---@field public callback               fun(self: eve.ux.Picker, bufnr: integer): nil
 
 ---@class eve.ux.picker.IKeymap
----@field public disabled               boolean|nil
+---@field public disabled               eve.ux.picker.ICheckKeymapDisabled|boolean|nil
 ---@field public modes                  eve.e.VimMode[]
 ---@field public aliases                string[]|nil
 ---@field public key                    string
@@ -75,18 +78,40 @@ local __module_name__ = "eve.ux.picker" ---@type string
 ---@field public close                  eve.ux.picker.IKeymap
 
 ---@class eve.ux.picker.keymaps_finder
+---@field public disables_on_singleline eve.ux.picker.IKeymap
 ---@field public focus_down             eve.ux.picker.IKeymap
 ---@field public focus_left             eve.ux.picker.IKeymap
 ---@field public focus_right            eve.ux.picker.IKeymap
 ---@field public focus_up               eve.ux.picker.IKeymap
+---@field public move_down              eve.ux.picker.IKeymap
+---@field public move_down_singleline   eve.ux.picker.IKeymap
+---@field public move_down2_singleline  eve.ux.picker.IKeymap
+---@field public move_up                eve.ux.picker.IKeymap
+---@field public move_up_singleline     eve.ux.picker.IKeymap
+---@field public move_up2_singleline    eve.ux.picker.IKeymap
 
 ---@class eve.ux.picker.keymaps_result
+---@field public disables               eve.ux.picker.IKeymap
+---@field public edit_A                 eve.ux.picker.IKeymap
+---@field public edit_a                 eve.ux.picker.IKeymap
+---@field public edit_I                 eve.ux.picker.IKeymap
+---@field public edit_i                 eve.ux.picker.IKeymap
+---@field public edit_O                 eve.ux.picker.IKeymap
+---@field public edit_o                 eve.ux.picker.IKeymap
+---@field public focus                  eve.ux.picker.IKeymap
 ---@field public focus_down             eve.ux.picker.IKeymap
 ---@field public focus_left             eve.ux.picker.IKeymap
 ---@field public focus_right            eve.ux.picker.IKeymap
 ---@field public focus_up               eve.ux.picker.IKeymap
 
 ---@class eve.ux.picker.keymaps_preview
+---@field public disables               eve.ux.picker.IKeymap
+---@field public edit_A                 eve.ux.picker.IKeymap
+---@field public edit_a                 eve.ux.picker.IKeymap
+---@field public edit_I                 eve.ux.picker.IKeymap
+---@field public edit_i                 eve.ux.picker.IKeymap
+---@field public edit_O                 eve.ux.picker.IKeymap
+---@field public edit_o                 eve.ux.picker.IKeymap
 ---@field public focus_down             eve.ux.picker.IKeymap
 ---@field public focus_left             eve.ux.picker.IKeymap
 ---@field public focus_right            eve.ux.picker.IKeymap
@@ -156,6 +181,16 @@ local __keymaps__ = {
     },
   },
   finder = {
+    disables_on_singleline = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "n", "v" },
+      key = "o",
+      aliases = { "O" },
+      desc = "picker#finder: noop",
+      callback = eve.std.fn.noop,
+    },
     focus_down = {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
@@ -213,8 +248,204 @@ local __keymaps__ = {
         self:__focus_pane__("result")
       end,
     },
+    move_down = {
+      modes = { "i", "n", "v" },
+      key = "<C-j>",
+      desc = "picker#finder: focus next item",
+      callback = function(self)
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(step)
+      end,
+    },
+    move_down_singleline = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "n", "v" },
+      key = "j",
+      desc = "picker#finder: focus next item",
+      callback = function(self)
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(step)
+      end,
+    },
+    move_down2_singleline = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "i", "n", "v" },
+      key = "<Down>",
+      desc = "picker#finder: focus next item",
+      callback = function(self)
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(step)
+      end,
+    },
+    move_first = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "n", "v" },
+      key = "gg",
+      desc = "picker#finder: focus first item",
+      callback = function(self)
+        self:__result_move_to__(1)
+      end,
+    },
+    move_last = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "n", "v" },
+      key = "G",
+      desc = "picker#finder: focus last item",
+      callback = function(self)
+        local total = self._result_total:snapshot() ---@type integer
+        self:__result_move_to__(total)
+      end,
+    },
+    move_up = {
+      modes = { "i", "n", "v" },
+      key = "<C-k>",
+      desc = "picker#finder: focus prev item",
+      callback = function(self)
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(-step)
+      end,
+    },
+    move_up_singleline = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "n", "v" },
+      key = "k",
+      desc = "picker#finder: focus prev item",
+      callback = function(self)
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(-step)
+      end,
+    },
+    move_up2_singleline = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "i", "n", "v" },
+      key = "<Up>",
+      desc = "picker#finder: focus prev item",
+      callback = function(self)
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(-step)
+      end,
+    },
   },
   result = {
+    disables = {
+      modes = { "n", "v" },
+      key = "d",
+      aliases = { "dd", "X", "x" },
+      desc = "picker#result: noop",
+      callback = eve.std.fn.noop,
+    },
+    edit_A = {
+      modes = { "n", "v" },
+      key = "A",
+      desc = "picker#result: back to edit (A)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("A", "n", false)
+        end
+      end,
+    },
+    edit_a = {
+      modes = { "n", "v" },
+      key = "a",
+      desc = "picker#result: back to edit (a)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("a", "n", false)
+        end
+      end,
+    },
+    edit_I = {
+      modes = { "n", "v" },
+      key = "I",
+      desc = "picker#result: back to edit (I)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("I", "n", false)
+        end
+      end,
+    },
+    edit_i = {
+      modes = { "n", "v" },
+      key = "i",
+      desc = "picker#result: back to edit (i)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("i", "n", false)
+        end
+      end,
+    },
+    edit_O = {
+      modes = { "n", "v" },
+      key = "O",
+      desc = "picker#result: back to edit (O)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        if self._finder_multiline then
+          local winnr = vim.api.nvim_get_current_win() ---@type integer
+          if winnr == self._finder_winnr then
+            vim.api.nvim_feedkeys("O", "n", false)
+          end
+        end
+      end,
+    },
+    edit_o = {
+      modes = { "n", "v" },
+      key = "o",
+      desc = "picker#result: back to edit (o)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        if self._finder_multiline then
+          local winnr = vim.api.nvim_get_current_win() ---@type integer
+          if winnr == self._finder_winnr then
+            vim.api.nvim_feedkeys("o", "n", false)
+          end
+        end
+      end,
+    },
+    focus = {
+      modes = { "i", "n", "v" },
+      key = "<LeftMouse>",
+      desc = "picker#result: focus",
+      callback = function(self)
+        local cursor = vim.fn.getmousepos()
+        local result_winnr = self._result_winnr ---@type integer|nil
+
+        if cursor.winid == result_winnr then
+          local lnum = cursor.line ---@type integer
+          self:__result_move_to__(lnum)
+          return
+        end
+
+        ---! fallback
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<LeftMouse>", true, false, true), "n", false)
+      end,
+    },
     focus_down = {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
@@ -274,6 +505,95 @@ local __keymaps__ = {
     },
   },
   preview = {
+    disables = {
+      modes = { "n", "v" },
+      key = "d",
+      aliases = { "dd", "X", "x" },
+      desc = "picker#preview: noop",
+      callback = eve.std.fn.noop,
+    },
+    edit_A = {
+      modes = { "n", "v" },
+      key = "A",
+      desc = "picker#preview: back to edit (A)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("A", "n", false)
+        end
+      end,
+    },
+    edit_a = {
+      modes = { "n", "v" },
+      key = "a",
+      desc = "picker#preview: back to edit (a)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("a", "n", false)
+        end
+      end,
+    },
+    edit_I = {
+      modes = { "n", "v" },
+      key = "I",
+      desc = "picker#preview: back to edit (I)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("I", "n", false)
+        end
+      end,
+    },
+    edit_i = {
+      modes = { "n", "v" },
+      key = "i",
+      desc = "picker#preview: back to edit (i)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        if winnr == self._finder_winnr then
+          vim.api.nvim_feedkeys("i", "n", false)
+        end
+      end,
+    },
+    edit_O = {
+      modes = { "n", "v" },
+      key = "O",
+      desc = "picker#preview: back to edit (O)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        if self._finder_multiline then
+          local winnr = vim.api.nvim_get_current_win() ---@type integer
+          if winnr == self._finder_winnr then
+            vim.api.nvim_feedkeys("O", "n", false)
+          end
+        end
+      end,
+    },
+    edit_o = {
+      modes = { "n", "v" },
+      key = "o",
+      desc = "picker#preview: back to edit (o)",
+      callback = function(self)
+        self:__focus_pane__("finder")
+
+        if self._finder_multiline then
+          local winnr = vim.api.nvim_get_current_win() ---@type integer
+          if winnr == self._finder_winnr then
+            vim.api.nvim_feedkeys("o", "n", false)
+          end
+        end
+      end,
+    },
     focus_down = {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
@@ -459,13 +779,51 @@ function M.new(props)
   local on_finder_change = props.on_finder_change ---@type eve.ux.picker.IOnFinderChange
 
   local self = setmetatable({}, M)
+  self.uuid = uuid
+  self.name = name
+  self.nsnr = nsnr
+  self.permanent = permanent
+  self._flags = flags
+  self._flags_start_index = flags_start_index
 
-  local scheduler_finder ---@type eve.std.collection.Scheduler
-  local scheduler_preview ---@type eve.std.collection.Scheduler|nil
-  local scheduler_result ---@type eve.std.collection.Scheduler
+  self._disposed = false ---@type boolean
+  self._visible = false ---@type boolean
+  self._augroup_CursorMoved = augroup_CursorMoved
+  self._pane_focused = "finder" ---@type eve.ux.picker.PaneEnum
+  self._pane_last_focused = "finder" ---@type eve.ux.picker.PaneEnum
+
+  self._finder_bufnr = nil
+  self._finder_winnr = nil
+  self._finder_title = finder_title
+  self._finder_winopts = finder_winopts
+  self._finder_input = finder_input
+  self._finder_line_count = finder_count
+  self._finder_multiline = finder_multiline
+
+  self._result_bufnr = nil
+  self._result_winnr = nil
+  self._result_winopts = result_winopts
+  self._result_lnum = result_lnum
+  self._result_total = result_total
+  self._result_render = result_render
+
+  self._preview_bufnr = nil
+  self._preview_winnr = nil
+  self._preview_title = nil
+  self._preview_winopts = preview_winopts
+  self._preview_render = preview_render
+
+  self._on_close = on_close ---@type eve.ux.picker.IOnClose
+  self._on_dispose = on_dispose ---@type eve.ux.picker.IOnDispose
+  self._on_focus = on_focus ---@type eve.ux.picker.IOnFocus
+  self._on_finder_change = on_finder_change ---@type eve.ux.picker.IOnFinderChange
+
+  self._finder_keymaps = self:__resolve_finder__keymaps__(finder_keymaps)
+  self._result_keymaps = self:__resolve_result__keymaps__(result_keymaps)
+  self._preview_keymaps = self:__resolve_preview__keymaps__(preview_keymaps)
 
   ---@type eve.std.collection.Scheduler
-  scheduler_finder = eve.std.Scheduler.new({
+  self._scheduler_finder = eve.std.Scheduler.new({
     name = string.format("picker:finder:%s", name),
     mode = "debounce",
     delay = 200,
@@ -503,7 +861,7 @@ function M.new(props)
   })
 
   if preview_render ~= nil then
-    scheduler_preview = eve.std.Scheduler.new({
+    self._scheduler_preview = eve.std.Scheduler.new({
       name = string.format("picker:preview:%s", name),
       mode = "debounce",
       delay = 256,
@@ -543,7 +901,7 @@ function M.new(props)
   end
 
   ---@type eve.std.collection.Scheduler
-  scheduler_result = eve.std.Scheduler.new({
+  self._scheduler_result = eve.std.Scheduler.new({
     name = string.format("picker:result:%s", name),
     mode = "debounce",
     delay = 128,
@@ -560,7 +918,7 @@ function M.new(props)
       vim.bo[bufnr].readonly = false
 
       local input = finder_input:snapshot() ---@type string
-      local ok, lnum, lnum_present = pcall(result_render, self, bufnr, input) ---@type boolean, integer, integer|nil
+      local ok, lnum, lnum_present = pcall(result_render, self, bufnr, input) ---@type boolean, integer|nil, integer|nil
       if not ok then
         eve.reporter.error({
           from = __module_name__,
@@ -579,6 +937,7 @@ function M.new(props)
       local total = vim.api.nvim_buf_line_count(bufnr) ---@type integer
       result_total:next(total)
 
+      lnum = lnum or result_lnum:snapshot() ---@type integer
       lnum = math.min(total, math.max(total > 0 and 1 or 0, lnum)) ---@type integer
       result_lnum:next(lnum)
 
@@ -587,65 +946,47 @@ function M.new(props)
         vim.fn.sign_place(bufnr, "", eve.var.sign.PICKER_RESULT_PRESENT, bufnr, { lnum = lnum, priority = 10 })
       end
 
-      scheduler_finder:schedule()
-      if scheduler_preview ~= nil then
-        scheduler_preview:schedule()
+      if self._scheduler_preview ~= nil then
+        self._scheduler_preview:schedule()
       end
-
-      vim.schedule(function()
-        local winnr = self._result_winnr ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          vim.wo[winnr].cursorline = total > 0
-        end
-      end)
     end,
   })
 
-  self.uuid = uuid
-  self.name = name
-  self.nsnr = nsnr
-  self.permanent = permanent
-  self._flags = flags
-  self._flags_start_index = flags_start_index
+  result_lnum:subscribe(
+    eve.std.Subscriber.new({
+      on_next = function(lnum)
+        self._scheduler_finder:schedule()
+        if self._scheduler_preview ~= nil then
+          self._scheduler_preview:schedule()
+        end
+        vim.schedule(function()
+          local winnr = self._result_winnr ---@type integer|nil
+          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+            pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
+          end
+        end)
+      end,
+    }),
+    true
+  )
 
-  self._disposed = false ---@type boolean
-  self._visible = false ---@type boolean
-  self._augroup_CursorMoved = augroup_CursorMoved
-  self._pane_focused = "finder" ---@type eve.ux.picker.PaneEnum
-  self._pane_last_focused = "finder" ---@type eve.ux.picker.PaneEnum
-
-  self._scheduler_finder = scheduler_finder
-  self._scheduler_preview = scheduler_preview
-  self._scheduler_result = scheduler_result
-
-  self._finder_bufnr = nil
-  self._finder_winnr = nil
-  self._finder_keymaps = self:__resolve_finder__keymaps__(finder_keymaps)
-  self._finder_title = finder_title
-  self._finder_winopts = finder_winopts
-  self._finder_input = finder_input
-  self._finder_line_count = finder_count
-  self._finder_multiline = finder_multiline
-
-  self._result_bufnr = nil
-  self._result_winnr = nil
-  self._result_keymaps = self:__resolve_result__keymaps__(result_keymaps)
-  self._result_winopts = result_winopts
-  self._result_lnum = result_lnum
-  self._result_total = result_total
-  self._result_render = result_render
-
-  self._preview_bufnr = nil
-  self._preview_winnr = nil
-  self._preview_keymaps = self:__resolve_preview__keymaps__(preview_keymaps)
-  self._preview_title = nil
-  self._preview_winopts = preview_winopts
-  self._preview_render = preview_render
-
-  self._on_close = on_close ---@type eve.ux.picker.IOnClose
-  self._on_dispose = on_dispose ---@type eve.ux.picker.IOnDispose
-  self._on_focus = on_focus ---@type eve.ux.picker.IOnFocus
-  self._on_finder_change = on_finder_change ---@type eve.ux.picker.IOnFinderChange
+  result_total:subscribe(
+    eve.std.Subscriber.new({
+      on_next = function(total)
+        self._scheduler_finder:schedule()
+        if self._scheduler_preview ~= nil then
+          self._scheduler_preview:schedule()
+        end
+        vim.schedule(function()
+          local winnr = self._result_winnr ---@type integer|nil
+          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+            vim.wo[winnr].cursorline = total > 0
+          end
+        end)
+      end,
+    }),
+    false
+  )
 
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = augroup_CursorMoved,
@@ -943,7 +1284,7 @@ function M:set_finder_title(title)
     wincfg.title = self._finder_title
     vim.api.nvim_win_set_config(finder_winnr, wincfg)
   else
-    M:__create_wins__()
+    self:__create_wins__()
   end
 end
 
@@ -953,7 +1294,7 @@ function M:set_preview_title(title)
   self:__health__()
   self._preview_title = string.format(" %s ", vim.trim(title)) ---@type string
 
-  local should_preview_show = M:__should_show_preview__() ---@type boolean
+  local should_preview_show = self:__should_show_preview__() ---@type boolean
   if should_preview_show then
     local preview_winnr = self._preview_winnr ---@type integer|nil
     if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
@@ -961,9 +1302,19 @@ function M:set_preview_title(title)
       wincfg.title = self._preview_title
       vim.api.nvim_win_set_config(preview_winnr, wincfg)
     else
-      M:__create_wins__()
+      self:__create_wins__()
     end
   end
+end
+
+---@param lnum                          integer
+---@return nil
+function M:set_result_lnum(lnum)
+  self:__health__()
+
+  local total = self._result_total:snapshot() ---@type integer
+  lnum = math.min(total, math.max(0, lnum)) ---@type integer
+  self._result_lnum:next(lnum)
 end
 
 ---@protected
@@ -1101,7 +1452,7 @@ end
 ---@return integer
 ---@return integer|nil
 function M:__create_wins__()
-  local should_show_preview = M:__should_show_preview__() ---@type boolean
+  local should_show_preview = self:__should_show_preview__() ---@type boolean
   local finder_winnr = self._finder_winnr ---@type integer|nil
   local result_winnr = self._result_winnr ---@type integer|nil
   local preview_winnr = self._preview_winnr ---@type integer|nil
@@ -1194,6 +1545,9 @@ function M:__create_wins__()
     vim.wo[result_winnr].winfixbuf = true
     vim.wo[result_winnr].winhighlight = __highlights__.result
     vim.wo[result_winnr].wrap = winopts.wrap
+
+    local lnum = self._result_lnum:snapshot() ---@type integer
+    pcall(vim.api.nvim_win_set_cursor, result_winnr, { lnum, 0 })
   else
     vim.api.nvim_win_set_config(result_winnr, result_wincfg)
 
@@ -1201,7 +1555,7 @@ function M:__create_wins__()
     vim.api.nvim_win_set_buf(result_winnr, result_bufnr)
     vim.wo[result_winnr].winfixbuf = true
   end
-  vim.wo[finder_winnr].cursorline = self._result_total:snapshot() > 0
+  vim.wo[result_winnr].cursorline = self._result_total:snapshot() > 0
 
   if should_show_preview then
     ---@cast preview_bufnr              integer
@@ -1306,7 +1660,14 @@ function M:__resolve_keymaps__(keymaps)
   local kms = {} ---@type table<string, eve.ux.picker.IInternalKeymap>
 
   for _, keymap in ipairs(keymaps) do
-    if not keymap.disabled then
+    local disabled ---@type boolean
+    if type(keymap.disabled) == "function" then
+      disabled = keymap.disabled(self) ---@type boolean
+    else
+      disabled = not not keymap.disabled ---@type boolean
+    end
+
+    if not disabled then
       ---@type vim.keymap.set.Opts
       local opts = {
         desc = keymap.desc,
@@ -1394,7 +1755,7 @@ function M:__resolve_finder__keymaps__(keymaps)
   for _, keymap in ipairs(keymaps) do
     kms[#kms + 1] = keymap
   end
-  return M:__resolve_keymaps__(kms)
+  return self:__resolve_keymaps__(kms)
 end
 
 ---@param keymaps                       eve.ux.picker.IKeymap[]
@@ -1407,7 +1768,7 @@ function M:__resolve_result__keymaps__(keymaps)
   for _, keymap in ipairs(keymaps) do
     kms[#kms + 1] = keymap
   end
-  return M:__resolve_keymaps__(kms)
+  return self:__resolve_keymaps__(kms)
 end
 ---@param keymaps                       eve.ux.picker.IKeymap[]
 ---@return eve.ux.picker.IInternalKeymap[]
@@ -1419,17 +1780,14 @@ function M:__resolve_preview__keymaps__(keymaps)
   for _, keymap in ipairs(keymaps) do
     kms[#kms + 1] = keymap
   end
-  return M:__resolve_keymaps__(kms)
+  return self:__resolve_keymaps__(kms)
 end
-
----@return nil
-function M:__result_movedown__() end
 
 ---@return eve.ux.picker.IWinPosition
 ---@return eve.ux.picker.IWinPosition
 ---@return eve.ux.picker.IWinPosition|nil
 function M:__resize__()
-  local should_show_preview = M:__should_show_preview__() ---@type boolean
+  local should_show_preview = self:__should_show_preview__() ---@type boolean
   local max_height = math.max(math.floor(vim.o.lines * 0.9), vim.o.lines - 10) ---@type integer
   local max_width = math.max(math.floor(vim.o.columns * 0.9), vim.o.columns - 20) ---@type integer
 
@@ -1475,6 +1833,27 @@ function M:__resize__()
     }
   end
   return finder_position, result_position, preview_position
+end
+
+---@param step                         integer
+---@return nil
+function M:__result_move_down__(step)
+  local total = self._result_total:snapshot() ---@type integer
+  if total > 1 then
+    local lnum = self._result_lnum:snapshot() ---@type integer
+    local next_lnum = eve.std.fn.navigate_circular(lnum, step, total) ---@type integer
+    self._result_lnum:next(next_lnum)
+  end
+end
+
+---@param next_lnum                     integer
+---@return nil
+function M:__result_move_to__(next_lnum)
+  local total = self._result_total:snapshot() ---@type integer
+  if total > 1 then
+    next_lnum = math.min(total, math.max(0, next_lnum)) ---@type integer
+    self._result_lnum:next(next_lnum)
+  end
 end
 
 ---@return boolean
