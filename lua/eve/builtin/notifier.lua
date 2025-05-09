@@ -129,7 +129,7 @@ end
 ---@return integer
 local function measure_task_height(task)
   local height = #task.lines + 1 ---@type integer
-  return math.min(height, 42, vim.o.lines - 4) ---@type integer
+  return math.min(height, 42, math.floor(vim.o.lines * 0.4)) ---@type integer
 end
 
 ---@class eve.builtin.notifier
