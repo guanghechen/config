@@ -13,7 +13,7 @@ function M.username(position)
   local text_icon_only = eve.icon.os.current .. " " ---@type string
 
   local invalid = false ---@type boolean
-  eve.state.observe({ eve.state.theme.username }, function()
+  eve.fn.observe({ eve.state.theme.username }, function()
     invalid = true
   end, true)
 

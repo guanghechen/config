@@ -58,4 +58,21 @@ function M.fileicon(filename)
   return eve.icon.filetype.Unknown, "MiniIconsRed"
 end
 
+----------------------------------------------------------------------------------------------------
+
+---@param observables                   eve.std.collection.IObservable[]
+---@param callback                      fun(): nil
+---@param ignore_initial                ?boolean
+---@return nil
+function M.observe(observables, callback, ignore_initial)
+  for _, observable in ipairs(observables) do
+    local subscriber = eve.std.Subscriber.new({
+      on_next = function()
+        vim.schedule(callback)
+      end,
+    })
+    observable:subscribe(subscriber, ignore_initial)
+  end
+end
+
 return M

@@ -9,7 +9,7 @@ end)
 
 local python_venv = "" ---@type string|nil
 local python_version = "" ---@type string|nil
-eve.state.observe({ eve.state.lsp.python_venv_path }, function()
+eve.fn.observe({ eve.state.lsp.python_venv_path }, function()
   local python_venv_path = eve.state.lsp.python_venv_path:snapshot() ---@type string
   python_venv = python_venv_path ~= nil and eve.path.basename(python_venv_path) or nil ---@type string|nil
 

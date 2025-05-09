@@ -87,7 +87,7 @@ function M.select(items, opts, on_choice)
 end
 
 local original_select = vim.ui.select
-eve.state.observe({ eve.state.flight.dressing_select }, function()
+eve.fn.observe({ eve.state.flight.dressing_select }, function()
   local flag = eve.state.flight.dressing_select:snapshot() ---@type boolean
   if flag then
     vim.ui.select = M.select

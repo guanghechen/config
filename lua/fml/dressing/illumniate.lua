@@ -79,7 +79,7 @@ local function get_reference_words()
   return words, current
 end
 
-eve.state.observe({ eve.state.flight.dressing_illumniate }, function()
+eve.fn.observe({ eve.state.flight.dressing_illumniate }, function()
   local enabled = eve.state.flight.dressing_illumniate:snapshot() ---@type boolean
 
   if enabled then

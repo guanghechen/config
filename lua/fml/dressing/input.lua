@@ -166,7 +166,7 @@ function M.input(opts, on_confirm)
 end
 
 local original_input = vim.ui.input
-eve.state.observe({ eve.state.flight.dressing_input }, function()
+eve.fn.observe({ eve.state.flight.dressing_input }, function()
   local flag = eve.state.flight.dressing_input:snapshot() ---@type boolean
   if flag then
     vim.ui.input = M.input

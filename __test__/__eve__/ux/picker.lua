@@ -105,6 +105,9 @@ for _, relative_filepath in ipairs(relative_filepaths) do
   treeview:insert_leaf(uuid, parent_uuid, data)
 end
 
+local fuzzy = eve.std.Observable.from_value(false)
+local sensitive = eve.std.Observable.from_value(true)
+
 local picker = eve.ux.Picker.new({
   uuid = "__test__eve_ux_picker__",
   name = "file-picker",
@@ -112,6 +115,41 @@ local picker = eve.ux.Picker.new({
   finder_title = "File Picker",
   finder_input = "eve/ux",
   finder_multiline = false,
+  flags = {
+    {
+      type = "enum",
+      desc = "file-picker: open settings",
+      callback = eve.std.fn.noop,
+      snapshot = function()
+        return true, eve.icon.symbols.setting
+      end,
+    },
+    {
+      type = "boolean",
+      desc = "file-picker: fuzzy",
+      callback = function()
+        local enabled = fuzzy:snapshot() ---@type boolean
+        fuzzy:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = fuzzy:snapshot() ---@type boolean
+        return enabled, eve.icon.symbols.flag_fuzzy
+      end,
+    },
+    {
+      type = "boolean",
+      desc = "file-picker: sensitive",
+      callback = function()
+        local enabled = sensitive:snapshot() ---@type boolean
+        sensitive:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = sensitive:snapshot() ---@type boolean
+        return enabled, eve.icon.symbols.flag_case_sensitive
+      end,
+    },
+  },
+  flags_start_index = 0,
   result_keymaps = {
     {
       modes = { "n" },
@@ -245,5 +283,9 @@ local picker = eve.ux.Picker.new({
     treeview:render(bufnr, cwd)
   end,
 })
+
+eve.fn.observe({ fuzzy, sensitive }, function()
+  picker:mark_result_flags_dirty()
+end, true)
 
 picker:focus()

@@ -196,34 +196,19 @@ function M.set_storage(storage)
   M._storage = storage
 end
 
----@param observables                   eve.std.collection.IObservable[]
----@param callback                      fun(): nil
----@param ignore_initial                ?boolean
----@return nil
-function M.observe(observables, callback, ignore_initial)
-  for _, observable in ipairs(observables) do
-    local subscriber = eve.std.Subscriber.new({
-      on_next = function()
-        vim.schedule(callback)
-      end,
-    })
-    observable:subscribe(subscriber, ignore_initial)
-  end
-end
-
 ---@return nil
 function M.watch_changes()
   local ticker_editor = eve.std.Ticker.new({ start = 0 })
   local ticker_workspace = eve.std.Ticker.new({ start = 0 })
 
-  M.observe({ M.theme.theme }, function()
+  eve.fn.observe({ M.theme.theme }, function()
     eve.state.theme.reload_theme(false, true)
   end, true)
-  M.observe({ M.theme.transparency }, function()
+  eve.fn.observe({ M.theme.transparency }, function()
     eve.state.theme.reload_theme(true, true)
   end, true)
 
-  M.observe({
+  eve.fn.observe({
     M.option.relativenumber,
   }, function()
     local flag = M.option.relativenumber:snapshot() ---@type boolean
@@ -236,7 +221,7 @@ function M.watch_changes()
     end
   end, true)
 
-  M.observe({
+  eve.fn.observe({
     M.behavior.auto_im,
     M.behavior.bufs_relative,
     M.theme.theme,
@@ -251,7 +236,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  M.observe({
+  eve.fn.observe({
     M.plugin.render_markdown,
     M.plugin.treesitter_context,
     M.option.relativenumber,
@@ -299,13 +284,13 @@ function M.watch_changes()
     table.insert(select_states, select_item.includes)
     table.insert(select_states, select_item.excludes)
   end
-  M.observe(select_states, function()
+  eve.fn.observe(select_states, function()
     ticker_workspace:tick()
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
   end, true)
 
-  M.observe({
+  eve.fn.observe({
     M.lsp.code_lens,
     M.lsp.inlay_hints,
   }, function()
@@ -314,7 +299,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  M.observe({
+  eve.fn.observe({
     eve.status.msg_lsp,
     eve.status.msg_mode,
   }, function()
