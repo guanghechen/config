@@ -149,11 +149,16 @@ function M.gen_hlgroup_map(context)
     nvim_tab_toggle = { fg = c.bg1, bg = c.green },
 
     ---! picker
-    picker_result_flag_boolean = { fg = c.fg1, bg = c.bg2 },
-    picker_result_flag_boolean_active = { fg = c.bg4, bg = c.blue },
-    picker_result_flag_enum = { fg = c.fg1, bg = c.bg2 },
-    picker_result_flag_enum_active = { fg = c.bg4, bg = c.purple },
-    picker_result_pos_text = { fg = c.fg4, bg = "bg_bar" },
+    picker = { sp = c.pink, underline = true },
+    picker_result_flag_boolean = { fg = c.fg3, bg = c.bg2, sp = c.pink, underline = true },
+    picker_result_flag_boolean_active = { fg = c.bg0, bg = c.orange, sp = c.pink, underline = true },
+    picker_result_flag_boolean_sep = { fg = c.bg4, bg = c.bg2, sp = c.pink, underline = true },
+    picker_result_flag_boolean_sep_active = { fg = c.bg4, bg = c.orange, sp = c.pink, underline = true },
+    picker_result_flag_enum = { fg = c.fg3, bg = c.bg2, sp = c.pink, underline = true },
+    picker_result_flag_enum_active = { fg = c.bg0, bg = c.purple, sp = c.pink, underline = true },
+    picker_result_flag_enum_sep = { fg = c.bg4, bg = c.bg2, sp = c.pink, underline = true },
+    picker_result_flag_enum_sep_active = { fg = c.bg4, bg = c.purple, sp = c.pink, underline = true },
+    picker_result_pos_text = { fg = c.fg4, bg = "bg_bar", sp = c.pink, underline = true },
 
     ---! plugin
     plugin_neotree_blank = { fg = c.fg1, bg = "bg_bar" },

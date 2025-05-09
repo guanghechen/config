@@ -448,8 +448,10 @@ local __keymaps__ = {
 
         if cursor.winid == result_winnr then
           local lnum = cursor.line ---@type integer
-          self:__result_move_to__(lnum)
-          return
+          if lnum > 0 then
+            self:__result_move_to__(lnum)
+            return
+          end
         end
 
         ---! fallback
@@ -715,7 +717,6 @@ local __winopts__ = {
 ---@field protected _flags              eve.ux.picker.IInternalFlagItem[]
 ---@field protected _flags_start_index  0|1
 ---
----@field protected _scheduler_finder   eve.std.collection.Scheduler
 ---@field protected _scheduler_preview  eve.std.collection.Scheduler|nil
 ---@field protected _scheduler_result   eve.std.collection.Scheduler
 ---
@@ -769,7 +770,6 @@ function M.new(props)
   local finder_input = eve.std.Observable.from_value(initial_input) ---@type eve.std.collection.Observable
   local finder_keymaps = props.finder_keymaps or {} ---@type eve.ux.picker.IKeymap[]
   local finder_count = eve.std.Observable.from_value(#initial_input_lines) ---@type eve.std.collection.Observable
-  local finder_prompt_nr = nil ---@type integer|nil
   local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
   local finder_winopts = vim.tbl_deep_extend("force", {}, __winopts__.finder, props.finder_win_opts or {}) ---@type eve.ux.picker.IWinOptions
@@ -868,8 +868,8 @@ function M.new(props)
     .new({
       name = string.format("picker:result:%s", name),
       comp_sep = "",
-      comp_sep_hlname = "f_wl_bg",
-      comp_sep_hlname_active = "f_wl_bg",
+      comp_sep_hlname = "f_wl_picker",
+      comp_sep_hlname_active = "f_wl_picker",
       delay = 128,
       silent = eve.std.fn.falsy,
       get_max_width = function()
@@ -896,44 +896,6 @@ function M.new(props)
     })
     :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
     :place("right", c.picker.result_pos(position, result_lnum, result_total), 100)
-
-  ---@type eve.std.collection.Scheduler
-  self._scheduler_finder = eve.std.Scheduler.new({
-    name = string.format("picker:finder:%s", name),
-    mode = "debounce",
-    delay = 200,
-    timeout = 0,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
-    task = function()
-      local bufnr = self:get_finder_bufnr() ---@type integer|nil
-      if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-      end
-
-      ---! Set the extmark with the right-aligned virtual text
-      if finder_prompt_nr then
-        vim.api.nvim_buf_del_extmark(bufnr, nsnr, finder_prompt_nr)
-        finder_prompt_nr = nil
-      end
-
-      local total = result_total:snapshot() ---@type integer
-      local lnum = result_lnum:snapshot() ---@type integer
-      finder_prompt_nr = vim.api.nvim_buf_set_extmark(bufnr, nsnr, 0, 0, {
-        virt_text = { { "" .. lnum .. " / " .. total, "Comment" } },
-        virt_text_pos = "right_align",
-      })
-
-      ---! Set prompt extmark
-      vim.fn.sign_place( --
-        bufnr,
-        "",
-        eve.var.sign.PICKER_FINDER_PROMPT,
-        bufnr,
-        { lnum = 1, priority = 10 }
-      )
-    end,
-  })
 
   if preview_render ~= nil then
     self._scheduler_preview = eve.std.Scheduler.new({
@@ -1031,7 +993,6 @@ function M.new(props)
     eve.std.Subscriber.new({
       on_next = function(lnum)
         self._result_nvimbar:render()
-        self._scheduler_finder:schedule()
         if self._scheduler_preview ~= nil then
           self._scheduler_preview:schedule()
         end
@@ -1050,7 +1011,6 @@ function M.new(props)
     eve.std.Subscriber.new({
       on_next = function(total)
         self._result_nvimbar:render()
-        self._scheduler_finder:schedule()
         if self._scheduler_preview ~= nil then
           self._scheduler_preview:schedule()
         end
@@ -1111,13 +1071,11 @@ function M:dispose()
   self._flags = nil
   self._flags_start_index = nil
 
-  self._scheduler_finder:dispose()
   self._scheduler_result:dispose()
   if self._scheduler_preview then
     self._scheduler_preview:dispose()
   end
 
-  self._scheduler_finder = nil
   self._scheduler_result = nil
   self._scheduler_preview = nil
 
@@ -1346,8 +1304,8 @@ function M:set_finder_content(content)
     return
   end
 
-  local bufnr = self._finder_bufnr ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+  local finder_bufnr = self._finder_bufnr ---@type integer|nil
+  if finder_bufnr == nil or not vim.api.nvim_buf_is_valid(finder_bufnr) then
     return
   end
 
@@ -1355,11 +1313,10 @@ function M:set_finder_content(content)
   if #lines < 1 then
     lines = { "" } ---@type string[]
   end
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_buf_set_lines(finder_bufnr, 0, -1, false, lines)
   self._finder_input:next(content)
   self._finder_line_count:next(#lines)
-
-  self._scheduler_finder:schedule()
+  self:__set_finder_prompt_sign__(finder_bufnr)
 end
 
 ---@param title                         string
@@ -1452,12 +1409,11 @@ function M:__create_bufs__()
         local content = table.concat(lines, "\n") ---@type string
         self._finder_input:next(content)
         self._finder_line_count:next(#lines)
-        self._scheduler_finder:schedule()
         self._on_finder_change(self, finder_bufnr, content)
       end,
     })
 
-    self._scheduler_finder:schedule({ immediate = true })
+    self:__set_finder_prompt_sign__(finder_bufnr)
   end
 
   if result_bufnr == nil or not vim.api.nvim_buf_is_valid(result_bufnr) then
@@ -1943,6 +1899,18 @@ function M:__result_move_to__(next_lnum)
     next_lnum = math.min(total, math.max(0, next_lnum)) ---@type integer
     self._result_lnum:next(next_lnum)
   end
+end
+
+---@param finder_bufnr                  integer
+---@return nil
+function M:__set_finder_prompt_sign__(finder_bufnr)
+  vim.fn.sign_place( --
+    finder_bufnr,
+    "",
+    eve.var.sign.PICKER_FINDER_PROMPT,
+    finder_bufnr,
+    { lnum = 1, priority = 10 }
+  )
 end
 
 ---@return boolean

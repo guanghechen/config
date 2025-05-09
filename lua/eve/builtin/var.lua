@@ -64,6 +64,9 @@ sd(M.sign.DAP_BREAKPOINT_REJECTED,     { text = eve.icon.dap.BreakpointRejected,
 sd(M.sign.DAP_LOG_POINT,               { text = eve.icon.dap.LogPoint,            texthl = "DapLogPoint",            linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
 sd(M.sign.DAP_STOPPED,                 { text = eve.icon.dap.Stopped,             texthl = "DapStopped",             linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
+sd(M.sign.PICKER_FINDER_PROMPT,        { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"      })
+sd(M.sign.PICKER_RESULT_PRESENT,       { text = eve.icon.ui.ArrowPresent,         texthl = "fs_main_present"      })
+
 sd(M.sign.SEARCH_INPUT_CURSOR,         { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"      })
 sd(M.sign.SEARCH_MAIN_CURRENT,         { text = ' ',                              texthl = "fs_main_current"      })
 sd(M.sign.SEARCH_MAIN_PRESENT,         { text = eve.icon.ui.ArrowPresent,         texthl = "fs_main_present"      })

@@ -11,8 +11,12 @@ local M = {}
 function M.result_flags(position, flags, flags_start_index)
   local hln_flag_boolean = position .. "_picker_result_flag_boolean" ---@type string
   local hln_flag_boolean_active = position .. "_picker_result_flag_boolean_active" ---@type string
+  local hln_flag_boolean_sep = position .. "_picker_result_flag_boolean_sep" ---@type string
+  local hln_flag_boolean_sep_active = position .. "_picker_result_flag_boolean_sep_active" ---@type string
   local hln_flag_enum = position .. "_picker_result_flag_enum" ---@type string
   local hln_flag_enum_active = position .. "_picker_result_flag_enum_active" ---@type string
+  local hln_flag_enum_sep = position .. "_picker_result_flag_enum_sep" ---@type string
+  local hln_flag_enum_sep_active = position .. "_picker_result_flag_enum_sep_active" ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
@@ -27,18 +31,25 @@ function M.result_flags(position, flags, flags_start_index)
       local index = flags_start_index ---@type integer
       for _, item in ipairs(flags) do
         local digit = eve.icon.todigit_supscript(index) ---@type string
-        local text_sep = index > 1 and "▏" or " " ---@type string
+        local text_sep = index > flags_start_index and "▏" or " " ---@type string
 
         local active, text_flag = item:snapshot() ---@type boolean, string
-        local text_piece = string.format("%s%s%s", text_sep, text_flag, digit) ---@type string
+        local text_piece = text_flag .. digit ---@type string
 
         ---@type string
         local hln_flag = active and (item.type == "enum" and hln_flag_enum_active or hln_flag_boolean_active)
           or (item.type == "enum" and hln_flag_enum or hln_flag_boolean)
-        local hl_text_piece = btn(txt(text_flag, hln_flag), item.callback_fn)
 
-        text = text .. text_piece ---@type string
-        hl_text = hl_text .. hl_text_piece ---@type string
+        ---@type string
+        local hln_flag_sep = active
+            and (item.type == "enum" and hln_flag_enum_sep_active or hln_flag_boolean_sep_active)
+          or (item.type == "enum" and hln_flag_enum_sep or hln_flag_boolean_sep)
+
+        local hl_text_sep = txt(text_sep, hln_flag_sep) ---@type string
+        local hl_text_piece = txt(text_piece, hln_flag) ---@type string
+
+        text = text .. text_sep .. text_piece ---@type string
+        hl_text = hl_text .. btn(hl_text_sep .. hl_text_piece, item.callback_fn) ---@type string
         index = index + 1
       end
       return text, hl_text, true
