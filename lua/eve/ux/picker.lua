@@ -6,17 +6,23 @@ local __module_name__ = "eve.ux.picker" ---@type string
 ---| "preview"
 ---| "result"
 
+---@alias eve.ux.picker.IOnClose
+---| fun(): nil
+
+---@alias eve.ux.picker.IOnDispose
+---| fun(): nil
+
+---@alias eve.ux.picker.IOnFocus
+---| fun(self: eve.ux.Picker): nil
+
+---@alias eve.ux.picker.IOnFinderChange
+---| fun(self: eve.ux.Picker, bufnr: integer, input: string): nil
+
 ---@alias eve.ux.picker.IResultRender
 ---| fun(self: eve.ux.Picker, bufnr: integer, input: string): integer, integer?
 
 ---@alias eve.ux.picker.IPreviewRender
 ---| fun(self: eve.ux.Picker, bufnr: integer, input: string): string
-
----@alias eve.ux.picker.IOnDispose
----| fun(): nil
-
----@alias eve.ux.picker.IOnFinderChange
----| fun(self: eve.ux.Picker, bufnr: integer, input: string): nil
 
 ---@class eve.ux.picker.IFlagItem
 ---@field public type                   "enum"|"boolean"
@@ -360,7 +366,9 @@ local __winopts__ = {
 ---@field public preview_render         ?eve.ux.picker.IResultRender
 ---@field public preview_win_opts       ?eve.ux.picker.IWinOptions
 ---
+---@field public on_close               ?eve.ux.picker.IOnClose
 ---@field public on_dispose             ?eve.ux.picker.IOnDispose
+---@field public on_focus               ?eve.ux.picker.IOnFocus
 ---@field public on_finder_change       eve.ux.picker.IOnFinderChange
 
 ---@class eve.ux.Picker
@@ -405,7 +413,9 @@ local __winopts__ = {
 ---@field protected _preview_winopts    eve.ux.picker.IWinOptions
 ---@field protected _preview_render     eve.ux.picker.IPreviewRender|nil
 ---
+---@field protected _on_close           eve.ux.picker.IOnClose
 ---@field protected _on_dispose         eve.ux.picker.IOnDispose
+---@field protected _on_focus           eve.ux.picker.IOnFocus
 ---@field protected _on_finder_change   eve.ux.picker.IOnFinderChange
 local M = {}
 M.__index = M
@@ -443,7 +453,9 @@ function M.new(props)
   local preview_render = props.preview_render ---@type eve.ux.picker.IPreviewRender|nil
   local preview_winopts = vim.tbl_deep_extend("force", {}, __winopts__.preview, props.preview_win_opts or {}) ---@type eve.ux.picker.IWinOptions
 
+  local on_close = props.on_close or eve.std.fn.noop ---@type eve.ux.picker.IOnClose
   local on_dispose = props.on_dispose or eve.std.fn.noop ---@type eve.ux.picker.IOnDispose
+  local on_focus = props.on_focus or eve.std.fn.noop ---@type eve.ux.picker.IOnFocus
   local on_finder_change = props.on_finder_change ---@type eve.ux.picker.IOnFinderChange
 
   local self = setmetatable({}, M)
@@ -630,7 +642,9 @@ function M.new(props)
   self._preview_winopts = preview_winopts
   self._preview_render = preview_render
 
+  self._on_close = on_close ---@type eve.ux.picker.IOnClose
   self._on_dispose = on_dispose ---@type eve.ux.picker.IOnDispose
+  self._on_focus = on_focus ---@type eve.ux.picker.IOnFocus
   self._on_finder_change = on_finder_change ---@type eve.ux.picker.IOnFinderChange
 
   vim.api.nvim_create_autocmd("CursorMoved", {
@@ -724,7 +738,9 @@ function M:dispose()
   self._on_finder_change = nil
 
   pcall(vim.api.nvim_clear_autocmds, { group = augroup_cursor })
-  pcall(on_dispose)
+  vim.schedule(function()
+    pcall(on_dispose)
+  end)
 end
 
 ---@return nil
@@ -744,6 +760,10 @@ function M:close()
   self._finder_winnr = nil
   self._preview_winnr = nil
   self._result_winnr = nil
+
+  vim.schedule(function()
+    pcall(self._on_close)
+  end)
 end
 
 ---@param pane                         eve.ux.picker.PaneEnum|nil
@@ -755,6 +775,10 @@ function M:focus(pane)
   local has_new_created = self:__create_wins__()
   local pane_focused = has_new_created and "finder" or self._pane_focused ---@type eve.ux.picker.PaneEnum
   self:__focus_pane__(pane or pane_focused)
+
+  vim.schedule(function()
+    pcall(self._on_focus, self)
+  end)
 end
 
 ---@return nil
