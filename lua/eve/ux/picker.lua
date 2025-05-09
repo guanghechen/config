@@ -89,6 +89,7 @@ local c = eve.ux.nvimbar.component
 
 ---@class eve.ux.picker.keymaps_finder
 ---@field public disables_on_singleline eve.ux.picker.IKeymap
+---@field public disables_on_singleline_i eve.ux.picker.IKeymap
 ---@field public focus_down             eve.ux.picker.IKeymap
 ---@field public focus_left             eve.ux.picker.IKeymap
 ---@field public focus_right            eve.ux.picker.IKeymap
@@ -197,7 +198,16 @@ local __keymaps__ = {
       end,
       modes = { "n", "v" },
       key = "o",
-      aliases = { "O" },
+      aliases = { "O", "<enter>" },
+      desc = "picker#finder: noop",
+      callback = eve.std.fn.noop,
+    },
+    disables_on_singleline_i = {
+      disabled = function(self)
+        return self._finder_multiline
+      end,
+      modes = { "i" },
+      key = "<enter>",
       desc = "picker#finder: noop",
       callback = eve.std.fn.noop,
     },
@@ -439,6 +449,7 @@ local __keymaps__ = {
       end,
     },
     focus = {
+      disabled = true,
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
       desc = "picker#result: focus",
@@ -1034,9 +1045,8 @@ function M.new(props)
         local row = cursor[1] ---@type integer
         if cursor[2] ~= 0 then
           vim.api.nvim_win_set_cursor(winnr, { row, 0 })
-        else
-          result_lnum:next(row)
         end
+        result_lnum:next(row)
       end
     end,
   })
@@ -1062,7 +1072,7 @@ function M:dispose()
   self._disposed = true
   self._visible = false
 
-  local augroup_cursor = self._augroup_CursorMoved ---@type integer
+  local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
   local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDispose
 
   self._augroup_CursorMoved = nil
@@ -1120,7 +1130,7 @@ function M:dispose()
   self._on_dispose = nil
   self._on_finder_change = nil
 
-  pcall(vim.api.nvim_clear_autocmds, { group = augroup_cursor })
+  pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
   vim.schedule(function()
     pcall(on_dispose)
   end)
@@ -1379,6 +1389,8 @@ function M:__create_bufs__()
     self._finder_bufnr = finder_bufnr
 
     vim.b[finder_bufnr].miniindentscope_disable = true
+    vim.b[finder_bufnr].miniai_disable = true
+    vim.b[finder_bufnr].minihipatterns_disable = true
     vim.bo[finder_bufnr].buflisted = false
     vim.bo[finder_bufnr].buftype = "nofile"
     vim.bo[finder_bufnr].filetype = eve.filetype.UX_PICKER_FINDER
@@ -1410,6 +1422,7 @@ function M:__create_bufs__()
         self._finder_input:next(content)
         self._finder_line_count:next(#lines)
         self._on_finder_change(self, finder_bufnr, content)
+        M:__set_finder_prompt_sign__(finder_bufnr)
       end,
     })
 
@@ -1439,6 +1452,8 @@ function M:__create_bufs__()
     end
 
     vim.b[result_bufnr].miniindentscope_disable = true
+    vim.b[result_bufnr].miniai_disable = true
+    vim.b[result_bufnr].minihipatterns_disable = true
     vim.bo[result_bufnr].buflisted = false
     vim.bo[result_bufnr].buftype = "nofile"
     vim.bo[result_bufnr].filetype = eve.filetype.UX_PICKER_RESULT
@@ -1473,6 +1488,8 @@ function M:__create_bufs__()
       end
 
       vim.b[preview_bufnr].miniindentscope_disable = true
+      vim.b[preview_bufnr].miniai_disable = true
+      vim.b[preview_bufnr].minihipatterns_disable = true
       vim.bo[preview_bufnr].buflisted = false
       vim.bo[preview_bufnr].buftype = "nofile"
       vim.bo[preview_bufnr].filetype = eve.filetype.UX_PICKER_PREVIEW
