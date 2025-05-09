@@ -11,6 +11,7 @@ function M.gen_hlgroup_map(context)
   ---@type string
   local item_kind_bg = t and c.none or c.bg0
 
+  ---@type table<string, eve.t.theme.IHlgroup>
   return {
     ---! aerial.nvim
     AerialGuide = { fg = c.bg2 },

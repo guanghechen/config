@@ -1,14 +1,9 @@
 local __module_name__ = "eve.ux.nvimbar" ---@type string
 
----@alias eve.ux.nvimbar.Position
----| 'f_sl'
----| 'f_tl'
----| 'f_wl'
-
----@class eve.ux.nvimbar.IPresetContext
+---@class eve.ux.nvimbar.INvimbarPresetContext
 ---@field public winnr                  ?integer
 
----@class eve.ux.nvimbar.IContext
+---@class eve.ux.nvimbar.INvimbarContext
 ---@field public tabnr                  integer
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
@@ -22,34 +17,11 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field public mode_name              string
 ---@field public git_branch             string|nil
 
----@class eve.ux.nvimbar.IRawComponent
----@field public atomic                 boolean
----@field public name                   string
----@field public tight                  ?boolean
----@field public condition              ?fun(context: eve.ux.nvimbar.IContext, remain_width: integer): boolean
----@field public render                 fun(context: eve.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
----@field public will_change            ?fun(context: eve.ux.nvimbar.IContext, prev_context: eve.ux.nvimbar.IContext|nil, remain_width: integer): boolean
-
----@class eve.ux.nvimbar.IComponent
----@field public last_render_context    eve.ux.nvimbar.IContext|nil
----@field public last_result_full       boolean
----@field public last_result_hltext     string
----@field public last_result_text       string
----@field public last_result_width      integer
----@field public atomic                 boolean
----@field public name                   string
----@field public position               eve.e.NvimbarCompPosition
----@field public priority               integer
----@field public tight                  boolean
----@field public condition              fun(context: eve.ux.nvimbar.IContext, remain_width: integer): boolean
----@field public render                 fun(context: eve.ux.nvimbar.IContext, remain_width: integer): string, string, boolean
----@field public will_change            fun(context: eve.ux.nvimbar.IContext, prev_context: eve.ux.nvimbar.IContext|nil, remain_width: integer): boolean
-
 ---@class eve.ux.nvimbar.IItem
 ---@field public name                   string
 ---@field public position               eve.e.NvimbarCompPosition
 
----@class eve.ux.nvimbar.IProps
+---@class eve.ux.nvimbar.INvimbarProps
 ---@field public name                   string
 ---@field public comp_sep               string
 ---@field public comp_sep_hlname        string
@@ -57,12 +29,12 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field public delay           ?integer
 ---@field public silent                 ?fun(): boolean
 ---@field public get_max_width          fun(): integer
----@field public get_preset_context     ?fun(): eve.ux.nvimbar.IPresetContext
----@field public is_active              fun(context: eve.ux.nvimbar.IContext): boolean
+---@field public get_preset_context     ?fun(): eve.ux.nvimbar.INvimbarPresetContext
+---@field public is_active              fun(context: eve.ux.nvimbar.INvimbarContext): boolean
 ---@field public on_fulfilled           ?fun(result: string): nil
 ---@field public validate               ?fun(): string|nil
 
----@class eve.ux.Nvimbar
+---@class eve.ux.nvimbar.Nvimbar
 ---@field public name                   string
 ---@field protected _value              eve.std.collection.Observable
 ---@field protected _disposed           boolean
@@ -73,13 +45,13 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field protected _orders             integer[]
 ---@field protected _scheduler          eve.std.collection.Scheduler
 ---@field protected _get_max_width      fun(): integer
----@field protected _get_preset_context fun(): eve.ux.nvimbar.IPresetContext
----@field protected _isactive          fun(context: eve.ux.nvimbar.IContext): boolean
+---@field protected _get_preset_context fun(): eve.ux.nvimbar.INvimbarPresetContext
+---@field protected _isactive          fun(context: eve.ux.nvimbar.INvimbarContext): boolean
 local M = {}
 M.__index = M
 
----@param preset_context                eve.ux.nvimbar.IPresetContext
----@return eve.ux.nvimbar.IContext
+---@param preset_context                eve.ux.nvimbar.INvimbarPresetContext
+---@return eve.ux.nvimbar.INvimbarContext
 local function build_context(preset_context)
   local mode, mode_name = eve.constant.hlgroup.common.resolve_mode()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -94,7 +66,7 @@ local function build_context(preset_context)
   local git = vim.b[bufnr].gitsigns_status_dict
   local git_branch = git and git.head or nil ---@type string|nil
 
-  ---@type eve.ux.nvimbar.IContext
+  ---@type eve.ux.nvimbar.INvimbarContext
   local context = {
     tabnr = tabnr,
     winnr = winnr,
@@ -112,8 +84,8 @@ local function build_context(preset_context)
   return context
 end
 
----@param props                         eve.ux.nvimbar.IProps
----@return eve.ux.Nvimbar
+---@param props                         eve.ux.nvimbar.INvimbarProps
+---@return eve.ux.nvimbar.Nvimbar
 function M.new(props)
   local name = props.name ---@type string
   local comp_sep = props.comp_sep ---@type string
@@ -124,12 +96,12 @@ function M.new(props)
   local get_max_width = props.get_max_width ---@type fun(): integer
   local value = eve.std.Observable.from_value("") ---@type eve.std.collection.Observable
 
-  ---@type fun(): eve.ux.nvimbar.IPresetContext
+  ---@type fun(): eve.ux.nvimbar.INvimbarPresetContext
   local get_preset_context = props.get_preset_context or function()
     return {}
   end
 
-  local isactive = props.is_active ---@type fun(context: eve.ux.nvimbar.IContext): boolean
+  local isactive = props.is_active ---@type fun(context: eve.ux.nvimbar.INvimbarContext): boolean
   local on_fulfilled = props.on_fulfilled or eve.std.fn.noop ---@type fun(result: string): nil
   local validate = props.validate or eve.std.fn.noop ---@type fun(): string|nil
 
@@ -231,7 +203,7 @@ end
 ---@param position                      eve.e.NvimbarCompPosition
 ---@param raw_component                 eve.ux.nvimbar.IRawComponent
 ---@param priority                      ?integer
----@return eve.ux.Nvimbar
+---@return eve.ux.nvimbar.Nvimbar
 function M:place(position, raw_component, priority)
   self:__health__()
 
@@ -302,8 +274,8 @@ end
 ---@param force                         boolean
 ---@return string
 function M:__render__(force)
-  local preset_context = self._get_preset_context() ---@type eve.ux.nvimbar.IPresetContext
-  local context = build_context(preset_context) ---@type eve.ux.nvimbar.IContext
+  local preset_context = self._get_preset_context() ---@type eve.ux.nvimbar.INvimbarPresetContext
+  local context = build_context(preset_context) ---@type eve.ux.nvimbar.INvimbarContext
 
   local sep = self._isactive(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer

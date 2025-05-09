@@ -1,10 +1,10 @@
-local c = require("fml.dressing.nvimbar.components")
+local c = eve.ux.nvimbar.component
 
 local dirtier = eve.status.dirtier_tabline ---@type eve.std.collection.IDirtier
-local position = "f_tl" ---@type eve.ux.nvimbar.Position
+local position = "f_tl" ---@type eve.ux.nvimbar.PositionEnum
 
-local tabline ---@type eve.ux.Nvimbar
-tabline = eve.ux.Nvimbar.new({
+local tabline ---@type eve.ux.nvimbar.Nvimbar
+tabline = eve.ux.nvimbar.Nvimbar.new({
   name = "tabline",
   comp_sep = "",
   comp_sep_hlname = position .. "_bg",
@@ -24,10 +24,10 @@ tabline = eve.ux.Nvimbar.new({
 })
 
 tabline
-  :place("left", c.neotree(position, "left"), 95)
+  :place("left", c.plugin.neotree(position, "left"), 95)
   :place(
     "left",
-    c.sidebar(position, eve.filetype.DIFFVIEW_FILES, function()
+    c.sidebar.of(position, eve.filetype.DIFFVIEW_FILES, function()
       local title = eve.icon.git.Git .. " Git Diffview" ---@type string
       return title
     end),
@@ -35,25 +35,25 @@ tabline
   )
   :place(
     "left",
-    c.sidebar(position, eve.filetype.DAP_UI_SCOPES, function()
+    c.sidebar.of(position, eve.filetype.DAP_UI_SCOPES, function()
       local title = eve.icon.ui.Bug .. " Debug" ---@type string
       return title
     end),
     95
   )
-  :place("left", c.bufs(position), 95)
+  :place("left", c.buf.bufs(position), 95)
   --
-  :place("center", c.debug_render_count(position), 100)
+  :place("center", c.devmode.render_count(position), 100)
   --
-  -- :place("right", c.cwd(position), 100)
-  -- :place("right", c.devmode(position), 100)
+  -- :place("right", c.cwd.cwd(position), 100)
+  -- :place("right", c.devmode.devmode(position), 100)
   :place(
     "right",
-    c.tabs(position),
+    c.nvim.tabs(position),
     100
   )
 --
--- :place("right", c.cwd(position), 100)
+-- :place("right", c.cwd.cwd(position), 100)
 
 ---@return boolean
 local function should_show_tabline()

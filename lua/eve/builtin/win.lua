@@ -30,7 +30,7 @@ local __module_name__ = "eve.builtin.win"
 ---@field public bufnr                  integer
 ---@field public locate_scheduler       eve.std.collection.Scheduler|nil
 ---@field public lsp_symbols            eve.t.ILspSymbol[]|nil
----@field public nvimbar                eve.ux.Nvimbar
+---@field public nvimbar                eve.ux.nvimbar.Nvimbar
 
 ---@class eve.builtin.win.IMeta
 ---@field public history                eve.std.collection.IHistory|nil

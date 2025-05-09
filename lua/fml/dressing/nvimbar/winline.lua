@@ -1,7 +1,7 @@
-local c = require("fml.dressing.nvimbar.components")
+local c = eve.ux.nvimbar.component
 
 local txt = eve.nvim.txt
-local position = "f_wl" ---@type eve.ux.nvimbar.Position
+local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
 
 ---@return boolean
 local function silent()
@@ -11,13 +11,13 @@ end
 
 ---@param winnr                         integer
 ---@param source                        "sourcefile"|"neotree"
----@return eve.ux.Nvimbar|nil
+---@return eve.ux.nvimbar.Nvimbar|nil
 local function resolve_nvimbar(winnr, source)
   local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   local winline = meta ~= nil and meta.winline or nil ---@type eve.builtin.win.IWinline|nil
   if winline == nil or winline.nvimbar:isdisposed() then
-    local nvimbar = nil ---@type eve.ux.Nvimbar|nil
-    nvimbar = eve.ux.Nvimbar.new({
+    local nvimbar = nil ---@type eve.ux.nvimbar.Nvimbar|nil
+    nvimbar = eve.ux.nvimbar.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
       comp_sep_hlname = position .. "_bg",
@@ -59,16 +59,16 @@ local function resolve_nvimbar(winnr, source)
       winline.lsp_symbols = {}
       nvimbar
         ---
-        :place("left", c.dirpath(position), 95)
-        :place("left", c.filename(position), 100)
-        :place("left", c.lsp_symbols(position), 90)
+        :place("left", c.dir.path(position), 95)
+        :place("left", c.file.name(position), 100)
+        :place("left", c.lsp.symbols(position), 90)
         ---
-        :place("center", c.debug_render_count(position), 100)
+        :place("center", c.devmode.render_count(position), 100)
       ---
       -- :place("right", c.dirpath_prominent(position), 100)
     elseif source == "neotree" then
       local is_floating = eve.win.is_float(winnr) ---@type boolean
-      nvimbar:place("center", c.neotree(position, is_floating and "float" or "left"), 100)
+      nvimbar:place("center", c.plugin.neotree(position, is_floating and "float" or "left"), 100)
     else
     end
   end
@@ -123,7 +123,7 @@ local function render(winnr)
 
   if filetype == eve.filetype.NEOTREE then
     if vim.o.showtabline == 0 or eve.win.is_float(winnr) then
-      local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type eve.ux.Nvimbar|nil
+      local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type eve.ux.nvimbar.Nvimbar|nil
       if nvimbar ~= nil then
         nvimbar:render()
       end
@@ -165,7 +165,7 @@ local function render(winnr)
     return
   end
 
-  local nvimbar = resolve_nvimbar(winnr, "sourcefile") ---@type eve.ux.Nvimbar|nil
+  local nvimbar = resolve_nvimbar(winnr, "sourcefile") ---@type eve.ux.nvimbar.Nvimbar|nil
   if nvimbar ~= nil then
     nvimbar:render()
     return

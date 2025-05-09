@@ -11,7 +11,6 @@ local __mods = {
   SelectPopup = "eve.ux.select_popup",
 
   Board = "eve.ux.board",
-  Nvimbar = "eve.ux.nvimbar",
   Picker = "eve.ux.picker",
   Setting = "eve.ux.setting",
   Terminal = "eve.ux.terminal",
@@ -22,6 +21,7 @@ local __mods = {
 ---@field public __mods                 eve.ux.__mods
 ---@field public fn                     eve.ux.fn
 ---@field public view                   eve.ux.view
+---@field public nvimbar                eve.ux.nvimbar
 ---
 ---@field public Search                 eve.ux.Search
 ---@field public SearchContext          eve.ux.SearchContext
@@ -34,7 +34,6 @@ local __mods = {
 ---@field public SelectPopup            eve.ux.SelectPopup
 ---
 ---@field public Board                  eve.ux.Board
----@field public Nvimbar                eve.ux.Nvimbar
 ---@field public Picker                 eve.ux.Picker
 ---@field public Setting                eve.ux.Setting
 ---@field public Terminal               eve.ux.Terminal
@@ -42,6 +41,7 @@ local __mods = {
 local M = setmetatable({
   __mods = __mods,
   fn = require("eve.ux.fn"),
+  nvimbar = require("eve.ux.nvimbar"),
   view = require("eve.ux.view"),
 }, {
   __index = function(t, k)

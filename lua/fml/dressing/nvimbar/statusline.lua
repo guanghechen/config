@@ -1,10 +1,10 @@
-local c = require("fml.dressing.nvimbar.components")
+local c = eve.ux.nvimbar.component
 
 local dirtier = eve.status.dirtier_statusline ---@type eve.std.collection.IDirtier
-local position = "f_sl" ---@type eve.ux.nvimbar.Position
+local position = "f_sl" ---@type eve.ux.nvimbar.PositionEnum
 
-local statusline ---@type eve.ux.Nvimbar
-statusline = eve.ux.Nvimbar.new({
+local statusline ---@type eve.ux.nvimbar.Nvimbar
+statusline = eve.ux.nvimbar.Nvimbar.new({
   name = "statusline",
   comp_sep = "  ",
   comp_sep_hlname = position .. "_bg",
@@ -26,32 +26,31 @@ statusline = eve.ux.Nvimbar.new({
 })
 
 statusline
-  :place("left", c.username(position), 100)
-  :place("left", c.mode(position), 100)
-  :place("left", c.pos(position), 100)
-  :place("left", c.git(position), 100)
-  :place("left", c.readonly(position), 95)
-  :place("left", c.filepath(position))
-  :place("left", c.filesize(position))
-  :place("left", c.filestatus(position))
+  :place("left", c.host.username(position), 100)
+  :place("left", c.nvim.mode(position), 100)
+  :place("left", c.nvim.pos(position), 100)
+  :place("left", c.git.branch(position), 100)
+  :place("left", c.file.readonly(position), 95)
+  :place("left", c.file.path(position))
+  :place("left", c.file.size(position))
+  :place("left", c.file.status(position))
   --
-  :place("center", c.debug_render_count(position), 100)
-  :place("center", c.widget(position), 100)
+  :place("center", c.devmode.render_count(position), 100)
+  :place("center", c.widget.flags(position), 100)
   --
-  :place("right", c.cwd(position), 100)
-  :place("right", c.fileformat(position), 95)
-  :place("right", c.fileindent(position), 95)
-  :place("right", c.encoding(position), 100)
-  :place("right", c.filetype(position), 95)
-  :place("right", c.python_env(position), 100)
-  :place("right", c.lsp(position), 100)
-  :place("right", c.ai(position), 95)
-  -- :place("right", c.copilot(position), 95)
-  :place("right", c.diagnostics(position), 95)
-  :place("right", c.msg_mode(position), 95)
-  :place("right", c.msg_command(position), 80)
-  :place("right", c.msg_changes(position), 85)
-  :place("right", c.msg_lsp(position), 90)
+  :place("right", c.cwd.cwd(position), 100)
+  :place("right", c.file.format(position), 95)
+  :place("right", c.file.indent(position), 95)
+  :place("right", c.file.encoding(position), 100)
+  :place("right", c.file.type(position), 95)
+  :place("right", c.python.env(position), 100)
+  :place("right", c.lsp.client(position), 100)
+  :place("right", c.ai.provider(position), 95)
+  :place("right", c.lsp.diagnostics(position), 95)
+  :place("right", c.nvim.msg_mode(position), 95)
+  :place("right", c.nvim.msg_command(position), 80)
+  :place("right", c.nvim.msg_changes(position), 85)
+  :place("right", c.nvim.msg_lsp(position), 90)
 
 dirtier:subscribe(eve.std.Subscriber.new({
   on_next = function()

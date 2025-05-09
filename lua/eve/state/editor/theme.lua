@@ -185,10 +185,6 @@ function M.apply_theme(params)
               fg = hlgroup.fg,
               bg = nvimbar_hlgroup_map.f_wl_bufc.bg,
             }
-
-            additional["f_sl_filename_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_filename.bg }
-            additional["f_tl_filename_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_filename.bg }
-            additional["f_wl_filename_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_filename.bg }
           end
         end
 
