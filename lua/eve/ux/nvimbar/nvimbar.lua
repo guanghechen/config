@@ -3,8 +3,10 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@class eve.ux.nvimbar.INvimbarPresetContext
 ---@field public winnr                  ?integer
 
+---@alias eve.ux.nvimbar.IGetNvimbarPresetContext
+---| fun(): eve.ux.nvimbar.INvimbarPresetContext|nil
+
 ---@class eve.ux.nvimbar.INvimbarContext
----@field public tabnr                  integer
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public cwd                    string
@@ -26,10 +28,10 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field public comp_sep               string
 ---@field public comp_sep_hlname        string
 ---@field public comp_sep_hlname_active string
----@field public delay           ?integer
+---@field public delay                  ?integer
 ---@field public silent                 ?fun(): boolean
 ---@field public get_max_width          fun(): integer
----@field public get_preset_context     ?fun(): eve.ux.nvimbar.INvimbarPresetContext
+---@field public get_preset_context     ?eve.ux.nvimbar.IGetNvimbarPresetContext
 ---@field public is_active              fun(context: eve.ux.nvimbar.INvimbarContext): boolean
 ---@field public on_fulfilled           ?fun(result: string): nil
 ---@field public validate               ?fun(): string|nil
@@ -45,8 +47,8 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field protected _orders             integer[]
 ---@field protected _scheduler          eve.std.collection.Scheduler
 ---@field protected _get_max_width      fun(): integer
----@field protected _get_preset_context fun(): eve.ux.nvimbar.INvimbarPresetContext
----@field protected _isactive          fun(context: eve.ux.nvimbar.INvimbarContext): boolean
+---@field protected _get_preset_context eve.ux.nvimbar.IGetNvimbarPresetContext
+---@field protected _isactive           fun(context: eve.ux.nvimbar.INvimbarContext): boolean
 local M = {}
 M.__index = M
 
@@ -54,8 +56,7 @@ M.__index = M
 ---@return eve.ux.nvimbar.INvimbarContext
 local function build_context(preset_context)
   local mode, mode_name = eve.constant.hlgroup.common.resolve_mode()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr = preset_context.winnr or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+  local winnr = preset_context.winnr or vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local cwd = eve.path.cwd() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
@@ -68,7 +69,6 @@ local function build_context(preset_context)
 
   ---@type eve.ux.nvimbar.INvimbarContext
   local context = {
-    tabnr = tabnr,
     winnr = winnr,
     bufnr = bufnr,
     cwd = cwd,
@@ -95,11 +95,7 @@ function M.new(props)
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
   local value = eve.std.Observable.from_value("") ---@type eve.std.collection.Observable
-
-  ---@type fun(): eve.ux.nvimbar.INvimbarPresetContext
-  local get_preset_context = props.get_preset_context or function()
-    return {}
-  end
+  local get_preset_context = props.get_preset_context or eve.std.fn.noop ---@type eve.ux.nvimbar.IGetNvimbarPresetContext
 
   local isactive = props.is_active ---@type fun(context: eve.ux.nvimbar.INvimbarContext): boolean
   local on_fulfilled = props.on_fulfilled or eve.std.fn.noop ---@type fun(result: string): nil
@@ -274,9 +270,8 @@ end
 ---@param force                         boolean
 ---@return string
 function M:__render__(force)
-  local preset_context = self._get_preset_context() ---@type eve.ux.nvimbar.INvimbarPresetContext
+  local preset_context = self._get_preset_context() or {} ---@type eve.ux.nvimbar.INvimbarPresetContext
   local context = build_context(preset_context) ---@type eve.ux.nvimbar.INvimbarContext
-
   local sep = self._isactive(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer
   local width_full = self._get_max_width() ---@type integer

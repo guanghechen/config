@@ -120,7 +120,8 @@ function M.name(position)
     name = "file:name",
     atomic = true,
     render = function(context)
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(context.tabnr) ---@type integer|nil
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       local is_mod = vim.bo[context.bufnr].modified ---@type boolean
       local text_mod = is_mod and " " or "" ---@type string
       if context.winnr ~= winnr_sourcefile then
