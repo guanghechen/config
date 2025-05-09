@@ -20,8 +20,8 @@ local function resolve_nvimbar(winnr, source)
     nvimbar = eve.ux.nvimbar.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
-      comp_sep_hlname = position .. "_bg",
-      comp_sep_hlname_active = position .. "_bg",
+      comp_sep_hlname = "f_wl_bg",
+      comp_sep_hlname_active = "f_wl_bg",
       delay = 128,
       silent = silent,
       get_max_width = function()
@@ -33,9 +33,8 @@ local function resolve_nvimbar(winnr, source)
       get_preset_context = function()
         return { winnr = winnr }
       end,
-      is_active = function(context)
-        local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-        return winnr_cur > 0 and winnr_cur == context.winnr
+      is_active = function()
+        return winnr == vim.api.nvim_get_current_win()
       end,
       on_fulfilled = function(result)
         if vim.api.nvim_win_is_valid(winnr) then

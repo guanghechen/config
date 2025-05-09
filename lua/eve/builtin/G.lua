@@ -5,6 +5,8 @@ local gfn = {} ---@type table<string, fun(...): nil>
 local M = {}
 setmetatable(M, { __index = gfn })
 
+M.noop = eve.std.fn.noop
+
 ---@param fn                       fun(...): nil
 ---@return string
 function M.register_anonymous_fn(fn)
@@ -15,3 +17,4 @@ function M.register_anonymous_fn(fn)
 end
 
 return M
+

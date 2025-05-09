@@ -10,6 +10,7 @@ local __mods = {
   host = "eve.ux.nvimbar.component.host",
   lsp = "eve.ux.nvimbar.component.lsp",
   nvim = "eve.ux.nvimbar.component.nvim",
+  picker = "eve.ux.nvimbar.component.picker",
   plugin = "eve.ux.nvimbar.component.plugin",
   python = "eve.ux.nvimbar.component.python",
   sidebar = "eve.ux.nvimbar.component.sidebar",
@@ -29,6 +30,7 @@ local __mods = {
 ---@field public host                   eve.ux.nvimbar.component.host
 ---@field public lsp                    eve.ux.nvimbar.component.lsp
 ---@field public nvim                   eve.ux.nvimbar.component.nvim
+---@field public picker                 eve.ux.nvimbar.component.picker
 ---@field public plugin                 eve.ux.nvimbar.component.plugin
 ---@field public python                 eve.ux.nvimbar.component.python
 ---@field public sidebar                eve.ux.nvimbar.component.sidebar

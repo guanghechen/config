@@ -53,10 +53,14 @@ local M = {}
 M.__index = M
 
 ---@param preset_context                eve.ux.nvimbar.INvimbarPresetContext
----@return eve.ux.nvimbar.INvimbarContext
+---@return eve.ux.nvimbar.INvimbarContext|nil
 local function build_context(preset_context)
+  local winnr = preset_context.winnr ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return nil
+  end
+
   local mode, mode_name = eve.constant.hlgroup.common.resolve_mode()
-  local winnr = preset_context.winnr or vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local cwd = eve.path.cwd() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
@@ -95,7 +99,16 @@ function M.new(props)
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
   local value = eve.std.Observable.from_value("") ---@type eve.std.collection.Observable
-  local get_preset_context = props.get_preset_context or eve.std.fn.noop ---@type eve.ux.nvimbar.IGetNvimbarPresetContext
+
+  ---@type eve.ux.nvimbar.IGetNvimbarPresetContext
+  local get_preset_context = props.get_preset_context
+    or function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      ---@type eve.ux.nvimbar.INvimbarPresetContext
+      return {
+        winnr = winnr,
+      }
+    end
 
   local isactive = props.is_active ---@type fun(context: eve.ux.nvimbar.INvimbarContext): boolean
   local on_fulfilled = props.on_fulfilled or eve.std.fn.noop ---@type fun(result: string): nil
@@ -121,7 +134,12 @@ function M.new(props)
       local last_result = scheduler:snapshot() ---@type string|nil
 
       ---@diagnostic disable-next-line: invisible
-      local result = self:__render__(false) ---@type string
+      local result = self:__render__(false) ---@type string|nil
+      if result == nil then
+        callback(false)
+        return
+      end
+
       callback(true, result)
 
       --- Trigger rerender need called after the callback executed,
@@ -187,9 +205,12 @@ function M:render(immediate)
   self:__health__()
 
   if immediate then
-    local result = self:__render__(false) ---@type string
-    self._value:next(result)
-    return result
+    local result = self:__render__(false) ---@type string|nil
+    if result ~= nil then
+      self._value:next(result)
+      return result
+    end
+    return self._scheduler:snapshot() or ""
   end
 
   self._scheduler:schedule()
@@ -268,10 +289,14 @@ end
 
 ---@protected
 ---@param force                         boolean
----@return string
+---@return string|nil
 function M:__render__(force)
   local preset_context = self._get_preset_context() or {} ---@type eve.ux.nvimbar.INvimbarPresetContext
-  local context = build_context(preset_context) ---@type eve.ux.nvimbar.INvimbarContext
+  local context = build_context(preset_context) ---@type eve.ux.nvimbar.INvimbarContext|nil
+  if context == nil then
+    return nil
+  end
+
   local sep = self._isactive(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer
   local width_full = self._get_max_width() ---@type integer

@@ -1,6 +1,9 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "eve.ux.picker" ---@type string
 
+local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
+local c = eve.ux.nvimbar.component
+
 ---@alias eve.ux.picker.PaneEnum
 ---| "finder"
 ---| "preview"
@@ -27,11 +30,18 @@ local __module_name__ = "eve.ux.picker" ---@type string
 ---@alias eve.ux.picker.ICheckKeymapDisabled
 ---| fun(self: eve.ux.Picker): boolean
 
+---@class eve.ux.picker.IInternalFlagItem
+---@field public type                   "enum"|"boolean"
+---@field public desc                   string
+---@field public callback_fn            string
+---@field public callback               fun(): nil
+---@field public snapshot               fun(): boolean, string
+
 ---@class eve.ux.picker.IFlagItem
 ---@field public type                   "enum"|"boolean"
 ---@field public desc                   string
 ---@field public callback               fun(self: eve.ux.Picker): nil
----@field public snapshot               fun(self: eve.ux.Picker): string
+---@field public snapshot               fun(self: eve.ux.Picker): boolean, string
 
 ---@class eve.ux.picker.IInternalKeymap
 ---@field public mode                   eve.e.VimMode
@@ -702,7 +712,7 @@ local __winopts__ = {
 ---@field protected _augroup_CursorMoved integer
 ---@field protected _pane_focused       eve.ux.picker.PaneEnum
 ---@field protected _pane_last_focused  eve.ux.picker.PaneEnum
----@field protected _flags              eve.ux.picker.IFlagItem[]
+---@field protected _flags              eve.ux.picker.IInternalFlagItem[]
 ---@field protected _flags_start_index  0|1
 ---
 ---@field protected _scheduler_finder   eve.std.collection.Scheduler
@@ -724,6 +734,7 @@ local __winopts__ = {
 ---@field protected _result_winopts     eve.ux.picker.IWinOptions
 ---@field protected _result_lnum        eve.std.collection.Observable
 ---@field protected _result_total       eve.std.collection.Observable
+---@field protected _result_nvimbar     eve.ux.nvimbar.Nvimbar
 ---@field protected _result_render      eve.ux.picker.IResultRender
 ---
 ---@field protected _preview_bufnr      integer|nil
@@ -749,7 +760,7 @@ function M.new(props)
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
   local permanent = not not props.permanent ---@type boolean
-  local flags = vim.list_slice(props.flags or {}) ---@type eve.ux.picker.IFlagItem[]
+  local flags = {} ---@type eve.ux.picker.IInternalFlagItem[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
   local augroup_CursorMoved = eve.nvim.augroup(string.format("picker:CursorMoved%s#%s", name, uuid))
 
@@ -779,6 +790,37 @@ function M.new(props)
   local on_finder_change = props.on_finder_change ---@type eve.ux.picker.IOnFinderChange
 
   local self = setmetatable({}, M)
+
+  if props.flags ~= nil and #props.flags > 0 then
+    for _, flag in ipairs(props.flags) do
+      local raw_callback = flag.callback ---@type fun(self: eve.ux.Picker): nil
+      local raw_snapshot = flag.snapshot ---@type fun(self: eve.ux.Picker): boolean, string
+
+      ---@return nil
+      local function callback()
+        raw_callback(self)
+      end
+
+      ---@return boolean
+      ---@return string
+      local function snapshot()
+        return raw_snapshot(self)
+      end
+
+      local callback_fn = eve.G.register_anonymous_fn(callback) or "eve.G.noop" ---@type string
+
+      ---@type eve.ux.picker.IInternalFlagItem
+      local item = {
+        type = flag.type,
+        desc = flag.desc,
+        callback = callback,
+        callback_fn = callback_fn,
+        snapshot = snapshot,
+      }
+      flags[#flags + 1] = item
+    end
+  end
+
   self.uuid = uuid
   self.name = name
   self.nsnr = nsnr
@@ -821,6 +863,39 @@ function M.new(props)
   self._finder_keymaps = self:__resolve_finder__keymaps__(finder_keymaps)
   self._result_keymaps = self:__resolve_result__keymaps__(result_keymaps)
   self._preview_keymaps = self:__resolve_preview__keymaps__(preview_keymaps)
+
+  self._result_nvimbar = eve.ux.nvimbar.Nvimbar
+    .new({
+      name = string.format("picker:result:%s", name),
+      comp_sep = "",
+      comp_sep_hlname = "f_wl_bg",
+      comp_sep_hlname_active = "f_wl_bg",
+      delay = 128,
+      silent = eve.std.fn.falsy,
+      get_max_width = function()
+        local winnr = self._result_winnr ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          return vim.api.nvim_win_get_width(winnr)
+        end
+        return 0
+      end,
+      get_preset_context = function()
+        local winnr = self._result_winnr ---@type integer|nil
+        return { winnr = winnr }
+      end,
+      is_active = function()
+        local winnr = self._result_winnr ---@type integer|nil
+        return winnr == vim.api.nvim_get_current_win()
+      end,
+      on_fulfilled = function(result)
+        local winnr = self._result_winnr ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          vim.wo[winnr].winbar = result
+        end
+      end,
+    })
+    :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
+    :place("right", c.picker.result_pos(position, result_lnum, result_total), 100)
 
   ---@type eve.std.collection.Scheduler
   self._scheduler_finder = eve.std.Scheduler.new({
@@ -955,6 +1030,7 @@ function M.new(props)
   result_lnum:subscribe(
     eve.std.Subscriber.new({
       on_next = function(lnum)
+        self._result_nvimbar:render()
         self._scheduler_finder:schedule()
         if self._scheduler_preview ~= nil then
           self._scheduler_preview:schedule()
@@ -973,6 +1049,7 @@ function M.new(props)
   result_total:subscribe(
     eve.std.Subscriber.new({
       on_next = function(total)
+        self._result_nvimbar:render()
         self._scheduler_finder:schedule()
         if self._scheduler_preview ~= nil then
           self._scheduler_preview:schedule()
@@ -1055,6 +1132,7 @@ function M:dispose()
   self._finder_line_count:dispose()
   self._result_total:dispose()
   self._result_lnum:dispose()
+  self._result_nvimbar:dispose()
 
   self._finder_bufnr = nil
   self._finder_winnr = nil
@@ -1071,6 +1149,7 @@ function M:dispose()
   self._result_winopts = nil
   self._result_lnum = nil
   self._result_total = nil
+  self._result_nvimbar = nil
   self._result_render = nil
 
   self._preview_bufnr = nil
@@ -1136,6 +1215,11 @@ function M:resize()
   end
 
   local has_new_created, finder_winnr, result_winnr, preview_winnr = self:__create_wins__() ---@type boolean, integer, integer, integer|nil
+  if has_new_created then
+    self:__focus_pane__("finder")
+    return
+  end
+
   local finder_position, result_position, preview_position = self:__resize__() ---@type eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition|nil
 
   local finder_wincfg = vim.api.nvim_win_get_config(finder_winnr) ---@type vim.api.keyset.win_config
@@ -1143,12 +1227,15 @@ function M:resize()
   finder_wincfg.col = finder_position.col
   finder_wincfg.width = finder_position.width
   finder_wincfg.height = finder_position.height
+  vim.api.nvim_win_set_config(finder_winnr, finder_wincfg)
 
   local result_wincfg = vim.api.nvim_win_get_config(result_winnr) ---@type vim.api.keyset.win_config
   result_wincfg.row = result_position.row
   result_wincfg.col = result_position.col
   result_wincfg.width = result_position.width
   result_wincfg.height = result_position.height
+  vim.api.nvim_win_set_config(result_winnr, result_wincfg)
+  vim.wo[result_winnr].winbar = self._result_nvimbar:snapshot()
 
   if preview_winnr ~= nil and preview_position ~= nil then
     local preview_wincfg = vim.api.nvim_win_get_config(preview_winnr) ---@type vim.api.keyset.win_config
@@ -1156,10 +1243,7 @@ function M:resize()
     preview_wincfg.col = preview_position.col
     preview_wincfg.width = preview_position.width
     preview_wincfg.height = preview_position.height
-  end
-
-  if has_new_created then
-    self:__focus_pane__("finder")
+    vim.api.nvim_win_set_config(preview_winnr, preview_wincfg)
   end
 end
 
@@ -1245,6 +1329,12 @@ end
 function M:mark_result_dirty()
   self:__health__()
   self._scheduler_result:schedule()
+end
+
+---@return nil
+function M:mark_result_flags_dirty()
+  self:__health__()
+  self._result_nvimbar:render()
 end
 
 ---@param content                       string
@@ -1556,6 +1646,7 @@ function M:__create_wins__()
     vim.wo[result_winnr].winfixbuf = true
   end
   vim.wo[result_winnr].cursorline = self._result_total:snapshot() > 0
+  vim.wo[result_winnr].winbar = self._result_nvimbar:snapshot()
 
   if should_show_preview then
     ---@cast preview_bufnr              integer
@@ -1735,9 +1826,7 @@ function M:__resolve_common__keymaps__()
       modes = { "n" },
       key = string.format("<leader>%d", index),
       desc = item.desc,
-      callback = function(picker)
-        item.callback(picker)
-      end,
+      callback = item.callback,
     }
     keymaps[#keymaps + 1] = keymap
     index = index + 1
