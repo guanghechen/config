@@ -652,8 +652,13 @@ function M.new(props)
     callback = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if winnr == self._result_winnr then
-        local row = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-        result_lnum:next(row)
+        local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+        local row = cursor[1] ---@type integer
+        if cursor[2] ~= 0 then
+          vim.api.nvim_win_set_cursor(winnr, { row, 0 })
+        else
+          result_lnum:next(row)
+        end
       end
     end,
   })
