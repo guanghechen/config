@@ -239,7 +239,7 @@ function M:destroy()
 end
 
 ---@return nil
-function M:show()
+function M:focus()
   local winnr = self:create_win_as_needed()
   local index = self._item_index_present ---@type integer
   vim.api.nvim_win_set_cursor(winnr, { index, 0 })

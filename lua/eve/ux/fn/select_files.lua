@@ -85,7 +85,7 @@ local function select_files(params)
     title = title,
   })
 
-  widget:show()
+  widget:focus()
   return widget
 end
 

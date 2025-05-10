@@ -10,7 +10,6 @@
 ---@field public mark_data_dirty        fun(self: eve.ux.IFileSelect): nil
 ---@field public mark_item_deleted      fun(self: eve.ux.IFileSelect, uuid: string): nil
 ---@field public reset_input            fun(self: eve.ux.IFileSelect, text: string): nil
----@field public show                   fun(self: eve.ux.IFileSelect): nil
 ---@field public toggle                 fun(self: eve.ux.IFileSelect): nil
 
 ---@alias eve.ux.select_file.IFetchData
@@ -369,10 +368,28 @@ function M:focus()
   select:focus()
 end
 
----@return boolean
-function M:focused()
+---@return nil
+function M:hide()
   local select = self._get_select() ---@type eve.ux.ISelect
-  return select:focused()
+  select:hide()
+end
+
+---@return boolean
+function M:isdisposed()
+  local select = self._get_select() ---@type eve.ux.ISelect
+  return select:isdisposed()
+end
+
+---@return boolean
+function M:isfocused()
+  local select = self._get_select() ---@type eve.ux.ISelect
+  return select:isfocused()
+end
+
+---@return boolean
+function M:isvisible()
+  local select = self._get_select() ---@type eve.ux.ISelect
+  return select:isvisible()
 end
 
 ---@param uuid                          string
@@ -437,9 +454,9 @@ function M.make_items_by_filepaths(cwd, filepaths)
 end
 
 ---@return nil
-function M:show()
+function M:resize()
   local select = self._get_select() ---@type eve.ux.ISelect
-  select:show()
+  select:resize()
 end
 
 ---@return nil

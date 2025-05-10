@@ -169,7 +169,7 @@ local function create_jump_or_list(title, method, additional_params)
 
           if select ~= nil then
             select:mark_data_dirty()
-            select:show()
+            select:focus()
           end
         end
       end

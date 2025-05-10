@@ -201,7 +201,7 @@ local M = {}
 ---@return nil
 function M.history()
   local select = get_history_select() ---@type eve.ux.ISelect
-  select:show()
+  select:focus()
 end
 
 ---@return nil

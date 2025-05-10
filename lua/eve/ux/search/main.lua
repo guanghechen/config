@@ -1,7 +1,7 @@
 local __module_name__ = "eve.ux.search.main" ---@type string
 
 ---@class eve.ux.SearchMain
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _scheduler          eve.std.collection.Scheduler
 local M = {}
@@ -10,7 +10,7 @@ M.__index = M
 ---@class eve.ux.ISearchMainProps
 ---@field public delay_render           integer
 ---@field public keymaps                eve.t.IKeymap[]
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field public on_rendered            ?eve.ux.search.IOnMainRendered
 
 ---@param props                         eve.ux.ISearchMainProps
@@ -20,7 +20,7 @@ function M.new(props)
 
   local delay_render = props.delay_render ---@type integer
   local keymaps = props.keymaps ---@type eve.t.IKeymap[]
-  local context = props.context ---@type eve.ux.ISearchContext
+  local context = props.context ---@type eve.ux.SearchContext
   local on_rendered = props.on_rendered ---@type eve.ux.search.IOnMainRendered|nil
 
   local _last_items = nil ---@type eve.ux.search.IItem[]|nil
@@ -93,8 +93,7 @@ function M.new(props)
     eve.std.Subscriber.new({
       on_next = function()
         local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
-        local status = context.status:snapshot() ---@type eve.e.WidgetStatus
-        local visible = status == "visible" ---@type boolean
+        local visible = context:isvisible() ---@type boolean
         if visible and is_main_dirty then
           scheduler:schedule()
         end
@@ -109,7 +108,7 @@ end
 ---@return integer
 ---@return boolean
 function M:create_buf_as_needed()
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   if context.bufnr_main ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_main) then
     return context.bufnr_main, false
   end
@@ -129,7 +128,7 @@ end
 
 ---@return nil
 function M:dispose()
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   local bufnr = context.bufnr_main ---@type integer|nil
   context.bufnr_main = nil
 

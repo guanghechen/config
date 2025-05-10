@@ -359,6 +359,7 @@
     "isactive",
     "isdirectory",
     "isdisposed",
+    "isfocused",
     "islist",
     "isort",
     "isvisible",

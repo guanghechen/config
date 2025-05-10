@@ -14,7 +14,7 @@ local __module_name__ = "eve.ux.search.preview" ---@type string
 ---@field public col                    ?integer
 
 ---@class eve.ux.SearchPreview
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field public get_current_location   fun(): integer|nil, integer|nil
 ---@field protected _keymaps            eve.t.IKeymap[]
 ---@field protected _scheduler          eve.std.collection.Scheduler
@@ -26,7 +26,7 @@ M.__index = M
 ---@field public fetch_data             eve.ux.search.IFetchPreviewData
 ---@field public keymaps                eve.t.IKeymap[]
 ---@field public patch_data             ?eve.ux.search.IPatchPreviewData
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field public on_rendered            ?eve.ux.search.IOnPreviewRendered
 ---@field public update_win_config      fun(opts: eve.ux.ISearchPreviewWinOpts): nil
 
@@ -39,7 +39,7 @@ function M.new(props)
   local _fetch_data = props.fetch_data ---@type eve.ux.search.IFetchPreviewData
   local _patch_data = props.patch_data ---@type eve.ux.search.IPatchPreviewData|nil
   local keymaps = props.keymaps ---@type eve.t.IKeymap[]
-  local context = props.context ---@type eve.ux.ISearchContext
+  local context = props.context ---@type eve.ux.SearchContext
   local on_rendered = props.on_rendered ---@type eve.ux.search.IOnMainRendered|nil
   local _update_win_config = props.update_win_config ---@type fun(opts: eve.ux.ISearchPreviewWinOpts): nil
 
@@ -167,8 +167,7 @@ function M.new(props)
     eve.std.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
-        local status = context.status:snapshot() ---@type eve.e.WidgetStatus
-        local visible = status == "visible" ---@type boolean
+        local visible = context:isvisible() ---@type boolean
         if visible and is_preview_dirty then
           scheduler:schedule()
         end
@@ -181,7 +180,7 @@ end
 
 ---@return integer
 function M:create_buf_as_needed()
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   if context.bufnr_preview ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_preview) then
     return context.bufnr_preview
   end
@@ -201,7 +200,7 @@ end
 
 ---@return nil
 function M:dispose()
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   local bufnr = context.bufnr_preview ---@type integer|nil
   context.bufnr_preview = nil
 

@@ -22,7 +22,7 @@ function M.backward()
   local is_bottom = false ---@type boolean
   while not is_bottom do
     widget, is_bottom = M.history:backward()
-    if widget ~= nil and not equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
+    if widget ~= nil and not widget:isdisposed() and not equals(widget, present) then
       present:hide()
       widget:focus()
       break
@@ -41,7 +41,7 @@ function M.forward()
   local is_top = false ---@type boolean
   while not is_top do
     widget, is_top = M.history:forward() ---@type eve.t.ux.IWidget|nil, boolean
-    if widget ~= nil and not equals(widget, present) and widget:status() ~= "closed" and not widget:focused() then
+    if widget ~= nil and not widget:isdisposed() and not equals(widget, present) then
       present:hide()
       widget:focus()
       break
@@ -49,17 +49,10 @@ function M.forward()
   end
 end
 
----@return nil
-function M.close_present()
-  local widget = M.get_widget_current() ---@type eve.t.ux.IWidget|nil
-  if widget ~= nil and widget:status() == "visible" then
-    widget:close()
-  end
-end
-
 ---@param widget                        eve.t.ux.IWidget
 ---@return eve.t.IKeymap[]
 function M.get_keymaps(widget)
+  ---@return nil
   local function on_close()
     widget:close()
 
@@ -112,13 +105,13 @@ end
 ---@return integer|nil
 function M.get_widget_current()
   local present, present_index = M.history:present() ---@type eve.t.ux.IWidget|nil
-  if present ~= nil and present:status() ~= "closed" then
+  if present ~= nil and not present:isdisposed() then
     return present, present_index
   end
 
   for index = present_index - 1, 1, -1 do
     local widget = M.history:at(index) ---@type eve.t.ux.IWidget|nil
-    if widget ~= nil and widget:status() ~= "closed" then
+    if widget ~= nil and not widget:isdisposed() then
       M.history:go(index)
       return widget, index
     end
@@ -130,13 +123,13 @@ end
 ---@return integer|nil
 function M.get_widget_visible()
   local present, present_index = M.history:present() ---@type eve.t.ux.IWidget|nil, integer
-  if present ~= nil and present:status() == "visible" then
+  if present ~= nil and present:isvisible() then
     return present, present_index
   end
 
   for index = M.history:size(), 1, -1 do
     local widget = M.history:at(index) ---@type eve.t.ux.IWidget|nil
-    if widget ~= nil and widget:status() == "visible" then
+    if widget ~= nil and widget:isvisible() then
       M.history:go(index)
       return widget, index
     end
@@ -146,31 +139,27 @@ end
 
 ---@param widget                        eve.t.ux.IWidget
 ---@return nil
-function M.open(widget)
+function M.push(widget)
   local present = M.get_widget_current() ---@type eve.t.ux.IWidget|nil
   if present == nil then
     M.history:push(widget)
-    widget:focus()
     return
   end
 
   if not equals(present, widget) then
     if M.history:size() == M.history:capacity() then
       local bottom_widget = M.history:bottom() ---@type eve.t.ux.IWidget
-      bottom_widget:close()
+      bottom_widget:hide()
     end
     M.history:push(widget)
-
     present:hide()
   end
-  widget:focus()
 end
 
 ---@return nil
 function M.resize()
   for widget in M.history:iterator() do
-    local status = widget:status() ---@type eve.e.WidgetStatus
-    if status ~= "closed" then
+    if widget:isvisible() then
       widget:resize()
     end
   end
@@ -180,7 +169,7 @@ end
 function M.resume()
   local present = M.get_widget_current() ---@type eve.t.ux.IWidget|nil
   if present ~= nil then
-    if present:focused() then
+    if present:isfocused() then
       present:hide()
     else
       present:focus()
@@ -196,47 +185,37 @@ function M.wrap(raw_widget)
 
   local close = raw_widget.close
   local focus = raw_widget.focus
-  local focused = raw_widget.focused
   local hide = raw_widget.hide
+  local isdisposed = raw_widget.isdisposed
+  local isfocused = raw_widget.isfocused
+  local isvisible = raw_widget.isvisible
   local resize = raw_widget.resize
-  local status = raw_widget.status
 
   ---@type eve.t.ux.IWidget
   widget = {
     name = raw_widget.name,
+    statusline_items = raw_widget.statusline_items,
     close = function()
       close(widget)
     end,
     focus = function()
-      local present = M.get_widget_current() ---@type eve.t.ux.IWidget|nil
-      if present == nil then
-        M.history:push(widget)
-        focus(widget)
-        return
-      end
-
-      if not equals(present, widget) then
-        if M.history:size() == M.history:capacity() then
-          local bottom_widget = M.history:bottom() ---@type eve.t.ux.IWidget
-          bottom_widget:close()
-        end
-        M.history:push(widget)
-
-        present:hide()
-      end
       focus(widget)
-    end,
-    focused = function()
-      return focused(widget)
+      M.push(widget)
     end,
     hide = function()
       hide(widget)
     end,
+    isdisposed = function()
+      return isdisposed(widget)
+    end,
+    isfocused = function()
+      return isfocused(widget)
+    end,
+    isvisible = function()
+      return isvisible(widget)
+    end,
     resize = function()
       resize(widget)
-    end,
-    status = function()
-      return status(widget)
     end,
   }
   return widget

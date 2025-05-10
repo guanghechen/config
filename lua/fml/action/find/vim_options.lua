@@ -90,7 +90,7 @@ local select = eve.ux.Select.new({
   title = "Find Vim Options",
   on_confirm = function(widget, items)
     if #items == 1 then
-      widget:hide()
+      widget:close()
       local item = items[1] ---@type eve.ux.select.IItem
       local data = item.data ---@type fml.action.find.vim_options.IItemData
       local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
@@ -104,7 +104,7 @@ local M = {}
 
 ---@return nil
 function M.find_vim_options()
-  select:show()
+  select:focus()
 end
 
 return M

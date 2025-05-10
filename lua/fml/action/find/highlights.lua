@@ -146,7 +146,7 @@ local select = eve.ux.Select.new({
   title = "Find Highlights",
   on_confirm = function(widget, items)
     if #items == 1 then
-      widget:hide()
+      widget:close()
       local item = items[1] ---@type eve.ux.select.IItem
       vim.fn.setreg("+", item.text)
     end
@@ -158,7 +158,7 @@ local M = {}
 
 ---@return nil
 function M.find_highlights()
-  select:show()
+  select:focus()
 end
 
 return M

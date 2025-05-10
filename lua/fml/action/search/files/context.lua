@@ -259,7 +259,7 @@ function M.get_search()
     local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
     local title = gen_title() ---@type string
 
-    ---@type eve.ux.ISearchContext
+    ---@type eve.ux.SearchContext
     local context = eve.ux.SearchContext.new({
       delay_fetch = 512,
       dimension = {
@@ -314,13 +314,6 @@ function M.get_search()
     })
   end
   return _search
-end
-
----@return nil
-function M.hide()
-  if _search ~= nil then
-    _search:hide()
-  end
 end
 
 ---@param uuid                          string

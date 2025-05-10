@@ -274,7 +274,7 @@ local function get_select()
       provider = provider,
       title = "Find python venv",
       on_confirm = function(widget, items)
-        widget:hide()
+        widget:close()
 
         if #items == 1 then
           local item = items[1]
@@ -292,7 +292,7 @@ local M = {}
 ---@return nil
 function M.activate_venv()
   local select = get_select()
-  select:show()
+  select:focus()
 end
 
 return M

@@ -209,7 +209,7 @@ local select = eve.ux.Select.new({
   provider = provider,
   title = "Find buffers",
   on_confirm = function(widget, items)
-    widget:hide()
+    widget:close()
 
     if #items > 0 then
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -244,19 +244,19 @@ local M = {}
 ---@return nil
 function M.find_bufs()
   eve.state.select.find_buffer_scope:next("A")
-  select:show()
+  select:focus()
 end
 
 ---@return nil
 function M.find_bufs_file()
   eve.state.select.find_buffer_scope:next("F")
-  select:show()
+  select:focus()
 end
 
 ---@return nil
 function M.find_bufs_term()
   eve.state.select.find_buffer_scope:next("T")
-  select:show()
+  select:focus()
 end
 
 return M

@@ -96,7 +96,7 @@ select = eve.ux.Select.new({
     end
   end,
   on_confirm = function(widget, items)
-    widget:hide()
+    widget:close()
     for _, item in ipairs(items) do
       local task = item.data ---@type eve.builtin.notifier.ITask
       eve.notifier.notify({
@@ -118,7 +118,7 @@ local M = {}
 
 ---@return nil
 function M.find_notifications()
-  select:show()
+  select:focus()
 end
 
 return M

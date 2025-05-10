@@ -50,12 +50,12 @@ local runners = {
         })
         code_runner_terminals.mjs = terminal
 
-        terminal:show()
+        terminal:focus()
         eve.std.timer.set_timeout(function()
           handle(terminal)
         end, 1500)
       else
-        terminal:show()
+        terminal:focus()
         eve.std.timer.set_timeout(function()
           handle(terminal)
         end, 100)

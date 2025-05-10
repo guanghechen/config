@@ -431,13 +431,13 @@ local M = {}
 
 ---@return nil
 function M.find_files()
-  select:show()
+  select:focus()
 end
 
 ---@return nil
 function M.find_files_cwd()
   eve.state.select.find_file_scope:next("C")
-  select:show()
+  select:focus()
 end
 
 ---@param specified_filepath            string|nil
@@ -457,13 +457,13 @@ function M.find_files_directory(specified_filepath)
   end
   eve.state.select.find_file_scope:next("D", { silent = silent })
   eve.status.dirtier_statusline:mark_dirty()
-  select:show()
+  select:focus()
 end
 
 ---@return nil
 function M.find_files_workspace()
   eve.state.select.find_file_scope:next("W")
-  select:show()
+  select:focus()
 end
 
 return M

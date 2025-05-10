@@ -140,7 +140,7 @@ local function select_encoding(params)
     end,
   })
 
-  select:show()
+  select:focus()
   return select
 end
 

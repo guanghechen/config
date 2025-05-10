@@ -83,7 +83,7 @@ function M.select(items, opts, on_choice)
     end,
   })
 
-  _selector:show()
+  _selector:focus()
 end
 
 local original_select = vim.ui.select

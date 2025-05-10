@@ -70,7 +70,7 @@ local function select(params)
     on_confirm = on_confirm,
   })
 
-  widget:show()
+  widget:focus()
   return widget
 end
 

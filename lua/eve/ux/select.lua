@@ -1,7 +1,7 @@
 local __module_name__ = "eve.ux.select" ---@type string
 
 ---@class eve.ux.ISelect : eve.t.ux.IWidget
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field public change_dimension       fun(self: eve.ux.ISelect, dimension: eve.ux.IRawSearchDimension): nil
 ---@field public change_input_title     fun(self: eve.ux.ISelect, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.ISelect, title: string): nil
@@ -14,7 +14,6 @@ local __module_name__ = "eve.ux.select" ---@type string
 ---@field public mark_data_dirty        fun(self: eve.ux.ISelect): nil
 ---@field public mark_item_deleted      fun(self: eve.ux.ISelect, uuid: string): nil
 ---@field public reset_input            fun(self: eve.ux.ISelect, text: string): nil
----@field public show                   fun(self: eve.ux.ISelect): nil
 ---@field public toggle                 fun(self: eve.ux.ISelect): nil
 
 ---@alias eve.ux.select.IFetchData
@@ -137,7 +136,7 @@ function M.new(props)
     end)
   end
 
-  ---@type eve.ux.ISearchContext
+  ---@type eve.ux.SearchContext
   local context = eve.ux.SearchContext.new({
     delay_fetch = delay_fetch,
     dimension = dimension,
@@ -561,14 +560,29 @@ function M:find_matched_items(input, old_matches)
   return matches
 end
 
----@return boolean
-function M:focused()
-  return self._search:focused()
-end
-
 ---@return nil
 function M:focus()
   self._search:focus()
+end
+
+---@return boolean
+function M:isdisposed()
+  return self._search:isdisposed()
+end
+
+---@return nil
+function M:hide()
+  return self._search:hide()
+end
+
+---@return boolean
+function M:isfocused()
+  return self._search:isfocused()
+end
+
+---@return boolean
+function M:isvisible()
+  return self._search:isvisible()
 end
 
 ---@param uuid                          string
@@ -606,11 +620,6 @@ function M:get_winnr_preview()
 end
 
 ---@return nil
-function M:hide()
-  self._search:hide()
-end
-
----@return nil
 function M:mark_data_dirty()
   self._live_data_dirty:next(true)
   self._search.context.dirtier_data:mark_dirty()
@@ -634,8 +643,8 @@ function M:reset_input(text)
 end
 
 ---@return nil
-function M:show()
-  self._search:show()
+function M:resize()
+  self._search:resize()
 end
 
 ---@return nil

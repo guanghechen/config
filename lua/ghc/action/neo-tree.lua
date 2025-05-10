@@ -36,16 +36,20 @@ local function create_widget(params)
     return nil
   end
 
+  ---@return nil
+  local function hide()
+    local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil
+    if winnr ~= nil and bufnr ~= nil then
+      local next_source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
+      source = next_source
+      vim.api.nvim_win_close(winnr, true)
+    end
+  end
+
   return eve.widget.wrap({
     name = name,
-    close = function()
-      local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil
-      if winnr ~= nil and bufnr ~= nil then
-        local next_source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
-        source = next_source
-        vim.api.nvim_win_close(winnr, true)
-      end
-    end,
+    close = hide,
+    hide = hide,
     focus = function()
       local cwd = params.cwd() ---@type string
       require("neo-tree.command").execute({
@@ -57,24 +61,19 @@ local function create_widget(params)
         toggle = false,
       })
     end,
-    focused = function()
+    isdisposed = function()
+      return false
+    end,
+    isfocused = function()
       local winnr = locate_neotree_winnr() ---@type integer|nil
       local winnr_current = vim.api.nvim_get_current_win() ---@type integer
       return winnr == winnr_current
     end,
-    hide = function()
-      local winnr, bufnr = locate_neotree_winnr() ---@type integer|nil, integer|nil
-      if winnr ~= nil and bufnr ~= nil then
-        local next_source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
-        source = next_source
-        vim.api.nvim_win_close(winnr, true)
-      end
+    isvisible = function()
+      local winnr = locate_neotree_winnr() ---@type integer|nil
+      return winnr ~= nil
     end,
     resize = function() end,
-    status = function()
-      local winnr = locate_neotree_winnr() ---@type integer|nil
-      return winnr == nil and "hidden" or "visible"
-    end,
   })
 end
 
@@ -140,8 +139,8 @@ end
 ---@return nil
 function M.git_cwd()
   local widget = widgets.git_cwd ---@type eve.t.ux.IWidget
-  if widget:focused() then
-    widget:hide()
+  if widget:isfocused() then
+    widget:close()
   else
     widget:focus()
   end
@@ -150,8 +149,8 @@ end
 ---@return nil
 function M.git_workspace()
   local widget = widgets.git_workspace ---@type eve.t.ux.IWidget
-  if widget:focused() then
-    widget:hide()
+  if widget:isfocused() then
+    widget:close()
   else
     widget:focus()
   end

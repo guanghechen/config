@@ -101,18 +101,20 @@ local function open_lazygit(name, cwd, args)
     name = name,
     cmd = cmd,
     cwd = cwd,
-    permanent = false,
+    permanent = true,
   })
 
-  local bufnr = terminal:get_bufnr() ---@type integer|nil
-  local winnr = terminal:get_winnr() ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and terminal:status() == "visible" then
-    local function edit()
-      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        edit_lazygit_file_in_buffer(winnr, cwd)
+  if terminal:isvisible() then
+    local bufnr = terminal:get_bufnr() ---@type integer|nil
+    if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+      local function edit()
+        local winnr = terminal:get_winnr() ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          edit_lazygit_file_in_buffer(winnr, cwd)
+        end
       end
+      vim.keymap.set("t", "<C-e>", edit, { buffer = bufnr, noremap = true, silent = true })
     end
-    vim.keymap.set("t", "<C-e>", edit, { buffer = bufnr, noremap = true, silent = true })
   end
 end
 

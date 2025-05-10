@@ -63,7 +63,7 @@ local borders = {
 }
 
 ---@class eve.ux.ISearch : eve.t.ux.IWidget
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field public change_input_title     fun(self: eve.ux.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.ISearch, title: string): nil
 ---@field public get_item_selected      fun(self: eve.ux.ISearch): eve.ux.search.IItem|nil, integer
@@ -72,10 +72,12 @@ local borders = {
 ---@field public get_winnr_preview      fun(self: eve.ux.ISearch): integer|nil
 ---@field public mark_item_deleted      fun(self: eve.ux.ISearch, uuid: string): nil
 ---@field public reset_input            fun(self: eve.ux.ISearch, text: string): nil
----@field public show                   fun(self: eve.ux.ISearch): nil
 ---@field public toggle                 fun(self: eve.ux.ISearch): nil
 
 ---@alias eve.ux.search.IOnClose
+---| fun(): nil
+
+---@alias eve.ux.search.IOnDispose
 ---| fun(): nil
 
 ---@alias eve.ux.search.IOnConfirm
@@ -119,7 +121,7 @@ local borders = {
 ---@field public highlights             eve.t.IHighlightInline[]
 
 ---@class eve.ux.search.IProps
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field public delay_render           ?integer
 ---@field public fetch_preview_data     ?eve.ux.search.IFetchPreviewData
 ---@field public input_keymaps          ?eve.t.IKeymap[]
@@ -128,6 +130,7 @@ local borders = {
 ---@field public preview_keymaps        ?eve.t.IKeymap[]
 ---@field public statusline_items       eve.t.ux.widget.IRawStatuslineItem[]
 ---@field public on_close               ?eve.ux.search.IOnClose
+---@field public on_dispose             ?eve.ux.search.IOnDispose
 ---@field public on_invisible           ?eve.ux.search.IOnInvisible
 ---@field public on_confirm             eve.ux.search.IOnConfirm
 ---@field public on_preview_rendered    ?eve.ux.search.IOnPreviewRendered
@@ -147,7 +150,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
-  local context = props.context ---@type eve.ux.ISearchContext
+  local context = props.context ---@type eve.ux.SearchContext
   local common_keymaps = eve.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
   local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
@@ -196,8 +199,7 @@ function M.new(props)
       context:reset_selected_items()
       on_confirm_from_props(self, selected_items)
 
-      local status = context.status:snapshot() ---@type eve.e.WidgetStatus
-      if status ~= "visible" then
+      if context:isvisible() then
         local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
@@ -594,9 +596,7 @@ function M.new(props)
     silent = eve.std.fn.falsy,
     value = eve.std.Observable.from_value(true),
     task = function()
-      local status = context.status:snapshot() ---@type eve.e.WidgetStatus
-      local visible = status == "visible" ---@type boolean
-      if visible then
+      if context:isvisible() then
         self:create_wins_as_needed()
         self.context.dirtier_dimension:mark_clean()
       end
@@ -605,21 +605,10 @@ function M.new(props)
 
   ---@return nil
   local function trigger_draw_wins()
-    local status = context.status:snapshot() ---@type eve.e.WidgetStatus
-    local visible = status == "visible" ---@type boolean
-    if visible then
+    if context:isvisible() then
       scheduler:schedule()
     end
   end
-
-  context.status:subscribe(
-    eve.std.Subscriber.new({
-      on_next = function()
-        trigger_draw_wins()
-      end,
-    }),
-    true
-  )
 
   context.state_has_matched:subscribe(
     eve.std.Subscriber.new({
@@ -706,7 +695,8 @@ end
 
 ---@return nil
 function M:sync_main_cursor()
-  local context = self.context ---@type eve.ux.ISearchContext
+  self.context:health()
+  local context = self.context ---@type eve.ux.SearchContext
   local winnr_main = context.winnr_main ---@type integer|nil
   if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
     local lnum = context:place_lnum_sign() ---@type integer|nil
@@ -718,7 +708,8 @@ end
 
 ---@return nil
 function M:create_wins_as_needed()
-  local context = self.context ---@type eve.ux.ISearchContext
+  self.context:health()
+  local context = self.context ---@type eve.ux.SearchContext
   local dimension = context.dimension ---@type eve.ux.ISearchDimension
 
   local bufnr_input = self._input:create_buf_as_needed() ---@type integer
@@ -868,7 +859,7 @@ function M:create_wins_as_needed()
       ---@type integer|nil, integer|nil
       local preview_lnum, preview_col = self._preview.get_current_location()
       if preview_lnum ~= nil and preview_col ~= nil then
-        vim.api.nvim_win_set_cursor(winnr_preview, { preview_lnum, preview_col })
+        pcall(vim.api.nvim_win_set_cursor, winnr_preview, { preview_lnum, preview_col })
       end
 
       eve.win.set_type(winnr_preview, eve.win.Types.SEARCH_PREVIEW)
@@ -957,9 +948,9 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_input_title(title)
-  local context = self.context ---@type eve.ux.ISearchContext
-  context.cfg_input_title = title
-  local winnr = context.winnr_input ---@type integer|nil
+  self.context:health()
+  self.context.cfg_input_title = title
+  local winnr = self.context.winnr_input ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config
     local win_conf_cur = vim.api.nvim_win_get_config(winnr)
@@ -971,9 +962,9 @@ end
 ---@param title                         string
 ---@return nil
 function M:change_preview_title(title)
-  local context = self.context ---@type eve.ux.ISearchContext
-  context.cfg_preview_title = title
-  local winnr = context.winnr_preview ---@type integer|nil
+  self.context:health()
+  self.context.cfg_preview_title = title
+  local winnr = self.context.winnr_preview ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     ---@type vim.api.keyset.win_config
     local win_conf_cur = vim.api.nvim_win_get_config(winnr)
@@ -983,136 +974,133 @@ function M:change_preview_title(title)
 end
 
 ---@return nil
-function M:close()
-  local context = self.context ---@type eve.ux.ISearchContext
+function M:dispose()
+  if self:isdisposed() then
+    return
+  end
 
-  self:hide()
+  self.context:dispose()
+  self._input:dispose()
+  self._main:dispose()
+  if self._preview ~= nil then
+    self._preview:dispose()
+  end
 
-  if not context.permanent then
-    self.context.status:next("closed")
-    self._input:dispose()
-    self._main:dispose()
-
-    if self._preview ~= nil then
-      self._preview:dispose()
-    end
-
-    if self._on_close ~= nil then
-      self._on_close()
-    end
+  if self._on_close ~= nil then
+    vim.schedule(function()
+      pcall(self._on_close)
+    end)
   end
 end
 
 ---@return nil
-function M:focus()
-  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
-  if status == "closed" then
-    self.context.dirtier_data_cache:mark_dirty()
-    self.context.dirtier_data:mark_dirty()
+function M:close()
+  if self:isdisposed() then
+    return
   end
 
-  if not self:focused() then
-    self._input:create_buf_as_needed()
-    self._main:render()
-    if self._preview ~= nil then
-      self._preview:render()
-    end
-    self._input:reset_input()
-    self.context.status:next("visible")
+  local context = self.context ---@type eve.ux.SearchContext
+  if not context.permanent then
+    self:dispose()
+  end
+  self:hide()
+end
+
+---@return nil
+function M:focus()
+  self.context:health()
+  eve.widget.push(self)
+
+  self:create_wins_as_needed()
+  self._input:create_buf_as_needed()
+  self._main:render()
+  if self._preview ~= nil then
+    self._preview:render()
+  end
+  self._input:reset_input()
+end
+
+---@return nil
+function M:hide()
+  if self:isdisposed() then
+    return
+  end
+
+  self.context:hide()
+  if self._on_close ~= nil then
+    vim.schedule(function()
+      pcall(self._on_close)
+    end)
   end
 end
 
 ---@return boolean
-function M:focused()
-  local context = self.context ---@type eve.ux.ISearchContext
-  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
-  return winnr_cur == context.winnr_input or winnr_cur == context.winnr_main or winnr_cur == context.winnr_preview
+function M:isdisposed()
+  return self.context:isdisposed()
+end
+
+---@return boolean
+function M:isfocused()
+  return self.context:isfocused()
+end
+
+---@return boolean
+function M:isvisible()
+  return self.context:isvisible()
 end
 
 ---@return eve.ux.search.IItem|nil
 ---@return integer
 function M:get_item_selected()
+  self.context:health()
   return self.context:get_current()
 end
 
 ---@return integer|nil
 function M:get_winnr_main()
+  self.context:health()
   return self.context.winnr_main
 end
 
 ---@return integer|nil
 function M:get_winnr_input()
+  self.context:health()
   return self.context.winnr_input
 end
 
 ---@return integer|nil
 function M:get_winnr_preview()
+  self.context:health()
   return self.context.winnr_preview
-end
-
----@return nil
-function M:hide()
-  local context = self.context ---@type eve.ux.ISearchContext
-  local winnr_input = context.winnr_input ---@type integer|nil
-  local winnr_main = context.winnr_main ---@type integer|nil
-  local winnr_preview = context.winnr_preview ---@type integer|nil
-
-  context.winnr_input = nil
-  context.winnr_main = nil
-  context.winnr_preview = nil
-  context.status:next("hidden")
-
-  if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
-    vim.api.nvim_win_close(winnr_input, true)
-  end
-
-  if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
-    vim.api.nvim_win_close(winnr_main, true)
-  end
-
-  if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
-    vim.api.nvim_win_close(winnr_preview, true)
-  end
-
-  if self._on_invisible ~= nil then
-    self._on_invisible()
-  end
 end
 
 ---@param uuid                          string
 ---@return nil
 function M:mark_item_deleted(uuid)
+  self.context:health()
   self.context:set_item_deleted(uuid)
 end
 
 ---@param text                          string
 ---@return nil
 function M:reset_input(text)
+  self.context:health()
   self._input:reset_input(text)
 end
 
 ---@return nil
 function M:resize()
+  self.context:health()
   self.context.dirtier_dimension:mark_dirty()
 end
 
 ---@return nil
-function M:show()
-  eve.widget.open(self)
-end
-
----@return eve.e.WidgetStatus
-function M:status()
-  local status = self.context.status:snapshot() ---@type eve.e.WidgetStatus
-  return status
-end
-
----@return nil
 function M:toggle()
-  if self:focused() then
-    self:hide()
+  self.context:health()
+  if self:isfocused() then
+    self:close()
   else
-    self:show()
+    self:focus()
   end
 end
 

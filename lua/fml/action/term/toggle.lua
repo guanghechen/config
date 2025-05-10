@@ -48,7 +48,7 @@ function M.new(props)
   })
   terminal_map[name] = terminal
 
-  terminal:show()
+  terminal:focus()
   return terminal
 end
 
@@ -58,7 +58,8 @@ function M.toggle(params)
   local name = params.name ---@type string
 
   local terminal = terminal_map[name] ---@type eve.ux.ITerminal|nil
-  if terminal == nil then
+  if terminal == nil or terminal:isdisposed() then
+    terminal_map[name] = nil
     terminal = M.new(params)
   else
     terminal:update({
@@ -71,14 +72,16 @@ function M.toggle(params)
     terminal:toggle()
   end
 
-  local selected_text = params.selected_text ---@type string|nil
-  if selected_text ~= nil and #selected_text > 0 and terminal:status() == "visible" then
-    local winnr = terminal:get_winnr() ---@type integer|nil
-    local bufnr = terminal:get_bufnr() ---@type integer|nil
-    if winnr ~= nil and bufnr ~= nil then
-      if selected_text and #selected_text > 1 then
-        vim.api.nvim_set_current_win(winnr)
-        vim.api.nvim_feedkeys("i" .. selected_text, "n", true) -- Insert the text without newline
+  if terminal:isvisible() then
+    local selected_text = params.selected_text ---@type string|nil
+    if selected_text ~= nil and #selected_text > 0 then
+      local winnr = terminal:get_winnr() ---@type integer|nil
+      local bufnr = terminal:get_bufnr() ---@type integer|nil
+      if winnr ~= nil and bufnr ~= nil then
+        if selected_text and #selected_text > 1 then
+          vim.api.nvim_set_current_win(winnr)
+          vim.api.nvim_feedkeys("i" .. selected_text, "n", true) -- Insert the text without newline
+        end
       end
     end
   end

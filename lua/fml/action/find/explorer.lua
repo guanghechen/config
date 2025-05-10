@@ -439,7 +439,7 @@ local select = eve.ux.Select.new({
         vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
       end
 
-      widget:hide()
+      widget:close()
       for _, filepath in ipairs(filepaths) do
         eve.win.open_filepath(winnr_sourcefile, filepath)
       end
@@ -492,7 +492,7 @@ function M.find_explorer(specified_filepath)
       end
     end
   end
-  select:show()
+  select:focus()
 end
 
 return M

@@ -16,12 +16,10 @@ end
 ---@class ghc.action.copilot_chat.widget
 ---@field public winnr                  integer|nil
 ---@field public cursor                 integer[]|nil
----@field public status                 eve.e.WidgetStatus
 ---@field public win_cfg                fun(): vim.api.keyset.win_config
 local config = {
   winnr = nil,
   cursor = nil,
-  status = "closed",
   win_cfg = function()
     local width = math.min(124, math.floor(vim.o.columns * 0.8)) ---@type integer
     local height = math.min(48, math.floor(vim.o.lines * 0.8)) ---@type integer
@@ -45,80 +43,79 @@ local config = {
   end,
 }
 
+---@return nil
+local function hide()
+  local winnr = config.winnr ---@type integer|nil
+  config.winnr = nil
+
+  ---save the window cursor.
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+    config.cursor = cursor
+  end
+  require("CopilotChat").close()
+end
+
 ---@type eve.t.ux.IWidget
 local chat = eve.widget.wrap({
   name = "copilot-chat",
-  close = function()
-    local winnr = config.winnr ---@type integer|nil
-    config.status = "closed"
-    config.winnr = nil
-
-    ---save the window cursor.
-    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-      local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-      config.cursor = cursor
-    end
-
-    require("CopilotChat").close()
-  end,
+  close = hide,
+  hide = hide,
   focus = function(widget)
-    if not widget:focused() then
-      require("CopilotChat").open()
-      vim.schedule(function()
-        local winnr = eve.win.find_floating_by_filetype(0, eve.filetype.COPILOT_CHAT) ---@type integer|nil
-        if winnr == nil then
-          return
-        end
-
-        if eve.win.is_float(winnr) then
-          local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-          local cfg_customized = config.win_cfg() ---@type vim.api.keyset.win_config
-          local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
-          vim.api.nvim_win_set_config(winnr, cfg)
-        end
-
-        config.winnr = winnr
-        config.status = "visible"
-
-        vim.wo[winnr].wrap = true
-        vim.wo[winnr].number = false
-        vim.wo[winnr].relativenumber = false
-        vim.wo[winnr].signcolumn = "yes"
-        vim.wo[winnr].winfixbuf = true
-        vim.api.nvim_tabpage_set_win(0, winnr)
-
-        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not vim.b[bufnr].fml_key_bound then
-          vim.b[bufnr].fml_key_bound = true
-          local keymaps = eve.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
-          eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
-        end
-
-        vim.cmd.stopinsert()
-        if config.cursor then
-          pcall(function()
-            vim.api.nvim_win_set_cursor(winnr, config.cursor)
-          end)
-        end
-      end)
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    if config.winnr ~= nil and not vim.api.nvim_win_is_valid(config.winnr) then
+      vim.api.nvim_tabpage_set_win(tabnr, config.winnr)
+      return
     end
+
+    require("CopilotChat").open()
+
+    vim.schedule(function()
+      local winnr = eve.win.find_floating_by_filetype(0, eve.filetype.COPILOT_CHAT) ---@type integer|nil
+      if winnr == nil then
+        return
+      end
+
+      if eve.win.is_float(winnr) then
+        local cfg_current = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+        local cfg_customized = config.win_cfg() ---@type vim.api.keyset.win_config
+        local cfg = vim.tbl_extend("force", cfg_current, cfg_customized) ---@type vim.api.keyset.win_config
+        vim.api.nvim_win_set_config(winnr, cfg)
+      end
+
+      config.winnr = winnr
+
+      vim.wo[winnr].wrap = true
+      vim.wo[winnr].number = false
+      vim.wo[winnr].relativenumber = false
+      vim.wo[winnr].signcolumn = "yes"
+      vim.wo[winnr].winfixbuf = true
+      vim.api.nvim_tabpage_set_win(0, winnr)
+
+      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      if not vim.b[bufnr].fml_key_bound then
+        vim.b[bufnr].fml_key_bound = true
+        local keymaps = eve.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
+        eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      end
+
+      vim.cmd.stopinsert()
+      if config.cursor then
+        pcall(function()
+          vim.api.nvim_win_set_cursor(winnr, config.cursor)
+        end)
+      end
+    end)
   end,
-  focused = function()
+  isdisposed = function()
+    return false
+  end,
+  isfocused = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     return winnr == config.winnr
   end,
-  hide = function()
-    local winnr = config.winnr ---@type integer|nil
-    config.status = "hidden"
-    config.winnr = nil
-
-    ---save the window cursor.
-    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-      local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-      config.cursor = cursor
-    end
-
-    require("CopilotChat").close()
+  isvisible = function()
+    return config.winnr ~= nil and vim.api.nvim_win_is_valid(config.winnr)
   end,
   resize = function()
     local winnr = config.winnr ---@type integer|nil
@@ -126,9 +123,6 @@ local chat = eve.widget.wrap({
       local wincfg = config.win_cfg() ---@type vim.api.keyset.win_config
       vim.api.nvim_win_set_config(winnr, wincfg)
     end
-  end,
-  status = function()
-    return config.status
   end,
 })
 
@@ -224,8 +218,8 @@ end
 
 ---@return nil
 function M.toggle()
-  if chat:focused() then
-    chat:hide()
+  if chat:isfocused() then
+    chat:close()
   else
     chat:focus()
   end

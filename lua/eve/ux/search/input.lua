@@ -1,7 +1,7 @@
 local __module_name__ = "eve.ux.search.input" ---@type string
 
 ---@class eve.ux.SearchInput
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field protected _autocmd_group      integer
 ---@field protected _extmark_nr         integer|nil
 ---@field protected _scheduler          eve.std.collection.Scheduler
@@ -12,7 +12,7 @@ M.__index = M
 local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 
 ---@class eve.ux.ISearchInputProps
----@field public context                eve.ux.ISearchContext
+---@field public context                eve.ux.SearchContext
 ---@field public keymaps                eve.t.IKeymap[]
 
 ---@param props                         eve.ux.ISearchInputProps
@@ -20,7 +20,7 @@ local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local context = props.context ---@type eve.ux.ISearchContext
+  local context = props.context ---@type eve.ux.SearchContext
   local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
   local actions = {
     apply_prev_input = function()
@@ -82,8 +82,7 @@ function M.new(props)
     eve.std.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
-        local status = context.status:snapshot() ---@type eve.e.WidgetStatus
-        local visible = status == "visible" ---@type boolean
+        local visible = context:isvisible() ---@type boolean
         if visible and is_preview_dirty then
           self:set_virtual_text()
         end
@@ -118,7 +117,7 @@ end
 
 ---@return integer
 function M:create_buf_as_needed()
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   if context.bufnr_input ~= nil and vim.api.nvim_buf_is_valid(context.bufnr_input) then
     return context.bufnr_input
   end
@@ -151,7 +150,7 @@ end
 
 ---@return nil
 function M:dispose()
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   local bufnr = context.bufnr_input ---@type integer|nil
   context.bufnr_input = nil
 
@@ -163,7 +162,7 @@ end
 
 ---@return nil
 function M:set_virtual_text()
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   local bufnr = context.bufnr_input ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     local total = #context.items or 0 ---@type integer
@@ -187,7 +186,7 @@ end
 ---@param text                          string|nil
 ---@return nil
 function M:reset_input(text)
-  local context = self.context ---@type eve.ux.ISearchContext
+  local context = self.context ---@type eve.ux.SearchContext
   local bufnr = context.bufnr_input ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return

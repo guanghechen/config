@@ -85,7 +85,7 @@ function M.copy_filepath(arg)
       end,
       on_confirm = function(widget, items)
         if #items == 1 then
-          widget:hide()
+          widget:close()
           local item = items[1] ---@type eve.ux.select.IItem
           local candidate = item.uuid ---@type string
           copy_current_filepath(candidate, filepath)

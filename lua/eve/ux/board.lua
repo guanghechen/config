@@ -7,8 +7,8 @@
 ---@field public name                   string
 ---@field public focused                boolean
 ---@field public visible                boolean
----@field public is_focused             fun(): boolean
----@field public is_visible             fun(): boolean
+---@field public isfocused              fun(): boolean
+---@field public isvisible              fun(): boolean
 ---@field public add_lines              fun(self: eve.ux.IBoard, lines: string[]): nil
 ---@field public add_highlights         fun(self: eve.ux.IBoard, highlights: eve.t.IHighlight[]): nil
 ---@field public clear                  fun(self: eve.ux.IBoard): nil
@@ -64,9 +64,6 @@ function M.new(props)
 end
 
 ---@return nil
-function M:show() end
-
----@return nil
-function M:hide() end
+function M:focus() end
 
 return M

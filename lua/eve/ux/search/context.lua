@@ -18,7 +18,12 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public width                  ?number
 ---@field public width_preview          ?number
 
----@class eve.ux.ISearchContext
+---@class eve.ux.SearchContext
+---@field protected _disposed           boolean
+---@field protected _item_lnum_cur      integer
+---@field protected _item_uuid_cur      string|nil
+---@field protected _uuids_selected     table<string, true>
+---
 ---@field public dirtier_dimension      eve.std.collection.IDirtier
 ---@field public dirtier_data           eve.std.collection.IDirtier
 ---@field public dirtier_data_cache     eve.std.collection.IDirtier
@@ -31,7 +36,6 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public input_history          eve.std.collection.IHistory|nil
 ---@field public input_line_count       eve.std.collection.IObservable
 ---@field public state_has_matched      eve.std.collection.IObservable
----@field public status                 eve.std.collection.IObservable
 ---
 ---@field public bufnr_input            integer|nil
 ---@field public bufnr_main             integer|nil
@@ -58,37 +62,6 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field public multiple               boolean
 ---@field public permanent              boolean
 ---@field public uuid                   string
----
----@field public focus_left             fun(self: eve.ux.ISearchContext): nil
----@field public focus_right            fun(self: eve.ux.ISearchContext): nil
----@field public focus_input            fun(self: eve.ux.ISearchContext): nil
----@field public focus_main             fun(self: eve.ux.ISearchContext): nil
----@field public focus_preview          fun(self: eve.ux.ISearchContext): nil
----
----@field public change_dimension       fun(self: eve.ux.ISearchContext, dimension: eve.ux.IRawSearchDimension): nil
----@field public get_current            fun(self: eve.ux.ISearchContext): eve.ux.search.IItem|nil, integer
----@field public get_current_lnum       fun(self: eve.ux.ISearchContext): integer
----@field public get_current_uuid       fun(self: eve.ux.ISearchContext): string|nil
----@field public get_selected_items     fun(self: eve.ux.ISearchContext): eve.ux.search.IItem[]
----@field public has_item_deleted       fun(self: eve.ux.ISearchContext, uuid: string): boolean
----@field public set_current            fun(self: eve.ux.ISearchContext, lnum: integer): integer
----@field public locate                 fun(self: eve.ux.ISearchContext, lnum: integer): integer
----@field public mark_all_items_deleted fun(self: eve.ux.ISearchContext): nil
----@field public moveup                 fun(self: eve.ux.ISearchContext): integer
----@field public movedown               fun(self: eve.ux.ISearchContext): integer
----@field public place_lnum_sign        fun(self: eve.ux.ISearchContext): integer|nil
----@field public place_selected_sign    fun(self: eve.ux.ISearchContext): nil
----@field public reset_selected_items   fun(self: eve.ux.ISearchContext): nil
----@field public set_item_deleted       fun(self: eve.ux.ISearchContext, uuid: string): nil
----@field public set_item_selected      fun(self: eve.ux.ISearchContext, uuid: string, selected: boolean): nil
----@field public show_state             fun(self: eve.ux.ISearchContext): nil
----@field public toggle_item_selected   fun(self: eve.ux.ISearchContext, lnum: integer): nil
----@field public toggle_items_selected  fun(self: eve.ux.ISearchContext, lnums: integer[]): nil
-
----@class eve.ux.SearchContext : eve.ux.ISearchContext
----@field protected _item_lnum_cur      integer
----@field protected _item_uuid_cur      string|nil
----@field protected _uuids_selected     table<string, true>
 local M = {}
 M.__index = M
 
@@ -123,7 +96,6 @@ function M.new(props)
   local input_history = props.input_history ---@type eve.std.collection.IHistory|nil
   local input_line_count = eve.std.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.std.collection.IObservable
   local state_has_matched = eve.std.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.std.collection.IObservable
-  local status = eve.std.Observable.from_value("hidden")
 
   local cfg_input_title = props.title ---@type string
   local cfg_preview_title = props.preview_title or " preview " ---@type string
@@ -259,8 +231,7 @@ function M.new(props)
 
   ---@return nil
   local function on_refresh()
-    local _status = status:snapshot() ---@type eve.e.WidgetStatus
-    local visible = _status == "visible" ---@type boolean
+    local visible = self:isvisible() ---@type boolean
     local is_data_dirty = self.dirtier_data:is_dirty() ---@type boolean
     if visible and is_data_dirty then
       fetch_scheduler:schedule()
@@ -272,6 +243,10 @@ function M.new(props)
     dirtier_selected:mark_dirty()
   end
 
+  self._disposed = false
+  self._item_lnum_cur = 0 ---@type integer
+  self._item_uuid_cur = nil ---@type string|nil
+  self._uuids_selected = {} ---@type table<string, true>
   self.dirtier_dimension = dirtier_dimension
   self.dirtier_data = dirtier_data
   self.dirtier_data_cache = dirtier_data_cache
@@ -284,7 +259,6 @@ function M.new(props)
   self.input_history = input_history
   self.input_line_count = input_line_count
   self.state_has_matched = state_has_matched
-  self.status = status
 
   self.cfg_input_title = cfg_input_title
   self.cfg_preview_title = cfg_preview_title
@@ -305,20 +279,56 @@ function M.new(props)
   self.permanent = permanent
   self.uuid = uuid
 
-  self._item_lnum_cur = 0 ---@type integer
-  self._item_uuid_cur = nil ---@type string|nil
-  self._uuids_selected = {} ---@type table<string, true>
-
   flag_selected:subscribe(eve.std.Subscriber.new({ on_next = on_flag_selected_change }), false)
   input:subscribe(eve.std.Subscriber.new({ on_next = on_input_change }), false)
-  status:subscribe(eve.std.Subscriber.new({ on_next = on_refresh }), false)
   dirtier_data:subscribe(eve.std.Subscriber.new({ on_next = on_refresh }), false)
   dirtier_data_cache:subscribe(eve.std.Subscriber.new({ on_next = on_data_cache_dirty }), false)
   return self
 end
 
 ---@return nil
+function M:hide()
+  if self._disposed then
+    return
+  end
+
+  local winnr_input = self.winnr_input ---@type integer|nil
+  local bufnr_input = self.bufnr_input ---@type integer|nil
+  local winnr_main = self.winnr_main ---@type integer|nil
+  local bufnr_main = self.bufnr_main ---@type integer|nil
+  local winnr_preview = self.winnr_preview ---@type integer|nil
+  local bufnr_preview = self.bufnr_preview ---@type integer|nil
+  self.winnr_input = nil
+  self.bufnr_input = nil
+  self.winnr_main = nil
+  self.bufnr_main = nil
+  self.winnr_preview = nil
+  self.bufnr_preview = nil
+  eve.win.close(winnr_input)
+  eve.buf.close(bufnr_input)
+  eve.win.close(winnr_main)
+  eve.buf.close(bufnr_main)
+  eve.win.close(winnr_preview)
+  eve.buf.close(bufnr_preview)
+end
+
+---@return nil
 function M:dispose()
+  if self._disposed then
+    return
+  end
+  self._disposed = true
+
+  local winnr_input = self.winnr_input ---@type integer|nil
+  local winnr_main = self.winnr_main ---@type integer|nil
+  local winnr_preview = self.winnr_preview ---@type integer|nil
+  self.winnr_input = nil
+  self.winnr_main = nil
+  self.winnr_preview = nil
+  eve.win.close(winnr_input)
+  eve.win.close(winnr_main)
+  eve.win.close(winnr_preview)
+
   self.dirtier_dimension:dispose()
   self.dirtier_data:dispose()
   self.dirtier_main:dispose()
@@ -326,12 +336,51 @@ function M:dispose()
   self.dirtier_selected:dispose()
   self.state_has_matched:dispose()
   self.input_line_count:dispose()
-  self.status:dispose()
+end
+
+---@return nil
+function M:health()
+  if self._disposed then
+    local message = string.format("[%s#%s] already been disposed.", __module_name__, self.uuid) ---@type string
+    error(message)
+  end
+end
+
+---@return boolean
+function M:isdisposed()
+  return self._disposed
+end
+
+---@return boolean
+function M:isfocused()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  return winnr == self.winnr_input or winnr == self.winnr_main or winnr == self.winnr_preview
+end
+
+---@return boolean
+function M:isvisible()
+  local winnr_input = self.winnr_input ---@type integer|nil
+  if winnr_input ~= nil and vim.api.nvim_win_is_valid(winnr_input) then
+    return true
+  end
+
+  local winnr_main = self.winnr_main ---@type integer|nil
+  if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
+    return true
+  end
+
+  local winnr_preview = self.winnr_preview ---@type integer|nil
+  if winnr_preview ~= nil and vim.api.nvim_win_is_valid(winnr_preview) then
+    return true
+  end
+
+  return false
 end
 
 ---@param raw_dimension                 eve.ux.IRawSearchDimension
 ---@return nil
 function M:change_dimension(raw_dimension)
+  self:health()
   local old_dimension = self.dimension
 
   ---@type eve.ux.ISearchDimension
@@ -359,6 +408,7 @@ end
 
 ---@return nil
 function M:focus_left()
+  self:health()
   local pane = self.focused_pane_left ---@type string
   local winnr_pane = self["winnr_" .. pane] ---@type integer|nil
   if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
@@ -372,6 +422,7 @@ end
 
 ---@return nil
 function M:focus_right()
+  self:health()
   local pane = self.focused_pane_right ---@type string
   local winnr_pane = self["winnr_" .. pane] ---@type integer|nil
   if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
@@ -385,6 +436,7 @@ end
 
 ---@return nil
 function M:focus_input()
+  self:health()
   local winnr_pane = self.winnr_input ---@type integer|nil
   if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
     self.focused_pane = "input"
@@ -398,6 +450,7 @@ end
 
 ---@return nil
 function M:focus_main()
+  self:health()
   local winnr_pane = self.winnr_main ---@type integer|nil
   if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
     self.focused_pane = "main"
@@ -411,6 +464,7 @@ end
 
 ---@return nil
 function M:focus_preview()
+  self:health()
   local winnr_pane = self.winnr_preview ---@type integer|nil
   if winnr_pane and vim.api.nvim_win_is_valid(winnr_pane) then
     self.focused_pane = "preview"
@@ -425,22 +479,26 @@ end
 ---@return eve.ux.search.IItem|nil
 ---@return integer
 function M:get_current()
+  self:health()
   local lnum = self._item_lnum_cur ---@type integer
   return self.items[lnum], lnum
 end
 
 ---@return integer
 function M:get_current_lnum()
+  self:health()
   return self._item_lnum_cur
 end
 
 ---@return string|nil
 function M:get_current_uuid()
+  self:health()
   return self._item_uuid_cur
 end
 
 ---@return eve.ux.search.IItem[]
 function M:get_selected_items()
+  self:health()
   local selected = {} ---@type eve.ux.search.IItem[]
   local items_valid_map = self.items_valid_map ---@type table<string, eve.ux.search.IItem>
   for uuid in pairs(self._uuids_selected) do
@@ -455,12 +513,14 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:has_item_deleted(uuid)
+  self:health()
   return not self.items_valid_map[uuid]
 end
 
 ---@param lnum                          integer
 ---@return integer
 function M:locate(lnum)
+  self:health()
   local items = self.items ---@type eve.ux.search.IItem[]
   local item_lnum_next = math.max(1, math.min(#items, lnum)) ---@type integer
   local item_uuid_next = items[item_lnum_next] and items[item_lnum_next].uuid or nil ---@type string|nil
@@ -475,6 +535,7 @@ end
 
 ---@return nil
 function M:mark_all_items_deleted()
+  self:health()
   self.items = {} ---@type eve.ux.search.IItem[]
   self.items_valid_map = {} ---@type table<string, eve.ux.search.IItem>
   self._uuids_selected = {} ---@type table<string, true>
@@ -490,6 +551,7 @@ end
 
 ---@return integer
 function M:moveup()
+  self:health()
   local items = self.items ---@type eve.ux.search.IItem[]
   if #items <= 1 then
     return 0
@@ -510,6 +572,7 @@ end
 
 ---@return integer
 function M:movedown()
+  self:health()
   local items = self.items ---@type eve.ux.search.IItem[]
   if #items <= 1 then
     return 0
@@ -530,6 +593,7 @@ end
 
 ---@return integer|nil
 function M:place_lnum_sign()
+  self:health()
   local bufnr = self.bufnr_main ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.fn.sign_unplace("", { buffer = bufnr, id = eve.var.sign.NR_SEARCH_MAIN_CURRENT })
@@ -593,6 +657,7 @@ end
 
 ---@return nil
 function M:place_selected_sign()
+  self:health()
   local bufnr = self.bufnr_main ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.fn.sign_unplace(eve.var.sign.GROUP_SEARCH_MAIN_SELECTED, { buffer = bufnr })
@@ -615,6 +680,7 @@ end
 
 ---@return nil
 function M:reset_selected_items()
+  self:health()
   self._uuids_selected = {}
   self.dirtier_selected:mark_dirty()
 end
@@ -622,6 +688,7 @@ end
 ---@param uuid                          string|nil
 ---@return integer|nil
 function M:resolve_current_lnum(uuid)
+  self:health()
   for lnum, item in ipairs(self.items) do
     if item.uuid == uuid then
       return lnum
@@ -633,6 +700,7 @@ end
 ---@param uuid                          string
 ---@return nil
 function M:set_item_deleted(uuid)
+  self:health()
   local items_valid_map = self.items_valid_map ---@type table<string, eve.ux.search.IItem>
   if not items_valid_map[uuid] then
     return
@@ -686,6 +754,7 @@ end
 ---@param selected                      boolean
 ---@return nil
 function M:set_item_selected(uuid, selected)
+  self:health()
   local selected_prev = self._uuids_selected[uuid] == true ---@type boolean
   if selected_prev ~= selected then
     if selected then
@@ -697,62 +766,10 @@ function M:set_item_selected(uuid, selected)
   end
 end
 
----@return nil
-function M:show_state()
-  eve.reporter.error({
-    from = __module_name__,
-    subject = "show_state",
-    details = {
-      cfg = {
-        bufnr_input = self.bufnr_input or vim.NIL,
-        bufnr_main = self.bufnr_main or vim.NIL,
-        bufnr_preview = self.bufnr_preview or vim.NIL,
-        winnr_input = self.winnr_input or vim.NIL,
-        winnr_main = self.winnr_main or vim.NIL,
-        winnr_preview = self.winnr_preview or vim.NIL,
-        preview_title = self.cfg_preview_title,
-        preview_wrap = self.cfg_preview_wrap,
-      },
-
-      dirtier = {
-        dimension = self.dirtier_dimension:snapshot(),
-        data = self.dirtier_data:snapshot(),
-        data_cache = self.dirtier_data_cache:snapshot(),
-        main = self.dirtier_main:snapshot(),
-        preview = self.dirtier_preview:snapshot(),
-        selected = self.dirtier_selected:snapshot(),
-      },
-
-      input = {
-        keyword = self.input:snapshot(),
-        history = self.input_history and self.input_history:collect() or vim.NIL,
-        line_count = self.input_line_count:snapshot(),
-      },
-
-      state = {
-        has_matched = self.state_has_matched:snapshot(),
-        status = self.status:snapshot(),
-      },
-
-      focused_pane = self.focused_pane,
-      focused_pane_left = self.focused_pane_left,
-      focused_pane_right = self.focused_pane_right,
-
-      dimension = self.dimension,
-      enable_multiline_input = self.enable_multiline_input,
-      item_uuid_present = self.item_uuid_present or vim.NIL,
-      max_width = self.item_max_width,
-      multiple = self.multiple,
-      permanent = self.permanent,
-      title = self.cfg_input_title,
-      uuid = self.uuid,
-    },
-  })
-end
-
 ---@param lnum                          integer
 ---@return nil
 function M:toggle_item_selected(lnum)
+  self:health()
   if self.multiple then
     local item = self.items[lnum] ---@type eve.ux.search.IItem
     if item ~= nil then
@@ -770,6 +787,7 @@ end
 ---@param lnums                         integer[]
 ---@return nil
 function M:toggle_items_selected(lnums)
+  self:health()
   if self.multiple then
     local uuids_selected = self._uuids_selected ---@type table<string, true>
 

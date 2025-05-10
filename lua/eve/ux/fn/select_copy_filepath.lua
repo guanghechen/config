@@ -60,7 +60,7 @@ local function select_copy_filepath(params)
         end
       end,
     })
-    :show()
+    :focus()
 end
 
 return select_copy_filepath

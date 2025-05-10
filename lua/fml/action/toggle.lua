@@ -191,7 +191,7 @@ local group_items = {
                 end
               end,
             })
-            :show()
+            :focus()
         end
       end,
     },
@@ -265,7 +265,7 @@ local group_items = {
                 end
               end,
             })
-            :show()
+            :focus()
         end
 
         if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
@@ -643,7 +643,7 @@ function M.list(arg)
         end
       end,
     })
-    select:show()
+    select:focus()
   end
 end
 
