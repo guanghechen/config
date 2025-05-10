@@ -85,7 +85,6 @@ local c = eve.ux.nvimbar.component
 ---@field public preview                string
 
 ---@class eve.ux.picker.keymaps_common
----@field public close                  eve.ux.picker.IKeymap
 
 ---@class eve.ux.picker.keymaps_finder
 ---@field public disables_on_singleline eve.ux.picker.IKeymap
@@ -181,16 +180,7 @@ local __highlights__ = {
 
 ---@type eve.ux.picker.keymaps
 local __keymaps__ = {
-  common = {
-    close = {
-      modes = { "n" },
-      key = "q",
-      desc = "picker: close",
-      callback = function(self)
-        self:close()
-      end,
-    },
-  },
+  common = {},
   finder = {
     disables_on_singleline = {
       disabled = function(self)
@@ -1833,6 +1823,21 @@ end
 ---@return eve.ux.picker.IKeymap[]
 function M:__resolve_common__keymaps__()
   local keymaps = {} ---@type eve.ux.picker.IKeymap[]
+
+  local widget_keymaps = eve.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  for _, widget_keymap in ipairs(widget_keymaps) do
+    ---@type eve.ux.picker.IKeymap
+    local keymap = {
+      disabled = widget_keymap.disabled,
+      modes = widget_keymap.modes,
+      key = widget_keymap.key,
+      aliases = widget_keymap.aliases,
+      desc = widget_keymap.desc,
+      callback = widget_keymap.callback,
+    }
+    keymaps[#keymaps + 1] = keymap
+  end
+
   for _, keymap in pairs(__keymaps__.common) do
     keymaps[#keymaps + 1] = keymap
   end
