@@ -4,7 +4,6 @@
 ---@field public clear                  fun(self: eve.ux.view.IView): eve.ux.view.IView
 ---@field public dispose                fun(self: eve.ux.view.IView): nil
 ---@field public isdisposed             fun(self: eve.ux.view.IView): boolean
----@field public measure                fun(self: eve.ux.view.IView): integer, integer -- height, max_width
 ---@field public render                 fun(self: eve.ux.view.IView, bufnr: integer): eve.ux.view.IView
 
 ---@class eve.ux.view.__mods

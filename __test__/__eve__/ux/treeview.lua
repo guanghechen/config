@@ -13,15 +13,16 @@ local relative_filepaths = vim.split(vim.trim(vim.fn.system(command)), "\n", { p
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
   indent = " ",
+  indent_hln = "f_utw_indent_float",
   ---@param node                        eve.ux.view.treeview.INode
   ---@return string
   ---@return eve.t.IHighlightInline[]|nil
   renderer = function(node)
-    local data = node.data ---@type __test__.ux.treeview.IData
+    local data = node.data ---@type __test__.ux.picker.IData
     local highlights = {} ---@type eve.t.IHighlightInline[]
     local icon, icon_hln ---@type string, string
 
-    if node.type == "container" then
+    if data.filetype == "directory" then
       icon, icon_hln = eve.fn.diricon(data.basename)
       if not node.collapsed then
         if #node.children < 1 then
@@ -43,6 +44,14 @@ local treeview = eve.ux.view.Treeview.new({
   ---@param right                       eve.ux.view.treeview.INode
   ---@return boolean
   sorter = function(left, right)
+    if left.data.filetype ~= right.data.filetype then
+      if left.data.filetype == "directory" then
+        return true
+      end
+      if right.data.filetype == "directory" then
+        return false
+      end
+    end
     return left.data.basename < right.data.basename
   end,
 })
@@ -61,7 +70,7 @@ do
     filetype = filetype,
     basename = basename,
   }
-  treeview:insert_container(root_uuid, root_uuid, data, false)
+  treeview:insert(root_uuid, root_uuid, data, false, false)
 end
 
 for _, relative_filepath in ipairs(relative_filepaths) do
@@ -83,7 +92,7 @@ for _, relative_filepath in ipairs(relative_filepaths) do
         filetype = filetype,
         basename = basename,
       }
-      treeview:insert_container(uuid, parent_uuid, data, index > 2)
+      treeview:insert(uuid, parent_uuid, data, false, index > 2)
     end
     parent_uuid = uuid
   end
@@ -101,7 +110,7 @@ for _, relative_filepath in ipairs(relative_filepaths) do
     filetype = filetype,
     basename = filename,
   }
-  treeview:insert_leaf(uuid, parent_uuid, data)
+  treeview:insert(uuid, parent_uuid, data, true, false)
 end
 
 local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -136,10 +145,10 @@ local keymaps = {
         return
       end
 
-      if node.type == "container" then
+      local data = node.data ---@type __test__.ux.picker.IData
+      if data.filetype == "directory" then
         treeview:collapse(node.uuid, "toggle", true):render(bufnr)
       else
-        local data = node.data ---@type __test__.ux.treeview.IData
         vim.api.nvim_win_close(winnr, true)
 
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
@@ -163,7 +172,8 @@ local keymaps = {
         return
       end
 
-      if node.type == "container" then
+      local data = node.data ---@type __test__.ux.picker.IData
+      if data.filetype == "directory" then
         treeview:collapse(node.uuid, "toggle", false):render(bufnr)
       else
       end
@@ -182,10 +192,10 @@ local keymaps = {
         return
       end
 
-      if node.type == "container" then
+      local data = node.data ---@type __test__.ux.picker.IData
+      if data.filetype == "directory" then
         treeview:collapse(node.uuid, "expanded", false):render(bufnr)
       else
-        local data = node.data ---@type __test__.ux.treeview.IData
         vim.api.nvim_win_close(winnr, true)
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
 
@@ -209,7 +219,8 @@ local keymaps = {
         return
       end
 
-      if node.type == "container" and not node.collapsed then
+      local data = node.data ---@type __test__.ux.picker.IData
+      if data.filetype == "directory" then
         treeview:collapse(node.uuid, "collapsed", false):render(bufnr)
       else
         local lnum_parent = treeview:retrieve_lnum(node.parent) ---@type integer|nil
@@ -229,7 +240,8 @@ eve.nvim.bindkeys(keymaps, {
 })
 
 treeview:render(bufnr)
-local max_height, max_width = treeview:measure() ---@type integer, integer
+local max_height = math.floor(vim.o.lines * 0.6) ---@type integer
+local max_width = math.floor(vim.o.columns * 0.6) ---@type integer
 max_width = math.max(48, max_width) ---@type integer
 local height = math.min(40, vim.o.lines - 8, max_height + 1) ---@type integer
 local width = math.min(100, vim.o.columns - 20, max_width + 2) ---@type integer

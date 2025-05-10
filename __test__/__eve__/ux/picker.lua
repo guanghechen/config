@@ -1,4 +1,5 @@
 require("plenary.reload").reload_module("eve.ux.picker")
+require("plenary.reload").reload_module("eve.ux.view.treeview")
 
 ---@class __test__.ux.picker.IData
 ---@field public uuid                   string
@@ -12,7 +13,6 @@ local relative_filepaths = vim.split(vim.trim(vim.fn.system(command)), "\n", { p
 
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
-  indent = " ",
   indent_hln = "f_utw_indent_float",
   ---@param node                        eve.ux.view.treeview.INode
   ---@return string
@@ -22,7 +22,7 @@ local treeview = eve.ux.view.Treeview.new({
     local highlights = {} ---@type eve.t.IHighlightInline[]
     local icon, icon_hln ---@type string, string
 
-    if node.type == "container" then
+    if data.filetype == "directory" then
       icon, icon_hln = eve.fn.diricon(data.basename)
       if not node.collapsed then
         if #node.children < 1 then
@@ -44,6 +44,14 @@ local treeview = eve.ux.view.Treeview.new({
   ---@param right                       eve.ux.view.treeview.INode
   ---@return boolean
   sorter = function(left, right)
+    if left.data.filetype ~= right.data.filetype then
+      if left.data.filetype == "directory" then
+        return true
+      end
+      if right.data.filetype == "directory" then
+        return false
+      end
+    end
     return left.data.basename < right.data.basename
   end,
 })
@@ -62,13 +70,13 @@ do
     filetype = filetype,
     basename = basename,
   }
-  treeview:insert_container(root_uuid, root_uuid, data, false)
+  treeview:insert(root_uuid, root_uuid, data, false, false)
 end
 
 for _, relative_filepath in ipairs(relative_filepaths) do
   local pieces = eve.path.split(relative_filepath) ---@type string[]
   local parent_uuid = root_uuid ---@type string
-  local filepath = cwd --@type string
+  local filepath = cwd ---@type string
   for index = 1, #pieces - 1, 1 do
     local filetype = "directory" ---@type string
     local basename = pieces[index] ---@type string
@@ -84,7 +92,7 @@ for _, relative_filepath in ipairs(relative_filepaths) do
         filetype = filetype,
         basename = basename,
       }
-      treeview:insert_container(uuid, parent_uuid, data, index > 2)
+      treeview:insert(uuid, parent_uuid, data, false, index > 2)
     end
     parent_uuid = uuid
   end
@@ -102,7 +110,7 @@ for _, relative_filepath in ipairs(relative_filepaths) do
     filetype = filetype,
     basename = filename,
   }
-  treeview:insert_leaf(uuid, parent_uuid, data)
+  treeview:insert(uuid, parent_uuid, data, true, false)
 end
 
 local fuzzy = eve.std.Observable.from_value(false)
@@ -162,7 +170,8 @@ local picker = eve.ux.Picker.new({
           return
         end
 
-        if node.type == "container" then
+        local data = node.data ---@type __test__.ux.picker.IData
+        if data.filetype == "directory" then
           treeview:collapse(node.uuid, "toggle", true)
           self:mark_result_dirty()
         else
@@ -172,9 +181,7 @@ local picker = eve.ux.Picker.new({
             vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
           end
 
-          local data = node.data ---@type __test__.ux.picker.IData
           self:close()
-
           local filepath = data.filepath ---@type string
           eve.win.open_filepath(winnr_sourcefile, filepath)
         end
@@ -198,7 +205,8 @@ local picker = eve.ux.Picker.new({
             return
           end
 
-          if node.type == "container" then
+          local data = node.data ---@type __test__.ux.picker.IData
+          if data.filetype == "directory" then
             treeview:collapse(node.uuid, "toggle", false)
             self:mark_result_dirty()
           else
@@ -208,9 +216,7 @@ local picker = eve.ux.Picker.new({
               vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
             end
 
-            local data = node.data ---@type __test__.ux.picker.IData
             self:close()
-
             local filepath = data.filepath ---@type string
             eve.win.open_filepath(winnr_sourcefile, filepath)
           end
@@ -229,7 +235,8 @@ local picker = eve.ux.Picker.new({
           return
         end
 
-        if node.type == "container" then
+        local data = node.data ---@type __test__.ux.picker.IData
+        if data.filetype == "directory" then
           treeview:collapse(node.uuid, "expanded", false)
           self:mark_result_dirty()
         else
@@ -239,9 +246,7 @@ local picker = eve.ux.Picker.new({
             vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
           end
 
-          local data = node.data ---@type __test__.ux.picker.IData
           self:close()
-
           local filepath = data.filepath ---@type string
           eve.win.open_filepath(winnr_sourcefile, filepath)
         end
@@ -259,7 +264,8 @@ local picker = eve.ux.Picker.new({
           return
         end
 
-        if node.type == "container" and not node.collapsed then
+        local data = node.data ---@type __test__.ux.picker.IData
+        if data.filetype == "directory" and not node.collapsed then
           treeview:collapse(node.uuid, "collapsed", false)
           self:mark_result_dirty()
         else
