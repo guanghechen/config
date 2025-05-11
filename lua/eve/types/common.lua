@@ -63,3 +63,9 @@
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 ---@field public text                   ?string
+
+---@class eve.t.IScoredMatch
+---@field public order                  integer
+---@field public uuid                   string
+---@field public score                  integer
+---@field public matches                eve.t.IMatchPoint[]

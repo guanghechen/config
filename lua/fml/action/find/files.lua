@@ -188,7 +188,7 @@ local actions = {
       local cwd = eve.path.cwd() ---@type string
       local select_cwd = state_cwd:snapshot() ---@type string
       local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
-      local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
+      local matched_items = _select:get_matched_items() ---@type eve.t.IScoredMatch[]
       for _, matched_item in ipairs(matched_items) do
         local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
         ---@cast item                   eve.ux.select_file.IItem

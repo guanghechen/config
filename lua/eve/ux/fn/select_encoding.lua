@@ -72,7 +72,7 @@ for _, fileencoding in ipairs(fileencodings) do
 end
 
 ---@param item                          eve.ux.fn.select_encoding.IItem
----@param match                         eve.ux.select.IMatchedItem
+---@param match                         eve.t.IScoredMatch
 ---@return string
 ---@return eve.t.IHighlightInline[]
 local function render_item(item, match)

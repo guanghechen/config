@@ -476,6 +476,13 @@ function M.new(props)
   self._on_dispose = on_dispose
   self._on_focus = on_focus
   self._on_hide = on_hide
+
+  finder_input:subscribe(eve.std.Subscriber.new({
+    on_next = function(input)
+      self:mark_result_dirty()
+    end,
+  }))
+
   return self
 end
 

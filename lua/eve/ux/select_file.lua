@@ -3,7 +3,7 @@
 ---@field public change_input_title     fun(self: eve.ux.IFileSelect, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.IFileSelect, title: string): nil
 ---@field public get_item               fun(self: eve.ux.IFileSelect, uuid: string): eve.ux.select.IItem|nil
----@field public get_matched_items      fun(self: eve.ux.IFileSelect): eve.ux.select.IMatchedItem[]
+---@field public get_matched_items      fun(self: eve.ux.IFileSelect): eve.t.IScoredMatch[]
 ---@field public get_winnr_input        fun(self: eve.ux.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: eve.ux.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: eve.ux.IFileSelect): integer|nil
@@ -22,7 +22,7 @@
 ---| fun(item: eve.ux.select_file.IItem, last_item: eve.ux.select_file.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
 ---@alias eve.ux.select_file.IRenderItem
----| fun(item: eve.ux.select_file.IItem, match: eve.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
+---| fun(item: eve.ux.select_file.IItem, match: eve.t.IScoredMatch): string, eve.t.IHighlightInline[]
 
 ---@class eve.ux.select_file.IData
 ---@field public items                  eve.ux.select_file.IRawItem[]
@@ -126,7 +126,7 @@ function M.new(props)
     local function send_to_qflist()
       if _select ~= nil then
         local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
-        local matched_items = _select:get_matched_items() ---@type eve.ux.select.IMatchedItem[]
+        local matched_items = _select:get_matched_items() ---@type eve.t.IScoredMatch[]
         for _, matched_item in ipairs(matched_items) do
           local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
           ---@cast item                 eve.ux.select_file.IItem
@@ -314,7 +314,7 @@ function M.patch_preview_data(item, last_item, last_data)
 end
 
 ---@param item                          eve.ux.select_file.IItem
----@param match                         eve.ux.select.IMatchedItem
+---@param match                         eve.t.IScoredMatch
 ---@return string
 ---@return eve.t.IHighlightInline[]
 function M.render_item(item, match)
@@ -399,7 +399,7 @@ function M:get_item(uuid)
   return select:get_item(uuid)
 end
 
----@return                              eve.ux.select.IMatchedItem[]
+---@return                              eve.t.IScoredMatch[]
 function M:get_matched_items()
   local select = self._get_select() ---@type eve.ux.ISelect
   return select:get_matched_items()

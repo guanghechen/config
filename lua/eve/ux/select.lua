@@ -7,7 +7,7 @@ local __module_name__ = "eve.ux.select" ---@type string
 ---@field public change_preview_title   fun(self: eve.ux.ISelect, title: string): nil
 ---@field public get_item               fun(self: eve.ux.ISelect, uuid: string): eve.ux.select.IItem|nil
 ---@field public get_item_selected      fun(self: eve.ux.ISelect): eve.ux.select.IItem|nil, integer, string|nil
----@field public get_matched_items      fun(self: eve.ux.ISelect): eve.ux.select.IMatchedItem[]
+---@field public get_matched_items      fun(self: eve.ux.ISelect): eve.t.IScoredMatch[]
 ---@field public get_winnr_input        fun(self: eve.ux.ISelect): integer|nil
 ---@field public get_winnr_main         fun(self: eve.ux.ISelect): integer|nil
 ---@field public get_winnr_preview      fun(self: eve.ux.ISelect): integer|nil
@@ -26,10 +26,10 @@ local __module_name__ = "eve.ux.select" ---@type string
 ---| fun(item: eve.ux.select.IItem, last_item: eve.ux.select.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
 ---@alias eve.ux.select.IMatchedItemCmp
----| fun(item1: eve.ux.select.IMatchedItem, item2: eve.ux.select.IMatchedItem): boolean
+---| fun(item1: eve.t.IScoredMatch, item2: eve.t.IScoredMatch): boolean
 
 ---@alias eve.ux.select.IRenderItem
----| fun(item: eve.ux.select.IItem, match: eve.ux.select.IMatchedItem): string, eve.t.IHighlightInline[]
+---| fun(item: eve.ux.select.IItem, match: eve.t.IScoredMatch): string, eve.t.IHighlightInline[]
 
 ---@alias eve.ux.select.IOnConfirm
 ---| fun(widget: eve.ux.ISelect, items: eve.ux.select.IItem[]): nil
@@ -46,12 +46,6 @@ local __module_name__ = "eve.ux.select" ---@type string
 ---@field public text_lower             string|nil
 ---@field public data                   any|nil
 
----@class eve.ux.select.IMatchedItem
----@field public order                  integer
----@field public uuid                   string
----@field public score                  integer
----@field public matches                eve.t.IMatchPoint[]
-
 ---@class eve.ux.select.IProvider
 ---@field public fetch_data             eve.ux.select.IFetchData
 ---@field public fetch_preview_data     ?eve.ux.select.IFetchPreviewData
@@ -64,14 +58,14 @@ local __module_name__ = "eve.ux.select" ---@type string
 ---@field protected _flag_fuzzy         eve.std.collection.IObservable
 ---@field protected _flag_regex         eve.std.collection.IObservable
 ---@field protected _frecency           eve.std.collection.IFrecency|nil
----@field protected _full_matches       eve.ux.select.IMatchedItem[]
+---@field protected _full_matches       eve.t.IScoredMatch[]
 ---@field protected _item_map           table<string, eve.ux.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
 ---@field protected _live_data_dirty    eve.std.collection.IObservable
----@field protected _matches            eve.ux.select.IMatchedItem[]
+---@field protected _matches            eve.t.IScoredMatch[]
 ---@field protected _provider           eve.ux.select.IProvider
 ---@field protected _search             eve.ux.ISearch
 local M = {}
@@ -387,15 +381,15 @@ function M:close()
   self._search:close()
 end
 
----@param item1                         eve.ux.select.IMatchedItem
----@param item2                         eve.ux.select.IMatchedItem
+---@param item1                         eve.t.IScoredMatch
+---@param item2                         eve.t.IScoredMatch
 ---@return boolean
 function M.cmp_by_score(item1, item2)
   return item1.score == item2.score and item1.order < item2.order or item1.score > item2.score
 end
 
 ---@param item                          eve.ux.select.IItem
----@param match                         eve.ux.select.IMatchedItem
+---@param match                         eve.t.IScoredMatch
 ---@return string
 ---@return eve.t.IHighlightInline[]
 function M.default_render_item(item, match)
@@ -419,10 +413,10 @@ function M:fetch_data(input, force)
     local frecency = self._frecency ---@type eve.std.collection.IFrecency|nil
     local data = self._provider.fetch_data(force) ---@type eve.ux.select.IData
     local item_map = {} ---@type table<string, eve.ux.select.IItem>
-    local full_matches = {} ---@type eve.ux.select.IMatchedItem[]
+    local full_matches = {} ---@type eve.t.IScoredMatch[]
     for order, item in ipairs(data.items) do
       local score = frecency ~= nil and frecency:score(item.uuid) or 0 ---@type integer
-      local match_item = { order = order, uuid = item.uuid, score = score, matches = {} } ---@type eve.ux.select.IMatchedItem
+      local match_item = { order = order, uuid = item.uuid, score = score, matches = {} } ---@type eve.t.IScoredMatch
       item_map[item.uuid] = item
       table.insert(full_matches, match_item)
     end
@@ -439,7 +433,7 @@ function M:fetch_data(input, force)
   end
 
   local item_map = self._item_map ---@type table<string, eve.ux.select.IItem>
-  local matches = self:filter(input) ---@type eve.ux.select.IMatchedItem[]
+  local matches = self:filter(input) ---@type eve.t.IScoredMatch[]
   local items = {} ---@type eve.ux.search.IItem[]
   local render_item = self._provider.render_item or M.default_render_item ---@type eve.ux.select.IRenderItem
   for _, match in ipairs(matches) do
@@ -455,12 +449,12 @@ function M:fetch_data(input, force)
 end
 
 ---@param input                         string
----@return eve.ux.select.IMatchedItem[]
+---@return eve.t.IScoredMatch[]
 function M:filter(input)
   local frecency = self._frecency ---@type eve.std.collection.IFrecency|nil
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
-  local matches = self._full_matches ---@type eve.ux.select.IMatchedItem[]
+  local matches = self._full_matches ---@type eve.t.IScoredMatch[]
   if #input < 1 then
     if frecency ~= nil then
       for _, match in ipairs(matches) do
@@ -469,7 +463,7 @@ function M:filter(input)
       end
     end
   else
-    local old_matches = self._full_matches ---@type eve.ux.select.IMatchedItem[]
+    local old_matches = self._full_matches ---@type eve.t.IScoredMatch[]
     local last_case_sensitive = self._last_case_sensitive ---@type boolean
     local last_input = self._last_input ---@type string|nil
     if last_input ~= nil and case_sensitive == last_case_sensitive or not last_case_sensitive then
@@ -490,7 +484,7 @@ function M:filter(input)
       end
     end
 
-    ---@type eve.ux.select.IMatchedItem[]
+    ---@type eve.t.IScoredMatch[]
     matches = self:find_matched_items(input, old_matches)
     if frecency ~= nil then
       for _, match in ipairs(matches) do
@@ -511,8 +505,8 @@ function M:filter(input)
 end
 
 ---@param input                         string
----@param old_matches                   eve.ux.select.IMatchedItem[]
----@return eve.ux.select.IMatchedItem[]
+---@param old_matches                   eve.t.IScoredMatch[]
+---@return eve.t.IScoredMatch[]
 function M:find_matched_items(input, old_matches)
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
   local flag_fuzzy = self._flag_fuzzy:snapshot() ---@type boolean
@@ -544,11 +538,11 @@ function M:find_matched_items(input, old_matches)
     return old_matches
   end
 
-  local matches = {} ---@type eve.ux.select.IMatchedItem[]
+  local matches = {} ---@type eve.t.IScoredMatch[]
   for _, oxi_match in ipairs(oxi_matches) do
-    local old_match = old_matches[oxi_match.lnum] ---@type eve.ux.select.IMatchedItem
+    local old_match = old_matches[oxi_match.lnum] ---@type eve.t.IScoredMatch
 
-    ---@type eve.ux.select.IMatchedItem
+    ---@type eve.t.IScoredMatch
     local match = {
       order = old_match.order,
       uuid = old_match.uuid,
@@ -599,7 +593,7 @@ function M:get_item_selected()
   return select_item, lnum
 end
 
----@return                              eve.ux.select.IMatchedItem[]
+---@return                              eve.t.IScoredMatch[]
 function M:get_matched_items()
   return self._matches
 end
