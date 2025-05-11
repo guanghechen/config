@@ -47,8 +47,8 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@class eve.ux.view.Treeview : eve.ux.view.IView
 ---@field protected _disposed           boolean
 ---@field protected _foldempty          boolean
----@field protected _tick_treeview      integer
 ---@field protected _tick_listview      integer
+---@field protected _tick_treeview      integer
 ---
 ---@field protected _indent             string
 ---@field protected _indent_hln         string
@@ -91,8 +91,8 @@ function M.new(props)
   self.nsnr = nsnr
   self._disposed = false
   self._foldempty = foldempty
-  self._tick_treeview = 0
   self._tick_listview = 0
+  self._tick_treeview = 0
   self._indent = indent
   self._indent_hln = indent_hln
   self._lnum2uuid = {}
@@ -301,37 +301,6 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param included_uuids                string[]
----@return table<string, boolean>
-function M:calc_include_uuid_set(included_uuids)
-  self:health()
-
-  local uuids = {} ---@type table<string, boolean>
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-  for _, uuid in ipairs(included_uuids) do
-    local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
-    if node == nil then
-      eve.reporter.warn({
-        from = __module_name__,
-        subject = "calc_include_uuid_set",
-        message = "The node isn't exist",
-        details = { uuid = uuid },
-      })
-      goto continue
-    end
-
-    uuids[uuid] = true
-
-    while not uuids[node.parent] do
-      uuids[node.parent] = true
-      node = node_map[node.parent]
-    end
-
-    ::continue::
-  end
-  return uuids
-end
-
 ---@param uuid                          string
 ---@param value                         "collapsed"|"expanded"|"toggle"
 ---@param recursive                     ?boolean
@@ -365,13 +334,6 @@ function M:collapse(uuid, value, recursive)
     self:__update_collapse_recursively__(node, collapsed)
   end
   return self
-end
-
----@param uuid                          string
----@return boolean
-function M:has(uuid)
-  self:health()
-  return self._node_map[uuid] ~= nil
 end
 
 ---@param uuid                          string
@@ -447,79 +409,6 @@ function M:remove(uuid)
   end
 
   self:__remove_recursively__(node)
-  return self
-end
-
----@param lnum                          integer
----@param silent                        boolean|nil
----@return eve.ux.view.treeview.INode|nil
-function M:retrieve_by_lnum(lnum, silent)
-  self:health()
-
-  local uuid = self._lnum2uuid[lnum] ---@type string|nil
-  if uuid == nil then
-    if not silent then
-      eve.reporter.error({
-        from = __module_name__,
-        subject = "retrieve_by_lnum",
-        message = "Cannot retrieve the uuid by the given lnum",
-        details = { lnum = lnum },
-      })
-    end
-    return nil
-  end
-
-  local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
-  if node == nil then
-    if not silent then
-      eve.reporter.error({
-        from = __module_name__,
-        subject = "retrieve_by_lnum",
-        message = "The node isn't exist",
-        details = { lnum = lnum, uuid = uuid },
-      })
-    end
-    return nil
-  end
-  return node
-end
-
----@param uuid                          string
----@param silent                        boolean|nil
----@return eve.ux.view.treeview.INode|nil
-function M:retrieve_by_uuid(uuid, silent)
-  self:health()
-
-  local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
-  if node == nil then
-    if not silent then
-      eve.reporter.error({
-        from = __module_name__,
-        subject = "retrieve_by_uuid",
-        message = "The node isn't exist",
-        details = { uuid = uuid },
-      })
-    end
-    return nil
-  end
-  return node
-end
-
----@param uuid                          string
----@return integer|nil
-function M:retrieve_lnum(uuid)
-  self:health()
-  return self._uuid2lnum[uuid] ---@type integer|nil
-end
-
----@param foldempty                     boolean
----@return eve.ux.view.Treeview
-function M:set_foldempty(foldempty)
-  self:health()
-  if self._foldempty ~= foldempty then
-    self._foldempty = foldempty
-    self._tick_treeview = self._tick_treeview + 1
-  end
   return self
 end
 
@@ -601,6 +490,133 @@ function M:update(uuid, parent_uuid, data, leaf, collapsed, insert_if_non_exist)
   node.parent = parent_uuid
   parent.children[#parent.children + 1] = uuid
   parent.dirty_orders = true
+  return self
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@param included_uuids                string[]
+---@return table<string, boolean>
+function M:calc_include_uuid_set(included_uuids)
+  self:health()
+
+  local uuids = {} ---@type table<string, boolean>
+  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+  for _, uuid in ipairs(included_uuids) do
+    local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+    if node == nil then
+      eve.reporter.warn({
+        from = __module_name__,
+        subject = "calc_include_uuid_set",
+        message = "The node isn't exist",
+        details = { uuid = uuid },
+      })
+      goto continue
+    end
+
+    uuids[uuid] = true
+
+    while not uuids[node.parent] do
+      uuids[node.parent] = true
+      node = node_map[node.parent]
+    end
+
+    ::continue::
+  end
+  return uuids
+end
+
+---@param uuid                          string
+---@return boolean
+function M:has(uuid)
+  self:health()
+  return self._node_map[uuid] ~= nil
+end
+
+---@return eve.ux.view.Treeview
+function M:mark_listview_node_cache_dirty()
+  self:health()
+  self._tick_listview = self._tick_listview + 1
+  return self
+end
+
+---@return eve.ux.view.Treeview
+function M:mark_treeview_node_cache_dirty()
+  self:health()
+  self._tick_treeview = self._tick_treeview + 1
+  return self
+end
+
+---@param lnum                          integer
+---@param silent                        boolean|nil
+---@return eve.ux.view.treeview.INode|nil
+function M:retrieve_by_lnum(lnum, silent)
+  self:health()
+
+  local uuid = self._lnum2uuid[lnum] ---@type string|nil
+  if uuid == nil then
+    if not silent then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "retrieve_by_lnum",
+        message = "Cannot retrieve the uuid by the given lnum",
+        details = { lnum = lnum },
+      })
+    end
+    return nil
+  end
+
+  local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+  if node == nil then
+    if not silent then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "retrieve_by_lnum",
+        message = "The node isn't exist",
+        details = { lnum = lnum, uuid = uuid },
+      })
+    end
+    return nil
+  end
+  return node
+end
+
+---@param uuid                          string
+---@param silent                        boolean|nil
+---@return eve.ux.view.treeview.INode|nil
+function M:retrieve_by_uuid(uuid, silent)
+  self:health()
+
+  local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+  if node == nil then
+    if not silent then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "retrieve_by_uuid",
+        message = "The node isn't exist",
+        details = { uuid = uuid },
+      })
+    end
+    return nil
+  end
+  return node
+end
+
+---@param uuid                          string
+---@return integer|nil
+function M:retrieve_lnum(uuid)
+  self:health()
+  return self._uuid2lnum[uuid] ---@type integer|nil
+end
+
+---@param foldempty                     boolean
+---@return eve.ux.view.Treeview
+function M:set_foldempty(foldempty)
+  self:health()
+  if self._foldempty ~= foldempty then
+    self._foldempty = foldempty
+    self._tick_treeview = self._tick_treeview + 1
+  end
   return self
 end
 
