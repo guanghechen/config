@@ -68,8 +68,8 @@ local treeview = eve.ux.view.Treeview.new({
   end,
   ---@type eve.ux.view.treeview.INodeSorter
   sorter = function(left, right)
-    if left.data.leaf ~= right.data.leaf then
-      return right.data.leaf
+    if left.leaf ~= right.leaf then
+      return right.leaf
     end
     return left.data.basename < right.data.basename
   end,
@@ -190,6 +190,61 @@ local picker = eve.ux.Picker.new({
     },
   },
   flags_start_index = 0,
+  finder_keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-l>",
+      desc = "filetree: open",
+      callback = function(self)
+        local lnum = self:get_result_lnum() ---@type integer
+        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        if node == nil then
+          return
+        end
+
+        local data = node.data ---@type __test__.ux.picker.ITreeNodeData
+        if data.filetype == "directory" then
+          treeview:collapse(node.uuid, "expanded", false)
+          self:mark_result_dirty()
+        else
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+          end
+
+          self:close()
+          local filepath = data.filepath ---@type string
+          eve.win.open_filepath(winnr_sourcefile, filepath)
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-h>",
+      desc = "filetree: close",
+      callback = function(self)
+        local lnum = self:get_result_lnum() ---@type integer
+        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        if node == nil then
+          return
+        end
+
+        local data = node.data ---@type __test__.ux.picker.ITreeNodeData
+        if data.filetype == "directory" and not node.collapsed then
+          treeview:collapse(node.uuid, "collapsed", false)
+          self:mark_result_dirty()
+        else
+          local lnum_parent = treeview:retrieve_lnum(node.parent) ---@type integer|nil
+          treeview:collapse(node.parent, "collapsed", false)
+          self:mark_result_dirty()
+          if lnum_parent ~= nil then
+            self:set_result_lnum(lnum_parent)
+          end
+        end
+      end,
+    },
+  },
   result_keymaps = {
     {
       modes = { "n" },
@@ -314,11 +369,51 @@ local picker = eve.ux.Picker.new({
   on_dispose = function()
     treeview:dispose()
   end,
-  on_finder_change = function(self)
-    self:mark_result_dirty()
+  on_finder_change = function(picker)
+    picker:mark_result_dirty()
   end,
-  result_render = function(self, bufnr, input)
+  ---@type eve.ux.picker.IResultRender
+  result_render = function(_, bufnr, input)
     treeview:render(bufnr, root_uuid)
+  end,
+  ---@type eve.ux.picker.IPreviewRender
+  preview_render = function(picker, bufnr)
+    local lnum = picker:get_result_lnum() ---@type integer
+    local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
+    if node == nil then
+      ---@type string[]
+      local lines = {
+        string.format("Error: cannot retrieve node by the given lnum: %d", lnum),
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      return string.format("Unknown lnum(%d)", lnum)
+    end
+
+    local data = node.data ---@type __test__.ux.picker.ITreeNodeData
+    if data.filetype == "directory" then
+      ---@type string[]
+      local lines = {
+        string.format("Directory: %s", data.filepath),
+      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      return data.filepath
+    end
+
+    local lines = eve.fs.read_file_as_lines({ filepath = data.filepath, silent = true }) ---@type string[]
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+    local filetype = data.filetype ---@type string
+    if filetype ~= nil then
+      if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+        local lang = vim.treesitter.language.get_lang(filetype) or filetype
+        local loaded = vim.treesitter.language.add(lang)
+        if loaded then
+          vim.treesitter.stop(bufnr)
+          vim.treesitter.start(bufnr, lang)
+        end
+      end
+    end
+    return data.filepath
   end,
 })
 

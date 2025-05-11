@@ -926,7 +926,7 @@ function M.new(props)
           })
         else
           if preview_title ~= nil then
-            self._preview_title = string.format(" %s ", vim.trim(preview_title))
+            self:set_preview_title(preview_title)
           end
         end
 
@@ -1393,6 +1393,7 @@ function M:set_preview_title(title)
     if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
       local wincfg = vim.api.nvim_win_get_config(preview_winnr) ---@type vim.api.keyset.win_config
       wincfg.title = self._preview_title
+      wincfg.title_pos = self._preview_title and "center" or nil
       vim.api.nvim_win_set_config(preview_winnr, wincfg)
     else
       self:__create_wins__()
@@ -1671,7 +1672,7 @@ function M:__create_wins__()
       style = "minimal",
       focusable = true,
       title = self._preview_title,
-      title_pos = "center",
+      title_pos = self._preview_title and "center" or nil,
     }
 
     if preview_winnr == nil then
