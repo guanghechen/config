@@ -42,7 +42,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---@field public node_renderer          eve.ux.view.treeview.INodeRenderer
----@field public sorter                 eve.ux.view.treeview.INodeSorter
+---@field public node_sorter            eve.ux.view.treeview.INodeSorter
 
 ---@class eve.ux.view.Treeview : eve.ux.view.IView
 ---@field protected _disposed           boolean
@@ -57,7 +57,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field protected _node_map           table<string, eve.ux.view.treeview.INode>
 ---@field protected _node_root          eve.ux.view.treeview.INode
 ---@field protected _node_renderer      eve.ux.view.treeview.INodeRenderer
----@field protected _sorter             eve.ux.view.treeview.INodeSorter
+---@field protected _node_sorter        eve.ux.view.treeview.INodeSorter
 local M = {}
 M.__index = M
 
@@ -72,7 +72,7 @@ function M.new(props)
   local indent = props.indent or "" ---@type string
   local indent_hln = props.indent_hln or "f_utw_indent" ---@type string
   local node_renderer = props.node_renderer ---@type eve.ux.view.treeview.INodeRenderer
-  local sorter = props.sorter ---@type eve.ux.view.treeview.INodeSorter
+  local sorter = props.node_sorter ---@type eve.ux.view.treeview.INodeSorter
 
   local self = setmetatable({}, M)
 
@@ -100,7 +100,7 @@ function M.new(props)
   self._node_map = { [root.uuid] = root }
   self._node_root = root
   self._node_renderer = node_renderer
-  self._sorter = sorter
+  self._node_sorter = sorter
   return self
 end
 
@@ -130,7 +130,7 @@ function M:dispose()
   self._node_map = nil
   self._node_root = nil
   self._node_renderer = nil
-  self._sorter = nil
+  self._node_sorter = nil
 end
 
 ---@return boolean
@@ -664,7 +664,7 @@ function M:__sort_children__(parent)
   table.sort(parent.children, function(uuid_left, uuid_right)
     local left = self._node_map[uuid_left] ---@type eve.ux.view.treeview.INode
     local right = self._node_map[uuid_right] ---@type eve.ux.view.treeview.INode
-    return self._sorter(left, right)
+    return self._node_sorter(left, right)
   end)
 end
 

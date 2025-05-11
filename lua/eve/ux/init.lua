@@ -1,5 +1,8 @@
 ---@class eve.ux.__mods
 local __mods = {
+  Picker = "eve.ux.picker",
+  FilePicker = "eve.ux.picker-file",
+
   Search = "eve.ux.search.search",
   SearchContext = "eve.ux.search.context",
   SearchInput = "eve.ux.search.input",
@@ -11,7 +14,6 @@ local __mods = {
   SelectPopup = "eve.ux.select_popup",
 
   Board = "eve.ux.board",
-  Picker = "eve.ux.picker",
   Setting = "eve.ux.setting",
   Terminal = "eve.ux.terminal",
   Textarea = "eve.ux.textarea",
@@ -22,6 +24,9 @@ local __mods = {
 ---@field public fn                     eve.ux.fn
 ---@field public view                   eve.ux.view
 ---@field public nvimbar                eve.ux.nvimbar
+---
+---@field public Picker                 eve.ux.Picker
+---@field public FilePicker             eve.ux.FilePicker
 ---
 ---@field public Search                 eve.ux.Search
 ---@field public SearchContext          eve.ux.SearchContext
@@ -34,7 +39,6 @@ local __mods = {
 ---@field public SelectPopup            eve.ux.SelectPopup
 ---
 ---@field public Board                  eve.ux.Board
----@field public Picker                 eve.ux.Picker
 ---@field public Setting                eve.ux.Setting
 ---@field public Terminal               eve.ux.Terminal
 ---@field public Textarea               eve.ux.Textarea

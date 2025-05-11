@@ -82,6 +82,7 @@ M.symbols = {
   setting = "",
   flag_case_sensitive = "",
   flag_exclude = "",
+  flag_fold_empty_path = "",
   flag_fuzzy = "",
   flag_gitignore = "",
   flag_included = "󱣬",

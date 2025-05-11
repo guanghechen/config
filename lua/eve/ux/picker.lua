@@ -19,7 +19,7 @@ local c = eve.ux.nvimbar.component
 ---| fun(self: eve.ux.Picker, bufnr: integer, input: string): nil
 
 ---@alias eve.ux.picker.IOnHide
----| fun(): nil
+---| fun(self: eve.ux.Picker): nil
 
 ---@alias eve.ux.picker.IResultRender
 ---| fun(self: eve.ux.Picker, bufnr: integer, input: string): integer?, integer?
@@ -685,7 +685,7 @@ local __winopts__ = {
 ---@field public flags                  ?eve.ux.picker.IFlagItem[]
 ---@field public flags_start_index      ?0|1
 ---
----@field public finder_input           ?string
+---@field public finder_input           eve.std.collection.IObservable
 ---@field public finder_keymaps         ?eve.ux.picker.IKeymap[]
 ---@field public finder_multiline       ?boolean
 ---@field public finder_title           string
@@ -696,12 +696,11 @@ local __winopts__ = {
 ---@field public result_win_opts        ?eve.ux.picker.IWinOptions
 ---
 ---@field public preview_keymaps        ?eve.ux.picker.IKeymap[]
----@field public preview_render         ?eve.ux.picker.IResultRender
+---@field public preview_render         ?eve.ux.picker.IPreviewRender
 ---@field public preview_win_opts       ?eve.ux.picker.IWinOptions
 ---
 ---@field public on_dispose             ?eve.ux.picker.IOnDispose
 ---@field public on_focus               ?eve.ux.picker.IOnFocus
----@field public on_finder_change       eve.ux.picker.IOnFinderChange
 ---@field public on_hide                ?eve.ux.picker.IOnHide
 
 ---@class eve.ux.Picker : eve.t.ux.IWidget
@@ -725,16 +724,16 @@ local __winopts__ = {
 ---@field protected _finder_keymaps     eve.ux.picker.IInternalKeymap[]
 ---@field protected _finder_title       string
 ---@field protected _finder_winopts     eve.ux.picker.IWinOptions
----@field protected _finder_input       eve.std.collection.Observable
----@field protected _finder_line_count  eve.std.collection.Observable
+---@field protected _finder_input       eve.std.collection.IObservable
+---@field protected _finder_line_count  eve.std.collection.IObservable
 ---@field protected _finder_multiline   boolean
 ---
 ---@field protected _result_bufnr       integer|nil
 ---@field protected _result_winnr       integer|nil
 ---@field protected _result_keymaps     eve.ux.picker.IInternalKeymap[]
 ---@field protected _result_winopts     eve.ux.picker.IWinOptions
----@field protected _result_lnum        eve.std.collection.Observable
----@field protected _result_total       eve.std.collection.Observable
+---@field protected _result_lnum        eve.std.collection.IObservable
+---@field protected _result_total       eve.std.collection.IObservable
 ---@field protected _result_nvimbar     eve.ux.nvimbar.Nvimbar
 ---@field protected _result_render      eve.ux.picker.IResultRender
 ---
@@ -747,7 +746,6 @@ local __winopts__ = {
 ---
 ---@field protected _on_dispose         eve.ux.picker.IOnDispose
 ---@field protected _on_focus           eve.ux.picker.IOnFocus
----@field protected _on_finder_change   eve.ux.picker.IOnFinderChange
 ---@field protected _on_hide            eve.ux.picker.IOnHide
 local M = {}
 M.__index = M
@@ -765,18 +763,16 @@ function M.new(props)
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
   local augroup_CursorMoved = eve.nvim.augroup(string.format("picker:CursorMoved%s#%s", name, uuid))
 
-  local initial_input = props.finder_input or "" ---@type string
-  local initial_input_lines = vim.split(initial_input, "\n", { plain = true }) ---@type string[]
-  local finder_input = eve.std.Observable.from_value(initial_input) ---@type eve.std.collection.Observable
+  local finder_input = props.finder_input ---@type eve.std.collection.IObservable
   local finder_keymaps = props.finder_keymaps or {} ---@type eve.ux.picker.IKeymap[]
-  local finder_count = eve.std.Observable.from_value(#initial_input_lines) ---@type eve.std.collection.Observable
+  local finder_count = eve.std.Observable.from_value(#vim.split(finder_input:snapshot(), "\n", { plain = true })) ---@type eve.std.collection.IObservable
   local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
   local finder_winopts = vim.tbl_deep_extend("force", {}, __winopts__.finder, props.finder_win_opts or {}) ---@type eve.ux.picker.IWinOptions
 
   local result_keymaps = props.result_keymaps or {} ---@type eve.ux.picker.IKeymap[]
-  local result_lnum = eve.std.Observable.from_value(0) ---@type eve.std.collection.Observable
-  local result_total = eve.std.Observable.from_value(0) ---@type eve.std.collection.Observable
+  local result_lnum = eve.std.Observable.from_value(0) ---@type eve.std.collection.IObservable
+  local result_total = eve.std.Observable.from_value(0) ---@type eve.std.collection.IObservable
   local result_render = props.result_render ---@type eve.ux.picker.IResultRender
   local result_winopts = vim.tbl_deep_extend("force", {}, __winopts__.result, props.result_win_opts or {}) ---@type eve.ux.picker.IWinOptions
 
@@ -786,7 +782,6 @@ function M.new(props)
 
   local on_dispose = props.on_dispose or eve.std.fn.noop ---@type eve.ux.picker.IOnDispose
   local on_focus = props.on_focus or eve.std.fn.noop ---@type eve.ux.picker.IOnFocus
-  local on_finder_change = props.on_finder_change ---@type eve.ux.picker.IOnFinderChange
   local on_hide = props.on_hide or eve.std.fn.noop ---@type eve.ux.picker.IOnHide
 
   local self = setmetatable({}, M)
@@ -856,7 +851,6 @@ function M.new(props)
 
   self._on_dispose = on_dispose ---@type eve.ux.picker.IOnDispose
   self._on_focus = on_focus ---@type eve.ux.picker.IOnFocus
-  self._on_finder_change = on_finder_change ---@type eve.ux.picker.IOnFinderChange
   self._on_hide = on_hide ---@type eve.ux.picker.IOnHide
 
   self._finder_keymaps = self:__resolve_finder__keymaps__(finder_keymaps)
@@ -1117,7 +1111,6 @@ function M:dispose()
   self._preview_render = nil
 
   self._on_dispose = nil
-  self._on_finder_change = nil
 
   pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
   vim.schedule(function()
@@ -1171,7 +1164,7 @@ function M:hide()
   eve.win.close(result_winnr)
 
   vim.schedule(function()
-    pcall(self._on_hide)
+    pcall(self._on_hide, self)
   end)
 end
 
@@ -1458,7 +1451,6 @@ function M:__create_bufs__()
         local content = table.concat(lines, "\n") ---@type string
         self._finder_input:next(content)
         self._finder_line_count:next(#lines)
-        self._on_finder_change(self, finder_bufnr, content)
         self:__set_finder_prompt_sign__(finder_bufnr)
       end,
     })
@@ -1932,7 +1924,7 @@ function M:__resize__()
   local result_position = {
     row = row + finder_height + 1,
     col = col,
-    height = height - finder_height,
+    height = height - finder_height - 1,
     width = finder_width,
   }
 

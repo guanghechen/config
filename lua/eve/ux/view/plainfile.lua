@@ -1,13 +1,18 @@
+local __module_name__ = "eve.ux.view.plainfile" ---@type string
+
+---@class eve.ux.view.plainfile.IData
+---@field public filepath               string
+---@field public filetype               string
+---@field public lines                  string[]
+
 ---@class eve.ux.view.IPlainfileProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 
 ---@class eve.ux.view.Plainfile : eve.ux.view.IView
 ---@field protected _disposed           boolean
----@field protected _filename           string|nil
----@field protected _filetype           string|nil
----@field protected _lines              string[]
----@field protected _max_width          integer
+---@field protected _last_bufnr         integer|nil
+---@field protected _last_data          eve.ux.view.plainfile.IData|nil
 local M = {}
 M.__index = M
 
@@ -24,21 +29,17 @@ function M.new(props)
   self.name = name
   self.nsnr = nsnr
   self._disposed = false
-  self._filename = nil
-  self._filetype = nil
-  self._lines = nil
-  self._max_width = 0
+  self._last_bufnr = nil
+  self._last_data = nil
   return self
 end
 
 ---@return eve.ux.view.Plainfile
 function M:clear()
-  self:health()
+  self:__health__()
 
-  self._filename = nil
-  self._filetype = nil
-  self._lines = nil
-  self._max_width = 0
+  self._last_bufnr = nil
+  self._last_data = nil
   return self
 end
 
@@ -47,12 +48,10 @@ function M:dispose()
   if self._disposed then
     return nil
   end
-
   self._disposed = true
-  self._filename = nil
-  self._filetype = nil
-  self._lines = nil
-  self._max_width = nil
+
+  self._last_bufnr = nil
+  self._last_data = nil
 end
 
 ---@return boolean
@@ -60,42 +59,46 @@ function M:isdisposed()
   return self._disposed
 end
 
----@return nil
-function M:health()
-  if self._disposed then
-    local message = string.format("Plainfile (%s) has been disposed.", self.name) ---@type string
-    error(message)
-  end
-end
-
----@return integer
----@return integer
-function M:measure()
-  self:health()
-
-  local height = #self._lines ---@type integer
-  local max_width = self._max_width ---@type integer
-  return height, max_width
-end
-
 ---@param bufnr                         integer
+---@param filepath                      string
+---@param force                         boolean
 ---@return eve.ux.view.Plainfile
-function M:render(bufnr)
-  self:health()
+function M:render(bufnr, filepath, force)
+  self:__health__()
 
-  local lines = self._lines ---@type string[]
-  local filetype = self._filetype ---@type string
-  local nsnr = self.nsnr ---@type integer
+  local data = self._last_data ---@type eve.ux.view.plainfile.IData|nil
+  if force or data == nil or data.filepath ~= filepath then
+    local lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    local filename = eve.path.basename(filepath) ---@type string
+    local filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
 
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    ---@type eve.ux.view.plainfile.IData
+    data = {
+      filepath = filepath,
+      filetype = filetype,
+      lines = lines,
+    }
+    self._last_data = data
 
-  if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
-    local lang = vim.treesitter.language.get_lang(filetype) or filetype
-    local loaded = vim.treesitter.language.add(lang)
-    if loaded then
-      vim.treesitter.stop(bufnr)
-      vim.treesitter.start(bufnr, lang)
+    force = true
+  end
+
+  if force or self._last_bufnr ~= bufnr then
+    self._last_bufnr = bufnr
+    local nsnr = self.nsnr ---@type integer
+    local lines = data.lines ---@type string[]
+    local filetype = data.filetype ---@type string
+
+    vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+    if filetype ~= nil and vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+      local lang = vim.treesitter.language.get_lang(filetype) or filetype
+      local loaded = vim.treesitter.language.add(lang)
+      if loaded then
+        vim.treesitter.stop(bufnr)
+        vim.treesitter.start(bufnr, lang)
+      end
     end
   end
 
@@ -104,24 +107,12 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param filename                      string
----@param filetype                      string
----@param lines                         string[]
----@return eve.ux.view.Plainfile
-function M:attach(filename, filetype, lines)
-  self:health()
-
-  local max_width = 0 ---@type integer
-  for _, line in ipairs(lines) do
-    local width = vim.api.nvim_strwidth(line) ---@type integer
-    max_width = max_width < width and width or max_width ---@type integer
+---@return nil
+function M:__health__()
+  if self._disposed then
+    local message = string.format("%s (%s) has been disposed.", __module_name__, self.name) ---@type string
+    error(message)
   end
-
-  self._filename = filename
-  self._filetype = filetype
-  self._lines = lines
-  self._max_width = max_width
-  return self
 end
 
 return M

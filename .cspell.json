@@ -418,6 +418,7 @@
     "nextnonblank",
     "noautocmd",
     "nocombine",
+    "nodetype",
     "nofile",
     "noinsert",
     "nonblank",

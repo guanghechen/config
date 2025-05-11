@@ -59,8 +59,8 @@ function M.result_flags(position, flags, flags_start_index)
 end
 
 ---@param position                      eve.ux.nvimbar.PositionEnum
----@param result_lnum                   eve.std.collection.Observable
----@param result_total                  eve.std.collection.Observable
+---@param result_lnum                   eve.std.collection.IObservable
+---@param result_total                  eve.std.collection.IObservable
 ---@return eve.ux.nvimbar.IRawComponent
 function M.result_pos(position, result_lnum, result_total)
   local hln_text = position .. "_picker_result_pos_text" ---@type string
