@@ -962,6 +962,7 @@ function M.new(props)
           message = "Failed to render result",
           details = {
             bufnr = bufnr,
+            error = lnum,
           },
         })
         lnum = 1

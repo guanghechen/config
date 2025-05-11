@@ -1,7 +1,7 @@
 require("plenary.reload").reload_module("eve.ux.picker")
 require("plenary.reload").reload_module("eve.ux.view.treeview")
 
----@class __test__.ux.picker.IData
+---@class __test__.ux.picker.ITreeNodeData
 ---@field public uuid                   string
 ---@field public filepath               string
 ---@field public filetype               string
@@ -13,13 +13,11 @@ local relative_filepaths = vim.split(vim.trim(vim.fn.system(command)), "\n", { p
 
 local treeview = eve.ux.view.Treeview.new({
   name = "file treeview",
+  foldempty = false,
   indent_hln = "f_utw_indent_float",
-  ---@param node                        eve.ux.view.treeview.INode
-  ---@return string
-  ---@return eve.t.IHighlightInline[]|nil
-  renderer = function(node)
-    local data = node.data ---@type __test__.ux.picker.IData
-    local highlights = {} ---@type eve.t.IHighlightInline[]
+  ---@type eve.ux.view.treeview.INodeRenderer
+  node_renderer = function(treeview, node, folded_depth)
+    local data = node.data ---@type __test__.ux.picker.ITreeNodeData
     local icon, icon_hln ---@type string, string
 
     if data.filetype == "directory" then
@@ -35,22 +33,43 @@ local treeview = eve.ux.view.Treeview.new({
       icon, icon_hln = eve.fn.fileicon(data.basename)
     end
 
-    local text = string.format("%s %s", icon, data.basename) ---@type string
-    local highlight = { coll = 0, colr = #icon + 1, hlname = icon_hln } ---@type eve.t.IHighlightInline
-    highlights[#highlights + 1] = highlight
-    return text, highlights
+    local text ---@type string
+    local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type eve.t.IHighlightInline[]
+
+    if folded_depth < 1 then
+      text = string.format("%s %s", icon, data.basename) ---@type string
+      local hln_basename = data.filetype == "directory" and "f_utw_dirname" or "f_utw_filename" ---@type string
+      highlights[#highlights + 1] = { coll = #icon + 1, colr = #text, hlname = hln_basename }
+    else
+      local basenames = {} ---@type string[]
+      basenames[folded_depth + 1] = data.basename ---@type string
+      for index = folded_depth, 1, -1 do
+        local parent_uuid = node.parent ---@type string
+        local parent = treeview:retrieve_by_uuid(parent_uuid) ---@type eve.ux.view.treeview.INode|nil
+        ---@cast parent eve.ux.view.treeview.INode
+
+        local parent_data = parent.data ---@type __test__.ux.picker.ITreeNodeData
+        basenames[index] = parent_data.basename ---@type string
+      end
+
+      text = string.format("%s %s", icon, basenames[1]) ---@type string
+      highlights[#highlights + 1] = { coll = #icon + 1, colr = #text, hlname = "f_utw_dirname" }
+
+      for index = 2, #basenames, 1 do
+        local basename = basenames[index] ---@type string
+        local offset = #text ---@type integer
+        text = text .. string.format("/%s", basename)
+        highlights[#highlights + 1] = { coll = offset + 1, colr = offset + 2, hlname = "f_utw_pathsep" }
+        highlights[#highlights + 1] = { coll = offset + 2, colr = #text, hlname = "f_utw_dirname" }
+      end
+    end
+
+    return { text = text, highlights = highlights }
   end,
-  ---@param left                        eve.ux.view.treeview.INode
-  ---@param right                       eve.ux.view.treeview.INode
-  ---@return boolean
+  ---@type eve.ux.view.treeview.INodeSorter
   sorter = function(left, right)
-    if left.data.filetype ~= right.data.filetype then
-      if left.data.filetype == "directory" then
-        return true
-      end
-      if right.data.filetype == "directory" then
-        return false
-      end
+    if left.data.leaf ~= right.data.leaf then
+      return right.data.leaf
     end
     return left.data.basename < right.data.basename
   end,
@@ -63,7 +82,7 @@ do
   local filetype = "directory" ---@type string
   local basename = cwd ---@type string
 
-  ---@type __test__.ux.treeview.IData
+  ---@type __test__.ux.picker.ITreeNodeData
   local data = {
     uuid = root_uuid,
     filepath = filepath,
@@ -85,7 +104,7 @@ for _, relative_filepath in ipairs(relative_filepaths) do
     local uuid = string.format("uuid:%s", filepath) ---@type string
 
     if not treeview:has(uuid) then
-      ---@type __test__.ux.picker.IData
+      ---@type __test__.ux.picker.ITreeNodeData
       local data = {
         uuid = uuid,
         filepath = filepath,
@@ -103,7 +122,7 @@ for _, relative_filepath in ipairs(relative_filepaths) do
   filepath = filepath .. eve.env.PATH_SEP .. filename ---@type string
   local uuid = string.format("uuid:%s", filepath) ---@type string
 
-  ---@type __test__.ux.picker.IData
+  ---@type __test__.ux.picker.ITreeNodeData
   local data = {
     uuid = uuid,
     filepath = filepath,
@@ -156,6 +175,19 @@ local picker = eve.ux.Picker.new({
         return enabled, eve.icon.symbols.flag_case_sensitive
       end,
     },
+    {
+      type = "boolean",
+      desc = "file-picker: fold empty path",
+      callback = function(picker)
+        local enabled = treeview:isfoldempty() ---@type boolean
+        treeview:set_foldempty(not enabled)
+        picker:mark_result_dirty()
+      end,
+      snapshot = function()
+        local enabled = treeview:isfoldempty() ---@type boolean
+        return enabled, ""
+      end,
+    },
   },
   flags_start_index = 0,
   result_keymaps = {
@@ -170,7 +202,7 @@ local picker = eve.ux.Picker.new({
           return
         end
 
-        local data = node.data ---@type __test__.ux.picker.IData
+        local data = node.data ---@type __test__.ux.picker.ITreeNodeData
         if data.filetype == "directory" then
           treeview:collapse(node.uuid, "toggle", true)
           self:mark_result_dirty()
@@ -205,7 +237,7 @@ local picker = eve.ux.Picker.new({
             return
           end
 
-          local data = node.data ---@type __test__.ux.picker.IData
+          local data = node.data ---@type __test__.ux.picker.ITreeNodeData
           if data.filetype == "directory" then
             treeview:collapse(node.uuid, "toggle", false)
             self:mark_result_dirty()
@@ -235,7 +267,7 @@ local picker = eve.ux.Picker.new({
           return
         end
 
-        local data = node.data ---@type __test__.ux.picker.IData
+        local data = node.data ---@type __test__.ux.picker.ITreeNodeData
         if data.filetype == "directory" then
           treeview:collapse(node.uuid, "expanded", false)
           self:mark_result_dirty()
@@ -264,7 +296,7 @@ local picker = eve.ux.Picker.new({
           return
         end
 
-        local data = node.data ---@type __test__.ux.picker.IData
+        local data = node.data ---@type __test__.ux.picker.ITreeNodeData
         if data.filetype == "directory" and not node.collapsed then
           treeview:collapse(node.uuid, "collapsed", false)
           self:mark_result_dirty()
@@ -286,7 +318,7 @@ local picker = eve.ux.Picker.new({
     self:mark_result_dirty()
   end,
   result_render = function(self, bufnr, input)
-    treeview:render(bufnr, cwd)
+    treeview:render(bufnr, root_uuid)
   end,
 })
 
