@@ -404,7 +404,6 @@ function M:calc_include_uuid_set(included_uuids)
     end
 
     uuids[uuid] = true
-
     while not uuids[node.parent] do
       uuids[node.parent] = true
       node = node_map[node.parent]

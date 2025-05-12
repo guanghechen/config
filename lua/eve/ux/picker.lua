@@ -1465,6 +1465,11 @@ function M:__create_bufs__()
       vim.keymap.set(keymap.mode, keymap.key, callback, opts)
     end
 
+    local finder_input = self._finder_input:snapshot() ---@type string
+    local initial_lines = self._finder_multiline and { finder_input } or vim.split(finder_input, "\n", { plain = true }) ---@type string[]
+    vim.api.nvim_buf_set_lines(finder_bufnr, 0, -1, false, initial_lines)
+    self:__set_finder_prompt_sign__(finder_bufnr)
+
     vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
       buffer = finder_bufnr,
       callback = function()
@@ -1475,8 +1480,6 @@ function M:__create_bufs__()
         self:__set_finder_prompt_sign__(finder_bufnr)
       end,
     })
-
-    self:__set_finder_prompt_sign__(finder_bufnr)
   end
 
   if result_bufnr == nil or not vim.api.nvim_buf_is_valid(result_bufnr) then

@@ -18,6 +18,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public uuid                   string
 ---@field public basename               string
 ---@field public filepath               string
+---@field public filepath_lower         string
 ---@field public nodetype               eve.ux.picker_file.NodetypeEnum
 
 ---@type eve.ux.view.treeview.INodeRenderer
@@ -136,11 +137,14 @@ end
 ---@field protected _picker             eve.ux.Picker
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.std.collection.BufRetriever
+---@field protected _scheduler_match    eve.std.collection.Scheduler|nil
 ---@field protected _treeview           eve.ux.view.Treeview
 ---
+---@field protected _last_input         string
+---@field protected _last_matches       eve.t.IScoredMatch[]|nil
+---@field protected _last_matched_uuids table<string, boolean>|nil
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuids_leaf         string[]
----@field protected _uuids_visible      string[]|nil
 ---
 ---@field protected _on_dispose         eve.ux.picker_file.IOnDispose
 ---@field protected _on_focus           eve.ux.picker_file.IOnFocus
@@ -177,6 +181,20 @@ function M.new(props)
   ---@type eve.ux.view.Plainfile
   local plainfile = eve.ux.view.Plainfile.new({
     name = name,
+  })
+
+  local scheduler_match = eve.std.Scheduler.new({
+    name = string.format("%s#match", name),
+    mode = "debounce",
+    delay = 256,
+    timeout = 0,
+    silent = eve.std.fn.falsy,
+    value = eve.std.Observable.from_value(true),
+    task = function()
+      local input = finder_input:snapshot() ---@type string
+      self:__match__(input)
+      self:mark_result_dirty()
+    end,
   })
 
   ---@type eve.ux.view.Treeview
@@ -488,7 +506,7 @@ function M.new(props)
     end,
     result_render = function(_, bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
-      local result = treeview:render(bufnr, viewtype, self._uuid_root) ---@type eve.ux.view.treeview.IRenderResult
+      local result = treeview:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
       local uuids = result.uuids ---@type string[]
       retriever:attach(bufnr, uuids)
     end,
@@ -529,10 +547,14 @@ function M.new(props)
   self._picker = picker
   self._plainfile = plainfile
   self._retriever = retriever
+  self._scheduler_match = scheduler_match
   self._treeview = treeview
+
+  self._last_input = ""
+  self._last_matches = nil
+  self._last_matched_uuids = nil
   self._uuid_root = nil
   self._uuids_leaf = {}
-  self._uuids_visible = nil
 
   self._on_dispose = on_dispose
   self._on_focus = on_focus
@@ -540,7 +562,7 @@ function M.new(props)
 
   finder_input:subscribe(eve.std.Subscriber.new({
     on_next = function()
-      self:mark_result_dirty()
+      scheduler_match:schedule()
     end,
   }))
 
@@ -557,6 +579,7 @@ function M:dispose()
   local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDisposed
   self._plainfile:dispose()
   self._retriever:dispose()
+  self._scheduler_match:dispose()
   self._treeview:dispose()
   self._picker:dispose()
 
@@ -567,11 +590,14 @@ function M:dispose()
   self._picker = nil
   self._plainfile = nil
   self._retriever = nil
+  self._scheduler_match = nil
   self._treeview = nil
 
+  self._last_input = nil
+  self._last_matches = nil
+  self._last_matched_uuids = nil
   self._uuid_root = nil
   self._uuids_leaf = nil
-  self._uuids_visible = nil
 
   vim.schedule(function()
     pcall(on_dispose)
@@ -619,6 +645,9 @@ end
 ---@return eve.ux.FilePicker
 function M:attach(uuid)
   self:__health__()
+  if self._uuid_root == uuid then
+    return self
+  end
 
   local node = self._treeview:retrieve_by_uuid(uuid) ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
@@ -631,6 +660,10 @@ function M:attach(uuid)
   end
 
   self._uuid_root = uuid
+  self._last_input = ""
+  self._last_matches = nil
+  self._last_matched_uuids = nil
+  self._scheduler_match:schedule()
   return self
 end
 
@@ -660,6 +693,7 @@ function M:reset_filepaths(filepaths)
     uuid = "uuid:",
     basename = "",
     filepath = "",
+    filepath_lower = "",
     nodetype = "directory",
   }
   treeview:insert(root.uuid, root.uuid, root, false, false)
@@ -686,6 +720,7 @@ function M:reset_filepaths(filepaths)
         uuid = uuid,
         basename = basename,
         filepath = filepath,
+        filepath_lower = filepath:lower(),
         nodetype = "directory",
       }
       treeview:insert(uuid, uuid_parent, data, false, false)
@@ -720,6 +755,7 @@ function M:reset_filepaths(filepaths)
         uuid = uuid,
         basename = basename,
         filepath = filepath,
+        filepath_lower = filepath:lower(),
         nodetype = "directory",
       }
       treeview:insert(uuid, uuid_parent, data, false, false)
@@ -735,6 +771,7 @@ function M:reset_filepaths(filepaths)
       uuid = uuid,
       basename = basename,
       filepath = filepath,
+      filepath_lower = filepath:lower(),
       nodetype = "file",
     }
     treeview:insert(uuid, uuid_parent, data, true, false)
@@ -759,6 +796,7 @@ function M:reset_filepaths(filepaths)
         uuid = uuid,
         basename = basename,
         filepath = filepath,
+        filepath_lower = filepath:lower(),
         nodetype = "directory",
       }
       treeview:insert(uuid, uuid_parent, data, false, false)
@@ -774,70 +812,23 @@ function M:reset_filepaths(filepaths)
       uuid = uuid,
       basename = basename,
       filepath = filepath,
+      filepath_lower = filepath:lower(),
       nodetype = "file",
     }
     treeview:insert(uuid, uuid_parent, data, true, false)
   end
 
   local uuids_leaf = treeview:collect_leaf_uuids(cwd_uuid) ---@type string[]
+  self._last_input = ""
+  self._last_matches = nil
+  self._last_matched_uuids = nil
   self._uuid_root = cwd_uuid
   self._uuids_leaf = uuids_leaf
-  self._uuids_visible = nil
+  self._scheduler_match:schedule()
   return self
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@protected
----@param input                         string
----@param old_matches                   eve.t.IScoredMatch[]
----@return eve.t.IScoredMatch[]
-function M:find_matched_items(input, old_matches)
-  local flag_sensitive = self.flag_sensitive:snapshot() ---@type boolean
-  local flag_fuzzy = self.flag_fuzzy:snapshot() ---@type boolean
-  local flag_regex = self.flag_regex:snapshot() ---@type boolean
-  local item_map = {} --self._item_map ---@type table<string, eve.ux.select.IItem>
-
-  local lines = {} ---@type string[]
-  if flag_sensitive then
-    for _, match in ipairs(old_matches) do
-      local uuid = match.uuid ---@type string
-      local text = item_map[uuid].text ---@type string
-      table.insert(lines, text)
-    end
-  else
-    input = input:lower()
-    for _, match in ipairs(old_matches) do
-      local uuid = match.uuid ---@type string
-      local item = item_map[uuid] ---@type eve.ux.select.IItem|nil
-      if item ~= nil then
-        item.text_lower = item.text_lower or item.text:lower()
-        table.insert(lines, item.text_lower)
-      end
-    end
-  end
-
-  ---@type eve.builtin.oxi.string.ILineMatch[]|nil
-  local oxi_matches = eve.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
-  if oxi_matches == nil then
-    return old_matches
-  end
-
-  local matches = {} ---@type eve.t.IScoredMatch[]
-  for _, oxi_match in ipairs(oxi_matches) do
-    local old_match = old_matches[oxi_match.lnum] ---@type eve.t.IScoredMatch
-
-    ---@type eve.t.IScoredMatch
-    local match = {
-      order = old_match.order,
-      uuid = old_match.uuid,
-      score = oxi_match.score,
-      matches = oxi_match.matches,
-    }
-    table.insert(matches, match)
-  end
-  return matches
-end
 
 ---@protected
 ---@return nil
@@ -846,6 +837,106 @@ function M:__health__()
     local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
     error(message)
   end
+end
+
+---@protected
+---@param input                         string
+---@return nil
+function M:__match__(input)
+  if #input < 1 then
+    self._last_input = ""
+    self._last_matches = nil
+    self._last_matched_uuids = nil
+    return
+  end
+
+  local treeview = self._treeview ---@type eve.ux.view.Treeview
+  local flag_sensitive = self.flag_sensitive:snapshot() ---@type boolean
+  local flag_fuzzy = self.flag_fuzzy:snapshot() ---@type boolean
+  local flag_regex = self.flag_regex:snapshot() ---@type boolean
+
+  local lines = {} ---@type string[]
+  local uuids = {} ---@type string[]
+
+  local root = treeview:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.treeview.INode|nil
+  local prefix_len = root ~= nil and #root.data.filepath > 2 and #root.data.filepath + 2 or 0 ---@type integer
+
+  local last_input = self._last_input ---@type string
+  local last_matches = self._last_matches ---@type eve.t.IScoredMatch[]|nil
+  if last_matches ~= nil and not flag_regex and #input > #last_input and input:sub(1, #last_input) == last_input then
+    if flag_sensitive then
+      for _, match in ipairs(last_matches) do
+        local node = treeview:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.treeview.INode|nil
+        if node ~= nil then
+          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local line = data.filepath:sub(prefix_len) ---@type string
+          lines[#lines + 1] = line
+          uuids[#uuids + 1] = node.uuid
+        end
+      end
+    else
+      for _, match in ipairs(last_matches) do
+        local node = treeview:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.treeview.INode|nil
+        if node ~= nil then
+          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local line = data.filepath_lower:sub(prefix_len) ---@type string
+          lines[#lines + 1] = line
+          uuids[#uuids + 1] = node.uuid
+        end
+      end
+    end
+  else
+    if flag_sensitive then
+      for _, uuid in ipairs(self._uuids_leaf) do
+        local node = treeview:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.treeview.INode|nil
+        if node ~= nil then
+          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local line = data.filepath:sub(prefix_len) ---@type string
+          lines[#lines + 1] = line
+          uuids[#uuids + 1] = node.uuid
+        end
+      end
+    else
+      for _, uuid in ipairs(self._uuids_leaf) do
+        local node = treeview:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.treeview.INode|nil
+        if node ~= nil then
+          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local line = data.filepath_lower:sub(prefix_len) ---@type string
+          lines[#lines + 1] = line
+          uuids[#uuids + 1] = node.uuid
+        end
+      end
+    end
+  end
+
+  ---@type eve.builtin.oxi.string.ILineMatch[]|nil
+  local oxi_matches = eve.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
+  if oxi_matches == nil then
+    self._last_input = ""
+    self._last_matches = nil
+    self._last_matched_uuids = nil
+    return
+  end
+
+  local matches = {} ---@type eve.t.IScoredMatch[]
+  local matched_uuids = {} ---@type string[]
+  for _, oxi_match in ipairs(oxi_matches) do
+    local lnum = oxi_match.lnum ---@type integer
+
+    ---@type eve.t.IScoredMatch
+    local match = {
+      order = lnum,
+      uuid = uuids[lnum],
+      score = oxi_match.score,
+      matches = oxi_match.matches,
+    }
+    matches[#matches + 1] = match
+    matched_uuids[#matched_uuids + 1] = match.uuid
+  end
+
+  self._last_input = input
+  self._last_matches = matches
+  self._last_matched_uuids = treeview:calc_include_uuid_set(matched_uuids)
 end
 
 return M
