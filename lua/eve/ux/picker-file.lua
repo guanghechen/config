@@ -119,7 +119,9 @@ end
 ---@field protected _picker             eve.ux.Picker
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _treeview           eve.ux.view.Treeview
----@field protected _root_uuid          string|nil
+---
+---@field protected _uuid_root          string|nil
+---@field protected _uuid_leafs         string[]
 ---
 ---@field protected _on_dispose         eve.ux.picker_file.IOnDispose
 ---@field protected _on_focus           eve.ux.picker_file.IOnFocus
@@ -432,7 +434,7 @@ function M.new(props)
       on_hide(self)
     end,
     result_render = function(_, bufnr)
-      treeview:render(bufnr, self._root_uuid)
+      treeview:render(bufnr, self._uuid_root)
     end,
     preview_render = function(picker, bufnr)
       local lnum = picker:get_result_lnum() ---@type integer
@@ -471,7 +473,7 @@ function M.new(props)
   self._disposed = false
   self._picker = picker
   self._treeview = treeview
-  self._root_uuid = nil
+  self._uuid_root = nil
 
   self._on_dispose = on_dispose
   self._on_focus = on_focus
@@ -505,7 +507,9 @@ function M:dispose()
   self._plainfile = nil
   self._treeview = nil
   self._picker = nil
-  self._root_uuid = nil
+
+  self._uuid_root = nil
+  self._uuid_leafs = nil
 
   vim.schedule(function()
     pcall(on_dispose)
@@ -549,6 +553,25 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param uuid                          string
+---@return eve.ux.FilePicker
+function M:attach(uuid)
+  self:__health__()
+
+  local node = self._treeview:retrieve_by_uuid(uuid) ---@type eve.ux.view.treeview.INode|nil
+  if node == nil then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "attach",
+      message = string.format("Cannot find node by the given uuid: %s", uuid),
+    })
+    return self
+  end
+
+  self._root_uuid = uuid
+  return self
+end
+
 ---@return nil
 function M:mark_result_dirty()
   self:__health__()
@@ -569,6 +592,8 @@ function M:reset_filepaths(filepaths)
   self:__health__()
   local treeview = self._treeview ---@type eve.ux.view.Treeview
   treeview:clear()
+
+  local uuid_leafs = {} ---@type string[]
 
   ---@type eve.ux.file_picker.ITreeNodeData
   local root = {
@@ -619,15 +644,14 @@ function M:reset_filepaths(filepaths)
       p = p:sub(cwd_length + 1) ---@type string
     end
 
-    local pieces = eve.path.split(p) ---@type string[]
-    local N = #pieces ---@type integer
-
     local filepath = cwd ---@type string
     local uuid = cwd_uuid ---@type string
     local uuid_parent = cwd_uuid ---@type string
+
+    local pieces = eve.path.split(p) ---@type string[]
+    local N = #pieces - 1 ---@type integer
     for index = 1, N, 1 do
       local basename = pieces[index] ---@type string
-      local nodetype = index == N and "file" or "directory" ---@type eve.ux.picker_file.NodetypeEnum
       filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
       uuid = uuid .. "/" .. basename ---@type string
 
@@ -636,26 +660,39 @@ function M:reset_filepaths(filepaths)
         uuid = uuid,
         basename = basename,
         filepath = filepath,
-        nodetype = nodetype,
+        nodetype = "directory",
       }
-      treeview:insert(uuid, uuid_parent, data, index == N, false)
+      treeview:insert(uuid, uuid_parent, data, false, false)
       uuid_parent = uuid ---@type string
     end
+
+    local basename = pieces[#pieces] ---@type string
+    filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+    uuid = uuid .. "/" .. basename ---@type string
+
+    ---@type eve.ux.file_picker.ITreeNodeData
+    local data = {
+      uuid = uuid,
+      basename = basename,
+      filepath = filepath,
+      nodetype = "file",
+    }
+    treeview:insert(uuid, uuid_parent, data, true, false)
+    uuid_leafs[#uuid_leafs + 1] = uuid ---@type string
     ::continue::
   end
 
   for _, p in ipairs(absolute_filepaths) do
-    local pieces = eve.path.split(p) ---@type string[]
-    local N = #pieces ---@type integer
-
     local filepath = root.filepath ---@type string
     local uuid = root.uuid ---@type string
     local uuid_parent = root.uuid ---@type string
     local start_index = eve.env.IS_WIN and 1 or 2 ---@type integer
+
+    local pieces = eve.path.split(p) ---@type string[]
+    local N = #pieces - 1 ---@type integer
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
-      local nodetype = index == N and "file" or "directory" ---@type eve.ux.picker_file.NodetypeEnum
-      filepath = index == 1 and basename or (filepath .. eve.env.PATH_SEP .. basename) ---@type string
+      filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
       uuid = uuid .. "/" .. basename ---@type string
 
       ---@type eve.ux.file_picker.ITreeNodeData
@@ -663,15 +700,29 @@ function M:reset_filepaths(filepaths)
         uuid = uuid,
         basename = basename,
         filepath = filepath,
-        nodetype = nodetype,
+        nodetype = "directory",
       }
-      treeview:insert(uuid, uuid_parent, data, index == N, false)
-      uuid_parent = uuid
+      treeview:insert(uuid, uuid_parent, data, false, false)
+      uuid_parent = uuid ---@type string
     end
-    cwd_uuid = uuid
+
+    local basename = pieces[#pieces] ---@type string
+    filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+    uuid = uuid .. "/" .. basename ---@type string
+
+    ---@type eve.ux.file_picker.ITreeNodeData
+    local data = {
+      uuid = uuid,
+      basename = basename,
+      filepath = filepath,
+      nodetype = "file",
+    }
+    treeview:insert(uuid, uuid_parent, data, true, false)
+    uuid_leafs[#uuid_leafs + 1] = uuid ---@type string
   end
 
-  self._root_uuid = cwd_uuid
+  self._uuid_root = cwd_uuid
+  self._uuid_leafs = uuid_leafs
   return self
 end
 
