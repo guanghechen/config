@@ -532,7 +532,12 @@ function M.new(props)
       end
 
       plainfile:render(bufnr, data.filepath, false)
-      return data.filepath
+
+      local root = treeview:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.treeview.INode|nil
+      if root == nil then
+        return data.filepath
+      end
+      return eve.path.relative(root.data.filepath or eve.path.cwd(), data.filepath, false)
     end,
   })
 
