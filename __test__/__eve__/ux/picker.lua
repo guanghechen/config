@@ -12,7 +12,7 @@ local finder_input = eve.std.Observable.from_value("eve/ux")
 local flag_fuzzy = eve.std.Observable.from_value(false)
 local flag_regex = eve.std.Observable.from_value(false)
 local flag_sensitive = eve.std.Observable.from_value(true)
-local flag_viewtype = eve.std.Observable.from_value("list")
+local flag_viewtype = eve.std.Observable.from_value("tree")
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",

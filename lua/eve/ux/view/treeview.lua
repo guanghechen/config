@@ -124,6 +124,8 @@ function M:clear()
   self:health()
 
   local root = self._node_root ---@type eve.ux.view.treeview.INode
+  self._tick_listview = self._tick_listview + 1
+  self._tick_treeview = self._tick_treeview + 1
   self._node_map = { [root.uuid] = root }
   self._node_root.children = {}
   self._node_root.dirty_orders = false
@@ -515,7 +517,7 @@ end
 ---@return eve.ux.view.treeview.IRenderResult
 function M:__render_list__(bufnr, root_uuid, included_uuid_set)
   local uuids = {} ---@type string[]
-  local tick_treeview = self._tick_treeview ---@type integer
+  local tick_listview = self._tick_listview ---@type integer
 
   local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
   local nsnr = self.nsnr ---@type integer
@@ -541,15 +543,15 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
   ---@type eve.ux.view.treeview.IRenderList
   render = function(node)
     local cache = node.cache_listview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
-    if cache == nil or cache.tick ~= tick_treeview then
+    if cache == nil or cache.tick ~= tick_listview then
       local result = self._node_flat_renderer(self, node, root) ---@type eve.ux.view.treeview.INodeRenderResult
       ---@type eve.ux.view.treeview.INodeRenderResultCache
       cache = {
-        tick = tick_treeview,
+        tick = tick_listview,
         text = result.text,
         highlights = result.highlights or {},
       }
-      node.cache_treeview = cache
+      node.cache_listview = cache
     end
 
     local lnum = row + 1 ---@type integer
@@ -693,7 +695,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
 
       render(node, depth, indent, folded_depth, is_last)
 
-      if N > 1 and node.dirty_orders then
+      if node.dirty_orders then
         self:__sort_children__(node)
       end
 
@@ -713,6 +715,10 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
         return
       end
 
+      if node.dirty_orders then
+        self:__sort_children__(node)
+      end
+
       local first_child_index = nil ---@type integer|nil
       local last_child_index = #node.children ---@type integer
       for index, child_uuid in ipairs(node.children) do
@@ -723,7 +729,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
       end
 
       if first_child_index == last_child_index and foldempty then
-        local child_uuid = node.children[last_child_index] ---@type string
+        local child_uuid = node.children[first_child_index] ---@type string
         local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
         if not child.leaf then
           return recursive(child, depth, indent, folded_depth + 1, is_last)
@@ -733,15 +739,11 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
       render(node, depth, indent, folded_depth, is_last)
 
       if first_child_index ~= nil then
-        if first_child_index ~= last_child_index and node.dirty_orders then
-          self:__sort_children__(node)
-        end
-
         local child_depth = depth + 1 ---@type integer
         local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
         for index = first_child_index, last_child_index, 1 do
-          if included_uuid_set[first_child_index] then
-            local child_uuid = node.children[index] ---@type string
+          local child_uuid = node.children[index] ---@type string
+          if included_uuid_set[child_uuid] then
             local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
             recursive(child, child_depth, child_indent, 0, index == last_child_index)
           end
@@ -786,11 +788,13 @@ end
 ---@return nil
 function M:__sort_children__(parent)
   parent.dirty_orders = false
-  table.sort(parent.children, function(uuid_left, uuid_right)
-    local left = self._node_map[uuid_left] ---@type eve.ux.view.treeview.INode
-    local right = self._node_map[uuid_right] ---@type eve.ux.view.treeview.INode
-    return self._node_sorter(left, right)
-  end)
+  if #parent.children > 1 then
+    table.sort(parent.children, function(uuid_left, uuid_right)
+      local left = self._node_map[uuid_left] ---@type eve.ux.view.treeview.INode
+      local right = self._node_map[uuid_right] ---@type eve.ux.view.treeview.INode
+      return self._node_sorter(left, right)
+    end)
+  end
 end
 
 ---@protected

@@ -49,13 +49,16 @@ local default_treeview_node_renderer = function(treeview, node, _, folded_depth)
   else
     local basenames = {} ---@type string[]
     basenames[folded_depth + 1] = data.basename ---@type string
+
+    local o = node
     for index = folded_depth, 1, -1 do
-      local parent_uuid = node.parent ---@type string
+      local parent_uuid = o.parent ---@type string
       local parent = treeview:retrieve_by_uuid(parent_uuid) ---@type eve.ux.view.treeview.INode|nil
       ---@cast parent eve.ux.view.treeview.INode
 
       local parent_data = parent.data ---@type eve.ux.file_picker.ITreeNodeData
       basenames[index] = parent_data.basename ---@type string
+      o = parent
     end
 
     text = string.format("%s %s", icon, basenames[1]) ---@type string
@@ -65,8 +68,8 @@ local default_treeview_node_renderer = function(treeview, node, _, folded_depth)
       local basename = basenames[index] ---@type string
       local offset = #text ---@type integer
       text = text .. string.format("/%s", basename)
-      highlights[#highlights + 1] = { coll = offset + 1, colr = offset + 2, hlname = "f_utw_pathsep" }
-      highlights[#highlights + 1] = { coll = offset + 2, colr = #text, hlname = "f_utw_dirname" }
+      highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "f_utw_pathsep" }
+      highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "f_utw_dirname" }
     end
   end
 
@@ -183,6 +186,17 @@ function M.new(props)
     name = name,
   })
 
+  ---@type eve.ux.view.Treeview
+  local treeview = eve.ux.view.Treeview.new({
+    name = name,
+    foldempty = foldempty,
+    indent = "",
+    indent_hln = "f_utw_indent_float",
+    node_flat_renderer = node_flat_renderer,
+    node_renderer = node_renderer,
+    node_sorter = node_sorter,
+  })
+
   local scheduler_match = eve.std.Scheduler.new({
     name = string.format("%s#match", name),
     mode = "debounce",
@@ -193,19 +207,9 @@ function M.new(props)
     task = function()
       local input = finder_input:snapshot() ---@type string
       self:__match__(input)
+      treeview:mark_treeview_node_cache_dirty()
       self:mark_result_dirty()
     end,
-  })
-
-  ---@type eve.ux.view.Treeview
-  local treeview = eve.ux.view.Treeview.new({
-    name = name,
-    foldempty = foldempty,
-    indent = "",
-    indent_hln = "f_utw_indent_float",
-    node_flat_renderer = node_flat_renderer,
-    node_renderer = node_renderer,
-    node_sorter = node_sorter,
   })
 
   ---@param picker                      eve.ux.Picker
