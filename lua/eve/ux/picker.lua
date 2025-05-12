@@ -36,11 +36,13 @@ local c = eve.ux.nvimbar.component
 ---@class eve.ux.picker.IInternalFlagItem
 ---@field public desc                   string
 ---@field public callback_fn            string
+---@field public disabled               fun(): boolean
 ---@field public callback               fun(): nil
 ---@field public snapshot               fun(): boolean, string
 
 ---@class eve.ux.picker.IFlagItem
 ---@field public desc                   string
+---@field public disabled               boolean|nil|(fun(self: eve.ux.Picker): boolean)
 ---@field public callback               fun(self: eve.ux.Picker): nil
 ---@field public snapshot               fun(self: eve.ux.Picker): string, string
 
@@ -797,8 +799,21 @@ function M.new(props)
 
   if props.flags ~= nil and #props.flags > 0 then
     for _, flag in ipairs(props.flags) do
+      local raw_disabled = flag.disabled ---@type boolean|nil|(fun(self: eve.ux.Picker): boolean)
       local raw_callback = flag.callback ---@type fun(self: eve.ux.Picker): nil
       local raw_snapshot = flag.snapshot ---@type fun(self: eve.ux.Picker): boolean, string
+
+      local disabled ---@type fun(): boolean
+      if raw_disabled == nil or raw_disabled == false then
+        disabled = eve.std.fn.falsy
+      elseif raw_disabled == true then
+        disabled = eve.std.fn.truthy
+      else
+        ---@return boolean
+        disabled = function()
+          return raw_disabled(self)
+        end
+      end
 
       ---@return nil
       local function callback()
@@ -816,8 +831,9 @@ function M.new(props)
       ---@type eve.ux.picker.IInternalFlagItem
       local item = {
         desc = flag.desc,
-        callback = callback,
         callback_fn = callback_fn,
+        disabled = disabled,
+        callback = callback,
         snapshot = snapshot,
       }
       flags[#flags + 1] = item

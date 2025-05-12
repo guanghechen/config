@@ -265,6 +265,10 @@ function M.new(props)
   }
   flags[#flags + 1] = {
     desc = string.format("%s: fold empty path", name),
+    disabled = function()
+      local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
+      return viewtype ~= "tree"
+    end,
     callback = function(picker)
       local enabled = treeview:isfoldempty() ---@type boolean
       treeview:set_foldempty(not enabled)
