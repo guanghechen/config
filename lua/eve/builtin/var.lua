@@ -14,18 +14,23 @@ local cn = vim.api.nvim_create_namespace
 ---@class eve.builtin.vars.nsnr
 M.nsnr = {
   -- stylua: ignore start
-  attach                = cn("ux_attach"),
-  cmdline               = cn("ux_cmdline"),
-  hipairs               = cn("ux_hipairs"),
-  indentline            = cn("ux_indentline"),
-  notify                = cn("ux_notify"),
-  search_count          = cn("ux_search_count"),
-  search_input          = cn("ux_search_input"),
-  search_main           = cn("ux_search_main"),
-  search_preview        = cn("ux_search_preview"),
-  select_popup          = cn("ux_select_popup"),
-  popupmenu             = cn("ux_popupmenu"),
-  popupmenu_selected    = cn("ux_popupmenu_selected"),
+  attach                = cn("ux:attach"),
+  cmdline               = cn("ux:cmdline"),
+  hipairs               = cn("ux:hipairs"),
+  indentline            = cn("ux:indentline"),
+  matches               = cn("ux:matches"),
+  notify                = cn("ux:notify"),
+  picker                = cn("ux:picker"),
+  search_count          = cn("ux:search_count"),
+  search_input          = cn("ux:search_input"),
+  search_main           = cn("ux:search_main"),
+  search_preview        = cn("ux:search_preview"),
+  select_popup          = cn("ux:select_popup"),
+  popupmenu             = cn("ux:popupmenu"),
+  popupmenu_selected    = cn("ux:popupmenu_selected"),
+  view_plainfile        = cn("ux:view:plainfile"),
+  view_printer          = cn("ux:view:printer"),
+  view_treeview         = cn("ux:view:treeview"),
   -- stylua: ignore end
 }
 

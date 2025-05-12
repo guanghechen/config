@@ -15,7 +15,7 @@
 local M = {}
 M.__index = M
 
-local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_printer") ---@type integer
+local NSNR_DEFAULT = eve.var.nsnr.view_printer ---@type integer
 
 ---@param props                        eve.ux.view.IPrinterProps
 ---@return eve.ux.view.Printer

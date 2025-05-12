@@ -478,7 +478,7 @@ function M.new(props)
   self._on_hide = on_hide
 
   finder_input:subscribe(eve.std.Subscriber.new({
-    on_next = function(input)
+    on_next = function()
       self:mark_result_dirty()
     end,
   }))

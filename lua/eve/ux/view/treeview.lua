@@ -61,7 +61,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 local M = {}
 M.__index = M
 
-local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_treeview") ---@type integer
+local NSNR_DEFAULT = eve.var.nsnr.view_treeview ---@type integer
 
 ---@param props                         eve.ux.view.ITreeviewProps
 ---@return eve.ux.view.Treeview

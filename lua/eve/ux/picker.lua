@@ -758,7 +758,7 @@ local __winopts__ = {
 local M = {}
 M.__index = M
 
-local NSNR_DEFAULT = vim.api.nvim_create_namespace("ux_view_picker") ---@type integer
+local NSNR_DEFAULT = eve.var.nsnr.picker ---@type integer
 
 ---@param props                         eve.ux.IPickerProps
 ---@return eve.ux.Picker
