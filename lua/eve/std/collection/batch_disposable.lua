@@ -37,7 +37,7 @@ function M.dispose_all(disposables)
 end
 
 ---@return boolean
-function M:is_disposed()
+function M:isdisposed()
   return self._disposed
 end
 
@@ -46,8 +46,8 @@ function M:dispose()
   if self._disposed then
     return
   end
-
   self._disposed = true
+
   if #self._disposables <= 0 then
     return
   end
@@ -71,7 +71,7 @@ end
 ---@param disposable eve.std.collection.IDisposable
 ---@return eve.std.collection.IBatchDisposable
 function M:add_disposable(disposable)
-  if disposable:is_disposed() then
+  if disposable:isdisposed() then
     return self
   end
 

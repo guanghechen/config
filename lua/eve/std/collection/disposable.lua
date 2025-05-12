@@ -2,7 +2,7 @@
 ---@field public unsubscribe            fun(self: eve.std.collection.IUnsubscribable):nil
 
 ---@class eve.std.collection.IDisposable
----@field public is_disposed            fun(self: eve.std.collection.IDisposable): boolean Check if the disposable disposed.
+---@field public isdisposed            fun(self: eve.std.collection.IDisposable): boolean Check if the disposable disposed.
 ---@field public dispose                fun(self: eve.std.collection.IDisposable): boolean Dispose the disposable.
 
 ---@class eve.std.collection.disposable.IProps
@@ -36,7 +36,7 @@ function M.from_unsubscribable(unsubscribable)
 end
 
 ---@return boolean
-function M:is_disposed()
+function M:isdisposed()
   return self._disposed
 end
 

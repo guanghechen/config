@@ -1,3 +1,5 @@
+local __module_name__ = "eve.std.collection.subscribers" ---@type string
+
 ---@class eve.std.collection.ISubscribable
 ---@field public subscribe              fun(self: eve.std.collection.ISubscribable, subscriber: eve.std.collection.ISubscriber, ignoreInitial?: boolean): eve.std.collection.IUnsubscribable
 
@@ -49,7 +51,7 @@ function M:count()
 end
 
 ---@return boolean
-function M:is_disposed()
+function M:isdisposed()
   return self._disposed
 end
 
@@ -58,7 +60,6 @@ function M:dispose()
   if self._disposed then
     return
   end
-
   self._disposed = true
 
   local handler = eve.std.BatchHandler.new()
@@ -72,7 +73,7 @@ function M:dispose()
     end
 
     item.unsubscribed = true
-    if item.subscriber:is_disposed() then
+    if item.subscriber:isdisposed() then
       goto continue
     end
 
@@ -105,7 +106,7 @@ function M:notify(value, value_prev)
   local L = #items
   while i <= L do
     local item = items[i]
-    if not item.unsubscribed and not item.subscriber:is_disposed() then
+    if not item.unsubscribed and not item.subscriber:isdisposed() then
       handler:run(function()
         item.subscriber:next(value, value_prev)
       end)
@@ -120,7 +121,7 @@ end
 ---@param subscriber                    eve.std.collection.ISubscriber
 ---@return eve.std.collection.IUnsubscribable
 function M:subscribe(subscriber)
-  if subscriber:is_disposed() then
+  if subscriber:isdisposed() then
     return noop_unsubscribable
   end
 
@@ -150,6 +151,9 @@ function M:subscribe(subscriber)
   return unsubscribe
 end
 
+----------------------------------------------------------------------------------------------------
+
+---@protected
 ---@return nil
 function M:_arrange()
   local items = self._items
@@ -160,7 +164,7 @@ function M:_arrange()
     local i = 1
     while i <= #items do
       local item = items[i]
-      if not item.unsubscribed and not item.subscriber:is_disposed() then
+      if not item.unsubscribed and not item.subscriber:isdisposed() then
         table.insert(next_items, item)
       end
       i = i + 1
@@ -168,6 +172,15 @@ function M:_arrange()
 
     self._items = next_items
     self._subscribing_count = #next_items
+  end
+end
+
+---@protected
+---@return nil
+function M:__health__()
+  if self._disposed then
+    local message = string.format("[%s] already been disposed.", __module_name__) ---@type string
+    error(message)
   end
 end
 

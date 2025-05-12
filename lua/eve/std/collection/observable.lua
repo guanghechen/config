@@ -64,7 +64,7 @@ end
 
 ---@return nil
 function M:dispose()
-  if self:is_disposed() then
+  if self:isdisposed() then
     return
   end
 
@@ -83,7 +83,7 @@ function M:next(value, options)
   end
 
   options = options or {} ---@type eve.std.collection.observable.INextOptions
-  if self:is_disposed() then
+  if self:isdisposed() then
     local strict = options.strict ~= false ---@type boolean
     if strict then
       eve.reporter.error({
@@ -115,7 +115,7 @@ end
 ---@param ignoreInitial                 boolean
 ---@return eve.std.collection.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)
-  if subscriber:is_disposed() then
+  if subscriber:isdisposed() then
     return noop_unsubscribable
   end
 
@@ -125,7 +125,7 @@ function M:subscribe(subscriber, ignoreInitial)
     subscriber:next(value, value_prev)
   end
 
-  if self:is_disposed() then
+  if self:isdisposed() then
     subscriber:dispose()
     return noop_unsubscribable
   end
