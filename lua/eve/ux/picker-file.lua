@@ -422,13 +422,13 @@ function M.new(props)
 
     result_keymaps = result_keymaps,
 
-    on_dispose = function()
+    on_disposed = function()
       self:dispose()
     end,
-    on_focus = function()
+    on_focused = function()
       on_focus(self)
     end,
-    on_hide = function()
+    on_hidden = function()
       on_hide(self)
     end,
     result_render = function(_, bufnr)
@@ -493,7 +493,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDispose
+  local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDisposed
   self._plainfile:dispose()
   self._treeview:dispose()
   self._picker:dispose()
@@ -676,6 +676,57 @@ function M:reset_filepaths(filepaths)
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param input                         string
+---@param old_matches                   eve.t.IScoredMatch[]
+---@return eve.t.IScoredMatch[]
+function M:find_matched_items(input, old_matches)
+  local flag_sensitive = self.flag_sensitive:snapshot() ---@type boolean
+  local flag_fuzzy = self.flag_fuzzy:snapshot() ---@type boolean
+  local flag_regex = self.flag_regex:snapshot() ---@type boolean
+  local item_map = {} --self._item_map ---@type table<string, eve.ux.select.IItem>
+
+  local lines = {} ---@type string[]
+  if flag_sensitive then
+    for _, match in ipairs(old_matches) do
+      local uuid = match.uuid ---@type string
+      local text = item_map[uuid].text ---@type string
+      table.insert(lines, text)
+    end
+  else
+    input = input:lower()
+    for _, match in ipairs(old_matches) do
+      local uuid = match.uuid ---@type string
+      local item = item_map[uuid] ---@type eve.ux.select.IItem|nil
+      if item ~= nil then
+        item.text_lower = item.text_lower or item.text:lower()
+        table.insert(lines, item.text_lower)
+      end
+    end
+  end
+
+  ---@type eve.builtin.oxi.string.ILineMatch[]|nil
+  local oxi_matches = eve.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
+  if oxi_matches == nil then
+    return old_matches
+  end
+
+  local matches = {} ---@type eve.t.IScoredMatch[]
+  for _, oxi_match in ipairs(oxi_matches) do
+    local old_match = old_matches[oxi_match.lnum] ---@type eve.t.IScoredMatch
+
+    ---@type eve.t.IScoredMatch
+    local match = {
+      order = old_match.order,
+      uuid = old_match.uuid,
+      score = oxi_match.score,
+      matches = oxi_match.matches,
+    }
+    table.insert(matches, match)
+  end
+  return matches
+end
 
 ---@protected
 ---@return nil

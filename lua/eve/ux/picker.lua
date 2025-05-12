@@ -9,23 +9,26 @@ local c = eve.ux.nvimbar.component
 ---| "preview"
 ---| "result"
 
----@alias eve.ux.picker.IOnDispose
+---@alias eve.ux.picker.IOnDisposed
 ---| fun(): nil
 
----@alias eve.ux.picker.IOnFocus
+---@alias eve.ux.picker.IOnFocused
 ---| fun(self: eve.ux.Picker): nil
 
----@alias eve.ux.picker.IOnFinderChange
----| fun(self: eve.ux.Picker, bufnr: integer, input: string): nil
-
----@alias eve.ux.picker.IOnHide
+---@alias eve.ux.picker.IOnHidden
 ---| fun(self: eve.ux.Picker): nil
+
+---@alias eve.ux.picker.IOnResultRendered
+---| fun(self: eve.ux.Picker, bufnr: integer): nil
+
+---@alias eve.ux.picker.IOnPreviewRendered
+---| fun(self: eve.ux.Picker, bufnr: integer): nil
 
 ---@alias eve.ux.picker.IResultRender
----| fun(self: eve.ux.Picker, bufnr: integer, input: string): integer?, integer?
+---| fun(self: eve.ux.Picker, bufnr: integer): integer?, integer?
 
 ---@alias eve.ux.picker.IPreviewRender
----| fun(self: eve.ux.Picker, bufnr: integer, input: string): string
+---| fun(self: eve.ux.Picker, bufnr: integer): string
 
 ---@alias eve.ux.picker.ICheckKeymapDisabled
 ---| fun(self: eve.ux.Picker): boolean
@@ -221,7 +224,8 @@ local __keymaps__ = {
           return
         end
 
-        if self._preview_render ~= nil then
+        local preview_winnr = self._preview_winnr ---@type integer|nil
+        if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
           self:__focus_pane__("preview")
           return
         end
@@ -233,7 +237,8 @@ local __keymaps__ = {
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#finder: focus right",
       callback = function(self)
-        if self._preview_render ~= nil then
+        local preview_winnr = self._preview_winnr ---@type integer|nil
+        if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
           self:__focus_pane__("preview")
           return
         end
@@ -484,7 +489,8 @@ local __keymaps__ = {
           return
         end
 
-        if self._preview_render ~= nil then
+        local preview_winnr = self._preview_winnr ---@type integer|nil
+        if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
           self:__focus_pane__("preview")
           return
         end
@@ -496,7 +502,8 @@ local __keymaps__ = {
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#result: focus right",
       callback = function(self)
-        if self._preview_render ~= nil then
+        local preview_winnr = self._preview_winnr ---@type integer|nil
+        if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
           self:__focus_pane__("preview")
           return
         end
@@ -699,9 +706,11 @@ local __winopts__ = {
 ---@field public preview_render         ?eve.ux.picker.IPreviewRender
 ---@field public preview_win_opts       ?eve.ux.picker.IWinOptions
 ---
----@field public on_dispose             ?eve.ux.picker.IOnDispose
----@field public on_focus               ?eve.ux.picker.IOnFocus
----@field public on_hide                ?eve.ux.picker.IOnHide
+---@field public on_disposed            ?eve.ux.picker.IOnDisposed
+---@field public on_focused             ?eve.ux.picker.IOnFocused
+---@field public on_hidden              ?eve.ux.picker.IOnHidden
+---@field public on_preview_rendered    ?eve.ux.picker.IOnPreviewRendered
+---@field public on_result_rendered     ?eve.ux.picker.IOnResultRendered
 
 ---@class eve.ux.Picker : eve.t.ux.IWidget
 ---@field public uuid                   string
@@ -735,18 +744,17 @@ local __winopts__ = {
 ---@field protected _result_lnum        eve.std.collection.IObservable
 ---@field protected _result_total       eve.std.collection.IObservable
 ---@field protected _result_nvimbar     eve.ux.nvimbar.Nvimbar
----@field protected _result_render      eve.ux.picker.IResultRender
 ---
 ---@field protected _preview_bufnr      integer|nil
 ---@field protected _preview_winnr      integer|nil
 ---@field protected _preview_keymaps    eve.ux.picker.IInternalKeymap[]
 ---@field protected _preview_title      string|nil
 ---@field protected _preview_winopts    eve.ux.picker.IWinOptions
----@field protected _preview_render     eve.ux.picker.IPreviewRender|nil
+---@field protected _has_preview        boolean
 ---
----@field protected _on_dispose         eve.ux.picker.IOnDispose
----@field protected _on_focus           eve.ux.picker.IOnFocus
----@field protected _on_hide            eve.ux.picker.IOnHide
+---@field protected _on_disposed        eve.ux.picker.IOnDisposed
+---@field protected _on_focused         eve.ux.picker.IOnFocused
+---@field protected _on_hidden          eve.ux.picker.IOnHidden
 local M = {}
 M.__index = M
 
@@ -779,10 +787,13 @@ function M.new(props)
   local preview_keymaps = props.preview_keymaps or {} ---@type eve.ux.picker.IKeymap[]
   local preview_render = props.preview_render ---@type eve.ux.picker.IPreviewRender|nil
   local preview_winopts = vim.tbl_deep_extend("force", {}, __winopts__.preview, props.preview_win_opts or {}) ---@type eve.ux.picker.IWinOptions
+  local has_preview = preview_render ~= nil ---@type boolean
 
-  local on_dispose = props.on_dispose or eve.std.fn.noop ---@type eve.ux.picker.IOnDispose
-  local on_focus = props.on_focus or eve.std.fn.noop ---@type eve.ux.picker.IOnFocus
-  local on_hide = props.on_hide or eve.std.fn.noop ---@type eve.ux.picker.IOnHide
+  local on_disposed = props.on_disposed or eve.std.fn.noop ---@type eve.ux.picker.IOnDisposed
+  local on_focused = props.on_focused or eve.std.fn.noop ---@type eve.ux.picker.IOnFocused
+  local on_hidden = props.on_hidden or eve.std.fn.noop ---@type eve.ux.picker.IOnHidden
+  local on_preview_rendered = props.on_preview_rendered or eve.std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
+  local on_result_rendered = props.on_result_rendered or eve.std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
 
   local self = setmetatable({}, M)
 
@@ -841,17 +852,16 @@ function M.new(props)
   self._result_winopts = result_winopts
   self._result_lnum = result_lnum
   self._result_total = result_total
-  self._result_render = result_render
 
   self._preview_bufnr = nil
   self._preview_winnr = nil
   self._preview_title = nil
   self._preview_winopts = preview_winopts
-  self._preview_render = preview_render
+  self._has_preview = has_preview
 
-  self._on_dispose = on_dispose ---@type eve.ux.picker.IOnDispose
-  self._on_focus = on_focus ---@type eve.ux.picker.IOnFocus
-  self._on_hide = on_hide ---@type eve.ux.picker.IOnHide
+  self._on_disposed = on_disposed ---@type eve.ux.picker.IOnDisposed
+  self._on_focused = on_focused ---@type eve.ux.picker.IOnFocused
+  self._on_hidden = on_hidden ---@type eve.ux.picker.IOnHidden
 
   self._finder_keymaps = self:__resolve_finder__keymaps__(finder_keymaps)
   self._result_keymaps = self:__resolve_result__keymaps__(result_keymaps)
@@ -906,9 +916,10 @@ function M.new(props)
 
         vim.bo[bufnr].modifiable = true
         vim.bo[bufnr].readonly = false
+        local ok, preview_title = pcall(preview_render, self, bufnr) ---@type boolean, string|nil
+        vim.bo[bufnr].modifiable = false
+        vim.bo[bufnr].readonly = true
 
-        local input = finder_input:snapshot() ---@type string
-        local ok, preview_title = pcall(preview_render, self, bufnr, input) ---@type boolean, string|nil
         if not ok then
           eve.reporter.error({
             from = __module_name__,
@@ -924,8 +935,7 @@ function M.new(props)
           end
         end
 
-        vim.bo[bufnr].modifiable = false
-        vim.bo[bufnr].readonly = true
+        pcall(on_preview_rendered, self, bufnr)
       end,
     })
   end
@@ -946,9 +956,10 @@ function M.new(props)
 
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
+      local ok, lnum, lnum_present = pcall(result_render, self, bufnr) ---@type boolean, integer|nil, integer|nil
+      vim.bo[bufnr].modifiable = false
+      vim.bo[bufnr].readonly = true
 
-      local input = finder_input:snapshot() ---@type string
-      local ok, lnum, lnum_present = pcall(result_render, self, bufnr, input) ---@type boolean, integer|nil, integer|nil
       if not ok then
         eve.reporter.error({
           from = __module_name__,
@@ -962,9 +973,6 @@ function M.new(props)
         lnum = 1
       end
 
-      vim.bo[bufnr].modifiable = false
-      vim.bo[bufnr].readonly = true
-
       local total = vim.api.nvim_buf_line_count(bufnr) ---@type integer
       result_total:next(total)
 
@@ -976,6 +984,8 @@ function M.new(props)
       if lnum_present ~= nil then
         vim.fn.sign_place(bufnr, "", eve.var.sign.PICKER_RESULT_PRESENT, bufnr, { lnum = lnum, priority = 10 })
       end
+
+      pcall(on_result_rendered, self, bufnr)
 
       if self._scheduler_preview ~= nil then
         self._scheduler_preview:schedule()
@@ -1045,7 +1055,7 @@ function M:dispose()
   self._disposed = true
 
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
-  local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDispose
+  local on_dispose = self._on_disposed ---@type eve.ux.picker.IOnDisposed
 
   self._augroup_CursorMoved = nil
   self._pane_focused = nil
@@ -1079,7 +1089,6 @@ function M:dispose()
   eve.win.close(preview_winnr)
   eve.buf.close(preview_bufnr)
 
-  self._finder_input:dispose()
   self._finder_line_count:dispose()
   self._result_total:dispose()
   self._result_lnum:dispose()
@@ -1101,16 +1110,15 @@ function M:dispose()
   self._result_lnum = nil
   self._result_total = nil
   self._result_nvimbar = nil
-  self._result_render = nil
 
   self._preview_bufnr = nil
   self._preview_winnr = nil
   self._preview_keymaps = nil
   self._preview_title = nil
   self._preview_winopts = nil
-  self._preview_render = nil
+  self._has_preview = nil
 
-  self._on_dispose = nil
+  self._on_disposed = nil
 
   pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
   vim.schedule(function()
@@ -1143,7 +1151,7 @@ function M:focus(pane)
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
-    pcall(self._on_focus, self)
+    pcall(self._on_focused, self)
   end)
 end
 
@@ -1164,7 +1172,7 @@ function M:hide()
   eve.win.close(result_winnr)
 
   vim.schedule(function()
-    pcall(self._on_hide, self)
+    pcall(self._on_hidden, self)
   end)
 end
 
@@ -1412,7 +1420,7 @@ function M:__create_bufs__()
   local finder_bufnr = self._finder_bufnr ---@type integer|nil
   local result_bufnr = self._result_bufnr ---@type integer|nil
   local preview_bufnr = self._preview_bufnr ---@type integer|nil
-  local has_preview = self._preview_render ~= nil ---@type boolean
+  local has_preview = self._has_preview ---@type boolean
 
   if finder_bufnr == nil or not vim.api.nvim_buf_is_valid(finder_bufnr) then
     finder_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
