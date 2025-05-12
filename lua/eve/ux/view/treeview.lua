@@ -1,19 +1,29 @@
 local __module_name__ = "eve.ux.view.treeview" ---@type string
 
+---@alias eve.ux.view.treeview.ViewtypeEnum
+---| "tree"
+---| "list"
+
 ---@alias eve.ux.view.treeview.INodeRenderer
----| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, folded_depth: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
+---| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode, folded_depth: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.treeview.INodeFlatRenderer
----| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode): eve.ux.view.treeview.INodeRenderResult
+---| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.treeview.INodeSorter
 ---| fun(left: eve.ux.view.treeview.INode, right: eve.ux.view.treeview.INode): boolean
 
----@alias eve.ux.view.treeview.IRender
+---@alias eve.ux.view.treeview.IRenderTree
 ---| fun(node: eve.ux.view.treeview.INode, depth: integer, indent: string, folded_depth: integer, is_last: boolean): nil
 
----@alias eve.ux.view.treeview.IRenderRecursive
+---@alias eve.ux.view.treeview.IRenderTreeRecursive
 ---| fun(node: eve.ux.view.treeview.INode, depth: integer, indent: string, folded_depth: integer, is_last: boolean): nil
+
+---@alias eve.ux.view.treeview.IRenderList
+---| fun(node: eve.ux.view.treeview.INode): nil
+
+---@alias eve.ux.view.treeview.IRenderListRecursive
+---| fun(node: eve.ux.view.treeview.INode): nil
 
 ---@class eve.ux.view.treeview.INodeRenderResult
 ---@field public text                   string
@@ -44,10 +54,13 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field public foldempty              ?boolean
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
+---@field public node_flat_renderer     eve.ux.view.treeview.INodeFlatRenderer
 ---@field public node_renderer          eve.ux.view.treeview.INodeRenderer
 ---@field public node_sorter            eve.ux.view.treeview.INodeSorter
 
----@class eve.ux.view.Treeview : eve.ux.view.IView
+---@class eve.ux.view.Treeview
+---@field public name                   string
+---@field public nsnr                   integer
 ---@field protected _disposed           boolean
 ---@field protected _foldempty          boolean
 ---@field protected _tick_listview      integer
@@ -57,6 +70,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field protected _indent_hln         string
 ---@field protected _node_map           table<string, eve.ux.view.treeview.INode>
 ---@field protected _node_root          eve.ux.view.treeview.INode
+---@field protected _node_flat_renderer eve.ux.view.treeview.INodeFlatRenderer
 ---@field protected _node_renderer      eve.ux.view.treeview.INodeRenderer
 ---@field protected _node_sorter        eve.ux.view.treeview.INodeSorter
 local M = {}
@@ -72,6 +86,7 @@ function M.new(props)
   local foldempty = props.foldempty ~= false ---@type boolean
   local indent = props.indent or "" ---@type string
   local indent_hln = props.indent_hln or "f_utw_indent" ---@type string
+  local node_flat_renderer = props.node_flat_renderer ---@type eve.ux.view.treeview.INodeFlatRenderer
   local node_renderer = props.node_renderer ---@type eve.ux.view.treeview.INodeRenderer
   local sorter = props.node_sorter ---@type eve.ux.view.treeview.INodeSorter
 
@@ -98,6 +113,7 @@ function M.new(props)
   self._indent_hln = indent_hln
   self._node_map = { [root.uuid] = root }
   self._node_root = root
+  self._node_flat_renderer = node_flat_renderer
   self._node_renderer = node_renderer
   self._node_sorter = sorter
   return self
@@ -121,9 +137,15 @@ function M:dispose()
   end
   self._disposed = true
 
+  self._foldempty = nil
+  self._tick_listview = nil
+  self._tick_treeview = nil
+
   self._indent = nil
+  self._indent_hln = nil
   self._node_map = nil
   self._node_root = nil
+  self._node_flat_renderer = nil
   self._node_renderer = nil
   self._node_sorter = nil
 end
@@ -147,156 +169,23 @@ function M:health()
 end
 
 ---@param bufnr                         integer
+---@param viewtype                      eve.ux.view.treeview.ViewtypeEnum
 ---@param root_uuid                     string|nil
 ---@param included_uuid_set             table<string, boolean>|nil
 ---@return eve.ux.view.treeview.IRenderResult
-function M:render(bufnr, root_uuid, included_uuid_set)
+function M:render(bufnr, viewtype, root_uuid, included_uuid_set)
   self:health()
 
-  local uuids = {} ---@type string[]
-  local foldempty = self._foldempty ---@type boolean
-  local tick_treeview = self._tick_treeview ---@type integer
-
-  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
-  local nsnr = self.nsnr ---@type integer
-
-  if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
-    vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-
-    ---@type eve.ux.view.treeview.IRenderResult
-    local result = {
-      uuids = uuids,
-    }
-    return result
+  if viewtype == "list" then
+    return self:__render_list__(bufnr, root_uuid, included_uuid_set)
   end
 
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-
-  local row = 0 ---@type integer
-  local render ---@type eve.ux.view.treeview.IRender
-  local recursive ---@type eve.ux.view.treeview.IRenderRecursive
-
-  ---@type eve.ux.view.treeview.IRender
-  render = function(node, depth, indent, folded_depth, is_last)
-    local cache = node.cache_treeview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
-    if cache == nil or cache.tick ~= tick_treeview then
-      local result = self._node_renderer(self, node, folded_depth, depth) ---@type eve.ux.view.treeview.INodeRenderResult
-      ---@type eve.ux.view.treeview.INodeRenderResultCache
-      cache = {
-        tick = tick_treeview,
-        text = result.text,
-        highlights = result.highlights or {},
-      }
-      node.cache_treeview = cache
-    end
-
-    if depth > 0 then
-      indent = indent .. (is_last and "╰─" or "├─") ---@type string
-    end
-
-    local lnum = row + 1 ---@type integer
-    local text = indent .. cache.text ---@type string
-    vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
-
-    local offset = #indent ---@type integer
-    vim.hl.range(bufnr, nsnr, self._indent_hln, { row, 0 }, { row, offset })
-    for _, highlight in ipairs(cache.highlights) do
-      local hlname = highlight.hlname ---@type string
-      local colr = highlight.colr ---@type integer
-      local coll = highlight.coll ---@type integer
-      vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
-    end
-
-    uuids[#uuids + 1] = node.uuid
-    row = row + 1 ---@type integer
+  if viewtype == "tree" then
+    return self:__render_tree__(bufnr, root_uuid, included_uuid_set)
   end
 
-  if included_uuid_set == nil then
-    ---@type eve.ux.view.treeview.IRenderRecursive
-    recursive = function(node, depth, indent, folded_depth, is_last)
-      if node.collapsed or #node.children < 1 then
-        render(node, depth, indent, folded_depth, is_last)
-        return
-      end
-
-      local N = #node.children ---@type integer
-      if N == 1 and foldempty then
-        local child_uuid = node.children[1] ---@type string
-        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
-        if not child.leaf then
-          return recursive(child, depth, indent, folded_depth + 1, is_last)
-        end
-      end
-
-      render(node, depth, indent, folded_depth, is_last)
-
-      if N > 1 and node.dirty_orders then
-        self:__sort_children__(node)
-      end
-
-      local child_depth = depth + 1 ---@type integer
-      local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
-      for index = 1, N, 1 do
-        local child_uuid = node.children[index] ---@type string
-        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
-        recursive(child, child_depth, child_indent, 0, index == N)
-      end
-    end
-  else
-    ---@type eve.ux.view.treeview.IRenderRecursive
-    recursive = function(node, depth, indent, folded_depth, is_last)
-      if node.collapsed or #node.children < 1 then
-        render(node, depth, indent, folded_depth, is_last)
-        return
-      end
-
-      local first_child_index = nil ---@type integer|nil
-      local last_child_index = #node.children ---@type integer
-      for index, child_uuid in ipairs(node.children) do
-        if included_uuid_set[child_uuid] then
-          first_child_index = first_child_index or index ---@type integer
-          last_child_index = index ---@type integer
-        end
-      end
-
-      if first_child_index == last_child_index and foldempty then
-        local child_uuid = node.children[last_child_index] ---@type string
-        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
-        if not child.leaf then
-          return recursive(child, depth, indent, folded_depth + 1, is_last)
-        end
-      end
-
-      render(node, depth, indent, folded_depth, is_last)
-
-      if first_child_index ~= nil then
-        if first_child_index ~= last_child_index and node.dirty_orders then
-          self:__sort_children__(node)
-        end
-
-        local child_depth = depth + 1 ---@type integer
-        local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
-        for index = first_child_index, last_child_index, 1 do
-          if included_uuid_set[first_child_index] then
-            local child_uuid = node.children[index] ---@type string
-            local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
-            recursive(child, child_depth, child_indent, 0, index == last_child_index)
-          end
-        end
-      end
-    end
-  end
-
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  recursive(root, 0, self._indent, 0, true)
-  vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
-
-  ---@type eve.ux.view.treeview.IRenderResult
-  local result = {
-    uuids = uuids,
-  }
-  return result
+  local message = string.format("[%s#%s] The viewtype (%s) is not supported.", __module_name__, self.name, viewtype) ---@type string
+  error(message)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -526,6 +415,34 @@ function M:calc_include_uuid_set(included_uuids)
   return uuids
 end
 
+---@param root_uuid                     string|nil
+---@return string[]
+function M:collect_leaf_uuids(root_uuid)
+  self:health()
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  local uuids = {} ---@type string[]
+
+  ---@param node                        eve.ux.view.treeview.INode
+  ---@return nil
+  local function recursive(node)
+    if node.leaf then
+      uuids[#uuids + 1] = node.uuid
+    end
+
+    if node.dirty_orders then
+      self:__sort_children__(node)
+    end
+
+    for _, uuid in ipairs(node.children) do
+      local child = self._node_map[uuid] ---@type eve.ux.view.treeview.INode
+      recursive(child)
+    end
+  end
+
+  recursive(root)
+  return uuids
+end
+
 ---@param uuid                          string
 ---@return boolean
 function M:has(uuid)
@@ -591,6 +508,256 @@ function M:__remove_recursively__(node)
     local child = node_map[uuid] ---@type eve.ux.view.treeview.INode
     self:__remove_recursively__(child)
   end
+end
+
+---@param bufnr                         integer
+---@param root_uuid                     string|nil
+---@param included_uuid_set             table<string, boolean>|nil
+---@return eve.ux.view.treeview.IRenderResult
+function M:__render_list__(bufnr, root_uuid, included_uuid_set)
+  local uuids = {} ---@type string[]
+  local tick_treeview = self._tick_treeview ---@type integer
+
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  local nsnr = self.nsnr ---@type integer
+
+  if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
+    vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+
+    ---@type eve.ux.view.treeview.IRenderResult
+    local result = {
+      uuids = uuids,
+    }
+    return result
+  end
+
+  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+  local indent = self._indent ---@type string
+
+  local row = 0 ---@type integer
+  local render ---@type eve.ux.view.treeview.IRenderList
+  local recursive ---@type eve.ux.view.treeview.IRenderListRecursive
+
+  ---@type eve.ux.view.treeview.IRenderList
+  render = function(node)
+    local cache = node.cache_listview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
+    if cache == nil or cache.tick ~= tick_treeview then
+      local result = self._node_flat_renderer(self, node, root) ---@type eve.ux.view.treeview.INodeRenderResult
+      ---@type eve.ux.view.treeview.INodeRenderResultCache
+      cache = {
+        tick = tick_treeview,
+        text = result.text,
+        highlights = result.highlights or {},
+      }
+      node.cache_treeview = cache
+    end
+
+    local lnum = row + 1 ---@type integer
+    local text = indent .. cache.text ---@type string
+    vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
+
+    local offset = #indent ---@type integer
+    vim.hl.range(bufnr, nsnr, self._indent_hln, { row, 0 }, { row, offset })
+    for _, highlight in ipairs(cache.highlights) do
+      local hlname = highlight.hlname ---@type string
+      local colr = highlight.colr ---@type integer
+      local coll = highlight.coll ---@type integer
+      vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+    end
+
+    uuids[#uuids + 1] = node.uuid
+    row = row + 1 ---@type integer
+  end
+
+  if included_uuid_set == nil then
+    ---@type eve.ux.view.treeview.IRenderListRecursive
+    recursive = function(node)
+      if node.leaf then
+        render(node)
+        return
+      end
+
+      local N = #node.children ---@type integer
+      for index = 1, N, 1 do
+        local child_uuid = node.children[index] ---@type string
+        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        recursive(child)
+      end
+    end
+  else
+    ---@type eve.ux.view.treeview.IRenderListRecursive
+    recursive = function(node)
+      if node.leaf and included_uuid_set[node.uuid] then
+        render(node)
+        return
+      end
+
+      local N = #node.children ---@type integer
+      for index = 1, N, 1 do
+        local child_uuid = node.children[index] ---@type string
+        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        recursive(child)
+      end
+    end
+  end
+
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+  recursive(root)
+  vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
+
+  ---@type eve.ux.view.treeview.IRenderResult
+  local result = { uuids = uuids }
+  return result
+end
+
+---@param bufnr                         integer
+---@param root_uuid                     string|nil
+---@param included_uuid_set             table<string, boolean>|nil
+---@return eve.ux.view.treeview.IRenderResult
+function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
+  local uuids = {} ---@type string[]
+  local foldempty = self._foldempty ---@type boolean
+  local tick_treeview = self._tick_treeview ---@type integer
+
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  local nsnr = self.nsnr ---@type integer
+
+  if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
+    vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+
+    ---@type eve.ux.view.treeview.IRenderResult
+    local result = {
+      uuids = uuids,
+    }
+    return result
+  end
+
+  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+
+  local row = 0 ---@type integer
+  local render ---@type eve.ux.view.treeview.IRenderTree
+  local recursive ---@type eve.ux.view.treeview.IRenderTreeRecursive
+
+  ---@type eve.ux.view.treeview.IRenderTree
+  render = function(node, depth, indent, folded_depth, is_last)
+    local cache = node.cache_treeview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
+    if cache == nil or cache.tick ~= tick_treeview then
+      local result = self._node_renderer(self, node, root, folded_depth, depth) ---@type eve.ux.view.treeview.INodeRenderResult
+      ---@type eve.ux.view.treeview.INodeRenderResultCache
+      cache = {
+        tick = tick_treeview,
+        text = result.text,
+        highlights = result.highlights or {},
+      }
+      node.cache_treeview = cache
+    end
+
+    if depth > 0 then
+      indent = indent .. (is_last and "╰─" or "├─") ---@type string
+    end
+
+    local lnum = row + 1 ---@type integer
+    local text = indent .. cache.text ---@type string
+    vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
+
+    local offset = #indent ---@type integer
+    vim.hl.range(bufnr, nsnr, self._indent_hln, { row, 0 }, { row, offset })
+    for _, highlight in ipairs(cache.highlights) do
+      local hlname = highlight.hlname ---@type string
+      local colr = highlight.colr ---@type integer
+      local coll = highlight.coll ---@type integer
+      vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+    end
+
+    uuids[#uuids + 1] = node.uuid
+    row = row + 1 ---@type integer
+  end
+
+  if included_uuid_set == nil then
+    ---@type eve.ux.view.treeview.IRenderTreeRecursive
+    recursive = function(node, depth, indent, folded_depth, is_last)
+      if node.collapsed or #node.children < 1 then
+        render(node, depth, indent, folded_depth, is_last)
+        return
+      end
+
+      local N = #node.children ---@type integer
+      if N == 1 and foldempty then
+        local child_uuid = node.children[1] ---@type string
+        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        if not child.leaf then
+          return recursive(child, depth, indent, folded_depth + 1, is_last)
+        end
+      end
+
+      render(node, depth, indent, folded_depth, is_last)
+
+      if N > 1 and node.dirty_orders then
+        self:__sort_children__(node)
+      end
+
+      local child_depth = depth + 1 ---@type integer
+      local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
+      for index = 1, N, 1 do
+        local child_uuid = node.children[index] ---@type string
+        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        recursive(child, child_depth, child_indent, 0, index == N)
+      end
+    end
+  else
+    ---@type eve.ux.view.treeview.IRenderTreeRecursive
+    recursive = function(node, depth, indent, folded_depth, is_last)
+      if node.collapsed or #node.children < 1 then
+        render(node, depth, indent, folded_depth, is_last)
+        return
+      end
+
+      local first_child_index = nil ---@type integer|nil
+      local last_child_index = #node.children ---@type integer
+      for index, child_uuid in ipairs(node.children) do
+        if included_uuid_set[child_uuid] then
+          first_child_index = first_child_index or index ---@type integer
+          last_child_index = index ---@type integer
+        end
+      end
+
+      if first_child_index == last_child_index and foldempty then
+        local child_uuid = node.children[last_child_index] ---@type string
+        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        if not child.leaf then
+          return recursive(child, depth, indent, folded_depth + 1, is_last)
+        end
+      end
+
+      render(node, depth, indent, folded_depth, is_last)
+
+      if first_child_index ~= nil then
+        if first_child_index ~= last_child_index and node.dirty_orders then
+          self:__sort_children__(node)
+        end
+
+        local child_depth = depth + 1 ---@type integer
+        local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
+        for index = first_child_index, last_child_index, 1 do
+          if included_uuid_set[first_child_index] then
+            local child_uuid = node.children[index] ---@type string
+            local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+            recursive(child, child_depth, child_indent, 0, index == last_child_index)
+          end
+        end
+      end
+    end
+  end
+
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+  recursive(root, 0, self._indent, 0, true)
+  vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
+
+  ---@type eve.ux.view.treeview.IRenderResult
+  local result = { uuids = uuids }
+  return result
 end
 
 ---@protected

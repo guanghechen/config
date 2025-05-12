@@ -34,17 +34,15 @@ local c = eve.ux.nvimbar.component
 ---| fun(self: eve.ux.Picker): boolean
 
 ---@class eve.ux.picker.IInternalFlagItem
----@field public type                   "enum"|"boolean"
 ---@field public desc                   string
 ---@field public callback_fn            string
 ---@field public callback               fun(): nil
 ---@field public snapshot               fun(): boolean, string
 
 ---@class eve.ux.picker.IFlagItem
----@field public type                   "enum"|"boolean"
 ---@field public desc                   string
 ---@field public callback               fun(self: eve.ux.Picker): nil
----@field public snapshot               fun(self: eve.ux.Picker): boolean, string
+---@field public snapshot               fun(self: eve.ux.Picker): string, string
 
 ---@class eve.ux.picker.IInternalKeymap
 ---@field public mode                   eve.e.VimMode
@@ -817,7 +815,6 @@ function M.new(props)
 
       ---@type eve.ux.picker.IInternalFlagItem
       local item = {
-        type = flag.type,
         desc = flag.desc,
         callback = callback,
         callback_fn = callback_fn,

@@ -150,14 +150,14 @@ function M.gen_hlgroup_map(context)
 
     ---! picker
     picker = { sp = c.pink, underline = true },
-    picker_result_flag_boolean = { fg = c.fg3, bg = c.bg2, sp = c.pink, underline = true },
-    picker_result_flag_boolean_active = { fg = c.bg0, bg = c.orange, sp = c.pink, underline = true },
-    picker_result_flag_boolean_sep = { fg = c.bg4, bg = c.bg2, sp = c.pink, underline = true },
-    picker_result_flag_boolean_sep_active = { fg = c.bg4, bg = c.orange, sp = c.pink, underline = true },
-    picker_result_flag_enum = { fg = c.fg3, bg = c.bg2, sp = c.pink, underline = true },
-    picker_result_flag_enum_active = { fg = c.bg0, bg = c.purple, sp = c.pink, underline = true },
-    picker_result_flag_enum_sep = { fg = c.bg4, bg = c.bg2, sp = c.pink, underline = true },
-    picker_result_flag_enum_sep_active = { fg = c.bg4, bg = c.purple, sp = c.pink, underline = true },
+    picker_flag_grey = { fg = c.fg3, bg = c.bg2, sp = c.pink, underline = true },
+    picker_flag_red = { fg = c.bg0, bg = c.red, sp = c.pink, underline = true },
+    picker_flag_green = { fg = c.bg0, bg = c.green, sp = c.pink, underline = true },
+    picker_flag_yellow = { fg = c.bg0, bg = c.yellow, sp = c.pink, underline = true },
+    picker_flag_blue = { fg = c.bg0, bg = c.blue, sp = c.pink, underline = true },
+    picker_flag_purple = { fg = c.bg0, bg = c.purple, sp = c.pink, underline = true },
+    picker_flag_aqua = { fg = c.bg0, bg = c.aqua, sp = c.pink, underline = true },
+    picker_flag_orange = { fg = c.bg0, bg = c.orange, sp = c.pink, underline = true },
     picker_result_pos_text = { fg = c.fg4, bg = "bg_bar", sp = c.pink, underline = true },
 
     ---! plugin

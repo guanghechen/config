@@ -86,10 +86,12 @@ M.symbols = {
   flag_fuzzy = "",
   flag_gitignore = "",
   flag_included = "󱣬",
+  flag_list = "",
   flag_regex = "󰑑",
   flag_replace = "",
   flag_reset = "󰝳",
   flag_selected = "󰔡",
+  flag_tree = "",
   sep_left = "",
   sep_right = "",
 }

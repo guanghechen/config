@@ -21,7 +21,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public nodetype               eve.ux.picker_file.NodetypeEnum
 
 ---@type eve.ux.view.treeview.INodeRenderer
-local default_treeview_node_renderer = function(treeview, node, folded_depth)
+local default_treeview_node_renderer = function(treeview, node, _, folded_depth)
   local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
   local icon, icon_hln ---@type string, string
 
@@ -72,6 +72,20 @@ local default_treeview_node_renderer = function(treeview, node, folded_depth)
   return { text = text, highlights = highlights }
 end
 
+---@type eve.ux.view.treeview.INodeFlatRenderer
+local default_treeview_node_flat_renderer = function(_, node, root)
+  local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+  local icon, icon_hln = eve.fn.fileicon(data.basename) ---@type string, string
+
+  local filepath = #root.data.filepath < 2 and data.filepath or data.filepath:sub(#root.data.filepath + 2) ---@type string
+  local text = string.format("%s %s", icon, filepath) ---@type string
+  local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type eve.t.IHighlightInline[]
+
+  ---@type eve.ux.view.treeview.INodeRenderResult
+  local result = { text = text, highlights = highlights }
+  return result
+end
+
 ---@type eve.ux.view.treeview.INodeSorter
 local default_treeview_node_sorter = function(left, right)
   if left.leaf ~= right.leaf then
@@ -89,12 +103,14 @@ end
 ---@field public title                  string
 ---
 ---@field public foldempty              ?boolean
+---@field public node_flat_renderer     ?eve.ux.view.treeview.INodeFlatRenderer
 ---@field public node_renderer          ?eve.ux.view.treeview.INodeRenderer
 ---@field public node_sorter            ?eve.ux.view.treeview.INodeSorter
 ---
 ---@field public flag_fuzzy             eve.std.collection.IObservable
 ---@field public flag_regex             eve.std.collection.IObservable
 ---@field public flag_sensitive         eve.std.collection.IObservable
+---@field public flag_viewtype          eve.std.collection.IObservable
 ---@field public flags_append           eve.ux.picker.IFlagItem[]|nil
 ---@field public flags_prepend          eve.ux.picker.IFlagItem[]|nil
 ---@field public flags_start_index      ?0|1
@@ -114,6 +130,7 @@ end
 ---@field public flag_fuzzy             eve.std.collection.IObservable
 ---@field public flag_regex             eve.std.collection.IObservable
 ---@field public flag_sensitive         eve.std.collection.IObservable
+---@field public flag_viewtype          eve.std.collection.IObservable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _picker             eve.ux.Picker
@@ -122,6 +139,7 @@ end
 ---@field protected _treeview           eve.ux.view.Treeview
 ---
 ---@field protected _uuid_root          string|nil
+---@field protected _uuids_leaf         string[]
 ---@field protected _uuids_visible      string[]|nil
 ---
 ---@field protected _on_dispose         eve.ux.picker_file.IOnDispose
@@ -138,6 +156,7 @@ function M.new(props)
   local permanent = props.permanent ---@type boolean
   local title = props.title ---@type string
   local foldempty = props.foldempty ---@type boolean|nil
+  local node_flat_renderer = props.node_flat_renderer or default_treeview_node_flat_renderer ---@type eve.ux.view.treeview.INodeFlatRenderer
   local node_renderer = props.node_renderer or default_treeview_node_renderer ---@type eve.ux.view.treeview.INodeRenderer
   local node_sorter = props.node_sorter or default_treeview_node_sorter ---@type eve.ux.view.treeview.INodeSorter
 
@@ -166,6 +185,7 @@ function M.new(props)
     foldempty = foldempty,
     indent = "",
     indent_hln = "f_utw_indent_float",
+    node_flat_renderer = node_flat_renderer,
     node_renderer = node_renderer,
     node_sorter = node_sorter,
   })
@@ -186,6 +206,7 @@ function M.new(props)
   local flag_fuzzy = props.flag_fuzzy ---@type eve.std.collection.IObservable
   local flag_regex = props.flag_regex ---@type eve.std.collection.IObservable
   local flag_sensitive = props.flag_sensitive ---@type eve.std.collection.IObservable
+  local flag_viewtype = props.flag_viewtype ---@type eve.std.collection.IObservable
   local flags_append = props.flags_append ---@type eve.ux.picker.IFlagItem[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.IFlagItem[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
@@ -194,7 +215,6 @@ function M.new(props)
   if flags_prepend ~= nil then
     for _, flag in ipairs(flags_prepend) do
       flags[#flags + 1] = {
-        type = flag.type,
         desc = string.format("%s: %s", name, flag.desc),
         callback = flag.callback,
         snapshot = flag.snapshot,
@@ -202,7 +222,26 @@ function M.new(props)
     end
   end
   flags[#flags + 1] = {
-    type = "boolean",
+    desc = string.format("%s: viewtype", name),
+    callback = function()
+      local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
+      local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type eve.ux.view.treeview.ViewtypeEnum
+      flag_viewtype:next(next_viewtype)
+    end,
+    snapshot = function()
+      local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
+      if viewtype == "tree" then
+        return eve.icon.symbols.flag_tree, "picker_flag_aqua"
+      end
+      if viewtype == "list" then
+        return eve.icon.symbols.flag_list, "picker_flag_aqua"
+      end
+
+      local message = string.format("[%s#%s] Unknown viewtype: %s", __module_name__, name, viewtype)
+      error(message)
+    end,
+  }
+  flags[#flags + 1] = {
     desc = string.format("%s: fuzzy", name),
     callback = function()
       local enabled = flag_fuzzy:snapshot() ---@type boolean
@@ -210,11 +249,10 @@ function M.new(props)
     end,
     snapshot = function()
       local enabled = flag_fuzzy:snapshot() ---@type boolean
-      return enabled, eve.icon.symbols.flag_fuzzy
+      return eve.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
     end,
   }
   flags[#flags + 1] = {
-    type = "boolean",
     desc = string.format("%s: sensitive", name),
     callback = function()
       local enabled = flag_sensitive:snapshot() ---@type boolean
@@ -222,11 +260,10 @@ function M.new(props)
     end,
     snapshot = function()
       local enabled = flag_sensitive:snapshot() ---@type boolean
-      return enabled, eve.icon.symbols.flag_case_sensitive
+      return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
     end,
   }
   flags[#flags + 1] = {
-    type = "boolean",
     desc = string.format("%s: fold empty path", name),
     callback = function(picker)
       local enabled = treeview:isfoldempty() ---@type boolean
@@ -235,13 +272,12 @@ function M.new(props)
     end,
     snapshot = function()
       local enabled = treeview:isfoldempty() ---@type boolean
-      return enabled, eve.icon.symbols.flag_fold_empty_path
+      return eve.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
     end,
   }
   if flags_append ~= nil then
     for _, flag in ipairs(flags_append) do
       flags[#flags + 1] = {
-        type = flag.type,
         desc = string.format("%s: %s", name, flag.desc),
         callback = flag.callback,
         snapshot = flag.snapshot,
@@ -447,7 +483,8 @@ function M.new(props)
       on_hide(self)
     end,
     result_render = function(_, bufnr)
-      local result = treeview:render(bufnr, self._uuid_root) ---@type eve.ux.view.treeview.IRenderResult
+      local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
+      local result = treeview:render(bufnr, viewtype, self._uuid_root) ---@type eve.ux.view.treeview.IRenderResult
       local uuids = result.uuids ---@type string[]
       retriever:attach(bufnr, uuids)
     end,
@@ -490,6 +527,7 @@ function M.new(props)
   self._retriever = retriever
   self._treeview = treeview
   self._uuid_root = nil
+  self._uuids_leaf = {}
   self._uuids_visible = nil
 
   self._on_dispose = on_dispose
@@ -528,6 +566,7 @@ function M:dispose()
   self._treeview = nil
 
   self._uuid_root = nil
+  self._uuids_leaf = nil
   self._uuids_visible = nil
 
   vim.schedule(function()
@@ -587,7 +626,7 @@ function M:attach(uuid)
     return self
   end
 
-  self._root_uuid = uuid
+  self._uuid_root = uuid
   return self
 end
 
@@ -736,7 +775,9 @@ function M:reset_filepaths(filepaths)
     treeview:insert(uuid, uuid_parent, data, true, false)
   end
 
+  local uuids_leaf = treeview:collect_leaf_uuids(cwd_uuid) ---@type string[]
   self._uuid_root = cwd_uuid
+  self._uuids_leaf = uuids_leaf
   self._uuids_visible = nil
   return self
 end

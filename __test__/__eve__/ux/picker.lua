@@ -12,6 +12,7 @@ local finder_input = eve.std.Observable.from_value("eve/ux")
 local flag_fuzzy = eve.std.Observable.from_value(false)
 local flag_regex = eve.std.Observable.from_value(false)
 local flag_sensitive = eve.std.Observable.from_value(true)
+local flag_viewtype = eve.std.Observable.from_value("list")
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",
@@ -25,23 +26,23 @@ local picker = eve.ux.FilePicker.new({
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
   flag_sensitive = flag_sensitive,
+  flag_viewtype = flag_viewtype,
   flags_start_index = 0,
   flags_prepend = {
     {
-      type = "enum",
       desc = "find-files: open settings",
       callback = eve.std.fn.noop,
       snapshot = function()
-        return true, eve.icon.symbols.setting
+        return eve.icon.symbols.setting, "picker_flag_purple"
       end,
     },
   },
 })
 
-eve.fn.observe({ finder_input }, function()
+eve.fn.observe({ finder_input, flag_viewtype }, function()
   picker:mark_result_dirty()
 end, true)
-eve.fn.observe({ flag_fuzzy, flag_regex, flag_sensitive }, function()
+eve.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
   picker:mark_result_flags_dirty()
 end, true)
 
