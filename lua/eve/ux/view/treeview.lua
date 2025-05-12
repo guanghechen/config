@@ -35,6 +35,9 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field public cache_treeview         eve.ux.view.treeview.INodeRenderResultCache|nil
 ---@field public cache_listview         eve.ux.view.treeview.INodeRenderResultCache|nil
 
+---@class eve.ux.view.treeview.IRenderResult
+---@field public uuids                  string[]
+
 ---@class eve.ux.view.ITreeviewProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
@@ -52,8 +55,6 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---
 ---@field protected _indent             string
 ---@field protected _indent_hln         string
----@field protected _lnum2uuid          table<integer, string>
----@field protected _uuid2lnum          table<string, integer>
 ---@field protected _node_map           table<string, eve.ux.view.treeview.INode>
 ---@field protected _node_root          eve.ux.view.treeview.INode
 ---@field protected _node_renderer      eve.ux.view.treeview.INodeRenderer
@@ -95,8 +96,6 @@ function M.new(props)
   self._tick_treeview = 0
   self._indent = indent
   self._indent_hln = indent_hln
-  self._lnum2uuid = {}
-  self._uuid2lnum = {}
   self._node_map = { [root.uuid] = root }
   self._node_root = root
   self._node_renderer = node_renderer
@@ -109,8 +108,6 @@ function M:clear()
   self:health()
 
   local root = self._node_root ---@type eve.ux.view.treeview.INode
-  self._lnum2uuid = {}
-  self._uuid2lnum = {}
   self._node_map = { [root.uuid] = root }
   self._node_root.children = {}
   self._node_root.dirty_orders = false
@@ -125,8 +122,6 @@ function M:dispose()
   self._disposed = true
 
   self._indent = nil
-  self._lnum2uuid = nil
-  self._uuid2lnum = nil
   self._node_map = nil
   self._node_root = nil
   self._node_renderer = nil
@@ -154,26 +149,28 @@ end
 ---@param bufnr                         integer
 ---@param root_uuid                     string|nil
 ---@param included_uuid_set             table<string, boolean>|nil
----@return eve.ux.view.Treeview
+---@return eve.ux.view.treeview.IRenderResult
 function M:render(bufnr, root_uuid, included_uuid_set)
   self:health()
 
+  local uuids = {} ---@type string[]
   local foldempty = self._foldempty ---@type boolean
   local tick_treeview = self._tick_treeview ---@type integer
 
   local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
   local nsnr = self.nsnr ---@type integer
-  self._lnum2uuid = {} ---@type table<integer, string>
-  self._uuid2lnum = {} ---@type table<string, integer>
 
   if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-    return self
+
+    ---@type eve.ux.view.treeview.IRenderResult
+    local result = {
+      uuids = uuids,
+    }
+    return result
   end
 
-  local lnum2uuid = self._lnum2uuid ---@type table<integer, string>
-  local uuid2lnum = self._uuid2lnum ---@type table<string, integer>
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
 
   local row = 0 ---@type integer
@@ -194,14 +191,11 @@ function M:render(bufnr, root_uuid, included_uuid_set)
       node.cache_treeview = cache
     end
 
-    local lnum = row + 1 ---@type integer
-    lnum2uuid[lnum] = node.uuid
-    uuid2lnum[node.uuid] = lnum
-
     if depth > 0 then
       indent = indent .. (is_last and "╰─" or "├─") ---@type string
     end
 
+    local lnum = row + 1 ---@type integer
     local text = indent .. cache.text ---@type string
     vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
 
@@ -214,6 +208,7 @@ function M:render(bufnr, root_uuid, included_uuid_set)
       vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
     end
 
+    uuids[#uuids + 1] = node.uuid
     row = row + 1 ---@type integer
   end
 
@@ -296,7 +291,12 @@ function M:render(bufnr, root_uuid, included_uuid_set)
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   recursive(root, 0, self._indent, 0, true)
   vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
-  return self
+
+  ---@type eve.ux.view.treeview.IRenderResult
+  local result = {
+    uuids = uuids,
+  }
+  return result
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -547,40 +547,6 @@ function M:mark_treeview_node_cache_dirty()
   return self
 end
 
----@param lnum                          integer
----@param silent                        boolean|nil
----@return eve.ux.view.treeview.INode|nil
-function M:retrieve_by_lnum(lnum, silent)
-  self:health()
-
-  local uuid = self._lnum2uuid[lnum] ---@type string|nil
-  if uuid == nil then
-    if not silent then
-      eve.reporter.error({
-        from = __module_name__,
-        subject = "retrieve_by_lnum",
-        message = "Cannot retrieve the uuid by the given lnum",
-        details = { lnum = lnum },
-      })
-    end
-    return nil
-  end
-
-  local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
-  if node == nil then
-    if not silent then
-      eve.reporter.error({
-        from = __module_name__,
-        subject = "retrieve_by_lnum",
-        message = "The node isn't exist",
-        details = { lnum = lnum, uuid = uuid },
-      })
-    end
-    return nil
-  end
-  return node
-end
-
 ---@param uuid                          string
 ---@param silent                        boolean|nil
 ---@return eve.ux.view.treeview.INode|nil
@@ -600,13 +566,6 @@ function M:retrieve_by_uuid(uuid, silent)
     return nil
   end
   return node
-end
-
----@param uuid                          string
----@return integer|nil
-function M:retrieve_lnum(uuid)
-  self:health()
-  return self._uuid2lnum[uuid] ---@type integer|nil
 end
 
 ---@param foldempty                     boolean

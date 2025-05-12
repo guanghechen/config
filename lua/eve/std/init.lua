@@ -11,6 +11,7 @@ local __mods = {
 
   BatchDisposable = "eve.std.collection.batch_disposable",
   BatchHandler = "eve.std.collection.batch_handler",
+  BufRetriever = "eve.std.collection.buf_retriever",
   CircularQueue = "eve.std.collection.circular_queue",
   CircularStack = "eve.std.collection.circular_stack",
   Dirtier = "eve.std.collection.dirtier",
@@ -41,6 +42,7 @@ local __mods = {
 ---
 ---@field public BatchDisposable        eve.std.collection.BatchDisposable
 ---@field public BatchHandler           eve.std.collection.BatchHandler
+---@field public BufRetriever           eve.std.collection.BufRetriever
 ---@field public CircularQueue          eve.std.collection.CircularQueue
 ---@field public CircularStack          eve.std.collection.CircularStack
 ---@field public Dirtier                eve.std.collection.Dirtier

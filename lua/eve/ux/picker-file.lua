@@ -118,10 +118,11 @@ end
 ---@field protected _disposed           boolean
 ---@field protected _picker             eve.ux.Picker
 ---@field protected _plainfile          eve.ux.view.Plainfile
+---@field protected _retriever          eve.std.collection.BufRetriever
 ---@field protected _treeview           eve.ux.view.Treeview
 ---
 ---@field protected _uuid_root          string|nil
----@field protected _uuid_leafs         string[]
+---@field protected _uuids_visible      string[]|nil
 ---
 ---@field protected _on_dispose         eve.ux.picker_file.IOnDispose
 ---@field protected _on_focus           eve.ux.picker_file.IOnFocus
@@ -149,6 +150,11 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
+  ---@type eve.std.collection.BufRetriever
+  local retriever = eve.std.BufRetriever.new({
+    name = name,
+  })
+
   ---@type eve.ux.view.Plainfile
   local plainfile = eve.ux.view.Plainfile.new({
     name = name,
@@ -163,6 +169,19 @@ function M.new(props)
     node_renderer = node_renderer,
     node_sorter = node_sorter,
   })
+
+  ---@param picker                      eve.ux.Picker
+  ---@return eve.ux.view.treeview.INode|nil
+  ---@return integer
+  local function retrieve(picker)
+    local lnum = picker:get_result_lnum() ---@type integer
+    local node_uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+    if node_uuid == nil then
+      return node_uuid, lnum
+    end
+    local node = treeview:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.treeview.INode|nil
+    return node, lnum
+  end
 
   local flag_fuzzy = props.flag_fuzzy ---@type eve.std.collection.IObservable
   local flag_regex = props.flag_regex ---@type eve.std.collection.IObservable
@@ -237,8 +256,7 @@ function M.new(props)
       key = "<C-l>",
       desc = "filetree: open",
       callback = function(picker)
-        local lnum = picker:get_result_lnum() ---@type integer
-        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        local node = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
         if node == nil then
           return
         end
@@ -265,8 +283,7 @@ function M.new(props)
       key = "<C-h>",
       desc = "filetree: close",
       callback = function(picker)
-        local lnum = picker:get_result_lnum() ---@type integer
-        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        local node = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
         if node == nil then
           return
         end
@@ -276,7 +293,7 @@ function M.new(props)
           treeview:collapse(node.uuid, "collapsed", false)
           picker:mark_result_dirty()
         else
-          local lnum_parent = treeview:retrieve_lnum(node.parent) ---@type integer|nil
+          local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
           treeview:collapse(node.parent, "collapsed", false)
           picker:mark_result_dirty()
           if lnum_parent ~= nil then
@@ -294,8 +311,7 @@ function M.new(props)
       key = "z",
       desc = "filetree: toggle collapsed (recursively)",
       callback = function(picker)
-        local lnum = picker:get_result_lnum() ---@type integer
-        local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
+        local node = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
         if node == nil then
           return
         end
@@ -329,8 +345,7 @@ function M.new(props)
 
         local cursor = vim.fn.getmousepos()
         if cursor.winid == result_winnr then
-          local lnum = cursor.line ---@type integer
-          local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
+          local node = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
           if node == nil then
             return
           end
@@ -359,8 +374,7 @@ function M.new(props)
       aliases = { "<Right>", "l", "o" },
       desc = "filetree: open",
       callback = function(picker)
-        local lnum = picker:get_result_lnum() ---@type integer
-        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        local node = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
         if node == nil then
           return
         end
@@ -388,8 +402,7 @@ function M.new(props)
       aliases = { "<Left>", "h", "c" },
       desc = "filetree: close",
       callback = function(picker)
-        local lnum = picker:get_result_lnum() ---@type integer
-        local node = treeview:retrieve_by_lnum(lnum, false) ---@type eve.ux.view.treeview.INode|nil
+        local node = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
         if node == nil then
           return
         end
@@ -399,7 +412,7 @@ function M.new(props)
           treeview:collapse(node.uuid, "collapsed", false)
           picker:mark_result_dirty()
         else
-          local lnum_parent = treeview:retrieve_lnum(node.parent) ---@type integer|nil
+          local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
           treeview:collapse(node.parent, "collapsed", false)
           picker:mark_result_dirty()
           if lnum_parent ~= nil then
@@ -434,11 +447,12 @@ function M.new(props)
       on_hide(self)
     end,
     result_render = function(_, bufnr)
-      treeview:render(bufnr, self._uuid_root)
+      local result = treeview:render(bufnr, self._uuid_root) ---@type eve.ux.view.treeview.IRenderResult
+      local uuids = result.uuids ---@type string[]
+      retriever:attach(bufnr, uuids)
     end,
     preview_render = function(picker, bufnr)
-      local lnum = picker:get_result_lnum() ---@type integer
-      local node = treeview:retrieve_by_lnum(lnum, true) ---@type eve.ux.view.treeview.INode|nil
+      local node, lnum = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
       if node == nil then
         ---@type string[]
         local lines = {
@@ -472,8 +486,11 @@ function M.new(props)
 
   self._disposed = false
   self._picker = picker
+  self._plainfile = plainfile
+  self._retriever = retriever
   self._treeview = treeview
   self._uuid_root = nil
+  self._uuids_visible = nil
 
   self._on_dispose = on_dispose
   self._on_focus = on_focus
@@ -497,6 +514,7 @@ function M:dispose()
 
   local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDisposed
   self._plainfile:dispose()
+  self._retriever:dispose()
   self._treeview:dispose()
   self._picker:dispose()
 
@@ -504,12 +522,13 @@ function M:dispose()
   self.flag_regex = nil
   self.flag_sensitive = nil
 
-  self._plainfile = nil
-  self._treeview = nil
   self._picker = nil
+  self._plainfile = nil
+  self._retriever = nil
+  self._treeview = nil
 
   self._uuid_root = nil
-  self._uuid_leafs = nil
+  self._uuids_visible = nil
 
   vim.schedule(function()
     pcall(on_dispose)
@@ -592,8 +611,6 @@ function M:reset_filepaths(filepaths)
   self:__health__()
   local treeview = self._treeview ---@type eve.ux.view.Treeview
   treeview:clear()
-
-  local uuid_leafs = {} ---@type string[]
 
   ---@type eve.ux.file_picker.ITreeNodeData
   local root = {
@@ -678,7 +695,6 @@ function M:reset_filepaths(filepaths)
       nodetype = "file",
     }
     treeview:insert(uuid, uuid_parent, data, true, false)
-    uuid_leafs[#uuid_leafs + 1] = uuid ---@type string
     ::continue::
   end
 
@@ -718,11 +734,10 @@ function M:reset_filepaths(filepaths)
       nodetype = "file",
     }
     treeview:insert(uuid, uuid_parent, data, true, false)
-    uuid_leafs[#uuid_leafs + 1] = uuid ---@type string
   end
 
   self._uuid_root = cwd_uuid
-  self._uuid_leafs = uuid_leafs
+  self._uuids_visible = nil
   return self
 end
 
