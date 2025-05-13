@@ -42,7 +42,7 @@ function M.check_methods(client, bufnr)
   for method, clients in pairs(supports_method) do
     clients[client] = clients[client] or {}
     if not clients[client][bufnr] then
-      if client.supports_method and client:supports_method(method, bufnr) then
+      if client:supports_method(method, bufnr) then
         clients[client][bufnr] = true
         vim.api.nvim_exec_autocmds("User", {
           pattern = "LspSupportsMethod",
