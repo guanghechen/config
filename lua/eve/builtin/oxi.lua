@@ -888,10 +888,17 @@ function M.parse_lines(text, lwidths)
   return lines
 end
 
+---@param text                          string
+---@return string
+function M.md5(text)
+  return nvim_tools.md5(text)
+end
+
 ---@return string
 function M.uuid()
   return nvim_tools.uuid()
 end
+
 ------------------------------------------------------------------------------------------[S]tring--
 
 return M

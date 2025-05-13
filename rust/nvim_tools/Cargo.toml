@@ -10,6 +10,7 @@ crate-type = ["cdylib", "lib"]
 chrono = "0.4"
 lazy_static = "1.4.0"
 libc = "0.2"
+md-5 = "0.10.6"
 nvim-oxi = { version = "0.5.0", features=["neovim-nightly"] }
 regex = "1.10.5"
 serde = { version = "1.0", features = ["derive"] }

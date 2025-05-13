@@ -108,5 +108,6 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::search::search)),
         ),
         ("uuid", Object::from(Function::from_fn(oxi::string::uuid))),
+        ("md5", Object::from(Function::from_fn(oxi::string::get_md5))),
     ])
 }

@@ -1,10 +1,11 @@
 use crate::types::r#match::{LineMatch, MatchLocation};
 use crate::types::FunResult;
 use crate::util;
+use md5::{Digest, Md5};
 use uuid::Uuid;
 
 pub fn count_lines(text: String) -> u32 {
-    return text.lines().count() as u32;
+    text.lines().count() as u32
 }
 
 pub fn find_match_points_line_by_line(
@@ -52,4 +53,11 @@ pub fn normalize_comma_list(input: String) -> String {
 pub fn uuid((): ()) -> String {
     let uuid = Uuid::new_v4();
     uuid.to_string()
+}
+
+pub fn get_md5(input: String) -> String {
+    let mut hasher = Md5::new();
+    hasher.update(input);
+    let hash = hasher.finalize();
+    format!("{:x}", hash)
 }
