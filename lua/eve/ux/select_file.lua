@@ -29,7 +29,6 @@
 ---@field public uuid_present           ?string
 
 ---@class eve.ux.select_file.IRawItem
----
 ---@field public filepath               string
 ---@field public filepath_relative      string
 ---@field public group                  ?string

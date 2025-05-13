@@ -152,6 +152,7 @@ local function create_jump_or_list(title, method, additional_params)
     delay_render = 10,
     preview_enabled = true,
     extend_preset_keymaps = true,
+    permanent = true,
     multiple = true,
     title = title,
     provider = {
