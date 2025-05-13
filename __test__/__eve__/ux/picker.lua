@@ -2,12 +2,6 @@ require("plenary.reload").reload_module("eve.ux.picker")
 require("plenary.reload").reload_module("eve.ux.picker-file")
 require("plenary.reload").reload_module("eve.ux.view.treeview")
 
----@class __test__.ux.picker.ITreeNodeData
----@field public uuid                   string
----@field public filepath               string
----@field public filetype               string
----@field public basename               string
-
 local finder_input = eve.std.Observable.from_value("eve/ux")
 local flag_fuzzy = eve.std.Observable.from_value(false)
 local flag_regex = eve.std.Observable.from_value(false)

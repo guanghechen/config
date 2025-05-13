@@ -5,14 +5,20 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---| "directory"
 ---| "file"
 
----@alias eve.ux.picker_file.IOnDispose
+---@alias eve.ux.picker_file.IOnClosed
+---| fun(self: eve.ux.FilePicker): nil
+
+---@alias eve.ux.picker_file.IOnDisposed
 ---| fun(): nil
 
----@alias eve.ux.picker_file.IOnFocus
+---@alias eve.ux.picker_file.IOnFocused
 ---| fun(self: eve.ux.FilePicker): nil
 
----@alias eve.ux.picker_file.IOnHide
+---@alias eve.ux.picker_file.IOnHidden
 ---| fun(self: eve.ux.FilePicker): nil
+---
+---@alias eve.ux.picker_file.IOnRefresh
+---| fun(self: eve.ux.FilePicker, force: boolean): nil
 
 ---@class eve.ux.file_picker.ITreeNodeData
 ---@field public uuid                   string
@@ -104,6 +110,7 @@ end
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
+---@field public preview                ?boolean
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
@@ -124,9 +131,11 @@ end
 ---@field public finder_input           eve.std.collection.IObservable
 ---@field public finder_multiline       ?boolean
 ---
----@field public on_dispose             eve.ux.picker_file.IOnDispose|nil
----@field public on_focus               eve.ux.picker_file.IOnFocus|nil
----@field public on_hide                eve.ux.picker_file.IOnHide|nil
+---@field public on_closed              ?eve.ux.picker_file.IOnClosed
+---@field public on_disposed            ?eve.ux.picker_file.IOnDisposed
+---@field public on_focused             ?eve.ux.picker_file.IOnFocused
+---@field public on_hidden              ?eve.ux.picker_file.IOnHidden
+---@field public on_refresh             ?eve.ux.picker_file.IOnRefresh
 
 ---@class eve.ux.FilePicker
 ---@field public uuid                   ?string
@@ -151,9 +160,7 @@ end
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuids_leaf         string[]
 ---
----@field protected _on_dispose         eve.ux.picker_file.IOnDispose
----@field protected _on_focus           eve.ux.picker_file.IOnFocus
----@field protected _on_hide            eve.ux.picker_file.IOnHide
+---@field protected _on_disposed         eve.ux.picker_file.IOnDisposed
 local M = {}
 M.__index = M
 
@@ -163,6 +170,7 @@ function M.new(props)
   local name = props.name ---@type string
   local uuid = props.uuid or eve.oxi.uuid() ---@type string
   local permanent = props.permanent ---@type boolean
+  local preview = props.preview ~= false ---@type boolean
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
@@ -174,9 +182,11 @@ function M.new(props)
   local finder_input = props.finder_input ---@type eve.std.collection.IObservable
   local finder_multiline = props.finder_multiline ---@type boolean|nil
 
-  local on_dispose = props.on_dispose or eve.std.fn.noop ---@type eve.ux.picker_file.IOnDispose
-  local on_focus = props.on_focus or eve.std.fn.noop ---@type eve.ux.picker_file.IOnFocus
-  local on_hide = props.on_hide or eve.std.fn.noop ---@type eve.ux.picker_file.IOnHide
+  local on_closed = props.on_closed or eve.std.fn.noop ---@type eve.ux.picker_file.IOnClosed
+  local on_disposed = props.on_disposed or eve.std.fn.noop ---@type eve.ux.picker_file.IOnDisposed
+  local on_focused = props.on_focused or eve.std.fn.noop ---@type eve.ux.picker_file.IOnFocused
+  local on_hidden = props.on_hidden or eve.std.fn.noop ---@type eve.ux.picker_file.IOnHidden
+  local on_refresh = props.on_refresh ---@type eve.ux.picker_file.IOnRefresh|nil
 
   local self = setmetatable({}, M)
 
@@ -320,6 +330,7 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<C-l>",
+      aliases = { "<enter>" },
       desc = "filetree: open",
       callback = function(picker)
         local node = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
@@ -505,50 +516,59 @@ function M.new(props)
 
     result_keymaps = result_keymaps,
 
+    on_closed = function()
+      on_closed(self)
+    end,
     on_disposed = function()
       self:dispose()
     end,
     on_focused = function()
-      on_focus(self)
+      on_focused(self)
     end,
     on_hidden = function()
-      on_hide(self)
+      on_hidden(self)
     end,
+    on_refresh = on_refresh ~= nil and function(_, force)
+      on_refresh(self, force)
+    end or nil,
+
     result_render = function(_, bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
       local result = treeview:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
       local uuids = result.uuids ---@type string[]
       retriever:attach(bufnr, uuids)
     end,
-    preview_render = function(picker, bufnr)
-      local node, lnum = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
-      if node == nil then
-        ---@type string[]
-        local lines = {
-          string.format("Error: cannot retrieve node by the given lnum: %d", lnum),
-        }
-        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-        return string.format("Unknown lnum(%d)", lnum)
-      end
+    preview_render = preview
+        and function(picker, bufnr)
+          local node, lnum = retrieve(picker) ---@type  eve.ux.view.treeview.INode|nil, integer
+          if node == nil then
+            ---@type string[]
+            local lines = {
+              string.format("Error: cannot retrieve node by the given lnum: %d", lnum),
+            }
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+            return string.format("Unknown lnum(%d)", lnum)
+          end
 
-      local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
-      if data.nodetype == "directory" then
-        ---@type string[]
-        local lines = {
-          string.format("Directory: %s", data.filepath),
-        }
-        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-        return data.filepath
-      end
+          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          if data.nodetype == "directory" then
+            ---@type string[]
+            local lines = {
+              string.format("Directory: %s", data.filepath),
+            }
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+            return data.filepath
+          end
 
-      plainfile:render(bufnr, data.filepath, false)
+          plainfile:render(bufnr, data.filepath, false)
 
-      local root = treeview:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.treeview.INode|nil
-      if root == nil then
-        return data.filepath
-      end
-      return eve.path.relative(root.data.filepath or eve.path.cwd(), data.filepath, false)
-    end,
+          local root = treeview:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.treeview.INode|nil
+          if root == nil then
+            return data.filepath
+          end
+          return eve.path.relative(root.data.filepath or eve.path.cwd(), data.filepath, false)
+        end
+      or nil,
   })
 
   self.uuid = uuid
@@ -571,9 +591,7 @@ function M.new(props)
   self._uuid_root = nil
   self._uuids_leaf = {}
 
-  self._on_dispose = on_dispose
-  self._on_focus = on_focus
-  self._on_hide = on_hide
+  self._on_disposed = on_disposed
 
   finder_input:subscribe(eve.std.Subscriber.new({
     on_next = function()
@@ -591,7 +609,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local on_dispose = self._on_dispose ---@type eve.ux.picker.IOnDisposed
+  local on_dispose = self._on_disposed ---@type eve.ux.picker.IOnDisposed
   self._plainfile:dispose()
   self._retriever:dispose()
   self._scheduler_match:dispose()

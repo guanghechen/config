@@ -15,7 +15,8 @@ ms({ "n", "v" }, "<leader>;", K.ai.copilot_chat_toggle)
 ms({ "n", "v" }, "<leader>'", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
 ms({ "n", "v" }, "<leader>2", K.search.files_in_cwd)
-ms({ "n", "v" }, "<leader>3", K.explorer.git_cwd)
+ms({ "n", "v" }, "<leader>3", K.find.git_not_committed)
+ms({ "n", "v" }, "<leader>4", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------

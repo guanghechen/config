@@ -9,6 +9,9 @@ local c = eve.ux.nvimbar.component
 ---| "preview"
 ---| "result"
 
+---@alias eve.ux.picker.IOnClosed
+---| fun(self: eve.ux.Picker): nil
+
 ---@alias eve.ux.picker.IOnDisposed
 ---| fun(): nil
 
@@ -17,6 +20,9 @@ local c = eve.ux.nvimbar.component
 
 ---@alias eve.ux.picker.IOnHidden
 ---| fun(self: eve.ux.Picker): nil
+
+---@alias eve.ux.picker.IOnRefresh
+---| fun(self: eve.ux.Picker, force: boolean): nil
 
 ---@alias eve.ux.picker.IOnResultRendered
 ---| fun(self: eve.ux.Picker, bufnr: integer): nil
@@ -88,6 +94,7 @@ local c = eve.ux.nvimbar.component
 ---@field public preview                string
 
 ---@class eve.ux.picker.keymaps_common
+---@field public refresh                eve.ux.picker.IKeymap
 
 ---@class eve.ux.picker.keymaps_finder
 ---@field public disables_on_singleline eve.ux.picker.IKeymap
@@ -183,7 +190,27 @@ local __highlights__ = {
 
 ---@type eve.ux.picker.keymaps
 local __keymaps__ = {
-  common = {},
+  common = {
+    refresh = {
+      disabled = function(self)
+        return self._on_refresh == nil
+      end,
+      modes = { "i", "n", "v" },
+      key = "<C-a>r",
+      aliases = { "<D-r>", "<M-r>" },
+      desc = "picker: refresh",
+      callback = function(self)
+        eve.fn.pcall(
+          __module_name__,
+          string.format("%s:refresh", self.name),
+          "Failed to run on_refresh",
+          self._on_refresh,
+          self,
+          true
+        )
+      end,
+    },
+  },
   finder = {
     disables_on_singleline = {
       disabled = function(self)
@@ -709,9 +736,11 @@ local __winopts__ = {
 ---@field public preview_render         ?eve.ux.picker.IPreviewRender
 ---@field public preview_win_opts       ?eve.ux.picker.IWinOptions
 ---
+---@field public on_closed              ?eve.ux.picker.IOnClosed
 ---@field public on_disposed            ?eve.ux.picker.IOnDisposed
 ---@field public on_focused             ?eve.ux.picker.IOnFocused
 ---@field public on_hidden              ?eve.ux.picker.IOnHidden
+---@field public on_refresh             ?eve.ux.picker.IOnRefresh
 ---@field public on_preview_rendered    ?eve.ux.picker.IOnPreviewRendered
 ---@field public on_result_rendered     ?eve.ux.picker.IOnResultRendered
 
@@ -758,9 +787,11 @@ local __winopts__ = {
 ---@field protected _preview_winopts    eve.ux.picker.IWinOptions
 ---@field protected _has_preview        boolean
 ---
+---@field protected _on_closed          eve.ux.picker.IOnClosed
 ---@field protected _on_disposed        eve.ux.picker.IOnDisposed
 ---@field protected _on_focused         eve.ux.picker.IOnFocused
 ---@field protected _on_hidden          eve.ux.picker.IOnHidden
+---@field protected _on_refresh         eve.ux.picker.IOnRefresh|nil
 local M = {}
 M.__index = M
 
@@ -797,9 +828,11 @@ function M.new(props)
   local preview_winopts = vim.tbl_deep_extend("force", {}, __winopts__.preview, props.preview_win_opts or {}) ---@type eve.ux.picker.IWinOptions
   local has_preview = preview_render ~= nil ---@type boolean
 
+  local on_closed = props.on_closed or eve.std.fn.noop ---@type eve.ux.picker.IOnClosed
   local on_disposed = props.on_disposed or eve.std.fn.noop ---@type eve.ux.picker.IOnDisposed
   local on_focused = props.on_focused or eve.std.fn.noop ---@type eve.ux.picker.IOnFocused
   local on_hidden = props.on_hidden or eve.std.fn.noop ---@type eve.ux.picker.IOnHidden
+  local on_refresh = props.on_refresh ---@type eve.ux.picker.IOnRefresh|nil
   local on_preview_rendered = props.on_preview_rendered or eve.std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
   local on_result_rendered = props.on_result_rendered or eve.std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
 
@@ -883,9 +916,11 @@ function M.new(props)
   self._preview_winopts = preview_winopts
   self._has_preview = has_preview
 
+  self._on_closed = on_closed ---@type eve.ux.picker.IOnClosed
   self._on_disposed = on_disposed ---@type eve.ux.picker.IOnDisposed
   self._on_focused = on_focused ---@type eve.ux.picker.IOnFocused
   self._on_hidden = on_hidden ---@type eve.ux.picker.IOnHidden
+  self._on_refresh = on_refresh ---@type eve.ux.picker.IOnRefresh|nil
 
   self._finder_keymaps = self:__resolve_finder__keymaps__(finder_keymaps)
   self._result_keymaps = self:__resolve_result__keymaps__(result_keymaps)
@@ -959,7 +994,14 @@ function M.new(props)
           end
         end
 
-        pcall(on_preview_rendered, self, bufnr)
+        eve.fn.pcall(
+          __module_name__,
+          scheduler.name,
+          "Failed to call on_preview_rendered",
+          on_preview_rendered,
+          self,
+          bufnr
+        )
       end,
     })
   end
@@ -1009,7 +1051,14 @@ function M.new(props)
         vim.fn.sign_place(bufnr, "", eve.var.sign.PICKER_RESULT_PRESENT, bufnr, { lnum = lnum, priority = 10 })
       end
 
-      pcall(on_result_rendered, self, bufnr)
+      eve.fn.pcall(
+        __module_name__,
+        scheduler.name,
+        "Failed to call on_result_rendered",
+        on_result_rendered,
+        self,
+        bufnr
+      )
 
       if self._scheduler_preview ~= nil then
         self._scheduler_preview:schedule()
@@ -1079,7 +1128,7 @@ function M:dispose()
   self._disposed = true
 
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
-  local on_dispose = self._on_disposed ---@type eve.ux.picker.IOnDisposed
+  local on_disposed = self._on_disposed ---@type eve.ux.picker.IOnDisposed
 
   self._augroup_CursorMoved = nil
   self._pane_focused = nil
@@ -1145,11 +1194,15 @@ function M:dispose()
   self._preview_winopts = nil
   self._has_preview = nil
 
+  self._on_closed = nil
   self._on_disposed = nil
+  self._on_focused = nil
+  self._on_hidden = nil
+  self._on_refresh = nil
 
   pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
   vim.schedule(function()
-    pcall(on_dispose)
+    eve.fn.pcall(__module_name__, "dispose", "Failed to call on_disposed", on_disposed)
   end)
 end
 
@@ -1164,7 +1217,10 @@ function M:close()
     return
   end
 
-  self:hide()
+  self:__hide__()
+  vim.schedule(function()
+    eve.fn.pcall(__module_name__, "close", "Failed to call on_closed", self._on_closed, self)
+  end)
 end
 
 ---@param pane                         eve.ux.picker.PaneEnum|nil
@@ -1178,7 +1234,7 @@ function M:focus(pane)
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
-    pcall(self._on_focused, self)
+    eve.fn.pcall(__module_name__, "focus", "Failed to call on_focused", self._on_focused, self)
   end)
 end
 
@@ -1188,18 +1244,9 @@ function M:hide()
     return
   end
 
-  local finder_winnr = self._finder_winnr ---@type integer|nil
-  local result_winnr = self._result_winnr ---@type integer|nil
-  local preview_winnr = self._preview_winnr ---@type integer|nil
-  self._finder_winnr = nil
-  self._preview_winnr = nil
-  self._result_winnr = nil
-  eve.win.close(finder_winnr)
-  eve.win.close(preview_winnr)
-  eve.win.close(result_winnr)
-
+  self:__hide__()
   vim.schedule(function()
-    pcall(self._on_hidden, self)
+    eve.fn.pcall(__module_name__, "hide", "Failed to call on_hidden", self._on_hidden, self)
   end)
 end
 
@@ -1783,6 +1830,20 @@ function M:__health__()
     local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
     error(message)
   end
+end
+
+---@protected
+---@return nil
+function M:__hide__()
+  local finder_winnr = self._finder_winnr ---@type integer|nil
+  local result_winnr = self._result_winnr ---@type integer|nil
+  local preview_winnr = self._preview_winnr ---@type integer|nil
+  self._finder_winnr = nil
+  self._preview_winnr = nil
+  self._result_winnr = nil
+  eve.win.close(finder_winnr)
+  eve.win.close(preview_winnr)
+  eve.win.close(result_winnr)
 end
 
 ---@param keymaps                       eve.ux.picker.IKeymap[]
