@@ -986,6 +986,7 @@ function M.new(props)
             message = "Failed to render preview",
             details = {
               bufnr = bufnr,
+              error = preview_title,
             },
           })
         else

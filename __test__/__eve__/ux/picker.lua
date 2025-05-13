@@ -46,7 +46,7 @@ end, true)
 
 local command = string.format("fd '.lua'") ---@type string
 local filepaths = vim.split(vim.trim(vim.fn.system(command)), "\n", { plain = true }) ---@type string[]
-picker:reset_filepaths(filepaths)
+picker:reset_filepaths(eve.path.cwd(), filepaths)
 picker:mark_result_dirty()
 
 picker:focus()

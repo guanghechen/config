@@ -1,14 +1,17 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "eve.ux.view.filetree" ---@type string
 
+local FILETREE_ROOT_UUID = "4d618576933d60f4b31039b123256943" ---@type string
+local filepath2uuid = { [""] = FILETREE_ROOT_UUID } ---@type table<string, string>
+
 ---@alias eve.ux.filetree.NodetypeEnum
 ---| "directory"
 ---| "file"
 
 ---@class eve.ux.view.filetree.INode : eve.ux.view.treeview.INode
----@field public data                   eve.ux.filetree.INodeData
+---@field public data                   eve.ux.view.filetree.INodeData
 
----@class eve.ux.filetree.INodeData
+---@class eve.ux.view.filetree.INodeData
 ---@field public uuid                   string
 ---@field public basename               string
 ---@field public filepath               string
@@ -98,6 +101,13 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param included_uuids                string[]
+---@return table<string, boolean>
+function M:calc_include_uuid_set(included_uuids)
+  self:__health__()
+  return self._treeview:calc_include_uuid_set(included_uuids)
+end
+
 ---@param uuid                          string
 ---@param value                         eve.ux.view.treeview.CollapseActionEnum
 ---@param recursive                     ?boolean
@@ -106,6 +116,13 @@ function M:collapse(uuid, value, recursive)
   self:__health__()
   self._treeview:collapse(uuid, value, recursive)
   return self
+end
+
+---@param root_uuid                     string|nil
+---@return string[]
+function M:collect_leaf_uuids(root_uuid)
+  self:__health__()
+  return self._treeview:collect_leaf_uuids(root_uuid)
 end
 
 ---@return eve.ux.view.Filetree
@@ -132,12 +149,172 @@ function M:render(bufnr, viewtype, root_uuid, included_uuid_set)
   return self._treeview:render(bufnr, viewtype, root_uuid, included_uuid_set)
 end
 
+---@param uuid                          string
+---@param silent                        boolean|nil
 ---@return eve.ux.view.filetree.INode|nil
-function M:retrieve_by_uuid(uuid)
+function M:retrieve_by_uuid(uuid, silent)
   self:__health__()
-  local node = self._treeview:retrieve_by_uuid(uuid)
+  local node = self._treeview:retrieve_by_uuid(uuid, silent)
   ---@cast node                         eve.ux.view.filetree.INode|nil
   return node
+end
+
+---@param filepath                     string
+---@return string|nil
+function M:retrieve_uuid_by_filepath(filepath)
+  if eve.path.is_absolute(filepath) then
+    filepath = eve.path.normalize(filepath) ---@type string
+    return filepath2uuid[filepath]
+  end
+  return nil
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@param cwd                           string
+---@param filepaths                     string[]
+---@return eve.ux.view.Filetree
+function M:reset_filepaths(cwd, filepaths)
+  self:__health__()
+  local treeview = self._treeview ---@type eve.ux.view.Treeview
+  treeview:clear()
+
+  if #filepaths < 1 then
+    return self
+  end
+
+  ---@type eve.ux.view.filetree.INodeData
+  local root = {
+    uuid = FILETREE_ROOT_UUID,
+    basename = "",
+    filepath = "",
+    filepath_lower = "",
+    nodetype = "directory",
+  }
+  treeview:insert(root.uuid, root.uuid, root, false, false)
+
+  cwd = eve.path.normalize(cwd) ---@type string
+  local cwd_with_slash = cwd .. eve.env.PATH_SEP ---@type string
+  local cwd_length = #cwd_with_slash ---@type integer
+  do
+    local pieces = eve.path.split(cwd) ---@type string[]
+    local N = #pieces ---@type integer
+
+    local filepath = root.filepath ---@type string
+    local uuid_parent = root.uuid ---@type string
+    local start_index = eve.env.IS_WIN and 1 or 2 ---@type integer
+    for index = start_index, N, 1 do
+      local basename = pieces[index] ---@type string
+      filepath = index == 1 and basename or (filepath .. eve.env.PATH_SEP .. basename) ---@type string
+      local uuid = self:__resolve_uuid__(filepath) ---@type string
+
+      ---@type eve.ux.view.filetree.INodeData
+      local data = {
+        uuid = uuid,
+        basename = basename,
+        filepath = filepath,
+        filepath_lower = filepath:lower(),
+        nodetype = "directory",
+      }
+      treeview:insert(uuid, uuid_parent, data, false, false)
+      uuid_parent = uuid
+    end
+  end
+
+  ---@param p                           string
+  ---@return nil
+  local function insert_absolute_filepath(p)
+    local pieces = eve.path.split(p) ---@type string[]
+    local N = #pieces - 1 ---@type integer
+
+    local filepath = root.filepath ---@type string
+    local uuid_parent = root.uuid ---@type string
+    local start_index = eve.env.IS_WIN and 1 or 2 ---@type integer
+    for index = start_index, N, 1 do
+      local basename = pieces[index] ---@type string
+      filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+      local uuid = self:__resolve_uuid__(filepath) ---@type string
+
+      ---@type eve.ux.view.filetree.INodeData
+      local data = {
+        uuid = uuid,
+        basename = basename,
+        filepath = filepath,
+        filepath_lower = filepath:lower(),
+        nodetype = "directory",
+      }
+      treeview:insert(uuid, uuid_parent, data, false, false)
+      uuid_parent = uuid ---@type string
+    end
+
+    local basename = pieces[#pieces] ---@type string
+    filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+    local uuid = self:__resolve_uuid__(filepath) ---@type string
+
+    ---@type eve.ux.view.filetree.INodeData
+    local data = {
+      uuid = uuid,
+      basename = basename,
+      filepath = filepath,
+      filepath_lower = filepath:lower(),
+      nodetype = "file",
+    }
+    treeview:insert(uuid, uuid_parent, data, true, false)
+  end
+
+  ---@param p                           string
+  ---@return nil
+  local function insert_relative_filepath(p)
+    local pieces = eve.path.split(p) ---@type string[]
+    local N = #pieces - 1 ---@type integer
+
+    local filepath = cwd ---@type string
+    local uuid_parent = self:__resolve_uuid__(filepath) ---@type string
+    for index = 1, N, 1 do
+      local basename = pieces[index] ---@type string
+      filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+      local uuid = self:__resolve_uuid__(filepath) ---@type string
+
+      ---@type eve.ux.view.filetree.INodeData
+      local data = {
+        uuid = uuid,
+        basename = basename,
+        filepath = filepath,
+        filepath_lower = filepath:lower(),
+        nodetype = "directory",
+      }
+      treeview:insert(uuid, uuid_parent, data, false, false)
+      uuid_parent = uuid ---@type string
+    end
+
+    local basename = pieces[#pieces] ---@type string
+    filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+    local uuid = self:__resolve_uuid__(filepath) ---@type string
+
+    ---@type eve.ux.view.filetree.INodeData
+    local data = {
+      uuid = uuid,
+      basename = basename,
+      filepath = filepath,
+      filepath_lower = filepath:lower(),
+      nodetype = "file",
+    }
+    treeview:insert(uuid, uuid_parent, data, true, false)
+  end
+
+  for _, p in ipairs(filepaths) do
+    if eve.path.is_absolute(p) then
+      if p:sub(1, cwd_length) ~= cwd_with_slash then
+        insert_absolute_filepath(p)
+      else
+        p = p:sub(cwd_length + 1) ---@type string
+        insert_relative_filepath(p)
+      end
+    else
+      insert_relative_filepath(p)
+    end
+  end
+  return self
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -158,8 +335,9 @@ end
 ---@param folded_depth                  integer
 ---@param depth                         integer
 ---@return eve.ux.view.treeview.INodeRenderResult
+---@diagnostic disable-next-line: unused-local
 function M:__render_node__(treeview, node, root, folded_depth, depth)
-  local data = node.data ---@type eve.ux.filetree.INodeData
+  local data = node.data ---@type eve.ux.view.filetree.INodeData
   local icon, icon_hln ---@type string, string
 
   if data.nodetype == "directory" then
@@ -192,7 +370,7 @@ function M:__render_node__(treeview, node, root, folded_depth, depth)
       local parent = treeview:retrieve_by_uuid(parent_uuid)
       ---@cast parent eve.ux.view.filetree.INode
 
-      local parent_data = parent.data ---@type eve.ux.filetree.INodeData
+      local parent_data = parent.data ---@type eve.ux.view.filetree.INodeData
       basenames[index] = parent_data.basename ---@type string
       o = parent
     end
@@ -219,7 +397,7 @@ end
 ---@return eve.ux.view.treeview.INodeRenderResult
 ---@diagnostic disable-next-line: unused-local
 function M:__render_node_flatten__(treeview, node, root)
-  local data = node.data ---@type eve.ux.filetree.INodeData
+  local data = node.data ---@type eve.ux.view.filetree.INodeData
   local icon, icon_hln = eve.fn.fileicon(data.basename) ---@type string, string
 
   local filepath = #root.data.filepath < 2 and data.filepath or data.filepath:sub(#root.data.filepath + 2) ---@type string
@@ -229,6 +407,17 @@ function M:__render_node_flatten__(treeview, node, root)
   ---@type eve.ux.view.treeview.INodeRenderResult
   local result = { text = text, highlights = highlights }
   return result
+end
+
+---@param filepath                      string
+---@return string
+function M:__resolve_uuid__(filepath)
+  local uuid = filepath2uuid[filepath] ---@type string|nil
+  if uuid == nil then
+    uuid = eve.oxi.md5(filepath) ---@type string
+    filepath2uuid[filepath] = uuid
+  end
+  return uuid
 end
 
 ---@param left                          eve.ux.view.filetree.INode

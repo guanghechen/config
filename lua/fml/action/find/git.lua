@@ -9,7 +9,6 @@ local flag_sensitive = eve.std.Observable.from_value(true)
 local flag_viewtype = eve.std.Observable.from_value("tree")
 
 local git_filepaths_dirty = true
-local git_filepaths = {} ---@type string[]
 
 ---@param picker                        eve.ux.FilePicker
 ---@param force                         boolean
@@ -29,9 +28,8 @@ local function refresh(picker, force)
     filepaths[#filepaths + 1] = absolute_filepath
   end
 
-  git_filepaths = filepaths
   git_filepaths_dirty = false
-  picker:reset_filepaths(git_filepaths)
+  picker:reset_filepaths(eve.path.cwd(), filepaths)
 end
 
 local picker = eve.ux.FilePicker.new({
@@ -72,6 +70,7 @@ end, true)
 
 ---@return nil
 function M.find_git_not_committed()
+  refresh(picker, false)
   picker:focus()
 end
 

@@ -74,7 +74,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field protected _indent             string
 ---@field protected _indent_hln         string
 ---@field protected _node_map           table<string, eve.ux.view.treeview.INode>
----@field protected _node_root          eve.ux.view.treeview.INode
+---@field protected _virtual_root       eve.ux.view.treeview.INode
 ---@field protected _node_flat_renderer eve.ux.view.treeview.INodeFlattenRenderer
 ---@field protected _node_renderer      eve.ux.view.treeview.INodeRenderer
 ---@field protected _node_sorter        eve.ux.view.treeview.INodeSorter
@@ -98,7 +98,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   ---@type eve.ux.view.treeview.INode
-  local root = {
+  local __virtual_root__ = {
     parent = "__virtual_root__",
     uuid = "__virtual_root__",
     data = nil,
@@ -116,8 +116,8 @@ function M.new(props)
   self._tick_treeview = 0
   self._indent = indent
   self._indent_hln = indent_hln
-  self._node_map = { [root.uuid] = root }
-  self._node_root = root
+  self._node_map = { [__virtual_root__.uuid] = __virtual_root__ }
+  self._virtual_root = __virtual_root__
   self._node_flat_renderer = node_flat_renderer
   self._node_renderer = node_renderer
   self._node_sorter = sorter
@@ -128,12 +128,12 @@ end
 function M:clear()
   self:__health__()
 
-  local root = self._node_root ---@type eve.ux.view.treeview.INode
+  local root = self._virtual_root ---@type eve.ux.view.treeview.INode
   self._tick_listview = self._tick_listview + 1
   self._tick_treeview = self._tick_treeview + 1
   self._node_map = { [root.uuid] = root }
-  self._node_root.children = {}
-  self._node_root.dirty_orders = false
+  self._virtual_root.children = {}
+  self._virtual_root.dirty_orders = false
   return self
 end
 
@@ -151,7 +151,7 @@ function M:dispose()
   self._indent = nil
   self._indent_hln = nil
   self._node_map = nil
-  self._node_root = nil
+  self._virtual_root = nil
   self._node_flat_renderer = nil
   self._node_renderer = nil
   self._node_sorter = nil
@@ -417,7 +417,7 @@ end
 ---@return string[]
 function M:collect_leaf_uuids(root_uuid)
   self:__health__()
-  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._virtual_root
   local uuids = {} ---@type string[]
 
   ---@param node                        eve.ux.view.treeview.INode
@@ -471,12 +471,7 @@ function M:retrieve_by_uuid(uuid, silent)
   local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
     if not silent then
-      eve.reporter.error({
-        from = __module_name__,
-        subject = "retrieve_by_uuid",
-        message = "The node isn't exist",
-        details = { uuid = uuid },
-      })
+      error(string.format("[retrieve_by_uuid] The node isn't exist: %s", uuid))
     end
     return nil
   end
@@ -525,7 +520,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
   local uuids = {} ---@type string[]
   local tick_listview = self._tick_listview ---@type integer
 
-  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._virtual_root
   local nsnr = self.nsnr ---@type integer
 
   if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
@@ -627,7 +622,8 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   local foldempty = self._foldempty ---@type boolean
   local tick_treeview = self._tick_treeview ---@type integer
 
-  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
+  local virtual_root = self._virtual_root ---@type eve.ux.view.treeview.INode
+  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or virtual_root
   local nsnr = self.nsnr ---@type integer
 
   if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
@@ -649,6 +645,10 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
 
   ---@type eve.ux.view.treeview.IRenderTree
   render = function(node, depth, indent, folded_depth, is_last)
+    if node == virtual_root then
+      return
+    end
+
     local cache = node.cache_treeview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
     if cache == nil or cache.tick ~= tick_treeview then
       local result = self._node_renderer(self, node, root, folded_depth, depth) ---@type eve.ux.view.treeview.INodeRenderResult
@@ -759,7 +759,9 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   end
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-  recursive(root, 0, self._indent, 0, true)
+  if included_uuid_set == nil or included_uuid_set[root.uuid] then
+    recursive(root, 0, self._indent, 0, true)
+  end
   vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
 
   ---@type eve.ux.view.treeview.IRenderResult
@@ -773,7 +775,7 @@ end
 ---@return eve.ux.view.treeview.INode|nil
 function M:__retrieve_parent__(uuid, parent_uuid)
   if uuid == parent_uuid then
-    return self._node_root
+    return self._virtual_root
   end
 
   local parent = self._node_map[parent_uuid] ---@type eve.ux.view.treeview.INode|nil
