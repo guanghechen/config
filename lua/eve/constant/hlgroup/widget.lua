@@ -65,6 +65,11 @@ function M.gen_hlgroup_map(context)
     f_fe_perm = { fg = c.fg1 },
     f_fe_size = { fg = c.green },
 
+    ---filetree
+    f_ft_dirname = { fg = c.blue },
+    f_ft_filename = { fg = c.fg2 },
+    f_ft_pathsep = { fg = c.fg4 },
+
     ---git hunk preview
     f_ghp_cursor = { bg = c.bg3 },
     f_ghp_normal = { bg = c.bg1 },
@@ -183,9 +188,6 @@ function M.gen_hlgroup_map(context)
     ---treeview
     f_utw_indent = { fg = c.bg2 },
     f_utw_indent_float = { fg = c.bg4 },
-    f_utw_dirname = { fg = c.blue },
-    f_utw_filename = { fg = c.fg2 },
-    f_utw_pathsep = { fg = c.fg4 },
 
     ---vim options
     f_us_vo_name = { fg = c.purple },

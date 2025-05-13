@@ -8,6 +8,7 @@
 
 ---@class eve.ux.view.__mods
 local __mods = {
+  Filetree = "eve.ux.view.filetree",
   Plainfile = "eve.ux.view.plainfile",
   Printer = "eve.ux.view.printer",
   Treeview = "eve.ux.view.treeview",
@@ -16,6 +17,7 @@ local __mods = {
 ---@class eve.ux.view
 ---@field public __mods                 eve.ux.view.__mods
 ---
+---@field public Filetree               eve.ux.view.Filetree
 ---@field public Plainfile              eve.ux.view.Plainfile
 ---@field public Printer                eve.ux.view.Printer
 ---@field public Treeview               eve.ux.view.Treeview

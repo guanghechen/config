@@ -1,10 +1,6 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "eve.ux.picker-file" ---@type string
 
----@alias eve.ux.picker_file.NodetypeEnum
----| "directory"
----| "file"
-
 ---@alias eve.ux.picker_file.IOnClosed
 ---| fun(self: eve.ux.FilePicker): nil
 
@@ -20,90 +16,6 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@alias eve.ux.picker_file.IOnRefresh
 ---| fun(self: eve.ux.FilePicker, force: boolean): nil
 
----@class eve.ux.file_picker.ITreeNodeData
----@field public uuid                   string
----@field public basename               string
----@field public filepath               string
----@field public filepath_lower         string
----@field public nodetype               eve.ux.picker_file.NodetypeEnum
-
----@type eve.ux.view.treeview.INodeRenderer
-local default_treeview_node_renderer = function(treeview, node, _, folded_depth)
-  local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
-  local icon, icon_hln ---@type string, string
-
-  if data.nodetype == "directory" then
-    icon, icon_hln = eve.fn.diricon(data.basename)
-    if not node.collapsed then
-      if #node.children < 1 then
-        icon = eve.icon.filetype.FolderEmptyOpen
-      else
-        icon = eve.icon.filetype.FolderOpen
-      end
-    end
-  else
-    icon, icon_hln = eve.fn.fileicon(data.basename)
-  end
-
-  local text ---@type string
-  local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type eve.t.IHighlightInline[]
-
-  if folded_depth < 1 then
-    text = string.format("%s %s", icon, data.basename) ---@type string
-    local hln_basename = data.nodetype == "directory" and "f_utw_dirname" or "f_utw_filename" ---@type string
-    highlights[#highlights + 1] = { coll = #icon + 1, colr = #text, hlname = hln_basename }
-  else
-    local basenames = {} ---@type string[]
-    basenames[folded_depth + 1] = data.basename ---@type string
-
-    local o = node
-    for index = folded_depth, 1, -1 do
-      local parent_uuid = o.parent ---@type string
-      local parent = treeview:retrieve_by_uuid(parent_uuid) ---@type eve.ux.view.treeview.INode|nil
-      ---@cast parent eve.ux.view.treeview.INode
-
-      local parent_data = parent.data ---@type eve.ux.file_picker.ITreeNodeData
-      basenames[index] = parent_data.basename ---@type string
-      o = parent
-    end
-
-    text = string.format("%s %s", icon, basenames[1]) ---@type string
-    highlights[#highlights + 1] = { coll = #icon + 1, colr = #text, hlname = "f_utw_dirname" }
-
-    for index = 2, #basenames, 1 do
-      local basename = basenames[index] ---@type string
-      local offset = #text ---@type integer
-      text = text .. string.format("/%s", basename)
-      highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "f_utw_pathsep" }
-      highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "f_utw_dirname" }
-    end
-  end
-
-  return { text = text, highlights = highlights }
-end
-
----@type eve.ux.view.treeview.INodeFlatRenderer
-local default_treeview_node_flat_renderer = function(_, node, root)
-  local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
-  local icon, icon_hln = eve.fn.fileicon(data.basename) ---@type string, string
-
-  local filepath = #root.data.filepath < 2 and data.filepath or data.filepath:sub(#root.data.filepath + 2) ---@type string
-  local text = string.format("%s %s", icon, filepath) ---@type string
-  local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type eve.t.IHighlightInline[]
-
-  ---@type eve.ux.view.treeview.INodeRenderResult
-  local result = { text = text, highlights = highlights }
-  return result
-end
-
----@type eve.ux.view.treeview.INodeSorter
-local default_treeview_node_sorter = function(left, right)
-  if left.leaf ~= right.leaf then
-    return right.leaf
-  end
-  return left.data.basename < right.data.basename
-end
-
 ----------------------------------------------------------------------------------------------------
 
 ---@class eve.ux.IFilePickerProps
@@ -115,11 +27,7 @@ end
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public foldempty              ?boolean
----@field public node_flat_renderer     ?eve.ux.view.treeview.INodeFlatRenderer
----@field public node_renderer          ?eve.ux.view.treeview.INodeRenderer
----@field public node_sorter            ?eve.ux.view.treeview.INodeSorter
----
+---@field public flag_foldempty         eve.std.collection.IObservable
 ---@field public flag_fuzzy             eve.std.collection.IObservable
 ---@field public flag_regex             eve.std.collection.IObservable
 ---@field public flag_sensitive         eve.std.collection.IObservable
@@ -142,17 +50,18 @@ end
 ---@field public name                   string
 ---@field public title                  string
 ---
+---@field public flag_foldempty         eve.std.collection.IObservable
 ---@field public flag_fuzzy             eve.std.collection.IObservable
 ---@field public flag_regex             eve.std.collection.IObservable
 ---@field public flag_sensitive         eve.std.collection.IObservable
 ---@field public flag_viewtype          eve.std.collection.IObservable
 ---
 ---@field protected _disposed           boolean
+---@field protected _filetree           eve.ux.view.Filetree
 ---@field protected _picker             eve.ux.Picker
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.std.collection.BufRetriever
 ---@field protected _scheduler_match    eve.std.collection.Scheduler|nil
----@field protected _treeview           eve.ux.view.Treeview
 ---
 ---@field protected _last_input         string
 ---@field protected _last_matches       eve.t.IScoredMatch[]|nil
@@ -174,13 +83,18 @@ function M.new(props)
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
-  local foldempty = props.foldempty ---@type boolean|nil
-  local node_flat_renderer = props.node_flat_renderer or default_treeview_node_flat_renderer ---@type eve.ux.view.treeview.INodeFlatRenderer
-  local node_renderer = props.node_renderer or default_treeview_node_renderer ---@type eve.ux.view.treeview.INodeRenderer
-  local node_sorter = props.node_sorter or default_treeview_node_sorter ---@type eve.ux.view.treeview.INodeSorter
 
   local finder_input = props.finder_input ---@type eve.std.collection.IObservable
   local finder_multiline = props.finder_multiline ---@type boolean|nil
+
+  local flag_fuzzy = props.flag_fuzzy ---@type eve.std.collection.IObservable
+  local flag_regex = props.flag_regex ---@type eve.std.collection.IObservable
+  local flag_foldempty = props.flag_foldempty ---@type eve.std.collection.IObservable
+  local flag_sensitive = props.flag_sensitive ---@type eve.std.collection.IObservable
+  local flag_viewtype = props.flag_viewtype ---@type eve.std.collection.IObservable
+  local flags_append = props.flags_append ---@type eve.ux.picker.IFlagItem[]|nil
+  local flags_prepend = props.flags_prepend ---@type eve.ux.picker.IFlagItem[]|nil
+  local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local on_closed = props.on_closed or eve.std.fn.noop ---@type eve.ux.picker_file.IOnClosed
   local on_disposed = props.on_disposed or eve.std.fn.noop ---@type eve.ux.picker_file.IOnDisposed
@@ -200,15 +114,12 @@ function M.new(props)
     name = name,
   })
 
-  ---@type eve.ux.view.Treeview
-  local treeview = eve.ux.view.Treeview.new({
+  ---@type eve.ux.view.Filetree
+  local filetree = eve.ux.view.Filetree.new({
     name = name,
-    foldempty = foldempty,
+    flag_foldempty = flag_foldempty,
     indent = "",
     indent_hln = "f_utw_indent_float",
-    node_flat_renderer = node_flat_renderer,
-    node_renderer = node_renderer,
-    node_sorter = node_sorter,
   })
 
   local scheduler_match = eve.std.Scheduler.new({
@@ -221,7 +132,7 @@ function M.new(props)
     task = function()
       local input = finder_input:snapshot() ---@type string
       self:__match__(input)
-      treeview:mark_treeview_node_cache_dirty()
+      filetree:mark_treeview_node_cache_dirty()
       self:mark_result_dirty()
     end,
   })
@@ -235,17 +146,9 @@ function M.new(props)
     if node_uuid == nil then
       return node_uuid, lnum
     end
-    local node = treeview:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.treeview.INode|nil
+    local node = filetree:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.treeview.INode|nil
     return node, lnum
   end
-
-  local flag_fuzzy = props.flag_fuzzy ---@type eve.std.collection.IObservable
-  local flag_regex = props.flag_regex ---@type eve.std.collection.IObservable
-  local flag_sensitive = props.flag_sensitive ---@type eve.std.collection.IObservable
-  local flag_viewtype = props.flag_viewtype ---@type eve.std.collection.IObservable
-  local flags_append = props.flags_append ---@type eve.ux.picker.IFlagItem[]|nil
-  local flags_prepend = props.flags_prepend ---@type eve.ux.picker.IFlagItem[]|nil
-  local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local flags = {} ---@type eve.ux.picker.IFlagItem[]
   if flags_prepend ~= nil then
@@ -306,12 +209,12 @@ function M.new(props)
       return viewtype ~= "tree"
     end,
     callback = function(picker)
-      local enabled = treeview:isfoldempty() ---@type boolean
-      treeview:set_foldempty(not enabled)
+      local enabled = flag_foldempty:snapshot() ---@type boolean
+      flag_foldempty:next(not enabled)
       picker:mark_result_dirty()
     end,
     snapshot = function()
-      local enabled = treeview:isfoldempty() ---@type boolean
+      local enabled = flag_foldempty:snapshot() ---@type boolean
       return eve.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
     end,
   }
@@ -338,9 +241,9 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+        local data = node.data ---@type eve.ux.filetree.INodeData
         if data.nodetype == "directory" then
-          treeview:collapse(node.uuid, "expanded", false)
+          filetree:collapse(node.uuid, "expand", false)
           picker:mark_result_dirty()
         else
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -365,13 +268,13 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+        local data = node.data ---@type eve.ux.filetree.INodeData
         if data.nodetype == "directory" and not node.collapsed then
-          treeview:collapse(node.uuid, "collapsed", false)
+          filetree:collapse(node.uuid, "collapse", false)
           picker:mark_result_dirty()
         else
           local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
-          treeview:collapse(node.parent, "collapsed", false)
+          filetree:collapse(node.parent, "collapse", false)
           picker:mark_result_dirty()
           if lnum_parent ~= nil then
             picker:set_result_lnum(lnum_parent)
@@ -393,9 +296,9 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+        local data = node.data ---@type eve.ux.filetree.INodeData
         if data.nodetype == "directory" then
-          treeview:collapse(node.uuid, "toggle", true)
+          filetree:collapse(node.uuid, "toggle", true)
           picker:mark_result_dirty()
         else
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -427,9 +330,9 @@ function M.new(props)
             return
           end
 
-          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local data = node.data ---@type eve.ux.filetree.INodeData
           if data.nodetype == "directory" then
-            treeview:collapse(node.uuid, "toggle", false)
+            filetree:collapse(node.uuid, "toggle", false)
             picker:mark_result_dirty()
           else
             local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -456,9 +359,9 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+        local data = node.data ---@type eve.ux.filetree.INodeData
         if data.nodetype == "directory" then
-          treeview:collapse(node.uuid, "expanded", false)
+          filetree:collapse(node.uuid, "expand", false)
           picker:mark_result_dirty()
         else
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -484,13 +387,13 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+        local data = node.data ---@type eve.ux.filetree.INodeData
         if data.nodetype == "directory" and not node.collapsed then
-          treeview:collapse(node.uuid, "collapsed", false)
+          filetree:collapse(node.uuid, "collapse", false)
           picker:mark_result_dirty()
         else
           local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
-          treeview:collapse(node.parent, "collapsed", false)
+          filetree:collapse(node.parent, "collapse", false)
           picker:mark_result_dirty()
           if lnum_parent ~= nil then
             picker:set_result_lnum(lnum_parent)
@@ -534,7 +437,7 @@ function M.new(props)
 
     result_render = function(_, bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
-      local result = treeview:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
+      local result = filetree:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
       local uuids = result.uuids ---@type string[]
       retriever:attach(bufnr, uuids)
     end,
@@ -550,7 +453,7 @@ function M.new(props)
             return string.format("Unknown lnum(%d)", lnum)
           end
 
-          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local data = node.data ---@type eve.ux.filetree.INodeData
           if data.nodetype == "directory" then
             ---@type string[]
             local lines = {
@@ -562,7 +465,7 @@ function M.new(props)
 
           plainfile:render(bufnr, data.filepath, false)
 
-          local root = treeview:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.treeview.INode|nil
+          local root = filetree:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.treeview.INode|nil
           if root == nil then
             return data.filepath
           end
@@ -574,6 +477,7 @@ function M.new(props)
   self.uuid = uuid
   self.name = name
 
+  self.flag_foldempty = flag_foldempty
   self.flag_fuzzy = flag_fuzzy
   self.flag_regex = flag_regex
   self.flag_sensitive = flag_sensitive
@@ -583,7 +487,7 @@ function M.new(props)
   self._plainfile = plainfile
   self._retriever = retriever
   self._scheduler_match = scheduler_match
-  self._treeview = treeview
+  self._treeview = filetree
 
   self._last_input = ""
   self._last_matches = nil
@@ -616,6 +520,7 @@ function M:dispose()
   self._treeview:dispose()
   self._picker:dispose()
 
+  self.flag_foldempty = nil
   self.flag_fuzzy = nil
   self.flag_regex = nil
   self.flag_sensitive = nil
@@ -721,7 +626,7 @@ function M:reset_filepaths(filepaths)
   local treeview = self._treeview ---@type eve.ux.view.Treeview
   treeview:clear()
 
-  ---@type eve.ux.file_picker.ITreeNodeData
+  ---@type eve.ux.filetree.INodeData
   local root = {
     uuid = "uuid:",
     basename = "",
@@ -748,7 +653,7 @@ function M:reset_filepaths(filepaths)
       filepath = index == 1 and basename or (filepath .. eve.env.PATH_SEP .. basename) ---@type string
       uuid = uuid .. "/" .. basename ---@type string
 
-      ---@type eve.ux.file_picker.ITreeNodeData
+      ---@type eve.ux.filetree.INodeData
       local data = {
         uuid = uuid,
         basename = basename,
@@ -783,7 +688,7 @@ function M:reset_filepaths(filepaths)
       filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
       uuid = uuid .. "/" .. basename ---@type string
 
-      ---@type eve.ux.file_picker.ITreeNodeData
+      ---@type eve.ux.filetree.INodeData
       local data = {
         uuid = uuid,
         basename = basename,
@@ -799,7 +704,7 @@ function M:reset_filepaths(filepaths)
     filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
     uuid = uuid .. "/" .. basename ---@type string
 
-    ---@type eve.ux.file_picker.ITreeNodeData
+    ---@type eve.ux.filetree.INodeData
     local data = {
       uuid = uuid,
       basename = basename,
@@ -824,7 +729,7 @@ function M:reset_filepaths(filepaths)
       filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
       uuid = uuid .. "/" .. basename ---@type string
 
-      ---@type eve.ux.file_picker.ITreeNodeData
+      ---@type eve.ux.filetree.INodeData
       local data = {
         uuid = uuid,
         basename = basename,
@@ -840,7 +745,7 @@ function M:reset_filepaths(filepaths)
     filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
     uuid = uuid .. "/" .. basename ---@type string
 
-    ---@type eve.ux.file_picker.ITreeNodeData
+    ---@type eve.ux.filetree.INodeData
     local data = {
       uuid = uuid,
       basename = basename,
@@ -901,7 +806,7 @@ function M:__match__(input)
       for _, match in ipairs(last_matches) do
         local node = treeview:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.treeview.INode|nil
         if node ~= nil then
-          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local data = node.data ---@type eve.ux.filetree.INodeData
           local line = data.filepath:sub(prefix_len) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
@@ -911,7 +816,7 @@ function M:__match__(input)
       for _, match in ipairs(last_matches) do
         local node = treeview:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.treeview.INode|nil
         if node ~= nil then
-          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local data = node.data ---@type eve.ux.filetree.INodeData
           local line = data.filepath_lower:sub(prefix_len) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
@@ -923,7 +828,7 @@ function M:__match__(input)
       for _, uuid in ipairs(self._uuids_leaf) do
         local node = treeview:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.treeview.INode|nil
         if node ~= nil then
-          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local data = node.data ---@type eve.ux.filetree.INodeData
           local line = data.filepath:sub(prefix_len) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
@@ -933,7 +838,7 @@ function M:__match__(input)
       for _, uuid in ipairs(self._uuids_leaf) do
         local node = treeview:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.treeview.INode|nil
         if node ~= nil then
-          local data = node.data ---@type eve.ux.file_picker.ITreeNodeData
+          local data = node.data ---@type eve.ux.filetree.INodeData
           local line = data.filepath_lower:sub(prefix_len) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid

@@ -2,6 +2,7 @@
 local M = {}
 
 local finder_input = eve.std.Observable.from_value("")
+local flag_foldempty = eve.std.Observable.from_value(true)
 local flag_fuzzy = eve.std.Observable.from_value(false)
 local flag_regex = eve.std.Observable.from_value(false)
 local flag_sensitive = eve.std.Observable.from_value(true)
@@ -44,6 +45,7 @@ local picker = eve.ux.FilePicker.new({
   finder_input = finder_input,
   finder_multiline = false,
 
+  flag_foldempty = flag_foldempty,
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
   flag_sensitive = flag_sensitive,
@@ -64,7 +66,7 @@ local picker = eve.ux.FilePicker.new({
 eve.fn.observe({ finder_input, flag_viewtype }, function()
   picker:mark_result_dirty()
 end, true)
-eve.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
+eve.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
   picker:mark_result_flags_dirty()
 end, true)
 

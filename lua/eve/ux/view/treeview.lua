@@ -4,10 +4,15 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---| "tree"
 ---| "list"
 
+---@alias eve.ux.view.treeview.CollapseActionEnum
+---| "collapse"
+---| "expand"
+---| "toggle"
+
 ---@alias eve.ux.view.treeview.INodeRenderer
 ---| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode, folded_depth: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
 
----@alias eve.ux.view.treeview.INodeFlatRenderer
+---@alias eve.ux.view.treeview.INodeFlattenRenderer
 ---| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.treeview.INodeSorter
@@ -54,7 +59,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field public foldempty              ?boolean
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
----@field public node_flat_renderer     eve.ux.view.treeview.INodeFlatRenderer
+---@field public node_flat_renderer     eve.ux.view.treeview.INodeFlattenRenderer
 ---@field public node_renderer          eve.ux.view.treeview.INodeRenderer
 ---@field public node_sorter            eve.ux.view.treeview.INodeSorter
 
@@ -70,7 +75,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field protected _indent_hln         string
 ---@field protected _node_map           table<string, eve.ux.view.treeview.INode>
 ---@field protected _node_root          eve.ux.view.treeview.INode
----@field protected _node_flat_renderer eve.ux.view.treeview.INodeFlatRenderer
+---@field protected _node_flat_renderer eve.ux.view.treeview.INodeFlattenRenderer
 ---@field protected _node_renderer      eve.ux.view.treeview.INodeRenderer
 ---@field protected _node_sorter        eve.ux.view.treeview.INodeSorter
 local M = {}
@@ -86,7 +91,7 @@ function M.new(props)
   local foldempty = props.foldempty ~= false ---@type boolean
   local indent = props.indent or "" ---@type string
   local indent_hln = props.indent_hln or "f_utw_indent" ---@type string
-  local node_flat_renderer = props.node_flat_renderer ---@type eve.ux.view.treeview.INodeFlatRenderer
+  local node_flat_renderer = props.node_flat_renderer ---@type eve.ux.view.treeview.INodeFlattenRenderer
   local node_renderer = props.node_renderer ---@type eve.ux.view.treeview.INodeRenderer
   local sorter = props.node_sorter ---@type eve.ux.view.treeview.INodeSorter
 
@@ -121,7 +126,7 @@ end
 
 ---@return eve.ux.view.Treeview
 function M:clear()
-  self:health()
+  self:__health__()
 
   local root = self._node_root ---@type eve.ux.view.treeview.INode
   self._tick_listview = self._tick_listview + 1
@@ -162,21 +167,13 @@ function M:isfoldempty()
   return self._foldempty
 end
 
----@return nil
-function M:health()
-  if self._disposed then
-    local message = string.format("Treeview (%s) has been disposed.", self.name) ---@type string
-    error(message)
-  end
-end
-
 ---@param bufnr                         integer
 ---@param viewtype                      eve.ux.view.treeview.ViewtypeEnum
 ---@param root_uuid                     string|nil
 ---@param included_uuid_set             table<string, boolean>|nil
 ---@return eve.ux.view.treeview.IRenderResult
 function M:render(bufnr, viewtype, root_uuid, included_uuid_set)
-  self:health()
+  self:__health__()
 
   if viewtype == "list" then
     return self:__render_list__(bufnr, root_uuid, included_uuid_set)
@@ -193,11 +190,11 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param uuid                          string
----@param value                         "collapsed"|"expanded"|"toggle"
+---@param value                         eve.ux.view.treeview.CollapseActionEnum
 ---@param recursive                     ?boolean
 ---@return eve.ux.view.Treeview
 function M:collapse(uuid, value, recursive)
-  self:health()
+  self:__health__()
 
   local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
@@ -213,9 +210,9 @@ function M:collapse(uuid, value, recursive)
   local collapsed = node.collapsed ---@type boolean
   if value == "toggle" then
     collapsed = not collapsed
-  elseif value == "collapsed" then
+  elseif value == "collapse" then
     collapsed = true
-  elseif value == "expanded" then
+  elseif value == "expand" then
     collapsed = false
   end
 
@@ -234,7 +231,7 @@ end
 ---@param collapsed                     boolean
 ---@return eve.ux.view.Treeview
 function M:insert(uuid, parent_uuid, data, leaf, collapsed)
-  self:health()
+  self:__health__()
 
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
   local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
@@ -267,7 +264,7 @@ end
 ---@param uuid                          string
 ---@return eve.ux.view.Treeview
 function M:remove(uuid)
-  self:health()
+  self:__health__()
 
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
   local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
@@ -311,7 +308,7 @@ end
 ---@param insert_if_non_exist           ?boolean
 ---@return eve.ux.view.Treeview
 function M:update(uuid, parent_uuid, data, leaf, collapsed, insert_if_non_exist)
-  self:health()
+  self:__health__()
 
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
   local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
@@ -389,7 +386,7 @@ end
 ---@param included_uuids                string[]
 ---@return table<string, boolean>
 function M:calc_include_uuid_set(included_uuids)
-  self:health()
+  self:__health__()
 
   local uuids = {} ---@type table<string, boolean>
   local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
@@ -419,7 +416,7 @@ end
 ---@param root_uuid                     string|nil
 ---@return string[]
 function M:collect_leaf_uuids(root_uuid)
-  self:health()
+  self:__health__()
   local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._node_root
   local uuids = {} ---@type string[]
 
@@ -447,20 +444,20 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:has(uuid)
-  self:health()
+  self:__health__()
   return self._node_map[uuid] ~= nil
 end
 
 ---@return eve.ux.view.Treeview
 function M:mark_listview_node_cache_dirty()
-  self:health()
+  self:__health__()
   self._tick_listview = self._tick_listview + 1
   return self
 end
 
 ---@return eve.ux.view.Treeview
 function M:mark_treeview_node_cache_dirty()
-  self:health()
+  self:__health__()
   self._tick_treeview = self._tick_treeview + 1
   return self
 end
@@ -469,7 +466,7 @@ end
 ---@param silent                        boolean|nil
 ---@return eve.ux.view.treeview.INode|nil
 function M:retrieve_by_uuid(uuid, silent)
-  self:health()
+  self:__health__()
 
   local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
@@ -489,7 +486,7 @@ end
 ---@param foldempty                     boolean
 ---@return eve.ux.view.Treeview
 function M:set_foldempty(foldempty)
-  self:health()
+  self:__health__()
   if self._foldempty ~= foldempty then
     self._foldempty = foldempty
     self._tick_treeview = self._tick_treeview + 1
@@ -498,6 +495,15 @@ function M:set_foldempty(foldempty)
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@protected
+---@return nil
+function M:__health__()
+  if self._disposed then
+    local message = string.format("Treeview (%s) has been disposed.", self.name) ---@type string
+    error(message)
+  end
+end
 
 ---@protected
 ---@param node                          eve.ux.view.treeview.INode
