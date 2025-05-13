@@ -193,11 +193,9 @@ function M.show(task)
     end
   end
 
-  local group = replace_last and states.message.last_group or nil ---@type string|nil
-  if group == nil then
-    local md5 = eve.std.md5.new():update(tostring(level)):update(title):update(message):finish()
-    group = eve.std.md5.tohex(md5) ---@type string
-  end
+  ---@type string
+  local group = replace_last and states.message.last_group
+    or eve.oxi.md5(string.format("%s:%s:%s", level, title, message))
   states.message.last_group = group
 
   local anonymous = KIND_MAP.CHANGES[kind] ~= true and kind ~= "echo" and not history ---@type boolean

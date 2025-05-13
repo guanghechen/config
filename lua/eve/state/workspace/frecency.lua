@@ -65,7 +65,7 @@ local _defaults = M.defaults() ---@type eve.state.frecency.data
 M.files = eve.std.Frecency.deserialize({
   data = _defaults.files,
   normalize = function(key)
-    return eve.std.md5.sumhexa(key)
+    return eve.oxi.md5(key)
   end,
 })
 

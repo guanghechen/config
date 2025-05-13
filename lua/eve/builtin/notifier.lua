@@ -260,8 +260,7 @@ function M.notify(params)
 
   local timestamp = os.time() ---@type integer
   local lines = vim.split(content, "\n", { plain = true }) ---@type string[]
-  local md5 = eve.std.md5.new():update(level):update(group or ""):update(title):update(content):finish()
-  local uuid = eve.std.md5.tohex(md5) ---@type string
+  local uuid = eve.oxi.md5(string.format("%s:%s:%s:%s", level, group or "", title, content)) ---@type string
 
   ---@type eve.builtin.notifier.ITask
   local task = {
