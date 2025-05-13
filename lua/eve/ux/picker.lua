@@ -689,8 +689,11 @@ local __winopts__ = {
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 ---@field public permanent              boolean
+---
 ---@field public flags                  ?eve.ux.picker.IFlagItem[]
 ---@field public flags_start_index      ?0|1
+---@field public height                 ?number
+---@field public width                  ?number
 ---
 ---@field public finder_input           eve.std.collection.IObservable
 ---@field public finder_keymaps         ?eve.ux.picker.IKeymap[]
@@ -722,8 +725,11 @@ local __winopts__ = {
 ---@field protected _augroup_CursorMoved integer
 ---@field protected _pane_focused       eve.ux.picker.PaneEnum
 ---@field protected _pane_last_focused  eve.ux.picker.PaneEnum
+---
 ---@field protected _flags              eve.ux.picker.IInternalFlagItem[]
 ---@field protected _flags_start_index  0|1
+---@field protected _recommended_height number
+---@field protected _recommended_width  number
 ---
 ---@field protected _scheduler_preview  eve.std.collection.Scheduler|nil
 ---@field protected _scheduler_result   eve.std.collection.Scheduler
@@ -767,9 +773,11 @@ function M.new(props)
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
   local permanent = not not props.permanent ---@type boolean
+
   local flags = {} ---@type eve.ux.picker.IInternalFlagItem[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
-  local augroup_CursorMoved = eve.nvim.augroup(string.format("picker:CursorMoved%s#%s", name, uuid))
+  local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
+  local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
   local finder_input = props.finder_input ---@type eve.std.collection.IObservable
   local finder_keymaps = props.finder_keymaps or {} ---@type eve.ux.picker.IKeymap[]
@@ -844,11 +852,14 @@ function M.new(props)
   self.name = name
   self.nsnr = nsnr
   self.permanent = permanent
+
   self._flags = flags
   self._flags_start_index = flags_start_index
+  self._recommended_height = recommended_height
+  self._recommended_width = recommended_width
 
   self._disposed = false ---@type boolean
-  self._augroup_CursorMoved = augroup_CursorMoved
+  self._augroup_CursorMoved = eve.nvim.augroup(string.format("picker:CursorMoved%s#%s", name, uuid)) ---@type integer
   self._pane_focused = "finder" ---@type eve.ux.picker.PaneEnum
   self._pane_last_focused = "finder" ---@type eve.ux.picker.PaneEnum
 
@@ -1043,7 +1054,7 @@ function M.new(props)
   )
 
   vim.api.nvim_create_autocmd("CursorMoved", {
-    group = augroup_CursorMoved,
+    group = self._augroup_CursorMoved,
     callback = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       if winnr == self._result_winnr then
@@ -1073,8 +1084,11 @@ function M:dispose()
   self._augroup_CursorMoved = nil
   self._pane_focused = nil
   self._pane_last_focused = nil
+
   self._flags = nil
   self._flags_start_index = nil
+  self._recommended_height = nil
+  self._recommended_width = nil
 
   self._scheduler_result:dispose()
   if self._scheduler_preview then
@@ -1921,10 +1935,20 @@ function M:__resize__()
   local max_height = math.max(math.floor(vim.o.lines * 0.9), vim.o.lines - 10) ---@type integer
   local max_width = math.max(math.floor(vim.o.columns * 0.9), vim.o.columns - 20) ---@type integer
 
-  local height = math.min(max_height - 3, 56) ---@type integer
-  local width = math.min(max_width - 3, should_show_preview and 160 or 80) ---@type integer
-  local row = math.floor((vim.o.lines - height) / 2) ---@type integer
-  local col = math.floor((vim.o.columns - width) / 2) ---@type integer
+  local min_height = math.min(math.floor(vim.o.lines * 0.6), 56) ---@type integer
+  local min_width = should_show_preview and math.min(math.floor(vim.o.columns * 0.6), 160)
+    or math.min(math.floor(vim.o.columns * 0.4), 80)
+
+  local recommended_height = self._recommended_height <= 1 and math.floor(vim.o.lines * self._recommended_height)
+    or math.floor(self._recommended_height) ---@type integer
+  local recommended_width = self._recommended_width <= 1 and math.floor(vim.o.columns * self._recommended_width)
+    or math.floor(self._recommended_width) ---@type integer
+
+  local height = math.min(max_height, math.max(min_height, recommended_height)) ---@type integer
+  local width = math.min(max_width, math.max(min_width, recommended_width)) ---@type integer
+
+  local row = math.floor((vim.o.lines - height - 3) / 2) ---@type integer
+  local col = math.floor((vim.o.columns - width - 2) / 2) ---@type integer
 
   local finder_width = should_show_preview and math.floor(width / 2) or width ---@type integer
   local finder_height = 1 ---@type integer

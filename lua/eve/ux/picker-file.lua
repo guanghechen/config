@@ -105,6 +105,8 @@ end
 ---@field public name                   string
 ---@field public permanent              boolean
 ---@field public title                  string
+---@field public height                 ?number
+---@field public width                  ?number
 ---
 ---@field public foldempty              ?boolean
 ---@field public node_flat_renderer     ?eve.ux.view.treeview.INodeFlatRenderer
@@ -162,6 +164,8 @@ function M.new(props)
   local uuid = props.uuid or eve.oxi.uuid() ---@type string
   local permanent = props.permanent ---@type boolean
   local title = props.title ---@type string
+  local height = props.height ---@type number|nil
+  local width = props.width ---@type number|nil
   local foldempty = props.foldempty ---@type boolean|nil
   local node_flat_renderer = props.node_flat_renderer or default_treeview_node_flat_renderer ---@type eve.ux.view.treeview.INodeFlatRenderer
   local node_renderer = props.node_renderer or default_treeview_node_renderer ---@type eve.ux.view.treeview.INodeRenderer
@@ -491,6 +495,8 @@ function M.new(props)
     permanent = permanent,
     flags = flags,
     flags_start_index = flags_start_index,
+    height = height,
+    width = width,
 
     finder_title = title,
     finder_keymaps = finder_keymaps,

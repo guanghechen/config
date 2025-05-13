@@ -19,6 +19,8 @@ local picker = eve.ux.FilePicker.new({
   name = "find-files",
   permanent = false,
   title = "Find files",
+  height = 0.80,
+  width = 0.85,
 
   finder_input = finder_input,
   finder_multiline = false,
