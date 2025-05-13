@@ -152,7 +152,7 @@ function M.push(widget)
       bottom_widget:hide()
     end
     M.history:push(widget)
-    present:hide()
+    -- present:hide()
   end
 end
 
