@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.lsp" ---@type string
 
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@param callback                      fun(ok: boolean, data: eve.ux.select_file.IData|nil): nil
+---@param callback                      fun(ok: boolean, filepaths: string[]|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -24,13 +24,12 @@ local function fetch_data(method, additional_params, callback)
     return
   end
 
-  local cwd = eve.path.cwd() ---@type string
   local params =
     vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile, "utf-8"), additional_params)
 
   vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
-    local items = {}
     local errors = {} ---@type string[]
+    local items = {} ---@type [string, integer, integer][]
 
     local uri_cur = params.textDocument.uri ---@type string
     local line_cur = params.position.line ---@type integer
@@ -62,23 +61,12 @@ local function fetch_data(method, additional_params, callback)
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
               local filepath = eve.path.normalize(uri:gsub("^file://", "")) ---@type string
-              local filepath_relative = eve.path.relative(cwd, filepath, true) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
-
-              local last_item = items[#items] ---@type eve.ux.select_file.IRawItem|nil
-              if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
-                local uuid = filepath .. ":" .. tostring(lnum) .. ":" .. tostring(col) ---@type string
-                ---@type eve.ux.select_file.IRawItem
-                local item = {
-                  group = filepath,
-                  filepath = filepath,
-                  filepath_relative = filepath_relative,
-                  uuid = uuid,
-                  lnum = lnum,
-                  col = col,
-                }
-                table.insert(items, item)
+              local last_item = items[#items] ---@type [string, integer, integer]|nil
+              if last_item == nil or last_item[1] ~= filepath or last_item[2] ~= lnum then
+                local item = { filepath, lnum, col } ---@type [string, integer, integer]
+                items[#items + 1] = item
               end
             end
           end
@@ -103,39 +91,18 @@ local function fetch_data(method, additional_params, callback)
     end
 
     if #items == 1 then
-      local item = items[1] ---@type eve.ux.select_file.IRawItem
-      eve.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
+      local filepath, lnum, col = unpack(items[1]) ---@type string, integer, integer
+      eve.win.open_filepath(winnr_sourcefile, filepath, lnum, col)
       callback(true, nil)
       return
     end
 
-    table.sort(items, function(a, b)
-      if a.filepath == b.filepath then
-        if a.lnum == b.lnum then
-          return a.col < b.col
-        end
-        return a.lnum < b.lnum
-      end
-      return a.filepath < b.filepath
-    end)
-
-    local last_item = items[1] ---@type eve.ux.select_file.IRawItem
-    local N = #items ---@type integer
-    local k = 2 ---@type integer
-    for i = 2, N, 1 do
-      local item = items[i] ---@type eve.ux.select_file.IRawItem
-
-      if item.filepath ~= last_item.filepath or item.lnum ~= last_item.lnum then
-        last_item = item
-        items[k] = item
-        k = k + 1
-      end
+    local filepaths = {} ---@type string[]
+    for _, item in ipairs(items) do
+      local filepath = string.format("%s:%d:%d", item[1], item[2], item[3]) ---@type string
+      filepaths[#filepaths + 1] = filepath
     end
-    for i = N, k, -1 do
-      items[i] = nil
-    end
-    local data = { items = items, cwd = cwd } ---@type eve.ux.select_file.IData
-    callback(true, data)
+    callback(true, filepaths)
   end)
 end
 
@@ -144,35 +111,49 @@ end
 ---@param additional_params             table<string, any>
 ---@return fun(): nil
 local function create_jump_or_list(title, method, additional_params)
-  local _last_data = { items = {}, cwd = eve.path.cwd() } ---@type eve.ux.select_file.IData
+  local finder_input = eve.std.Observable.from_value("")
+  local flag_foldempty = eve.std.Observable.from_value(true)
+  local flag_fuzzy = eve.std.Observable.from_value(false)
+  local flag_regex = eve.std.Observable.from_value(false)
+  local flag_sensitive = eve.std.Observable.from_value(true)
+  local flag_viewtype = eve.std.Observable.from_value("tree")
 
-  local select = nil ---@type eve.ux.IFileSelect|nil
-  select = eve.ux.FileSelect.new({
-    delay_fetch = 0,
-    delay_render = 10,
-    preview_enabled = true,
-    extend_preset_keymaps = true,
+  local picker = eve.ux.FilePicker.new({
+    name = string.format("lsp-reference:%s", method),
     permanent = true,
-    multiple = true,
     title = title,
-    provider = {
-      fetch_data = function()
-        return _last_data
-      end,
-    },
+    height = 0.80,
+    width = 0.85,
+
+    finder_input = finder_input,
+    finder_multiline = false,
+
+    flag_foldempty = flag_foldempty,
+    flag_fuzzy = flag_fuzzy,
+    flag_regex = flag_regex,
+    flag_sensitive = flag_sensitive,
+    flag_viewtype = flag_viewtype,
+    flags_start_index = 1,
+
+    on_close = function()
+      finder_input:next("")
+    end,
   })
 
-  local function jump_or_list()
-    fetch_data(method, additional_params, function(ok, data)
-      if ok then
-        if data ~= nil then
-          _last_data = data
+  eve.fn.observe({ finder_input, flag_viewtype }, function()
+    picker:mark_result_dirty()
+  end, true)
+  eve.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
+    picker:mark_result_flags_dirty()
+  end, true)
 
-          if select ~= nil then
-            select:mark_data_dirty()
-            select:focus()
-          end
-        end
+  local function jump_or_list()
+    fetch_data(method, additional_params, function(ok, filepaths)
+      if ok and filepaths ~= nil then
+        local cwd = eve.path.cwd() ---@type string
+        picker:reset_filepaths(cwd, filepaths, true)
+        picker:mark_result_dirty()
+        picker:focus()
       end
     end)
   end
