@@ -1,30 +1,3 @@
----@param status                        string
----@return string
-local function get_simple_git_status_code(status)
-  -- Prioritize M then A over all others
-  if status == "AA" or status == "DD" or status:match("U") then
-    return "U"
-  elseif status:match("M") then
-    return "M"
-  elseif status:match("[ACR]") then
-    return "A"
-  elseif status:match("!$") then
-    return "!"
-  elseif status:match("?$") then
-    return "?"
-  else
-    local len = #status
-    while len > 0 do
-      local char = status:sub(len, len)
-      if char ~= " " then
-        return char
-      end
-      len = len - 1
-    end
-    return status
-  end
-end
-
 ---@param status                        string|nil
 ---@param other_status                  string|nil
 ---@return string|nil
@@ -48,9 +21,8 @@ end
 
 ---@param line                          string
 ---@param workspace                     string
----@param exclude_directories           boolean
 ---@param git_status                    table<string, string>
-local parse_git_status_line = function(line, workspace, exclude_directories, git_status)
+local function parse_git_status_line(line, workspace, git_status)
   if type(line) ~= "string" or #line < 3 then
     return
   end
@@ -91,69 +63,79 @@ local parse_git_status_line = function(line, workspace, exclude_directories, git
     status = merged
   end
   git_status[absolute_path] = status
-
-  if not exclude_directories then
-    local parts = eve.path.split(absolute_path) ---@type string[]
-    table.remove(parts) -- pop the last part so we don't override the file's status
-
-    local acc = "" ---@type string
-    for _, part in ipairs(parts) do
-      local path = acc .. eve.env.PATH_SEP .. part
-      if eve.env.IS_WIN then
-        path = path:gsub("^" .. eve.env.PATH_SEP, "")
-      end
-      local path_status = git_status[path]
-      local file_status = get_simple_git_status_code(status)
-      git_status[path] = get_priority_git_status_code(path_status, file_status)
-      acc = path
-    end
-  end
 end
 
 ---@class eve.viewmodel.git
 local M = {}
 
 ---@param base                          string git ref base
----@param exclude_directories           boolean Whether to skip bubbling up status to directories
+---@return string
 ---@return table<string, string>
-function M.status(base, exclude_directories)
-  if not eve.path.is_repo_git() then
-    return {}
-  end
-
+function M.status(base)
   local workspace = eve.path.workspace() ---@type string
+
+  if not eve.path.is_repo_git() then
+    return workspace, {}
+  end
 
   local cmd_staged = { "git", "-C", workspace, "diff", "--staged", "--name-status", base, "--" }
   local ok_staged, result_staged = eve.job.execute_command(cmd_staged)
   if not ok_staged then
-    return {}
+    return workspace, {}
   end
 
   local cmd_unstaged = { "git", "-C", workspace, "diff", "--name-status" }
   local ok_unstaged, result_unstaged = eve.job.execute_command(cmd_unstaged)
   if not ok_unstaged then
-    return {}
+    return workspace, {}
   end
 
   local cmd_untracked = { "git", "-C", workspace, "ls-files", "--exclude-standard", "--others" }
   local ok_untracked, result_untracked = eve.job.execute_command(cmd_untracked)
   if not ok_untracked then
-    return {}
+    return workspace, {}
   end
 
   local git_status = {} ---@type table<string, string>
 
   for _, line in ipairs(result_staged) do
-    parse_git_status_line(line, workspace, exclude_directories, git_status)
+    parse_git_status_line(line, workspace, git_status)
   end
   for _, line in ipairs(result_unstaged) do
-    parse_git_status_line(line and (" " .. line) or line, workspace, exclude_directories, git_status)
+    parse_git_status_line(line and (" " .. line) or line, workspace, git_status)
   end
   for _, line in ipairs(result_untracked) do
-    parse_git_status_line(line and ("?	" .. line) or line, workspace, exclude_directories, git_status)
+    parse_git_status_line(line and ("?	" .. line) or line, workspace, git_status)
   end
 
-  return git_status
+  return workspace, git_status
+end
+
+---@param status                        string
+---@return string
+function M.extract_parent_status(status)
+  -- Prioritize M then A over all others
+  if status == "AA" or status == "DD" or status:match("U") then
+    return "U"
+  elseif status:match("M") then
+    return "M"
+  elseif status:match("[ACR]") then
+    return "A"
+  elseif status:match("!$") then
+    return "!"
+  elseif status:match("?$") then
+    return "?"
+  else
+    local len = #status
+    while len > 0 do
+      local char = status:sub(len, len)
+      if char ~= " " then
+        return char
+      end
+      len = len - 1
+    end
+    return status
+  end
 end
 
 return M

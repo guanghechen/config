@@ -1,3 +1,5 @@
+local __module_name__ = "fml.action.find.git" ---@type string
+
 ---@class fml.action.find
 local M = {}
 
@@ -18,22 +20,19 @@ local function refresh(picker, force)
     return
   end
 
-  local cwd = eve.path.cwd() ---@type string
-  local result = vim.fn.system("git ls-files --others --modified --exclude-standard") ---@type string
-  local lines = eve.oxi.parse_lines(result) ---@type string[]
-
+  local workspace, status = eve.viewmodel.git.status("HEAD") ---@type string, table<string, string>
   local filepaths = {} ---@type string[]
-  for _, line in ipairs(lines) do
-    local filepath = eve.path.join(cwd, line) ---@type string
-    filepaths[#filepaths + 1] = filepath
+  for filepath in pairs(status) do
+    local absolute_filepath = eve.path.join(workspace, filepath) ---@type string
+    filepaths[#filepaths + 1] = absolute_filepath
   end
 
-  picker:reset_filepaths(cwd, filepaths, false)
+  picker:reset_filepaths(workspace, filepaths, false)
   git_filepaths_dirty = false
 end
 
 local picker = eve.ux.FilePicker.new({
-  name = "find-git-not-committed",
+  name = "find-git-not-",
   permanent = true,
   title = "Find git (not committed)",
   height = 0.80,
@@ -70,6 +69,15 @@ end, true)
 
 ---@return nil
 function M.find_git_not_committed()
+  if not eve.path.is_repo_git() then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "find_git_not_committed",
+      message = "Not a git repository",
+    })
+    return
+  end
+
   refresh(picker, false)
   picker:focus()
 end
