@@ -28,8 +28,8 @@ local function refresh(picker, force)
     filepaths[#filepaths + 1] = filepath
   end
 
-  git_filepaths_dirty = false
   picker:reset_filepaths(cwd, filepaths, false)
+  git_filepaths_dirty = false
 end
 
 local picker = eve.ux.FilePicker.new({
@@ -50,7 +50,7 @@ local picker = eve.ux.FilePicker.new({
   flag_viewtype = flag_viewtype,
   flags_start_index = 1,
 
-  on_close = function()
+  on_closed = function()
     git_filepaths_dirty = true
   end,
   on_focused = function(picker)
