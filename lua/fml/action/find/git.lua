@@ -18,18 +18,18 @@ local function refresh(picker, force)
     return
   end
 
-  local workspace = eve.path.workspace() ---@type string
-  local result = vim.fn.system("git diff HEAD --name-only") ---@type string
+  local cwd = eve.path.cwd() ---@type string
+  local result = vim.fn.system("git ls-files --others --modified --exclude-standard") ---@type string
   local lines = eve.oxi.parse_lines(result) ---@type string[]
 
   local filepaths = {} ---@type string[]
   for _, line in ipairs(lines) do
-    local absolute_filepath = eve.path.join(workspace, line) ---@type string
-    filepaths[#filepaths + 1] = absolute_filepath
+    local filepath = eve.path.join(cwd, line) ---@type string
+    filepaths[#filepaths + 1] = filepath
   end
 
   git_filepaths_dirty = false
-  picker:reset_filepaths(eve.path.cwd(), filepaths, false)
+  picker:reset_filepaths(cwd, filepaths, false)
 end
 
 local picker = eve.ux.FilePicker.new({
