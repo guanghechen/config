@@ -1,3 +1,9 @@
+---@param octal                          string
+---@return string
+local convert_octal_char = function(octal)
+  return string.char(tonumber(octal, 8))
+end
+
 ---@class eve.builtin.string
 local M = {}
 
@@ -7,6 +13,16 @@ function M.escape_url_component(text)
   return (text:gsub("([^%w%.%-])", function(c)
     return string.format("%%%02X", string.byte(c))
   end))
+end
+
+---@param text                          string
+---@return string
+function M.octal_to_utf8(text)
+  local success, converted = pcall(string.gsub, text, "\\([0-7][0-7][0-7])", convert_octal_char)
+  if success then
+    return converted
+  end
+  return text
 end
 
 ---@param text                          string
@@ -73,4 +89,3 @@ function M.starts_with(text, word)
 end
 
 return M
-

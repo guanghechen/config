@@ -12,6 +12,7 @@ local __mods = {
   fs = "eve.builtin.fs",
   icon = "eve.builtin.icon",
   im = "eve.builtin.im",
+  job = "eve.builtin.job",
   json = "eve.builtin.json",
   lsp = "eve.builtin.lsp",
   notifier = "eve.builtin.notifier",
@@ -40,6 +41,7 @@ local __mods = {
 ---@field public std                    eve.std
 ---@field public state                  eve.state
 ---@field public ux                     eve.ux
+---@field public viewmodel              eve.viewmodel
 ---
 ---@field public G                      eve.builtin.G
 ---@field public box                    eve.builtin.box
@@ -53,6 +55,7 @@ local __mods = {
 ---@field public fs                     eve.builtin.fs
 ---@field public icon                   eve.builtin.icon
 ---@field public im                     eve.builtin.im
+---@field public job                    eve.builtin.job
 ---@field public json                   eve.builtin.json
 ---@field public lsp                    eve.builtin.lsp
 ---@field public notifier               eve.builtin.notifier
@@ -79,6 +82,7 @@ local M = setmetatable({
   std = require("eve.std"),
   state = require("eve.state"),
   ux = require("eve.ux"),
+  viewmodel = require("eve.viewmodel"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
