@@ -43,6 +43,18 @@ end
 
 ---@param text                          string
 ---@return string
+---@return integer|nil
+---@return integer|nil
+function M.parse_filepath_with_position(text)
+  local pieces = vim.split(text, ":", { plain = true })
+  local filepath = pieces[1] ---@type string
+  local lnum = pieces[2] ~= nil and tonumber(pieces[2]) or nil ---@type integer|nil
+  local col = pieces[3] ~= nil and tonumber(pieces[3]) or nil ---@type integer|nil
+  return filepath, lnum, col
+end
+
+---@param text                          string
+---@return string
 function M.remove_last_slash(text)
   if #text > 1 then
     local last_character = string.sub(text, -1, -1)
@@ -61,3 +73,4 @@ function M.starts_with(text, word)
 end
 
 return M
+

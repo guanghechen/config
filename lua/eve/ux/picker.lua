@@ -34,7 +34,7 @@ local c = eve.ux.nvimbar.component
 ---| fun(self: eve.ux.Picker, bufnr: integer): integer?, integer?
 
 ---@alias eve.ux.picker.IPreviewRender
----| fun(self: eve.ux.Picker, bufnr: integer): string
+---| fun(self: eve.ux.Picker, bufnr: integer): string, integer?, integer?
 
 ---@alias eve.ux.picker.ICheckKeymapDisabled
 ---| fun(self: eve.ux.Picker): boolean
@@ -784,6 +784,8 @@ local __winopts__ = {
 ---@field protected _preview_winnr      integer|nil
 ---@field protected _preview_keymaps    eve.ux.picker.IInternalKeymap[]
 ---@field protected _preview_title      string|nil
+---@field protected _preview_lnum       integer|nil
+---@field protected _preview_col        integer|nil
 ---@field protected _preview_winopts    eve.ux.picker.IWinOptions
 ---@field protected _has_preview        boolean
 ---
@@ -913,6 +915,8 @@ function M.new(props)
   self._preview_bufnr = nil
   self._preview_winnr = nil
   self._preview_title = nil
+  self._preview_lnum = nil
+  self._preview_col = nil
   self._preview_winopts = preview_winopts
   self._has_preview = has_preview
 
@@ -975,7 +979,7 @@ function M.new(props)
 
         vim.bo[bufnr].modifiable = true
         vim.bo[bufnr].readonly = false
-        local ok, preview_title = pcall(preview_render, self, bufnr) ---@type boolean, string|nil
+        local ok, preview_title, preview_lnum, preview_col = pcall(preview_render, self, bufnr) ---@type boolean, string|nil, integer|nil, integer|nil
         vim.bo[bufnr].modifiable = false
         vim.bo[bufnr].readonly = true
 
@@ -992,6 +996,9 @@ function M.new(props)
         else
           if preview_title ~= nil then
             self:set_preview_title(preview_title)
+          end
+          if preview_lnum ~= nil then
+            self:set_preview_position(preview_lnum, preview_col)
           end
         end
 
@@ -1192,6 +1199,8 @@ function M:dispose()
   self._preview_winnr = nil
   self._preview_keymaps = nil
   self._preview_title = nil
+  self._preview_lnum = nil
+  self._preview_col = nil
   self._preview_winopts = nil
   self._has_preview = nil
 
@@ -1472,7 +1481,29 @@ function M:set_preview_title(title)
       wincfg.title_pos = self._preview_title and "center" or nil
       vim.api.nvim_win_set_config(preview_winnr, wincfg)
     else
-      self:__create_wins__()
+      vim.schedule(function()
+        self:__create_wins__()
+      end)
+    end
+  end
+end
+
+---@param lnum                          integer
+---@param col                           integer|nil
+function M:set_preview_position(lnum, col)
+  self:__health__()
+  self._preview_lnum = lnum
+  self._preview_col = col
+
+  local should_preview_show = self:__should_show_preview__() ---@type boolean
+  if should_preview_show then
+    local preview_winnr = self._preview_winnr ---@type integer|nil
+    if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
+      vim.api.nvim_win_set_cursor(preview_winnr, { lnum, col or 0 })
+    else
+      vim.schedule(function()
+        self:__create_wins__()
+      end)
     end
   end
 end
@@ -1786,6 +1817,10 @@ function M:__create_wins__()
       vim.wo[preview_winnr].winfixbuf = true
     end
     vim.wo[preview_winnr].cursorline = true
+
+    if self._preview_lnum ~= nil then
+      vim.api.nvim_win_set_cursor(preview_winnr, { self._preview_lnum, self._preview_col or 0 })
+    end
   end
 
   return true, finder_winnr, result_winnr, preview_winnr

@@ -67,7 +67,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _last_matches       eve.t.IScoredMatch[]|nil
 ---@field protected _last_matched_uuids table<string, boolean>|nil
 ---@field protected _uuid_root          string|nil
----@field protected _uuids_leaf         string[]
+---@field protected _uuids_file         string[]
 ---
 ---@field protected _on_disposed         eve.ux.picker_file.IOnDisposed
 local M = {}
@@ -241,21 +241,28 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.view.filetree.INodeData
-        if data.nodetype == "directory" then
+        if node.type == "container" then
           filetree:collapse(node.uuid, "expand", false)
           picker:mark_result_dirty()
-        else
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-          end
-
-          picker:close()
-          local filepath = data.filepath ---@type string
-          eve.win.open_filepath(winnr_sourcefile, filepath)
+          return
         end
+
+        if node.type == "leaf" and #node.children > 0 then
+          filetree:collapse(node.uuid, "expand", false)
+          picker:mark_result_dirty()
+          return
+        end
+
+        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+        local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+        if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+          vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+        end
+
+        local filepath = node.data.filepath ---@type string
+
+        picker:close()
+        eve.win.open_filepath(winnr_sourcefile, filepath)
       end,
     },
     {
@@ -268,17 +275,23 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.view.filetree.INodeData
-        if data.nodetype == "directory" and not node.collapsed then
+        if node.type == "container" then
           filetree:collapse(node.uuid, "collapse", false)
           picker:mark_result_dirty()
-        else
-          local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
-          filetree:collapse(node.parent, "collapse", false)
+          return
+        end
+
+        if node.type == "leaf" and #node.children > 0 then
+          filetree:collapse(node.uuid, "collapse", false)
           picker:mark_result_dirty()
-          if lnum_parent ~= nil then
-            picker:set_result_lnum(lnum_parent)
-          end
+          return
+        end
+
+        local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
+        filetree:collapse(node.parent, "collapse", false)
+        picker:mark_result_dirty()
+        if lnum_parent ~= nil then
+          picker:set_result_lnum(lnum_parent)
         end
       end,
     },
@@ -296,21 +309,28 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.view.filetree.INodeData
-        if data.nodetype == "directory" then
+        if node.type == "container" then
           filetree:collapse(node.uuid, "toggle", true)
           picker:mark_result_dirty()
-        else
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-          end
-
-          picker:close()
-          local filepath = data.filepath ---@type string
-          eve.win.open_filepath(winnr_sourcefile, filepath)
+          return
         end
+
+        if node.type == "leaf" and #node.children > 0 then
+          filetree:collapse(node.uuid, "toggle", true)
+          picker:mark_result_dirty()
+          return
+        end
+
+        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+        local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+        if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+          vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+        end
+
+        local filepath = node.data.filepath ---@type string
+
+        picker:close()
+        eve.win.open_filepath(winnr_sourcefile, filepath)
       end,
     },
     {
@@ -330,21 +350,28 @@ function M.new(props)
             return
           end
 
-          local data = node.data ---@type eve.ux.view.filetree.INodeData
-          if data.nodetype == "directory" then
+          if node.type == "container" then
             filetree:collapse(node.uuid, "toggle", false)
             picker:mark_result_dirty()
-          else
-            local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-            local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-            if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-              vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-            end
-
-            picker:close()
-            local filepath = data.filepath ---@type string
-            eve.win.open_filepath(winnr_sourcefile, filepath)
+            return
           end
+
+          if node.type == "leaf" and #node.children > 0 then
+            filetree:collapse(node.uuid, "toggle", false)
+            picker:mark_result_dirty()
+            return
+          end
+
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+          end
+
+          local filepath = node.data.filepath ---@type string
+
+          picker:close()
+          eve.win.open_filepath(winnr_sourcefile, filepath)
         end
       end,
     },
@@ -359,21 +386,28 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.view.filetree.INodeData
-        if data.nodetype == "directory" then
+        if node.type == "container" then
           filetree:collapse(node.uuid, "expand", false)
           picker:mark_result_dirty()
-        else
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-          end
-
-          picker:close()
-          local filepath = data.filepath ---@type string
-          eve.win.open_filepath(winnr_sourcefile, filepath)
+          return
         end
+
+        if node.type == "leaf" and #node.children > 0 then
+          filetree:collapse(node.uuid, "expand", false)
+          picker:mark_result_dirty()
+          return
+        end
+
+        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+        local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+        if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+          vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+        end
+
+        local filepath = node.data.filepath ---@type string
+
+        picker:close()
+        eve.win.open_filepath(winnr_sourcefile, filepath)
       end,
     },
     {
@@ -387,17 +421,23 @@ function M.new(props)
           return
         end
 
-        local data = node.data ---@type eve.ux.view.filetree.INodeData
-        if data.nodetype == "directory" and not node.collapsed then
+        if node.type == "container" then
           filetree:collapse(node.uuid, "collapse", false)
           picker:mark_result_dirty()
-        else
-          local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
-          filetree:collapse(node.parent, "collapse", false)
+          return
+        end
+
+        if node.type == "leaf" and #node.children > 0 then
+          filetree:collapse(node.uuid, "collapse", false)
           picker:mark_result_dirty()
-          if lnum_parent ~= nil then
-            picker:set_result_lnum(lnum_parent)
-          end
+          return
+        end
+
+        local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
+        filetree:collapse(node.parent, "collapse", false)
+        picker:mark_result_dirty()
+        if lnum_parent ~= nil then
+          picker:set_result_lnum(lnum_parent)
         end
       end,
     },
@@ -441,35 +481,43 @@ function M.new(props)
       local uuids = result.uuids ---@type string[]
       retriever:attach(bufnr, uuids)
     end,
+    ---@type eve.ux.picker.IPreviewRender|nil
     preview_render = preview
         and function(picker, bufnr)
           local node, lnum = retrieve(picker) ---@type  eve.ux.view.filetree.INode|nil, integer
           if node == nil then
-            ---@type string[]
-            local lines = {
-              string.format("Error: cannot retrieve node by the given lnum: %d", lnum),
-            }
+            local lines = { string.format("Error: cannot retrieve node by the given lnum: %d", lnum) } ---@type string[]
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
             return string.format("Unknown lnum(%d)", lnum)
           end
 
-          local data = node.data ---@type eve.ux.view.filetree.INodeData
-          if data.nodetype == "directory" then
-            ---@type string[]
-            local lines = {
-              string.format("Directory: %s", data.filepath),
-            }
+          if node.type == "container" then
+            ---@cast node               eve.ux.view.filetree.IDirectoryNode
+            local lines = { string.format("Directory: %s", node.data.filepath) } ---@type string[]
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-            return data.filepath
+            return node.data.filepath
           end
 
-          plainfile:render(bufnr, data.filepath, false)
+          if node.type == "leaf" and #node.children > 0 then
+            local child_uuid = node.children[1] ---@type string
+            local child = filetree:retrieve_by_uuid(child_uuid) ---@type eve.ux.view.filetree.INode|nil
+            ---@cast child              eve.ux.view.filetree.IPositionNode
+            node = child
+          end
+
+          local filepath = node.data.filepath ---@type string
+          plainfile:render(bufnr, filepath, false)
 
           local root = filetree:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.filetree.INode|nil
-          if root == nil then
-            return data.filepath
+          local relative_filepath = root ~= nil
+              and eve.path.relative(root.data.filepath or eve.path.cwd(), filepath, false)
+            or filepath
+          if node.type == "leaf" then
+            return filepath
           end
-          return eve.path.relative(root.data.filepath or eve.path.cwd(), data.filepath, false)
+
+          ---@cast node                 eve.ux.view.filetree.IPositionNode
+          return relative_filepath, node.data.lnum, node.data.col
         end
       or nil,
   })
@@ -493,7 +541,7 @@ function M.new(props)
   self._last_matches = nil
   self._last_matched_uuids = nil
   self._uuid_root = nil
-  self._uuids_leaf = {}
+  self._uuids_file = {}
 
   self._on_disposed = on_disposed
 
@@ -535,7 +583,7 @@ function M:dispose()
   self._last_matches = nil
   self._last_matched_uuids = nil
   self._uuid_root = nil
-  self._uuids_leaf = nil
+  self._uuids_file = nil
 
   vim.schedule(function()
     pcall(on_dispose)
@@ -606,6 +654,24 @@ function M:attach(uuid)
 end
 
 ---@return eve.ux.FilePicker
+function M:clear_positions()
+  self:__health__()
+  self._filetree:clear_positions()
+  return self
+end
+
+---@param fileuuid                     string
+---@param lnum                          integer
+---@param col                           integer|nil
+---@param data                          unknown|nil
+---@return eve.ux.FilePicker
+function M:insert_position(fileuuid, lnum, col, data)
+  self:__health__()
+  self._filetree:insert_position(fileuuid, lnum, col, data)
+  return self
+end
+
+---@return eve.ux.FilePicker
 function M:mark_result_dirty()
   self:__health__()
   self._picker:mark_result_dirty()
@@ -620,24 +686,40 @@ function M:mark_result_flags_dirty()
 end
 
 ---@param cwd                           string
----@param filepaths                 string[]
+---@param filepaths                     string[]
+---@param with_positions                boolean
 ---@return eve.ux.FilePicker
-function M:reset_filepaths(cwd, filepaths)
+function M:reset_filepaths(cwd, filepaths, with_positions)
   self:__health__()
 
   cwd = eve.path.normalize(cwd) ---@type string
-  self._filetree:reset_filepaths(cwd, filepaths)
+  self._filetree:reset_filepaths(cwd, filepaths, with_positions)
 
   local uuid_cwd = self._filetree:retrieve_uuid_by_filepath(cwd) ---@type string|nil
-  local uuids_leaf = self._filetree:collect_leaf_uuids(uuid_cwd) ---@type string[]
+  local uuids_file = self._filetree:collect_file_uuids(uuid_cwd) ---@type string[]
 
   self._last_input = ""
   self._last_matches = nil
   self._last_matched_uuids = nil
   self._uuid_root = uuid_cwd
-  self._uuids_leaf = uuids_leaf
+  self._uuids_file = uuids_file
   self._scheduler_match:schedule()
   return self
+end
+
+---@param uuid                          string
+---@param silent                        boolean|nil
+---@return eve.ux.view.filetree.INode|nil
+function M:retrieve_by_uuid(uuid, silent)
+  self:__health__()
+  return self._filetree:retrieve_by_uuid(uuid, silent)
+end
+
+---@param filepath                     string
+---@return string|nil
+function M:retrieve_uuid_by_filepath(filepath)
+  self:__health__()
+  return self._filetree:retrieve_uuid_by_filepath(filepath)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -699,7 +781,7 @@ function M:__match__(input)
     end
   else
     if flag_sensitive then
-      for _, uuid in ipairs(self._uuids_leaf) do
+      for _, uuid in ipairs(self._uuids_file) do
         local node = filetree:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
@@ -709,7 +791,7 @@ function M:__match__(input)
         end
       end
     else
-      for _, uuid in ipairs(self._uuids_leaf) do
+      for _, uuid in ipairs(self._uuids_file) do
         local node = filetree:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
@@ -744,6 +826,14 @@ function M:__match__(input)
     }
     matches[#matches + 1] = match
     matched_uuids[#matched_uuids + 1] = match.uuid
+  end
+
+  for _, uuid in ipairs(matched_uuids) do
+    local node = filetree:retrieve_by_uuid(uuid, false)
+    ---@cast node eve.ux.view.filetree.IFileNode
+    for _, child_uuid in ipairs(node.children) do
+      matched_uuids[#matched_uuids + 1] = child_uuid
+    end
   end
 
   self._last_input = input

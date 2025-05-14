@@ -69,6 +69,7 @@ function M.gen_hlgroup_map(context)
     f_ft_dirname = { fg = c.blue },
     f_ft_filename = { fg = c.fg2 },
     f_ft_pathsep = { fg = c.fg4 },
+    f_ft_position = { fg = c.bg4 },
 
     ---git hunk preview
     f_ghp_cursor = { bg = c.bg3 },

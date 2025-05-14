@@ -29,7 +29,7 @@ local function refresh(picker, force)
   end
 
   git_filepaths_dirty = false
-  picker:reset_filepaths(eve.path.cwd(), filepaths)
+  picker:reset_filepaths(eve.path.cwd(), filepaths, false)
 end
 
 local picker = eve.ux.FilePicker.new({
