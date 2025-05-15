@@ -9,7 +9,7 @@ local flag_fuzzy = eve.std.Observable.from_value(false)
 local flag_regex = eve.std.Observable.from_value(false)
 local flag_sensitive = eve.std.Observable.from_value(true)
 local flag_viewtype = eve.std.Observable.from_value("tree")
-local flag_case = eve.std.Observable.from_value(2)
+local flag_case = eve.std.Observable.from_value(1)
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",

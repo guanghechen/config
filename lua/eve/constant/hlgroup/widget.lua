@@ -130,6 +130,7 @@ function M.gen_hlgroup_map(context)
     ---picker
     f_picker_finder_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },
     f_picker_finder_title = { link = t and "ms_b_bg0" or "ms_b_none" },
+    f_picker_matches = { fg = c.pink, bold = true, italic = true },
     f_picker_preview_current = { bg = c.bg2 },
     f_picker_preview_normal = { bg = bg_preview },
     f_picker_preview_title = { fg = c.green, bg = t and c.bg0 or c.none, bold = true },

@@ -64,6 +64,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _scheduler_match    eve.std.collection.Scheduler|nil
 ---
 ---@field protected _last_input         string
+---@field protected _last_offset        integer
 ---@field protected _last_matches       eve.t.IScoredMatch[]|nil
 ---@field protected _last_matched_uuids table<string, boolean>|nil
 ---@field protected _uuid_root          string|nil
@@ -72,6 +73,8 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _on_disposed         eve.ux.picker_file.IOnDisposed
 local M = {}
 M.__index = M
+
+local NSNR_PICKER_MATCHES = eve.var.nsnr.picker_matches ---@type integer
 
 ---@param props                         eve.ux.IFilePickerProps
 ---@return eve.ux.FilePicker
@@ -101,6 +104,8 @@ function M.new(props)
   local on_focused = props.on_focused or eve.std.fn.noop ---@type eve.ux.picker_file.IOnFocused
   local on_hidden = props.on_hidden or eve.std.fn.noop ---@type eve.ux.picker_file.IOnHidden
   local on_refresh = props.on_refresh ---@type eve.ux.picker_file.IOnRefresh|nil
+
+  local indents = {} ---@type string[]
 
   local self = setmetatable({}, M)
 
@@ -471,6 +476,71 @@ function M.new(props)
     on_hidden = function()
       on_hidden(self)
     end,
+    on_result_rendered = function(_, bufnr)
+      local last_matches = self._last_matches ---@type eve.t.IScoredMatch[]|nil
+      if last_matches == nil or #last_matches < 1 then
+        return
+      end
+
+      local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
+      if viewtype == "tree" then
+        for _, search_match in ipairs(last_matches) do
+          local node_uuid = search_match.uuid ---@type string
+          local lnum = retriever:retrieve_lnum(node_uuid) ---@type integer|nil
+          local node = filetree:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.filetree.INode|nil
+          if lnum ~= nil and node ~= nil then
+            ---@cast node eve.ux.view.filetree.IFileNode
+
+            local row = lnum - 1 ---@type integer
+            local text_width = #node.data.basename ---@type integer
+            local offset = self._last_offset ---@type integer
+            local offset_start = #node.data.filepath - text_width + 1 ---@type integer
+            local offset_final = #indents[lnum] + #node.data.icon + 1 ---@type integer
+            for _, m in ipairs(search_match.matches) do
+              local dl = m.l + offset - offset_start ---@type integer
+              local dr = m.r + offset - offset_start ---@type integer
+              if dl <= text_width and dr >= 0 then
+                dl = dl < 0 and 0 or dl ---@type integer
+                dr = dr > text_width and text_width or dr ---@type integer
+                vim.hl.range(
+                  bufnr,
+                  NSNR_PICKER_MATCHES,
+                  "f_picker_matches",
+                  { row, offset_final + dl },
+                  { row, offset_final + dr }
+                )
+              end
+            end
+          end
+        end
+        return
+      end
+
+      if viewtype == "list" then
+        for _, search_match in ipairs(last_matches) do
+          local node_uuid = search_match.uuid ---@type string
+          local lnum = retriever:retrieve_lnum(node_uuid) ---@type integer|nil
+          local node = filetree:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.filetree.INode|nil
+          if lnum ~= nil and node ~= nil then
+            ---@cast node eve.ux.view.filetree.IFileNode
+
+            local row = lnum - 1 ---@type integer
+            local offset_final = #node.data.icon + 1 ---@type integer
+            for _, m in ipairs(search_match.matches) do
+              vim.hl.range(
+                bufnr,
+                NSNR_PICKER_MATCHES,
+                "f_picker_matches",
+                { row, offset_final + m.l },
+                { row, offset_final + m.r }
+              )
+            end
+          end
+        end
+        return
+      end
+    end,
+
     on_refresh = on_refresh ~= nil and function(_, force)
       on_refresh(self, force)
     end or nil,
@@ -479,6 +549,7 @@ function M.new(props)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
       local result = filetree:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
       local uuids = result.uuids ---@type string[]
+      indents = result.indents ---@type string[]
       retriever:attach(bufnr, uuids)
     end,
     ---@type eve.ux.picker.IPreviewRender|nil
@@ -535,6 +606,7 @@ function M.new(props)
   self._scheduler_match = scheduler_match
 
   self._last_input = ""
+  self._last_offset = 0
   self._last_matches = nil
   self._last_matched_uuids = nil
   self._uuid_root = nil
@@ -577,6 +649,7 @@ function M:dispose()
   self._scheduler_match = nil
 
   self._last_input = nil
+  self._last_offset = nil
   self._last_matches = nil
   self._last_matched_uuids = nil
   self._uuid_root = nil
@@ -644,6 +717,7 @@ function M:attach(uuid)
 
   self._uuid_root = uuid
   self._last_input = ""
+  self._last_offset = nil
   self._last_matches = nil
   self._last_matched_uuids = nil
   self._scheduler_match:schedule()
@@ -696,6 +770,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   local uuids_file = self._filetree:collect_file_uuids(uuid_cwd) ---@type string[]
 
   self._last_input = ""
+  self._last_offset = nil
   self._last_matches = nil
   self._last_matched_uuids = nil
   self._uuid_root = uuid_cwd
@@ -736,6 +811,7 @@ end
 function M:__match__(input)
   if #input < 1 then
     self._last_input = ""
+    self._last_offset = 0
     self._last_matches = nil
     self._last_matched_uuids = nil
     return
@@ -750,7 +826,7 @@ function M:__match__(input)
   local uuids = {} ---@type string[]
 
   local root = filetree:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.filetree.INode|nil
-  local prefix_len = root ~= nil and #root.data.filepath > 2 and #root.data.filepath + 2 or 0 ---@type integer
+  local offset = root ~= nil and #root.data.filepath > 2 and #root.data.filepath + 2 or 0 ---@type integer
 
   local last_input = self._last_input ---@type string
   local last_matches = self._last_matches ---@type eve.t.IScoredMatch[]|nil
@@ -760,7 +836,7 @@ function M:__match__(input)
         local node = filetree:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath:sub(prefix_len) ---@type string
+          local line = data.filepath:sub(offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end
@@ -770,7 +846,7 @@ function M:__match__(input)
         local node = filetree:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath_lower:sub(prefix_len) ---@type string
+          local line = data.filepath_lower:sub(offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end
@@ -782,7 +858,7 @@ function M:__match__(input)
         local node = filetree:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath:sub(prefix_len) ---@type string
+          local line = data.filepath:sub(offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end
@@ -792,7 +868,7 @@ function M:__match__(input)
         local node = filetree:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath_lower:sub(prefix_len) ---@type string
+          local line = data.filepath_lower:sub(offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end
@@ -804,6 +880,7 @@ function M:__match__(input)
   local oxi_matches = eve.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     self._last_input = ""
+    self._last_offset = 0
     self._last_matches = nil
     self._last_matched_uuids = nil
     return
@@ -834,6 +911,7 @@ function M:__match__(input)
   end
 
   self._last_input = input
+  self._last_offset = offset
   self._last_matches = matches
   self._last_matched_uuids = filetree:calc_include_uuid_set(matched_uuids)
 end

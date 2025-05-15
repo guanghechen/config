@@ -12,29 +12,33 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 ---| eve.ux.view.filetree.IPositionNode
 
 ---@alias eve.ux.view.filetree.IDirectoryNodeRenderer
----| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IDirectoryNode, folded_depth: integer, root: eve.ux.view.filetree.IDirectoryNode, depth: integer): eve.ux.view.treeview.INodeRenderResult
+---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IDirectoryNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer, depth: integer, folded_depth: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.filetree.IFileNodeRenderer
----| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IFileNode, root: eve.ux.view.filetree.IDirectoryNode, depth: integer): eve.ux.view.treeview.INodeRenderResult
+---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IFileNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.filetree.IPositionNodeRenderer
----| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IPositionNode, root: eve.ux.view.filetree.IDirectoryNode, depth: integer): eve.ux.view.treeview.INodeRenderResult
+---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IPositionNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.filetree.IFileNodeFlattenRenderer
----| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IFileNode, root: eve.ux.view.filetree.IDirectoryNode): eve.ux.view.treeview.INodeRenderResult
+---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IFileNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.filetree.IPositionNodeFlattenRenderer
----| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IPositionNode, root: eve.ux.view.filetree.IDirectoryNode): eve.ux.view.treeview.INodeRenderResult
+---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IPositionNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@class eve.ux.view.filetree.IDirectoryNodeData
 ---@field public basename               string
 ---@field public filepath               string
 ---@field public filepath_lower         string
+---@field public icon                   string
+---@field public icon_hln               string
 
 ---@class eve.ux.view.filetree.IFileNodeData
 ---@field public basename               string
 ---@field public filepath               string
 ---@field public filepath_lower         string
+---@field public icon                   string
+---@field public icon_hln               string
 
 ---@class eve.ux.view.filetree.IPositionNodeData
 ---@field public filepath               string
@@ -71,114 +75,6 @@ local nodetype_priority_map = {
   position = 1,
 }
 
----@type eve.ux.view.filetree.IDirectoryNodeRenderer
-local default_directory_node_renderer = function(_, node, folded_depth)
-  local basename = node.data.basename ---@type string
-  local icon, icon_hln = eve.fn.diricon(basename)
-  if not node.collapsed then
-    if #node.children < 1 then
-      icon = eve.icon.filetype.FolderEmptyOpen
-    else
-      icon = eve.icon.filetype.FolderOpen
-    end
-  end
-
-  if folded_depth < 1 then
-    local text = string.format("%s %s", icon, basename) ---@type string
-
-    ---@type eve.t.IHighlightInline[]
-    local highlights = {
-      { coll = 0, colr = #icon + 1, hlname = icon_hln },
-      { coll = #icon + 1, colr = #text, hlname = "f_ft_dirname" },
-    }
-    return { text = text, highlights = highlights }
-  end
-
-  local basenames = {} ---@type string[]
-  basenames[folded_depth + 1] = basename ---@type string
-
-  local o = node ---@type eve.ux.view.filetree.IDirectoryNode
-  for index = folded_depth, 1, -1 do
-    basenames[index] = o.parent.data.basename ---@type string
-    o = o.parent
-  end
-
-  local text = string.format("%s %s", icon, basenames[1]) ---@type string
-
-  ---@type eve.t.IHighlightInline[]
-  local highlights = {
-    { coll = 0, colr = #icon + 1, hlname = icon_hln },
-    { coll = #icon + 1, colr = #text, hlname = "f_ft_dirname" },
-  }
-
-  for index = 2, #basenames, 1 do
-    local piece = basenames[index] ---@type string
-    local offset = #text ---@type integer
-    text = text .. string.format("/%s", piece)
-    highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "f_ft_pathsep" }
-    highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "f_ft_dirname" }
-  end
-
-  return { text = text, highlights = highlights }
-end
-
----@type eve.ux.view.filetree.IFileNodeRenderer
-local default_file_node_renderer = function(_, node)
-  local basename = node.data.basename ---@type string
-  local icon, icon_hln = eve.fn.fileicon(basename)
-
-  local text = string.format("%s %s", icon, basename) ---@type string
-
-  ---@type eve.t.IHighlightInline[]
-  local highlights = {
-    { coll = 0, colr = #icon + 1, hlname = icon_hln },
-    { coll = #icon + 1, colr = #text, hlname = "f_ft_filename" },
-  }
-  return { text = text, highlights = highlights }
-end
-
----@type eve.ux.view.filetree.IPositionNodeRenderer
-local default_position_node_renderer = function(_, node)
-  local lnum = node.data.lnum
-  local col = node.data.col
-
-  local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
-
-  ---@type eve.t.IHighlightInline[]
-  local highlights = {
-    { coll = 0, colr = #text, hlname = "f_ft_position" },
-  }
-  return { text = text, highlights = highlights }
-end
-
----@type eve.ux.view.filetree.IFileNodeFlattenRenderer
-local default_file_node_flatten_renderer = function(_, node, root)
-  local nodedata = node.data ---@type eve.ux.view.filetree.IFileNodeData
-  local icon, icon_hln = eve.fn.fileicon(nodedata.basename) ---@type string, string
-
-  local filepath = #root.data.filepath < 2 and nodedata.filepath or nodedata.filepath:sub(#root.data.filepath + 2) ---@type string
-  local text = string.format("%s %s", icon, filepath) ---@type string
-  local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type eve.t.IHighlightInline[]
-
-  ---@type eve.ux.view.treeview.INodeRenderResult
-  local result = { text = text, highlights = highlights }
-  return result
-end
-
----@type eve.ux.view.filetree.IPositionNodeFlattenRenderer
-local default_position_node_flatten_renderer = function(_, node)
-  local lnum = node.data.lnum
-  local col = node.data.col
-
-  local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
-
-  ---@type eve.t.IHighlightInline[]
-  local highlights = {
-    { coll = 0, colr = #text, hlname = "f_ft_position" },
-  }
-  return { text = text, highlights = highlights }
-end
-
 ----------------------------------------------------------------------------------------------------
 
 ---@class eve.ux.view.IFiletreeProps
@@ -210,11 +106,11 @@ function M.new(props)
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
 
-  local render_directory_node = props.directory_node_renderer or default_directory_node_renderer ---@type eve.ux.view.filetree.IDirectoryNodeRenderer
-  local render_file_node = props.file_node_renderer or default_file_node_renderer ---@type eve.ux.view.filetree.IFileNodeRenderer
-  local render_position_node = props.position_node_renderer or default_position_node_renderer ---@type eve.ux.view.filetree.IPositionNodeRenderer
-  local flatten_render_file_node = props.file_node_flatten_renderer or default_file_node_flatten_renderer ---@type eve.ux.view.filetree.IFileNodeFlattenRenderer
-  local flatten_render_position_node = props.position_node_flatten_renderer or default_position_node_flatten_renderer ---@type eve.ux.view.filetree.IPositionNodeFlattenRenderer
+  local render_directory_node = props.directory_node_renderer or M.default_directory_node_renderer ---@type eve.ux.view.filetree.IDirectoryNodeRenderer
+  local render_file_node = props.file_node_renderer or M.default_file_node_renderer ---@type eve.ux.view.filetree.IFileNodeRenderer
+  local render_position_node = props.position_node_renderer or M.default_position_node_renderer ---@type eve.ux.view.filetree.IPositionNodeRenderer
+  local flatten_render_file_node = props.file_node_flatten_renderer or M.default_file_node_flatten_renderer ---@type eve.ux.view.filetree.IFileNodeFlattenRenderer
+  local flatten_render_position_node = props.position_node_flatten_renderer or M.default_position_node_flatten_renderer ---@type eve.ux.view.filetree.IPositionNodeFlattenRenderer
 
   local self = setmetatable({}, M)
 
@@ -224,38 +120,38 @@ function M.new(props)
     indent = indent,
     indent_hln = indent_hln,
     ---@type eve.ux.view.treeview.INodeRenderer
-    node_renderer = function(_, node, root, folded_depth, depth)
+    node_renderer = function(_, node, root, lnum, depth, folded_depth)
       ---@cast root                     eve.ux.view.filetree.IDirectoryNode
 
       if node.type == "container" then
         ---@cast node                     eve.ux.view.filetree.IDirectoryNode
-        return render_directory_node(self, node, folded_depth, root, depth)
+        return render_directory_node(self, node, root, lnum, depth, folded_depth)
       end
 
       if node.type == "leaf" then
         ---@cast node                     eve.ux.view.filetree.IFileNode
-        return render_file_node(self, node, root, depth)
+        return render_file_node(self, node, root, lnum, depth)
       end
 
       if node.type == "position" then
         ---@cast node                     eve.ux.view.filetree.IPositionNode
-        return render_position_node(self, node, root, depth)
+        return render_position_node(self, node, root, lnum, depth)
       end
 
       error(string.format("[%s | %s] #node_renderer - Unexpected nodetype: %s", name, __module_name__, node.type))
     end,
     ---@type eve.ux.view.treeview.INodeFlattenRenderer
-    node_flatten_renderer = function(_, node, root)
+    node_flatten_renderer = function(_, node, root, lnum)
       ---@cast root                     eve.ux.view.filetree.IDirectoryNode
 
       if node.type == "leaf" then
         ---@cast node                     eve.ux.view.filetree.IFileNode
-        return flatten_render_file_node(self, node, root)
+        return flatten_render_file_node(self, node, root, lnum)
       end
 
       if node.type == "position" then
         ---@cast node                     eve.ux.view.filetree.IPositionNode
-        return flatten_render_position_node(self, node, root)
+        return flatten_render_position_node(self, node, root, lnum)
       end
 
       error(
@@ -467,6 +363,8 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     basename = "",
     filepath = "",
     filepath_lower = "",
+    icon = eve.icon.filetype.FileTree,
+    icon_hln = "MiniIconsBlue",
   }
   treeview:insert(uuid_root, uuid_root, "container", root, false)
 
@@ -484,12 +382,15 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local basename = pieces[index] ---@type string
       filepath = index == 1 and basename or (filepath .. eve.env.PATH_SEP .. basename) ---@type string
       local uuid = self:__resolve_uuid__(filepath) ---@type string
+      local icon, icon_hln = eve.fn.diricon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
       local nodedata = {
         basename = basename,
         filepath = filepath,
         filepath_lower = filepath:lower(),
+        icon = icon,
+        icon_hln = icon_hln,
       }
       treeview:insert(uuid, uuid_parent, "container", nodedata, false)
       uuid_parent = uuid
@@ -510,12 +411,15 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local basename = pieces[index] ---@type string
       filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
       local uuid = self:__resolve_uuid__(filepath) ---@type string
+      local icon, icon_hln = eve.fn.diricon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
       local nodedata = {
         basename = basename,
         filepath = filepath,
         filepath_lower = filepath:lower(),
+        icon = icon,
+        icon_hln = icon_hln,
       }
       treeview:insert(uuid, uuid_parent, "container", nodedata, false)
       uuid_parent = uuid ---@type string
@@ -524,12 +428,15 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local basename = pieces[#pieces] ---@type string
     filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
     local uuid = self:__resolve_uuid__(filepath) ---@type string
+    local icon, icon_hln = eve.fn.fileicon(basename)
 
     ---@type eve.ux.view.filetree.IFileNodeData
     local nodedata = {
       basename = basename,
       filepath = filepath,
       filepath_lower = filepath:lower(),
+      icon = icon,
+      icon_hln = icon_hln,
     }
     treeview:insert(uuid, uuid_parent, "leaf", nodedata, false)
     return uuid, filepath
@@ -548,12 +455,15 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local basename = pieces[index] ---@type string
       filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
       local uuid = self:__resolve_uuid__(filepath) ---@type string
+      local icon, icon_hln = eve.fn.diricon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
       local nodedata = {
         basename = basename,
         filepath = filepath,
         filepath_lower = filepath:lower(),
+        icon = icon,
+        icon_hln = icon_hln,
       }
       treeview:insert(uuid, uuid_parent, "container", nodedata, false)
       uuid_parent = uuid ---@type string
@@ -562,12 +472,15 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local basename = pieces[#pieces] ---@type string
     filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
     local uuid = self:__resolve_uuid__(filepath) ---@type string
+    local icon, icon_hln = eve.fn.fileicon(basename)
 
     ---@type eve.ux.view.filetree.IFileNodeData
     local nodedata = {
       basename = basename,
       filepath = filepath,
       filepath_lower = filepath:lower(),
+      icon = icon,
+      icon_hln = icon_hln,
     }
     treeview:insert(uuid, uuid_parent, "leaf", nodedata, false)
     return uuid, filepath
@@ -616,6 +529,118 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   end
 
   return self
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@type eve.ux.view.filetree.IDirectoryNodeRenderer
+function M.default_directory_node_renderer(_, node, _, _, _, folded_depth)
+  local basename = node.data.basename ---@type string
+  local icon = node.data.icon ---@type string
+  local icon_hln = node.data.icon_hln ---@type string
+  if not node.collapsed then
+    if #node.children < 1 then
+      icon = eve.icon.filetype.FolderEmptyOpen
+    else
+      icon = eve.icon.filetype.FolderOpen
+    end
+  end
+
+  if folded_depth < 1 then
+    local text = string.format("%s %s", icon, basename) ---@type string
+
+    ---@type eve.t.IHighlightInline[]
+    local highlights = {
+      { coll = 0, colr = #icon + 1, hlname = icon_hln },
+      { coll = #icon + 1, colr = #text, hlname = "f_ft_dirname" },
+    }
+    return { text = text, highlights = highlights }
+  end
+
+  local basenames = {} ---@type string[]
+  basenames[folded_depth + 1] = basename ---@type string
+
+  local o = node ---@type eve.ux.view.filetree.IDirectoryNode
+  for index = folded_depth, 1, -1 do
+    basenames[index] = o.parent.data.basename ---@type string
+    o = o.parent
+  end
+
+  local text = string.format("%s %s", icon, basenames[1]) ---@type string
+
+  ---@type eve.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = #icon + 1, hlname = icon_hln },
+    { coll = #icon + 1, colr = #text, hlname = "f_ft_dirname" },
+  }
+
+  for index = 2, #basenames, 1 do
+    local piece = basenames[index] ---@type string
+    local offset = #text ---@type integer
+    text = text .. string.format("/%s", piece)
+    highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "f_ft_pathsep" }
+    highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "f_ft_dirname" }
+  end
+
+  return { text = text, highlights = highlights }
+end
+
+---@type eve.ux.view.filetree.IFileNodeRenderer
+function M.default_file_node_renderer(_, node)
+  local basename = node.data.basename ---@type string
+  local icon = node.data.icon ---@type string
+  local icon_hln = node.data.icon_hln ---@type string
+
+  local text = string.format("%s %s", icon, basename) ---@type string
+
+  ---@type eve.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = #icon + 1, hlname = icon_hln },
+    { coll = #icon + 1, colr = #text, hlname = "f_ft_filename" },
+  }
+  return { text = text, highlights = highlights }
+end
+
+---@type eve.ux.view.filetree.IPositionNodeRenderer
+function M.default_position_node_renderer(_, node)
+  local lnum = node.data.lnum
+  local col = node.data.col
+
+  local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
+
+  ---@type eve.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = #text, hlname = "f_ft_position" },
+  }
+  return { text = text, highlights = highlights }
+end
+
+---@type eve.ux.view.filetree.IFileNodeFlattenRenderer
+function M.default_file_node_flatten_renderer(_, node, root)
+  local nodedata = node.data ---@type eve.ux.view.filetree.IFileNodeData
+  local icon, icon_hln = eve.fn.fileicon(nodedata.basename) ---@type string, string
+
+  local filepath = #root.data.filepath < 2 and nodedata.filepath or nodedata.filepath:sub(#root.data.filepath + 2) ---@type string
+  local text = string.format("%s %s", icon, filepath) ---@type string
+  local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type eve.t.IHighlightInline[]
+
+  ---@type eve.ux.view.treeview.INodeRenderResult
+  local result = { text = text, highlights = highlights }
+  return result
+end
+
+---@type eve.ux.view.filetree.IPositionNodeFlattenRenderer
+function M.default_position_node_flatten_renderer(_, node)
+  local lnum = node.data.lnum
+  local col = node.data.col
+
+  local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
+
+  ---@type eve.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = #text, hlname = "f_ft_position" },
+  }
+  return { text = text, highlights = highlights }
 end
 
 ----------------------------------------------------------------------------------------------------

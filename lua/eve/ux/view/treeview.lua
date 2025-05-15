@@ -15,10 +15,10 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---| "toggle"
 
 ---@alias eve.ux.view.treeview.INodeRenderer
----| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode, folded_depth: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
+---| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode, lnum: integer, depth: integer, folded_depth: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.treeview.INodeFlattenRenderer
----| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode): eve.ux.view.treeview.INodeRenderResult
+---| fun(treeview: eve.ux.view.Treeview, node: eve.ux.view.treeview.INode, root: eve.ux.view.treeview.INode, lnum: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.treeview.INodeSorter
 ---| fun(left: eve.ux.view.treeview.INode, right: eve.ux.view.treeview.INode): boolean
@@ -57,6 +57,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 
 ---@class eve.ux.view.treeview.IRenderResult
 ---@field public uuids                  string[]
+---@field public indents                string[]
 
 ---@class eve.ux.view.ITreeviewProps
 ---@field public name                   string
@@ -555,6 +556,8 @@ end
 ---@return eve.ux.view.treeview.IRenderResult
 function M:__render_list__(bufnr, root_uuid, included_uuid_set)
   local uuids = {} ---@type string[]
+  local indents = {} ---@type string[]
+
   local tick_listview = self._tick_listview ---@type integer
 
   local root = (root_uuid ~= nil and self._nodemap[root_uuid]) or self._virtual_root
@@ -567,13 +570,16 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
     ---@type eve.ux.view.treeview.IRenderResult
     local result = {
       uuids = uuids,
+      indents = indents,
     }
     return result
   end
 
   local INDENT_COMMON = self._indent ---@type string
+  local lines = {} ---@type string[]
+  local highlights_list = {} ---@type (eve.t.IHighlightInline[]|nil)[]
 
-  local row = 0 ---@type integer
+  local lnum = 1 ---@type integer
   local render ---@type eve.ux.view.treeview.IRenderList
   local recursive ---@type eve.ux.view.treeview.IRenderListRecursive
 
@@ -581,7 +587,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
   render = function(node, is_last)
     local cache = node.cache_listview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
     if cache == nil or cache.tick ~= tick_listview then
-      local result = self._node_flatten_renderer(self, node, root) ---@type eve.ux.view.treeview.INodeRenderResult
+      local result = self._node_flatten_renderer(self, node, root, lnum) ---@type eve.ux.view.treeview.INodeRenderResult
       ---@type eve.ux.view.treeview.INodeRenderResultCache
       cache = {
         tick = tick_listview,
@@ -596,21 +602,11 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
       indent = indent .. (is_last and "╰─" or "├─") ---@type string
     end
 
-    local lnum = row + 1 ---@type integer
-    local text = indent .. cache.text ---@type string
-    vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
-
-    local offset = #indent ---@type integer
-    vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
-    for _, highlight in ipairs(cache.highlights) do
-      local hlname = highlight.hlname ---@type string
-      local colr = highlight.colr ---@type integer
-      local coll = highlight.coll ---@type integer
-      vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
-    end
-
-    uuids[#uuids + 1] = node.uuid
-    row = row + 1 ---@type integer
+    lines[lnum] = indent .. cache.text ---@type string
+    highlights_list[lnum] = cache.highlights ---@type eve.t.IHighlightInline[]|nil
+    indents[lnum] = indent ---@type string
+    uuids[lnum] = node.uuid
+    lnum = lnum + 1 ---@type integer
   end
 
   if included_uuid_set == nil then
@@ -670,11 +666,26 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   if included_uuid_set == nil or included_uuid_set[root.uuid] then
     recursive(root, true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    for index = 1, #lines, 1 do
+      local row = index - 1 ---@type integer
+      local highlights = highlights_list[index] ---@type eve.t.IHighlightInline[]|nil
+      local indent = indents[index] ---@type string
+      local offset = #indent
+      vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
+      if highlights ~= nil then
+        for _, highlight in ipairs(highlights) do
+          local hlname = highlight.hlname ---@type string
+          local colr = highlight.colr ---@type integer
+          local coll = highlight.coll ---@type integer
+          vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+        end
+      end
+    end
   end
-  vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
 
   ---@type eve.ux.view.treeview.IRenderResult
-  local result = { uuids = uuids }
+  local result = { uuids = uuids, indents = indents }
   return result
 end
 
@@ -684,6 +695,8 @@ end
 ---@return eve.ux.view.treeview.IRenderResult
 function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   local uuids = {} ---@type string[]
+  local indents = {} ---@type string[]
+
   local foldempty = self._foldempty ---@type boolean
   local tick_treeview = self._tick_treeview ---@type integer
 
@@ -698,13 +711,16 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
     ---@type eve.ux.view.treeview.IRenderResult
     local result = {
       uuids = uuids,
+      indents = indents,
     }
     return result
   end
 
   local INDENT_COMMON = self._indent ---@type string
+  local lines = {} ---@type string[]
+  local highlights_list = {} ---@type (eve.t.IHighlightInline[]|nil)[]
 
-  local row = 0 ---@type integer
+  local lnum = 1 ---@type integer
   local render ---@type eve.ux.view.treeview.IRenderTree
   local recursive ---@type eve.ux.view.treeview.IRenderTreeRecursive
 
@@ -716,7 +732,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
 
     local cache = node.cache_treeview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
     if cache == nil or cache.tick ~= tick_treeview then
-      local result = self._node_renderer(self, node, root, folded_depth, depth) ---@type eve.ux.view.treeview.INodeRenderResult
+      local result = self._node_renderer(self, node, root, lnum, depth, folded_depth) ---@type eve.ux.view.treeview.INodeRenderResult
       ---@type eve.ux.view.treeview.INodeRenderResultCache
       cache = {
         tick = tick_treeview,
@@ -730,21 +746,11 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
       indent = indent .. (is_last and "╰─" or "├─") ---@type string
     end
 
-    local lnum = row + 1 ---@type integer
-    local text = indent .. cache.text ---@type string
-    vim.api.nvim_buf_set_lines(bufnr, row, lnum, false, { text })
-
-    local offset = #indent ---@type integer
-    vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
-    for _, highlight in ipairs(cache.highlights) do
-      local hlname = highlight.hlname ---@type string
-      local colr = highlight.colr ---@type integer
-      local coll = highlight.coll ---@type integer
-      vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
-    end
-
-    uuids[#uuids + 1] = node.uuid
-    row = row + 1 ---@type integer
+    lines[lnum] = indent .. cache.text ---@type string
+    highlights_list[lnum] = cache.highlights ---@type eve.t.IHighlightInline[]|nil
+    indents[lnum] = indent ---@type string
+    uuids[lnum] = node.uuid
+    lnum = lnum + 1 ---@type integer
   end
 
   if included_uuid_set == nil then
@@ -822,11 +828,26 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   if included_uuid_set == nil or included_uuid_set[root.uuid] then
     recursive(root, 0, self._indent, 0, true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    for index = 1, #lines, 1 do
+      local row = index - 1 ---@type integer
+      local highlights = highlights_list[index] ---@type eve.t.IHighlightInline[]|nil
+      local indent = indents[index] ---@type string
+      local offset = #indent
+      vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
+      if highlights ~= nil then
+        for _, highlight in ipairs(highlights) do
+          local hlname = highlight.hlname ---@type string
+          local colr = highlight.colr ---@type integer
+          local coll = highlight.coll ---@type integer
+          vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+        end
+      end
+    end
   end
-  vim.api.nvim_buf_set_lines(bufnr, row, -1, false, {})
 
   ---@type eve.ux.view.treeview.IRenderResult
-  local result = { uuids = uuids }
+  local result = { uuids = uuids, indents = indents }
   return result
 end
 

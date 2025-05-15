@@ -21,6 +21,7 @@ M.nsnr = {
   matches               = cn("ux:matches"),
   notify                = cn("ux:notify"),
   picker                = cn("ux:picker"),
+  picker_matches        = cn("ux:picker:matches"),
   search_count          = cn("ux:search_count"),
   search_input          = cn("ux:search_input"),
   search_main           = cn("ux:search_main"),
