@@ -614,11 +614,9 @@ function M.new(props)
 
   self._on_disposed = on_disposed
 
-  finder_input:subscribe(eve.std.Subscriber.new({
-    on_next = function()
-      scheduler_match:schedule()
-    end,
-  }))
+  eve.fn.observe({ finder_input, flag_fuzzy, flag_regex }, function()
+    scheduler_match:schedule()
+  end)
 
   return self
 end
