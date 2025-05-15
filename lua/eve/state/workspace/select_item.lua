@@ -5,6 +5,8 @@
 ---@field public flag_gitignore         boolean
 ---@field public flag_regex             boolean
 ---@field public flag_selected          boolean
+---@field public flag_foldempty         boolean
+---@field public flag_viewtype          string
 ---@field public includes               string[]
 ---@field public excludes               string[]
 ---@field public input                  string
@@ -17,6 +19,8 @@
 ---@field public flag_gitignore         eve.std.collection.IObservable
 ---@field public flag_regex             eve.std.collection.IObservable
 ---@field public flag_selected          eve.std.collection.IObservable
+---@field public flag_foldempty         eve.std.collection.IObservable
+---@field public flag_viewtype          eve.std.collection.IObservable
 ---@field public includes               eve.std.collection.IObservable
 ---@field public excludes               eve.std.collection.IObservable
 ---@field public input                  eve.std.collection.IObservable
@@ -39,6 +43,8 @@ function M.defaults()
     flag_gitignore = true,
     flag_regex = false,
     flag_selected = false,
+    flag_foldempty = true,
+    flag_viewtype = "tree",
     includes = {},
     excludes = {
       ".git/",
@@ -83,6 +89,14 @@ function M.normalize(data)
     if type(data.flag_selected) == "boolean" then
       resolved.flag_selected = data.flag_selected
     end
+    if type(data.flag_foldempty) == "boolean" then
+      resolved.flag_foldempty = data.flag_foldempty
+    end
+    if type(data.flag_viewtype) == "string" then
+      if data.flag_viewtype == "tree" or data.flag_viewtype == "list" then
+        resolved.flag_viewtype = data.flag_viewtype
+      end
+    end
     if type(data.includes) == "table" then
       resolved.includes = data.includes
     end
@@ -117,6 +131,8 @@ function M.dump(state)
     flag_gitignore = state.flag_gitignore:snapshot(),
     flag_regex = state.flag_regex:snapshot(),
     flag_selected = state.flag_selected:snapshot(),
+    flag_foldempty = state.flag_foldempty:snapshot(),
+    flag_viewtype = state.flag_viewtype:snapshot(),
     includes = state.includes:snapshot(),
     excludes = state.excludes:snapshot(),
     input = state.input:snapshot(),
@@ -140,6 +156,8 @@ function M.load(state, name, raw_data)
       flag_gitignore = eve.std.Observable.from_value(data.flag_gitignore),
       flag_regex = eve.std.Observable.from_value(data.flag_regex),
       flag_selected = eve.std.Observable.from_value(data.flag_selected),
+      flag_foldempty = eve.std.Observable.from_value(data.flag_foldempty),
+      flag_viewtype = eve.std.Observable.from_value(data.flag_viewtype),
       includes = eve.std.Observable.from_value(data.includes),
       excludes = eve.std.Observable.from_value(data.excludes),
       input = eve.std.Observable.from_value(data.input),
@@ -158,6 +176,8 @@ function M.load(state, name, raw_data)
   state.flag_gitignore:next(data.flag_gitignore)
   state.flag_regex:next(data.flag_regex)
   state.flag_selected:next(data.flag_selected)
+  state.flag_foldempty:next(data.flag_foldempty)
+  state.flag_viewtype:next(data.flag_viewtype)
   if not eve.std.fn.equals_list(state.includes:snapshot(), data.includes) then
     state.includes:next(data.includes)
   end

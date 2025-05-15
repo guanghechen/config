@@ -3,12 +3,12 @@ local __module_name__ = "fml.action.find.git" ---@type string
 ---@class fml.action.find
 local M = {}
 
-local finder_input = eve.std.Observable.from_value("")
-local flag_foldempty = eve.std.Observable.from_value(true)
-local flag_fuzzy = eve.std.Observable.from_value(false)
-local flag_regex = eve.std.Observable.from_value(false)
-local flag_sensitive = eve.std.Observable.from_value(true)
-local flag_viewtype = eve.std.Observable.from_value("tree")
+local finder_input = eve.state.select.find_git.input
+local flag_foldempty = eve.state.select.find_git.flag_foldempty
+local flag_fuzzy = eve.state.select.find_git.flag_fuzzy
+local flag_regex = eve.state.select.find_git.flag_regex
+local flag_sensitive = eve.state.select.find_git.flag_case_sensitive
+local flag_viewtype = eve.state.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
 
