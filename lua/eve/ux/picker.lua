@@ -200,14 +200,15 @@ local __keymaps__ = {
       aliases = { "<D-r>", "<M-r>" },
       desc = "picker: refresh",
       callback = function(self)
-        eve.fn.pcall(
-          __module_name__,
-          string.format("%s:refresh", self.name),
-          "Failed to run on_refresh",
-          self._on_refresh,
-          self,
-          true
-        )
+        local refresh_ok, refresh_error = pcall(self._on_refresh, self, true)
+        if not refresh_ok then
+          eve.reporter.error({
+            from = __module_name__,
+            subject = string.format("%s:refresh", self.name),
+            message = "Failed to run on_refresh",
+            details = { error = refresh_error },
+          })
+        end
       end,
     },
   },
@@ -1002,14 +1003,15 @@ function M.new(props)
           end
         end
 
-        eve.fn.pcall(
-          __module_name__,
-          scheduler.name,
-          "Failed to call on_preview_rendered",
-          on_preview_rendered,
-          self,
-          bufnr
-        )
+        local preview_rendered_ok, preview_rendered_error = pcall(on_preview_rendered, self, bufnr)
+        if not preview_rendered_ok then
+          eve.reporter.error({
+            from = __module_name__,
+            subject = scheduler.name,
+            message = "Failed to call on_preview_rendered",
+            details = { error = preview_rendered_error, bufnr = bufnr },
+          })
+        end
       end,
     })
   end
@@ -1059,14 +1061,15 @@ function M.new(props)
         vim.fn.sign_place(bufnr, "", eve.var.sign.PICKER_RESULT_PRESENT, bufnr, { lnum = lnum, priority = 10 })
       end
 
-      eve.fn.pcall(
-        __module_name__,
-        scheduler.name,
-        "Failed to call on_result_rendered",
-        on_result_rendered,
-        self,
-        bufnr
-      )
+      local result_rendered_ok, result_rendered_error = pcall(on_result_rendered, self, bufnr)
+      if not result_rendered_ok then
+        eve.reporter.error({
+          from = __module_name__,
+          subject = scheduler.name,
+          message = "Failed to call on_result_rendered",
+          details = { error = result_rendered_error, bufnr = bufnr },
+        })
+      end
 
       if self._scheduler_preview ~= nil then
         self._scheduler_preview:schedule()
@@ -1212,7 +1215,15 @@ function M:dispose()
 
   pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
   vim.schedule(function()
-    eve.fn.pcall(__module_name__, "dispose", "Failed to call on_disposed", on_disposed)
+    local ok, error = pcall(on_disposed)
+    if not ok then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "dispose",
+        message = "Failed to call on_disposed",
+        details = { error = error },
+      })
+    end
   end)
 end
 
@@ -1229,7 +1240,15 @@ function M:close()
 
   self:__hide__()
   vim.schedule(function()
-    eve.fn.pcall(__module_name__, "close", "Failed to call on_closed", self._on_closed, self)
+    local ok, error = pcall(self._on_closed, self)
+    if not ok then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "close",
+        message = "Failed to call on_closed",
+        details = { error = error },
+      })
+    end
   end)
 end
 
@@ -1244,7 +1263,15 @@ function M:focus(pane)
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
-    eve.fn.pcall(__module_name__, "focus", "Failed to call on_focused", self._on_focused, self)
+    local ok, error = pcall(self._on_focused, self)
+    if not ok then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "focus",
+        message = "Failed to call on_focused",
+        details = { error = error },
+      })
+    end
   end)
 end
 
@@ -1256,7 +1283,15 @@ function M:hide()
 
   self:__hide__()
   vim.schedule(function()
-    eve.fn.pcall(__module_name__, "hide", "Failed to call on_hidden", self._on_hidden, self)
+    local ok, error = pcall(self._on_hidden, self)
+    if not ok then
+      eve.reporter.error({
+        from = __module_name__,
+        subject = "hide",
+        message = "Failed to call on_hidden",
+        details = { error = error },
+      })
+    end
   end)
 end
 

@@ -75,24 +75,4 @@ function M.observe(observables, callback, ignore_initial)
   end
 end
 
----@param from                          string
----@param subject                       string
----@param message                       string
----@param fn                            fun(...): any
----@param ...                           any
----@return nil
-function M.pcall(from, subject, message, fn, ...)
-  local ok, error = pcall(fn, ...)
-  if not ok then
-    eve.reporter.error({
-      from = from,
-      subject = subject,
-      message = message,
-      details = {
-        error = error,
-      },
-    })
-  end
-end
-
 return M
