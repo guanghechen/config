@@ -130,7 +130,7 @@ function M.new(props)
   local scheduler_match = eve.std.Scheduler.new({
     name = string.format("%s#match", name),
     mode = "debounce",
-    delay = 256,
+    delay = 64,
     timeout = 0,
     silent = eve.std.fn.falsy,
     value = eve.std.Observable.from_value(true),
