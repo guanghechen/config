@@ -23,8 +23,7 @@ local function refresh(picker, force)
   local workspace, status = eve.viewmodel.git.status("HEAD") ---@type string, table<string, string>
   local filepaths = {} ---@type string[]
   for filepath in pairs(status) do
-    local absolute_filepath = eve.path.join(workspace, filepath) ---@type string
-    filepaths[#filepaths + 1] = absolute_filepath
+    filepaths[#filepaths + 1] = filepath
   end
 
   picker:reset_filepaths(workspace, filepaths, false)
