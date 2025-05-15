@@ -43,13 +43,17 @@ local function fetch_data(method, additional_params, callback)
           local locations = {} ---@type lsp.Location[]
           if vim.islist(result) then
             for _, location in ipairs(result) do
-              if location.uri ~= uri_cur or location.range.start.line ~= line_cur then
+              local uri = location.targetUri or location.uri
+              local range = location.targetRange or location.range
+              if uri ~= uri_cur or range.start.line ~= line_cur then
                 table.insert(locations, location)
               end
             end
           else
-            local location = result ---@type lsp.Location
-            if location.uri ~= uri_cur or location.range.start.line ~= line_cur then
+            local location = result
+            local uri = location.targetUri or location.uri
+            local range = location.targetRange or location.range
+            if uri ~= uri_cur or range.start.line ~= line_cur then
               table.insert(locations, location)
             end
           end
