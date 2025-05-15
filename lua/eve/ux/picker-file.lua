@@ -262,7 +262,7 @@ function M.new(props)
         local filepath = node.data.filepath ---@type string
 
         picker:close()
-        eve.win.open_filepath(winnr_sourcefile, filepath)
+        eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
       end,
     },
     {
@@ -330,7 +330,7 @@ function M.new(props)
         local filepath = node.data.filepath ---@type string
 
         picker:close()
-        eve.win.open_filepath(winnr_sourcefile, filepath)
+        eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
       end,
     },
     {
@@ -371,7 +371,7 @@ function M.new(props)
           local filepath = node.data.filepath ---@type string
 
           picker:close()
-          eve.win.open_filepath(winnr_sourcefile, filepath)
+          eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
         end
       end,
     },
@@ -407,7 +407,7 @@ function M.new(props)
         local filepath = node.data.filepath ---@type string
 
         picker:close()
-        eve.win.open_filepath(winnr_sourcefile, filepath)
+        eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
       end,
     },
     {
