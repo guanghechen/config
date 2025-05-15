@@ -97,9 +97,13 @@ function M.loadfile(filepath)
 
   if eve.path.is_exist_filepath(filepath) then
     local bufnr = vim.fn.bufadd(filepath) ---@type integer
+    if bufnr == 0 or not vim.api.nvim_buf_is_valid(bufnr) then
+      return nil
+    end
+
+    local ok = pcall(vim.fn.bufload, bufnr)
     vim.bo[bufnr].buflisted = true
-    vim.fn.bufload(bufnr)
-    return bufnr
+    return ok and bufnr or nil
   end
 end
 

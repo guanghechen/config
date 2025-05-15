@@ -24,44 +24,60 @@ function M.close()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr == nil then
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    eve.buf.close(bufnr)
     return
   end
 
   local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil then
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    eve.buf.close(bufnr)
     return
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer|nil
   local history = meta.history ---@type eve.std.collection.IHistory|nil
   if history == nil then
+    eve.buf.close(bufnr)
     return
   end
 
   local bufnr_target = nil ---@type integer|nil
-  while true do
-    local item, is_bot = history:backward()
-    ---@cast item eve.builtin.win.IFilepathHistoryItem|nil
-    ---@cast is_bot boolean
 
-    if item == nil then
-      break
-    end
+  local item_present = history:present() ---@type eve.builtin.win.IFilepathHistoryItem|nil
+  if
+    item_present ~= nil
+    and item_present.bufnr ~= nil
+    and item_present.bufnr ~= bufnr
+    and vim.api.nvim_buf_is_valid(item_present.bufnr)
+  then
+    bufnr_target = item_present.bufnr ---@type integer
+  else
+    while true do
+      local item, is_bot = history:backward()
+      ---@cast item eve.builtin.win.IFilepathHistoryItem|nil
+      ---@cast is_bot boolean
 
-    if item.bufnr ~= nil and vim.api.nvim_buf_is_valid(item.bufnr) then
-      bufnr_target = item.bufnr ---@type integer
-      item.filepath = vim.api.nvim_buf_get_name(bufnr_target) ---@type string
-      break
-    end
+      if item == nil then
+        break
+      end
 
-    bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
-    if bufnr_target ~= nil then
-      item.bufnr = bufnr_target ---@type integer
-      break
-    end
+      if item.bufnr ~= nil and vim.api.nvim_buf_is_valid(item.bufnr) then
+        bufnr_target = item.bufnr ---@type integer
+        item.filepath = vim.api.nvim_buf_get_name(bufnr_target) ---@type string
+        break
+      end
 
-    if is_bot then
-      break
+      bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
+      if bufnr_target ~= nil then
+        item.bufnr = bufnr_target ---@type integer
+        break
+      end
+
+      if is_bot then
+        break
+      end
     end
   end
 
