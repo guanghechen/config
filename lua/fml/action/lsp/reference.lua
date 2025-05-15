@@ -2,13 +2,13 @@ local __module_name__ = "fml.action.lsp" ---@type string
 
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@param callback                      fun(ok: boolean, filepaths: string[]|nil): nil
+---@param callback                      fun(ok: boolean, rootdir: string|nil, filepaths: string[]|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil then
-    callback(false, nil)
+    callback(false)
     return
   end
 
@@ -20,7 +20,7 @@ local function fetch_data(method, additional_params, callback)
       message = "Not support method.",
       details = { bufnr = bufnr_sourcefile, method = method, context = additional_params },
     })
-    callback(false, nil)
+    callback(false)
     return
   end
 
@@ -81,28 +81,39 @@ local function fetch_data(method, additional_params, callback)
         message = "Encountered errors.",
         details = { bufnr = bufnr_sourcefile, method = method, params = params, errors = errors },
       })
-      callback(false, nil)
+      callback(false)
       return
     end
 
     if #items <= 0 then
-      callback(true, nil)
+      callback(true)
       return
     end
 
     if #items == 1 then
       local filepath, lnum, col = unpack(items[1]) ---@type string, integer, integer
       eve.win.open_filepath(winnr_sourcefile, filepath, lnum, col)
-      callback(true, nil)
+      callback(true)
       return
     end
 
     local filepaths = {} ---@type string[]
+    local rootdir = eve.path.cwd() ---@type string
     for _, item in ipairs(items) do
       local filepath = string.format("%s:%d:%d", item[1], item[2], item[3]) ---@type string
       filepaths[#filepaths + 1] = filepath
+
+      if filepath:sub(1, #rootdir) ~= rootdir then
+        while true do
+          local parent = eve.path.dirname(rootdir) ---@type string
+          if parent == rootdir then
+            break
+          end
+          rootdir = parent
+        end
+      end
     end
-    callback(true, filepaths)
+    callback(true, rootdir, filepaths)
   end)
 end
 
@@ -141,10 +152,9 @@ local function create_jump_or_list(title, method, additional_params)
   })
 
   local function jump_or_list()
-    fetch_data(method, additional_params, function(ok, filepaths)
-      if ok and filepaths ~= nil then
-        local cwd = eve.path.cwd() ---@type string
-        picker:reset_filepaths(cwd, filepaths, true)
+    fetch_data(method, additional_params, function(ok, rootdir, filepaths)
+      if ok and rootdir ~= nil and filepaths ~= nil then
+        picker:reset_filepaths(rootdir, filepaths, true)
         picker:mark_result_dirty()
         picker:focus()
       end

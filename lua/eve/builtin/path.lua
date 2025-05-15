@@ -64,10 +64,11 @@ end
 function M.dirname(filepath)
   local pieces = M.split(filepath)
   if #pieces == 1 then
-    return pieces[1]
+    local piece = pieces[1] ---@type string
+    return piece == "" and (filepath:sub(1, 1) == "/") and "/" or piece
   end
-
-  return #pieces > 0 and table.concat(pieces, SEP, 1, #pieces - 1) or ""
+  local dirpath = #pieces > 0 and table.concat(pieces, SEP, 1, #pieces - 1) or "" ---@type string
+  return dirpath == "" and filepath:sub(1, 1) == "/" and "/" or dirpath
 end
 
 ---@param filename                      string
@@ -160,6 +161,10 @@ end
 ---@param filepath                      string
 ---@return string
 function M.normalize(filepath)
+  if filepath == "/" and not eve.env.IS_WIN then
+    return "/"
+  end
+
   filepath = filepath:gsub("%%(%x%x)", function(hex)
     return string.char(tonumber(hex, 16))
   end)

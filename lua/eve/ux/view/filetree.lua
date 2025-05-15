@@ -369,9 +369,20 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   treeview:insert(uuid_root, uuid_root, "container", root, false)
 
   cwd = eve.path.normalize(cwd) ---@type string
-  local cwd_with_slash = cwd .. eve.env.PATH_SEP ---@type string
+  local cwd_with_slash = cwd == "/" and "/" or cwd .. eve.env.PATH_SEP ---@type string
   local cwd_length = #cwd_with_slash ---@type integer
-  do
+  if cwd == "/" then
+    local uuid = self:__resolve_uuid__("/") ---@type string
+    ---@type eve.ux.view.filetree.IDirectoryNodeData
+    local nodedata = {
+      basename = cwd,
+      filepath = cwd,
+      filepath_lower = cwd,
+      icon = eve.icon.filetype.Folder,
+      icon_hln = "MiniIconsBlue",
+    }
+    treeview:insert(uuid, uuid_root, "container", nodedata, false)
+  else
     local pieces = eve.path.split(cwd) ---@type string[]
     local N = #pieces ---@type integer
 

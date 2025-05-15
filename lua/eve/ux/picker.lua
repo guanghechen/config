@@ -1850,7 +1850,7 @@ function M:__create_wins__()
     vim.wo[preview_winnr].cursorline = true
 
     if self._preview_lnum ~= nil then
-      vim.api.nvim_win_set_cursor(preview_winnr, { self._preview_lnum, self._preview_col or 0 })
+      pcall(vim.api.nvim_win_set_cursor, preview_winnr, { self._preview_lnum, self._preview_col or 0 })
     end
   end
 

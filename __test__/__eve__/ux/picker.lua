@@ -78,6 +78,14 @@ flag_case:subscribe(
         picker:reset_filepaths(cwd, filepaths, true)
       end
 
+      if kase == 3 then
+        local filepaths = {
+          "/opt/me/a.txt",
+          "/bin/usr/b.txt",
+        }
+        picker:reset_filepaths("/", filepaths, true)
+      end
+
       picker:mark_result_dirty()
       picker:focus()
     end,
