@@ -53,16 +53,9 @@ local picker = eve.ux.FilePicker.new({
   },
 })
 
-eve.fn.observe({ finder_input, flag_viewtype }, function()
-  picker:mark_result_dirty()
+eve.fn.observe({ flag_case }, function()
+  picker:mark_result_flags_dirty()
 end, true)
-eve.fn.observe(
-  { finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype, flag_case },
-  function()
-    picker:mark_result_flags_dirty()
-  end,
-  true
-)
 
 flag_case:subscribe(
   eve.std.Subscriber.new({

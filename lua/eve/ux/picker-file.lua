@@ -208,6 +208,17 @@ function M.new(props)
     end,
   }
   flags[#flags + 1] = {
+    desc = string.format("%s: regex", name),
+    callback = function()
+      local enabled = flag_regex:snapshot() ---@type boolean
+      flag_regex:next(not enabled)
+    end,
+    snapshot = function()
+      local enabled = flag_regex:snapshot() ---@type boolean
+      return eve.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
+    end,
+  }
+  flags[#flags + 1] = {
     desc = string.format("%s: fold empty path", name),
     disabled = function()
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
@@ -614,7 +625,13 @@ function M.new(props)
 
   self._on_disposed = on_disposed
 
-  eve.fn.observe({ finder_input, flag_fuzzy, flag_regex }, function()
+  eve.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
+    picker:mark_result_flags_dirty()
+  end, true)
+  eve.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
+    picker:mark_result_dirty()
+  end, true)
+  eve.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
     scheduler_match:schedule()
   end)
 
@@ -874,8 +891,10 @@ function M:__match__(input)
     end
   end
 
+  local keyword = flag_sensitive and input or input:lower() ---@type string
+
   ---@type eve.builtin.oxi.string.ILineMatch[]|nil
-  local oxi_matches = eve.oxi.find_match_points_line_by_line(input, lines, flag_fuzzy, flag_regex)
+  local oxi_matches = eve.oxi.find_match_points_line_by_line(keyword, lines, flag_fuzzy, flag_regex)
   if oxi_matches == nil then
     self._last_input = ""
     self._last_offset = 0

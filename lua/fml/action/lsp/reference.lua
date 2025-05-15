@@ -140,13 +140,6 @@ local function create_jump_or_list(title, method, additional_params)
     end,
   })
 
-  eve.fn.observe({ finder_input, flag_viewtype }, function()
-    picker:mark_result_dirty()
-  end, true)
-  eve.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
-    picker:mark_result_flags_dirty()
-  end, true)
-
   local function jump_or_list()
     fetch_data(method, additional_params, function(ok, filepaths)
       if ok and filepaths ~= nil then

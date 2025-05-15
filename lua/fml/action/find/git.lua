@@ -59,13 +59,6 @@ local picker = eve.ux.FilePicker.new({
   end,
 })
 
-eve.fn.observe({ finder_input, flag_viewtype }, function()
-  picker:mark_result_dirty()
-end, true)
-eve.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
-  picker:mark_result_flags_dirty()
-end, true)
-
 ---@return nil
 function M.find_git_not_committed()
   if not eve.path.is_repo_git() then
