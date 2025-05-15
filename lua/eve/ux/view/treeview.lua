@@ -46,12 +46,12 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 
 ---@class eve.ux.view.treeview.INode
 ---@field public uuid                   string
----@field public parent                 string
+---@field public parent                 eve.ux.view.treeview.INode
+---@field public children               eve.ux.view.treeview.INode[]
 ---@field public type                   eve.ux.view.treeview.NodeTypeEnum
 ---@field public data                   unknown
 ---@field public collapsed              boolean
 ---@field public dirty_orders           boolean
----@field public children               string[]
 ---@field public cache_treeview         eve.ux.view.treeview.INodeRenderResultCache|nil
 ---@field public cache_listview         eve.ux.view.treeview.INodeRenderResultCache|nil
 
@@ -78,7 +78,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---
 ---@field protected _indent             string
 ---@field protected _indent_hln         string
----@field protected _node_map           table<string, eve.ux.view.treeview.INode>
+---@field protected _nodemap           table<string, eve.ux.view.treeview.INode>
 ---@field protected _virtual_root       eve.ux.view.treeview.INode
 ---@field protected _node_flatten_renderer eve.ux.view.treeview.INodeFlattenRenderer
 ---@field protected _node_renderer      eve.ux.view.treeview.INodeRenderer
@@ -104,7 +104,8 @@ function M.new(props)
 
   ---@type eve.ux.view.treeview.INode
   local __virtual_root__ = {
-    parent = "__virtual_root__",
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    parent = nil,
     uuid = "__virtual_root__",
     type = "container",
     data = nil,
@@ -112,6 +113,7 @@ function M.new(props)
     dirty_orders = false,
     children = {},
   }
+  __virtual_root__.parent = __virtual_root__ ---@type eve.ux.view.treeview.INode
 
   self.name = name
   self.nsnr = nsnr
@@ -121,7 +123,7 @@ function M.new(props)
   self._tick_treeview = 0
   self._indent = indent
   self._indent_hln = indent_hln
-  self._node_map = { [__virtual_root__.uuid] = __virtual_root__ }
+  self._nodemap = { [__virtual_root__.uuid] = __virtual_root__ }
   self._virtual_root = __virtual_root__
   self._node_flatten_renderer = node_flatten_renderer
   self._node_renderer = node_renderer
@@ -136,7 +138,7 @@ function M:clear()
   local root = self._virtual_root ---@type eve.ux.view.treeview.INode
   self._tick_listview = self._tick_listview + 1
   self._tick_treeview = self._tick_treeview + 1
-  self._node_map = { [root.uuid] = root }
+  self._nodemap = { [root.uuid] = root }
   self._virtual_root.children = {}
   self._virtual_root.dirty_orders = false
   return self
@@ -155,7 +157,7 @@ function M:dispose()
 
   self._indent = nil
   self._indent_hln = nil
-  self._node_map = nil
+  self._nodemap = nil
   self._virtual_root = nil
   self._node_flatten_renderer = nil
   self._node_renderer = nil
@@ -201,7 +203,7 @@ end
 function M:collapse(uuid, value, recursive)
   self:__health__()
 
-  local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+  local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -230,6 +232,29 @@ function M:collapse(uuid, value, recursive)
 end
 
 ---@param uuid                          string
+---@return eve.ux.view.Treeview
+function M:empty(uuid)
+  self:__health__()
+  local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
+  if node == nil then
+    eve.reporter.error({
+      from = __module_name__,
+      subject = "empty",
+      message = "The node is not exist",
+      details = { uuid = uuid },
+    })
+    return self
+  end
+
+  local nodemap = self._nodemap ---@type table<string, eve.ux.view.treeview.INode>
+  for _, child in ipairs(node.children) do
+    nodemap[child.uuid] = nil
+  end
+  node.children = {}
+  return self
+end
+
+---@param uuid                          string
 ---@param parent_uuid                   string
 ---@param nodetype                      eve.ux.view.treeview.NodeTypeEnum
 ---@param data                          unknown
@@ -238,8 +263,8 @@ end
 function M:insert(uuid, parent_uuid, nodetype, data, collapsed)
   self:__health__()
 
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-  local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+  local nodemap = self._nodemap ---@type table<string, eve.ux.view.treeview.INode>
+  local node = nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node ~= nil then
     return self:update(uuid, parent_uuid, nodetype, data, collapsed)
   end
@@ -250,9 +275,9 @@ function M:insert(uuid, parent_uuid, nodetype, data, collapsed)
   end
 
   ---@type eve.ux.view.treeview.INode
-  local new_node = {
+  node = {
     uuid = uuid,
-    parent = parent_uuid,
+    parent = parent,
     type = nodetype,
     data = data,
     collapsed = collapsed,
@@ -260,9 +285,9 @@ function M:insert(uuid, parent_uuid, nodetype, data, collapsed)
     children = {},
   }
 
-  parent.children[#parent.children + 1] = uuid
+  parent.children[#parent.children + 1] = node
   parent.dirty_orders = true
-  node_map[uuid] = new_node
+  nodemap[uuid] = node
   return self
 end
 
@@ -271,8 +296,7 @@ end
 function M:remove(uuid)
   self:__health__()
 
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-  local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+  local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -283,17 +307,12 @@ function M:remove(uuid)
     return self
   end
 
-  local parent = self:__retrieve_parent__(uuid, node.parent) ---@type eve.ux.view.treeview.INode|nil
-  if parent == nil then
-    return self
-  end
-
-  local children = parent.children ---@type string[]
+  local children = node.parent.children ---@type eve.ux.view.treeview.INode[]
   local k, N = 1, #children ---@type integer, integer
   for index = 1, N, 1 do
-    local child_uuid = children[index] ---@type string
-    if child_uuid ~= uuid then
-      children[k] = child_uuid
+    local child = children[index] ---@type eve.ux.view.treeview.INode
+    if child.uuid ~= uuid then
+      children[k] = child
       k = k + 1
     end
   end
@@ -315,14 +334,13 @@ end
 function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_exist)
   self:__health__()
 
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-  local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+  local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
     if not insert_if_non_exist then
       eve.reporter.error({
         from = __module_name__,
-        subject = "update (ignored)",
-        message = "The node isn't exist",
+        subject = "update",
+        message = "The node isn't exist (skipped)",
         details = { uuid = uuid, parent_uuid = parent_uuid, nodetype = nodetype, data = data, collapsed = collapsed },
       })
       return self
@@ -331,8 +349,8 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
     if parent_uuid == nil then
       eve.reporter.error({
         from = __module_name__,
-        subject = "update (ignored)",
-        message = "The node isn't exist and the parent_uuid not provided",
+        subject = "update",
+        message = "The node isn't exist and the parent_uuid not provided (skipped)",
         details = { uuid = uuid, parent_uuid = parent_uuid, nodetype = nodetype, data = data, collapsed = collapsed },
       })
       return self
@@ -344,8 +362,8 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
   if node.type ~= nodetype then
     eve.reporter.error({
       from = __module_name__,
-      subject = "update (ignored)",
-      message = "The nodetype is different with the previous one",
+      subject = "update",
+      message = "The nodetype is different with the previous one (skipped)",
       details = {
         node = node,
         uuid = uuid,
@@ -358,20 +376,16 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
     return self
   end
 
+  ---! update the node
   node.cache_treeview = nil
   node.cache_listview = nil
-
-  parent_uuid = parent_uuid or node.parent ---@type string
-  if node.parent == parent_uuid then
-    node.data = data
-    if collapsed ~= nil then
-      node.collapsed = collapsed ---@type boolean
-    end
-    return self
+  node.data = data
+  if collapsed ~= nil then
+    node.collapsed = collapsed ---@type boolean
   end
 
-  local old_parent = self:__retrieve_parent__(uuid, node.parent) ---@type eve.ux.view.treeview.INode|nil
-  if old_parent == nil then
+  parent_uuid = parent_uuid or node.parent.uuid ---@type string
+  if node.parent.uuid == parent_uuid then
     return self
   end
 
@@ -380,12 +394,13 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
     return self
   end
 
-  local children = old_parent.children ---@type string[]
+  ---! remove from the old parent
+  local children = node.parent.children ---@type eve.ux.view.treeview.INode[]
   local k, N = 1, #children ---@type integer, integer
   for index = 1, N, 1 do
-    local child_uuid = children[index] ---@type string
-    if child_uuid ~= uuid then
-      children[k] = child_uuid
+    local child = children[index] ---@type eve.ux.view.treeview.INode
+    if child.uuid ~= uuid then
+      children[k] = child
       k = k + 1
     end
   end
@@ -393,12 +408,9 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
     children[index] = nil
   end
 
-  if collapsed ~= nil then
-    node.collapsed = collapsed ---@type boolean
-  end
-  node.data = data
-  node.parent = parent_uuid
-  parent.children[#parent.children + 1] = uuid
+  ---! insert into the new parent
+  node.parent = parent
+  parent.children[#parent.children + 1] = node
   parent.dirty_orders = true
   return self
 end
@@ -411,9 +423,9 @@ function M:calc_include_uuid_set(included_uuids)
   self:__health__()
 
   local uuids = {} ---@type table<string, boolean>
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
+  local nodemap = self._nodemap ---@type table<string, eve.ux.view.treeview.INode>
   for _, uuid in ipairs(included_uuids) do
-    local node = node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+    local node = nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
     if node == nil then
       eve.reporter.warn({
         from = __module_name__,
@@ -421,16 +433,13 @@ function M:calc_include_uuid_set(included_uuids)
         message = "The node isn't exist",
         details = { uuid = uuid },
       })
-      goto continue
+    else
+      uuids[uuid] = true
+      while not uuids[node.parent.uuid] do
+        uuids[node.parent.uuid] = true
+        node = node.parent
+      end
     end
-
-    uuids[uuid] = true
-    while not uuids[node.parent] do
-      uuids[node.parent] = true
-      node = node_map[node.parent]
-    end
-
-    ::continue::
   end
   return uuids
 end
@@ -439,7 +448,7 @@ end
 ---@return string[]
 function M:collect_leaf_uuids(root_uuid)
   self:__health__()
-  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._virtual_root
+  local root = (root_uuid ~= nil and self._nodemap[root_uuid]) or self._virtual_root
   local uuids = {} ---@type string[]
 
   ---@param node                        eve.ux.view.treeview.INode
@@ -454,8 +463,7 @@ function M:collect_leaf_uuids(root_uuid)
       self:__sort_children__(node)
     end
 
-    for _, uuid in ipairs(node.children) do
-      local child = self._node_map[uuid] ---@type eve.ux.view.treeview.INode
+    for _, child in ipairs(node.children) do
       recursive(child)
     end
   end
@@ -468,7 +476,7 @@ end
 ---@return boolean
 function M:has(uuid)
   self:__health__()
-  return self._node_map[uuid] ~= nil
+  return self._nodemap[uuid] ~= nil
 end
 
 ---@return eve.ux.view.Treeview
@@ -489,7 +497,7 @@ end
 ---@return eve.ux.view.treeview.INode
 function M:retrieve_root(uuid)
   self:__health__()
-  local root = (uuid ~= nil and self._node_map[uuid]) or self._virtual_root
+  local root = (uuid ~= nil and self._nodemap[uuid]) or self._virtual_root
   return root
 end
 
@@ -499,7 +507,7 @@ end
 function M:retrieve_by_uuid(uuid, silent)
   self:__health__()
 
-  local node = self._node_map[uuid] ---@type eve.ux.view.treeview.INode|nil
+  local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
     if not silent then
       error(string.format("[retrieve_by_uuid] The node isn't exist: %s", uuid))
@@ -535,10 +543,8 @@ end
 ---@param node                          eve.ux.view.treeview.INode
 ---@return nil
 function M:__remove_recursively__(node)
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
-  node_map[node.uuid] = nil
-  for _, uuid in ipairs(node.children) do
-    local child = node_map[uuid] ---@type eve.ux.view.treeview.INode
+  self._nodemap[node.uuid] = nil
+  for _, child in ipairs(node.children) do
     self:__remove_recursively__(child)
   end
 end
@@ -551,7 +557,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
   local uuids = {} ---@type string[]
   local tick_listview = self._tick_listview ---@type integer
 
-  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or self._virtual_root
+  local root = (root_uuid ~= nil and self._nodemap[root_uuid]) or self._virtual_root
   local nsnr = self.nsnr ---@type integer
 
   if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
@@ -565,7 +571,6 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
     return result
   end
 
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
   local INDENT_COMMON = self._indent ---@type string
 
   local row = 0 ---@type integer
@@ -624,8 +629,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
 
       local N = #node.children ---@type integer
       for index = 1, N, 1 do
-        local child_uuid = node.children[index] ---@type string
-        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        local child = node.children[index] ---@type eve.ux.view.treeview.INode
         recursive(child, index == N)
       end
     end
@@ -645,8 +649,8 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
 
       local first_child_index = nil ---@type integer|nil
       local last_child_index = #node.children ---@type integer
-      for index, child_uuid in ipairs(node.children) do
-        if included_uuid_set[child_uuid] then
+      for index, child in ipairs(node.children) do
+        if included_uuid_set[child.uuid] then
           first_child_index = first_child_index or index ---@type integer
           last_child_index = index ---@type integer
         end
@@ -654,9 +658,8 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
 
       if first_child_index ~= nil then
         for index = first_child_index, last_child_index, 1 do
-          local child_uuid = node.children[index] ---@type string
-          if included_uuid_set[child_uuid] then
-            local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+          local child = node.children[index] ---@type eve.ux.view.treeview.INode
+          if included_uuid_set[child.uuid] then
             recursive(child, index == last_child_index)
           end
         end
@@ -685,7 +688,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   local tick_treeview = self._tick_treeview ---@type integer
 
   local virtual_root = self._virtual_root ---@type eve.ux.view.treeview.INode
-  local root = (root_uuid ~= nil and self._node_map[root_uuid]) or virtual_root
+  local root = (root_uuid ~= nil and self._nodemap[root_uuid]) or virtual_root
   local nsnr = self.nsnr ---@type integer
 
   if included_uuid_set ~= nil and not included_uuid_set[root.uuid] then
@@ -699,7 +702,6 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
     return result
   end
 
-  local node_map = self._node_map ---@type table<string, eve.ux.view.treeview.INode>
   local INDENT_COMMON = self._indent ---@type string
 
   local row = 0 ---@type integer
@@ -755,8 +757,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
 
       local N = #node.children ---@type integer
       if N == 1 and foldempty then
-        local child_uuid = node.children[1] ---@type string
-        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        local child = node.children[1] ---@type eve.ux.view.treeview.INode
         if child.type == "container" then
           return recursive(child, depth, indent, folded_depth + 1, is_last)
         end
@@ -771,8 +772,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
       local child_depth = depth + 1 ---@type integer
       local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
       for index = 1, N, 1 do
-        local child_uuid = node.children[index] ---@type string
-        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        local child = node.children[index] ---@type eve.ux.view.treeview.INode
         recursive(child, child_depth, child_indent, 0, index == N)
       end
     end
@@ -790,16 +790,15 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
 
       local first_child_index = nil ---@type integer|nil
       local last_child_index = #node.children ---@type integer
-      for index, child_uuid in ipairs(node.children) do
-        if included_uuid_set[child_uuid] then
+      for index, child in ipairs(node.children) do
+        if included_uuid_set[child.uuid] then
           first_child_index = first_child_index or index ---@type integer
           last_child_index = index ---@type integer
         end
       end
 
       if first_child_index == last_child_index and foldempty then
-        local child_uuid = node.children[first_child_index] ---@type string
-        local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+        local child = node.children[first_child_index] ---@type eve.ux.view.treeview.INode
         if child.type == "container" then
           return recursive(child, depth, indent, folded_depth + 1, is_last)
         end
@@ -811,9 +810,8 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
         local child_depth = depth + 1 ---@type integer
         local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
         for index = first_child_index, last_child_index, 1 do
-          local child_uuid = node.children[index] ---@type string
-          if included_uuid_set[child_uuid] then
-            local child = node_map[child_uuid] ---@type eve.ux.view.treeview.INode
+          local child = node.children[index] ---@type eve.ux.view.treeview.INode
+          if included_uuid_set[child.uuid] then
             recursive(child, child_depth, child_indent, 0, index == last_child_index)
           end
         end
@@ -841,7 +839,7 @@ function M:__retrieve_parent__(uuid, parent_uuid)
     return self._virtual_root
   end
 
-  local parent = self._node_map[parent_uuid] ---@type eve.ux.view.treeview.INode|nil
+  local parent = self._nodemap[parent_uuid] ---@type eve.ux.view.treeview.INode|nil
   if parent == nil then
     eve.reporter.error({
       from = __module_name__,
@@ -860,9 +858,7 @@ end
 function M:__sort_children__(parent)
   parent.dirty_orders = false
   if #parent.children > 1 then
-    table.sort(parent.children, function(uuid_left, uuid_right)
-      local left = self._node_map[uuid_left] ---@type eve.ux.view.treeview.INode
-      local right = self._node_map[uuid_right] ---@type eve.ux.view.treeview.INode
+    table.sort(parent.children, function(left, right)
       return self._node_sorter(left, right)
     end)
   end
@@ -875,8 +871,7 @@ end
 function M:__update_collapse_recursively__(node, collapsed)
   node.collapsed = collapsed
   node.cache_treeview = nil
-  for _, uuid in ipairs(node.children) do
-    local child = self._node_map[uuid] ---@type eve.ux.view.treeview.INode
+  for _, child in ipairs(node.children) do
     self:__update_collapse_recursively__(child, collapsed)
   end
 end

@@ -44,14 +44,19 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 
 ---@class eve.ux.view.filetree.IDirectoryNode : eve.ux.view.treeview.INode
 ---@field public type                   "container"
+---@field public parent                 eve.ux.view.filetree.IDirectoryNode
+---@field public children               eve.ux.view.filetree.INode[]
 ---@field public data                   eve.ux.view.filetree.IDirectoryNodeData
 
 ---@class eve.ux.view.filetree.IFileNode : eve.ux.view.treeview.INode
 ---@field public type                   "leaf"
+---@field public parent                 eve.ux.view.filetree.IDirectoryNode
+---@field public children               eve.ux.view.filetree.INode[]
 ---@field public data                   eve.ux.view.filetree.IFileNodeData
 
 ---@class eve.ux.view.filetree.IPositionNode : eve.ux.view.treeview.INode
 ---@field public type                   "position"
+---@field public parent                 eve.ux.view.filetree.IFileNode
 ---@field public data                   eve.ux.view.filetree.IPositionNodeData
 
 ----------------------------------------------------------------------------------------------------
@@ -67,7 +72,7 @@ local nodetype_priority_map = {
 }
 
 ---@type eve.ux.view.filetree.IDirectoryNodeRenderer
-local default_directory_node_renderer = function(self, node, folded_depth)
+local default_directory_node_renderer = function(_, node, folded_depth)
   local basename = node.data.basename ---@type string
   local icon, icon_hln = eve.fn.diricon(basename)
   if not node.collapsed then
@@ -94,12 +99,8 @@ local default_directory_node_renderer = function(self, node, folded_depth)
 
   local o = node ---@type eve.ux.view.filetree.IDirectoryNode
   for index = folded_depth, 1, -1 do
-    local parent_uuid = o.parent ---@type string
-    local parent = self._treeview:retrieve_by_uuid(parent_uuid)
-    ---@cast parent eve.ux.view.filetree.IDirectoryNode
-
-    basenames[index] = parent.data.basename ---@type string
-    o = parent
+    basenames[index] = o.parent.data.basename ---@type string
+    o = o.parent
   end
 
   local text = string.format("%s %s", icon, basenames[1]) ---@type string
@@ -405,12 +406,7 @@ function M:clear_positions()
   local parents_of_position = self._parents_of_position ---@type table<string, true>
   self._parents_of_position = {} ---@type table<string, true>
   for fileuuid in pairs(parents_of_position) do
-    local filenode = self._treeview:retrieve_by_uuid(fileuuid)
-    ---@cast filenode                     eve.ux.view.filetree.IFileNode
-    for _, child_uuid in ipairs(filenode.children) do
-      self._treeview:remove(child_uuid)
-    end
-    filenode.children = {} ---@type string[]
+    self._treeview:empty(fileuuid)
   end
   return self
 end
