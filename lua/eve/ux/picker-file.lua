@@ -287,8 +287,8 @@ function M.new(props)
           return
         end
 
-        local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
-        filetree:collapse(node.parent, "collapse", false)
+        local lnum_parent = retriever:retrieve_lnum(node.parent.uuid) ---@type integer|nil
+        filetree:collapse(node.parent.uuid, "collapse", false)
         picker:mark_result_dirty()
         if lnum_parent ~= nil then
           picker:set_result_lnum(lnum_parent)
@@ -433,8 +433,8 @@ function M.new(props)
           return
         end
 
-        local lnum_parent = retriever:retrieve_lnum(node.parent) ---@type integer|nil
-        filetree:collapse(node.parent, "collapse", false)
+        local lnum_parent = retriever:retrieve_lnum(node.parent.uuid) ---@type integer|nil
+        filetree:collapse(node.parent.uuid, "collapse", false)
         picker:mark_result_dirty()
         if lnum_parent ~= nil then
           picker:set_result_lnum(lnum_parent)
@@ -499,10 +499,7 @@ function M.new(props)
           end
 
           if node.type == "leaf" and #node.children > 0 then
-            local child_uuid = node.children[1] ---@type string
-            local child = filetree:retrieve_by_uuid(child_uuid) ---@type eve.ux.view.filetree.INode|nil
-            ---@cast child              eve.ux.view.filetree.IPositionNode
-            node = child
+            node = node.children[1] ---@type eve.ux.view.filetree.INode
           end
 
           local filepath = node.data.filepath ---@type string
@@ -831,8 +828,8 @@ function M:__match__(input)
   for _, uuid in ipairs(matched_uuids) do
     local node = filetree:retrieve_by_uuid(uuid, false)
     ---@cast node eve.ux.view.filetree.IFileNode
-    for _, child_uuid in ipairs(node.children) do
-      matched_uuids[#matched_uuids + 1] = child_uuid
+    for _, child in ipairs(node.children) do
+      matched_uuids[#matched_uuids + 1] = child.uuid
     end
   end
 
