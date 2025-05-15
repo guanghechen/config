@@ -516,7 +516,7 @@ function M.new(props)
                 vim.hl.range(
                   bufnr,
                   NSNR_PICKER_MATCHES,
-                  "f_picker_matches",
+                  "f_pk_matches",
                   { row, offset_final + dl },
                   { row, offset_final + dr }
                 )
@@ -541,7 +541,7 @@ function M.new(props)
               vim.hl.range(
                 bufnr,
                 NSNR_PICKER_MATCHES,
-                "f_picker_matches",
+                "f_pk_matches",
                 { row, offset_final + m.l },
                 { row, offset_final + m.r }
               )

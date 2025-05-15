@@ -50,7 +50,11 @@ M.sign = {
   DAP_LOG_POINT             = "DapLogPoint",
   DAP_STOPPED               = "DapStopped",
 
+  NR_PICKER_FINDER_PROMPT   = 3031,
+  NR_PICKER_RESULT_CURRENT  = 3032,
+  NR_PICKER_RESULT_PRESENT  = 3033,
   PICKER_FINDER_PROMPT      = "PickerFinderPrompt",
+  PICKER_RESULT_CURRENT     = "PickerResultCurrent",
   PICKER_RESULT_PRESENT     = "PickerResultPresent",
 
   SEARCH_INPUT_CURSOR       = "SearchInputCursor",
@@ -70,8 +74,9 @@ sd(M.sign.DAP_BREAKPOINT_REJECTED,     { text = eve.icon.dap.BreakpointRejected,
 sd(M.sign.DAP_LOG_POINT,               { text = eve.icon.dap.LogPoint,            texthl = "DapLogPoint",            linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
 sd(M.sign.DAP_STOPPED,                 { text = eve.icon.dap.Stopped,             texthl = "DapStopped",             linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
-sd(M.sign.PICKER_FINDER_PROMPT,        { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"      })
-sd(M.sign.PICKER_RESULT_PRESENT,       { text = eve.icon.ui.ArrowPresent,         texthl = "fs_main_present"      })
+sd(M.sign.PICKER_FINDER_PROMPT,        { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"   })
+sd(M.sign.PICKER_RESULT_CURRENT,       { text = ' ',                              texthl = "f_pk_result_current"  })
+sd(M.sign.PICKER_RESULT_PRESENT,       { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_result_present"  })
 
 sd(M.sign.SEARCH_INPUT_CURSOR,         { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"      })
 sd(M.sign.SEARCH_MAIN_CURRENT,         { text = ' ',                              texthl = "fs_main_current"      })

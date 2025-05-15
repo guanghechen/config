@@ -166,25 +166,25 @@ local __borders__ = {
 local __highlights__ = {
   finder = table.concat({
     "FloatBorder:FloatBorder",
-    "FloatTitle:f_picker_finder_title",
-    "Normal:f_picker_finder_normal",
+    "FloatTitle:f_pk_finder_title",
+    "Normal:f_pk_finder_normal",
   }, ","),
   result = table.concat({
-    "Cursor:f_picker_result_current",
-    "CursorColumn:f_picker_result_current",
-    "CursorLine:f_picker_result_current",
-    "CursorLineNr:f_picker_result_current",
+    "Cursor:f_pk_result_current",
+    "CursorColumn:f_pk_result_current",
+    "CursorLine:f_pk_result_current",
+    "CursorLineNr:f_pk_result_current",
     "FloatBorder:FloatBorder",
-    "Normal:f_picker_result_normal",
+    "Normal:f_pk_result_normal",
   }, ","),
   preview = table.concat({
-    "Cursor:f_picker_preview_current",
-    "CursorColumn:f_picker_preview_current",
-    "CursorLine:f_picker_preview_current",
-    "CursorLineNr:f_picker_preview_current",
+    "Cursor:f_pk_preview_current",
+    "CursorColumn:f_pk_preview_current",
+    "CursorLine:f_pk_preview_current",
+    "CursorLineNr:f_pk_preview_current",
     "FloatBorder:FloatBorder",
-    "FloatTitle:f_picker_preview_title",
-    "Normal:f_picker_preview_normal",
+    "FloatTitle:f_pk_preview_title",
+    "Normal:f_pk_preview_normal",
   }, ","),
 }
 
@@ -761,8 +761,8 @@ local __winopts__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _scheduler_preview  eve.std.collection.Scheduler|nil
----@field protected _scheduler_result   eve.std.collection.Scheduler
+---@field protected _scheduler_preview              eve.std.collection.Scheduler|nil
+---@field protected _scheduler_result_content       eve.std.collection.Scheduler
 ---
 ---@field protected _finder_bufnr       integer|nil
 ---@field protected _finder_winnr       integer|nil
@@ -778,6 +778,7 @@ local __winopts__ = {
 ---@field protected _result_keymaps     eve.ux.picker.IInternalKeymap[]
 ---@field protected _result_winopts     eve.ux.picker.IWinOptions
 ---@field protected _result_lnum        eve.std.collection.IObservable
+---@field protected _result_present     integer|nil
 ---@field protected _result_total       eve.std.collection.IObservable
 ---@field protected _result_nvimbar     eve.ux.nvimbar.Nvimbar
 ---
@@ -911,6 +912,7 @@ function M.new(props)
   self._result_winnr = nil
   self._result_winopts = result_winopts
   self._result_lnum = result_lnum
+  self._result_present = nil
   self._result_total = result_total
 
   self._preview_bufnr = nil
@@ -1017,8 +1019,8 @@ function M.new(props)
   end
 
   ---@type eve.std.collection.Scheduler
-  self._scheduler_result = eve.std.Scheduler.new({
-    name = string.format("picker:result:%s", name),
+  self._scheduler_result_content = eve.std.Scheduler.new({
+    name = string.format("picker:result_content:%s", name),
     mode = "debounce",
     delay = 128,
     timeout = 0,
@@ -1056,11 +1058,6 @@ function M.new(props)
       lnum = math.min(total, math.max(total > 0 and 1 or 0, lnum)) ---@type integer
       result_lnum:next(lnum)
 
-      vim.fn.sign_unplace("", { buffer = bufnr, id = bufnr })
-      if lnum_present ~= nil then
-        vim.fn.sign_place(bufnr, "", eve.var.sign.PICKER_RESULT_PRESENT, bufnr, { lnum = lnum, priority = 10 })
-      end
-
       local result_rendered_ok, result_rendered_error = pcall(on_result_rendered, self, bufnr)
       if not result_rendered_ok then
         eve.reporter.error({
@@ -1071,6 +1068,8 @@ function M.new(props)
         })
       end
 
+      self._result_present = lnum_present ---@type integer|nil
+      self:__set_result_statuscolumn__()
       if self._scheduler_preview ~= nil then
         self._scheduler_preview:schedule()
       end
@@ -1079,17 +1078,12 @@ function M.new(props)
 
   result_lnum:subscribe(
     eve.std.Subscriber.new({
-      on_next = function(lnum)
+      on_next = function()
         self._result_nvimbar:render()
         if self._scheduler_preview ~= nil then
           self._scheduler_preview:schedule()
         end
-        vim.schedule(function()
-          local winnr = self._result_winnr ---@type integer|nil
-          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-            pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
-          end
-        end)
+        self:__set_result_statuscolumn__()
       end,
     }),
     true
@@ -1150,11 +1144,11 @@ function M:dispose()
   self._recommended_height = nil
   self._recommended_width = nil
 
-  self._scheduler_result:dispose()
+  self._scheduler_result_content:dispose()
   if self._scheduler_preview then
     self._scheduler_preview:dispose()
   end
-  self._scheduler_result = nil
+  self._scheduler_result_content = nil
   self._scheduler_preview = nil
 
   local finder_winnr = self._finder_winnr ---@type integer|nil
@@ -1195,6 +1189,7 @@ function M:dispose()
   self._result_keymaps = nil
   self._result_winopts = nil
   self._result_lnum = nil
+  self._result_present = nil
   self._result_total = nil
   self._result_nvimbar = nil
 
@@ -1411,7 +1406,7 @@ end
 ---@return nil
 function M:mark_result_dirty()
   self:__health__()
-  self._scheduler_result:schedule()
+  self._scheduler_result_content:schedule()
 end
 
 ---@return nil
@@ -1642,7 +1637,8 @@ function M:__create_bufs__()
     vim.bo[result_bufnr].modifiable = false
     vim.bo[result_bufnr].readonly = true
 
-    self._scheduler_result:schedule({ immediate = true })
+    self._scheduler_result_content:schedule({ immediate = true })
+    self:__set_result_statuscolumn__()
   end
 
   if has_preview then
@@ -2152,6 +2148,46 @@ function M:__set_finder_prompt_sign__(finder_bufnr)
     finder_bufnr,
     { lnum = 1, priority = 10 }
   )
+end
+
+---@return nil
+function M:__set_result_statuscolumn__()
+  vim.schedule(function()
+    local lnum_cursor = self._result_lnum:snapshot() ---@type integer
+
+    local winnr = self._result_winnr ---@type integer|nil
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_cursor, 0 })
+    end
+
+    local bufnr = self._result_bufnr ---@type integer|nil
+    if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+      local nr_cursor = eve.var.sign.NR_PICKER_RESULT_CURRENT ---@type integer
+      pcall(vim.fn.sign_unplace, "", { buffer = bufnr, id = nr_cursor })
+      pcall(
+        vim.fn.sign_place,
+        nr_cursor,
+        "",
+        eve.var.sign.PICKER_RESULT_CURRENT,
+        bufnr,
+        { lnum = lnum_cursor, priority = 10 }
+      )
+
+      local lnum_present = self._result_present ---@type integer|nil
+      local nr_present = eve.var.sign.NR_PICKER_RESULT_PRESENT ---@type integer
+      pcall(vim.fn.sign_unplace, "", { buffer = bufnr, id = nr_present })
+      if lnum_present ~= nil then
+        pcall(
+          vim.fn.sign_place,
+          nr_present,
+          "",
+          eve.var.sign.PICKER_RESULT_PRESENT,
+          bufnr,
+          { lnum = lnum_present, priority = 20 }
+        )
+      end
+    end
+  end)
 end
 
 ---@return boolean
