@@ -29,7 +29,13 @@ return {
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   config = function()
     vim.diagnostic.config({
-      current_line = true,
+      virtual_text = {
+        current_line = false,
+        format = function(diagnostic)
+          local icon = severity2prefixicon[diagnostic.severity] or ""
+          return string.format("%s %s", icon, diagnostic.message)
+        end,
+      },
       virtual_lines = {
         current_line = true,
         format = function(diagnostic)
