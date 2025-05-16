@@ -1,5 +1,3 @@
-_G.std = require("std")
-_G.eve = require("eve")
 eve.setup_patches()
 eve.setup_workspace()
 

@@ -1,3 +1,6 @@
+_G.std = require("std")
+_G.eve = require("eve")
+
 if vim.g.vscode then
   require("integration.vscode")
   return
