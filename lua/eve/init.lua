@@ -39,9 +39,9 @@ local __mods = {
 ---@field public __mods                 eve.__mods
 ---@field public constant               eve.constant
 ---@field public context                eve.context
+---@field public state                  eve.state
 ---@field public std                    eve.std
 ---@field public ux                     eve.ux
----@field public viewmodel              eve.viewmodel
 ---
 ---@field public G                      eve.builtin.G
 ---@field public box                    eve.builtin.box
@@ -80,9 +80,9 @@ local M = setmetatable({
   __mods = __mods,
   constant = require("eve.constant"),
   context = require("eve.context"),
+  state = require("eve.state"),
   std = require("eve.std"),
   ux = require("eve.ux"),
-  viewmodel = require("eve.viewmodel"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

@@ -65,7 +65,7 @@ local function parse_git_status_line(line, workspace, git_status)
   git_status[absolute_path] = status
 end
 
----@class eve.viewmodel.git
+---@class eve.state.git
 local M = {}
 
 ---@param base                          string git ref base

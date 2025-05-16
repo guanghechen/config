@@ -20,7 +20,7 @@ local function refresh(picker, force)
     return
   end
 
-  local workspace, status = eve.viewmodel.git.status("HEAD") ---@type string, table<string, string>
+  local workspace, status = eve.state.git.status("HEAD") ---@type string, table<string, string>
   local filepaths = {} ---@type string[]
   for filepath in pairs(status) do
     filepaths[#filepaths + 1] = filepath

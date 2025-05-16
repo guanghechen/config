@@ -1,12 +1,12 @@
----@class eve.viewmodel.__mods
+---@class eve.state.__mods
 local __mods = {
-  git = "eve.viewmodel.git",
+  git = "eve.state.git",
 }
 
----@class eve.viewmodel
----@field public __mods                 eve.viewmodel.__mods
+---@class eve.state
+---@field public __mods                 eve.state.__mods
 ---
----@field public git                    eve.viewmodel.git
+---@field public git                    eve.state.git
 local M = setmetatable({
   __mods = __mods,
 }, {
