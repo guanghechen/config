@@ -3,8 +3,8 @@ local __module_name__ = "eve.builtin.im.wsl" ---@type string
 ---@class eve.builtin.im
 local M = {}
 
-local app_home = eve.path.locate_app_config_home("guanghechen")
-local script_path = eve.path.join(
+local app_home = std.path.locate_app_config_home("guanghechen")
+local script_path = std.path.join(
   app_home,
   (std.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
     or (std.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")

@@ -236,10 +236,10 @@ return {
         },
       },
       typescript = {
-        tsdk = eve.path.locate_nearest_filepath(eve.path.cwd(), { eve.path.normalize("node_modules/typescript/lib") }),
-        globalTsdk = eve.path.locate_nearest_filepath(
-          eve.path.cwd(),
-          { eve.path.normalize("node_modules/typescript/lib") }
+        tsdk = std.path.locate_nearest_filepath(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
+        globalTsdk = std.path.locate_nearest_filepath(
+          std.path.cwd(),
+          { std.path.normalize("node_modules/typescript/lib") }
         ),
         updateImportsOnFileMove = { enabled = "always" },
         suggest = {

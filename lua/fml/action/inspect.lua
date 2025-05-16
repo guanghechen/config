@@ -31,8 +31,8 @@ end
 
 ---@return nil
 function M.inspect_state()
-  local cwd = eve.path.cwd() ---@type string
-  local workspace = eve.path.workspace() ---@type string
+  local cwd = std.path.cwd() ---@type string
+  local workspace = std.path.workspace() ---@type string
   local full_state = eve.context.dump() ---@type eve.context.data
 
   std.reporter.info({
@@ -58,8 +58,8 @@ end
 
 ---@return nil
 function M.inspect_state_full()
-  local cwd = eve.path.cwd() ---@type string
-  local workspace = eve.path.workspace() ---@type string
+  local cwd = std.path.cwd() ---@type string
+  local workspace = std.path.workspace() ---@type string
 
   std.reporter.info({
     from = __module_name__,

@@ -53,7 +53,7 @@ function M.copy_file(filepath_source, filepath_target, force)
   local content = fin:read("*all")
   fin:close()
 
-  vim.fn.mkdir(eve.path.dirname(filepath_target), "p")
+  vim.fn.mkdir(std.path.dirname(filepath_target), "p")
 
   local fout = assert(io.open(filepath_target, "wb"))
   fout:write(content)

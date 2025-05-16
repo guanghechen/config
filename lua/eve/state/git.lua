@@ -45,9 +45,9 @@ local function parse_git_status_line(line, workspace, git_status)
   -- convert octal encoded lines to utf-8
   relative_path = std.string.octal_to_utf8(relative_path)
   -- normalize the filepath
-  relative_path = eve.path.normalize(relative_path)
+  relative_path = std.path.normalize(relative_path)
 
-  local absolute_path = eve.path.join(workspace, relative_path)
+  local absolute_path = std.path.join(workspace, relative_path)
   -- merge status result if there are results from multiple passes
   local existing_status = git_status[absolute_path]
   if existing_status then
@@ -72,9 +72,9 @@ local M = {}
 ---@return string
 ---@return table<string, string>
 function M.status(base)
-  local workspace = eve.path.workspace() ---@type string
+  local workspace = std.path.workspace() ---@type string
 
-  if not eve.path.is_repo_git() then
+  if not std.path.is_repo_git() then
     return workspace, {}
   end
 

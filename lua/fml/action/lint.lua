@@ -39,8 +39,8 @@ function M.spellcheck_register()
   end)
 
   local filepath_buf = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filepath = eve.path.locate_nearest_filepath(filepath_buf, { ".cspell.json" })
-    or eve.path.join(eve.path.workspace(), ".cspell.json")
+  local filepath = std.path.locate_nearest_filepath(filepath_buf, { ".cspell.json" })
+    or std.path.join(std.path.workspace(), ".cspell.json")
 
   if not eve.fs.is_exists(filepath) then
     local data = {

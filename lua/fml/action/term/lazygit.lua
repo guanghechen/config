@@ -4,12 +4,12 @@ local toggle_term = require("fml.action.term.toggle").toggle
 
 ---@return string|nil
 local function get_lazygit_config_filepath()
-  local HOME_LAZYGIT = eve.path.locate_app_config_home("lazygit") ---@type string
+  local HOME_LAZYGIT = std.path.locate_app_config_home("lazygit") ---@type string
 
   ---@type string[]
   local candidate_config_filepaths = {
-    eve.path.join(HOME_LAZYGIT, "local/theme.yml"),
-    eve.path.join(HOME_LAZYGIT, "config.yml"),
+    std.path.join(HOME_LAZYGIT, "local/theme.yml"),
+    std.path.join(HOME_LAZYGIT, "config.yml"),
   }
 
   for _, config_filepath in ipairs(candidate_config_filepaths) do
@@ -28,7 +28,7 @@ local function get_filepath_from_lazygit(cwd)
   for i = 1, 5 do
     local relative_filepath = vim.fn.getreg("+")
     if relative_filepath ~= "" then
-      return eve.path.join(cwd, relative_filepath)
+      return std.path.join(cwd, relative_filepath)
     end
     vim.uv.sleep(30)
   end
@@ -123,20 +123,20 @@ local M = {}
 
 ---@return nil
 function M.lazygit_cwd()
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = std.path.cwd() ---@type string
   open_lazygit("lazygit_cwd", cwd)
 end
 
 ---@return nil
 function M.lazygit_workspace()
-  local cwd = eve.path.workspace() ---@type string
+  local cwd = std.path.workspace() ---@type string
   open_lazygit("lazygit_workspace", cwd)
 end
 
 ---@return nil
 function M.lazygit_file_history()
-  local cwd = eve.path.cwd() ---@type string
-  local filepath = eve.path.current_filepath() ---@type string
+  local cwd = std.path.cwd() ---@type string
+  local filepath = std.path.current_filepath() ---@type string
   local args = { "-f", vim.fn.shellescape(filepath) } ---@type string[]
   open_lazygit("lazygit_file_history", cwd, args)
 end

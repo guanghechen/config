@@ -69,14 +69,14 @@ local ignored = {
 
 ---@class ghc.plugin.conform.config
 local config = {
-  prettier_bin_path = eve.path.normalize("node_modules/.bin/prettier") .. (std.env.IS_WIN and ".cmd" or ""),
+  prettier_bin_path = std.path.normalize("node_modules/.bin/prettier") .. (std.env.IS_WIN and ".cmd" or ""),
 }
 
 local fns = {
   ---@param dirname                     string
   ---@return string
   find_prettier_binpath = function(dirname)
-    local binpath = eve.path.locate_nearest_filepath(dirname, { config.prettier_bin_path }) ---@type string|nil
+    local binpath = std.path.locate_nearest_filepath(dirname, { config.prettier_bin_path }) ---@type string|nil
     return binpath or "prettier" ---@type string
   end,
 }

@@ -1,11 +1,11 @@
 local capabilities = eve.lsp.get_capabilities()
 
 local nvim_config = nil ---@type string|nil
-local workspace = eve.path.workspace() ---@type string
-if workspace == eve.path.locate_app_config_home("nvim") then
-  nvim_config = eve.path.join(workspace, "lua")
-elseif workspace == eve.path.locate_app_config_home("nvim-nvchad") then
-  nvim_config = eve.path.join(workspace, "lua")
+local workspace = std.path.workspace() ---@type string
+if workspace == std.path.locate_app_config_home("nvim") then
+  nvim_config = std.path.join(workspace, "lua")
+elseif workspace == std.path.locate_app_config_home("nvim-nvchad") then
+  nvim_config = std.path.join(workspace, "lua")
 end
 
 return {
@@ -50,8 +50,8 @@ return {
       workspace = {
         checkThirdParty = false,
         library = vim.tbl_filter(std.fn.boolean, {
-          eve.path.join(vim.env.VIMRUNTIME, "lua"),
-          eve.path.join(std.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
+          std.path.join(vim.env.VIMRUNTIME, "lua"),
+          std.path.join(std.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
           nvim_config,
           "${3rd}/luv/library",
         }),

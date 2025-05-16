@@ -95,7 +95,7 @@ function M.loadfile(filepath)
     end
   end
 
-  if eve.path.is_exist_filepath(filepath) then
+  if std.path.is_exist_filepath(filepath) then
     local bufnr = vim.fn.bufadd(filepath) ---@type integer
     if bufnr == 0 or not vim.api.nvim_buf_is_valid(bufnr) then
       return nil
@@ -117,13 +117,13 @@ function M.pick_filepath(cwd, existed_paths)
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = eve.path.resolve(cwd, filename) ---@type string
+      local filepath = std.path.resolve(cwd, filename) ---@type string
       existed_paths[filepath] = true
     end
   end
 
   for i = 1, 100 do
-    local filepath = eve.path.join(cwd, eve.setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+    local filepath = std.path.join(cwd, eve.setting.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
     if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
       return filepath
     end
@@ -153,9 +153,9 @@ function M.resolve(bufnr, force)
     return meta
   end
 
-  local cwd = eve.path.cwd() ---@type string
-  local relpath = eve.path.relative(cwd, filepath, false) ---@type string
-  local filename = eve.path.basename(filepath) ---@type string
+  local cwd = std.path.cwd() ---@type string
+  local relpath = std.path.relative(cwd, filepath, false) ---@type string
+  local filename = std.path.basename(filepath) ---@type string
   local fileicon, fileicon_hln = eve.fn.fileicon(filename) ---@type string, string
 
   if meta == nil then

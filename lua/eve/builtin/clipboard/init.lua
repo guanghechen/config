@@ -45,12 +45,12 @@ function M.paste_image(filepath_target)
     local filetype = vim.bo.filetype ---@type string
     if eve.filetype.is_sourcefile(filetype) then
       local filepath_current = vim.api.nvim_buf_get_name(0) ---@type string
-      local src = eve.path.relative(eve.path.dirname(filepath_current), filepath_target, true) ---@type string
+      local src = std.path.relative(std.path.dirname(filepath_current), filepath_target, true) ---@type string
       if #src > 1 then
         if src:sub(1, 1) ~= "." then
           src = "." .. std.env.PATH_SEP .. src
         end
-        local filename = eve.path.basename(filepath_target) ---@type string
+        local filename = std.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string
 
         vim.schedule(function()
@@ -105,7 +105,7 @@ function M.paste_image_as_base64(filepath_source)
     return false
   end
 
-  local filename = eve.path.basename(filepath_source) ---@type string
+  local filename = std.path.basename(filepath_source) ---@type string
   local src = "data:image/png;base64," .. base64
   return M.insert_markup(filename, src)
 end

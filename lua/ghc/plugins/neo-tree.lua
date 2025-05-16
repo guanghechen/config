@@ -206,8 +206,8 @@ return {
         local modified = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec)
         local mode = string.format("%o", stat.mode)
 
-        local filepath_relative = eve.path.relative(eve.path.cwd(), filepath, false) ---@type string
-        local filename = eve.path.basename(filepath) ---@type string
+        local filepath_relative = std.path.relative(std.path.cwd(), filepath, false) ---@type string
+        local filename = std.path.basename(filepath) ---@type string
         local icon = eve.fn.fileicon(filename)
 
         local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

@@ -80,7 +80,7 @@ local NSNR_PICKER_MATCHES = eve.var.nsnr.picker_matches ---@type integer
 ---@return eve.ux.FilePicker
 function M.new(props)
   local name = props.name ---@type string
-  local uuid = props.uuid or eve.oxi.uuid() ---@type string
+  local uuid = props.uuid or std.fn.uuid() ---@type string
   local permanent = props.permanent ---@type boolean
   local preview = props.preview ~= false ---@type boolean
   local title = props.title ---@type string
@@ -589,7 +589,7 @@ function M.new(props)
 
           local root = filetree:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.filetree.INode|nil
           local relative_filepath = root ~= nil
-              and eve.path.relative(root.data.filepath or eve.path.cwd(), filepath, false)
+              and std.path.relative(root.data.filepath or std.path.cwd(), filepath, false)
             or filepath
           if node.type == "leaf" then
             return filepath
@@ -778,7 +778,7 @@ end
 function M:reset_filepaths(cwd, filepaths, with_positions)
   self:__health__()
 
-  cwd = eve.path.normalize(cwd) ---@type string
+  cwd = std.path.normalize(cwd) ---@type string
   self._filetree:reset_filepaths(cwd, filepaths, with_positions)
 
   local uuid_cwd = self._filetree:retrieve_uuid_by_filepath(cwd) ---@type string|nil

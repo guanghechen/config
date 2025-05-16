@@ -24,11 +24,11 @@ local function get_scope_cwd(dirpath)
   local scope = eve.context.select.search_file_scope:snapshot() ---@type std.e.SearchFileScope
 
   if scope == "W" then
-    return eve.path.workspace()
+    return std.path.workspace()
   end
 
   if scope == "C" then
-    return eve.path.cwd()
+    return std.path.cwd()
   end
 
   if scope == "D" then
@@ -45,10 +45,10 @@ local function get_scope_cwd(dirpath)
     message = "Unknown scope.",
     details = { scope = scope, dirpath = dirpath },
   })
-  return eve.path.cwd()
+  return std.path.cwd()
 end
 
-local state_cwd = std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+local state_cwd = std.Observable.from_value(get_scope_cwd(std.path.cwd()))
 
 ---@return string
 local function gen_title()
@@ -61,13 +61,13 @@ local function gen_title()
   elseif scope == "C" then
     return mode .. "in files (cwd)" ---@type string
   elseif scope == "D" then
-    local cwd = eve.path.cwd() ---@type string
+    local cwd = std.path.cwd() ---@type string
     local dirpath = state_cwd:snapshot() ---@type string
     if dirpath == cwd then
       return mode .. "in files (dir: .)" ---@type string
     end
 
-    local relative_dirpath = eve.path.relative(cwd, dirpath, false)
+    local relative_dirpath = std.path.relative(cwd, dirpath, false)
     if #relative_dirpath < 1 or relative_dirpath == "." then
       return mode .. "in files (dir: .)" ---@type string
     end
@@ -76,13 +76,13 @@ local function gen_title()
     return mode .. "in files (dir: " .. dirpath .. ")" ---@type string
   end
 
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = std.path.cwd() ---@type string
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-    if eve.path.is_exist_filepath(filepath) then
-      local relative_filepath = eve.path.relative(cwd, filepath, false)
+    if std.path.is_exist_filepath(filepath) then
+      local relative_filepath = std.path.relative(cwd, filepath, false)
       return mode .. "in " .. relative_filepath ---@type string
     end
   end
@@ -95,8 +95,8 @@ eve.context.select.search_file_scope:subscribe(
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
       local current_buf_dirpath = bufnr_sourcefile ~= nil
-          and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
-        or eve.path.cwd() ---@type string
+          and std.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
+        or std.path.cwd() ---@type string
       local current_search_cwd = state_cwd:snapshot() ---@type string
       local next_search_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
       if current_search_cwd ~= next_search_cwd then

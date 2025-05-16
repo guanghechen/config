@@ -1,7 +1,7 @@
 local __module_name__ = "ghc.action.profile" ---@type string
 
-local log_filepath = eve.path.locate_config_filepath("profile.log") ---@type string
-local svg_filepath = eve.path.locate_config_filepath("profile.svg") ---@type string
+local log_filepath = std.path.locate_config_filepath("profile.log") ---@type string
+local svg_filepath = std.path.locate_config_filepath("profile.svg") ---@type string
 
 ---@class ghc.action.profile
 local M = {}

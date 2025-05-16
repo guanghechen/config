@@ -804,7 +804,7 @@ local NSNR_DEFAULT = eve.var.nsnr.picker ---@type integer
 ---@param props                         eve.ux.IPickerProps
 ---@return eve.ux.Picker
 function M.new(props)
-  local uuid = props.uuid or eve.oxi.uuid() ---@type string
+  local uuid = props.uuid or std.fn.uuid() ---@type string
   local name = props.name ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
   local permanent = not not props.permanent ---@type boolean

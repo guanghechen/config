@@ -18,7 +18,7 @@ function M.cwd(position)
       return prev_context == nil or context.cwd ~= prev_context.cwd
     end,
     render = function(context)
-      local cwd_name = eve.path.basename(context.cwd) ---@type string
+      local cwd_name = std.path.basename(context.cwd) ---@type string
       local text = eve.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 

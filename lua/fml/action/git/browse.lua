@@ -218,9 +218,9 @@ function M.browse()
     return
   end
 
-  local workspace = eve.path.workspace() ---@type string
+  local workspace = std.path.workspace() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string|nil
-  filepath = filepath ~= nil and eve.path.is_under(workspace, filepath) and eve.path.relative(workspace, filepath, true) or nil
+  filepath = filepath ~= nil and std.path.is_under(workspace, filepath) and std.path.relative(workspace, filepath, true) or nil
 
   local remotes = {} ---@type fml.action.git.browse.IRemote[]
   local fields = {

@@ -5,10 +5,10 @@ local toggle_term = require("fml.action.term.toggle").toggle
 ---@param filepath                      string
 ---@return nil
 local function open_yazi(name, cwd, filepath)
-  local tempname = eve.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
+  local tempname = std.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
   local terminal ---@type eve.ux.ITerminal|nil
 
-  local dirpath = eve.path.dirname(filepath) ---@type string
+  local dirpath = std.path.dirname(filepath) ---@type string
   local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string
   terminal = toggle_term({
     name = name,
@@ -50,13 +50,13 @@ local M = {}
 
 ---@return nil
 function M.yazi_cwd()
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = std.path.cwd() ---@type string
   open_yazi("yazi_cwd", cwd, cwd)
 end
 
 ---@return nil
 function M.yazi_reveal()
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = std.path.cwd() ---@type string
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
@@ -69,7 +69,7 @@ end
 
 ---@return nil
 function M.yazi_workspace()
-  local workspace = eve.path.workspace() ---@type string
+  local workspace = std.path.workspace() ---@type string
   open_yazi("yazi_workspace", workspace, workspace)
 end
 

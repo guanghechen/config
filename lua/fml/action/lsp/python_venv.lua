@@ -34,7 +34,7 @@ local function get_select()
     local provider = {
       fetch_data = function()
         local items = {} ---@type fml.action.lsp.python_venv.IItem[]
-        local root = eve.path.cwd() ---@type string
+        local root = std.path.cwd() ---@type string
         local uuid_set = {} ---@type table<string, true>
 
         do

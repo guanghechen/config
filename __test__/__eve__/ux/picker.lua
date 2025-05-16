@@ -61,14 +61,14 @@ flag_case:subscribe(
   std.Subscriber.new({
     on_next = function(kase)
       if kase == 1 then
-        local cwd = eve.path.cwd() ---@type string
+        local cwd = std.path.cwd() ---@type string
         local command = string.format("fd '.lua'") ---@type string
         local filepaths = vim.split(vim.trim(vim.fn.system(command)), "\n", { plain = true }) ---@type string[]
         picker:reset_filepaths(cwd, filepaths, false)
       end
 
       if kase == 2 then
-        local cwd = eve.path.cwd() ---@type string
+        local cwd = std.path.cwd() ---@type string
         local filepaths = {
           "__test__/__eve__/ux/picker.lua:50:7",
           "lua/eve/ux/picker-file.lua:136:11",

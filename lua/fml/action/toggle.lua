@@ -99,7 +99,7 @@ local group_items = {
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
         local buftype = vim.bo[bufnr].buftype ---@type string
-        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
+        local filename = std.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
           std.reporter.error({
             from = __module_name__,
@@ -120,7 +120,7 @@ local group_items = {
           return
         end
 
-        local cwd_name = eve.path.basename(eve.path.cwd()) ---@type string
+        local cwd_name = std.path.basename(std.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
         local fileencoding_cur = vim.bo[bufnr].fileencoding ---@type string
 
@@ -214,7 +214,7 @@ local group_items = {
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
         local buftype = vim.bo[bufnr].buftype ---@type string
-        local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
+        local filename = std.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
           std.reporter.error({
             from = __module_name__,
@@ -235,7 +235,7 @@ local group_items = {
           return
         end
 
-        local cwd_name = eve.path.basename(eve.path.cwd()) ---@type string
+        local cwd_name = std.path.basename(std.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
@@ -429,8 +429,8 @@ local group_items = {
       end,
       action = function()
         local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
-        local app_home = eve.path.locate_app_config_home("guanghechen")
-        local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
+        local app_home = std.path.locate_app_config_home("guanghechen")
+        local script_path = std.path.join(app_home, "config/theme/toggle_theme.mjs")
         local ok, error = pcall(function()
           vim.fn.system({ "node", script_path, theme })
         end)
@@ -524,8 +524,8 @@ local function apply_theme(theme)
     return
   end
 
-  local app_home = eve.path.locate_app_config_home("guanghechen")
-  local script_path = eve.path.join(app_home, "config/theme/apply_theme.mjs")
+  local app_home = std.path.locate_app_config_home("guanghechen")
+  local script_path = std.path.join(app_home, "config/theme/apply_theme.mjs")
   local ok, error = pcall(function()
     vim.fn.system({ "node", script_path, theme })
   end)

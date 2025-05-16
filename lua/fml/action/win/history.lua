@@ -24,7 +24,7 @@ local function get_history_select()
   ---@type eve.ux.select.IProvider
   local provider = {
     fetch_data = function()
-      local cwd = eve.path.cwd() ---@type string
+      local cwd = std.path.cwd() ---@type string
       local items = {} ---@type eve.ux.select.IItem[]
       local uuid_present = "0" ---@type string
 
@@ -61,8 +61,8 @@ local function get_history_select()
         if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
           local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
           local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-          local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
-          local filename = eve.path.basename(filepath) ---@type string
+          local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
+          local filename = std.path.basename(filepath) ---@type string
           local icon, icon_hln = eve.fn.fileicon(filename) ---@type string, string
 
           ---@type fml.action.win.history.IItemData
@@ -82,10 +82,10 @@ local function get_history_select()
         end
 
         local filepath = history_item.filepath ---@type string|nil
-        if filepath ~= nil and eve.path.is_exist_filepath(filepath) then
+        if filepath ~= nil and std.path.is_exist_filepath(filepath) then
           local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-          local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
-          local filename = eve.path.basename(filepath) ---@type string
+          local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
+          local filename = std.path.basename(filepath) ---@type string
           local icon, icon_hln = eve.fn.fileicon(filename) ---@type string, string
 
           local text = string.format("%2d %s %s", ordinal, icon, relative_filepath) ---@type string
@@ -310,7 +310,7 @@ function M.history_forward()
       break
     end
 
-    if item.filepath ~= nil and eve.path.is_exist_filepath(item.filepath) then
+    if item.filepath ~= nil and std.path.is_exist_filepath(item.filepath) then
       bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
       if bufnr_target ~= nil then
         item.bufnr = bufnr_target ---@type integer

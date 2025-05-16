@@ -173,7 +173,7 @@ function M.new(props)
       for _, raw_item in ipairs(raw_items) do
         local filepath = raw_item.filepath ---@type string
         local filepath_relative = raw_item.filepath_relative ---@type string
-        local filename = eve.path.basename(raw_item.filepath)
+        local filename = std.path.basename(raw_item.filepath)
         local icon, icon_hl = eve.fn.fileicon(filename)
 
         ---@type eve.ux.select_file.IItem
@@ -441,7 +441,7 @@ end
 function M.make_items_by_filepaths(cwd, filepaths)
   local items = {} ---@type eve.ux.select_file.IRawItem[]
   for _, filepath in ipairs(filepaths) do
-    local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
+    local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
     ---@type eve.ux.select_file.IRawItem
     local item = {
       filepath = filepath,

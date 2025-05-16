@@ -118,7 +118,7 @@ function M.new(props)
   local multiple = not not props.multiple ---@type boolean
   local permanent = not not props.permanent ---@type boolean
 
-  local uuid = eve.oxi.uuid() ---@type string
+  local uuid = std.fn.uuid() ---@type string
 
   ---@type std.collection.Scheduler
   local fetch_scheduler = std.Scheduler.new({

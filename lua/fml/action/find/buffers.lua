@@ -90,7 +90,7 @@ local main_keymaps = {
 ---@type eve.ux.select.IProvider
 local provider = {
   fetch_data = function()
-    local cwd = eve.path.cwd() ---@type string
+    local cwd = std.path.cwd() ---@type string
     local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 
@@ -128,8 +128,8 @@ local provider = {
         local buftype = vim.bo[bufnr].buftype ---@type string
         local filetype = vim.bo[bufnr].filetype ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local relative_filepath = eve.path.relative(cwd, filepath, true) ---@type string
-        local filename = eve.path.basename(filepath)
+        local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
+        local filename = std.path.basename(filepath)
         local icon, icon_hl = eve.fn.fileicon(filename)
 
         ---@type fml.action.find.buffers.IItemData

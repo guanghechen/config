@@ -69,7 +69,7 @@ function M:render(bufnr, filepath, force)
   local data = self._last_data ---@type eve.ux.view.plainfile.IData|nil
   if force or data == nil or data.filepath ~= filepath then
     local lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
-    local filename = eve.path.basename(filepath) ---@type string
+    local filename = std.path.basename(filepath) ---@type string
     local filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
 
     ---@type eve.ux.view.plainfile.IData

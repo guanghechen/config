@@ -113,23 +113,23 @@ local function fetch_diritem(dirpath, force)
   return diritem
 end
 
-local state_cwd = std.Observable.from_value(eve.path.cwd()) ---@type std.collection.IObservable
+local state_cwd = std.Observable.from_value(std.path.cwd()) ---@type std.collection.IObservable
 local _select = nil ---@type eve.ux.ISelect|nil
 
 ---@return string
 local function gen_title()
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = std.path.cwd() ---@type string
   local dirpath = state_cwd:snapshot() ---@type string
   if dirpath == cwd then
     return "File explorer (cwd)" ---@type string
   end
 
-  local relative_dirpath = eve.path.relative(cwd, dirpath, false)
+  local relative_dirpath = std.path.relative(cwd, dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer (cwd)" ---@type string
   end
 
-  local workspace = eve.path.workspace() ---@type string
+  local workspace = std.path.workspace() ---@type string
   if dirpath == workspace then
     return "Find files (workspace)" ---@type string
   end
@@ -168,8 +168,8 @@ local dimension = {
 ---@type eve.ux.select.IProvider
 local provider = {
   fetch_data = function(force)
-    local dirpath = eve.path.normalize(state_cwd:snapshot()) ---@type string
-    local parent_dirpath = eve.path.dirname(dirpath) ---@type string
+    local dirpath = std.path.normalize(state_cwd:snapshot()) ---@type string
+    local parent_dirpath = std.path.dirname(dirpath) ---@type string
     local diritem = fetch_diritem(dirpath, force) ---@type fml.action.find.explorer.IDirItem
     fetch_diritem(parent_dirpath, force)
 
@@ -212,7 +212,7 @@ local provider = {
       if is_text_file then
         local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
         local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
-        local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
+        local title = std.path.relative(std.path.cwd(), item.uuid, false) ---@type string
 
         ---@type eve.ux.ISearchPreviewData
         return {
@@ -290,9 +290,9 @@ local provider = {
         table.insert(lines, text)
       end
 
-      local title = eve.path.relative(eve.path.cwd(), item.uuid, false) ---@type string
+      local title = std.path.relative(std.path.cwd(), item.uuid, false) ---@type string
       if #title < 1 or title:sub(1, 1) == "." then
-        title = eve.path.normalize(item.uuid)
+        title = std.path.normalize(item.uuid)
       end
 
       ---@type eve.ux.ISearchPreviewData
@@ -392,7 +392,7 @@ local common_keymaps = {
     modes = { "n", "v" },
     key = "<Backspace>",
     callback = function()
-      local next_cwd = eve.path.dirname(state_cwd:snapshot())
+      local next_cwd = std.path.dirname(state_cwd:snapshot())
       state_cwd:next(next_cwd)
     end,
     desc = "file explorer: goto the parent dir",
@@ -467,12 +467,12 @@ local M = {}
 function M.find_explorer(specified_filepath)
   local dirpath_resolved = false ---@type boolean
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    if eve.path.is_exist_dirpath(specified_filepath) then
-      local dirpath = eve.path.normalize(specified_filepath) ---@type string
+    if std.path.is_exist_dirpath(specified_filepath) then
+      local dirpath = std.path.normalize(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
-    elseif eve.path.is_exist_filepath(specified_filepath) then
-      local dirpath = eve.path.dirname(specified_filepath) ---@type string
+    elseif std.path.is_exist_filepath(specified_filepath) then
+      local dirpath = std.path.dirname(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
     end
@@ -484,10 +484,10 @@ function M.find_explorer(specified_filepath)
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 then
-        if eve.path.is_exist_dirpath(filepath) then
+        if std.path.is_exist_dirpath(filepath) then
           state_cwd:next(filepath, { force = true })
-        elseif eve.path.is_exist_filepath(filepath) then
-          state_cwd:next(eve.path.dirname(filepath), { force = true })
+        elseif std.path.is_exist_filepath(filepath) then
+          state_cwd:next(std.path.dirname(filepath), { force = true })
         end
       end
     end

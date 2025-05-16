@@ -44,12 +44,12 @@ function M.search_files_in_directory(specified_filepath)
   local next_scope = "D" ---@type std.e.SearchFileScope
 
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    if eve.path.is_exist_dirpath(specified_filepath) then
-      local dirpath = eve.path.normalize(specified_filepath) ---@type string
+    if std.path.is_exist_dirpath(specified_filepath) then
+      local dirpath = std.path.normalize(specified_filepath) ---@type string
       context.search_cwd:next(dirpath)
       silent = true
-    elseif eve.path.is_exist_filepath(specified_filepath) then
-      local dirpath = eve.path.dirname(specified_filepath) ---@type string
+    elseif std.path.is_exist_filepath(specified_filepath) then
+      local dirpath = std.path.dirname(specified_filepath) ---@type string
       context.search_cwd:next(dirpath, { force = true })
       silent = true
 
@@ -98,12 +98,12 @@ function M.replace_files_in_directory(specified_filepath)
   local next_scope = "D" ---@type std.e.SearchFileScope
 
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    if eve.path.is_exist_dirpath(specified_filepath) then
-      local dirpath = eve.path.normalize(specified_filepath) ---@type string
+    if std.path.is_exist_dirpath(specified_filepath) then
+      local dirpath = std.path.normalize(specified_filepath) ---@type string
       context.search_cwd:next(dirpath)
       silent = true
-    elseif eve.path.is_exist_filepath(specified_filepath) then
-      local dirpath = eve.path.dirname(specified_filepath) ---@type string
+    elseif std.path.is_exist_filepath(specified_filepath) then
+      local dirpath = std.path.dirname(specified_filepath) ---@type string
       context.search_cwd:next(dirpath, { force = true })
       silent = true
 

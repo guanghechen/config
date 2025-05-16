@@ -8,9 +8,9 @@ local _select = nil ---@type eve.ux.IFileSelect|nil
 local function get_scope_cwd(dirpath)
   local scope = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
   if scope == "W" then
-    return eve.path.workspace()
+    return std.path.workspace()
   elseif scope == "C" then
-    return eve.path.cwd()
+    return std.path.cwd()
   elseif scope == "D" then
     return dirpath
   end
@@ -21,11 +21,11 @@ local function get_scope_cwd(dirpath)
     message = "Unknown scope.",
     details = { scope = scope, dirpath = dirpath },
   })
-  return eve.path.cwd()
+  return std.path.cwd()
 end
 
 local scopes = vim.list_slice(eve.context.select.find_file_scopes) ---@type std.e.FindFileScope[]
-local state_cwd = std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+local state_cwd = std.Observable.from_value(get_scope_cwd(std.path.cwd()))
 
 ---@return string
 local function gen_title()
@@ -36,13 +36,13 @@ local function gen_title()
     return "Find files (cwd)" ---@type string
   end
 
-  local cwd = eve.path.cwd() ---@type string
+  local cwd = std.path.cwd() ---@type string
   local dirpath = state_cwd:snapshot() ---@type string
   if dirpath == cwd then
     return "Find files (dir: .)" ---@type string
   end
 
-  local relative_dirpath = eve.path.relative(cwd, dirpath, false)
+  local relative_dirpath = std.path.relative(cwd, dirpath, false)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "Find files (dir: .)" ---@type string
   end
@@ -54,8 +54,8 @@ end
 std.fn.observe({ eve.context.select.find_file_scope }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
-  local current_buf_dirpath = bufnr_sourcefile ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
-    or eve.path.cwd() ---@type string
+  local current_buf_dirpath = bufnr_sourcefile ~= nil and std.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
+    or std.path.cwd() ---@type string
   local current_find_cwd = state_cwd:snapshot() ---@type string
   local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
   if current_find_cwd ~= next_find_cwd then
@@ -185,7 +185,7 @@ local actions = {
   end,
   send_to_qflist = function()
     if _select ~= nil then
-      local cwd = eve.path.cwd() ---@type string
+      local cwd = std.path.cwd() ---@type string
       local select_cwd = state_cwd:snapshot() ---@type string
       local quickfix_items = {} ---@type std.t.IQuickFixItem[]
       local matched_items = _select:get_matched_items() ---@type std.t.IScoredMatch[]
@@ -194,8 +194,8 @@ local actions = {
         ---@cast item                   eve.ux.select_file.IItem
 
         if item ~= nil then
-          local absolute_filepath = eve.path.join(select_cwd, item.data.filepath) ---@type string
-          local relative_filepath = eve.path.relative(cwd, absolute_filepath, false) ---@type string
+          local absolute_filepath = std.path.join(select_cwd, item.data.filepath) ---@type string
+          local relative_filepath = std.path.relative(cwd, absolute_filepath, false) ---@type string
           table.insert(quickfix_items, {
             filename = relative_filepath,
             lnum = item.data.lnum or 1,
@@ -367,7 +367,7 @@ local preview_keymaps = vim.list_slice(common_keymaps)
 local provider = {
   fetch_data = function()
     local cwd = state_cwd:snapshot() ---@type string
-    local workspace = eve.path.workspace() ---@type string
+    local workspace = std.path.workspace() ---@type string
     local flag_exclude = eve.context.select.find_file.flag_exclude:snapshot() ---@type boolean
     local flag_gitignore = eve.context.select.find_file.flag_gitignore:snapshot() ---@type boolean
     local excludes = flag_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
@@ -387,7 +387,7 @@ local provider = {
 
     local items = {} ---@type eve.ux.select_file.IRawItem[]
     for _, relative_filepath in ipairs(filepaths) do
-      local filepath = eve.path.resolve(cwd, relative_filepath) ---@type string
+      local filepath = std.path.resolve(cwd, relative_filepath) ---@type string
       ---@type eve.ux.select_file.IRawItem
       local item = {
         filepath = filepath,
@@ -445,12 +445,12 @@ end
 function M.find_files_directory(specified_filepath)
   local silent = false ---@type boolean
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    if eve.path.is_exist_dirpath(specified_filepath) then
-      local dirpath = eve.path.normalize(specified_filepath) ---@type string
+    if std.path.is_exist_dirpath(specified_filepath) then
+      local dirpath = std.path.normalize(specified_filepath) ---@type string
       state_cwd:next(dirpath)
       silent = true
-    elseif eve.path.is_exist_filepath(specified_filepath) then
-      local dirpath = eve.path.dirname(specified_filepath) ---@type string
+    elseif std.path.is_exist_filepath(specified_filepath) then
+      local dirpath = std.path.dirname(specified_filepath) ---@type string
       state_cwd:next(dirpath)
       silent = true
     end

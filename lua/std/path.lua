@@ -4,7 +4,7 @@ local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
 local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
 local HOME_CONTEXT = std.env.HOME_CONTEXT ---@type string
 
----@class eve.builtin.path.reposcope_map
+---@class std.path.reposcope_map
 local repo_map = {
   public = {
     [".config"] = {
@@ -49,7 +49,7 @@ local repo_map = {
   },
 }
 
----@class eve.builtin.path
+---@class std.path
 local M = {}
 
 ---@param filepath                      string
@@ -402,7 +402,7 @@ end
 function M.locate_cache_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = eve.oxi.md5(workspace_path)
+  local hash = std.fn.md5(workspace_path)
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
   M.mkdir_if_nonexist(dirpath)
@@ -458,7 +458,7 @@ end
 function M.locate_workspace_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-  local hash = eve.oxi.md5(workspace_path)
+  local hash = std.fn.md5(workspace_path)
   local session_dir = workspace_name .. "@" .. hash ---@type string
   return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
 end

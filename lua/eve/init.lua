@@ -15,7 +15,6 @@ local __mods = {
   notifier = "eve.builtin.notifier",
   nvim = "eve.builtin.nvim",
   oxi = "eve.builtin.oxi",
-  path = "eve.builtin.path",
   qflist = "eve.builtin.qflist",
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
@@ -51,7 +50,6 @@ local __mods = {
 ---@field public notifier               eve.builtin.notifier
 ---@field public nvim                   eve.builtin.nvim
 ---@field public oxi                    eve.builtin.oxi
----@field public path                   eve.builtin.path
 ---@field public qflist                 eve.builtin.qflist
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting
@@ -81,15 +79,15 @@ local M = setmetatable({
 
 ---@return eve.context.storage
 function M.get_default_storage()
-  local is_git_repo = eve.path.is_repo_git() ---@type boolean
+  local is_git_repo = std.path.is_repo_git() ---@type boolean
 
   ---@type eve.context.storage
   return {
-    editor = eve.path.locate_context_filepath("editor.json"),
-    session = is_git_repo and eve.path.locate_workspace_filepath("session.json") or nil,
-    workspace = is_git_repo and eve.path.locate_workspace_filepath("workspace.json") or nil,
-    nvim_session = is_git_repo and eve.path.locate_workspace_filepath("session.vim") or nil,
-    nvim_session_autosaved = is_git_repo and eve.path.locate_workspace_filepath("session.autosaved.vim") or nil,
+    editor = std.path.locate_context_filepath("editor.json"),
+    session = is_git_repo and std.path.locate_workspace_filepath("session.json") or nil,
+    workspace = is_git_repo and std.path.locate_workspace_filepath("workspace.json") or nil,
+    nvim_session = is_git_repo and std.path.locate_workspace_filepath("session.vim") or nil,
+    nvim_session_autosaved = is_git_repo and std.path.locate_workspace_filepath("session.autosaved.vim") or nil,
   }
 end
 
@@ -109,8 +107,8 @@ function M.setup_workspace()
   if vim.fn.expand("%") ~= "" then
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
-    local A = eve.path.locate_git_repo(p)
-    local B = eve.path.locate_git_repo(cwd)
+    local A = std.path.locate_git_repo(p)
+    local B = std.path.locate_git_repo(cwd)
 
     if A == nil then
       pcall(function()

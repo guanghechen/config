@@ -30,7 +30,7 @@ local function select_files(params)
       local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
       if bufnr_sourcefile ~= nil then
         local absolute_filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-        present_filepath = eve.path.relative(cwd, absolute_filepath, true) ---@type string
+        present_filepath = std.path.relative(cwd, absolute_filepath, true) ---@type string
       end
       return present_filepath
     end

@@ -287,8 +287,8 @@ end
 ---@param filepath                     string
 ---@return string|nil
 function M:retrieve_uuid_by_filepath(filepath)
-  if eve.path.is_absolute(filepath) then
-    filepath = eve.path.normalize(filepath) ---@type string
+  if std.path.is_absolute(filepath) then
+    filepath = std.path.normalize(filepath) ---@type string
     return filepath2uuid[filepath]
   end
   return nil
@@ -368,7 +368,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   }
   treeview:insert(uuid_root, uuid_root, "container", root, false)
 
-  cwd = eve.path.normalize(cwd) ---@type string
+  cwd = std.path.normalize(cwd) ---@type string
   local cwd_with_slash = cwd == "/" and "/" or cwd .. std.env.PATH_SEP ---@type string
   local cwd_length = #cwd_with_slash ---@type integer
   if cwd == "/" then
@@ -383,7 +383,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     }
     treeview:insert(uuid, uuid_root, "container", nodedata, false)
   else
-    local pieces = eve.path.split(cwd) ---@type string[]
+    local pieces = std.path.split(cwd) ---@type string[]
     local N = #pieces ---@type integer
 
     local filepath = root.filepath ---@type string
@@ -412,7 +412,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   ---@return string
   ---@return string
   local function insert_absolute_filepath(p)
-    local pieces = eve.path.split(p) ---@type string[]
+    local pieces = std.path.split(p) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
     local filepath = root.filepath ---@type string
@@ -457,7 +457,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   ---@return string
   ---@return string
   local function insert_relative_filepath(p)
-    local pieces = eve.path.split(p) ---@type string[]
+    local pieces = std.path.split(p) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
     local filepath = cwd ---@type string
@@ -501,7 +501,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     for _, p in ipairs(filepaths) do
       local filepath, lnum, col = std.string.parse_filepath_with_position(p) ---@type string, integer|nil, integer|nil
       local fileuuid, absolute_filepath ---@type string, string
-      if eve.path.is_absolute(filepath) then
+      if std.path.is_absolute(filepath) then
         if filepath:sub(1, cwd_length) ~= cwd_with_slash then
           fileuuid, absolute_filepath = insert_absolute_filepath(filepath)
         else
@@ -526,7 +526,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     end
   else
     for _, filepath in ipairs(filepaths) do
-      if eve.path.is_absolute(filepath) then
+      if std.path.is_absolute(filepath) then
         if filepath:sub(1, cwd_length) ~= cwd_with_slash then
           insert_absolute_filepath(filepath)
         else
@@ -670,7 +670,7 @@ end
 function M:__resolve_uuid__(filepath)
   local uuid = filepath2uuid[filepath] ---@type string|nil
   if uuid == nil then
-    uuid = eve.oxi.md5(filepath) ---@type string
+    uuid = std.fn.md5(filepath) ---@type string
     filepath2uuid[filepath] = uuid
   end
   return uuid

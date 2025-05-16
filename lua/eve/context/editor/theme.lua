@@ -49,7 +49,7 @@ local integrations = {
 
 ---@return string
 local function get_theme_path()
-  return eve.path.locate_context_filepath("theme")
+  return std.path.locate_context_filepath("theme")
 end
 
 ---@return eve.context.theme.data
@@ -235,7 +235,7 @@ function M.reload_theme(force, reload_plugins)
   end
 
   local theme_path = get_theme_path() ---@type string
-  if force or not eve.path.is_exist(theme_path) then
+  if force or not std.path.is_exist(theme_path) then
     M.apply_theme({
       theme = theme,
       transparency = transparency,

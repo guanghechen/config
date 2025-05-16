@@ -36,8 +36,8 @@ local function select_copy_filepath(params)
               message = "Copied absolute filepath: " .. content,
             })
           elseif item.uuid == "relative" then
-            local cwd = eve.path.cwd() ---@type string
-            local content = eve.path.relative(cwd, filepath, true) ---@type string
+            local cwd = std.path.cwd() ---@type string
+            local content = std.path.relative(cwd, filepath, true) ---@type string
 
             vim.fn.setreg("+", content)
             std.reporter.info({
@@ -45,7 +45,7 @@ local function select_copy_filepath(params)
               message = "Copied relative filepath: " .. content,
             })
           elseif item.uuid == "filename" then
-            local content = eve.path.basename(filepath) ---@type string
+            local content = std.path.basename(filepath) ---@type string
             vim.fn.setreg("+", content)
             std.reporter.info({
               from = __module_name__,

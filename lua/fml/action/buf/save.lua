@@ -5,8 +5,8 @@ local M = {}
 
 ---@return nil
 function M.save()
-  local cwd = eve.path.cwd() ---@type string
-  local workspace = eve.path.workspace() ---@type string
+  local cwd = std.path.cwd() ---@type string
+  local workspace = std.path.workspace() ---@type string
 
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   local bufnrs_modified = {} ---@type integer[]
@@ -15,7 +15,7 @@ function M.save()
   for _, bufnr in ipairs(bufnrs) do
     if vim.bo[bufnr].modified and vim.bo[bufnr].buftype == "" then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if #filepath > 0 and eve.path.is_absolute(filepath) then
+      if #filepath > 0 and std.path.is_absolute(filepath) then
         table.insert(bufnrs_modified, bufnr)
 
         if not eve.fs.is_exists(filepath) then
@@ -66,7 +66,7 @@ function M.save()
 
   for _, bufnr in ipairs(bufnrs_new_file) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local initial_text = eve.path.is_under(workspace, filepath) and eve.path.relative(cwd, filepath, true) or filepath ---@type string
+    local initial_text = std.path.is_under(workspace, filepath) and std.path.relative(cwd, filepath, true) or filepath ---@type string
     vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
 
     vim.ui.input({
@@ -78,7 +78,7 @@ function M.save()
         return
       end
 
-      local next_filepath = eve.path.resolve(cwd, text) ---@type string
+      local next_filepath = std.path.resolve(cwd, text) ---@type string
 
       ---@return nil
       local on_save = function()
@@ -88,7 +88,7 @@ function M.save()
         check()
       end
 
-      if eve.path.is_exist_filepath(next_filepath) then
+      if std.path.is_exist_filepath(next_filepath) then
         vim.ui.select(
           { "Yes", "No" },
           { prompt = "The file is already existed, do you want to override it?" },
@@ -101,7 +101,7 @@ function M.save()
         return false
       end
 
-      if eve.path.is_exist_dirpath(next_filepath) then
+      if std.path.is_exist_dirpath(next_filepath) then
         std.reporter.error({
           from = __module_name__,
           subject = "save",

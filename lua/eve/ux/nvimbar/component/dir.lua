@@ -87,7 +87,7 @@ function M.path_prominent(position)
       end
 
       local relpath_pieces = vim.split(meta.relpath, std.env.PATH_SEP, { plain = true }) ---@type string[]
-      local cwd_name = eve.path.basename(context.cwd) ---@type string
+      local cwd_name = std.path.basename(context.cwd) ---@type string
       local N = #relpath_pieces - 1 ---@type integer
       if N < 1 then
         local text = cwd_name .. " " ---@type string

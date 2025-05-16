@@ -110,10 +110,10 @@ return {
           return
         end
 
-        local workspace = eve.path.workspace() ---@type string
+        local workspace = std.path.workspace() ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath_relative = eve.path.relative(workspace, filepath, true) ---@type string
-        if eve.path.is_absolute(filepath_relative) then
+        local filepath_relative = std.path.relative(workspace, filepath, true) ---@type string
+        if std.path.is_absolute(filepath_relative) then
           return true
         end
 

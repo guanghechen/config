@@ -64,7 +64,7 @@ local function fetch_data(method, additional_params, callback)
             ---@diagnostic disable-next-line: undefined-field
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
-              local filepath = eve.path.normalize(uri:gsub("^file://", "")) ---@type string
+              local filepath = std.path.normalize(uri:gsub("^file://", "")) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
               local last_item = items[#items] ---@type [string, integer, integer]|nil
@@ -102,14 +102,14 @@ local function fetch_data(method, additional_params, callback)
     end
 
     local filepaths = {} ---@type string[]
-    local rootdir = eve.path.cwd() ---@type string
+    local rootdir = std.path.cwd() ---@type string
     for _, item in ipairs(items) do
       local filepath = string.format("%s:%d:%d", item[1], item[2], item[3]) ---@type string
       filepaths[#filepaths + 1] = filepath
 
       if filepath:sub(1, #rootdir) ~= rootdir then
         while true do
-          local parent = eve.path.dirname(rootdir) ---@type string
+          local parent = std.path.dirname(rootdir) ---@type string
           if parent == rootdir then
             break
           end
