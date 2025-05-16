@@ -5,7 +5,7 @@ require("eve.option")
 require("eve.keymap")
 require("integration.neovim.autocmd")
 
-eve.setup_state({ editor = eve.get_default_storage().editor })
+eve.setup_context({ editor = eve.get_default_storage().editor })
 require("integration.neovim.keymap")
 
 require("fml.dressing.notifier")

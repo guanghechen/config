@@ -30,7 +30,7 @@ local conds = {
   end,
   ---@return boolean
   ai = function()
-    return not vim.g.vscode and eve.state.flight.ai:snapshot()
+    return not vim.g.vscode and eve.context.flight.ai:snapshot()
   end,
   ---@return boolean
   cmp = function()
@@ -49,7 +49,7 @@ local conds = {
     return not vim.g.vscode
   end,
   treesitter_context = function()
-    return not vim.g.vscode and eve.state.plugin.treesitter_context:snapshot()
+    return not vim.g.vscode and eve.context.plugin.treesitter_context:snapshot()
   end,
 }
 

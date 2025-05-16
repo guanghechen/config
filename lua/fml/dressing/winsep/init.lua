@@ -107,7 +107,7 @@ local scheduler = eve.std.Scheduler.new({
   silent = eve.std.fn.falsy,
   value = eve.std.Observable.from_value(true),
   task = function(_, context)
-    local enabled = eve.state.flight.dressing_winsep:snapshot() ---@type boolean
+    local enabled = eve.context.flight.dressing_winsep:snapshot() ---@type boolean
     if not enabled then
       winsep:hide()
       return
@@ -121,7 +121,7 @@ local scheduler = eve.std.Scheduler.new({
   end,
 })
 
-eve.fn.observe({ eve.state.flight.dressing_winsep }, function()
+eve.fn.observe({ eve.context.flight.dressing_winsep }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
   local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext

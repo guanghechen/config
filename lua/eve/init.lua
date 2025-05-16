@@ -38,8 +38,8 @@ local __mods = {
 ---@class eve
 ---@field public __mods                 eve.__mods
 ---@field public constant               eve.constant
+---@field public context                eve.context
 ---@field public std                    eve.std
----@field public state                  eve.state
 ---@field public ux                     eve.ux
 ---@field public viewmodel              eve.viewmodel
 ---
@@ -79,8 +79,8 @@ local __mods = {
 local M = setmetatable({
   __mods = __mods,
   constant = require("eve.constant"),
+  context = require("eve.context"),
   std = require("eve.std"),
-  state = require("eve.state"),
   ux = require("eve.ux"),
   viewmodel = require("eve.viewmodel"),
 }, {
@@ -94,11 +94,11 @@ local M = setmetatable({
 })
 _G.eve = M
 
----@return eve.state.storage
+---@return eve.context.storage
 function M.get_default_storage()
   local is_git_repo = eve.path.is_repo_git() ---@type boolean
 
-  ---@type eve.state.storage
+  ---@type eve.context.storage
   return {
     editor = eve.path.locate_context_filepath("editor.json"),
     session = is_git_repo and eve.path.locate_workspace_filepath("session.json") or nil,
@@ -106,36 +106,6 @@ function M.get_default_storage()
     nvim_session = is_git_repo and eve.path.locate_workspace_filepath("session.vim") or nil,
     nvim_session_autosaved = is_git_repo and eve.path.locate_workspace_filepath("session.autosaved.vim") or nil,
   }
-end
-
----@return nil
-function M.setup_breakpoints()
-  local breakpoints = eve.state.lsp.breakpoints:snapshot() ---@type eve.state.lsp.IBreakpointData
-  if #breakpoints < 1 then
-    return
-  end
-
-  local filepath_set = {} ---@type table<string, true>
-  for _, breakpoint in ipairs(breakpoints) do
-    filepath_set[breakpoint.filepath] = true
-  end
-  local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
-
-  eve.win.open_filepaths(0, filepaths)
-
-  eve.std.timer.set_timeout(function()
-    local bps = require("dap.breakpoints")
-    for _, breakpoint in ipairs(breakpoints) do
-      local bufnr = eve.buf.loadfile(breakpoint.filepath) ---@type integer|nil
-      if bufnr ~= nil then
-        bps.set({
-          condition = breakpoint.condition,
-          hit_condition = breakpoint.hit_condition,
-          log_message = breakpoint.log_message,
-        }, bufnr, breakpoint.lnum)
-      end
-    end
-  end, 100)
 end
 
 ---@return nil
@@ -172,21 +142,51 @@ function M.setup_workspace()
   end)
 end
 
----@param storage                       eve.state.storage|nil
+---@param storage                       eve.context.storage|nil
 ---@return nil
-function M.setup_state(storage)
-  storage = storage or M.get_default_storage() ---@type eve.state.storage
-  eve.state.set_storage(storage)
-  eve.state.load(storage, false)
+function M.setup_context(storage)
+  storage = storage or M.get_default_storage() ---@type eve.context.storage
+  eve.context.set_storage(storage)
+  eve.context.load(storage, false)
 end
 
 ---@return nil
 function M.setup_theme()
-  eve.state.theme.reload_theme(false, false)
+  eve.context.theme.reload_theme(false, false)
   vim.schedule(function()
-    eve.state.theme.reload_theme(false, false)
-    eve.state.watch_changes()
+    eve.context.theme.reload_theme(false, false)
+    eve.context.watch_changes()
   end)
+end
+
+---@return nil
+function M.setup_breakpoints()
+  local breakpoints = eve.context.lsp.breakpoints:snapshot() ---@type eve.context.lsp.IBreakpointData
+  if #breakpoints < 1 then
+    return
+  end
+
+  local filepath_set = {} ---@type table<string, true>
+  for _, breakpoint in ipairs(breakpoints) do
+    filepath_set[breakpoint.filepath] = true
+  end
+  local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
+
+  eve.win.open_filepaths(0, filepaths)
+
+  eve.std.timer.set_timeout(function()
+    local bps = require("dap.breakpoints")
+    for _, breakpoint in ipairs(breakpoints) do
+      local bufnr = eve.buf.loadfile(breakpoint.filepath) ---@type integer|nil
+      if bufnr ~= nil then
+        bps.set({
+          condition = breakpoint.condition,
+          hit_condition = breakpoint.hit_condition,
+          log_message = breakpoint.log_message,
+        }, bufnr, breakpoint.lnum)
+      end
+    end
+  end, 100)
 end
 
 return M

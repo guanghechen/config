@@ -90,7 +90,7 @@ return {
       silent = eve.std.fn.falsy,
       value = eve.std.Observable.from_value(true),
       task = function(_, context)
-        local spellcheck = eve.state.lsp.spellcheck:snapshot() ---@type boolean
+        local spellcheck = eve.context.lsp.spellcheck:snapshot() ---@type boolean
         if not spellcheck then
           return
         end

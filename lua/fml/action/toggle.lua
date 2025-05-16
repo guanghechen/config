@@ -14,45 +14,45 @@ local group_priorities = {
 local group_flags = {
   ---behavior
   behavior = {
-    auto_im = eve.state.behavior.auto_im,
-    bufs_relative = eve.state.behavior.bufs_relative,
+    auto_im = eve.context.behavior.auto_im,
+    bufs_relative = eve.context.behavior.bufs_relative,
   },
 
   ---flight
   flight = {
-    ai = eve.state.flight.ai,
-    autoformat = eve.state.flight.autoformat,
-    autoload = eve.state.flight.autoload,
-    autosave = eve.state.flight.autosave,
-    devmode = eve.state.flight.devmode,
-    dressing_clipboard = eve.state.flight.dressing_clipboard,
-    dressing_hipairs = eve.state.flight.dressing_hipairs,
-    dressing_illumniate = eve.state.flight.dressing_illumniate,
-    dressing_input = eve.state.flight.dressing_input,
-    dressing_select = eve.state.flight.dressing_select,
-    dressing_winsep = eve.state.flight.dressing_winsep,
-    gitdiff_expand_all = eve.state.flight.gitdiff_expand_all,
+    ai = eve.context.flight.ai,
+    autoformat = eve.context.flight.autoformat,
+    autoload = eve.context.flight.autoload,
+    autosave = eve.context.flight.autosave,
+    devmode = eve.context.flight.devmode,
+    dressing_clipboard = eve.context.flight.dressing_clipboard,
+    dressing_hipairs = eve.context.flight.dressing_hipairs,
+    dressing_illumniate = eve.context.flight.dressing_illumniate,
+    dressing_input = eve.context.flight.dressing_input,
+    dressing_select = eve.context.flight.dressing_select,
+    dressing_winsep = eve.context.flight.dressing_winsep,
+    gitdiff_expand_all = eve.context.flight.gitdiff_expand_all,
   },
 
   ---lsp
   lsp = {
-    code_lens = eve.state.lsp.code_lens,
-    inlay_hints = eve.state.lsp.inlay_hints,
-    spellcheck = eve.state.lsp.spellcheck,
+    code_lens = eve.context.lsp.code_lens,
+    inlay_hints = eve.context.lsp.inlay_hints,
+    spellcheck = eve.context.lsp.spellcheck,
   },
 
   ---ux
   ux = {
     notification_paused = eve.status.notification_paused,
-    relativenumber = eve.state.option.relativenumber,
-    username = eve.state.theme.username,
-    transparency = eve.state.theme.transparency,
+    relativenumber = eve.context.option.relativenumber,
+    username = eve.context.theme.username,
+    transparency = eve.context.theme.transparency,
   },
 
   ---plugin
   plugin = {
-    render_markdown = eve.state.plugin.render_markdown,
-    treesitter_context = eve.state.plugin.treesitter_context,
+    render_markdown = eve.context.plugin.render_markdown,
+    treesitter_context = eve.context.plugin.treesitter_context,
   },
 }
 
@@ -71,7 +71,7 @@ local group_items = {
     ai_provider = {
       title = "ai_provider",
       snapshot = function()
-        local provider = eve.state.flight.ai_provider:snapshot() ---@type string
+        local provider = eve.context.flight.ai_provider:snapshot() ---@type string
         return provider, "String"
       end,
       action = function()
@@ -314,7 +314,7 @@ local group_items = {
         if ok then
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
           eve.tab.focus_win_fixed(tabnr)
-          eve.state.plugin.render_markdown:next(true)
+          eve.context.plugin.render_markdown:next(true)
           render_markdown.buf_toggle()
         end
       end,
@@ -366,39 +366,39 @@ local group_items = {
     python_debug_host = {
       title = "python debug host",
       snapshot = function()
-        local host = eve.state.lsp.python_debug_host:snapshot() ---@type string
+        local host = eve.context.lsp.python_debug_host:snapshot() ---@type string
         if host == nil then
           return "nil", "Keyword"
         end
         return host, "String"
       end,
       action = function()
-        local default_host = eve.state.lsp.python_debug_host:snapshot() or "" ---@type string
+        local default_host = eve.context.lsp.python_debug_host:snapshot() or "" ---@type string
         local input_host = vim.fn.input("host [" .. default_host .. "]", default_host)
         local host = #input_host > 0 and input_host or default_host ---@type string
-        eve.state.lsp.python_debug_host:next(host)
+        eve.context.lsp.python_debug_host:next(host)
       end,
     },
     python_debug_port = {
       title = "python debug port",
       snapshot = function()
-        local port = eve.state.lsp.python_debug_port:snapshot() ---@type integer
+        local port = eve.context.lsp.python_debug_port:snapshot() ---@type integer
         if port == nil then
           return "nil", "Keyword"
         end
         return tostring(port), "Number"
       end,
       action = function()
-        local default_port = eve.state.lsp.python_debug_port:snapshot() or 0 ---@type integer
+        local default_port = eve.context.lsp.python_debug_port:snapshot() or 0 ---@type integer
         local input_port = vim.fn.input("port [" .. tostring(default_port) .. "]", tostring(default_port))
         local port = #input_port > 0 and tonumber(input_port) or default_port ---@type integer
-        eve.state.lsp.python_debug_port:next(port)
+        eve.context.lsp.python_debug_port:next(port)
       end,
     },
     python_venv = {
       title = "python venv path",
       snapshot = function()
-        local venv_path = eve.state.lsp.python_venv_path:snapshot() ---@type string
+        local venv_path = eve.context.lsp.python_venv_path:snapshot() ---@type string
         if venv_path == nil then
           return "nil", "Keyword"
         end
@@ -413,7 +413,7 @@ local group_items = {
     theme = {
       title = "theme",
       snapshot = function()
-        local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
         return theme, "String"
       end,
       action = function()
@@ -423,12 +423,12 @@ local group_items = {
     theme_variant = {
       title = "theme variant",
       snapshot = function()
-        local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
-        local scheme = eve.state.theme.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
+        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
+        local scheme = eve.context.theme.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
         return scheme and scheme.variant or "", "String"
       end,
       action = function()
-        local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
         local app_home = eve.path.locate_app_config_home("guanghechen")
         local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
         local ok, error = pcall(function()
@@ -652,7 +652,7 @@ end
 function M.toggle_ai_provider(arg)
   local ai_provider = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(ai_providers, ai_provider) then
-    eve.state.flight.ai_provider:next(ai_provider)
+    eve.context.flight.ai_provider:next(ai_provider)
   else
     eve.ux.fn.select({
       title = "Toggle ai provider",
@@ -665,7 +665,7 @@ function M.toggle_ai_provider(arg)
       },
       multiple = false,
       get_present = function()
-        return eve.state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+        return eve.context.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
       end,
       fetch_items = function()
         local items = {} ---@type eve.ux.select.IItem[]
@@ -686,7 +686,7 @@ function M.toggle_ai_provider(arg)
         if #items == 1 then
           local item = items[1] ---@type eve.ux.select.IItem
           widget:close()
-          eve.state.flight.ai_provider:next(item.uuid)
+          eve.context.flight.ai_provider:next(item.uuid)
         end
       end,
     })
@@ -769,7 +769,7 @@ function M.toggle_theme(arg)
       },
       multiple = false,
       get_present = function()
-        local theme = eve.state.theme.theme:snapshot() ---@type eve.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
         return theme
       end,
       fetch_items = function()

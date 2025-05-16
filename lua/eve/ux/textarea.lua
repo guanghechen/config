@@ -79,7 +79,7 @@ function M.new(props)
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
   local filetype = props.filetype ---@type string|nil
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
 
   ---@type table<string, any>
   local win_opts = vim.tbl_extend("force", {

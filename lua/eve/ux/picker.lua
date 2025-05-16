@@ -1722,7 +1722,7 @@ function M:__create_wins__()
     return false, finder_winnr, result_winnr, preview_winnr
   end
 
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local finder_bufnr, result_bufnr, preview_bufnr = self:__create_bufs__() ---@type integer, integer, integer|nil
   local finder_position, result_position, preview_position = self:__resize__() ---@type eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition, eve.ux.picker.IWinPosition|nil
 

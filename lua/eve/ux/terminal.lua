@@ -249,7 +249,7 @@ function M:__create_win_as_needed__()
   local height = math.ceil(0.9 * vim.o.lines) ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {

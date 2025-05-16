@@ -11,7 +11,7 @@ tabline = eve.ux.nvimbar.Nvimbar.new({
   comp_sep_hlname_active = position .. "_bg",
   delay = 256,
   silent = function()
-    local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+    local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()
@@ -57,7 +57,7 @@ tabline
 
 ---@return boolean
 local function should_show_tabline()
-  local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+  local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
     return true
   end

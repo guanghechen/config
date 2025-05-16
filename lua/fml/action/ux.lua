@@ -5,7 +5,7 @@ local M = {}
 ---@return nil
 function M.reload_theme(arg)
   local force = type(arg) == "string" and arg:lower() == "force" ---@type boolean
-  eve.state.theme.reload_theme(force, true)
+  eve.context.theme.reload_theme(force, true)
 end
 
 ---@return nil

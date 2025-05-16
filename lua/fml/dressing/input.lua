@@ -63,7 +63,7 @@ function M.input(opts, on_confirm)
   vim.bo[bufnr].swapfile = false
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
 
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local relative = opts.relative or "cursor"
   local width = opts.width or 60 ---@type integer
   local row = relative == "editor" and 3 or (parent_row < 5 and 2 or 2) ---@type integer
@@ -166,8 +166,8 @@ function M.input(opts, on_confirm)
 end
 
 local original_input = vim.ui.input
-eve.fn.observe({ eve.state.flight.dressing_input }, function()
-  local flag = eve.state.flight.dressing_input:snapshot() ---@type boolean
+eve.fn.observe({ eve.context.flight.dressing_input }, function()
+  local flag = eve.context.flight.dressing_input:snapshot() ---@type boolean
   if flag then
     vim.ui.input = M.input
   else

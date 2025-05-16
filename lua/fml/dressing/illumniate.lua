@@ -24,7 +24,7 @@ local config = {
 ---@param modes                         ?boolean if modes is true, also check if the current mode is enabled
 ---@return boolean
 local function is_enabled(bufnr, modes)
-  local enabled = eve.state.flight.dressing_illumniate:snapshot() ---@type boolean
+  local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
   if not enabled then
     return false
   end
@@ -79,8 +79,8 @@ local function get_reference_words()
   return words, current
 end
 
-eve.fn.observe({ eve.state.flight.dressing_illumniate }, function()
-  local enabled = eve.state.flight.dressing_illumniate:snapshot() ---@type boolean
+eve.fn.observe({ eve.context.flight.dressing_illumniate }, function()
+  local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
 
   if enabled then
     vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "ModeChanged" }, {

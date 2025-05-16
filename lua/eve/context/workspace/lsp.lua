@@ -1,12 +1,12 @@
----@class eve.state.lsp.IBreakpointData
+---@class eve.context.lsp.IBreakpointData
 ---@field public filepath               string
 ---@field public lnum                   integer
 ---@field public condition              ?string
 ---@field public hit_condition          ?string
 ---@field public log_message            ?string
 
----@class eve.state.lsp.data
----@field public breakpoints            eve.state.lsp.IBreakpointData[]
+---@class eve.context.lsp.data
+---@field public breakpoints            eve.context.lsp.IBreakpointData[]
 ---@field public code_lens              boolean
 ---@field public inlay_hints            boolean
 ---@field public python_debug_host      string
@@ -14,7 +14,7 @@
 ---@field public python_venv_path       string|nil
 ---@field public spellcheck             boolean
 
----@class eve.state.lsp.state
+---@class eve.context.lsp.state
 ---@field public breakpoints            eve.std.collection.IObservable
 ---@field public code_lens              eve.std.collection.IObservable
 ---@field public inlay_hints            eve.std.collection.IObservable
@@ -26,11 +26,11 @@
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
 
----@class eve.state.lsp : eve.state.lsp.state
----@field public defaults               fun(): eve.state.lsp.data
----@field public dump                   fun(): eve.state.lsp.data
+---@class eve.context.lsp : eve.context.lsp.state
+---@field public defaults               fun(): eve.context.lsp.data
+---@field public dump                   fun(): eve.context.lsp.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): eve.state.lsp.data
+---@field public normalize              fun(data: unknown): eve.context.lsp.data
 local M = {}
 
 ---@param workspace                     string
@@ -50,12 +50,12 @@ local function is_valid_breakpoint(workspace, breakpoint)
   return false
 end
 
----@return eve.state.lsp.data
+---@return eve.context.lsp.data
 function M.defaults()
   local is_git_repo = eve.path.is_repo_git() ---@type boolean
   local is_repo_personal = eve.path.is_repo_personal_public() ---@type boolean
 
-  ---@type eve.state.lsp.data
+  ---@type eve.context.lsp.data
   return {
     breakpoints = {},
     code_lens = false,
@@ -68,15 +68,15 @@ function M.defaults()
 end
 
 ---@param data                        any
----@return eve.state.lsp.data
+---@return eve.context.lsp.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.state.lsp.data
+  local resolved = M.defaults() ---@type eve.context.lsp.data
   local workspace = eve.path.workspace() ---@type string
   if type(data) == "table" then
     if type(data.breakpoints) == "table" then
-      resolved.breakpoints = {} ---@type eve.state.lsp.IBreakpointData[]
+      resolved.breakpoints = {} ---@type eve.context.lsp.IBreakpointData[]
       for _, raw_breakpoint in ipairs(data.breakpoints) do
-        ---@type eve.state.lsp.IBreakpointData
+        ---@type eve.context.lsp.IBreakpointData
         local breakpoint = {
           filepath = raw_breakpoint.filepath,
           lnum = raw_breakpoint.lnum,
@@ -111,9 +111,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return eve.state.lsp.data
+---@return eve.context.lsp.data
 function M.dump()
-  ---@type eve.state.lsp.data
+  ---@type eve.context.lsp.data
   return {
     breakpoints = M.breakpoints:snapshot(),
     code_lens = M.code_lens:snapshot(),
@@ -126,9 +126,9 @@ function M.dump()
 end
 
 ---@param raw_data                      any
----@return eve.state.lsp.state
+---@return eve.context.lsp.state
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type eve.state.lsp.data
+  local data = M.normalize(raw_data) ---@type eve.context.lsp.data
 
   M.breakpoints:next(data.breakpoints)
   M.code_lens:next(data.code_lens)
@@ -142,7 +142,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local data = M.defaults() ---@type eve.state.lsp.data
+local data = M.defaults() ---@type eve.context.lsp.data
 M.breakpoints = eve.std.Observable.from_value(data.breakpoints)
 M.code_lens = eve.std.Observable.from_value(data.code_lens)
 M.inlay_hints = eve.std.Observable.from_value(data.inlay_hints)
@@ -175,12 +175,12 @@ function M.refresh_breakpoints()
   end
 
   local raw_breakpoints_list = bps.get()
-  local breakpoints = {} ---@type eve.state.lsp.IBreakpointData[]
+  local breakpoints = {} ---@type eve.context.lsp.IBreakpointData[]
   local workspace = eve.path.workspace() ---@type string
   for bufnr, raw_breakpoints in pairs(raw_breakpoints_list) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     for _, raw_breakpoint in ipairs(raw_breakpoints) do
-      ---@type eve.state.lsp.IBreakpointData
+      ---@type eve.context.lsp.IBreakpointData
       local breakpoint = {
         filepath = filepath,
         lnum = raw_breakpoint.line,

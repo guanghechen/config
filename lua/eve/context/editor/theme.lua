@@ -1,40 +1,40 @@
 local __module_name__ = "eve.status.theme" ---@type string
 
----@class eve.theme.ILoadIntegrationParams
+---@class eve.context.theme.ILoadIntegrationParams
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
 ---@field public integration            eve.e.ThemeIntegration
 ---@field public nsnr                   ?integer
 
----@class eve.theme.ILoadThemeParams
+---@class eve.context.theme.ILoadThemeParams
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
 ---@field public persistent             boolean
 ---@field public nsnr                   ?integer
 
----@class eve.state.theme.data
+---@class eve.context.theme.data
 ---@field public theme                  eve.e.Theme
 ---@field public transparency           boolean
 ---@field public username               boolean
 
----@class eve.state.theme.state
+---@class eve.context.theme.state
 ---@field public theme                  eve.std.collection.IObservable
 ---@field public transparency           eve.std.collection.IObservable
 ---@field public username               eve.std.collection.IObservable
 ---
 ---@field public get_float_winblend     fun(): integer
 ---
----@field public apply_integration      fun(params: eve.theme.ILoadIntegrationParams): nil
----@field public apply_theme            fun(params: eve.theme.ILoadThemeParams): nil
+---@field public apply_integration      fun(params: eve.context.theme.ILoadIntegrationParams): nil
+---@field public apply_theme            fun(params: eve.context.theme.ILoadThemeParams): nil
 ---@field public get_scheme             fun(theme: eve.e.Theme): eve.t.theme.IScheme | nil
 ---@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
 ---@field public set_term_colors        fun(scheme: eve.t.theme.IScheme): nil
 
----@class eve.state.theme :  eve.state.theme.state
----@field public defaults               fun(): eve.state.theme.data
----@field public dump                   fun(): eve.state.theme.data
+---@class eve.context.theme :  eve.context.theme.state
+---@field public defaults               fun(): eve.context.theme.data
+---@field public dump                   fun(): eve.context.theme.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): eve.state.theme.data
+---@field public normalize              fun(data: unknown): eve.context.theme.data
 local M = {}
 
 ---@type eve.e.ThemeIntegration[]
@@ -52,9 +52,9 @@ local function get_theme_path()
   return eve.path.locate_context_filepath("theme")
 end
 
----@return eve.state.theme.data
+---@return eve.context.theme.data
 function M.defaults()
-  ---@type eve.state.theme.data
+  ---@type eve.context.theme.data
   return {
     theme = "catppuccin-mocha",
     transparency = false,
@@ -63,9 +63,9 @@ function M.defaults()
 end
 
 ---@param data                        any
----@return eve.state.theme.data
+---@return eve.context.theme.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.state.theme.data
+  local resolved = M.defaults() ---@type eve.context.theme.data
   if type(data) == "table" then
     if type(data.theme) == "string" and vim.list_contains(eve.setting.themes, data.theme) then
       resolved.theme = data.theme
@@ -78,13 +78,13 @@ function M.normalize(data)
     end
   end
 
-  ---@type eve.state.theme.data
+  ---@type eve.context.theme.data
   return resolved
 end
 
----@return eve.state.theme.data
+---@return eve.context.theme.data
 function M.dump()
-  ---@type eve.state.theme.data
+  ---@type eve.context.theme.data
   return {
     theme = M.theme:snapshot(),
     transparency = M.transparency:snapshot(),
@@ -94,7 +94,7 @@ end
 
 ---@param raw_data                      any
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type eve.state.theme.data
+  local data = M.normalize(raw_data) ---@type eve.context.theme.data
   M.theme:next(data.theme)
   M.transparency:next(data.transparency)
   M.username:next(data.username)
@@ -102,7 +102,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type eve.state.theme.data
+local _defaults = M.defaults() ---@type eve.context.theme.data
 M.theme = eve.std.Observable.from_value(_defaults.theme)
 M.transparency = eve.std.Observable.from_value(_defaults.transparency)
 M.username = eve.std.Observable.from_value(_defaults.username)
@@ -112,7 +112,7 @@ function M.get_float_winblend()
   return M.transparency:snapshot() and 15 or 0 ---@type integer
 end
 
----@param params                        eve.theme.ILoadIntegrationParams
+---@param params                        eve.context.theme.ILoadIntegrationParams
 ---@return nil
 function M.apply_integration(params)
   local theme = params.theme ---@type eve.e.Theme
@@ -136,7 +136,7 @@ function M.apply_integration(params)
   end
 end
 
----@param params                        eve.theme.ILoadThemeParams
+---@param params                        eve.context.theme.ILoadThemeParams
 ---@return nil
 function M.apply_theme(params)
   local theme = params.theme ---@type eve.e.Theme

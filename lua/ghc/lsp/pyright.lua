@@ -7,7 +7,7 @@ return {
   settings = {
     python = {
       enabled = true,
-      pythonPath = eve.state.lsp.get_python_bin_path(),
+      pythonPath = eve.context.lsp.get_python_bin_path(),
       analysis = {
         typeCheckingMode = "standard",
         autoImportCompletions = true,

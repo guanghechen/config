@@ -2,7 +2,7 @@
 local actions = {
   ---@return boolean|nil
   ai_accept = function()
-    local enabled = eve.state.flight.ai:snapshot() ---@type boolean
+    local enabled = eve.context.flight.ai:snapshot() ---@type boolean
     if enabled and package.loaded["copilot"] then
       if require("copilot.suggestion").is_visible() then
         eve.nvim.create_undo()

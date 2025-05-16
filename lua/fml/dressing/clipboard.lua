@@ -54,7 +54,7 @@ end
 -- it will contain the path to the image or file, or a link to the image
 ---@diagnostic disable-next-line: duplicate-set-field
 vim.paste = function(lines, phase)
-  local flag_dressing_clipboard = eve.state.flight.dressing_clipboard:snapshot() ---@type boolean
+  local flag_dressing_clipboard = eve.context.flight.dressing_clipboard:snapshot() ---@type boolean
   if not flag_dressing_clipboard then
     return original_vim_paste(lines, phase)
   end

@@ -17,7 +17,7 @@ function M.toggle_pin()
   local buf = meta.bufs[bufid_sourcefile] ---@type eve.builtin.tab.IBufItem
   local filepath = vim.api.nvim_buf_get_name(buf.bufnr) ---@type string
 
-  local pinned_list = eve.state.bookmark.pinned:snapshot() ---@type string[]
+  local pinned_list = eve.context.bookmark.pinned:snapshot() ---@type string[]
   local k = eve.table.find_index(pinned_list, filepath) ---@type integer|nil
   if k == nil then
     table.insert(pinned_list, filepath)

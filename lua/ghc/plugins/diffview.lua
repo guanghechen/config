@@ -51,7 +51,7 @@ return {
       hooks = {
         ---@diagnostic disable-next-line: unused-local
         diff_buf_win_enter = function(bufnr, winid, ctx)
-          if eve.state.flight.gitdiff_expand_all:snapshot() then
+          if eve.context.flight.gitdiff_expand_all:snapshot() then
             vim.opt_local.foldlevel = 99
           end
 

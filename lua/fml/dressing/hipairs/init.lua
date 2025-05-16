@@ -26,7 +26,7 @@ vim.api.nvim_create_autocmd({
   callback = function()
     close_timer()
 
-    local enabled = eve.state.flight.dressing_hipairs:snapshot() ---@type boolean
+    local enabled = eve.context.flight.dressing_hipairs:snapshot() ---@type boolean
     if not enabled then
       return
     end

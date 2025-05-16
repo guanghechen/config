@@ -152,8 +152,8 @@ state_cwd:subscribe(
   true
 )
 
-local frecency = eve.state.frecency.files ---@type eve.std.collection.IFrecency
-local input_history = eve.state.select.find_file.input_history ---@type eve.std.collection.IHistory
+local frecency = eve.context.frecency.files ---@type eve.std.collection.IFrecency
+local input_history = eve.context.select.find_file.input_history ---@type eve.std.collection.IHistory
 
 local main_width = 0.4 ---@type number
 ---@type eve.ux.IRawSearchDimension

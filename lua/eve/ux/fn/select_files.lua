@@ -77,7 +77,7 @@ local function select_files(params)
     extend_preset_keymaps = true,
     flag_fuzzy = eve.std.Observable.from_value(flag_fuzzy),
     flag_regex = eve.std.Observable.from_value(flag_regex),
-    frecency = eve.state.frecency.files,
+    frecency = eve.context.frecency.files,
     input = input,
     multiple = multiple,
     permanent = false,

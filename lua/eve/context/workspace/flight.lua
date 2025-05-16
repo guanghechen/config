@@ -1,4 +1,4 @@
----@class eve.state.flight.data
+---@class eve.context.flight.data
 ---@field public ai                     boolean
 ---@field public ai_provider            eve.e.AiProvider
 ---@field public autoformat             boolean
@@ -15,7 +15,7 @@
 ---
 ---@field public gitdiff_expand_all     boolean
 
----@class eve.state.flight.state
+---@class eve.context.flight.state
 ---@field public ai                     eve.std.collection.IObservable
 ---@field public ai_provider            eve.std.collection.IObservable
 ---@field public autoformat             eve.std.collection.IObservable
@@ -32,14 +32,14 @@
 ---
 ---@field public gitdiff_expand_all     eve.std.collection.IObservable
 
----@class eve.state.flight : eve.state.flight.state
----@field public defaults               fun(): eve.state.flight.data
----@field public dump                   fun(): eve.state.flight.data
+---@class eve.context.flight : eve.context.flight.state
+---@field public defaults               fun(): eve.context.flight.data
+---@field public dump                   fun(): eve.context.flight.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): eve.state.flight.data
+---@field public normalize              fun(data: unknown): eve.context.flight.data
 local M = {}
 
----@return eve.state.flight.data
+---@return eve.context.flight.data
 function M.defaults()
   local workspace = eve.path.workspace() ---@type string
   local is_home_config_dir = workspace == eve.env.HOME_NVIM_CONFIG ---@type boolean
@@ -48,7 +48,7 @@ function M.defaults()
   local is_playground = eve.path.is_repo_playground() ---@type boolean
   local is_personal_public = eve.path.is_repo_personal_public() ---@type boolean
 
-  ---@type eve.state.flight.data
+  ---@type eve.context.flight.data
   return {
     ai = is_thirdparty or is_playground or is_personal_public,
     ai_provider = "copilot",
@@ -69,9 +69,9 @@ function M.defaults()
 end
 
 ---@param data                        any
----@return eve.state.flight.data
+---@return eve.context.flight.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.state.flight.data
+  local resolved = M.defaults() ---@type eve.context.flight.data
   if type(data) == "table" then
     if type(data.ai) == "boolean" then
       resolved.ai = data.ai
@@ -118,9 +118,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return eve.state.flight.data
+---@return eve.context.flight.data
 function M.dump()
-  ---@type eve.state.flight.data
+  ---@type eve.context.flight.data
   return {
     ai = M.ai:snapshot(),
     ai_provider = M.ai_provider:snapshot(),
@@ -143,7 +143,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type eve.state.flight.data
+  local data = M.normalize(raw_data) ---@type eve.context.flight.data
 
   M.ai:next(data.ai)
   M.ai_provider:next(data.ai_provider)
@@ -164,7 +164,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type eve.state.flight.data
+local _defaults = M.defaults() ---@type eve.context.flight.data
 M.ai = eve.std.Observable.from_value(_defaults.ai)
 M.ai_provider = eve.std.Observable.from_value(_defaults.ai_provider)
 M.autoformat = eve.std.Observable.from_value(_defaults.autoformat)

@@ -249,7 +249,7 @@ local function get_select()
         end
 
         ---@type eve.ux.select.IData
-        return { items = items, uuid_present = eve.state.lsp.python_venv_path:snapshot() }
+        return { items = items, uuid_present = eve.context.lsp.python_venv_path:snapshot() }
       end,
     }
 
@@ -262,12 +262,12 @@ local function get_select()
         width = 120,
       },
       dirty_on_invisible = true,
-      flag_case_sensitive = eve.state.select.find_python_venv.flag_case_sensitive,
-      flag_fuzzy = eve.state.select.find_python_venv.flag_fuzzy,
-      flag_regex = eve.state.select.find_python_venv.flag_regex,
-      flag_selected = eve.state.select.find_python_venv.flag_selected,
-      input = eve.state.select.find_python_venv.input,
-      input_history = eve.state.select.find_python_venv.input_history,
+      flag_case_sensitive = eve.context.select.find_python_venv.flag_case_sensitive,
+      flag_fuzzy = eve.context.select.find_python_venv.flag_fuzzy,
+      flag_regex = eve.context.select.find_python_venv.flag_regex,
+      flag_selected = eve.context.select.find_python_venv.flag_selected,
+      input = eve.context.select.find_python_venv.input,
+      input_history = eve.context.select.find_python_venv.input_history,
       multiple = false,
       preview_enabled = false,
       extend_preset_keymaps = true,
@@ -278,7 +278,7 @@ local function get_select()
 
         if #items == 1 then
           local item = items[1]
-          eve.state.lsp.python_venv_path:next(item.data.path)
+          eve.context.lsp.python_venv_path:next(item.data.path)
         end
       end,
     })

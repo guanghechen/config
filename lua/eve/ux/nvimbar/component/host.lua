@@ -13,7 +13,7 @@ function M.username(position)
   local text_icon_only = eve.icon.os.current .. " " ---@type string
 
   local invalid = false ---@type boolean
-  eve.fn.observe({ eve.state.theme.username }, function()
+  eve.fn.observe({ eve.context.theme.username }, function()
     invalid = true
   end, true)
 
@@ -26,7 +26,7 @@ function M.username(position)
     end,
     render = function()
       invalid = false
-      local show_username = eve.state.theme.username:snapshot() ---@type boolean
+      local show_username = eve.context.theme.username:snapshot() ---@type boolean
       if not show_username then
         local text = text_icon_only ---@type string
         local hl_text = txt(text, hln_text) ---@type string

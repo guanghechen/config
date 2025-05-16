@@ -421,7 +421,7 @@ end
 
 ---@return nil
 function M.hover()
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local bufnr_cur = vim.api.nvim_get_current_buf() ---@type integer
 

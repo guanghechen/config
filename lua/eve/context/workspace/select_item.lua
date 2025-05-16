@@ -1,4 +1,4 @@
----@class eve.state.select.item.data
+---@class eve.context.select.item.data
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_exclude           boolean
 ---@field public flag_fuzzy             boolean
@@ -12,7 +12,7 @@
 ---@field public input                  string
 ---@field public input_history          eve.std.collection.history.ISerializedData
 
----@class eve.state.select.item.state
+---@class eve.context.select.item.state
 ---@field public flag_case_sensitive    eve.std.collection.IObservable
 ---@field public flag_exclude           eve.std.collection.IObservable
 ---@field public flag_fuzzy             eve.std.collection.IObservable
@@ -26,16 +26,16 @@
 ---@field public input                  eve.std.collection.IObservable
 ---@field public input_history          eve.std.collection.IHistory
 
----@class eve.state.select.item
----@field public defaults               fun(): eve.state.select.item.data
----@field public normalize              fun(data: unknown): eve.state.select.item.data
----@field public dump                   fun(state: eve.state.select.item.state): eve.state.select.item.data
----@field public load                   fun(state: eve.state.select.item.state|nil, name: string, data: unknown): eve.state.select.item.state
+---@class eve.context.select.item
+---@field public defaults               fun(): eve.context.select.item.data
+---@field public normalize              fun(data: unknown): eve.context.select.item.data
+---@field public dump                   fun(state: eve.context.select.item.state): eve.context.select.item.data
+---@field public load                   fun(state: eve.context.select.item.state|nil, name: string, data: unknown): eve.context.select.item.state
 local M = {}
 
----@return eve.state.select.item.data
+---@return eve.context.select.item.data
 function M.defaults()
-  ---@type eve.state.select.item.data
+  ---@type eve.context.select.item.data
   return {
     flag_case_sensitive = false,
     flag_exclude = true,
@@ -67,9 +67,9 @@ function M.defaults()
 end
 
 ---@param data                        any
----@return eve.state.select.item.data
+---@return eve.context.select.item.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.state.select.item.data
+  local resolved = M.defaults() ---@type eve.context.select.item.data
   if type(data) == "table" then
     if type(data.flag_case_sensitive) == "boolean" then
       resolved.flag_case_sensitive = data.flag_case_sensitive
@@ -116,14 +116,14 @@ function M.normalize(data)
     end
   end
 
-  ---@type eve.state.select.item.data
+  ---@type eve.context.select.item.data
   return resolved
 end
 
----@param state                         eve.state.select.item.state
----@return eve.state.select.item.data
+---@param state                         eve.context.select.item.state
+---@return eve.context.select.item.data
 function M.dump(state)
-  ---@type eve.state.select.item.data
+  ---@type eve.context.select.item.data
   return {
     flag_case_sensitive = state.flag_case_sensitive:snapshot(),
     flag_exclude = state.flag_exclude:snapshot(),
@@ -140,15 +140,15 @@ function M.dump(state)
   }
 end
 
----@param state                         eve.state.select.item.state|nil
+---@param state                         eve.context.select.item.state|nil
 ---@param name                          string
 ---@param raw_data                      any
----@return eve.state.select.item.state
+---@return eve.context.select.item.state
 function M.load(state, name, raw_data)
-  local data = M.normalize(raw_data) ---@type eve.state.select.item.data
+  local data = M.normalize(raw_data) ---@type eve.context.select.item.data
 
   if state == nil then
-    ---@type eve.state.select.item.state
+    ---@type eve.context.select.item.state
     state = {
       flag_case_sensitive = eve.std.Observable.from_value(data.flag_case_sensitive),
       flag_exclude = eve.std.Observable.from_value(data.flag_exclude),

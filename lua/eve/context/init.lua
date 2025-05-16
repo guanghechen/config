@@ -1,79 +1,79 @@
-local __module_name__ = "eve.state" ---@type string
+local __module_name__ = "eve.context" ---@type string
 
----@class eve.state.__mods
+---@class eve.context.__mods
 local __mods = {
-  behavior = "eve.state.editor.behavior",
-  theme = "eve.state.editor.theme",
+  behavior = "eve.context.editor.behavior",
+  theme = "eve.context.editor.theme",
 
   --------------------------------------------------------------------------------------------------
 
-  tab = "eve.state.session.tab",
+  tab = "eve.context.session.tab",
 
   --------------------------------------------------------------------------------------------------
 
-  bookmark = "eve.state.workspace.bookmark",
-  flight = "eve.state.workspace.flight",
-  frecency = "eve.state.workspace.frecency",
-  lsp = "eve.state.workspace.lsp",
-  option = "eve.state.workspace.option",
-  plugin = "eve.state.workspace.plugin",
-  search_file = "eve.state.workspace.search_file",
-  select = "eve.state.workspace.select",
+  bookmark = "eve.context.workspace.bookmark",
+  flight = "eve.context.workspace.flight",
+  frecency = "eve.context.workspace.frecency",
+  lsp = "eve.context.workspace.lsp",
+  option = "eve.context.workspace.option",
+  plugin = "eve.context.workspace.plugin",
+  search_file = "eve.context.workspace.search_file",
+  select = "eve.context.workspace.select",
 }
 
----@class eve.state.state.IWatchChangeParams
+---@class eve.context.state.IWatchChangeParams
 ---@field public on_theme_changed       ?fun(): nil
 
----@class eve.state.storage
+---@class eve.context.storage
 ---@field public editor                 ?string
 ---@field public session                ?string
 ---@field public workspace              ?string
 ---@field public nvim_session           ?string
 ---@field public nvim_session_autosaved ?string
 
----@class eve.state.data
----@field public behavior               eve.state.behavior.data
----@field public theme                  eve.state.theme.data
+---@class eve.context.data
+---@field public behavior               eve.context.behavior.data
+---@field public theme                  eve.context.theme.data
 ---
----@field public tab                    eve.state.tab.data
+---@field public tab                    eve.context.tab.data
 ---
----@field public bookmark               eve.state.bookmark.data
----@field public flight                 eve.state.flight.data
----@field public frecency               eve.state.frecency.data
----@field public lsp                    eve.state.lsp.data
----@field public option                 eve.state.option.data
----@field public plugin                 eve.state.plugin.data
----@field public search_file            eve.state.search_file.data
----@field public select                 eve.state.select.data
+---@field public bookmark               eve.context.bookmark.data
+---@field public flight                 eve.context.flight.data
+---@field public frecency               eve.context.frecency.data
+---@field public lsp                    eve.context.lsp.data
+---@field public option                 eve.context.option.data
+---@field public plugin                 eve.context.plugin.data
+---@field public search_file            eve.context.search_file.data
+---@field public select                 eve.context.select.data
 
----@class eve.state.state
+---@class eve.context.state
 ---
----@field public dump                   fun(): eve.state.data
----@field public load                   fun(storage: eve.state.storage): nil
----@field public save                   fun(storage: eve.state.storage): nil
----@field public get_storage            fun(): eve.state.storage
----@field public set_storage            fun(storage: eve.state.storage): nil
+---@field public dump                   fun(): eve.context.data
+---@field public load                   fun(storage: eve.context.storage): nil
+---@field public save                   fun(storage: eve.context.storage): nil
+---@field public get_storage            fun(): eve.context.storage
+---@field public set_storage            fun(storage: eve.context.storage): nil
 ---
 ---@field public observe                fun(observables: eve.std.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
----@field public watch_changes          fun(params: eve.state.state.IWatchChangeParams): nil
+---@field public watch_changes          fun(params: eve.context.state.IWatchChangeParams): nil
 
----@class eve.state : eve.state.state
----@field public behavior               eve.state.behavior
----@field public theme                  eve.state.theme
+---@class eve.context : eve.context.state
+---@field public behavior               eve.context.behavior
+---@field public theme                  eve.context.theme
 ---
----@field public tab                    eve.state.tab
+---@field public tab                    eve.context.tab
 ---
----@field public bookmark               eve.state.bookmark
----@field public flight                 eve.state.flight
----@field public frecency               eve.state.frecency
----@field public lsp                    eve.state.lsp
----@field public option                 eve.state.option
----@field public plugin                 eve.state.plugin
----@field public search_file            eve.state.search_file
----@field public select                 eve.state.select
----@field private _storage              eve.state.storage
+---@field public bookmark               eve.context.bookmark
+---@field public flight                 eve.context.flight
+---@field public frecency               eve.context.frecency
+---@field public lsp                    eve.context.lsp
+---@field public option                 eve.context.option
+---@field public plugin                 eve.context.plugin
+---@field public search_file            eve.context.search_file
+---@field public select                 eve.context.select
+---@field private _storage              eve.context.storage
 local M = setmetatable({
   _storage = {},
 }, {
@@ -86,9 +86,9 @@ local M = setmetatable({
   end,
 })
 
----@return eve.state.data
+---@return eve.context.data
 function M.dump()
-  ---@type eve.state.data
+  ---@type eve.context.data
   local data = {
     behavior = M.behavior.dump(),
     theme = M.theme.dump(),
@@ -107,7 +107,7 @@ function M.dump()
   return data
 end
 
----@param storage                       eve.state.storage
+---@param storage                       eve.context.storage
 ---@param initialize                    boolean
 ---@return nil
 function M.load(storage, initialize)
@@ -148,7 +148,7 @@ function M.load(storage, initialize)
   end
 end
 
----@param storage                       eve.state.storage
+---@param storage                       eve.context.storage
 ---@return nil
 function M.save(storage)
   if storage.editor then
@@ -185,12 +185,12 @@ function M.save(storage)
   end
 end
 
----@return eve.state.storage
+---@return eve.context.storage
 function M.get_storage()
   return M._storage
 end
 
----@param storage                       eve.state.storage
+---@param storage                       eve.context.storage
 ---@return nil
 function M.set_storage(storage)
   M._storage = storage
@@ -202,10 +202,10 @@ function M.watch_changes()
   local ticker_workspace = eve.std.Ticker.new({ start = 0 })
 
   eve.fn.observe({ M.theme.theme }, function()
-    eve.state.theme.reload_theme(false, true)
+    eve.context.theme.reload_theme(false, true)
   end, true)
   eve.fn.observe({ M.theme.transparency }, function()
-    eve.state.theme.reload_theme(true, true)
+    eve.context.theme.reload_theme(true, true)
   end, true)
 
   eve.fn.observe({
@@ -275,7 +275,7 @@ function M.watch_changes()
     M.select.find_file_scope,
   }
   for _, key in ipairs(M.select.keys) do
-    local select_item = M.select[key] ---@type eve.state.select.item.state
+    local select_item = M.select[key] ---@type eve.context.select.item.state
     table.insert(select_states, select_item.flag_case_sensitive)
     table.insert(select_states, select_item.flag_gitignore)
     table.insert(select_states, select_item.flag_exclude)
@@ -344,7 +344,7 @@ function M.watch_changes()
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
-      ---@type eve.state.storage
+      ---@type eve.context.storage
       local storage = {
         session = autosave and M._storage.session or nil,
         workspace = M._storage.workspace,

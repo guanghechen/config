@@ -192,7 +192,7 @@ end
 function M:create_win_as_needed()
   local bufnr = self:create_buf_as_needed() ---@type integer
   local winnr = self._winnr ---@type integer|nil
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local winnr_new_created = false ---@type boolean
 
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then

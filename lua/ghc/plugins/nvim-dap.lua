@@ -83,7 +83,7 @@ local function setup_python()
   local dap = require("dap")
 
   local function resolve_python_path()
-    local python_path = eve.state.lsp.get_python_bin_path() ---@type string|nil
+    local python_path = eve.context.lsp.get_python_bin_path() ---@type string|nil
     return python_path
   end
 
@@ -123,8 +123,8 @@ local function setup_python()
       description = "python: attach",
       cwd = "${workspaceFolder}",
       connect = function()
-        local host = eve.state.lsp.python_debug_host:snapshot() ---@type string
-        local port = eve.state.lsp.python_debug_port:snapshot() ---@type integer
+        local host = eve.context.lsp.python_debug_host:snapshot() ---@type string
+        local port = eve.context.lsp.python_debug_port:snapshot() ---@type integer
         return { host = host, port = port }
       end,
     },

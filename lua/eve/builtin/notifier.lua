@@ -433,7 +433,7 @@ function M.create_win_as_needed(win)
   end
 
   local winbar = M.gen_winbar(task, width) ---@type string
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local winhighlight = config.winhighlight[task.level] ---@type string
 
   vim.wo[winnr].winbar = winbar

@@ -33,7 +33,7 @@ end
 function M.inspect_state()
   local cwd = eve.path.cwd() ---@type string
   local workspace = eve.path.workspace() ---@type string
-  local full_state = eve.state.dump() ---@type eve.state.data
+  local full_state = eve.context.dump() ---@type eve.context.data
 
   eve.reporter.info({
     from = __module_name__,
@@ -69,7 +69,7 @@ function M.inspect_state_full()
         cwd = cwd,
         workspace = workspace,
       },
-      state = eve.state.dump(),
+      state = eve.context.dump(),
     },
   })
 end

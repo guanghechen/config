@@ -7,7 +7,7 @@
 ---@field public icon                   string
 ---@field public icon_hl                string
 
-local scopes = vim.list_slice(eve.state.select.find_buffer_scopes) ---@type eve.e.FindBufferScope[]
+local scopes = vim.list_slice(eve.context.select.find_buffer_scopes) ---@type eve.e.FindBufferScope[]
 local _select = nil ---@type eve.ux.ISelect|nil
 
 ---@type eve.t.ux.widget.IRawStatuslineItem[]
@@ -16,13 +16,13 @@ local statusline_items = {
     type = "enum",
     desc = "find(buffer): toggle scope",
     symbol = "",
-    state = eve.state.select.find_buffer_scope,
+    state = eve.context.select.find_buffer_scope,
     callback = function()
-      local scope = eve.state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+      local scope = eve.context.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
       local idx = eve.table.find_index(scopes, scope) or 1 ---@type integer
       local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
       local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
-      eve.state.select.find_buffer_scope:next(next_scope)
+      eve.context.select.find_buffer_scope:next(next_scope)
 
       if _select ~= nil then
         _select:mark_data_dirty()
@@ -33,10 +33,10 @@ local statusline_items = {
     type = "flag",
     desc = "find(buffer): toggle selected",
     symbol = eve.icon.symbols.flag_selected,
-    state = eve.state.select.find_buffer.flag_selected,
+    state = eve.context.select.find_buffer.flag_selected,
     callback = function()
-      local flag = eve.state.select.find_buffer.flag_selected:snapshot() ---@type boolean
-      eve.state.select.find_buffer.flag_selected:next(not flag)
+      local flag = eve.context.select.find_buffer.flag_selected:snapshot() ---@type boolean
+      eve.context.select.find_buffer.flag_selected:next(not flag)
     end,
   },
 }
@@ -91,7 +91,7 @@ local main_keymaps = {
 local provider = {
   fetch_data = function()
     local cwd = eve.path.cwd() ---@type string
-    local scope = eve.state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+    local scope = eve.context.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 
     ---@param bufnr                     integer
@@ -194,12 +194,12 @@ local select = eve.ux.Select.new({
     width_preview = 0,
   },
   dirty_on_invisible = true,
-  flag_case_sensitive = eve.state.select.find_buffer.flag_case_sensitive,
-  flag_fuzzy = eve.state.select.find_buffer.flag_fuzzy,
-  flag_regex = eve.state.select.find_buffer.flag_regex,
-  flag_selected = eve.state.select.find_buffer.flag_selected,
-  input = eve.state.select.find_buffer.input,
-  input_history = eve.state.select.find_buffer.input_history,
+  flag_case_sensitive = eve.context.select.find_buffer.flag_case_sensitive,
+  flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy,
+  flag_regex = eve.context.select.find_buffer.flag_regex,
+  flag_selected = eve.context.select.find_buffer.flag_selected,
+  input = eve.context.select.find_buffer.input,
+  input_history = eve.context.select.find_buffer.input_history,
   input_keymaps = main_keymaps,
   main_keymaps = main_keymaps,
   multiple = true,
@@ -225,8 +225,8 @@ local select = eve.ux.Select.new({
 })
 _select = select
 
-eve.fn.observe({ eve.state.select.find_buffer_scope }, function()
-  local scope = eve.state.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+eve.fn.observe({ eve.context.select.find_buffer_scope }, function()
+  local scope = eve.context.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
   if scope == "A" then
     select:change_input_title("find buffers")
   elseif scope == "F" then
@@ -243,19 +243,19 @@ local M = {}
 
 ---@return nil
 function M.find_bufs()
-  eve.state.select.find_buffer_scope:next("A")
+  eve.context.select.find_buffer_scope:next("A")
   select:focus()
 end
 
 ---@return nil
 function M.find_bufs_file()
-  eve.state.select.find_buffer_scope:next("F")
+  eve.context.select.find_buffer_scope:next("F")
   select:focus()
 end
 
 ---@return nil
 function M.find_bufs_term()
-  eve.state.select.find_buffer_scope:next("T")
+  eve.context.select.find_buffer_scope:next("T")
   select:focus()
 end
 

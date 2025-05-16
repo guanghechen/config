@@ -17,8 +17,8 @@ end
 
 ---@type string
 local fn_show_message = eve.G.register_anonymous_fn(function()
-  local enabled = eve.state.flight.ai:snapshot() ---@type boolean
-  local provider = eve.state.flight.ai_provider:snapshot() ---@type string
+  local enabled = eve.context.flight.ai:snapshot() ---@type boolean
+  local provider = eve.context.flight.ai_provider:snapshot() ---@type string
   local status = "NIL" ---@type unknown
 
   if provider == "copilot" then
@@ -46,11 +46,11 @@ function M.provider(position)
     name = "ai:provider",
     atomic = true,
     condition = function()
-      return eve.state.flight.ai:snapshot()
+      return eve.context.flight.ai:snapshot()
     end,
     render = function()
-      local enabled = eve.state.flight.ai:snapshot() ---@type boolean
-      local provider = eve.state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+      local enabled = eve.context.flight.ai:snapshot() ---@type boolean
+      local provider = eve.context.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
 
       if not enabled then
         local text = "󱙻 " .. provider .. " " ---@type string

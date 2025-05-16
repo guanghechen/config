@@ -13,7 +13,7 @@ function M.devmode(position)
     name = "devmode:devmode",
     atomic = true,
     condition = function()
-      local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+      local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
       return devmode
     end,
     render = function()
@@ -37,7 +37,7 @@ function M.render_count(position)
     name = "debug_render_count",
     atomic = true,
     condition = function()
-      local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+      local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
       return devmode
     end,
     render = function()

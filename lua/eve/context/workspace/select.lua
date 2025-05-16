@@ -1,52 +1,52 @@
-local select_item = require("eve.state.workspace.select_item")
+local select_item = require("eve.context.workspace.select_item")
 
----@class eve.state.select.data
----@field public find_buffer            eve.state.select.item.data
----@field public find_explorer          eve.state.select.item.data
----@field public find_file              eve.state.select.item.data
----@field public find_git               eve.state.select.item.data
----@field public find_highlight         eve.state.select.item.data
----@field public find_pinned_file       eve.state.select.item.data
----@field public find_python_venv       eve.state.select.item.data
----@field public find_vim_option        eve.state.select.item.data
----@field public search_file            eve.state.select.item.data
----@field public select_avante          eve.state.select.item.data
+---@class eve.context.select.data
+---@field public find_buffer            eve.context.select.item.data
+---@field public find_explorer          eve.context.select.item.data
+---@field public find_file              eve.context.select.item.data
+---@field public find_git               eve.context.select.item.data
+---@field public find_highlight         eve.context.select.item.data
+---@field public find_pinned_file       eve.context.select.item.data
+---@field public find_python_venv       eve.context.select.item.data
+---@field public find_vim_option        eve.context.select.item.data
+---@field public search_file            eve.context.select.item.data
+---@field public select_avante          eve.context.select.item.data
 ---
 ---@field public find_buffer_scope      eve.e.FindBufferScope
 ---@field public find_file_scope        eve.e.FindFileScope
 ---@field public search_file_scope      eve.e.SearchFileScope
 
----@class eve.state.select.state
----@field public find_buffer            eve.state.select.item.state
----@field public find_explorer          eve.state.select.item.state
----@field public find_file              eve.state.select.item.state
----@field public find_git               eve.state.select.item.state
----@field public find_highlight         eve.state.select.item.state
----@field public find_pinned_file       eve.state.select.item.state
----@field public find_python_venv       eve.state.select.item.state
----@field public find_vim_option        eve.state.select.item.state
----@field public search_file            eve.state.select.item.state
----@field public select_avante          eve.state.select.item.state
+---@class eve.context.select.state
+---@field public find_buffer            eve.context.select.item.state
+---@field public find_explorer          eve.context.select.item.state
+---@field public find_file              eve.context.select.item.state
+---@field public find_git               eve.context.select.item.state
+---@field public find_highlight         eve.context.select.item.state
+---@field public find_pinned_file       eve.context.select.item.state
+---@field public find_python_venv       eve.context.select.item.state
+---@field public find_vim_option        eve.context.select.item.state
+---@field public search_file            eve.context.select.item.state
+---@field public select_avante          eve.context.select.item.state
 ---
 ---@field public find_buffer_scope      eve.std.collection.IObservable
 ---@field public find_file_scope        eve.std.collection.IObservable
 ---@field public search_file_scope      eve.std.collection.IObservable
 
----@class eve.state.select : eve.state.select.state
+---@class eve.context.select : eve.context.select.state
 ---@field public keys                   string[]
 ---@field public find_buffer_scopes     eve.e.FindBufferScope[]
 ---@field public find_file_scopes       eve.e.FindFileScope[]
 ---@field public search_file_scopes     eve.e.SearchFileScope[]
 ---
----@field public defaults               fun(): eve.state.select.data
----@field public dump                   fun(): eve.state.select.data
+---@field public defaults               fun(): eve.context.select.data
+---@field public dump                   fun(): eve.context.select.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): eve.state.select.data
+---@field public normalize              fun(data: unknown): eve.context.select.data
 local M = {}
 
----@return eve.state.select.data
+---@return eve.context.select.data
 function M.defaults()
-  ---@type eve.state.select.data
+  ---@type eve.context.select.data
   return {
     find_buffer = select_item.defaults(),
     find_explorer = select_item.defaults(),
@@ -66,11 +66,11 @@ function M.defaults()
 end
 
 ---@param data                        any
----@return eve.state.select.data
+---@return eve.context.select.data
 function M.normalize(data)
   data = type(data) == "table" and data or {}
 
-  ---@type eve.state.select.data
+  ---@type eve.context.select.data
   local resolved = {
     find_buffer = select_item.normalize(data.find_buffer),
     find_explorer = select_item.normalize(data.find_explorer),
@@ -100,9 +100,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return eve.state.select.data
+---@return eve.context.select.data
 function M.dump()
-  ---@type eve.state.select.data
+  ---@type eve.context.select.data
   return {
     find_buffer = select_item.dump(M.find_buffer),
     find_explorer = select_item.dump(M.find_explorer),
@@ -124,7 +124,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type eve.state.select.data
+  local data = M.normalize(raw_data) ---@type eve.context.select.data
 
   M.find_buffer = select_item.load(M.find_buffer, "find_buffer", data.find_buffer)
   M.find_explorer = select_item.load(M.find_explorer, "find_explorer", data.find_explorer)
@@ -144,7 +144,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type eve.state.select.data
+local _defaults = M.defaults() ---@type eve.context.select.data
 M.find_buffer = select_item.load(nil, "find_buffer", _defaults.find_buffer)
 M.find_explorer = select_item.load(nil, "find_explorer", _defaults.find_explorer)
 M.find_file = select_item.load(nil, "find_file", _defaults.find_file)

@@ -19,7 +19,7 @@ local AI_PROVIDER_MAP = {
 
 ---@return fun(params: ghc.plugins.avante.file_selector.IParams): nil
 local function get_file_selector()
-  local context = eve.state.select.select_avante
+  local context = eve.context.select.select_avante
   local _on_choice = eve.std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
   local _filepaths = {} ---@type string[]
   local _filepath_default = nil ---@type string|nil
@@ -28,12 +28,12 @@ local function get_file_selector()
   local _select ---@type eve.ux.Select
 
   eve.fn.observe({
-    eve.state.select.select_avante.excludes,
-    eve.state.select.select_avante.flag_case_sensitive,
-    eve.state.select.select_avante.flag_exclude,
-    eve.state.select.select_avante.flag_fuzzy,
-    eve.state.select.select_avante.flag_gitignore,
-    eve.state.select.select_avante.flag_regex,
+    eve.context.select.select_avante.excludes,
+    eve.context.select.select_avante.flag_case_sensitive,
+    eve.context.select.select_avante.flag_exclude,
+    eve.context.select.select_avante.flag_fuzzy,
+    eve.context.select.select_avante.flag_gitignore,
+    eve.context.select.select_avante.flag_regex,
   }, function()
     if _select ~= nil then
       _select:mark_data_dirty()
@@ -43,30 +43,30 @@ local function get_file_selector()
   ---@class ghc.plugins.avante.file_selector.actions
   local actions = {
     toggle_case_sensitive = function()
-      local flag = eve.state.select.select_avante.flag_case_sensitive:snapshot() ---@type boolean
-      eve.state.select.select_avante.flag_case_sensitive:next(not flag)
+      local flag = eve.context.select.select_avante.flag_case_sensitive:snapshot() ---@type boolean
+      eve.context.select.select_avante.flag_case_sensitive:next(not flag)
     end,
     toggle_flag_exclude = function()
-      local flag = eve.state.select.select_avante.flag_exclude:snapshot() ---@type boolean
-      eve.state.select.select_avante.flag_exclude:next(not flag)
+      local flag = eve.context.select.select_avante.flag_exclude:snapshot() ---@type boolean
+      eve.context.select.select_avante.flag_exclude:next(not flag)
     end,
     toggle_flag_fuzzy = function()
-      local flag = eve.state.select.select_avante.flag_fuzzy:snapshot() ---@type boolean
-      eve.state.select.select_avante.flag_fuzzy:next(not flag)
+      local flag = eve.context.select.select_avante.flag_fuzzy:snapshot() ---@type boolean
+      eve.context.select.select_avante.flag_fuzzy:next(not flag)
     end,
     ---@return nil
     toggle_flag_gitignore = function()
-      local flag = eve.state.select.select_avante.flag_gitignore:snapshot() ---@type boolean
-      eve.state.select.select_avante.flag_gitignore:next(not flag)
+      local flag = eve.context.select.select_avante.flag_gitignore:snapshot() ---@type boolean
+      eve.context.select.select_avante.flag_gitignore:next(not flag)
     end,
     toggle_flag_regex = function()
-      local flag = eve.state.select.select_avante.flag_regex:snapshot() ---@type boolean
-      eve.state.select.select_avante.flag_regex:next(not flag)
+      local flag = eve.context.select.select_avante.flag_regex:snapshot() ---@type boolean
+      eve.context.select.select_avante.flag_regex:next(not flag)
     end,
     ---@return nil
     toggle_flag_selected = function()
-      local flag = eve.state.select.select_avante.flag_selected:snapshot() ---@type boolean
-      eve.state.select.select_avante.flag_selected:next(not flag)
+      local flag = eve.context.select.select_avante.flag_selected:snapshot() ---@type boolean
+      eve.context.select.select_avante.flag_selected:next(not flag)
     end,
   }
 
@@ -76,42 +76,42 @@ local function get_file_selector()
       type = "flag",
       desc = "find: toggle selected",
       symbol = eve.icon.symbols.flag_selected,
-      state = eve.state.select.select_avante.flag_selected,
+      state = eve.context.select.select_avante.flag_selected,
       callback = actions.toggle_flag_selected,
     },
     {
       type = "flag",
       desc = "find: toggle exclude",
       symbol = eve.icon.symbols.flag_exclude,
-      state = eve.state.select.select_avante.flag_exclude,
+      state = eve.context.select.select_avante.flag_exclude,
       callback = actions.toggle_flag_exclude,
     },
     {
       type = "flag",
       desc = "find: toggle gitignore",
       symbol = eve.icon.symbols.flag_gitignore,
-      state = eve.state.select.select_avante.flag_gitignore,
+      state = eve.context.select.select_avante.flag_gitignore,
       callback = actions.toggle_flag_gitignore,
     },
     {
       type = "flag",
       desc = "select: toggle flag fuzzy",
       symbol = eve.icon.symbols.flag_fuzzy,
-      state = eve.state.select.select_avante.flag_fuzzy,
+      state = eve.context.select.select_avante.flag_fuzzy,
       callback = actions.toggle_flag_fuzzy,
     },
     {
       type = "flag",
       desc = "find: toggle case sensitive",
       symbol = eve.icon.symbols.flag_case_sensitive,
-      state = eve.state.select.select_avante.flag_case_sensitive,
+      state = eve.context.select.select_avante.flag_case_sensitive,
       callback = actions.toggle_case_sensitive,
     },
     {
       type = "flag",
       desc = "select: toggle flag regex",
       symbol = eve.icon.symbols.flag_regex,
-      state = eve.state.select.select_avante.flag_regex,
+      state = eve.context.select.select_avante.flag_regex,
       callback = actions.toggle_flag_regex,
     },
   }
@@ -127,7 +127,7 @@ local function get_file_selector()
     flag_regex = context.flag_regex,
     flag_fuzzy = context.flag_fuzzy,
     flag_selected = context.flag_selected,
-    frecency = eve.state.frecency.files,
+    frecency = eve.context.frecency.files,
     input = context.input,
     input_history = context.input_history,
     multiple = true,
@@ -251,9 +251,9 @@ local selector_provider_opts = {
     local selected_filepaths = params.selected_filepaths ---@type string[]
 
     local workspace = eve.path.workspace() ---@type string
-    local flag_exclude = eve.state.select.select_avante.flag_exclude:snapshot() ---@type boolean
-    local flag_gitignore = eve.state.select.select_avante.flag_gitignore:snapshot() ---@type boolean
-    local excludes = flag_exclude and eve.state.select.select_avante.excludes:snapshot() or {} ---@type string[]
+    local flag_exclude = eve.context.select.select_avante.flag_exclude:snapshot() ---@type boolean
+    local flag_gitignore = eve.context.select.select_avante.flag_gitignore:snapshot() ---@type boolean
+    local excludes = flag_exclude and eve.context.select.select_avante.excludes:snapshot() or {} ---@type string[]
 
     ---@type string[]
     local filepaths = eve.oxi.find({
@@ -303,7 +303,7 @@ return {
     "render-markdown.nvim",
   },
   opts = function()
-    local ai_provider = eve.state.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+    local ai_provider = eve.context.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
     local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot" ---@type string
     return {
       azure = {
@@ -425,8 +425,8 @@ return {
     package.loaded["dressing.nvim"] = {}
 
     require("avante").setup(opts)
-    eve.fn.observe({ eve.state.flight.ai_provider }, function()
-      local ai_provider = eve.state.flight.ai_provider:snapshot()
+    eve.fn.observe({ eve.context.flight.ai_provider }, function()
+      local ai_provider = eve.context.flight.ai_provider:snapshot()
       local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot"
       vim.cmd("AvanteSwitchProvider " .. provider_name)
     end, true)

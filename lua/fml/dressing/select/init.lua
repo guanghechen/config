@@ -17,9 +17,9 @@ local providers = {
   fallback = fallback_provider,
 }
 
----@type table<string, eve.state.select.item.state>
+---@type table<string, eve.context.select.item.state>
 local states_by_title = {
-  ["(Avante) Add a file"] = eve.state.select.select_avante,
+  ["(Avante) Add a file"] = eve.context.select.select_avante,
 }
 
 ---@class fml.dressing.select
@@ -38,7 +38,7 @@ function M.select(items, opts, on_choice)
 
   local _selector = nil ---@type eve.ux.ISelect|nil
   local winnr = vim.api.nvim_get_current_win()
-  local context = states_by_title[title] ---@type eve.state.select.item.state|nil
+  local context = states_by_title[title] ---@type eve.context.select.item.state|nil
 
   title = (#title > 1 and title:sub(1, 1) ~= " ") and " " .. title .. " " or title ---@type string
 
@@ -87,8 +87,8 @@ function M.select(items, opts, on_choice)
 end
 
 local original_select = vim.ui.select
-eve.fn.observe({ eve.state.flight.dressing_select }, function()
-  local flag = eve.state.flight.dressing_select:snapshot() ---@type boolean
+eve.fn.observe({ eve.context.flight.dressing_select }, function()
+  local flag = eve.context.flight.dressing_select:snapshot() ---@type boolean
   if flag then
     vim.ui.select = M.select
   else

@@ -1,6 +1,6 @@
 local __module_name__ = "ghc.action.copilot-chat" ---@type string
 
-if not eve.state.flight.ai:snapshot() then
+if not eve.context.flight.ai:snapshot() then
   eve.reporter.error({
     from = __module_name__,
     subject = "copilot-chat",

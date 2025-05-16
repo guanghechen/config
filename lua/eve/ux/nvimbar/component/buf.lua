@@ -216,7 +216,7 @@ function M.bufs(position)
 
       local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
       local bufid_middle = bufid_sourcefile or 1 ---@type integer
-      local relative_orders = bufid_middle == bufid_sourcefile and eve.state.behavior.bufs_relative:snapshot() ---@type boolean
+      local relative_orders = bufid_middle == bufid_sourcefile and eve.context.behavior.bufs_relative:snapshot() ---@type boolean
       local N = #bufs ---@type integer
 
       local text ---@type string

@@ -8,7 +8,7 @@ require("eve.autocmd")
 require("integration.neovim.autocmd")
 pcall(require, "integration.local.autocmd")
 
-eve.setup_state()
+eve.setup_context()
 require("integration.neovim.option")
 require("integration.neovim.keymap")
 pcall(require, "integration.local.option")
@@ -28,8 +28,8 @@ require("ghc.command")
 
 ---! Reload session if not specify file and current directory is a git repository.
 if eve.path.is_repo_git() then
-  if eve.state.flight.autoload:snapshot() then
-    eve.session.load_session(eve.state.get_storage().nvim_session_autosaved)
+  if eve.context.flight.autoload:snapshot() then
+    eve.session.load_session(eve.context.get_storage().nvim_session_autosaved)
     vim.schedule(eve.tab.refresh)
   end
 end

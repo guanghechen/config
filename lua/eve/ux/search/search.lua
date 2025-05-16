@@ -716,7 +716,7 @@ function M:create_wins_as_needed()
   local bufnr_main = self._main:create_buf_as_needed() ---@type integer
   local screen_height = vim.o.lines ---@type integer
   local screen_width = vim.o.columns ---@type integer
-  local winblend = eve.state.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local focused_pane = "input" ---@type "input"|"main"|"preview"
 
   if context.focused_pane == "main" then

@@ -88,7 +88,7 @@ local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 ---@param ...                           any
 ---@return boolean|nil
 local function ui_attach_callback(event, kind, ...)
-  local devmode = eve.state.flight.devmode:snapshot() ---@type boolean
+  local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
     eve.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
   end

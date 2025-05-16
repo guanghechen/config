@@ -6,7 +6,7 @@ require("eve.keymap")
 pcall(require, "integration.vscode.autocmd")
 pcall(require, "integration.local.autocmd")
 
-eve.setup_state()
+eve.setup_context()
 
 require("integration.vscode.option")
 require("integration.vscode.keymap")

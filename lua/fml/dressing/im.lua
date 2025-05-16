@@ -6,7 +6,7 @@ if not eve.env.IS_NIX then
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
       group = augroup,
       callback = function()
-        local enabled = eve.state.behavior.auto_im:snapshot() ---@type boolean
+        local enabled = eve.context.behavior.auto_im:snapshot() ---@type boolean
         if not enabled then
           return
         end
