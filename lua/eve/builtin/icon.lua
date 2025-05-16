@@ -238,7 +238,6 @@ M.kind = {
   StaticMethod = "",
   String = "",
   Struct = "󰙅",
-  Supermaven = "",
   Table = "",
   TabNine = "󰏚",
   Tag = "",

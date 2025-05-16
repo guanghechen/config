@@ -161,6 +161,7 @@ local function on_attach(client, bufnr)
 
           local params = vim.lsp.util.make_position_params(nil, "utf-8")
           params.position.character = params.position.character + 1
+          ---@diagnostic disable-next-line: inject-field
           params.newName = new_name
 
           vim.lsp.buf_request(bufnr, "textDocument/rename", params, function(err, result, ctx, config)

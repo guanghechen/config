@@ -1,7 +1,7 @@
 ---@class eve.builtin.var
 local M = {}
 
----@class eve.builtin.vars.Names
+---@class eve.builtin.var.Names
 M.Names = {
   BUF_DISABLE_AUTO_FORMAT = "eve_buf_disable_auto_format",
   BUF_DISABLE_LINT = "eve_buf_disable_lint",
@@ -11,7 +11,7 @@ M.Names = {
 
 local cn = vim.api.nvim_create_namespace
 
----@class eve.builtin.vars.nsnr
+---@class eve.builtin.var.nsnr
 M.nsnr = {
   -- stylua: ignore start
   attach                = cn("ux:attach"),
@@ -35,7 +35,7 @@ M.nsnr = {
   -- stylua: ignore end
 }
 
----@class eve.builtin.vars.sign
+---@class eve.builtin.var.sign
 M.sign = {
   NR_SEARCH_MAIN_CURRENT = 2333,
   NR_SEARCH_MAIN_PRESENT = 2334,

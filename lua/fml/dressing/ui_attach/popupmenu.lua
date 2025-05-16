@@ -1,6 +1,6 @@
 local states = require("fml.dressing.ui_attach.state")
 
-local nsnrs = eve.var.nsnr ---@type eve.var.nsnr
+local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
 
 ---@class fml.dressing.ui_attach.popupmenu
 local M = {}

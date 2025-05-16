@@ -240,7 +240,7 @@ local function get_file_selector()
     _winnr = vim.api.nvim_get_current_win()
 
     _select:mark_data_dirty()
-    _select:show()
+    _select:focus()
   end
   return file_selector
 end

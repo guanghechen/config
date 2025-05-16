@@ -414,6 +414,7 @@
     "minmax",
     "movedown",
     "moveup",
+    "msgsep",
     "nargs",
     "neotree",
     "neovide",

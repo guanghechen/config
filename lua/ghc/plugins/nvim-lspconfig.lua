@@ -71,6 +71,7 @@ return {
     end
 
     -- inlay hints
+    ---@diagnostic disable-next-line: unused-local
     eve.lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local enable_inlay_hints = eve.context.lsp.inlay_hints:snapshot() ---@type boolean
@@ -79,6 +80,7 @@ return {
     end)
 
     -- code lens
+    ---@diagnostic disable-next-line: unused-local
     eve.lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean

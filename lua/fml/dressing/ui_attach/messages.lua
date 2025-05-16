@@ -7,7 +7,7 @@ local KIND_MAP = {
   },
 }
 
-local nsnrs = eve.var.nsnr ---@type eve.var.nsnr
+local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
 
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
