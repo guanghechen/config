@@ -31,9 +31,10 @@ return {
     vim.diagnostic.config({
       virtual_text = {
         current_line = false,
-        format = function(diagnostic)
-          local icon = severity2prefixicon[diagnostic.severity] or ""
-          return string.format("%s %s", icon, diagnostic.message)
+        source = "if_many",
+        spacing = 4,
+        prefix = function(diagnostic)
+          return severity2prefixicon[diagnostic.severity] or ""
         end,
       },
       virtual_lines = {
