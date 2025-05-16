@@ -14,12 +14,6 @@ local nvim_tools = require("nvim_tools")
 ---@class eve.builtin.oxi
 local M = {}
 
----@param input string
----@return string
-function M.normalize_comma_list(input)
-  return nvim_tools.normalize_comma_list(input)
-end
-
 ---@param subject                       string
 ---@param result_str                    string
 ---@return boolean
@@ -858,14 +852,6 @@ function M.get_line_widths(text)
 
   local result = raw_result ---@type integer[]
   return result
-end
-
----@param text                          string
----@param offsets                       integer[]
----@return std.t.IMatchLocation[]
-function M.get_locations(text, offsets)
-  local ok, data = M.resolve_fun_result("get_locations", nvim_tools.get_locations(text, table.concat(offsets, ",")))
-  return ok and data or {}
 end
 
 ---@param text                          string

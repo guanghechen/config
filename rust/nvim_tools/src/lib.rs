@@ -32,14 +32,6 @@ fn nvim_tools() -> Dictionary {
             "get_line_widths",
             Object::from(Function::from_fn(oxi::string::get_line_widths)),
         ),
-        (
-            "get_locations",
-            Object::from(Function::from_fn(oxi::string::get_locations)),
-        ),
-        (
-            "normalize_comma_list",
-            Object::from(Function::from_fn(oxi::string::normalize_comma_list)),
-        ),
         ("now", Object::from(Function::from_fn(oxi::time::now))),
         (
             "replace_file",

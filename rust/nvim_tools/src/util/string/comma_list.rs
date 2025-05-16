@@ -1,10 +1,5 @@
 use std::str::FromStr;
 
-pub fn normalize_comma_list(input: &str) -> String {
-    let parts: Vec<String> = parse_comma_list(input);
-    parts.join(", ")
-}
-
 pub fn parse_comma_list(input: &str) -> Vec<String> {
     input
         //-
