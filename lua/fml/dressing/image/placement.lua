@@ -108,7 +108,7 @@ function M.new(bufnr, src, opts)
   end
 
   local update = self.update
-  self.update = eve.std.timer.debounce(function()
+  self.update = std.timer.debounce(function()
     update(self)
   end, 10)
   return self
@@ -126,7 +126,7 @@ function M:error()
         msg = msg .. "## " .. step.name .. "\n\n" .. step.err .. "\n\n"
         if step.proc then
           msg = msg
-            .. eve.debug.cmd({
+            .. std.debug.cmd({
               cmd = step.proc.opts.cmd,
               args = step.proc.opts.args,
               cwd = step.proc.opts.cwd,

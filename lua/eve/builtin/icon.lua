@@ -135,10 +135,10 @@ M.os = {
   nix = "",
   wsl = "",
   unknown = "",
-  current = (eve.env.IS_NIX and "")
-    or (eve.env.IS_MAC and "")
-    or (eve.env.IS_WIN and "")
-    or (eve.env.IS_WSL and "")
+  current = (std.env.IS_NIX and "")
+    or (std.env.IS_MAC and "")
+    or (std.env.IS_WIN and "")
+    or (std.env.IS_WSL and "")
     or "",
 }
 

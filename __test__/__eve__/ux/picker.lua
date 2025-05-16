@@ -3,13 +3,13 @@ require("plenary.reload").reload_module("eve.ux.view.filetree")
 require("plenary.reload").reload_module("eve.ux.picker")
 require("plenary.reload").reload_module("eve.ux.picker-file")
 
-local finder_input = eve.std.Observable.from_value("")
-local flag_foldempty = eve.std.Observable.from_value(true)
-local flag_fuzzy = eve.std.Observable.from_value(false)
-local flag_regex = eve.std.Observable.from_value(false)
-local flag_sensitive = eve.std.Observable.from_value(true)
-local flag_viewtype = eve.std.Observable.from_value("tree")
-local flag_case = eve.std.Observable.from_value(1)
+local finder_input = std.Observable.from_value("")
+local flag_foldempty = std.Observable.from_value(true)
+local flag_fuzzy = std.Observable.from_value(false)
+local flag_regex = std.Observable.from_value(false)
+local flag_sensitive = std.Observable.from_value(true)
+local flag_viewtype = std.Observable.from_value("tree")
+local flag_case = std.Observable.from_value(1)
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",
@@ -31,7 +31,7 @@ local picker = eve.ux.FilePicker.new({
   flags_prepend = {
     {
       desc = "find-files: open settings",
-      callback = eve.std.fn.noop,
+      callback = std.fn.noop,
       snapshot = function()
         return eve.icon.symbols.setting, "picker_flag_purple"
       end,
@@ -58,7 +58,7 @@ eve.fn.observe({ flag_case }, function()
 end, true)
 
 flag_case:subscribe(
-  eve.std.Subscriber.new({
+  std.Subscriber.new({
     on_next = function(kase)
       if kase == 1 then
         local cwd = eve.path.cwd() ---@type string

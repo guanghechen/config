@@ -4,8 +4,8 @@ local __module_name__ = "eve.ux.search.input" ---@type string
 ---@field public context                eve.ux.SearchContext
 ---@field protected _autocmd_group      integer
 ---@field protected _extmark_nr         integer|nil
----@field protected _scheduler          eve.std.collection.Scheduler
----@field protected _keymaps            eve.t.IKeymap[]
+---@field protected _scheduler          std.collection.Scheduler
+---@field protected _keymaps            std.t.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -13,7 +13,7 @@ local EDITING_PREFIX = eve.setting.EDITING_INPUT_PREFIX ---@type string
 
 ---@class eve.ux.ISearchInputProps
 ---@field public context                eve.ux.SearchContext
----@field public keymaps                eve.t.IKeymap[]
+---@field public keymaps                std.t.IKeymap[]
 
 ---@param props                         eve.ux.ISearchInputProps
 ---@return eve.ux.SearchInput
@@ -21,7 +21,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local context = props.context ---@type eve.ux.SearchContext
-  local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
+  local input_history = context.input_history ---@type std.collection.IHistory|nil
   local actions = {
     apply_prev_input = function()
       if input_history == nil then
@@ -45,7 +45,7 @@ function M.new(props)
     end,
   }
 
-  local keymaps = vim.list_slice(props.keymaps) ---@type eve.t.IKeymap[]
+  local keymaps = vim.list_slice(props.keymaps) ---@type std.t.IKeymap[]
   if input_history ~= nil then
     vim.list_extend(keymaps, {
       { modes = { "i", "n", "v" }, key = "<C-j>", callback = actions.apply_next_input, desc = "search: next input" },
@@ -53,13 +53,13 @@ function M.new(props)
     })
   end
 
-  local scheduler = eve.std.Scheduler.new({
+  local scheduler = std.Scheduler.new({
     name = string.format("%s | %s", context.uuid, __module_name__),
     mode = "throttle",
     delay = 32,
     timeout = 3000,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
     task = function()
       local bufnr = context.bufnr_input ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -79,7 +79,7 @@ function M.new(props)
   self._scheduler = scheduler
 
   context.dirtier_preview:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
         local visible = context:isvisible() ---@type boolean
@@ -92,14 +92,14 @@ function M.new(props)
   )
 
   context.input:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         if input_history ~= nil then
           local input_cur = context.input:snapshot() ---@type string
           local input_present = input_history:present() ---@type string|nil, integer
           if input_present ~= input_cur then
             local input_top = input_history:top() ---@type string|nil
-            if input_top ~= nil and eve.string.starts_with(input_top, EDITING_PREFIX) then
+            if input_top ~= nil and std.string.starts_with(input_top, EDITING_PREFIX) then
               input_history:update_top(EDITING_PREFIX .. input_cur)
             else
               input_history:go(math.huge)
@@ -193,7 +193,7 @@ function M:reset_input(text)
   end
 
   local next_text = text or context.input:snapshot() ---@type string
-  next_text = eve.string.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
+  next_text = std.string.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
   context.input:next(next_text)
 
   local old_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]

@@ -59,7 +59,7 @@ local fileencodings = {
 
 local items = {} ---@type eve.ux.fn.select_encoding.IItem[]
 for _, fileencoding in ipairs(fileencodings) do
-  local text = string.format("%s     %s", eve.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
+  local text = string.format("%s     %s", std.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
 
   ---@type eve.ux.fn.select_encoding.IItem
   local item = {
@@ -72,13 +72,13 @@ for _, fileencoding in ipairs(fileencodings) do
 end
 
 ---@param item                          eve.ux.fn.select_encoding.IItem
----@param match                         eve.t.IScoredMatch
+---@param match                         std.t.IScoredMatch
 ---@return string
----@return eve.t.IHighlightInline[]
+---@return std.t.IHighlightInline[]
 local function render_item(item, match)
-  local highlights = {} ---@type eve.t.IHighlightInline[]
+  local highlights = {} ---@type std.t.IHighlightInline[]
   for _, piece in ipairs(match.matches) do
-    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" } ---@type eve.t.IHighlightInline[]
+    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" } ---@type std.t.IHighlightInline[]
     table.insert(highlights, highlight)
   end
   return item.text, highlights
@@ -110,8 +110,8 @@ local function select_encoding(params)
       row = 3,
     },
     extend_preset_keymaps = true,
-    flag_fuzzy = eve.std.Observable.from_value(true),
-    flag_regex = eve.std.Observable.from_value(false),
+    flag_fuzzy = std.Observable.from_value(true),
+    flag_regex = std.Observable.from_value(false),
     multiple = false,
     permanent = false,
     preview_enabled = false,

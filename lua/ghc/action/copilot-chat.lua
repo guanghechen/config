@@ -1,7 +1,7 @@
 local __module_name__ = "ghc.action.copilot-chat" ---@type string
 
 if not eve.context.flight.ai:snapshot() then
-  eve.reporter.error({
+  std.reporter.error({
     from = __module_name__,
     subject = "copilot-chat",
     message = "Copilot is not enabled",
@@ -56,7 +56,7 @@ local function hide()
   require("CopilotChat").close()
 end
 
----@type eve.t.ux.IWidget
+---@type std.t.ux.IWidget
 local chat = eve.widget.wrap({
   name = "copilot-chat",
   close = hide,
@@ -95,7 +95,7 @@ local chat = eve.widget.wrap({
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       if not vim.b[bufnr].fml_key_bound then
         vim.b[bufnr].fml_key_bound = true
-        local keymaps = eve.widget.get_keymaps(widget) ---@type eve.t.IKeymap[]
+        local keymaps = eve.widget.get_keymaps(widget) ---@type std.t.IKeymap[]
         eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
       end
 
@@ -134,7 +134,7 @@ function M.prompt()
   local actions = require("CopilotChat.actions")
   local prompt_actions = actions["prompt_actions"]()
   if not prompt_actions then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       subject = "pick",
       message = "No prompt found on the current line",
@@ -185,7 +185,7 @@ function M.prompt()
         widget:close()
 
         local data = items[1].data ---@type ghc.action.copilot_chat.prompt_actions.IItem
-        eve.std.timer.set_timeout(function()
+        std.timer.set_timeout(function()
           chat:focus()
           require("CopilotChat").ask(data.prompt, data)
         end, 100)

@@ -98,14 +98,14 @@ local winsep = {
   end,
 }
 
----@type eve.std.collection.Scheduler
-local scheduler = eve.std.Scheduler.new({
+---@type std.collection.Scheduler
+local scheduler = std.Scheduler.new({
   name = __module_name__,
   mode = "debounce",
   delay = 32,
   timeout = 0,
-  silent = eve.std.fn.falsy,
-  value = eve.std.Observable.from_value(true),
+  silent = std.fn.falsy,
+  value = std.Observable.from_value(true),
   task = function(_, context)
     local enabled = eve.context.flight.dressing_winsep:snapshot() ---@type boolean
     if not enabled then

@@ -10,7 +10,7 @@ local group_priorities = {
   plugin = 6,
 }
 
----@type table<string, table<string, eve.std.collection.IObservable<boolean>>>
+---@type table<string, table<string, std.collection.IObservable<boolean>>>
 local group_flags = {
   ---behavior
   behavior = {
@@ -101,7 +101,7 @@ local group_items = {
         local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = "fileencoding_local",
             message = "Unsupported buftype",
@@ -111,7 +111,7 @@ local group_items = {
         end
 
         if vim.bo[bufnr].modified then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = "fileencoding_local",
             message = "File is modified without save, please save it first.",
@@ -216,7 +216,7 @@ local group_items = {
         local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = eve.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = "fileformat_local",
             message = "Unsupported buftype",
@@ -226,7 +226,7 @@ local group_items = {
         end
 
         if vim.bo[bufnr].modified then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = "fileformat_local",
             message = "File is modified without save, please save it first.",
@@ -413,7 +413,7 @@ local group_items = {
     theme = {
       title = "theme",
       snapshot = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
         return theme, "String"
       end,
       action = function()
@@ -423,19 +423,19 @@ local group_items = {
     theme_variant = {
       title = "theme variant",
       snapshot = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
-        local scheme = eve.context.theme.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
+        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
+        local scheme = eve.context.theme.get_scheme(theme) ---@type std.t.theme.IScheme|nil
         return scheme and scheme.variant or "", "String"
       end,
       action = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
         local app_home = eve.path.locate_app_config_home("guanghechen")
         local script_path = eve.path.join(app_home, "config/theme/toggle_theme.mjs")
         local ok, error = pcall(function()
           vim.fn.system({ "node", script_path, theme })
         end)
         if not ok then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = "toggle_theme_variant",
             message = "Failed to toggle theme variant.",
@@ -515,7 +515,7 @@ end
 ---@return nil
 local function apply_theme(theme)
   if not vim.list_contains(themes, theme) then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Unknown theme.",
@@ -530,7 +530,7 @@ local function apply_theme(theme)
     vim.fn.system({ "node", script_path, theme })
   end)
   if not ok then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Failed to toggle theme.",
@@ -563,7 +563,7 @@ function M.list(arg)
 
     local select = nil ---@type eve.ux.Select|nil
 
-    ---@type eve.t.IKeymap[]
+    ---@type std.t.IKeymap[]
     local main_keymaps = {
       {
         modes = { "n" },
@@ -584,9 +584,9 @@ function M.list(arg)
 
     select = eve.ux.Select.new({
       title = "Toggle Select",
-      flag_fuzzy = eve.std.Observable.from_value(true),
-      flag_regex = eve.std.Observable.from_value(false),
-      input = eve.std.Observable.from_value(flag_name),
+      flag_fuzzy = std.Observable.from_value(true),
+      flag_regex = std.Observable.from_value(false),
+      input = std.Observable.from_value(flag_name),
       dimension = {
         row = 3,
         width = 64,
@@ -609,8 +609,8 @@ function M.list(arg)
             ---@type string
             local text = string.format(
               "%s %s %s",
-              eve.string.pad_end(text_group, w_p_group, " "),
-              eve.string.pad_end(item.title, w_p_title, " "),
+              std.string.pad_end(text_group, w_p_group, " "),
+              std.string.pad_end(item.title, w_p_title, " "),
               text_flag
             )
 
@@ -623,7 +623,7 @@ function M.list(arg)
           local text_group = flag_item.group or "" ---@type string
           local text_flag, hln_flag = flag_item.snapshot()
 
-          ---@type eve.t.IHighlightInline[]
+          ---@type std.t.IHighlightInline[]
           local highlights = {
             { coll = 0, colr = #text_group + 1, hlname = "Special" },
             { coll = offset, colr = offset + #text_flag, hlname = hln_flag },
@@ -658,14 +658,14 @@ function M.toggle_ai_provider(arg)
       title = "Toggle ai provider",
       flag_fuzzy = true,
       flag_regex = false,
-      input = eve.std.Observable.from_value(ai_provider),
+      input = std.Observable.from_value(ai_provider),
       dimension = {
         row = 5,
         width = 50,
       },
       multiple = false,
       get_present = function()
-        return eve.context.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+        return eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
       end,
       fetch_items = function()
         local items = {} ---@type eve.ux.select.IItem[]
@@ -676,7 +676,7 @@ function M.toggle_ai_provider(arg)
       end,
       render_item = function(item, match)
         local text = item.uuid ---@type string
-        local highlights = { { coll = 0, colr = -1, hlname = "String" } } ---@type eve.t.IHighlightInline[]
+        local highlights = { { coll = 0, colr = -1, hlname = "String" } } ---@type std.t.IHighlightInline[]
         for _, piece in ipairs(match.matches) do
           highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
         end
@@ -762,14 +762,14 @@ function M.toggle_theme(arg)
       title = "Select theme",
       flag_fuzzy = true,
       flag_regex = false,
-      input = eve.std.Observable.from_value(theme_name),
+      input = std.Observable.from_value(theme_name),
       dimension = {
         row = 5,
         width = 50,
       },
       multiple = false,
       get_present = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type eve.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
         return theme
       end,
       fetch_items = function()

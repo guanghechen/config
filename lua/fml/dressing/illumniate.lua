@@ -94,7 +94,7 @@ eve.fn.observe({ eve.context.flight.dressing_illumniate }, function()
         local _, reference_cur = get_reference_words()
         if not reference_cur then
           local buf = vim.api.nvim_get_current_buf()
-          eve.std.timer.set_timeout(function()
+          std.timer.set_timeout(function()
             if vim.api.nvim_buf_is_valid(buf) then
               vim.api.nvim_buf_call(buf, function()
                 if not is_enabled(nil, true) then
@@ -141,7 +141,7 @@ function M.jump(step, cycle)
     end
     vim.api.nvim_win_set_cursor(0, target.from)
     if config.notify_jump then
-      eve.reporter.info({
+      std.reporter.info({
         from = __module_name__,
         subject = "jump",
         message = ("Reference [%d/%d]"):format(current_index, #reference_words),
@@ -151,7 +151,7 @@ function M.jump(step, cycle)
       vim.cmd.normal({ "zv", bang = true })
     end
   elseif config.notify_end then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       subject = "jump",
       message = "No more references",

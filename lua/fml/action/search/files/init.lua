@@ -41,7 +41,7 @@ end
 ---@return nil
 function M.search_files_in_directory(specified_filepath)
   local silent = false ---@type boolean
-  local next_scope = "D" ---@type eve.e.SearchFileScope
+  local next_scope = "D" ---@type std.e.SearchFileScope
 
   if specified_filepath ~= nil and #specified_filepath > 0 then
     if eve.path.is_exist_dirpath(specified_filepath) then
@@ -95,7 +95,7 @@ end
 ---@return nil
 function M.replace_files_in_directory(specified_filepath)
   local silent = false ---@type boolean
-  local next_scope = "D" ---@type eve.e.SearchFileScope
+  local next_scope = "D" ---@type std.e.SearchFileScope
 
   if specified_filepath ~= nil and #specified_filepath > 0 then
     if eve.path.is_exist_dirpath(specified_filepath) then

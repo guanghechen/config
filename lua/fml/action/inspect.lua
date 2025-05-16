@@ -8,7 +8,7 @@ function M.inspect_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     subject = "inspect_buf",
     details = {
@@ -35,7 +35,7 @@ function M.inspect_state()
   local workspace = eve.path.workspace() ---@type string
   local full_state = eve.context.dump() ---@type eve.context.data
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     subject = "inspect_state",
     details = {
@@ -61,7 +61,7 @@ function M.inspect_state_full()
   local cwd = eve.path.cwd() ---@type string
   local workspace = eve.path.workspace() ---@type string
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     subject = "inspect_state_full",
     details = {
@@ -80,7 +80,7 @@ function M.inspect_tab()
   local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
 
   if meta == nil then
-    eve.reporter.info({
+    std.reporter.info({
       from = __module_name__,
       subject = "inspect_tab",
       details = {
@@ -94,7 +94,7 @@ function M.inspect_tab()
     return
   end
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     subject = "inspect_tab",
     details = {
@@ -130,7 +130,7 @@ function M.inspect_window()
   local meta_win = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   local meta_buf = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     subject = "inspect_window",
     details = {

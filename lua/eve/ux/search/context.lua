@@ -24,18 +24,18 @@ local __module_name__ = "eve.ux.search.context" ---@type string
 ---@field protected _item_uuid_cur      string|nil
 ---@field protected _uuids_selected     table<string, true>
 ---
----@field public dirtier_dimension      eve.std.collection.IDirtier
----@field public dirtier_data           eve.std.collection.IDirtier
----@field public dirtier_data_cache     eve.std.collection.IDirtier
----@field public dirtier_main           eve.std.collection.IDirtier
----@field public dirtier_preview        eve.std.collection.IDirtier
----@field public dirtier_selected       eve.std.collection.IDirtier
+---@field public dirtier_dimension      std.collection.IDirtier
+---@field public dirtier_data           std.collection.IDirtier
+---@field public dirtier_data_cache     std.collection.IDirtier
+---@field public dirtier_main           std.collection.IDirtier
+---@field public dirtier_preview        std.collection.IDirtier
+---@field public dirtier_selected       std.collection.IDirtier
 ---
----@field public flag_selected          eve.std.collection.IObservable
----@field public input                  eve.std.collection.IObservable
----@field public input_history          eve.std.collection.IHistory|nil
----@field public input_line_count       eve.std.collection.IObservable
----@field public state_has_matched      eve.std.collection.IObservable
+---@field public flag_selected          std.collection.IObservable
+---@field public input                  std.collection.IObservable
+---@field public input_history          std.collection.IHistory|nil
+---@field public input_line_count       std.collection.IObservable
+---@field public state_has_matched      std.collection.IObservable
 ---
 ---@field public bufnr_input            integer|nil
 ---@field public bufnr_main             integer|nil
@@ -70,9 +70,9 @@ M.__index = M
 ---@field public dimension              eve.ux.IRawSearchDimension|nil
 ---@field public enable_multiline_input boolean
 ---@field public fetch_data             eve.ux.search.IFetchData
----@field public flag_selected          eve.std.collection.IObservable
----@field public input                  eve.std.collection.IObservable
----@field public input_history          eve.std.collection.IHistory|nil
+---@field public flag_selected          std.collection.IObservable
+---@field public input                  std.collection.IObservable
+---@field public input_history          std.collection.IHistory|nil
 ---@field public multiple               boolean|nil
 ---@field public permanent              boolean|nil
 ---@field public preview_title          string|nil
@@ -84,18 +84,18 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local dirtier_dimension = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
-  local dirtier_data = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
-  local dirtier_data_cache = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
-  local dirtier_main = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
-  local dirtier_preview = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
-  local dirtier_selected = eve.std.Dirtier.new({ dirty = false }) ---@type eve.std.collection.IDirtier
+  local dirtier_dimension = std.Dirtier.new({ dirty = false }) ---@type std.collection.IDirtier
+  local dirtier_data = std.Dirtier.new({ dirty = false }) ---@type std.collection.IDirtier
+  local dirtier_data_cache = std.Dirtier.new({ dirty = false }) ---@type std.collection.IDirtier
+  local dirtier_main = std.Dirtier.new({ dirty = false }) ---@type std.collection.IDirtier
+  local dirtier_preview = std.Dirtier.new({ dirty = false }) ---@type std.collection.IDirtier
+  local dirtier_selected = std.Dirtier.new({ dirty = false }) ---@type std.collection.IDirtier
 
-  local flag_selected = props.flag_selected ---@type eve.std.collection.IObservable
-  local input = props.input ---@type eve.std.collection.IObservable
-  local input_history = props.input_history ---@type eve.std.collection.IHistory|nil
-  local input_line_count = eve.std.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type eve.std.collection.IObservable
-  local state_has_matched = eve.std.Observable.new({ value = false, equals = eve.std.fn.falsy }) ---@type eve.std.collection.IObservable
+  local flag_selected = props.flag_selected ---@type std.collection.IObservable
+  local input = props.input ---@type std.collection.IObservable
+  local input_history = props.input_history ---@type std.collection.IHistory|nil
+  local input_line_count = std.Observable.from_value(eve.oxi.count_lines(input:snapshot())) ---@type std.collection.IObservable
+  local state_has_matched = std.Observable.new({ value = false, equals = std.fn.falsy }) ---@type std.collection.IObservable
 
   local cfg_input_title = props.title ---@type string
   local cfg_preview_title = props.preview_title or " preview " ---@type string
@@ -120,14 +120,14 @@ function M.new(props)
 
   local uuid = eve.oxi.uuid() ---@type string
 
-  ---@type eve.std.collection.Scheduler
-  local fetch_scheduler = eve.std.Scheduler.new({
+  ---@type std.collection.Scheduler
+  local fetch_scheduler = std.Scheduler.new({
     name = string.format("%s | %s", uuid, __module_name__),
     mode = "throttle",
     delay = delay_fetch,
     timeout = 200000,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
     task = function(_, _, callback)
       local input_cur = input:snapshot() ---@type string
       local force = dirtier_data_cache:is_dirty() ---@type boolean
@@ -279,10 +279,10 @@ function M.new(props)
   self.permanent = permanent
   self.uuid = uuid
 
-  flag_selected:subscribe(eve.std.Subscriber.new({ on_next = on_flag_selected_change }), false)
-  input:subscribe(eve.std.Subscriber.new({ on_next = on_input_change }), false)
-  dirtier_data:subscribe(eve.std.Subscriber.new({ on_next = on_refresh }), false)
-  dirtier_data_cache:subscribe(eve.std.Subscriber.new({ on_next = on_data_cache_dirty }), false)
+  flag_selected:subscribe(std.Subscriber.new({ on_next = on_flag_selected_change }), false)
+  input:subscribe(std.Subscriber.new({ on_next = on_input_change }), false)
+  dirtier_data:subscribe(std.Subscriber.new({ on_next = on_refresh }), false)
+  dirtier_data_cache:subscribe(std.Subscriber.new({ on_next = on_data_cache_dirty }), false)
   return self
 end
 
@@ -561,10 +561,10 @@ function M:moveup()
     if winnr == self.winnr_main then
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       local row = cursor[1] ---@type integer
-      local lnum = eve.std.fn.navigate_circular(row, -step, #items) ---@type integer
+      local lnum = std.fn.navigate_circular(row, -step, #items) ---@type integer
       return self:locate(lnum)
     else
-      local lnum = eve.std.fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
+      local lnum = std.fn.navigate_circular(self._item_lnum_cur, -step, #items) ---@type integer
       return self:locate(lnum)
     end
   end
@@ -582,10 +582,10 @@ function M:movedown()
     if winnr == self.winnr_main then
       local cursor = vim.api.nvim_win_get_cursor(winnr)
       local row = cursor[1] ---@type integer
-      local lnum = eve.std.fn.navigate_circular(row, step, #items) ---@type integer
+      local lnum = std.fn.navigate_circular(row, step, #items) ---@type integer
       return self:locate(lnum)
     else
-      local lnum = eve.std.fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
+      local lnum = std.fn.navigate_circular(self._item_lnum_cur, step, #items) ---@type integer
       return self:locate(lnum)
     end
   end
@@ -706,7 +706,7 @@ function M:set_item_deleted(uuid)
     return
   end
 
-  local lnum = eve.table.find_index(self.items, function(item)
+  local lnum = std.table.find_index(self.items, function(item)
     return item.uuid == uuid
   end)
   if lnum == nil then

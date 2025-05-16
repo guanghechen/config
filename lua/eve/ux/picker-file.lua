@@ -27,16 +27,16 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public flag_foldempty         eve.std.collection.IObservable
----@field public flag_fuzzy             eve.std.collection.IObservable
----@field public flag_regex             eve.std.collection.IObservable
----@field public flag_sensitive         eve.std.collection.IObservable
----@field public flag_viewtype          eve.std.collection.IObservable
+---@field public flag_foldempty         std.collection.IObservable
+---@field public flag_fuzzy             std.collection.IObservable
+---@field public flag_regex             std.collection.IObservable
+---@field public flag_sensitive         std.collection.IObservable
+---@field public flag_viewtype          std.collection.IObservable
 ---@field public flags_append           eve.ux.picker.IFlagItem[]|nil
 ---@field public flags_prepend          eve.ux.picker.IFlagItem[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public finder_input           eve.std.collection.IObservable
+---@field public finder_input           std.collection.IObservable
 ---@field public finder_multiline       ?boolean
 ---
 ---@field public on_closed              ?eve.ux.picker_file.IOnClosed
@@ -50,22 +50,22 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public name                   string
 ---@field public title                  string
 ---
----@field public flag_foldempty         eve.std.collection.IObservable
----@field public flag_fuzzy             eve.std.collection.IObservable
----@field public flag_regex             eve.std.collection.IObservable
----@field public flag_sensitive         eve.std.collection.IObservable
----@field public flag_viewtype          eve.std.collection.IObservable
+---@field public flag_foldempty         std.collection.IObservable
+---@field public flag_fuzzy             std.collection.IObservable
+---@field public flag_regex             std.collection.IObservable
+---@field public flag_sensitive         std.collection.IObservable
+---@field public flag_viewtype          std.collection.IObservable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           eve.ux.view.Filetree
 ---@field protected _picker             eve.ux.Picker
 ---@field protected _plainfile          eve.ux.view.Plainfile
----@field protected _retriever          eve.std.collection.BufRetriever
----@field protected _scheduler_match    eve.std.collection.Scheduler|nil
+---@field protected _retriever          std.collection.BufRetriever
+---@field protected _scheduler_match    std.collection.Scheduler|nil
 ---
 ---@field protected _last_input         string
 ---@field protected _last_offset        integer
----@field protected _last_matches       eve.t.IScoredMatch[]|nil
+---@field protected _last_matches       std.t.IScoredMatch[]|nil
 ---@field protected _last_matched_uuids table<string, boolean>|nil
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuids_file         string[]
@@ -87,30 +87,30 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local finder_input = props.finder_input ---@type eve.std.collection.IObservable
+  local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_multiline = props.finder_multiline ---@type boolean|nil
 
-  local flag_fuzzy = props.flag_fuzzy ---@type eve.std.collection.IObservable
-  local flag_regex = props.flag_regex ---@type eve.std.collection.IObservable
-  local flag_foldempty = props.flag_foldempty ---@type eve.std.collection.IObservable
-  local flag_sensitive = props.flag_sensitive ---@type eve.std.collection.IObservable
-  local flag_viewtype = props.flag_viewtype ---@type eve.std.collection.IObservable
+  local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
+  local flag_regex = props.flag_regex ---@type std.collection.IObservable
+  local flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
+  local flag_sensitive = props.flag_sensitive ---@type std.collection.IObservable
+  local flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
   local flags_append = props.flags_append ---@type eve.ux.picker.IFlagItem[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.IFlagItem[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local on_closed = props.on_closed or eve.std.fn.noop ---@type eve.ux.picker_file.IOnClosed
-  local on_disposed = props.on_disposed or eve.std.fn.noop ---@type eve.ux.picker_file.IOnDisposed
-  local on_focused = props.on_focused or eve.std.fn.noop ---@type eve.ux.picker_file.IOnFocused
-  local on_hidden = props.on_hidden or eve.std.fn.noop ---@type eve.ux.picker_file.IOnHidden
+  local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker_file.IOnClosed
+  local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker_file.IOnDisposed
+  local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker_file.IOnFocused
+  local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker_file.IOnHidden
   local on_refresh = props.on_refresh ---@type eve.ux.picker_file.IOnRefresh|nil
 
   local indents = {} ---@type string[]
 
   local self = setmetatable({}, M)
 
-  ---@type eve.std.collection.BufRetriever
-  local retriever = eve.std.BufRetriever.new({
+  ---@type std.collection.BufRetriever
+  local retriever = std.BufRetriever.new({
     name = name,
   })
 
@@ -127,13 +127,13 @@ function M.new(props)
     indent_hln = "f_utw_indent_float",
   })
 
-  local scheduler_match = eve.std.Scheduler.new({
+  local scheduler_match = std.Scheduler.new({
     name = string.format("%s#match", name),
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
     task = function()
       local input = finder_input:snapshot() ---@type string
       self:__match__(input)
@@ -488,7 +488,7 @@ function M.new(props)
       on_hidden(self)
     end,
     on_result_rendered = function(_, bufnr)
-      local last_matches = self._last_matches ---@type eve.t.IScoredMatch[]|nil
+      local last_matches = self._last_matches ---@type std.t.IScoredMatch[]|nil
       if last_matches == nil or #last_matches < 1 then
         return
       end
@@ -722,7 +722,7 @@ function M:attach(uuid)
 
   local node = self._filetree:retrieve_by_uuid(uuid) ---@type eve.ux.view.filetree.INode|nil
   if node == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "attach",
       message = string.format("Cannot find node by the given uuid: %s", uuid),
@@ -844,7 +844,7 @@ function M:__match__(input)
   local offset = root ~= nil and #root.data.filepath > 2 and #root.data.filepath + 2 or 0 ---@type integer
 
   local last_input = self._last_input ---@type string
-  local last_matches = self._last_matches ---@type eve.t.IScoredMatch[]|nil
+  local last_matches = self._last_matches ---@type std.t.IScoredMatch[]|nil
   if last_matches ~= nil and not flag_regex and #input > #last_input and input:sub(1, #last_input) == last_input then
     if flag_sensitive then
       for _, match in ipairs(last_matches) do
@@ -903,12 +903,12 @@ function M:__match__(input)
     return
   end
 
-  local matches = {} ---@type eve.t.IScoredMatch[]
+  local matches = {} ---@type std.t.IScoredMatch[]
   local matched_uuids = {} ---@type string[]
   for _, oxi_match in ipairs(oxi_matches) do
     local lnum = oxi_match.lnum ---@type integer
 
-    ---@type eve.t.IScoredMatch
+    ---@type std.t.IScoredMatch
     local match = {
       order = lnum,
       uuid = uuids[lnum],

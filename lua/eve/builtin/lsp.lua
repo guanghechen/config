@@ -184,7 +184,7 @@ end
 ---@return string|nil
 function M.find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
-    local filepath = dirpath .. eve.env.PATH_SEP .. filename ---@type string
+    local filepath = dirpath .. std.env.PATH_SEP .. filename ---@type string
     if eve.path.is_exist_filepath(filepath) then
       return filepath
     end
@@ -215,7 +215,7 @@ function M.locate_lsp_root(filepath, config_filenames)
   local pieces = eve.path.split(filepath) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
-    local dirpath = table.concat(pieces, eve.env.PATH_SEP, 1, k) ---@type string
+    local dirpath = table.concat(pieces, std.env.PATH_SEP, 1, k) ---@type string
     if dirpath == cwd then
       break
     end
@@ -234,12 +234,12 @@ end
 ---@return string|nil
 function M.locate_mason_pkg_path(pkg, pkg_path, silent)
   pcall(require, "mason") -- make sure Mason is loaded. Will fail when generating docs
-  local root = vim.env.MASON or (eve.env.HOME_NVIM_DATA .. eve.env.PATH_SEP .. "mason")
+  local root = vim.env.MASON or (std.env.HOME_NVIM_DATA .. std.env.PATH_SEP .. "mason")
   local filepath = root .. "/packages/" .. pkg .. "/" .. pkg_path
 
   if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then
     if not silent then
-      eve.reporter.warn({
+      std.reporter.warn({
         from = __module_name__,
         subject = "locate_mason_pkg_path",
         message = string.format(
@@ -268,7 +268,7 @@ function M.on_attach(client, bufnr)
     M.check_methods(client, bufnr)
   end
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },
@@ -276,7 +276,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.hover()
 
-        eve.std.timer.set_timeout(function()
+        std.timer.set_timeout(function()
           vim.lsp.buf.hover()
         end, 100)
       end,
@@ -288,7 +288,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.declaration()
 
-        eve.std.timer.set_timeout(function()
+        std.timer.set_timeout(function()
           vim.lsp.buf.declaration()
         end, 100)
       end,
@@ -300,7 +300,7 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.lsp.buf.signature_help()
 
-        eve.std.timer.set_timeout(function()
+        std.timer.set_timeout(function()
           vim.lsp.buf.signature_help()
         end, 100)
       end,

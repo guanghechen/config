@@ -15,13 +15,13 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field public fileicon               string
 ---@field public fileicon_hl            string
 ---@field public filetype               string
----@field public mode                   eve.e.VimModeName
+---@field public mode                   std.e.VimModeName
 ---@field public mode_name              string
 ---@field public git_branch             string|nil
 
 ---@class eve.ux.nvimbar.IItem
 ---@field public name                   string
----@field public position               eve.e.NvimbarCompPosition
+---@field public position               std.e.NvimbarCompPosition
 
 ---@class eve.ux.nvimbar.INvimbarProps
 ---@field public name                   string
@@ -38,14 +38,14 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 
 ---@class eve.ux.nvimbar.Nvimbar
 ---@field public name                   string
----@field protected _value              eve.std.collection.Observable
+---@field protected _value              std.collection.Observable
 ---@field protected _disposed           boolean
 ---@field protected _sep                string
 ---@field protected _sep_active         string
 ---@field protected _sep_width          integer
 ---@field protected _components         eve.ux.nvimbar.IComponent[]
 ---@field protected _orders             integer[]
----@field protected _scheduler          eve.std.collection.Scheduler
+---@field protected _scheduler          std.collection.Scheduler
 ---@field protected _get_max_width      fun(): integer
 ---@field protected _get_preset_context eve.ux.nvimbar.IGetNvimbarPresetContext
 ---@field protected _isactive           fun(context: eve.ux.nvimbar.INvimbarContext): boolean
@@ -98,7 +98,7 @@ function M.new(props)
   local delay = props.delay or 20 ---@type integer
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
-  local value = eve.std.Observable.from_value("") ---@type eve.std.collection.Observable
+  local value = std.Observable.from_value("") ---@type std.collection.Observable
 
   ---@type eve.ux.nvimbar.IGetNvimbarPresetContext
   local get_preset_context = props.get_preset_context
@@ -111,13 +111,13 @@ function M.new(props)
     end
 
   local isactive = props.is_active ---@type fun(context: eve.ux.nvimbar.INvimbarContext): boolean
-  local on_fulfilled = props.on_fulfilled or eve.std.fn.noop ---@type fun(result: string): nil
-  local validate = props.validate or eve.std.fn.noop ---@type fun(): string|nil
+  local on_fulfilled = props.on_fulfilled or std.fn.noop ---@type fun(result: string): nil
+  local validate = props.validate or std.fn.noop ---@type fun(): string|nil
 
   local self = setmetatable({}, M)
 
-  ---@type eve.std.collection.Scheduler
-  local scheduler = eve.std.Scheduler.new({
+  ---@type std.collection.Scheduler
+  local scheduler = std.Scheduler.new({
     name = string.format("%s | %s", name, __module_name__),
     mode = "throttle",
     delay = delay,
@@ -217,7 +217,7 @@ function M:render(immediate)
   return self._scheduler:snapshot() or ""
 end
 
----@param position                      eve.e.NvimbarCompPosition
+---@param position                      std.e.NvimbarCompPosition
 ---@param raw_component                 eve.ux.nvimbar.IRawComponent
 ---@param priority                      ?integer
 ---@return eve.ux.nvimbar.Nvimbar
@@ -228,7 +228,7 @@ function M:place(position, raw_component, priority)
   local name = raw_component.name ---@type string
 
   if position ~= "left" and position ~= "center" and position ~= "right" then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "place",
       message = "Bad component position.",
@@ -254,8 +254,8 @@ function M:place(position, raw_component, priority)
     priority = priority,
     tight = not not raw_component.tight,
     render = raw_component.render,
-    will_change = raw_component.will_change or eve.std.fn.truthy,
-    condition = raw_component.condition or eve.std.fn.truthy,
+    will_change = raw_component.will_change or std.fn.truthy,
+    condition = raw_component.condition or std.fn.truthy,
   }
   components[k + 1] = component
 
@@ -339,7 +339,7 @@ function M:__render__(force)
     if ok then
       if width > 0 and width <= width_remain then
         local tight = component.tight ---@type boolean
-        local position = component.position ---@type eve.e.NvimbarCompPosition
+        local position = component.position ---@type std.e.NvimbarCompPosition
         if position == "left" then
           if not hl or tight then
             hl = true
@@ -376,7 +376,7 @@ function M:__render__(force)
         end
       end
     else
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "render",
         message = "Encounter error while render the nvimbar component.",
@@ -394,7 +394,7 @@ function M:__render__(force)
   for i = 1, N, 1 do
     local hltext = hltexts[i] ---@type string
     local component = components[i] ---@type eve.ux.nvimbar.IComponent
-    local position = component.position ---@type eve.e.NvimbarCompPosition
+    local position = component.position ---@type std.e.NvimbarCompPosition
     if position == "left" then
       tl = tl .. hltext
     elseif position == "center" then

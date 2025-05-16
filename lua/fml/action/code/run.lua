@@ -22,7 +22,7 @@ local runners = {
       local url = string.format(
         "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
         YOZORA_SERVER_PORT,
-        eve.string.escape_url_component(filepath),
+        std.string.escape_url_component(filepath),
         force and "true" or "false"
       )
       vim.system({ "curl", "-X", "POST", url }, { detach = true })
@@ -51,12 +51,12 @@ local runners = {
         code_runner_terminals.mjs = terminal
 
         terminal:focus()
-        eve.std.timer.set_timeout(function()
+        std.timer.set_timeout(function()
           handle(terminal)
         end, 1500)
       else
         terminal:focus()
-        eve.std.timer.set_timeout(function()
+        std.timer.set_timeout(function()
           handle(terminal)
         end, 100)
       end
@@ -82,7 +82,7 @@ function M.run(force)
 
   local runner = runners[key]
   if runner == nil then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       subject = "run",
       message = "Cannot find the runner by the given filepath.",

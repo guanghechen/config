@@ -11,7 +11,7 @@ local _history_select = nil ---@type eve.ux.ISelect|nil
 
 ---@return eve.ux.ISelect
 local function get_history_select()
-  local frecency = eve.context.frecency.files ---@type eve.std.collection.IFrecency
+  local frecency = eve.context.frecency.files ---@type std.collection.IFrecency
   local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
   local ORDINAL_FORMAT = "%" .. tostring(ORDINAL_WIDTH) .. "d" ---@type string
 
@@ -31,7 +31,7 @@ local function get_history_select()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       if winnr_sourcefile == nil then
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           message = "Cannot resolve sourcefile winnr",
           details = { cwd = cwd, winnr_source = winnr_sourcefile },
@@ -42,7 +42,7 @@ local function get_history_select()
 
       local meta = eve.win.resolve(winnr_sourcefile, false) ---@type eve.builtin.win.IMeta|nil
       if meta == nil then
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           message = "No history found.",
           details = { cwd = cwd, winnr_source = winnr_sourcefile },
@@ -126,7 +126,7 @@ local function get_history_select()
       local width_icon = string.len(item.data.icon) ---@type integer
       local text = string.format("%s %s %s", item.uuid, item.data.icon, item.text) ---@type string
 
-      ---@type eve.t.IHighlightInline[]
+      ---@type std.t.IHighlightInline[]
       local highlights = {
         {
           coll = offset,
@@ -137,7 +137,7 @@ local function get_history_select()
 
       offset = offset + width_icon + 1 ---@type integer
       for _, piece in ipairs(match.matches) do
-        ---@type eve.t.IHighlightInline
+        ---@type std.t.IHighlightInline
         local highlight = {
           coll = offset + piece.l,
           colr = offset + piece.r,
@@ -217,7 +217,7 @@ function M.history_backward()
 
   local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "No history found.",
@@ -226,9 +226,9 @@ function M.history_backward()
     return
   end
 
-  local history = meta.history ---@type eve.std.collection.IHistory|nil
+  local history = meta.history ---@type std.collection.IHistory|nil
   if history == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "No history found.",
@@ -284,7 +284,7 @@ function M.history_forward()
 
   local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil or meta.history == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "history_forward",
       message = "No history found.",
@@ -294,7 +294,7 @@ function M.history_forward()
   end
 
   local bufnr_target = nil ---@type integer|nil
-  local history = meta.history ---@type eve.std.collection.IHistory
+  local history = meta.history ---@type std.collection.IHistory
   while true do
     local item, is_top = history:forward()
     ---@cast item                       eve.builtin.win.IFilepathHistoryItem|nil

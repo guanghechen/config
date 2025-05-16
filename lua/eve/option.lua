@@ -1,6 +1,6 @@
-if eve.env.IS_MAC or eve.env.IS_NIX or eve.env.IS_WSL then
+if std.env.IS_MAC or std.env.IS_NIX or std.env.IS_WSL then
   vim.o.shell = "/bin/bash"
-elseif eve.env.IS_WIN then
+elseif std.env.IS_WIN then
   vim.o.shell = "pwsh"
 
   -- Setting shell command flags

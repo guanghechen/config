@@ -19,7 +19,7 @@
 ---@field public last_result_width      integer
 ---@field public atomic                 boolean
 ---@field public name                   string
----@field public position               eve.e.NvimbarCompPosition
+---@field public position               std.e.NvimbarCompPosition
 ---@field public priority               integer
 ---@field public tight                  boolean
 ---@field public condition              fun(context: eve.ux.nvimbar.INvimbarContext, remain_width: integer): boolean

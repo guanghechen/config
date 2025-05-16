@@ -7,10 +7,10 @@
 ---@field public icon                   string
 ---@field public icon_hl                string
 
-local scopes = vim.list_slice(eve.context.select.find_buffer_scopes) ---@type eve.e.FindBufferScope[]
+local scopes = vim.list_slice(eve.context.select.find_buffer_scopes) ---@type std.e.FindBufferScope[]
 local _select = nil ---@type eve.ux.ISelect|nil
 
----@type eve.t.ux.widget.IRawStatuslineItem[]
+---@type std.t.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
   {
     type = "enum",
@@ -18,10 +18,10 @@ local statusline_items = {
     symbol = "",
     state = eve.context.select.find_buffer_scope,
     callback = function()
-      local scope = eve.context.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
-      local idx = eve.table.find_index(scopes, scope) or 1 ---@type integer
+      local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
+      local idx = std.table.find_index(scopes, scope) or 1 ---@type integer
       local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
-      local next_scope = scopes[idx_next] ---@type eve.e.FindBufferScope
+      local next_scope = scopes[idx_next] ---@type std.e.FindBufferScope
       eve.context.select.find_buffer_scope:next(next_scope)
 
       if _select ~= nil then
@@ -41,7 +41,7 @@ local statusline_items = {
   },
 }
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local main_keymaps = {
   {
     modes = { "i", "n", "v" },
@@ -91,7 +91,7 @@ local main_keymaps = {
 local provider = {
   fetch_data = function()
     local cwd = eve.path.cwd() ---@type string
-    local scope = eve.context.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+    local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 
     ---@param bufnr                     integer
@@ -166,7 +166,7 @@ local provider = {
   render_item = function(item, match)
     local data = item.data ---@type fml.action.find.buffers.IItemData
 
-    ---@type eve.t.IHighlightInline[]
+    ---@type std.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = 5, hlname = "f_buf_nr" },
       { coll = 6, colr = 16, hlname = "f_buf_buftype" },
@@ -176,7 +176,7 @@ local provider = {
     }
 
     for _, piece in ipairs(match.matches) do
-      ---@type eve.t.IHighlightInline[]
+      ---@type std.t.IHighlightInline[]
       local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end
@@ -226,7 +226,7 @@ local select = eve.ux.Select.new({
 _select = select
 
 eve.fn.observe({ eve.context.select.find_buffer_scope }, function()
-  local scope = eve.context.select.find_buffer_scope:snapshot() ---@type eve.e.FindBufferScope
+  local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
   if scope == "A" then
     select:change_input_title("find buffers")
   elseif scope == "F" then

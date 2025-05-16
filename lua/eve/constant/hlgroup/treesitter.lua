@@ -1,10 +1,10 @@
 ---@class eve.constant.hlgroup.treesitter
 local M = {}
 
----@param context                       eve.t.theme.IContext
----@return table<string, eve.t.theme.IHlgroup>
+---@param context                       std.t.theme.IContext
+---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type eve.t.theme.IPalette
+  local c = context.scheme.palette ---@type std.t.theme.IPalette
 
   return {
     ["@annotation"] = { fg = c.brightRed },

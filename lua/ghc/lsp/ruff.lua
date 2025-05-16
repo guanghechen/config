@@ -4,7 +4,7 @@ local function on_attach(client, bufnr)
   client.server_capabilities.hoverProvider = false
   eve.lsp.on_attach(client, bufnr)
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },

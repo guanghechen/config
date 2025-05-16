@@ -43,8 +43,8 @@ return {
         checkThirdParty = false,
         library = {
           eve.path.join(vim.env.VIMRUNTIME, "lua"),
-          eve.path.join(eve.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
-          -- eve.path.join(eve.env.HOME_NVIM_CONFIG, "lua"),
+          eve.path.join(std.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
+          -- eve.path.join(std.env.HOME_NVIM_CONFIG, "lua"),
           "${3rd}/luv/library",
         },
       },

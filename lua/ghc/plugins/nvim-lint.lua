@@ -57,7 +57,7 @@ local linters_by_ft = {
 
 local linters = {}
 
-local scheduler = nil ---@type eve.std.collection.Scheduler|nil
+local scheduler = nil ---@type std.collection.Scheduler|nil
 
 return {
   name = "nvim-lint",
@@ -81,14 +81,14 @@ return {
       scheduler:dispose()
     end
 
-    ---@type eve.std.collection.Scheduler
-    scheduler = eve.std.Scheduler.new({
+    ---@type std.collection.Scheduler
+    scheduler = std.Scheduler.new({
       name = __module_name__,
       mode = "debounce",
       delay = 128,
       timeout = 0,
-      silent = eve.std.fn.falsy,
-      value = eve.std.Observable.from_value(true),
+      silent = std.fn.falsy,
+      value = std.Observable.from_value(true),
       task = function(_, context)
         local spellcheck = eve.context.lsp.spellcheck:snapshot() ---@type boolean
         if not spellcheck then
@@ -151,7 +151,7 @@ return {
 
           local linter = lint.linters[name]
           if not linter then
-            eve.reporter.warn({
+            std.reporter.warn({
               from = __module_name__,
               message = "Linter not found: " .. name,
             })

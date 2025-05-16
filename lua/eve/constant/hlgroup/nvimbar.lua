@@ -1,11 +1,11 @@
 ---@class eve.constant.hlgroup.nvimbar
 local M = {}
 
----@param context                       eve.t.theme.IContext
+---@param context                       std.t.theme.IContext
 ---@return eve.constant.hlgroup.nvimbar
 function M.gen_hlgroup_map(context)
-  local cs = eve.std.color
-  local c = context.scheme.palette ---@type eve.t.theme.IPalette
+  local cs = std.color
+  local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_bufc = t and c.none or c.bg0 ---@type string
   local bg_pos = t and c.bg0 or c.bg2 ---@type string
@@ -16,7 +16,7 @@ function M.gen_hlgroup_map(context)
     f_wl = c.none,
   }
 
-  ---@type table<string, eve.t.theme.IHlgroup>
+  ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
     bg = { fg = "bg_bar", bg = "bg_bar" },
     text = { fg = c.fg2, bg = "bg_bar" },
@@ -186,7 +186,7 @@ function M.gen_hlgroup_map(context)
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type eve.ux.nvimbar.PositionEnum[]
 
-  ---@class eve.constant.hlgroup.nvimbar : table<string, eve.t.theme.IHlgroup>
+  ---@class eve.constant.hlgroup.nvimbar : table<string, std.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
   ---@field public f_tl_bg              { bg: string, sp?: string }
   ---@field public f_wl_bg              { bg: string, sp?: string }

@@ -7,7 +7,7 @@ local __module_name__ = "eve.ux.setting" ---@type string
 ---@field public close                  fun(self: eve.ux.ISetting): nil
 
 ---@class eve.ux.setting.IOpenParams
----@field public initial_value          eve.t.T
+---@field public initial_value          std.t.T
 ---@field public row                    ?number
 ---@field public col                    ?number
 ---@field public width                  ?number
@@ -21,7 +21,7 @@ M.__index = M
 setmetatable(M, eve.ux.Textarea)
 
 ---@class eve.ux.setting.IProps
----@field public position               eve.e.BoxPosition
+---@field public position               std.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -29,36 +29,36 @@ setmetatable(M, eve.ux.Textarea)
 ---@field public max_height             ?number
 ---@field public min_width              ?number
 ---@field public min_height             ?number
----@field public keymaps                ?eve.t.IKeymap[]
+---@field public keymaps                ?std.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
----@field public validate               ?fun(value: eve.t.T): string|nil
+---@field public validate               ?fun(value: std.t.T): string|nil
 ---@field public on_close               ?fun(): nil
----@field public on_confirm             fun(value: eve.t.T): boolean
+---@field public on_confirm             fun(value: std.t.T): boolean
 
 ---@param props                         eve.ux.setting.IProps
 ---@return eve.ux.Setting
 function M.new(props)
-  local position = props.position ---@type eve.e.BoxPosition
+  local position = props.position ---@type std.e.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
   local max_height = props.max_height ---@type number|nil
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
-  local keymaps = props.keymaps or {} ---@type eve.t.IKeymap[]
+  local keymaps = props.keymaps or {} ---@type std.t.IKeymap[]
   local title = props.title ---@type string|nil
   local win_opts = props.win_opts or {} ---@type table<string, any>
 
-  local validate_from_props = props.validate ---@type (fun(value: eve.t.T): string)|nil
+  local validate_from_props = props.validate ---@type (fun(value: std.t.T): string)|nil
   local on_close_from_props = props.on_close ---@type (fun(): nil)
-  local on_confirm_from_props = props.on_confirm ---@type fun(text: eve.t.T): boolean
+  local on_confirm_from_props = props.on_confirm ---@type fun(text: std.t.T): boolean
 
   ---@param lines                       string[]
   ---@return string|nil
   local function validate(lines)
     local text = table.concat(lines, "\n") ---@type string
     local ok, data = pcall(function()
-      return eve.json.parse(text)
+      return std.json.parse(text)
     end)
 
     if not ok then
@@ -75,11 +75,11 @@ function M.new(props)
   local function on_confirm(lines)
     local text = table.concat(lines, "\n") ---@type string
     local ok, data = pcall(function()
-      return eve.json.parse(text)
+      return std.json.parse(text)
     end)
 
     if not ok then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "on_confirm",
         message = "Failed to parse json string.",
@@ -117,7 +117,7 @@ end
 ---@param params                        eve.ux.setting.IOpenParams
 ---@return nil
 function M:open(params)
-  local lines = eve.json.stringify_prettier_lines(params.initial_value) ---@type string[]
+  local lines = std.json.stringify_prettier_lines(params.initial_value) ---@type string[]
   ---@type eve.ux.textarea.IOpenParams
   local opts = {
     initial_lines = lines,

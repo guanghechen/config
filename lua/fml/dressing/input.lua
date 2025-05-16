@@ -146,7 +146,7 @@ function M.input(opts, on_confirm)
   vim.fn.prompt_setcallback(bufnr, action.confirm)
   vim.fn.prompt_setinterrupt(bufnr, action.cancel)
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "v" },
@@ -157,8 +157,8 @@ function M.input(opts, on_confirm)
     },
     { modes = { "i", "n" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
     { modes = { "n" }, key = "q", desc = "input: quit", callback = action.cancel },
-    { modes = { "n" }, key = "o", desc = "input: noop", callback = eve.std.fn.noop },
-    { modes = { "n" }, key = "O", desc = "input: noop", callback = eve.std.fn.noop },
+    { modes = { "n" }, key = "o", desc = "input: noop", callback = std.fn.noop },
+    { modes = { "n" }, key = "O", desc = "input: noop", callback = std.fn.noop },
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 

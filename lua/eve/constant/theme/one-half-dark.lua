@@ -1,4 +1,4 @@
----@type eve.t.theme.IScheme
+---@type std.t.theme.IScheme
 local M = {
   theme = "one-half-dark",
   variant = "dark",

@@ -149,7 +149,7 @@ for index = 1, #specs, 1 do
     spec_details.branch = spec_basic.branch
     spec_details.main = spec_basic.main
   elseif not vim.list_contains(no_details_module_names, spec_basic.name) then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. spec_basic.name,
@@ -161,7 +161,7 @@ end
 ---! bootstrap lazy and all plugins
 vim.list_extend(final_specs, require("ghc.plugins._extra"))
 
-local lazypath = eve.path.normalize(eve.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
+local lazypath = eve.path.normalize(std.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
 if not eve.path.is_exist(eve.path.join(lazypath, ".git")) then
   local repo = "https://github.com/guanghechen/mirror"
   vim.fn.system({
@@ -208,7 +208,7 @@ require("lazy").setup({
         "netrwPlugin",
         "netrwSettings",
         "optwin",
-        (eve.env.IS_WIN or eve.env.IS_MAC) and "osc52" or nil,
+        (std.env.IS_WIN or std.env.IS_MAC) and "osc52" or nil,
         "rplugin",
         "rrhelper",
         "spellfile_plugin",

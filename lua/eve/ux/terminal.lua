@@ -10,7 +10,7 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_terminal_bg",
 }, ",")
 
----@class eve.ux.ITerminal : eve.t.ux.IWidget
+---@class eve.ux.ITerminal : std.t.ux.IWidget
 ---@field public get_winnr              fun(self: eve.ux.ITerminal): integer|nil
 ---@field public get_bufnr              fun(self: eve.ux.ITerminal): integer|nil
 ---@field public show                   fun(self: eve.ux.ITerminal): nil
@@ -39,7 +39,7 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
 ---@field protected _cmd                string
 ---@field protected _cmd_cwd            string
 ---@field protected _cmd_env            table<string, string>|nil
----@field protected _keymaps            eve.t.IKeymap[]
+---@field protected _keymaps            std.t.IKeymap[]
 ---@field protected _term_alive         boolean
 ---@field protected _on_exit            fun(): nil
 local M = {}
@@ -49,7 +49,7 @@ M.__index = M
 ---@field public cmd                    ?string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
----@field public keymaps                ?eve.t.IKeymap[]
+---@field public keymaps                ?std.t.IKeymap[]
 ---@field public permanent              ?boolean
 ---@field public title                  string|nil
 ---@field public on_exit                ?fun(): nil
@@ -59,7 +59,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local keymaps = eve.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  local keymaps = eve.widget.get_keymaps(self) ---@type std.t.IKeymap[]
   vim.list_extend(keymaps, props.keymaps or {})
 
   local cmd = eve.shell.format_command(props.cmd) ---@type string
@@ -79,7 +79,7 @@ function M.new(props)
   self._cmd_env = cmd_env
   self._keymaps = keymaps
   self._term_alive = false
-  self._on_exit = props.on_exit or eve.std.fn.noop
+  self._on_exit = props.on_exit or std.fn.noop
   return self
 end
 

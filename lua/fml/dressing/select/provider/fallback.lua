@@ -3,7 +3,7 @@
 ---@return eve.ux.select.IProvider
 ---@return integer
 local function normal_provider(items, opts)
-  local format_item = opts.format_item or eve.std.fn.identity ---@type fun(item): string
+  local format_item = opts.format_item or std.fn.identity ---@type fun(item): string
   local width = 0 ---@type integer
   local select_items = {} ---@type eve.ux.select.IItem[]
   for index, item in ipairs(items) do

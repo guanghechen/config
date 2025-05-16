@@ -21,12 +21,12 @@ function M.flags(position)
     name = "widget",
     atomic = true,
     render = function()
-      local widget = eve.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
+      local widget = eve.widget.get_widget_visible() ---@type std.t.ux.IWidget|nil
       if widget == nil then
         return "", "", true
       end
 
-      local items = widget.statusline_items ---@type eve.t.ux.widget.IStatuslineItem[]|nil
+      local items = widget.statusline_items ---@type std.t.ux.widget.IStatuslineItem[]|nil
       if items == nil or #items < 1 then
         return "", "", true
       end

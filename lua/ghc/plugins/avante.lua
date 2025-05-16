@@ -20,7 +20,7 @@ local AI_PROVIDER_MAP = {
 ---@return fun(params: ghc.plugins.avante.file_selector.IParams): nil
 local function get_file_selector()
   local context = eve.context.select.select_avante
-  local _on_choice = eve.std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
+  local _on_choice = std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
   local _filepaths = {} ---@type string[]
   local _filepath_default = nil ---@type string|nil
   local _winnr = nil ---@type integer|nil
@@ -70,7 +70,7 @@ local function get_file_selector()
     end,
   }
 
-  ---@type eve.t.ux.widget.IRawStatuslineItem[]
+  ---@type std.t.ux.widget.IRawStatuslineItem[]
   local statusline_items = {
     {
       type = "flag",
@@ -181,10 +181,10 @@ local function get_file_selector()
           text = text .. ":" .. item.data.lnum .. ":" .. item.data.col
         end
 
-        ---@type eve.t.IHighlightInline[]
+        ---@type std.t.IHighlightInline[]
         local highlights = { { coll = 0, colr = icon_width, hlname = item.data.icon_hl } }
         for _, piece in ipairs(match.matches) do
-          ---@type eve.t.IHighlightInline
+          ---@type std.t.IHighlightInline
           local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
           table.insert(highlights, highlight)
         end
@@ -279,7 +279,7 @@ local selector_provider_opts = {
 
 return {
   "avante.nvim",
-  build = eve.env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource true"
+  build = std.env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource true"
     or "make BUILD_FROM_SOURCE=true",
   cmd = {
     "AvanteAsk",
@@ -303,7 +303,7 @@ return {
     "render-markdown.nvim",
   },
   opts = function()
-    local ai_provider = eve.context.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+    local ai_provider = eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
     local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot" ---@type string
     return {
       azure = {

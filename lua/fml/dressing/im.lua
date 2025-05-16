@@ -1,7 +1,7 @@
-if not eve.env.IS_NIX then
+if not std.env.IS_NIX then
   local augroup = eve.nvim.augroup("auto_toggle_im")
-  eve.std.timer.set_timeout(function()
-    local previous_mode = "n" ---@type eve.e.VimMode
+  std.timer.set_timeout(function()
+    local previous_mode = "n" ---@type std.e.VimMode
     local previous_input_method = nil ---@type eve.builtin.im.InputMethod|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
       group = augroup,
@@ -11,7 +11,7 @@ if not eve.env.IS_NIX then
           return
         end
 
-        local current_mode = vim.fn.mode() ---@type eve.e.VimMode
+        local current_mode = vim.fn.mode() ---@type std.e.VimMode
         if current_mode ~= previous_mode then
           if previous_mode == "i" then
             previous_input_method = eve.im.get_input_method() ---@type eve.builtin.im.InputMethod|nil

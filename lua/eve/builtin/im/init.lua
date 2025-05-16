@@ -7,11 +7,11 @@
 ---@field public set_input_method   fun(input_method: eve.builtin.im.InputMethod): nil
 local M = {}
 
-if eve.env.IS_MAC then
+if std.env.IS_MAC then
   M = require("eve.builtin.im.mac")
-elseif eve.env.IS_WSL then
+elseif std.env.IS_WSL then
   M = require("eve.builtin.im.wsl")
-elseif eve.env.IS_NIX then
+elseif std.env.IS_NIX then
   function M.get_input_method()
     return nil
   end
@@ -19,7 +19,7 @@ elseif eve.env.IS_NIX then
   function M.set_input_method()
     return nil
   end
-elseif eve.env.IS_WIN then
+elseif std.env.IS_WIN then
   M = require("eve.builtin.im.win")
 end
 

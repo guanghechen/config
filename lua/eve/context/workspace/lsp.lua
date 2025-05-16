@@ -15,13 +15,13 @@
 ---@field public spellcheck             boolean
 
 ---@class eve.context.lsp.state
----@field public breakpoints            eve.std.collection.IObservable
----@field public code_lens              eve.std.collection.IObservable
----@field public inlay_hints            eve.std.collection.IObservable
----@field public python_debug_host      eve.std.collection.IObservable
----@field public python_debug_port      eve.std.collection.IObservable
----@field public python_venv_path       eve.std.collection.IObservable
----@field public spellcheck             eve.std.collection.IObservable
+---@field public breakpoints            std.collection.IObservable
+---@field public code_lens              std.collection.IObservable
+---@field public inlay_hints            std.collection.IObservable
+---@field public python_debug_host      std.collection.IObservable
+---@field public python_debug_port      std.collection.IObservable
+---@field public python_venv_path       std.collection.IObservable
+---@field public spellcheck             std.collection.IObservable
 ---
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
@@ -143,13 +143,13 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local data = M.defaults() ---@type eve.context.lsp.data
-M.breakpoints = eve.std.Observable.from_value(data.breakpoints)
-M.code_lens = eve.std.Observable.from_value(data.code_lens)
-M.inlay_hints = eve.std.Observable.from_value(data.inlay_hints)
-M.python_debug_host = eve.std.Observable.from_value(data.python_debug_host)
-M.python_debug_port = eve.std.Observable.from_value(data.python_debug_port)
-M.python_venv_path = eve.std.Observable.from_value(data.python_venv_path)
-M.spellcheck = eve.std.Observable.from_value(data.spellcheck)
+M.breakpoints = std.Observable.from_value(data.breakpoints)
+M.code_lens = std.Observable.from_value(data.code_lens)
+M.inlay_hints = std.Observable.from_value(data.inlay_hints)
+M.python_debug_host = std.Observable.from_value(data.python_debug_host)
+M.python_debug_port = std.Observable.from_value(data.python_debug_port)
+M.python_venv_path = std.Observable.from_value(data.python_venv_path)
+M.spellcheck = std.Observable.from_value(data.spellcheck)
 
 ---@return string|nil
 ---@return string|nil
@@ -159,8 +159,8 @@ function M.get_python_bin_path()
     return nil, nil
   end
 
-  local python_name = eve.env.IS_WIN and "python.exe" or "python" ---@type string
-  local python_parent_path = eve.env.IS_WIN and "Scripts" or "bin" ---@type string
+  local python_name = std.env.IS_WIN and "python.exe" or "python" ---@type string
+  local python_parent_path = std.env.IS_WIN and "Scripts" or "bin" ---@type string
 
   local bin_path = eve.path.join(venv_path, python_parent_path) ---@type string
   local python_path = eve.path.join(bin_path, python_name) ---@type string

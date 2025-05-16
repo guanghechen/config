@@ -69,7 +69,7 @@ local ignored = {
 
 ---@class ghc.plugin.conform.config
 local config = {
-  prettier_bin_path = eve.path.normalize("node_modules/.bin/prettier") .. (eve.env.IS_WIN and ".cmd" or ""),
+  prettier_bin_path = eve.path.normalize("node_modules/.bin/prettier") .. (std.env.IS_WIN and ".cmd" or ""),
 }
 
 local fns = {

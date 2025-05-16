@@ -66,7 +66,7 @@ local function get_diff_lines_from_git(lnum, filepath)
   return dels, adds
 end
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local keymaps = {
   {
     modes = { "n" },
@@ -170,7 +170,7 @@ local keymaps = {
         .new({ name = "blame line", indent = "  " })
         :lf()
         :line(
-          string.format("%s, %s (%s)", author_name, eve.std.fn.time_ago(author_timestamp or os.time()), author_date),
+          string.format("%s, %s (%s)", author_name, std.fn.time_ago(author_timestamp or os.time()), author_date),
           { { hlname = "Title", coll = 0, colr = -1 } }
         )
         :line(separate_line, { { hlname = "VertSplit", coll = 0, colr = -1 } })
@@ -184,7 +184,7 @@ local keymaps = {
         :line(string.format("Changes added in %s | <remote url>", commit_hash), {})
         :lf()
 
-      ---@type eve.t.IKeymap[]
+      ---@type std.t.IKeymap[]
       local keymaps = {
         {
           modes = { "i", "n", "v" },

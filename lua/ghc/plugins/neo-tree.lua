@@ -100,7 +100,7 @@ return {
           return
         end
 
-        local index = eve.table.find_index(sources, source) ---@type integer |nil
+        local index = std.table.find_index(sources, source) ---@type integer |nil
         if index == nil then
           return
         end
@@ -118,7 +118,7 @@ return {
           return
         end
 
-        local index = eve.table.find_index(sources, source) ---@type integer |nil
+        local index = std.table.find_index(sources, source) ---@type integer |nil
         if index == nil then
           return
         end
@@ -191,7 +191,7 @@ return {
         local filepath = node.path ---@type string
         local stat = vim.loop.fs_stat(filepath)
         if not stat then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = "show_file_info",
             message = "Failed to get file stats",
@@ -217,7 +217,7 @@ return {
         vim.bo[bufnr].filetype = "markdown"
         vim.bo[bufnr].swapfile = false
 
-        ---@type eve.t.IKeymap[]
+        ---@type std.t.IKeymap[]
         local keymaps = {
           {
             modes = { "n" },
@@ -343,7 +343,7 @@ return {
         event = "neo_tree_popup_input_ready",
         ---@param args { bufnr: integer, winid: integer }
         handler = function(args)
-          local keymaps = { { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert } } ---@type eve.t.IKeymap[]
+          local keymaps = { { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert } } ---@type std.t.IKeymap[]
           eve.nvim.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
           vim.cmd.stopinsert()
         end,

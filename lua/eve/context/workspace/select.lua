@@ -12,9 +12,9 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public search_file            eve.context.select.item.data
 ---@field public select_avante          eve.context.select.item.data
 ---
----@field public find_buffer_scope      eve.e.FindBufferScope
----@field public find_file_scope        eve.e.FindFileScope
----@field public search_file_scope      eve.e.SearchFileScope
+---@field public find_buffer_scope      std.e.FindBufferScope
+---@field public find_file_scope        std.e.FindFileScope
+---@field public search_file_scope      std.e.SearchFileScope
 
 ---@class eve.context.select.state
 ---@field public find_buffer            eve.context.select.item.state
@@ -28,15 +28,15 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public search_file            eve.context.select.item.state
 ---@field public select_avante          eve.context.select.item.state
 ---
----@field public find_buffer_scope      eve.std.collection.IObservable
----@field public find_file_scope        eve.std.collection.IObservable
----@field public search_file_scope      eve.std.collection.IObservable
+---@field public find_buffer_scope      std.collection.IObservable
+---@field public find_file_scope        std.collection.IObservable
+---@field public search_file_scope      std.collection.IObservable
 
 ---@class eve.context.select : eve.context.select.state
 ---@field public keys                   string[]
----@field public find_buffer_scopes     eve.e.FindBufferScope[]
----@field public find_file_scopes       eve.e.FindFileScope[]
----@field public search_file_scopes     eve.e.SearchFileScope[]
+---@field public find_buffer_scopes     std.e.FindBufferScope[]
+---@field public find_file_scopes       std.e.FindFileScope[]
+---@field public search_file_scopes     std.e.SearchFileScope[]
 ---
 ---@field public defaults               fun(): eve.context.select.data
 ---@field public dump                   fun(): eve.context.select.data
@@ -156,9 +156,9 @@ M.find_vim_option = select_item.load(nil, "find_vim_option", _defaults.find_vim_
 M.search_file = select_item.load(nil, "search_file", _defaults.search_file)
 M.select_avante = select_item.load(nil, "select_avante", _defaults.select_avante)
 
-M.find_buffer_scope = eve.std.Observable.from_value(_defaults.find_file_scope)
-M.find_file_scope = eve.std.Observable.from_value(_defaults.find_file_scope)
-M.search_file_scope = eve.std.Observable.from_value(_defaults.search_file_scope)
+M.find_buffer_scope = std.Observable.from_value(_defaults.find_file_scope)
+M.find_file_scope = std.Observable.from_value(_defaults.find_file_scope)
+M.search_file_scope = std.Observable.from_value(_defaults.search_file_scope)
 
 ---@return string[]
 M.keys = {
@@ -173,8 +173,8 @@ M.keys = {
   "search_file",
   "select_avante",
 }
-M.find_buffer_scopes = { "A", "F", "L", "T" } ---@type eve.e.FindBufferScope[]
-M.find_file_scopes = { "W", "C", "D" } ---@type eve.e.FindFileScope[]
-M.search_file_scopes = { "W", "C", "D", "B" } ---@type eve.e.SearchFileScope[]
+M.find_buffer_scopes = { "A", "F", "L", "T" } ---@type std.e.FindBufferScope[]
+M.find_file_scopes = { "W", "C", "D" } ---@type std.e.FindFileScope[]
+M.search_file_scopes = { "W", "C", "D", "B" } ---@type std.e.SearchFileScope[]
 
 return M

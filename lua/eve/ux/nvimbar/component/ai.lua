@@ -3,7 +3,7 @@ local __module_name__ = "eve.ux.nvimbar.component.ai" ---@type string
 local btn = eve.nvim.btn
 local txt = eve.nvim.txt
 
----@param provider                    eve.e.AiProvider
+---@param provider                    std.e.AiProvider
 ---@return string
 local function get_status(provider)
   if provider == "copilot" then
@@ -27,7 +27,7 @@ local fn_show_message = eve.G.register_anonymous_fn(function()
     end
   end
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     details = { enabled = enabled, provider = provider, status = status },
   })
@@ -50,7 +50,7 @@ function M.provider(position)
     end,
     render = function()
       local enabled = eve.context.flight.ai:snapshot() ---@type boolean
-      local provider = eve.context.flight.ai_provider:snapshot() ---@type eve.e.AiProvider
+      local provider = eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
 
       if not enabled then
         local text = "󱙻 " .. provider .. " " ---@type string

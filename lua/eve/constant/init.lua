@@ -67,18 +67,18 @@ local theme__mods = {
 
 ---@class eve.constant.theme
 ---@field public __mods                 eve.constant.theme.__mods
----@field public ["catppuccin-frappe"]  eve.t.theme.IScheme
----@field public ["catppuccin-latte"]   eve.t.theme.IScheme
----@field public ["catppuccin-macchiato"] eve.t.theme.IScheme
----@field public ["catppuccin-mocha"]   eve.t.theme.IScheme
----@field public ["gruvbox-light"]      eve.t.theme.IScheme
----@field public ["gruvbox-dark"]       eve.t.theme.IScheme
----@field public ["nord"]               eve.t.theme.IScheme
----@field public ["one-half-light"]     eve.t.theme.IScheme
----@field public ["one-half-dark"]      eve.t.theme.IScheme
----@field public ["rose-pine-main"]     eve.t.theme.IScheme
----@field public ["rose-pine-moon"]     eve.t.theme.IScheme
----@field public ["rose-pine-dawn"]     eve.t.theme.IScheme
+---@field public ["catppuccin-frappe"]  std.t.theme.IScheme
+---@field public ["catppuccin-latte"]   std.t.theme.IScheme
+---@field public ["catppuccin-macchiato"] std.t.theme.IScheme
+---@field public ["catppuccin-mocha"]   std.t.theme.IScheme
+---@field public ["gruvbox-light"]      std.t.theme.IScheme
+---@field public ["gruvbox-dark"]       std.t.theme.IScheme
+---@field public ["nord"]               std.t.theme.IScheme
+---@field public ["one-half-light"]     std.t.theme.IScheme
+---@field public ["one-half-dark"]      std.t.theme.IScheme
+---@field public ["rose-pine-main"]     std.t.theme.IScheme
+---@field public ["rose-pine-moon"]     std.t.theme.IScheme
+---@field public ["rose-pine-dawn"]     std.t.theme.IScheme
 local theme = setmetatable({
   __mods = theme__mods,
 }, {

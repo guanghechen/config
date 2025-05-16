@@ -3,7 +3,7 @@ local config = require("fml.dressing.image.config")
 -- HACK: ghostty doesn't like it when sending images too fast,
 -- after Neovim startup, so we delay the first image
 local queue = {} ---@type string[]?
-eve.std.timer.set_timeout(function()
+std.timer.set_timeout(function()
   for _, data in ipairs(queue or {}) do
     io.stdout:write(data)
   end

@@ -29,7 +29,7 @@ function M.new(props)
 
   local terminal = terminal_map[name] ---@type eve.ux.ITerminal|nil
   if terminal ~= nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "new",
       message = "The term with the given name already exists.",

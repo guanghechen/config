@@ -8,7 +8,7 @@ local M = {}
 
 ---@return nil
 function M.start()
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     subject = "start",
     details = {
@@ -32,7 +32,7 @@ function M.stop()
     pcall(vim.fn.system, command)
   end)
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     subject = "stop",
     details = {

@@ -28,12 +28,12 @@ local __module_name__ = "eve.builtin.win"
 
 ---@class eve.builtin.win.IWinline
 ---@field public bufnr                  integer
----@field public locate_scheduler       eve.std.collection.Scheduler|nil
----@field public lsp_symbols            eve.t.ILspSymbol[]|nil
+---@field public locate_scheduler       std.collection.Scheduler|nil
+---@field public lsp_symbols            std.t.ILspSymbol[]|nil
 ---@field public nvimbar                eve.ux.nvimbar.Nvimbar
 
 ---@class eve.builtin.win.IMeta
----@field public history                eve.std.collection.IHistory|nil
+---@field public history                std.collection.IHistory|nil
 ---@field public winline                eve.builtin.win.IWinline|nil
 ---@field public wintype                eve.builtin.win.TypeEnum|nil
 
@@ -311,7 +311,7 @@ function M.fork(winnr_source, winnr_target)
     if meta_target.history ~= nil then
       meta_target.history:clear()
     end
-    local history_forked = meta_source.history:fork({ name = "win_filepath" }) ---@type eve.std.collection.IHistory
+    local history_forked = meta_source.history:fork({ name = "win_filepath" }) ---@type std.collection.IHistory
     meta_target.history = history_forked
   end
 
@@ -340,7 +340,7 @@ function M.resolve(winnr, force)
   end
 
   if meta.history == nil then
-    meta.history = eve.std.History.new({
+    meta.history = std.History.new({
       name = "win#bufs",
       capacity = eve.setting.WIN_BUF_HISTORY_CAPACITY,
       ---@param x                       eve.builtin.win.IFilepathHistoryItem
@@ -369,7 +369,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param winnr                         integer|nil
----@param callback                      fun(ok: boolean, symbols: eve.t.ILspSymbol[]|nil): nil
+---@param callback                      fun(ok: boolean, symbols: std.t.ILspSymbol[]|nil): nil
 ---@return nil
 function M.locate_symbols(winnr, callback)
   if winnr == nil or not eve.win.is_valid(winnr) then
@@ -426,7 +426,7 @@ function M.locate_symbols(winnr, callback)
         return
       end
 
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "locate_symbols",
         message = "Failed to request document symbols",
@@ -438,7 +438,7 @@ function M.locate_symbols(winnr, callback)
 
     local cursor_pos = { line = row - 1, character = col }
     local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
-    local lsp_symbols = {} ---@type eve.t.ILspSymbol[]
+    local lsp_symbols = {} ---@type std.t.ILspSymbol[]
 
     local k = 1 ---@type integer
     if symbol_path then
@@ -446,7 +446,7 @@ function M.locate_symbols(winnr, callback)
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
         local name = symbol.name
         local pos = symbol.range and symbol.range.start or symbol.location.range.start
-        ---@type eve.t.ILspSymbol
+        ---@type std.t.ILspSymbol
         local lsp_symbol = {
           kind = kind,
           name = name,
@@ -585,7 +585,7 @@ function M.on_buf_enter(winnr, bufnr)
   end
 
   local filepath = meta_buf.filepath ---@type string
-  local history = meta_win.history ---@type eve.std.collection.IHistory
+  local history = meta_win.history ---@type std.collection.IHistory
   local item = { bufnr = bufnr, filepath = filepath } ---@type eve.builtin.win.IFilepathHistoryItem
   history:push(item)
 end

@@ -11,48 +11,48 @@
 ---@field public tmux_zen_mode          boolean
 
 ---@class eve.builtin.status
----@field protected _disposables        eve.std.collection.BatchDisposable
+---@field protected _disposables        std.collection.BatchDisposable
 ---
 ---
----@field public winnr_command          eve.std.collection.IObservable
+---@field public winnr_command          std.collection.IObservable
 ---
----@field public dirtier_statusline     eve.std.collection.IDirtier
----@field public dirtier_tabline        eve.std.collection.IDirtier
----@field public dirty_winline_nr       eve.std.collection.IObservable
+---@field public dirtier_statusline     std.collection.IDirtier
+---@field public dirtier_tabline        std.collection.IDirtier
+---@field public dirty_winline_nr       std.collection.IObservable
 ---
----@field public lint_schedule_nr       eve.std.collection.IObservable
+---@field public lint_schedule_nr       std.collection.IObservable
 ---
----@field public msg_changes            eve.std.collection.IObservable
----@field public msg_command            eve.std.collection.IObservable
----@field public msg_lsp                eve.std.collection.IObservable
----@field public msg_mode               eve.std.collection.IObservable
+---@field public msg_changes            std.collection.IObservable
+---@field public msg_command            std.collection.IObservable
+---@field public msg_lsp                std.collection.IObservable
+---@field public msg_mode               std.collection.IObservable
 ---
----@field public notification_paused    eve.std.collection.IObservable
----@field public notification_level     eve.std.collection.IObservable
----@field public searching              eve.std.collection.IObservable
----@field public suppress_warning       eve.std.collection.IObservable
----@field public tmux_zen_mode          eve.std.collection.IObservable
+---@field public notification_paused    std.collection.IObservable
+---@field public notification_level     std.collection.IObservable
+---@field public searching              std.collection.IObservable
+---@field public suppress_warning       std.collection.IObservable
+---@field public tmux_zen_mode          std.collection.IObservable
 local M = {
-  _disposables = eve.std.BatchDisposable.new(),
+  _disposables = std.BatchDisposable.new(),
 
-  winnr_command = eve.std.Observable.from_value(0),
+  winnr_command = std.Observable.from_value(0),
 
-  dirtier_statusline = eve.std.Dirtier.new({ dirty = true }),
-  dirtier_tabline = eve.std.Dirtier.new({ dirty = true }),
-  dirty_winline_nr = eve.std.Observable.from_value(0, eve.std.fn.falsy),
+  dirtier_statusline = std.Dirtier.new({ dirty = true }),
+  dirtier_tabline = std.Dirtier.new({ dirty = true }),
+  dirty_winline_nr = std.Observable.from_value(0, std.fn.falsy),
 
-  lint_schedule_nr = eve.std.Observable.from_value(0, eve.std.fn.falsy),
+  lint_schedule_nr = std.Observable.from_value(0, std.fn.falsy),
 
-  msg_changes = eve.std.Observable.from_value(""),
-  msg_command = eve.std.Observable.from_value(""),
-  msg_lsp = eve.std.Observable.from_value(""),
-  msg_mode = eve.std.Observable.from_value(""),
+  msg_changes = std.Observable.from_value(""),
+  msg_command = std.Observable.from_value(""),
+  msg_lsp = std.Observable.from_value(""),
+  msg_mode = std.Observable.from_value(""),
 
-  notification_paused = eve.std.Observable.from_value(false),
-  notification_level = eve.std.Observable.from_value("TRACE"),
-  searching = eve.std.Observable.from_value(false),
-  suppress_warning = eve.std.Observable.from_value(false),
-  tmux_zen_mode = eve.std.Observable.from_value(true),
+  notification_paused = std.Observable.from_value(false),
+  notification_level = std.Observable.from_value("TRACE"),
+  searching = std.Observable.from_value(false),
+  suppress_warning = std.Observable.from_value(false),
+  tmux_zen_mode = std.Observable.from_value(true),
 }
 
 M._disposables
@@ -71,7 +71,7 @@ M._disposables
   :add_disposable(M.suppress_warning)
   :add_disposable(M.tmux_zen_mode)
 
----@param disposable                    eve.std.collection.IDisposable
+---@param disposable                    std.collection.IDisposable
 ---@return nil
 function M.add_disposable(disposable)
   M._disposables:add_disposable(disposable)

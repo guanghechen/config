@@ -57,7 +57,7 @@ local provider = {
   end,
   render_item = function(item, match)
     local suffix = item.data.level:lower() ---@type string
-    ---@type eve.t.IHighlightInline[]
+    ---@type std.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = 8, hlname = "f_un_icon_" .. suffix },
       { coll = 9, colr = 12, hlname = "f_un_icon_" .. suffix },
@@ -65,7 +65,7 @@ local provider = {
     }
 
     for _, piece in ipairs(match.matches) do
-      ---@type eve.t.IHighlightInline[]
+      ---@type std.t.IHighlightInline[]
       local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end

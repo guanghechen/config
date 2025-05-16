@@ -1,6 +1,6 @@
 ---@class eve.context.flight.data
 ---@field public ai                     boolean
----@field public ai_provider            eve.e.AiProvider
+---@field public ai_provider            std.e.AiProvider
 ---@field public autoformat             boolean
 ---@field public autoload               boolean
 ---@field public autosave               boolean
@@ -16,21 +16,21 @@
 ---@field public gitdiff_expand_all     boolean
 
 ---@class eve.context.flight.state
----@field public ai                     eve.std.collection.IObservable
----@field public ai_provider            eve.std.collection.IObservable
----@field public autoformat             eve.std.collection.IObservable
----@field public autoload               eve.std.collection.IObservable
----@field public autosave               eve.std.collection.IObservable
----@field public devmode                eve.std.collection.IObservable
+---@field public ai                     std.collection.IObservable
+---@field public ai_provider            std.collection.IObservable
+---@field public autoformat             std.collection.IObservable
+---@field public autoload               std.collection.IObservable
+---@field public autosave               std.collection.IObservable
+---@field public devmode                std.collection.IObservable
 ---
----@field public dressing_clipboard     eve.std.collection.IObservable
----@field public dressing_hipairs       eve.std.collection.IObservable
----@field public dressing_illumniate    eve.std.collection.IObservable
----@field public dressing_input         eve.std.collection.IObservable
----@field public dressing_select        eve.std.collection.IObservable
----@field public dressing_winsep        eve.std.collection.IObservable
+---@field public dressing_clipboard     std.collection.IObservable
+---@field public dressing_hipairs       std.collection.IObservable
+---@field public dressing_illumniate    std.collection.IObservable
+---@field public dressing_input         std.collection.IObservable
+---@field public dressing_select        std.collection.IObservable
+---@field public dressing_winsep        std.collection.IObservable
 ---
----@field public gitdiff_expand_all     eve.std.collection.IObservable
+---@field public gitdiff_expand_all     std.collection.IObservable
 
 ---@class eve.context.flight : eve.context.flight.state
 ---@field public defaults               fun(): eve.context.flight.data
@@ -42,7 +42,7 @@ local M = {}
 ---@return eve.context.flight.data
 function M.defaults()
   local workspace = eve.path.workspace() ---@type string
-  local is_home_config_dir = workspace == eve.env.HOME_NVIM_CONFIG ---@type boolean
+  local is_home_config_dir = workspace == std.env.HOME_NVIM_CONFIG ---@type boolean
   local is_git_repo = eve.path.is_repo_git() ---@type boolean
   local is_thirdparty = eve.path.is_repo_thirdparty() ---@type boolean
   local is_playground = eve.path.is_repo_playground() ---@type boolean
@@ -165,20 +165,20 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.flight.data
-M.ai = eve.std.Observable.from_value(_defaults.ai)
-M.ai_provider = eve.std.Observable.from_value(_defaults.ai_provider)
-M.autoformat = eve.std.Observable.from_value(_defaults.autoformat)
-M.autoload = eve.std.Observable.from_value(_defaults.autoload)
-M.autosave = eve.std.Observable.from_value(_defaults.autosave)
-M.devmode = eve.std.Observable.from_value(_defaults.devmode)
+M.ai = std.Observable.from_value(_defaults.ai)
+M.ai_provider = std.Observable.from_value(_defaults.ai_provider)
+M.autoformat = std.Observable.from_value(_defaults.autoformat)
+M.autoload = std.Observable.from_value(_defaults.autoload)
+M.autosave = std.Observable.from_value(_defaults.autosave)
+M.devmode = std.Observable.from_value(_defaults.devmode)
 
-M.dressing_clipboard = eve.std.Observable.from_value(_defaults.dressing_clipboard)
-M.dressing_hipairs = eve.std.Observable.from_value(_defaults.dressing_hipairs)
-M.dressing_illumniate = eve.std.Observable.from_value(_defaults.dressing_illumniate)
-M.dressing_input = eve.std.Observable.from_value(_defaults.dressing_input)
-M.dressing_select = eve.std.Observable.from_value(_defaults.dressing_select)
-M.dressing_winsep = eve.std.Observable.from_value(_defaults.dressing_winsep, eve.std.fn.falsy)
+M.dressing_clipboard = std.Observable.from_value(_defaults.dressing_clipboard)
+M.dressing_hipairs = std.Observable.from_value(_defaults.dressing_hipairs)
+M.dressing_illumniate = std.Observable.from_value(_defaults.dressing_illumniate)
+M.dressing_input = std.Observable.from_value(_defaults.dressing_input)
+M.dressing_select = std.Observable.from_value(_defaults.dressing_select)
+M.dressing_winsep = std.Observable.from_value(_defaults.dressing_winsep, std.fn.falsy)
 
-M.gitdiff_expand_all = eve.std.Observable.from_value(_defaults.gitdiff_expand_all)
+M.gitdiff_expand_all = std.Observable.from_value(_defaults.gitdiff_expand_all)
 
 return M

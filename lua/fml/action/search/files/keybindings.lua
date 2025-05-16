@@ -1,12 +1,12 @@
 local context = require("fml.action.search.files.context")
 
----@type eve.t.ux.widget.IRawStatuslineItem[]
+---@type std.t.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
   {
     type = "popup",
     desc = "search: edit settings",
     symbol = eve.icon.symbols.setting,
-    state = eve.std.Observable.from_value(true),
+    state = std.Observable.from_value(true),
     callback = context.edit_config,
   },
   {
@@ -60,7 +60,7 @@ local statusline_items = {
   },
 }
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local common_keymaps = {
   {
     modes = { "i", "n", "v" },
@@ -112,7 +112,7 @@ local common_keymaps = {
   },
 }
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local input_keymaps = {
   {
     modes = { "n", "v" },
@@ -134,16 +134,16 @@ local input_keymaps = {
 ---@class fml.action.search.files.keybindings
 local M = {}
 
----@type eve.t.ux.widget.IRawStatuslineItem[]
+---@type std.t.ux.widget.IRawStatuslineItem[]
 M.statusline_items = vim.list_slice(statusline_items)
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 M.input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps)
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 M.main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps)
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 M.preview_keymaps = vim.list_slice(common_keymaps)
 
 return M

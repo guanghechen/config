@@ -25,7 +25,7 @@ local M = {}
 ---@param err                           any
 ---@param unwatch                       fun():nil
 local function default_watch_on_error(filepath, err, unwatch)
-  eve.reporter.error({
+  std.reporter.error({
     from = __module_name__,
     subject = "watch_file",
     message = "Failed to watch file.",
@@ -82,7 +82,7 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
 
   local handle = vim.uv.fs_scandir(dirpath_source)
   if not handle then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "copy_directory",
       message = "Failed to open source directory.",
@@ -98,8 +98,8 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
       break
     end
 
-    local source_path = dirpath_source .. eve.env.PATH_SEP .. name
-    local target_path = dirpath_target .. eve.env.PATH_SEP .. name
+    local source_path = dirpath_source .. std.env.PATH_SEP .. name
+    local target_path = dirpath_target .. std.env.PATH_SEP .. name
 
     if type == "directory" then
       success = success and M.copy_directory(source_path, target_path, force)
@@ -135,7 +135,7 @@ function M.read_file(params)
   local file = io.open(filepath, "rb") -- rb: read in binary mode
   if not file then
     if not silent then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "read_file",
         message = "Failed to open filepath.",
@@ -158,7 +158,7 @@ function M.read_file_as_base64(params)
   local file = io.open(filepath, "r")
   if not file then
     if not silent then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "read_file_as_base64",
         message = "Failed to open filepath.",
@@ -170,7 +170,7 @@ function M.read_file_as_base64(params)
 
   local content = file:read("*a") -- Read the entire content of the file
   file:close()
-  return eve.std.base64.encode(content)
+  return std.base64.encode(content)
 end
 
 ---@param params                        eve.builtin.fs.IReadFileAsLinesParams
@@ -181,7 +181,7 @@ function M.read_file_as_lines(params)
   local file = io.open(filepath, "r")
   if not file then
     if not silent then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "read_file_as_lines",
         message = "Failed to open filepath.",
@@ -222,7 +222,7 @@ function M.read_json(params)
   local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
   if not ok_to_decode_json then
     if not silent_on_bad_json then
-      eve.reporter.warn({
+      std.reporter.warn({
         from = __module_name__,
         subject = "read_json",
         message = "Failed to decode json",
@@ -246,7 +246,7 @@ function M.touch(filepath)
       local current_time = vim.uv.hrtime() / 1e9 -- Get current time in seconds
       vim.uv.fs_utime(filepath, current_time, current_time, function(err)
         if err then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = "touch",
             message = "Failed to touch file.",
@@ -308,7 +308,7 @@ function M.write_file(filepath, content)
 
   local file = io.open(filepath, "wb")
   if not file then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "write_file",
       message = "Failed to open filepath.",
@@ -319,7 +319,7 @@ function M.write_file(filepath, content)
 
   local ok, err = pcall(file.write, file, content)
   if not ok then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "write_file",
       message = "Failed to write content.",
@@ -335,9 +335,9 @@ end
 ---@param prettier                      boolean
 ---@return nil
 function M.write_json(filepath, data, prettier)
-  local ok_to_encode_json, json_text = pcall(prettier and eve.json.stringify_prettier or eve.json.stringify, data)
+  local ok_to_encode_json, json_text = pcall(prettier and std.json.stringify_prettier or std.json.stringify, data)
   if not ok_to_encode_json then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       subject = "write_json",
       message = "Failed to encode json data.",

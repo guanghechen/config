@@ -1,11 +1,11 @@
----@type fun(w1: eve.t.ux.IWidget, w2: eve.t.ux.IWidget): boolean
-local equals = eve.std.fn.equals_shallow
+---@type fun(w1: std.t.ux.IWidget, w2: std.t.ux.IWidget): boolean
+local equals = std.fn.equals_shallow
 
 ---@class eve.builtin.widget
 local M = {}
 
----@type eve.std.collection.History
-M.history = eve.std.History.new({
+---@type std.collection.History
+M.history = std.History.new({
   name = "widget",
   capacity = 100,
   equals = equals,
@@ -13,12 +13,12 @@ M.history = eve.std.History.new({
 
 ---@return nil
 function M.backward()
-  local present, present_index = M.history:present() ---@type eve.t.ux.IWidget|nil, integer|nil
+  local present, present_index = M.history:present() ---@type std.t.ux.IWidget|nil, integer|nil
   if present == nil or present_index <= 1 then
     return
   end
 
-  local widget = nil ---@type eve.t.ux.IWidget|nil
+  local widget = nil ---@type std.t.ux.IWidget|nil
   local is_bottom = false ---@type boolean
   while not is_bottom do
     widget, is_bottom = M.history:backward()
@@ -32,15 +32,15 @@ end
 
 ---@return nil
 function M.forward()
-  local present, present_index = M.history:present() ---@type eve.t.ux.IWidget|nil, integer|nil
+  local present, present_index = M.history:present() ---@type std.t.ux.IWidget|nil, integer|nil
   if present == nil or present_index >= M.history:size() then
     return
   end
 
-  local widget = nil ---@type eve.t.ux.IWidget|nil
+  local widget = nil ---@type std.t.ux.IWidget|nil
   local is_top = false ---@type boolean
   while not is_top do
-    widget, is_top = M.history:forward() ---@type eve.t.ux.IWidget|nil, boolean
+    widget, is_top = M.history:forward() ---@type std.t.ux.IWidget|nil, boolean
     if widget ~= nil and not widget:isdisposed() and not equals(widget, present) then
       present:hide()
       widget:focus()
@@ -49,14 +49,14 @@ function M.forward()
   end
 end
 
----@param widget                        eve.t.ux.IWidget
----@return eve.t.IKeymap[]
+---@param widget                        std.t.ux.IWidget
+---@return std.t.IKeymap[]
 function M.get_keymaps(widget)
   ---@return nil
   local function on_close()
     widget:close()
 
-    local widget_visible, widget_visible_index = M.get_widget_visible() ---@type eve.t.ux.IWidget|nil, integer|nil
+    local widget_visible, widget_visible_index = M.get_widget_visible() ---@type std.t.ux.IWidget|nil, integer|nil
     if widget_visible ~= nil and widget_visible_index ~= nil then
       widget_visible:focus()
       M.history:go(widget_visible_index)
@@ -68,7 +68,7 @@ function M.get_keymaps(widget)
     end
   end
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "t", "v" },
@@ -101,16 +101,16 @@ function M.get_keymaps(widget)
   return keymaps
 end
 
----@return eve.t.ux.IWidget|nil
+---@return std.t.ux.IWidget|nil
 ---@return integer|nil
 function M.get_widget_current()
-  local present, present_index = M.history:present() ---@type eve.t.ux.IWidget|nil
+  local present, present_index = M.history:present() ---@type std.t.ux.IWidget|nil
   if present ~= nil and not present:isdisposed() then
     return present, present_index
   end
 
   for index = present_index - 1, 1, -1 do
-    local widget = M.history:at(index) ---@type eve.t.ux.IWidget|nil
+    local widget = M.history:at(index) ---@type std.t.ux.IWidget|nil
     if widget ~= nil and not widget:isdisposed() then
       M.history:go(index)
       return widget, index
@@ -119,16 +119,16 @@ function M.get_widget_current()
   M.history:go(1)
 end
 
----@return eve.t.ux.IWidget|nil
+---@return std.t.ux.IWidget|nil
 ---@return integer|nil
 function M.get_widget_visible()
-  local present, present_index = M.history:present() ---@type eve.t.ux.IWidget|nil, integer
+  local present, present_index = M.history:present() ---@type std.t.ux.IWidget|nil, integer
   if present ~= nil and present:isvisible() then
     return present, present_index
   end
 
   for index = M.history:size(), 1, -1 do
-    local widget = M.history:at(index) ---@type eve.t.ux.IWidget|nil
+    local widget = M.history:at(index) ---@type std.t.ux.IWidget|nil
     if widget ~= nil and widget:isvisible() then
       M.history:go(index)
       return widget, index
@@ -137,10 +137,10 @@ function M.get_widget_visible()
   return nil, nil
 end
 
----@param widget                        eve.t.ux.IWidget
+---@param widget                        std.t.ux.IWidget
 ---@return nil
 function M.push(widget)
-  local present = M.get_widget_current() ---@type eve.t.ux.IWidget|nil
+  local present = M.get_widget_current() ---@type std.t.ux.IWidget|nil
   if present == nil then
     M.history:push(widget)
     return
@@ -148,7 +148,7 @@ function M.push(widget)
 
   if not equals(present, widget) then
     if M.history:size() == M.history:capacity() then
-      local bottom_widget = M.history:bottom() ---@type eve.t.ux.IWidget
+      local bottom_widget = M.history:bottom() ---@type std.t.ux.IWidget
       bottom_widget:hide()
     end
     M.history:push(widget)
@@ -165,9 +165,9 @@ function M.resize()
   end
 end
 
----@return eve.t.ux.IWidget|nil
+---@return std.t.ux.IWidget|nil
 function M.resume()
-  local present = M.get_widget_current() ---@type eve.t.ux.IWidget|nil
+  local present = M.get_widget_current() ---@type std.t.ux.IWidget|nil
   if present ~= nil then
     if present:isfocused() then
       present:hide()
@@ -178,10 +178,10 @@ function M.resume()
   return present
 end
 
----@param raw_widget                    eve.t.ux.IRawWidget
----@return eve.t.ux.IWidget
+---@param raw_widget                    std.t.ux.IRawWidget
+---@return std.t.ux.IWidget
 function M.wrap(raw_widget)
-  local widget ---@type eve.t.ux.IWidget
+  local widget ---@type std.t.ux.IWidget
 
   local close = raw_widget.close
   local focus = raw_widget.focus
@@ -191,7 +191,7 @@ function M.wrap(raw_widget)
   local isvisible = raw_widget.isvisible
   local resize = raw_widget.resize
 
-  ---@type eve.t.ux.IWidget
+  ---@type std.t.ux.IWidget
   widget = {
     name = raw_widget.name,
     statusline_items = raw_widget.statusline_items,

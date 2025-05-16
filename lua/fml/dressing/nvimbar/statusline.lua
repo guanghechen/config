@@ -1,6 +1,6 @@
 local c = eve.ux.nvimbar.component
 
-local dirtier = eve.status.dirtier_statusline ---@type eve.std.collection.IDirtier
+local dirtier = eve.status.dirtier_statusline ---@type std.collection.IDirtier
 local position = "f_sl" ---@type eve.ux.nvimbar.PositionEnum
 
 local statusline ---@type eve.ux.nvimbar.Nvimbar
@@ -17,7 +17,7 @@ statusline = eve.ux.nvimbar.Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = eve.std.fn.falsy,
+  is_active = std.fn.falsy,
   on_fulfilled = function()
     local result = statusline:snapshot() or "" ---@type string
     vim.o.statusline = result
@@ -52,7 +52,7 @@ statusline
   :place("right", c.nvim.msg_changes(position), 85)
   :place("right", c.nvim.msg_lsp(position), 90)
 
-dirtier:subscribe(eve.std.Subscriber.new({
+dirtier:subscribe(std.Subscriber.new({
   on_next = function()
     if dirtier:is_dirty() then
       statusline:render()

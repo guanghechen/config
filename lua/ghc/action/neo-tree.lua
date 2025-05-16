@@ -15,7 +15,7 @@ end
 ---@field public cwd                    fun(): string
 
 ---@param params                        ghc.action.neo_tree.ICreateWidgetParams
----@return eve.t.ux.IWidget
+---@return std.t.ux.IWidget
 local function create_widget(params)
   local name = params.name ---@type string
   local source = params.source ---@type string
@@ -138,7 +138,7 @@ end
 
 ---@return nil
 function M.git_cwd()
-  local widget = widgets.git_cwd ---@type eve.t.ux.IWidget
+  local widget = widgets.git_cwd ---@type std.t.ux.IWidget
   if widget:isfocused() then
     widget:close()
   else
@@ -148,7 +148,7 @@ end
 
 ---@return nil
 function M.git_workspace()
-  local widget = widgets.git_workspace ---@type eve.t.ux.IWidget
+  local widget = widgets.git_workspace ---@type std.t.ux.IWidget
   if widget:isfocused() then
     widget:close()
   else

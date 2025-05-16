@@ -38,7 +38,7 @@ function M.refresh_all()
   eve.status.dirtier_tabline:mark_dirty()
   vim.cmd("redraw!")
 
-  eve.reporter.info({
+  std.reporter.info({
     from = __module_name__,
     message = "Refreshed all!",
   })

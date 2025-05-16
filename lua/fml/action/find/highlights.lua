@@ -46,7 +46,7 @@ local provider = {
       local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.get_hl_info>
 
       local lines = {} ---@type string[]
-      local highlights = {} ---@type eve.t.IHighlight[]
+      local highlights = {} ---@type std.t.IHighlight[]
 
       local max_hlname_width = 0 ---@type integer
       for _, hlname in ipairs(hlnames) do
@@ -54,16 +54,16 @@ local provider = {
       end
 
       for lnum, hlname in ipairs(hlnames) do
-        local line = "xxx   " .. eve.string.pad_end(hlname, max_hlname_width, " ") ---@type string
-        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type eve.t.IHighlight
+        local line = "xxx   " .. std.string.pad_end(hlname, max_hlname_width, " ") ---@type string
+        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type std.t.IHighlight
 
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.get_hl_info
         if hlgroup.fg ~= nil then
-          local color_name = eve.std.color.int2hex(hlgroup.fg) ---@type string
+          local color_name = std.color.int2hex(hlgroup.fg) ---@type string
           line = line .. " fg=" .. color_name
         end
         if hlgroup.bg ~= nil then
-          local color_name = eve.std.color.int2hex(hlgroup.bg) ---@type string
+          local color_name = std.color.int2hex(hlgroup.bg) ---@type string
           line = line .. " bg=" .. color_name
         end
         if hlgroup.link ~= nil then
@@ -115,12 +115,12 @@ local provider = {
     return data
   end,
   render_item = function(item, match)
-    local text = string.format("%s xxx   %s", eve.string.pad_end(tostring(item.data.hlid), 5, " "), item.text) ---@type string
-    local highlights = { { coll = 6, colr = 9, hlname = item.text } } ---@type eve.t.IHighlightInline[]
+    local text = string.format("%s xxx   %s", std.string.pad_end(tostring(item.data.hlid), 5, " "), item.text) ---@type string
+    local highlights = { { coll = 6, colr = 9, hlname = item.text } } ---@type std.t.IHighlightInline[]
 
     local offset = 12 ---@type integer
     for _, piece in ipairs(match.matches) do
-      ---@type eve.t.IHighlightInline[]
+      ---@type std.t.IHighlightInline[]
       local highlight = { coll = offset + piece.l, colr = offset + piece.r, hlname = "f_us_main_match" }
       table.insert(highlights, highlight)
     end

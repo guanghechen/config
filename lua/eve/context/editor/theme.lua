@@ -1,34 +1,34 @@
 local __module_name__ = "eve.status.theme" ---@type string
 
 ---@class eve.context.theme.ILoadIntegrationParams
----@field public theme                  eve.e.Theme
+---@field public theme                  std.e.Theme
 ---@field public transparency           boolean
----@field public integration            eve.e.ThemeIntegration
+---@field public integration            std.e.ThemeIntegration
 ---@field public nsnr                   ?integer
 
 ---@class eve.context.theme.ILoadThemeParams
----@field public theme                  eve.e.Theme
+---@field public theme                  std.e.Theme
 ---@field public transparency           boolean
 ---@field public persistent             boolean
 ---@field public nsnr                   ?integer
 
 ---@class eve.context.theme.data
----@field public theme                  eve.e.Theme
+---@field public theme                  std.e.Theme
 ---@field public transparency           boolean
 ---@field public username               boolean
 
 ---@class eve.context.theme.state
----@field public theme                  eve.std.collection.IObservable
----@field public transparency           eve.std.collection.IObservable
----@field public username               eve.std.collection.IObservable
+---@field public theme                  std.collection.IObservable
+---@field public transparency           std.collection.IObservable
+---@field public username               std.collection.IObservable
 ---
 ---@field public get_float_winblend     fun(): integer
 ---
 ---@field public apply_integration      fun(params: eve.context.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.context.theme.ILoadThemeParams): nil
----@field public get_scheme             fun(theme: eve.e.Theme): eve.t.theme.IScheme | nil
+---@field public get_scheme             fun(theme: std.e.Theme): std.t.theme.IScheme | nil
 ---@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
----@field public set_term_colors        fun(scheme: eve.t.theme.IScheme): nil
+---@field public set_term_colors        fun(scheme: std.t.theme.IScheme): nil
 
 ---@class eve.context.theme :  eve.context.theme.state
 ---@field public defaults               fun(): eve.context.theme.data
@@ -37,7 +37,7 @@ local __module_name__ = "eve.status.theme" ---@type string
 ---@field public normalize              fun(data: unknown): eve.context.theme.data
 local M = {}
 
----@type eve.e.ThemeIntegration[]
+---@type std.e.ThemeIntegration[]
 local integrations = {
   "common",
   "basic",
@@ -103,9 +103,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.theme.data
-M.theme = eve.std.Observable.from_value(_defaults.theme)
-M.transparency = eve.std.Observable.from_value(_defaults.transparency)
-M.username = eve.std.Observable.from_value(_defaults.username)
+M.theme = std.Observable.from_value(_defaults.theme)
+M.transparency = std.Observable.from_value(_defaults.transparency)
+M.username = std.Observable.from_value(_defaults.username)
 
 ---@return integer
 function M.get_float_winblend()
@@ -115,14 +115,14 @@ end
 ---@param params                        eve.context.theme.ILoadIntegrationParams
 ---@return nil
 function M.apply_integration(params)
-  local theme = params.theme ---@type eve.e.Theme
+  local theme = params.theme ---@type std.e.Theme
   local transparency = params.transparency ---@type boolean
-  local integration = params.integration ---@type eve.e.ThemeIntegration
+  local integration = params.integration ---@type std.e.ThemeIntegration
   local nsnr = params.nsnr or 0 ---@type integer
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    ---@type eve.t.theme.IContext
+    ---@type std.t.theme.IContext
     local themeContext = {
       theme = scheme.theme,
       scheme = scheme,
@@ -130,7 +130,7 @@ function M.apply_integration(params)
     }
     local h = require("eve.constant.hlgroup." .. integration)
     local hlgroup_map = h.gen_hlgroup_map(themeContext)
-    local uxTheme = eve.std.Theme.new()
+    local uxTheme = std.Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
   end
@@ -139,7 +139,7 @@ end
 ---@param params                        eve.context.theme.ILoadThemeParams
 ---@return nil
 function M.apply_theme(params)
-  local theme = params.theme ---@type eve.e.Theme
+  local theme = params.theme ---@type std.e.Theme
   local transparency = params.transparency ---@type boolean
   local persistent = params.persistent ---@type boolean
   local nsnr = params.nsnr or 0 ---@type integer
@@ -155,14 +155,14 @@ function M.apply_theme(params)
       transparency = transparency,
     })
 
-    local uxTheme = eve.std.Theme.new()
+    local uxTheme = std.Theme.new()
     for _, integration in ipairs(integrations) do
       local h = require("eve.constant.hlgroup." .. integration)
-      ---@return table<string, eve.t.theme.IHlgroup>
+      ---@return table<string, std.t.theme.IHlgroup>
       local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, eve.t.theme.IHlgroup>
+        local additional = {} ---@type table<string, std.t.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if hlname:sub(1, 9) == "MiniIcons" then
             additional["f_sl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }
@@ -207,11 +207,11 @@ function M.apply_theme(params)
   return scheme
 end
 
----@param theme                         eve.e.Theme
----@return eve.t.theme.IScheme | nil
+---@param theme                         std.e.Theme
+---@return std.t.theme.IScheme | nil
 function M.get_scheme(theme)
   if not vim.list_contains(eve.setting.themes, theme) then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "get_scheme",
       message = "Unknown theme.",
@@ -226,10 +226,10 @@ end
 ---@param reload_plugins                boolean
 ---@return nil
 function M.reload_theme(force, reload_plugins)
-  local theme = M.theme:snapshot() ---@type eve.e.Theme
+  local theme = M.theme:snapshot() ---@type std.e.Theme
   local transparency = M.transparency:snapshot() ---@type boolean
 
-  local scheme = M.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
+  local scheme = M.get_scheme(theme) ---@type std.t.theme.IScheme|nil
   if scheme ~= nil then
     vim.o.background = scheme.variant == "dark" and "dark" or "light"
   end
@@ -245,7 +245,7 @@ function M.reload_theme(force, reload_plugins)
   else
     local ok, err = pcall(dofile, theme_path)
     if not ok then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "reload_theme",
         message = "Bad theme file.",
@@ -253,7 +253,7 @@ function M.reload_theme(force, reload_plugins)
       })
     end
 
-    -- local scheme = M.get_scheme(theme) ---@type eve.t.theme.IScheme|nil
+    -- local scheme = M.get_scheme(theme) ---@type std.t.theme.IScheme|nil
     -- if scheme ~= nil then
     -- M.set_term_colors(scheme)
     -- end
@@ -264,10 +264,10 @@ end
 --- Since we also changed the terminal color outside, so no need to set it again,
 --- so we can get the terminal color automatically changed by the terminal itself
 --- since we used the color name instead of a specific value (hex).
----@param scheme                        eve.t.theme.IScheme
+---@param scheme                        std.t.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette ---@type eve.t.theme.IPalette
+  local c = scheme.palette ---@type std.t.theme.IPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.red
   vim.g.terminal_color_2 = c.green

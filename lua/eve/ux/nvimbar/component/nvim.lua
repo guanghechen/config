@@ -15,7 +15,7 @@ local function calc_row_percentage()
   elseif row == total_lines then
     return row, col, "bot"
   else
-    local text = eve.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
+    local text = std.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
     return row, col, text
   end
 end

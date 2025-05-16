@@ -62,7 +62,7 @@ local borders = {
   -- stylua: ignore end
 }
 
----@class eve.ux.ISearch : eve.t.ux.IWidget
+---@class eve.ux.ISearch : std.t.ux.IWidget
 ---@field public context                eve.ux.SearchContext
 ---@field public change_input_title     fun(self: eve.ux.ISearch, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.ISearch, title: string): nil
@@ -118,17 +118,17 @@ local borders = {
 ---@field public parent                 string|nil
 ---@field public uuid                   string
 ---@field public text                   string
----@field public highlights             eve.t.IHighlightInline[]
+---@field public highlights             std.t.IHighlightInline[]
 
 ---@class eve.ux.search.IProps
 ---@field public context                eve.ux.SearchContext
 ---@field public delay_render           ?integer
 ---@field public fetch_preview_data     ?eve.ux.search.IFetchPreviewData
----@field public input_keymaps          ?eve.t.IKeymap[]
----@field public main_keymaps           ?eve.t.IKeymap[]
+---@field public input_keymaps          ?std.t.IKeymap[]
+---@field public main_keymaps           ?std.t.IKeymap[]
 ---@field public patch_preview_data     ?eve.ux.search.IPatchPreviewData
----@field public preview_keymaps        ?eve.t.IKeymap[]
----@field public statusline_items       eve.t.ux.widget.IRawStatuslineItem[]
+---@field public preview_keymaps        ?std.t.IKeymap[]
+---@field public statusline_items       std.t.ux.widget.IRawStatuslineItem[]
 ---@field public on_close               ?eve.ux.search.IOnClose
 ---@field public on_dispose             ?eve.ux.search.IOnDispose
 ---@field public on_invisible           ?eve.ux.search.IOnInvisible
@@ -151,24 +151,24 @@ function M.new(props)
 
   local enable_preview = type(props.fetch_preview_data) == "function" ---@type boolean
   local context = props.context ---@type eve.ux.SearchContext
-  local common_keymaps = eve.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
-  local statusline_items = {} ---@type eve.t.ux.widget.IStatuslineItem[]
+  local common_keymaps = eve.widget.get_keymaps(self) ---@type std.t.IKeymap[]
+  local statusline_items = {} ---@type std.t.ux.widget.IStatuslineItem[]
   local delay_render = math.max(0, props.delay_render or 48) ---@type integer
 
-  local raw_statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
+  local raw_statusline_items = props.statusline_items ---@type std.t.ux.widget.IRawStatuslineItem[]
   local index = #raw_statusline_items > 0 and raw_statusline_items[1].type == "popup" and 0 or 1 ---@type integer
   for _, item in ipairs(raw_statusline_items) do
     if not item.disabled then
-      local stl_state = item.state ---@type eve.std.collection.IObservable
+      local stl_state = item.state ---@type std.collection.IObservable
       local symbol = item.symbol ---@type string
       local callback = item.callback ---@type fun(): nil
       local callback_fn = eve.G.register_anonymous_fn(callback) or "" ---@type string
 
-      ---@type eve.t.ux.widget.IStatuslineItem
+      ---@type std.t.ux.widget.IStatuslineItem
       local statusline_item = { type = item.type, state = stl_state, symbol = symbol, callback_fn = callback_fn }
       table.insert(statusline_items, statusline_item)
 
-      ---@type eve.t.IKeymap
+      ---@type std.t.IKeymap
       local keymap = {
         modes = { "n", "v" },
         key = "<leader>" .. index,
@@ -200,11 +200,11 @@ function M.new(props)
       on_confirm_from_props(self, selected_items)
 
       if context:isvisible() then
-        local input_history = context.input_history ---@type eve.std.collection.IHistory|nil
+        local input_history = context.input_history ---@type std.collection.IHistory|nil
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
-            top = eve.string.starts_with(top, EDITING_PREFIX) and top:sub(#EDITING_PREFIX + 1) or top ---@type string
+            top = std.string.starts_with(top, EDITING_PREFIX) and top:sub(#EDITING_PREFIX + 1) or top ---@type string
             input_history:update_top(top)
           end
         end
@@ -338,7 +338,7 @@ function M.new(props)
     },
   })
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local default_input_keymaps = {
     {
       modes = { "i", "n", "v" },
@@ -370,7 +370,7 @@ function M.new(props)
     },
   }
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local default_main_keymaps = {
     {
       modes = { "i", "n", "v" },
@@ -448,7 +448,7 @@ function M.new(props)
     },
   }
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local default_preview_keymaps = {
     {
       modes = { "i", "n", "v" },
@@ -479,28 +479,28 @@ function M.new(props)
     },
   }
 
-  local input_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
+  local input_keymaps = vim.list_slice(common_keymaps) ---@type std.t.IKeymap[]
   vim.list_extend(input_keymaps, default_input_keymaps)
   vim.list_extend(input_keymaps, props.input_keymaps or {})
 
-  local main_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
+  local main_keymaps = vim.list_slice(common_keymaps) ---@type std.t.IKeymap[]
   vim.list_extend(main_keymaps, default_main_keymaps)
   vim.list_extend(main_keymaps, props.main_keymaps or {})
 
-  local preview_keymaps = vim.list_slice(common_keymaps) ---@type eve.t.IKeymap[]
+  local preview_keymaps = vim.list_slice(common_keymaps) ---@type std.t.IKeymap[]
   vim.list_extend(preview_keymaps, default_preview_keymaps)
   vim.list_extend(preview_keymaps, props.preview_keymaps or {})
 
   if not context.enable_multiline_input then
-    ---@type eve.t.IKeymap[]
+    ---@type std.t.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "i", "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
       { modes = { "i", "n", "v" }, key = "<Down>", callback = actions.on_main_down, desc = "search: focus next item" },
       { modes = { "i", "n", "v" }, key = "<Up>", callback = actions.on_main_up, desc = "search: focus prev item" },
       { modes = { "n", "v" }, key = "j", callback = actions.on_main_down, desc = "search: focus next item" },
       { modes = { "n", "v" }, key = "k", callback = actions.on_main_up, desc = "search: focus prev item" },
-      { modes = { "n", "v" }, key = "o", callback = eve.std.fn.noop },
-      { modes = { "n", "v" }, key = "O", callback = eve.std.fn.noop },
+      { modes = { "n", "v" }, key = "o", callback = std.fn.noop },
+      { modes = { "n", "v" }, key = "O", callback = std.fn.noop },
       { modes = { "n", "v" }, key = "G", callback = actions.on_main_G, desc = "search: goto last line" },
       { modes = { "n", "v" }, key = "g", callback = actions.on_main_g, desc = "search: locate" },
       { modes = { "n", "v" }, key = "gg", callback = actions.on_main_gg, desc = "search: goto first line" },
@@ -527,7 +527,7 @@ function M.new(props)
     local on_input_g = create_fallback("g", actions.on_main_g)
     local on_input_gg = create_fallback("gg", actions.on_main_gg)
 
-    ---@type eve.t.IKeymap[]
+    ---@type std.t.IKeymap[]
     local additional_input_keymaps = {
       { modes = { "n", "v" }, key = "<cr>", callback = on_confirm, desc = "search: confirm" },
       { modes = { "n", "v" }, key = "j", callback = on_input_move_down, desc = "search: focus next item" },
@@ -587,14 +587,14 @@ function M.new(props)
   self._on_close = on_close_from_props
   self._on_invisible = on_invisible_from_props
 
-  ---@type eve.std.collection.Scheduler
-  local scheduler = eve.std.Scheduler.new({
+  ---@type std.collection.Scheduler
+  local scheduler = std.Scheduler.new({
     name = string.format("%s | %s", context.uuid, __module_name__),
     mode = "throttle",
     delay = 64,
     timeout = 0,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
     task = function()
       if context:isvisible() then
         self:create_wins_as_needed()
@@ -611,7 +611,7 @@ function M.new(props)
   end
 
   context.state_has_matched:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function(flag)
         local winnr_main = context.winnr_main ---@type integer|nil
         if winnr_main ~= nil and vim.api.nvim_win_is_valid(winnr_main) then
@@ -628,7 +628,7 @@ function M.new(props)
   )
 
   context.dirtier_dimension:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         local is_dimension_dirty = context.dirtier_dimension:is_dirty() ---@type boolean
         if is_dimension_dirty then
@@ -640,7 +640,7 @@ function M.new(props)
   )
 
   context.dirtier_main:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         local is_main_dirty = context.dirtier_main:is_dirty() ---@type boolean
         if is_main_dirty then
@@ -654,7 +654,7 @@ function M.new(props)
   ---! Trigger the preview dirty change when the preview not exist.
   if preview == nil then
     context.dirtier_preview:subscribe(
-      eve.std.Subscriber.new({
+      std.Subscriber.new({
         on_next = function()
           local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
           if is_preview_dirty then
@@ -667,7 +667,7 @@ function M.new(props)
   end
 
   context.dirtier_selected:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         local is_selected_dirty = context.dirtier_selected:is_dirty() ---@type boolean
         if is_selected_dirty then
@@ -681,7 +681,7 @@ function M.new(props)
 
   if context.enable_multiline_input then
     context.input_line_count:subscribe(
-      eve.std.Subscriber.new({
+      std.Subscriber.new({
         on_next = function()
           trigger_draw_wins()
         end,

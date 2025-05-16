@@ -6,15 +6,15 @@ local M = {}
 local app_home = eve.path.locate_app_config_home("guanghechen")
 local script_path = eve.path.join(
   app_home,
-  (eve.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
-    or (eve.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")
+  (std.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
+    or (std.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")
     or "bin/im-select/win/x64/im-select.exe"
 )
 
 ---@return eve.builtin.im.InputMethod|nil
 function M.get_input_method()
   if not vim.fn.executable(script_path) then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Not a executable file.",
@@ -25,7 +25,7 @@ function M.get_input_method()
 
   local handle = io.popen(vim.fn.fnameescape(script_path))
   if not handle then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Failed to run the executable file.",
@@ -48,7 +48,7 @@ function M.get_input_method()
     return "Chinese"
   end
 
-  eve.reporter.error({
+  std.reporter.error({
     from = __module_name__,
     subject = "get_input_method",
     message = "Unknown input method.",
@@ -60,7 +60,7 @@ end
 ---@return nil
 function M.set_input_method(input_method)
   if not vim.fn.executable(script_path) then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
       message = "Not a executable file.",
@@ -75,7 +75,7 @@ function M.set_input_method(input_method)
   elseif input_method == "Chinese" then
     arg = "2052"
   else
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Unknown input method.",
@@ -86,7 +86,7 @@ function M.set_input_method(input_method)
 
   local handle = io.popen(vim.fn.fnameescape(script_path) .. " " .. arg)
   if not handle then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
       message = "Failed to run the executable file.",
@@ -99,7 +99,7 @@ function M.set_input_method(input_method)
   handle:close()
 
   if output ~= nil and output ~= "" then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
       message = "Unexpected output from the executable file.",

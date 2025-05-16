@@ -73,10 +73,10 @@ function M.resolve_mode()
   return m[1], m[2]
 end
 
----@param context                       eve.t.theme.IContext
----@return table<string, eve.t.theme.IHlgroup>
+---@param context                       std.t.theme.IContext
+---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type eve.t.theme.IPalette
+  local c = context.scheme.palette ---@type std.t.theme.IPalette
   local mc = {
     command = c.blue,
     confirm = c.brightAqua,
@@ -89,7 +89,7 @@ function M.gen_hlgroup_map(context)
     visual = c.orange,
   }
 
-  local hlgroup_map = {} ---@type table<string, eve.t.theme.IHlgroup>
+  local hlgroup_map = {} ---@type table<string, std.t.theme.IHlgroup>
   for _, color in ipairs(colors) do
     for mode, mode_color in pairs(mc) do
       local suffix = string.format("_%s_%s", color, mode) ---@type string

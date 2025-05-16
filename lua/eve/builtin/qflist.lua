@@ -1,20 +1,20 @@
 ---@class eve.builtin.qflist
 local M = {}
 
----@type eve.std.collection.IHistory
-M.history = eve.std.History.new({
+---@type std.collection.IHistory
+M.history = std.History.new({
   name = "qflist",
   capacity = 100,
 })
 
 ---@return nil
 function M.backward()
-  local qflist_cur = M.history:present() ---@type eve.t.IQuickFixItem[]|nil
+  local qflist_cur = M.history:present() ---@type std.t.IQuickFixItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_prev = M.history:backward() ---@type eve.t.IQuickFixItem[]|nil
+  local qflist_prev = M.history:backward() ---@type std.t.IQuickFixItem[]|nil
   if qflist_prev == nil or qflist_prev == qflist_cur then
     return
   end
@@ -26,12 +26,12 @@ end
 
 ---@return nil
 function M.forward()
-  local qflist_cur = M.history:present() ---@type eve.t.IQuickFixItem[]|nil
+  local qflist_cur = M.history:present() ---@type std.t.IQuickFixItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_next = M.history:forward() ---@type eve.t.IQuickFixItem[]|nil
+  local qflist_next = M.history:forward() ---@type std.t.IQuickFixItem[]|nil
   if qflist_next == nil or qflist_next == qflist_cur then
     return
   end
@@ -67,7 +67,7 @@ function M.open_qflist(prefer_trouble)
   vim.cmd([[botright copen]])
 end
 
----@param qflist                        eve.t.IQuickFixItem[]|nil
+---@param qflist                        std.t.IQuickFixItem[]|nil
 ---@return nil
 function M.set_qflist(qflist)
   if qflist ~= nil and #qflist > 0 then
@@ -78,15 +78,15 @@ function M.set_qflist(qflist)
   end
 end
 
----@param qflist                        eve.t.IQuickFixItem[]|nil
+---@param qflist                        std.t.IQuickFixItem[]|nil
 ---@return nil
 function M.push(qflist)
   if qflist == nil or #qflist < 1 then
     return
   end
 
-  local qflist_cur = M.history:present() ---@type eve.t.IQuickFixItem[]|nil
-  if qflist_cur == nil or not eve.std.fn.equals_deep(qflist_cur, qflist) then
+  local qflist_cur = M.history:present() ---@type std.t.IQuickFixItem[]|nil
+  if qflist_cur == nil or not std.fn.equals_deep(qflist_cur, qflist) then
     M.history:push(qflist)
     M.set_qflist(qflist)
   end

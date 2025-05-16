@@ -43,7 +43,7 @@ local function parse_git_status_line(line, workspace, git_status)
   -- remove any " due to whitespace or utf-8 in the path
   relative_path = relative_path:gsub('^"', ""):gsub('"$', "")
   -- convert octal encoded lines to utf-8
-  relative_path = eve.string.octal_to_utf8(relative_path)
+  relative_path = std.string.octal_to_utf8(relative_path)
   -- normalize the filepath
   relative_path = eve.path.normalize(relative_path)
 

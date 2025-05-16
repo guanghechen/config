@@ -29,7 +29,7 @@ local function vim_navigate(direction)
 
   local ok, error = pcall(vim_navigate_window, direction)
   if not ok then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       message = "E11: Invalid in command-line window; <cr> executes, ctrl-c quits",
       details = { direction = direction, error = error },
@@ -103,7 +103,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local navigate = eve.env.IS_TMUX and tmux_navigate or vim_navigate
+local navigate = std.env.IS_TMUX and tmux_navigate or vim_navigate
 
 ---@class fml.action.win
 local M = {}

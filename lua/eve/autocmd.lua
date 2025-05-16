@@ -151,7 +151,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
       eve.status.dirtier_tabline:mark_dirty()
     end)
 
-    if eve.env.IS_TMUX then
+    if std.env.IS_TMUX then
       vim.schedule(function()
         local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
         eve.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
@@ -182,7 +182,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
     vim.schedule(function()
-      if eve.env.IS_TMUX then
+      if std.env.IS_TMUX then
         vim.schedule(function()
           local is_tmux_pane_zoomed = eve.tmux.is_tmux_pane_zoomed() ---@type boolean
           eve.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
@@ -337,7 +337,7 @@ if 1 == 0 then
         local bufname2 = vim.api.nvim_buf_get_name(bufnr2) ---@type string
         local buftype2 = vim.bo[bufnr2].buftype ---@type string
         local filetype2 = vim.bo[bufnr2].filetype ---@type string
-        eve.debug.log_silent({
+        std.debug.log_silent({
           arg = arg,
           winnr = winnr,
           b1 = {

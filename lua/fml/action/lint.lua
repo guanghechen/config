@@ -49,7 +49,7 @@ function M.spellcheck_register()
       words = { word },
     }
     eve.fs.write_json(filepath, data, true)
-    eve.reporter.info({
+    std.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
       message = "Created cspell.json file.",
@@ -58,7 +58,7 @@ function M.spellcheck_register()
   else
     local data = eve.fs.read_json({ filepath = filepath, silent_on_bad_json = false, silent_on_bad_path = false })
     if type(data) ~= "table" or type(data.words) ~= "table" then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "spellcheck_register",
         message = "Bad cspell.json format, missing the `words` field.",
@@ -74,7 +74,7 @@ function M.spellcheck_register()
     table.insert(data.words, word)
     table.sort(data.words)
     eve.fs.write_json(filepath, data, true)
-    eve.reporter.info({
+    std.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
       message = string.format("Added word (%s) to cspell.json file.", word),

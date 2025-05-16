@@ -1,12 +1,12 @@
 local __module_name__ = "fml.action.find" ---@type string
 
-local observable_truthy = eve.std.Observable.from_value(true)
+local observable_truthy = std.Observable.from_value(true)
 local _select = nil ---@type eve.ux.IFileSelect|nil
 
 ---@param dirpath                       string
 ---@return string
 local function get_scope_cwd(dirpath)
-  local scope = eve.context.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
+  local scope = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
   if scope == "W" then
     return eve.path.workspace()
   elseif scope == "C" then
@@ -15,7 +15,7 @@ local function get_scope_cwd(dirpath)
     return dirpath
   end
 
-  eve.reporter.error({
+  std.reporter.error({
     from = __module_name__,
     subject = "get_scope_cwd",
     message = "Unknown scope.",
@@ -24,12 +24,12 @@ local function get_scope_cwd(dirpath)
   return eve.path.cwd()
 end
 
-local scopes = vim.list_slice(eve.context.select.find_file_scopes) ---@type eve.e.FindFileScope[]
-local state_cwd = eve.std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
+local scopes = vim.list_slice(eve.context.select.find_file_scopes) ---@type std.e.FindFileScope[]
+local state_cwd = std.Observable.from_value(get_scope_cwd(eve.path.cwd()))
 
 ---@return string
 local function gen_title()
-  local scope = eve.context.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
+  local scope = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
   if scope == "W" then
     return "Find files (workspace)" ---@type string
   elseif scope == "C" then
@@ -88,10 +88,10 @@ eve.fn.observe({
   end
 end, true)
 
----@param scope                         eve.e.FindFileScope
+---@param scope                         std.e.FindFileScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = eve.context.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
+  local scope_current = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
   if scope_current ~= scope then
     eve.context.select.find_file_scope:next(scope)
   end
@@ -187,8 +187,8 @@ local actions = {
     if _select ~= nil then
       local cwd = eve.path.cwd() ---@type string
       local select_cwd = state_cwd:snapshot() ---@type string
-      local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
-      local matched_items = _select:get_matched_items() ---@type eve.t.IScoredMatch[]
+      local quickfix_items = {} ---@type std.t.IQuickFixItem[]
+      local matched_items = _select:get_matched_items() ---@type std.t.IScoredMatch[]
       for _, matched_item in ipairs(matched_items) do
         local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
         ---@cast item                   eve.ux.select_file.IItem
@@ -235,10 +235,10 @@ local actions = {
   end,
   ---@return nil
   toggle_flag_scope = function()
-    local scope = eve.context.select.find_file_scope:snapshot() ---@type eve.e.FindFileScope
-    local idx = eve.table.find_index(scopes, scope) or 1 ---@type integer
+    local scope = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
+    local idx = std.table.find_index(scopes, scope) or 1 ---@type integer
     local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
-    local next_scope = scopes[idx_next] ---@type eve.e.FindFileScope
+    local next_scope = scopes[idx_next] ---@type std.e.FindFileScope
     eve.context.select.find_file_scope:next(next_scope)
   end,
   ---@return nil
@@ -248,7 +248,7 @@ local actions = {
   end,
 }
 
----@type eve.t.ux.widget.IRawStatuslineItem[]
+---@type std.t.ux.widget.IRawStatuslineItem[]
 local statusline_items = {
   {
     type = "popup",
@@ -308,7 +308,7 @@ local statusline_items = {
   },
 }
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local common_keymaps = {
   {
     modes = { "i", "n", "v" },
@@ -354,13 +354,13 @@ local common_keymaps = {
   },
 }
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local input_keymaps = vim.list_slice(common_keymaps)
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local main_keymaps = vim.list_slice(common_keymaps)
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local preview_keymaps = vim.list_slice(common_keymaps)
 
 ---@type eve.ux.select_file.IProvider

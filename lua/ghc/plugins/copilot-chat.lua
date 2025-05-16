@@ -1,4 +1,4 @@
-local username = eve.env.USERNAME ---@type string
+local username = std.env.USERNAME ---@type string
 
 return {
   name = "copilot-chat.nvim",

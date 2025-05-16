@@ -53,14 +53,14 @@ local c = eve.ux.nvimbar.component
 ---@field public snapshot               fun(self: eve.ux.Picker): string, string
 
 ---@class eve.ux.picker.IInternalKeymap
----@field public mode                   eve.e.VimMode
+---@field public mode                   std.e.VimMode
 ---@field public key                    string
 ---@field public opts                   vim.keymap.set.Opts
 ---@field public callback               fun(self: eve.ux.Picker, bufnr: integer): nil
 
 ---@class eve.ux.picker.IKeymap
 ---@field public disabled               eve.ux.picker.ICheckKeymapDisabled|boolean|nil
----@field public modes                  eve.e.VimMode[]
+---@field public modes                  std.e.VimMode[]
 ---@field public aliases                string[]|nil
 ---@field public key                    string
 ---@field public callback               fun(self: eve.ux.Picker, bufnr: integer): nil
@@ -202,7 +202,7 @@ local __keymaps__ = {
       callback = function(self)
         local refresh_ok, refresh_error = pcall(self._on_refresh, self, true)
         if not refresh_ok then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = string.format("%s:refresh", self.name),
             message = "Failed to run on_refresh",
@@ -221,7 +221,7 @@ local __keymaps__ = {
       key = "o",
       aliases = { "O", "<enter>" },
       desc = "picker#finder: noop",
-      callback = eve.std.fn.noop,
+      callback = std.fn.noop,
     },
     disables_on_singleline_i = {
       disabled = function(self)
@@ -230,7 +230,7 @@ local __keymaps__ = {
       modes = { "i" },
       key = "<enter>",
       desc = "picker#finder: noop",
-      callback = eve.std.fn.noop,
+      callback = std.fn.noop,
     },
     focus_down = {
       modes = { "i", "n", "v" },
@@ -247,7 +247,7 @@ local __keymaps__ = {
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#finder: focus left",
       callback = function(self)
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("h")
           return
         end
@@ -271,7 +271,7 @@ local __keymaps__ = {
           return
         end
 
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("l")
           return
         end
@@ -283,7 +283,7 @@ local __keymaps__ = {
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#finder: focus up",
       callback = function(self)
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("k")
           return
         end
@@ -387,7 +387,7 @@ local __keymaps__ = {
       key = "d",
       aliases = { "dd", "X", "x" },
       desc = "picker#result: noop",
-      callback = eve.std.fn.noop,
+      callback = std.fn.noop,
     },
     edit_A = {
       modes = { "n", "v" },
@@ -498,7 +498,7 @@ local __keymaps__ = {
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#result: focus down",
       callback = function(self)
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("j")
           return
         end
@@ -512,7 +512,7 @@ local __keymaps__ = {
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#result: focus left",
       callback = function(self)
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("h")
           return
         end
@@ -536,7 +536,7 @@ local __keymaps__ = {
           return
         end
 
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("l")
           return
         end
@@ -558,7 +558,7 @@ local __keymaps__ = {
       key = "d",
       aliases = { "dd", "X", "x" },
       desc = "picker#preview: noop",
-      callback = eve.std.fn.noop,
+      callback = std.fn.noop,
     },
     edit_A = {
       modes = { "n", "v" },
@@ -648,7 +648,7 @@ local __keymaps__ = {
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#preview: focus down",
       callback = function()
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("j")
           return
         end
@@ -670,7 +670,7 @@ local __keymaps__ = {
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#result: focus right",
       callback = function(self)
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("l")
           return
         end
@@ -685,7 +685,7 @@ local __keymaps__ = {
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#preview: focus up",
       callback = function()
-        if eve.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           eve.tmux.change_pane("k")
           return
         end
@@ -723,7 +723,7 @@ local __winopts__ = {
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public finder_input           eve.std.collection.IObservable
+---@field public finder_input           std.collection.IObservable
 ---@field public finder_keymaps         ?eve.ux.picker.IKeymap[]
 ---@field public finder_multiline       ?boolean
 ---@field public finder_title           string
@@ -745,7 +745,7 @@ local __winopts__ = {
 ---@field public on_preview_rendered    ?eve.ux.picker.IOnPreviewRendered
 ---@field public on_result_rendered     ?eve.ux.picker.IOnResultRendered
 
----@class eve.ux.Picker : eve.t.ux.IWidget
+---@class eve.ux.Picker : std.t.ux.IWidget
 ---@field public uuid                   string
 ---@field public name                   string
 ---@field public nsnr                   integer
@@ -761,25 +761,25 @@ local __winopts__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _scheduler_preview              eve.std.collection.Scheduler|nil
----@field protected _scheduler_result_content       eve.std.collection.Scheduler
+---@field protected _scheduler_preview              std.collection.Scheduler|nil
+---@field protected _scheduler_result_content       std.collection.Scheduler
 ---
 ---@field protected _finder_bufnr       integer|nil
 ---@field protected _finder_winnr       integer|nil
 ---@field protected _finder_keymaps     eve.ux.picker.IInternalKeymap[]
 ---@field protected _finder_title       string
 ---@field protected _finder_winopts     eve.ux.picker.IWinOptions
----@field protected _finder_input       eve.std.collection.IObservable
----@field protected _finder_line_count  eve.std.collection.IObservable
+---@field protected _finder_input       std.collection.IObservable
+---@field protected _finder_line_count  std.collection.IObservable
 ---@field protected _finder_multiline   boolean
 ---
 ---@field protected _result_bufnr       integer|nil
 ---@field protected _result_winnr       integer|nil
 ---@field protected _result_keymaps     eve.ux.picker.IInternalKeymap[]
 ---@field protected _result_winopts     eve.ux.picker.IWinOptions
----@field protected _result_lnum        eve.std.collection.IObservable
+---@field protected _result_lnum        std.collection.IObservable
 ---@field protected _result_present     integer|nil
----@field protected _result_total       eve.std.collection.IObservable
+---@field protected _result_total       std.collection.IObservable
 ---@field protected _result_nvimbar     eve.ux.nvimbar.Nvimbar
 ---
 ---@field protected _preview_bufnr      integer|nil
@@ -814,16 +814,16 @@ function M.new(props)
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
-  local finder_input = props.finder_input ---@type eve.std.collection.IObservable
+  local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_keymaps = props.finder_keymaps or {} ---@type eve.ux.picker.IKeymap[]
-  local finder_count = eve.std.Observable.from_value(#vim.split(finder_input:snapshot(), "\n", { plain = true })) ---@type eve.std.collection.IObservable
+  local finder_count = std.Observable.from_value(#vim.split(finder_input:snapshot(), "\n", { plain = true })) ---@type std.collection.IObservable
   local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
   local finder_winopts = vim.tbl_deep_extend("force", {}, __winopts__.finder, props.finder_win_opts or {}) ---@type eve.ux.picker.IWinOptions
 
   local result_keymaps = props.result_keymaps or {} ---@type eve.ux.picker.IKeymap[]
-  local result_lnum = eve.std.Observable.from_value(0) ---@type eve.std.collection.IObservable
-  local result_total = eve.std.Observable.from_value(0) ---@type eve.std.collection.IObservable
+  local result_lnum = std.Observable.from_value(0) ---@type std.collection.IObservable
+  local result_total = std.Observable.from_value(0) ---@type std.collection.IObservable
   local result_render = props.result_render ---@type eve.ux.picker.IResultRender
   local result_winopts = vim.tbl_deep_extend("force", {}, __winopts__.result, props.result_win_opts or {}) ---@type eve.ux.picker.IWinOptions
 
@@ -832,13 +832,13 @@ function M.new(props)
   local preview_winopts = vim.tbl_deep_extend("force", {}, __winopts__.preview, props.preview_win_opts or {}) ---@type eve.ux.picker.IWinOptions
   local has_preview = preview_render ~= nil ---@type boolean
 
-  local on_closed = props.on_closed or eve.std.fn.noop ---@type eve.ux.picker.IOnClosed
-  local on_disposed = props.on_disposed or eve.std.fn.noop ---@type eve.ux.picker.IOnDisposed
-  local on_focused = props.on_focused or eve.std.fn.noop ---@type eve.ux.picker.IOnFocused
-  local on_hidden = props.on_hidden or eve.std.fn.noop ---@type eve.ux.picker.IOnHidden
+  local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.IOnClosed
+  local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker.IOnDisposed
+  local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker.IOnFocused
+  local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker.IOnHidden
   local on_refresh = props.on_refresh ---@type eve.ux.picker.IOnRefresh|nil
-  local on_preview_rendered = props.on_preview_rendered or eve.std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
-  local on_result_rendered = props.on_result_rendered or eve.std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
+  local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
+  local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.picker.IOnPreviewRendered
 
   local self = setmetatable({}, M)
 
@@ -850,9 +850,9 @@ function M.new(props)
 
       local disabled ---@type fun(): boolean
       if raw_disabled == nil or raw_disabled == false then
-        disabled = eve.std.fn.falsy
+        disabled = std.fn.falsy
       elseif raw_disabled == true then
-        disabled = eve.std.fn.truthy
+        disabled = std.fn.truthy
       else
         ---@return boolean
         disabled = function()
@@ -940,7 +940,7 @@ function M.new(props)
       comp_sep_hlname = "f_wl_picker",
       comp_sep_hlname_active = "f_wl_picker",
       delay = 128,
-      silent = eve.std.fn.falsy,
+      silent = std.fn.falsy,
       get_max_width = function()
         local winnr = self._result_winnr ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -967,13 +967,13 @@ function M.new(props)
     :place("right", c.picker.result_pos(position, result_lnum, result_total), 100)
 
   if preview_render ~= nil then
-    self._scheduler_preview = eve.std.Scheduler.new({
+    self._scheduler_preview = std.Scheduler.new({
       name = string.format("picker:preview:%s", name),
       mode = "debounce",
       delay = 256,
       timeout = 0,
-      silent = eve.std.fn.falsy,
-      value = eve.std.Observable.from_value(true),
+      silent = std.fn.falsy,
+      value = std.Observable.from_value(true),
       task = function(scheduler)
         local bufnr = self:get_preview_bufnr() ---@type integer|nil
         if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -987,7 +987,7 @@ function M.new(props)
         vim.bo[bufnr].readonly = true
 
         if not ok then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = scheduler.name,
             message = "Failed to render preview",
@@ -1007,7 +1007,7 @@ function M.new(props)
 
         local preview_rendered_ok, preview_rendered_error = pcall(on_preview_rendered, self, bufnr)
         if not preview_rendered_ok then
-          eve.reporter.error({
+          std.reporter.error({
             from = __module_name__,
             subject = scheduler.name,
             message = "Failed to call on_preview_rendered",
@@ -1018,14 +1018,14 @@ function M.new(props)
     })
   end
 
-  ---@type eve.std.collection.Scheduler
-  self._scheduler_result_content = eve.std.Scheduler.new({
+  ---@type std.collection.Scheduler
+  self._scheduler_result_content = std.Scheduler.new({
     name = string.format("picker:result_content:%s", name),
     mode = "debounce",
     delay = 128,
     timeout = 0,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
     task = function(scheduler)
       local bufnr = self:get_result_bufnr() ---@type integer|nil
       if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -1039,7 +1039,7 @@ function M.new(props)
       vim.bo[bufnr].readonly = true
 
       if not ok then
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           subject = scheduler.name,
           message = "Failed to render result",
@@ -1060,7 +1060,7 @@ function M.new(props)
 
       local result_rendered_ok, result_rendered_error = pcall(on_result_rendered, self, bufnr)
       if not result_rendered_ok then
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           subject = scheduler.name,
           message = "Failed to call on_result_rendered",
@@ -1077,7 +1077,7 @@ function M.new(props)
   })
 
   result_lnum:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         self._result_nvimbar:render()
         if self._scheduler_preview ~= nil then
@@ -1090,7 +1090,7 @@ function M.new(props)
   )
 
   result_total:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function(total)
         self._result_nvimbar:render()
         if self._scheduler_preview ~= nil then
@@ -1212,7 +1212,7 @@ function M:dispose()
   vim.schedule(function()
     local ok, error = pcall(on_disposed)
     if not ok then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "dispose",
         message = "Failed to call on_disposed",
@@ -1237,7 +1237,7 @@ function M:close()
   vim.schedule(function()
     local ok, error = pcall(self._on_closed, self)
     if not ok then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "close",
         message = "Failed to call on_closed",
@@ -1260,7 +1260,7 @@ function M:focus(pane)
   vim.schedule(function()
     local ok, error = pcall(self._on_focused, self)
     if not ok then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "focus",
         message = "Failed to call on_focused",
@@ -1280,7 +1280,7 @@ function M:hide()
   vim.schedule(function()
     local ok, error = pcall(self._on_hidden, self)
     if not ok then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "hide",
         message = "Failed to call on_hidden",
@@ -1984,7 +1984,7 @@ end
 function M:__resolve_common__keymaps__()
   local keymaps = {} ---@type eve.ux.picker.IKeymap[]
 
-  local widget_keymaps = eve.widget.get_keymaps(self) ---@type eve.t.IKeymap[]
+  local widget_keymaps = eve.widget.get_keymaps(self) ---@type std.t.IKeymap[]
   for _, widget_keymap in ipairs(widget_keymaps) do
     ---@type eve.ux.picker.IKeymap
     local keymap = {
@@ -2123,7 +2123,7 @@ function M:__result_move_down__(step)
   local total = self._result_total:snapshot() ---@type integer
   if total > 1 then
     local lnum = self._result_lnum:snapshot() ---@type integer
-    local next_lnum = eve.std.fn.navigate_circular(lnum, step, total) ---@type integer
+    local next_lnum = std.fn.navigate_circular(lnum, step, total) ---@type integer
     self._result_lnum:next(next_lnum)
   end
 end

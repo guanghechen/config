@@ -36,7 +36,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@class eve.ux.Textarea : eve.ux.ITextarea
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected position            eve.e.BoxPosition
+---@field protected position            std.e.BoxPosition
 ---@field protected width               number
 ---@field protected height              number
 ---@field protected max_width           number|nil
@@ -45,13 +45,13 @@ local WIN_HIGHLIGHT = table.concat({
 ---@field protected min_height          number|nil
 ---@field protected title               string
 ---@field protected filetype            string|nil
----@field protected keymaps             eve.t.IKeymap[]
+---@field protected keymaps             std.t.IKeymap[]
 ---@field protected win_opts            table<string, any>
 local M = {}
 M.__index = M
 
 ---@class eve.ux.textarea.IProps
----@field public position               eve.e.BoxPosition
+---@field public position               std.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -60,7 +60,7 @@ M.__index = M
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 ---@field public filetype               ?string
----@field public keymaps                ?eve.t.IKeymap[]
+---@field public keymaps                ?std.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(lines: string[]): string|nil
 ---@field public on_close               ?fun(): nil
@@ -71,7 +71,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local position = props.position ---@type eve.e.BoxPosition
+  local position = props.position ---@type std.e.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
@@ -111,7 +111,7 @@ function M.new(props)
   local function on_confirm()
     local bufnr = self:get_bufnr() ---@type integer|nil
     if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-      eve.reporter.warn({
+      std.reporter.warn({
         from = __module_name__,
         subject = "confirm",
         message = "The buffer is not valid.",
@@ -123,7 +123,7 @@ function M.new(props)
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
     local err_msg = type(validate) == "function" and validate(lines) or nil ---@type string|nil
     if err_msg ~= nil then
-      eve.reporter.warn({
+      std.reporter.warn({
         from = __module_name__,
         subject = "confirm",
         message = "Validation failed.",
@@ -137,7 +137,7 @@ function M.new(props)
     end
   end
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "v" },

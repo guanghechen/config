@@ -5,29 +5,23 @@ local __mods = {
   buf = "eve.builtin.buf",
   clipboard = "eve.builtin.clipboard",
   command = "eve.builtin.command",
-  debug = "eve.builtin.debug",
-  env = "eve.builtin.env",
   filetype = "eve.builtin.filetype",
   fn = "eve.builtin.fn",
   fs = "eve.builtin.fs",
   icon = "eve.builtin.icon",
   im = "eve.builtin.im",
   job = "eve.builtin.job",
-  json = "eve.builtin.json",
   lsp = "eve.builtin.lsp",
   notifier = "eve.builtin.notifier",
   nvim = "eve.builtin.nvim",
   oxi = "eve.builtin.oxi",
   path = "eve.builtin.path",
   qflist = "eve.builtin.qflist",
-  reporter = "eve.builtin.reporter",
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
   shell = "eve.builtin.shell",
   status = "eve.builtin.status",
-  string = "eve.builtin.string",
   tab = "eve.builtin.tab",
-  table = "eve.builtin.table",
   tmux = "eve.builtin.tmux",
   var = "eve.builtin.var",
   widget = "eve.builtin.widget",
@@ -40,7 +34,6 @@ local __mods = {
 ---@field public constant               eve.constant
 ---@field public context                eve.context
 ---@field public state                  eve.state
----@field public std                    eve.std
 ---@field public ux                     eve.ux
 ---
 ---@field public G                      eve.builtin.G
@@ -48,29 +41,23 @@ local __mods = {
 ---@field public buf                    eve.builtin.buf
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public command                eve.builtin.command
----@field public debug                  eve.builtin.debug
----@field public env                    eve.builtin.env
 ---@field public filetype               eve.builtin.filetype
 ---@field public fn                     eve.builtin.fn
 ---@field public fs                     eve.builtin.fs
 ---@field public icon                   eve.builtin.icon
 ---@field public im                     eve.builtin.im
 ---@field public job                    eve.builtin.job
----@field public json                   eve.builtin.json
 ---@field public lsp                    eve.builtin.lsp
 ---@field public notifier               eve.builtin.notifier
 ---@field public nvim                   eve.builtin.nvim
 ---@field public oxi                    eve.builtin.oxi
 ---@field public path                   eve.builtin.path
 ---@field public qflist                 eve.builtin.qflist
----@field public reporter               eve.builtin.reporter
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting
 ---@field public shell                  eve.builtin.shell
 ---@field public status                 eve.builtin.status
----@field public string                 eve.builtin.string
 ---@field public tab                    eve.builtin.tab
----@field public table                  eve.builtin.table
 ---@field public tmux                   eve.builtin.tmux
 ---@field public var                    eve.builtin.var
 ---@field public widget                 eve.builtin.widget
@@ -81,7 +68,6 @@ local M = setmetatable({
   constant = require("eve.constant"),
   context = require("eve.context"),
   state = require("eve.state"),
-  std = require("eve.std"),
   ux = require("eve.ux"),
 }, {
   __index = function(t, k)
@@ -92,7 +78,6 @@ local M = setmetatable({
     return require(m)
   end,
 })
-_G.eve = M
 
 ---@return eve.context.storage
 function M.get_default_storage()
@@ -174,7 +159,7 @@ function M.setup_breakpoints()
 
   eve.win.open_filepaths(0, filepaths)
 
-  eve.std.timer.set_timeout(function()
+  std.timer.set_timeout(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
       local bufnr = eve.buf.loadfile(breakpoint.filepath) ---@type integer|nil

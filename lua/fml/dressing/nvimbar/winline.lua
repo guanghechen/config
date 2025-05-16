@@ -74,12 +74,12 @@ local function resolve_nvimbar(winnr, source)
 
   if source == "sourcefile" and winline ~= nil then
     if winline.locate_scheduler == nil or winline.locate_scheduler:isdisposed() then
-      local locate_scheduler = eve.std.Scheduler.new({
+      local locate_scheduler = std.Scheduler.new({
         name = string.format("locate_scheduler:%d", winnr),
         mode = "throttle",
         delay = 128,
         timeout = 10000,
-        value = eve.std.Observable.from_value(false),
+        value = std.Observable.from_value(false),
         silent = silent,
         task = function(_, _, callback)
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -137,8 +137,8 @@ local function render(winnr)
     local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
     if should_show_winline then
       local text = filepath:sub(12) ---@type string
-      if text:sub(1, #eve.env.HOME_NVIM_CONFIG) == eve.env.HOME_NVIM_CONFIG then
-        text = "<NVIM_HOME>" .. text:sub(#eve.env.HOME_NVIM_CONFIG + 1)
+      if text:sub(1, #std.env.HOME_NVIM_CONFIG) == std.env.HOME_NVIM_CONFIG then
+        text = "<NVIM_HOME>" .. text:sub(#std.env.HOME_NVIM_CONFIG + 1)
       end
       local winbar = "diffview://" .. text
       vim.wo[winnr].winbar = txt(winbar, "f_wl_text")
@@ -147,8 +147,8 @@ local function render(winnr)
   end
   if filepath:sub(1, 11) == "gitsigns://" then
     local text = filepath:sub(12) ---@type string
-    if text:sub(1, #eve.env.HOME_NVIM_CONFIG) == eve.env.HOME_NVIM_CONFIG then
-      text = "<NVIM_HOME>" .. text:sub(#eve.env.HOME_NVIM_CONFIG + 1)
+    if text:sub(1, #std.env.HOME_NVIM_CONFIG) == std.env.HOME_NVIM_CONFIG then
+      text = "<NVIM_HOME>" .. text:sub(#std.env.HOME_NVIM_CONFIG + 1)
     end
     local winbar = "gitsigns://" .. text
     vim.wo[winnr].winbar = txt(winbar, "f_wl_text")
@@ -177,7 +177,7 @@ local function render(winnr)
 end
 
 eve.status.dirty_winline_nr:subscribe(
-  eve.std.Subscriber.new({
+  std.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)
       if winnr_prev ~= winnr then

@@ -37,12 +37,12 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 
 ---@class eve.ux.view.treeview.INodeRenderResult
 ---@field public text                   string
----@field public highlights             eve.t.IHighlightInline[]|nil
+---@field public highlights             std.t.IHighlightInline[]|nil
 
 ---@class eve.ux.view.treeview.INodeRenderResultCache
 ---@field public tick                   integer
 ---@field public text                   string
----@field public highlights             eve.t.IHighlightInline[]
+---@field public highlights             std.t.IHighlightInline[]
 
 ---@class eve.ux.view.treeview.INode
 ---@field public uuid                   string
@@ -206,7 +206,7 @@ function M:collapse(uuid, value, recursive)
 
   local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "collapse",
       message = "The node isn't exist",
@@ -238,7 +238,7 @@ function M:empty(uuid)
   self:__health__()
   local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "empty",
       message = "The node is not exist",
@@ -299,7 +299,7 @@ function M:remove(uuid)
 
   local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "remove",
       message = "The node isn't exist",
@@ -338,7 +338,7 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
   local node = self._nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
   if node == nil then
     if not insert_if_non_exist then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "update",
         message = "The node isn't exist (skipped)",
@@ -348,7 +348,7 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
     end
 
     if parent_uuid == nil then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "update",
         message = "The node isn't exist and the parent_uuid not provided (skipped)",
@@ -361,7 +361,7 @@ function M:update(uuid, parent_uuid, nodetype, data, collapsed, insert_if_non_ex
   end
 
   if node.type ~= nodetype then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "update",
       message = "The nodetype is different with the previous one (skipped)",
@@ -428,7 +428,7 @@ function M:calc_include_uuid_set(included_uuids)
   for _, uuid in ipairs(included_uuids) do
     local node = nodemap[uuid] ---@type eve.ux.view.treeview.INode|nil
     if node == nil then
-      eve.reporter.warn({
+      std.reporter.warn({
         from = __module_name__,
         subject = "calc_include_uuid_set",
         message = "The node isn't exist",
@@ -577,7 +577,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
 
   local INDENT_COMMON = self._indent ---@type string
   local lines = {} ---@type string[]
-  local highlights_list = {} ---@type (eve.t.IHighlightInline[]|nil)[]
+  local highlights_list = {} ---@type (std.t.IHighlightInline[]|nil)[]
 
   local lnum = 1 ---@type integer
   local render ---@type eve.ux.view.treeview.IRenderList
@@ -603,7 +603,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
     end
 
     lines[lnum] = indent .. cache.text ---@type string
-    highlights_list[lnum] = cache.highlights ---@type eve.t.IHighlightInline[]|nil
+    highlights_list[lnum] = cache.highlights ---@type std.t.IHighlightInline[]|nil
     indents[lnum] = indent ---@type string
     uuids[lnum] = node.uuid
     lnum = lnum + 1 ---@type integer
@@ -669,7 +669,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     for index = 1, #lines, 1 do
       local row = index - 1 ---@type integer
-      local highlights = highlights_list[index] ---@type eve.t.IHighlightInline[]|nil
+      local highlights = highlights_list[index] ---@type std.t.IHighlightInline[]|nil
       local indent = indents[index] ---@type string
       local offset = #indent
       vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
@@ -718,7 +718,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
 
   local INDENT_COMMON = self._indent ---@type string
   local lines = {} ---@type string[]
-  local highlights_list = {} ---@type (eve.t.IHighlightInline[]|nil)[]
+  local highlights_list = {} ---@type (std.t.IHighlightInline[]|nil)[]
 
   local lnum = 1 ---@type integer
   local render ---@type eve.ux.view.treeview.IRenderTree
@@ -747,7 +747,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
     end
 
     lines[lnum] = indent .. cache.text ---@type string
-    highlights_list[lnum] = cache.highlights ---@type eve.t.IHighlightInline[]|nil
+    highlights_list[lnum] = cache.highlights ---@type std.t.IHighlightInline[]|nil
     indents[lnum] = indent ---@type string
     uuids[lnum] = node.uuid
     lnum = lnum + 1 ---@type integer
@@ -831,7 +831,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     for index = 1, #lines, 1 do
       local row = index - 1 ---@type integer
-      local highlights = highlights_list[index] ---@type eve.t.IHighlightInline[]|nil
+      local highlights = highlights_list[index] ---@type std.t.IHighlightInline[]|nil
       local indent = indents[index] ---@type string
       local offset = #indent
       vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
@@ -862,7 +862,7 @@ function M:__retrieve_parent__(uuid, parent_uuid)
 
   local parent = self._nodemap[parent_uuid] ---@type eve.ux.view.treeview.INode|nil
   if parent == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "retrieve_parent",
       message = "The expected parent is not exist",

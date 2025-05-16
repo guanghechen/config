@@ -10,21 +10,21 @@
 ---@field public includes               string[]
 ---@field public excludes               string[]
 ---@field public input                  string
----@field public input_history          eve.std.collection.history.ISerializedData
+---@field public input_history          std.collection.history.ISerializedData
 
 ---@class eve.context.select.item.state
----@field public flag_case_sensitive    eve.std.collection.IObservable
----@field public flag_exclude           eve.std.collection.IObservable
----@field public flag_fuzzy             eve.std.collection.IObservable
----@field public flag_gitignore         eve.std.collection.IObservable
----@field public flag_regex             eve.std.collection.IObservable
----@field public flag_selected          eve.std.collection.IObservable
----@field public flag_foldempty         eve.std.collection.IObservable
----@field public flag_viewtype          eve.std.collection.IObservable
----@field public includes               eve.std.collection.IObservable
----@field public excludes               eve.std.collection.IObservable
----@field public input                  eve.std.collection.IObservable
----@field public input_history          eve.std.collection.IHistory
+---@field public flag_case_sensitive    std.collection.IObservable
+---@field public flag_exclude           std.collection.IObservable
+---@field public flag_fuzzy             std.collection.IObservable
+---@field public flag_gitignore         std.collection.IObservable
+---@field public flag_regex             std.collection.IObservable
+---@field public flag_selected          std.collection.IObservable
+---@field public flag_foldempty         std.collection.IObservable
+---@field public flag_viewtype          std.collection.IObservable
+---@field public includes               std.collection.IObservable
+---@field public excludes               std.collection.IObservable
+---@field public input                  std.collection.IObservable
+---@field public input_history          std.collection.IHistory
 
 ---@class eve.context.select.item
 ---@field public defaults               fun(): eve.context.select.item.data
@@ -150,18 +150,18 @@ function M.load(state, name, raw_data)
   if state == nil then
     ---@type eve.context.select.item.state
     state = {
-      flag_case_sensitive = eve.std.Observable.from_value(data.flag_case_sensitive),
-      flag_exclude = eve.std.Observable.from_value(data.flag_exclude),
-      flag_fuzzy = eve.std.Observable.from_value(data.flag_fuzzy),
-      flag_gitignore = eve.std.Observable.from_value(data.flag_gitignore),
-      flag_regex = eve.std.Observable.from_value(data.flag_regex),
-      flag_selected = eve.std.Observable.from_value(data.flag_selected),
-      flag_foldempty = eve.std.Observable.from_value(data.flag_foldempty),
-      flag_viewtype = eve.std.Observable.from_value(data.flag_viewtype),
-      includes = eve.std.Observable.from_value(data.includes),
-      excludes = eve.std.Observable.from_value(data.excludes),
-      input = eve.std.Observable.from_value(data.input),
-      input_history = eve.std.History.deserialize({
+      flag_case_sensitive = std.Observable.from_value(data.flag_case_sensitive),
+      flag_exclude = std.Observable.from_value(data.flag_exclude),
+      flag_fuzzy = std.Observable.from_value(data.flag_fuzzy),
+      flag_gitignore = std.Observable.from_value(data.flag_gitignore),
+      flag_regex = std.Observable.from_value(data.flag_regex),
+      flag_selected = std.Observable.from_value(data.flag_selected),
+      flag_foldempty = std.Observable.from_value(data.flag_foldempty),
+      flag_viewtype = std.Observable.from_value(data.flag_viewtype),
+      includes = std.Observable.from_value(data.includes),
+      excludes = std.Observable.from_value(data.excludes),
+      input = std.Observable.from_value(data.input),
+      input_history = std.History.deserialize({
         name = name,
         capacity = 100,
         data = data.input_history,
@@ -178,10 +178,10 @@ function M.load(state, name, raw_data)
   state.flag_selected:next(data.flag_selected)
   state.flag_foldempty:next(data.flag_foldempty)
   state.flag_viewtype:next(data.flag_viewtype)
-  if not eve.std.fn.equals_list(state.includes:snapshot(), data.includes) then
+  if not std.fn.equals_list(state.includes:snapshot(), data.includes) then
     state.includes:next(data.includes)
   end
-  if not eve.std.fn.equals_list(state.excludes:snapshot(), data.excludes) then
+  if not std.fn.equals_list(state.excludes:snapshot(), data.excludes) then
     state.excludes:next(data.excludes)
   end
   state.input:next(data.input)

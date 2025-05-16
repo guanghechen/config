@@ -145,7 +145,7 @@ function M._show(state)
       line = line .. " " .. info
     end
 
-    lines[#lines + 1] = eve.string.pad_end(line, width, " ") ---@type string
+    lines[#lines + 1] = std.string.pad_end(line, width, " ") ---@type string
   end
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.popupmenu, 0, -1)

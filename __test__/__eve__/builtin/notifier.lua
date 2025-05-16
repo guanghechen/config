@@ -10,7 +10,7 @@ local f = function(delay, group, level, title, content, timeout)
       silent = false,
     })
   else
-    eve.std.timer.set_timeout(function()
+    std.timer.set_timeout(function()
       eve.notifier.notify({
         group = group,
         level = level,

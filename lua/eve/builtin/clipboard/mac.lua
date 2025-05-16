@@ -16,7 +16,7 @@ function M.get_image_as_base64()
 
   local exit_code = vim.v.shell_error
   if exit_code ~= 0 then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "get_image_as_base64",
       message = "Failed to run command.",
@@ -41,7 +41,7 @@ function M.has_image()
 
   local exit_code = vim.v.shell_error
   if exit_code ~= 0 then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "has_image",
       message = "Failed to run command.",
@@ -65,7 +65,7 @@ function M.paste_image_from_clipboard(filepath)
   local exit_code = vim.v.shell_error
 
   if exit_code ~= 0 then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "paste_image_from_clipboard",
       message = "Failed to run command.",
@@ -83,14 +83,14 @@ function M.paste_image_from_clipboard(filepath)
   return true
 end
 
-if eve.env.IS_TMUX then
+if std.env.IS_TMUX then
   function M.get_clipboard()
     local fake_clipboard_filepath = eve.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
     if fake_clipboard_filepath == nil or not eve.path.is_exist(fake_clipboard_filepath) then
       return
     end
 
-    eve.reporter.info({
+    std.reporter.info({
       from = __module_name__,
       message = "Using fake clipboard:" .. fake_clipboard_filepath,
     })
@@ -101,7 +101,7 @@ if eve.env.IS_TMUX then
     local function read_from_fake_clipboard()
       local file = io.open(clipboard_file, "r")
       if file == nil then
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           subject = "read_from_fake_clipboard",
           message = "Unable to open fake clipboard file for reading.",
@@ -122,7 +122,7 @@ if eve.env.IS_TMUX then
     local function write_to_fake_clipboard(data)
       local file = io.open(clipboard_file, "w")
       if file == nil then
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           subject = "write_to_fake_clipboard",
           message = "Unable to open fake clipboard file for writing.",

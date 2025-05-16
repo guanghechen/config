@@ -5,7 +5,7 @@ if timer == nil then
   return
 end
 
-local tasks = eve.std.CircularQueue.new({ capacity = 500 })
+local tasks = std.CircularQueue.new({ capacity = 500 })
 local processing = false ---@type boolean
 
 local handlers = {
@@ -90,7 +90,7 @@ local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 local function ui_attach_callback(event, kind, ...)
   local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
-    eve.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
+    std.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
   end
 
   if vim.v.exiting ~= vim.NIL then
@@ -105,7 +105,7 @@ local function ui_attach_callback(event, kind, ...)
 
   local handler = handlers[event]
   if handler == nil then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       message = string.format("unhandled | %s", event),
       details = { event, kind, ... },

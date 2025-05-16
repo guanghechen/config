@@ -19,7 +19,7 @@ function M.focus(bufid)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "focus",
       message = "Cannot resolve the meta for the current tab.",
@@ -29,7 +29,7 @@ function M.focus(bufid)
   end
 
   local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local bufid_next = eve.std.fn.navigate_limit(0, bufid, #bufs) ---@type integer
+  local bufid_next = std.fn.navigate_limit(0, bufid, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
@@ -39,7 +39,7 @@ function M.focus_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "focus_left",
       message = "Cannot resolve the meta for the current tab.",
@@ -56,7 +56,7 @@ function M.focus_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
 
   local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local bufid_next = eve.std.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
+  local bufid_next = std.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
@@ -66,7 +66,7 @@ function M.focus_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   if meta == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "focus_right",
       message = "Cannot resolve the meta for the current tab.",
@@ -82,7 +82,7 @@ function M.focus_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local bufid_next = eve.std.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
+  local bufid_next = std.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 

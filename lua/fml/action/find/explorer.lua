@@ -113,7 +113,7 @@ local function fetch_diritem(dirpath, force)
   return diritem
 end
 
-local state_cwd = eve.std.Observable.from_value(eve.path.cwd()) ---@type eve.std.collection.IObservable
+local state_cwd = std.Observable.from_value(eve.path.cwd()) ---@type std.collection.IObservable
 local _select = nil ---@type eve.ux.ISelect|nil
 
 ---@return string
@@ -139,7 +139,7 @@ local function gen_title()
 end
 
 state_cwd:subscribe(
-  eve.std.Subscriber.new({
+  std.Subscriber.new({
     on_next = function()
       if _select ~= nil then
         _select:mark_data_dirty()
@@ -152,8 +152,8 @@ state_cwd:subscribe(
   true
 )
 
-local frecency = eve.context.frecency.files ---@type eve.std.collection.IFrecency
-local input_history = eve.context.select.find_file.input_history ---@type eve.std.collection.IHistory
+local frecency = eve.context.frecency.files ---@type std.collection.IFrecency
+local input_history = eve.context.select.find_file.input_history ---@type std.collection.IHistory
 
 local main_width = 0.4 ---@type number
 ---@type eve.ux.IRawSearchDimension
@@ -191,7 +191,7 @@ local provider = {
     local fileitem = file_datamap[item.uuid] ---@type fml.action.find.explorer.IFileItem|nil
     if fileitem == nil then
       local lines = { "  Cannot found the file.  " } ---@type string[]
-      local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
+      local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type std.t.IHighlight[]
 
       ---@type eve.ux.ISearchPreviewData
       return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -201,7 +201,7 @@ local provider = {
     local diritem = dir_datamap[dirpath] ---@type fml.action.find.explorer.IDirItem|nil
     if diritem == nil then
       local lines = { "  Cannot found the parent directory.  " } ---@type string[]
-      local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
+      local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type std.t.IHighlight[]
 
       ---@type eve.ux.ISearchPreviewData
       return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -226,14 +226,14 @@ local provider = {
       end
     elseif fileitem.type == "directory" then
       local lines = {} ---@type string[]
-      local highlights = {} ---@type eve.t.IHighlight[]
+      local highlights = {} ---@type std.t.IHighlight[]
       local c_diritem = fetch_diritem(fileitem.path, false) ---@type fml.action.find.explorer.IDirItem
       for lnum, c_fileitem in ipairs(c_diritem.items) do
         local width = 0 ---@type integer
         local text = "" ---@type string
 
         local sep_perm = string.rep(" ", 2) ---@type string
-        local text_perm = eve.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm
+        local text_perm = std.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. sep_perm
         local width_perm = string.len(text_perm) ---@type integer
         table.insert(highlights, {
           lnum = lnum,
@@ -246,22 +246,22 @@ local provider = {
         width = width + width_perm
 
         local sep_size = string.rep(" ", 2) ---@type string
-        local text_size = eve.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size
+        local text_size = std.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. sep_size
         local width_size = string.len(text_size) ---@type integer
         table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_size, hlname = "f_fe_size" })
         text = text .. text_size
         width = width + width_size
 
-        if not eve.env.IS_WIN then
+        if not std.env.IS_WIN then
           local sep_owner = string.rep(" ", 1) ---@type string
-          local text_owner = eve.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
+          local text_owner = std.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. sep_owner
           local width_owner = string.len(text_owner) ---@type integer
           table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_owner, hlname = "f_fe_owner" })
           text = text .. text_owner
           width = width + width_owner
 
           local sep_group = string.rep(" ", 2) ---@type string
-          local text_group = eve.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group
+          local text_group = std.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. sep_group
           local width_group = string.len(text_group) ---@type integer
           table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_group, hlname = "f_fe_group" })
           text = text .. text_group
@@ -269,14 +269,14 @@ local provider = {
         end
 
         local sep_date = string.rep(" ", 2) ---@type string
-        local text_date = eve.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date
+        local text_date = std.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. sep_date
         local width_date = string.len(text_date) ---@type integer
         table.insert(highlights, { lnum = lnum, coll = width, colr = width + width_date, hlname = "f_fe_date" })
         text = text .. text_date
         width = width + width_date
 
         local sep_name = string.rep(" ", 10) ---@type string
-        local text_name = eve.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name
+        local text_name = std.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. sep_name
         local width_name = string.len(text_name) ---@type integer
         table.insert(highlights, {
           lnum = lnum,
@@ -300,7 +300,7 @@ local provider = {
     end
 
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
-    local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
+    local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type std.t.IHighlight[]
 
     ---@type eve.ux.ISearchPreviewData
     return { lines = lines, highlights = highlights, filetype = nil, title = item.text, lnum = 1, col = 0 }
@@ -317,7 +317,7 @@ local provider = {
       return item.text, {}
     end
 
-    local highlights = {} ---@type eve.t.IHighlightInline[]
+    local highlights = {} ---@type std.t.IHighlightInline[]
     local width = 0 ---@type integer
     local text = "" ---@type string
     local filename = ((item.text == "../") or (item.text == "./")) and item.text
@@ -334,14 +334,14 @@ local provider = {
       - (diritem.date_width + 2)
 
     local sep_icon = string.rep(" ", 2) ---@type string
-    local text_icon = eve.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string
+    local text_icon = std.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. sep_icon ---@type string
     local width_icon = string.len(text_icon) ---@type integer
     table.insert(highlights, { coll = width, colr = width + width_icon, hlname = fileitem.icon_hl })
     text = text .. text_icon
     width = width + width_icon
 
     local sep_name = string.rep(" ", filename_sep_width) ---@type string
-    local text_name = eve.string.pad_end(filename, diritem.name_width + 1, " ") .. sep_name ---@type string
+    local text_name = std.string.pad_end(filename, diritem.name_width + 1, " ") .. sep_name ---@type string
     local width_name = string.len(text_name) ---@type integer
     table.insert(highlights, {
       coll = width,
@@ -349,7 +349,7 @@ local provider = {
       hlname = fileitem.type == "directory" and "f_fe_name_dir" or "f_fe_name_file",
     })
     for _, piece in ipairs(match.matches) do
-      ---@type eve.t.IHighlightInline
+      ---@type std.t.IHighlightInline
       local highlight = { coll = width + piece.l, colr = width + piece.r, hlname = "f_fe_match" }
       table.insert(highlights, highlight)
     end
@@ -357,7 +357,7 @@ local provider = {
     width = width + width_name
 
     local sep_perm = string.rep(" ", 2) ---@type string
-    local text_perm = eve.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. sep_perm ---@type string
+    local text_perm = std.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. sep_perm ---@type string
     local width_perm = string.len(text_perm) ---@type integer
     table.insert(highlights, {
       coll = width,
@@ -369,14 +369,14 @@ local provider = {
     width = width + width_perm
 
     local sep_size = string.rep(" ", 2) ---@type string
-    local text_size = eve.string.pad_start(fileitem.size, diritem.size_width, " ") .. sep_size ---@type string
+    local text_size = std.string.pad_start(fileitem.size, diritem.size_width, " ") .. sep_size ---@type string
     local width_size = string.len(text_size) ---@type integer
     table.insert(highlights, { coll = width, colr = width + width_size, hlname = "f_fe_size" })
     text = text .. text_size
     width = width + width_size
 
     local sep_date = string.rep(" ", 2) ---@type string
-    local text_date = eve.string.pad_end(fileitem.date, diritem.date_width, " ") .. sep_date ---@type string
+    local text_date = std.string.pad_end(fileitem.date, diritem.date_width, " ") .. sep_date ---@type string
     local width_date = string.len(text_date) ---@type integer
     table.insert(highlights, { coll = width, colr = width + width_date, hlname = "f_fe_date" })
     text = text .. text_date
@@ -386,7 +386,7 @@ local provider = {
   end,
 }
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local common_keymaps = {
   {
     modes = { "n", "v" },
@@ -399,13 +399,13 @@ local common_keymaps = {
   },
 }
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local input_keymaps = vim.list_slice(common_keymaps)
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local main_keymaps = vim.list_slice(common_keymaps)
 
----@type eve.t.IKeymap[]
+---@type std.t.IKeymap[]
 local preview_keymaps = vim.list_slice(common_keymaps)
 
 ---@type eve.ux.ISelect

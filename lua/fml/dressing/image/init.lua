@@ -1,6 +1,6 @@
 --- https://github.com/folke/snacks.nvim/blob/70e7e081ee558eb3756aba02491f1bc84fb72ab0/lua/snacks/image/init.lua
 
-if eve.env.IS_WIN then
+if std.env.IS_WIN then
   return
 end
 

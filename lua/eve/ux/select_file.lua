@@ -1,9 +1,9 @@
----@class eve.ux.IFileSelect : eve.t.ux.IWidget
+---@class eve.ux.IFileSelect : std.t.ux.IWidget
 ---@field public change_dimension       fun(self: eve.ux.IFileSelect, dimension: eve.ux.IRawSearchDimension): nil
 ---@field public change_input_title     fun(self: eve.ux.IFileSelect, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.IFileSelect, title: string): nil
 ---@field public get_item               fun(self: eve.ux.IFileSelect, uuid: string): eve.ux.select.IItem|nil
----@field public get_matched_items      fun(self: eve.ux.IFileSelect): eve.t.IScoredMatch[]
+---@field public get_matched_items      fun(self: eve.ux.IFileSelect): std.t.IScoredMatch[]
 ---@field public get_winnr_input        fun(self: eve.ux.IFileSelect): integer|nil
 ---@field public get_winnr_main         fun(self: eve.ux.IFileSelect): integer|nil
 ---@field public get_winnr_preview      fun(self: eve.ux.IFileSelect): integer|nil
@@ -22,7 +22,7 @@
 ---| fun(item: eve.ux.select_file.IItem, last_item: eve.ux.select_file.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
 ---@alias eve.ux.select_file.IRenderItem
----| fun(item: eve.ux.select_file.IItem, match: eve.t.IScoredMatch): string, eve.t.IHighlightInline[]
+---| fun(item: eve.ux.select_file.IItem, match: std.t.IScoredMatch): string, std.t.IHighlightInline[]
 
 ---@class eve.ux.select_file.IData
 ---@field public items                  eve.ux.select_file.IRawItem[]
@@ -60,7 +60,7 @@ local M = {}
 M.__index = M
 
 ---@class eve.ux.IFileSelectProps
----@field public case_sensitive         ?eve.std.collection.IObservable
+---@field public case_sensitive         ?std.collection.IObservable
 ---@field public cmp                    ?eve.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
@@ -69,19 +69,19 @@ M.__index = M
 ---@field public preview_enabled        boolean
 ---@field public preview_wrap           ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?eve.std.collection.IObservable
----@field public flag_regex             ?eve.std.collection.IObservable
----@field public flag_selected          ?eve.std.collection.IObservable
----@field public frecency               ?eve.std.collection.IFrecency
----@field public input                  ?eve.std.collection.IObservable
----@field public input_history          ?eve.std.collection.IHistory
----@field public input_keymaps          ?eve.t.IKeymap[]
----@field public main_keymaps           ?eve.t.IKeymap[]
+---@field public flag_fuzzy             ?std.collection.IObservable
+---@field public flag_regex             ?std.collection.IObservable
+---@field public flag_selected          ?std.collection.IObservable
+---@field public frecency               ?std.collection.IFrecency
+---@field public input                  ?std.collection.IObservable
+---@field public input_history          ?std.collection.IHistory
+---@field public input_keymaps          ?std.t.IKeymap[]
+---@field public main_keymaps           ?std.t.IKeymap[]
 ---@field public multiple               ?boolean
 ---@field public permanent              ?boolean
----@field public preview_keymaps        ?eve.t.IKeymap[]
+---@field public preview_keymaps        ?std.t.IKeymap[]
 ---@field public provider               eve.ux.select_file.IProvider
----@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
+---@field public statusline_items       ?std.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?eve.ux.search.IOnClose
 ---@field public on_confirm             ?eve.ux.select.IOnConfirm
@@ -92,7 +92,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local case_sensitive = props.case_sensitive ---@type eve.std.collection.IObservable|nil
+  local case_sensitive = props.case_sensitive ---@type std.collection.IObservable|nil
   local cmp = props.cmp ---@type eve.ux.select.IMatchedItemCmp|nil
   local delay_fetch = props.delay_fetch ---@type integer|nil
   local delay_render = props.delay_render ---@type integer|nil
@@ -100,19 +100,19 @@ function M.new(props)
   local preview_enabled = props.preview_enabled ---@type boolean
   local preview_wrap = props.preview_wrap ---@type boolean|nil
   local extend_preset_keymaps = props.extend_preset_keymaps ---@type boolean|nil
-  local flag_fuzzy = props.flag_fuzzy ---@type eve.std.collection.IObservable|nil
-  local flag_regex = props.flag_regex ---@type eve.std.collection.IObservable|nil
-  local flag_selected = props.flag_selected ---@type eve.std.collection.IObservable|nil
-  local frecency = props.frecency ---@type eve.std.collection.IFrecency|nil
-  local input = props.input ---@type eve.std.collection.IObservable|nil
-  local input_history = props.input_history ---@type eve.std.collection.IHistory|nil
-  local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
-  local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
+  local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable|nil
+  local flag_regex = props.flag_regex ---@type std.collection.IObservable|nil
+  local flag_selected = props.flag_selected ---@type std.collection.IObservable|nil
+  local frecency = props.frecency ---@type std.collection.IFrecency|nil
+  local input = props.input ---@type std.collection.IObservable|nil
+  local input_history = props.input_history ---@type std.collection.IHistory|nil
+  local input_keymaps = props.input_keymaps ---@type std.t.IKeymap[]|nil
+  local main_keymaps = props.main_keymaps ---@type std.t.IKeymap[]|nil
   local multiple = props.multiple ---@type boolean|nil
   local permanent = props.permanent ---@type boolean|nil
-  local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
+  local preview_keymaps = props.preview_keymaps ---@type std.t.IKeymap[]|nil
   local provider = props.provider ---@type eve.ux.select_file.IProvider
-  local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]|nil
+  local statusline_items = props.statusline_items ---@type std.t.ux.widget.IRawStatuslineItem[]|nil
   local title = props.title ---@type string
   local on_close = props.on_close ---@type eve.ux.search.IOnClose|nil
   local on_confirm_from_props = props.on_confirm ---@type eve.ux.select.IOnConfirm|nil
@@ -124,8 +124,8 @@ function M.new(props)
     ---@return nil
     local function send_to_qflist()
       if _select ~= nil then
-        local quickfix_items = {} ---@type eve.t.IQuickFixItem[]
-        local matched_items = _select:get_matched_items() ---@type eve.t.IScoredMatch[]
+        local quickfix_items = {} ---@type std.t.IQuickFixItem[]
+        local matched_items = _select:get_matched_items() ---@type std.t.IScoredMatch[]
         for _, matched_item in ipairs(matched_items) do
           local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
           ---@cast item                 eve.ux.select_file.IItem
@@ -148,7 +148,7 @@ function M.new(props)
       end
     end
 
-    ---@type eve.t.IKeymap[]
+    ---@type std.t.IKeymap[]
     local common_keymaps = {
       {
         modes = { "i", "n", "v" },
@@ -157,9 +157,9 @@ function M.new(props)
         desc = "search: send to qflist",
       },
     }
-    input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps or {}) ---@type eve.t.IKeymap[]
-    main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), main_keymaps or {}) ---@type eve.t.IKeymap[]
-    preview_keymaps = vim.list_extend(vim.list_slice(common_keymaps), preview_keymaps or {}) ---@type eve.t.IKeymap[]
+    input_keymaps = vim.list_extend(vim.list_slice(common_keymaps), input_keymaps or {}) ---@type std.t.IKeymap[]
+    main_keymaps = vim.list_extend(vim.list_slice(common_keymaps), main_keymaps or {}) ---@type std.t.IKeymap[]
+    preview_keymaps = vim.list_extend(vim.list_slice(common_keymaps), preview_keymaps or {}) ---@type std.t.IKeymap[]
   end
 
   ---@type eve.ux.select.IProvider
@@ -290,7 +290,7 @@ function M.fetch_preview_data(item)
   end
 
   local lines = { "  Not a text file, cannot preview." } ---@type string[]
-  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type eve.t.IHighlight[]
+  local highlights = { { lnum = 1, coll = 0, colr = -1, hlname = "f_us_preview_error" } } ---@type std.t.IHighlight[]
 
   ---@type eve.ux.ISearchPreviewData
   return { lines = lines, highlights = highlights, filetype = nil, title = item.text }
@@ -313,9 +313,9 @@ function M.patch_preview_data(item, last_item, last_data)
 end
 
 ---@param item                          eve.ux.select_file.IItem
----@param match                         eve.t.IScoredMatch
+---@param match                         std.t.IScoredMatch
 ---@return string
----@return eve.t.IHighlightInline[]
+---@return std.t.IHighlightInline[]
 function M.render_item(item, match)
   local icon_width = string.len(item.data.icon) ---@type integer
   local text = item.data.icon .. item.data.filepath_relative ---@type string
@@ -324,10 +324,10 @@ function M.render_item(item, match)
     text = text .. ":" .. item.data.lnum .. ":" .. item.data.col
   end
 
-  ---@type eve.t.IHighlightInline[]
+  ---@type std.t.IHighlightInline[]
   local highlights = { { coll = 0, colr = icon_width, hlname = item.data.icon_hl } }
   for _, piece in ipairs(match.matches) do
-    ---@type eve.t.IHighlightInline
+    ---@type std.t.IHighlightInline
     local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end
@@ -398,7 +398,7 @@ function M:get_item(uuid)
   return select:get_item(uuid)
 end
 
----@return                              eve.t.IScoredMatch[]
+---@return                              std.t.IScoredMatch[]
 function M:get_matched_items()
   local select = self._get_select() ---@type eve.ux.ISelect
   return select:get_matched_items()

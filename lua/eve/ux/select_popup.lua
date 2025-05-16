@@ -1,11 +1,11 @@
 ---@class eve.ux.ISelectPopupItem
 ---@field public uuid                   string
 ---@field public text                   string
----@field public highlights             eve.t.IHighlightInline[]|nil
+---@field public highlights             std.t.IHighlightInline[]|nil
 
 ---@class eve.ux.ISelectPopupProps
 ---@field public wincfg                 vim.api.keyset.win_config|nil
----@field public keymaps                eve.t.IKeymap[]|nil
+---@field public keymaps                std.t.IKeymap[]|nil
 ---@field public items                  eve.ux.ISelectPopupItem[]
 ---@field public item_present_uuid      string|nil
 ---@field public on_select              fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem|nil): nil
@@ -19,7 +19,7 @@
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _wincfg             vim.api.keyset.win_config
----@field protected _keymaps            eve.t.IKeymap[]
+---@field protected _keymaps            std.t.IKeymap[]
 ---@field protected _items              eve.ux.ISelectPopupItem[]
 ---@field protected _item_index_present integer
 ---@field protected _on_select          fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem)
@@ -68,14 +68,14 @@ function M.new(props)
     focusable = true,
   }, props.wincfg or {})
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local keymaps = vim.list_extend({
     {
       modes = { "i", "n", "v" },
       key = "<Left>",
       aliases = { "<Right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
       desc = "select_popup: noop",
-      callback = eve.std.fn.noop,
+      callback = std.fn.noop,
     },
     {
       modes = { "i", "n", "v" },
@@ -138,7 +138,7 @@ function M.new(props)
   self._bufnr = nil ---@type integer|nil
   self._winnr = nil ---@type integer|nil
   self._wincfg = wincfg ---@type vim.api.keyset.win_config
-  self._keymaps = keymaps ---@type eve.t.IKeymap[]
+  self._keymaps = keymaps ---@type std.t.IKeymap[]
   self._items = items ---@type eve.ux.ISelectPopupItem[]
   self._item_index_present = item_present_index ---@type integer
   self._on_select = on_select ---@type fun(item: eve.ux.ISelectPopupItem|nil): nil

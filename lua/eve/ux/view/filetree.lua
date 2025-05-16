@@ -79,7 +79,7 @@ local nodetype_priority_map = {
 
 ---@class eve.ux.view.IFiletreeProps
 ---@field public name                   string
----@field public flag_foldempty         eve.std.collection.IObservable
+---@field public flag_foldempty         std.collection.IObservable
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---
@@ -92,7 +92,7 @@ local nodetype_priority_map = {
 ---@class eve.ux.view.Filetree
 ---@field public name                   string
 ---@field protected _disposed           boolean
----@field protected _flag_foldempty     eve.std.collection.IObservable
+---@field protected _flag_foldempty     std.collection.IObservable
 ---@field protected _treeview           eve.ux.view.Treeview
 ---@field protected _parents_of_position table<string, true>
 local M = {}
@@ -102,7 +102,7 @@ M.__index = M
 ---@return eve.ux.view.Filetree
 function M.new(props)
   local name = props.name ---@type string
-  local flag_foldempty = props.flag_foldempty ---@type eve.std.collection.IObservable
+  local flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
 
@@ -196,7 +196,7 @@ function M.new(props)
   self._treeview = treeview
   self._parents_of_position = {}
 
-  flag_foldempty:subscribe(eve.std.Subscriber.new({
+  flag_foldempty:subscribe(std.Subscriber.new({
     on_next = function(value)
       treeview:set_foldempty(value)
     end,
@@ -317,7 +317,7 @@ function M:insert_position(fileuuid, lnum, col, data)
   local treeview = self._treeview ---@type eve.ux.view.Treeview
   local filenode = treeview:retrieve_by_uuid(fileuuid)
   if filenode == nil or filenode.type ~= "leaf" then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "insert_position",
       message = "Invalid fileuuid",
@@ -369,7 +369,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   treeview:insert(uuid_root, uuid_root, "container", root, false)
 
   cwd = eve.path.normalize(cwd) ---@type string
-  local cwd_with_slash = cwd == "/" and "/" or cwd .. eve.env.PATH_SEP ---@type string
+  local cwd_with_slash = cwd == "/" and "/" or cwd .. std.env.PATH_SEP ---@type string
   local cwd_length = #cwd_with_slash ---@type integer
   if cwd == "/" then
     local uuid = self:__resolve_uuid__("/") ---@type string
@@ -388,10 +388,10 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
 
     local filepath = root.filepath ---@type string
     local uuid_parent = uuid_root ---@type string
-    local start_index = eve.env.IS_WIN and 1 or 2 ---@type integer
+    local start_index = std.env.IS_WIN and 1 or 2 ---@type integer
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
-      filepath = index == 1 and basename or (filepath .. eve.env.PATH_SEP .. basename) ---@type string
+      filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
       local uuid = self:__resolve_uuid__(filepath) ---@type string
       local icon, icon_hln = eve.fn.diricon(basename)
 
@@ -417,10 +417,10 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
 
     local filepath = root.filepath ---@type string
     local uuid_parent = uuid_root ---@type string
-    local start_index = eve.env.IS_WIN and 1 or 2 ---@type integer
+    local start_index = std.env.IS_WIN and 1 or 2 ---@type integer
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
-      filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+      filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
       local uuid = self:__resolve_uuid__(filepath) ---@type string
       local icon, icon_hln = eve.fn.diricon(basename)
 
@@ -437,7 +437,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     end
 
     local basename = pieces[#pieces] ---@type string
-    filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+    filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
     local uuid = self:__resolve_uuid__(filepath) ---@type string
     local icon, icon_hln = eve.fn.fileicon(basename)
 
@@ -464,7 +464,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local uuid_parent = self:__resolve_uuid__(filepath) ---@type string
     for index = 1, N, 1 do
       local basename = pieces[index] ---@type string
-      filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+      filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
       local uuid = self:__resolve_uuid__(filepath) ---@type string
       local icon, icon_hln = eve.fn.diricon(basename)
 
@@ -481,7 +481,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     end
 
     local basename = pieces[#pieces] ---@type string
-    filepath = filepath .. eve.env.PATH_SEP .. basename ---@type string
+    filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
     local uuid = self:__resolve_uuid__(filepath) ---@type string
     local icon, icon_hln = eve.fn.fileicon(basename)
 
@@ -499,7 +499,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
 
   if with_positions then
     for _, p in ipairs(filepaths) do
-      local filepath, lnum, col = eve.string.parse_filepath_with_position(p) ---@type string, integer|nil, integer|nil
+      local filepath, lnum, col = std.string.parse_filepath_with_position(p) ---@type string, integer|nil, integer|nil
       local fileuuid, absolute_filepath ---@type string, string
       if eve.path.is_absolute(filepath) then
         if filepath:sub(1, cwd_length) ~= cwd_with_slash then
@@ -560,7 +560,7 @@ function M.default_directory_node_renderer(_, node, _, _, _, folded_depth)
   if folded_depth < 1 then
     local text = string.format("%s %s", icon, basename) ---@type string
 
-    ---@type eve.t.IHighlightInline[]
+    ---@type std.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #icon + 1, hlname = icon_hln },
       { coll = #icon + 1, colr = #text, hlname = "f_ft_dirname" },
@@ -579,7 +579,7 @@ function M.default_directory_node_renderer(_, node, _, _, _, folded_depth)
 
   local text = string.format("%s %s", icon, basenames[1]) ---@type string
 
-  ---@type eve.t.IHighlightInline[]
+  ---@type std.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #icon + 1, hlname = icon_hln },
     { coll = #icon + 1, colr = #text, hlname = "f_ft_dirname" },
@@ -604,7 +604,7 @@ function M.default_file_node_renderer(_, node)
 
   local text = string.format("%s %s", icon, basename) ---@type string
 
-  ---@type eve.t.IHighlightInline[]
+  ---@type std.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #icon + 1, hlname = icon_hln },
     { coll = #icon + 1, colr = #text, hlname = "f_ft_filename" },
@@ -619,7 +619,7 @@ function M.default_position_node_renderer(_, node)
 
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
 
-  ---@type eve.t.IHighlightInline[]
+  ---@type std.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #text, hlname = "f_ft_position" },
   }
@@ -633,7 +633,7 @@ function M.default_file_node_flatten_renderer(_, node, root)
 
   local filepath = #root.data.filepath < 2 and nodedata.filepath or nodedata.filepath:sub(#root.data.filepath + 2) ---@type string
   local text = string.format("%s %s", icon, filepath) ---@type string
-  local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type eve.t.IHighlightInline[]
+  local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type std.t.IHighlightInline[]
 
   ---@type eve.ux.view.treeview.INodeRenderResult
   local result = { text = text, highlights = highlights }
@@ -647,7 +647,7 @@ function M.default_position_node_flatten_renderer(_, node)
 
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
 
-  ---@type eve.t.IHighlightInline[]
+  ---@type std.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #text, hlname = "f_ft_position" },
   }

@@ -15,7 +15,7 @@ function M.new(buf)
   self.idx = {}
   local group = eve.nvim.augroup("fml.dressing.image.inline." .. buf)
 
-  local update = eve.std.timer.debounce(function()
+  local update = std.timer.debounce(function()
     self:update()
   end, 100)
 
@@ -111,7 +111,7 @@ function M:update()
         img = Placement.new(
           self.buf,
           i.src,
-          eve.table.merge_config({}, config.state.doc, {
+          std.table.merge_config({}, config.state.doc, {
             pos = i.pos,
             range = i.range,
             inline = true,

@@ -57,7 +57,7 @@ local function on_attach(client, bufnr)
 
   eve.lsp.on_attach(client, bufnr)
 
-  ---@type eve.t.IKeymap[]
+  ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },
@@ -165,7 +165,7 @@ local function on_attach(client, bufnr)
 
           vim.lsp.buf_request(bufnr, "textDocument/rename", params, function(err, result, ctx, config)
             if err then
-              eve.reporter.error({
+              std.reporter.error({
                 from = __module_name__,
                 subject = "rename",
                 message = "Failed to rename.",

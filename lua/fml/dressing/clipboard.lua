@@ -39,7 +39,7 @@ end
 ---@return nil
 local function fallback(lines, phase, silent)
   if not silent then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       subject = "fallback",
       message = "Did not handle paste, calling original vim.paste",
@@ -167,7 +167,7 @@ vim.paste = function(lines, phase)
 
     local basename_source = eve.path.basename(filepath_source) ---@type string
     local filepath_default = eve.path.join(dirpath, basename_source) ---@type string
-    local suffix = is_dirpath and eve.env.PATH_SEP or "" ---@type string
+    local suffix = is_dirpath and std.env.PATH_SEP or "" ---@type string
 
     local placeholder = eve.path.relative(cwd, filepath_default, false) ---@type string
     if placeholder == "" then
@@ -201,7 +201,7 @@ vim.paste = function(lines, phase)
             local src = eve.path.relative(dirpath, filepath_target, true) ---@type string
             if #src > 1 then
               if src:sub(1, 1) ~= "." then
-                src = "." .. eve.env.PATH_SEP .. src
+                src = "." .. std.env.PATH_SEP .. src
               end
               local filename = eve.path.basename(filepath_target) ---@type string
               local alt = vim.fn.fnamemodify(filename, ":r") ---@type string

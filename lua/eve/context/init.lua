@@ -54,7 +54,7 @@ local __mods = {
 ---@field public get_storage            fun(): eve.context.storage
 ---@field public set_storage            fun(storage: eve.context.storage): nil
 ---
----@field public observe                fun(observables: eve.std.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---@field public observe                fun(observables: std.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: eve.context.state.IWatchChangeParams): nil
@@ -198,8 +198,8 @@ end
 
 ---@return nil
 function M.watch_changes()
-  local ticker_editor = eve.std.Ticker.new({ start = 0 })
-  local ticker_workspace = eve.std.Ticker.new({ start = 0 })
+  local ticker_editor = std.Ticker.new({ start = 0 })
+  local ticker_workspace = std.Ticker.new({ start = 0 })
 
   eve.fn.observe({ M.theme.theme }, function()
     eve.context.theme.reload_theme(false, true)
@@ -248,7 +248,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  ---@type eve.std.collection.IObservable[]
+  ---@type std.collection.IObservable[]
   local select_states = {
     M.bookmark.pinned,
     M.flight.ai,
@@ -306,13 +306,13 @@ function M.watch_changes()
     eve.status.dirtier_statusline:mark_dirty()
   end)
 
-  local scheduler = eve.std.Scheduler.new({
+  local scheduler = std.Scheduler.new({
     name = __module_name__,
     mode = "throttle",
     delay = 256,
     timeout = 3000,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
     task = function()
       if M._storage.editor then
         local raw_data = eve.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
@@ -331,7 +331,7 @@ function M.watch_changes()
     end,
   })
   ticker_editor:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         scheduler:schedule()
       end,
@@ -340,7 +340,7 @@ function M.watch_changes()
   )
 
   ---! Save when leave the editor.
-  eve.status.add_disposable(eve.std.Disposable.new({
+  eve.status.add_disposable(std.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -371,7 +371,7 @@ function M.watch_changes()
         end
       end,
       on_error = function(p, err)
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           subject = "watch_changes",
           message = "Something got wrong while watching the editor states file changes!",
@@ -379,7 +379,7 @@ function M.watch_changes()
         })
       end,
     })
-    eve.status.add_disposable(eve.std.Disposable.new({ on_dispose = unwatch }))
+    eve.status.add_disposable(std.Disposable.new({ on_dispose = unwatch }))
   end
 end
 

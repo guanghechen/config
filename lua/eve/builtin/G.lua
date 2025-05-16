@@ -5,7 +5,7 @@ local gfn = {} ---@type table<string, fun(...): nil>
 local M = {}
 setmetatable(M, { __index = gfn })
 
-M.noop = eve.std.fn.noop
+M.noop = std.fn.noop
 
 ---@param fn                       fun(...): nil
 ---@return string

@@ -5,7 +5,7 @@
 ---@field public height                 integer
 
 ---@class eve.builtin.box.IRestriction
----@field public position               eve.e.BoxPosition
+---@field public position               std.e.BoxPosition
 ---@field public rows                   integer
 ---@field public cols                   integer
 ---@field public row                    ?number
@@ -64,7 +64,7 @@ function M.measure(width, height, restriction)
     return { row = row, col = col, width = width, height = height }
   end
 
-  local position = restriction.position ---@type eve.e.BoxPosition
+  local position = restriction.position ---@type std.e.BoxPosition
   if position == "cursor" then
     if restriction.cursor_row ~= nil and restriction.cursor_col ~= nil then
       local row = restriction.cursor_row + 1 ---@type integer

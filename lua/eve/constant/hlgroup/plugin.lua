@@ -1,17 +1,17 @@
 ---@class eve.constant.hlgroup.plugin
 local M = {}
 
----@param context                       eve.t.theme.IContext
----@return table<string, eve.t.theme.IHlgroup>
+---@param context                       std.t.theme.IContext
+---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local cs = eve.std.color
-  local c = context.scheme.palette ---@type eve.t.theme.IPalette
+  local cs = std.color
+  local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
 
   ---@type string
   local item_kind_bg = t and c.none or c.bg0
 
-  ---@type table<string, eve.t.theme.IHlgroup>
+  ---@type table<string, std.t.theme.IHlgroup>
   return {
     ---! aerial.nvim
     AerialGuide = { fg = c.bg2 },

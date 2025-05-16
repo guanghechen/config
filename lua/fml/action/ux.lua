@@ -18,7 +18,7 @@ function M.resume_last_widget()
   end
 
   if eve.widget.resume() then
-    local widget, widget_index = eve.widget.get_widget_visible() ---@type eve.t.ux.IWidget|nil
+    local widget, widget_index = eve.widget.get_widget_visible() ---@type std.t.ux.IWidget|nil
     if widget ~= nil and widget_index ~= nil then
       widget:focus()
       eve.widget.history:go(widget_index)

@@ -10,7 +10,7 @@
 ---@field public isfocused              fun(): boolean
 ---@field public isvisible              fun(): boolean
 ---@field public add_lines              fun(self: eve.ux.IBoard, lines: string[]): nil
----@field public add_highlights         fun(self: eve.ux.IBoard, highlights: eve.t.IHighlight[]): nil
+---@field public add_highlights         fun(self: eve.ux.IBoard, highlights: std.t.IHighlight[]): nil
 ---@field public clear                  fun(self: eve.ux.IBoard): nil
 ---@field public close                  fun(self: eve.ux.IBoard): nil
 ---@field public focus                  fun(self: eve.ux.IBoard): nil

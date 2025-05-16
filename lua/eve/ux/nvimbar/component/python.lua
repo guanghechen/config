@@ -21,7 +21,7 @@ eve.fn.observe({ eve.context.lsp.python_venv_path }, function()
       python_version = output:match("(%d+%.%d+%.%d+)")
     else
       python_version = nil
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         message = "Failed to run python version command.",
         details = { error = output, cmd = cmd, python_path = python_path },

@@ -285,10 +285,10 @@ function M:get_completions(ctx, resolve)
     local since = now - self.context.start_ts
     if since < self.config.debounce then
       if self.debounce_timer then
-        eve.std.timer.clear_timer(self.debounce_timer)
+        std.timer.clear_timer(self.debounce_timer)
         self.debounce_timer = nil
       end
-      self.debounce_timer = eve.std.timer.set_timeout(function()
+      self.debounce_timer = std.timer.set_timeout(function()
         self.debounce_timer = nil
         self:get_completions(ctx, resolve)
       end, self.config.debounce)

@@ -267,7 +267,7 @@ function M._show_confirm(state, msg_show_task)
   local button_line_width = vim.api.nvim_strwidth(buttons_line) ---@type integer
 
   local message = "" ---@type string
-  local highlights = {} ---@type eve.t.IHighlight[]
+  local highlights = {} ---@type std.t.IHighlight[]
 
   ---! resolve the lines and highlights
   do
@@ -290,7 +290,7 @@ function M._show_confirm(state, msg_show_task)
           col_offset = 0
         end
         if #line > 0 then
-          ---@type eve.t.IHighlight
+          ---@type std.t.IHighlight
           local highlight = {
             lnum = lnum,
             coll = col_offset,
@@ -337,7 +337,7 @@ function M._show_confirm(state, msg_show_task)
     local buttons_offset = buttons_padding_width + 2 ---@type integer
     for index, button in ipairs(buttons) do
       local w = vim.api.nvim_strwidth(button) ---@type integer
-      ---@type eve.t.IHighlight
+      ---@type std.t.IHighlight
       local highlight = {
         lnum = lnum,
         coll = buttons_offset,

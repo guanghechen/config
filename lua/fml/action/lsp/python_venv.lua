@@ -64,7 +64,7 @@ local function get_select()
           local output, err = vim.fn.system(cmd)
 
           if vim.v.shell_error ~= 0 then
-            eve.reporter.error({
+            std.reporter.error({
               from = __module_name__,
               subject = "find_venvs",
               message = "Failed to run fd command.",
@@ -78,7 +78,7 @@ local function get_select()
             for _, line in ipairs(lines) do
               if #line > 0 then
                 local icon = "󰅬" ---@type string
-                local dirpath = eve.string.remove_last_slash(line) ---@type string
+                local dirpath = std.string.remove_last_slash(line) ---@type string
                 if not uuid_set[dirpath] then
                   uuid_set[dirpath] = true
 
@@ -123,7 +123,7 @@ local function get_select()
             local output, err = vim.fn.system(cmd)
 
             if vim.v.shell_error ~= 0 then
-              eve.reporter.error({
+              std.reporter.error({
                 from = __module_name__,
                 subject = "find_venvs",
                 message = "Failed to run fd command.",
@@ -137,7 +137,7 @@ local function get_select()
               for _, line in ipairs(lines) do
                 if #line > 0 then
                   local icon = "" ---@type string
-                  local dirpath = eve.string.remove_last_slash(line) ---@type string
+                  local dirpath = std.string.remove_last_slash(line) ---@type string
                   if not uuid_set[dirpath] then
                     uuid_set[dirpath] = true
 
@@ -194,7 +194,7 @@ local function get_select()
             local output, err = vim.fn.system(cmd)
 
             if vim.v.shell_error ~= 0 then
-              eve.reporter.error({
+              std.reporter.error({
                 from = __module_name__,
                 subject = "find_venvs",
                 message = "Failed to run fd command.",
@@ -208,7 +208,7 @@ local function get_select()
               for _, line in ipairs(lines) do
                 if #line > 0 then
                   local icon = "" ---@type string
-                  local dirpath = eve.string.remove_last_slash(line) ---@type string
+                  local dirpath = std.string.remove_last_slash(line) ---@type string
                   if not uuid_set[dirpath] then
                     uuid_set[dirpath] = true
                     ---@type fml.action.lsp.python_venv.IItem
@@ -229,7 +229,7 @@ local function get_select()
             -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
             if vim.fn.isdirectory(clp.paths.AnacondaBase) ~= 0 then
               local icon = "" ---@type string
-              local dirpath = eve.string.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
+              local dirpath = std.string.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
               if not uuid_set[dirpath] then
                 uuid_set[dirpath] = true
 

@@ -2,7 +2,7 @@ local __module_name__ = "eve.ux.search.preview" ---@type string
 
 ---@class eve.ux.ISearchPreviewData
 ---@field public lines                  string[]
----@field public highlights             eve.t.IHighlight[]
+---@field public highlights             std.t.IHighlight[]
 ---@field public filetype               string|nil
 ---@field public title                  string
 ---@field public lnum                   integer|nil
@@ -16,15 +16,15 @@ local __module_name__ = "eve.ux.search.preview" ---@type string
 ---@class eve.ux.SearchPreview
 ---@field public context                eve.ux.SearchContext
 ---@field public get_current_location   fun(): integer|nil, integer|nil
----@field protected _keymaps            eve.t.IKeymap[]
----@field protected _scheduler          eve.std.collection.Scheduler
+---@field protected _keymaps            std.t.IKeymap[]
+---@field protected _scheduler          std.collection.Scheduler
 local M = {}
 M.__index = M
 
 ---@class eve.ux.ISearchPreviewProps
 ---@field public delay_render           integer
 ---@field public fetch_data             eve.ux.search.IFetchPreviewData
----@field public keymaps                eve.t.IKeymap[]
+---@field public keymaps                std.t.IKeymap[]
 ---@field public patch_data             ?eve.ux.search.IPatchPreviewData
 ---@field public context                eve.ux.SearchContext
 ---@field public on_rendered            ?eve.ux.search.IOnPreviewRendered
@@ -38,7 +38,7 @@ function M.new(props)
   local delay_render = props.delay_render ---@type integer
   local _fetch_data = props.fetch_data ---@type eve.ux.search.IFetchPreviewData
   local _patch_data = props.patch_data ---@type eve.ux.search.IPatchPreviewData|nil
-  local keymaps = props.keymaps ---@type eve.t.IKeymap[]
+  local keymaps = props.keymaps ---@type std.t.IKeymap[]
   local context = props.context ---@type eve.ux.SearchContext
   local on_rendered = props.on_rendered ---@type eve.ux.search.IOnMainRendered|nil
   local _update_win_config = props.update_win_config ---@type fun(opts: eve.ux.ISearchPreviewWinOpts): nil
@@ -131,14 +131,14 @@ function M.new(props)
     _update_win_config({ title = title, lnum = lnum, col = col })
   end
 
-  ---@type eve.std.collection.Scheduler
-  local scheduler = eve.std.Scheduler.new({
+  ---@type std.collection.Scheduler
+  local scheduler = std.Scheduler.new({
     name = string.format("%s | %s", context.uuid, __module_name__),
     mode = "throttle",
     delay = delay_render,
     timeout = 0,
-    silent = eve.std.fn.falsy,
-    value = eve.std.Observable.from_value(true),
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
     task = function()
       render()
 
@@ -164,7 +164,7 @@ function M.new(props)
   self._scheduler = scheduler
 
   context.dirtier_preview:subscribe(
-    eve.std.Subscriber.new({
+    std.Subscriber.new({
       on_next = function()
         local is_preview_dirty = context.dirtier_preview:is_dirty() ---@type boolean
         local visible = context:isvisible() ---@type boolean

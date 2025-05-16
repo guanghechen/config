@@ -501,7 +501,7 @@ function M.hover()
     end
 
     local updated = false
-    local o = eve.table.merge_config({}, config.state.doc, {
+    local o = std.table.merge_config({}, config.state.doc, {
       on_update_pre = function()
         if hover and not updated then
           updated = true

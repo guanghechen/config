@@ -1,6 +1,6 @@
 local c = eve.ux.nvimbar.component
 
-local dirtier = eve.status.dirtier_tabline ---@type eve.std.collection.IDirtier
+local dirtier = eve.status.dirtier_tabline ---@type std.collection.IDirtier
 local position = "f_tl" ---@type eve.ux.nvimbar.PositionEnum
 
 local tabline ---@type eve.ux.nvimbar.Nvimbar
@@ -17,7 +17,7 @@ tabline = eve.ux.nvimbar.Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = eve.std.fn.falsy,
+  is_active = std.fn.falsy,
   on_fulfilled = function()
     vim.o.tabline = tabline:snapshot()
   end,
@@ -73,7 +73,7 @@ local function should_show_tabline()
 end
 
 local last_showtabline = 0 ---@type integer
-dirtier:subscribe(eve.std.Subscriber.new({
+dirtier:subscribe(std.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
       vim.o.showtabline = 2

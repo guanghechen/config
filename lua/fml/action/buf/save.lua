@@ -36,7 +36,7 @@ function M.save()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) or eve.win.pick_sourcefile() ---@type integer|nil
   if winnr_sourcefile == nil then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "save",
       message = "Cannot find a valid sourcefile winnr",
@@ -102,7 +102,7 @@ function M.save()
       end
 
       if eve.path.is_exist_dirpath(next_filepath) then
-        eve.reporter.error({
+        std.reporter.error({
           from = __module_name__,
           subject = "save",
           message = "Cannot save a file into a directory.",

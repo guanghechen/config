@@ -150,7 +150,7 @@ function M.render(winnr)
   local hipairs_rendering_tick = (vim.b[snapshot_bufnr].hipairs_rendering_tick or 0) + 1 ---@type integer
   vim.b[snapshot_bufnr].hipairs_rendering_tick = hipairs_rendering_tick
 
-  return eve.std.timer.set_timeout(function()
+  return std.timer.set_timeout(function()
     if not vim.api.nvim_win_is_valid(winnr) then
       return
     end

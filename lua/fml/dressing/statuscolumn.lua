@@ -39,7 +39,7 @@ local did_setup = false
 local function setup()
   if not did_setup then
     did_setup = true
-    eve.std.timer.set_interval(function()
+    std.timer.set_interval(function()
       sign_cache = {}
       cache = {}
     end, config.refresh)

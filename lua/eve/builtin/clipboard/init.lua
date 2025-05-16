@@ -11,13 +11,13 @@ local MAX_BASE64_SIZE = 24 * 1024 ---@type number
 ---@field public paste_image_from_clipboard fun(filepath_target: string): boolean
 local M = {}
 
-if eve.env.IS_MAC then
+if std.env.IS_MAC then
   M = require("eve.builtin.clipboard.mac")
-elseif eve.env.IS_WSL then
+elseif std.env.IS_WSL then
   M = require("eve.builtin.clipboard.wsl")
-elseif eve.env.IS_NIX then
+elseif std.env.IS_NIX then
   M = require("eve.builtin.clipboard.nix")
-elseif eve.env.IS_WIN then
+elseif std.env.IS_WIN then
   M = require("eve.builtin.clipboard.win")
 end
 
@@ -48,7 +48,7 @@ function M.paste_image(filepath_target)
       local src = eve.path.relative(eve.path.dirname(filepath_current), filepath_target, true) ---@type string
       if #src > 1 then
         if src:sub(1, 1) ~= "." then
-          src = "." .. eve.env.PATH_SEP .. src
+          src = "." .. std.env.PATH_SEP .. src
         end
         local filename = eve.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string
@@ -67,7 +67,7 @@ end
 function M.paste_image_as_base64(filepath_source)
   local filetype = vim.bo.filetype ---@type string
   if eve.filetype.is_not_sourcefile(filetype) then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       subject = "paste_image_as_base64",
       message = "Filetype does not support base64 encoding.",
@@ -84,7 +84,7 @@ function M.paste_image_as_base64(filepath_source)
   end
 
   if base64 == nil or type(base64) ~= "string" or #base64 < 1 then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "paste_image_as_base64",
       message = "Could not get base64 string.",
@@ -96,7 +96,7 @@ function M.paste_image_as_base64(filepath_source)
   -- check if base64 string is too long (max_base64_size is in KB)
   local size_bytes = math.floor((string.len(base64) * 6) / 8)
   if size_bytes > MAX_BASE64_SIZE then
-    eve.reporter.warn({
+    std.reporter.warn({
       from = __module_name__,
       subject = "paste_image_as_base64",
       message = "Base64 string is too large.",

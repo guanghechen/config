@@ -168,7 +168,7 @@ function M.show(task)
     eve.status.msg_changes:next(message)
   end
 
-  local highlights = {} ---@type eve.t.IHighlight[]
+  local highlights = {} ---@type std.t.IHighlight[]
   local lnum, col_offset = 1, 0 ---@type integer, integer
   for _, item in ipairs(content) do
     local _, text, hlid = unpack(item) ---@type integer, string, integer
@@ -180,7 +180,7 @@ function M.show(task)
         col_offset = 0
       end
       if #line > 0 then
-        ---@type eve.t.IHighlight
+        ---@type std.t.IHighlight
         local highlight = {
           lnum = lnum,
           coll = col_offset,

@@ -30,9 +30,9 @@ end
 ---@return boolean
 ---@return any|nil
 function M.resolve_cmd_result(subject, result_str)
-  local result = eve.json.parse(result_str)
+  local result = std.json.parse(result_str)
   if result == nil or type(result.error) == "string" then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = subject,
       message = "Failed to run command.",
@@ -50,9 +50,9 @@ end
 ---@return boolean
 ---@return any|nil
 function M.resolve_fun_result(subject, result_str)
-  local result = eve.json.parse(result_str)
+  local result = std.json.parse(result_str)
   if result == nil or type(result.error) == "string" then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = subject,
       message = "Failed to run function",
@@ -141,7 +141,7 @@ end
 ---@param params                        eve.builtin.oxi.find.IParams
 ---@return string[]
 function M.find(params)
-  local options_stringified = eve.json.stringify(params)
+  local options_stringified = std.json.stringify(params)
   local result_str = nvim_tools.find(options_stringified)
   local ok, data = M.resolve_cmd_result("find", result_str)
   if ok and data ~= nil then
@@ -212,11 +212,11 @@ end
 
 ---@class eve.builtin.oxi.replace.replace_file_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_file_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_text_preview.IRawResult
 ---@field public text                   string
@@ -226,11 +226,11 @@ end
 
 ---@class eve.builtin.oxi.replace.replace_text_preview_advance.IRawResult
 ---@field public text                   string
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_text_preview_advance_by_matches.IRawResult
 ---@field public text                   string
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_file.IResult
 ---@field public success                boolean
@@ -240,7 +240,7 @@ end
 ---| boolean
 
 ---@class eve.builtin.oxi.replace.replace_file_advance_by_matches.IResult
----@field public locations              eve.t.IMatchLocation[]
+---@field public locations              std.t.IMatchLocation[]
 
 ---@class eve.builtin.oxi.replace.replace_file_preview.IResult
 ---@field public lines                  string[]
@@ -253,12 +253,12 @@ end
 ---@class eve.builtin.oxi.replace.replace_file_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_file_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_text_preview.IResult
 ---@field public lines                  string[]
@@ -271,12 +271,12 @@ end
 ---@class eve.builtin.oxi.replace.replace_text_preview_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_text_preview_advance_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.replace.replace_file.IParams
 ---@field public cwd                    string
@@ -408,7 +408,7 @@ function M.replace_file_by_matches(params)
     flag_regex = params.flag_regex,
     match_offsets = match_offsets,
   }
-  local payload = eve.json.stringify(resolved_params)
+  local payload = std.json.stringify(resolved_params)
   local ok, data = M.run_fun("replace_file_by_matches", nvim_tools.replace_file_advance_by_matches, payload)
   ---@cast data                         eve.builtin.oxi.replace.replace_file_by_matches.IResult
 
@@ -417,7 +417,7 @@ end
 
 ---@param params                        eve.builtin.oxi.replace.replace_file_advance_by_matches.IParams
 ---@return boolean
----@return eve.t.IMatchLocation[]
+---@return std.t.IMatchLocation[]
 function M.replace_file_advance_by_matches(params)
   local search_pattern = params.search_pattern ---@type string
   local filepath = eve.path.resolve(params.cwd, params.filepath) ---@type string
@@ -436,7 +436,7 @@ function M.replace_file_advance_by_matches(params)
     match_offsets = match_offsets,
     remain_offsets = remain_offsets,
   }
-  local payload = eve.json.stringify(resolved_params)
+  local payload = std.json.stringify(resolved_params)
   local ok, data = M.run_fun("replace_file_advance_by_matches", nvim_tools.replace_file_advance_by_matches, payload)
   ---@cast data                         eve.builtin.oxi.replace.replace_file_advance_by_matches.IResult
 
@@ -496,7 +496,7 @@ function M.replace_file_preview_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = eve.json.stringify(payload_params)
+  local payload = std.json.stringify(payload_params)
   local ok, data = M.run_fun( ---
     "replace_file_preview_by_matches",
     nvim_tools.replace_file_preview_by_matches,
@@ -573,7 +573,7 @@ function M.replace_file_preview_advance_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = eve.json.stringify(payload_params)
+  local payload = std.json.stringify(payload_params)
   local ok, data =
     M.run_fun("replace_file_preview_advance_by_matches", nvim_tools.replace_file_preview_advance_by_matches, payload)
 
@@ -647,7 +647,7 @@ function M.replace_text_preview_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = eve.json.stringify(payload_params)
+  local payload = std.json.stringify(payload_params)
   local ok, data = M.run_fun( ---
     "replace_text_preview_by_matches",
     nvim_tools.replace_text_preview_by_matches,
@@ -728,7 +728,7 @@ function M.replace_text_preview_advance_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
-  local payload = eve.json.stringify(payload_params)
+  local payload = std.json.stringify(payload_params)
   local ok, data = M.run_fun( ---
     "replace_text_preview_advance_by_matches",
     nvim_tools.replace_text_preview_advance_by_matches,
@@ -764,7 +764,7 @@ end
 ---@field public offset                 integer
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@class eve.builtin.oxi.search.IFileMatch
 ---@field public matches                eve.builtin.oxi.search.IBlockMatch[]
@@ -791,7 +791,7 @@ end
 ---@param params                        eve.builtin.oxi.search.IParams
 ---@return eve.builtin.oxi.search.IResult|nil
 function M.search(params)
-  local payload = eve.json.stringify(params) ---@type string
+  local payload = std.json.stringify(params) ---@type string
   local ok, data = M.run_cmd("search", nvim_tools.search, payload)
 
   if ok and data ~= nil and data.items ~= nil then
@@ -826,7 +826,7 @@ end
 ---@class eve.builtin.oxi.string.ILineMatch
 ---@field public lnum                   integer
 ---@field public score                  integer
----@field public matches                eve.t.IMatchPoint[]
+---@field public matches                std.t.IMatchPoint[]
 
 ---@param text                          string
 ---@return integer
@@ -858,7 +858,7 @@ end
 ---@return integer[]
 function M.get_line_widths(text)
   local str = nvim_tools.get_line_widths(text)
-  local raw_result = eve.json.parse(str)
+  local raw_result = std.json.parse(str)
   ---@cast raw_result                   integer[]
 
   local result = raw_result ---@type integer[]
@@ -867,7 +867,7 @@ end
 
 ---@param text                          string
 ---@param offsets                       integer[]
----@return eve.t.IMatchLocation[]
+---@return std.t.IMatchLocation[]
 function M.get_locations(text, offsets)
   local ok, data = M.resolve_fun_result("get_locations", nvim_tools.get_locations(text, table.concat(offsets, ",")))
   return ok and data or {}

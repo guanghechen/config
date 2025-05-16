@@ -3,8 +3,8 @@
 ---@field public bufs_relative          boolean
 
 ---@class eve.context.behavior.state
----@field public auto_im                eve.std.collection.IObservable
----@field public bufs_relative          eve.std.collection.IObservable
+---@field public auto_im                std.collection.IObservable
+---@field public bufs_relative          std.collection.IObservable
 
 ---@class eve.context.behavior : eve.context.behavior.state
 ---@field public defaults               fun(): eve.context.behavior.data
@@ -57,6 +57,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.behavior.data
-M.auto_im = eve.std.Observable.from_value(_defaults.auto_im)
-M.bufs_relative = eve.std.Observable.from_value(_defaults.bufs_relative)
+M.auto_im = std.Observable.from_value(_defaults.auto_im)
+M.bufs_relative = std.Observable.from_value(_defaults.bufs_relative)
 return M

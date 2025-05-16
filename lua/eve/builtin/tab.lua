@@ -8,9 +8,9 @@
 
 ---@class eve.builtin.tab.IMeta
 ---@field public bufs                   eve.builtin.tab.IBufItem[]
----@field public winnr_fixed            eve.std.collection.IObservable
----@field public winnr_float            eve.std.collection.IObservable
----@field public winnr_sourcefile       eve.std.collection.IObservable
+---@field public winnr_fixed            std.collection.IObservable
+---@field public winnr_float            std.collection.IObservable
+---@field public winnr_sourcefile       std.collection.IObservable
 ---@field public tabtype                eve.builtin.tab.TypeEnum
 
 ---@class eve.builtin.tab.Types
@@ -314,9 +314,9 @@ function M.resolve(tabnr, force)
   local tabtype = M.resolve_type(tabnr, force) ---@type eve.builtin.tab.TypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  local winnr_fixed = eve.std.Observable.from_value(eve.win.is_fixed(winnr) and winnr or 0) ---@type eve.std.collection.IObservable
-  local winnr_float = eve.std.Observable.from_value(eve.win.is_float(winnr) and winnr or 0) ---@type eve.std.collection.IObservable
-  local winnr_sourcefile = eve.std.Observable.from_value(eve.win.is_sourcefile(winnr) and winnr or 0)
+  local winnr_fixed = std.Observable.from_value(eve.win.is_fixed(winnr) and winnr or 0) ---@type std.collection.IObservable
+  local winnr_float = std.Observable.from_value(eve.win.is_float(winnr) and winnr or 0) ---@type std.collection.IObservable
+  local winnr_sourcefile = std.Observable.from_value(eve.win.is_sourcefile(winnr) and winnr or 0)
 
   ---@type eve.builtin.tab.IMeta
   meta = {

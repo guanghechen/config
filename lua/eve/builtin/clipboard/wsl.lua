@@ -17,7 +17,7 @@ function M.has_image()
 
   local exit_code = vim.v.shell_error
   if exit_code ~= 0 then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "has_image",
       message = "Failed to run command.",
@@ -45,7 +45,7 @@ function M.get_image_as_base64()
 
   local exit_code = vim.v.shell_error
   if exit_code ~= 0 then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "get_image_as_base64",
       message = "Failed to run command.",
@@ -76,7 +76,7 @@ function M.paste_image_from_clipboard(filepath)
 
   local exit_code = vim.v.shell_error
   if exit_code ~= 0 then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "paste_image_from_clipboard",
       message = "Failed to run command.",

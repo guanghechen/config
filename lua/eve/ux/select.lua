@@ -1,13 +1,13 @@
 local __module_name__ = "eve.ux.select" ---@type string
 
----@class eve.ux.ISelect : eve.t.ux.IWidget
+---@class eve.ux.ISelect : std.t.ux.IWidget
 ---@field public context                eve.ux.SearchContext
 ---@field public change_dimension       fun(self: eve.ux.ISelect, dimension: eve.ux.IRawSearchDimension): nil
 ---@field public change_input_title     fun(self: eve.ux.ISelect, title: string): nil
 ---@field public change_preview_title   fun(self: eve.ux.ISelect, title: string): nil
 ---@field public get_item               fun(self: eve.ux.ISelect, uuid: string): eve.ux.select.IItem|nil
 ---@field public get_item_selected      fun(self: eve.ux.ISelect): eve.ux.select.IItem|nil, integer, string|nil
----@field public get_matched_items      fun(self: eve.ux.ISelect): eve.t.IScoredMatch[]
+---@field public get_matched_items      fun(self: eve.ux.ISelect): std.t.IScoredMatch[]
 ---@field public get_winnr_input        fun(self: eve.ux.ISelect): integer|nil
 ---@field public get_winnr_main         fun(self: eve.ux.ISelect): integer|nil
 ---@field public get_winnr_preview      fun(self: eve.ux.ISelect): integer|nil
@@ -26,10 +26,10 @@ local __module_name__ = "eve.ux.select" ---@type string
 ---| fun(item: eve.ux.select.IItem, last_item: eve.ux.select.IItem, last_data: eve.ux.ISearchPreviewData): eve.ux.ISearchPreviewData
 
 ---@alias eve.ux.select.IMatchedItemCmp
----| fun(item1: eve.t.IScoredMatch, item2: eve.t.IScoredMatch): boolean
+---| fun(item1: std.t.IScoredMatch, item2: std.t.IScoredMatch): boolean
 
 ---@alias eve.ux.select.IRenderItem
----| fun(item: eve.ux.select.IItem, match: eve.t.IScoredMatch): string, eve.t.IHighlightInline[]
+---| fun(item: eve.ux.select.IItem, match: std.t.IScoredMatch): string, std.t.IHighlightInline[]
 
 ---@alias eve.ux.select.IOnConfirm
 ---| fun(widget: eve.ux.ISelect, items: eve.ux.select.IItem[]): nil
@@ -53,26 +53,26 @@ local __module_name__ = "eve.ux.select" ---@type string
 ---@field public render_item            ?eve.ux.select.IRenderItem
 
 ---@class eve.ux.Select : eve.ux.ISelect
----@field protected _case_sensitive     eve.std.collection.IObservable
+---@field protected _case_sensitive     std.collection.IObservable
 ---@field protected _cmp                eve.ux.select.IMatchedItemCmp|nil
----@field protected _flag_fuzzy         eve.std.collection.IObservable
----@field protected _flag_regex         eve.std.collection.IObservable
----@field protected _frecency           eve.std.collection.IFrecency|nil
----@field protected _full_matches       eve.t.IScoredMatch[]
+---@field protected _flag_fuzzy         std.collection.IObservable
+---@field protected _flag_regex         std.collection.IObservable
+---@field protected _frecency           std.collection.IFrecency|nil
+---@field protected _full_matches       std.t.IScoredMatch[]
 ---@field protected _item_map           table<string, eve.ux.select.IItem>
 ---@field protected _item_uuid_cursor   string|nil
 ---@field protected _item_uuid_present  string|nil
 ---@field protected _last_case_sensitive boolean
 ---@field protected _last_input         string|nil
----@field protected _live_data_dirty    eve.std.collection.IObservable
----@field protected _matches            eve.t.IScoredMatch[]
+---@field protected _live_data_dirty    std.collection.IObservable
+---@field protected _matches            std.t.IScoredMatch[]
 ---@field protected _provider           eve.ux.select.IProvider
 ---@field protected _search             eve.ux.ISearch
 local M = {}
 M.__index = M
 
 ---@class eve.ux.select.IProps
----@field public case_sensitive         ?eve.std.collection.IObservable
+---@field public case_sensitive         ?std.collection.IObservable
 ---@field public cmp                    ?eve.ux.select.IMatchedItemCmp
 ---@field public delay_fetch            ?integer
 ---@field public delay_render           ?integer
@@ -82,19 +82,19 @@ M.__index = M
 ---@field public preview_title          ?string
 ---@field public preview_wrap           ?boolean
 ---@field public extend_preset_keymaps  ?boolean
----@field public flag_fuzzy             ?eve.std.collection.IObservable
----@field public flag_selected          ?eve.std.collection.IObservable
----@field public flag_regex             ?eve.std.collection.IObservable
----@field public frecency               ?eve.std.collection.IFrecency
----@field public input                  ?eve.std.collection.IObservable
----@field public input_history          ?eve.std.collection.IHistory
----@field public input_keymaps          ?eve.t.IKeymap[]
----@field public main_keymaps           ?eve.t.IKeymap[]
+---@field public flag_fuzzy             ?std.collection.IObservable
+---@field public flag_selected          ?std.collection.IObservable
+---@field public flag_regex             ?std.collection.IObservable
+---@field public frecency               ?std.collection.IFrecency
+---@field public input                  ?std.collection.IObservable
+---@field public input_history          ?std.collection.IHistory
+---@field public input_keymaps          ?std.t.IKeymap[]
+---@field public main_keymaps           ?std.t.IKeymap[]
 ---@field public multiple               ?boolean
 ---@field public permanent              ?boolean
----@field public preview_keymaps        ?eve.t.IKeymap[]
+---@field public preview_keymaps        ?std.t.IKeymap[]
 ---@field public provider               eve.ux.select.IProvider
----@field public statusline_items       ?eve.t.ux.widget.IRawStatuslineItem[]
+---@field public statusline_items       ?std.t.ux.widget.IRawStatuslineItem[]
 ---@field public title                  string
 ---@field public on_close               ?eve.ux.search.IOnClose
 ---@field public on_confirm             eve.ux.select.IOnConfirm
@@ -108,11 +108,11 @@ function M.new(props)
 
   local delay_fetch = props.delay_fetch or 128 ---@type integer
   local dimension = props.dimension ---@type eve.ux.IRawSearchDimension|nil
-  local flag_fuzzy = props.flag_fuzzy or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable
-  local flag_regex = props.flag_regex or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable
-  local flag_selected = props.flag_selected or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable
-  local input = props.input or eve.std.Observable.from_value("") ---@type eve.std.collection.IObservable
-  local input_history = props.input_history ---@type eve.std.collection.IHistory|nil
+  local flag_fuzzy = props.flag_fuzzy or std.Observable.from_value(false) ---@type std.collection.IObservable
+  local flag_regex = props.flag_regex or std.Observable.from_value(false) ---@type std.collection.IObservable
+  local flag_selected = props.flag_selected or std.Observable.from_value(false) ---@type std.collection.IObservable
+  local input = props.input or std.Observable.from_value("") ---@type std.collection.IObservable
+  local input_history = props.input_history ---@type std.collection.IHistory|nil
   local multiple = props.multiple ---@type boolean|nil
   local permanent = props.permanent ---@type boolean|nil
   local preview_title = props.preview_title ---@type string|nil
@@ -146,19 +146,19 @@ function M.new(props)
     title = title,
   })
 
-  local case_sensitive = props.case_sensitive or eve.std.Observable.from_value(false) ---@type eve.std.collection.IObservable
+  local case_sensitive = props.case_sensitive or std.Observable.from_value(false) ---@type std.collection.IObservable
   local cmp = props.cmp ---@type eve.ux.select.IMatchedItemCmp|nil
   local delay_render = props.delay_render or 48 ---@type integer
   local dirty_on_invisible = not not props.dirty_on_invisible ---@type boolean
   local preview_enabled = props.preview_enabled ---@type boolean
   local extend_preset_keymaps = not not props.extend_preset_keymaps ---@type boolean
-  local frecency = props.frecency ---@type eve.std.collection.IFrecency|nil
-  local input_keymaps = props.input_keymaps ---@type eve.t.IKeymap[]|nil
-  local live_data_dirty = eve.std.Observable.from_value(true) ---@type eve.std.collection.IObservable
-  local main_keymaps = props.main_keymaps ---@type eve.t.IKeymap[]|nil
-  local preview_keymaps = props.preview_keymaps ---@type eve.t.IKeymap[]|nil
+  local frecency = props.frecency ---@type std.collection.IFrecency|nil
+  local input_keymaps = props.input_keymaps ---@type std.t.IKeymap[]|nil
+  local live_data_dirty = std.Observable.from_value(true) ---@type std.collection.IObservable
+  local main_keymaps = props.main_keymaps ---@type std.t.IKeymap[]|nil
+  local preview_keymaps = props.preview_keymaps ---@type std.t.IKeymap[]|nil
   local provider = props.provider ---@type eve.ux.select.IProvider
-  local statusline_items = props.statusline_items ---@type eve.t.ux.widget.IRawStatuslineItem[]
+  local statusline_items = props.statusline_items ---@type std.t.ux.widget.IRawStatuslineItem[]
   local on_confirm_from_props = props.on_confirm ---@type eve.ux.select.IOnConfirm
   local on_close_from_props = props.on_close ---@type eve.ux.search.IOnClose|nil
   local on_invisible_from_props = props.on_invisible ---@type eve.ux.search.IOnInvisible|nil
@@ -197,7 +197,7 @@ function M.new(props)
       eve.status.dirtier_statusline:mark_dirty()
     end
 
-    ---@type eve.t.ux.widget.IRawStatuslineItem[]
+    ---@type std.t.ux.widget.IRawStatuslineItem[]
     statusline_items = vim.list_extend(statusline_items or {}, {
       {
         disabled = not multiple,
@@ -230,7 +230,7 @@ function M.new(props)
       },
     })
 
-    ---@type eve.t.IKeymap[]
+    ---@type std.t.IKeymap[]
     local preset_keymaps = {
       {
         modes = { "n", "v" },
@@ -285,7 +285,7 @@ function M.new(props)
     end
 
     if #select_items < 1 then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "select: on_confirm",
         message = "no items selected",
@@ -295,7 +295,7 @@ function M.new(props)
     end
 
     if #select_items > 1 and not context.multiple then
-      eve.reporter.error({
+      std.reporter.error({
         from = __module_name__,
         subject = "select: on_confirm",
         message = "More than one items selected, but `multiple` is not enabled",
@@ -381,21 +381,21 @@ function M:close()
   self._search:close()
 end
 
----@param item1                         eve.t.IScoredMatch
----@param item2                         eve.t.IScoredMatch
+---@param item1                         std.t.IScoredMatch
+---@param item2                         std.t.IScoredMatch
 ---@return boolean
 function M.cmp_by_score(item1, item2)
   return item1.score == item2.score and item1.order < item2.order or item1.score > item2.score
 end
 
 ---@param item                          eve.ux.select.IItem
----@param match                         eve.t.IScoredMatch
+---@param match                         std.t.IScoredMatch
 ---@return string
----@return eve.t.IHighlightInline[]
+---@return std.t.IHighlightInline[]
 function M.default_render_item(item, match)
-  local highlights = {} ---@type eve.t.IHighlightInline[]
+  local highlights = {} ---@type std.t.IHighlightInline[]
   for _, piece in ipairs(match.matches) do
-    ---@type eve.t.IHighlightInline[]
+    ---@type std.t.IHighlightInline[]
     local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
     table.insert(highlights, highlight)
   end
@@ -410,13 +410,13 @@ function M:fetch_data(input, force)
   self._live_data_dirty:next(false)
 
   if is_data_dirty then
-    local frecency = self._frecency ---@type eve.std.collection.IFrecency|nil
+    local frecency = self._frecency ---@type std.collection.IFrecency|nil
     local data = self._provider.fetch_data(force) ---@type eve.ux.select.IData
     local item_map = {} ---@type table<string, eve.ux.select.IItem>
-    local full_matches = {} ---@type eve.t.IScoredMatch[]
+    local full_matches = {} ---@type std.t.IScoredMatch[]
     for order, item in ipairs(data.items) do
       local score = frecency ~= nil and frecency:score(item.uuid) or 0 ---@type integer
-      local match_item = { order = order, uuid = item.uuid, score = score, matches = {} } ---@type eve.t.IScoredMatch
+      local match_item = { order = order, uuid = item.uuid, score = score, matches = {} } ---@type std.t.IScoredMatch
       item_map[item.uuid] = item
       table.insert(full_matches, match_item)
     end
@@ -433,7 +433,7 @@ function M:fetch_data(input, force)
   end
 
   local item_map = self._item_map ---@type table<string, eve.ux.select.IItem>
-  local matches = self:filter(input) ---@type eve.t.IScoredMatch[]
+  local matches = self:filter(input) ---@type std.t.IScoredMatch[]
   local items = {} ---@type eve.ux.search.IItem[]
   local render_item = self._provider.render_item or M.default_render_item ---@type eve.ux.select.IRenderItem
   for _, match in ipairs(matches) do
@@ -449,12 +449,12 @@ function M:fetch_data(input, force)
 end
 
 ---@param input                         string
----@return eve.t.IScoredMatch[]
+---@return std.t.IScoredMatch[]
 function M:filter(input)
-  local frecency = self._frecency ---@type eve.std.collection.IFrecency|nil
+  local frecency = self._frecency ---@type std.collection.IFrecency|nil
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
 
-  local matches = self._full_matches ---@type eve.t.IScoredMatch[]
+  local matches = self._full_matches ---@type std.t.IScoredMatch[]
   if #input < 1 then
     if frecency ~= nil then
       for _, match in ipairs(matches) do
@@ -463,7 +463,7 @@ function M:filter(input)
       end
     end
   else
-    local old_matches = self._full_matches ---@type eve.t.IScoredMatch[]
+    local old_matches = self._full_matches ---@type std.t.IScoredMatch[]
     local last_case_sensitive = self._last_case_sensitive ---@type boolean
     local last_input = self._last_input ---@type string|nil
     if last_input ~= nil and case_sensitive == last_case_sensitive or not last_case_sensitive then
@@ -484,7 +484,7 @@ function M:filter(input)
       end
     end
 
-    ---@type eve.t.IScoredMatch[]
+    ---@type std.t.IScoredMatch[]
     matches = self:find_matched_items(input, old_matches)
     if frecency ~= nil then
       for _, match in ipairs(matches) do
@@ -505,8 +505,8 @@ function M:filter(input)
 end
 
 ---@param input                         string
----@param old_matches                   eve.t.IScoredMatch[]
----@return eve.t.IScoredMatch[]
+---@param old_matches                   std.t.IScoredMatch[]
+---@return std.t.IScoredMatch[]
 function M:find_matched_items(input, old_matches)
   local case_sensitive = self._case_sensitive:snapshot() ---@type boolean
   local flag_fuzzy = self._flag_fuzzy:snapshot() ---@type boolean
@@ -538,11 +538,11 @@ function M:find_matched_items(input, old_matches)
     return old_matches
   end
 
-  local matches = {} ---@type eve.t.IScoredMatch[]
+  local matches = {} ---@type std.t.IScoredMatch[]
   for _, oxi_match in ipairs(oxi_matches) do
-    local old_match = old_matches[oxi_match.lnum] ---@type eve.t.IScoredMatch
+    local old_match = old_matches[oxi_match.lnum] ---@type std.t.IScoredMatch
 
-    ---@type eve.t.IScoredMatch
+    ---@type std.t.IScoredMatch
     local match = {
       order = old_match.order,
       uuid = old_match.uuid,
@@ -593,7 +593,7 @@ function M:get_item_selected()
   return select_item, lnum
 end
 
----@return                              eve.t.IScoredMatch[]
+---@return                              std.t.IScoredMatch[]
 function M:get_matched_items()
   return self._matches
 end

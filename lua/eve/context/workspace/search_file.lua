@@ -5,10 +5,10 @@
 ---@field public replacement            string
 
 ---@class eve.context.search_file.state
----@field public flag_replace           eve.std.collection.IObservable
----@field public max_filesize           eve.std.collection.IObservable
----@field public max_matches            eve.std.collection.IObservable
----@field public replacement            eve.std.collection.IObservable
+---@field public flag_replace           std.collection.IObservable
+---@field public max_filesize           std.collection.IObservable
+---@field public max_matches            std.collection.IObservable
+---@field public replacement            std.collection.IObservable
 
 ---@class eve.context.search_file : eve.context.search_file.state
 ---@field public defaults               fun(): eve.context.search_file.data
@@ -76,9 +76,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.search_file.data
-M.flag_replace = eve.std.Observable.from_value(_defaults.flag_replace)
-M.max_filesize = eve.std.Observable.from_value(_defaults.max_filesize)
-M.max_matches = eve.std.Observable.from_value(_defaults.max_matches)
-M.replacement = eve.std.Observable.from_value(_defaults.replacement)
+M.flag_replace = std.Observable.from_value(_defaults.flag_replace)
+M.max_filesize = std.Observable.from_value(_defaults.max_filesize)
+M.max_matches = std.Observable.from_value(_defaults.max_matches)
+M.replacement = std.Observable.from_value(_defaults.replacement)
 
 return M

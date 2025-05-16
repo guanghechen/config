@@ -1,0 +1,50 @@
+---@class std.t.theme.IPalette
+---@field public none                   string
+---
+---@field public bg0                    string
+---@field public bg1                    string
+---@field public bg2                    string
+---@field public bg3                    string
+---@field public bg4                    string
+---
+---@field public fg0                    string
+---@field public fg1                    string
+---@field public fg2                    string
+---@field public fg3                    string
+---@field public fg4                    string
+---
+---@field public red                    string
+---@field public green                  string
+---@field public yellow                 string
+---@field public blue                   string
+---@field public purple                 string
+---@field public aqua                   string
+---@field public orange                 string
+---
+---@field public brightRed              string
+---@field public brightGreen            string
+---@field public brightYellow           string
+---@field public brightBlue             string
+---@field public brightPurple           string
+---@field public brightAqua             string
+---@field public brightOrange           string
+---
+---@field public grey                   string
+---@field public pink                   string
+---
+---@field public diffDel                string
+---@field public diffDelInline          string
+---@field public diffAdd                string
+---@field public diffAddInline          string
+
+---@class std.t.theme.IScheme
+---@field public theme                  std.e.Theme
+---@field public variant                std.e.ThemeVariant
+---@field public palette                std.t.theme.IPalette
+
+---@class std.t.theme.IContext
+---@field public theme                  string
+---@field public scheme                 std.t.theme.IScheme
+---@field public transparency           boolean
+
+---@class std.t.theme.IHlgroup : vim.api.keyset.highlight

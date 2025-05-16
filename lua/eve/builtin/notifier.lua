@@ -1,19 +1,12 @@
 local __module_name__ = "eve.builtin.notifier" ---@type string
 
----@alias eve.builtin.notifier.LevelEnum
----| 'TRACE'
----| 'DEBUG'
----| 'INFO'
----| 'WARN'
----| 'ERROR'
-
 ---@class eve.builtin.notifier.ITask
 ---@field public uuid                   string
 ---@field public group                  string|nil
 ---@field public level                  string
 ---@field public title                  string
 ---@field public content                string
----@field public highlights             eve.t.IHighlight[]|nil
+---@field public highlights             std.t.IHighlight[]|nil
 ---@field public lines                  string[]
 ---@field public times                  integer
 ---@field public timeout                integer
@@ -25,7 +18,7 @@ local __module_name__ = "eve.builtin.notifier" ---@type string
 ---@field public level                  string
 ---@field public title                  string
 ---@field public content                string
----@field public highlights             eve.t.IHighlight[]|nil
+---@field public highlights             std.t.IHighlight[]|nil
 ---@field public timeout                integer
 ---@field public anonymous              boolean
 ---@field public silent                 boolean
@@ -102,8 +95,8 @@ local config = {
   },
 }
 
-local __TASKS__ = eve.std.CircularQueue.new({ capacity = 50 })
-local __TASK_HISTORY__ = eve.std.CircularQueue.new({ capacity = 200 })
+local __TASKS__ = std.CircularQueue.new({ capacity = 50 })
+local __TASK_HISTORY__ = std.CircularQueue.new({ capacity = 200 })
 local __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
 
 ---@param task                          eve.builtin.notifier.ITask
@@ -143,16 +136,16 @@ setmetatable(M, {
   __call = function(self, msg, level0, opts)
     opts = opts or {}
 
-    local level = eve.notifier.resolve_level(level0) ---@type eve.builtin.notifier.LevelEnum
+    local level = M.resolve_level(level0) ---@type std.e.LogLevelEnum
     local group = type(opts.group) == "string" and opts.group or nil ---@type string|nil
-    local title = opts.title or eve.notifier.resolve_title(level) ---@type string
+    local title = opts.title or M.resolve_title(level) ---@type string
     local content = msg ---@type string
     if type(opts.message) == "string" then
       content = opts.message
     elseif type(opts.content) == "string" then
       content = opts.content
     end
-    local highlights = type(opts.highlights) == "table" and opts.highlights or nil ---@type eve.t.IHighlight[]|nil
+    local highlights = type(opts.highlights) == "table" and opts.highlights or nil ---@type std.t.IHighlight[]|nil
     local timeout = opts.timeout or 3000 ---@type integer
     local anonymous = type(opts.anonymous) == "boolean" and opts.anonymous or false ---@type boolean
     local silent = type(opts.silent) == "boolean" and opts.silent or false ---@type boolean
@@ -170,14 +163,14 @@ setmetatable(M, {
   end,
 })
 
----@type eve.std.collection.Scheduler
-local scheduler = eve.std.Scheduler.new({
+---@type std.collection.Scheduler
+local scheduler = std.Scheduler.new({
   name = __module_name__,
   mode = "throttle",
   delay = 256,
   timeout = 3000,
-  silent = eve.std.fn.truthy,
-  value = eve.std.Observable.from_value(true),
+  silent = std.fn.truthy,
+  value = std.Observable.from_value(true),
   task = function()
     local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
     if notification_paused then
@@ -235,12 +228,12 @@ function M.resume()
 end
 
 ---@param level                         number
----@return eve.builtin.notifier.LevelEnum
+---@return std.e.LogLevelEnum
 function M.resolve_level(level)
   return LevelMap[level] or "INFO"
 end
 
----@param level                         eve.builtin.notifier.LevelEnum
+---@param level                         std.e.LogLevelEnum
 ---@return string
 function M.resolve_title(level)
   return LevelTitleMap[level]
@@ -253,7 +246,7 @@ function M.notify(params)
   local level = params.level ---@type string
   local title = params.title ---@type string
   local content = params.content ---@type string
-  local highlights = params.highlights ---@type eve.t.IHighlight[]|nil
+  local highlights = params.highlights ---@type std.t.IHighlight[]|nil
   local timeout = params.timeout ---@type integer
   local anonymous = params.anonymous ---@type boolean
   local silent = params.silent ---@type boolean
@@ -277,7 +270,7 @@ function M.notify(params)
   }
 
   local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
-  local notification_level = eve.status.notification_level:snapshot() ---@type eve.builtin.notifier.LevelEnum
+  local notification_level = eve.status.notification_level:snapshot() ---@type std.e.LogLevelEnum
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 
@@ -341,7 +334,7 @@ function M.create_buf_as_needed(win)
     vim.bo[bufnr].filetype = eve.filetype.NOTIFY
     vim.bo[bufnr].swapfile = false
 
-    ---@type eve.t.IKeymap[]
+    ---@type std.t.IKeymap[]
     local keymaps = {
       {
         modes = { "n", "v" },
@@ -586,7 +579,7 @@ function M.handle()
 
       local tick = win.tick ---@type integer
       local winnr = M.create_win_as_needed(win) ---@type integer
-      eve.std.timer.set_timeout(function()
+      std.timer.set_timeout(function()
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and win.tick == tick then
           vim.api.nvim_win_close(winnr, true)
           M.schedule()

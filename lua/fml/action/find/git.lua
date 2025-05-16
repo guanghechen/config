@@ -62,7 +62,7 @@ local picker = eve.ux.FilePicker.new({
 ---@return nil
 function M.find_git_not_committed()
   if not eve.path.is_repo_git() then
-    eve.reporter.error({
+    std.reporter.error({
       from = __module_name__,
       subject = "find_git_not_committed",
       message = "Not a git repository",

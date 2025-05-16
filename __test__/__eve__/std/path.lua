@@ -1,4 +1,4 @@
-eve.debug.log("path", {
+std.debug.log("path", {
   eve.path.is_absolute("/a/b/c"),
   vim.inspect(eve.path.split("/a/b/c")),
   eve.path.relative("/a/b/c", "/a/b/c/d/e.txt", true),
