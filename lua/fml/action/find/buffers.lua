@@ -225,7 +225,7 @@ local select = eve.ux.Select.new({
 })
 _select = select
 
-eve.fn.observe({ eve.context.select.find_buffer_scope }, function()
+std.fn.observe({ eve.context.select.find_buffer_scope }, function()
   local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
   if scope == "A" then
     select:change_input_title("find buffers")

@@ -201,14 +201,14 @@ function M.watch_changes()
   local ticker_editor = std.Ticker.new({ start = 0 })
   local ticker_workspace = std.Ticker.new({ start = 0 })
 
-  eve.fn.observe({ M.theme.theme }, function()
+  std.fn.observe({ M.theme.theme }, function()
     eve.context.theme.reload_theme(false, true)
   end, true)
-  eve.fn.observe({ M.theme.transparency }, function()
+  std.fn.observe({ M.theme.transparency }, function()
     eve.context.theme.reload_theme(true, true)
   end, true)
 
-  eve.fn.observe({
+  std.fn.observe({
     M.option.relativenumber,
   }, function()
     local flag = M.option.relativenumber:snapshot() ---@type boolean
@@ -221,7 +221,7 @@ function M.watch_changes()
     end
   end, true)
 
-  eve.fn.observe({
+  std.fn.observe({
     M.behavior.auto_im,
     M.behavior.bufs_relative,
     M.theme.theme,
@@ -236,7 +236,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  eve.fn.observe({
+  std.fn.observe({
     M.plugin.render_markdown,
     M.plugin.treesitter_context,
     M.option.relativenumber,
@@ -284,13 +284,13 @@ function M.watch_changes()
     table.insert(select_states, select_item.includes)
     table.insert(select_states, select_item.excludes)
   end
-  eve.fn.observe(select_states, function()
+  std.fn.observe(select_states, function()
     ticker_workspace:tick()
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
   end, true)
 
-  eve.fn.observe({
+  std.fn.observe({
     M.lsp.code_lens,
     M.lsp.inlay_hints,
   }, function()
@@ -299,7 +299,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  eve.fn.observe({
+  std.fn.observe({
     eve.status.msg_lsp,
     eve.status.msg_mode,
   }, function()

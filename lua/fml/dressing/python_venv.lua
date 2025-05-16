@@ -173,7 +173,7 @@ local function setup()
   if not initialized then
     initialized = true
 
-    eve.fn.observe({ eve.context.lsp.python_venv_path }, function()
+    std.fn.observe({ eve.context.lsp.python_venv_path }, function()
       local venv_path = eve.context.lsp.python_venv_path:snapshot() ---@type string
       if venv_path ~= nil and vim.fn.isdirectory(venv_path) ~= 0 then
         M.activate_venv(venv_path)

@@ -121,7 +121,7 @@ local scheduler = std.Scheduler.new({
   end,
 })
 
-eve.fn.observe({ eve.context.flight.dressing_winsep }, function()
+std.fn.observe({ eve.context.flight.dressing_winsep }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
   local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext

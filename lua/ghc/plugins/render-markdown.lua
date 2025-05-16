@@ -31,7 +31,7 @@ return {
     local plugin = require("render-markdown")
     plugin.setup(opts)
 
-    eve.fn.observe({ eve.context.plugin.render_markdown }, function()
+    std.fn.observe({ eve.context.plugin.render_markdown }, function()
       local flag = eve.context.plugin.render_markdown:snapshot() ---@type boolean
       if flag then
         plugin.enable()

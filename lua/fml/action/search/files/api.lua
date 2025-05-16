@@ -29,7 +29,7 @@ local _last_preview_data = nil ---@type fml.action.search.files.IPreviewData|nil
 local _last_search_input = nil ---@type string|nil
 local _last_search_result = nil ---@type eve.builtin.oxi.search.IResult|nil
 
-eve.fn.observe({
+std.fn.observe({
   --
   eve.context.search_file.flag_replace,
   eve.context.select.search_file_scope,
@@ -38,7 +38,7 @@ eve.fn.observe({
   context.refresh_title()
 end, true)
 
-eve.fn.observe({
+std.fn.observe({
   eve.context.select.search_file.flag_case_sensitive,
   eve.context.select.search_file.flag_exclude,
   eve.context.select.search_file.flag_gitignore,
@@ -54,7 +54,7 @@ eve.fn.observe({
   _last_search_result = nil
   context.reload()
 end, true)
-eve.fn.observe({
+std.fn.observe({
   eve.context.search_file.flag_replace,
   eve.context.search_file.replacement,
 }, function()

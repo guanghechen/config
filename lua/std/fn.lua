@@ -143,6 +143,44 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param observables                   std.collection.IObservable[]
+---@param callback                      fun(): nil
+---@param ignore_initial                ?boolean
+---@return std.collection.IUnsubscribable
+function M.observe(observables, callback, ignore_initial)
+  local unsubscribables = {} ---@type std.collection.IUnsubscribable[]
+  for _, observable in ipairs(observables) do
+    local subscriber = std.Subscriber.new({
+      on_next = function()
+        vim.schedule(callback)
+      end,
+    })
+    local unsubscribable = observable:subscribe(subscriber, ignore_initial)
+    unsubscribables[#unsubscribables + 1] = unsubscribable
+  end
+
+  local unsubscribed = false ---@type boolean
+
+  ---@type std.collection.IUnsubscribable
+  local unsubscribe = {
+    unsubscribe = function()
+      if unsubscribed then
+        return
+      end
+      unsubscribed = true
+
+      local batcher = std.BatchHandler.new()
+      for _, unsubscribable in ipairs(unsubscribables) do
+        batcher:run(unsubscribable.unsubscribe, unsubscribable)
+      end
+      batcher:summary("unsubscribable observers.")
+    end,
+  }
+  return unsubscribe
+end
+
+----------------------------------------------------------------------------------------------------
+
 ---@param timestamp                     integer
 ---@return string
 function M.time_ago(timestamp)

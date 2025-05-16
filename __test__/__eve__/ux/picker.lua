@@ -53,7 +53,7 @@ local picker = eve.ux.FilePicker.new({
   },
 })
 
-eve.fn.observe({ flag_case }, function()
+std.fn.observe({ flag_case }, function()
   picker:mark_result_flags_dirty()
 end, true)
 

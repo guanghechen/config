@@ -27,7 +27,7 @@ local function get_file_selector()
   local _confirmed = false ---@type boolean
   local _select ---@type eve.ux.Select
 
-  eve.fn.observe({
+  std.fn.observe({
     eve.context.select.select_avante.excludes,
     eve.context.select.select_avante.flag_case_sensitive,
     eve.context.select.select_avante.flag_exclude,
@@ -425,7 +425,7 @@ return {
     package.loaded["dressing.nvim"] = {}
 
     require("avante").setup(opts)
-    eve.fn.observe({ eve.context.flight.ai_provider }, function()
+    std.fn.observe({ eve.context.flight.ai_provider }, function()
       local ai_provider = eve.context.flight.ai_provider:snapshot()
       local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot"
       vim.cmd("AvanteSwitchProvider " .. provider_name)

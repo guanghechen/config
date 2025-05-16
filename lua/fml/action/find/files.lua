@@ -51,7 +51,7 @@ local function gen_title()
   return "Find files (dir: " .. dirpath .. ")" ---@type string
 end
 
-eve.fn.observe({ eve.context.select.find_file_scope }, function()
+std.fn.observe({ eve.context.select.find_file_scope }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   local current_buf_dirpath = bufnr_sourcefile ~= nil and eve.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
@@ -63,7 +63,7 @@ eve.fn.observe({ eve.context.select.find_file_scope }, function()
   end
 end, true)
 
-eve.fn.observe({
+std.fn.observe({
   eve.context.select.find_file.excludes,
   eve.context.select.find_file.flag_case_sensitive,
   eve.context.select.find_file.flag_exclude,
@@ -76,7 +76,7 @@ eve.fn.observe({
   end
 end, true)
 
-eve.fn.observe({
+std.fn.observe({
   eve.context.select.find_file_scope,
   state_cwd,
 }, function()

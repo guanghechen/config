@@ -10,13 +10,8 @@ M.__index = M
 ---@return std.collection.BatchHandler
 function M.new()
   local self = setmetatable({}, M)
-
-  ---@type any[]
-  self._errors = {}
-
-  ---@type string|nil
-  self._summary = nil
-
+  self._errors = {} ---@type any[]
+  self._summary = nil ---@type string|nil
   return self
 end
 
@@ -26,17 +21,18 @@ function M:cleanup()
   self._summary = nil
 end
 
----@param action fun():nil
+---@param fn                            fun(...: any): nil
+---@param ...                           any
 ---@return nil
-function M:run(action)
-  local ok, error = pcall(action)
+function M:run(fn, ...)
+  local ok, error = pcall(fn, ...)
   if not ok then
     table.insert(self._errors, error)
     self._summary = nil
   end
 end
 
----@param title string
+---@param title                         string
 ---@return nil
 function M:summary(title)
   if self._summary == nil then

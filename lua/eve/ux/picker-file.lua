@@ -625,13 +625,13 @@ function M.new(props)
 
   self._on_disposed = on_disposed
 
-  eve.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
+  std.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
     picker:mark_result_flags_dirty()
   end, true)
-  eve.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
+  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
     picker:mark_result_dirty()
   end, true)
-  eve.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
+  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
     scheduler_match:schedule()
   end)
 
