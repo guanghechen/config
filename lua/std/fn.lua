@@ -1,6 +1,12 @@
 ---@class std.fn
 local M = {}
 
+---@param value                         unknown
+---@return boolean
+function M.boolean(value)
+  return not not value
+end
+
 ---@param ...                           any[]
 ---@return boolean
 ---@diagnostic disable-next-line: unused-vararg

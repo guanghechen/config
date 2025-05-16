@@ -1,5 +1,13 @@
 local capabilities = eve.lsp.get_capabilities()
 
+local nvim_config = nil ---@type string|nil
+local workspace = eve.path.workspace() ---@type string
+if workspace == eve.path.locate_app_config_home("nvim") then
+  nvim_config = eve.path.join(workspace, "lua")
+elseif workspace == eve.path.locate_app_config_home("nvim-nvchad") then
+  nvim_config = eve.path.join(workspace, "lua")
+end
+
 return {
   capabilities = capabilities,
   on_attach = eve.lsp.on_attach,
@@ -41,12 +49,12 @@ return {
       },
       workspace = {
         checkThirdParty = false,
-        library = {
+        library = vim.tbl_filter(std.fn.boolean, {
           eve.path.join(vim.env.VIMRUNTIME, "lua"),
           eve.path.join(std.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
-          eve.path.join(std.env.HOME_NVIM_CONFIG, "lua"),
+          nvim_config,
           "${3rd}/luv/library",
-        },
+        }),
       },
     },
   },
