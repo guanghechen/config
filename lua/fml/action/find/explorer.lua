@@ -211,7 +211,7 @@ local provider = {
       local is_text_file = eve.filetype.is_printable_file(fileitem.name) ---@type boolean
       if is_text_file then
         local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
-        local lines = eve.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
+        local lines = std.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
         local title = std.path.relative(std.path.cwd(), item.uuid, false) ---@type string
 
         ---@type eve.ux.ISearchPreviewData

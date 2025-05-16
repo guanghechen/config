@@ -193,7 +193,7 @@ function M.calc_preview_data(uuid)
       end
     end
   else
-    lines = eve.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     highlights = {} ---@type fml.action.search.files.IHighlight[]
 
     local filematch = M.get_filematch(item.filepath) ---@type eve.builtin.oxi.search.IFileMatch|nil

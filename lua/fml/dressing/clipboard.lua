@@ -118,12 +118,12 @@ vim.paste = function(lines, phase)
           for _, filepath_source in ipairs(filepaths) do
             local basename_source = std.path.basename(filepath_source) ---@type string
             local filepath_target = std.path.join(dirpath_container, basename_source) ---@type string
-            eve.fs.copy_file(filepath_source, filepath_target)
+            std.fs.copy_file(filepath_source, filepath_target)
           end
           for _, dirpath_source in ipairs(dirpaths) do
             local basename_source = std.path.basename(dirpath_source) ---@type string
             local dirpath_target = std.path.join(dirpath_container, basename_source) ---@type string
-            eve.fs.copy_directory(dirpath_source, dirpath_target)
+            std.fs.copy_directory(dirpath_source, dirpath_target)
           end
         end)
 
@@ -188,9 +188,9 @@ vim.paste = function(lines, phase)
 
       local ok = pcall(function()
         if is_filepath then
-          eve.fs.copy_file(filepath_source, filepath_target)
+          std.fs.copy_file(filepath_source, filepath_target)
         elseif is_dirpath then
-          eve.fs.copy_directory(filepath_source, filepath_target)
+          std.fs.copy_directory(filepath_source, filepath_target)
         end
       end)
 

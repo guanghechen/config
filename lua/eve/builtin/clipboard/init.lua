@@ -78,7 +78,7 @@ function M.paste_image_as_base64(filepath_source)
 
   local base64 = nil ---@type string|nil
   if filepath_source then
-    base64 = eve.fs.read_file_as_base64({ filepath = filepath_source, silent = false })
+    base64 = std.fs.read_file_as_base64({ filepath = filepath_source, silent = false })
   else
     base64 = M.get_image_as_base64()
   end

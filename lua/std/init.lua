@@ -7,6 +7,7 @@ local __mods = {
   debug = "std.debug",
   env = "std.env",
   fn = "std.fn",
+  fs = "std.fs",
   is = "std.is",
   json = "std.json",
   path = "std.path",
@@ -44,6 +45,7 @@ local __mods = {
 ---@field public debug                  std.debug
 ---@field public env                    std.env
 ---@field public fn                     std.fn
+---@field public fs                     std.fs
 ---@field public is                     std.is
 ---@field public json                   std.json
 ---@field public path                   std.path

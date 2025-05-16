@@ -42,13 +42,13 @@ function M.spellcheck_register()
   local filepath = std.path.locate_nearest_filepath(filepath_buf, { ".cspell.json" })
     or std.path.join(std.path.workspace(), ".cspell.json")
 
-  if not eve.fs.is_exists(filepath) then
+  if not std.path.is_exist(filepath) then
     local data = {
       version = "0.2",
       language = "en",
       words = { word },
     }
-    eve.fs.write_json(filepath, data, true)
+    std.fs.write_json(filepath, data, true)
     std.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
@@ -56,7 +56,7 @@ function M.spellcheck_register()
     })
     return
   else
-    local data = eve.fs.read_json({ filepath = filepath, silent_on_bad_json = false, silent_on_bad_path = false })
+    local data = std.fs.read_json({ filepath = filepath, silent_on_bad_json = false, silent_on_bad_path = false })
     if type(data) ~= "table" or type(data.words) ~= "table" then
       std.reporter.error({
         from = __module_name__,
@@ -73,7 +73,7 @@ function M.spellcheck_register()
 
     table.insert(data.words, word)
     table.sort(data.words)
-    eve.fs.write_json(filepath, data, true)
+    std.fs.write_json(filepath, data, true)
     std.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",

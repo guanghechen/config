@@ -1,24 +1,24 @@
-local __module_name__ = "eve.builtin.fs" ---@type string
+local __module_name__ = "std.fs" ---@type string
 
----@class eve.builtin.fs.IReadFileParams
+---@class std.fs.IReadFileParams
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class eve.builtin.fs.IReadFileAsBase64Params
+---@class std.fs.IReadFileAsBase64Params
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class eve.builtin.fs.IReadFileAsLinesParams
+---@class std.fs.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
 ---@field public silent                 ?boolean
 
----@class eve.builtin.fs.IReadJsonParams
+---@class std.fs.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
 
----@class eve.builtin.fs
+---@class std.fs
 local M = {}
 
 ---@param filepath                      string
@@ -42,7 +42,7 @@ function M.copy_file(filepath_source, filepath_target, force)
   force = force or false
 
   -- Check if target already exists and confirm overwrite if not forced
-  if not force and M.is_exists(filepath_target) then
+  if not force and std.path.is_exist(filepath_target) then
     local choice = vim.fn.confirm(string.format("File already exists: %s\nOverwrite?", filepath_target), "&Yes\n&No", 2)
     if choice ~= 1 then
       return false
@@ -70,7 +70,7 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
   force = force or false
 
   -- Check if target already exists and confirm overwrite if not forced
-  if not force and M.is_exists(dirpath_target) then
+  if not force and std.path.is_exist(dirpath_target) then
     local choice =
       vim.fn.confirm(string.format("Directory already exists: %s\nOverwrite contents?", dirpath_target), "&Yes\n&No", 2)
     if choice ~= 1 then
@@ -120,14 +120,7 @@ function M.edit_file(filepath)
   vim.bo.backupcopy = "yes"
 end
 
----@param filepath                      string
----@return boolean
-function M.is_exists(filepath)
-  local stat = vim.uv.fs_stat(filepath)
-  return stat ~= nil
-end
-
----@param params                        eve.builtin.fs.IReadFileParams
+---@param params                        std.fs.IReadFileParams
 ---@return string|nil
 function M.read_file(params)
   local filepath = params.filepath ---@type string
@@ -150,7 +143,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param params                        eve.builtin.fs.IReadFileAsBase64Params
+---@param params                        std.fs.IReadFileAsBase64Params
 ---@return string|nil
 function M.read_file_as_base64(params)
   local filepath = params.filepath ---@type string
@@ -173,7 +166,7 @@ function M.read_file_as_base64(params)
   return std.base64.encode(content)
 end
 
----@param params                        eve.builtin.fs.IReadFileAsLinesParams
+---@param params                        std.fs.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -204,7 +197,7 @@ function M.read_file_as_lines(params)
   return lines
 end
 
----@param params                        eve.builtin.fs.IReadJsonParams
+---@param params                        std.fs.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)
   local filepath = params.filepath ---@type string
@@ -258,12 +251,12 @@ function M.touch(filepath)
   end
 end
 
----@class eve.builtin.fs.IWatchFileOptions
+---@class std.fs.IWatchFileOptions
 ---@field filepath string
 ---@field on_event fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field on_error? fun(filepath:string, err: any, unwatch:fun():nil):nil
 
----@param opts                          eve.builtin.fs.IWatchFileOptions
+---@param opts                          std.fs.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath

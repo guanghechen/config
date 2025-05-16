@@ -7,7 +7,6 @@ local __mods = {
   command = "eve.builtin.command",
   filetype = "eve.builtin.filetype",
   fn = "eve.builtin.fn",
-  fs = "eve.builtin.fs",
   icon = "eve.builtin.icon",
   im = "eve.builtin.im",
   job = "eve.builtin.job",
@@ -42,7 +41,6 @@ local __mods = {
 ---@field public command                eve.builtin.command
 ---@field public filetype               eve.builtin.filetype
 ---@field public fn                     eve.builtin.fn
----@field public fs                     eve.builtin.fs
 ---@field public icon                   eve.builtin.icon
 ---@field public im                     eve.builtin.im
 ---@field public job                    eve.builtin.job

@@ -18,7 +18,7 @@ function M.save()
       if #filepath > 0 and std.path.is_absolute(filepath) then
         table.insert(bufnrs_modified, bufnr)
 
-        if not eve.fs.is_exists(filepath) then
+        if not std.path.is_exist(filepath) then
           table.insert(bufnrs_new_file, bufnr)
         end
       end
