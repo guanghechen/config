@@ -59,7 +59,7 @@ local function tmux_navigate(direction)
 
     if is_last_win then
       pcall(tmux_navigate_window_topmost)
-      eve.tmux.change_pane(direction)
+      std.tmux.change_pane(direction)
     else
       vim_navigate(direction)
     end
@@ -67,7 +67,7 @@ local function tmux_navigate(direction)
     -- if the last pane was a tmux pane, then we need to handle control
     -- to tmux; otherwise, just issue a last pane command in vim
     if tmux_control == true then
-      eve.tmux.change_pane(direction)
+      std.tmux.change_pane(direction)
     elseif tmux_control == false then
       vim_navigate(direction)
     end
@@ -93,7 +93,7 @@ local function tmux_navigate(direction)
     -- if should_by_tmux and not tmux.is_tmux_pane_corner(direction) and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
     local is_zen_mode = eve.status.tmux_zen_mode:snapshot() ---@type boolean
     if should_by_tmux and (not DISABLE_WHEN_ZOOMED or not is_zen_mode) then
-      eve.tmux.change_pane(direction)
+      std.tmux.change_pane(direction)
       tmux_control = true
     else
       tmux_control = false

@@ -248,7 +248,7 @@ local __keymaps__ = {
       desc = "picker#finder: focus left",
       callback = function(self)
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("h")
+          std.tmux.change_pane("h")
           return
         end
 
@@ -272,7 +272,7 @@ local __keymaps__ = {
         end
 
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("l")
+          std.tmux.change_pane("l")
           return
         end
       end,
@@ -284,7 +284,7 @@ local __keymaps__ = {
       desc = "picker#finder: focus up",
       callback = function(self)
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("k")
+          std.tmux.change_pane("k")
           return
         end
 
@@ -499,7 +499,7 @@ local __keymaps__ = {
       desc = "picker#result: focus down",
       callback = function(self)
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("j")
+          std.tmux.change_pane("j")
           return
         end
 
@@ -513,7 +513,7 @@ local __keymaps__ = {
       desc = "picker#result: focus left",
       callback = function(self)
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("h")
+          std.tmux.change_pane("h")
           return
         end
 
@@ -537,7 +537,7 @@ local __keymaps__ = {
         end
 
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("l")
+          std.tmux.change_pane("l")
           return
         end
       end,
@@ -649,7 +649,7 @@ local __keymaps__ = {
       desc = "picker#preview: focus down",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("j")
+          std.tmux.change_pane("j")
           return
         end
       end,
@@ -671,7 +671,7 @@ local __keymaps__ = {
       desc = "picker#result: focus right",
       callback = function(self)
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("l")
+          std.tmux.change_pane("l")
           return
         end
 
@@ -686,7 +686,7 @@ local __keymaps__ = {
       desc = "picker#preview: focus up",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          eve.tmux.change_pane("k")
+          std.tmux.change_pane("k")
           return
         end
       end,

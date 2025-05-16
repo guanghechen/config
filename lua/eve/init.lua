@@ -20,7 +20,6 @@ local __mods = {
   shell = "eve.builtin.shell",
   status = "eve.builtin.status",
   tab = "eve.builtin.tab",
-  tmux = "eve.builtin.tmux",
   var = "eve.builtin.var",
   widget = "eve.builtin.widget",
   win = "eve.builtin.win",
@@ -54,7 +53,6 @@ local __mods = {
 ---@field public shell                  eve.builtin.shell
 ---@field public status                 eve.builtin.status
 ---@field public tab                    eve.builtin.tab
----@field public tmux                   eve.builtin.tmux
 ---@field public var                    eve.builtin.var
 ---@field public widget                 eve.builtin.widget
 ---@field public win                    eve.builtin.win
