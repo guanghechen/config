@@ -9,7 +9,6 @@ local __mods = {
   fn = "eve.builtin.fn",
   icon = "eve.builtin.icon",
   im = "eve.builtin.im",
-  job = "eve.builtin.job",
   lsp = "eve.builtin.lsp",
   notifier = "eve.builtin.notifier",
   nvim = "eve.builtin.nvim",
@@ -42,7 +41,6 @@ local __mods = {
 ---@field public fn                     eve.builtin.fn
 ---@field public icon                   eve.builtin.icon
 ---@field public im                     eve.builtin.im
----@field public job                    eve.builtin.job
 ---@field public lsp                    eve.builtin.lsp
 ---@field public notifier               eve.builtin.notifier
 ---@field public nvim                   eve.builtin.nvim

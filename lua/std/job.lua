@@ -1,4 +1,4 @@
----@class eve.builtin.job
+---@class std.job
 local M = {}
 
 ---@param cmd                           string[]

@@ -79,19 +79,19 @@ function M.status(base)
   end
 
   local cmd_staged = { "git", "-C", workspace, "diff", "--staged", "--name-status", base, "--" }
-  local ok_staged, result_staged = eve.job.execute_command(cmd_staged)
+  local ok_staged, result_staged = std.job.execute_command(cmd_staged)
   if not ok_staged then
     return workspace, {}
   end
 
   local cmd_unstaged = { "git", "-C", workspace, "diff", "--name-status" }
-  local ok_unstaged, result_unstaged = eve.job.execute_command(cmd_unstaged)
+  local ok_unstaged, result_unstaged = std.job.execute_command(cmd_unstaged)
   if not ok_unstaged then
     return workspace, {}
   end
 
   local cmd_untracked = { "git", "-C", workspace, "ls-files", "--exclude-standard", "--others" }
-  local ok_untracked, result_untracked = eve.job.execute_command(cmd_untracked)
+  local ok_untracked, result_untracked = std.job.execute_command(cmd_untracked)
   if not ok_untracked then
     return workspace, {}
   end
