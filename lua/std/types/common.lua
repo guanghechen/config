@@ -69,3 +69,9 @@
 ---@field public uuid                   string
 ---@field public score                  integer
 ---@field public matches                std.t.IMatchPoint[]
+
+---@class std.t.IWinDimension
+---@field public width                  integer
+---@field public height                 integer
+---@field public row                    integer
+---@field public col                    integer

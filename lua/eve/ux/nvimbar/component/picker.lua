@@ -5,7 +5,7 @@ local txt = eve.nvim.txt
 local M = {}
 
 ---@param position                      eve.ux.nvimbar.PositionEnum
----@param flags                         eve.ux.picker.IInternalFlagItem[]
+---@param flags                         eve.ux.picker.result.IFlagItem[]
 ---@param flags_start_index             integer
 ---@return eve.ux.nvimbar.IRawComponent
 function M.result_flags(position, flags, flags_start_index)
@@ -23,12 +23,12 @@ function M.result_flags(position, flags, flags_start_index)
       for _, item in ipairs(flags) do
         if not item.disabled() then
           local digit = eve.icon.todigit_supscript(index) ---@type string
-          local flag_text, flag_hln = item:snapshot() ---@type boolean, string
+          local flag_text, flag_hln = item:snapshot() ---@type string, string
           local piece_text = " " .. flag_text .. digit ---@type string
           local piece_hln = string.format("%s_%s", position, flag_hln) ---@type string
 
           text = text .. piece_text ---@type string
-          hl_text = hl_text .. btn(txt(piece_text, piece_hln), item.callback_fn) ---@type string
+          hl_text = hl_text .. btn(txt(piece_text, piece_hln), item.callback) ---@type string
           index = index + 1
         end
       end

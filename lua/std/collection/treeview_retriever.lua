@@ -1,19 +1,20 @@
 local __module_name__ = "std.collection.buf_retriever" ---@type string
 
----@class std.collection.IBufRetrieverProps
+---@class std.collection.ITreeviewRetrieverProps
 ---@field public name                   string
 
----@class std.collection.BufRetriever : std.collection.IDisposable
+---@class std.collection.TreeviewRetriever : std.collection.IDisposable
 ---@field public name                   string
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer
----@field protected _lnum2uuid          table<integer, string>
----@field protected _uuid2lnum          table<string, integer>
+---@field protected _uuid2lnum          table<string, integer>|nil
+---@field protected _lnum2uuid          string[]|nil
+---@field protected _childline          integer[]|nil
 local M = {}
 M.__index = M
 
----@param props std.collection.IBufRetrieverProps
----@return std.collection.BufRetriever
+---@param props std.collection.ITreeviewRetrieverProps
+---@return std.collection.TreeviewRetriever
 function M.new(props)
   local name = props.name ---@type string
 
@@ -21,8 +22,9 @@ function M.new(props)
   self.name = name
   self._disposed = false
   self._bufnr = nil
-  self._lnum2uuid = {}
-  self._uuid2lnum = {}
+  self._lnum2uuid = nil
+  self._uuid2lnum = nil
+  self._childline = nil
   return self
 end
 
@@ -36,6 +38,7 @@ function M:dispose()
   self._bufnr = nil
   self._lnum2uuid = nil
   self._uuid2lnum = nil
+  self._childline = nil
 end
 
 ---@return boolean
@@ -55,22 +58,28 @@ function M:retrieve_lnum(uuid)
   return self._uuid2lnum ~= nil and self._uuid2lnum[uuid] or nil
 end
 
+---@param lnum                          integer
+---@return integer|nil
+function M:retrieve_lastchild_lnum(lnum)
+  return self._childline ~= nil and self._childline[lnum] or nil
+end
+
 ---@param bufnr                         integer
 ---@param uuids                         string[]
-function M:attach(bufnr, uuids)
-  local lnum2uuid = {} ---@type table<integer, string>
+---@param childline                     integer[]|nil
+function M:attach(bufnr, uuids, childline)
   local uuid2lnum = {} ---@type table<string, integer>
 
   local N = #uuids ---@type integer
-  for index = 1, N, 1 do
-    local uuid = uuids[index] ---@type string
-    lnum2uuid[index] = uuid
-    uuid2lnum[uuid] = index
+  for lnum = 1, N, 1 do
+    local uuid = uuids[lnum] ---@type string
+    uuid2lnum[uuid] = lnum
   end
 
   self._bufnr = bufnr
-  self._lnum2uuid = lnum2uuid
   self._uuid2lnum = uuid2lnum
+  self._lnum2uuid = vim.list_slice(uuids)
+  self._childline = childline and vim.list_slice(childline) or nil
 end
 
 ---@protected

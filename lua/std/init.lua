@@ -20,7 +20,6 @@ local __mods = {
 
   BatchDisposable = "std.collection.batch_disposable",
   BatchHandler = "std.collection.batch_handler",
-  BufRetriever = "std.collection.buf_retriever",
   CircularQueue = "std.collection.circular_queue",
   CircularStack = "std.collection.circular_stack",
   Dirtier = "std.collection.dirtier",
@@ -35,6 +34,7 @@ local __mods = {
   Subscribers = "std.collection.subscribers",
   Theme = "std.collection.theme",
   Ticker = "std.collection.ticker",
+  TreeviewRetriever = "std.collection.treeview_retriever",
 }
 
 ---@class std
@@ -60,7 +60,6 @@ local __mods = {
 ---
 ---@field public BatchDisposable        std.collection.BatchDisposable
 ---@field public BatchHandler           std.collection.BatchHandler
----@field public BufRetriever           std.collection.BufRetriever
 ---@field public CircularQueue          std.collection.CircularQueue
 ---@field public CircularStack          std.collection.CircularStack
 ---@field public Dirtier                std.collection.Dirtier
@@ -75,6 +74,7 @@ local __mods = {
 ---@field public Subscribers            std.collection.Subscribers
 ---@field public Theme                  std.collection.Theme
 ---@field public Ticker                 std.collection.Ticker
+---@field public TreeviewRetriever      std.collection.TreeviewRetriever
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

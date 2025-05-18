@@ -24,10 +24,10 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---| fun(left: eve.ux.view.treeview.INode, right: eve.ux.view.treeview.INode): boolean
 
 ---@alias eve.ux.view.treeview.IRenderTree
----| fun(node: eve.ux.view.treeview.INode, depth: integer, indent: string, folded_depth: integer, is_last: boolean): nil
+---| fun(node: eve.ux.view.treeview.INode, depth: integer, indent: string, folded_depth: integer, is_last: boolean): integer
 
 ---@alias eve.ux.view.treeview.IRenderTreeRecursive
----| fun(node: eve.ux.view.treeview.INode, depth: integer, indent: string, folded_depth: integer, is_last: boolean): nil
+---| fun(node: eve.ux.view.treeview.INode, depth: integer, indent: string, folded_depth: integer, is_last: boolean): integer
 
 ---@alias eve.ux.view.treeview.IRenderList
 ---| fun(node: eve.ux.view.treeview.INode, is_last: boolean): nil
@@ -58,6 +58,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@class eve.ux.view.treeview.IRenderResult
 ---@field public uuids                  string[]
 ---@field public indents                string[]
+---@field public childline              integer[]|nil
 
 ---@class eve.ux.view.ITreeviewProps
 ---@field public name                   string
@@ -696,6 +697,7 @@ end
 function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   local uuids = {} ---@type string[]
   local indents = {} ---@type string[]
+  local childline = {} ---@type integer[]
 
   local foldempty = self._foldempty ---@type boolean
   local tick_treeview = self._tick_treeview ---@type integer
@@ -720,15 +722,18 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   local lines = {} ---@type string[]
   local highlights_list = {} ---@type (std.t.IHighlightInline[]|nil)[]
 
-  local lnum = 1 ---@type integer
+  local lnum = 0 ---@type integer
   local render ---@type eve.ux.view.treeview.IRenderTree
   local recursive ---@type eve.ux.view.treeview.IRenderTreeRecursive
 
   ---@type eve.ux.view.treeview.IRenderTree
   render = function(node, depth, indent, folded_depth, is_last)
     if node == virtual_root then
-      return
+      return 0
     end
+
+    lnum = lnum + 1 ---@type integer
+    indent = depth < 1 and indent or (indent .. (is_last and "╰─" or "├─")) ---@type string
 
     local cache = node.cache_treeview ---@type eve.ux.view.treeview.INodeRenderResultCache|nil
     if cache == nil or cache.tick ~= tick_treeview then
@@ -742,34 +747,35 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
       node.cache_treeview = cache
     end
 
-    if depth > 0 then
-      indent = indent .. (is_last and "╰─" or "├─") ---@type string
-    end
-
     lines[lnum] = indent .. cache.text ---@type string
     highlights_list[lnum] = cache.highlights ---@type std.t.IHighlightInline[]|nil
-    indents[lnum] = indent ---@type string
     uuids[lnum] = node.uuid
-    lnum = lnum + 1 ---@type integer
+    indents[lnum] = indent ---@type string
+    childline[lnum] = lnum ---@type integer
+    return lnum
   end
 
   if included_uuid_set == nil then
     ---@type eve.ux.view.treeview.IRenderTreeRecursive
     recursive = function(node, depth, indent, folded_depth, is_last)
       if node.collapsed or #node.children < 1 then
-        render(node, depth, indent, folded_depth, is_last)
-        return
+        return render(node, depth, indent, folded_depth, is_last)
       end
 
       local N = #node.children ---@type integer
       if N == 1 and foldempty then
         local child = node.children[1] ---@type eve.ux.view.treeview.INode
         if child.type == "container" then
-          return recursive(child, depth, indent, folded_depth + 1, is_last)
+          local lnum_subroot = lnum + 1 ---@type integer
+          local lnum_next = recursive(child, depth, indent, folded_depth + 1, is_last) ---@type integer
+          if lnum_subroot < lnum_next then
+            childline[lnum_subroot] = lnum_next
+          end
+          return lnum_next
         end
       end
 
-      render(node, depth, indent, folded_depth, is_last)
+      local lnum_subroot = render(node, depth, indent, folded_depth, is_last) ---@type integer
 
       if node.dirty_orders then
         self:__sort_children__(node)
@@ -777,17 +783,21 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
 
       local child_depth = depth + 1 ---@type integer
       local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
+      local lnum_next = lnum_subroot ---@type integer
       for index = 1, N, 1 do
         local child = node.children[index] ---@type eve.ux.view.treeview.INode
-        recursive(child, child_depth, child_indent, 0, index == N)
+        lnum_next = math.max(lnum_next, recursive(child, child_depth, child_indent, 0, index == N)) ---@type integer
       end
+      if lnum_subroot < lnum_next then
+        childline[lnum_subroot] = lnum_next
+      end
+      return lnum_next
     end
   else
     ---@type eve.ux.view.treeview.IRenderTreeRecursive
     recursive = function(node, depth, indent, folded_depth, is_last)
       if node.collapsed or #node.children < 1 then
-        render(node, depth, indent, folded_depth, is_last)
-        return
+        return render(node, depth, indent, folded_depth, is_last)
       end
 
       if node.dirty_orders then
@@ -806,22 +816,33 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
       if first_child_index == last_child_index and foldempty then
         local child = node.children[first_child_index] ---@type eve.ux.view.treeview.INode
         if child.type == "container" then
-          return recursive(child, depth, indent, folded_depth + 1, is_last)
+          local lnum_subroot = lnum + 1 ---@type integer
+          local lnum_next = recursive(child, depth, indent, folded_depth + 1, is_last) ---@type integer
+          if lnum_subroot < lnum_next then
+            childline[lnum_subroot] = lnum_next
+          end
+          return lnum_next
         end
       end
 
-      render(node, depth, indent, folded_depth, is_last)
+      local lnum_subroot = render(node, depth, indent, folded_depth, is_last)
 
       if first_child_index ~= nil then
         local child_depth = depth + 1 ---@type integer
         local child_indent = depth == 0 and indent or (indent .. (is_last and "  " or "│ ")) ---@type string
+        local lnum_next = lnum_subroot ---@type integer
         for index = first_child_index, last_child_index, 1 do
           local child = node.children[index] ---@type eve.ux.view.treeview.INode
           if included_uuid_set[child.uuid] then
-            recursive(child, child_depth, child_indent, 0, index == last_child_index)
+            lnum_next = math.max(lnum_next, recursive(child, child_depth, child_indent, 0, index == last_child_index))
           end
         end
+        if lnum_subroot < lnum_next then
+          childline[lnum_subroot] = lnum_next
+        end
+        return lnum_next
       end
+      return lnum_subroot
     end
   end
 
@@ -847,7 +868,7 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   end
 
   ---@type eve.ux.view.treeview.IRenderResult
-  local result = { uuids = uuids, indents = indents }
+  local result = { uuids = uuids, indents = indents, childline = childline }
   return result
 end
 

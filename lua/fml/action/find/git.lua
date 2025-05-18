@@ -11,11 +11,11 @@ local flag_sensitive = eve.context.select.find_git.flag_case_sensitive
 local flag_viewtype = eve.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
+local picker ---@type eve.ux.FilePicker
 
----@param picker                        eve.ux.FilePicker
 ---@param force                         boolean
 ---@return nil
-local function refresh(picker, force)
+local function refresh(force)
   if not force and not git_filepaths_dirty then
     return
   end
@@ -30,7 +30,7 @@ local function refresh(picker, force)
   git_filepaths_dirty = false
 end
 
-local picker = eve.ux.FilePicker.new({
+picker = eve.ux.FilePicker.new({
   name = "find-git-not-",
   permanent = true,
   title = "Find git (not committed)",
@@ -51,11 +51,11 @@ local picker = eve.ux.FilePicker.new({
   on_closed = function()
     git_filepaths_dirty = true
   end,
-  on_focused = function(picker)
-    refresh(picker, false)
+  on_focused = function()
+    refresh(false)
   end,
-  on_refresh = function(picker)
-    refresh(picker, true)
+  on_refresh = function()
+    refresh(true)
   end,
 })
 
@@ -70,7 +70,7 @@ function M.find_git_not_committed()
     return
   end
 
-  refresh(picker, false)
+  refresh(false)
   picker:focus()
 end
 

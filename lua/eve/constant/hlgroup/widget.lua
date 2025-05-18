@@ -138,6 +138,7 @@ function M.gen_hlgroup_map(context)
     f_pk_preview_title = { fg = c.green, bg = t and c.bg0 or c.none, bold = true },
     f_pk_result_current = { bg = c.bg3 },
     f_pk_result_normal = { bg = bg_main },
+    f_pk_result_selected = { fg = c.purple, bg = c.none },
 
     ---popupmenu
     f_up_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },

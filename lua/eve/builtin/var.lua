@@ -37,32 +37,36 @@ M.nsnr = {
 
 ---@class eve.builtin.var.sign
 M.sign = {
-  NR_SEARCH_MAIN_CURRENT = 2333,
-  NR_SEARCH_MAIN_PRESENT = 2334,
-  NR_SEARCH_MAIN_SELECTED = 2335,
-
-  GROUP_SEARCH_MAIN_SELECTED = "GROUP_SEARCH_MAIN_SELECTED",
-
   -- stylua: ignore start
-  DAP_BREAKPOINT            = "DapBreakpoint",
-  DAP_BREAKPOINT_CONDITION  = "DapBreakpointCondition",
-  DAP_BREAKPOINT_REJECTED   = "DapBreakpointRejected",
-  DAP_LOG_POINT             = "DapLogPoint",
-  DAP_STOPPED               = "DapStopped",
+  NR_SEARCH_MAIN_CURRENT        = 2333,
+  NR_SEARCH_MAIN_PRESENT        = 2334,
+  NR_SEARCH_MAIN_SELECTED       = 2335,
 
-  NR_PICKER_FINDER_PROMPT   = 3031,
-  NR_PICKER_RESULT_CURRENT  = 3032,
-  NR_PICKER_RESULT_PRESENT  = 3033,
-  PICKER_FINDER_PROMPT      = "PickerFinderPrompt",
-  PICKER_RESULT_CURRENT     = "PickerResultCurrent",
-  PICKER_RESULT_PRESENT     = "PickerResultPresent",
+  ---! picker
+  GROUP_PICKER_FINDER_PROMPT    = std.fn.uuid(),
+  GROUP_PICKER_RESULT_CURRENT   = std.fn.uuid(),
+  GROUP_PICKER_RESULT_PRESENT   = std.fn.uuid(),
+  GROUP_PICKER_RESULT_SELECTED  = std.fn.uuid(),
+  PICKER_FINDER_PROMPT          = "PickerFinderPrompt",
+  PICKER_RESULT_CURRENT         = "PickerResultCurrent",
+  PICKER_RESULT_PRESENT         = "PickerResultPresent",
+  PICKER_RESULT_SELECTED        = "PickerResultSelected",
 
-  SEARCH_INPUT_CURSOR       = "SearchInputCursor",
-  SEARCH_MAIN_CURRENT       = "SearchMainCurrent",
-  SEARCH_MAIN_PRESENT       = "SearchMainPresent",
-  SEARCH_MAIN_PRESENT_CUR   = "SearchMainPresentCur",
-  SEARCH_MAIN_SELECTED      = "SearchMainSelected",
-  SEARCH_MAIN_SELECTED_CUR  = "SearchMainSelectedCur",
+  GROUP_SEARCH_MAIN_SELECTED    = std.fn.uuid(),
+
+  DAP_BREAKPOINT                = "DapBreakpoint",
+  DAP_BREAKPOINT_CONDITION      = "DapBreakpointCondition",
+  DAP_BREAKPOINT_REJECTED       = "DapBreakpointRejected",
+  DAP_LOG_POINT                 = "DapLogPoint",
+  DAP_STOPPED                   = "DapStopped",
+
+
+  SEARCH_INPUT_CURSOR           = "SearchInputCursor",
+  SEARCH_MAIN_CURRENT           = "SearchMainCurrent",
+  SEARCH_MAIN_PRESENT           = "SearchMainPresent",
+  SEARCH_MAIN_PRESENT_CUR       = "SearchMainPresentCur",
+  SEARCH_MAIN_SELECTED          = "SearchMainSelected",
+  SEARCH_MAIN_SELECTED_CUR      = "SearchMainSelectedCur",
   -- stylua: ignore end
 }
 
@@ -74,9 +78,11 @@ sd(M.sign.DAP_BREAKPOINT_REJECTED,     { text = eve.icon.dap.BreakpointRejected,
 sd(M.sign.DAP_LOG_POINT,               { text = eve.icon.dap.LogPoint,            texthl = "DapLogPoint",            linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
 sd(M.sign.DAP_STOPPED,                 { text = eve.icon.dap.Stopped,             texthl = "DapStopped",             linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
+sd(M.sign.PICKER_RESULT_CURRENT,       { text = ' ',                              texthl = "f_st_result_current"  })
+sd(M.sign.PICKER_RESULT_PRESENT,       { text = eve.icon.ui.ArrowPresent,         texthl = "f_st_result_present"  })
+sd(M.sign.PICKER_RESULT_SELECTED,      { text = eve.icon.ui.Selected,             texthl = "f_st_result_selected" })
+
 sd(M.sign.PICKER_FINDER_PROMPT,        { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"   })
-sd(M.sign.PICKER_RESULT_CURRENT,       { text = ' ',                              texthl = "f_pk_result_current"  })
-sd(M.sign.PICKER_RESULT_PRESENT,       { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_result_present"  })
 
 sd(M.sign.SEARCH_INPUT_CURSOR,         { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"      })
 sd(M.sign.SEARCH_MAIN_CURRENT,         { text = ' ',                              texthl = "fs_main_current"      })
