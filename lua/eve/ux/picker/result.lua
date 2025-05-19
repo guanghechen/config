@@ -152,8 +152,8 @@ function M.new(props)
   ---@type std.collection.Scheduler
   local scheduler_lnum_current = std.Scheduler.new({
     name = string.format("%s | %s", "result:lnum_current", name),
-    mode = "debounce",
-    delay = 16,
+    mode = "throttle",
+    delay = 32,
     timeout = 0,
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
@@ -161,11 +161,18 @@ function M.new(props)
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         local group = eve.var.sign.GROUP_PICKER_RESULT_CURRENT ---@type string
+        local signnr = eve.var.sign.NR_PICKER_RESULT_CURRENT ---@type integer
         local sign = eve.var.sign.PICKER_RESULT_CURRENT ---@type string
-        pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
-
         local lnum = _lnum_current:snapshot() ---@type integer
-        pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 10 })
+        local lnums_selected = _lnum_selected_set:snapshot() ---@type table<integer, true>
+        if lnum == _lnum_present:snapshot() then
+          sign = eve.var.sign.PICKER_RESULT_CURRENT_PRESENT ---@type string
+        elseif lnums_selected[lnum] then
+          sign = eve.var.sign.PICKER_RESULT_CURRENT_SELECTED ---@type string
+        end
+
+        pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
+        pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum, priority = 30 })
       end
     end,
   })
@@ -182,12 +189,13 @@ function M.new(props)
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         local group = eve.var.sign.GROUP_PICKER_RESULT_PRESENT ---@type string
+        local signnr = eve.var.sign.NR_PICKER_RESULT_PRESENT ---@type integer
         local sign = eve.var.sign.PICKER_RESULT_PRESENT ---@type string
-        pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
+        pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
 
         local lnum = _lnum_present:snapshot() ---@type integer
         if lnum > 0 then
-          pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 20 })
+          pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum, priority = 10 })
         end
       end
     end,
@@ -210,7 +218,7 @@ function M.new(props)
 
         local lnums_selected = _lnum_selected_set:snapshot() ---@type table<integer, true>
         for lnum in pairs(lnums_selected) do
-          pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
+          pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 20 })
         end
       end
     end,
@@ -309,6 +317,7 @@ function M.new(props)
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local lnum_total = _lnum_total:snapshot() ---@type integer
       vim.wo[winnr].cursorline = lnum_total > 0
+      nvimbar:render()
     end
   end)
 
@@ -320,6 +329,7 @@ function M.new(props)
       if cursor[1] ~= lnum_current then
         pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_current, 0 })
       end
+      nvimbar:render()
     end
     self._scheduler_lnum_current:schedule()
   end)
@@ -657,8 +667,9 @@ function M:set_lnum_current(lnum)
 end
 
 ---@param lnum                          integer
+---@param next_selected                 boolean|nil
 ---@return eve.ux.PickerResult
-function M:toggle_selected(lnum)
+function M:toggle_selected(lnum, next_selected)
   self:__health__()
 
   local bufnr = self._bufnr ---@type integer|nil
@@ -667,13 +678,22 @@ function M:toggle_selected(lnum)
     local group = eve.var.sign.GROUP_PICKER_RESULT_SELECTED ---@type string
     local sign = eve.var.sign.PICKER_RESULT_SELECTED ---@type string
 
+    if next_selected == nil then
+      next_selected = lnum_selected_set[lnum] == nil ---@type boolean
+    end
     local selected = lnum_selected_set[lnum] == true ---@type boolean
-    if selected then
-      lnum_selected_set[lnum] = nil
-      pcall(vim.fn.sign_unplace, group, { id = lnum, buffer = bufnr })
-    else
-      lnum_selected_set[lnum] = true
-      pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
+    if next_selected ~= selected then
+      if next_selected then
+        lnum_selected_set[lnum] = true
+        pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
+      else
+        lnum_selected_set[lnum] = nil
+        pcall(vim.fn.sign_unplace, group, { id = lnum, buffer = bufnr })
+      end
+
+      if lnum == self.lnum_current:snapshot() then
+        self._scheduler_lnum_current:schedule()
+      end
     end
   end
 

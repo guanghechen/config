@@ -396,21 +396,22 @@ function M.new(props)
       if node.type == "container" then
         local lastchild_index = self._retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
         if lastchild_index ~= nil and lnum <= lastchild_index then
-          if uuids_selected[node.uuid] then
-            for index = lnum, lastchild_index, 1 do
-              local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
-              if node_uuid ~= nil then
-                uuids_selected[node_uuid] = nil
-                picker.result:toggle_selected(index)
-              end
+          local next_selected = false ---@type boolean
+          local next_selected_value = nil ---@type boolean|nil
+          for index = lnum, lastchild_index, 1 do
+            local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
+            if node_uuid ~= nil and uuids_selected[node_uuid] ~= true then
+              next_selected = true
+              next_selected_value = true
+              break
             end
-          else
-            for index = lnum, lastchild_index, 1 do
-              local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
-              if node_uuid ~= nil then
-                uuids_selected[node_uuid] = true
-                picker.result:toggle_selected(index)
-              end
+          end
+
+          for index = lnum, lastchild_index, 1 do
+            local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
+            if node_uuid ~= nil then
+              uuids_selected[node_uuid] = next_selected_value
+              picker.result:toggle_selected(index, next_selected)
             end
           end
         end

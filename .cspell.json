@@ -515,6 +515,7 @@
     "showtabline",
     "sidescrolloff",
     "signcolumn",
+    "signnr",
     "skiprtp",
     "smartcase",
     "smartindent",

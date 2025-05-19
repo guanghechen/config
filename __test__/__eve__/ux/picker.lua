@@ -1,7 +1,10 @@
+require("plenary.reload").reload_module("eve.ux.picker.composer")
+require("plenary.reload").reload_module("eve.ux.picker.finder")
+require("plenary.reload").reload_module("eve.ux.picker.result")
+require("plenary.reload").reload_module("eve.ux.picker.preview")
+require("plenary.reload").reload_module("eve.ux.picker-file")
 require("plenary.reload").reload_module("eve.ux.view.treeview")
 require("plenary.reload").reload_module("eve.ux.view.filetree")
-require("plenary.reload").reload_module("eve.ux.picker")
-require("plenary.reload").reload_module("eve.ux.picker-file")
 
 local finder_input = std.Observable.from_value("")
 local flag_foldempty = std.Observable.from_value(true)
@@ -9,7 +12,7 @@ local flag_fuzzy = std.Observable.from_value(false)
 local flag_regex = std.Observable.from_value(false)
 local flag_sensitive = std.Observable.from_value(true)
 local flag_viewtype = std.Observable.from_value("tree")
-local flag_case = std.Observable.from_value(1)
+local flag_case = std.Observable.from_value(3)
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",

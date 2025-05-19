@@ -383,6 +383,9 @@ end
 function M:mark_result_dirty()
   self:__health__()
   self.result:mark_content_dirty()
+  if self.preview ~= nil then
+    self.preview:mark_content_dirty()
+  end
   return self
 end
 
