@@ -1,3 +1,5 @@
+local __module_name__ = "eve.builtin.buf" ---@type string
+
 ---@alias eve.builtin.buf.TypeEnum
 ---| ""
 ---| "acwrite"
@@ -101,9 +103,26 @@ function M.loadfile(filepath)
       return nil
     end
 
-    local ok = pcall(vim.fn.bufload, bufnr)
     vim.bo[bufnr].buflisted = true
-    return ok and bufnr or nil
+    vim.bo[bufnr].buftype = ""
+    local ok, error = pcall(vim.fn.bufload, bufnr)
+    if not ok then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "loadfile",
+        message = string.format("Failed to load file %s", filepath),
+        details = {
+          bufnr = bufnr,
+          filepath = filepath,
+          error = error,
+        },
+      })
+      return nil
+    end
+
+    -- vim.api.nvim_exec_autocmds("FileReadPost", { buffer = bufnr })
+    -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = bufnr })
+    return bufnr
   end
 end
 
