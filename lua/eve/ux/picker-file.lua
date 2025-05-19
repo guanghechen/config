@@ -16,6 +16,13 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@alias eve.ux.picker_file.IOnRefresh
 ---| fun(self: eve.ux.FilePicker, force: boolean): nil
 
+---@class eve.ux.picker_file.actions
+---@field public on_filetree_close      fun(): nil
+---@field public on_filetree_open       fun(): nil
+---@field public on_filetree_toggle     fun(): nil
+---@field public on_filetree_toggle_recursively fun(): nil
+---@field public on_toggle_selection    fun(): nil
+
 ----------------------------------------------------------------------------------------------------
 
 ---@class eve.ux.IFilePickerProps
@@ -68,6 +75,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _last_matches       std.t.IScoredMatch[]|nil
 ---@field protected _last_matched_uuids table<string, boolean>|nil
 ---@field protected _uuid_root          string|nil
+---@field protected _uuid_current       string|nil
 ---@field protected _uuids_file         string[]
 ---@field protected _uuids_selected     table<string, true>
 ---
@@ -246,28 +254,86 @@ function M.new(props)
     end
   end
 
-  ---@type std.t.IKeymap[]
-  local finder_keymaps = {
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-l>",
-      aliases = { "<enter>" },
-      desc = "filetree: open",
-      callback = function()
+  ---@type eve.ux.picker_file.actions
+  local actions = {
+    on_filetree_close = function()
+      local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
+      if node == nil then
+        return
+      end
+
+      local picker = self._picker ---@type eve.ux.PickerComposer
+      if node.type == "container" then
+        filetree:collapse(node.uuid, "collapse", false)
+        picker:mark_result_dirty()
+        return
+      end
+
+      if node.type == "leaf" and #node.children > 0 then
+        filetree:collapse(node.uuid, "collapse", false)
+        picker:mark_result_dirty()
+        return
+      end
+
+      local lnum_parent = retriever:retrieve_lnum(node.parent.uuid) ---@type integer|nil
+      filetree:collapse(node.parent.uuid, "collapse", false)
+      picker:mark_result_dirty()
+      if lnum_parent ~= nil then
+        picker:set_result_lnum(lnum_parent)
+      end
+    end,
+    on_filetree_open = function()
+      local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
+      if node == nil then
+        return
+      end
+
+      local picker = self._picker ---@type eve.ux.PickerComposer
+      if node.type == "container" then
+        filetree:collapse(node.uuid, "expand", false)
+        picker:mark_result_dirty()
+        return
+      end
+
+      if node.type == "leaf" and #node.children > 0 then
+        filetree:collapse(node.uuid, "expand", false)
+        picker:mark_result_dirty()
+        return
+      end
+
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+        vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+      end
+
+      local filepath = node.data.filepath ---@type string
+
+      picker:close()
+      eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
+    end,
+    on_filetree_toggle = function()
+      local picker = self._picker ---@type eve.ux.PickerComposer
+      local result_winnr = picker.result:get_winnr() ---@type integer|nil
+      if result_winnr == nil or not vim.api.nvim_win_is_valid(result_winnr) then
+        return
+      end
+
+      local cursor = vim.fn.getmousepos()
+      if cursor.winid == result_winnr then
         local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
         if node == nil then
           return
         end
 
-        local picker = self._picker ---@type eve.ux.PickerComposer
         if node.type == "container" then
-          filetree:collapse(node.uuid, "expand", false)
+          filetree:collapse(node.uuid, "toggle", false)
           picker:mark_result_dirty()
           return
         end
 
         if node.type == "leaf" and #node.children > 0 then
-          filetree:collapse(node.uuid, "expand", false)
+          filetree:collapse(node.uuid, "toggle", false)
           picker:mark_result_dirty()
           return
         end
@@ -282,38 +348,107 @@ function M.new(props)
 
         picker:close()
         eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
-      end,
+      end
+    end,
+    on_filetree_toggle_recursively = function()
+      local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
+      if node == nil then
+        return
+      end
+
+      local picker = self._picker ---@type eve.ux.PickerComposer
+      if node.type == "container" then
+        filetree:collapse(node.uuid, "toggle", true)
+        picker:mark_result_dirty()
+        return
+      end
+
+      if node.type == "leaf" and #node.children > 0 then
+        filetree:collapse(node.uuid, "toggle", true)
+        picker:mark_result_dirty()
+        return
+      end
+
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+        vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+      end
+
+      local filepath = node.data.filepath ---@type string
+
+      picker:close()
+      eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
+    end,
+    on_toggle_selection = function()
+      local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
+      if node == nil then
+        return
+      end
+
+      local picker = self._picker ---@type eve.ux.PickerComposer
+      local lnum = retriever:retrieve_lnum(node.uuid) ---@type integer|nil
+      if lnum == nil or lnum < 0 then
+        return
+      end
+
+      local uuids_selected = self._uuids_selected ---@type table<string, true>
+      if node.type == "container" then
+        local lastchild_index = self._retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+        if lastchild_index ~= nil and lnum <= lastchild_index then
+          if uuids_selected[node.uuid] then
+            for index = lnum, lastchild_index, 1 do
+              local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
+              if node_uuid ~= nil then
+                uuids_selected[node_uuid] = nil
+                picker.result:toggle_selected(index)
+              end
+            end
+          else
+            for index = lnum, lastchild_index, 1 do
+              local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
+              if node_uuid ~= nil then
+                uuids_selected[node_uuid] = true
+                picker.result:toggle_selected(index)
+              end
+            end
+          end
+        end
+        return
+      end
+
+      if node.type == "leaf" then
+        if uuids_selected[node.uuid] then
+          uuids_selected[node.uuid] = nil
+        else
+          uuids_selected[node.uuid] = true
+        end
+        picker.result:toggle_selected(lnum)
+        return
+      end
+    end,
+  }
+
+  ---@type std.t.IKeymap[]
+  local finder_keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-l>",
+      aliases = { "<enter>" },
+      desc = "filetree: open",
+      callback = actions.on_filetree_open,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-h>",
       desc = "filetree: close",
-      callback = function()
-        local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-        if node == nil then
-          return
-        end
-
-        local picker = self._picker ---@type eve.ux.PickerComposer
-        if node.type == "container" then
-          filetree:collapse(node.uuid, "collapse", false)
-          picker:mark_result_dirty()
-          return
-        end
-
-        if node.type == "leaf" and #node.children > 0 then
-          filetree:collapse(node.uuid, "collapse", false)
-          picker:mark_result_dirty()
-          return
-        end
-
-        local lnum_parent = retriever:retrieve_lnum(node.parent.uuid) ---@type integer|nil
-        filetree:collapse(node.parent.uuid, "collapse", false)
-        picker:mark_result_dirty()
-        if lnum_parent ~= nil then
-          picker:set_result_lnum(lnum_parent)
-        end
-      end,
+      callback = actions.on_filetree_close,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<Tab>",
+      desc = "filetree: toggle selection",
+      callback = actions.on_toggle_selection,
     },
   }
 
@@ -322,199 +457,34 @@ function M.new(props)
     {
       modes = { "n" },
       key = "z",
-      desc = "filetree: toggle collapsed (recursively)",
-      callback = function()
-        local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-        if node == nil then
-          return
-        end
-
-        local picker = self._picker ---@type eve.ux.PickerComposer
-        if node.type == "container" then
-          filetree:collapse(node.uuid, "toggle", true)
-          picker:mark_result_dirty()
-          return
-        end
-
-        if node.type == "leaf" and #node.children > 0 then
-          filetree:collapse(node.uuid, "toggle", true)
-          picker:mark_result_dirty()
-          return
-        end
-
-        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-        if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-          vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-        end
-
-        local filepath = node.data.filepath ---@type string
-
-        picker:close()
-        eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
-      end,
+      desc = "filetree: toggle (recursively)",
+      callback = actions.on_filetree_toggle_recursively,
     },
     {
       modes = { "n" },
       key = "<2-LeftMouse>",
       desc = "filetree: toggle",
-      callback = function()
-        local picker = self._picker ---@type eve.ux.PickerComposer
-        local result_winnr = picker.result:get_winnr() ---@type integer|nil
-        if result_winnr == nil or not vim.api.nvim_win_is_valid(result_winnr) then
-          return
-        end
-
-        local cursor = vim.fn.getmousepos()
-        if cursor.winid == result_winnr then
-          local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-          if node == nil then
-            return
-          end
-
-          if node.type == "container" then
-            filetree:collapse(node.uuid, "toggle", false)
-            picker:mark_result_dirty()
-            return
-          end
-
-          if node.type == "leaf" and #node.children > 0 then
-            filetree:collapse(node.uuid, "toggle", false)
-            picker:mark_result_dirty()
-            return
-          end
-
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-            vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-          end
-
-          local filepath = node.data.filepath ---@type string
-
-          picker:close()
-          eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
-        end
-      end,
+      callback = actions.on_filetree_toggle,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Right>",
       aliases = { "<CR>", "l", "o" },
       desc = "filetree: open",
-      callback = function()
-        local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-        if node == nil then
-          return
-        end
-
-        local picker = self._picker ---@type eve.ux.PickerComposer
-        if node.type == "container" then
-          filetree:collapse(node.uuid, "expand", false)
-          picker:mark_result_dirty()
-          return
-        end
-
-        if node.type == "leaf" and #node.children > 0 then
-          filetree:collapse(node.uuid, "expand", false)
-          picker:mark_result_dirty()
-          return
-        end
-
-        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-        local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-        if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-          vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-        end
-
-        local filepath = node.data.filepath ---@type string
-
-        picker:close()
-        eve.win.open_filepath(winnr_sourcefile, filepath, node.data.lnum, node.data.col)
-      end,
+      callback = actions.on_filetree_open,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Left>",
       aliases = { "<Left>", "h", "c" },
       desc = "filetree: close",
-      callback = function()
-        local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-        if node == nil then
-          return
-        end
-
-        local picker = self._picker ---@type eve.ux.PickerComposer
-        if node.type == "container" then
-          filetree:collapse(node.uuid, "collapse", false)
-          picker:mark_result_dirty()
-          return
-        end
-
-        if node.type == "leaf" and #node.children > 0 then
-          filetree:collapse(node.uuid, "collapse", false)
-          picker:mark_result_dirty()
-          return
-        end
-
-        local lnum_parent = retriever:retrieve_lnum(node.parent.uuid) ---@type integer|nil
-        filetree:collapse(node.parent.uuid, "collapse", false)
-        picker:mark_result_dirty()
-        if lnum_parent ~= nil then
-          picker:set_result_lnum(lnum_parent)
-        end
-      end,
+      callback = actions.on_filetree_close,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Tab>",
       desc = "filetree: toggle selection",
-      callback = function()
-        local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-        if node == nil then
-          return
-        end
-
-        local picker = self._picker ---@type eve.ux.PickerComposer
-        local lnum = retriever:retrieve_lnum(node.uuid) ---@type integer|nil
-        if lnum == nil or lnum < 0 then
-          return
-        end
-
-        local uuids_selected = self._uuids_selected ---@type table<string, true>
-        if node.type == "container" then
-          local lastchild_index = self._retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-          if lastchild_index ~= nil and lnum <= lastchild_index then
-            if uuids_selected[node.uuid] then
-              for index = lnum, lastchild_index, 1 do
-                local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
-                if node_uuid ~= nil then
-                  uuids_selected[node_uuid] = nil
-                end
-              end
-            else
-              for index = lnum, lastchild_index, 1 do
-                local node_uuid = retriever:retrieve_uuid(index) ---@type string|nil
-                if node_uuid ~= nil then
-                  uuids_selected[node_uuid] = true
-                end
-              end
-            end
-          end
-          picker:mark_result_statuscolumn_dirty()
-          return
-        end
-
-        if node.type == "leaf" then
-          if uuids_selected[node.uuid] then
-            uuids_selected[node.uuid] = nil
-          else
-            uuids_selected[node.uuid] = true
-          end
-          picker:mark_result_statuscolumn_dirty()
-          return
-        end
-      end,
+      callback = actions.on_toggle_selection,
     },
   }
 
@@ -548,7 +518,10 @@ function M.new(props)
           lnums_selected[#lnums_selected + 1] = lnum_selected
         end
       end
-      local ret = { uuids_selected = lnums_selected } ---@type eve.ux.picker.result.IDrawResult
+
+      local uuid_current = self._uuid_current ---@type string|nil
+      local lnum_current = uuid_current ~= nil and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil
+      local ret = { lnum_current = lnum_current, lnums_selected = lnums_selected } ---@type eve.ux.picker.result.IDrawResult
       return ret
     end,
 
@@ -585,7 +558,16 @@ function M.new(props)
           end
 
           ---@cast node                 eve.ux.view.filetree.IPositionNode
-          return relative_filepath, node.data.lnum, node.data.col
+          ---@type eve.ux.picker.preview.IDrawResult
+          local result = {
+            cursorline = true,
+            number = true,
+            title = relative_filepath,
+            wrap = false,
+            lnum = node.data.lnum,
+            col = node.data.col,
+          }
+          return result
         end
       or nil,
 
@@ -703,6 +685,13 @@ function M.new(props)
   end, true)
   std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
     scheduler_match:schedule()
+  end)
+  std.fn.observe({ picker.result.lnum_current }, function()
+    local lnum = picker.result.lnum_current:snapshot() ---@type integer
+    local node_uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+    if node_uuid ~= nil then
+      self._uuid_current = node_uuid
+    end
   end)
 
   return self

@@ -361,7 +361,7 @@ function M:__update_winopts__()
   vim.api.nvim_win_set_config(winnr, wincfg)
 
   if result.lnum ~= nil then
-    vim.api.nvim_win_set_cursor(winnr, { result.lnum, result.col or 0 })
+    pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })
   end
   return self
 end

@@ -52,10 +52,12 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected _augroup_CursorMoved    integer
----@field protected _nvimbar                eve.ux.nvimbar.Nvimbar
----@field protected _scheduler_content      std.collection.Scheduler
----@field protected _scheduler_statuscolumn std.collection.Scheduler
+---@field protected _augroup_CursorMoved      integer
+---@field protected _nvimbar                  eve.ux.nvimbar.Nvimbar
+---@field protected _scheduler_content        std.collection.Scheduler
+---@field protected _scheduler_lnum_current   std.collection.Scheduler
+---@field protected _scheduler_lnum_present   std.collection.Scheduler
+---@field protected _scheduler_lnums_selected std.collection.Scheduler
 local M = {}
 M.__index = M
 
@@ -116,7 +118,7 @@ function M.new(props)
   ---@type eve.ux.nvimbar.Nvimbar
   local nvimbar = eve.ux.nvimbar.Nvimbar
     .new({
-      name = name,
+      name = string.format("%s | %s", "result:winline", name),
       comp_sep = "",
       comp_sep_hlname = "f_wl_picker",
       comp_sep_hlname_active = "f_wl_picker",
@@ -148,8 +150,52 @@ function M.new(props)
     :place("right", c.picker.result_pos(position, _lnum_current, _lnum_total), 100)
 
   ---@type std.collection.Scheduler
-  local scheduler_statuscolumn = std.Scheduler.new({
-    name = name,
+  local scheduler_lnum_current = std.Scheduler.new({
+    name = string.format("%s | %s", "result:lnum_current", name),
+    mode = "debounce",
+    delay = 16,
+    timeout = 0,
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
+    task = function()
+      local bufnr = self._bufnr ---@type integer|nil
+      if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+        local group = eve.var.sign.GROUP_PICKER_RESULT_CURRENT ---@type string
+        local sign = eve.var.sign.PICKER_RESULT_CURRENT ---@type string
+        pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
+
+        local lnum = _lnum_current:snapshot() ---@type integer
+        pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 10 })
+      end
+    end,
+  })
+
+  ---@type std.collection.Scheduler
+  local scheduler_lnum_present = std.Scheduler.new({
+    name = string.format("%s | %s", "result:lnum_present", name),
+    mode = "debounce",
+    delay = 64,
+    timeout = 0,
+    silent = std.fn.falsy,
+    value = std.Observable.from_value(true),
+    task = function()
+      local bufnr = self._bufnr ---@type integer|nil
+      if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+        local group = eve.var.sign.GROUP_PICKER_RESULT_PRESENT ---@type string
+        local sign = eve.var.sign.PICKER_RESULT_PRESENT ---@type string
+        pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
+
+        local lnum = _lnum_present:snapshot() ---@type integer
+        if lnum > 0 then
+          pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 20 })
+        end
+      end
+    end,
+  })
+
+  ---@type std.collection.Scheduler
+  local scheduler_lnums_selected = std.Scheduler.new({
+    name = string.format("%s | %s", "result:lnums_selected", name),
     mode = "debounce",
     delay = 128,
     timeout = 0,
@@ -158,35 +204,13 @@ function M.new(props)
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-        do
-          local group = eve.var.sign.GROUP_PICKER_RESULT_CURRENT ---@type string
-          local sign = eve.var.sign.PICKER_RESULT_CURRENT ---@type string
-          pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
+        local group = eve.var.sign.GROUP_PICKER_RESULT_SELECTED ---@type string
+        local sign = eve.var.sign.PICKER_RESULT_SELECTED ---@type string
+        pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
 
-          local lnum = _lnum_current:snapshot() ---@type integer
-          pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 10 })
-        end
-
-        do
-          local group = eve.var.sign.GROUP_PICKER_RESULT_PRESENT ---@type string
-          local sign = eve.var.sign.PICKER_RESULT_PRESENT ---@type string
-          pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
-
-          local lnum = _lnum_present:snapshot() ---@type integer
-          if lnum > 0 then
-            pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 20 })
-          end
-        end
-
-        do
-          local group = eve.var.sign.GROUP_PICKER_RESULT_SELECTED ---@type string
-          local sign = eve.var.sign.PICKER_RESULT_SELECTED ---@type string
-          pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
-
-          local lnums_selected = _lnum_selected_set:snapshot() ---@type table<integer, true>
-          for lnum in pairs(lnums_selected) do
-            pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
-          end
+        local lnums_selected = _lnum_selected_set:snapshot() ---@type table<integer, true>
+        for lnum in pairs(lnums_selected) do
+          pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
         end
       end
     end,
@@ -194,7 +218,7 @@ function M.new(props)
 
   ---@type std.collection.Scheduler
   local scheduler_content = std.Scheduler.new({
-    name = name,
+    name = string.format("%s | %s", "result:content", name),
     mode = "debounce",
     delay = 128,
     timeout = 0,
@@ -259,8 +283,6 @@ function M.new(props)
           },
         })
       end
-
-      scheduler_statuscolumn:schedule({ immediate = true })
     end,
   })
 
@@ -278,7 +300,9 @@ function M.new(props)
   self._augroup_CursorMoved = augroup_CursorMoved
   self._nvimbar = nvimbar
   self._scheduler_content = scheduler_content
-  self._scheduler_statuscolumn = scheduler_statuscolumn
+  self._scheduler_lnum_current = scheduler_lnum_current
+  self._scheduler_lnum_present = scheduler_lnum_present
+  self._scheduler_lnums_selected = scheduler_lnums_selected
 
   std.fn.observe({ _lnum_total }, function()
     local winnr = self._winnr ---@type integer|nil
@@ -297,11 +321,24 @@ function M.new(props)
         pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_current, 0 })
       end
     end
+    self._scheduler_lnum_current:schedule()
   end)
 
-  std.fn.observe({ _lnum_current, _lnum_present, _lnum_selected_set }, function()
+  std.fn.observe({ _lnum_current }, function()
     if not self._disposed then
-      self._scheduler_statuscolumn:schedule()
+      self._scheduler_lnum_current:schedule()
+    end
+  end)
+
+  std.fn.observe({ _lnum_present }, function()
+    if not self._disposed then
+      self._scheduler_lnum_present:schedule()
+    end
+  end)
+
+  std.fn.observe({ _lnum_selected_set }, function()
+    if not self._disposed then
+      self._scheduler_lnums_selected:schedule()
     end
   end)
 
@@ -340,7 +377,9 @@ function M:dispose()
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
   local nvimbar = self._nvimbar ---@type eve.ux.nvimbar.Nvimbar
   local scheduler_content = self._scheduler_content ---@type std.collection.Scheduler
-  local scheduler_statuscolumn = self._scheduler_statuscolumn ---@type std.collection.Scheduler
+  local scheduler_lnum_current = self._scheduler_lnum_current ---@type std.collection.Scheduler
+  local scheduler_lnum_present = self._scheduler_lnum_present ---@type std.collection.Scheduler
+  local scheduler_lnums_selected = self._scheduler_lnums_selected ---@type std.collection.Scheduler
   vim.schedule(function()
     lnum_current:dispose()
     lnum_present:dispose()
@@ -352,7 +391,9 @@ function M:dispose()
     local ok3, error3 = pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
     local ok4, error4 = pcall(nvimbar.dispose, nvimbar)
     local ok5, error5 = pcall(scheduler_content.dispose, scheduler_content)
-    local ok6, error6 = pcall(scheduler_statuscolumn.dispose, scheduler_statuscolumn)
+    local ok6, error6 = pcall(scheduler_lnum_current.dispose, scheduler_lnum_current)
+    local ok7, error7 = pcall(scheduler_lnum_present.dispose, scheduler_lnum_present)
+    local ok8, error8 = pcall(scheduler_lnums_selected.dispose, scheduler_lnums_selected)
     if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
       std.reporter.error({
         from = string.format("%s | %s", name, __module_name__),
@@ -367,6 +408,8 @@ function M:dispose()
           error4 = not ok4 and error4 or nil,
           error5 = not ok5 and error5 or nil,
           error6 = not ok6 and error6 or nil,
+          error7 = not ok7 and error7 or nil,
+          error8 = not ok8 and error8 or nil,
         },
       })
     end
@@ -383,7 +426,9 @@ function M:dispose()
   self._augroup_CursorMoved = nil
   self._nvimbar = nil
   self._scheduler_content = nil
-  self._scheduler_statuscolumn = nil
+  self._scheduler_lnum_current = nil
+  self._scheduler_lnum_present = nil
+  self._scheduler_lnums_selected = nil
 end
 
 ---@return boolean
@@ -451,7 +496,9 @@ function M:create_buf()
   eve.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   self._scheduler_content:schedule({ immediate = true })
-  self._scheduler_statuscolumn:schedule({ immediate = true })
+  self._scheduler_lnum_current:schedule({ immediate = true })
+  self._scheduler_lnum_present:schedule({ immediate = true })
+  self._scheduler_lnums_selected:schedule({ immediate = true })
   return bufnr, true
 end
 
@@ -578,13 +625,6 @@ function M:mark_nvimbar_dirty()
   return self
 end
 
----@return eve.ux.PickerResult
-function M:mark_statuscolumn_dirty()
-  self:__health__()
-  self._scheduler_statuscolumn:schedule()
-  return self
-end
-
 ---@param step                          integer
 ---@return nil
 function M:movedown(step)
@@ -616,25 +656,25 @@ function M:set_lnum_current(lnum)
   return self
 end
 
----@param bufnr                         integer
 ---@param lnum                          integer
 ---@return eve.ux.PickerResult
-function M:toggle_selected(bufnr, lnum)
+function M:toggle_selected(lnum)
   self:__health__()
 
+  local bufnr = self._bufnr ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    local lnum_selected_set = {} ---@type table<integer, true>
+    local lnum_selected_set = self.lnum_selected_set:snapshot() ---@type table<integer, true>
     local group = eve.var.sign.GROUP_PICKER_RESULT_SELECTED ---@type string
     local sign = eve.var.sign.PICKER_RESULT_SELECTED ---@type string
 
     local selected = lnum_selected_set[lnum] == true ---@type boolean
     if selected then
-      pcall(vim.fn.sign_unplace, group, { lnum = lnum, buffer = bufnr })
+      lnum_selected_set[lnum] = nil
+      pcall(vim.fn.sign_unplace, group, { id = lnum, buffer = bufnr })
     else
+      lnum_selected_set[lnum] = true
       pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
     end
-    lnum_selected_set[lnum] = selected or nil
-    self.lnum_selected_set:next(lnum_selected_set)
   end
 
   return self

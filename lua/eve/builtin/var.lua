@@ -78,9 +78,9 @@ sd(M.sign.DAP_BREAKPOINT_REJECTED,     { text = eve.icon.dap.BreakpointRejected,
 sd(M.sign.DAP_LOG_POINT,               { text = eve.icon.dap.LogPoint,            texthl = "DapLogPoint",            linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
 sd(M.sign.DAP_STOPPED,                 { text = eve.icon.dap.Stopped,             texthl = "DapStopped",             linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
-sd(M.sign.PICKER_RESULT_CURRENT,       { text = ' ',                              texthl = "f_st_result_current"  })
-sd(M.sign.PICKER_RESULT_PRESENT,       { text = eve.icon.ui.ArrowPresent,         texthl = "f_st_result_present"  })
-sd(M.sign.PICKER_RESULT_SELECTED,      { text = eve.icon.ui.Selected,             texthl = "f_st_result_selected" })
+sd(M.sign.PICKER_RESULT_CURRENT,       { text = ' ',                              texthl = "f_pk_result_current"  })
+sd(M.sign.PICKER_RESULT_PRESENT,       { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_result_present"  })
+sd(M.sign.PICKER_RESULT_SELECTED,      { text = eve.icon.ui.Selected,             texthl = "f_pk_result_selected" })
 
 sd(M.sign.PICKER_FINDER_PROMPT,        { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"   })
 

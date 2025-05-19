@@ -393,13 +393,6 @@ function M:mark_result_flags_dirty()
   return self
 end
 
----@return eve.ux.PickerComposer
-function M:mark_result_statuscolumn_dirty()
-  self:__health__()
-  self.result:mark_statuscolumn_dirty()
-  return self
-end
-
 function M:mark_preview_dirty()
   self:__health__()
   if self.preview ~= nil then
@@ -998,6 +991,24 @@ function M:__resolve_builtin_result_keymaps__()
       desc = "picker#result: focus up",
       callback = function()
         self:__focus_pane__("finder")
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "j",
+      desc = "picker#result: focus next item",
+      callback = function()
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(step)
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "k",
+      desc = "picker#result: focus prev item",
+      callback = function()
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(-step)
       end,
     },
   }
