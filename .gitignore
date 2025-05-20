@@ -4,7 +4,6 @@ lua/nvim_tools.dll
 
 bin/
 local/
-local/
 target/
 tmp/
 

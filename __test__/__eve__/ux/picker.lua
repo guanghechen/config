@@ -88,7 +88,7 @@ flag_case:subscribe(
           "/f/opt/me/a.txt",
           "/f/bin/usr/b.txt",
         }
-        picker:reset_filepaths("/f", filepaths, true)
+        picker:reset_filepaths("/", filepaths, true)
       end
 
       picker:mark_result_dirty()

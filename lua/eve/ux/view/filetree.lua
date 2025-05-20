@@ -65,8 +65,9 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
-local FILETREE_ROOT_UUID = "4d618576933d60f4b31039b123256943" ---@type string
-local filepath2uuid = { [""] = FILETREE_ROOT_UUID } ---@type table<string, string>
+local FILETREE_ROOT_FILEPATH = std.env.IS_WIN and "" or "/" ---@type string
+local FILETREE_ROOT_UUID = std.env.IS_WIN and "d41d8cd98f00b204e9800998ecf8427e" or "6666cd76f96956469e7be39d750cc7d9" ---@type string
+local filepath2uuid = { [FILETREE_ROOT_FILEPATH] = FILETREE_ROOT_UUID } ---@type table<string, string>
 
 ---@type table<eve.ux.view.treeview.NodeTypeEnum, integer>
 local nodetype_priority_map = {
@@ -356,39 +357,27 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     return self
   end
 
-  local uuid_root = FILETREE_ROOT_UUID
   local treeview = self._treeview ---@type eve.ux.view.Treeview
 
   ---@type eve.ux.view.filetree.IDirectoryNodeData
-  local root = {
-    basename = "",
-    filepath = "",
-    filepath_lower = "",
+  local rootdata = {
+    basename = FILETREE_ROOT_FILEPATH,
+    filepath = FILETREE_ROOT_FILEPATH,
+    filepath_lower = FILETREE_ROOT_FILEPATH,
     icon = eve.icon.filetype.FileTree,
     icon_hln = "MiniIconsBlue",
   }
-  treeview:insert(uuid_root, uuid_root, "container", root, false)
+  treeview:insert(FILETREE_ROOT_UUID, FILETREE_ROOT_UUID, "container", rootdata, false)
 
   cwd = std.path.normalize(cwd) ---@type string
-  local cwd_with_slash = cwd == "/" and "/" or cwd .. std.env.PATH_SEP ---@type string
-  local cwd_length = #cwd_with_slash ---@type integer
-  if cwd == "/" then
-    local uuid = self:__resolve_uuid__("/") ---@type string
-    ---@type eve.ux.view.filetree.IDirectoryNodeData
-    local nodedata = {
-      basename = cwd,
-      filepath = cwd,
-      filepath_lower = cwd,
-      icon = eve.icon.filetype.Folder,
-      icon_hln = "MiniIconsBlue",
-    }
-    treeview:insert(uuid, uuid_root, "container", nodedata, false)
-  else
+  local cwd_with_slash = cwd == "/" and "/" or (cwd .. std.env.PATH_SEP) ---@type string
+  local cwd_with_slash_length = #cwd_with_slash ---@type integer
+  if cwd ~= "/" then
     local pieces = std.path.split(cwd) ---@type string[]
     local N = #pieces ---@type integer
 
-    local filepath = root.filepath ---@type string
-    local uuid_parent = uuid_root ---@type string
+    local filepath = "" ---@type string
+    local uuid_parent = FILETREE_ROOT_UUID ---@type string
     local start_index = std.env.IS_WIN and 1 or 2 ---@type integer
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
@@ -409,6 +398,8 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     end
   end
 
+  local cwd_uuid = self:__resolve_uuid__(cwd) ---@type string
+
   ---@param p                           string
   ---@return string
   ---@return string
@@ -416,8 +407,8 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local pieces = std.path.split(p) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
-    local filepath = root.filepath ---@type string
-    local uuid_parent = uuid_root ---@type string
+    local filepath = "" ---@type string
+    local uuid_parent = FILETREE_ROOT_UUID ---@type string
     local start_index = std.env.IS_WIN and 1 or 2 ---@type integer
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
@@ -462,7 +453,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local N = #pieces - 1 ---@type integer
 
     local filepath = cwd == "/" and "" or cwd ---@type string
-    local uuid_parent = self:__resolve_uuid__(filepath) ---@type string
+    local uuid_parent = cwd_uuid ---@type string
     for index = 1, N, 1 do
       local basename = pieces[index] ---@type string
       filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
@@ -503,10 +494,10 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local filepath, lnum, col = std.string.parse_filepath_with_position(p) ---@type string, integer|nil, integer|nil
       local fileuuid, absolute_filepath ---@type string, string
       if std.path.is_absolute(filepath) then
-        if filepath:sub(1, cwd_length) ~= cwd_with_slash then
+        if filepath:sub(1, cwd_with_slash_length) ~= cwd_with_slash then
           fileuuid, absolute_filepath = insert_absolute_filepath(filepath)
         else
-          filepath = filepath:sub(cwd_length + 1) ---@type string
+          filepath = filepath:sub(cwd_with_slash_length + 1) ---@type string
           fileuuid, absolute_filepath = insert_relative_filepath(filepath)
         end
       else
@@ -528,10 +519,10 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   else
     for _, filepath in ipairs(filepaths) do
       if std.path.is_absolute(filepath) then
-        if filepath:sub(1, cwd_length) ~= cwd_with_slash then
+        if filepath:sub(1, cwd_with_slash_length) ~= cwd_with_slash then
           insert_absolute_filepath(filepath)
         else
-          filepath = filepath:sub(cwd_length + 1) ---@type string
+          filepath = filepath:sub(cwd_with_slash_length + 1) ---@type string
           insert_relative_filepath(filepath)
         end
       else
