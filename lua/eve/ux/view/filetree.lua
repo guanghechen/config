@@ -268,10 +268,11 @@ end
 ---@param viewtype                      eve.ux.view.treeview.ViewtypeEnum
 ---@param root_uuid                     string|nil
 ---@param included_uuid_set             table<string, boolean>|nil
+---@param included_collapsed_nodes      boolean|nil
 ---@return eve.ux.view.treeview.IRenderResult
-function M:render(bufnr, viewtype, root_uuid, included_uuid_set)
+function M:render(bufnr, viewtype, root_uuid, included_uuid_set, included_collapsed_nodes)
   self:__health__()
-  return self._treeview:render(bufnr, viewtype, root_uuid, included_uuid_set)
+  return self._treeview:render(bufnr, viewtype, root_uuid, included_uuid_set, included_collapsed_nodes)
 end
 
 ---@param uuid                          string

@@ -180,8 +180,9 @@ end
 ---@param viewtype                      eve.ux.view.treeview.ViewtypeEnum
 ---@param root_uuid                     string|nil
 ---@param included_uuid_set             table<string, boolean>|nil
+---@param included_collapsed_nodes      boolean|nil
 ---@return eve.ux.view.treeview.IRenderResult
-function M:render(bufnr, viewtype, root_uuid, included_uuid_set)
+function M:render(bufnr, viewtype, root_uuid, included_uuid_set, included_collapsed_nodes)
   self:__health__()
 
   if viewtype == "list" then
@@ -189,7 +190,7 @@ function M:render(bufnr, viewtype, root_uuid, included_uuid_set)
   end
 
   if viewtype == "tree" then
-    return self:__render_tree__(bufnr, root_uuid, included_uuid_set)
+    return self:__render_tree__(bufnr, root_uuid, included_uuid_set, included_collapsed_nodes)
   end
 
   local message = string.format("[%s#%s] The viewtype (%s) is not supported.", __module_name__, self.name, viewtype) ---@type string
@@ -693,8 +694,9 @@ end
 ---@param bufnr                         integer
 ---@param root_uuid                     string|nil
 ---@param included_uuid_set             table<string, boolean>|nil
+---@param included_collapsed_nodes      boolean|nil
 ---@return eve.ux.view.treeview.IRenderResult
-function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
+function M:__render_tree__(bufnr, root_uuid, included_uuid_set, included_collapsed_nodes)
   local uuids = {} ---@type string[]
   local indents = {} ---@type string[]
   local childline = {} ---@type integer[]
@@ -758,8 +760,10 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   if included_uuid_set == nil then
     ---@type eve.ux.view.treeview.IRenderTreeRecursive
     recursive = function(node, depth, indent, folded_depth, is_last)
-      if node.collapsed or #node.children < 1 then
-        return render(node, depth, indent, folded_depth, is_last)
+      if not included_collapsed_nodes then
+        if node.collapsed or #node.children < 1 then
+          return render(node, depth, indent, folded_depth, is_last)
+        end
       end
 
       local N = #node.children ---@type integer
@@ -796,8 +800,10 @@ function M:__render_tree__(bufnr, root_uuid, included_uuid_set)
   else
     ---@type eve.ux.view.treeview.IRenderTreeRecursive
     recursive = function(node, depth, indent, folded_depth, is_last)
-      if node.collapsed or #node.children < 1 then
-        return render(node, depth, indent, folded_depth, is_last)
+      if not included_collapsed_nodes then
+        if node.collapsed or #node.children < 1 then
+          return render(node, depth, indent, folded_depth, is_last)
+        end
       end
 
       if node.dirty_orders then

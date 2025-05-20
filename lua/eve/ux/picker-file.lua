@@ -78,6 +78,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _last_offset        integer
 ---@field protected _last_matches       std.t.IScoredMatch[]|nil
 ---@field protected _last_matched_uuids table<string, boolean>|nil
+---@field protected _last_preview_filepath  string|nil
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuids_file         string[]
@@ -537,14 +538,35 @@ function M.new(props)
           if node == nil then
             local lines = { string.format("Error: cannot retrieve node by the given lnum: %d", lnum) } ---@type string[]
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-            return string.format("Unknown lnum(%d)", lnum)
+            self._last_preview_filepath = nil
+
+            ---@cast node                 eve.ux.view.filetree.IPositionNode
+            ---@type eve.ux.picker.preview.IDrawResult
+            local result = {
+              cursorline = true,
+              number = true,
+              title = string.format("Unknown lnum(%d)", lnum),
+              wrap = true,
+              lnum = 1,
+            }
+            return result
           end
 
+          local force = node.data.filepath ~= self._last_preview_filepath ---@type boolean
+          self._last_preview_filepath = node.data.filepath ---@type string|nil
+
           if node.type == "container" then
-            ---@cast node               eve.ux.view.filetree.IDirectoryNode
-            local lines = { string.format("Directory: %s", node.data.filepath) } ---@type string[]
-            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-            return node.data.filepath
+            filetree:render(bufnr, "tree", node.uuid, nil, true)
+            ---@cast node                 eve.ux.view.filetree.IPositionNode
+            ---@type eve.ux.picker.preview.IDrawResult
+            local result = {
+              cursorline = true,
+              number = true,
+              title = node.data.filepath,
+              wrap = false,
+              lnum = 1,
+            }
+            return result
           end
 
           if node.type == "leaf" and #node.children > 0 then
@@ -552,15 +574,12 @@ function M.new(props)
           end
 
           local filepath = node.data.filepath ---@type string
-          plainfile:render(bufnr, filepath, false)
+          plainfile:render(bufnr, filepath, force)
 
           local root = filetree:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.filetree.INode|nil
           local relative_filepath = root ~= nil
               and std.path.relative(root.data.filepath or std.path.cwd(), filepath, false)
             or filepath
-          if node.type == "leaf" then
-            return filepath
-          end
 
           ---@cast node                 eve.ux.view.filetree.IPositionNode
           ---@type eve.ux.picker.preview.IDrawResult
@@ -680,6 +699,7 @@ function M.new(props)
   self._last_offset = 0
   self._last_matches = nil
   self._last_matched_uuids = nil
+  self._last_preview_filepath = nil
   self._uuid_root = nil
   self._uuids_file = {}
   self._uuids_selected = {}
@@ -739,6 +759,7 @@ function M:dispose()
   self._last_offset = nil
   self._last_matches = nil
   self._last_matched_uuids = nil
+  self._last_preview_filepath = nil
   self._uuid_root = nil
   self._uuids_file = nil
   self._uuids_selected = nil
@@ -861,6 +882,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   self._last_offset = nil
   self._last_matches = nil
   self._last_matched_uuids = nil
+  self._last_preview_filepath = nil
   self._uuid_root = uuid_cwd
   self._uuids_file = uuids_file
   self._uuids_selected = {}

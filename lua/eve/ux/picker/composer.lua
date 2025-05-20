@@ -184,6 +184,7 @@ function M.new(props)
     flags_start_index = flags_start_index,
     ---@type eve.ux.picker.result.IOnDrawed
     on_drawed = function(bufnr)
+      self:mark_preview_dirty()
       on_result_rendered(self, bufnr)
     end,
   })

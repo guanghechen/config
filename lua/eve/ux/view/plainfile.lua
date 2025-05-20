@@ -68,9 +68,20 @@ function M:render(bufnr, filepath, force)
 
   local data = self._last_data ---@type eve.ux.view.plainfile.IData|nil
   if force or data == nil or data.filepath ~= filepath then
-    local lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
     local filename = std.path.basename(filepath) ---@type string
-    local filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
+    local lines ---@type string[]
+    local filetype ---@type string
+    if std.path.is_exist_filepath(filepath) then
+      lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+      filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
+    else
+      ---@type string[]
+      lines = {
+        string.format("Error: the filepath is not exist or not a valid file"),
+        string.format("filepath: %s", filepath),
+      }
+      filetype = "text" ---@type string
+    end
 
     ---@type eve.ux.view.plainfile.IData
     data = {
@@ -79,7 +90,6 @@ function M:render(bufnr, filepath, force)
       lines = lines,
     }
     self._last_data = data
-
     force = true
   end
 
