@@ -279,6 +279,7 @@ local selector_provider_opts = {
 
 return {
   "avante.nvim",
+  commit = "eb1cd44731783024621beafe4e46204cbc9a4320",
   build = std.env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource true"
     or "make BUILD_FROM_SOURCE=true",
   cmd = {
