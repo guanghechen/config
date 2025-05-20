@@ -45,7 +45,7 @@ local picker = eve.ux.FilePicker.new({
       desc = "find-files: test case",
       callback = function()
         local kase = flag_case:snapshot() ---@type integer
-        local next_kase = kase % 2 + 1 ---@type integer
+        local next_kase = kase % 3 + 1 ---@type integer
         flag_case:next(next_kase)
       end,
       snapshot = function()
@@ -83,10 +83,10 @@ flag_case:subscribe(
 
       if kase == 3 then
         local filepaths = {
-          "/opt/me/a.txt",
-          "/bin/usr/b.txt",
+          "/f/opt/me/a.txt",
+          "/f/bin/usr/b.txt",
         }
-        picker:reset_filepaths("/", filepaths, true)
+        picker:reset_filepaths("/f", filepaths, true)
       end
 
       picker:mark_result_dirty()

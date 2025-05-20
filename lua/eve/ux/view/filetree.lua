@@ -421,7 +421,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local start_index = std.env.IS_WIN and 1 or 2 ---@type integer
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
-      filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
+      filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
       local uuid = self:__resolve_uuid__(filepath) ---@type string
       local icon, icon_hln = eve.fn.diricon(basename)
 
@@ -461,7 +461,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local pieces = std.path.split(p) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
-    local filepath = cwd ---@type string
+    local filepath = cwd == "/" and "" or cwd ---@type string
     local uuid_parent = self:__resolve_uuid__(filepath) ---@type string
     for index = 1, N, 1 do
       local basename = pieces[index] ---@type string
