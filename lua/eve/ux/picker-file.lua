@@ -38,6 +38,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public flag_fuzzy             std.collection.Observable
 ---@field public flag_regex             std.collection.Observable
 ---@field public flag_sensitive         std.collection.Observable
+---@field public flag_selected          std.collection.Observable
 ---@field public flag_viewtype          std.collection.Observable
 ---@field public flags_append           eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          eve.ux.picker.result.IFlagItemRaw[]|nil
@@ -65,6 +66,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public flag_fuzzy             std.collection.Observable
 ---@field public flag_regex             std.collection.Observable
 ---@field public flag_sensitive         std.collection.Observable
+---@field public flag_selected          std.collection.Observable
 ---@field public flag_viewtype          std.collection.Observable
 ---
 ---@field protected _disposed           boolean
@@ -108,6 +110,7 @@ function M.new(props)
   local flag_regex = props.flag_regex ---@type std.collection.Observable
   local flag_foldempty = props.flag_foldempty ---@type std.collection.Observable
   local flag_sensitive = props.flag_sensitive ---@type std.collection.Observable
+  local flag_selected = props.flag_selected ---@type std.collection.Observable
   local flag_viewtype = props.flag_viewtype ---@type std.collection.Observable
   local flags_append = props.flags_append ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
@@ -179,6 +182,17 @@ function M.new(props)
         }
       end
     end
+    flags[#flags + 1] = {
+      desc = string.format("%s: selected only", name),
+      callback = function()
+        local enabled = flag_selected:snapshot() ---@type boolean
+        flag_selected:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = flag_selected:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
+      end,
+    }
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
@@ -687,6 +701,7 @@ function M.new(props)
   self.flag_fuzzy = flag_fuzzy
   self.flag_regex = flag_regex
   self.flag_sensitive = flag_sensitive
+  self.flag_selected = flag_selected
 
   self._disposed = false
   self._filetree = filetree
@@ -706,10 +721,14 @@ function M.new(props)
 
   self._on_disposed = on_disposed
 
-  std.fn.observe({ finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
-    picker:mark_result_flags_dirty()
-  end, true)
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_viewtype }, function()
+  std.fn.observe(
+    { finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_selected, flag_viewtype },
+    function()
+      picker:mark_result_flags_dirty()
+    end,
+    true
+  )
+  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_selected, flag_viewtype }, function()
     picker:mark_result_dirty()
   end, true)
   std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
@@ -748,6 +767,7 @@ function M:dispose()
   self.flag_fuzzy = nil
   self.flag_regex = nil
   self.flag_sensitive = nil
+  self.flag_selected = nil
 
   self._filetree = nil
   self._picker = nil
@@ -929,9 +949,9 @@ function M:__match__(input)
   end
 
   local filetree = self._filetree ---@type eve.ux.view.Filetree
-  local flag_sensitive = self.flag_sensitive:snapshot() ---@type boolean
   local flag_fuzzy = self.flag_fuzzy:snapshot() ---@type boolean
   local flag_regex = self.flag_regex:snapshot() ---@type boolean
+  local flag_sensitive = self.flag_sensitive:snapshot() ---@type boolean
 
   local lines = {} ---@type string[]
   local uuids = {} ---@type string[]

@@ -11,6 +11,7 @@ local flag_foldempty = std.Observable.from_value(true)
 local flag_fuzzy = std.Observable.from_value(false)
 local flag_regex = std.Observable.from_value(false)
 local flag_sensitive = std.Observable.from_value(true)
+local flag_selected = std.Observable.from_value(false)
 local flag_viewtype = std.Observable.from_value("tree")
 local flag_case = std.Observable.from_value(3)
 
@@ -29,6 +30,7 @@ local picker = eve.ux.FilePicker.new({
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
   flag_sensitive = flag_sensitive,
+  flag_selected = flag_selected,
   flag_viewtype = flag_viewtype,
   flags_start_index = 0,
   flags_prepend = {
