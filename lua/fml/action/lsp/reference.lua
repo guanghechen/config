@@ -1,11 +1,11 @@
 local __module_name__ = "fml.action.lsp.reference" ---@type string
 
 local finder_input = std.Observable.from_value("")
-local flag_foldempty = std.Observable.from_value(true)
-local flag_fuzzy = std.Observable.from_value(false)
-local flag_regex = std.Observable.from_value(false)
-local flag_sensitive = std.Observable.from_value(true)
-local flag_viewtype = std.Observable.from_value("tree")
+local flag_foldempty = eve.context.select.lsp_reference.flag_foldempty
+local flag_fuzzy = eve.context.select.lsp_reference.flag_fuzzy
+local flag_regex = eve.context.select.lsp_reference.flag_regex
+local flag_sensitive = eve.context.select.lsp_reference.flag_case_sensitive
+local flag_viewtype = eve.context.select.lsp_reference.flag_viewtype
 
 local picker = eve.ux.FilePicker.new({
   name = "lsp:reference",

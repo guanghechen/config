@@ -9,6 +9,7 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public find_pinned_file       eve.context.select.item.data
 ---@field public find_python_venv       eve.context.select.item.data
 ---@field public find_vim_option        eve.context.select.item.data
+---@field public lsp_reference          eve.context.select.item.data
 ---@field public search_file            eve.context.select.item.data
 ---@field public select_avante          eve.context.select.item.data
 ---
@@ -25,6 +26,7 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public find_pinned_file       eve.context.select.item.state
 ---@field public find_python_venv       eve.context.select.item.state
 ---@field public find_vim_option        eve.context.select.item.state
+---@field public lsp_reference          eve.context.select.item.state
 ---@field public search_file            eve.context.select.item.state
 ---@field public select_avante          eve.context.select.item.state
 ---
@@ -56,6 +58,7 @@ function M.defaults()
     find_pinned_file = select_item.defaults(),
     find_python_venv = select_item.defaults(),
     find_vim_option = select_item.defaults(),
+    lsp_reference = select_item.defaults(),
     search_file = select_item.defaults(),
     select_avante = select_item.defaults(),
 
@@ -80,6 +83,7 @@ function M.normalize(data)
     find_pinned_file = select_item.normalize(data.find_pinned_file),
     find_python_venv = select_item.normalize(data.find_python_venv),
     find_vim_option = select_item.normalize(data.find_vim_option),
+    lsp_reference = select_item.normalize(data.lsp_reference),
     search_file = select_item.normalize(data.search_file),
     select_avante = select_item.normalize(data.select_avante),
 
@@ -112,6 +116,7 @@ function M.dump()
     find_pinned_file = select_item.dump(M.find_pinned_file),
     find_python_venv = select_item.dump(M.find_python_venv),
     find_vim_option = select_item.dump(M.find_vim_option),
+    lsp_reference = select_item.dump(M.lsp_reference),
     search_file = select_item.dump(M.search_file),
     select_avante = select_item.dump(M.select_avante),
 
@@ -134,6 +139,7 @@ function M.load(raw_data)
   M.find_pinned_file = select_item.load(M.find_pinned_file, "find_pinned_file", data.find_pinned_file)
   M.find_python_venv = select_item.load(M.find_python_venv, "find_python_venv", data.find_python_venv)
   M.find_vim_option = select_item.load(M.find_vim_option, "find_vim_option", data.find_vim_option)
+  M.lsp_reference = select_item.load(M.lsp_reference, "lsp_reference", data.lsp_reference)
   M.search_file = select_item.load(M.search_file, "search_file", data.search_file)
   M.select_avante = select_item.load(M.select_avante, "select_avante", data.select_avante)
 
@@ -153,6 +159,7 @@ M.find_highlight = select_item.load(nil, "find_highlight", _defaults.find_highli
 M.find_pinned_file = select_item.load(nil, "find_pinned_file", _defaults.find_pinned_file)
 M.find_python_venv = select_item.load(nil, "find_python_venv", _defaults.find_python_venv)
 M.find_vim_option = select_item.load(nil, "find_vim_option", _defaults.find_vim_option)
+M.lsp_reference = select_item.load(nil, "lsp_reference", _defaults.lsp_reference)
 M.search_file = select_item.load(nil, "search_file", _defaults.search_file)
 M.select_avante = select_item.load(nil, "select_avante", _defaults.select_avante)
 
@@ -170,6 +177,7 @@ M.keys = {
   "find_pinned_file",
   "find_python_venv",
   "find_vim_option",
+  "lsp_reference",
   "search_file",
   "select_avante",
 }

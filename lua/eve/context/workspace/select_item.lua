@@ -13,17 +13,17 @@
 ---@field public input_history          std.collection.history.ISerializedData
 
 ---@class eve.context.select.item.state
----@field public flag_case_sensitive    std.collection.IObservable
----@field public flag_exclude           std.collection.IObservable
----@field public flag_fuzzy             std.collection.IObservable
----@field public flag_gitignore         std.collection.IObservable
----@field public flag_regex             std.collection.IObservable
----@field public flag_selected          std.collection.IObservable
----@field public flag_foldempty         std.collection.IObservable
----@field public flag_viewtype          std.collection.IObservable
----@field public includes               std.collection.IObservable
----@field public excludes               std.collection.IObservable
----@field public input                  std.collection.IObservable
+---@field public flag_case_sensitive    std.collection.Observable
+---@field public flag_exclude           std.collection.Observable
+---@field public flag_fuzzy             std.collection.Observable
+---@field public flag_gitignore         std.collection.Observable
+---@field public flag_regex             std.collection.Observable
+---@field public flag_selected          std.collection.Observable
+---@field public flag_foldempty         std.collection.Observable
+---@field public flag_viewtype          std.collection.Observable
+---@field public includes               std.collection.Observable
+---@field public excludes               std.collection.Observable
+---@field public input                  std.collection.Observable
 ---@field public input_history          std.collection.IHistory
 
 ---@class eve.context.select.item
