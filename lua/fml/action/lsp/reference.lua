@@ -1,4 +1,33 @@
-local __module_name__ = "fml.action.lsp" ---@type string
+local __module_name__ = "fml.action.lsp.reference" ---@type string
+
+local finder_input = std.Observable.from_value("")
+local flag_foldempty = std.Observable.from_value(true)
+local flag_fuzzy = std.Observable.from_value(false)
+local flag_regex = std.Observable.from_value(false)
+local flag_sensitive = std.Observable.from_value(true)
+local flag_viewtype = std.Observable.from_value("tree")
+
+local picker = eve.ux.FilePicker.new({
+  name = "lsp:reference",
+  permanent = true,
+  title = "LSP References",
+  height = 0.80,
+  width = 0.85,
+
+  finder_input = finder_input,
+  finder_multiline = false,
+
+  flag_foldempty = flag_foldempty,
+  flag_fuzzy = flag_fuzzy,
+  flag_regex = flag_regex,
+  flag_sensitive = flag_sensitive,
+  flag_viewtype = flag_viewtype,
+  flags_start_index = 1,
+
+  on_close = function()
+    finder_input:next("")
+  end,
+})
 
 ---@param method                        string
 ---@param additional_params             table<string, any>
@@ -124,81 +153,39 @@ end
 ---@param title                         string
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@return fun(): nil
-local function create_jump_or_list(title, method, additional_params)
-  local finder_input = std.Observable.from_value("")
-  local flag_foldempty = std.Observable.from_value(true)
-  local flag_fuzzy = std.Observable.from_value(false)
-  local flag_regex = std.Observable.from_value(false)
-  local flag_sensitive = std.Observable.from_value(true)
-  local flag_viewtype = std.Observable.from_value("tree")
-
-  local picker = eve.ux.FilePicker.new({
-    name = string.format("lsp-reference:%s", method),
-    permanent = true,
-    title = title,
-    height = 0.80,
-    width = 0.85,
-
-    finder_input = finder_input,
-    finder_multiline = false,
-
-    flag_foldempty = flag_foldempty,
-    flag_fuzzy = flag_fuzzy,
-    flag_regex = flag_regex,
-    flag_sensitive = flag_sensitive,
-    flag_viewtype = flag_viewtype,
-    flags_start_index = 1,
-
-    on_close = function()
-      finder_input:next("")
-    end,
-  })
-
-  local function jump_or_list()
-    fetch_data(method, additional_params, function(ok, rootdir, filepaths)
-      if ok and rootdir ~= nil and filepaths ~= nil then
-        picker:reset_filepaths(rootdir, filepaths, true)
-        picker:mark_result_dirty()
-        picker:focus()
-      end
-    end)
-  end
-  return jump_or_list
+---@return nil
+local function focus(title, method, additional_params)
+  fetch_data(method, additional_params, function(ok, rootdir, filepaths)
+    if ok and rootdir ~= nil and filepaths ~= nil then
+      picker.finder:set_title(title)
+      picker:reset_filepaths(rootdir, filepaths, true)
+      picker:mark_result_dirty()
+      picker:focus()
+    end
+  end)
 end
-
-local jump_or_lists = {
-  references = create_jump_or_list(
-    "LSP References",
-    "textDocument/references",
-    { context = { includeDeclaration = true } }
-  ),
-  definitions = create_jump_or_list("LSP Definitions", "textDocument/definition", {}),
-  type_definitions = create_jump_or_list("LSP Type Definitions", "textDocument/typeDefinition", {}),
-  implementations = create_jump_or_list("LSP Implementations", "textDocument/implementation", {}),
-}
 
 ---@class fml.action.lsp
 local M = {}
 
 ---@return nil
 function M.goto_definitions()
-  jump_or_lists.definitions()
+  focus("LSP Definitions", "textDocument/definition", {})
 end
 
 ---@return nil
 function M.goto_implementations()
-  jump_or_lists.implementations()
+  focus("LSP Implementations", "textDocument/implementation", {})
 end
 
 ---@return nil
 function M.goto_references()
-  jump_or_lists.references()
+  focus("LSP References", "textDocument/references", { context = { includeDeclaration = true } })
 end
 
 ---@return nil
 function M.goto_type_definitions()
-  jump_or_lists.type_definitions()
+  focus("LSP Type Definitions", "textDocument/typeDefinition", {})
 end
 
 return M

@@ -57,6 +57,10 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public name                   string
 ---@field public title                  string
 ---
+---@field public finder                 eve.ux.PickerFinder
+---@field public result                 eve.ux.PickerResult
+---@field public preview                eve.ux.PickerPreview
+---
 ---@field public flag_foldempty         std.collection.Observable
 ---@field public flag_fuzzy             std.collection.Observable
 ---@field public flag_regex             std.collection.Observable
@@ -656,6 +660,10 @@ function M.new(props)
   self.uuid = uuid
   self.name = name
 
+  self.finder = picker.finder
+  self.result = picker.result
+  self.preview = picker.preview
+
   self.flag_foldempty = flag_foldempty
   self.flag_fuzzy = flag_fuzzy
   self.flag_regex = flag_regex
@@ -711,6 +719,10 @@ function M:dispose()
   self._retriever:dispose()
   self._scheduler_match:dispose()
   self._picker:dispose()
+
+  self.finder = nil
+  self.result = nil
+  self.preview = nil
 
   self.flag_foldempty = nil
   self.flag_fuzzy = nil
