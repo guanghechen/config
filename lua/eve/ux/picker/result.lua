@@ -262,7 +262,7 @@ function M.new(props)
 
       local lnums_selected = result.lnums_selected ---@type integer[]|nil
       local lnum_total = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-      local lnum_current = math.max(0, math.min(lnum_total, result.lnum_current or _lnum_current:snapshot())) ---@type integer
+      local lnum_current = math.min(lnum_total, math.max(1, result.lnum_current or _lnum_current:snapshot())) ---@type integer
       local lnum_present = result.lnum_present or -1 ---@type integer
       local lnum_selected_set = {} ---@type table<integer, true>
       if lnums_selected ~= nil then
