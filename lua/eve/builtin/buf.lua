@@ -105,6 +105,7 @@ function M.loadfile(filepath)
 
     vim.bo[bufnr].buflisted = true
     vim.bo[bufnr].buftype = ""
+    vim.bo[bufnr].swapfile = false
     local ok, error = pcall(vim.fn.bufload, bufnr)
     if not ok then
       std.reporter.error({
@@ -120,6 +121,7 @@ function M.loadfile(filepath)
       return nil
     end
 
+    vim.bo[bufnr].swapfile = true
     -- vim.api.nvim_exec_autocmds("FileReadPost", { buffer = bufnr })
     -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = bufnr })
     return bufnr
