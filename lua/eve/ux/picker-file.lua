@@ -434,6 +434,7 @@ function M.new(props)
             end
           end
         end
+        picker:mark_result_dirty()
         return
       end
 
@@ -444,6 +445,7 @@ function M.new(props)
           uuids_selected[node.uuid] = true
         end
         picker.result:toggle_selected(lnum)
+        picker:mark_result_dirty()
         return
       end
     end,
@@ -527,7 +529,13 @@ function M.new(props)
     ---@type eve.ux.picker.result.IDraw
     result_render = function(bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
-      local result = filetree:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
+      local result ---@type eve.ux.view.treeview.IRenderResult
+      if flag_selected:snapshot() then
+        local visible_uuids = filetree:calc_include_uuid_set(vim.tbl_keys(self._uuids_selected)) ---@type table<string, boolean>
+        result = filetree:render(bufnr, viewtype, self._uuid_root, visible_uuids) ---@type eve.ux.view.treeview.IRenderResult
+      else
+        result = filetree:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
+      end
       indents = result.indents ---@type string[]
       retriever:attach(bufnr, result.uuids, result.childline)
 
