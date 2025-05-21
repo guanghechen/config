@@ -1,5 +1,8 @@
 fish_vi_key_bindings
 
+# Reset fish_user_paths (prevent duplication)
+set -U fish_user_paths
+
 # Filter other users path (which could be inherit by `sudo su`)
 if test (uname) = "Darwin"
   set -l current_user (whoami)
