@@ -499,8 +499,10 @@ end
 
 ---@param winnr_source                  integer|nil
 ---@param filepaths                     string[]
+---@param lnum                          ?integer
+---@param col                           ?integer
 ---@return nil
-function M.open_filepaths(winnr_source, filepaths)
+function M.open_filepaths(winnr_source, filepaths, lnum, col)
   if #filepaths < 1 then
     return
   end
@@ -528,6 +530,10 @@ function M.open_filepaths(winnr_source, filepaths)
 
   vim.schedule(function()
     vim.cmd.stopinsert()
+
+    if lnum ~= nil and col ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, col })
+    end
   end)
 end
 

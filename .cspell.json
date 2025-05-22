@@ -380,6 +380,7 @@
     "keymaps",
     "languagetree",
     "lastchild",
+    "lastnode",
     "laststatus",
     "lazygit",
     "lazypath",

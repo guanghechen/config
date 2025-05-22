@@ -3,7 +3,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@alias eve.ux.view.treeview.NodeTypeEnum
 ---| "container"
 ---| "leaf"
----| "position"
+---| "location"
 
 ---@alias eve.ux.view.treeview.ViewtypeEnum
 ---| "tree"
@@ -600,7 +600,7 @@ function M:__render_list__(bufnr, root_uuid, included_uuid_set)
     end
 
     local indent = INDENT_COMMON ---@type string
-    if node.type == "position" then
+    if node.type == "location" then
       indent = indent .. (is_last and "╰─" or "├─") ---@type string
     end
 

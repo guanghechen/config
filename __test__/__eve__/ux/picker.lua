@@ -13,7 +13,7 @@ local flag_regex = std.Observable.from_value(false)
 local flag_sensitive = std.Observable.from_value(true)
 local flag_selected = std.Observable.from_value(false)
 local flag_viewtype = std.Observable.from_value("tree")
-local flag_case = std.Observable.from_value(3)
+local flag_case = std.Observable.from_value(1)
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",

@@ -6,6 +6,9 @@ local __module_name__ = "eve.ux.picker.composer" ---@type string
 ---| "preview"
 ---| "result"
 
+---@alias eve.ux.picker.composer.IOnCancel
+---| fun(): nil
+
 ---@alias eve.ux.picker.composer.IOnClosed
 ---| fun(self: eve.ux.PickerComposer): nil
 
@@ -99,6 +102,7 @@ local __highlights__ = {
 ---@field public preview_keymaps        ?std.t.IKeymap[]
 ---@field public preview_render         ?eve.ux.picker.preview.IDraw
 ---
+---@field public on_cancel              ?eve.ux.picker.composer.IOnCancel
 ---@field public on_closed              ?eve.ux.picker.composer.IOnClosed
 ---@field public on_disposed            ?eve.ux.picker.composer.IOnDisposed
 ---@field public on_focused             ?eve.ux.picker.composer.IOnFocused
@@ -122,6 +126,7 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
+---@field protected _on_cancel          eve.ux.picker.composer.IOnCancel
 ---@field protected _on_closed          eve.ux.picker.composer.IOnClosed
 ---@field protected _on_disposed        eve.ux.picker.composer.IOnDisposed
 ---@field protected _on_focused         eve.ux.picker.composer.IOnFocused
@@ -155,6 +160,7 @@ function M.new(props)
   local preview_keymaps = props.preview_keymaps or {} ---@type std.t.IKeymap[]
   local preview_render = props.preview_render ---@type eve.ux.picker.preview.IDraw|nil
 
+  local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.picker.composer.IOnCancel
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.IOnClosed
   local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker.composer.IOnDisposed
   local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker.composer.IOnFocused
@@ -218,6 +224,7 @@ function M.new(props)
   self._recommended_height = recommended_height
   self._recommended_width = recommended_width
 
+  self._on_cancel = on_cancel ---@type eve.ux.picker.composer.IOnCancel
   self._on_closed = on_closed ---@type eve.ux.picker.composer.IOnClosed
   self._on_disposed = on_disposed ---@type eve.ux.picker.composer.IOnDisposed
   self._on_focused = on_focused ---@type eve.ux.picker.composer.IOnFocused
@@ -278,6 +285,7 @@ function M:dispose()
   self._recommended_height = nil
   self._recommended_width = nil
 
+  self._on_cancel = nil
   self._on_closed = nil
   self._on_disposed = nil
   self._on_focused = nil
@@ -620,6 +628,15 @@ function M:__resolve_builtin_common_keymaps__(flags, flags_start_index)
       desc = "picker: close",
       callback = function()
         self:close()
+        local ok, error = pcall(self._on_cancel)
+        if not ok then
+          std.reporter.error({
+            from = string.format("%s | %s", self.name, __module_name__),
+            subject = "close",
+            message = "Failed to call on_cancel",
+            details = { error = error },
+          })
+        end
       end,
     },
 

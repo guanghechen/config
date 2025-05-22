@@ -9,7 +9,7 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 ---@alias eve.ux.view.filetree.INode
 ---| eve.ux.view.filetree.IDirectoryNode
 ---| eve.ux.view.filetree.IFileNode
----| eve.ux.view.filetree.IPositionNode
+---| eve.ux.view.filetree.ILocationNode
 
 ---@alias eve.ux.view.filetree.IDirectoryNodeRenderer
 ---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IDirectoryNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer, depth: integer, folded_depth: integer): eve.ux.view.treeview.INodeRenderResult
@@ -18,13 +18,13 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 ---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IFileNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.filetree.IPositionNodeRenderer
----| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IPositionNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
+---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.ILocationNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer, depth: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.filetree.IFileNodeFlattenRenderer
 ---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IFileNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@alias eve.ux.view.filetree.IPositionNodeFlattenRenderer
----| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.IPositionNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer): eve.ux.view.treeview.INodeRenderResult
+---| fun(self: eve.ux.view.Filetree, node: eve.ux.view.filetree.ILocationNode, root: eve.ux.view.filetree.IDirectoryNode, lnum: integer): eve.ux.view.treeview.INodeRenderResult
 
 ---@class eve.ux.view.filetree.IDirectoryNodeData
 ---@field public basename               string
@@ -58,8 +58,8 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 ---@field public children               eve.ux.view.filetree.INode[]
 ---@field public data                   eve.ux.view.filetree.IFileNodeData
 
----@class eve.ux.view.filetree.IPositionNode : eve.ux.view.treeview.INode
----@field public type                   "position"
+---@class eve.ux.view.filetree.ILocationNode : eve.ux.view.treeview.INode
+---@field public type                   "location"
 ---@field public parent                 eve.ux.view.filetree.IFileNode
 ---@field public data                   eve.ux.view.filetree.IPositionNodeData
 
@@ -125,17 +125,17 @@ function M.new(props)
       ---@cast root                     eve.ux.view.filetree.IDirectoryNode
 
       if node.type == "container" then
-        ---@cast node                     eve.ux.view.filetree.IDirectoryNode
+        ---@cast node                   eve.ux.view.filetree.IDirectoryNode
         return render_directory_node(self, node, root, lnum, depth, folded_depth)
       end
 
       if node.type == "leaf" then
-        ---@cast node                     eve.ux.view.filetree.IFileNode
+        ---@cast node                   eve.ux.view.filetree.IFileNode
         return render_file_node(self, node, root, lnum, depth)
       end
 
-      if node.type == "position" then
-        ---@cast node                     eve.ux.view.filetree.IPositionNode
+      if node.type == "location" then
+        ---@cast node                   eve.ux.view.filetree.ILocationNode
         return render_position_node(self, node, root, lnum, depth)
       end
 
@@ -146,12 +146,12 @@ function M.new(props)
       ---@cast root                     eve.ux.view.filetree.IDirectoryNode
 
       if node.type == "leaf" then
-        ---@cast node                     eve.ux.view.filetree.IFileNode
+        ---@cast node                   eve.ux.view.filetree.IFileNode
         return flatten_render_file_node(self, node, root, lnum)
       end
 
-      if node.type == "position" then
-        ---@cast node                     eve.ux.view.filetree.IPositionNode
+      if node.type == "location" then
+        ---@cast node                   eve.ux.view.filetree.ILocationNode
         return flatten_render_position_node(self, node, root, lnum)
       end
 
@@ -168,19 +168,19 @@ function M.new(props)
       end
 
       if left.type == "container" then
-        ---@cast left                       eve.ux.view.filetree.IDirectoryNode
-        ---@cast right                      eve.ux.view.filetree.IDirectoryNode
+        ---@cast left                   eve.ux.view.filetree.IDirectoryNode
+        ---@cast right                  eve.ux.view.filetree.IDirectoryNode
         return left.data.basename < right.data.basename
       end
 
       if left.type == "leaf" then
-        ---@cast left                       eve.ux.view.filetree.IFileNode
-        ---@cast right                      eve.ux.view.filetree.IFileNode
+        ---@cast left                   eve.ux.view.filetree.IFileNode
+        ---@cast right                  eve.ux.view.filetree.IFileNode
         return left.data.basename < right.data.basename
       end
 
-      ---@cast left                       eve.ux.view.filetree.IPositionNode
-      ---@cast right                      eve.ux.view.filetree.IPositionNode
+      ---@cast left                     eve.ux.view.filetree.ILocationNode
+      ---@cast right                    eve.ux.view.filetree.ILocationNode
       if left.data.lnum ~= right.data.lnum then
         return left.data.lnum < right.data.lnum
       end
@@ -339,7 +339,7 @@ function M:insert_position(fileuuid, lnum, col, data)
     col = col,
     data = data,
   }
-  treeview:insert(uuid, fileuuid, "position", nodedata, false)
+  treeview:insert(uuid, fileuuid, "location", nodedata, false)
   self._parents_of_position[fileuuid] = true
   return self
 end
@@ -512,7 +512,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
           lnum = lnum,
           col = col,
         }
-        treeview:insert(uuid, fileuuid, "position", nodedata, false)
+        treeview:insert(uuid, fileuuid, "location", nodedata, false)
         self._parents_of_position[fileuuid] = true
       end
     end

@@ -4,6 +4,9 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@alias eve.ux.picker_file.IOnClosed
 ---| fun(self: eve.ux.FilePicker): nil
 
+---@alias eve.ux.picker_file.IOnConfirm
+---| fun(self: eve.ux.FilePicker, selected_items: eve.ux.picker_file.ISelectedItem[]|nil): nil
+
 ---@alias eve.ux.picker_file.IOnDisposed
 ---| fun(): nil
 
@@ -15,6 +18,10 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---
 ---@alias eve.ux.picker_file.IOnRefresh
 ---| fun(self: eve.ux.FilePicker, force: boolean): nil
+
+---@class eve.ux.picker_file.ISelectedItem
+---@field public filepath               string
+---@field public locations              [integer, integer?][]
 
 ---@class eve.ux.picker_file.actions
 ---@field public on_filetree_open       fun(): nil
@@ -47,6 +54,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public finder_multiline       ?boolean
 ---
 ---@field public on_closed              ?eve.ux.picker_file.IOnClosed
+---@field public on_confirm             ?eve.ux.picker_file.IOnConfirm
 ---@field public on_disposed            ?eve.ux.picker_file.IOnDisposed
 ---@field public on_focused             ?eve.ux.picker_file.IOnFocused
 ---@field public on_hidden              ?eve.ux.picker_file.IOnHidden
@@ -85,7 +93,8 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _uuids_file         string[]
 ---@field protected _uuids_selected     table<string, true>
 ---
----@field protected _on_disposed         eve.ux.picker_file.IOnDisposed
+---@field protected _on_confirm         eve.ux.picker_file.IOnConfirm|nil
+---@field protected _on_disposed        eve.ux.picker_file.IOnDisposed
 local M = {}
 M.__index = M
 
@@ -116,6 +125,7 @@ function M.new(props)
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker_file.IOnClosed
+  local on_confirm = props.on_confirm ---@type eve.ux.picker_file.IOnConfirm|nil
   local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker_file.IOnDisposed
   local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker_file.IOnFocused
   local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker_file.IOnHidden
@@ -280,89 +290,23 @@ function M.new(props)
         return
       end
 
-      local picker = self._picker ---@type eve.ux.PickerComposer
-      if node.type == "container" then
-        filetree:collapse(node.uuid, "toggle", false)
-        picker:mark_result_dirty()
-        return
-      end
-
-      if node.type == "leaf" and node.collapsed then
-        filetree:collapse(node.uuid, "expand", false)
-        picker:mark_result_dirty()
-        return
-      end
-
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-      if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-        vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+      if on_confirm == nil then
+        self:__open_node__(node)
       else
-        winnr_sourcefile = nil
+        self:__resolve_confirmation__(node)
       end
-
-      picker:close()
-      eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
     end,
     on_filetree_toggle = function()
       local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-      if node == nil then
-        return
+      if node ~= nil then
+        self:__toggle_node__(node, false)
       end
-
-      local picker = self._picker ---@type eve.ux.PickerComposer
-      if node.type == "container" then
-        filetree:collapse(node.uuid, "toggle", false)
-        picker:mark_result_dirty()
-        return
-      end
-
-      if node.type == "leaf" and #node.children > 0 then
-        filetree:collapse(node.uuid, "toggle", false)
-        picker:mark_result_dirty()
-        return
-      end
-
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-      if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-        vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-      else
-        winnr_sourcefile = nil
-      end
-
-      picker:close()
-      eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
     end,
     on_filetree_toggle_recursively = function()
       local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
-      if node == nil then
-        return
+      if node ~= nil then
+        self:__toggle_node__(node, true)
       end
-
-      local picker = self._picker ---@type eve.ux.PickerComposer
-      if node.type == "container" then
-        filetree:collapse(node.uuid, "toggle", true)
-        picker:mark_result_dirty()
-        return
-      end
-
-      if node.type == "leaf" and #node.children > 0 then
-        filetree:collapse(node.uuid, "toggle", false)
-        picker:mark_result_dirty()
-        return
-      end
-
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-      if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-        vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-      else
-        winnr_sourcefile = nil
-      end
-
-      picker:close()
-      eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
     end,
     on_toggle_selection = function()
       local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
@@ -533,7 +477,7 @@ function M.new(props)
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
             self._last_preview_filepath = nil
 
-            ---@cast node                 eve.ux.view.filetree.IPositionNode
+            ---@cast node                 eve.ux.view.filetree.ILocationNode
             ---@type eve.ux.picker.preview.IDrawResult
             local result = {
               cursorline = true,
@@ -550,7 +494,7 @@ function M.new(props)
 
           if node.type == "container" then
             filetree:render(bufnr, "tree", node.uuid, nil, true)
-            ---@cast node                 eve.ux.view.filetree.IPositionNode
+            ---@cast node                 eve.ux.view.filetree.ILocationNode
             ---@type eve.ux.picker.preview.IDrawResult
             local result = {
               cursorline = true,
@@ -574,7 +518,7 @@ function M.new(props)
               and std.path.relative(root.data.filepath or std.path.cwd(), filepath, false)
             or filepath
 
-          ---@cast node                 eve.ux.view.filetree.IPositionNode
+          ---@cast node                 eve.ux.view.filetree.ILocationNode
           ---@type eve.ux.picker.preview.IDrawResult
           local result = {
             cursorline = true,
@@ -588,6 +532,11 @@ function M.new(props)
         end
       or nil,
 
+    on_cancel = function()
+      if on_confirm ~= nil then
+        on_confirm(self, nil)
+      end
+    end,
     on_closed = function()
       on_closed(self)
     end,
@@ -698,6 +647,7 @@ function M.new(props)
   self._uuids_file = {}
   self._uuids_selected = {}
 
+  self._on_confirm = on_confirm
   self._on_disposed = on_disposed
 
   std.fn.observe(
@@ -762,6 +712,9 @@ function M:dispose()
   self._uuid_root = nil
   self._uuids_file = nil
   self._uuids_selected = nil
+
+  self._on_confirm = nil
+  self._on_disposed = nil
 
   vim.schedule(function()
     pcall(on_dispose)
@@ -1026,6 +979,159 @@ function M:__match__(input)
   self._last_offset = offset
   self._last_matches = matches
   self._last_matched_uuids = filetree:calc_include_uuid_set(matched_uuids)
+end
+
+---@param node                          eve.ux.view.filetree.INode
+---@return nil
+function M:__open_node__(node)
+  local filetree = self._filetree ---@type eve.ux.view.Filetree
+  local picker = self._picker ---@type eve.ux.PickerComposer
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+    vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+  else
+    winnr_sourcefile = nil
+  end
+
+  local uuids_selected = self._uuids_selected ---@type table<string, true>
+  local filepath_set = {} ---@type table<string, eve.ux.view.filetree.IFileNode|eve.ux.view.filetree.ILocationNode>
+  for uuid in pairs(uuids_selected) do
+    local o = filetree:retrieve_by_uuid(uuid) ---@type eve.ux.view.filetree.INode|nil
+    if o ~= nil then
+      if o.type == "leaf" then
+        filepath_set[o.data.filepath] = filepath_set[o.data.filepath] or o
+      elseif o.type == "location" then
+        filepath_set[o.data.filepath] = o
+      end
+    end
+  end
+  local filepaths = {} ---@type string[]
+  for filepath in pairs(filepath_set) do
+    filepaths[#filepaths + 1] = filepath
+  end
+
+  if #filepaths > 0 then
+    local last_filepath = filepaths[#filepaths] ---@type string
+    local lastnode = filepath_set[last_filepath] ---@type eve.ux.view.filetree.IFileNode|eve.ux.view.filetree.ILocationNode
+
+    picker:close()
+    eve.win.open_filepaths(winnr_sourcefile, filepaths, lastnode.data.lnum, lastnode.data.col)
+    return
+  end
+
+  if node.type == "container" then
+    filetree:collapse(node.uuid, "toggle", false)
+    picker:mark_result_dirty()
+    return
+  end
+
+  if node.type == "leaf" and node.collapsed then
+    filetree:collapse(node.uuid, "expand", false)
+    picker:mark_result_dirty()
+    return
+  end
+
+  picker:close()
+  eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
+end
+
+---@param node                          eve.ux.view.filetree.INode
+---@return eve.ux.picker_file.ISelectedItem[]|nil
+function M:__resolve_confirmation__(node)
+  local filetree = self._filetree ---@type eve.ux.view.Filetree
+  local picker = self._picker ---@type eve.ux.PickerComposer
+  local root = filetree:retrieve_by_uuid(self._uuid_root) ---@type eve.ux.view.filetree.INode|nil
+  local uuids_selected = self._uuids_selected ---@type table<string, true>
+
+  local item_map = {} ---@type table<string, eve.ux.picker_file.ISelectedItem[]>
+  for uuid in pairs(uuids_selected) do
+    local o = filetree:retrieve_by_uuid(uuid) ---@type eve.ux.view.filetree.INode|nil
+    if o ~= nil and (o.type == "leaf" or o.type == "location") then
+      local item = item_map[o.data.filepath] ---@type eve.ux.picker_file.ISelectedItem[]|nil
+      if item == nil then
+        local filepath = root ~= nil and std.path.relative(root.data.filepath or std.path.cwd(), o.data.filepath, false)
+          or o.data.filepath
+
+        item = { filepath = filepath, locations = {} } ---@type eve.ux.picker_file.ISelectedItem
+        item_map[filepath] = item
+      end
+
+      if o.data.lnum ~= nil then
+        item.locations[#item.locations + 1] = {
+          lnum = o.data.lnum,
+          col = o.data.col,
+        }
+      end
+    end
+  end
+  local items = {} ---@type eve.ux.picker_file.ISelectedItem[]
+  for _, item in pairs(item_map) do
+    items[#items + 1] = item
+  end
+
+  if #items > 0 then
+    picker:close()
+    self._on_confirm(self, items)
+    return
+  end
+
+  if node.type == "container" then
+    filetree:collapse(node.uuid, "toggle", false)
+    picker:mark_result_dirty()
+    return
+  end
+
+  if node.type == "leaf" and node.collapsed then
+    filetree:collapse(node.uuid, "expand", false)
+    picker:mark_result_dirty()
+    return
+  end
+
+  local filepath = root ~= nil and std.path.relative(root.data.filepath or std.path.cwd(), node.data.filepath, false)
+    or node.data.filepath
+
+  local item = { filepath = filepath, locations = {} } ---@type eve.ux.picker_file.ISelectedItem
+  if node.data.lnum ~= nil then
+    item.locations[#item.locations + 1] = {
+      lnum = node.data.lnum,
+      col = node.data.col,
+    }
+  end
+
+  picker:close()
+  self._on_confirm(self, items)
+end
+
+---@param node                          eve.ux.view.filetree.INode
+---@param recursively                   boolean
+---@return nil
+function M:__toggle_node__(node, recursively)
+  local filetree = self._filetree ---@type eve.ux.view.Filetree
+  local picker = self._picker ---@type eve.ux.PickerComposer
+  if node.type == "container" then
+    filetree:collapse(node.uuid, "toggle", recursively)
+    picker:mark_result_dirty()
+    return
+  end
+
+  if node.type == "leaf" and #node.children > 0 then
+    filetree:collapse(node.uuid, "toggle", false)
+    picker:mark_result_dirty()
+    return
+  end
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+    vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+  else
+    winnr_sourcefile = nil
+  end
+
+  picker:close()
+  eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
 end
 
 return M
