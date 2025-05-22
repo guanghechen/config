@@ -117,7 +117,6 @@ function M.load(raw_data)
       end
     end
 
-    eve.tab.set_type(tabnr, tab_data.tabtype)
     eve.tab.refresh_bufs(meta.bufs)
     eve.tab.rearrange_bufs(meta.bufs)
     ::continue::
