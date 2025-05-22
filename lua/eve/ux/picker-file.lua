@@ -399,7 +399,6 @@ function M.new(props)
             end
           end
         end
-        picker:mark_result_dirty()
         return
       end
 
@@ -410,7 +409,6 @@ function M.new(props)
           uuids_selected[node.uuid] = true
         end
         picker.result:toggle_selected(lnum)
-        picker:mark_result_dirty()
         return
       end
     end,
