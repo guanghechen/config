@@ -1122,16 +1122,18 @@ function M:__toggle_node__(node, recursively)
     return
   end
 
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-    vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-  else
-    winnr_sourcefile = nil
-  end
+  if self._on_confirm == nil then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+    if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+      vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+    else
+      winnr_sourcefile = nil
+    end
 
-  picker:close()
-  eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
+    picker:close()
+    eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
+  end
 end
 
 return M
