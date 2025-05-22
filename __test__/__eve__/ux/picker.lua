@@ -6,7 +6,13 @@ require("plenary.reload").reload_module("eve.ux.picker-file")
 require("plenary.reload").reload_module("eve.ux.view.treeview")
 require("plenary.reload").reload_module("eve.ux.view.filetree")
 
+local name = "find-files" ---@type string
 local finder_input = std.Observable.from_value("")
+local finder_input_history = std.InputHistory.new({
+  name = name,
+  capacity = 5,
+  input = finder_input,
+})
 local flag_foldempty = std.Observable.from_value(true)
 local flag_fuzzy = std.Observable.from_value(false)
 local flag_regex = std.Observable.from_value(false)
@@ -17,13 +23,14 @@ local flag_case = std.Observable.from_value(1)
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",
-  name = "find-files",
+  name = name,
   permanent = false,
   title = "Find files",
   height = 0.80,
   width = 0.85,
 
   finder_input = finder_input,
+  finder_input_history = finder_input_history,
   finder_multiline = false,
 
   flag_foldempty = flag_foldempty,

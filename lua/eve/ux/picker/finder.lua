@@ -10,14 +10,14 @@ local __module_name__ = "eve.ux.picker.finder" ---@type string
 ---@class eve.ux.IPickerFinderProps
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
----@field public keyword                std.collection.Observable
+---@field public input                  std.collection.Observable
 ---@field public multiline              boolean
 ---@field public title                  string
 
 ---@class eve.ux.PickerFinder
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
----@field public keyword                std.collection.Observable
+---@field public input                  std.collection.Observable
 ---@field public linecount              std.collection.Observable
 ---@field public multiline              boolean
 ---@field public title                  string
@@ -33,7 +33,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
-  local keyword = props.keyword ---@type std.collection.Observable
+  local input = props.input ---@type std.collection.Observable
   local linecount = std.Observable.from_value(0) ---@type std.collection.Observable
   local multiline = props.multiline ---@type boolean
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
@@ -41,7 +41,7 @@ function M.new(props)
   local self = setmetatable({}, M)
   self.name = name
   self.keymaps = keymaps
-  self.keyword = keyword
+  self.input = input
   self.linecount = linecount
   self.multiline = multiline
   self.title = title
@@ -83,7 +83,7 @@ function M:dispose()
     end
   end)
 
-  self.keyword = nil
+  self.input = nil
   self.keymaps = nil
   self.linecount = nil
   self.multiline = nil
@@ -148,7 +148,7 @@ function M:create_buf()
 
   eve.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
-  local keyword = self.keyword:snapshot() ---@type string
+  local keyword = self.input:snapshot() ---@type string
   local initial_lines = self.multiline and { keyword } or vim.split(keyword, "\n", { plain = true }) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, initial_lines)
   self:__set_prompt__(bufnr)
@@ -158,7 +158,7 @@ function M:create_buf()
     callback = function()
       local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
       local content = table.concat(lines, "\n") ---@type string
-      self.keyword:next(content)
+      self.input:next(content)
       self.linecount:next(#lines)
       self:__set_prompt__(bufnr)
     end,
@@ -279,7 +279,7 @@ function M:set_content(content)
     return
   end
 
-  if content == self.keyword:snapshot() then
+  if content == self.input:snapshot() then
     return
   end
 
@@ -288,7 +288,7 @@ function M:set_content(content)
     lines = { "" } ---@type string[]
   end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  self.keyword:next(content)
+  self.input:next(content)
   self.linecount:next(#lines)
   self:__set_prompt__(bufnr)
 end

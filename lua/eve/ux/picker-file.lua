@@ -51,6 +51,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public finder_input           std.collection.Observable
+---@field public finder_input_history   ?std.collection.InputHistory
 ---@field public finder_multiline       ?boolean
 ---
 ---@field public on_closed              ?eve.ux.picker_file.IOnClosed
@@ -112,6 +113,7 @@ function M.new(props)
   local width = props.width ---@type number|nil
 
   local finder_input = props.finder_input ---@type std.collection.Observable
+  local finder_input_history = props.finder_input_history ---@type std.collection.InputHistory|nil
   local finder_multiline = props.finder_multiline ---@type boolean|nil
 
   local flag_fuzzy = props.flag_fuzzy ---@type std.collection.Observable
@@ -436,6 +438,7 @@ function M.new(props)
     width = width,
 
     finder_input = finder_input,
+    finder_input_history = finder_input_history,
     finder_keymaps = finder_keymaps,
     finder_multiline = finder_multiline,
     finder_title = title,

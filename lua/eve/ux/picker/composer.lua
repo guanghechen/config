@@ -92,6 +92,7 @@ local __highlights__ = {
 ---@field public width                  ?number
 ---
 ---@field public finder_input           std.collection.Observable
+---@field public finder_input_history   ?std.collection.InputHistory
 ---@field public finder_keymaps         ?std.t.IKeymap[]
 ---@field public finder_multiline       ?boolean
 ---@field public finder_title           string
@@ -126,6 +127,8 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
+---@field protected _finder_input_history ?std.collection.InputHistory
+---
 ---@field protected _on_cancel          eve.ux.picker.composer.IOnCancel
 ---@field protected _on_closed          eve.ux.picker.composer.IOnClosed
 ---@field protected _on_disposed        eve.ux.picker.composer.IOnDisposed
@@ -150,6 +153,7 @@ function M.new(props)
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
   local finder_input = props.finder_input ---@type std.collection.Observable
+  local finder_input_history = props.finder_input_history ---@type std.collection.InputHistory
   local finder_keymaps = props.finder_keymaps or {} ---@type std.t.IKeymap[]
   local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
@@ -169,13 +173,21 @@ function M.new(props)
   local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.picker.composer.IOnPreviewRendered
   local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.picker.composer.IOnResultRendered
 
+  local has_finder_input_history = finder_input_history ~= nil ---@type boolean
+
   local self = setmetatable({}, M)
 
   ---@type eve.ux.PickerFinder
   local finder = eve.ux.PickerFinder.new({
     name = name,
-    keymaps = self:__resolve_finder__keymaps__(flags, flags_start_index, finder_multiline, finder_keymaps),
-    keyword = finder_input,
+    keymaps = self:__resolve_finder__keymaps__(
+      flags,
+      flags_start_index,
+      finder_multiline,
+      has_finder_input_history,
+      finder_keymaps
+    ),
+    input = finder_input,
     multiline = finder_multiline,
     title = finder_title,
   })
@@ -184,7 +196,15 @@ function M.new(props)
   local result = eve.ux.PickerResult.new({
     uuid = uuid,
     name = name,
-    draw = result_render,
+    draw = function(bufnr)
+      if finder_input_history ~= nil then
+        local keyword = finder_input:snapshot() ---@type string
+        if keyword ~= nil and vim.trim(keyword) ~= "" then
+          finder_input_history:push(keyword)
+        end
+      end
+      return result_render(bufnr)
+    end,
     keymaps = self:__resolve_result__keymaps__(flags, flags_start_index, result_keymaps),
     flags = flags,
     flags_start_index = flags_start_index,
@@ -223,6 +243,8 @@ function M.new(props)
   self._pane_last_focused = pane_last_focused
   self._recommended_height = recommended_height
   self._recommended_width = recommended_width
+
+  self._finder_input_history = finder_input_history
 
   self._on_cancel = on_cancel ---@type eve.ux.picker.composer.IOnCancel
   self._on_closed = on_closed ---@type eve.ux.picker.composer.IOnClosed
@@ -284,6 +306,8 @@ function M:dispose()
   self._pane_last_focused = nil
   self._recommended_height = nil
   self._recommended_width = nil
+
+  self._finder_input_history = nil
 
   self._on_cancel = nil
   self._on_closed = nil
@@ -676,8 +700,9 @@ function M:__resolve_builtin_common_keymaps__(flags, flags_start_index)
 end
 
 ---@param finder_multiline              boolean
+---@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_finder_keymaps__(finder_multiline)
+function M:__resolve_builtin_finder_keymaps__(finder_multiline, has_input_history)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -754,7 +779,30 @@ function M:__resolve_builtin_finder_keymaps__(finder_multiline)
         self:__result_move_down__(-step)
       end,
     },
-
+    {
+      disabled = not has_input_history,
+      modes = { "i", "n", "v" },
+      key = "<C-i>",
+      desc = "picker#finder: history backward",
+      callback = function()
+        local last_input = self._finder_input_history:backward() ---@type string|nil
+        if last_input ~= nil then
+          self.finder:set_content(last_input)
+        end
+      end,
+    },
+    {
+      disabled = not has_input_history,
+      modes = { "i", "n", "v" },
+      key = "<C-o>",
+      desc = "picker#finder: history forward",
+      callback = function()
+        local next_input = self._finder_input_history:forward() ---@type string|nil
+        if next_input ~= nil then
+          self.finder:set_content(next_input)
+        end
+      end,
+    },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
@@ -1185,11 +1233,12 @@ end
 ---@param flags                         eve.ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param finder_multiline              boolean
+---@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_finder__keymaps__(flags, flags_start_index, finder_multiline, keymaps)
+function M:__resolve_finder__keymaps__(flags, flags_start_index, finder_multiline, has_input_history, keymaps)
   local builtin_common_keymaps = self:__resolve_builtin_common_keymaps__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_finder_keymaps = self:__resolve_builtin_finder_keymaps__(finder_multiline) ---@type std.t.IKeymap[]
+  local builtin_finder_keymaps = self:__resolve_builtin_finder_keymaps__(finder_multiline, has_input_history) ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_common_keymaps, builtin_finder_keymaps) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
