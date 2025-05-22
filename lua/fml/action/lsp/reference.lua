@@ -11,6 +11,7 @@ local flag_viewtype = eve.context.select.lsp_reference.flag_viewtype
 local picker = eve.ux.FilePicker.new({
   name = "lsp:reference",
   permanent = true,
+  frecency = eve.context.frecency.files,
   title = "LSP References",
   height = 0.80,
   width = 0.85,

@@ -24,6 +24,7 @@ local flag_case = std.Observable.from_value(1)
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",
   name = name,
+  frecency = eve.context.frecency.files,
   permanent = false,
   title = "Find files",
   height = 0.80,

@@ -4,6 +4,12 @@ local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
 local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
 local HOME_CONTEXT = std.env.HOME_CONTEXT ---@type string
 
+---@type table<string, string>
+local FILEPATH_TO_UUID = {
+  [""] = "d41d8cd98f00b204e9800998ecf8427e",
+  ["/"] = "6666cd76f96956469e7be39d750cc7d9",
+}
+
 ---@class std.path.reposcope_map
 local repo_map = {
   public = {
@@ -367,15 +373,18 @@ function M.cwd()
   return cwd
 end
 
+---@param filepath                      string
 ---@return string
-function M.current_directory()
-  return vim.fn.expand("%:p:h")
+function M.uuid(filepath)
+  local uuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
+  if uuid == nil then
+    uuid = std.fn.md5(filepath) ---@type string
+    FILEPATH_TO_UUID[filepath] = uuid
+  end
+  return uuid
 end
 
----@return string
-function M.current_filepath()
-  return vim.api.nvim_buf_get_name(0)
-end
+----------------------------------------------------------------------------------------------------
 
 ---@return string|nil
 function M.locate_git_repo(filepath)

@@ -33,6 +33,7 @@ end
 
 picker = eve.ux.FilePicker.new({
   name = "find-git-not-",
+  frecency = eve.context.frecency.files,
   permanent = true,
   title = "Find git (not committed)",
   height = 0.80,

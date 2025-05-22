@@ -67,7 +67,6 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 
 local FILETREE_ROOT_FILEPATH = std.env.IS_WIN and "" or "/" ---@type string
 local FILETREE_ROOT_UUID = std.env.IS_WIN and "d41d8cd98f00b204e9800998ecf8427e" or "6666cd76f96956469e7be39d750cc7d9" ---@type string
-local filepath2uuid = { [FILETREE_ROOT_FILEPATH] = FILETREE_ROOT_UUID } ---@type table<string, string>
 
 ---@type table<eve.ux.view.treeview.NodeTypeEnum, integer>
 local nodetype_priority_map = {
@@ -290,8 +289,7 @@ end
 ---@return string|nil
 function M:retrieve_uuid_by_filepath(filepath)
   if std.path.is_absolute(filepath) then
-    filepath = std.path.normalize(filepath) ---@type string
-    return filepath2uuid[filepath]
+    return std.path.uuid(filepath)
   end
   return nil
 end
@@ -382,7 +380,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
       filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
-      local uuid = self:__resolve_uuid__(filepath) ---@type string
+      local uuid = std.path.uuid(filepath) ---@type string
       local icon, icon_hln = eve.fn.diricon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
@@ -398,7 +396,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     end
   end
 
-  local cwd_uuid = self:__resolve_uuid__(cwd) ---@type string
+  local cwd_uuid = std.path.uuid(cwd) ---@type string
 
   ---@param p                           string
   ---@return string
@@ -413,7 +411,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     for index = start_index, N, 1 do
       local basename = pieces[index] ---@type string
       filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
-      local uuid = self:__resolve_uuid__(filepath) ---@type string
+      local uuid = std.path.uuid(filepath) ---@type string
       local icon, icon_hln = eve.fn.diricon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
@@ -430,7 +428,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
 
     local basename = pieces[#pieces] ---@type string
     filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
-    local uuid = self:__resolve_uuid__(filepath) ---@type string
+    local uuid = std.path.uuid(filepath) ---@type string
     local icon, icon_hln = eve.fn.fileicon(basename)
 
     ---@type eve.ux.view.filetree.IFileNodeData
@@ -457,7 +455,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     for index = 1, N, 1 do
       local basename = pieces[index] ---@type string
       filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
-      local uuid = self:__resolve_uuid__(filepath) ---@type string
+      local uuid = std.path.uuid(filepath) ---@type string
       local icon, icon_hln = eve.fn.diricon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
@@ -474,7 +472,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
 
     local basename = pieces[#pieces] ---@type string
     filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
-    local uuid = self:__resolve_uuid__(filepath) ---@type string
+    local uuid = std.path.uuid(filepath) ---@type string
     local icon, icon_hln = eve.fn.fileicon(basename)
 
     ---@type eve.ux.view.filetree.IFileNodeData
@@ -655,17 +653,6 @@ function M:__health__()
     local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
     error(message)
   end
-end
-
----@param filepath                      string
----@return string
-function M:__resolve_uuid__(filepath)
-  local uuid = filepath2uuid[filepath] ---@type string|nil
-  if uuid == nil then
-    uuid = std.fn.md5(filepath) ---@type string
-    filepath2uuid[filepath] = uuid
-  end
-  return uuid
 end
 
 return M

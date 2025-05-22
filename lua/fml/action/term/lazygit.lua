@@ -136,7 +136,8 @@ end
 ---@return nil
 function M.lazygit_file_history()
   local cwd = std.path.cwd() ---@type string
-  local filepath = std.path.current_filepath() ---@type string
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local args = { "-f", vim.fn.shellescape(filepath) } ---@type string[]
   open_lazygit("lazygit_file_history", cwd, args)
 end
