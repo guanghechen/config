@@ -26,6 +26,7 @@ local __mods = {
   Disposable = "std.collection.disposable",
   Frecency = "std.collection.frecency",
   History = "std.collection.history",
+  InputHistory = "std.collection.input_history",
   Observable = "std.collection.observable",
   Promise = "std.collection.promise",
   Scheduler = "std.collection.scheduler",
@@ -66,6 +67,7 @@ local __mods = {
 ---@field public Disposable             std.collection.Disposable
 ---@field public Frecency               std.collection.Frecency
 ---@field public History                std.collection.History
+---@field public InputHistory           std.collection.InputHistory
 ---@field public Observable             std.collection.Observable
 ---@field public Promise                std.collection.Promise
 ---@field public Scheduler              std.collection.Scheduler
