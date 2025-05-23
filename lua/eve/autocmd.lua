@@ -21,6 +21,12 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     eve.status.dirty_winline_nr:next(winnr)
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
+
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    if std.path.is_absolute(filepath) and std.path.is_exist_filepath(filepath) then
+      local uuid = std.path.uuid(filepath) ---@type string
+      eve.context.frecency.files:access(uuid)
+    end
   end,
 })
 

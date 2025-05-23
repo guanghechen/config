@@ -35,7 +35,6 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
----@field public frecency               std.collection.IFrecency
 ---@field public preview                ?boolean
 ---@field public title                  string
 ---@field public height                 ?number
@@ -51,6 +50,8 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public flags_prepend          eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
+---@field public frecency               ?std.collection.IFrecency
+---
 ---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.InputHistory
 ---@field public finder_multiline       ?boolean
@@ -65,7 +66,6 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@class eve.ux.FilePicker
 ---@field public uuid                   string
 ---@field public name                   string
----@field public frecency               std.collection.IFrecency
 ---@field public title                  string
 ---
 ---@field public finder                 eve.ux.PickerFinder
@@ -81,6 +81,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           eve.ux.view.Filetree
+---@field protected _frecency           std.collection.IFrecency|nil
 ---@field protected _picker             eve.ux.PickerComposer
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          std.collection.TreeviewRetriever
@@ -108,7 +109,6 @@ local NSNR_PICKER_MATCHES = eve.var.nsnr.picker_matches ---@type integer
 function M.new(props)
   local name = props.name ---@type string
   local uuid = props.uuid or std.fn.uuid() ---@type string
-  local frecency = props.frecency ---@type std.collection.IFrecency
   local permanent = props.permanent ---@type boolean
   local preview = props.preview ~= false ---@type boolean
   local title = props.title ---@type string
@@ -128,6 +128,8 @@ function M.new(props)
   local flags_append = props.flags_append ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
+
+  local frecency = props.frecency ---@type std.collection.IFrecency|nil
 
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker_file.IOnClosed
   local on_confirm = props.on_confirm ---@type eve.ux.picker_file.IOnConfirm|nil
@@ -626,7 +628,6 @@ function M.new(props)
 
   self.uuid = uuid
   self.name = name
-  self.frecency = frecency
 
   self.finder = picker.finder
   self.result = picker.result
@@ -640,6 +641,7 @@ function M.new(props)
 
   self._disposed = false
   self._filetree = filetree
+  self._frecency = frecency
   self._picker = picker
   self._plainfile = plainfile
   self._retriever = retriever
@@ -689,10 +691,10 @@ function M:dispose()
   self._disposed = true
 
   local on_dispose = self._on_disposed ---@type eve.ux.picker.composer.IOnDisposed
+  self._scheduler_match:dispose()
   self._filetree:dispose()
   self._plainfile:dispose()
   self._retriever:dispose()
-  self._scheduler_match:dispose()
   self._picker:dispose()
 
   self.finder = nil
@@ -706,6 +708,7 @@ function M:dispose()
   self.flag_selected = nil
 
   self._filetree = nil
+  self._frecency = nil
   self._picker = nil
   self._plainfile = nil
   self._retriever = nil
@@ -992,7 +995,6 @@ end
 ---@return nil
 function M:__open_node__(node)
   local filetree = self._filetree ---@type eve.ux.view.Filetree
-  local frecency = self.frecency ---@type std.collection.IFrecency
   local picker = self._picker ---@type eve.ux.PickerComposer
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -1018,8 +1020,6 @@ function M:__open_node__(node)
   local filepaths = {} ---@type string[]
   for filepath in pairs(filepath_set) do
     filepaths[#filepaths + 1] = filepath
-    local uuid = std.path.uuid(filepath) ---@type string
-    frecency:access(uuid)
   end
 
   if #filepaths > 0 then
@@ -1042,9 +1042,6 @@ function M:__open_node__(node)
     picker:mark_result_dirty()
     return
   end
-
-  local uuid = std.path.uuid(node.data.filepath) ---@type string
-  frecency:access(uuid)
 
   picker:close()
   eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
@@ -1122,7 +1119,6 @@ end
 ---@return nil
 function M:__toggle_node__(node, recursively)
   local filetree = self._filetree ---@type eve.ux.view.Filetree
-  local frecency = self.frecency ---@type std.collection.IFrecency
   local picker = self._picker ---@type eve.ux.PickerComposer
   if node.type == "container" then
     filetree:collapse(node.uuid, "toggle", recursively)
@@ -1144,9 +1140,6 @@ function M:__toggle_node__(node, recursively)
     else
       winnr_sourcefile = nil
     end
-
-    local uuid = std.path.uuid(node.data.filepath) ---@type string
-    frecency:access(uuid)
 
     picker:close()
     eve.win.open_filepath(winnr_sourcefile, node.data.filepath, node.data.lnum, node.data.col)
