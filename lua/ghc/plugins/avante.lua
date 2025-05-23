@@ -315,7 +315,7 @@ return {
         api_version = vim.env.AZURE_OPENAI_API_VERSION,
       },
       copilot = {
-        model = "claude-3.7-sonnet",
+        model = "claude-sonnet-4",
       },
       vendors = {
         aoai2 = {
@@ -326,7 +326,15 @@ return {
           api_key_name = "AZURE_OPENAI_O4_MINI_API_KEY",
           api_version = vim.env.AZURE_OPENAI_O4_MINI_API_VERSION,
         },
-        copilot2 = {
+        claude4 = {
+          __inherited_from = "copilot",
+          model = "claude-sonnet-4",
+        },
+        claude3_7 = {
+          __inherited_from = "copilot",
+          model = "claude-3.7-sonnet",
+        },
+        claude3_5 = {
           __inherited_from = "copilot",
           model = "claude-3.5-sonnet",
         },
