@@ -70,6 +70,7 @@ alias today='cal -C3'
 
 ### platform specific
 if test (uname) = Darwin
+    alias code='env -u TMUX -u TERM /usr/local/bin/code'
     alias ghc-reset-git-credential='echo -e "host=github.com\nprotocol=https\n" | git credential-osxkeychain erase'
 else
     alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.
