@@ -13,11 +13,13 @@ if test (uname) = "Darwin"
     end
   end
   set -gx PATH $new_path
+
+  set -gx f_vscode_settings "$HOME/Library/Application Support/Code/User/keybindings.json"
+  set -gx f_cline_settings "$HOME/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
 end
 
 ## Local
 #
-# set -gx f_vscode_settings
 # set -gx f_windows_terminal_settings
 #
 # set -gx AZURE_OPENAI_O4_MINI_ENDPOINT     '<endpoint>'
