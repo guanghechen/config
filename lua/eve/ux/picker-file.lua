@@ -53,7 +53,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public frecency               ?std.collection.IFrecency
 ---
 ---@field public finder_input           std.collection.IObservable
----@field public finder_input_history   ?std.collection.InputHistory
+---@field public finder_input_history   ?std.collection.IHistory
 ---@field public finder_multiline       ?boolean
 ---
 ---@field public on_closed              ?eve.ux.picker_file.IOnClosed
@@ -109,7 +109,7 @@ local NSNR_PICKER_MATCHES = eve.var.nsnr.picker_matches ---@type integer
 ---@return eve.ux.FilePicker
 function M.new(props)
   local name = props.name ---@type string
-  local uuid = props.uuid or std.fn.uuid() ---@type string
+  local picker_uuid = props.uuid or std.fn.uuid() ---@type string
   local permanent = props.permanent ---@type boolean
   local preview = props.preview ~= false ---@type boolean
   local title = props.title ---@type string
@@ -117,7 +117,7 @@ function M.new(props)
   local width = props.width ---@type number|nil
 
   local finder_input = props.finder_input ---@type std.collection.IObservable
-  local finder_input_history = props.finder_input_history ---@type std.collection.InputHistory|nil
+  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
   local finder_multiline = props.finder_multiline ---@type boolean|nil
 
   local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
@@ -180,11 +180,11 @@ function M.new(props)
   ---@return integer
   local function retrieve()
     local lnum = self._picker:get_result_lnum() ---@type integer
-    local node_uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-    if node_uuid == nil then
-      return node_uuid, lnum
+    local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+    if uuid == nil then
+      return uuid, lnum
     end
-    local node = filetree:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.filetree.INode|nil
+    local node = filetree:retrieve_by_uuid(uuid) ---@type eve.ux.view.filetree.INode|nil
     return node, lnum
   end
 
@@ -231,6 +231,22 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      desc = string.format("%s: fold empty path", name),
+      disabled = function()
+        local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
+        return viewtype ~= "tree"
+      end,
+      callback = function()
+        local enabled = flag_foldempty:snapshot() ---@type boolean
+        flag_foldempty:next(not enabled)
+        self._picker:mark_result_dirty()
+      end,
+      snapshot = function()
+        local enabled = flag_foldempty:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    }
+    flags[#flags + 1] = {
       desc = string.format("%s: fuzzy", name),
       callback = function()
         local enabled = flag_fuzzy:snapshot() ---@type boolean
@@ -263,22 +279,6 @@ function M.new(props)
         return eve.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
-    flags[#flags + 1] = {
-      desc = string.format("%s: fold empty path", name),
-      disabled = function()
-        local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
-        return viewtype ~= "tree"
-      end,
-      callback = function()
-        local enabled = flag_foldempty:snapshot() ---@type boolean
-        flag_foldempty:next(not enabled)
-        self._picker:mark_result_dirty()
-      end,
-      snapshot = function()
-        local enabled = flag_foldempty:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    }
     if flags_append ~= nil then
       for _, flag in ipairs(flags_append) do
         flags[#flags + 1] = {
@@ -308,6 +308,17 @@ function M.new(props)
       local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
       if node ~= nil then
         self:__toggle_node__(node, false)
+      end
+    end,
+    on_filetree_attach = function()
+      local node = retrieve() ---@type  eve.ux.view.filetree.INode|nil, integer
+      if node == nil then
+        return
+      end
+
+      if node.type == "container" then
+        self._uuid_root = node.uuid ---@type string
+        self:mark_result_dirty()
       end
     end,
     on_filetree_toggle_recursively = function()
@@ -369,6 +380,12 @@ function M.new(props)
   ---@type std.t.IKeymap[]
   local finder_keymaps = {
     {
+      modes = { "n", "v" },
+      key = ".",
+      desc = "filetree: change root",
+      callback = actions.on_filetree_attach,
+    },
+    {
       modes = { "i", "n", "v" },
       key = "<enter>",
       desc = "filetree: open",
@@ -392,24 +409,10 @@ function M.new(props)
   ---@type std.t.IKeymap[]
   local result_keymaps = {
     {
-      modes = { "n" },
-      key = "z",
-      desc = "filetree: toggle (recursively)",
-      callback = actions.on_filetree_toggle_recursively,
-    },
-    {
-      modes = { "n" },
-      key = "<2-LeftMouse>",
-      desc = "filetree: toggle",
-      callback = function()
-        local result_winnr = self._picker.result:get_winnr() ---@type integer|nil
-        if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
-          local cursor = vim.fn.getmousepos()
-          if cursor.winid == result_winnr then
-            actions.on_filetree_toggle()
-          end
-        end
-      end,
+      modes = { "i", "n", "v" },
+      key = ".",
+      desc = "filetree: change root",
+      callback = actions.on_filetree_attach,
     },
     {
       modes = { "i", "n", "v" },
@@ -427,6 +430,26 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
+      key = "<2-LeftMouse>",
+      desc = "filetree: toggle",
+      callback = function()
+        local result_winnr = self._picker.result:get_winnr() ---@type integer|nil
+        if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
+          local cursor = vim.fn.getmousepos()
+          if cursor.winid == result_winnr then
+            actions.on_filetree_toggle()
+          end
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "z",
+      desc = "filetree: toggle (recursively)",
+      callback = actions.on_filetree_toggle_recursively,
+    },
+    {
+      modes = { "i", "n", "v" },
       key = "<Tab>",
       desc = "filetree: toggle selection",
       callback = actions.on_toggle_selection,
@@ -434,7 +457,7 @@ function M.new(props)
   }
 
   local picker = eve.ux.PickerComposer.new({
-    uuid = uuid,
+    uuid = picker_uuid,
     name = name,
     permanent = permanent,
 
@@ -570,9 +593,9 @@ function M.new(props)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.treeview.ViewtypeEnum
       if viewtype == "tree" then
         for _, search_match in ipairs(last_matches) do
-          local node_uuid = search_match.uuid ---@type string
-          local lnum = retriever:retrieve_lnum(node_uuid) ---@type integer|nil
-          local node = filetree:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.filetree.INode|nil
+          local uuid = search_match.uuid ---@type string
+          local lnum = retriever:retrieve_lnum(uuid) ---@type integer|nil
+          local node = filetree:retrieve_by_uuid(uuid) ---@type eve.ux.view.filetree.INode|nil
           if lnum ~= nil and node ~= nil then
             ---@cast node eve.ux.view.filetree.IFileNode
 
@@ -603,9 +626,9 @@ function M.new(props)
 
       if viewtype == "list" then
         for _, search_match in ipairs(last_matches) do
-          local node_uuid = search_match.uuid ---@type string
-          local lnum = retriever:retrieve_lnum(node_uuid) ---@type integer|nil
-          local node = filetree:retrieve_by_uuid(node_uuid) ---@type eve.ux.view.filetree.INode|nil
+          local uuid = search_match.uuid ---@type string
+          local lnum = retriever:retrieve_lnum(uuid) ---@type integer|nil
+          local node = filetree:retrieve_by_uuid(uuid) ---@type eve.ux.view.filetree.INode|nil
           if lnum ~= nil and node ~= nil then
             ---@cast node eve.ux.view.filetree.IFileNode
 
@@ -627,7 +650,7 @@ function M.new(props)
     end,
   })
 
-  self.uuid = uuid
+  self.uuid = picker_uuid
   self.name = name
 
   self.finder = picker.finder
@@ -668,7 +691,7 @@ function M.new(props)
     end,
     true
   )
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive, flag_selected, flag_viewtype }, function()
+  std.fn.observe({ flag_selected, flag_viewtype }, function()
     picker:mark_result_dirty()
   end, true)
   std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
@@ -676,9 +699,9 @@ function M.new(props)
   end)
   std.fn.observe({ picker.result.lnum_current }, function()
     local lnum = picker.result.lnum_current:snapshot() ---@type integer
-    local node_uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-    if node_uuid ~= nil then
-      self._uuid_current = node_uuid
+    local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+    if uuid ~= nil then
+      self._uuid_current = uuid
     end
   end)
 

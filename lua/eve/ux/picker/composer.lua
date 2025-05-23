@@ -92,7 +92,7 @@ local __highlights__ = {
 ---@field public width                  ?number
 ---
 ---@field public finder_input           std.collection.IObservable
----@field public finder_input_history   ?std.collection.InputHistory
+---@field public finder_input_history   ?std.collection.IHistory
 ---@field public finder_keymaps         ?std.t.IKeymap[]
 ---@field public finder_multiline       ?boolean
 ---@field public finder_title           string
@@ -127,7 +127,7 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _finder_input_history ?std.collection.InputHistory
+---@field protected _finder_input_history ?std.collection.IHistory
 ---
 ---@field protected _on_cancel          eve.ux.picker.composer.IOnCancel
 ---@field protected _on_closed          eve.ux.picker.composer.IOnClosed
@@ -153,7 +153,7 @@ function M.new(props)
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
   local finder_input = props.finder_input ---@type std.collection.IObservable
-  local finder_input_history = props.finder_input_history ---@type std.collection.InputHistory
+  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory
   local finder_keymaps = props.finder_keymaps or {} ---@type std.t.IKeymap[]
   local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
