@@ -170,5 +170,7 @@ pub fn find_match_points_line_by_line(
         }
     }
 
+    // Sort matches by score in descending order (higher scores first)
+    matches.sort_by(|a, b| b.score.cmp(&a.score));
     Ok(matches)
 }
