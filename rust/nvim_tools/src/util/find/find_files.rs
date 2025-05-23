@@ -38,7 +38,7 @@ pub fn find_files(
 ) -> Result<FindFilesSucceedResult, FindFilesFailedResult> {
     let workspace: &String = &options.workspace;
     let cwd: &String = &options.cwd;
-    let falg_case_sensitive: bool = options.flag_case_sensitive;
+    let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_gitignore: bool = options.flag_gitignore;
     let flag_regex: bool = options.flag_regex;
     let search_pattern: &String = &options.search_pattern;
@@ -67,7 +67,7 @@ pub fn find_files(
             cmd.arg("--no-ignore-vcs");
         }
 
-        if falg_case_sensitive {
+        if flag_case_sensitive {
             cmd.arg("--case-sensitive");
         } else {
             cmd.arg("--ignore-case");
