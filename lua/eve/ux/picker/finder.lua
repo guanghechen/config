@@ -10,15 +10,15 @@ local __module_name__ = "eve.ux.picker.finder" ---@type string
 ---@class eve.ux.IPickerFinderProps
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
----@field public input                  std.collection.Observable
+---@field public input                  std.collection.IObservable
 ---@field public multiline              boolean
 ---@field public title                  string
 
 ---@class eve.ux.PickerFinder
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
----@field public input                  std.collection.Observable
----@field public linecount              std.collection.Observable
+---@field public input                  std.collection.IObservable
+---@field public linecount              std.collection.IObservable
 ---@field public multiline              boolean
 ---@field public title                  string
 ---
@@ -33,8 +33,8 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
-  local input = props.input ---@type std.collection.Observable
-  local linecount = std.Observable.from_value(0) ---@type std.collection.Observable
+  local input = props.input ---@type std.collection.IObservable
+  local linecount = std.Observable.from_value(0) ---@type std.collection.IObservable
   local multiline = props.multiline ---@type boolean
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
 

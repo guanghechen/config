@@ -91,7 +91,7 @@ local __highlights__ = {
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public finder_input           std.collection.Observable
+---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.InputHistory
 ---@field public finder_keymaps         ?std.t.IKeymap[]
 ---@field public finder_multiline       ?boolean
@@ -152,7 +152,7 @@ function M.new(props)
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
-  local finder_input = props.finder_input ---@type std.collection.Observable
+  local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.InputHistory
   local finder_keymaps = props.finder_keymaps or {} ---@type std.t.IKeymap[]
   local finder_multiline = not not props.finder_multiline ---@type boolean

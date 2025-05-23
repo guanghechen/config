@@ -41,17 +41,17 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public flag_foldempty         std.collection.Observable
----@field public flag_fuzzy             std.collection.Observable
----@field public flag_regex             std.collection.Observable
----@field public flag_sensitive         std.collection.Observable
----@field public flag_selected          std.collection.Observable
----@field public flag_viewtype          std.collection.Observable
+---@field public flag_foldempty         std.collection.IObservable
+---@field public flag_fuzzy             std.collection.IObservable
+---@field public flag_regex             std.collection.IObservable
+---@field public flag_sensitive         std.collection.IObservable
+---@field public flag_selected          std.collection.IObservable
+---@field public flag_viewtype          std.collection.IObservable
 ---@field public flags_append           eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public finder_input           std.collection.Observable
+---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.InputHistory
 ---@field public finder_multiline       ?boolean
 ---
@@ -72,12 +72,12 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public result                 eve.ux.PickerResult
 ---@field public preview                eve.ux.PickerPreview
 ---
----@field public flag_foldempty         std.collection.Observable
----@field public flag_fuzzy             std.collection.Observable
----@field public flag_regex             std.collection.Observable
----@field public flag_sensitive         std.collection.Observable
----@field public flag_selected          std.collection.Observable
----@field public flag_viewtype          std.collection.Observable
+---@field public flag_foldempty         std.collection.IObservable
+---@field public flag_fuzzy             std.collection.IObservable
+---@field public flag_regex             std.collection.IObservable
+---@field public flag_sensitive         std.collection.IObservable
+---@field public flag_selected          std.collection.IObservable
+---@field public flag_viewtype          std.collection.IObservable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           eve.ux.view.Filetree
@@ -115,16 +115,16 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local finder_input = props.finder_input ---@type std.collection.Observable
+  local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.InputHistory|nil
   local finder_multiline = props.finder_multiline ---@type boolean|nil
 
-  local flag_fuzzy = props.flag_fuzzy ---@type std.collection.Observable
-  local flag_regex = props.flag_regex ---@type std.collection.Observable
-  local flag_foldempty = props.flag_foldempty ---@type std.collection.Observable
-  local flag_sensitive = props.flag_sensitive ---@type std.collection.Observable
-  local flag_selected = props.flag_selected ---@type std.collection.Observable
-  local flag_viewtype = props.flag_viewtype ---@type std.collection.Observable
+  local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
+  local flag_regex = props.flag_regex ---@type std.collection.IObservable
+  local flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
+  local flag_sensitive = props.flag_sensitive ---@type std.collection.IObservable
+  local flag_selected = props.flag_selected ---@type std.collection.IObservable
+  local flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
   local flags_append = props.flags_append ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil

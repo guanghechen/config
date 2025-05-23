@@ -38,7 +38,7 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 
 ---@class eve.ux.nvimbar.Nvimbar
 ---@field public name                   string
----@field protected _value              std.collection.Observable
+---@field protected _value              std.collection.IObservable
 ---@field protected _disposed           boolean
 ---@field protected _sep                string
 ---@field protected _sep_active         string
@@ -98,7 +98,7 @@ function M.new(props)
   local delay = props.delay or 20 ---@type integer
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
-  local value = std.Observable.from_value("") ---@type std.collection.Observable
+  local value = std.Observable.from_value("") ---@type std.collection.IObservable
 
   ---@type eve.ux.nvimbar.IGetNvimbarPresetContext
   local get_preset_context = props.get_preset_context

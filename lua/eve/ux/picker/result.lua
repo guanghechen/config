@@ -45,10 +45,10 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 ---@field public draw                   eve.ux.picker.result.IDraw
 ---@field public flags                  eve.ux.picker.result.IFlagItem[]
 ---@field public keymaps                std.t.IKeymap[]
----@field public lnum_current           std.collection.Observable
----@field public lnum_present           std.collection.Observable
----@field public lnum_selected_set      std.collection.Observable
----@field public lnum_total             std.collection.Observable
+---@field public lnum_current           std.collection.IObservable
+---@field public lnum_present           std.collection.IObservable
+---@field public lnum_selected_set      std.collection.IObservable
+---@field public lnum_total             std.collection.IObservable
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
@@ -72,10 +72,10 @@ function M.new(props)
   local on_drawed = props.on_drawed or std.fn.noop ---@type eve.ux.picker.result.IOnDrawed
   local augroup_CursorMoved = eve.nvim.augroup(string.format("picker.result:CursorMoved#%s", uuid)) ---@type integer
 
-  local _lnum_current = std.Observable.from_value(0) ---@type std.collection.Observable
-  local _lnum_present = std.Observable.from_value(-1) ---@type std.collection.Observable
-  local _lnum_selected_set = std.Observable.from_value({}, std.fn.falsy) ---@type std.collection.Observable
-  local _lnum_total = std.Observable.from_value(0) ---@type std.collection.Observable
+  local _lnum_current = std.Observable.from_value(0) ---@type std.collection.IObservable
+  local _lnum_present = std.Observable.from_value(-1) ---@type std.collection.IObservable
+  local _lnum_selected_set = std.Observable.from_value({}, std.fn.falsy) ---@type std.collection.IObservable
+  local _lnum_total = std.Observable.from_value(0) ---@type std.collection.IObservable
 
   local flags = {} ---@type eve.ux.picker.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
@@ -380,10 +380,10 @@ function M:dispose()
   local name = self.name ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local lnum_current = self.lnum_current ---@type std.collection.Observable
-  local lnum_present = self.lnum_present ---@type std.collection.Observable
-  local lnum_selected_set = self.lnum_selected_set ---@type std.collection.Observable
-  local lnum_total = self.lnum_total ---@type std.collection.Observable
+  local lnum_current = self.lnum_current ---@type std.collection.IObservable
+  local lnum_present = self.lnum_present ---@type std.collection.IObservable
+  local lnum_selected_set = self.lnum_selected_set ---@type std.collection.IObservable
+  local lnum_total = self.lnum_total ---@type std.collection.IObservable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
   local nvimbar = self._nvimbar ---@type eve.ux.nvimbar.Nvimbar
   local scheduler_content = self._scheduler_content ---@type std.collection.Scheduler
