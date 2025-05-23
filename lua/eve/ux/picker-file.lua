@@ -95,6 +95,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuids_file         string[]
+---@field protected _uuids_order        string[]
 ---@field protected _uuids_selected     table<string, true>
 ---
 ---@field protected _on_confirm         eve.ux.picker_file.IOnConfirm|nil
@@ -455,9 +456,9 @@ function M.new(props)
       local result ---@type eve.ux.view.treeview.IRenderResult
       if flag_selected:snapshot() then
         local visible_uuids = filetree:calc_include_uuid_set(vim.tbl_keys(self._uuids_selected)) ---@type table<string, boolean>
-        result = filetree:render(bufnr, viewtype, self._uuid_root, visible_uuids) ---@type eve.ux.view.treeview.IRenderResult
+        result = filetree:render(bufnr, viewtype, self._uuid_root, visible_uuids, self._uuids_order) ---@type eve.ux.view.treeview.IRenderResult
       else
-        result = filetree:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids) ---@type eve.ux.view.treeview.IRenderResult
+        result = filetree:render(bufnr, viewtype, self._uuid_root, self._last_matched_uuids, self._uuids_order) ---@type eve.ux.view.treeview.IRenderResult
       end
       indents = result.indents ---@type string[]
       retriever:attach(bufnr, result.uuids, result.childline)
@@ -501,7 +502,7 @@ function M.new(props)
           self._last_preview_filepath = node.data.filepath ---@type string|nil
 
           if node.type == "container" then
-            filetree:render(bufnr, "tree", node.uuid, nil, true)
+            filetree:render_tree(bufnr, node.uuid, nil, true)
             ---@cast node                 eve.ux.view.filetree.ILocationNode
             ---@type eve.ux.picker.preview.IDrawResult
             local result = {
@@ -654,6 +655,7 @@ function M.new(props)
   self._last_preview_filepath = nil
   self._uuid_root = nil
   self._uuids_file = {}
+  self._uuids_order = {}
   self._uuids_selected = {}
 
   self._on_confirm = on_confirm
@@ -721,6 +723,7 @@ function M:dispose()
   self._last_preview_filepath = nil
   self._uuid_root = nil
   self._uuids_file = nil
+  self._uuids_order = nil
   self._uuids_selected = nil
 
   self._on_confirm = nil
@@ -837,8 +840,18 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   cwd = std.path.normalize(cwd) ---@type string
   self._filetree:reset_filepaths(cwd, filepaths, with_positions)
 
+  local frecency = self._frecency ---@type std.collection.IFrecency|nil
   local uuid_cwd = self._filetree:retrieve_uuid_by_filepath(cwd) ---@type string|nil
   local uuids_file = self._filetree:collect_file_uuids(uuid_cwd) ---@type string[]
+  local uuids_order = vim.list_slice(uuids_file) ---@type string[]
+
+  if frecency ~= nil then
+    table.sort(uuids_order, function(a, b)
+      local sa = frecency:score(a) or 0 ---@type integer
+      local sb = frecency:score(b) or 0 ---@type integer
+      return sa > sb
+    end)
+  end
 
   self._last_input = ""
   self._last_offset = nil
@@ -847,6 +860,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   self._last_preview_filepath = nil
   self._uuid_root = uuid_cwd
   self._uuids_file = uuids_file
+  self._uuids_order = uuids_order
   self._uuids_selected = {}
   self._scheduler_match:schedule()
   return self
@@ -882,11 +896,23 @@ end
 ---@param input                         string
 ---@return nil
 function M:__match__(input)
+  local frecency = self._frecency ---@type std.collection.IFrecency|nil
+
   if #input < 1 then
+    local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
+    if frecency ~= nil then
+      table.sort(uuids_order, function(a, b)
+        local sa = frecency:score(a) or 0 ---@type integer
+        local sb = frecency:score(b) or 0 ---@type integer
+        return sa >= sb
+      end)
+    end
+
     self._last_input = ""
     self._last_offset = 0
     self._last_matches = nil
     self._last_matched_uuids = nil
+    self._uuids_order = uuids_order
     return
   end
 
@@ -958,11 +984,23 @@ function M:__match__(input)
     self._last_offset = 0
     self._last_matches = nil
     self._last_matched_uuids = nil
+    self._uuids_order = {}
     return
+  end
+
+  if frecency ~= nil then
+    for _, match in ipairs(oxi_matches) do
+      local score = frecency:score(uuids[match.lnum]) or 0 ---@type integer
+      match.score = match.score + score
+    end
+    table.sort(oxi_matches, function(a, b)
+      return a.score > b.score
+    end)
   end
 
   local matches = {} ---@type std.t.IScoredMatch[]
   local matched_uuids = {} ---@type string[]
+  local uuids_order = {} ---@type string[]
   for _, oxi_match in ipairs(oxi_matches) do
     local lnum = oxi_match.lnum ---@type integer
 
@@ -973,8 +1011,10 @@ function M:__match__(input)
       score = oxi_match.score,
       matches = oxi_match.matches,
     }
+
     matches[#matches + 1] = match
     matched_uuids[#matched_uuids + 1] = match.uuid
+    uuids_order[#uuids_order + 1] = match.uuid
   end
 
   for _, uuid in ipairs(matched_uuids) do
@@ -989,6 +1029,7 @@ function M:__match__(input)
   self._last_offset = offset
   self._last_matches = matches
   self._last_matched_uuids = filetree:calc_include_uuid_set(matched_uuids)
+  self._uuids_order = uuids_order
 end
 
 ---@param node                          eve.ux.view.filetree.INode

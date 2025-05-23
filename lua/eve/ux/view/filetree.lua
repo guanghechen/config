@@ -268,11 +268,32 @@ end
 ---@param viewtype                      eve.ux.view.treeview.ViewtypeEnum
 ---@param root_uuid                     string|nil
 ---@param included_uuid_set             table<string, boolean>|nil
----@param included_collapsed_nodes      boolean|nil
+---@param orders                        string[]|nil
+---@param skip_check_collapsed      boolean|nil
 ---@return eve.ux.view.treeview.IRenderResult
-function M:render(bufnr, viewtype, root_uuid, included_uuid_set, included_collapsed_nodes)
+function M:render(bufnr, viewtype, root_uuid, included_uuid_set, orders, skip_check_collapsed)
   self:__health__()
-  return self._treeview:render(bufnr, viewtype, root_uuid, included_uuid_set, included_collapsed_nodes)
+  return self._treeview:render(bufnr, viewtype, root_uuid, included_uuid_set, orders, skip_check_collapsed)
+end
+
+---@param bufnr                         integer
+---@param root_uuid                     string|nil
+---@param included_uuid_set             table<string, boolean>|nil
+---@param orders                        string[]|nil
+---@return eve.ux.view.treeview.IRenderResult
+function M:render_list(bufnr, root_uuid, included_uuid_set, orders)
+  self:__health__()
+  return self._treeview:render_list(bufnr, root_uuid, included_uuid_set, orders)
+end
+
+---@param bufnr                         integer
+---@param root_uuid                     string|nil
+---@param included_uuid_set             table<string, boolean>|nil
+---@param skip_check_collapsed          boolean|nil
+---@return eve.ux.view.treeview.IRenderResult
+function M:render_tree(bufnr, root_uuid, included_uuid_set, skip_check_collapsed)
+  self:__health__()
+  return self._treeview:render_tree(bufnr, root_uuid, included_uuid_set, skip_check_collapsed)
 end
 
 ---@param uuid                          string
