@@ -362,6 +362,7 @@
     "indentscope",
     "inputmethod",
     "isactive",
+    "isdescendant",
     "isdirectory",
     "isdisposed",
     "isfocused",

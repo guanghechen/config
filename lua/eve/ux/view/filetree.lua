@@ -30,6 +30,7 @@ local __module_name__ = "eve.ux.view.filetree" ---@type string
 ---@field public basename               string
 ---@field public filepath               string
 ---@field public filepath_lower         string
+---@field public depth                  integer
 ---@field public icon                   string
 ---@field public icon_hln               string
 
@@ -224,6 +225,27 @@ function M:isdisposed()
   return self._disposed
 end
 
+---@param container                     eve.ux.view.filetree.INode
+---@param node                          eve.ux.view.filetree.INode
+function M:isdescendant(container, node)
+  self:__health__()
+  if container == node then
+    return true
+  end
+
+  local delta = node.data.depth - container.data.depth ---@type integer
+  if delta < 1 then
+    return false
+  end
+
+  local o = node ---@type eve.ux.view.filetree.INode
+  for _ = 1, delta, 1 do
+    o = o.parent
+  end
+
+  return o == container
+end
+
 ----------------------------------------------------------------------------------------------------
 
 ---@param included_uuids                string[]
@@ -383,6 +405,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     basename = FILETREE_ROOT_FILEPATH,
     filepath = FILETREE_ROOT_FILEPATH,
     filepath_lower = FILETREE_ROOT_FILEPATH,
+    depth = 0,
     icon = eve.icon.filetype.FileTree,
     icon_hln = "MiniIconsBlue",
   }
@@ -409,6 +432,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
         basename = basename,
         filepath = filepath,
         filepath_lower = filepath:lower(),
+        depth = index - start_index + 1,
         icon = icon,
         icon_hln = icon_hln,
       }
@@ -418,6 +442,8 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   end
 
   local cwd_uuid = std.path.uuid(cwd) ---@type string
+  local cwd_node = treeview:retrieve_by_uuid(cwd_uuid)
+  ---@cast cwd_node                     eve.ux.view.filetree.IDirectoryNode
 
   ---@param p                           string
   ---@return string
@@ -440,6 +466,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
         basename = basename,
         filepath = filepath,
         filepath_lower = filepath:lower(),
+        depth = index - start_index + 1,
         icon = icon,
         icon_hln = icon_hln,
       }
@@ -484,6 +511,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
         basename = basename,
         filepath = filepath,
         filepath_lower = filepath:lower(),
+        depth = index + cwd_node.data.depth,
         icon = icon,
         icon_hln = icon_hln,
       }

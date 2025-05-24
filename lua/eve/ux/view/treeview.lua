@@ -46,9 +46,9 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 
 ---@class eve.ux.view.treeview.INode
 ---@field public uuid                   string
+---@field public type                   eve.ux.view.treeview.NodeTypeEnum
 ---@field public parent                 eve.ux.view.treeview.INode
 ---@field public children               eve.ux.view.treeview.INode[]
----@field public type                   eve.ux.view.treeview.NodeTypeEnum
 ---@field public data                   unknown
 ---@field public collapsed              boolean
 ---@field public dirty_orders           boolean
