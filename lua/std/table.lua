@@ -3,6 +3,55 @@ local M = {}
 
 ---@generic T
 ---@param elements                      T[]
+---@param filter                        fun(element: T, index: integer, elements: T[]): boolean
+---@return integer
+function M.count(elements, filter)
+  local count = 0 ---@type integer
+  for index = 1, #elements, 1 do
+    if filter(elements[index], index, elements) then
+      count = count + 1 ---@type integer
+    end
+  end
+  return count
+end
+
+---@generic T
+---@param elements                      T[]
+---@param filter                        fun(element: T, index: integer, elements: T[]): boolean
+---@return T[]
+function M.filter(elements, filter)
+  local result = {}
+  for index = 1, #elements, 1 do
+    if filter(elements[index], index, elements) then
+      result[#result + 1] = elements[index]
+    end
+  end
+  return result
+end
+
+---@generic T
+---@param elements                      T[]
+---@param filter                        fun(element: T, index: integer): boolean
+---@return nil
+function M.filter_inline(elements, filter)
+  local N = #elements ---@type integer
+  if N > 0 then
+    local k = 1 ---@type integer
+    for index = 1, N, 1 do
+      if filter(elements[index], index) then
+        elements[k] = elements[index]
+        k = k + 1
+      end
+    end
+
+    for index = N, k, 1 do
+      elements[index] = nil
+    end
+  end
+end
+
+---@generic T
+---@param elements                      T[]
 ---@param element                       T|fun(element: T, index: integer): boolean
 ---@return integer|nil
 function M.find_index(elements, element)
@@ -49,6 +98,20 @@ function M.to_string_set(elements)
     set[element] = true
   end
   return set
+end
+
+---@generic T
+---@param elements                      T[]
+---@param max_length                   integer
+---@return nil
+function M.truncate_inline(elements, max_length)
+  local N = #elements ---@type integer
+  if N > max_length then
+    local L = max_length ---@type integer
+    for index = N, L, -1 do
+      elements[index] = nil
+    end
+  end
 end
 
 return M

@@ -35,6 +35,7 @@ local __mods = {
   Subscribers = "std.collection.subscribers",
   Theme = "std.collection.theme",
   Ticker = "std.collection.ticker",
+  Tree = "std.collection.tree",
   TreeviewRetriever = "std.collection.treeview_retriever",
 }
 
@@ -76,6 +77,7 @@ local __mods = {
 ---@field public Subscribers            std.collection.Subscribers
 ---@field public Theme                  std.collection.Theme
 ---@field public Ticker                 std.collection.Ticker
+---@field public Tree                   std.collection.Tree
 ---@field public TreeviewRetriever      std.collection.TreeviewRetriever
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
