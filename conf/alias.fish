@@ -68,22 +68,6 @@ alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 alias today='cal -C3'
 
-### platform specific
-if test (uname) = Darwin
-    alias code='env -u TMUX -u TERM /usr/local/bin/code'
-    alias ghc-reset-git-credential='echo -e "host=github.com\nprotocol=https\n" | git credential-osxkeychain erase'
-else
-    alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.
-end
-
-### wsl
-if test -e /proc/version
-    if grep -qEi "(Microsoft|WSL)" /proc/version
-        alias open="ghc-open"
-        alias pbpaste="ghc-pbpaste"
-    end
-end
-
 ## Run python server with poetry
 # alias pydemo-server='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run uvicorn <server_entry> --host localhost --port 9528'
 # alias pydemo-debug='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run python -m debugpy --listen 9527 -m uvicorn <server_entry> --host localhost --port 9528'
