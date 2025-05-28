@@ -266,6 +266,7 @@ function M.watch_changes()
     M.flight.gitdiff_expand_all,
     M.lsp.breakpoints,
     M.lsp.code_lens,
+    M.lsp.diagnostics_virt_lines,
     M.lsp.inlay_hints,
     M.lsp.spellcheck,
     M.lsp.python_debug_host,
@@ -292,6 +293,7 @@ function M.watch_changes()
 
   std.fn.observe({
     M.lsp.code_lens,
+    M.lsp.diagnostics_virt_lines,
     M.lsp.inlay_hints,
   }, function()
     pcall(function()

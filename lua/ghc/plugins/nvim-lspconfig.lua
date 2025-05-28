@@ -28,22 +28,28 @@ return {
   name = "nvim-lspconfig",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   config = function()
+    local enable_diagnostic_virt_lines = eve.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
+    local virtual_text_current_line = nil ---@type boolean|nil
+    if enable_diagnostic_virt_lines then
+      virtual_text_current_line = false ---@type boolean|nil
+    end
+
     vim.diagnostic.config({
       virtual_text = {
-        current_line = false,
+        current_line = virtual_text_current_line,
         source = "if_many",
         spacing = 4,
         prefix = function(diagnostic)
           return severity2prefixicon[diagnostic.severity] or ""
         end,
       },
-      virtual_lines = {
+      virtual_lines = enable_diagnostic_virt_lines and {
         current_line = true,
         format = function(diagnostic)
           local icon = severity2prefixicon[diagnostic.severity] or ""
           return string.format("%s %s", icon, diagnostic.message)
         end,
-      },
+      } or nil,
       signs = {
         text = severity2texticon,
         numhl = severity2numhl,

@@ -8,6 +8,7 @@
 ---@class eve.context.lsp.data
 ---@field public breakpoints            eve.context.lsp.IBreakpointData[]
 ---@field public code_lens              boolean
+---@field public diagnostics_virt_lines boolean
 ---@field public inlay_hints            boolean
 ---@field public python_debug_host      string
 ---@field public python_debug_port      integer
@@ -17,6 +18,7 @@
 ---@class eve.context.lsp.state
 ---@field public breakpoints            std.collection.IObservable
 ---@field public code_lens              std.collection.IObservable
+---@field public diagnostics_virt_lines std.collection.IObservable
 ---@field public inlay_hints            std.collection.IObservable
 ---@field public python_debug_host      std.collection.IObservable
 ---@field public python_debug_port      std.collection.IObservable
@@ -59,6 +61,7 @@ function M.defaults()
   return {
     breakpoints = {},
     code_lens = false,
+    diagnostics_virt_lines = false,
     inlay_hints = is_git_repo,
     python_debug_host = "127.0.0.1",
     python_debug_port = 9527,
@@ -92,6 +95,9 @@ function M.normalize(data)
     if type(data.code_lens) == "boolean" then
       resolved.code_lens = data.code_lens
     end
+    if type(data.diagnostics_virt_lines) == "boolean" then
+      resolved.diagnostics_virt_lines = data.diagnostics_virt_lines
+    end
     if type(data.inlay_hints) == "boolean" then
       resolved.inlay_hints = data.inlay_hints
     end
@@ -117,6 +123,7 @@ function M.dump()
   return {
     breakpoints = M.breakpoints:snapshot(),
     code_lens = M.code_lens:snapshot(),
+    diagnostics_virt_lines = M.diagnostics_virt_lines:snapshot(),
     inlay_hints = M.inlay_hints:snapshot(),
     python_debug_host = M.python_debug_host:snapshot(),
     python_debug_port = M.python_debug_port:snapshot(),
@@ -132,6 +139,7 @@ function M.load(raw_data)
 
   M.breakpoints:next(data.breakpoints)
   M.code_lens:next(data.code_lens)
+  M.diagnostics_virt_lines:next(data.diagnostics_virt_lines)
   M.inlay_hints:next(data.inlay_hints)
   M.python_debug_host:next(data.python_debug_host)
   M.python_debug_port:next(data.python_debug_port)
@@ -145,6 +153,7 @@ end
 local data = M.defaults() ---@type eve.context.lsp.data
 M.breakpoints = std.Observable.from_value(data.breakpoints)
 M.code_lens = std.Observable.from_value(data.code_lens)
+M.diagnostics_virt_lines = std.Observable.from_value(data.diagnostics_virt_lines)
 M.inlay_hints = std.Observable.from_value(data.inlay_hints)
 M.python_debug_host = std.Observable.from_value(data.python_debug_host)
 M.python_debug_port = std.Observable.from_value(data.python_debug_port)

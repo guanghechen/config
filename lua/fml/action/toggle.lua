@@ -37,6 +37,7 @@ local group_flags = {
   ---lsp
   lsp = {
     code_lens = eve.context.lsp.code_lens,
+    diagnostics_virt_lines = eve.context.lsp.diagnostics_virt_lines,
     inlay_hints = eve.context.lsp.inlay_hints,
     spellcheck = eve.context.lsp.spellcheck,
   },
