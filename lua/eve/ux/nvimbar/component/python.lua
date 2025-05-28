@@ -15,10 +15,11 @@ std.fn.observe({ eve.context.lsp.python_venv_path }, function()
 
   local python_path = eve.context.lsp.get_python_bin_path() ---@type string|nil
   if python_path ~= nil then
-    local cmd = vim.fn.shellescape(python_path) .. " --version"
+    local cmd = { python_path, "--version" } ---@type string[]
     local ok, output = pcall(vim.fn.system, cmd)
-    if ok then
-      python_version = output:match("(%d+%.%d+%.%d+)")
+    local exit_code = vim.v.shell_error
+    if ok and exit_code == 0 then
+      python_version = vim.trim(output):match("(%d+%.%d+%.%d+)") or ""
     else
       python_version = nil
       std.reporter.error({

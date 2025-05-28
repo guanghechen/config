@@ -52,7 +52,7 @@ local ALL_VENV_MANAGER_PATHS = {
     Hatch = getenv("USERPROFILE") .. "\\AppData\\Local\\hatch\\env\\virtual",
     VenvWrapper = getenv("USERPROFILE") .. ".virtualenvs", -- VenvWrapper not supported on Windows but need something here
     AnacondaBase = getenv("CONDA_PREFIX"),
-    AnacondaEnvs = "C:\\app\\miniforge3\\envs",
+    AnacondaEnvs = "C:\\app\\miniforge\\envs",
   },
 }
 
