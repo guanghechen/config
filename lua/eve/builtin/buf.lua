@@ -93,6 +93,7 @@ function M.loadfile(filepath)
   for _, bufnr in ipairs(bufnrs) do
     local bufpath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if bufpath == filepath then
+      vim.bo[bufnr].buflisted = true
       return bufnr
     end
   end
