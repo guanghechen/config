@@ -208,7 +208,7 @@ return {
 
         local filepath_relative = std.path.relative(std.path.cwd(), filepath, false) ---@type string
         local filename = std.path.basename(filepath) ---@type string
-        local icon = eve.fn.fileicon(filename)
+        local icon = std.fileicon.get_file_icon(filename)
 
         local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
         vim.bo[bufnr].bufhidden = "wipe"
@@ -544,12 +544,8 @@ return {
     },
   },
   config = function(_, opts)
-    package.loaded["window-picker"] = {
-      pick_window = function()
-        local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-        return eve.win.pick_projectable(winnr_source)
-      end,
-    }
+    require("fml.dressing.plugin").mock_web_devicons()
+    require("fml.dressing.plugin").mock_winpicker()
 
     local function on_move(data)
       eve.lsp.on_rename(data.source, data.destination)
@@ -574,7 +570,6 @@ return {
     })
   end,
   dependencies = {
-    "mini.icons",
     "nui.nvim",
     "plenary.nvim",
   },

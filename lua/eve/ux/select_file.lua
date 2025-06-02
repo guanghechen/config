@@ -174,7 +174,7 @@ function M.new(props)
         local filepath = raw_item.filepath ---@type string
         local filepath_relative = raw_item.filepath_relative ---@type string
         local filename = std.path.basename(raw_item.filepath)
-        local icon, icon_hl = eve.fn.fileicon(filename)
+        local icon, icon_hl = std.fileicon.get_file_icon(filename)
 
         ---@type eve.ux.select_file.IItem
         local item = {

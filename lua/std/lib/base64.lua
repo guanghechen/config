@@ -100,7 +100,7 @@ function base64.makeencoder(s62, s63, spad)
     s63 or "/",
     spad or "=",
   }) do
-    encoder[b64code] = string.byte(char, )
+    encoder[b64code] = string.byte(char)
   end
   return encoder
 end

@@ -1,4 +1,7 @@
 {
+  "ignorePaths": [
+    "lua/std/fileicon.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -415,6 +418,8 @@
     "miniai",
     "miniforge3",
     "minihipatterns",
+    "miniicon",
+    "miniicons",
     "miniindentscope",
     "minipairs",
     "minmax",

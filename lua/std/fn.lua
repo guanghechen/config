@@ -207,6 +207,15 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+local spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" } ---@type string[]
+-- local spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" } ---@type string[]
+
+---@return string
+function M.spinner()
+  local index = math.floor(vim.uv.hrtime() / (1e6 * 80)) % #spinners + 1 ---@type integer
+  return spinners[index]
+end
+
 ---@param timestamp                     integer
 ---@return string
 function M.time_ago(timestamp)
@@ -233,5 +242,21 @@ function M.time_ago(timestamp)
     return string.format("%d years ago", math.floor(diff / seconds_in_year))
   end
 end
+
+----------------------------------------------------------------------------------------------------
+
+local BUFNR_DETECT_FILETYPE = -1 ---@type integer
+
+---@param filename                      string
+---@return string|nil
+function M.detect_filetype(filename)
+  if BUFNR_DETECT_FILETYPE < 1 or not vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
+    BUFNR_DETECT_FILETYPE = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(BUFNR_DETECT_FILETYPE, "guanghechen://detect-filetype/" .. BUFNR_DETECT_FILETYPE)
+  end
+  return vim.filetype.match({ filename = filename, buf = BUFNR_DETECT_FILETYPE })
+end
+
+----------------------------------------------------------------------------------------------------
 
 return M

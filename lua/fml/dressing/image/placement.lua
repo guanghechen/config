@@ -168,7 +168,7 @@ function M:progress()
       vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
       vim.api.nvim_buf_set_extmark(self.bufnr, ns, 0, 0, {
         virt_text = {
-          { eve.fn.spinner(), "SnacksImageSpinner" },
+          { std.fn.spinner(), "SnacksImageSpinner" },
           { " " },
           { self.image._convert:current().name .. " loading …", "SnacksImageLoading" },
         },

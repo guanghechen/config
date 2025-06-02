@@ -25,4 +25,9 @@ return {
       kinds = kinds,
     },
   },
+  config = function(_, opts)
+    require("fml.dressing.plugin").mock_miniicons()
+
+    require("trouble").setup(opts)
+  end,
 }

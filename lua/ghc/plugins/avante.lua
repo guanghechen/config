@@ -151,7 +151,7 @@ local function get_file_selector()
             icon = eve.icon.filetype.Folder
             icon_hl = "MiniIconsBlue"
           else
-            icon, icon_hl = eve.fn.fileicon(filepath)
+            icon, icon_hl = std.fileicon.get_file_icon(filepath)
           end
 
           local data = { filepath = filepath, icon = icon, icon_hl = icon_hl }
@@ -299,7 +299,6 @@ return {
     "plenary.nvim",
     "nui.nvim",
     "nvim-treesitter",
-    "mini.icons",
     "copilot.lua",
     "render-markdown.nvim",
   },
@@ -431,7 +430,8 @@ return {
     }
   end,
   config = function(_, opts)
-    package.loaded["dressing.nvim"] = {}
+    require("fml.dressing.plugin").mock_miniicons()
+    require("fml.dressing.plugin").mock_dressing()
 
     require("avante").setup(opts)
     std.fn.observe({ eve.context.flight.ai_provider }, function()

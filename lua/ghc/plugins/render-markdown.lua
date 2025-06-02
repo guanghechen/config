@@ -28,6 +28,8 @@ return {
     },
   },
   config = function(_, opts)
+    require("fml.dressing.plugin").mock_miniicons()
+
     local plugin = require("render-markdown")
     plugin.setup(opts)
 

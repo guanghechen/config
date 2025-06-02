@@ -27,6 +27,7 @@ return {
     attach_mode = "global",
     autojump = false,
     backends = { "lsp", "treesitter", "markdown", "man" },
+    nerd_font = true,
     filter_kind = {
       _ = vim.list_extend({}, base_filter_kind),
       lua = vim.list_extend({
@@ -79,6 +80,9 @@ return {
   },
   dependencies = {
     "nvim-treesitter",
-    "mini.icons",
   },
+  config = function(_, opts)
+    require("fml.dressing.plugin").mock_miniicons()
+    require("aerial").setup(opts)
+  end,
 }

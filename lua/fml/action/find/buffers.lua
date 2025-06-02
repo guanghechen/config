@@ -130,7 +130,7 @@ local provider = {
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
         local filename = std.path.basename(filepath)
-        local icon, icon_hl = eve.fn.fileicon(filename)
+        local icon, icon_hl = std.fileicon.get_file_icon(filename, filetype)
 
         ---@type fml.action.find.buffers.IItemData
         local data = {

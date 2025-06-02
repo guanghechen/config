@@ -63,7 +63,7 @@ local function get_history_select()
           local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
           local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
           local filename = std.path.basename(filepath) ---@type string
-          local icon, icon_hln = eve.fn.fileicon(filename) ---@type string, string
+          local icon, icon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
 
           ---@type fml.action.win.history.IItemData
           local data = {
@@ -86,7 +86,7 @@ local function get_history_select()
           local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
           local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
           local filename = std.path.basename(filepath) ---@type string
-          local icon, icon_hln = eve.fn.fileicon(filename) ---@type string, string
+          local icon, icon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
 
           local text = string.format("%2d %s %s", ordinal, icon, relative_filepath) ---@type string
 

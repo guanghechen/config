@@ -70,7 +70,6 @@ local raw_specs = {
   { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                },
   { name = "mini.ai",                     main = "mini.ai",                       cond = conds.common             },
   { name = "mini.hipatterns",             main = "mini.hipatterns",               cond = conds.not_vscode         },
-  { name = "mini.icons",                  main = "mini.icons",                    cond = conds.not_vscode         },
   { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode         },
   { name = "mini.pairs",                  main = "mini.pairs",                    cond = conds.common             },
   { name = "mini.surround",               main = "mini.surround",                 cond = conds.common             },

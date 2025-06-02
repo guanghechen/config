@@ -66,7 +66,7 @@ local function build_context(preset_context)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filename = std.path.basename(filepath) ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
-  local fileicon, fileicon_hl = eve.fn.fileicon(filename) ---@type string, string
+  local fileicon, fileicon_hl = std.fileicon.get_file_icon(filename, filetype) ---@type string, string
 
   local git = vim.b[bufnr].gitsigns_status_dict
   local git_branch = git and git.head or nil ---@type string|nil

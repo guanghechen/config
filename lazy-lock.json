@@ -14,7 +14,6 @@
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "8024d64e1330b86044fed4c8494ef3dcd483a67c" },
   "mini.ai": { "branch": "nvim@mini.ai", "commit": "4b5348fac5912f1957f4c012c2e0ab0c4b865386" },
   "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "e5083df391171dc9d8172645606f8496d9443374" },
-  "mini.icons": { "branch": "nvim@mini.icons", "commit": "397ed3807e96b59709ef3292f0a3e253d5c1dc0a" },
   "mini.indentscope": { "branch": "nvim@mini.indentscope", "commit": "8af2569a7d7fd37300dfa760e44e71efbbf322fd" },
   "mini.pairs": { "branch": "nvim@mini.pairs", "commit": "69864a2efb36c030877421634487fd90db1e4298" },
   "mini.surround": { "branch": "nvim@mini.surround", "commit": "f4307f935ad87cfe3e570dbaae485b35cce4e5ec" },

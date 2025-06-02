@@ -7,6 +7,7 @@ local __mods = {
   byte = "std.byte",
   debug = "std.debug",
   env = "std.env",
+  fileicon = "std.fileicon",
   fn = "std.fn",
   fs = "std.fs",
   is = "std.is",
@@ -50,6 +51,7 @@ local __mods = {
 ---@field public byte                   std.byte
 ---@field public debug                  std.debug
 ---@field public env                    std.env
+---@field public fileicon               std.fileicon
 ---@field public fn                     std.fn
 ---@field public fs                     std.fs
 ---@field public is                     std.is

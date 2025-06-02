@@ -35,4 +35,9 @@ return {
       },
     },
   },
+  config = function(_, opts)
+    require("fml.dressing.plugin").mock_miniicons()
+
+    require("which-key").setup(opts)
+  end,
 }

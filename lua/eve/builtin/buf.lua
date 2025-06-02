@@ -178,7 +178,7 @@ function M.resolve(bufnr, force)
   local cwd = std.path.cwd() ---@type string
   local relpath = std.path.relative(cwd, filepath, false) ---@type string
   local filename = std.path.basename(filepath) ---@type string
-  local fileicon, fileicon_hln = eve.fn.fileicon(filename) ---@type string, string
+  local fileicon, fileicon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
 
   if meta == nil then
     ---@type eve.builtin.buf.IMeta

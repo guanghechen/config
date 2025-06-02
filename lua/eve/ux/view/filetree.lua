@@ -425,7 +425,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local basename = pieces[index] ---@type string
       filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
       local uuid = std.path.uuid(filepath) ---@type string
-      local icon, icon_hln = eve.fn.diricon(basename)
+      local icon, icon_hln = std.fileicon.get_directory_icon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
       local nodedata = {
@@ -459,7 +459,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local basename = pieces[index] ---@type string
       filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
       local uuid = std.path.uuid(filepath) ---@type string
-      local icon, icon_hln = eve.fn.diricon(basename)
+      local icon, icon_hln = std.fileicon.get_directory_icon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
       local nodedata = {
@@ -477,7 +477,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local basename = pieces[#pieces] ---@type string
     filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
     local uuid = std.path.uuid(filepath) ---@type string
-    local icon, icon_hln = eve.fn.fileicon(basename)
+    local icon, icon_hln = std.fileicon.get_file_icon(basename)
 
     ---@type eve.ux.view.filetree.IFileNodeData
     local nodedata = {
@@ -504,7 +504,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local basename = pieces[index] ---@type string
       filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
       local uuid = std.path.uuid(filepath) ---@type string
-      local icon, icon_hln = eve.fn.diricon(basename)
+      local icon, icon_hln = std.fileicon.get_directory_icon(basename)
 
       ---@type eve.ux.view.filetree.IDirectoryNodeData
       local nodedata = {
@@ -522,7 +522,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
     local basename = pieces[#pieces] ---@type string
     filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
     local uuid = std.path.uuid(filepath) ---@type string
-    local icon, icon_hln = eve.fn.fileicon(basename)
+    local icon, icon_hln = std.fileicon.get_file_icon(basename)
 
     ---@type eve.ux.view.filetree.IFileNodeData
     local nodedata = {
@@ -668,9 +668,10 @@ end
 ---@type eve.ux.view.filetree.IFileNodeFlattenRenderer
 function M.default_file_node_flatten_renderer(_, node, root)
   local nodedata = node.data ---@type eve.ux.view.filetree.IFileNodeData
-  local icon, icon_hln = eve.fn.fileicon(nodedata.basename) ---@type string, string
+  local icon, icon_hln = std.fileicon.get_file_icon(nodedata.basename) ---@type string, string
 
-  local filepath = #root.data.filepath < 2 and nodedata.filepath or nodedata.string.sub(filepath, #root.data.filepath + 2) ---@type string
+  local filepath = #root.data.filepath < 2 and nodedata.filepath
+    or nodedata.string.sub(filepath, #root.data.filepath + 2) ---@type string
   local text = string.format("%s %s", icon, filepath) ---@type string
   local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type std.t.IHighlightInline[]
 

@@ -362,7 +362,7 @@ function M.fetch_data(input_text, force, callback)
       fileitem_map[filepath] = fileitem
 
       local filename = std.path.basename(filepath) ---@type string
-      local icon, icon_hl = eve.fn.fileicon(filename)
+      local icon, icon_hl = std.fileicon.get_file_icon(filename)
       local icon_width = string.len(icon) ---@type integer
       local file_highlights = { { coll = 0, colr = icon_width, hlname = icon_hl } } ---@type std.t.IHighlightInline[]
 
@@ -427,7 +427,9 @@ function M.fetch_data(input_text, force, callback)
             local width_prefix = string.len(text_prefix) ---@type integer
             local search_item ---@type eve.ux.search.IItem
             if s_k == r_k then
-              local prettier_line = string.sub(line, 1, col_end) .. string.sub(r_line, r_col + 1, r_col_end) .. string.sub(line, col_end + 1) ---@type string
+              local prettier_line = string.sub(line, 1, col_end)
+                .. string.sub(r_line, r_col + 1, r_col_end)
+                .. string.sub(line, col_end + 1) ---@type string
               local text = text_prefix .. prettier_line .. eve.icon.listchars.eol ---@type string
 
               ---@type std.t.IHighlightInline[]
