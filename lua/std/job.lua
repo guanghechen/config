@@ -13,7 +13,7 @@ function M.execute_command(cmd)
 
   if #lines > 0 then
     local line = lines[1] ---@type string
-    if line:sub(1, 6) == "fatal:" then
+    if string.sub(line, 1, 6) == "fatal:" then
       return false, {}
     end
   end

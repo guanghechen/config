@@ -49,7 +49,7 @@ M.transforms = {
   norg = function(img, ctx)
     local row, col = ctx.src.node:start()
     local line = vim.api.nvim_buf_get_lines(ctx.bufnr, row, row + 1, false)[1]
-    img.src = line:sub(col + 1)
+    img.src = string.sub(line, col + 1)
   end,
   typst = function(img, ctx)
     if not img.content then

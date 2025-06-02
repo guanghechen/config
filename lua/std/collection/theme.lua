@@ -18,6 +18,8 @@
 local M = {}
 M.__index = M
 
+local BYTE_AT = std.byte.BYTES.AT ---@type integer
+
 ---@return std.collection.Theme
 function M.new()
   local self = setmetatable({}, M)
@@ -70,7 +72,7 @@ function M:compile(params)
       table.insert(hlgroup_fields, field)
     end
 
-    local hlname_stringified = string.sub(hlname, 1, 1) == "@" and '["' .. hlname .. '"]' or hlname
+    local hlname_stringified = string.byte(hlname, 1, 1) == BYTE_AT and '["' .. hlname .. '"]' or hlname
     local hlgroup_str = hlname_stringified .. "={" .. table.concat(hlgroup_fields, ",") .. "}"
     table.insert(hlgroup_strs, hlgroup_str)
   end

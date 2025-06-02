@@ -104,7 +104,7 @@ local function get_buf_signs(bufnr)
       ---@type fml.dressing.statuscolumn.ISign
       local sign = {
         type = "mark",
-        text = mark.mark:sub(2),
+        text = mark.string.sub(mark, 2),
         texthl = "DiagnosticSignHint",
         priority = 0,
       }

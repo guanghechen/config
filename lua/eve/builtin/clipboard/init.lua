@@ -2,6 +2,7 @@
 
 local __module_name__ = "eve.builtin.clipboard" ---@type string
 
+local BYTE_DOT = std.byte.BYTES.DOT ---@type integer
 local MAX_BASE64_SIZE = 24 * 1024 ---@type number
 
 ---@class eve.builtin.clipboard
@@ -47,7 +48,7 @@ function M.paste_image(filepath_target)
       local filepath_current = vim.api.nvim_buf_get_name(0) ---@type string
       local src = std.path.relative(std.path.dirname(filepath_current), filepath_target, true) ---@type string
       if #src > 1 then
-        if src:sub(1, 1) ~= "." then
+        if string.byte(src, 1, 1) ~= BYTE_DOT then
           src = "." .. std.env.PATH_SEP .. src
         end
         local filename = std.path.basename(filepath_target) ---@type string

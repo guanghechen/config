@@ -200,7 +200,7 @@ vim.paste = function(lines, phase)
           if IMAGE_EXTENSIONS[extname] then
             local src = std.path.relative(dirpath, filepath_target, true) ---@type string
             if #src > 1 then
-              if src:sub(1, 1) ~= "." then
+              if string.sub(src, 1, 1) ~= "." then
                 src = "." .. std.env.PATH_SEP .. src
               end
               local filename = std.path.basename(filepath_target) ---@type string

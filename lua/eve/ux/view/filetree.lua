@@ -541,10 +541,10 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
       local filepath, lnum, col = std.string.parse_filepath_with_position(p) ---@type string, integer|nil, integer|nil
       local fileuuid, absolute_filepath ---@type string, string
       if std.path.is_absolute(filepath) then
-        if filepath:sub(1, cwd_with_slash_length) ~= cwd_with_slash then
+        if string.sub(filepath, 1, cwd_with_slash_length) ~= cwd_with_slash then
           fileuuid, absolute_filepath = insert_absolute_filepath(filepath)
         else
-          filepath = filepath:sub(cwd_with_slash_length + 1) ---@type string
+          filepath = string.sub(filepath, cwd_with_slash_length + 1) ---@type string
           fileuuid, absolute_filepath = insert_relative_filepath(filepath)
         end
       else
@@ -566,10 +566,10 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   else
     for _, filepath in ipairs(filepaths) do
       if std.path.is_absolute(filepath) then
-        if filepath:sub(1, cwd_with_slash_length) ~= cwd_with_slash then
+        if string.sub(filepath, 1, cwd_with_slash_length) ~= cwd_with_slash then
           insert_absolute_filepath(filepath)
         else
-          filepath = filepath:sub(cwd_with_slash_length + 1) ---@type string
+          filepath = string.sub(filepath, cwd_with_slash_length + 1) ---@type string
           insert_relative_filepath(filepath)
         end
       else
@@ -670,7 +670,7 @@ function M.default_file_node_flatten_renderer(_, node, root)
   local nodedata = node.data ---@type eve.ux.view.filetree.IFileNodeData
   local icon, icon_hln = eve.fn.fileicon(nodedata.basename) ---@type string, string
 
-  local filepath = #root.data.filepath < 2 and nodedata.filepath or nodedata.filepath:sub(#root.data.filepath + 2) ---@type string
+  local filepath = #root.data.filepath < 2 and nodedata.filepath or nodedata.string.sub(filepath, #root.data.filepath + 2) ---@type string
   local text = string.format("%s %s", icon, filepath) ---@type string
   local highlights = { { coll = 0, colr = #icon + 1, hlname = icon_hln } } ---@type std.t.IHighlightInline[]
 

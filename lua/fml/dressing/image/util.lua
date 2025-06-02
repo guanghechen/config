@@ -20,11 +20,11 @@ function M.dim(filepath)
   fd:close()
 
   -- Check PNG signature
-  assert(header:sub(1, 8) == "\137PNG\r\n\26\n", "Not a valid PNG file: " .. filepath)
+  assert(string.sub(header, 1, 8) == "\137PNG\r\n\26\n", "Not a valid PNG file: " .. filepath)
 
   -- Extract width and height from the IHDR chunk
-  local width = header:byte(17) * 16777216 + header:byte(18) * 65536 + header:byte(19) * 256 + header:byte(20)
-  local height = header:byte(21) * 16777216 + header:byte(22) * 65536 + header:byte(23) * 256 + header:byte(24)
+  local width = string.byte(header, 17) * 16777216 + string.byte(header, 18) * 65536 + string.byte(header, 19) * 256 + string.byte(header, 20)
+  local height = string.byte(header, 21) * 16777216 + string.byte(header, 22) * 65536 + string.byte(header, 23) * 256 + string.byte(header, 24)
   dims[filepath] = { width = width, height = height }
   return dims[filepath]
 end
@@ -100,7 +100,7 @@ function M.tpl(str, data, opts)
       ---@param w                       string
       ---@return string
       function(w)
-        local inner = w:sub(2 + #(opts.prefix or ""), -2)
+        local inner = string.sub(w, 2 + #(opts.prefix or ""), -2)
         local key, default = inner:match("^(.-):(.*)$")
         local ret = data[key or inner]
         if ret == "" and default then
@@ -117,7 +117,7 @@ function M.tpl(str, data, opts)
       indent = math.min(indent, line:find("%S") or 1000)
     end
     for l, line in ipairs(lines) do
-      lines[l] = line:sub(indent)
+      lines[l] = string.sub(line, indent)
     end
   end
   return ret

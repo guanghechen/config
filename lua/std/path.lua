@@ -4,6 +4,13 @@ local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
 local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
 local HOME_CONTEXT = std.env.HOME_CONTEXT ---@type string
 
+-- stylua: ignore start
+local BYTE_SLASH      = std.byte.BYTES.SLASH      ---@type integer '/'
+local BYTE_BACKSLASH  = std.byte.BYTES.BACKSLASH  ---@type integer '\\'
+local BYTE_COLON      = std.byte.BYTES.COLON      ---@type integer ':'
+local BYTE_PATHSEP    = string.byte(SEP)          ---@type integer
+-- stylua: ignore end
+
 ---@type table<string, string>
 local FILEPATH_TO_UUID = {
   [""] = "d41d8cd98f00b204e9800998ecf8427e",
@@ -61,8 +68,29 @@ local M = {}
 ---@param filepath                      string
 ---@return string
 function M.basename(filepath)
-  local pieces = M.split(filepath)
-  return #pieces > 0 and pieces[#pieces] or ""
+  if filepath == "" then
+    return ""
+  end
+
+  local pos_invalid = #filepath + 1 ---@type integer
+  local pos_sep = 0 ---@type integer
+
+  for i = #filepath, 1, -1 do
+    local byte = string.byte(filepath, i, i) ---@type integer
+    if byte == BYTE_SLASH or byte == BYTE_BACKSLASH then
+      if i + 1 == pos_invalid then
+        pos_invalid = i
+      else
+        pos_sep = i
+        break
+      end
+    end
+  end
+
+  if pos_sep == 0 and pos_invalid == #filepath + 1 then
+    return filepath
+  end
+  return string.sub(filepath, pos_sep + 1, pos_invalid - 1)
 end
 
 ---@param filepath                      string
@@ -71,10 +99,10 @@ function M.dirname(filepath)
   local pieces = M.split(filepath)
   if #pieces == 1 then
     local piece = pieces[1] ---@type string
-    return piece == "" and (filepath:sub(1, 1) == "/") and "/" or piece
+    return piece == "" and string.byte(filepath, 1, 1) == BYTE_SLASH and "/" or piece
   end
   local dirpath = #pieces > 0 and table.concat(pieces, SEP, 1, #pieces - 1) or "" ---@type string
-  return dirpath == "" and filepath:sub(1, 1) == "/" and "/" or dirpath
+  return dirpath == "" and string.byte(filepath, 1, 1) == BYTE_SLASH and "/" or dirpath
 end
 
 ---@param filename                      string
@@ -87,9 +115,9 @@ end
 ---@return boolean
 function M.is_absolute(filepath)
   if std.env.IS_WIN then
-    return #filepath > 1 and filepath:sub(2, 2) == ":"
+    return #filepath > 1 and string.byte(filepath, 2, 2) == BYTE_COLON
   end
-  return string.sub(filepath, 1, 1) == SEP
+  return string.byte(filepath, 1, 1) == BYTE_PATHSEP
 end
 
 ---@param filepath                      string
@@ -212,7 +240,7 @@ function M.relative_dir(from, to, prefer_slash)
   for j = i, #to_pieces - 1 do
     p = p .. sep .. to_pieces[j] ---@type string
   end
-  return #p > 1 and p:sub(2) or p
+  return #p > 1 and string.sub(p, 2) or p
 end
 
 ---@param from                          string
@@ -251,7 +279,7 @@ function M.relative(from, to, prefer_slash)
   for j = i, #to_pieces do
     p = p .. sep .. to_pieces[j] ---@type string
   end
-  return #p > 1 and p:sub(2) or p
+  return #p > 1 and string.sub(p, 2) or p
 end
 
 ---@param cwd                           string
@@ -265,7 +293,7 @@ end
 function M.split(filepath)
   local pieces = {} ---@type string[]
   local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = SEP == "/" and string.sub(filepath, 1, 1) == SEP ---@type boolean
+  local has_prefix_sep = SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
 
   for piece in string.gmatch(filepath, pattern) do
     if #piece > 0 and piece ~= "." then
@@ -280,7 +308,7 @@ function M.split(filepath)
     table.insert(pieces, 1, "")
   end
 
-  if std.env.IS_WIN and #filepath > 1 and filepath:sub(2, 2) == ":" then
+  if std.env.IS_WIN and #filepath > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
     pieces[1] = pieces[1]:upper()
   end
   return pieces

@@ -193,7 +193,7 @@ function M:reset_input(text)
   end
 
   local next_text = text or context.input:snapshot() ---@type string
-  next_text = std.string.starts_with(next_text, EDITING_PREFIX) and next_text:sub(#EDITING_PREFIX + 1) or next_text ---@type string
+  next_text = std.string.starts_with(next_text, EDITING_PREFIX) and string.sub(next_text, #EDITING_PREFIX + 1) or next_text ---@type string
   context.input:next(next_text)
 
   local old_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]

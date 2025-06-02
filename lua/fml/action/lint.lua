@@ -8,18 +8,18 @@ local function get_strict_word_under_cursor()
   local start_col = col
   local end_col = col
 
-  while start_col > 0 and line:sub(start_col, start_col):match("[%w]") do
+  while start_col > 0 and string.sub(line, start_col, start_col):match("[%w]") do
     start_col = start_col - 1
   end
-  if not line:sub(start_col, start_col):match("[%w]") then
+  if not string.sub(line, start_col, start_col):match("[%w]") then
     start_col = start_col + 1
   end
 
-  while end_col <= #line and line:sub(end_col + 1, end_col + 1):match("[%w]") do
+  while end_col <= #line and string.sub(line, end_col + 1, end_col + 1):match("[%w]") do
     end_col = end_col + 1
   end
 
-  local word = line:sub(start_col, end_col)
+  local word = string.sub(line, start_col, end_col)
   return word:match("^[a-zA-Z0-9]+$") and word:lower() or nil
 end
 

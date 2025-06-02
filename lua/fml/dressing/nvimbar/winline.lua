@@ -133,22 +133,22 @@ local function render(winnr)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  if filepath:sub(1, 11) == "diffview://" then
-    local should_show_winline = filepath:sub(1, 19) ~= "diffview:///panels/" ---@type boolean
+  if string.sub(filepath, 1, 11) == "diffview://" then
+    local should_show_winline = string.sub(filepath, 1, 19) ~= "diffview:///panels/" ---@type boolean
     if should_show_winline then
-      local text = filepath:sub(12) ---@type string
-      if text:sub(1, #std.env.HOME_NVIM_CONFIG) == std.env.HOME_NVIM_CONFIG then
-        text = "<NVIM_HOME>" .. text:sub(#std.env.HOME_NVIM_CONFIG + 1)
+      local text = string.sub(filepath, 12) ---@type string
+      if string.sub(text, 1, #std.env.HOME_NVIM_CONFIG) == std.env.HOME_NVIM_CONFIG then
+        text = "<NVIM_HOME>" .. string.sub(text, #std.env.HOME_NVIM_CONFIG + 1)
       end
       local winbar = "diffview://" .. text
       vim.wo[winnr].winbar = txt(winbar, "f_wl_text")
     end
     return
   end
-  if filepath:sub(1, 11) == "gitsigns://" then
-    local text = filepath:sub(12) ---@type string
-    if text:sub(1, #std.env.HOME_NVIM_CONFIG) == std.env.HOME_NVIM_CONFIG then
-      text = "<NVIM_HOME>" .. text:sub(#std.env.HOME_NVIM_CONFIG + 1)
+  if string.sub(filepath, 1, 11) == "gitsigns://" then
+    local text = string.sub(filepath, 12) ---@type string
+    if string.sub(text, 1, #std.env.HOME_NVIM_CONFIG) == std.env.HOME_NVIM_CONFIG then
+      text = "<NVIM_HOME>" .. string.sub(text, #std.env.HOME_NVIM_CONFIG + 1)
     end
     local winbar = "gitsigns://" .. text
     vim.wo[winnr].winbar = txt(winbar, "f_wl_text")

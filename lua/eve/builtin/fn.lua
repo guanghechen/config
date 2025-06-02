@@ -1,6 +1,10 @@
 ---@class eve.builtin.fn
 local M = {}
 
+-- stylua: ignore start
+local BYTE_PATHSEP    = string.byte(std.env.PATH_SEP) ---@type integer
+-- stylua: ignore end
+
 local spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" } ---@type string[]
 -- local spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" } ---@type string[]
 
@@ -20,7 +24,7 @@ function M.diricon(dirname)
     return eve.icon.filetype.Folder, "MiniIconsBlue"
   end
 
-  if dirname:sub(#dirname, #dirname) == "/" then
+  if string.byte(dirname, #dirname, #dirname) == BYTE_PATHSEP then
     return eve.icon.filetype.Folder, "MiniIconsBlue"
   end
 
@@ -43,7 +47,7 @@ function M.fileicon(filename)
     return eve.icon.filetype.Unknown, "MiniIconsRed"
   end
 
-  if filename:sub(#filename, #filename) == "/" then
+  if string.byte(filename, #filename, #filename) == BYTE_PATHSEP then
     return eve.icon.filetype.Folder, "MiniIconsBlue"
   end
 

@@ -952,13 +952,13 @@ function M:__match__(input)
 
   local last_input = self._last_input ---@type string
   local last_matches = self._last_matches ---@type std.t.IScoredMatch[]|nil
-  if last_matches ~= nil and not flag_regex and #input > #last_input and input:sub(1, #last_input) == last_input then
+  if last_matches ~= nil and not flag_regex and #input > #last_input and string.sub(input, 1, #last_input) == last_input then
     if flag_sensitive then
       for _, match in ipairs(last_matches) do
         local node = filetree:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath:sub(offset) ---@type string
+          local line = data.string.sub(filepath, offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end
@@ -968,7 +968,7 @@ function M:__match__(input)
         local node = filetree:retrieve_by_uuid(match.uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath_lower:sub(offset) ---@type string
+          local line = data.string.sub(filepath_lower, offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end
@@ -980,7 +980,7 @@ function M:__match__(input)
         local node = filetree:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath:sub(offset) ---@type string
+          local line = data.string.sub(filepath, offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end
@@ -990,7 +990,7 @@ function M:__match__(input)
         local node = filetree:retrieve_by_uuid(uuid, false) ---@type eve.ux.view.filetree.INode|nil
         if node ~= nil then
           local data = node.data ---@type eve.ux.view.filetree.INodeData
-          local line = data.filepath_lower:sub(offset) ---@type string
+          local line = data.string.sub(filepath_lower, offset) ---@type string
           lines[#lines + 1] = line
           uuids[#uuids + 1] = node.uuid
         end

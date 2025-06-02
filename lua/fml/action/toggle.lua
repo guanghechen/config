@@ -486,8 +486,8 @@ do
     local group = g ---@type string|nil
     if g == "misc" then
       group = nil
-    elseif g:sub(1, 1) == "_" then
-      group = g:sub(2)
+    elseif string.sub(g, 1, 1) == "_" then
+      group = string.sub(g, 2)
     end
 
     for name, item in pairs(items) do

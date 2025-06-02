@@ -111,13 +111,19 @@ function util.deindent(text)
     local current_indent = indents[i]
     local min_len = math.min(#common_prefix, #current_indent)
     local new_prefix = ""
+    
+    local k = 0 ---@type integer
     for j = 1, min_len do
-      if common_prefix:sub(j, j) == current_indent:sub(j, j) then
-        new_prefix = new_prefix .. common_prefix:sub(j, j)
-      else
+      if string.byte(common_prefix, j, j) ~= string.byte(current_indent, j, j) then
         break
       end
+      k = k + 1
     end
+
+    if k > 0 then
+      new_prefix = new_prefix .. string.sub(common_prefix, 1, k)
+    end
+
     common_prefix = new_prefix
     if common_prefix == "" then
       break

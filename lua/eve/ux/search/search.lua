@@ -204,7 +204,7 @@ function M.new(props)
         if input_history ~= nil then
           local top = input_history:top() ---@type string|nil
           if top ~= nil then
-            top = std.string.starts_with(top, EDITING_PREFIX) and top:sub(#EDITING_PREFIX + 1) or top ---@type string
+            top = std.string.starts_with(top, EDITING_PREFIX) and string.sub(top, #EDITING_PREFIX + 1) or top ---@type string
             input_history:update_top(top)
           end
         end

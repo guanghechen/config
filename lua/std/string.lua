@@ -1,3 +1,8 @@
+-- stylua: ignore start
+local BYTE_SLASH      = std.byte.BYTES.SLASH      ---@type integer '/'
+local BYTE_BACKSLASH  = std.byte.BYTES.BACKSLASH  ---@type integer '\\'
+-- stylua: ignore end
+
 ---@param octal                          string
 ---@return string
 local convert_octal_char = function(octal)
@@ -73,9 +78,9 @@ end
 ---@return string
 function M.remove_last_slash(text)
   if #text > 1 then
-    local last_character = string.sub(text, -1, -1)
-    if last_character == "/" or last_character == "\\" then
-      return string.sub(text, 1, -2)
+    local last_byte = string.byte(text, #text, #text)
+    if last_byte == BYTE_SLASH or last_byte == BYTE_BACKSLASH then
+      return string.sub(text, 1, #text - 1)
     end
   end
   return text
@@ -85,7 +90,7 @@ end
 ---@param word                          string
 ---@return boolean
 function M.starts_with(text, word)
-  return #text >= #word and text:sub(1, #word) == word
+  return #text >= #word and string.sub(text, 1, #word) == word
 end
 
 return M

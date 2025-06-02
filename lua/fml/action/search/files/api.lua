@@ -427,7 +427,7 @@ function M.fetch_data(input_text, force, callback)
             local width_prefix = string.len(text_prefix) ---@type integer
             local search_item ---@type eve.ux.search.IItem
             if s_k == r_k then
-              local prettier_line = line:sub(1, col_end) .. r_line:sub(r_col + 1, r_col_end) .. line:sub(col_end + 1) ---@type string
+              local prettier_line = string.sub(line, 1, col_end) .. string.sub(r_line, r_col + 1, r_col_end) .. string.sub(line, col_end + 1) ---@type string
               local text = text_prefix .. prettier_line .. eve.icon.listchars.eol ---@type string
 
               ---@type std.t.IHighlightInline[]

@@ -442,8 +442,8 @@ function M:state()
     local range = self.opts.range or { pos[1], pos[2], pos[1], pos[2] }
     if range[1] == range[3] then
       local line = vim.api.nvim_buf_get_lines(self.bufnr, range[1] - 1, range[1], false)[1] or ""
-      local has_before = line:sub(1, range[2]):find("%S") ~= nil
-      local has_after = line:sub(range[4] + 1):find("%S") ~= nil
+      local has_before = string.sub(line, 1, range[2]):find("%S") ~= nil
+      local has_after = string.sub(line, range[4] + 1):find("%S") ~= nil
       return has_before or has_after
     end
   end

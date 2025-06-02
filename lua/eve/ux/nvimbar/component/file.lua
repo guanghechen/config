@@ -256,7 +256,7 @@ function M.status(position)
         text = text .. " " .. eve.icon.git.Remove .. " " .. gitsigns_status_dict.removed ---@type string
       end
     end
-    return #text > 0 and text:sub(1) or ""
+    return text
   end
 
   ---@type eve.ux.nvimbar.IRawComponent

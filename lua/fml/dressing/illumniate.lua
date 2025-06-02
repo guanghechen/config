@@ -39,8 +39,8 @@ local function is_enabled(bufnr, modes)
   if modes then
     local mode = vim.api.nvim_get_mode().mode:lower()
     mode = mode:gsub("\22", "v"):gsub("\19", "s")
-    mode = mode:sub(1, 2) == "no" and "o" or mode
-    mode = mode:sub(1, 1):match("[ncitsvo]") or "n"
+    mode = string.sub(mode, 1, 2) == "no" and "o" or mode
+    mode = string.sub(mode, 1, 1):match("[ncitsvo]") or "n"
     if not vim.tbl_contains(config.modes, mode) then
       return false
     end

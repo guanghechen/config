@@ -239,7 +239,7 @@ function M.browse()
         local remote = {
           name = name,
           url = get_url(repo, scope):gsub("(%b{})", function(key)
-            return fields[key:sub(2, -2)] or key
+            return fields[string.sub(key, 2, -2)] or key
           end),
         }
         table.insert(remotes, remote)

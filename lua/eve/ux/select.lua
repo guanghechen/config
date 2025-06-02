@@ -473,12 +473,12 @@ function M:filter(input)
         if
           last_input_lower ~= nil
           and #input_lower > #last_input_lower
-          and input_lower:sub(1, #last_input_lower) == last_input_lower
+          and string.sub(input_lower, 1, #last_input_lower) == last_input_lower
         then
           old_matches = self._matches
         end
       else
-        if last_input ~= nil and #input > #last_input and input:sub(1, #last_input) == last_input then
+        if last_input ~= nil and #input > #last_input and string.sub(input, 1, #last_input) == last_input then
           old_matches = self._matches
         end
       end

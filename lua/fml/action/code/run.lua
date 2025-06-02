@@ -78,7 +78,7 @@ function M.run(force)
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   local extname = std.path.extname(filepath) ---@type string
-  local key = extname:sub(2) ---@type string
+  local key = string.sub(extname, 2) ---@type string
 
   local runner = runners[key]
   if runner == nil then

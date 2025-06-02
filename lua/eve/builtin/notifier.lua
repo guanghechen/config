@@ -461,7 +461,7 @@ function M.gen_winbar(task, width)
   local text_title = task.times > 1 and string.format("%s (x%d) ", task.title, task.times) or task.title ---@type string
   local width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   if width_title > max_width_title then
-    text_title = text_title:sub(1, max_width_title)
+    text_title = string.sub(text_title, 1, max_width_title)
     width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   end
 

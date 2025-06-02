@@ -55,8 +55,8 @@ local function parse_git_status_line(line, workspace, git_status)
     local i = 0
     while i < 2 do
       i = i + 1
-      local existing_char = #existing_status >= i and existing_status:sub(i, i) or ""
-      local new_char = #status >= i and status:sub(i, i) or ""
+      local existing_char = #existing_status >= i and string.sub(existing_status, i, i) or ""
+      local new_char = #status >= i and string.sub(status, i, i) or ""
       local merged_char = get_priority_git_status_code(existing_char, new_char)
       merged = merged .. merged_char
     end
@@ -128,7 +128,7 @@ function M.extract_parent_status(status)
   else
     local len = #status
     while len > 0 do
-      local char = status:sub(len, len)
+      local char = string.sub(status, len, len)
       if char ~= " " then
         return char
       end

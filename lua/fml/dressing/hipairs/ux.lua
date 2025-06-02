@@ -84,8 +84,8 @@ local function find_surrounds(bufnr, row, col)
           local start_line = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1] ---@type string|nil
           local end_line = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, false)[1] ---@type string|nil
           if start_line ~= nil and end_line ~= nil and start_col < #start_line and end_col <= #end_line then
-            local left_char = start_line:sub(start_col + 1, start_col + 1) ---@type string
-            local right_char = end_line:sub(end_col, end_col) ---@type string
+            local left_char = string.sub(start_line, start_col + 1, start_col + 1) ---@type string
+            local right_char = string.sub(end_line, end_col, end_col) ---@type string
             local left_delimiter = config.right_to_left_pairs[right_char] ---@type string
             local right_delimiter = config.left_to_right_pairs[left_char] ---@type string
 

@@ -139,7 +139,7 @@ local function fetch_data(method, additional_params, callback)
       local filepath = string.format("%s:%d:%d", item[1], item[2], item[3]) ---@type string
       filepaths[#filepaths + 1] = filepath
 
-      if filepath:sub(1, #rootdir) ~= rootdir then
+      if string.sub(filepath, 1, #rootdir) ~= rootdir then
         while true do
           local parent = std.path.dirname(rootdir) ---@type string
           if parent == rootdir then

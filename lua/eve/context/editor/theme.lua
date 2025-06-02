@@ -164,7 +164,7 @@ function M.apply_theme(params)
       if integration == "plugin" then
         local additional = {} ---@type table<string, std.t.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
-          if hlname:sub(1, 9) == "MiniIcons" then
+          if string.sub(hlname, 1, 9) == "MiniIcons" then
             additional["f_sl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }
             additional["f_tl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_tl_bg.bg }
             additional["f_wl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_wl_bg.bg }

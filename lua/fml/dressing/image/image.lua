@@ -171,7 +171,7 @@ function M:send()
     data = vim.base64.encode(data) -- encode the data
     local offset = 1
     while offset <= #data do
-      local chunk = data:sub(offset, offset + CHUNK_SIZE - 1)
+      local chunk = string.sub(data, offset, offset + CHUNK_SIZE - 1)
       local first = offset == 1
       offset = offset + CHUNK_SIZE
       local last = offset > #data

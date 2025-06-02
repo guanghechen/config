@@ -26,21 +26,23 @@
 ---@class std.lib.color
 local M = {}
 
+local BYTE_SHARP = string.byte("#") ---@type integer
+
 -- Convert a hex color value to RGB
 -- @param hex: The hex color value
 -- @return r: Red (0-255)
 -- @return g: Green (0-255)
 -- @return b: Blue (0-255)
 function M.hex2rgb(hex)
-  local hash = string.sub(hex, 1, 1) == "#"
+  local hash = string.byte(hex, 1, 1) == BYTE_SHARP
   local offset = hash and 0 or 1 ---@type integer
   if string.len(hex) ~= (7 - offset) then
     return nil
   end
 
-  local r = tonumber(hex:sub(2 - offset, 3 - offset), 16)
-  local g = tonumber(hex:sub(4 - offset, 5 - offset), 16)
-  local b = tonumber(hex:sub(6 - offset, 7 - offset), 16)
+  local r = tonumber(string.sub(hex, 2 - offset, 3 - offset), 16)
+  local g = tonumber(string.sub(hex, 4 - offset, 5 - offset), 16)
+  local b = tonumber(string.sub(hex, 6 - offset, 7 - offset), 16)
   return r, g, b
 end
 

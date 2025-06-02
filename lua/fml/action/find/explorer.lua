@@ -134,7 +134,7 @@ local function gen_title()
     return "Find files (workspace)" ---@type string
   end
 
-  dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
+  dirpath = string.sub(relative_dirpath, 1, 1) ~= "." and relative_dirpath or dirpath
   return "File explorer (" .. dirpath .. ")" ---@type string
 end
 
@@ -291,7 +291,7 @@ local provider = {
       end
 
       local title = std.path.relative(std.path.cwd(), item.uuid, false) ---@type string
-      if #title < 1 or title:sub(1, 1) == "." then
+      if #title < 1 or string.sub(title, 1, 1) == "." then
         title = std.path.normalize(item.uuid)
       end
 

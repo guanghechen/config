@@ -47,7 +47,7 @@ local function gen_title()
     return "Find files (dir: .)" ---@type string
   end
 
-  dirpath = relative_dirpath:sub(1, 1) ~= "." and relative_dirpath or dirpath
+  dirpath = string.sub(relative_dirpath, 1, 1) ~= "." and relative_dirpath or dirpath
   return "Find files (dir: " .. dirpath .. ")" ---@type string
 end
 

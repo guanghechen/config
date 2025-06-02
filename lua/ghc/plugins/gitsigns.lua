@@ -57,9 +57,9 @@ local function get_diff_lines_from_git(lnum, filepath)
   local adds = {} ---@type string[]
   for i = index + 1, #lines, 1 do
     local line = lines[i]
-    if line:sub(1, 1) == "-" then
+    if string.sub(line, 1, 1) == "-" then
       dels[#dels + 1] = line
-    elseif line:sub(1, 1) == "+" then
+    elseif string.sub(line, 1, 1) == "+" then
       adds[#adds + 1] = line
     end
   end
