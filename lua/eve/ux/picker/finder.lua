@@ -15,7 +15,7 @@ local __module_name__ = "eve.ux.picker.finder" ---@type string
 ---@field public title                  string
 
 ---@class eve.ux.PickerFinder
----@field public name                   string
+---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
 ---@field public linecount              std.collection.IObservable
@@ -32,6 +32,7 @@ M.__index = M
 ---@return eve.ux.PickerFinder
 function M.new(props)
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
   local input = props.input ---@type std.collection.IObservable
   local linecount = std.Observable.from_value(0) ---@type std.collection.IObservable
@@ -39,7 +40,7 @@ function M.new(props)
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
 
   local self = setmetatable({}, M)
-  self.name = name
+  self.fullname = fullname
   self.keymaps = keymaps
   self.input = input
   self.linecount = linecount
@@ -59,7 +60,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local name = self.name ---@type string
+  local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
   local linecount = self.linecount ---@type std.collection.IObservable
@@ -70,7 +71,7 @@ function M:dispose()
     local ok2, error2 = pcall(eve.buf.close, bufnr)
     if not (ok1 and ok2) then
       std.reporter.error({
-        from = string.format("%s | %s", name, __module_name__),
+        from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
         details = {
@@ -231,7 +232,7 @@ function M:hide()
   local ok2, error2 = pcall(eve.buf.close, bufnr)
   if not (ok1 and ok2) then
     std.reporter.error({
-      from = string.format("%s | %s", self.name, __module_name__),
+      from = self.fullname,
       subject = "hide",
       message = "Failed to hide",
       details = {
@@ -315,7 +316,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("[%s | %s] has been disposed.", self.name, __module_name__) ---@type string
+    local message = string.format("[%s] has been disposed.", self.fullname) ---@type string
     error(message)
   end
 end

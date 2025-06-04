@@ -41,7 +41,7 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 
 ---@class eve.ux.PickerResult
 ---@field public uuid                   string
----@field public name                   string
+---@field public fullname                   string
 ---@field public draw                   eve.ux.picker.result.IDraw
 ---@field public flags                  eve.ux.picker.result.IFlagItem[]
 ---@field public keymaps                std.t.IKeymap[]
@@ -66,6 +66,7 @@ M.__index = M
 function M.new(props)
   local uuid = props.uuid ---@type string
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type eve.ux.picker.result.IDraw
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
@@ -118,7 +119,7 @@ function M.new(props)
   ---@type eve.ux.nvimbar.Nvimbar
   local nvimbar = eve.ux.nvimbar.Nvimbar
     .new({
-      name = string.format("%s | %s", "result:winline", name),
+      name = string.format("%s#winline", fullname),
       comp_sep = "",
       comp_sep_hlname = "f_wl_picker",
       comp_sep_hlname_active = "f_wl_picker",
@@ -151,7 +152,7 @@ function M.new(props)
 
   ---@type std.collection.Scheduler
   local scheduler_lnum_current = std.Scheduler.new({
-    name = string.format("%s | %s", "result:lnum_current", name),
+    name = string.format("%s#lnum_current", fullname),
     mode = "throttle",
     delay = 32,
     timeout = 0,
@@ -179,7 +180,7 @@ function M.new(props)
 
   ---@type std.collection.Scheduler
   local scheduler_lnum_present = std.Scheduler.new({
-    name = string.format("%s | %s", "result:lnum_present", name),
+    name = string.format("%s#lnum_present", fullname),
     mode = "debounce",
     delay = 64,
     timeout = 0,
@@ -203,7 +204,7 @@ function M.new(props)
 
   ---@type std.collection.Scheduler
   local scheduler_lnums_selected = std.Scheduler.new({
-    name = string.format("%s | %s", "result:lnums_selected", name),
+    name = string.format("%s#lnums_selected", fullname),
     mode = "debounce",
     delay = 128,
     timeout = 0,
@@ -226,7 +227,7 @@ function M.new(props)
 
   ---@type std.collection.Scheduler
   local scheduler_content = std.Scheduler.new({
-    name = string.format("%s | %s", "result:content", name),
+    name = string.format("%s#content", fullname),
     mode = "debounce",
     delay = 128,
     timeout = 0,
@@ -246,7 +247,7 @@ function M.new(props)
 
       if not ok then
         std.reporter.error({
-          from = string.format("%s | %s", name, __module_name__),
+          from = fullname,
           subject = "draw",
           message = "Failed to draw",
           details = {
@@ -278,7 +279,7 @@ function M.new(props)
       local on_drawed_ok, on_drawed_result = pcall(on_drawed, bufnr)
       if not on_drawed_ok then
         std.reporter.error({
-          from = string.format("%s | %s", name, __module_name__),
+          from = fullname,
           subject = "on_drawed",
           message = "Failed to call on_drawed",
           details = {
@@ -294,7 +295,7 @@ function M.new(props)
     end,
   })
 
-  self.name = name
+  self.fullname = name
   self.draw = draw
   self.keymaps = keymaps
   self.lnum_current = _lnum_current
@@ -377,7 +378,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local name = self.name ---@type string
+  local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
   local lnum_current = self.lnum_current ---@type std.collection.IObservable
@@ -406,7 +407,7 @@ function M:dispose()
     local ok8, error8 = pcall(scheduler_lnums_selected.dispose, scheduler_lnums_selected)
     if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
       std.reporter.error({
-        from = string.format("%s | %s", name, __module_name__),
+        from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
         details = {
@@ -581,7 +582,7 @@ function M:hide()
   local ok2, error2 = pcall(eve.buf.close, bufnr)
   if not (ok1 and ok2) then
     std.reporter.error({
-      from = string.format("%s | %s", self.name, __module_name__),
+      from = self.fullname,
       subject = "hide",
       message = "Failed to hide",
       details = {
@@ -705,7 +706,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("[%s | %s] has been disposed.", self.name, __module_name__) ---@type string
+    local message = string.format("[%s] has been disposed.", self.fullname) ---@type string
     error(message)
   end
 end

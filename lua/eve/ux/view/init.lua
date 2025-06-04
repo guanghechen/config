@@ -1,5 +1,5 @@
 ---@class eve.ux.view.IView
----@field public name                   string
+---@field public fullname               string
 ---@field public nsnr                   integer
 ---@field public clear                  fun(self: eve.ux.view.IView): eve.ux.view.IView
 ---@field public dispose                fun(self: eve.ux.view.IView): nil

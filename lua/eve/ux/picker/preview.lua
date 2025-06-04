@@ -28,7 +28,7 @@ local __module_name__ = "eve.ux.picker.preview" ---@type string
 ---@field public on_drawed              ?eve.ux.picker.preview.IOnDrawed
 
 ---@class eve.ux.PickerPreview
----@field public name                   string
+---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
@@ -42,6 +42,7 @@ M.__index = M
 ---@return eve.ux.PickerPreview
 function M.new(props)
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type eve.ux.picker.preview.IDraw
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
   local on_drawed = props.on_drawed or std.fn.noop ---@type eve.ux.picker.preview.IOnDrawed
@@ -49,7 +50,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   local scheduler_content = std.Scheduler.new({
-    name = name,
+    name = string.format("%s#content", fullname),
     mode = "debounce",
     delay = 128,
     timeout = 0,
@@ -69,7 +70,7 @@ function M.new(props)
 
       if not ok then
         std.reporter.error({
-          from = string.format("%s | %s", name, __module_name__),
+          from = fullname,
           subject = "draw",
           message = "Failed to draw",
           details = {
@@ -86,7 +87,7 @@ function M.new(props)
       local on_drawed_ok, on_drawed_result = pcall(on_drawed, bufnr)
       if not on_drawed_ok then
         std.reporter.error({
-          from = string.format("%s | %s", name, __module_name__),
+          from = fullname,
           subject = "on_drawed",
           message = "Failed to call on_drawed",
           details = {
@@ -99,7 +100,7 @@ function M.new(props)
     end,
   })
 
-  self.name = name
+  self.fullname = name
   self.keymaps = keymaps
 
   self._disposed = false
@@ -116,7 +117,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local name = self.name ---@type string
+  local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
   local scheduler_content = self._scheduler_content ---@type std.collection.Scheduler
@@ -126,7 +127,7 @@ function M:dispose()
     local ok3, error3 = pcall(scheduler_content.dispose, scheduler_content)
     if not (ok1 and ok2) then
       std.reporter.error({
-        from = string.format("%s | %s", name, __module_name__),
+        from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
         details = {
@@ -285,7 +286,7 @@ function M:hide()
   local ok2, error2 = pcall(eve.buf.close, bufnr)
   if not (ok1 and ok2) then
     std.reporter.error({
-      from = string.format("%s | %s", self.name, __module_name__),
+      from = self.fullname,
       subject = "hide",
       message = "Failed to hide",
       details = {
@@ -335,7 +336,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("[%s | %s] has been disposed.", self.name, __module_name__) ---@type string
+    local message = string.format("[%s] has been disposed.", self.fullname) ---@type string
     error(message)
   end
 end

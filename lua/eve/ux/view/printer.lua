@@ -1,9 +1,13 @@
+local __module_name__ = "eve.ux.view.printer" ---@type string
+
 ---@class eve.ux.view.IPrinterProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 ---@field public indent                 ?string
 
----@class eve.ux.view.Printer : eve.ux.view.IView
+---@class eve.ux.view.Printer
+---@field public fullname               string
+---@field public nsnr                   integer
 ---@field protected _disposed           boolean
 ---@field protected _highlights         std.t.IHighlight[]
 ---@field protected _indent             string
@@ -21,12 +25,13 @@ local NSNR_DEFAULT = eve.var.nsnr.view_printer ---@type integer
 ---@return eve.ux.view.Printer
 function M.new(props)
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
   local indent = props.indent or ""
 
   local self = setmetatable({}, M)
 
-  self.name = name
+  self.fullname = fullname
   self.nsnr = nsnr
   self._disposed = false
   self._highlights = {}
@@ -77,7 +82,7 @@ end
 ---@return nil
 function M:health()
   if self._disposed then
-    local message = string.format("Printer (%s) has been disposed.", self.name) ---@type string
+    local message = string.format("Printer (%s) has been disposed.", self.fullname) ---@type string
     error(message)
   end
 end

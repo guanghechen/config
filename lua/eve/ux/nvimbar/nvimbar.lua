@@ -37,7 +37,7 @@ local __module_name__ = "eve.ux.nvimbar" ---@type string
 ---@field public validate               ?fun(): string|nil
 
 ---@class eve.ux.nvimbar.Nvimbar
----@field public name                   string
+---@field public fullname               string
 ---@field protected _value              std.collection.IObservable
 ---@field protected _disposed           boolean
 ---@field protected _sep                string
@@ -92,6 +92,7 @@ end
 ---@return eve.ux.nvimbar.Nvimbar
 function M.new(props)
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local comp_sep = props.comp_sep ---@type string
   local comp_sep_hlname = props.comp_sep_hlname ---@type string
   local comp_sep_hlname_active = props.comp_sep_hlname_active ---@type string
@@ -118,7 +119,7 @@ function M.new(props)
 
   ---@type std.collection.Scheduler
   local scheduler = std.Scheduler.new({
-    name = string.format("%s | %s", name, __module_name__),
+    name = fullname,
     mode = "throttle",
     delay = delay,
     timeout = 0,
@@ -127,7 +128,7 @@ function M.new(props)
     task = function(scheduler, _, callback)
       local validate_message = validate() ---@type string|nil
       if validate_message ~= nil then
-        callback(false, string.format("[%s | %s] Invalid: %s", name, __module_name__, validate_message))
+        callback(false, string.format("[%s] Invalid: %s", fullname, validate_message))
         return
       end
 
@@ -152,7 +153,7 @@ function M.new(props)
     end,
   })
 
-  self.name = name
+  self.fullname = fullname
   self._value = value
   self._disposed = false
   self._sep = eve.nvim.txt(comp_sep, comp_sep_hlname)
@@ -229,7 +230,7 @@ function M:place(position, raw_component, priority)
 
   if position ~= "left" and position ~= "center" and position ~= "right" then
     std.reporter.error({
-      from = __module_name__,
+      from = self.fullname,
       subject = "place",
       message = "Bad component position.",
       details = { name = name, position = position, priority = priority, component = raw_component },
@@ -282,7 +283,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
+    local message = string.format("[%s] already been disposed.", self.fullname) ---@type string
     error(message)
   end
 end
@@ -377,7 +378,7 @@ function M:__render__(force)
       end
     else
       std.reporter.error({
-        from = __module_name__,
+        from = self.fullname,
         subject = "render",
         message = "Encounter error while render the nvimbar component.",
         details = {

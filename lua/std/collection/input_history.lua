@@ -1,7 +1,7 @@
 local __module_name__ = "std.collection.input_history" ---@type string
 
 ---@class std.collection.InputHistory : std.collection.IHistory
----@field public name                   string
+---@field public fullname               string
 ---@field public equals                 std.t.IEquals
 ---@field protected _present            integer
 ---@field protected _stack              std.collection.ICircularStack
@@ -12,11 +12,12 @@ M.__index = M
 ---@return std.collection.InputHistory
 function M.new(props)
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local capacity = props.capacity ---@type integer
   local equals = props.equals or std.fn.equals_shallow ---@type std.t.IEquals
 
   local self = setmetatable({}, M)
-  self.name = name
+  self.fullname = fullname
   self.equals = equals
   self._present = 0
   self._stack = std.CircularStack.new({ capacity = capacity })
@@ -26,10 +27,12 @@ end
 ---@param props                         std.collection.history.IDeserializeProps
 ---@return std.collection.InputHistory
 function M.deserialize(props)
+  local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local data = props.data ---@type std.collection.history.ISerializedData
 
   local self = setmetatable({}, M)
-  self.name = props.name
+  self.fullname = fullname
   self.equals = props.equals or std.fn.equals_shallow ---@type std.t.IEquals
   self._stack = std.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
@@ -84,8 +87,11 @@ end
 ---@param params                        std.collection.history.IForkParams
 ---@return std.collection.InputHistory
 function M:fork(params)
+  local name = params.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
+
   local instance = setmetatable({}, M)
-  instance.name = params.name
+  instance.fullname = fullname
   instance.equals = self.equals
   instance._present = self._present
   instance._stack = std.CircularStack.from(self._stack)
@@ -158,7 +164,7 @@ function M:print()
   local present = self._present ---@type integer
   local stack = self._stack:collect() ---@type std.t.T
   std.reporter.info({
-    from = __module_name__,
+    from = self.fullname,
     subject = "print",
     details = { present = present, stack = stack },
   })

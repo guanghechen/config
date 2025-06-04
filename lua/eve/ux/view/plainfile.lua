@@ -9,7 +9,9 @@ local __module_name__ = "eve.ux.view.plainfile" ---@type string
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 
----@class eve.ux.view.Plainfile : eve.ux.view.IView
+---@class eve.ux.view.Plainfile
+---@field public fullname               string
+---@field public nsnr                   integer
 ---@field protected _disposed           boolean
 ---@field protected _last_bufnr         integer|nil
 ---@field protected _last_data          eve.ux.view.plainfile.IData|nil
@@ -22,11 +24,12 @@ local NSNR_DEFAULT = eve.var.nsnr.view_plainfile ---@type integer
 ---@return eve.ux.view.Plainfile
 function M.new(props)
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local nsnr = props.nsnr or NSNR_DEFAULT ---@type integer
 
   local self = setmetatable({}, M)
 
-  self.name = name
+  self.fullname = fullname
   self.nsnr = nsnr
   self._disposed = false
   self._last_bufnr = nil
@@ -120,7 +123,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("%s (%s) has been disposed.", __module_name__, self.name) ---@type string
+    local message = string.format("[%s] has been disposed.", self.fullname) ---@type string
     error(message)
   end
 end

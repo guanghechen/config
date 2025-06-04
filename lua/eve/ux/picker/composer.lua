@@ -114,7 +114,7 @@ local __highlights__ = {
 
 ---@class eve.ux.PickerComposer : std.t.ux.IWidget
 ---@field public uuid                   string
----@field public name                   string
+---@field public fullname               string
 ---@field public permanent              boolean
 ---
 ---@field public finder                 eve.ux.PickerFinder
@@ -143,6 +143,7 @@ M.__index = M
 function M.new(props)
   local uuid = props.uuid or std.fn.uuid() ---@type string
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local permanent = not not props.permanent ---@type boolean
 
   local flags = props.flags ---@type eve.ux.picker.result.IFlagItemRaw[]
@@ -231,7 +232,7 @@ function M.new(props)
   end
 
   self.uuid = uuid
-  self.name = name
+  self.fullname = fullname
   self.permanent = permanent
 
   self.finder = finder
@@ -268,7 +269,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local name = self.name ---@type string
+  local fullname = self.fullname ---@type string
   local finder = self.finder ---@type eve.ux.PickerFinder
   local result = self.result ---@type eve.ux.PickerResult
   local preview = self.preview ---@type eve.ux.PickerPreview|nil
@@ -285,7 +286,7 @@ function M:dispose()
 
     if not (ok1 and ok2 and ok3 and ok4) then
       std.reporter.error({
-        from = string.format("%s | %s", name, __module_name__),
+        from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
         details = {
@@ -333,7 +334,7 @@ function M:close()
     local ok, error = pcall(self._on_closed, self)
     if not ok then
       std.reporter.error({
-        from = string.format("%s | %s", self.name, __module_name__),
+        from = self.fullname,
         subject = "close",
         message = "Failed to call on_closed",
         details = { error = error },
@@ -356,7 +357,7 @@ function M:focus(pane)
     local ok, error = pcall(self._on_focused, self)
     if not ok then
       std.reporter.error({
-        from = string.format("%s | %s", self.name, __module_name__),
+        from = self.fullname,
         subject = "focus",
         message = "Failed to call on_focused",
         details = { error = error },
@@ -376,7 +377,7 @@ function M:hide()
     local ok, error = pcall(self._on_hidden, self)
     if not ok then
       std.reporter.error({
-        from = string.format("%s | %s", self.name, __module_name__),
+        from = self.fullname,
         subject = "hide",
         message = "Failed to call on_hidden",
         details = { error = error },
@@ -559,7 +560,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
+    local message = string.format("[%s] already been disposed.", self.fullname) ---@type string
     error(message)
   end
 end
@@ -655,7 +656,7 @@ function M:__resolve_builtin_common_keymaps__(flags, flags_start_index)
         local ok, error = pcall(self._on_cancel)
         if not ok then
           std.reporter.error({
-            from = string.format("%s | %s", self.name, __module_name__),
+            from = self.fullname,
             subject = "close",
             message = "Failed to call on_cancel",
             details = { error = error },
@@ -674,7 +675,7 @@ function M:__resolve_builtin_common_keymaps__(flags, flags_start_index)
         local refresh_ok, refresh_error = pcall(self._on_refresh, self, true)
         if not refresh_ok then
           std.reporter.error({
-            from = string.format("%s | %s", self.name, __module_name__),
+            from = self.fullname,
             subject = "refresh",
             message = "Failed to run on_refresh",
             details = { error = refresh_error },

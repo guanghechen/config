@@ -25,7 +25,7 @@ local __module_name__ = "std.collection.scheduler" ---@type string
 ---@field public silent                 ?fun(): boolean
 
 ---@class std.collection.Scheduler
----@field public name                   string
+---@field public fullname               string
 ---@field public mode                   std.collection.scheduler.ScheduleModeEnum
 ---
 ---@field protected _disposed           boolean
@@ -57,6 +57,7 @@ function M.new(props)
   assert(timer_timeout ~= nil)
 
   local name = props.name ---@type string
+  local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local mode = props.mode ---@type std.collection.scheduler.ScheduleModeEnum
   local task = props.task ---@type std.collection.scheduler.ITask
   local value = props.value ---@type std.collection.IObservable
@@ -65,7 +66,7 @@ function M.new(props)
   local silent = props.silent or std.fn.falsy ---@type fun(): boolean
 
   local self = setmetatable({}, M)
-  self.name = name
+  self.fullname = fullname
   self.mode = mode
 
   self._disposed = false
@@ -156,7 +157,7 @@ function M:schedule(opts)
     return self:__schedule_throttle__(immediate)
   end
 
-  error(string.format("[%s] Invalid schedule mode: %s", self.name, self.mode))
+  error(string.format("[%s] Invalid schedule mode: %s", self.fullname, self.mode))
 end
 
 ---@return unknown|nil
@@ -168,7 +169,7 @@ end
 ---@protected
 ---@return table
 function M:__details__()
-  local name = self.name ---@type string
+  local fullname = self.fullname ---@type string
   local mode = self.mode ---@type std.collection.scheduler.ScheduleModeEnum
   local context = self._context ---@type unknown|nil
   local disposed = self._disposed ---@type boolean
@@ -183,7 +184,7 @@ function M:__details__()
   local value = self._value:snapshot() ---@type unknown|nil
 
   return {
-    name = name,
+    fullname = fullname,
     mode = mode,
     context = context,
     disposed = disposed,
@@ -204,7 +205,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("[%s#%s] already been disposed.", __module_name__, self.name) ---@type string
+    local message = string.format("[%s] already been disposed.", self.fullname) ---@type string
     error(message)
   end
 end
@@ -243,12 +244,14 @@ function M:__run__()
         if result ~= nil then
           local silent = self._silent() ---@type boolean
           if silent then
-            local name = self.name ---@type string
-            local message = string.format("[%s] failed | %s", name, result) ---@type string
+            local fullname = self.fullname ---@type string
             std.reporter.error({
-              from = __module_name__,
-              message = message,
-              details = self:__details__(),
+              from = fullname,
+              message = "failed to run.",
+              details = {
+                ctx = self:__details__(),
+                result = result,
+              },
             })
           end
         end
