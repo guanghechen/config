@@ -28,7 +28,7 @@ if test -f "$HOME/.app/miniforge3/bin/conda"
 end
 
 ### neovim
-if not set -q PREFER_STABLE_NEOVIM; or test "$PREFER_STABLE_NEOVIM" == "true"
+if not set -q PREFER_STABLE_NEOVIM; or test "$PREFER_STABLE_NEOVIM" != "true"
   if test -f "$HOME/.app/neovim/bin/nvim"
     set -gx NEOVIM_HOME                   "$HOME/.app/neovim"
   else if test -f "/opt/me/app/neovim/bin/nvim"
