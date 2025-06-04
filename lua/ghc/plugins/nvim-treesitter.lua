@@ -25,7 +25,7 @@ return {
       enable = not vim.g.vscode,
       additional_vim_regex_highlighting = false,
       use_languagetree = true,
-      disable = function(lang, bufnr)
+      disable = function(_, bufnr)
         local max_filesize = vim.g.bigfile_size or (300 * 1024) -- 300 KB
         local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
         if ok and stats and stats.size > max_filesize then

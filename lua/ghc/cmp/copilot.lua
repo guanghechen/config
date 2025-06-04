@@ -77,7 +77,7 @@ end
 ---Remove the common indent from the text
 ---@param text string
 ---@return string
-function util.deindent(text)
+function util.unindent(text)
   local lines = vim.split(text, "\n")
 
   -- Cleanup the empty lines
@@ -111,7 +111,7 @@ function util.deindent(text)
     local current_indent = indents[i]
     local min_len = math.min(#common_prefix, #current_indent)
     local new_prefix = ""
-    
+
     local k = 0 ---@type integer
     for j = 1, min_len do
       if string.byte(common_prefix, j, j) ~= string.byte(current_indent, j, j) then
@@ -157,15 +157,15 @@ function util.lsp_completion_items_to_blink_items(completions, kind_name, kind_i
     -- The original range is the cursor position, so we need to update it to the end of the line
     completion.range["end"].character = util.length_of_first_line(completion.insertText)
 
-    local dedented_text = util.deindent(completion.insertText)
+    local unindented_text = util.unindent(completion.insertText)
 
     table.insert(items, {
-      label = dedented_text,
+      label = unindented_text,
       kind_name = kind_name,
       kind_icon = kind_icon,
       kind_hl = kind_hl,
       textEdit = { newText = completion.insertText, range = completion.range },
-      detail = dedented_text,
+      detail = unindented_text,
     })
   end
 
