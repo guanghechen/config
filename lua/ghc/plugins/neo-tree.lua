@@ -168,7 +168,7 @@ return {
       end,
       recursively_toggle_all = function(neotree_state)
         local node = neotree_state.tree:get_node()
-        if node.type == "directory" then
+        if node ~= nil and node.type == "directory" then
           if node:is_expanded() then
             neotree_state.commands.close_all_subnodes(neotree_state)
           else
