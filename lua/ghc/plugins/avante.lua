@@ -433,6 +433,11 @@ return {
     require("fml.dressing.plugin").mock_miniicons()
     require("fml.dressing.plugin").mock_dressing()
 
+    --- Hack: ensure the nerd fonts enabled.
+    require("avante.utils").icons_enabled = function()
+      return true
+    end
+
     require("avante").setup(opts)
     std.fn.observe({ eve.context.flight.ai_provider }, function()
       local ai_provider = eve.context.flight.ai_provider:snapshot()
