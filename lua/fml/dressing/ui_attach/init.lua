@@ -8,6 +8,11 @@ end
 local tasks = std.CircularQueue.new({ capacity = 500 })
 local processing = false ---@type boolean
 
+---@type table<string, boolean|nil>
+local IGNOREABLE_EVENTS = {
+  win_hide = true,
+}
+
 local handlers = {
   cmdline_hide = function(task)
     require("fml.dressing.ui_attach.cmdline").hide(task)
@@ -105,10 +110,15 @@ local function ui_attach_callback(event, kind, ...)
 
   local handler = handlers[event]
   if handler == nil then
+    local ignoreable = IGNOREABLE_EVENTS[event] == true ---@type boolean
+    local silent = ignoreable
+
     std.reporter.warn({
       from = __module_name__,
       message = string.format("unhandled | %s", event),
       details = { event, kind, ... },
+      silent = silent,
+      anonymous = false,
     })
     return
   end
