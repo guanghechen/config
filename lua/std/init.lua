@@ -1,6 +1,5 @@
 ---@class std.__mods
 local __mods = {
-  base64 = "std.lib.base64",
   color = "std.lib.color",
   easing = "std.lib.easing",
 
@@ -44,7 +43,6 @@ local __mods = {
 ---@class std
 ---@field public __mods                 std.__mods
 ---
----@field public base64                 std.lib.base64
 ---@field public color                  std.lib.color
 ---@field public easing                 std.lib.easing
 ---

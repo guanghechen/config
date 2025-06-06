@@ -163,7 +163,7 @@ function M.read_file_as_base64(params)
 
   local content = file:read("*a") -- Read the entire content of the file
   file:close()
-  return std.base64.encode(content)
+  return vim.base64.encode(content)
 end
 
 ---@param params                        std.fs.IReadFileAsLinesParams
