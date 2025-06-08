@@ -95,7 +95,9 @@ local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 local function ui_attach_callback(event, kind, ...)
   local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
-    std.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
+    if event ~= "msg_showcmd" then
+      std.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
+    end
   end
 
   if vim.v.exiting ~= vim.NIL then
