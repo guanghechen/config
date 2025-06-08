@@ -29,8 +29,8 @@ function M.result_flags(position, flags, flags_start_index)
 
           text = text .. piece_text ---@type string
           hl_text = hl_text .. btn(txt(piece_text, piece_hln), item.callback) ---@type string
-          index = index + 1
         end
+        index = index + 1 ---@type integer
       end
       return text, hl_text, true
     end,
