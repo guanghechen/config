@@ -177,6 +177,21 @@ function M.new(props)
   local has_finder_input_history = finder_input_history ~= nil ---@type boolean
 
   local self = setmetatable({}, M)
+  self.uuid = uuid
+  self.fullname = fullname
+  self.permanent = permanent
+  self._disposed = false
+  self._pane_focused = pane_focused
+  self._pane_last_focused = pane_last_focused
+  self._recommended_height = recommended_height
+  self._recommended_width = recommended_width
+  self._finder_input_history = finder_input_history
+  self._on_cancel = on_cancel ---@type eve.ux.picker.composer.IOnCancel
+  self._on_closed = on_closed ---@type eve.ux.picker.composer.IOnClosed
+  self._on_disposed = on_disposed ---@type eve.ux.picker.composer.IOnDisposed
+  self._on_focused = on_focused ---@type eve.ux.picker.composer.IOnFocused
+  self._on_hidden = on_hidden ---@type eve.ux.picker.composer.IOnHidden
+  self._on_refresh = on_refresh ---@type eve.ux.picker.composer.IOnRefresh
 
   ---@type eve.ux.PickerFinder
   local finder = eve.ux.PickerFinder.new({
@@ -231,28 +246,9 @@ function M.new(props)
     })
   end
 
-  self.uuid = uuid
-  self.fullname = fullname
-  self.permanent = permanent
-
   self.finder = finder
   self.result = result
   self.preview = preview
-
-  self._disposed = false
-  self._pane_focused = pane_focused
-  self._pane_last_focused = pane_last_focused
-  self._recommended_height = recommended_height
-  self._recommended_width = recommended_width
-
-  self._finder_input_history = finder_input_history
-
-  self._on_cancel = on_cancel ---@type eve.ux.picker.composer.IOnCancel
-  self._on_closed = on_closed ---@type eve.ux.picker.composer.IOnClosed
-  self._on_disposed = on_disposed ---@type eve.ux.picker.composer.IOnDisposed
-  self._on_focused = on_focused ---@type eve.ux.picker.composer.IOnFocused
-  self._on_hidden = on_hidden ---@type eve.ux.picker.composer.IOnHidden
-  self._on_refresh = on_refresh ---@type eve.ux.picker.composer.IOnRefresh
 
   if preview ~= nil then
     std.fn.observe({ result.lnum_current, result.lnum_total }, function()
@@ -653,14 +649,17 @@ function M:__resolve_builtin_common_keymaps__(flags, flags_start_index)
       desc = "picker: close",
       callback = function()
         self:close()
-        local ok, error = pcall(self._on_cancel)
-        if not ok then
-          std.reporter.error({
-            from = self.fullname,
-            subject = "close",
-            message = "Failed to call on_cancel",
-            details = { error = error },
-          })
+
+        if not self._disposed then
+          local ok, error = pcall(self._on_cancel)
+          if not ok then
+            std.reporter.error({
+              from = self.fullname,
+              subject = "close",
+              message = "Failed to call on_cancel",
+              details = { error = error },
+            })
+          end
         end
       end,
     },
