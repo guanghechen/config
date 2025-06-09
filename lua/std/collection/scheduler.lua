@@ -243,14 +243,14 @@ function M:__run__()
       else
         if result ~= nil then
           local silent = self._silent() ---@type boolean
-          if silent then
+          if not silent then
             local fullname = self.fullname ---@type string
             std.reporter.error({
               from = fullname,
               message = "failed to run.",
               details = {
                 ctx = self:__details__(),
-                result = result,
+                error = result,
               },
             })
           end
