@@ -107,7 +107,7 @@ end
 function M.truncate_inline(elements, max_length)
   local N = #elements ---@type integer
   if N > max_length then
-    local L = max_length ---@type integer
+    local L = max_length + 1 ---@type integer
     for index = N, L, -1 do
       elements[index] = nil
     end
