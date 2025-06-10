@@ -1,78 +1,119 @@
 local __module_name__ = "std.collection.tree" ---@type string
 
+---@alias std.collection.tree.TraverseConditionalEnum
+---| "badroot"  -- Don't handle current node and its descendants
+---| "goodnode" -- Handle current node, but don't traverse its descendants
+---| "goodroot" -- Handle current node and its descendants
+
+---@alias std.collection.tree.INodeSorter
+---| fun(left: std.collection.tree.INode, right: std.collection.tree.INode): boolean
+
 ---@alias std.collection.tree.ITraverseConditional
----| fun(uuid: string, cur: integer): boolean
+---| fun(ctx: std.collection.tree.ITraverseContext, node: std.collection.tree.INode, cur: integer): std.collection.tree.TraverseConditionalEnum
 
 ---@alias std.collection.tree.ITraverseHandler
----| fun(uuid: string, cur: integer, is_lastchild: boolean, childcount: integer, onlychild: string|nil): nil
+---| fun(ctx: std.collection.tree.ITraverseContext, node: std.collection.tree.INode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
 
 ---@alias std.collection.tree.ITraverseRecursive
----| fun(uuid: std.collection.tree.INode, cur: integer, is_lastchild: boolean): nil
+---| fun(ctx: std.collection.tree.ITraverseContext, node: std.collection.tree.INode, cur: integer, is_lastchild: boolean): nil
 
 ---@alias std.collection.tree.IQuickTraverseHandler
----| fun(uuid: string, cur: integer): nil
+---| fun(ctx: std.collection.tree.ITraverseContext, node: std.collection.tree.INode, cur: integer): nil
 
 ---@alias std.collection.tree.IQuickTraverseRecursive
----| fun(uuid: std.collection.tree.INode, cur: integer): nil
+---| fun(ctx: std.collection.tree.ITraverseContext, node: std.collection.tree.INode, cur: integer): nil
 
 ---@alias std.collection.tree.IUnsafeTraverseCallback
----| fun(root: std.collection.tree.INode, nodemap: table<string, std.collection.tree.INode>, cur: integer): nil
+---| fun(ctx: std.collection.tree.ITraverseContext): nil
+
+---@class std.collection.tree.ITraverseContext
+---@field public nodemap                table<string, std.collection.tree.INode>
+---@field public rootnode               std.collection.tree.INode
 
 ---@class std.collection.tree.INode
 ---@field public uuid                   string
 ---@field public parent                 string
 ---@field public children               string[]
 ---@field public depth                  integer
+---@field public data                   table
 ---@field public dirty_co               boolean children order dirty
-
----@alias std.collection.tree.INodeSorter
----| fun(uuid_left: string, uuid_right: string): boolean
 
 ----------------------------------------------------------------------------------------------------
 
 ---@class std.collection.ITreeProps
+---@field public fullname               string|nil
 ---@field public name                   string
 ---@field public node_sorter            std.collection.tree.INodeSorter
 
----@class std.collection.Tree
----@field public name                   string
+---@class std.collection.IReadonlyTree
+---@field public fullname               string
+---@field public root                   string
+---@field public isdisposed             fun(self: std.collection.IReadonlyTree): boolean
+---@field public isdescendant           fun(self: std.collection.IReadonlyTree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: std.collection.IReadonlyTree, uuid: string): boolean
+---@field public retrieve               fun(self: std.collection.IReadonlyTree, uuid: string): std.collection.tree.INode|nil
+---@field public quick_traverse         fun(self: std.collection.IReadonlyTree, root: string|nil, fn: std.collection.tree.IQuickTraverseHandler, conditional: std.collection.tree.ITraverseConditional|nil): std.collection.IReadonlyTree
+---@field public traverse               fun(self: std.collection.IReadonlyTree, root: string|nil, fn: std.collection.tree.ITraverseHandler, conditional: std.collection.tree.ITraverseConditional|nil): std.collection.IReadonlyTree
+---@field public unsafe_traverse        fun(self: std.collection.IReadonlyTree, root: string|nil, traverse: std.collection.tree.IUnsafeTraverseCallback): std.collection.IReadonlyTree
+---@field public calc_include_uuid_set  fun(self: std.collection.IReadonlyTree, uuids: string[]): table<string, boolean>
+
+---@class std.collection.ITree : std.collection.IReadonlyTree
+---@field public fullname               string
+---@field public root                   string
+---@field public clear                  fun(self: std.collection.ITree): std.collection.ITree
+---@field public dispose                fun(self: std.collection.ITree): nil
+---@field public isdisposed             fun(self: std.collection.ITree): boolean
+---@field public isdescendant           fun(self: std.collection.ITree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: std.collection.ITree, uuid: string): boolean
+---@field public retrieve               fun(self: std.collection.ITree, uuid: string): std.collection.tree.INode|nil
+---@field public quick_traverse         fun(self: std.collection.ITree, root: string|nil, fn: std.collection.tree.IQuickTraverseHandler, conditional: std.collection.tree.ITraverseConditional|nil): std.collection.ITree
+---@field public traverse               fun(self: std.collection.ITree, root: string|nil, fn: std.collection.tree.ITraverseHandler, conditional: std.collection.tree.ITraverseConditional|nil): std.collection.ITree
+---@field public unsafe_traverse        fun(self: std.collection.ITree, root: string|nil, traverse: std.collection.tree.IUnsafeTraverseCallback): std.collection.ITree
+---@field public calc_include_uuid_set  fun(self: std.collection.ITree, uuids: string[]): table<string, boolean>
+---@field public empty                  fun(self: std.collection.ITree, uuid: string): std.collection.ITree
+---@field public insert                 fun(self: std.collection.ITree, parent: string, uuid: string, data: table|nil): std.collection.ITree
+---@field public remove                 fun(self: std.collection.ITree, uuid: string): std.collection.ITree
+
+---@class std.collection.Tree : std.collection.ITree
+---@field public fullname               string
 ---@field public root                   string
 ---@field public node_sorter            std.collection.tree.INodeSorter
 ---@field protected _disposed           boolean
 ---@field protected _nodemap            table<string, std.collection.tree.INode>
----@field protected _noderoot           std.collection.tree.INode
+---@field protected _rootnode           std.collection.tree.INode
 local M = {}
 M.__index = M
 
 ---@param props                         std.collection.ITreeProps
 ---@return std.collection.Tree
 function M.new(props)
-  local alias = props.name ---@type string
-  local name = string.format("%s@%s", __module_name__, alias) ---@type string
+  local name = props.name ---@type string
+  local fullname = props.fullname or string.format("%s@%s", __module_name__, name) ---@type string
   local node_sorter = props.node_sorter ---@type std.collection.tree.INodeSorter
-  local nodeuuid_root = "__virtual_root__" ---@type string
+  local uuid_root = "__virtual_root__" ---@type string
 
   ---@type std.collection.tree.INode
   local noderoot = {
-    uuid = nodeuuid_root,
-    parent = nodeuuid_root,
+    uuid = uuid_root,
+    parent = uuid_root,
     children = {},
     depth = 0,
+    data = {},
     dirty_co = false,
   }
 
   ---@type table<string, std.collection.tree.INode>
   local nodemap = {
-    [nodeuuid_root] = noderoot,
+    [uuid_root] = noderoot,
   }
 
   local self = setmetatable({}, M)
-  self.name = name
-  self.root = nodeuuid_root
+  self.fullname = fullname
+  self.root = uuid_root
   self.node_sorter = node_sorter
   self._disposed = false
   self._nodemap = nodemap
-  self._noderoot = noderoot
+  self._rootnode = noderoot
   return self
 end
 
@@ -81,13 +122,13 @@ function M:clear()
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
-  local node_root = self._noderoot ---@type std.collection.tree.INode
-  for _, uuid_child in ipairs(node_root.children) do
-    local child = nodemap[uuid_child] ---@type std.collection.tree.INode
+  local rootnode = self._rootnode ---@type std.collection.tree.INode
+  for _, childuuid in ipairs(rootnode.children) do
+    local child = nodemap[childuuid] ---@type std.collection.tree.INode
     self:__remove_recursive__(child)
   end
-  node_root.children = {}
-  node_root.dirty_co = false
+  rootnode.children = {}
+  rootnode.dirty_co = false
   return self
 end
 
@@ -98,12 +139,12 @@ function M:dispose()
   end
   self._disposed = true
 
-  self:__remove_recursive__(self._noderoot)
+  self:__remove_recursive__(self._rootnode)
 
   self.root = nil
   self.node_sorter = nil
   self._nodemap = nil
-  self._noderoot = nil
+  self._rootnode = nil
 end
 
 ---@return boolean
@@ -137,25 +178,23 @@ function M:isdescendant(ancestor, uuid)
 
   local distance = node.depth - node_ancestor.depth ---@type integer
   for _ = 1, distance, 1 do
-    local node_parent = nodemap[node.parent] ---@type std.collection.tree.INode
-    node = node_parent
+    node = nodemap[node.parent] ---@type std.collection.tree.INode
   end
   return node.uuid == ancestor
 end
 
 ---@param uuid                          string
 ---@return boolean
-function M:isexist(uuid)
+function M:isexistent(uuid)
   self:__health__()
   return self._nodemap[uuid] ~= nil
 end
 
 ---@param uuid                          string
----@return string|nil
-function M:retrieve_parent(uuid)
+---@return std.collection.tree.INode|nil
+function M:retrieve(uuid)
   self:__health__()
-  local node = self._nodemap[uuid] ---@type std.collection.tree.INode|nil
-  return node ~= nil and node.parent or nil
+  return self._nodemap[uuid] ---@type std.collection.tree.INode|nil
 end
 
 ---@param root                          string
@@ -167,11 +206,12 @@ function M:quick_traverse(root, fn, conditional)
 
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
   local recursive ---@type std.collection.tree.IQuickTraverseRecursive
+  local rootnode = root and nodemap[root] or self._rootnode ---@type std.collection.tree.INode
 
   if conditional == nil then
     ---@type std.collection.tree.IQuickTraverseRecursive
-    recursive = function(node, cur)
-      fn(node.uuid, cur)
+    recursive = function(ctx, node, cur)
+      fn(ctx, node, cur)
 
       if node.dirty_co then
         self:__sort_children__(node)
@@ -180,15 +220,25 @@ function M:quick_traverse(root, fn, conditional)
       local next_cur = cur + 1 ---@type integer
       local N = #node.children ---@type integer
       for index = 1, N, 1 do
-        local uuid_child = node.children[index] ---@type string
-        local child = nodemap[uuid_child] ---@type std.collection.tree.INode
-        recursive(child, next_cur)
+        local childuuid = node.children[index] ---@type string
+        local child = nodemap[childuuid] ---@type std.collection.tree.INode
+        recursive(ctx, child, next_cur)
       end
     end
   else
     ---@type std.collection.tree.IQuickTraverseRecursive
-    recursive = function(node, cur)
-      fn(node.uuid, cur)
+    recursive = function(ctx, node, cur)
+      local condition = conditional(ctx, node, cur) ---@type std.collection.tree.TraverseConditionalEnum
+      if condition == "badroot" then
+        return
+      end
+
+      if condition == "goodnode" then
+        fn(ctx, node, cur)
+        return
+      end
+
+      fn(ctx, node, cur)
 
       if node.dirty_co then
         self:__sort_children__(node)
@@ -197,31 +247,26 @@ function M:quick_traverse(root, fn, conditional)
       local next_cur = cur + 1 ---@type integer
       local N = #node.children ---@type integer
       for index = 1, N, 1 do
-        local uuid_child = node.children[index] ---@type string
-        if conditional(uuid_child, next_cur) then
-          local child = nodemap[uuid_child] ---@type std.collection.tree.INode
-          recursive(child, next_cur)
-        end
+        local childuuid = node.children[index] ---@type string
+        local child = nodemap[childuuid] ---@type std.collection.tree.INode
+        recursive(ctx, child, next_cur)
       end
     end
   end
 
-  local node_root = root and nodemap[root] or self._noderoot ---@type std.collection.tree.INode
-  if node_root == self._noderoot then
-    if node_root.dirty_co then
-      self:__sort_children__(node_root)
+  if rootnode == self._rootnode then
+    if rootnode.dirty_co then
+      self:__sort_children__(rootnode)
     end
 
-    for _, uuid_child in ipairs(node_root.children) do
-      if conditional == nil or conditional(uuid_child, 1) then
-        local node_child = nodemap[uuid_child] ---@type std.collection.tree.INode
-        recursive(node_child, 1)
-      end
+    for _, childuuid in ipairs(rootnode.children) do
+      local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type std.collection.tree.ITraverseContext
+      recursive(ctx, childnode, 1)
     end
   else
-    if conditional == nil or conditional(node_root.uuid, 1) then
-      recursive(node_root, 1)
-    end
+    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type std.collection.tree.ITraverseContext
+    recursive(ctx, rootnode, 1)
   end
 
   return self
@@ -239,37 +284,47 @@ function M:traverse(root, fn, conditional)
 
   if conditional == nil then
     ---@type std.collection.tree.ITraverseRecursive
-    recursive = function(node, cur, is_lastchild)
+    recursive = function(ctx, node, cur, is_lastchild)
       local N = #node.children ---@type integer
       local next_cur = cur + 1 ---@type integer
 
       if N == 0 then
-        fn(node.uuid, cur, is_lastchild, 0, nil)
+        fn(ctx, node, cur, is_lastchild, nil, N)
         return
       end
 
       if N == 1 then
-        local uuid_child = node.children[1] ---@type string
-        local node_child = nodemap[uuid_child] ---@type std.collection.tree.INode
-        fn(node.uuid, cur, is_lastchild, 1, uuid_child)
-        return recursive(node_child, next_cur, true)
+        local childuuid = node.children[1] ---@type string
+        local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+        fn(ctx, node, cur, is_lastchild, childuuid, N)
+        return recursive(ctx, childnode, next_cur, true)
       end
 
-      fn(node.uuid, cur, is_lastchild, N, nil)
+      fn(ctx, node, cur, is_lastchild, nil, N)
 
       if node.dirty_co then
         self:__sort_children__(node)
       end
 
       for index = 1, N, 1 do
-        local uuid_child = node.children[index] ---@type string
-        local child = nodemap[uuid_child] ---@type std.collection.tree.INode
-        recursive(child, next_cur, index == N)
+        local childuuid = node.children[index] ---@type string
+        local child = nodemap[childuuid] ---@type std.collection.tree.INode
+        recursive(ctx, child, next_cur, index == N)
       end
     end
   else
     ---@type std.collection.tree.ITraverseRecursive
-    recursive = function(node, cur, is_lastchild)
+    recursive = function(ctx, node, cur, is_lastchild)
+      local condition = conditional(ctx, node, cur) ---@type std.collection.tree.TraverseConditionalEnum
+      if condition == "badroot" then
+        return
+      end
+
+      if condition == "goodnode" then
+        fn(ctx, node, cur, is_lastchild, nil, 0)
+        return
+      end
+
       if node.dirty_co then
         self:__sort_children__(node)
       end
@@ -277,56 +332,54 @@ function M:traverse(root, fn, conditional)
       local N = 0 ---@type integer
       local next_cur = cur + 1 ---@type integer
 
-      local first_child_index = 0 ---@type integer
+      local first_child_index = nil ---@type integer|nil
       local last_child_index = #node.children ---@type integer
-      for index, uuid_child in ipairs(node.children) do
-        if conditional(uuid_child, next_cur) then
+      for index, childuuid in ipairs(node.children) do
+        local child = nodemap[childuuid] ---@type std.collection.tree.INode
+        local child_condition = conditional(ctx, child, next_cur) ---@type std.collection.tree.TraverseConditionalEnum
+        if child_condition ~= "badroot" then
           N = N + 1 ---@type integer
           first_child_index = first_child_index or index ---@type integer
           last_child_index = index ---@type integer
         end
       end
 
-      if N == 0 then
-        fn(node.uuid, cur, is_lastchild, 0, nil)
+      if first_child_index == nil then
+        fn(ctx, node, cur, is_lastchild, nil, N)
         return
       end
 
       if N == 1 then
-        local uuid_child = node.children[first_child_index] ---@type string
-        local node_child = nodemap[uuid_child] ---@type std.collection.tree.INode
-        fn(node.uuid, cur, is_lastchild, 1, uuid_child)
-        return recursive(node_child, next_cur, true)
+        local childuuid = node.children[first_child_index] ---@type string
+        local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+        fn(ctx, node, cur, is_lastchild, childuuid, N)
+        return recursive(ctx, childnode, next_cur, true)
       end
 
-      fn(node.uuid, cur, is_lastchild, N, nil)
+      fn(ctx, node, cur, is_lastchild, nil, N)
 
       for index = first_child_index, last_child_index, 1 do
-        local uuid_child = node.children[index] ---@type string
-        if conditional(uuid_child, next_cur) then
-          local node_child = nodemap[uuid_child] ---@type std.collection.tree.INode
-          recursive(node_child, next_cur, index == last_child_index)
-        end
+        local childuuid = node.children[index] ---@type string
+        local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+        recursive(ctx, childnode, next_cur, index == last_child_index)
       end
     end
   end
 
-  local node_root = nodemap[root] or self._noderoot ---@type std.collection.tree.INode
-  if node_root == self._noderoot then
-    if node_root.dirty_co then
-      self:__sort_children__(node_root)
+  local rootnode = nodemap[root] or self._rootnode ---@type std.collection.tree.INode
+  if rootnode == self._rootnode then
+    if rootnode.dirty_co then
+      self:__sort_children__(rootnode)
     end
 
-    for _, uuid_child in ipairs(node_root.children) do
-      if conditional == nil or conditional(uuid_child, 1) then
-        local node_child = nodemap[uuid_child] ---@type std.collection.tree.INode
-        recursive(node_child, 1, true)
-      end
+    for _, childuuid in ipairs(rootnode.children) do
+      local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type std.collection.tree.ITraverseContext
+      recursive(ctx, childnode, 1, true)
     end
   else
-    if conditional == nil or conditional(node_root.uuid, 1) then
-      recursive(node_root, 1, true)
-    end
+    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type std.collection.tree.ITraverseContext
+    recursive(ctx, rootnode, 1, true)
   end
 
   return self
@@ -339,18 +392,20 @@ function M:unsafe_traverse(root, traverse)
   self:__health__()
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
 
-  local node_root = nodemap[root] or self._noderoot ---@type std.collection.tree.INode
-  if node_root == self._noderoot then
-    if node_root.dirty_co then
-      self:__sort_children__(node_root)
+  local rootnode = nodemap[root] or self._rootnode ---@type std.collection.tree.INode
+  if rootnode == self._rootnode then
+    if rootnode.dirty_co then
+      self:__sort_children__(rootnode)
     end
 
-    for _, uuid_child in ipairs(node_root.children) do
-      local node_child = nodemap[uuid_child] ---@type std.collection.tree.INode
-      traverse(node_child, nodemap, 1)
+    for _, childuuid in ipairs(rootnode.children) do
+      local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type std.collection.tree.ITraverseContext
+      traverse(ctx)
     end
   else
-    traverse(node_root, nodemap, 1)
+    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type std.collection.tree.ITraverseContext
+    traverse(ctx)
   end
 
   return self
@@ -363,16 +418,17 @@ end
 function M:calc_include_uuid_set(uuids)
   self:__health__()
 
-  local uuid_set = {} ---@type table<string, boolean>
+  local uuidset = {} ---@type table<string, boolean>
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
-  for _, uuid in ipairs(uuids) do
-    local id = uuid ---@type string
-    while not uuid_set[id] do
-      uuid_set[id] = true
-      id = nodemap[id].parent ---@type string
+  local N = #uuids ---@type integer
+  for index = 1, N, 1 do
+    local uuid = uuids[index] ---@type string
+    while not uuidset[uuid] do
+      uuidset[uuid] = true
+      uuid = nodemap[uuid].parent ---@type string
     end
   end
-  return uuid_set
+  return uuidset
 end
 
 ---@param uuid                          string
@@ -380,8 +436,8 @@ end
 function M:empty(uuid)
   self:__health__()
 
-  local node_root = self._noderoot ---@type std.collection.tree.INode
-  if uuid == node_root.uuid then
+  local rootnode = self._rootnode ---@type std.collection.tree.INode
+  if uuid == rootnode.uuid then
     return self:clear()
   end
 
@@ -389,7 +445,7 @@ function M:empty(uuid)
   local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
   if node == nil then
     std.reporter.error({
-      from = self.name,
+      from = self.fullname,
       subject = "clear",
       message = string.format("Node with uuid '%s' does not exist.", uuid),
       details = {
@@ -399,9 +455,9 @@ function M:empty(uuid)
     return self
   end
 
-  for _, uuid_child in ipairs(node.children) do
-    local node_child = nodemap[uuid_child] ---@type std.collection.tree.INode
-    self:__remove_recursive__(node_child)
+  for _, childuuid in ipairs(node.children) do
+    local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+    self:__remove_recursive__(childnode)
   end
   node.children = {}
   node.dirty_co = false
@@ -409,14 +465,16 @@ function M:empty(uuid)
   return self
 end
 
----@param uuid                          string
+---@generic T : table
 ---@param parent                        string
+---@param uuid                          string
+---@param data                          T
 ---@return std.collection.Tree
-function M:insert(uuid, parent)
+function M:insert(parent, uuid, data)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
-  local node_parent = uuid ~= parent and nodemap[parent] or self._noderoot ---@type std.collection.tree.INode
+  local node_parent = uuid ~= parent and nodemap[parent] or self._rootnode ---@type std.collection.tree.INode
   local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
   if node == nil then
     ---@type std.collection.tree.INode
@@ -425,17 +483,19 @@ function M:insert(uuid, parent)
       parent = node_parent.uuid,
       children = {},
       depth = node_parent.depth + 1,
+      data = data,
       dirty_co = false,
     }
     nodemap[uuid] = node
   else
+    node.data = data
     if node.parent == node_parent.uuid then
       return self
     end
 
     local old_node_parent = nodemap[node.parent] ---@type std.collection.tree.INode
-    std.table.filter_inline(old_node_parent.children, function(uuid_child)
-      return uuid_child ~= node.uuid
+    std.table.filter_inline(old_node_parent.children, function(childuuid)
+      return childuuid ~= node.uuid
     end)
 
     node.parent = node_parent.uuid
@@ -454,8 +514,8 @@ end
 function M:remove(uuid)
   self:__health__()
 
-  local node_root = self._noderoot ---@type std.collection.tree.INode
-  if uuid == node_root.uuid then
+  local rootnode = self._rootnode ---@type std.collection.tree.INode
+  if uuid == rootnode.uuid then
     return self:clear()
   end
 
@@ -463,7 +523,7 @@ function M:remove(uuid)
   local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
   if node == nil then
     std.reporter.error({
-      from = self.name,
+      from = self.fullname,
       subject = "remove",
       message = string.format("Node with uuid '%s' does not exist.", uuid),
       details = {
@@ -474,8 +534,8 @@ function M:remove(uuid)
   end
 
   local node_parent = nodemap[node.parent] ---@type std.collection.tree.INode
-  std.table.filter_inline(node_parent.children, function(uuid_child)
-    return uuid_child ~= uuid
+  std.table.filter_inline(node_parent.children, function(childuuid)
+    return childuuid ~= uuid
   end)
   self:__remove_recursive__(node)
 
@@ -488,7 +548,7 @@ end
 ---@return nil
 function M:__health__()
   if self._disposed then
-    local message = string.format("%s has been disposed.", self.name) ---@type string
+    local message = string.format("%s has been disposed.", self.fullname) ---@type string
     error(message)
   end
 end
@@ -498,9 +558,11 @@ end
 ---@return nil
 function M:__remove_recursive__(node)
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
-  for _, uuid_child in ipairs(node.children) do
-    local child = nodemap[uuid_child] ---@type std.collection.tree.INode
-    self:__remove_recursive__(child)
+  for _, childuuid in ipairs(node.children) do
+    local child = nodemap[childuuid] ---@type std.collection.tree.INode|nil
+    if child ~= nil then
+      self:__remove_recursive__(child)
+    end
   end
 
   nodemap[node.uuid] = nil
@@ -516,8 +578,8 @@ end
 ---@return nil
 function M:__resolve_depth_recursive__(node, depth)
   node.depth = depth
-  for _, uuid_child in ipairs(node.children) do
-    local child = self._nodemap[uuid_child] ---@type std.collection.tree.INode
+  for _, childuuid in ipairs(node.children) do
+    local child = self._nodemap[childuuid] ---@type std.collection.tree.INode
     self:__resolve_depth_recursive__(child, depth + 1)
   end
 end
@@ -528,7 +590,13 @@ end
 function M:__sort_children__(node)
   node.dirty_co = false
   if #node.children > 1 then
-    table.sort(node.children, self.node_sorter)
+    local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+    local node_sorter = self.node_sorter ---@type std.collection.tree.INodeSorter
+    table.sort(node.children, function(left_uuid, right_uuid)
+      local left = nodemap[left_uuid] ---@type std.collection.tree.INode
+      local right = nodemap[right_uuid] ---@type std.collection.tree.INode
+      return node_sorter(left, right)
+    end)
   end
 end
 
