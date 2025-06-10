@@ -1282,7 +1282,7 @@ end
 
 ---@return boolean
 function M:__should_show_preview__()
-  return self.preview ~= nil and vim.o.columns > 160
+  return self.preview ~= nil and vim.o.columns > 140
 end
 
 return M
