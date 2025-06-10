@@ -13,6 +13,13 @@ local IGNOREABLE_EVENTS = {
   win_hide = true,
 }
 
+---@type table<string, boolean|nil>
+local DEVMODE_IGNORED_EVENTS = {
+  msg_showcmd = true,
+  cmdline_show = true,
+  cmdline_hide = true,
+}
+
 local handlers = {
   cmdline_hide = function(task)
     require("fml.dressing.ui_attach.cmdline").hide(task)
@@ -95,7 +102,7 @@ local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 local function ui_attach_callback(event, kind, ...)
   local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
-    if event ~= "msg_showcmd" then
+    if not DEVMODE_IGNORED_EVENTS[event] then
       std.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
     end
   end
