@@ -25,6 +25,7 @@ local __mods = {
   CircularStack = "std.collection.circular_stack",
   Dirtier = "std.collection.dirtier",
   Disposable = "std.collection.disposable",
+  Filetree = "std.collection.filetree",
   Frecency = "std.collection.frecency",
   History = "std.collection.history",
   InputHistory = "std.collection.input_history",
@@ -68,6 +69,7 @@ local __mods = {
 ---@field public CircularStack          std.collection.CircularStack
 ---@field public Dirtier                std.collection.Dirtier
 ---@field public Disposable             std.collection.Disposable
+---@field public Filetree               std.collection.Filetree
 ---@field public Frecency               std.collection.Frecency
 ---@field public History                std.collection.History
 ---@field public InputHistory           std.collection.InputHistory
