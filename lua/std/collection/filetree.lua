@@ -151,6 +151,7 @@ function M.new(props)
   local tree = std.Tree.new({
     name = name,
     fullname = fullname,
+    rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, false),
     node_sorter = function(left, right)
       ---@cast left                     std.collection.filetree.INode
       ---@cast right                    std.collection.filetree.INode
@@ -326,7 +327,7 @@ function M:reset(cwd, filepaths, with_locations)
 
   if with_locations then
     for _, p in ipairs(filepaths) do
-      local filepath = std.string.parse_filepath_with_position(p) ---@type string, integer|nil, integer|nil
+      local filepath = std.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
       if std.path.is_absolute(filepath) then
         if filepath:sub(1, cwd_with_slash_length) ~= cwd_with_slash then
           insert_absolute_filepath(filepath)

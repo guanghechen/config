@@ -1,10 +1,12 @@
-require("plenary.reload").reload_module("eve.ux.picker.composer")
+require("plenary.reload").reload_module("std.collection.tree")
+require("plenary.reload").reload_module("std.collection.filetree")
+require("plenary.reload").reload_module("eve.ux.view.tree")
+require("plenary.reload").reload_module("eve.ux.view.filetree")
 require("plenary.reload").reload_module("eve.ux.picker.finder")
 require("plenary.reload").reload_module("eve.ux.picker.result")
 require("plenary.reload").reload_module("eve.ux.picker.preview")
+require("plenary.reload").reload_module("eve.ux.picker.composer")
 require("plenary.reload").reload_module("eve.ux.picker-file")
-require("plenary.reload").reload_module("eve.ux.view.treeview")
-require("plenary.reload").reload_module("eve.ux.view.filetree")
 
 local name = "find-files" ---@type string
 local finder_input = std.Observable.from_value("")
@@ -19,7 +21,7 @@ local flag_regex = std.Observable.from_value(false)
 local flag_sensitive = std.Observable.from_value(true)
 local flag_selected = std.Observable.from_value(false)
 local flag_viewtype = std.Observable.from_value("tree")
-local flag_case = std.Observable.from_value(1)
+local flag_case = std.Observable.from_value(2)
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",
@@ -96,7 +98,7 @@ flag_case:subscribe(
           "/f/opt/me/a.txt",
           "/f/bin/usr/b.txt",
         }
-        picker:reset_filepaths("/", filepaths, true)
+        picker:reset_filepaths("/", filepaths, false)
       end
 
       picker:mark_result_dirty()

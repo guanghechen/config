@@ -11,12 +11,6 @@ local BYTE_COLON      = std.byte.BYTES.COLON      ---@type integer ':'
 local BYTE_PATHSEP    = string.byte(SEP)          ---@type integer
 -- stylua: ignore end
 
----@type table<string, string>
-local FILEPATH_TO_UUID = {
-  [""] = "d41d8cd98f00b204e9800998ecf8427e",
-  ["/"] = "6666cd76f96956469e7be39d750cc7d9",
-}
-
 ---@class std.path.reposcope_map
 local repo_map = {
   public = {
@@ -399,17 +393,6 @@ end
 function M.cwd()
   local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
   return cwd
-end
-
----@param filepath                      string
----@return string
-function M.uuid(filepath)
-  local uuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
-  if uuid == nil then
-    uuid = std.fn.md5(filepath) ---@type string
-    FILEPATH_TO_UUID[filepath] = uuid
-  end
-  return uuid
 end
 
 ----------------------------------------------------------------------------------------------------

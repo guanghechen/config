@@ -1,10 +1,12 @@
-require("plenary.reload").reload_module("eve.ux.picker.composer")
+require("plenary.reload").reload_module("std.collection.tree")
+require("plenary.reload").reload_module("std.collection.filetree")
+require("plenary.reload").reload_module("eve.ux.view.tree")
+require("plenary.reload").reload_module("eve.ux.view.filetree")
 require("plenary.reload").reload_module("eve.ux.picker.finder")
 require("plenary.reload").reload_module("eve.ux.picker.result")
 require("plenary.reload").reload_module("eve.ux.picker.preview")
+require("plenary.reload").reload_module("eve.ux.picker.composer")
 require("plenary.reload").reload_module("eve.ux.picker-file")
-require("plenary.reload").reload_module("eve.ux.view.treeview")
-require("plenary.reload").reload_module("eve.ux.view.filetree")
 
 local name = "find-files" ---@type string
 local last_scope_path = nil ---@type string|nil

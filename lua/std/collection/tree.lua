@@ -44,6 +44,7 @@ local __module_name__ = "std.collection.tree" ---@type string
 ---@field public fullname               string|nil
 ---@field public name                   string
 ---@field public node_sorter            std.collection.tree.INodeSorter
+---@field public rootnodedata           unknown|nil
 
 ---@class std.collection.IReadonlyTree
 ---@field public fullname               string
@@ -90,6 +91,7 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = props.fullname or string.format("%s@%s", __module_name__, name) ---@type string
   local node_sorter = props.node_sorter ---@type std.collection.tree.INodeSorter
+  local rootnodedata = props.rootnodedata or {} ---@type unknown
   local uuid_root = "__virtual_root__" ---@type string
 
   ---@type std.collection.tree.INode
@@ -98,7 +100,7 @@ function M.new(props)
     parent = uuid_root,
     children = {},
     depth = 0,
-    data = {},
+    data = rootnodedata,
     dirty_co = false,
   }
 
@@ -474,8 +476,10 @@ function M:insert(parent, uuid, data)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
-  local node_parent = uuid ~= parent and nodemap[parent] or self._rootnode ---@type std.collection.tree.INode
+  local node_parent = parent ~= uuid and nodemap[parent] or self._rootnode ---@type std.collection.tree.INode
   local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
+  parent = node_parent.uuid ---@type string
+
   if node == nil then
     ---@type std.collection.tree.INode
     node = {

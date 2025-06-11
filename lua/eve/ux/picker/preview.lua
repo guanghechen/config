@@ -12,6 +12,7 @@ local __module_name__ = "eve.ux.picker.preview" ---@type string
 ---@field public number                 boolean
 ---@field public title                  string
 ---@field public wrap                   boolean
+---@field public whitespaces            ?boolean
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
@@ -239,7 +240,6 @@ function M:create_win(winopts, dimension)
   self._winnr = winnr
 
   eve.win.set_type(winnr, eve.win.Types.PICKER_PREVIEW)
-  vim.wo[winnr].list = true
   vim.wo[winnr].listchars = string.format(
     "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
     eve.icon.listchars.eol,
@@ -248,18 +248,34 @@ function M:create_win(winopts, dimension)
     eve.icon.listchars.space,
     eve.icon.listchars.trail
   )
-  vim.wo[winnr].cursorline = result ~= nil and result.cursorline == true
-  vim.wo[winnr].number = result ~= nil and result.number == true
   vim.wo[winnr].relativenumber = false
   vim.wo[winnr].spell = false
   vim.wo[winnr].signcolumn = "yes"
   vim.wo[winnr].winblend = winblend
   vim.wo[winnr].winfixbuf = true
   vim.wo[winnr].winhighlight = winopts.winhighlight
-  vim.wo[winnr].wrap = result ~= nil and result.wrap == true
 
-  if result ~= nil and result.lnum ~= nil then
-    pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })
+  if result == nil then
+    vim.wo[winnr].cursorline = true
+    vim.wo[winnr].number = true
+    vim.wo[winnr].wrap = false
+    vim.wo[winnr].list = true
+  else
+    if result.cursorline ~= nil then
+      vim.wo[winnr].cursorline = result.cursorline
+    end
+    if result.number ~= nil then
+      vim.wo[winnr].number = result.number
+    end
+    if result.wrap ~= nil then
+      vim.wo[winnr].wrap = result.wrap
+    end
+    if result.whitespaces ~= nil then
+      vim.wo[winnr].list = result.whitespaces
+    end
+    if result.lnum ~= nil then
+      pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })
+    end
   end
   return winnr, true
 end
@@ -356,14 +372,24 @@ function M:__update_winopts__()
   local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   wincfg.title = result.title
   wincfg.title_pos = #result.title > 0 and "center" or nil
-  vim.wo[winnr].cursorline = result.cursorline
-  vim.wo[winnr].number = result.number
-  vim.wo[winnr].wrap = result.wrap
-  vim.api.nvim_win_set_config(winnr, wincfg)
 
+  if result.cursorline ~= nil then
+    vim.wo[winnr].cursorline = result.cursorline
+  end
+  if result.number ~= nil then
+    vim.wo[winnr].number = result.number
+  end
+  if result.wrap ~= nil then
+    vim.wo[winnr].wrap = result.wrap
+  end
+  if result.whitespaces ~= nil then
+    vim.wo[winnr].list = result.whitespaces
+  end
   if result.lnum ~= nil then
     pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })
   end
+
+  vim.api.nvim_win_set_config(winnr, wincfg)
   return self
 end
 

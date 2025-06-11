@@ -24,7 +24,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if std.path.is_absolute(filepath) and std.path.is_exist_filepath(filepath) then
-      local uuid = std.path.uuid(filepath) ---@type string
+      local uuid = std.Filetree.uuid(filepath) ---@type string
       eve.context.frecency.files:access(uuid)
     end
   end,
