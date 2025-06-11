@@ -245,6 +245,14 @@ function M.new(props)
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
+      local lnum_total = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+      if lnum_total == 1 then
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)
+        if lines[1] == "" then
+          lnum_total = 0
+        end
+      end
+
       if not ok then
         std.reporter.error({
           from = fullname,
@@ -255,16 +263,12 @@ function M.new(props)
             error = result,
           },
         })
-
-        local lnum_total = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-        _lnum_total:next(lnum_total)
         return
       end
 
-      local lnums_selected = result.lnums_selected ---@type integer[]|nil
-      local lnum_total = vim.api.nvim_buf_line_count(bufnr) ---@type integer
       local lnum_current = math.min(lnum_total, math.max(1, result.lnum_current or _lnum_current:snapshot())) ---@type integer
       local lnum_present = result.lnum_present or -1 ---@type integer
+      local lnums_selected = result.lnums_selected ---@type integer[]|nil
       local lnum_selected_set = {} ---@type table<integer, true>
       if lnums_selected ~= nil then
         for _, lnum in ipairs(lnums_selected) do
