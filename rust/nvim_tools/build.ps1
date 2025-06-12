@@ -1,10 +1,21 @@
+param(
+    [switch]$Force
+)
+
 Set-Location -Path $PSScriptRoot
 
 $luaTargetPath = Join-Path -Path $PSScriptRoot -ChildPath "../../lua/nvim_tools.dll"
 $binTargetPath = Join-Path -Path $PSScriptRoot -ChildPath "../../bin/win.nvim_tools.dll"
 
-if (-not (Test-Path -Path $luaTargetPath)) {
+if ($Force -or (-not (Test-Path -Path $luaTargetPath))) {
     cargo build --release
+
+    if (Test-Path -Path $luaTargetPath) {
+        Remove-Item -Path $luaTargetPath -Force
+    }
+    if (Test-Path -Path $binTargetPath) {
+        Remove-Item -Path $binTargetPath -Force
+    }
 
     $binDirectoryPath = Join-Path -Path $PSScriptRoot -ChildPath "../../bin"
     if (-not (Test-Path -Path $binDirectoryPath)) {
