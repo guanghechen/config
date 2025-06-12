@@ -3,7 +3,13 @@ local __module_name__ = "fml.action.find.git" ---@type string
 ---@class fml.action.find
 local M = {}
 
+local name = __module_name__ ---@type string
 local finder_input = eve.context.select.find_git.input
+local finder_input_history = std.InputHistory.new({
+  name = name,
+  capacity = 5,
+  input = finder_input,
+})
 local flag_foldempty = eve.context.select.find_git.flag_foldempty
 local flag_fuzzy = eve.context.select.find_git.flag_fuzzy
 local flag_regex = eve.context.select.find_git.flag_regex
@@ -32,7 +38,7 @@ local function refresh(force)
 end
 
 picker = eve.ux.FilePicker.new({
-  name = "find-git-not-",
+  name = name,
   frecency = eve.context.frecency.files,
   permanent = true,
   title = "Find git (not committed)",
@@ -41,6 +47,7 @@ picker = eve.ux.FilePicker.new({
   preview = false,
 
   finder_input = finder_input,
+  finder_input_history = finder_input_history,
   finder_multiline = false,
 
   flag_foldempty = flag_foldempty,

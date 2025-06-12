@@ -68,10 +68,6 @@ local picker = eve.ux.FilePicker.new({
   },
 })
 
-std.fn.observe({ o_flag_case }, function()
-  picker:mark_result_flags_dirty()
-end, true)
-
 o_flag_case:subscribe(
   std.Subscriber.new({
     on_next = function(kase)

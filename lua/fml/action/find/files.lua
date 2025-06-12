@@ -227,7 +227,7 @@ end)
 
 std.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
   refresh(picker)
-end, false)
+end, true)
 
 std.fn.observe({ o_includes, o_excludes }, function()
   picker:mark_result_dirty()
