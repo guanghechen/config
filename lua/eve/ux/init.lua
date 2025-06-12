@@ -13,7 +13,6 @@ local __mods = {
   SearchPreview = "eve.ux.search.preview",
 
   Select = "eve.ux.select",
-  FileSelect = "eve.ux.select_file",
   SelectPopup = "eve.ux.select_popup",
 
   Board = "eve.ux.board",
@@ -41,7 +40,6 @@ local __mods = {
 ---@field public SearchPreview          eve.ux.SearchPreview
 ---
 ---@field public Select                 eve.ux.Select
----@field public FileSelect             eve.ux.FileSelect
 ---@field public SelectPopup            eve.ux.SelectPopup
 ---
 ---@field public Board                  eve.ux.Board
