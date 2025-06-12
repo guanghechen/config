@@ -12,7 +12,6 @@ local __mods = {
   Plainfile = "eve.ux.view.plainfile",
   Printer = "eve.ux.view.printer",
   Tree = "eve.ux.view.tree",
-  TreeRetriever = "eve.ux.view.tree_retriever",
 }
 
 ---@class eve.ux.view
@@ -22,7 +21,6 @@ local __mods = {
 ---@field public Plainfile              eve.ux.view.Plainfile
 ---@field public Printer                eve.ux.view.Printer
 ---@field public Tree                   eve.ux.view.Tree
----@field public TreeRetriever          eve.ux.view.TreeRetriever
 local M = setmetatable({
   __mods = __mods,
 }, {

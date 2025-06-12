@@ -93,7 +93,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _frecency           std.collection.IFrecency|nil
 ---@field protected _picker             eve.ux.PickerComposer
 ---@field protected _plainfile          eve.ux.view.Plainfile
----@field protected _retriever          eve.ux.view.TreeRetriever
+---@field protected _retriever          eve.ux.picker.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
 ---@field protected _treeview           eve.ux.view.Filetree
 ---
@@ -154,8 +154,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type eve.ux.view.TreeRetriever
-  local retriever = eve.ux.view.TreeRetriever.new({
+  ---@type eve.ux.picker.TreeRetriever
+  local retriever = eve.ux.PickerTreeRetriever.new({
     name = fullname,
   })
 
@@ -986,7 +986,7 @@ end
 function M:__collect_selected_lnums__()
   self:__health__()
 
-  local retriever = self._retriever ---@type eve.ux.view.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local linecount = retriever:linecount() ---@type integer
@@ -1012,7 +1012,7 @@ end
 function M:__collect_selected_uuids__()
   self:__health__()
 
-  local retriever = self._retriever ---@type eve.ux.view.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   if retriever:linecount() < 1 then
     return {}
   end
@@ -1050,7 +1050,7 @@ end
 function M:__has_selected_node__()
   self:__health__()
 
-  local retriever = self._retriever ---@type eve.ux.view.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   if retriever:linecount() < 1 then
     return false
   end

@@ -4,6 +4,7 @@ local __mods = {
   PickerFinder = "eve.ux.picker.finder",
   PickerPreview = "eve.ux.picker.preview",
   PickerResult = "eve.ux.picker.result",
+  PickerTreeRetriever = "eve.ux.picker.retriever.tree",
   FilePicker = "eve.ux.picker-file",
 
   Search = "eve.ux.search.search",
@@ -31,6 +32,7 @@ local __mods = {
 ---@field public PickerFinder           eve.ux.PickerFinder
 ---@field public PickerPreview          eve.ux.PickerPreview
 ---@field public PickerResult           eve.ux.PickerResult
+---@field public PickerTreeRetriever    eve.ux.picker.TreeRetriever
 ---@field public FilePicker             eve.ux.FilePicker
 ---
 ---@field public Search                 eve.ux.Search
