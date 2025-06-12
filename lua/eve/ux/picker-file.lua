@@ -496,6 +496,12 @@ function M.new(props)
       desc = "filetree: toggle selection",
       callback = actions.on_toggle_selection,
     },
+    {
+      modes = { "n", "v" },
+      key = "z",
+      desc = "filetree: toggle (recursively)",
+      callback = actions.on_filetree_toggle_recursively,
+    },
   }
 
   ---@type std.t.IKeymap[]
@@ -542,15 +548,15 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
-      key = "z",
-      desc = "filetree: toggle (recursively)",
-      callback = actions.on_filetree_toggle_recursively,
-    },
-    {
-      modes = { "i", "n", "v" },
       key = "<Tab>",
       desc = "filetree: toggle selection",
       callback = actions.on_toggle_selection,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "z",
+      desc = "filetree: toggle (recursively)",
+      callback = actions.on_filetree_toggle_recursively,
     },
   }
 
