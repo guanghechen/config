@@ -22,13 +22,13 @@ local __module_name__ = "eve.ux.picker.preview" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.IPickerPreviewProps
+---@class eve.ux.picker.IPreviewProps
 ---@field public name                   string
 ---@field public draw                   eve.ux.picker.preview.IDraw
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public on_drawed              ?eve.ux.picker.preview.IOnDrawed
 
----@class eve.ux.PickerPreview
+---@class eve.ux.picker.Preview
 ---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field protected _disposed           boolean
@@ -39,8 +39,8 @@ local __module_name__ = "eve.ux.picker.preview" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.IPickerPreviewProps
----@return eve.ux.PickerPreview
+---@param props                         eve.ux.picker.IPreviewProps
+---@return eve.ux.picker.Preview
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -282,7 +282,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.PickerPreview
+---@return eve.ux.picker.Preview
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -292,7 +292,7 @@ function M:focus()
   return self
 end
 
----@return eve.ux.PickerPreview
+---@return eve.ux.picker.Preview
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -320,7 +320,7 @@ function M:hide()
 end
 
 ---@param dimension                     std.t.IWinDimension,
----@return eve.ux.PickerPreview
+---@return eve.ux.picker.Preview
 function M:resize(dimension)
   self:__health__()
 
@@ -340,7 +340,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.PickerPreview
+---@return eve.ux.picker.Preview
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
@@ -357,7 +357,7 @@ function M:__health__()
   end
 end
 
----@return eve.ux.PickerPreview
+---@return eve.ux.picker.Preview
 function M:__update_winopts__()
   local result = self._last_result ---@type eve.ux.picker.preview.IDrawResult
   if result == nil then

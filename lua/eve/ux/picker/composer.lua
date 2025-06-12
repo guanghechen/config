@@ -10,25 +10,25 @@ local __module_name__ = "eve.ux.picker.composer" ---@type string
 ---| fun(): nil
 
 ---@alias eve.ux.picker.composer.IOnClosed
----| fun(self: eve.ux.PickerComposer): nil
+---| fun(self: eve.ux.picker.Composer): nil
 
 ---@alias eve.ux.picker.composer.IOnDisposed
 ---| fun(): nil
 
 ---@alias eve.ux.picker.composer.IOnFocused
----| fun(self: eve.ux.PickerComposer): nil
+---| fun(self: eve.ux.picker.Composer): nil
 
 ---@alias eve.ux.picker.composer.IOnHidden
----| fun(self: eve.ux.PickerComposer): nil
+---| fun(self: eve.ux.picker.Composer): nil
 
 ---@alias eve.ux.picker.composer.IOnRefresh
----| fun(self: eve.ux.PickerComposer, force: boolean): nil
+---| fun(self: eve.ux.picker.Composer, force: boolean): nil
 
 ---@alias eve.ux.picker.composer.IOnResultRendered
----| fun(self: eve.ux.PickerComposer, bufnr: integer): nil
+---| fun(self: eve.ux.picker.Composer, bufnr: integer): nil
 
 ---@alias eve.ux.picker.composer.IOnPreviewRendered
----| fun(self: eve.ux.PickerComposer, bufnr: integer): nil
+---| fun(self: eve.ux.picker.Composer, bufnr: integer): nil
 
 ----------------------------------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ local __highlights__ = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.IPickerComposerProps
+---@class eve.ux.picker.IComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
@@ -114,14 +114,14 @@ local __highlights__ = {
 ---@field public on_preview_rendered    ?eve.ux.picker.composer.IOnPreviewRendered
 ---@field public on_result_rendered     ?eve.ux.picker.composer.IOnResultRendered
 
----@class eve.ux.PickerComposer : std.t.ux.IWidget
+---@class eve.ux.picker.Composer : std.t.ux.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public permanent              boolean
 ---
----@field public finder                 eve.ux.PickerFinder
----@field public result                 eve.ux.PickerResult
----@field public preview                eve.ux.PickerPreview|nil
+---@field public finder                 eve.ux.picker.Finder
+---@field public result                 eve.ux.picker.Result
+---@field public preview                eve.ux.picker.Preview|nil
 ---
 ---@field protected _disposed           boolean
 ---@field protected _pane_focused       eve.ux.picker.composer.PaneEnum
@@ -140,8 +140,8 @@ local __highlights__ = {
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.IPickerComposerProps
----@return eve.ux.PickerComposer
+---@param props                         eve.ux.picker.IComposerProps
+---@return eve.ux.picker.Composer
 function M.new(props)
   local uuid = props.uuid or std.fn.uuid() ---@type string
   local name = props.name ---@type string
@@ -197,8 +197,8 @@ function M.new(props)
   self._on_hidden = on_hidden ---@type eve.ux.picker.composer.IOnHidden
   self._on_refresh = on_refresh ---@type eve.ux.picker.composer.IOnRefresh
 
-  ---@type eve.ux.PickerFinder
-  local finder = eve.ux.PickerFinder.new({
+  ---@type eve.ux.picker.Finder
+  local finder = eve.ux.picker.Finder.new({
     name = name,
     keymaps = self:__resolve_keymaps_finder__(
       flags,
@@ -212,8 +212,8 @@ function M.new(props)
     title = finder_title,
   })
 
-  ---@type eve.ux.PickerResult
-  local result = eve.ux.PickerResult.new({
+  ---@type eve.ux.picker.Result
+  local result = eve.ux.picker.Result.new({
     uuid = uuid,
     name = name,
     draw = function(bufnr)
@@ -239,10 +239,10 @@ function M.new(props)
     end,
   })
 
-  ---@type eve.ux.PickerPreview|nil
+  ---@type eve.ux.picker.Preview|nil
   local preview = nil
   if preview_render ~= nil then
-    preview = eve.ux.PickerPreview.new({
+    preview = eve.ux.picker.Preview.new({
       uuid = uuid,
       name = name,
       draw = preview_render,
@@ -278,9 +278,9 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname ---@type string
-  local finder = self.finder ---@type eve.ux.PickerFinder
-  local result = self.result ---@type eve.ux.PickerResult
-  local preview = self.preview ---@type eve.ux.PickerPreview|nil
+  local finder = self.finder ---@type eve.ux.picker.Finder
+  local result = self.result ---@type eve.ux.picker.Result
+  local preview = self.preview ---@type eve.ux.picker.Preview|nil
   local on_disposed = self._on_disposed ---@type eve.ux.picker.composer.IOnDisposed
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
@@ -421,7 +421,7 @@ function M:get_result_lnum()
   return self.result.lnum_current:snapshot()
 end
 
----@return eve.ux.PickerComposer
+---@return eve.ux.picker.Composer
 function M:mark_result_dirty()
   self:__health__()
   self.result:mark_content_dirty()
@@ -431,7 +431,7 @@ function M:mark_result_dirty()
   return self
 end
 
----@return eve.ux.PickerComposer
+---@return eve.ux.picker.Composer
 function M:mark_result_flags_dirty()
   self:__health__()
   self.result:mark_nvimbar_dirty()
@@ -469,7 +469,7 @@ function M:resize()
 end
 
 ---@param lnum                          integer
----@return eve.ux.PickerComposer
+---@return eve.ux.picker.Composer
 function M:set_result_lnum(lnum)
   self:__health__()
   self.result:set_lnum_current(lnum)
@@ -484,9 +484,9 @@ end
 ---@return integer
 ---@return integer|nil
 function M:__create_wins__()
-  local finder = self.finder ---@type eve.ux.PickerFinder
-  local result = self.result ---@type eve.ux.PickerResult
-  local preview = self.preview ---@type eve.ux.PickerPreview|nil
+  local finder = self.finder ---@type eve.ux.picker.Finder
+  local result = self.result ---@type eve.ux.picker.Result
+  local preview = self.preview ---@type eve.ux.picker.Preview|nil
 
   local finder_winnr = finder:get_winnr() ---@type integer|nil
   local result_winnr = result:get_winnr() ---@type integer|nil
@@ -576,9 +576,9 @@ end
 ---@protected
 ---@return nil
 function M:__hide__()
-  local finder = self.finder ---@type eve.ux.PickerFinder
-  local result = self.result ---@type eve.ux.PickerResult
-  local preview = self.preview ---@type eve.ux.PickerPreview|nil
+  local finder = self.finder ---@type eve.ux.picker.Finder
+  local result = self.result ---@type eve.ux.picker.Result
+  local preview = self.preview ---@type eve.ux.picker.Preview|nil
 
   finder:hide()
   result:hide()
@@ -614,7 +614,7 @@ function M:__layout__()
   local finder_height = 1 ---@type integer
   local preview_width = width - finder_width ---@type integer
 
-  local finder = self.finder ---@type eve.ux.PickerFinder
+  local finder = self.finder ---@type eve.ux.picker.Finder
   if finder.multiline then
     local linecount = finder.linecount:snapshot() ---@type integer
     finder_height = math.max(1, math.min(5, math.floor(height * 0.3), linecount)) ---@type integer

@@ -7,14 +7,14 @@ local __module_name__ = "eve.ux.picker.finder" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.IPickerFinderProps
+---@class eve.ux.picker.IFinderProps
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
 ---@field public multiline              boolean
 ---@field public title                  string
 
----@class eve.ux.PickerFinder
+---@class eve.ux.picker.Finder
 ---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
@@ -28,8 +28,8 @@ local __module_name__ = "eve.ux.picker.finder" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.IPickerFinderProps
----@return eve.ux.PickerFinder
+---@param props                         eve.ux.picker.IFinderProps
+---@return eve.ux.picker.Finder
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -212,7 +212,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.PickerFinder
+---@return eve.ux.picker.Finder
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -222,7 +222,7 @@ function M:focus()
   return self
 end
 
----@return eve.ux.PickerFinder
+---@return eve.ux.picker.Finder
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -250,7 +250,7 @@ function M:hide()
 end
 
 ---@param dimension                     std.t.IWinDimension,
----@return eve.ux.PickerFinder
+---@return eve.ux.picker.Finder
 function M:resize(dimension)
   self:__health__()
 
@@ -302,7 +302,7 @@ function M:set_content(content)
 end
 
 ---@param title                         string
----@return eve.ux.PickerFinder
+---@return eve.ux.picker.Finder
 function M:set_title(title)
   self:__health__()
   if self.title ~= title then
@@ -329,7 +329,7 @@ function M:__health__()
 end
 
 ---@param bufnr                         integer
----@return eve.ux.PickerFinder
+---@return eve.ux.picker.Finder
 function M:__set_prompt__(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
     local group = eve.var.sign.GROUP_PICKER_FINDER_PROMPT ---@type string

@@ -30,7 +30,7 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.IPickerResultProps
+---@class eve.ux.picker.IResultProps
 ---@field public uuid                   string
 ---@field public name                   string
 ---@field public draw                   eve.ux.picker.result.IDraw
@@ -39,7 +39,7 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 ---@field public flags_start_index      ?0|1
 ---@field public on_drawed              ?eve.ux.picker.result.IOnDrawed
 
----@class eve.ux.PickerResult
+---@class eve.ux.picker.Result
 ---@field public uuid                   string
 ---@field public fullname                   string
 ---@field public draw                   eve.ux.picker.result.IDraw
@@ -61,8 +61,8 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.IPickerResultProps
----@return eve.ux.PickerResult
+---@param props                         eve.ux.picker.IResultProps
+---@return eve.ux.picker.Result
 function M.new(props)
   local uuid = props.uuid ---@type string
   local name = props.name ---@type string
@@ -566,7 +566,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.PickerResult
+---@return eve.ux.picker.Result
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -576,7 +576,7 @@ function M:focus()
   return self
 end
 
----@return eve.ux.PickerResult
+---@return eve.ux.picker.Result
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -604,7 +604,7 @@ function M:hide()
 end
 
 ---@param dimension                     std.t.IWinDimension,
----@return eve.ux.PickerResult
+---@return eve.ux.picker.Result
 function M:resize(dimension)
   self:__health__()
 
@@ -626,14 +626,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.PickerResult
+---@return eve.ux.picker.Result
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
   return self
 end
 
----@return eve.ux.PickerResult
+---@return eve.ux.picker.Result
 function M:mark_nvimbar_dirty()
   self:__health__()
   self._nvimbar:render()
@@ -662,7 +662,7 @@ function M:moveto(next_lnum)
 end
 
 ---@param lnum                          integer
----@return eve.ux.PickerResult
+---@return eve.ux.picker.Result
 function M:set_lnum_current(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -673,7 +673,7 @@ end
 
 ---@param lnum                          integer
 ---@param next_selected                 boolean|nil
----@return eve.ux.PickerResult
+---@return eve.ux.picker.Result
 function M:toggle_selected(lnum, next_selected)
   self:__health__()
 

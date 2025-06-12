@@ -77,9 +77,9 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public fullname               string
 ---@field public title                  string
 ---
----@field public finder                 eve.ux.PickerFinder
----@field public result                 eve.ux.PickerResult
----@field public preview                eve.ux.PickerPreview
+---@field public finder                 eve.ux.picker.Finder
+---@field public result                 eve.ux.picker.Result
+---@field public preview                eve.ux.picker.Preview
 ---
 ---@field public flag_foldempty         std.collection.IObservable
 ---@field public flag_fuzzy             std.collection.IObservable
@@ -91,7 +91,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
 ---@field protected _frecency           std.collection.IFrecency|nil
----@field protected _picker             eve.ux.PickerComposer
+---@field protected _picker             eve.ux.picker.Composer
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.ux.picker.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
@@ -155,7 +155,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   ---@type eve.ux.picker.TreeRetriever
-  local retriever = eve.ux.PickerTreeRetriever.new({
+  local retriever = eve.ux.picker.TreeRetriever.new({
     name = fullname,
   })
 
@@ -401,7 +401,7 @@ function M.new(props)
         return
       end
 
-      local picker = self._picker ---@type eve.ux.PickerComposer
+      local picker = self._picker ---@type eve.ux.picker.Composer
       local lnum = retriever:retrieve_lnum(nodeuuid) ---@type integer|nil
       if lnum == nil or lnum < 0 then
         return
@@ -560,7 +560,7 @@ function M.new(props)
     },
   }
 
-  local picker = eve.ux.PickerComposer.new({
+  local picker = eve.ux.picker.Composer.new({
     uuid = picker_uuid,
     name = fullname,
     permanent = permanent,
@@ -788,7 +788,7 @@ function M:dispose()
 
   local fullname = self.fullname
   local on_dispose = self._on_disposed ---@type eve.ux.picker.composer.IOnDisposed
-  local picker = self._picker ---@type eve.ux.PickerComposer
+  local picker = self._picker ---@type eve.ux.picker.Composer
   local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
   local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
   local treeview = self._treeview ---@type eve.ux.view.Filetree
@@ -1141,7 +1141,7 @@ function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local filetree = self._filetree ---@type std.collection.Filetree
-  local picker = self._picker ---@type eve.ux.PickerComposer
+  local picker = self._picker ---@type eve.ux.picker.Composer
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   if self:__has_selected_node__() then
@@ -1206,7 +1206,7 @@ function M:__resolve_confirmation__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local filetree = self._filetree ---@type std.collection.Filetree
-  local picker = self._picker ---@type eve.ux.PickerComposer
+  local picker = self._picker ---@type eve.ux.picker.Composer
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
@@ -1277,7 +1277,7 @@ function M:__toggle_node__(nodeuuid, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local treeview = self._treeview ---@type eve.ux.view.Filetree
-  local picker = self._picker ---@type eve.ux.PickerComposer
+  local picker = self._picker ---@type eve.ux.picker.Composer
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", recursively)
     picker:mark_result_dirty()

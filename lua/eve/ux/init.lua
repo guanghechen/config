@@ -1,10 +1,5 @@
 ---@class eve.ux.__mods
 local __mods = {
-  PickerComposer = "eve.ux.picker.composer",
-  PickerFinder = "eve.ux.picker.finder",
-  PickerPreview = "eve.ux.picker.preview",
-  PickerResult = "eve.ux.picker.result",
-  PickerTreeRetriever = "eve.ux.picker.retriever.tree",
   FilePicker = "eve.ux.picker-file",
 
   Search = "eve.ux.search.search",
@@ -25,14 +20,10 @@ local __mods = {
 ---@class eve.ux
 ---@field public __mods                 eve.ux.__mods
 ---@field public fn                     eve.ux.fn
----@field public view                   eve.ux.view
 ---@field public nvimbar                eve.ux.nvimbar
+---@field public picker                 eve.ux.picker
+---@field public view                   eve.ux.view
 ---
----@field public PickerComposer         eve.ux.PickerComposer
----@field public PickerFinder           eve.ux.PickerFinder
----@field public PickerPreview          eve.ux.PickerPreview
----@field public PickerResult           eve.ux.PickerResult
----@field public PickerTreeRetriever    eve.ux.picker.TreeRetriever
 ---@field public FilePicker             eve.ux.FilePicker
 ---
 ---@field public Search                 eve.ux.Search
@@ -52,6 +43,7 @@ local M = setmetatable({
   __mods = __mods,
   fn = require("eve.ux.fn"),
   nvimbar = require("eve.ux.nvimbar"),
+  picker = require("eve.ux.picker"),
   view = require("eve.ux.view"),
 }, {
   __index = function(t, k)
