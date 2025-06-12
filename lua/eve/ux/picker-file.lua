@@ -968,6 +968,18 @@ function M:__collect_selected_uuids__()
   return uuids
 end
 
+---@return integer|nil
+function M:__focus_source_win__()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+    vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
+  else
+    winnr_sourcefile = nil
+  end
+  return winnr_sourcefile
+end
+
 ---@protected
 ---@return boolean
 function M:__has_selected_node__()
@@ -1063,14 +1075,6 @@ end
 function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-    vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-  else
-    winnr_sourcefile = nil
-  end
-
   local filetree = self._filetree ---@type std.collection.Filetree
   local picker = self._picker ---@type eve.ux.PickerComposer
   local treeview = self._treeview ---@type eve.ux.view.Filetree
@@ -1101,6 +1105,7 @@ function M:__open_node__(nodeuuid)
       local lnum = first_location and first_location.lnum or nil ---@type integer|nil
       local col = first_location and first_location.col or nil ---@type integer|nil
 
+      local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
       picker:close()
       eve.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
       return
@@ -1124,6 +1129,8 @@ function M:__open_node__(nodeuuid)
   local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.view.filetree.ILocationNodeState|nil
   local lnum = first_location and first_location.lnum or nil ---@type integer|nil
   local col = first_location and first_location.col or nil ---@type integer|nil
+
+  local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
   picker:close()
   eve.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
@@ -1219,14 +1226,7 @@ function M:__toggle_node__(nodeuuid, recursively)
   end
 
   if self._on_confirm == nil then
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-    if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-      vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
-    else
-      winnr_sourcefile = nil
-    end
-
+    local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
     picker:close()
     eve.win.open_filepath(winnr_sourcefile, node.data.filepath, nodestate.lnum, nodestate.col)
   end
