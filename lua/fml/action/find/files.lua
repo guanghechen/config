@@ -1,123 +1,42 @@
-local __module_name__ = "fml.action.find" ---@type string
+local name = "fml.action.find" ---@type string
+local last_scope_path = nil ---@type string|nil
+local o_scope_path = std.Observable.from_value(std.path.cwd())
 
-local observable_truthy = std.Observable.from_value(true)
-local _select = nil ---@type eve.ux.IFileSelect|nil
+local o_flag_exclude = eve.context.select.find_file.flag_exclude
+local o_flag_foldempty = eve.context.select.find_file.flag_foldempty
+local o_flag_fuzzy = eve.context.select.find_file.flag_fuzzy
+local o_flag_gitignore = eve.context.select.find_file.flag_gitignore
+local o_flag_regex = eve.context.select.find_file.flag_regex
+local o_flag_sensitive = eve.context.select.find_file.flag_case_sensitive
+local o_flag_selected = eve.context.select.find_file.flag_selected
+local o_flag_viewtype = eve.context.select.find_file.flag_viewtype
 
----@param dirpath                       string
----@return string
-local function get_scope_cwd(dirpath)
-  local scope = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
-  if scope == "W" then
-    return std.path.workspace()
-  elseif scope == "C" then
-    return std.path.cwd()
-  elseif scope == "D" then
-    return dirpath
-  end
+local o_input = eve.context.select.find_file.input
+local o_input_history = eve.context.select.find_file.input_history
+local o_excludes = eve.context.select.find_file.excludes
+local o_includes = eve.context.select.find_file.includes
 
-  std.reporter.error({
-    from = __module_name__,
-    subject = "get_scope_cwd",
-    message = "Unknown scope.",
-    details = { scope = scope, dirpath = dirpath },
-  })
-  return std.path.cwd()
-end
+---@class fml.action.find.files.ISettingData
+---@field public keyword        string
+---@field public includes       string[]
+---@field public excludes       string[]
 
-local scopes = vim.list_slice(eve.context.select.find_file_scopes) ---@type std.e.FindFileScope[]
-local state_cwd = std.Observable.from_value(get_scope_cwd(std.path.cwd()))
-
----@return string
-local function gen_title()
-  local scope = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
-  if scope == "W" then
-    return "Find files (workspace)" ---@type string
-  elseif scope == "C" then
-    return "Find files (cwd)" ---@type string
-  end
-
-  local cwd = std.path.cwd() ---@type string
-  local dirpath = state_cwd:snapshot() ---@type string
-  if dirpath == cwd then
-    return "Find files (dir: .)" ---@type string
-  end
-
-  local relative_dirpath = std.path.relative(cwd, dirpath, false)
-  if #relative_dirpath < 1 or relative_dirpath == "." then
-    return "Find files (dir: .)" ---@type string
-  end
-
-  dirpath = string.sub(relative_dirpath, 1, 1) ~= "." and relative_dirpath or dirpath
-  return "Find files (dir: " .. dirpath .. ")" ---@type string
-end
-
-std.fn.observe({ eve.context.select.find_file_scope }, function()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
-  local current_buf_dirpath = bufnr_sourcefile ~= nil and std.path.dirname(vim.api.nvim_buf_get_name(bufnr_sourcefile))
-    or std.path.cwd() ---@type string
-  local current_find_cwd = state_cwd:snapshot() ---@type string
-  local next_find_cwd = get_scope_cwd(current_buf_dirpath) ---@type string
-  if current_find_cwd ~= next_find_cwd then
-    state_cwd:next(next_find_cwd)
-  end
-end, true)
-
-std.fn.observe({
-  eve.context.select.find_file.excludes,
-  eve.context.select.find_file.flag_case_sensitive,
-  eve.context.select.find_file.flag_exclude,
-  eve.context.select.find_file.flag_fuzzy,
-  eve.context.select.find_file.flag_gitignore,
-  eve.context.select.find_file.flag_regex,
-}, function()
-  if _select ~= nil then
-    _select:mark_data_dirty()
-  end
-end, true)
-
-std.fn.observe({
-  eve.context.select.find_file_scope,
-  state_cwd,
-}, function()
-  if _select ~= nil then
-    _select:mark_data_dirty()
-
-    local title = gen_title() ---@type string
-    _select:change_input_title(title)
-  end
-end, true)
-
----@param scope                         std.e.FindFileScope
+---@param picker                        eve.ux.FilePicker
 ---@return nil
-local function change_scope(scope)
-  local scope_current = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
-  if scope_current ~= scope then
-    eve.context.select.find_file_scope:next(scope)
-  end
-end
+local function edit_setting(picker)
+  local s_keyword = o_input:snapshot() ---@type string
+  local s_includes = o_includes:snapshot() ---@type string[]
+  local s_excludes = o_excludes:snapshot() ---@type string[]
 
----@class fml.action.find.files.actions
-local actions = {
-  ---@return nil
-  edit_config = function()
-    ---@class fml.action.find.files.actions.IConfigData
-    ---@field public keyword        string
-    ---@field public includes       string[]
-    ---@field public excludes       string[]
+  ---@type fml.action.find.files.ISettingData
+  local data = {
+    keyword = s_keyword,
+    includes = s_includes,
+    excludes = s_excludes,
+  }
 
-    local s_keyword = eve.context.select.find_file.input:snapshot() ---@type string
-    local s_includes = eve.context.select.find_file.includes:snapshot() ---@type string[]
-    local s_excludes = eve.context.select.find_file.excludes:snapshot() ---@type string[]
-
-    ---@type fml.action.find.files.actions.IConfigData
-    local data = {
-      keyword = s_keyword,
-      includes = s_includes,
-      excludes = s_excludes,
-    }
-
-    local setting = eve.ux.Setting.new({
+  eve.ux.Setting
+    .new({
       position = "center",
       width = 100,
       title = "Edit Configuration (find files)",
@@ -125,7 +44,7 @@ local actions = {
         if type(raw_data) ~= "table" then
           return "Invalid find_files configuration, expect an object."
         end
-        ---@cast raw_data               fml.action.find.files.actions.IConfigData
+        ---@cast raw_data               fml.action.find.files.ISettingData
 
         if raw_data.keyword == nil or type(raw_data.keyword) ~= "string" then
           return "Invalid data.keyword, expect an string."
@@ -141,329 +60,207 @@ local actions = {
       end,
       on_confirm = function(raw_data)
         vim.schedule(function()
-          local last_keyword = eve.context.select.search_file.input:snapshot() ---@type string
-
+          local last_keyword = o_input:snapshot() ---@type string
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw                  fml.action.find.files.actions.IConfigData
+          ---@cast raw                  fml.action.find.files.ISettingData
 
           local keyword = raw.keyword ---@type string
           local includes = raw.includes ---@type string[]
           local excludes = raw.excludes ---@type string[]
 
-          eve.context.select.find_file.input:next(keyword)
-          eve.context.select.find_file.includes:next(includes)
-          eve.context.select.find_file.excludes:next(excludes)
-
-          if _select ~= nil then
-            if keyword ~= last_keyword then
-              _select:reset_input(keyword)
-            else
-              _select:mark_data_dirty()
-            end
+          o_includes:next(includes)
+          o_excludes:next(excludes)
+          if keyword ~= last_keyword then
+            picker.finder:set_content(keyword)
           end
         end)
         return true
       end,
     })
-    setting:open({
+    :open({
       initial_value = data,
       text_cursor_row = 1,
       text_cursor_col = 1,
     })
-  end,
-  ---@return nil
-  change_scope_cwd = function()
-    change_scope("C")
-  end,
-  ---@return nil
-  change_scope_directory = function()
-    change_scope("D")
-  end,
-  ---@return nil
-  change_scope_workspace = function()
-    change_scope("W")
-  end,
-  send_to_qflist = function()
-    if _select ~= nil then
-      local cwd = std.path.cwd() ---@type string
-      local select_cwd = state_cwd:snapshot() ---@type string
-      local quickfix_items = {} ---@type std.t.IQuickFixItem[]
-      local matched_items = _select:get_matched_items() ---@type std.t.IScoredMatch[]
-      for _, matched_item in ipairs(matched_items) do
-        local item = _select:get_item(matched_item.uuid) ---@type eve.ux.select.IItem|nil
-        ---@cast item                   eve.ux.select_file.IItem
+end
 
-        if item ~= nil then
-          local absolute_filepath = std.path.join(select_cwd, item.data.filepath) ---@type string
-          local relative_filepath = std.path.relative(cwd, absolute_filepath, false) ---@type string
-          table.insert(quickfix_items, {
-            filename = relative_filepath,
-            lnum = item.data.lnum or 1,
-            col = item.data.col or 0,
-          })
-        end
-      end
+---@param picker                        eve.ux.FilePicker
+---@return nil
+local function refresh(picker)
+  local workspace = std.path.workspace() ---@type string
+  local p = o_scope_path:snapshot() ---@type string
 
-      if #quickfix_items > 0 then
-        _select:close()
+  local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
+  local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
+  local excludes = enabled_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
 
-        eve.qflist.push(quickfix_items)
-        eve.qflist.open_qflist(false)
-      end
-    end
-  end,
-  toggle_case_sensitive = function()
-    local flag = eve.context.select.find_file.flag_case_sensitive:snapshot() ---@type boolean
-    eve.context.select.find_file.flag_case_sensitive:next(not flag)
-  end,
-  toggle_flag_exclude = function()
-    local flag = eve.context.select.find_file.flag_exclude:snapshot() ---@type boolean
-    eve.context.select.find_file.flag_exclude:next(not flag)
-  end,
-  toggle_flag_fuzzy = function()
-    local flag = eve.context.select.find_file.flag_fuzzy:snapshot() ---@type boolean
-    eve.context.select.find_file.flag_fuzzy:next(not flag)
-  end,
-  ---@return nil
-  toggle_flag_gitignore = function()
-    local flag = eve.context.select.find_file.flag_gitignore:snapshot() ---@type boolean
-    eve.context.select.find_file.flag_gitignore:next(not flag)
-  end,
-  toggle_flag_regex = function()
-    local flag = eve.context.select.find_file.flag_regex:snapshot() ---@type boolean
-    eve.context.select.find_file.flag_regex:next(not flag)
-  end,
-  ---@return nil
-  toggle_flag_scope = function()
-    local scope = eve.context.select.find_file_scope:snapshot() ---@type std.e.FindFileScope
-    local idx = std.table.find_index(scopes, scope) or 1 ---@type integer
-    local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
-    local next_scope = scopes[idx_next] ---@type std.e.FindFileScope
-    eve.context.select.find_file_scope:next(next_scope)
-  end,
-  ---@return nil
-  toggle_flag_selected = function()
-    local flag = eve.context.select.find_file.flag_selected:snapshot() ---@type boolean
-    eve.context.select.find_file.flag_selected:next(not flag)
-  end,
-}
+  ---@type string[]
+  local filepaths = eve.oxi.find({
+    workspace = workspace,
+    cwd = p,
+    flag_case_sensitive = false,
+    flag_gitignore = enabled_gitignore,
+    flag_regex = false,
+    search_pattern = "",
+    search_paths = "",
+    exclude_patterns = table.concat(excludes, ","),
+  })
 
----@type std.t.ux.widget.IRawStatuslineItem[]
-local statusline_items = {
-  {
-    type = "popup",
-    desc = "find: edit settings",
-    symbol = eve.icon.symbols.setting,
-    state = observable_truthy,
-    callback = actions.edit_config,
-  },
-  {
-    type = "enum",
-    desc = "find: toggle scope",
-    symbol = "",
-    state = eve.context.select.find_file_scope,
-    callback = actions.toggle_flag_scope,
-  },
-  {
-    type = "flag",
-    desc = "find: toggle selected",
-    symbol = eve.icon.symbols.flag_selected,
-    state = eve.context.select.find_file.flag_selected,
-    callback = actions.toggle_flag_selected,
-  },
-  {
-    type = "flag",
-    desc = "find: toggle exclude",
-    symbol = eve.icon.symbols.flag_exclude,
-    state = eve.context.select.find_file.flag_exclude,
-    callback = actions.toggle_flag_exclude,
-  },
-  {
-    type = "flag",
-    desc = "find: toggle gitignore",
-    symbol = eve.icon.symbols.flag_gitignore,
-    state = eve.context.select.find_file.flag_gitignore,
-    callback = actions.toggle_flag_gitignore,
-  },
-  {
-    type = "flag",
-    desc = "select: toggle flag fuzzy",
-    symbol = eve.icon.symbols.flag_fuzzy,
-    state = eve.context.select.find_file.flag_fuzzy,
-    callback = actions.toggle_flag_fuzzy,
-  },
-  {
-    type = "flag",
-    desc = "find: toggle case sensitive",
-    symbol = eve.icon.symbols.flag_case_sensitive,
-    state = eve.context.select.find_file.flag_case_sensitive,
-    callback = actions.toggle_case_sensitive,
-  },
-  {
-    type = "flag",
-    desc = "select: toggle flag regex",
-    symbol = eve.icon.symbols.flag_regex,
-    state = eve.context.select.find_file.flag_regex,
-    callback = actions.toggle_flag_regex,
-  },
-}
+  last_scope_path = p ---@type string
+  picker:reset_filepaths(p, filepaths, false)
+  picker:mark_result_dirty()
+  picker:focus()
+end
 
----@type std.t.IKeymap[]
-local common_keymaps = {
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-q>",
-    callback = actions.send_to_qflist,
-    desc = "search: send to qflist",
-  },
-  {
-    modes = { "n", "v" },
-    key = "<leader>tw",
-    callback = actions.change_scope_workspace,
-    desc = "find: change scope (workspace)",
-  },
-  {
-    modes = { "n", "v" },
-    key = "<leader>tc",
-    callback = actions.change_scope_cwd,
-    desc = "find: change scope (cwd)",
-  },
-  {
-    modes = { "n", "v" },
-    key = "<leader>td",
-    callback = actions.change_scope_directory,
-    desc = "find: change scope (directory)",
-  },
-  {
-    modes = { "n", "v" },
-    key = "<leader>ts",
-    callback = actions.edit_config,
-    desc = "find: edit config",
-  },
-  {
-    modes = { "n", "v" },
-    key = "<leader>ti",
-    callback = actions.toggle_case_sensitive,
-    desc = "find: toggle case sensitive",
-  },
-  {
-    modes = { "n", "v" },
-    key = "<leader>tr",
-    callback = actions.toggle_flag_regex,
-    desc = "find: toggle flag regex",
-  },
-}
+local picker ---@type eve.ux.FilePicker
 
----@type std.t.IKeymap[]
-local input_keymaps = vim.list_slice(common_keymaps)
+---@return nil
+local function attach_cwd()
+  local filepath = std.path.cwd() ---@type string
+  local rootuuid = std.Filetree.uuid(filepath) ---@type string
+  picker:attach(rootuuid)
+end
 
----@type std.t.IKeymap[]
-local main_keymaps = vim.list_slice(common_keymaps)
+---@return nil
+local function attach_workspace()
+  local filepath = std.path.workspace() ---@type string
+  local rootuuid = std.Filetree.uuid(filepath) ---@type string
+  picker:attach(rootuuid)
+end
 
----@type std.t.IKeymap[]
-local preview_keymaps = vim.list_slice(common_keymaps)
-
----@type eve.ux.select_file.IProvider
-local provider = {
-  fetch_data = function()
-    local cwd = state_cwd:snapshot() ---@type string
-    local workspace = std.path.workspace() ---@type string
-    local flag_exclude = eve.context.select.find_file.flag_exclude:snapshot() ---@type boolean
-    local flag_gitignore = eve.context.select.find_file.flag_gitignore:snapshot() ---@type boolean
-    local excludes = flag_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
-
-    ---@type string[]
-    local filepaths = eve.oxi.find({
-      workspace = workspace,
-      cwd = cwd,
-      flag_case_sensitive = false,
-      flag_gitignore = flag_gitignore,
-      flag_regex = false,
-      search_pattern = "",
-      search_paths = "",
-      exclude_patterns = table.concat(excludes, ","),
-    })
-    table.sort(filepaths)
-
-    local items = {} ---@type eve.ux.select_file.IRawItem[]
-    for _, relative_filepath in ipairs(filepaths) do
-      local filepath = std.path.resolve(cwd, relative_filepath) ---@type string
-      ---@type eve.ux.select_file.IRawItem
-      local item = {
-        filepath = filepath,
-        filepath_relative = relative_filepath,
-      }
-      table.insert(items, item)
-    end
-    local data = { items = items } ---@type eve.ux.select_file.IData
-    return data
-  end,
-}
-
-local states = eve.context.select.find_file ---@type eve.context.select.item.state
-
----@type eve.ux.IFileSelect
-local select = eve.ux.FileSelect.new({
-  case_sensitive = states.flag_case_sensitive,
-  cmp = eve.ux.Select.cmp_by_score,
-  dirty_on_invisible = false,
-  preview_enabled = true,
-  extend_preset_keymaps = false,
-  flag_fuzzy = states.flag_fuzzy,
-  flag_regex = states.flag_regex,
-  flag_selected = states.flag_selected,
+picker = eve.ux.FilePicker.new({
+  name = name,
   frecency = eve.context.frecency.files,
-  input = states.input,
-  input_history = states.input_history,
-  input_keymaps = input_keymaps,
-  main_keymaps = main_keymaps,
-  multiple = true,
   permanent = true,
-  preview_keymaps = preview_keymaps,
-  provider = provider,
-  statusline_items = statusline_items,
-  title = gen_title(),
+  title = "Find files",
+  height = 0.80,
+  width = 0.85,
+
+  keymaps_common = {
+    {
+      modes = { "n", "v" },
+      key = "<leader>C",
+      desc = "find-files: change scope (cwd)",
+      callback = attach_cwd,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>W",
+      desc = "find-files: change scope (workspace)",
+      callback = attach_workspace,
+    },
+  },
+
+  finder_input = o_input,
+  finder_input_history = o_input_history,
+  finder_multiline = false,
+
+  flag_foldempty = o_flag_foldempty,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_sensitive = o_flag_sensitive,
+  flag_selected = o_flag_selected,
+  flag_viewtype = o_flag_viewtype,
+  flags_start_index = 0,
+  flags_prepend = {
+    {
+      desc = "find-files: open settings",
+      callback = function()
+        edit_setting(picker)
+      end,
+      snapshot = function()
+        return eve.icon.symbols.setting, "picker_flag_purple"
+      end,
+    },
+  },
+  flags_append = {
+    {
+      desc = string.format("%s: toggle exclude", name),
+      callback = function()
+        local enabled = o_flag_exclude:snapshot() ---@type boolean
+        o_flag_exclude:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = o_flag_exclude:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_exclude, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+    {
+      desc = string.format("%s: toggle gitignore", name),
+      callback = function()
+        local enabled = o_flag_gitignore:snapshot() ---@type boolean
+        o_flag_gitignore:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = o_flag_gitignore:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+  },
+
+  on_attach = function(_, rootpath)
+    o_scope_path:next(rootpath)
+  end,
+
+  on_refresh = function(self)
+    refresh(self)
+  end,
 })
-_select = select
+
+std.fn.observe({ o_scope_path }, function()
+  local p = o_scope_path:snapshot() ---@type string
+  local workspace = std.path.workspace() ---@type string
+  local cwd = std.path.cwd() ---@type string
+  if p == workspace then
+    picker.finder:set_title("find files (workspace)")
+  elseif p == cwd then
+    picker.finder:set_title("find files (cwd)")
+  else
+    local relative_path = std.path.is_under(workspace, p) and std.path.relative(cwd, p, false) or p ---@type string
+    picker.finder:set_title(string.format("find files (%s)", relative_path))
+  end
+
+  if last_scope_path == nil or not std.path.is_under(last_scope_path, p) then
+    refresh(picker)
+  end
+end)
+
+std.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
+  refresh(picker)
+end, false)
+
+std.fn.observe({ o_includes, o_excludes }, function()
+  picker:mark_result_dirty()
+end)
 
 ---@class fml.action.find
 local M = {}
 
 ---@return nil
 function M.find_files()
-  select:focus()
+  picker:focus()
 end
 
 ---@return nil
 function M.find_files_cwd()
-  eve.context.select.find_file_scope:next("C")
-  select:focus()
+  attach_cwd()
+  picker:focus()
 end
 
 ---@param specified_filepath            string|nil
 ---@return nil
 function M.find_files_directory(specified_filepath)
-  local silent = false ---@type boolean
   if specified_filepath ~= nil and #specified_filepath > 0 then
-    if std.path.is_exist_dirpath(specified_filepath) then
-      local dirpath = std.path.normalize(specified_filepath) ---@type string
-      state_cwd:next(dirpath)
-      silent = true
-    elseif std.path.is_exist_filepath(specified_filepath) then
-      local dirpath = std.path.dirname(specified_filepath) ---@type string
-      state_cwd:next(dirpath)
-      silent = true
-    end
+    local rootuuid = std.Filetree.uuid(specified_filepath) ---@type string
+    picker:attach(rootuuid)
   end
-  eve.context.select.find_file_scope:next("D", { silent = silent })
-  eve.status.dirtier_statusline:mark_dirty()
-  select:focus()
+  picker:focus()
 end
 
 ---@return nil
 function M.find_files_workspace()
-  eve.context.select.find_file_scope:next("W")
-  select:focus()
+  attach_workspace()
+  picker:focus()
 end
 
 return M
