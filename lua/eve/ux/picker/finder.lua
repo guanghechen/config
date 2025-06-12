@@ -292,6 +292,13 @@ function M:set_content(content)
   self.input:next(content)
   self.linecount:next(#lines)
   self:__set_prompt__(bufnr)
+
+  local winnr = self._winnr ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    local last_line = #lines ---@type integer
+    local last_col = #lines[last_line] ---@type integer
+    vim.api.nvim_win_set_cursor(winnr, { last_line, last_col })
+  end
 end
 
 ---@param title                         string

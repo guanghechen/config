@@ -15,13 +15,13 @@ local finder_input_history = std.InputHistory.new({
   capacity = 5,
   input = finder_input,
 })
-local flag_foldempty = std.Observable.from_value(true)
-local flag_fuzzy = std.Observable.from_value(false)
-local flag_regex = std.Observable.from_value(false)
-local flag_sensitive = std.Observable.from_value(true)
-local flag_selected = std.Observable.from_value(false)
-local flag_viewtype = std.Observable.from_value("tree")
-local flag_case = std.Observable.from_value(2)
+local o_flag_foldempty = std.Observable.from_value(true)
+local o_flag_fuzzy = std.Observable.from_value(false)
+local o_flag_regex = std.Observable.from_value(false)
+local o_flag_sensitive = std.Observable.from_value(true)
+local o_flag_selected = std.Observable.from_value(false)
+local o_flag_viewtype = std.Observable.from_value("tree")
+local o_flag_case = std.Observable.from_value(2)
 
 local picker = eve.ux.FilePicker.new({
   uuid = "__test__eve_ux_picker__",
@@ -36,12 +36,12 @@ local picker = eve.ux.FilePicker.new({
   finder_input_history = finder_input_history,
   finder_multiline = false,
 
-  flag_foldempty = flag_foldempty,
-  flag_fuzzy = flag_fuzzy,
-  flag_regex = flag_regex,
-  flag_sensitive = flag_sensitive,
-  flag_selected = flag_selected,
-  flag_viewtype = flag_viewtype,
+  flag_foldempty = o_flag_foldempty,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_sensitive = o_flag_sensitive,
+  flag_selected = o_flag_selected,
+  flag_viewtype = o_flag_viewtype,
   flags_start_index = 0,
   flags_prepend = {
     {
@@ -56,23 +56,23 @@ local picker = eve.ux.FilePicker.new({
     {
       desc = "find-files: test case",
       callback = function()
-        local kase = flag_case:snapshot() ---@type integer
+        local kase = o_flag_case:snapshot() ---@type integer
         local next_kase = kase % 3 + 1 ---@type integer
-        flag_case:next(next_kase)
+        o_flag_case:next(next_kase)
       end,
       snapshot = function()
-        local kase = flag_case:snapshot() ---@type integer
+        local kase = o_flag_case:snapshot() ---@type integer
         return string.format("%d", kase), "picker_flag_orange"
       end,
     },
   },
 })
 
-std.fn.observe({ flag_case }, function()
+std.fn.observe({ o_flag_case }, function()
   picker:mark_result_flags_dirty()
 end, true)
 
-flag_case:subscribe(
+o_flag_case:subscribe(
   std.Subscriber.new({
     on_next = function(kase)
       if kase == 1 then

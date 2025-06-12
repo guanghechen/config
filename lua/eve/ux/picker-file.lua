@@ -1,6 +1,9 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "eve.ux.picker-file" ---@type string
 
+---@alias eve.ux.picker_file.IOnAttach
+---| fun(self: eve.ux.FilePicker, rootpath: string): nil
+
 ---@alias eve.ux.picker_file.IOnClosed
 ---| fun(self: eve.ux.FilePicker): nil
 
@@ -56,6 +59,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public finder_input_history   ?std.collection.IHistory
 ---@field public finder_multiline       ?boolean
 ---
+---@field public on_attach              ?eve.ux.picker_file.IOnAttach
 ---@field public on_closed              ?eve.ux.picker_file.IOnClosed
 ---@field public on_confirm             ?eve.ux.picker_file.IOnConfirm
 ---@field public on_disposed            ?eve.ux.picker_file.IOnDisposed
@@ -127,6 +131,7 @@ function M.new(props)
 
   local frecency = props.frecency ---@type std.collection.IFrecency|nil
 
+  local on_attach = props.on_attach or std.fn.noop ---@type eve.ux.picker_file.IOnAttach
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker_file.IOnClosed
   local on_confirm = props.on_confirm ---@type eve.ux.picker_file.IOnConfirm|nil
   local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker_file.IOnDisposed
@@ -308,6 +313,11 @@ function M.new(props)
           treeview:mark_cache_listview_dirty()
           self._uuid_root = nodeuuid ---@type string
           self:mark_result_dirty()
+
+          local next_rootnode = filetree:retrieve(nodeuuid)
+          if next_rootnode ~= nil then
+            on_attach(self, next_rootnode.data.filepath) ---@type eve.ux.picker_file.IOnAttach
+          end
         end
       end
     end,
@@ -318,6 +328,11 @@ function M.new(props)
         treeview:mark_cache_listview_dirty()
         self._uuid_root = rootnode.parent ---@type string
         self:mark_result_dirty()
+
+        local next_rootnode = filetree:retrieve(rootnode.parent)
+        if next_rootnode ~= nil then
+          on_attach(self, next_rootnode.data.filepath) ---@type eve.ux.picker_file.IOnAttach
+        end
       end
     end,
     on_filetree_toggle_recursively = function()
