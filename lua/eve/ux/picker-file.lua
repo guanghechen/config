@@ -103,6 +103,7 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field protected _uuids_file         string[]
 ---@field protected _uuids_order        string[]
 ---
+---@field protected _on_attach          eve.ux.picker_file.IOnAttach
 ---@field protected _on_confirm         eve.ux.picker_file.IOnConfirm|nil
 ---@field protected _on_disposed        eve.ux.picker_file.IOnDisposed
 local M = {}
@@ -744,6 +745,7 @@ function M.new(props)
   self._uuids_file = {}
   self._uuids_order = {}
 
+  self._on_attach = on_attach
   self._on_confirm = on_confirm
   self._on_disposed = on_disposed
 
@@ -832,6 +834,7 @@ function M:dispose()
   self._uuids_file = nil
   self._uuids_order = nil
 
+  self._on_attach = nil
   self._on_confirm = nil
   self._on_disposed = nil
 end
@@ -873,27 +876,35 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param uuid                          string
+---@param rootuuid                      string
 ---@return eve.ux.FilePicker
-function M:attach(uuid)
+function M:attach(rootuuid)
   self:__health__()
-  if self._uuid_root == uuid then
+  if self._uuid_root == rootuuid then
     return self
   end
 
-  local node = self._filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
+  local node = self._filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
   if node == nil then
     std.reporter.error({
       from = __module_name__,
       subject = "attach",
-      message = string.format("Cannot find node by the given uuid: %s", uuid),
+      message = string.format("Cannot find node by the given uuid: %s", rootuuid),
     })
     return self
   end
 
-  self._treeview:mark_cache_listview_dirty()
-  self._uuid_root = uuid
+  local filetree = self._filetree ---@type std.collection.Filetree
+  local treeview = self._treeview ---@type eve.ux.view.Filetree
+
+  treeview:mark_cache_listview_dirty()
+  self._uuid_root = rootuuid
   self._scheduler_match:schedule()
+
+  local next_rootnode = filetree:retrieve(rootuuid)
+  if next_rootnode ~= nil then
+    self._on_attach(self, next_rootnode.data.filepath) ---@type eve.ux.picker_file.IOnAttach
+  end
   return self
 end
 

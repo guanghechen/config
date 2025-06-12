@@ -132,6 +132,29 @@ picker = eve.ux.FilePicker.new({
   height = 0.80,
   width = 0.85,
 
+  keymaps_common = {
+    {
+      modes = { "n", "v" },
+      key = "<leader>W",
+      desc = "find-files: change scope (workspace)",
+      callback = function()
+        local filepath = std.path.workspace() ---@type string
+        local rootuuid = std.Filetree.uuid(filepath) ---@type string
+        picker:attach(rootuuid)
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>C",
+      desc = "find-files: change scope (cwd)",
+      callback = function()
+        local filepath = std.path.cwd() ---@type string
+        local rootuuid = std.Filetree.uuid(filepath) ---@type string
+        picker:attach(rootuuid)
+      end,
+    },
+  },
+
   finder_input = o_input,
   finder_input_history = o_input_history,
   finder_multiline = false,
