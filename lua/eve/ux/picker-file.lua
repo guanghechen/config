@@ -43,6 +43,11 @@ local __module_name__ = "eve.ux.picker-file" ---@type string
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
+---@field public keymaps_common         ?std.t.IKeymap[]
+---@field public keymaps_finder         ?std.t.IKeymap[]
+---@field public keymaps_preview        ?std.t.IKeymap[]
+---@field public keymaps_result         ?std.t.IKeymap[]
+---
 ---@field public flag_foldempty         std.collection.IObservable
 ---@field public flag_fuzzy             std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
@@ -118,6 +123,11 @@ function M.new(props)
   local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
   local finder_multiline = props.finder_multiline ---@type boolean|nil
+
+  local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
+  local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
+  local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
+  local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
 
   local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
   local flag_regex = props.flag_regex ---@type std.collection.IObservable
@@ -405,7 +415,7 @@ function M.new(props)
   }
 
   ---@type std.t.IKeymap[]
-  local finder_keymaps = {
+  local preset_keymaps_finder = {
     {
       modes = { "n", "v" },
       key = ".",
@@ -440,7 +450,7 @@ function M.new(props)
   }
 
   ---@type std.t.IKeymap[]
-  local result_keymaps = {
+  local preset_keymaps_result = {
     {
       modes = { "i", "n", "v" },
       key = ".",
@@ -505,13 +515,16 @@ function M.new(props)
     height = height,
     width = width,
 
+    keymaps_common = keymaps_common,
+    keymaps_preview = keymaps_preview,
+    keymaps_finder = keymaps_finder and vim.list_extend(preset_keymaps_finder, keymaps_finder) or preset_keymaps_finder,
+    keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
+
     finder_input = finder_input,
     finder_input_history = finder_input_history,
-    finder_keymaps = finder_keymaps,
     finder_multiline = finder_multiline,
     finder_title = title,
 
-    result_keymaps = result_keymaps,
     ---@type eve.ux.picker.result.IDraw
     result_render = function(bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum

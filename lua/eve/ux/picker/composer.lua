@@ -91,16 +91,18 @@ local __highlights__ = {
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
+---@field public keymaps_common         ?std.t.IKeymap[]
+---@field public keymaps_finder         ?std.t.IKeymap[]
+---@field public keymaps_preview        ?std.t.IKeymap[]
+---@field public keymaps_result         ?std.t.IKeymap[]
+---
 ---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.IHistory
----@field public finder_keymaps         ?std.t.IKeymap[]
 ---@field public finder_multiline       ?boolean
 ---@field public finder_title           string
 ---
----@field public result_keymaps         ?std.t.IKeymap[]
 ---@field public result_render          eve.ux.picker.result.IDraw
 ---
----@field public preview_keymaps        ?std.t.IKeymap[]
 ---@field public preview_render         ?eve.ux.picker.preview.IDraw
 ---
 ---@field public on_cancel              ?eve.ux.picker.composer.IOnCancel
@@ -153,16 +155,18 @@ function M.new(props)
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
+  local keymaps_common = props.keymaps_common or {} ---@type std.t.IKeymap[]
+  local keymaps_finder = props.keymaps_finder or {} ---@type std.t.IKeymap[]
+  local keymaps_preview = props.keymaps_preview or {} ---@type std.t.IKeymap[]
+  local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
+
   local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory
-  local finder_keymaps = props.finder_keymaps or {} ---@type std.t.IKeymap[]
   local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
-  local result_keymaps = props.result_keymaps or {} ---@type std.t.IKeymap[]
   local result_render = props.result_render ---@type eve.ux.picker.result.IDraw
 
-  local preview_keymaps = props.preview_keymaps or {} ---@type std.t.IKeymap[]
   local preview_render = props.preview_render ---@type eve.ux.picker.preview.IDraw|nil
 
   local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.picker.composer.IOnCancel
@@ -196,12 +200,12 @@ function M.new(props)
   ---@type eve.ux.PickerFinder
   local finder = eve.ux.PickerFinder.new({
     name = name,
-    keymaps = self:__resolve_finder__keymaps__(
+    keymaps = self:__resolve_keymaps_finder__(
       flags,
       flags_start_index,
       finder_multiline,
       has_finder_input_history,
-      finder_keymaps
+      vim.list_extend(vim.list_slice(keymaps_common), keymaps_finder)
     ),
     input = finder_input,
     multiline = finder_multiline,
@@ -221,7 +225,11 @@ function M.new(props)
       end
       return result_render(bufnr)
     end,
-    keymaps = self:__resolve_result__keymaps__(flags, flags_start_index, result_keymaps),
+    keymaps = self:__resolve_keymaps_result__(
+      flags,
+      flags_start_index,
+      vim.list_extend(vim.list_slice(keymaps_common), keymaps_result)
+    ),
     flags = flags,
     flags_start_index = flags_start_index,
     ---@type eve.ux.picker.result.IOnDrawed
@@ -238,7 +246,11 @@ function M.new(props)
       uuid = uuid,
       name = name,
       draw = preview_render,
-      keymaps = self:__resolve_preview__keymaps__(flags, flags_start_index, preview_keymaps),
+      keymaps = self:__resolve_keymaps_preview__(
+        flags,
+        flags_start_index,
+        vim.list_extend(vim.list_slice(keymaps_common), keymaps_preview)
+      ),
       ---@type eve.ux.picker.preview.IOnDrawed
       on_drawed = function(bufnr)
         on_preview_rendered(self, bufnr)
@@ -640,7 +652,7 @@ end
 ---@param flags                         eve.ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_common_keymaps__(flags, flags_start_index)
+function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -702,7 +714,7 @@ end
 ---@param finder_multiline              boolean
 ---@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_finder_keymaps__(finder_multiline, has_input_history)
+function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_history)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -888,7 +900,7 @@ function M:__resolve_builtin_finder_keymaps__(finder_multiline, has_input_histor
 end
 
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_result_keymaps__()
+function M:__resolve_builtin_keymaps_result__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -1085,7 +1097,7 @@ function M:__resolve_builtin_result_keymaps__()
 end
 
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_preview_keymaps__()
+function M:__resolve_builtin_keymaps_preview__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -1236,10 +1248,10 @@ end
 ---@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_finder__keymaps__(flags, flags_start_index, finder_multiline, has_input_history, keymaps)
-  local builtin_common_keymaps = self:__resolve_builtin_common_keymaps__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_finder_keymaps = self:__resolve_builtin_finder_keymaps__(finder_multiline, has_input_history) ---@type std.t.IKeymap[]
-  local resolved_keymaps = vim.list_extend(builtin_common_keymaps, builtin_finder_keymaps) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_finder__(flags, flags_start_index, finder_multiline, has_input_history, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_history) ---@type std.t.IKeymap[]
+  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
 end
@@ -1248,10 +1260,10 @@ end
 ---@param flags_start_index             0|1
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_result__keymaps__(flags, flags_start_index, keymaps)
-  local builtin_common_keymaps = self:__resolve_builtin_common_keymaps__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_result_keymaps = self:__resolve_builtin_result_keymaps__() ---@type std.t.IKeymap[]
-  local resolved_keymaps = vim.list_extend(builtin_common_keymaps, builtin_result_keymaps) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+  local builtin_keymaps_result = self:__resolve_builtin_keymaps_result__() ---@type std.t.IKeymap[]
+  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_result) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
 end
@@ -1260,10 +1272,10 @@ end
 ---@param flags_start_index             0|1
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_preview__keymaps__(flags, flags_start_index, keymaps)
-  local builtin_common_keymaps = self:__resolve_builtin_common_keymaps__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_preview_keymaps = self:__resolve_builtin_preview_keymaps__() ---@type std.t.IKeymap[]
-  local resolved_keymaps = vim.list_extend(builtin_common_keymaps, builtin_preview_keymaps) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_preview__(flags, flags_start_index, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+  local builtin_keymaps_preview = self:__resolve_builtin_keymaps_preview__() ---@type std.t.IKeymap[]
+  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_preview) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
 end
