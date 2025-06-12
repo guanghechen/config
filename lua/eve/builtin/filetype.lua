@@ -128,6 +128,56 @@ local filetypes = {
     [M.AVANTE] = true,
     [M.AVANTE_INPUT] = true,
   },
+  language = {
+    -- stylua: ignore start
+    assembly         = true,
+    bash             = true,
+    conf             = true,
+    cpp              = true,
+    csharp           = true,
+    css              = true,
+    dart             = true,
+    dockerfile       = true,
+    elixir           = true,
+    erlang           = true,
+    fish             = true,
+    fortran          = true,
+    fsharp           = true,
+    go               = true,
+    groovy           = true,
+    haskell          = true,
+    html             = true,
+    ini              = true,
+    java             = true,
+    javascript       = true,
+    javascriptreact  = true,
+    json             = true,
+    julia            = true,
+    kotlin           = true,
+    lua              = true,
+    makefile         = true,
+    markdown         = true,
+    nim              = true,
+    ['objective-c']  = true,
+    pascal           = true,
+    powershell       = true,
+    ps1              = true,
+    python           = true,
+    rust             = true,
+    scala            = true,
+    sh               = true,
+    shell            = true,
+    sql              = true,
+    swift            = true,
+    tmux             = true,
+    toml             = true,
+    typescript       = true,
+    typescriptreact  = true,
+    vue              = true,
+    xml              = true,
+    yaml             = true,
+    -- stylua: ignore end
+  },
   markdown = {
     ["markdown"] = true,
     [M.AVANTE] = true,
@@ -257,6 +307,15 @@ function M.is_not_sourcefile(filetype)
     return false
   end
   return filetypes.not_sourcefile[filetype] == true
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_language(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.language[filetype] == true
 end
 
 ---@param filetype                      string|nil
