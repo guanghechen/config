@@ -243,6 +243,12 @@ function M:collect_file_uuids(root)
   return self._view:collect_leafs(root)
 end
 
+---@param root                          string|nil
+---@return table<string, true>
+function M:collect_selected(root)
+  return self._view:collect_selected(root)
+end
+
 ---@return eve.ux.view.Filetree
 function M:clear_locations()
   self:__health__()
@@ -457,15 +463,17 @@ end
 ---@return eve.ux.view.Filetree
 function M:reset_filepaths(cwd, filepaths, with_locations)
   self:__health__()
+
+  local selected_set = self:collect_selected() ---@type table<string, true>
   self:clear()
 
   local filetree = self._filetree ---@type std.collection.IFiletree
-  filetree:reset(cwd, filepaths, with_locations)
-
   local view = self._view ---@type eve.ux.view.Tree
+  local tick_selected = view._tick_selected ---@type integer
   local statemap = view.statemap ---@type table<string, eve.ux.view.tree.INodeState>
   ---@cast statemap                     table<string, eve.ux.view.filetree.INodeState>
 
+  filetree:reset(cwd, filepaths, with_locations)
   filetree:unsafe_traverse(filetree.root, function(ctx)
     local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
     local rootnode = ctx.rootnode ---@type std.collection.filetree.INode
@@ -480,7 +488,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
           collapsed = false,
           tick_invisible = 0,
           tick_matched = 0,
-          tick_selected = 0,
+          tick_selected = selected_set[node.uuid] and tick_selected or 0,
           tick_selected_maximum = 0,
         }
         statemap[node.uuid] = nodestate
@@ -501,7 +509,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
           collapsed = false,
           tick_invisible = 0,
           tick_matched = 0,
-          tick_selected = 0,
+          tick_selected = selected_set[node.uuid] and tick_selected or 0,
           text = node.data.filepath,
           text_lower = node.data.filepath_lower,
         }

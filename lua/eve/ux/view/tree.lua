@@ -1109,8 +1109,9 @@ end
 function M:collect_leafs(root)
   self:__health__()
 
-  local uuids = {} ---@type string[]
   local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local uuids = {} ---@type string[]
+
   self._tree:quick_traverse(root, function(_, node)
     local state = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
     if state ~= nil and state.nodetype == "leaf" then
@@ -1118,6 +1119,24 @@ function M:collect_leafs(root)
     end
   end)
   return uuids
+end
+
+---@param root                          string|nil
+---@return table<string, true>
+function M:collect_selected(root)
+  self:__health__()
+
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local tick_selected = self._tick_selected ---@type integer
+  local selected_set = {} ---@type table<string, true>
+
+  self._tree:quick_traverse(root, function(_, node)
+    local state = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+    if state ~= nil and state.tick_selected == tick_selected then
+      selected_set[node.uuid] = true
+    end
+  end)
+  return selected_set
 end
 
 ---@param uuid                          string
