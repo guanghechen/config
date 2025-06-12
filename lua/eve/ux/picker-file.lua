@@ -351,6 +351,44 @@ function M.new(props)
         self:__toggle_node__(nodeuuid, true)
       end
     end,
+    on_send_to_qflist = function()
+      local cwd = std.path.cwd() ---@type string
+      local quickfix_items = {} ---@type std.t.IQuickFixItem[]
+
+      local linecount = retriever:linecount() ---@type integer
+      for lnum = 1, linecount, 1 do
+        local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        local node = uuid and filetree:retrieve(uuid) or nil ---@type std.collection.filetree.INode|nil
+        if node ~= nil and node.data.filetype == "file" then
+          local filepath = node.data.filepath ---@type string
+          local relative_filepath = std.path.relative(cwd, filepath, false) ---@type string
+
+          local nodestate = treeview:retrieve(uuid) ---@type eve.ux.view.filetree.INodeState|nil
+          local locations = nodestate and nodestate.locations or nil ---@type eve.ux.view.filetree.ILocationNodeState[]|nil
+          if locations == nil or #locations < 1 then
+            table.insert(quickfix_items, {
+              filename = relative_filepath,
+              lnum = 1,
+              col = 0,
+            })
+          else
+            for _, location in ipairs(locations) do
+              table.insert(quickfix_items, {
+                filename = relative_filepath,
+                lnum = location.lnum,
+                col = location.col or 0,
+              })
+            end
+          end
+        end
+      end
+
+      if #quickfix_items > 0 then
+        self._picker:close()
+        eve.qflist.push(quickfix_items)
+        eve.qflist.open_qflist(false)
+      end
+    end,
     on_toggle_selection = function()
       local nodeuuid = retrieve() ---@type string|nil
       if nodeuuid == nil then
@@ -415,6 +453,16 @@ function M.new(props)
   }
 
   ---@type std.t.IKeymap[]
+  local preset_keymaps_common = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-q>",
+      desc = "filetree: send to qflist",
+      callback = actions.on_send_to_qflist,
+    },
+  }
+
+  ---@type std.t.IKeymap[]
   local preset_keymaps_finder = {
     {
       modes = { "n", "v" },
@@ -458,7 +506,7 @@ function M.new(props)
       callback = actions.on_filetree_attach,
     },
     {
-      modes = { "n", "v" },
+      modes = { "i", "n", "v" },
       key = "<Backspace>",
       desc = "filetree: change root to parent",
       callback = actions.on_filetree_attach_parent,
@@ -515,10 +563,10 @@ function M.new(props)
     height = height,
     width = width,
 
-    keymaps_common = keymaps_common,
-    keymaps_preview = keymaps_preview,
+    keymaps_common = keymaps_common and vim.list_extend(preset_keymaps_common, keymaps_common) or preset_keymaps_common,
     keymaps_finder = keymaps_finder and vim.list_extend(preset_keymaps_finder, keymaps_finder) or preset_keymaps_finder,
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
+    keymaps_preview = keymaps_preview,
 
     finder_input = finder_input,
     finder_input_history = finder_input_history,
@@ -1145,7 +1193,7 @@ function M:__resolve_confirmation__(nodeuuid)
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
-  local rootpath = rootnode and rootnode.data.filepath or std.path.cwd() --@type string
+  local rootpath = rootnode and rootnode.data.filepath or std.path.cwd() ---@type string
 
   if self:__has_selected_node__() then
     local filepaths = {} ---@type string[]
