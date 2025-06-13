@@ -91,7 +91,7 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
 ---@field protected _frecency           std.collection.IFrecency|nil
----@field protected _picker             eve.ux.picker.BasicComposer
+---@field protected _composer           eve.ux.picker.BasicComposer
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.ux.picker.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
@@ -191,7 +191,7 @@ function M.new(props)
   ---@return string|nil
   ---@return integer
   local function retrieve()
-    local lnum = self._picker:get_result_lnum() ---@type integer
+    local lnum = self._composer:get_result_lnum() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     return uuid, lnum
   end
@@ -247,7 +247,7 @@ function M.new(props)
       callback = function()
         local enabled = flag_foldempty:snapshot() ---@type boolean
         flag_foldempty:next(not enabled)
-        self._picker:mark_result_dirty()
+        self._composer:mark_result_dirty()
       end,
       snapshot = function()
         local enabled = flag_foldempty:snapshot() ---@type boolean
@@ -385,7 +385,7 @@ function M.new(props)
       end
 
       if #quickfix_items > 0 then
-        self._picker:close()
+        self._composer:close()
         eve.qflist.push(quickfix_items)
         eve.qflist.open_qflist(false)
       end
@@ -401,7 +401,7 @@ function M.new(props)
         return
       end
 
-      local picker = self._picker ---@type eve.ux.picker.BasicComposer
+      local composer = self._composer ---@type eve.ux.picker.BasicComposer
       local lnum = retriever:retrieve_lnum(nodeuuid) ---@type integer|nil
       if lnum == nil or lnum < 0 then
         return
@@ -417,7 +417,7 @@ function M.new(props)
               local childstate = treeview:retrieve(childuuid) ---@type eve.ux.view.filetree.INodeState|nil
               if childstate ~= nil and childstate.nodetype ~= "location" then
                 treeview:toggle_select(childuuid, next_selected, true) ---@type boolean
-                picker.result:toggle_selected(index, next_selected)
+                composer.result:toggle_selected(index, next_selected)
               end
             end
           end
@@ -428,7 +428,7 @@ function M.new(props)
       if nodestate.nodetype == "leaf" then
         local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
         treeview:toggle_select(nodeuuid, next_selected, true) ---@type boolean
-        picker.result:toggle_selected(lnum)
+        composer.result:toggle_selected(lnum)
         return
       end
 
@@ -437,7 +437,7 @@ function M.new(props)
         lnum = retriever:retrieve_lnum(nodeuuid) or lnum ---@type integer
         local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
         treeview:toggle_select(nodeuuid, next_selected, true) ---@type boolean
-        picker.result:toggle_selected(lnum)
+        composer.result:toggle_selected(lnum)
         return
       end
 
@@ -537,7 +537,7 @@ function M.new(props)
       key = "<2-LeftMouse>",
       desc = "filetree: toggle",
       callback = function()
-        local result_winnr = self._picker.result:get_winnr() ---@type integer|nil
+        local result_winnr = self._composer.result:get_winnr() ---@type integer|nil
         if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
           local cursor = vim.fn.getmousepos()
           if cursor.winid == result_winnr then
@@ -560,7 +560,7 @@ function M.new(props)
     },
   }
 
-  local picker = eve.ux.picker.BasicComposer.new({
+  local composer = eve.ux.picker.BasicComposer.new({
     uuid = picker_uuid,
     name = fullname,
     permanent = permanent,
@@ -727,9 +727,9 @@ function M.new(props)
   self.uuid = picker_uuid
   self.fullname = fullname
 
-  self.finder = picker.finder
-  self.result = picker.result
-  self.preview = picker.preview
+  self.finder = composer.finder
+  self.result = composer.result
+  self.preview = composer.preview
 
   self.flag_foldempty = flag_foldempty
   self.flag_fuzzy = flag_fuzzy
@@ -740,7 +740,7 @@ function M.new(props)
   self._disposed = false
   self._filetree = filetree
   self._frecency = frecency
-  self._picker = picker
+  self._composer = composer
   self._plainfile = plainfile
   self._retriever = retriever
   self._scheduler_match = scheduler_match
@@ -758,18 +758,18 @@ function M.new(props)
   std.fn.observe(
     { finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_selected, flag_viewtype },
     function()
-      picker:mark_result_flags_dirty()
+      composer:mark_result_flags_dirty()
     end,
     true
   )
   std.fn.observe({ flag_selected, flag_viewtype }, function()
-    picker:mark_result_dirty()
+    composer:mark_result_dirty()
   end, true)
   std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
     scheduler_match:schedule()
   end)
-  std.fn.observe({ picker.result.lnum_current }, function()
-    local lnum = picker.result.lnum_current:snapshot() ---@type integer
+  std.fn.observe({ composer.result.lnum_current }, function()
+    local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     if uuid ~= nil then
       self._uuid_current = uuid
@@ -787,20 +787,22 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname
-  local on_dispose = self._on_disposed ---@type eve.ux.picker.composer.basic.IOnDisposed
-  local picker = self._picker ---@type eve.ux.picker.BasicComposer
+  local on_dispose = self._on_disposed ---@type eve.ux.picker.composer.filetree.IOnDisposed
+  local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   vim.schedule(function()
     local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
     local ok2, error2 = pcall(treeview.dispose, treeview)
-    local ok3, error3 = pcall(picker.dispose, picker)
+    local ok3, error3 = pcall(composer.dispose, composer)
     local ok4, error4 = pcall(plainfile.dispose, plainfile)
-    local ok5, error5 = pcall(on_dispose)
+    local ok5, error5 = pcall(retriever.dispose, retriever)
+    local ok6, error6 = pcall(on_dispose)
 
-    if not (ok1 and ok2 and ok3 and ok4 and ok5) then
+    if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
       std.reporter.error({
         from = fullname,
         subject = "dispose",
@@ -811,12 +813,11 @@ function M:dispose()
           error3 = not ok3 and error3 or nil,
           error4 = not ok4 and error4 or nil,
           error5 = not ok5 and error5 or nil,
+          error6 = not ok6 and error6 or nil,
         },
       })
     end
   end)
-
-  self._retriever:dispose()
 
   self.finder = nil
   self.result = nil
@@ -829,7 +830,7 @@ function M:dispose()
   self.flag_selected = nil
 
   self._frecency = nil
-  self._picker = nil
+  self._composer = nil
   self._plainfile = nil
   self._retriever = nil
   self._scheduler_match = nil
@@ -852,32 +853,32 @@ end
 
 ---@return boolean
 function M:isfocused()
-  return self._picker:isfocused()
+  return self._composer:isfocused()
 end
 
 ---@return boolean
 function M:isvisible()
-  return self._picker:isvisible()
+  return self._composer:isvisible()
 end
 
 ---@return nil
 function M:close()
-  self._picker:close()
+  self._composer:close()
 end
 
 ---@return nil
 function M:focus()
-  self._picker:focus()
+  self._composer:focus()
 end
 
 ---@return nil
 function M:hide()
-  self._picker:hide()
+  self._composer:hide()
 end
 
 ---@return nil
 function M:resize()
-  self._picker:resize()
+  self._composer:resize()
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -935,14 +936,14 @@ end
 ---@return eve.ux.picker.FiletreeComposer
 function M:mark_result_dirty()
   self:__health__()
-  self._picker:mark_result_dirty()
+  self._composer:mark_result_dirty()
   return self
 end
 
 ---@return eve.ux.picker.FiletreeComposer
 function M:mark_result_flags_dirty()
   self:__health__()
-  self._picker:mark_result_flags_dirty()
+  self._composer:mark_result_flags_dirty()
   return self
 end
 
@@ -1140,8 +1141,8 @@ end
 function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
+  local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
-  local picker = self._picker ---@type eve.ux.picker.BasicComposer
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   if self:__has_selected_node__() then
@@ -1171,7 +1172,7 @@ function M:__open_node__(nodeuuid)
       local col = first_location and first_location.col or nil ---@type integer|nil
 
       local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
-      picker:close()
+      composer:close()
       eve.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
       return
     end
@@ -1179,13 +1180,13 @@ function M:__open_node__(nodeuuid)
 
   if nodestate.nodetype == "container" then
     self._treeview:collapse(node.uuid, "toggle", false)
-    picker:mark_result_dirty()
+    composer:mark_result_dirty()
     return
   end
 
   if nodestate.nodetype == "leaf" and nodestate.collapsed then
     self._treeview:collapse(node.uuid, "expand", false)
-    picker:mark_result_dirty()
+    composer:mark_result_dirty()
     return
   end
 
@@ -1196,7 +1197,7 @@ function M:__open_node__(nodeuuid)
   local col = first_location and first_location.col or nil ---@type integer|nil
 
   local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
-  picker:close()
+  composer:close()
   eve.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
 
@@ -1205,8 +1206,8 @@ end
 function M:__resolve_confirmation__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
+  local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
-  local picker = self._picker ---@type eve.ux.picker.BasicComposer
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
@@ -1227,7 +1228,7 @@ function M:__resolve_confirmation__(nodeuuid)
     end
 
     if #filepaths > 0 then
-      picker:close()
+      composer:close()
       self._on_confirm(self, filepaths)
       return
     end
@@ -1235,19 +1236,19 @@ function M:__resolve_confirmation__(nodeuuid)
 
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", false)
-    picker:mark_result_dirty()
+    composer:mark_result_dirty()
     return
   end
 
   if nodestate.nodetype == "leaf" and nodestate.collapsed then
     treeview:collapse(node.uuid, "expand", false)
-    picker:mark_result_dirty()
+    composer:mark_result_dirty()
     return
   end
 
   local filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath, node.data.filepath, false)
     or node.data.filepath
-  picker:close()
+  composer:close()
   self._on_confirm(self, { filepath })
 end
 
@@ -1276,23 +1277,23 @@ end
 function M:__toggle_node__(nodeuuid, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
+  local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local treeview = self._treeview ---@type eve.ux.view.Filetree
-  local picker = self._picker ---@type eve.ux.picker.BasicComposer
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", recursively)
-    picker:mark_result_dirty()
+    composer:mark_result_dirty()
     return
   end
 
   if nodestate.nodetype == "leaf" and #node.children > 0 then
     treeview:collapse(node.uuid, "toggle", false)
-    picker:mark_result_dirty()
+    composer:mark_result_dirty()
     return
   end
 
   if self._on_confirm == nil then
     local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
-    picker:close()
+    composer:close()
     eve.win.open_filepath(winnr_sourcefile, node.data.filepath, nodestate.lnum, nodestate.col)
   end
 end
