@@ -21,7 +21,7 @@ local o_includes = eve.context.select.find_file.includes
 ---@field public includes       string[]
 ---@field public excludes       string[]
 
----@param picker                        eve.ux.FilePicker
+---@param picker                        eve.ux.picker.FiletreeComposer
 ---@return nil
 local function edit_setting(picker)
   local s_keyword = o_input:snapshot() ---@type string
@@ -84,7 +84,7 @@ local function edit_setting(picker)
     })
 end
 
----@param picker                        eve.ux.FilePicker
+---@param picker                        eve.ux.picker.FiletreeComposer
 ---@return nil
 local function refresh(picker)
   local workspace = std.path.workspace() ---@type string
@@ -112,7 +112,7 @@ local function refresh(picker)
   picker:focus()
 end
 
-local picker ---@type eve.ux.FilePicker
+local picker ---@type eve.ux.picker.FiletreeComposer
 
 ---@return nil
 local function attach_cwd()
@@ -128,7 +128,7 @@ local function attach_workspace()
   picker:attach(rootuuid)
 end
 
-picker = eve.ux.FilePicker.new({
+picker = eve.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
   permanent = true,

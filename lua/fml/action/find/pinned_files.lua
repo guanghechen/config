@@ -12,7 +12,7 @@ local o_flag_sensitive = std.Observable.from_value(true)
 local o_flag_selected = std.Observable.from_value(false)
 local o_flag_viewtype = std.Observable.from_value("tree")
 
----@param picker                        eve.ux.FilePicker
+---@param picker                        eve.ux.picker.FiletreeComposer
 ---@return nil
 local function refresh(picker)
   local cwd = std.path.cwd() ---@type string
@@ -20,7 +20,7 @@ local function refresh(picker)
   picker:reset_filepaths(cwd, filepaths, false)
 end
 
-local picker = eve.ux.FilePicker.new({
+local picker = eve.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
   permanent = true,

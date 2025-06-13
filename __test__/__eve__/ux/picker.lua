@@ -23,7 +23,7 @@ local o_flag_selected = std.Observable.from_value(false)
 local o_flag_viewtype = std.Observable.from_value("tree")
 local o_flag_case = std.Observable.from_value(2)
 
-local picker = eve.ux.FilePicker.new({
+local picker = eve.ux.picker.FiletreeComposer.new({
   uuid = "__test__eve_ux_picker__",
   name = name,
   frecency = eve.context.frecency.files,

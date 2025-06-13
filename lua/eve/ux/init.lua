@@ -1,7 +1,5 @@
 ---@class eve.ux.__mods
 local __mods = {
-  FilePicker = "eve.ux.picker-file",
-
   Search = "eve.ux.search.search",
   SearchContext = "eve.ux.search.context",
   SearchInput = "eve.ux.search.input",
@@ -23,8 +21,6 @@ local __mods = {
 ---@field public nvimbar                eve.ux.nvimbar
 ---@field public picker                 eve.ux.picker
 ---@field public view                   eve.ux.view
----
----@field public FilePicker             eve.ux.FilePicker
 ---
 ---@field public Search                 eve.ux.Search
 ---@field public SearchContext          eve.ux.SearchContext

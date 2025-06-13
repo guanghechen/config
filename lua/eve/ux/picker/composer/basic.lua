@@ -1,38 +1,38 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "eve.ux.picker.composer" ---@type string
+local __module_name__ = "eve.ux.picker.composer.basic" ---@type string
 
----@alias eve.ux.picker.composer.PaneEnum
+---@alias eve.ux.picker.composer.basic.PaneEnum
 ---| "finder"
 ---| "preview"
 ---| "result"
 
----@alias eve.ux.picker.composer.IOnCancel
+---@alias eve.ux.picker.composer.basic.IOnCancel
 ---| fun(): nil
 
----@alias eve.ux.picker.composer.IOnClosed
----| fun(self: eve.ux.picker.Composer): nil
+---@alias eve.ux.picker.composer.basic.IOnClosed
+---| fun(self: eve.ux.picker.BasicComposer): nil
 
----@alias eve.ux.picker.composer.IOnDisposed
+---@alias eve.ux.picker.composer.basic.IOnDisposed
 ---| fun(): nil
 
----@alias eve.ux.picker.composer.IOnFocused
----| fun(self: eve.ux.picker.Composer): nil
+---@alias eve.ux.picker.composer.basic.IOnFocused
+---| fun(self: eve.ux.picker.BasicComposer): nil
 
----@alias eve.ux.picker.composer.IOnHidden
----| fun(self: eve.ux.picker.Composer): nil
+---@alias eve.ux.picker.composer.basic.IOnHidden
+---| fun(self: eve.ux.picker.BasicComposer): nil
 
----@alias eve.ux.picker.composer.IOnRefresh
----| fun(self: eve.ux.picker.Composer, force: boolean): nil
+---@alias eve.ux.picker.composer.basic.IOnRefresh
+---| fun(self: eve.ux.picker.BasicComposer, force: boolean): nil
 
----@alias eve.ux.picker.composer.IOnResultRendered
----| fun(self: eve.ux.picker.Composer, bufnr: integer): nil
+---@alias eve.ux.picker.composer.basic.IOnResultRendered
+---| fun(self: eve.ux.picker.BasicComposer, bufnr: integer): nil
 
----@alias eve.ux.picker.composer.IOnPreviewRendered
----| fun(self: eve.ux.picker.Composer, bufnr: integer): nil
+---@alias eve.ux.picker.composer.basic.IOnPreviewRendered
+---| fun(self: eve.ux.picker.BasicComposer, bufnr: integer): nil
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.picker.composer.borders
+---@class eve.ux.picker.composer.basic.borders
 ---@field public finder                 string[]
 ---@field public finder_with_preview    string[]
 ---@field public finder_without_result  string[]
@@ -50,7 +50,7 @@ local __borders__ = {
   -- stylua: ignore end
 }
 
----@class eve.ux.picker.composer.highlights
+---@class eve.ux.picker.composer.basic.highlights
 ---@field public finder                 string
 ---@field public result                 string
 ---@field public preview                string
@@ -81,7 +81,7 @@ local __highlights__ = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.picker.IComposerProps
+---@class eve.ux.picker.composer.IBasicProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
@@ -105,16 +105,16 @@ local __highlights__ = {
 ---
 ---@field public preview_render         ?eve.ux.picker.preview.IDraw
 ---
----@field public on_cancel              ?eve.ux.picker.composer.IOnCancel
----@field public on_closed              ?eve.ux.picker.composer.IOnClosed
----@field public on_disposed            ?eve.ux.picker.composer.IOnDisposed
----@field public on_focused             ?eve.ux.picker.composer.IOnFocused
----@field public on_hidden              ?eve.ux.picker.composer.IOnHidden
----@field public on_refresh             ?eve.ux.picker.composer.IOnRefresh
----@field public on_preview_rendered    ?eve.ux.picker.composer.IOnPreviewRendered
----@field public on_result_rendered     ?eve.ux.picker.composer.IOnResultRendered
+---@field public on_cancel              ?eve.ux.picker.composer.basic.IOnCancel
+---@field public on_closed              ?eve.ux.picker.composer.basic.IOnClosed
+---@field public on_disposed            ?eve.ux.picker.composer.basic.IOnDisposed
+---@field public on_focused             ?eve.ux.picker.composer.basic.IOnFocused
+---@field public on_hidden              ?eve.ux.picker.composer.basic.IOnHidden
+---@field public on_refresh             ?eve.ux.picker.composer.basic.IOnRefresh
+---@field public on_preview_rendered    ?eve.ux.picker.composer.basic.IOnPreviewRendered
+---@field public on_result_rendered     ?eve.ux.picker.composer.basic.IOnResultRendered
 
----@class eve.ux.picker.Composer : std.t.ux.IWidget
+---@class eve.ux.picker.BasicComposer : std.t.ux.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public permanent              boolean
@@ -124,24 +124,24 @@ local __highlights__ = {
 ---@field public preview                eve.ux.picker.Preview|nil
 ---
 ---@field protected _disposed           boolean
----@field protected _pane_focused       eve.ux.picker.composer.PaneEnum
----@field protected _pane_last_focused  eve.ux.picker.composer.PaneEnum
+---@field protected _pane_focused       eve.ux.picker.composer.basic.PaneEnum
+---@field protected _pane_last_focused  eve.ux.picker.composer.basic.PaneEnum
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
 ---@field protected _finder_input_history ?std.collection.IHistory
 ---
----@field protected _on_cancel          eve.ux.picker.composer.IOnCancel
----@field protected _on_closed          eve.ux.picker.composer.IOnClosed
----@field protected _on_disposed        eve.ux.picker.composer.IOnDisposed
----@field protected _on_focused         eve.ux.picker.composer.IOnFocused
----@field protected _on_hidden          eve.ux.picker.composer.IOnHidden
----@field protected _on_refresh         eve.ux.picker.composer.IOnRefresh
+---@field protected _on_cancel          eve.ux.picker.composer.basic.IOnCancel
+---@field protected _on_closed          eve.ux.picker.composer.basic.IOnClosed
+---@field protected _on_disposed        eve.ux.picker.composer.basic.IOnDisposed
+---@field protected _on_focused         eve.ux.picker.composer.basic.IOnFocused
+---@field protected _on_hidden          eve.ux.picker.composer.basic.IOnHidden
+---@field protected _on_refresh         eve.ux.picker.composer.basic.IOnRefresh
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.picker.IComposerProps
----@return eve.ux.picker.Composer
+---@param props                         eve.ux.picker.composer.IBasicProps
+---@return eve.ux.picker.BasicComposer
 function M.new(props)
   local uuid = props.uuid or std.fn.uuid() ---@type string
   local name = props.name ---@type string
@@ -150,8 +150,8 @@ function M.new(props)
 
   local flags = props.flags ---@type eve.ux.picker.result.IFlagItemRaw[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
-  local pane_focused = "finder" ---@type eve.ux.picker.composer.PaneEnum
-  local pane_last_focused = "finder" ---@type eve.ux.picker.composer.PaneEnum
+  local pane_focused = "finder" ---@type eve.ux.picker.composer.basic.PaneEnum
+  local pane_last_focused = "finder" ---@type eve.ux.picker.composer.basic.PaneEnum
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
@@ -169,14 +169,14 @@ function M.new(props)
 
   local preview_render = props.preview_render ---@type eve.ux.picker.preview.IDraw|nil
 
-  local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.picker.composer.IOnCancel
-  local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.IOnClosed
-  local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker.composer.IOnDisposed
-  local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker.composer.IOnFocused
-  local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker.composer.IOnHidden
-  local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.picker.composer.IOnRefresh
-  local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.picker.composer.IOnPreviewRendered
-  local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.picker.composer.IOnResultRendered
+  local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnCancel
+  local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnClosed
+  local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnDisposed
+  local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnFocused
+  local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnHidden
+  local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnRefresh
+  local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnPreviewRendered
+  local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnResultRendered
 
   local has_finder_input_history = finder_input_history ~= nil ---@type boolean
 
@@ -190,12 +190,12 @@ function M.new(props)
   self._recommended_height = recommended_height
   self._recommended_width = recommended_width
   self._finder_input_history = finder_input_history
-  self._on_cancel = on_cancel ---@type eve.ux.picker.composer.IOnCancel
-  self._on_closed = on_closed ---@type eve.ux.picker.composer.IOnClosed
-  self._on_disposed = on_disposed ---@type eve.ux.picker.composer.IOnDisposed
-  self._on_focused = on_focused ---@type eve.ux.picker.composer.IOnFocused
-  self._on_hidden = on_hidden ---@type eve.ux.picker.composer.IOnHidden
-  self._on_refresh = on_refresh ---@type eve.ux.picker.composer.IOnRefresh
+  self._on_cancel = on_cancel ---@type eve.ux.picker.composer.basic.IOnCancel
+  self._on_closed = on_closed ---@type eve.ux.picker.composer.basic.IOnClosed
+  self._on_disposed = on_disposed ---@type eve.ux.picker.composer.basic.IOnDisposed
+  self._on_focused = on_focused ---@type eve.ux.picker.composer.basic.IOnFocused
+  self._on_hidden = on_hidden ---@type eve.ux.picker.composer.basic.IOnHidden
+  self._on_refresh = on_refresh ---@type eve.ux.picker.composer.basic.IOnRefresh
 
   ---@type eve.ux.picker.Finder
   local finder = eve.ux.picker.Finder.new({
@@ -281,7 +281,7 @@ function M:dispose()
   local finder = self.finder ---@type eve.ux.picker.Finder
   local result = self.result ---@type eve.ux.picker.Result
   local preview = self.preview ---@type eve.ux.picker.Preview|nil
-  local on_disposed = self._on_disposed ---@type eve.ux.picker.composer.IOnDisposed
+  local on_disposed = self._on_disposed ---@type eve.ux.picker.composer.basic.IOnDisposed
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
     local ok2, error2 = pcall(result.dispose, result)
@@ -351,14 +351,14 @@ function M:close()
   end)
 end
 
----@param pane                         eve.ux.picker.composer.PaneEnum|nil
+---@param pane                         eve.ux.picker.composer.basic.PaneEnum|nil
 ---@return nil
 function M:focus(pane)
   self:__health__()
   eve.widget.push(self)
 
   local has_new_created = self:__create_wins__()
-  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type eve.ux.picker.composer.PaneEnum
+  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type eve.ux.picker.composer.basic.PaneEnum
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
@@ -421,7 +421,7 @@ function M:get_result_lnum()
   return self.result.lnum_current:snapshot()
 end
 
----@return eve.ux.picker.Composer
+---@return eve.ux.picker.BasicComposer
 function M:mark_result_dirty()
   self:__health__()
   self.result:mark_content_dirty()
@@ -431,7 +431,7 @@ function M:mark_result_dirty()
   return self
 end
 
----@return eve.ux.picker.Composer
+---@return eve.ux.picker.BasicComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self.result:mark_nvimbar_dirty()
@@ -469,7 +469,7 @@ function M:resize()
 end
 
 ---@param lnum                          integer
----@return eve.ux.picker.Composer
+---@return eve.ux.picker.BasicComposer
 function M:set_result_lnum(lnum)
   self:__health__()
   self.result:set_lnum_current(lnum)
@@ -543,7 +543,7 @@ function M:__create_wins__()
 end
 
 ---@protected
----@param pane_focused                  eve.ux.picker.composer.PaneEnum
+---@param pane_focused                  eve.ux.picker.composer.basic.PaneEnum
 ---@return nil
 function M:__focus_pane__(pane_focused)
   if pane_focused == "finder" then
@@ -1207,7 +1207,7 @@ function M:__resolve_builtin_keymaps_preview__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#result: focus left",
       callback = function()
-        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.picker.composer.PaneEnum
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.picker.composer.basic.PaneEnum
         self:__focus_pane__(pane_focused)
       end,
     },
@@ -1222,7 +1222,7 @@ function M:__resolve_builtin_keymaps_preview__()
           return
         end
 
-        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.picker.composer.PaneEnum
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.picker.composer.basic.PaneEnum
         self:__focus_pane__(pane_focused)
       end,
     },

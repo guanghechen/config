@@ -8,7 +8,7 @@ local flag_sensitive = eve.context.select.lsp_reference.flag_case_sensitive
 local flag_selected = eve.context.select.lsp_reference.flag_selected
 local flag_viewtype = eve.context.select.lsp_reference.flag_viewtype
 
-local picker = eve.ux.FilePicker.new({
+local picker = eve.ux.picker.FiletreeComposer.new({
   name = "lsp:reference",
   permanent = true,
   frecency = eve.context.frecency.files,

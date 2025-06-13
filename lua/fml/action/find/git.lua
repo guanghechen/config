@@ -18,7 +18,7 @@ local flag_selected = eve.context.select.find_git.flag_selected
 local flag_viewtype = eve.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
-local picker ---@type eve.ux.FilePicker
+local picker ---@type eve.ux.picker.FiletreeComposer
 
 ---@param force                         boolean
 ---@return nil
@@ -37,7 +37,7 @@ local function refresh(force)
   git_filepaths_dirty = false
 end
 
-picker = eve.ux.FilePicker.new({
+picker = eve.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
   permanent = true,

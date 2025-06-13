@@ -1,9 +1,12 @@
 ---@class eve.ux.picker.__mods
 local __mods = {
-  Composer = "eve.ux.picker.composer",
   Finder = "eve.ux.picker.finder",
   Preview = "eve.ux.picker.preview",
   Result = "eve.ux.picker.result",
+
+  BasicComposer = "eve.ux.picker.composer.basic",
+  FiletreeComposer = "eve.ux.picker.composer.filetree",
+
   ListRetriever = "eve.ux.picker.retriever.list",
   TreeRetriever = "eve.ux.picker.retriever.tree",
 }
@@ -11,10 +14,13 @@ local __mods = {
 ---@class eve.ux.picker
 ---@field public __mods                 eve.ux.picker.__mods
 ---
----@field public Composer               eve.ux.picker.Composer
 ---@field public Finder                 eve.ux.picker.Finder
 ---@field public Preview                eve.ux.picker.Preview
 ---@field public Result                 eve.ux.picker.Result
+---
+---@field public BasicComposer          eve.ux.picker.BasicComposer
+---@field public FiletreeComposer       eve.ux.picker.FiletreeComposer
+---
 ---@field public ListRetriever          eve.ux.picker.ListRetriever
 ---@field public TreeRetriever          eve.ux.picker.TreeRetriever
 local M = setmetatable({
