@@ -1,5 +1,9 @@
----@class eve.ux.fn.select_encoding.IItem : eve.ux.select.IItem
----@field public data                   { encoding: string }
+---@class eve.ux.fn.select_encoding.IItem : eve.ux.picker.composer.list.IItem
+---@field public data                   eve.ux.fn.select_encoding.IItemData
+
+---@class eve.ux.fn.select_encoding.IItemData
+---@field public title                  string
+---@field public encoding               string
 
 ---@class eve.ux.fn.select_encoding.IParams
 ---@field public present                string|nil
@@ -57,91 +61,88 @@ local fileencodings = {
   { title = "Western European DOS (CP 850)", encoding = "cp850" },
 }
 
-local items = {} ---@type eve.ux.fn.select_encoding.IItem[]
-for _, fileencoding in ipairs(fileencodings) do
-  local text = string.format("%s     %s", std.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
+---@param present                       string|nil
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_data(present)
+  local items = {} ---@type eve.ux.fn.select_encoding.IItem[]
+  local uuid_present = nil ---@type string|nil
 
-  ---@type eve.ux.fn.select_encoding.IItem
-  local item = {
-    uuid = fileencoding.encoding,
-    text = text,
-    text_lower = text:lower(),
-    data = fileencoding,
-  }
-  table.insert(items, item)
-end
+  for _, fileencoding in ipairs(fileencodings) do
+    local text = string.format("%s     %s", std.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
 
----@param item                          eve.ux.fn.select_encoding.IItem
----@param match                         std.t.IScoredMatch
----@return string
----@return std.t.IHighlightInline[]
-local function render_item(item, match)
-  local highlights = {} ---@type std.t.IHighlightInline[]
-  for _, piece in ipairs(match.matches) do
-    local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" } ---@type std.t.IHighlightInline[]
-    table.insert(highlights, highlight)
+    ---@type eve.ux.fn.select_encoding.IItem
+    local item = {
+      uuid = fileencoding.encoding,
+      text = text,
+      text_lower = text:lower(),
+      highlights = {},
+      data = {
+        title = fileencoding.title,
+        encoding = fileencoding.encoding,
+      },
+    }
+    items[#items + 1] = item
+
+    if present == fileencoding.encoding then
+      uuid_present = fileencoding.encoding
+    end
   end
-  return item.text, highlights
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  return { items = items, uuid_present = uuid_present, uuid_current = uuid_present }
 end
+
+---@type eve.ux.picker.ListComposer|nil
+local picker = nil
 
 ---@param params                        eve.ux.fn.select_encoding.IParams
----@return eve.ux.ISelect
+---@return eve.ux.picker.ListComposer
 local function select_encoding(params)
   local present = params.present ---@type string|nil
-  local title = params.title or "Select encoding" ---@type string
+  local title = params.title or "Select Encoding" ---@type string
   local on_select = params.on_select ---@type fun(encoding: string|nil): nil
 
-  ---@type eve.ux.select.IProvider
-  local provider = {
-    fetch_data = function()
-      local data = { items = items, uuid_present = present } ---@type eve.ux.select.IData
-      return data
-    end,
-    render_item = render_item,
-  }
+  local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+  local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+  local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+  local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
-  local settled = false ---@type boolean
+  if picker and not picker:isdisposed() then
+    picker:dispose()
+  end
 
-  ---@type eve.ux.ISelect
-  local select = eve.ux.Select.new({
-    dimension = {
-      width = 80,
-      height = math.max(math.floor(vim.o.lines * 0.8), #fileencodings),
-      row = 3,
-    },
-    extend_preset_keymaps = true,
-    flag_fuzzy = std.Observable.from_value(true),
-    flag_regex = std.Observable.from_value(false),
-    multiple = false,
+  ---@type eve.ux.picker.ListComposer
+  picker = eve.ux.picker.ListComposer.new({
+    name = "select-encoding",
     permanent = false,
-    preview_enabled = false,
-    preview_wrap = false,
-    provider = provider,
+    preview = false,
     title = title,
-    on_close = function()
-      if not settled then
-        settled = true
-        on_select(nil)
-      end
+    height = math.min(20, #fileencodings + 2),
+    width = 80,
+
+    finder_input = finder_input,
+    flag_fuzzy = flag_fuzzy,
+    flag_regex = flag_regex,
+    flag_sensitive = flag_sensitive,
+
+    on_cancel = function()
+      on_select(nil)
     end,
-    on_confirm = function(widget, selected_items)
-      ---@cast selected_items eve.ux.fn.select_encoding.IItem[]
-
-      settled = true
-
-      if #selected_items == 1 then
-        local item = selected_items[1] ---@type eve.ux.fn.select_encoding.IItem
-        on_select(item.data.encoding)
-      else
+    on_confirm = function(composer, item)
+      if item == nil then
         on_select(nil)
+      else
+        ---@cast item eve.ux.fn.select_encoding.IItem
+        on_select(item.data.encoding)
       end
-
-      widget:close()
+      composer:close()
     end,
   })
 
-  select:focus()
-  return select
+  local data = fetch_data(present) ---@type eve.ux.picker.composer.list.IResetData
+  picker:reset_data(data)
+  picker:focus()
+  return picker
 end
 
 return select_encoding

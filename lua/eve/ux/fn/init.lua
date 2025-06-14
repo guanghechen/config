@@ -10,7 +10,7 @@ local __mods = {
 ---
 ---@field public select                 fun(params: eve.ux.fn.select.IParams): eve.ux.ISelect
 ---@field public select_copy_filepath   fun(params: eve.ux.fn.select_copy_filepath.IParams): nil
----@field public select_encoding        fun(params: eve.ux.fn.select_encoding.IParams): eve.ux.ISelect
+---@field public select_encoding        fun(params: eve.ux.fn.select_encoding.IParams): eve.ux.picker.ListComposer
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

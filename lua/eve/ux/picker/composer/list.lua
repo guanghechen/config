@@ -1,6 +1,9 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 
+---@alias eve.ux.picker.composer.list.IOnCancel
+---| fun(self: eve.ux.picker.ListComposer): nil
+
 ---@alias eve.ux.picker.composer.list.IOnClosed
 ---| fun(self: eve.ux.picker.ListComposer): nil
 
@@ -68,6 +71,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field public result_render          ?eve.ux.picker.composer.list.IResultRender
 ---@field public preview_render         ?eve.ux.picker.composer.list.IPreviewRender
 ---
+---@field public on_cancel              ?eve.ux.picker.composer.list.IOnCancel
 ---@field public on_closed              ?eve.ux.picker.composer.list.IOnClosed
 ---@field public on_confirm             ?eve.ux.picker.composer.list.IOnConfirm
 ---@field public on_disposed            ?eve.ux.picker.composer.list.IOnDisposed
@@ -130,6 +134,7 @@ function M.new(props)
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
+  local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.picker.composer.list.IOnCancel
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.list.IOnClosed
   local on_confirm = props.on_confirm ---@type eve.ux.picker.composer.list.IOnConfirm|nil
   local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker.composer.list.IOnDisposed
@@ -171,7 +176,9 @@ function M.new(props)
         end
       end
 
-      return uuids
+      ---@type eve.ux.picker.composer.list.IResultRenderData
+      local data = { uuids = uuids }
+      return data
     end
 
   ---@type eve.ux.picker.composer.list.IPreviewRender|nil
@@ -208,9 +215,9 @@ function M.new(props)
 
   local actions = {
     on_confirm = function()
-      local uuid = retrieve() ---@type string|nil
-      local item = uuid and self._itemmap[uuid] or nil ---@type eve.ux.picker.composer.list.IItem|nil
       if on_confirm ~= nil then
+        local uuid = retrieve() ---@type string|nil
+        local item = uuid and self._itemmap[uuid] or nil ---@type eve.ux.picker.composer.list.IItem|nil
         on_confirm(self, item)
       end
     end,
@@ -328,9 +335,7 @@ function M.new(props)
     end or nil,
 
     on_cancel = function()
-      if on_confirm ~= nil then
-        on_confirm(self, nil)
-      end
+      on_cancel(self)
     end,
     on_closed = function()
       on_closed(self)
