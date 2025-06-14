@@ -547,20 +547,21 @@ function M:create_win(winopts, dimension)
 
   eve.win.set_type(winnr, eve.win.Types.PICKER_RESULT)
 
+  local lnum_total = self.lnum_total:snapshot() ---@type integer
+  vim.wo[winnr].cursorline = lnum_total > 0
   vim.wo[winnr].number = false
   vim.wo[winnr].signcolumn = "yes"
   vim.wo[winnr].spell = false
+  vim.wo[winnr].winbar = self._nvimbar:render(true)
   vim.wo[winnr].winblend = winblend
   vim.wo[winnr].winfixbuf = true
   vim.wo[winnr].winhighlight = winopts.winhighlight
   vim.wo[winnr].wrap = false
 
-  local lnum = self.lnum_current:snapshot() ---@type integer
-  pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
-
-  local lnum_total = self.lnum_total:snapshot() ---@type integer
-  vim.wo[winnr].cursorline = lnum_total > 0
-  vim.wo[winnr].winbar = self._nvimbar:render(true)
+  vim.schedule(function()
+    local lnum = self.lnum_current:snapshot() ---@type integer
+    pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
+  end)
   return winnr, true
 end
 
