@@ -300,6 +300,79 @@ function M.new(props)
 
   ---@type eve.ux.picker.composer.filetree.actions
   local actions = {
+    on_add_node_to_avante = function()
+      local sidebar = require("avante").get()
+      if not sidebar then
+        return
+      end
+
+      -- ensure avante sidebar is open
+      if not sidebar:is_open() then
+        require("avante.api").ask()
+        sidebar = require("avante").get()
+      end
+
+      local _, lnum = retrieve() ---@type string|nil
+      local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+      if lnum_childline == nil and lnum > lnum_childline then
+        return
+      end
+
+      for index = lnum, lnum_childline, 1 do
+        local nodeuuid = retriever:retrieve_uuid(index) ---@type string|nil
+        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
+        if node ~= nil and node.data.filetype == "file" then
+          local filepath = node.data.filepath ---@type string
+          local relative_path = require("avante.utils").relative_path(filepath)
+          sidebar.file_selector:add_selected_file(relative_path)
+        end
+      end
+
+      sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
+      sidebar.file_selector:remove_selected_file("untitled-1")
+    end,
+    on_add_subtree_to_avante = function()
+      local sidebar = require("avante").get()
+      if not sidebar then
+        return
+      end
+
+      -- ensure avante sidebar is open
+      if not sidebar:is_open() then
+        require("avante.api").ask()
+        sidebar = require("avante").get()
+      end
+
+      local nodeuuid = retrieve() ---@type string|nil
+      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
+      if node == nil then
+        return
+      end
+
+      local filepath = node.data.filepath ---@type string
+      local relative_path = require("avante.utils").relative_path(filepath)
+      sidebar.file_selector:add_selected_file(relative_path)
+
+      sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
+      sidebar.file_selector:remove_selected_file("untitled-1")
+    end,
+    on_copy_node_filepath = function()
+      local nodeuuid = retrieve() ---@type string|nil
+      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
+      if node == nil then
+        return
+      end
+
+      local filepath = node.data.filepath ---@type string
+      eve.ux.fn.select_copy_filepath({
+        filepath = filepath,
+        winopts = {
+          relative = "cursor",
+          row = 1,
+          col = 4,
+        },
+      })
+    end,
     on_filetree_open = function()
       local nodeuuid = retrieve() ---@type string|nil
       if nodeuuid ~= nil then
@@ -498,6 +571,24 @@ function M.new(props)
     },
     {
       modes = { "n", "v" },
+      key = "oA",
+      desc = "filetree: add to avante (full subtree)",
+      callback = actions.on_add_subtree_to_avante,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oa",
+      desc = "filetree: add to avante",
+      callback = actions.on_add_node_to_avante,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oc",
+      desc = "filetree: copy filepath",
+      callback = actions.on_copy_node_filepath,
+    },
+    {
+      modes = { "n", "v" },
       key = "z",
       desc = "filetree: toggle (recursively)",
       callback = actions.on_filetree_toggle_recursively,
@@ -551,6 +642,24 @@ function M.new(props)
       key = "<Tab>",
       desc = "filetree: toggle selection",
       callback = actions.on_toggle_selection,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "oA",
+      desc = "filetree: add to avante (full subtree)",
+      callback = actions.on_add_subtree_to_avante,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "oa",
+      desc = "filetree: add to avante",
+      callback = actions.on_add_node_to_avante,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "oc",
+      desc = "filetree: copy filepath",
+      callback = actions.on_copy_node_filepath,
     },
     {
       modes = { "i", "n", "v" },

@@ -69,14 +69,14 @@ return {
           return
         end
 
-        local open = sidebar:is_open()
         -- ensure avante sidebar is open
-        if not open then
+        if not sidebar:is_open() then
           require("avante.api").ask()
           sidebar = require("avante").get()
         end
         sidebar.file_selector:add_selected_file(relative_path)
         sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
+        sidebar.file_selector:remove_selected_file("untitled-1")
       end,
       copy_filepath = function(state)
         local node = state.tree:get_node()
