@@ -275,20 +275,14 @@ command
   })
   .implement({
     uuid = K.find.files.uuid,
-    action = function()
-      require("fml.action.find.files").find_files()
+    action = function(args)
+      require("fml.action.find.files").find_files(args)
     end,
   })
   .implement({
     uuid = K.find.files_cwd.uuid,
     action = function()
       require("fml.action.find.files").find_files_cwd()
-    end,
-  })
-  .implement({
-    uuid = K.find.files_directory.uuid,
-    action = function(args)
-      require("fml.action.find.files").find_files_directory(args)
     end,
   })
   .implement({

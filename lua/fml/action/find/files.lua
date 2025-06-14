@@ -1,6 +1,5 @@
 local name = "fml.action.find" ---@type string
-local last_scope_path = nil ---@type string|nil
-local o_scope_path = std.Observable.from_value(std.path.cwd())
+local o_rootpath = std.Observable.from_value(std.path.cwd())
 
 local o_flag_exclude = eve.context.select.find_file.flag_exclude
 local o_flag_foldempty = eve.context.select.find_file.flag_foldempty
@@ -85,11 +84,11 @@ local function edit_setting(picker)
 end
 
 ---@param picker                        eve.ux.picker.FiletreeComposer
+---@param rootpath                      string
 ---@return nil
-local function refresh(picker)
+local function refresh(picker, rootpath)
+  local rootuuid = std.Filetree.uuid(rootpath) ---@type string
   local workspace = std.path.workspace() ---@type string
-  local p = o_scope_path:snapshot() ---@type string
-
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
@@ -97,7 +96,7 @@ local function refresh(picker)
   ---@type string[]
   local filepaths = eve.oxi.find({
     workspace = workspace,
-    cwd = p,
+    cwd = rootpath,
     flag_case_sensitive = false,
     flag_gitignore = enabled_gitignore,
     flag_regex = false,
@@ -106,28 +105,24 @@ local function refresh(picker)
     exclude_patterns = table.concat(excludes, ","),
   })
 
-  last_scope_path = p ---@type string
-  picker:reset_filepaths(p, filepaths, false)
+  picker:reset_filepaths(rootpath, filepaths, false)
+  picker:attach(rootuuid)
   picker:mark_result_dirty()
-  picker:focus()
+end
+
+---@param picker                        eve.ux.picker.FiletreeComposer
+---@param rootpath                      string
+---@return nil
+local function attach(picker, rootpath)
+  local rootuuid = std.Filetree.uuid(rootpath) ---@type string
+  if picker:isexistent(rootuuid) then
+    picker:attach(rootuuid)
+  else
+    refresh(picker, rootpath)
+  end
 end
 
 local picker ---@type eve.ux.picker.FiletreeComposer
-
----@return nil
-local function attach_cwd()
-  local filepath = std.path.cwd() ---@type string
-  local rootuuid = std.Filetree.uuid(filepath) ---@type string
-  picker:attach(rootuuid)
-end
-
----@return nil
-local function attach_workspace()
-  local filepath = std.path.workspace() ---@type string
-  local rootuuid = std.Filetree.uuid(filepath) ---@type string
-  picker:attach(rootuuid)
-end
-
 picker = eve.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
@@ -139,15 +134,21 @@ picker = eve.ux.picker.FiletreeComposer.new({
   keymaps_common = {
     {
       modes = { "n", "v" },
-      key = "<leader>C",
-      desc = "find-files: change scope (cwd)",
-      callback = attach_cwd,
+      key = "<leader>c",
+      desc = "find-files: change root (cwd)",
+      callback = function()
+        local cwd = std.path.cwd() ---@type string
+        attach(picker, cwd)
+      end,
     },
     {
       modes = { "n", "v" },
-      key = "<leader>W",
-      desc = "find-files: change scope (workspace)",
-      callback = attach_workspace,
+      key = "<leader>w",
+      desc = "find-files: change root (workspace)",
+      callback = function()
+        local workspace = std.path.workspace() ---@type string
+        attach(picker, workspace)
+      end,
     },
   },
 
@@ -199,34 +200,32 @@ picker = eve.ux.picker.FiletreeComposer.new({
   },
 
   on_attach = function(_, rootpath)
-    o_scope_path:next(rootpath)
+    o_rootpath:next(rootpath)
   end,
 
   on_refresh = function(self)
-    refresh(self)
+    local rootpath = o_rootpath:snapshot() ---@type string
+    refresh(self, rootpath)
   end,
 })
 
-std.fn.observe({ o_scope_path }, function()
-  local p = o_scope_path:snapshot() ---@type string
+std.fn.observe({ o_rootpath }, function()
+  local rootpath = o_rootpath:snapshot() ---@type string
   local workspace = std.path.workspace() ---@type string
   local cwd = std.path.cwd() ---@type string
-  if p == workspace then
+  if rootpath == workspace then
     picker.finder:set_title("find files (workspace)")
-  elseif p == cwd then
+  elseif rootpath == cwd then
     picker.finder:set_title("find files (cwd)")
   else
-    local relative_path = std.path.is_under(workspace, p) and std.path.relative(cwd, p, false) or p ---@type string
+    local relative_path = std.path.is_under(workspace, rootpath) and std.path.relative(cwd, rootpath, false) or rootpath ---@type string
     picker.finder:set_title(string.format("find files (%s)", relative_path))
-  end
-
-  if last_scope_path == nil or not std.path.is_under(last_scope_path, p) then
-    refresh(picker)
   end
 end)
 
 std.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
-  refresh(picker)
+  local rootpath = o_rootpath:snapshot() ---@type string
+  refresh(picker, rootpath)
 end, true)
 
 std.fn.observe({ o_includes, o_excludes }, function()
@@ -236,30 +235,25 @@ end)
 ---@class fml.action.find
 local M = {}
 
+---@param rootpath                      string|nil
 ---@return nil
-function M.find_files()
+function M.find_files(rootpath)
+  rootpath = (rootpath ~= nil and rootpath ~= "") and rootpath or o_rootpath:snapshot() ---@type string
+  attach(picker, rootpath)
   picker:focus()
 end
 
 ---@return nil
 function M.find_files_cwd()
-  attach_cwd()
-  picker:focus()
-end
-
----@param specified_filepath            string|nil
----@return nil
-function M.find_files_directory(specified_filepath)
-  if specified_filepath ~= nil and #specified_filepath > 0 then
-    local rootuuid = std.Filetree.uuid(specified_filepath) ---@type string
-    picker:attach(rootuuid)
-  end
+  local cwd = std.path.cwd() ---@type string
+  attach(picker, cwd)
   picker:focus()
 end
 
 ---@return nil
 function M.find_files_workspace()
-  attach_workspace()
+  local workspace = std.path.workspace() ---@type string
+  attach(picker, workspace)
   picker:focus()
 end
 

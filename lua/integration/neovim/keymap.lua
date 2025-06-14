@@ -173,7 +173,6 @@ else
 end
 ms({ "n", "v" }, "<leader>fb", K.find.bufs)
 ms({ "n", "v" }, "<leader>fc", K.find.files_cwd)
-ms({ "n", "v" }, "<leader>fd", K.find.files_directory)
 ms({ "n", "v" }, "<leader>fe", K.find.explorer)
 ms({ "n", "v" }, "<leader>ff", K.find.files)
 ms({ "n", "v" }, "<leader>fg", K.find.git_not_committed)

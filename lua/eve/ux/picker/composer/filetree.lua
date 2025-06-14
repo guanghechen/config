@@ -851,6 +851,12 @@ function M:isdisposed()
   return self._disposed
 end
 
+---@param uuid                          string
+---@return boolean
+function M:isexistent(uuid)
+  return self._filetree:isexistent(uuid)
+end
+
 ---@return boolean
 function M:isfocused()
   return self._composer:isfocused()
@@ -977,6 +983,8 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   self._uuids_file = uuids_file
   self._uuids_order = uuids_order
   self._scheduler_match:schedule()
+
+  self._on_attach(self, cwd)
   return self
 end
 

@@ -141,12 +141,17 @@ return {
       end,
       open_ghc_file_finder = function(state)
         local node = state.tree:get_node()
-        if node.type ~= "file" and node.type ~= "directory" then
+
+        if node.type == "file" then
+          local filepath = std.path.dirname(node:get_id()) ---@type string
+          vim.cmd(eve.command.definitions.find.files.uuid .. " " .. filepath)
           return
         end
 
-        local filepath = node:get_id() ---@type string
-        vim.cmd(eve.command.definitions.find.files_directory.uuid .. " " .. filepath)
+        if node.type == "directory" then
+          local filepath = node:get_id() ---@type string
+          vim.cmd(eve.command.definitions.find.files.uuid .. " " .. filepath)
+        end
       end,
       open_ghc_replacer = function(state)
         local node = state.tree:get_node()
