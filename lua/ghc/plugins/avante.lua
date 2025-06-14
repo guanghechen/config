@@ -279,7 +279,6 @@ local selector_provider_opts = {
 
 return {
   "avante.nvim",
-  commit = "eb1cd44731783024621beafe4e46204cbc9a4320",
   build = std.env.IS_WIN and "pwsh -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource true"
     or "make BUILD_FROM_SOURCE=true",
   cmd = {
@@ -306,17 +305,22 @@ return {
     local ai_provider = eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
     local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot" ---@type string
     return {
-      azure = {
-        endpoint = vim.env.AZURE_OPENAI_ENDPOINT,
-        deployment = vim.env.AZURE_OPENAI_DEPLOYMENT,
-        model = vim.env.AZURE_OPENAI_MODEL,
-        api_key_name = "AZURE_OPENAI_API_KEY",
-        api_version = vim.env.AZURE_OPENAI_API_VERSION,
-      },
-      copilot = {
-        model = "claude-sonnet-4",
-      },
-      vendors = {
+      auto_suggestions_provider = "copilot",
+      debug = false,
+      mode = "agentic",
+      -- mode = "legacy",
+      provider = provider_name,
+      providers = {
+        azure = {
+          endpoint = vim.env.AZURE_OPENAI_ENDPOINT,
+          deployment = vim.env.AZURE_OPENAI_DEPLOYMENT,
+          model = vim.env.AZURE_OPENAI_MODEL,
+          api_key_name = "AZURE_OPENAI_API_KEY",
+          api_version = vim.env.AZURE_OPENAI_API_VERSION,
+        },
+        copilot = {
+          model = "claude-sonnet-4",
+        },
         aoai2 = {
           __inherited_from = "azure",
           deployment = vim.env.AZURE_OPENAI_O4_MINI_DEPLOYMENT,
@@ -345,25 +349,23 @@ return {
         },
       },
       web_search_engine = {
-        -- provider = "google",
         provider = "tavily",
         proxy = vim.env.https_proxy or vim.env.HTTPS_PROXY,
       },
-
-      provider = provider_name,
-      auto_suggestions_provider = "copilot",
 
       ------------------------------------------------------------------------------------------------
 
       behaviour = {
         auto_apply_diff_after_generation = false,
+        auto_approve_tool_permissions = false,
+        auto_check_diagnostics = true,
+        auto_focus_on_diff_view = false,
         auto_focus_sidebar = true,
         auto_suggestions = false,
         auto_suggestions_respect_ignore = true,
         auto_set_highlight_group = false,
-        enable_token_counting = false,
-        enable_cursor_planning_mode = false,
-        enable_claude_text_editor_tool_mode = false,
+        auto_set_keymaps = true,
+        enable_token_counting = true,
         jump_result_buffer_on_finish = false,
         minimize_diff = true,
         support_paste_from_clipboard = false,
@@ -426,6 +428,8 @@ return {
           border = "rounded",
           start_insert = false, -- Start insert mode when opening the edit window
         },
+        position = "right",
+        wrap = true,
       },
     }
   end,
