@@ -136,11 +136,12 @@ function M.gen_hlgroup_map(context)
     f_pk_preview_normal = { bg = bg_preview },
     f_pk_preview_title = { fg = c.green, bg = t and c.bg0 or c.none, bold = true },
     f_pk_result_current = { bg = c.bg3 },
-    f_pk_result_current_present = { fg = c.blue, bg = c.bg3 },
-    f_pk_result_current_selected = { fg = c.purple, bg = c.bg3 },
     f_pk_result_normal = { bg = bg_main },
-    f_pk_result_present = { fg = c.blue, bg = c.none },
-    f_pk_result_selected = { fg = c.purple, bg = c.none },
+    f_pk_sign_line_current = { bg = c.bg3 },
+    f_pk_sign_line_present = { fg = c.pink, bg = c.none, bold = true },
+    f_pk_sign_line_present_current = { fg = c.pink, bg = c.bg3, bold = true },
+    f_pk_sign_line_selected = { fg = c.purple, bg = c.none },
+    f_pk_sign_line_selected_current = { fg = c.purple, bg = c.bg3 },
 
     ---popupmenu
     f_up_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },

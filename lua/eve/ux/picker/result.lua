@@ -163,17 +163,17 @@ function M.new(props)
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         local group = eve.var.sign.GROUP_PICKER_RESULT_CURRENT ---@type string
         local signnr = eve.var.sign.NR_PICKER_RESULT_CURRENT ---@type integer
-        local sign = eve.var.sign.PICKER_RESULT_CURRENT ---@type string
         local lnum = _lnum_current:snapshot() ---@type integer
-        local lnums_selected = _lnum_selected_set:snapshot() ---@type table<integer, true>
-        if lnum == _lnum_present:snapshot() then
-          sign = eve.var.sign.PICKER_RESULT_CURRENT_PRESENT ---@type string
-        elseif lnums_selected[lnum] then
-          sign = eve.var.sign.PICKER_RESULT_CURRENT_SELECTED ---@type string
-        end
+        local lnum_present = _lnum_present:snapshot() ---@type integer
 
         pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
-        pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum, priority = 30 })
+        if lnum > 0 then
+          ---@type string
+          local sign = (lnum == lnum_present and lnum_present > 0) --
+              and eve.var.sign.PICKER_RESULT_PRESENT_CURRENT
+            or eve.var.sign.PICKER_RESULT_CURRENT
+          pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum, priority = 50 })
+        end
       end
     end,
   })
@@ -191,12 +191,12 @@ function M.new(props)
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         local group = eve.var.sign.GROUP_PICKER_RESULT_PRESENT ---@type string
         local signnr = eve.var.sign.NR_PICKER_RESULT_PRESENT ---@type integer
-        local sign = eve.var.sign.PICKER_RESULT_PRESENT ---@type string
-        pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
+        local lnum_present = _lnum_present:snapshot() ---@type integer
 
-        local lnum = _lnum_present:snapshot() ---@type integer
-        if lnum > 0 then
-          pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum, priority = 10 })
+        pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
+        if lnum_present > 0 then
+          local sign = eve.var.sign.PICKER_RESULT_PRESENT ---@type string
+          pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum_present, priority = 40 })
         end
       end
     end,
@@ -219,7 +219,7 @@ function M.new(props)
 
         local lnums_selected = _lnum_selected_set:snapshot() ---@type table<integer, true>
         for lnum in pairs(lnums_selected) do
-          pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 20 })
+          pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
         end
       end
     end,
@@ -279,6 +279,10 @@ function M.new(props)
       _lnum_present:next(lnum_present)
       _lnum_total:next(lnum_total)
       _lnum_selected_set:next(lnum_selected_set)
+
+      self._scheduler_lnum_current:schedule()
+      self._scheduler_lnum_present:schedule()
+      self._scheduler_lnums_selected:schedule()
 
       local on_drawed_ok, on_drawed_result = pcall(on_drawed, bufnr)
       if not on_drawed_ok then
@@ -498,9 +502,9 @@ function M:create_buf()
   bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   self._bufnr = bufnr
 
-  vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
+  vim.b[bufnr].miniindentscope_disable = true
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = eve.filetype.UX_PICKER_RESULT
@@ -668,7 +672,17 @@ function M:set_lnum_current(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
   lnum = math.min(total, math.max(0, lnum)) ---@type integer
-  self.lnum_current:next(lnum)
+  self.lnum_current:next(lnum, { force = true })
+  return self
+end
+
+---@param lnum                          integer
+---@return eve.ux.picker.Result
+function M:set_lnum_present(lnum)
+  self:__health__()
+  local total = self.lnum_total:snapshot() ---@type integer
+  lnum = math.min(total, math.max(0, lnum)) ---@type integer
+  self.lnum_present:next(lnum, { force = true })
   return self
 end
 
