@@ -140,6 +140,7 @@ function M.gen_hlgroup_map(context)
     nvim_msg_command = { fg = c.pink, bg = "bg_bar" },
     nvim_msg_lsp = { fg = c.fg4, bg = "bg_bar" },
     nvim_msg_mode = { fg = c.yellow, bg = "bg_bar" },
+    nvim_nr = { fg = c.fg3, bg = "bg_bar" },
     nvim_pos_sep = { fg = bg_pos, bg = "bg_bar" },
     nvim_pos_text_anchor = { fg = c.fg2, bg = "bg_bar" },
     nvim_pos_text_percentage = { fg = c.fg2, bg = bg_pos, bold = true },

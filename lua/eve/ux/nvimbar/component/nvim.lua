@@ -169,6 +169,26 @@ end
 
 ---@param position                      eve.ux.nvimbar.PositionEnum
 ---@return eve.ux.nvimbar.IRawComponent
+function M.nr(position)
+  local hln_text = position .. "_nvim_nr" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "nvim:nr",
+    atomic = true,
+    render = function(context)
+      local winnr = context.winnr ---@type integer
+      local bufnr = context.bufnr ---@type integer
+      local text = string.format("%s %d:%d", "", winnr, bufnr) ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.PositionEnum
+---@return eve.ux.nvimbar.IRawComponent
 function M.pos(position)
   local hln_sep = position .. "_nvim_pos_sep" ---@type string
   local hln_text_anchor = position .. "_nvim_pos_text_anchor" ---@type string
@@ -182,6 +202,9 @@ function M.pos(position)
     name = "win:pos",
     atomic = true,
     tight = true,
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.winnr ~= prev_context.winnr or context.bufnr ~= prev_context.bufnr
+    end,
     render = function()
       local row, col, percentage = calc_row_percentage() ---@type integer, integer, string
       local text_percentage = " " .. percentage ---@type string

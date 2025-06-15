@@ -39,6 +39,7 @@ statusline
   :place("center", c.widget.flags(position), 100)
   --
   :place("right", c.cwd.cwd(position), 100)
+  :place("right", c.nvim.nr(position), 100)
   :place("right", c.file.format(position), 95)
   :place("right", c.file.indent(position), 95)
   :place("right", c.file.encoding(position), 100)
