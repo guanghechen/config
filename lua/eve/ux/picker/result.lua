@@ -26,6 +26,7 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 
 ---@class eve.ux.picker.result.IWinOpts
 ---@field public border                 string|string[]
+---@field public number                 boolean
 ---@field public winhighlight           string
 
 ----------------------------------------------------------------------------------------------------
@@ -41,7 +42,7 @@ local __module_name__ = "eve.ux.picker.result" ---@type string
 
 ---@class eve.ux.picker.Result
 ---@field public uuid                   string
----@field public fullname                   string
+---@field public fullname               string
 ---@field public draw                   eve.ux.picker.result.IDraw
 ---@field public flags                  eve.ux.picker.result.IFlagItem[]
 ---@field public keymaps                std.t.IKeymap[]
@@ -73,10 +74,10 @@ function M.new(props)
   local on_drawed = props.on_drawed or std.fn.noop ---@type eve.ux.picker.result.IOnDrawed
   local augroup_CursorMoved = eve.nvim.augroup(string.format("picker.result:CursorMoved#%s", uuid)) ---@type integer
 
-  local _lnum_current = std.Observable.from_value(0) ---@type std.collection.IObservable
-  local _lnum_present = std.Observable.from_value(-1) ---@type std.collection.IObservable
-  local _lnum_selected_set = std.Observable.from_value({}, std.fn.falsy) ---@type std.collection.IObservable
-  local _lnum_total = std.Observable.from_value(0) ---@type std.collection.IObservable
+  local _o_lnum_current = std.Observable.from_value(0) ---@type std.collection.IObservable
+  local _o_lnum_present = std.Observable.from_value(-1) ---@type std.collection.IObservable
+  local _o_lnum_selected_set = std.Observable.from_value({}, std.fn.falsy) ---@type std.collection.IObservable
+  local _o_lnum_total = std.Observable.from_value(0) ---@type std.collection.IObservable
 
   local flags = {} ---@type eve.ux.picker.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
@@ -148,7 +149,7 @@ function M.new(props)
       end,
     })
     :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
-    :place("right", c.picker.result_pos(position, _lnum_current, _lnum_total), 100)
+    :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
 
   ---@type std.collection.Scheduler
   local scheduler_lnum_current = std.Scheduler.new({
@@ -163,15 +164,18 @@ function M.new(props)
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         local group = eve.var.sign.GROUP_PICKER_RESULT_CURRENT ---@type string
         local signnr = eve.var.sign.NR_PICKER_RESULT_CURRENT ---@type integer
-        local lnum = _lnum_current:snapshot() ---@type integer
-        local lnum_present = _lnum_present:snapshot() ---@type integer
+        local lnum = _o_lnum_current:snapshot() ---@type integer
+        local lnum_present = _o_lnum_present:snapshot() ---@type integer
 
         pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
         if lnum > 0 then
-          ---@type string
-          local sign = (lnum == lnum_present and lnum_present > 0) --
-              and eve.var.sign.PICKER_RESULT_PRESENT_CURRENT
-            or eve.var.sign.PICKER_RESULT_CURRENT
+          local sign = eve.var.sign.PICKER_RESULT_CURRENT ---@type string
+          local lnum_selected_set = _o_lnum_selected_set:snapshot() ---@type table<integer, true>
+          if lnum_selected_set[lnum] then
+            sign = eve.var.sign.PICKER_RESULT_SELECTED_CURRENT
+          elseif lnum == lnum_present then
+            sign = eve.var.sign.PICKER_RESULT_PRESENT_CURRENT
+          end
           pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum, priority = 50 })
         end
       end
@@ -191,12 +195,12 @@ function M.new(props)
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
         local group = eve.var.sign.GROUP_PICKER_RESULT_PRESENT ---@type string
         local signnr = eve.var.sign.NR_PICKER_RESULT_PRESENT ---@type integer
-        local lnum_present = _lnum_present:snapshot() ---@type integer
+        local lnum_present = _o_lnum_present:snapshot() ---@type integer
 
         pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
         if lnum_present > 0 then
           local sign = eve.var.sign.PICKER_RESULT_PRESENT ---@type string
-          pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum_present, priority = 40 })
+          pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum_present, priority = 30 })
         end
       end
     end,
@@ -217,9 +221,9 @@ function M.new(props)
         local sign = eve.var.sign.PICKER_RESULT_SELECTED ---@type string
         pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
 
-        local lnums_selected = _lnum_selected_set:snapshot() ---@type table<integer, true>
+        local lnums_selected = _o_lnum_selected_set:snapshot() ---@type table<integer, true>
         for lnum in pairs(lnums_selected) do
-          pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
+          pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 40 })
         end
       end
     end,
@@ -266,7 +270,7 @@ function M.new(props)
         return
       end
 
-      local lnum_current = math.min(lnum_total, math.max(1, result.lnum_current or _lnum_current:snapshot())) ---@type integer
+      local lnum_current = math.min(lnum_total, math.max(1, result.lnum_current or _o_lnum_current:snapshot())) ---@type integer
       local lnum_present = result.lnum_present or -1 ---@type integer
       local lnums_selected = result.lnums_selected ---@type integer[]|nil
       local lnum_selected_set = {} ---@type table<integer, true>
@@ -275,10 +279,10 @@ function M.new(props)
           lnum_selected_set[lnum] = true
         end
       end
-      _lnum_current:next(lnum_current)
-      _lnum_present:next(lnum_present)
-      _lnum_total:next(lnum_total)
-      _lnum_selected_set:next(lnum_selected_set)
+      _o_lnum_current:next(lnum_current)
+      _o_lnum_present:next(lnum_present)
+      _o_lnum_total:next(lnum_total)
+      _o_lnum_selected_set:next(lnum_selected_set)
 
       self._scheduler_lnum_current:schedule()
       self._scheduler_lnum_present:schedule()
@@ -306,10 +310,10 @@ function M.new(props)
   self.fullname = name
   self.draw = draw
   self.keymaps = keymaps
-  self.lnum_current = _lnum_current
-  self.lnum_present = _lnum_present
-  self.lnum_selected_set = _lnum_selected_set
-  self.lnum_total = _lnum_total
+  self.lnum_current = _o_lnum_current
+  self.lnum_present = _o_lnum_present
+  self.lnum_selected_set = _o_lnum_selected_set
+  self.lnum_total = _o_lnum_total
 
   self._disposed = false
   self._bufnr = nil
@@ -321,20 +325,20 @@ function M.new(props)
   self._scheduler_lnum_present = scheduler_lnum_present
   self._scheduler_lnums_selected = scheduler_lnums_selected
 
-  std.fn.observe({ _lnum_total }, function()
+  std.fn.observe({ _o_lnum_total }, function()
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-      local lnum_total = _lnum_total:snapshot() ---@type integer
+      local lnum_total = _o_lnum_total:snapshot() ---@type integer
       vim.wo[winnr].cursorline = lnum_total > 0
       nvimbar:render()
     end
   end)
 
-  std.fn.observe({ _lnum_current }, function()
+  std.fn.observe({ _o_lnum_current }, function()
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-      local lnum_current = _lnum_current:snapshot() ---@type integer
+      local lnum_current = _o_lnum_current:snapshot() ---@type integer
       if cursor[1] ~= lnum_current then
         pcall(vim.api.nvim_win_set_cursor, winnr, { lnum_current, 0 })
       end
@@ -343,19 +347,19 @@ function M.new(props)
     self._scheduler_lnum_current:schedule()
   end)
 
-  std.fn.observe({ _lnum_current }, function()
+  std.fn.observe({ _o_lnum_current }, function()
     if not self._disposed then
       self._scheduler_lnum_current:schedule()
     end
   end)
 
-  std.fn.observe({ _lnum_present }, function()
+  std.fn.observe({ _o_lnum_present }, function()
     if not self._disposed then
       self._scheduler_lnum_present:schedule()
     end
   end)
 
-  std.fn.observe({ _lnum_selected_set }, function()
+  std.fn.observe({ _o_lnum_selected_set }, function()
     if not self._disposed then
       self._scheduler_lnums_selected:schedule()
     end
@@ -371,7 +375,7 @@ function M.new(props)
         if cursor[2] ~= 0 then
           vim.api.nvim_win_set_cursor(winnr, { row, 0 })
         end
-        _lnum_current:next(row)
+        _o_lnum_current:next(row)
       end
     end,
   })
@@ -553,7 +557,8 @@ function M:create_win(winopts, dimension)
 
   local lnum_total = self.lnum_total:snapshot() ---@type integer
   vim.wo[winnr].cursorline = lnum_total > 0
-  vim.wo[winnr].number = false
+  vim.wo[winnr].number = winopts.number
+  vim.wo[winnr].relativenumber = true
   vim.wo[winnr].signcolumn = "yes"
   vim.wo[winnr].spell = false
   vim.wo[winnr].winbar = self._nvimbar:render(true)
@@ -705,7 +710,7 @@ function M:toggle_selected(lnum, next_selected)
     if next_selected ~= selected then
       if next_selected then
         lnum_selected_set[lnum] = true
-        pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 30 })
+        pcall(vim.fn.sign_place, lnum, group, sign, bufnr, { lnum = lnum, priority = 40 })
       else
         lnum_selected_set[lnum] = nil
         pcall(vim.fn.sign_unplace, group, { id = lnum, buffer = bufnr })

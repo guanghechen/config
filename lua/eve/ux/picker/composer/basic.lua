@@ -101,6 +101,7 @@ local __highlights__ = {
 ---@field public finder_multiline       ?boolean
 ---@field public finder_title           string
 ---
+---@field public result_number          boolean
 ---@field public result_render          eve.ux.picker.result.IDraw
 ---
 ---@field public preview_render         ?eve.ux.picker.preview.IDraw
@@ -122,6 +123,8 @@ local __highlights__ = {
 ---@field public finder                 eve.ux.picker.Finder
 ---@field public result                 eve.ux.picker.Result
 ---@field public preview                eve.ux.picker.Preview|nil
+---
+---@field protected _result_number      boolean
 ---
 ---@field protected _disposed           boolean
 ---@field protected _pane_focused       eve.ux.picker.composer.basic.PaneEnum
@@ -165,6 +168,7 @@ function M.new(props)
   local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
+  local result_number = not not props.result_number ---@type boolean
   local result_render = props.result_render ---@type eve.ux.picker.result.IDraw
 
   local preview_render = props.preview_render ---@type eve.ux.picker.preview.IDraw|nil
@@ -261,6 +265,8 @@ function M.new(props)
   self.finder = finder
   self.result = result
   self.preview = preview
+
+  self._result_number = result_number ---@type boolean
 
   if preview ~= nil then
     std.fn.observe({ result.lnum_current, result.lnum_total }, function()
@@ -488,6 +494,8 @@ function M:__create_wins__()
   local result = self.result ---@type eve.ux.picker.Result
   local preview = self.preview ---@type eve.ux.picker.Preview|nil
 
+  local result_number = self._result_number ---@type boolean
+
   local finder_winnr = finder:get_winnr() ---@type integer|nil
   local result_winnr = result:get_winnr() ---@type integer|nil
   local preview_winnr = preview and preview:get_winnr() or nil ---@type integer|nil
@@ -526,6 +534,7 @@ function M:__create_wins__()
   ---@type eve.ux.picker.result.IWinOpts
   local result_winopts = {
     border = should_show_preview and __borders__.result_with_preview or __borders__.result,
+    number = result_number,
     winhighlight = __highlights__.result,
   }
   result_winnr = result:create_win(result_winopts, result_dimension)

@@ -689,6 +689,8 @@ function M.new(props)
     finder_multiline = finder_multiline,
     finder_title = title,
 
+    result_number = true,
+
     ---@type eve.ux.picker.result.IDraw
     result_render = function(bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum

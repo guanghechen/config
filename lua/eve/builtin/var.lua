@@ -88,7 +88,7 @@ sd(M.sign.PICKER_RESULT_CURRENT,          { text = eve.icon.ui.ArrowPresent,    
 sd(M.sign.PICKER_RESULT_PRESENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
 sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,  { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
 sd(M.sign.PICKER_RESULT_SELECTED,         { text = eve.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
-sd(M.sign.PICKER_RESULT_SELECTED_CURRENT, { text = eve.icon.ui.Selected,             texthl = "f_pk_sign_line_selected_current" })
+sd(M.sign.PICKER_RESULT_SELECTED_CURRENT, { text = eve.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
 
 sd(M.sign.PICKER_FINDER_PROMPT,           { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
 

@@ -314,6 +314,7 @@ M.ui = {
   Separator = "",
   DoubleSeparator = "󰄾",
   Selected = "▎",
+  SelectedCurrent = "󰞘",
   SignIn = "",
   SignOut = "",
   Sort = "",

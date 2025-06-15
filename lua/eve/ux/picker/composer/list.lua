@@ -314,6 +314,8 @@ function M.new(props)
     finder_multiline = false,
     finder_title = title,
 
+    result_number = false,
+
     result_render = function(bufnr)
       local data = result_render(self, bufnr, self._itemmap, self._matches)
       local uuids = data.uuids ---@type string[]
