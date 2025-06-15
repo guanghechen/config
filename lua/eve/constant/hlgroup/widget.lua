@@ -18,7 +18,8 @@ function M.gen_hlgroup_map(context)
     f_lnum_info = { fg = c.green },
     f_lnum_hint = { fg = c.purple },
     f_transparent = { bg = c.none },
-    f_fold_virt_text = { fg = c.fg4, bg = t and c.bg0 or c.none, italic = true },
+    f_fold_virt_text = { fg = c.bg2, bg = c.yellow, italic = true },
+    f_fold_virt_text_inv = { fg = c.yellow, bg = t and c.bg0 or c.none, italic = true },
 
     ---buffers
     f_buf_nr = { fg = c.fg4 },

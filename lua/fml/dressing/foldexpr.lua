@@ -57,7 +57,10 @@ function M.foldtext()
     end
   end
   table.insert(result, { text, hl })
-  table.insert(result, { " ↙ " .. linecount .. " lines", "f_fold_virt_text" })
+  table.insert(result, { "  ", "f_transparent" })
+  table.insert(result, { eve.icon.symbols.sep_left, "f_fold_virt_text_inv" })
+  table.insert(result, { string.format("%s %d lines", "↙", linecount), "f_fold_virt_text" })
+  table.insert(result, { eve.icon.symbols.sep_right, "f_fold_virt_text_inv" })
   return result
 end
 

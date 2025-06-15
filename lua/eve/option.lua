@@ -24,6 +24,7 @@ vim.g.qf_disable_statusline = true
 
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
+vim.opt.fillchars:append(eve.icon.fillchars)
 vim.opt.listchars:append(eve.icon.listchars)
 
 vim.o.foldcolumn = "0"
@@ -44,7 +45,6 @@ vim.o.cursorline = true -- highlight the row of the cursor.
 vim.o.cursorlineopt = "number,screenline"
 vim.o.cursorcolumn = false -- true to highlight the column of the cursor.
 vim.o.expandtab = true -- use spaces instead of tabs
-vim.o.fillchars = table.concat(eve.icon.fillchars, ",")
 vim.o.guifont = "Maple Mono NF CN"
 vim.o.linebreak = true -- Wrap lines at convenient points
 vim.o.list = true -- Show some invisible characters (tabs...
