@@ -373,6 +373,26 @@ function M.new(props)
         },
       })
     end,
+    on_goto_lnum_parent = function()
+      local nodeuuid, lnum = retrieve() ---@type string|nil, integer
+      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
+      local lnum_parent = node ~= nil and retriever:retrieve_lnum(node.parent) or nil ---@type integer|nil
+      if lnum_parent ~= nil then
+        if lnum == lnum_parent then
+          lnum_parent = lnum_parent > 1 and lnum_parent - 1 or lnum_parent ---@type integer
+        end
+        self._composer.result:set_lnum_current(lnum_parent)
+      end
+    end,
+    on_goto_lnum_lastchild = function()
+      local nodeuuid, lnum = retrieve() ---@type string|nil, integer
+      if nodeuuid ~= nil then
+        local lnum_lastchild = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+        if lnum_lastchild ~= nil then
+          self._composer.result:set_lnum_current(lnum_lastchild)
+        end
+      end
+    end,
     on_filetree_open = function()
       local nodeuuid = retrieve() ---@type string|nil
       if nodeuuid ~= nil then
@@ -571,6 +591,18 @@ function M.new(props)
     },
     {
       modes = { "n", "v" },
+      key = "[i",
+      desc = "filetree: goto the parent line",
+      callback = actions.on_goto_lnum_parent,
+    },
+    {
+      modes = { "n", "v" },
+      key = "]i",
+      desc = "filetree: goto the lastchild line",
+      callback = actions.on_goto_lnum_lastchild,
+    },
+    {
+      modes = { "n", "v" },
       key = "oA",
       desc = "filetree: add to avante (full subtree)",
       callback = actions.on_add_subtree_to_avante,
@@ -642,6 +674,18 @@ function M.new(props)
       key = "<Tab>",
       desc = "filetree: toggle selection",
       callback = actions.on_toggle_selection,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "[i",
+      desc = "filetree: goto the parent line",
+      callback = actions.on_goto_lnum_parent,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "]i",
+      desc = "filetree: goto the lastchild line",
+      callback = actions.on_goto_lnum_lastchild,
     },
     {
       modes = { "i", "n", "v" },
