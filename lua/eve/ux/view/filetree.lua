@@ -333,7 +333,7 @@ function M:render_listview(params)
   local only_matched = params.only_matched ---@type boolean
 
   local result = self._view:render_listview(params)
-  local uuids = result.uuids ---@type string[]
+  local uuids = result.lnum2uuid ---@type string[]
   local N = #uuids ---@type integer
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
@@ -405,7 +405,7 @@ function M:render_treeview(params)
   local only_matched = params.only_matched ---@type boolean
 
   local result = self._view:render_treeview(params)
-  local uuids = result.uuids ---@type string[]
+  local uuids = result.lnum2uuid ---@type string[]
   local N = #uuids ---@type integer
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)

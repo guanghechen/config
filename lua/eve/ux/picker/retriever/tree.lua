@@ -74,45 +74,16 @@ function M:retrieve_lastchild_lnum(lnum)
 end
 
 ---@param bufnr                         integer
----@param uuids                         string[]
+---@param lnum2uuid                     table<integer, string>
+---@param uuid2lnum                     table<string, integer>
 ---@param childline                     integer[]|nil
-function M:attach(bufnr, uuids, childline)
+function M:attach(bufnr, lnum2uuid, uuid2lnum, childline)
   self:__health__()
-
-  local lnum2uuid = self._lnum2uuid ---@type string[]
-  local uuid2lnum = self._uuid2lnum ---@type table<string, integer>
-
-  local N1 = #lnum2uuid ---@type integer
-  for lnum = 1, N1, 1 do
-    local uuid = lnum2uuid[lnum] ---@type string
-    uuid2lnum[uuid] = nil
-  end
-
-  local N2 = #uuids ---@type integer
-  for lnum = 1, N2, 1 do
-    local uuid = uuids[lnum] ---@type string
-    lnum2uuid[lnum] = uuid
-    uuid2lnum[uuid] = lnum
-  end
-
-  if N1 > N2 then
-    std.table.truncate_inline(lnum2uuid, N2)
-  end
-
-  if childline == nil then
-    self._childline = nil
-  else
-    local cls = self._childline or {} ---@type integer[]
-    for lnum = 1, N2, 1 do
-      local cl = childline[lnum] ---@type integer
-      cls[lnum] = cl
-    end
-    std.table.truncate_inline(cls, N2)
-    self._childline = cls
-  end
-
   self._bufnr = bufnr
+  self._childline = childline
   self._linecount = #lnum2uuid
+  self._lnum2uuid = lnum2uuid
+  self._uuid2lnum = uuid2lnum
 end
 
 ---@protected

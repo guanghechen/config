@@ -119,9 +119,10 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field public highlights             std.t.IHighlightInline[]|nil
 
 ---@class eve.ux.view.tree.IRenderResult
----@field public uuids                  string[]
----@field public indents                string[]
 ---@field public childline              integer[]|nil
+---@field public indents                string[]
+---@field public lnum2uuid              table<integer, string>
+---@field public uuid2lnum              table<string, integer>
 
 ---@class eve.ux.view.tree.IMatchParams
 ---@field public rootuuid               string|nil
@@ -325,7 +326,7 @@ function M:render_listview(params)
   local rootstate = statemap[rootuuid] ---@type eve.ux.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-    local result = { uuids = {}, indents = {} } ---@type eve.ux.view.tree.IRenderResult
+    local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type eve.ux.view.tree.IRenderResult
     return result
   end
 
@@ -351,11 +352,12 @@ function M:render_listview(params)
   local indent_location = indent_leaf .. "├─" ---@type string
   local indent_location_lastchild = indent_leaf .. "╰─" ---@type string
 
-  local uuids = {} ---@type string[]
-  local indents = {} ---@type string[]
   local childline = {} ---@type integer[]
+  local indents = {} ---@type string[]
   local lines = {} ---@type string[]
   local highlights_list = {} ---@type (std.t.IHighlightInline[]|nil)[]
+  local lnum2uuid = {} ---@type string[]
+  local uuid2lnum = {} ---@type table<string, integer>
 
   local lnum = 0 ---@type integer
 
@@ -383,11 +385,12 @@ function M:render_listview(params)
           local indent = index == last_child_index and indent_location_lastchild or indent_location ---@type string
           local result = render_listview_location(ctx, leafnode, leafstate, location, lnum)
 
+          childline[lnum] = lnum ---@type integer
+          indents[lnum] = indent ---@type string
           lines[lnum] = indent .. result.text ---@type string
           highlights_list[lnum] = result.highlights ---@type std.t.IHighlightInline[]|nil
-          indents[lnum] = indent ---@type string
-          uuids[lnum] = location.locationuuid
-          childline[lnum] = lnum ---@type integer
+          lnum2uuid[lnum] = location.locationuuid
+          uuid2lnum[location.locationuuid] = lnum
         end
       end
     end
@@ -414,13 +417,14 @@ function M:render_listview(params)
       leafstate.cache_listview = cache
     end
 
+    childline[lnum_leaf] = lnum
+    indents[lnum] = indent ---@type string
     lines[lnum] = indent .. cache.text ---@type string
     highlights_list[lnum] = cache.highlights ---@type std.t.IHighlightInline[]|nil
-    indents[lnum] = indent ---@type string
-    uuids[lnum] = leafnode.uuid ---@type string
+    lnum2uuid[lnum] = leafnode.uuid
+    uuid2lnum[leafnode.uuid] = lnum
 
     render_leaf_locations(leafnode, leafstate)
-    childline[lnum_leaf] = lnum
     return lnum
   end
 
@@ -623,7 +627,7 @@ function M:render_listview(params)
   end
 
   ---@type eve.ux.view.tree.IRenderResult
-  local result = { uuids = uuids, indents = indents, childline = childline }
+  local result = { childline = childline, indents = indents, lnum2uuid = lnum2uuid, uuid2lnum = uuid2lnum }
   return result
 end
 
@@ -652,7 +656,7 @@ function M:render_treeview(params)
   local rootstate = statemap[root] ---@type eve.ux.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-    local result = { uuids = {}, indents = {} } ---@type eve.ux.view.tree.IRenderResult
+    local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type eve.ux.view.tree.IRenderResult
     return result
   end
 
@@ -675,11 +679,12 @@ function M:render_treeview(params)
   local render_treeview_leaf = self._render_treeview_leaf ---@type eve.ux.view.tree.ITreeviewLeafNodeRenderer
   local render_treeview_location = self._render_treeview_location ---@type eve.ux.view.tree.ITreeviewLeafLocationRenderer
 
-  local uuids = {} ---@type string[]
-  local indents = {} ---@type string[]
   local childline = {} ---@type integer[]
+  local indents = {} ---@type string[]
   local lines = {} ---@type string[]
   local highlights_list = {} ---@type (std.t.IHighlightInline[]|nil)[]
+  local lnum2uuid = {} ---@type string[]
+  local uuid2lnum = {} ---@type table<string, integer>
 
   local folded_depth = 0 ---@type integer
   local folded_indent = INDENT_COMMON ---@type string
@@ -716,8 +721,9 @@ function M:render_treeview(params)
           lines[lnum] = indent .. result.text ---@type string
           highlights_list[lnum] = result.highlights ---@type std.t.IHighlightInline[]|nil
           indents[lnum] = indent ---@type string
-          uuids[lnum] = location.locationuuid
           childline[lnum] = lnum ---@type integer
+          lnum2uuid[lnum] = location.locationuuid
+          uuid2lnum[location.locationuuid] = lnum
         end
       end
     end
@@ -760,10 +766,11 @@ function M:render_treeview(params)
     lines[lnum] = indent .. cache.text ---@type string
     highlights_list[lnum] = cache.highlights ---@type std.t.IHighlightInline[]|nil
     indents[lnum] = indent ---@type string
-    uuids[lnum] = leafnode.uuid ---@type string
+    childline[lnum_leaf] = lnum
+    lnum2uuid[lnum] = leafnode.uuid
+    uuid2lnum[leafnode.uuid] = lnum
 
     render_leaf_locations(leafnode, leafstate, child_indent)
-    childline[lnum_leaf] = lnum
     return lnum
   end
 
@@ -792,6 +799,7 @@ function M:render_treeview(params)
       stack_indent[cur] = child_indent ---@type string
       stack_lnum_roots[cur] = lnum + 1 ---@type integer
       if dry then
+        uuid2lnum[containernode.uuid] = lnum
         return lnum
       end
 
@@ -823,7 +831,8 @@ function M:render_treeview(params)
       lines[lnum] = indent .. result.text ---@type string
       highlights_list[lnum] = result.highlights ---@type std.t.IHighlightInline[]|nil
       indents[lnum] = indent ---@type string
-      uuids[lnum] = containernode.uuid
+      uuid2lnum[containernode.uuid] = lnum
+      lnum2uuid[lnum] = containernode.uuid
       return lnum
     end
   else
@@ -844,6 +853,7 @@ function M:render_treeview(params)
       stack_indent[cur] = child_indent ---@type string
       stack_lnum_roots[cur] = lnum + 1 ---@type integer
       if dry then
+        uuid2lnum[containernode.uuid] = lnum
         return lnum
       end
 
@@ -869,7 +879,8 @@ function M:render_treeview(params)
       lines[lnum] = indent .. result.text ---@type string
       highlights_list[lnum] = result.highlights ---@type std.t.IHighlightInline[]|nil
       indents[lnum] = indent ---@type string
-      uuids[lnum] = containernode.uuid
+      uuid2lnum[containernode.uuid] = lnum
+      lnum2uuid[lnum] = containernode.uuid
       return lnum
     end
   end
@@ -1098,7 +1109,7 @@ function M:render_treeview(params)
   end
 
   ---@type eve.ux.view.tree.IRenderResult
-  local result = { uuids = uuids, indents = indents, childline = childline }
+  local result = { childline = childline, indents = indents, lnum2uuid = lnum2uuid, uuid2lnum = uuid2lnum }
   return result
 end
 
