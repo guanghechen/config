@@ -538,7 +538,7 @@ function M:create_win(winopts, dimension)
   local lnum_total = self.lnum_total:snapshot() ---@type integer
   vim.wo[winnr].cursorline = lnum_total > 0
   vim.wo[winnr].number = winopts.number
-  vim.wo[winnr].relativenumber = true
+  vim.wo[winnr].relativenumber = winopts.number
   vim.wo[winnr].signcolumn = "yes"
   vim.wo[winnr].spell = false
   vim.wo[winnr].winbar = self._nvimbar:render(true)

@@ -77,7 +77,6 @@ picker = eve.ux.picker.ListComposer.new({
   uuid = "__test__eve_ux_picker_list__",
   name = name,
   permanent = false,
-  preview = true,
   title = "Test List Picker",
   height = 0.80,
   width = 0.85,

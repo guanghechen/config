@@ -48,7 +48,6 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
----@field public preview                ?boolean
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number

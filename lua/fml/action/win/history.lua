@@ -127,7 +127,6 @@ local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.
 local picker = eve.ux.picker.ListComposer.new({
   name = "window-history",
   permanent = true,
-  preview = false,
   title = "Find Window History",
   height = 20,
   width = 80,

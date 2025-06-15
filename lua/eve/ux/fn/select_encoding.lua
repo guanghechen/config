@@ -115,7 +115,6 @@ local function select_encoding(params)
   picker = eve.ux.picker.ListComposer.new({
     name = "select-encoding",
     permanent = false,
-    preview = false,
     title = title,
     height = math.min(20, #fileencodings + 2),
     width = 80,

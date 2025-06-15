@@ -134,7 +134,6 @@ local picker ---@type eve.ux.picker.ListComposer
 picker = eve.ux.picker.ListComposer.new({
   name = "find-buffers",
   permanent = true,
-  preview = false,
   title = "Find buffers",
   height = 25,
   width = 120,
