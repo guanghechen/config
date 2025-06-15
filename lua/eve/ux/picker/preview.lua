@@ -2,7 +2,7 @@
 local __module_name__ = "eve.ux.picker.preview" ---@type string
 
 ---@alias eve.ux.picker.preview.IDraw
----| fun(bufnr: integer): eve.ux.picker.preview.IDrawResult
+---| fun(bufnr: integer, force: boolean): eve.ux.picker.preview.IDrawResult
 
 ---@alias eve.ux.picker.preview.IOnDrawed
 ---| fun(bufnr: integer): nil
@@ -65,7 +65,7 @@ function M.new(props)
 
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
-      local ok, result = pcall(draw, bufnr) ---@type boolean, eve.ux.picker.preview.IDrawResult
+      local ok, result = pcall(draw, bufnr, false) ---@type boolean, eve.ux.picker.preview.IDrawResult
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 

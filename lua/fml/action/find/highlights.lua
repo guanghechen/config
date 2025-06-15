@@ -1,62 +1,145 @@
+---@diagnostic disable: invisible
+local __module_name__ = "fml.action.find.highlights" ---@type string
+
+---@class fml.action.find.highlights.IItem : eve.ux.picker.composer.list.IItem
+---@field public data                        fml.action.find.highlights.IItemData
+
 ---@class fml.action.find.highlights.IItemData
----@field public lnum                   integer
----@field public hlid                   integer
+---@field public lnum                        integer
+---@field public hlid                        integer
 
----@class fml.action.find.highlights.IItem : eve.ux.select.IItem
----@field public data                   fml.action.find.highlights.IItemData
+local _hlnames = nil ---@type string[]?
+local _hlgroups = nil ---@type table<string, vim.api.keyset.get_hl_info>?
+local _last_preview_bufnr = -1 ---@type integer
 
-local _hlnames ---@type string[]|nil
-local _hlgroups ---@type table<string, vim.api.keyset.get_hl_info>
-local _preview_data ---@type eve.ux.ISearchPreviewData|nil
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_data()
+  local hlgroups = vim.api.nvim_get_hl(0, { create = false }) ---@type table<string, vim.api.keyset.get_hl_info>
+  local hlnames = {} ---@type string[]
+  for hlname in pairs(hlgroups) do
+    table.insert(hlnames, hlname)
+  end
+  table.sort(hlnames)
 
----@type eve.ux.select.IProvider
-local provider = {
-  fetch_data = function(force)
-    if force or _hlnames == nil then
-      local hlgroups = vim.api.nvim_get_hl(0, { create = false }) ---@type table<string, vim.api.keyset.get_hl_info>
-      local hlnames = {} ---@type string[]
-      for hlname in pairs(hlgroups) do
-        table.insert(hlnames, hlname)
+  _hlnames = hlnames
+  _hlgroups = hlgroups
+
+  local items = {} ---@type fml.action.find.highlights.IItem[]
+  for lnum, hlname in ipairs(hlnames) do
+    local hlid_str = std.string.pad_end(tostring(vim.fn.hlID(hlname)), 5, " ")
+    local text = string.format("%s xxx   %s", hlid_str, hlname) ---@type string
+    local highlights = { { coll = 6, colr = 9, hlname = hlname } } ---@type std.t.IHighlightInline[]
+
+    ---@type fml.action.find.highlights.IItemData
+    local data = {
+      lnum = lnum,
+      hlid = vim.fn.hlID(hlname),
+    }
+
+    ---@type fml.action.find.highlights.IItem
+    local item = {
+      uuid = hlname,
+      text = text,
+      text_lower = text:lower(),
+      highlights = highlights,
+      data = data,
+    }
+    items[#items + 1] = item
+  end
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  return { items = items }
+end
+
+local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+
+---@type eve.ux.picker.ListComposer
+local picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__,
+  permanent = true,
+  title = "Find Highlights",
+  height = 25,
+  width = 80,
+
+  finder_input = finder_input,
+  flag_fuzzy = flag_fuzzy,
+  flag_regex = flag_regex,
+  flag_sensitive = flag_sensitive,
+
+  result_render = function(composer, bufnr, itemmap, matches)
+    ---@cast itemmap                         table<string, fml.action.find.highlights.IItem>
+
+    local lines = {} ---@type string[]
+    local uuids = {} ---@type string[]
+    for _, match in ipairs(matches) do
+      local item = itemmap[match.uuid] ---@type fml.action.find.highlights.IItem
+      lines[#lines + 1] = item.text
+      uuids[#uuids + 1] = item.uuid
+    end
+
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    composer._retriever:attach(bufnr, uuids)
+
+    local nsnr_content = eve.var.nsnr.picker_result ---@type integer
+    local nsnr_matches = eve.var.nsnr.picker_matches
+
+    for lnum, match in ipairs(matches) do
+      local row = lnum - 1 ---@type integer
+      local item = itemmap[match.uuid]
+
+      if item and item.highlights then
+        for _, hl in ipairs(item.highlights) do
+          vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
+        end
       end
-      table.sort(hlnames)
 
-      _hlnames = hlnames
-      _hlgroups = hlgroups
-      _preview_data = nil
+      if match.matches then
+        local hlname_start_offset = 12 ---@type integer
+        for _, m in ipairs(match.matches) do
+          if m.l >= hlname_start_offset then
+            vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+          end
+        end
+      end
     end
 
-    local items = {} ---@type eve.ux.select.IItem[]
-    for lnum, hlname in ipairs(_hlnames) do
-      ---@type fml.action.find.highlights.IItemData
-      local data = {
-        lnum = lnum,
-        hlid = vim.fn.hlID(hlname),
-      }
-
-      ---@type fml.action.find.highlights.IItem
-      local item = { group = "H", uuid = hlname, text = hlname, data = data }
-      table.insert(items, item)
-    end
-    ---@type eve.ux.select.IData
-    return { items = items }
+    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
+    return data
   end,
-  fetch_preview_data = function(item)
-    if _preview_data == nil then
+  preview_render = function(composer, bufnr, force)
+    local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
+
+    if lnum_current < 1 then
+      -- Render empty buffer
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No highlight selected" })
+
+      ---@type eve.ux.picker.preview.IDrawResult
+      local result = {
+        cursorline = false,
+        number = true,
+        title = "No valid lnum retrieved",
+        wrap = false,
+      }
+      return result
+    end
+
+    if force or _last_preview_bufnr ~= bufnr then
       local hlnames = _hlnames or {} ---@type string[]
       local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.get_hl_info>
 
       local lines = {} ---@type string[]
-      local highlights = {} ---@type std.t.IHighlight[]
+      local nsnr_content = eve.var.nsnr.picker_preview ---@type integer
 
       local max_hlname_width = 0 ---@type integer
       for _, hlname in ipairs(hlnames) do
         max_hlname_width = math.max(max_hlname_width, vim.api.nvim_strwidth(hlname))
       end
 
-      for lnum, hlname in ipairs(hlnames) do
+      for _, hlname in ipairs(hlnames) do
         local line = "xxx   " .. std.string.pad_end(hlname, max_hlname_width, " ") ---@type string
-        local highlight = { lnum = lnum, coll = 0, colr = 3, hlname = hlname } ---@type std.t.IHighlight
-
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.get_hl_info
         if hlgroup.fg ~= nil then
           local color_name = std.color.int2hex(hlgroup.fg) ---@type string
@@ -85,71 +168,46 @@ local provider = {
             line = line .. " " .. key .. "=" .. val
           end
         end
-
         table.insert(lines, line)
-        table.insert(highlights, highlight)
       end
 
-      ---@type eve.ux.ISearchPreviewData
-      _preview_data = {
-        lines = lines,
-        highlights = highlights,
-        filetype = "text",
-        title = "Highlights Preview",
-        lnum = item.data.lnum,
-        col = 0,
-      }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      for lnum, hlname in ipairs(hlnames) do
+        local row = lnum - 1
+        vim.hl.range(bufnr, nsnr_content, hlname, { row, 0 }, { row, 3 }, { priority = 10 })
+      end
+
+      _last_preview_bufnr = bufnr
     end
-    return _preview_data
-  end,
-  patch_preview_data = function(item, _, last_data)
-    ---@type eve.ux.ISearchPreviewData
-    local data = {
-      lines = last_data.lines,
-      highlights = last_data.highlights,
-      filetype = last_data.filetype,
-      title = last_data.title,
-      lnum = item.data.lnum,
+
+    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    ---@cast item                       fml.action.find.highlights.IItem|nil
+
+    local lnum_target = item and item.data.lnum or lnum_current ---@type integer
+
+    ---@type eve.ux.picker.preview.IDrawResult
+    local result = {
+      cursorline = true,
+      number = true,
+      title = "Highlights Preview",
+      wrap = false,
+      whitespaces = false,
+      lnum = lnum_target,
       col = 0,
     }
-    return data
+    return result
   end,
-  render_item = function(item, match)
-    local text = string.format("%s xxx   %s", std.string.pad_end(tostring(item.data.hlid), 5, " "), item.text) ---@type string
-    local highlights = { { coll = 6, colr = 9, hlname = item.text } } ---@type std.t.IHighlightInline[]
 
-    local offset = 12 ---@type integer
-    for _, piece in ipairs(match.matches) do
-      ---@type std.t.IHighlightInline[]
-      local highlight = { coll = offset + piece.l, colr = offset + piece.r, hlname = "f_us_main_match" }
-      table.insert(highlights, highlight)
+  on_confirm = function(composer, item)
+    if item ~= nil then
+      ---@cast item fml.action.find.highlights.IItem
+      composer:close()
+      vim.fn.setreg("+", item.uuid)
     end
-    return text, highlights
   end,
-}
-
----@type eve.ux.ISelect
-local select = eve.ux.Select.new({
-  dimension = {
-    height = 0.8,
-    max_height = 1,
-    max_width = 1,
-    width = 0.35,
-    width_preview = 0.5,
-  },
-  dirty_on_invisible = false,
-  preview_enabled = true,
-  extend_preset_keymaps = true,
-  multiple = false,
-  permanent = false,
-  provider = provider,
-  title = "Find Highlights",
-  on_confirm = function(widget, items)
-    if #items == 1 then
-      widget:close()
-      local item = items[1] ---@type eve.ux.select.IItem
-      vim.fn.setreg("+", item.text)
-    end
+  on_refresh = function(composer)
+    local data = fetch_data() ---@type eve.ux.picker.composer.list.IResetData
+    composer:reset_data(data)
   end,
 })
 
@@ -158,7 +216,11 @@ local M = {}
 
 ---@return nil
 function M.find_highlights()
-  select:focus()
+  if _hlnames == nil or _hlgroups == nil then
+    local data = fetch_data()
+    picker:reset_data(data)
+  end
+  picker:focus()
 end
 
 return M

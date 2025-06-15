@@ -23,7 +23,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---| fun(self: eve.ux.picker.ListComposer, force: boolean): nil
 
 ---@alias eve.ux.picker.composer.list.IPreviewRender
----| fun(self: eve.ux.picker.ListComposer, bufnr: integer): eve.ux.picker.preview.IDrawResult
+---| fun(self: eve.ux.picker.ListComposer, bufnr: integer, force: boolean): eve.ux.picker.preview.IDrawResult
 
 ---@alias eve.ux.picker.composer.list.IResultRender
 ---| fun(self: eve.ux.picker.ListComposer, bufnr: integer, itemmap: table<string, eve.ux.picker.composer.list.IItem>, matches: std.t.IScoredMatch[]): eve.ux.picker.composer.list.IResultRenderData
@@ -326,8 +326,10 @@ function M.new(props)
       local lnum_present = uuid_present and retriever:retrieve_lnum(uuid_present) or nil ---@type integer|nil
       return { lnum_current = lnum_current, lnum_present = lnum_present }
     end,
-    preview_render = preview_render and function(bufnr)
-      return preview_render(self, bufnr)
+
+    ---@type eve.ux.picker.preview.IDraw|nil
+    preview_render = preview_render and function(bufnr, force)
+      return preview_render(self, bufnr, force)
     end or nil,
 
     on_cancel = function()
@@ -486,6 +488,15 @@ end
 ---@return nil
 function M:resize()
   self._composer:resize()
+end
+
+---@param lnum                          integer
+---@return eve.ux.picker.composer.list.IItem|nil
+function M:retrieve(lnum)
+  self:__health__()
+  local uuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
+  local item = uuid and self._itemmap[uuid] or nil ---@type eve.ux.picker.composer.list.IItem|nil
+  return item
 end
 
 ---@return eve.ux.picker.ListComposer
