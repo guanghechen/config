@@ -1,3 +1,8 @@
+---@diagnostic disable: invisible
+
+---@class fml.action.find.buffers.IItem : eve.ux.picker.composer.list.IItem
+---@field public data                   fml.action.find.buffers.IItemData
+
 ---@class fml.action.find.buffers.IItemData
 ---@field public bufnr                  integer
 ---@field public buftype                string
@@ -8,233 +13,269 @@
 ---@field public icon_hl                string
 
 local scopes = vim.list_slice(eve.context.select.find_buffer_scopes) ---@type std.e.FindBufferScope[]
-local _select = nil ---@type eve.ux.ISelect|nil
+local o_scope = eve.context.select.find_buffer_scope ---@type std.collection.IObservable
+local o_finder_input = eve.context.select.find_buffer.input ---@type std.collection.IObservable
+local o_flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy ---@type std.collection.IObservable
+local o_flag_regex = eve.context.select.find_buffer.flag_regex ---@type std.collection.IObservable
+local o_flag_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type std.collection.IObservable
 
----@type std.t.ux.widget.IRawStatuslineItem[]
-local statusline_items = {
-  {
-    type = "enum",
-    desc = "find(buffer): toggle scope",
-    symbol = "",
-    state = eve.context.select.find_buffer_scope,
-    callback = function()
-      local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
-      local idx = std.table.find_index(scopes, scope) or 1 ---@type integer
-      local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
-      local next_scope = scopes[idx_next] ---@type std.e.FindBufferScope
-      eve.context.select.find_buffer_scope:next(next_scope)
-
-      if _select ~= nil then
-        _select:mark_data_dirty()
-      end
-    end,
-  },
-  {
-    type = "flag",
-    desc = "find(buffer): toggle selected",
-    symbol = eve.icon.symbols.flag_selected,
-    state = eve.context.select.find_buffer.flag_selected,
-    callback = function()
-      local flag = eve.context.select.find_buffer.flag_selected:snapshot() ---@type boolean
-      eve.context.select.find_buffer.flag_selected:next(not flag)
-    end,
-  },
+local IGNORED_FILETYPES = {
+  eve.filetype.SEARCH_INPUT,
+  eve.filetype.SEARCH_MAIN,
+  eve.filetype.SEARCH_PREVIEW,
+  eve.filetype.UX_PICKER_FINDER,
+  eve.filetype.UX_PICKER_PREVIEW,
+  eve.filetype.UX_PICKER_RESULT,
+  eve.filetype.WINSEP,
 }
 
----@type std.t.IKeymap[]
-local main_keymaps = {
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-d>",
-    desc = "buffer: close",
-    callback = function()
-      if _select == nil then
-        return
-      end
+---@param bufnr                         integer
+---@param scope                         std.e.FindBufferScope
+---@param tabnr                         integer
+---@return boolean
+local function should_show_buffer(bufnr, scope, tabnr)
+  if scope == "A" then
+    return true
+  end
 
-      local item = _select:get_item_selected()
-      if item == nil then
-        return
-      end
+  local filetype = vim.bo[bufnr].filetype ---@type string
 
-      local bufnr = item.data.bufnr ---@type integer
-      if not eve.buf.is_valid(bufnr) then
-        _select:mark_item_deleted(item.uuid)
-        return
-      end
+  if scope == "T" then
+    return filetype == eve.filetype.TERM
+  end
 
-      if not vim.bo[bufnr].buflisted then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-        _select:mark_item_deleted(item.uuid)
-        _select:mark_data_dirty()
-        return
-      end
+  if scope == "F" then
+    return eve.tab.has_buf(tabnr, bufnr)
+  end
 
-      local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
-      for _, tabnr in ipairs(tabnrs) do
-        eve.tab.on_bufs_close(tabnr, { bufnr })
-      end
-
-      local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
-      if #bufnrs_unreferenced > 0 then
-        for _, unreferenced_bufnr in ipairs(bufnrs_unreferenced) do
-          vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
-        end
-        _select:mark_item_deleted(item.uuid)
-        _select:mark_data_dirty()
-      end
-    end,
-  },
-}
-
----@type eve.ux.select.IProvider
-local provider = {
-  fetch_data = function()
-    local cwd = std.path.cwd() ---@type string
-    local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-
-    ---@param bufnr                     integer
-    ---@return boolean
-    local function should_show(bufnr)
-      if scope == "A" then
-        return true
-      end
-
-      local filetype = vim.bo[bufnr].filetype ---@type string
-      if scope == "T" then
-        return filetype == eve.filetype.TERM
-      end
-
-      if scope == "F" then
-        return eve.tab.has_buf(tabnr, bufnr)
-      end
-
-      if
-        filetype == eve.filetype.SEARCH_INPUT
-        or filetype == eve.filetype.SEARCH_MAIN
-        or filetype == eve.filetype.SEARCH_PREVIEW
-        or filetype == eve.filetype.WINSEP
-      then
-        return false
-      end
-      return true
+  for _, excluded in ipairs(IGNORED_FILETYPES) do
+    if filetype == excluded then
+      return false
     end
+  end
 
-    local items = {} ---@type eve.ux.select.IItem[]
-    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-    for _, bufnr in ipairs(bufnrs) do
-      if should_show(bufnr) then
-        local buftype = vim.bo[bufnr].buftype ---@type string
-        local filetype = vim.bo[bufnr].filetype ---@type string
-        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
-        local filename = std.path.basename(filepath)
-        local icon, icon_hl = std.fileicon.get_file_icon(filename, filetype)
+  return true
+end
 
-        ---@type fml.action.find.buffers.IItemData
-        local data = {
-          bufnr = bufnr,
-          buftype = buftype,
-          filetype = filetype,
-          filepath = relative_filepath,
-          filename = filename,
-          icon = icon,
-          icon_hl = icon_hl,
-        }
+---@param bufnr                         integer
+---@param cwd                           string
+---@return fml.action.find.buffers.IItem
+local function create_buffer_item(bufnr, cwd)
+  local buftype = vim.bo[bufnr].buftype ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
+  local filename = std.path.basename(filepath)
+  local icon, icon_hl = std.fileicon.get_file_icon(filename, filetype)
 
-        local text = string.format(
-          "%-5d %-10s %-15s %s %s",
-          bufnr,
-          buftype or vim.NIL,
-          filetype,
-          #filepath > 0 and icon or " ",
-          relative_filepath
-        )
-        local item = { uuid = tostring(bufnr), text = text, data = data }
-        items[#items + 1] = item
-      end
+  ---@type fml.action.find.buffers.IItemData
+  local data = {
+    bufnr = bufnr,
+    buftype = buftype,
+    filetype = filetype,
+    filepath = relative_filepath,
+    filename = filename,
+    icon = icon,
+    icon_hl = icon_hl,
+  }
+
+  local text = string.format(
+    "%-5d %-10s %-15s %s %s",
+    bufnr,
+    buftype or vim.NIL,
+    filetype,
+    #filepath > 0 and icon or " ",
+    relative_filepath
+  )
+
+  ---@type std.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = 5, hlname = "f_buf_nr" },
+    { coll = 6, colr = 16, hlname = "f_buf_buftype" },
+    { coll = 17, colr = 32, hlname = "f_buf_filetype" },
+    { coll = 33, colr = 35, hlname = icon_hl },
+    { coll = 35, colr = -1, hlname = "f_buf_filepath" },
+  }
+
+  ---@type fml.action.find.buffers.IItem
+  return {
+    uuid = tostring(bufnr),
+    text = text,
+    text_lower = text:lower(),
+    highlights = highlights,
+    data = data,
+  }
+end
+
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_data()
+  local cwd = std.path.cwd() ---@type string
+  local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+
+  local items = {} ---@type fml.action.find.buffers.IItem[]
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+
+  for _, bufnr in ipairs(bufnrs) do
+    if should_show_buffer(bufnr, scope, tabnr) then
+      items[#items + 1] = create_buffer_item(bufnr, cwd)
     end
+  end
 
-    table.sort(items, function(a, b)
-      return a.data.bufnr < b.data.bufnr
-    end)
+  table.sort(items, function(a, b)
+    return a.data.bufnr < b.data.bufnr
+  end)
 
-    ---@type eve.ux.select.IData
-    return { items = items }
-  end,
-  render_item = function(item, match)
-    local data = item.data ---@type fml.action.find.buffers.IItemData
+  ---@type eve.ux.picker.composer.list.IResetData
+  return { items = items }
+end
 
-    ---@type std.t.IHighlightInline[]
-    local highlights = {
-      { coll = 0, colr = 5, hlname = "f_buf_nr" },
-      { coll = 6, colr = 16, hlname = "f_buf_buftype" },
-      { coll = 17, colr = 32, hlname = "f_buf_filetype" },
-      { coll = 33, colr = 35, hlname = data.icon_hl },
-      { coll = 35, colr = -1, hlname = "f_buf_filepath" },
-    }
-
-    for _, piece in ipairs(match.matches) do
-      ---@type std.t.IHighlightInline[]
-      local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-      table.insert(highlights, highlight)
-    end
-    return item.text, highlights
-  end,
-}
-
----@type eve.ux.ISelect
-local select = eve.ux.Select.new({
-  dimension = {
-    height = 0.8,
-    max_height = 1,
-    max_width = 1,
-    width = 120,
-    width_preview = 0,
-  },
-  dirty_on_invisible = true,
-  flag_case_sensitive = eve.context.select.find_buffer.flag_case_sensitive,
-  flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy,
-  flag_regex = eve.context.select.find_buffer.flag_regex,
-  flag_selected = eve.context.select.find_buffer.flag_selected,
-  input = eve.context.select.find_buffer.input,
-  input_history = eve.context.select.find_buffer.input_history,
-  input_keymaps = main_keymaps,
-  main_keymaps = main_keymaps,
-  multiple = true,
-  preview_enabled = false,
-  extend_preset_keymaps = true,
-  statusline_items = statusline_items,
-  provider = provider,
+local picker ---@type eve.ux.picker.ListComposer
+picker = eve.ux.picker.ListComposer.new({
+  name = "find-buffers",
+  permanent = true,
+  preview = false,
   title = "Find buffers",
-  on_confirm = function(widget, items)
-    widget:close()
+  height = 25,
+  width = 120,
 
-    if #items > 0 then
+  finder_input = o_finder_input,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_sensitive = o_flag_sensitive,
+  flag_start_index = 0,
+
+  flags_prepend = {
+    {
+      desc = "find(buffer): toggle scope",
+      callback = function()
+        local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
+        local idx = std.table.find_index(scopes, scope) or 1 ---@type integer
+        local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
+        local next_scope = scopes[idx_next] ---@type std.e.FindBufferScope
+        eve.context.select.find_buffer_scope:next(next_scope)
+        local data = fetch_data()
+        picker:reset_data(data)
+      end,
+      snapshot = function()
+        local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
+        return scope, "picker_flag_purple"
+      end,
+    },
+  },
+  flags_start_index = 0,
+
+  result_render = function(composer, bufnr, itemmap, matches)
+    ---@cast itemmap                    table<string, fml.action.find.buffers.IItem>
+    ---
+    local lines = {} ---@type string[]
+    local uuids = {} ---@type string[]
+    for _, match in ipairs(matches) do
+      local item = itemmap[match.uuid] ---@type fml.action.find.buffers.IItem
+      lines[#lines + 1] = item.text
+      uuids[#uuids + 1] = item.uuid
+    end
+
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    composer._retriever:attach(bufnr, uuids)
+
+    local nsnr_content = eve.var.nsnr.picker_result
+    local nsnr_matches = eve.var.nsnr.picker_matches
+
+    for lnum, match in ipairs(matches) do
+      local row = lnum - 1 ---@type integer
+      local item = itemmap[match.uuid]
+
+      if item and item.highlights then
+        for _, hl in ipairs(item.highlights) do
+          vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
+        end
+      end
+
+      if match.matches then
+        for _, m in ipairs(match.matches) do
+          vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+        end
+      end
+    end
+
+    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
+    return data
+  end,
+
+  keymaps_result = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-d>",
+      desc = "buffer: close",
+      callback = function()
+        local lnum = picker._composer:get_result_lnum() ---@type integer
+        local uuid = picker._retriever:retrieve_uuid(lnum) ---@type string|nil
+        local item = uuid and picker._itemmap[uuid] or nil ---@type eve.ux.picker.composer.list.IItem|nil
+        ---@cast item                   fml.action.find.buffers.IItem|nil
+        if item == nil then
+          return
+        end
+
+        local bufnr = item.data.bufnr ---@type integer
+        if not eve.buf.is_valid(bufnr) then
+          local data = fetch_data()
+          picker:reset_data(data)
+          return
+        end
+
+        if not vim.bo[bufnr].buflisted then
+          vim.api.nvim_buf_delete(bufnr, { force = true })
+          local data = fetch_data()
+          picker:reset_data(data)
+          return
+        end
+
+        local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
+        for _, tabnr in ipairs(tabnrs) do
+          eve.tab.on_bufs_close(tabnr, { bufnr })
+        end
+
+        local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+        if #bufnrs_unreferenced > 0 then
+          for _, unreferenced_bufnr in ipairs(bufnrs_unreferenced) do
+            vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
+          end
+          local data = fetch_data()
+          picker:reset_data(data)
+        end
+      end,
+    },
+  },
+
+  on_confirm = function(composer, item)
+    if item ~= nil then
+      ---@cast item fml.action.find.buffers.IItem
+      composer:close()
+
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) or eve.win.pick_sourcefile() ---@type integer|nil
       if winnr_sourcefile ~= nil then
-        for _, item in ipairs(items) do
-          local data = item.data ---@type fml.action.find.buffers.IItemData
-          vim.api.nvim_win_set_buf(winnr_sourcefile, data.bufnr)
-        end
+        vim.api.nvim_win_set_buf(winnr_sourcefile, item.data.bufnr)
       end
     end
   end,
+  on_refresh = function(composer)
+    local data = fetch_data() ---@type eve.ux.picker.composer.list.IResetData
+    composer:reset_data(data)
+  end,
 })
-_select = select
 
-std.fn.observe({ eve.context.select.find_buffer_scope }, function()
-  local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
+std.fn.observe({ o_scope }, function()
+  local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
   if scope == "A" then
-    select:change_input_title("find buffers")
+    picker.finder:set_title("find buffers")
   elseif scope == "F" then
-    select:change_input_title("find buffers (files)")
+    picker.finder:set_title("find buffers (files)")
   elseif scope == "L" then
-    select:change_input_title("find buffers (except widgets)")
+    picker.finder:set_title("find buffers (except widgets)")
   elseif scope == "T" then
-    select:change_input_title("find buffers (terms)")
+    picker.finder:set_title("find buffers (terms)")
   end
 end, false)
 
@@ -243,20 +284,28 @@ local M = {}
 
 ---@return nil
 function M.find_bufs()
-  eve.context.select.find_buffer_scope:next("A")
-  select:focus()
+  o_finder_input:next("")
+  local data = fetch_data()
+  picker:reset_data(data)
+  picker:focus()
 end
 
 ---@return nil
 function M.find_bufs_file()
-  eve.context.select.find_buffer_scope:next("F")
-  select:focus()
+  o_scope:next("F")
+  o_finder_input:next("")
+  local data = fetch_data()
+  picker:reset_data(data)
+  picker:focus()
 end
 
 ---@return nil
 function M.find_bufs_term()
-  eve.context.select.find_buffer_scope:next("T")
-  select:focus()
+  o_scope:next("T")
+  o_finder_input:next("")
+  local data = fetch_data()
+  picker:reset_data(data)
+  picker:focus()
 end
 
 return M

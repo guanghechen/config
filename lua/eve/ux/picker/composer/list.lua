@@ -269,34 +269,30 @@ function M.new(props)
     add_flags(flags, flags_append, name)
   end
 
-  local preset_keymaps_finder = {
+  ---@type std.t.IKeymap[]
+  local preset_ks_common = {
     {
       modes = { "i", "n", "v" },
       key = "<enter>",
       desc = "list: confirm",
       callback = actions.on_confirm,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<Tab>",
+      desc = "list: noop",
+      callback = std.fn.noop,
     },
   }
 
-  local preset_keymaps_result = {
-    {
-      modes = { "i", "n", "v" },
-      key = "<enter>",
-      aliases = { "o" },
-      desc = "list: confirm",
-      callback = actions.on_confirm,
-    },
-  }
+  ---@type std.t.IKeymap[]
+  local preset_ks_finder = {}
 
-  local preset_keymaps_preview = {
-    {
-      modes = { "i", "n", "v" },
-      key = "<enter>",
-      aliases = { "o" },
-      desc = "list: confirm",
-      callback = actions.on_confirm,
-    },
-  }
+  ---@type std.t.IKeymap[]
+  local preset_ks_result = {}
+
+  ---@type std.t.IKeymap[]
+  local preset_ks_preview = {}
 
   local composer = eve.ux.picker.BasicComposer.new({
     uuid = picker_uuid,
@@ -308,11 +304,10 @@ function M.new(props)
     height = height,
     width = width,
 
-    keymaps_common = keymaps_common,
-    keymaps_finder = keymaps_finder and vim.list_extend(preset_keymaps_finder, keymaps_finder) or preset_keymaps_finder,
-    keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
-    keymaps_preview = keymaps_preview and vim.list_extend(preset_keymaps_preview, keymaps_preview)
-      or preset_keymaps_preview,
+    keymaps_common = keymaps_common and vim.list_extend(preset_ks_common, keymaps_common) or preset_ks_common,
+    keymaps_finder = keymaps_finder and vim.list_extend(preset_ks_finder, keymaps_finder) or preset_ks_finder,
+    keymaps_result = keymaps_result and vim.list_extend(preset_ks_result, keymaps_result) or preset_ks_result,
+    keymaps_preview = keymaps_preview and vim.list_extend(preset_ks_preview, keymaps_preview) or preset_ks_preview,
 
     finder_input = finder_input,
     finder_input_history = finder_input_history,
