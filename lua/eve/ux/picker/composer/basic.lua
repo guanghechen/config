@@ -103,6 +103,7 @@ local __highlights__ = {
 ---
 ---@field public result_number          boolean
 ---@field public result_render          eve.ux.picker.result.IDraw
+---@field public result_isselected      ?eve.ux.picker.result.IIsSelected
 ---
 ---@field public preview_render         ?eve.ux.picker.preview.IDraw
 ---
@@ -170,6 +171,7 @@ function M.new(props)
 
   local result_number = not not props.result_number ---@type boolean
   local result_render = props.result_render ---@type eve.ux.picker.result.IDraw
+  local result_isselected = props.result_isselected ---@type eve.ux.picker.result.IIsSelected|nil
 
   local preview_render = props.preview_render ---@type eve.ux.picker.preview.IDraw|nil
 
@@ -229,6 +231,7 @@ function M.new(props)
       end
       return result_render(bufnr)
     end,
+    isselected = result_isselected,
     keymaps = self:__resolve_keymaps_result__(
       flags,
       flags_start_index,

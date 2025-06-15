@@ -490,18 +490,18 @@ function M.new(props)
               local childstate = treeview:retrieve(childuuid) ---@type eve.ux.view.filetree.INodeState|nil
               if childstate ~= nil and childstate.nodetype ~= "location" then
                 treeview:toggle_select(childuuid, next_selected, true) ---@type boolean
-                composer.result:toggle_selected(index, next_selected)
               end
             end
           end
         end
+        composer.result:refresh_signs()
         return
       end
 
       if nodestate.nodetype == "leaf" then
         local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
         treeview:toggle_select(nodeuuid, next_selected, true) ---@type boolean
-        composer.result:toggle_selected(lnum)
+        composer.result:refresh_signs()
         return
       end
 
@@ -510,7 +510,7 @@ function M.new(props)
         lnum = retriever:retrieve_lnum(nodeuuid) or lnum ---@type integer
         local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
         treeview:toggle_select(nodeuuid, next_selected, true) ---@type boolean
-        composer.result:toggle_selected(lnum)
+        composer.result:refresh_signs()
         return
       end
 
@@ -691,6 +691,12 @@ function M.new(props)
 
     result_number = true,
 
+    ---@type eve.ux.picker.result.IIsSelected
+    result_isselected = function(_, lnum)
+      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+      return uuid ~= nil and treeview:isselected(uuid)
+    end,
+
     ---@type eve.ux.picker.result.IDraw
     result_render = function(bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
@@ -723,9 +729,8 @@ function M.new(props)
       retriever:attach(bufnr, result.uuids, result.childline)
 
       local uuid_current = self._uuid_current ---@type string|nil
-      local lnums_selected = self:__collect_selected_lnums__() ---@type integer[]
       local lnum_current = uuid_current ~= nil and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil
-      local ret = { lnum_current = lnum_current, lnums_selected = lnums_selected } ---@type eve.ux.picker.result.IDrawResult
+      local ret = { lnum_current = lnum_current } ---@type eve.ux.picker.result.IDrawResult
       return ret
     end,
 
