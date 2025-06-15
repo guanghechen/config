@@ -26,10 +26,10 @@ vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
 vim.opt.listchars:append(eve.icon.listchars)
 
+vim.o.foldcolumn = "0"
 vim.o.foldenable = true
 vim.o.foldlevel = 99
-vim.o.foldmethod = "expr"
-vim.o.foldtext = ""
+vim.o.foldlevelstart = 99
 vim.o.laststatus = 3 -- Keep only the global status bar.
 vim.o.showtabline = 2
 
