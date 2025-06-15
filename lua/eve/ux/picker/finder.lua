@@ -226,26 +226,23 @@ end
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
-  local bufnr = self._bufnr ---@type integer|nil
 
-  local ok1, error1 = pcall(eve.win.close, winnr)
-  local ok2, error2 = pcall(eve.buf.close, bufnr)
-  if not (ok1 and ok2) then
-    std.reporter.error({
-      from = self.fullname,
-      subject = "hide",
-      message = "Failed to hide",
-      details = {
-        bufnr = bufnr,
-        winnr = winnr,
-        error1 = not ok1 and error1 or nil,
-        error2 = not ok2 and error2 or nil,
-      },
-    })
-  end
+  vim.schedule(function()
+    local ok1, error1 = pcall(eve.win.close, winnr)
+    if not ok1 then
+      std.reporter.error({
+        from = self.fullname,
+        subject = "hide",
+        message = "Failed to hide",
+        details = {
+          winnr = winnr,
+          error1 = not ok1 and error1 or nil,
+        },
+      })
+    end
+  end)
 
   self._winnr = nil
-  self._bufnr = nil
   return self
 end
 
