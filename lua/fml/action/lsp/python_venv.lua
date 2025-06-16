@@ -2,8 +2,15 @@ local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
 local clp = require("eve.constant.lang.python")
 
----@param folder                        string
----@return string|nil
+local dirty_data = true ---@type boolean
+local o_finder_input = std.Observable.from_value("")
+local o_flag_fuzzy = std.Observable.from_value(true)
+local o_flag_regex = std.Observable.from_value(false)
+local o_flag_sensitive = std.Observable.from_value(false)
+local o_python_venv_path = eve.context.lsp.python_venv_path
+
+---@param folder                               string
+---@return                              string|nil
 local function format_search_path(folder)
   local resolved_path = vim.fn.expand(folder) ---@type string
   if #resolved_path < 1 or vim.fn.isdirectory(resolved_path) == 0 then
@@ -22,277 +29,304 @@ end
 ---@field public icon                   string
 ---@field public path                   string
 
----@class fml.action.lsp.python_venv.IItem : eve.ux.select.IItem
+---@class fml.action.lsp.python_venv.IItem : eve.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.lsp.python_venv.IItemData
+---@field public text_lower             string
+---@field public highlights             table
 
-local _select ---@type eve.ux.ISelect|nil
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_data()
+  dirty_data = false
 
----@return eve.ux.ISelect
-local function get_select()
-  if _select == nil then
-    ---@type eve.ux.select.IProvider
-    local provider = {
-      fetch_data = function()
-        local items = {} ---@type fml.action.lsp.python_venv.IItem[]
-        local root = std.path.cwd() ---@type string
-        local uuid_set = {} ---@type table<string, true>
+  local cwd = std.path.cwd() ---@type string
+  local workspace = std.path.workspace() ---@type string
 
-        do
-          local anaconda_base_path = format_search_path(clp.paths.AnacondaBase) ---@type string|nil
-          local anaconda_envs_path = format_search_path(clp.paths.AnacondaEnvs) ---@type string|nil
+  local items = {} ---@type fml.action.lsp.python_venv.IItem[]
+  local uuid_set = {} ---@type table<string, true>
 
-          ---@type string[]
-          local cmd = {
-            "fd",
-            "--absolute-path",
-            "--color",
-            "never",
-            "-E",
-            "/proc",
-          }
-          if anaconda_base_path then
-            table.insert(cmd, "-E")
-            table.insert(cmd, anaconda_base_path)
-          end
-          if anaconda_envs_path then
-            table.insert(cmd, "-E")
-            table.insert(cmd, anaconda_envs_path)
-          end
-          table.insert(cmd, "-HItd")
-          table.insert(cmd, "^(venv|\\.venv)$")
-          table.insert(cmd, root)
-          local output, err = vim.fn.system(cmd)
+  do
+    local anaconda_base_path = format_search_path(clp.paths.AnacondaBase) ---@type string|nil
+    local anaconda_envs_path = format_search_path(clp.paths.AnacondaEnvs) ---@type string|nil
 
-          if vim.v.shell_error ~= 0 then
-            std.reporter.error({
-              from = __module_name__,
-              subject = "find_venvs",
-              message = "Failed to run fd command.",
-              details = { cmd = cmd, error = err or "Unknown error" },
-            })
-            return items
-          end
-
-          if output then
-            local lines = vim.split(output, "\n") ---@type string[]
-            for _, line in ipairs(lines) do
-              if #line > 0 then
-                local icon = "󰅬" ---@type string
-                local dirpath = std.string.remove_last_slash(line) ---@type string
-                if not uuid_set[dirpath] then
-                  uuid_set[dirpath] = true
-
-                  ---@type fml.action.lsp.python_venv.IItem
-                  local item = {
-                    uuid = dirpath,
-                    text = icon .. " " .. dirpath,
-                    data = {
-                      icon = icon,
-                      path = dirpath,
-                    },
-                  }
-                  table.insert(items, item)
-                end
-              end
-            end
-          end
-        end
-
-        do
-          --- search lsp workspace folders
-          local lsp_workspace_paths = {}
-          for _, client in pairs(vim.lsp.get_clients()) do
-            if vim.tbl_contains({ "basedpyright", "pyright", "pylance" }, client.name) then
-              for _, folder in pairs(client.workspace_folders or {}) do
-                local search_path = format_search_path(folder.name) ---@type string|nil
-                if search_path ~= nil then
-                  table.insert(lsp_workspace_paths, search_path)
-                end
-              end
-            end
-          end
-          if #lsp_workspace_paths > 0 then
-            local cmd = vim.list_extend({
-              "fd",
-              "--absolute-path",
-              "--color",
-              "never",
-              "-HItd",
-              "^(venv|\\.venv)$",
-            }, lsp_workspace_paths)
-            local output, err = vim.fn.system(cmd)
-
-            if vim.v.shell_error ~= 0 then
-              std.reporter.error({
-                from = __module_name__,
-                subject = "find_venvs",
-                message = "Failed to run fd command.",
-                details = { cmd = cmd, error = err or "Unknown error" },
-              })
-              return items
-            end
-
-            if output then
-              local lines = vim.split(output, "\n") ---@type string[]
-              for _, line in ipairs(lines) do
-                if #line > 0 then
-                  local icon = "" ---@type string
-                  local dirpath = std.string.remove_last_slash(line) ---@type string
-                  if not uuid_set[dirpath] then
-                    uuid_set[dirpath] = true
-
-                    ---@type fml.action.lsp.python_venv.IItem
-                    local item = {
-                      uuid = dirpath,
-                      text = icon .. " " .. dirpath,
-                      data = {
-                        icon = icon,
-                        path = dirpath,
-                      },
-                    }
-                    table.insert(items, item)
-                  end
-                end
-              end
-            end
-          end
-        end
-
-        --- Search venv manager paths
-        do
-          local venv_manager_paths = {
-            clp.paths.Poetry,
-            clp.paths.PDM,
-            clp.paths.Pipenv,
-            clp.paths.Pyenv,
-            clp.paths.Hatch,
-            clp.paths.VenvWrapper,
-            clp.paths.AnacondaEnvs,
-          }
-          local search_paths = {} ---@type string[]
-          for _, folder in ipairs(venv_manager_paths) do
-            local search_path = format_search_path(folder)
-            if search_path then
-              table.insert(search_paths, search_path)
-            end
-          end
-
-          if #search_paths > 0 then
-            local cmd = vim.list_extend({
-              "fd",
-              "--absolute-path",
-              "--color",
-              "never",
-              "--max-depth",
-              "1",
-              "-E",
-              "3.*.*",
-              "-tl",
-              "-HItd",
-              ".",
-            }, search_paths)
-            local output, err = vim.fn.system(cmd)
-
-            if vim.v.shell_error ~= 0 then
-              std.reporter.error({
-                from = __module_name__,
-                subject = "find_venvs",
-                message = "Failed to run fd command.",
-                details = { cmd = cmd, error = err or "Unknown error" },
-              })
-              return items
-            end
-
-            if output then
-              local lines = vim.split(output, "\n") ---@type string[]
-              for _, line in ipairs(lines) do
-                if #line > 0 then
-                  local icon = "" ---@type string
-                  local dirpath = std.string.remove_last_slash(line) ---@type string
-                  if not uuid_set[dirpath] then
-                    uuid_set[dirpath] = true
-                    ---@type fml.action.lsp.python_venv.IItem
-                    local item = {
-                      uuid = dirpath,
-                      text = icon .. " " .. dirpath,
-                      data = {
-                        icon = icon,
-                        path = dirpath,
-                      },
-                    }
-                    table.insert(items, item)
-                  end
-                end
-              end
-            end
-
-            -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
-            if vim.fn.isdirectory(clp.paths.AnacondaBase) ~= 0 then
-              local icon = "" ---@type string
-              local dirpath = std.string.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
-              if not uuid_set[dirpath] then
-                uuid_set[dirpath] = true
-
-                ---@type fml.action.lsp.python_venv.IItem
-                local item = {
-                  uuid = dirpath,
-                  text = icon .. " " .. dirpath,
-                  data = {
-                    icon = icon,
-                    path = dirpath,
-                  },
-                }
-                table.insert(items, item)
-              end
-            end
-          end
-        end
-
-        ---@type eve.ux.select.IData
-        return { items = items, uuid_present = eve.context.lsp.python_venv_path:snapshot() }
-      end,
+    ---@type string[]
+    local cmd = {
+      "fd",
+      "--absolute-path",
+      "--color",
+      "never",
+      "-E",
+      "/proc",
     }
+    if anaconda_base_path then
+      table.insert(cmd, "-E")
+      table.insert(cmd, anaconda_base_path)
+    end
+    if anaconda_envs_path then
+      table.insert(cmd, "-E")
+      table.insert(cmd, anaconda_envs_path)
+    end
+    table.insert(cmd, "-HItd")
+    table.insert(cmd, "^(venv|\\.venv)$")
+    table.insert(cmd, cwd)
+    local output, err = vim.fn.system(cmd)
 
-    ---@type eve.ux.ISelect
-    _select = eve.ux.Select.new({
-      dimension = {
-        height = 0.8,
-        max_height = 1,
-        max_width = 1,
-        width = 120,
-      },
-      dirty_on_invisible = true,
-      flag_case_sensitive = eve.context.select.find_python_venv.flag_case_sensitive,
-      flag_fuzzy = eve.context.select.find_python_venv.flag_fuzzy,
-      flag_regex = eve.context.select.find_python_venv.flag_regex,
-      flag_selected = eve.context.select.find_python_venv.flag_selected,
-      input = eve.context.select.find_python_venv.input,
-      input_history = eve.context.select.find_python_venv.input_history,
-      multiple = false,
-      preview_enabled = false,
-      extend_preset_keymaps = true,
-      provider = provider,
-      title = "Find python venv",
-      on_confirm = function(widget, items)
-        widget:close()
+    if vim.v.shell_error ~= 0 then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "find_venvs",
+        message = "Failed to run fd command.",
+        details = { cmd = cmd, error = err or "Unknown error" },
+      })
+      ---@type eve.ux.picker.composer.list.IResetData
+      local result = { items = {} }
+      return result
+    end
 
-        if #items == 1 then
-          local item = items[1]
-          eve.context.lsp.python_venv_path:next(item.data.path)
+    if output then
+      local lines = vim.split(output, "\n") ---@type string[]
+      for _, line in ipairs(lines) do
+        if #line > 0 then
+          local icon = "󰅬" ---@type string
+          local dirpath = std.string.remove_last_slash(line) ---@type string
+          if not uuid_set[dirpath] then
+            uuid_set[dirpath] = true
+            local resolved_dirpath = std.path.is_under(workspace, dirpath) and std.path.relative(cwd, dirpath, false)
+              or dirpath
+            local text_content = icon .. " " .. resolved_dirpath
+
+            ---@type fml.action.lsp.python_venv.IItem
+            local item = {
+              uuid = dirpath,
+              text = text_content,
+              text_lower = string.lower(text_content),
+              highlights = {},
+              data = {
+                icon = icon,
+                path = dirpath,
+              },
+            }
+            table.insert(items, item)
+          end
         end
-      end,
-    })
+      end
+    end
   end
-  return _select
+
+  do
+    --- search lsp workspace folders
+    local lsp_workspace_paths = {}
+    for _, client in pairs(vim.lsp.get_clients()) do
+      if vim.tbl_contains({ "basedpyright", "pyright", "pylance" }, client.name) then
+        for _, folder in pairs(client.workspace_folders or {}) do
+          local search_path = format_search_path(folder.name) ---@type string|nil
+          if search_path ~= nil then
+            table.insert(lsp_workspace_paths, search_path)
+          end
+        end
+      end
+    end
+    if #lsp_workspace_paths > 0 then
+      local cmd = vim.list_extend({
+        "fd",
+        "--absolute-path",
+        "--color",
+        "never",
+        "-HItd",
+        "^(venv|\\.venv)$",
+      }, lsp_workspace_paths)
+      local output, err = vim.fn.system(cmd)
+
+      if vim.v.shell_error ~= 0 then
+        std.reporter.error({
+          from = __module_name__,
+          subject = "find_venvs",
+          message = "Failed to run fd command.",
+          details = { cmd = cmd, error = err or "Unknown error" },
+        })
+        ---@type eve.ux.picker.composer.list.IResetData
+        local result = { items = {} }
+        return result
+      end
+
+      if output then
+        local lines = vim.split(output, "\n") ---@type string[]
+        for _, line in ipairs(lines) do
+          if #line > 0 then
+            local icon = "" ---@type string
+            local dirpath = std.string.remove_last_slash(line) ---@type string
+            if not uuid_set[dirpath] then
+              uuid_set[dirpath] = true
+              local text_content = icon .. " " .. dirpath
+
+              ---@type fml.action.lsp.python_venv.IItem
+              local item = {
+                uuid = dirpath,
+                text = text_content,
+                text_lower = string.lower(text_content),
+                highlights = {},
+                data = {
+                  icon = icon,
+                  path = dirpath,
+                },
+              }
+              table.insert(items, item)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  --- Search venv manager paths
+  do
+    local venv_manager_paths = {
+      clp.paths.Poetry,
+      clp.paths.PDM,
+      clp.paths.Pipenv,
+      clp.paths.Pyenv,
+      clp.paths.Hatch,
+      clp.paths.VenvWrapper,
+      clp.paths.AnacondaEnvs,
+    }
+    local search_paths = {} ---@type string[]
+    for _, folder in ipairs(venv_manager_paths) do
+      local search_path = format_search_path(folder)
+      if search_path then
+        table.insert(search_paths, search_path)
+      end
+    end
+
+    if #search_paths > 0 then
+      local cmd = vim.list_extend({
+        "fd",
+        "--absolute-path",
+        "--color",
+        "never",
+        "--max-depth",
+        "1",
+        "-E",
+        "3.*.*",
+        "-tl",
+        "-HItd",
+        ".",
+      }, search_paths)
+      local output, err = vim.fn.system(cmd)
+
+      if vim.v.shell_error ~= 0 then
+        std.reporter.error({
+          from = __module_name__,
+          subject = "find_venvs",
+          message = "Failed to run fd command.",
+          details = { cmd = cmd, error = err or "Unknown error" },
+        })
+        ---@type eve.ux.picker.composer.list.IResetData
+        local result = { items = {} }
+        return result
+      end
+
+      if output then
+        local lines = vim.split(output, "\n") ---@type string[]
+        for _, line in ipairs(lines) do
+          if #line > 0 then
+            local icon = "" ---@type string
+            local dirpath = std.string.remove_last_slash(line) ---@type string
+            if not uuid_set[dirpath] then
+              uuid_set[dirpath] = true
+              local text_content = icon .. " " .. dirpath
+              ---@type fml.action.lsp.python_venv.IItem
+              local item = {
+                uuid = dirpath,
+                text = text_content,
+                text_lower = string.lower(text_content),
+                highlights = {},
+                data = {
+                  icon = icon,
+                  path = dirpath,
+                },
+              }
+              table.insert(items, item)
+            end
+          end
+        end
+      end
+    end
+
+    -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
+    if vim.fn.isdirectory(clp.paths.AnacondaBase) ~= 0 then
+      local icon = "" ---@type string
+      local dirpath = std.string.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
+      if not uuid_set[dirpath] then
+        uuid_set[dirpath] = true
+        local text_content = icon .. " " .. dirpath
+
+        ---@type fml.action.lsp.python_venv.IItem
+        local item = {
+          uuid = dirpath,
+          text = text_content,
+          text_lower = string.lower(text_content),
+          highlights = {},
+          data = {
+            icon = icon,
+            path = dirpath,
+          },
+        }
+        table.insert(items, item)
+      end
+    end
+  end
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  local result = {
+    items = items,
+    uuid_current = o_python_venv_path:snapshot(),
+    uuid_present = o_python_venv_path:snapshot(),
+  }
+  return result
 end
+
+local picker ---@type eve.ux.picker.ListComposer|nil
+picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__,
+  permanent = true,
+  title = "Find python venv",
+  height = 25,
+  width = 120,
+
+  finder_input = o_finder_input,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_sensitive = o_flag_sensitive,
+
+  on_confirm = function(composer, item)
+    ---@cast item fml.action.lsp.python_venv.IItem
+    composer:close() -- or composer:close() if appropriate
+    if item then -- ListComposer passes a single item if multiple=false
+      o_python_venv_path:next(item.data.path)
+      dirty_data = true
+    end
+  end,
+  on_disposed = function()
+    o_finder_input:dispose()
+    o_flag_fuzzy:dispose()
+    o_flag_regex:dispose()
+    o_flag_sensitive:dispose()
+  end,
+  on_refresh = function(composer)
+    local result = fetch_data()
+    composer:reset_data(result)
+  end,
+})
 
 ---@class fml.action.lsp.python_venv
 local M = {}
 
----@return nil
+---@return                              nil
 function M.activate_venv()
-  local select = get_select()
-  select:focus()
+  if dirty_data then
+    local data = fetch_data()
+    picker:reset_data(data)
+  end
+  picker:focus()
 end
 
 return M
