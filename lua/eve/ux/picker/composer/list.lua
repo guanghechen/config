@@ -47,6 +47,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@class eve.ux.picker.IListComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
+---@field public autosort               ?boolean
 ---@field public permanent              boolean
 ---@field public title                  string
 ---@field public height                 ?number
@@ -96,6 +97,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field protected _retriever          eve.ux.picker.ListRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler
 ---
+---@field protected _autosort           boolean
 ---@field protected _items              eve.ux.picker.composer.list.IItem[]
 ---@field protected _itemmap            table<string, eve.ux.picker.composer.list.IItem>
 ---@field protected _matches            std.t.IScoredMatch[]
@@ -113,6 +115,7 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local picker_uuid = props.uuid or std.fn.uuid() ---@type string
+  local autosort = props.autosort ~= false ---@type boolean
   local permanent = props.permanent ---@type boolean
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
@@ -372,6 +375,7 @@ function M.new(props)
   self._retriever = retriever
   self._scheduler_match = scheduler_match
 
+  self._autosort = autosort
   self._items = {}
   self._itemmap = {}
   self._matches = {}
@@ -445,6 +449,8 @@ function M:dispose()
   self._composer = nil
   self._retriever = nil
   self._scheduler_match = nil
+
+  self._autosort = nil
   self._items = nil
   self._itemmap = nil
   self._matches = nil
@@ -601,9 +607,11 @@ function M:__match__(input)
     end
   end
 
-  table.sort(matches, function(a, b)
-    return a.score == b.score and a.order < b.order or a.score > b.score
-  end)
+  if self._autosort then
+    table.sort(matches, function(a, b)
+      return a.score == b.score and a.order < b.order or a.score > b.score
+    end)
+  end
 
   self._matches = matches
 end

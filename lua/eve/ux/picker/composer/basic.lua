@@ -430,6 +430,14 @@ function M:get_result_lnum()
   return self.result.lnum_current:snapshot()
 end
 
+---@return std.t.IWinDimension
+---@return std.t.IWinDimension
+---@return std.t.IWinDimension|nil
+function M:get_layout()
+  self:__health__()
+  return self:__layout__()
+end
+
 ---@return eve.ux.picker.BasicComposer
 function M:mark_result_dirty()
   self:__health__()

@@ -58,7 +58,6 @@ function M.gen_hlgroup_map(context)
     ---file explorer
     f_fe_date = { fg = c.fg4 },
     f_fe_group = { fg = c.red },
-    f_fe_match = { fg = c.red },
     f_fe_name_dir = { fg = c.blue },
     f_fe_name_file = { fg = c.fg1 },
     f_fe_owner = { fg = c.red },
