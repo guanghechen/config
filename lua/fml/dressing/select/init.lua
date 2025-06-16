@@ -12,6 +12,7 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public format_item            ?fun(item): string
 ---@field public kind                   ?string
 ---@field public dimension              ?fml.dressing.select.IDimension
+---@field public result_render          ?eve.ux.picker.composer.list.IResultRender
 ---@field public uuid_current           ?string
 ---@field public uuid_present           ?string
 
@@ -50,6 +51,10 @@ function M.select(items, opts, on_choice)
   local kind = opts.kind or "fallback" ---@type string
   local create_provider = providers[kind] or providers.fallback ---@type fml.dressing.select.IDataProvider
   local data, width, result_render = create_provider(items, opts)
+
+  if opts.result_render ~= nil then
+    result_render = opts.result_render
+  end
 
   local uuid_current = nil ---@type string|nil
   if opts.uuid_current then
