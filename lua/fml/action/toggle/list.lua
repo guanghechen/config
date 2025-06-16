@@ -1,5 +1,14 @@
 local __module_name__ = "fml.action.toggle.list" ---@type string
 
+---@class fml.action.toggle.IItem
+---@field public title                  string
+---@field public group                  string|nil
+---@field public snapshot               fun(): string, string
+---@field public action                 fun(): nil
+
+---@class fml.action.toggle.IListItem : eve.ux.picker.composer.list.IItem
+---@field public data                   fml.action.toggle.IItem
+
 ---@type table<string, integer>
 local group_priorities = {
   behavior = 1,
@@ -56,15 +65,6 @@ local group_flags = {
     treesitter_context = eve.context.plugin.treesitter_context,
   },
 }
-
----@class fml.action.toggle.IItem
----@field public title                  string
----@field public group                  string|nil
----@field public snapshot               fun(): string, string
----@field public action                 fun(): nil
-
----@class fml.action.toggle.IListItem : eve.ux.picker.composer.list.IItem
----@field public data                   fml.action.toggle.IItem
 
 ---@type table<string, table<string, fml.action.toggle.IItem>>
 local group_items = {
@@ -512,8 +512,16 @@ do
   end)
 end
 
+local dirty_data = true ---@type boolean
+local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+
 ---@return eve.ux.picker.composer.list.IResetData
 local function fetch_data()
+  dirty_data = false
+
   local items = {} ---@type fml.action.toggle.IListItem[]
 
   for _, flag in ipairs(toggle_item_names) do
@@ -569,17 +577,15 @@ local function execute_action(picker)
   end
 end
 
----@param _                              eve.ux.picker.ListComposer
----@param bufnr                          integer
----@param itemmap                        table<string, fml.action.toggle.IListItem>
----@param matches                        std.t.IScoredMatch[]
----@return eve.ux.picker.composer.list.IResultRenderData
+---@type eve.ux.picker.composer.list.IResultRender
 local function result_render(_, bufnr, itemmap, matches)
   local lines = {} ---@type string[]
   local uuids = {} ---@type string[]
 
   for _, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type fml.action.toggle.IListItem
+    local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+    ---@cast item                       fml.action.toggle.IListItem
+
     lines[#lines + 1] = item.text
     uuids[#uuids + 1] = item.uuid
   end
@@ -590,9 +596,10 @@ local function result_render(_, bufnr, itemmap, matches)
   local nsnr_matches = eve.var.nsnr.picker_matches ---@type integer
 
   for lnum, match in ipairs(matches) do
-    local row = lnum - 1 ---@type integer
-    local item = itemmap[match.uuid] ---@type fml.action.toggle.IListItem
+    local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+    ---@cast item                       fml.action.toggle.IListItem
 
+    local row = lnum - 1 ---@type integer
     if item and item.highlights then
       for _, hl in ipairs(item.highlights) do
         vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
@@ -619,12 +626,6 @@ eve.command.define({
 
 ---@class fml.action.toggle.list
 local M = {}
-
-local initialized = false ---@type boolean
-local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
-local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
-local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
 local picker ---@type eve.ux.picker.ListComposer
 picker = eve.ux.picker.ListComposer.new({
@@ -671,6 +672,8 @@ picker = eve.ux.picker.ListComposer.new({
 
     ---@cast item fml.action.toggle.IListItem
     composer:close()
+
+    dirty_data = true
     item.data.action()
   end,
 
@@ -688,8 +691,7 @@ function M.list(arg)
     local item = toggle_item_map[flag_name] ---@type fml.action.toggle.IItem
     item.action()
   else
-    if not initialized then
-      initialized = true
+    if dirty_data then
       local data = fetch_data()
       picker:reset_data(data)
     end

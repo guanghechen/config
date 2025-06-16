@@ -18,7 +18,7 @@ local OFFSET_TYPE = OFFSET_NAME + WIDTH_NAME ---@type integer
 local OFFSET_SCOPE = OFFSET_TYPE + WIDTH_TYPE ---@type integer
 local OFFSET_VALUE = OFFSET_SCOPE + WIDTH_SCOPE ---@type integer
 
-local initialized = false ---@type boolean
+local dirty_data = true ---@type boolean
 local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
 local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
@@ -26,6 +26,8 @@ local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.
 
 ---@return eve.ux.picker.composer.list.IResetData
 local function fetch_data()
+  dirty_data = false
+
   local items = {} ---@type fml.action.find.vim_options.IItem[]
 
   for name, info in pairs(vim.api.nvim_get_all_options_info()) do
@@ -138,6 +140,8 @@ local picker = eve.ux.picker.ListComposer.new({
     ---@cast item fml.action.find.vim_options.IItem
     composer:close()
 
+    dirty_data = false
+
     local data = item.data ---@type fml.action.find.vim_options.IItemData
     local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
     vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
@@ -154,8 +158,7 @@ local M = {}
 
 ---@return nil
 function M.find_vim_options()
-  if not initialized then
-    initialized = true
+  if dirty_data then
     local data = fetch_data()
     picker:reset_data(data)
   end

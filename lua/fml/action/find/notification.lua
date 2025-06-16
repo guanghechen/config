@@ -6,14 +6,16 @@ local __module_name__ = "fml.action.find.notification" ---@type string
 ---@class fml.action.find.notification.IItem : eve.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.notification.IItemData
 
-local initialized = false ---@type boolean
-local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
-local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
-local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+local dirty_data = true ---@type boolean
+local o_finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+local o_flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
 ---@return eve.ux.picker.composer.list.IResetData
 local function fetch_data()
+  dirty_data = false
+
   local items = {} ---@type fml.action.find.notification.IItem[]
   local tasks = eve.notifier.history() ---@type eve.builtin.notifier.ITask[]
 
@@ -53,10 +55,10 @@ picker = eve.ux.picker.ListComposer.new({
   height = 25,
   width = 120,
 
-  finder_input = finder_input,
-  flag_fuzzy = flag_fuzzy,
-  flag_regex = flag_regex,
-  flag_sensitive = flag_sensitive,
+  finder_input = o_finder_input,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_sensitive = o_flag_sensitive,
 
   preview_render = function(composer, bufnr)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
@@ -161,6 +163,8 @@ picker = eve.ux.picker.ListComposer.new({
     ---@cast item fml.action.find.notification.IItem
     composer:close()
 
+    dirty_data = true
+
     local task = item.data.task ---@type eve.builtin.notifier.ITask
     eve.notifier.notify({
       group = task.group,
@@ -173,7 +177,12 @@ picker = eve.ux.picker.ListComposer.new({
       silent = false,
     })
   end,
-
+  on_disposed = function()
+    o_finder_input:dispose()
+    o_flag_fuzzy:dispose()
+    o_flag_regex:dispose()
+    o_flag_sensitive:dispose()
+  end,
   on_refresh = function(composer)
     local data = fetch_data()
     composer:reset_data(data)
@@ -185,8 +194,7 @@ local M = {}
 
 ---@return nil
 function M.find_notifications()
-  if not initialized then
-    initialized = true
+  if dirty_data then
     local data = fetch_data()
     picker:reset_data(data)
   end
