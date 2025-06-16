@@ -1,8 +1,9 @@
 local __module_name__ = "fml.action.toggle.theme" ---@type string
 
 local themes = eve.command.definitions.toggle.theme.candidates ---@type string[]
+local o_theme = eve.context.theme.theme ---@type std.collection.IObservable
 
----@param theme                         string
+---@param theme                          string
 ---@return nil
 local function apply_theme(theme)
   if not vim.list_contains(themes, theme) then
@@ -40,35 +41,22 @@ function M.theme(arg)
   if vim.list_contains(themes, theme_name) then
     apply_theme(theme_name)
   else
-    eve.ux.fn.select({
-      title = "Select theme",
-      flag_fuzzy = true,
-      flag_regex = false,
-      input = std.Observable.from_value(theme_name),
+    local current_theme = o_theme:snapshot() ---@type std.e.Theme
+    vim.ui.select(themes, {
+      prompt = "Select theme: ",
+      uuid_current = current_theme,
       dimension = {
         row = 5,
         width = 50,
       },
-      multiple = false,
-      get_present = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
-        return theme
+      format_item = function(item)
+        return item
       end,
-      fetch_items = function()
-        local items = {} ---@type eve.ux.select.IItem[]
-        for _, theme in ipairs(themes) do
-          items[#items + 1] = { uuid = theme, text = theme }
-        end
-        return items
-      end,
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          local item = items[1] ---@type eve.ux.select.IItem
-          widget:close()
-          apply_theme(item.uuid)
-        end
-      end,
-    })
+    }, function(choice)
+      if choice then
+        apply_theme(choice)
+      end
+    end)
   end
 end
 
