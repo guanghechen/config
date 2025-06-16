@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.toggle" ---@type string
+local __module_name__ = "fml.action.toggle.list" ---@type string
 
 ---@type table<string, integer>
 local group_priorities = {
@@ -63,8 +63,8 @@ local group_flags = {
 ---@field public snapshot               fun(): string, string
 ---@field public action                 fun(): nil
 
-local ai_providers = eve.command.definitions.toggle.ai_provider.candidates ---@type string[]
-local themes = eve.command.definitions.toggle.theme.candidates ---@type string[]
+---@class fml.action.toggle.IListItem : eve.ux.picker.composer.list.IItem
+---@field public data                   fml.action.toggle.IItem
 
 ---@type table<string, table<string, fml.action.toggle.IItem>>
 local group_items = {
@@ -512,32 +512,102 @@ do
   end)
 end
 
----@param theme                         string
----@return nil
-local function apply_theme(theme)
-  if not vim.list_contains(themes, theme) then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "apply_theme",
-      message = "Unknown theme.",
-      details = { theme = theme },
-    })
-    return
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_data()
+  local items = {} ---@type fml.action.toggle.IListItem[]
+
+  for _, flag in ipairs(toggle_item_names) do
+    local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
+    local text_group = item.group or "" ---@type string
+    local text_flag, hln_flag = item.snapshot()
+
+    local w_p_title = 24 ---@type integer
+    local w_p_group = 12 ---@type integer
+    local offset = w_p_title + w_p_group + 2 ---@type integer
+
+    ---@type string
+    local text = string.format(
+      "%s %s %s",
+      std.string.pad_end(text_group, w_p_group, " "),
+      std.string.pad_end(item.title, w_p_title, " "),
+      text_flag
+    )
+
+    ---@type std.t.IHighlightInline[]
+    local highlights = {
+      { coll = 0, colr = #text_group + 1, hlname = "Special" },
+      { coll = offset, colr = offset + #text_flag, hlname = hln_flag },
+    }
+
+    ---@type fml.action.toggle.IListItem
+    local list_item = {
+      uuid = flag,
+      text = text,
+      text_lower = text:lower(),
+      highlights = highlights,
+      data = item,
+    }
+    items[#items + 1] = list_item
   end
 
-  local app_home = std.path.locate_app_config_home("guanghechen")
-  local script_path = std.path.join(app_home, "config/theme/apply_theme.mjs")
-  local ok, error = pcall(function()
-    vim.fn.system({ "node", script_path, theme })
-  end)
-  if not ok then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "apply_theme",
-      message = "Failed to toggle theme.",
-      details = { theme = theme, app_home = app_home, script_path = script_path, error = error },
-    })
+  ---@type eve.ux.picker.composer.list.IResetData
+  return { items = items }
+end
+
+---@param picker                        eve.ux.picker.ListComposer
+---@return nil
+local function execute_action(picker)
+  local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
+  if lnum_current >= 1 then
+    local item = picker:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    if item then
+      ---@cast item fml.action.toggle.IListItem
+      item.data.action()
+      local data = fetch_data()
+      picker:reset_data(data)
+    end
   end
+end
+
+---@param _                              eve.ux.picker.ListComposer
+---@param bufnr                          integer
+---@param itemmap                        table<string, fml.action.toggle.IListItem>
+---@param matches                        std.t.IScoredMatch[]
+---@return eve.ux.picker.composer.list.IResultRenderData
+local function result_render(_, bufnr, itemmap, matches)
+  local lines = {} ---@type string[]
+  local uuids = {} ---@type string[]
+
+  for _, match in ipairs(matches) do
+    local item = itemmap[match.uuid] ---@type fml.action.toggle.IListItem
+    lines[#lines + 1] = item.text
+    uuids[#uuids + 1] = item.uuid
+  end
+
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+  local nsnr_content = eve.var.nsnr.picker_result ---@type integer
+  local nsnr_matches = eve.var.nsnr.picker_matches ---@type integer
+
+  for lnum, match in ipairs(matches) do
+    local row = lnum - 1 ---@type integer
+    local item = itemmap[match.uuid] ---@type fml.action.toggle.IListItem
+
+    if item and item.highlights then
+      for _, hl in ipairs(item.highlights) do
+        vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
+      end
+    end
+
+    if match.matches then
+      for _, m in ipairs(match.matches) do
+        vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+      end
+    end
+  end
+
+  ---@type eve.ux.picker.composer.list.IResultRenderData
+  return { uuids = uuids }
 end
 
 eve.command.define({
@@ -547,8 +617,68 @@ eve.command.define({
   candidates = toggle_item_names,
 }, true)
 
----@class fml.action.ux
+---@class fml.action.toggle.list
 local M = {}
+
+local initialized = false ---@type boolean
+local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+
+local picker ---@type eve.ux.picker.ListComposer
+picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__,
+  permanent = true,
+  title = "Toggle Select",
+  height = math.max(math.floor(vim.o.lines * 0.6), 24),
+  width = 64,
+
+  finder_input = finder_input,
+  flag_fuzzy = flag_fuzzy,
+  flag_regex = flag_regex,
+  flag_sensitive = flag_sensitive,
+
+  result_render = result_render,
+
+  keymaps_finder = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<Tab>",
+      desc = "toggle: execute action",
+      callback = function()
+        execute_action(picker)
+      end,
+    },
+  },
+
+  keymaps_result = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<Tab>",
+      aliases = { "l", "h", "<Left>", "<Right>" },
+      desc = "toggle: execute action",
+      callback = function()
+        execute_action(picker)
+      end,
+    },
+  },
+
+  on_confirm = function(composer, item)
+    if item == nil then
+      return
+    end
+
+    ---@cast item fml.action.toggle.IListItem
+    composer:close()
+    item.data.action()
+  end,
+
+  on_refresh = function(composer)
+    local data = fetch_data()
+    composer:reset_data(data)
+  end,
+})
 
 ---@param arg                           string|nil
 ---@return nil
@@ -558,236 +688,17 @@ function M.list(arg)
     local item = toggle_item_map[flag_name] ---@type fml.action.toggle.IItem
     item.action()
   else
-    local w_p_title = 24 ---@type integer
-    local w_p_group = 12 ---@type integer
-    local offset = w_p_title + w_p_group + 2 ---@type integer
-
-    local select = nil ---@type eve.ux.Select|nil
-
-    ---@type std.t.IKeymap[]
-    local main_keymaps = {
-      {
-        modes = { "n" },
-        key = "l",
-        aliases = { "h", "<Left>", "<Right>" },
-        callback = function()
-          if select then
-            local uuid = select.context:get_current_uuid() ---@type string|nil
-            local item = uuid and toggle_item_map[uuid] or nil ---@type fml.action.toggle.IItem|nil
-            if item then
-              item.action()
-              select:mark_data_dirty()
-            end
-          end
-        end,
-      },
-    }
-
-    select = eve.ux.Select.new({
-      title = "Toggle Select",
-      flag_fuzzy = std.Observable.from_value(true),
-      flag_regex = std.Observable.from_value(false),
-      input = std.Observable.from_value(flag_name),
-      dimension = {
-        row = 3,
-        width = 64,
-        max_height = math.max(math.floor(vim.o.lines * 0.6), 24),
-      },
-      multiple = false,
-      permanent = false,
-      preview_enabled = false,
-      extend_preset_keymaps = true,
-      main_keymaps = main_keymaps,
-      provider = {
-        fetch_data = function()
-          local items = {} ---@type eve.ux.select.IItem[]
-          for _, flag in ipairs(toggle_item_names) do
-            local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
-
-            local text_group = item.group or "" ---@type string
-            local text_flag = item.snapshot()
-
-            ---@type string
-            local text = string.format(
-              "%s %s %s",
-              std.string.pad_end(text_group, w_p_group, " "),
-              std.string.pad_end(item.title, w_p_title, " "),
-              text_flag
-            )
-
-            items[#items + 1] = { uuid = flag, text = text, data = item }
-          end
-          return { items = items }
-        end,
-        render_item = function(item, match)
-          local flag_item = item.data ---@type fml.action.toggle.IItem
-          local text_group = flag_item.group or "" ---@type string
-          local text_flag, hln_flag = flag_item.snapshot()
-
-          ---@type std.t.IHighlightInline[]
-          local highlights = {
-            { coll = 0, colr = #text_group + 1, hlname = "Special" },
-            { coll = offset, colr = offset + #text_flag, hlname = hln_flag },
-          }
-
-          for _, piece in ipairs(match.matches) do
-            highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-          end
-          return item.text, highlights
-        end,
-      },
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          local item = items[1] ---@type eve.ux.select.IItem
-          widget:close()
-          item.data.action()
-        end
-      end,
-    })
-    select:focus()
-  end
-end
-
----@param arg                           string|nil
----@return nil
-function M.toggle_ai_provider(arg)
-  local ai_provider = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.list_contains(ai_providers, ai_provider) then
-    eve.context.flight.ai_provider:next(ai_provider)
-  else
-    eve.ux.fn.select({
-      title = "Toggle ai provider",
-      flag_fuzzy = true,
-      flag_regex = false,
-      input = std.Observable.from_value(ai_provider),
-      dimension = {
-        row = 5,
-        width = 50,
-      },
-      multiple = false,
-      get_present = function()
-        return eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
-      end,
-      fetch_items = function()
-        local items = {} ---@type eve.ux.select.IItem[]
-        for _, flight in ipairs(ai_providers) do
-          items[#items + 1] = { uuid = flight, text = flight }
-        end
-        return items
-      end,
-      render_item = function(item, match)
-        local text = item.uuid ---@type string
-        local highlights = { { coll = 0, colr = -1, hlname = "String" } } ---@type std.t.IHighlightInline[]
-        for _, piece in ipairs(match.matches) do
-          highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-        end
-        return text, highlights
-      end,
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          local item = items[1] ---@type eve.ux.select.IItem
-          widget:close()
-          eve.context.flight.ai_provider:next(item.uuid)
-        end
-      end,
-    })
-  end
-end
-
----@return nil
-function M.toggle_maximize()
-  local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
-  if winnr_command == nil or winnr_command < 1 or not vim.api.nvim_win_is_valid(winnr_command) then
-    return
-  end
-
-  local meta_command = eve.win.resolve(winnr_command, false) ---@type eve.builtin.win.IMeta|nil
-  if meta_command ~= nil and meta_command.wintype == eve.win.Types.MAXIMIZE then
-    vim.api.nvim_win_close(winnr_command, true)
-    return
-  end
-
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  local winnr_maximized = nil ---@type integer|nil
-  for _, winnr in ipairs(winnrs) do
-    local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
-    if meta ~= nil and meta.wintype == eve.win.Types.MAXIMIZE then
-      winnr_maximized = winnr
-      break
+    if not initialized then
+      initialized = true
+      local data = fetch_data()
+      picker:reset_data(data)
     end
-  end
 
-  if winnr_maximized ~= nil and vim.api.nvim_win_is_valid(winnr_maximized) then
-    vim.api.nvim_tabpage_set_win(tabnr, winnr_maximized)
-    return
-  end
+    if flag_name ~= "" then
+      finder_input:next(flag_name)
+    end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-  if eve.buf.is_valid(bufnr) then
-    local winnr = vim.api.nvim_open_win(bufnr, false, {
-      relative = "editor",
-      anchor = "NW",
-      row = 1,
-      col = 0,
-      width = vim.o.columns - 2,
-      height = vim.o.lines - 4,
-      border = "rounded",
-      style = "minimal",
-      focusable = true,
-      title = " MAXIMIZED ",
-      title_pos = "center",
-    })
-
-    eve.win.set_type(winnr, eve.win.Types.MAXIMIZE)
-    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
-
-    vim.wo[winnr].number = true
-    vim.wo[winnr].relativenumber = true
-    vim.wo[winnr].signcolumn = "yes"
-    vim.wo[winnr].wrap = false
-
-    vim.api.nvim_win_set_buf(winnr, bufnr)
-    vim.api.nvim_tabpage_set_win(tabnr, winnr)
-  end
-end
-
----@param arg                           unknown|nil
----@return nil
-function M.toggle_theme(arg)
-  local theme_name = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.list_contains(themes, theme_name) then
-    apply_theme(theme_name)
-  else
-    eve.ux.fn.select({
-      title = "Select theme",
-      flag_fuzzy = true,
-      flag_regex = false,
-      input = std.Observable.from_value(theme_name),
-      dimension = {
-        row = 5,
-        width = 50,
-      },
-      multiple = false,
-      get_present = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
-        return theme
-      end,
-      fetch_items = function()
-        local items = {} ---@type eve.ux.select.IItem[]
-        for _, theme in ipairs(themes) do
-          items[#items + 1] = { uuid = theme, text = theme }
-        end
-        return items
-      end,
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          local item = items[1] ---@type eve.ux.select.IItem
-          widget:close()
-          apply_theme(item.uuid)
-        end
-      end,
-    })
+    picker:focus()
   end
 end
 

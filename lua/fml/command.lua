@@ -650,55 +650,55 @@ command
   .implement({
     uuid = K.toggle.list.uuid,
     action = function(arg)
-      require("fml.action.toggle").list(arg)
+      require("fml.action.toggle.list").list(arg)
     end,
   })
   .implement({
     uuid = K.toggle.ai_provider.uuid,
     action = function(arg)
-      require("fml.action.toggle").toggle_ai_provider(arg)
+      require("fml.action.toggle.ai").ai_provider(arg)
     end,
   })
   .implement({
     uuid = K.toggle.markdown.uuid,
     action = function()
-      require("fml.action.toggle").list("markdown_local")
+      require("fml.action.toggle.list").list("markdown_local")
     end,
   })
   .implement({
     uuid = K.toggle.maximize.uuid,
     action = function()
-      require("fml.action.toggle").toggle_maximize()
+      require("fml.action.toggle.maximize").maximize()
     end,
   })
   .implement({
     uuid = K.toggle.relativenumber.uuid,
     action = function()
-      require("fml.action.toggle").list("relativenumber_ux")
+      require("fml.action.toggle.list").list("relativenumber_ux")
     end,
   })
   .implement({
     uuid = K.toggle.theme.uuid,
     action = function(arg)
-      require("fml.action.toggle").toggle_theme(arg)
+      require("fml.action.toggle.theme").theme(arg)
     end,
   })
   .implement({
     uuid = K.toggle.theme_variant.uuid,
     action = function()
-      require("fml.action.toggle").list("theme_variant_ux")
+      require("fml.action.toggle.list").list("theme_variant_ux")
     end,
   })
   .implement({
     uuid = K.toggle.transparency.uuid,
     action = function()
-      require("fml.action.toggle").list("transparency_ux")
+      require("fml.action.toggle.list").list("transparency_ux")
     end,
   })
   .implement({
     uuid = K.toggle.username.uuid,
     action = function()
-      require("fml.action.toggle").list("username_ux")
+      require("fml.action.toggle.list").list("username_ux")
     end,
   })
 
