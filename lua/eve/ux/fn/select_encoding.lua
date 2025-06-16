@@ -136,6 +136,12 @@ local function select_encoding(params)
       end
       composer:close()
     end,
+    on_disposed = function()
+      finder_input:dispose()
+      flag_fuzzy:dispose()
+      flag_regex:dispose()
+      flag_sensitive:dispose()
+    end,
   })
 
   local data = fetch_data(present) ---@type eve.ux.picker.composer.list.IResetData
