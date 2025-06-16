@@ -1,3 +1,5 @@
+local __module_name__ = "fml.action.find.vim_options" ---@type string
+
 ---@class fml.action.find.vim_options.IItemData
 ---@field public name                   string
 ---@field public type                   string
@@ -5,7 +7,7 @@
 ---@field public value                  string|number|boolean
 ---@field public text                   string
 
----@class fml.action.find.vim_options.IItem : eve.ux.select.IItem
+---@class fml.action.find.vim_options.IItem : eve.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.vim_options.IItemData
 
 local WIDTH_NAME = 25 ---@type integer
@@ -16,86 +18,134 @@ local OFFSET_TYPE = OFFSET_NAME + WIDTH_NAME ---@type integer
 local OFFSET_SCOPE = OFFSET_TYPE + WIDTH_TYPE ---@type integer
 local OFFSET_VALUE = OFFSET_SCOPE + WIDTH_SCOPE ---@type integer
 
----@type eve.ux.select.IProvider
-local provider = {
-  fetch_data = function()
-    local items = {} ---@type eve.ux.select.IItem[]
+local initialized = false ---@type boolean
+local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
-    for name, info in pairs(vim.api.nvim_get_all_options_info()) do
-      local ok, value = pcall(vim.api.nvim_get_option_value, name, {})
-      if not ok or value == nil then
-        value = info.default
-      end
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_data()
+  local items = {} ---@type fml.action.find.vim_options.IItem[]
 
-      local text_name = std.string.pad_end(info.name, WIDTH_NAME, " ") ---type string
-      local text_type = std.string.pad_end(info.type, WIDTH_TYPE, " ") ---type string
-      local text_scope = std.string.pad_end(info.scope, WIDTH_SCOPE, " ") ---type string
-      local text_value = tostring(value):gsub(string.char(9), "<TAB>"):gsub("", "<C-F>"):gsub(" ", "<Space>") ---@type string
-      local text = text_name .. text_type .. text_scope .. text_value ---@type string
-      local text_for_search = text_name .. string.rep(" ", WIDTH_TYPE + WIDTH_SCOPE) .. text_value ---@type string
-
-      ---@type fml.action.find.vim_options.IItemData
-      local data = {
-        name = name,
-        scope = info.scope,
-        type = info.type,
-        value = value,
-        text = text,
-      }
-
-      ---@type fml.action.find.vim_options.IItem
-      local item = { uuid = name, text = text_for_search, data = data }
-      table.insert(items, item)
+  for name, info in pairs(vim.api.nvim_get_all_options_info()) do
+    local ok, value = pcall(vim.api.nvim_get_option_value, name, {})
+    if not ok or value == nil then
+      value = info.default
     end
 
-    table.sort(items, function(a, b)
-      return a.data.name < b.data.name
-    end)
-    return { items = items }
-  end,
-  render_item = function(item, match)
-    local data = item.data ---@type fml.action.find.vim_options.IItemData
+    local text_name = std.string.pad_end(info.name, WIDTH_NAME, " ") ---@type string
+    local text_type = std.string.pad_end(info.type, WIDTH_TYPE, " ") ---@type string
+    local text_scope = std.string.pad_end(info.scope, WIDTH_SCOPE, " ") ---@type string
+    local text_value = tostring(value):gsub(string.char(9), "<TAB>"):gsub("", "<C-F>"):gsub(" ", "<Space>") ---@type string
+    local text = text_name .. text_type .. text_scope .. text_value ---@type string
+    local text_for_search = text_name .. string.rep(" ", WIDTH_TYPE + WIDTH_SCOPE) .. text_value ---@type string
 
     ---@type std.t.IHighlightInline[]
     local highlights = {
-      { coll = OFFSET_NAME, colr = OFFSET_NAME + #data.name, hlname = "f_us_vo_name" },
-      { coll = OFFSET_TYPE, colr = OFFSET_TYPE + #data.type, hlname = "f_us_vo_type" },
-      { coll = OFFSET_SCOPE, colr = OFFSET_SCOPE + #data.scope, hlname = "f_us_vo_scope" },
-      { coll = OFFSET_VALUE, colr = #item.text, hlname = "f_us_vo_value" },
+      { coll = OFFSET_NAME, colr = OFFSET_NAME + #info.name, hlname = "f_us_vo_name" },
+      { coll = OFFSET_TYPE, colr = OFFSET_TYPE + #info.type, hlname = "f_us_vo_type" },
+      { coll = OFFSET_SCOPE, colr = OFFSET_SCOPE + #info.scope, hlname = "f_us_vo_scope" },
+      { coll = OFFSET_VALUE, colr = -1, hlname = "f_us_vo_value" },
     }
 
-    for _, piece in ipairs(match.matches) do
-      ---@type std.t.IHighlightInline[]
-      local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-      table.insert(highlights, highlight)
-    end
-    return data.text, highlights
-  end,
-}
+    ---@type fml.action.find.vim_options.IItemData
+    local data = {
+      name = name,
+      scope = info.scope,
+      type = info.type,
+      value = value,
+      text = text,
+    }
 
----@type eve.ux.ISelect
-local select = eve.ux.Select.new({
-  dimension = {
-    height = 0.8,
-    max_height = 1,
-    max_width = 1,
-    width = 0.8,
-    width_preview = 0,
-  },
-  dirty_on_invisible = false,
-  multiple = false,
-  preview_enabled = false,
-  extend_preset_keymaps = true,
-  provider = provider,
+    ---@type fml.action.find.vim_options.IItem
+    local item = {
+      uuid = name,
+      text = text_for_search,
+      text_lower = text_for_search:lower(),
+      highlights = highlights,
+      data = data,
+    }
+    table.insert(items, item)
+  end
+
+  table.sort(items, function(a, b)
+    return a.data.name < b.data.name
+  end)
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  return { items = items }
+end
+
+local picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__,
+  permanent = true,
   title = "Find Vim Options",
-  on_confirm = function(widget, items)
-    if #items == 1 then
-      widget:close()
-      local item = items[1] ---@type eve.ux.select.IItem
-      local data = item.data ---@type fml.action.find.vim_options.IItemData
-      local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
-      vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
+  height = 25,
+  width = 120,
+
+  finder_input = finder_input,
+  flag_fuzzy = flag_fuzzy,
+  flag_regex = flag_regex,
+  flag_sensitive = flag_sensitive,
+
+  result_render = function(_, bufnr, itemmap, matches)
+    ---@cast itemmap                    table<string, fml.action.find.vim_options.IItem>
+    local lines = {} ---@type string[]
+    local uuids = {} ---@type string[]
+    for _, match in ipairs(matches) do
+      local item = itemmap[match.uuid] ---@type fml.action.find.vim_options.IItem
+      lines[#lines + 1] = item.data.text
+      uuids[#uuids + 1] = item.uuid
     end
+
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+    local nsnr_content = eve.var.nsnr.picker_result
+    local nsnr_matches = eve.var.nsnr.picker_matches
+
+    for lnum, match in ipairs(matches) do
+      local row = lnum - 1 ---@type integer
+      local item = itemmap[match.uuid]
+
+      if item and item.highlights then
+        for _, hl in ipairs(item.highlights) do
+          vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
+        end
+      end
+
+      if match.matches then
+        for _, m in ipairs(match.matches) do
+          local offset_l, offset_r = m.l, m.r
+          if m.l >= WIDTH_NAME then
+            offset_l = m.l + (WIDTH_TYPE + WIDTH_SCOPE)
+            offset_r = m.r + (WIDTH_TYPE + WIDTH_SCOPE)
+          end
+          vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, offset_l }, { row, offset_r }, { priority = 30 })
+        end
+      end
+    end
+
+    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
+    return data
+  end,
+
+  on_confirm = function(composer, item)
+    if item == nil then
+      return
+    end
+
+    ---@cast item fml.action.find.vim_options.IItem
+    composer:close()
+
+    local data = item.data ---@type fml.action.find.vim_options.IItemData
+    local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
+    vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
+  end,
+
+  on_refresh = function(composer)
+    local data = fetch_data() ---@type eve.ux.picker.composer.list.IResetData
+    composer:reset_data(data)
   end,
 })
 
@@ -104,7 +154,12 @@ local M = {}
 
 ---@return nil
 function M.find_vim_options()
-  select:focus()
+  if not initialized then
+    initialized = true
+    local data = fetch_data()
+    picker:reset_data(data)
+  end
+  picker:focus()
 end
 
 return M

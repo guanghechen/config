@@ -200,10 +200,10 @@ function M.gen_hlgroup_map(context)
     f_utw_indent_float = { fg = c.bg4 },
 
     ---vim options
-    f_us_vo_name = { fg = c.purple },
+    f_us_vo_name = { fg = c.fg1 },
     f_us_vo_type = { fg = c.orange },
     f_us_vo_scope = { fg = c.red, bold = true },
-    f_us_vo_value = { fg = c.fg1 },
+    f_us_vo_value = { fg = c.fg3 },
 
     ---winsep
     f_winsep_border = {},
