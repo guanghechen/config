@@ -687,7 +687,6 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
         end
       end,
     },
-
     {
       disabled = self._on_refresh == std.fn.noop,
       modes = { "i", "n", "v" },
@@ -703,6 +702,32 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
             message = "Failed to run on_refresh",
             details = { error = refresh_error },
           })
+        end
+      end,
+    },
+    {
+      disabled = self._finder_input_history == nil,
+      modes = { "i", "n", "v" },
+      key = "<C-i>",
+      desc = "picker: history backward",
+      callback = function()
+        local present = self._finder_input_history:present() ---@type string|nil
+        local finder_input = self._finder_input_history:backward() ---@type string|nil
+        if present ~= finder_input and finder_input ~= nil then
+          self.finder:set_content(finder_input)
+        end
+      end,
+    },
+    {
+      disabled = self._finder_input_history == nil,
+      modes = { "i", "n", "v" },
+      key = "<C-o>",
+      desc = "picker: history forward",
+      callback = function()
+        local present = self._finder_input_history:present() ---@type string|nil
+        local finder_input = self._finder_input_history:forward() ---@type string|nil
+        if present ~= finder_input and finder_input ~= nil then
+          self.finder:set_content(finder_input)
         end
       end,
     },
