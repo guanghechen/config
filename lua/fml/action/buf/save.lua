@@ -89,15 +89,14 @@ function M.save()
       end
 
       if std.path.is_exist_filepath(next_filepath) then
-        vim.ui.select(
-          { "Yes", "No" },
-          { prompt = "The file is already existed, do you want to override it?" },
-          function(choice)
-            if choice == "Yes" then
-              on_save()
-            end
+        vim.ui.select({ "Yes", "No" }, {
+          name = __module_name__,
+          prompt = "The file is already existed, do you want to override it?",
+        }, function(choice)
+          if choice == "Yes" then
+            on_save()
           end
-        )
+        end)
         return false
       end
 

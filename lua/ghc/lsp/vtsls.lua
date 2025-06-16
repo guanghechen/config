@@ -35,6 +35,7 @@ local function on_attach(client, bufnr)
       local files = result.body.files
       table.insert(files, 1, "Enter new path...")
       vim.ui.select(files, {
+        name = __module_name__,
         prompt = "Select move destination:",
         format_item = function(f)
           return vim.fn.fnamemodify(f, ":~:.")

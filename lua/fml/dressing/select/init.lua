@@ -1,3 +1,5 @@
+local __module_name__ = "fml.dressing.select" ---@type string
+
 ---@class fml.dressing.select.IDimension
 ---@field public row                    ?integer
 ---@field public col                    ?integer
@@ -5,6 +7,7 @@
 ---@field public width                  ?integer
 
 ---@class fml.dressing.select.IOptions
+---@field public name                   ?string
 ---@field public prompt                 ?string
 ---@field public format_item            ?fun(item): string
 ---@field public kind                   ?string
@@ -42,6 +45,7 @@ local M = {}
 ---@param on_choice                     fun(item: any|nil, idx: integer|nil): nil
 ---@return nil
 function M.select(items, opts, on_choice)
+  local name = opts.name or __module_name__ ---@type string
   local title = (opts.prompt or opts.kind or "--"):gsub(":$", "") ---@type string
   local kind = opts.kind or "fallback" ---@type string
   local create_provider = providers[kind] or providers.fallback ---@type fml.dressing.select.IDataProvider
@@ -96,7 +100,7 @@ function M.select(items, opts, on_choice)
 
   ---@type eve.ux.picker.ListComposer
   local picker = eve.ux.picker.ListComposer.new({
-    name = "dressing-select",
+    name = name,
     permanent = false,
     title = title,
     height = picker_height,

@@ -64,6 +64,7 @@ function M.copy_filepath(arg)
     copy_current_filepath(scope, filepath)
   else
     vim.ui.select(scopes, {
+      name = __module_name__,
       prompt = "Copy current filepath: ",
       uuid_current = "relative",
       dimension = {

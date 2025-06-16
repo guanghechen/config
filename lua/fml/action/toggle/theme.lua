@@ -43,6 +43,7 @@ function M.theme(arg)
   else
     local current_theme = o_theme:snapshot() ---@type std.e.Theme
     vim.ui.select(themes, {
+      name = __module_name__,
       prompt = "Select theme: ",
       uuid_current = current_theme,
       dimension = {
