@@ -63,35 +63,21 @@ function M.copy_filepath(arg)
   if vim.list_contains(scopes, scope) then
     copy_current_filepath(scope, filepath)
   else
-    eve.ux.fn.select({
-      title = "Copy current filepath",
-      flag_fuzzy = true,
-      flag_regex = false,
-      input = std.Observable.from_value(scope),
+    vim.ui.select(scopes, {
+      prompt = "Copy current filepath: ",
+      uuid_current = "relative",
       dimension = {
-        row = 5,
-        width = 50,
+        row = 3,
+        width = 20,
       },
-      multiple = false,
-      get_cursor = function()
-        return "relative"
+      format_item = function(item)
+        return item
       end,
-      fetch_items = function()
-        local items = {} ---@type eve.ux.select.IItem[]
-        for _, candidate in ipairs(scopes) do
-          table.insert(items, { uuid = candidate, text = candidate })
-        end
-        return items
-      end,
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          widget:close()
-          local item = items[1] ---@type eve.ux.select.IItem
-          local candidate = item.uuid ---@type string
-          copy_current_filepath(candidate, filepath)
-        end
-      end,
-    })
+    }, function(choice)
+      if choice then
+        copy_current_filepath(choice, filepath)
+      end
+    end)
   end
 end
 
