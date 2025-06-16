@@ -276,6 +276,7 @@ function M:__create_win_as_needed__()
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
     vim.wo[winnr].number = false
+    vim.wo[winnr].relativenumber = false
     vim.wo[winnr].signcolumn = "no"
     vim.wo[winnr].spell = false
     vim.wo[winnr].wrap = true

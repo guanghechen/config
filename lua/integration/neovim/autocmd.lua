@@ -201,19 +201,6 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
----terminal
-vim.api.nvim_create_autocmd("TermOpen", {
-  group = eve.nvim.augroup("filetype_terminal"),
-  callback = function()
-    vim.opt_local.number = false -- Disable line numbers
-    vim.opt_local.relativenumber = false -- Disable relative numbers
-    vim.opt_local.signcolumn = "no" -- Hide sign column
-    vim.schedule(function()
-      vim.cmd.startinsert() -- Start in insert mode
-    end)
-  end,
-})
-
 --filetype functional-------------------------------------------------------------------------------
 
 --- Close some filetypes with q
