@@ -1,27 +1,95 @@
+local __module_name__ = "fml.action.find.notification" ---@type string
+
 ---@class fml.action.find.notification.IItemData
 ---@field public task                   eve.builtin.notifier.ITask
 
----@class fml.action.find.notification.IItem : eve.ux.select.IItem
+---@class fml.action.find.notification.IItem : eve.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.notification.IItemData
 
----@type eve.ux.select.IProvider
-local provider = {
-  fetch_data = function()
-    local items = {} ---@type eve.ux.select.IItem[]
-    local tasks = eve.notifier.history() ---@type eve.builtin.notifier.ITask[]
-    for index = #tasks, 1, -1 do
-      local task = tasks[index] ---@type eve.builtin.notifier.ITask
-      local text =
-        string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), eve.icon.loglevel[task.level], task.title)
-      local item = { uuid = tostring(index), text = text, data = task } ---@type eve.ux.select.IItem
-      items[#items + 1] = item
+local initialized = false ---@type boolean
+local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_data()
+  local items = {} ---@type fml.action.find.notification.IItem[]
+  local tasks = eve.notifier.history() ---@type eve.builtin.notifier.ITask[]
+
+  for index = #tasks, 1, -1 do
+    local task = tasks[index] ---@type eve.builtin.notifier.ITask
+    local text =
+      string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), eve.icon.loglevel[task.level], task.title)
+
+    local suffix = task.level:lower() ---@type string
+    ---@type std.t.IHighlightInline[]
+    local highlights = {
+      { coll = 0, colr = 8, hlname = "f_un_icon_" .. suffix },
+      { coll = 9, colr = 12, hlname = "f_un_icon_" .. suffix },
+      { coll = 13, colr = -1, hlname = "f_un_title_" .. suffix },
+    }
+
+    ---@type fml.action.find.notification.IItem
+    local item = {
+      uuid = tostring(index),
+      text = text,
+      text_lower = text:lower(),
+      highlights = highlights,
+      data = { task = task },
+    }
+    items[#items + 1] = item
+  end
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  return { items = items }
+end
+
+local picker ---@type eve.ux.picker.ListComposer
+picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__,
+  permanent = true,
+  title = "Find notifications",
+  height = 25,
+  width = 120,
+
+  finder_input = finder_input,
+  flag_fuzzy = flag_fuzzy,
+  flag_regex = flag_regex,
+  flag_sensitive = flag_sensitive,
+
+  preview_render = function(composer, bufnr)
+    local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
+
+    if lnum_current < 1 then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
+      ---@type eve.ux.picker.preview.IDrawResult
+      return {
+        cursorline = false,
+        number = false,
+        title = "Notification",
+        wrap = false,
+      }
     end
-    local result = { items = items } ---@type eve.ux.select.IData
-    return result
-  end,
-  fetch_preview_data = function(item)
-    local task = item.data ---@type eve.builtin.notifier.ITask
-    local lines = vim.list_extend({
+
+    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    if item == nil then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
+      ---@type eve.ux.picker.preview.IDrawResult
+      return {
+        cursorline = false,
+        number = false,
+        title = "Notification",
+        wrap = false,
+      }
+    end
+
+    ---@cast item fml.action.find.notification.IItem
+
+    local task = item.data.task ---@type eve.builtin.notifier.ITask
+
+    ---@type string[]
+    local header_lines = {
       string.format("## %s", task.title),
       "",
       string.format("- **uuid**:      %s", task.uuid),
@@ -32,84 +100,83 @@ local provider = {
       "",
       "## Content",
       "",
-    }, task.lines) ---@type string[]
+    }
+
+    local content_start_line = #header_lines ---@type integer
+    local lines = vim.list_extend(header_lines, task.lines) ---@type string[]
 
     if task.highlights then
-      lines[#lines + 1] = "" ---@type string
-      lines[#lines + 1] = "## Highlight" ---@type string
-      lines[#lines + 1] = "" ---@type string
-      lines[#lines + 1] = "--------------------------------" ---@type string
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = "## Highlight"
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = "--------------------------------"
 
       for _, hl in ipairs(task.highlights) do
-        local text = string.format("%3d %5d %5d   %s", hl.lnum, hl.coll, hl.colr, hl.hlname) ---@type string
-        lines[#lines + 1] = text ---@type string
+        local text = string.format("%3d %5d %5d   %s", hl.lnum, hl.coll, hl.colr, hl.hlname)
+        lines[#lines + 1] = text
       end
     end
 
-    ---@type eve.ux.ISearchPreviewData
-    local result = {
-      lines = lines,
-      filetype = "markdown",
-      highlights = {},
-      title = "message",
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+    local nsnr_content = eve.var.nsnr.picker_preview ---@type integer
+    if task.highlights then
+      for _, hl in ipairs(task.highlights) do
+        local preview_row = content_start_line + hl.lnum - 1 ---@type integer
+        if preview_row < #lines then
+          vim.hl.range(
+            bufnr,
+            nsnr_content,
+            hl.hlname,
+            { preview_row, hl.coll },
+            { preview_row, hl.colr },
+            { priority = 10 }
+          )
+        end
+      end
+    end
+
+    if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
+      local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
+      local has_ts_parser = pcall(vim.treesitter.language.add, lang)
+      if has_ts_parser then
+        vim.treesitter.start(bufnr, lang)
+      end
+    end
+
+    ---@type eve.ux.picker.preview.IDrawResult
+    return {
+      cursorline = false,
+      number = false,
+      title = task.title,
+      wrap = false,
     }
-    return result
   end,
-  render_item = function(item, match)
-    local suffix = item.data.level:lower() ---@type string
-    ---@type std.t.IHighlightInline[]
-    local highlights = {
-      { coll = 0, colr = 8, hlname = "f_un_icon_" .. suffix },
-      { coll = 9, colr = 12, hlname = "f_un_icon_" .. suffix },
-      { coll = 13, colr = -1, hlname = "f_un_title_" .. suffix },
-    }
 
-    for _, piece in ipairs(match.matches) do
-      ---@type std.t.IHighlightInline[]
-      local highlight = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-      table.insert(highlights, highlight)
+  on_confirm = function(composer, item)
+    if item == nil then
+      return
     end
-    return item.text, highlights
+
+    ---@cast item fml.action.find.notification.IItem
+    composer:close()
+
+    local task = item.data.task ---@type eve.builtin.notifier.ITask
+    eve.notifier.notify({
+      group = task.group,
+      level = task.level,
+      title = task.title,
+      content = task.content,
+      highlights = task.highlights,
+      timeout = task.timeout,
+      anonymous = true,
+      silent = false,
+    })
   end,
-}
 
-local select = nil ---@type eve.ux.ISelect|nil
-
-select = eve.ux.Select.new({
-  dimension = {
-    height = 0.8,
-    max_height = 1,
-    max_width = 1,
-    width = 0.35,
-    width_preview = 0.5,
-  },
-  dirty_on_invisible = false,
-  multiple = true,
-  preview_enabled = true,
-  extend_preset_keymaps = true,
-  permanent = true,
-  provider = provider,
-  title = "Find notifications",
-  on_close = function()
-    if select ~= nil then
-      select:mark_data_dirty()
-    end
-  end,
-  on_confirm = function(widget, items)
-    widget:close()
-    for _, item in ipairs(items) do
-      local task = item.data ---@type eve.builtin.notifier.ITask
-      eve.notifier.notify({
-        group = task.group,
-        level = task.level,
-        title = task.title,
-        content = task.content,
-        highlights = task.highlights,
-        timeout = task.timeout,
-        anonymous = true,
-        silent = false,
-      })
-    end
+  on_refresh = function(composer)
+    local data = fetch_data()
+    composer:reset_data(data)
   end,
 })
 
@@ -118,7 +185,12 @@ local M = {}
 
 ---@return nil
 function M.find_notifications()
-  select:focus()
+  if not initialized then
+    initialized = true
+    local data = fetch_data()
+    picker:reset_data(data)
+  end
+  picker:focus()
 end
 
 return M
