@@ -305,7 +305,6 @@ return {
     local ai_provider = eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
     local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot" ---@type string
     return {
-      auto_suggestions_provider = "copilot",
       debug = false,
       mode = "agentic",
       -- mode = "legacy",
@@ -357,7 +356,16 @@ return {
 
       behaviour = {
         auto_apply_diff_after_generation = false,
-        auto_approve_tool_permissions = false,
+        auto_approve_tool_permissions = {
+          "create",
+          "ls",
+          "replace_in_file",
+          "str_replace",
+          "undo_edit",
+          "update_todo_status",
+          "view",
+          "write_to_file",
+        },
         auto_check_diagnostics = true,
         auto_focus_on_diff_view = false,
         auto_focus_sidebar = true,
