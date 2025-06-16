@@ -5,7 +5,7 @@
 ---@field public order_client           integer
 ---@field public order_type             integer
 
----@class fml.dressing.provider.codeaction.IItem : eve.ux.select.IItem
+---@class fml.dressing.provider.codeaction.IItem : fml.dressing.select.IItem
 ---@field public data                   fml.dressing.provider.codeaction.IItemData
 
 local ACTION_TYPE_ORDERS = {
@@ -35,7 +35,7 @@ local LSP_CLIENT_NAME_ORDERS = {
 }
 
 ---@param items                         any[]
----@return eve.ux.select.IProvider
+---@return eve.ux.picker.composer.list.IResetData
 ---@return integer
 local function codeaction_provider(items)
   local width_order = #tostring(#items) ---@type integer
@@ -94,24 +94,8 @@ local function codeaction_provider(items)
     local select_item = {
       uuid = uuid,
       text = text,
-      data = item_data,
-    }
-    select_items[#select_items + 1] = select_item
-  end
-
-  ---@type eve.ux.select.IProvider
-  local provider = {
-    fetch_data = function()
-      return { items = select_items }
-    end,
-    render_item = function(item, match)
-      local item_data = item.data ---@type fml.dressing.provider.codeaction.IItemData
-      local text_content = std.string.pad_end(item_data.content, width_content, " ")
-      local text_client_name = item_data.client_name ---@type string
-      local text = item.text ---@type string
-
-      ---@type std.t.IHighlightInline[]
-      local highlights = {
+      text_lower = text:lower(),
+      highlights = {
         { coll = 0, colr = width_order + 1, hlname = "f_us_codeaction_order" },
         { coll = width_order + 2, colr = width_order + 2 + #text_content, hlname = "f_us_codeaction_content" },
         {
@@ -119,21 +103,16 @@ local function codeaction_provider(items)
           colr = width_order + #text_content + 4 + #text_client_name,
           hlname = "f_us_codeaction_client_name",
         },
-      }
+      },
+      data = item_data,
+    }
+    select_items[#select_items + 1] = select_item
+  end
 
-      local offset = width_order + 2 ---@type integer
-      for _, piece in ipairs(match.matches) do
-        ---@type std.t.IHighlightInline[]
-        local highlight = { coll = offset + piece.l, colr = offset + piece.r, hlname = "f_us_main_match" }
-        highlights[#highlights + 1] = highlight
-      end
-
-      return text, highlights
-    end,
-  }
-
+  ---@type eve.ux.picker.composer.list.IResetData
+  local data = { items = select_items }
   local width = width_order + width_content + width_client_name + 4 ---@type integer
-  return provider, width
+  return data, width
 end
 
 return codeaction_provider
