@@ -65,15 +65,12 @@ function M.copy_filepath(arg)
   else
     vim.ui.select(scopes, {
       name = __module_name__,
-      prompt = "Copy current filepath: ",
+      prompt = "Copy Filepath",
       uuid_current = "relative",
       dimension = {
         row = 3,
         width = 20,
       },
-      format_item = function(item)
-        return item
-      end,
     }, function(choice)
       if choice then
         copy_current_filepath(choice, filepath)

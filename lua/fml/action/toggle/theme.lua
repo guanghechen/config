@@ -44,15 +44,13 @@ function M.theme(arg)
     local current_theme = o_theme:snapshot() ---@type std.e.Theme
     vim.ui.select(themes, {
       name = __module_name__,
-      prompt = "Select theme: ",
+      prompt = "Toggle Theme",
       uuid_current = current_theme,
+      uuid_present = current_theme,
       dimension = {
         row = 5,
         width = 50,
       },
-      format_item = function(item)
-        return item
-      end,
     }, function(choice)
       if choice then
         apply_theme(choice)

@@ -1,4 +1,7 @@
+local __module_name__ = "fml.action.toggle.ai" ---@type string
+
 local ai_providers = eve.command.definitions.toggle.ai_provider.candidates ---@type string[]
+local o_ai_provider = eve.context.flight.ai_provider ---@type std.collection.IObservable
 
 ---@class fml.action.toggle.ai
 local M = {}
@@ -8,44 +11,22 @@ local M = {}
 function M.ai_provider(arg)
   local ai_provider = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(ai_providers, ai_provider) then
-    eve.context.flight.ai_provider:next(ai_provider)
+    o_ai_provider:next(ai_provider)
   else
-    eve.ux.fn.select({
-      title = "Toggle ai provider",
-      flag_fuzzy = true,
-      flag_regex = false,
-      input = std.Observable.from_value(ai_provider),
+    vim.ui.select(ai_providers, {
+      name = __module_name__,
+      prompt = "Toggle Ai Provider",
+      uuid_current = o_ai_provider:snapshot(),
+      uuid_present = o_ai_provider:snapshot(),
       dimension = {
         row = 5,
         width = 50,
       },
-      multiple = false,
-      get_present = function()
-        return eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
-      end,
-      fetch_items = function()
-        local items = {} ---@type eve.ux.select.IItem[]
-        for _, flight in ipairs(ai_providers) do
-          items[#items + 1] = { uuid = flight, text = flight }
-        end
-        return items
-      end,
-      render_item = function(item, match)
-        local text = item.uuid ---@type string
-        local highlights = { { coll = 0, colr = -1, hlname = "String" } } ---@type std.t.IHighlightInline[]
-        for _, piece in ipairs(match.matches) do
-          highlights[#highlights + 1] = { coll = piece.l, colr = piece.r, hlname = "f_us_main_match" }
-        end
-        return text, highlights
-      end,
-      on_confirm = function(widget, items)
-        if #items == 1 then
-          local item = items[1] ---@type eve.ux.select.IItem
-          widget:close()
-          eve.context.flight.ai_provider:next(item.uuid)
-        end
-      end,
-    })
+    }, function(choice)
+      if choice then
+        o_ai_provider:next(choice)
+      end
+    end)
   end
 end
 
