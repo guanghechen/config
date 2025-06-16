@@ -32,6 +32,25 @@ local __module_name__ = "fml.action.find.explorer" ---@type string
 local dir_datamap = {} ---@type table<string, fml.action.find.explorer.IDirItem>
 local file_datamap = {} ---@type table<string, fml.action.find.explorer.IFileItem>
 
+---@param filepath                      string
+local function add_to_avante(filepath)
+  local sidebar = require("avante").get()
+  if not sidebar then
+    return
+  end
+
+  -- ensure avante sidebar is open
+  if not sidebar:is_open() then
+    require("avante.api").ask()
+    sidebar = require("avante").get()
+  end
+
+  local relative_path = require("avante.utils").relative_path(filepath)
+  sidebar.file_selector:add_selected_file(relative_path)
+  sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
+  sidebar.file_selector:remove_selected_file("untitled-1")
+end
+
 ---@param raw_item                      eve.builtin.oxi.IFileItemWithStatus
 ---@param dirpath                       string
 ---@return fml.action.find.explorer.IFileItem
@@ -608,6 +627,40 @@ picker = eve.ux.picker.ListComposer.new({
   flag_sensitive = flag_sensitive,
 
   preview_render = preview_render,
+
+  keymaps_finder = {
+    {
+      modes = { "n", "v" },
+      key = "oa",
+      desc = "filetree: add to avante",
+      callback = function()
+        local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
+        local item = picker:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+        ---@cast item                   fml.action.find.explorer.IItem|nil
+
+        if item ~= nil then
+          add_to_avante(item.data.fileitem.path)
+        end
+      end,
+    },
+  },
+
+  keymaps_result = {
+    {
+      modes = { "i", "n", "v" },
+      key = "oa",
+      desc = "filetree: add to avante",
+      callback = function()
+        local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
+        local item = picker:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+        ---@cast item                   fml.action.find.explorer.IItem|nil
+
+        if item ~= nil then
+          add_to_avante(item.data.fileitem.path)
+        end
+      end,
+    },
+  },
 
   result_render = function(composer, bufnr, itemmap, matches)
     ---@cast itemmap                    table<string, fml.action.find.explorer.IItem>
