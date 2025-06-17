@@ -1,8 +1,4 @@
-local AI_PROVIDER_MAP = {
-  aoai = "azure",
-  copilot = "copilot",
-  deepseek = "deepseek",
-}
+local __module_name__ = "ghc.plugins.avante" ---@type string
 
 ---@class ghc.plugins.avante.file_selector.Item
 ---@field public id                     string
@@ -17,232 +13,82 @@ local AI_PROVIDER_MAP = {
 ---@field public selected_item_ids      string[] | nil
 ---@field public get_preview_content    fun(item_id: string): (string, string) | nil
 
----@return fun(params: ghc.plugins.avante.file_selector.IParams): nil
-local function get_file_selector()
-  local context = eve.context.select.select_avante
-  local _on_choice = std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
-  local _filepaths = {} ---@type string[]
-  local _filepath_default = nil ---@type string|nil
-  local _winnr = nil ---@type integer|nil
-  local _confirmed = false ---@type boolean
-  local _select ---@type eve.ux.Select
+local AI_PROVIDER_MAP = {
+  aoai = "azure",
+  copilot = "copilot",
+  deepseek = "deepseek",
+}
 
-  std.fn.observe({
-    eve.context.select.select_avante.excludes,
-    eve.context.select.select_avante.flag_case_sensitive,
-    eve.context.select.select_avante.flag_exclude,
-    eve.context.select.select_avante.flag_fuzzy,
-    eve.context.select.select_avante.flag_gitignore,
-    eve.context.select.select_avante.flag_regex,
-  }, function()
-    if _select ~= nil then
-      _select:mark_data_dirty()
+local o_flag_foldempty = std.Observable.from_value(true)
+local o_flag_fuzzy = eve.context.select.select_avante.flag_fuzzy
+local o_flag_regex = eve.context.select.select_avante.flag_regex
+local o_flag_case_sensitive = eve.context.select.select_avante.flag_case_sensitive
+local o_flag_selected = eve.context.select.select_avante.flag_selected
+local o_flag_viewtype = std.Observable.from_value("tree")
+local o_input = eve.context.select.select_avante.input
+local o_input_history = eve.context.select.select_avante.input_history
+
+local _on_choice = std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
+local _filepaths = {} ---@type string[]
+local _winnr = nil ---@type integer|nil
+local _confirmed = false ---@type boolean
+
+local picker = eve.ux.picker.FiletreeComposer.new({
+  name = string.format("%s -- %s", __module_name__, "file_selector"),
+  permanent = true,
+  title = "(Avante) Add a file",
+  preview = false,
+  width = 100,
+
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_sensitive = o_flag_case_sensitive,
+  flag_selected = o_flag_selected,
+  finder_input = o_input,
+  finder_input_history = o_input_history,
+  frecency = eve.context.frecency.files,
+  flag_foldempty = o_flag_foldempty,
+  flag_viewtype = o_flag_viewtype,
+  on_confirm = function(self, selected_filepaths)
+    _confirmed = true
+    _on_choice(selected_filepaths)
+
+    self:close()
+    if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
+      vim.api.nvim_tabpage_set_win(0, _winnr)
     end
-  end, true)
-
-  ---@class ghc.plugins.avante.file_selector.actions
-  local actions = {
-    toggle_case_sensitive = function()
-      local flag = eve.context.select.select_avante.flag_case_sensitive:snapshot() ---@type boolean
-      eve.context.select.select_avante.flag_case_sensitive:next(not flag)
-    end,
-    toggle_flag_exclude = function()
-      local flag = eve.context.select.select_avante.flag_exclude:snapshot() ---@type boolean
-      eve.context.select.select_avante.flag_exclude:next(not flag)
-    end,
-    toggle_flag_fuzzy = function()
-      local flag = eve.context.select.select_avante.flag_fuzzy:snapshot() ---@type boolean
-      eve.context.select.select_avante.flag_fuzzy:next(not flag)
-    end,
-    ---@return nil
-    toggle_flag_gitignore = function()
-      local flag = eve.context.select.select_avante.flag_gitignore:snapshot() ---@type boolean
-      eve.context.select.select_avante.flag_gitignore:next(not flag)
-    end,
-    toggle_flag_regex = function()
-      local flag = eve.context.select.select_avante.flag_regex:snapshot() ---@type boolean
-      eve.context.select.select_avante.flag_regex:next(not flag)
-    end,
-    ---@return nil
-    toggle_flag_selected = function()
-      local flag = eve.context.select.select_avante.flag_selected:snapshot() ---@type boolean
-      eve.context.select.select_avante.flag_selected:next(not flag)
-    end,
-  }
-
-  ---@type std.t.ux.widget.IRawStatuslineItem[]
-  local statusline_items = {
-    {
-      type = "flag",
-      desc = "find: toggle selected",
-      symbol = eve.icon.symbols.flag_selected,
-      state = eve.context.select.select_avante.flag_selected,
-      callback = actions.toggle_flag_selected,
-    },
-    {
-      type = "flag",
-      desc = "find: toggle exclude",
-      symbol = eve.icon.symbols.flag_exclude,
-      state = eve.context.select.select_avante.flag_exclude,
-      callback = actions.toggle_flag_exclude,
-    },
-    {
-      type = "flag",
-      desc = "find: toggle gitignore",
-      symbol = eve.icon.symbols.flag_gitignore,
-      state = eve.context.select.select_avante.flag_gitignore,
-      callback = actions.toggle_flag_gitignore,
-    },
-    {
-      type = "flag",
-      desc = "select: toggle flag fuzzy",
-      symbol = eve.icon.symbols.flag_fuzzy,
-      state = eve.context.select.select_avante.flag_fuzzy,
-      callback = actions.toggle_flag_fuzzy,
-    },
-    {
-      type = "flag",
-      desc = "find: toggle case sensitive",
-      symbol = eve.icon.symbols.flag_case_sensitive,
-      state = eve.context.select.select_avante.flag_case_sensitive,
-      callback = actions.toggle_case_sensitive,
-    },
-    {
-      type = "flag",
-      desc = "select: toggle flag regex",
-      symbol = eve.icon.symbols.flag_regex,
-      state = eve.context.select.select_avante.flag_regex,
-      callback = actions.toggle_flag_regex,
-    },
-  }
-
-  _select = eve.ux.Select.new({
-    dimension = {
-      height = 3,
-      max_height = 0.8,
-      max_width = 0.8,
-      width = 80,
-    },
-    case_sensitive = context.flag_case_sensitive,
-    flag_regex = context.flag_regex,
-    flag_fuzzy = context.flag_fuzzy,
-    flag_selected = context.flag_selected,
-    frecency = eve.context.frecency.files,
-    input = context.input,
-    input_history = context.input_history,
-    multiple = true,
-    preview_enabled = false,
-    extend_preset_keymaps = false,
-    permanent = true,
-    statusline_items = statusline_items,
-    title = "(Avante) Add a file",
-    provider = {
-      fetch_data = function()
-        local width = 0 ---@type integer
-        local items = {} ---@type eve.ux.select.IItem[]
-        local cwd = std.path.cwd() ---@type string
-        for _, filepath in ipairs(_filepaths) do
-          local text = filepath ---@type string
-          local icon = "" ---@type string
-          local icon_hl = nil ---@type string|nil
-
-          local absolute_filepath = std.path.join(cwd, filepath) ---@type string
-          if vim.uv.fs_stat(absolute_filepath) and vim.uv.fs_stat(absolute_filepath).type == "directory" then
-            icon = eve.icon.filetype.Folder
-            icon_hl = "MiniIconsBlue"
-          else
-            icon, icon_hl = std.fileicon.get_file_icon(filepath)
-          end
-
-          local data = { filepath = filepath, icon = icon, icon_hl = icon_hl }
-          local select_item = { uuid = filepath, text = text, data = data } ---@type eve.ux.select.IItem
-          width = width < #text and #text or width ---@type integer
-          items[#items + 1] = select_item
-        end
-
-        vim.schedule(function()
-          _select:change_dimension({
-            height = #items + 3,
-            max_height = math.min(math.floor(vim.o.lines * 0.8), 40),
-            max_width = 0.8,
-            width = math.max(60, width + 10),
-          })
-        end)
-
-        ---@type eve.ux.select.IData
-        local result = { items = items, uuid_cursor = _filepath_default }
-        return result
-      end,
-      render_item = function(item, match)
-        local icon_width = string.len(item.data.icon .. " ") ---@type integer
-        local text = item.data.icon .. " " .. item.data.filepath ---@type string
-
-        if item.data.lnum ~= nil and item.data.col ~= nil then
-          text = text .. ":" .. item.data.lnum .. ":" .. item.data.col
-        end
-
-        ---@type std.t.IHighlightInline[]
-        local highlights = { { coll = 0, colr = icon_width, hlname = item.data.icon_hl } }
-        for _, piece in ipairs(match.matches) do
-          ---@type std.t.IHighlightInline
-          local highlight = { coll = piece.l + icon_width, colr = piece.r + icon_width, hlname = "f_us_main_match" }
-          table.insert(highlights, highlight)
-        end
-        return text, highlights
-      end,
-    },
-    on_close = function()
-      if not _confirmed then
-        _confirmed = true
-        _on_choice(nil)
-      end
-
-      if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
-        vim.api.nvim_tabpage_set_win(0, _winnr)
-      end
-    end,
-    on_confirm = function(widget, items_selected)
+  end,
+  on_closed = function()
+    if not _confirmed then
       _confirmed = true
-      _on_choice(items_selected)
-
-      widget:close()
-      if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
-        vim.api.nvim_tabpage_set_win(0, _winnr)
-      end
-    end,
-  })
-
-  ---@param params                      ghc.plugins.avante.file_selector.IParams
-  ---@return nil
-  local function file_selector(params)
-    local handler = params.on_select ---@type fun(item_ids: string[] | nil): nil
-
-    _filepaths = {} ---@type string[]
-    _filepath_default = params.default_item_id or nil ---@type string|nil
-    for _, item in ipairs(params.items) do
-      table.insert(_filepaths, item.id)
-    end
-    _select:change_input_title(params.title)
-
-    _on_choice = function(items)
-      if items == nil then
-        handler(nil)
-      else
-        local uuids_selected = {} ---@type string[]
-        for _, item in ipairs(items) do
-          table.insert(uuids_selected, item.uuid)
-        end
-        handler(uuids_selected)
-      end
+      _on_choice(nil)
     end
 
-    _confirmed = false
-    _winnr = vim.api.nvim_get_current_win()
+    if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
+      vim.api.nvim_tabpage_set_win(0, _winnr)
+    end
+  end,
+})
 
-    _select:mark_data_dirty()
-    _select:focus()
+---@param params                      ghc.plugins.avante.file_selector.IParams
+---@return nil
+local function file_selector_provider(params)
+  local handler = params.on_select ---@type fun(item_ids: string[] | nil): nil
+
+  _filepaths = {} ---@type string[]
+  for _, item in ipairs(params.items) do
+    table.insert(_filepaths, item.id)
   end
-  return file_selector
+
+  _on_choice = function(selected_filepaths)
+    handler(selected_filepaths)
+  end
+
+  _confirmed = false
+  _winnr = vim.api.nvim_get_current_win()
+
+  picker:reset_filepaths(std.path.cwd(), _filepaths, false)
+  picker:focus()
 end
 
 local selector_provider_opts = {
@@ -381,7 +227,7 @@ return {
       },
 
       selector = {
-        provider = get_file_selector(),
+        provider = file_selector_provider,
         provider_opts = selector_provider_opts,
       },
       file_selector = {
