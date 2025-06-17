@@ -1,4 +1,5 @@
 local SEP = std.env.PATH_SEP ---@type string
+local IS_WIN = std.env.IS_WIN ---@type boolean
 local HOME_NVIM_CACHE = std.env.HOME_NVIM_CACHE ---@type string
 local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
 local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
@@ -108,7 +109,7 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
-  if std.env.IS_WIN then
+  if IS_WIN then
     return #filepath > 1 and string.byte(filepath, 2, 2) == BYTE_COLON
   end
   return string.byte(filepath, 1, 1) == BYTE_PATHSEP
@@ -189,7 +190,7 @@ end
 ---@param filepath                      string
 ---@return string
 function M.normalize(filepath)
-  if filepath == "/" and not std.env.IS_WIN then
+  if filepath == "/" and not IS_WIN then
     return "/"
   end
 
@@ -299,22 +300,28 @@ end
 function M.split(filepath)
   local pieces = {} ---@type string[]
   local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
+  local has_sep_prefix = SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
+  local has_sep_suffix = #filepath > 1 and string.byte(filepath, #filepath, #filepath) == BYTE_PATHSEP ---@type boolean
+
+  if has_sep_prefix then
+    pieces[1] = ""
+  end
 
   for piece in string.gmatch(filepath, pattern) do
-    if #piece > 0 and piece ~= "." then
-      if piece == ".." and (has_prefix_sep or #pieces > 0) then
-        table.remove(pieces, #pieces)
+    if piece ~= "" and piece ~= "." then
+      if piece == ".." and (has_sep_prefix or #pieces > 0) then
+        pieces[#pieces] = nil
       else
-        table.insert(pieces, piece)
+        pieces[#pieces + 1] = piece
       end
     end
   end
-  if has_prefix_sep then
-    table.insert(pieces, 1, "")
+
+  if has_sep_suffix then
+    pieces[#pieces + 1] = ""
   end
 
-  if std.env.IS_WIN and #filepath > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
+  if IS_WIN and #filepath > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
     pieces[1] = pieces[1]:upper()
   end
   return pieces
