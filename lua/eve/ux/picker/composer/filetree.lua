@@ -458,26 +458,28 @@ function M.new(props)
       local linecount = retriever:linecount() ---@type integer
       for lnum = 1, linecount, 1 do
         local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        local node = uuid and filetree:retrieve(uuid) or nil ---@type std.collection.filetree.INode|nil
-        if node ~= nil and node.data.filetype == "file" then
-          local filepath = node.data.filepath ---@type string
-          local relative_filepath = std.path.relative(cwd, filepath, false) ---@type string
+        if uuid ~= nil then
+          local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
+          if node ~= nil and node.data.filetype == "file" then
+            local filepath = node.data.filepath ---@type string
+            local relative_filepath = std.path.relative(cwd, filepath, false) ---@type string
 
-          local nodestate = treeview:retrieve(uuid) ---@type eve.ux.view.filetree.INodeState|nil
-          local locations = nodestate and nodestate.locations or nil ---@type eve.ux.view.filetree.ILocationNodeState[]|nil
-          if locations == nil or #locations < 1 then
-            table.insert(quickfix_items, {
-              filename = relative_filepath,
-              lnum = 1,
-              col = 0,
-            })
-          else
-            for _, location in ipairs(locations) do
+            local nodestate = treeview:retrieve(uuid) ---@type eve.ux.view.filetree.INodeState|nil
+            local locations = nodestate and nodestate.locations or nil ---@type eve.ux.view.filetree.ILocationNodeState[]|nil
+            if locations == nil or #locations < 1 then
               table.insert(quickfix_items, {
                 filename = relative_filepath,
-                lnum = location.lnum,
-                col = location.col or 0,
+                lnum = 1,
+                col = 0,
               })
+            else
+              for _, location in ipairs(locations) do
+                table.insert(quickfix_items, {
+                  filename = relative_filepath,
+                  lnum = location.lnum,
+                  col = location.col or 0,
+                })
+              end
             end
           end
         end

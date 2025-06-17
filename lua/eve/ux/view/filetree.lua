@@ -218,6 +218,7 @@ function M:remove(uuid)
   return self
 end
 
+---@param uuid                          string
 ---@return eve.ux.view.filetree.INodeState|nil
 function M:retrieve(uuid)
   self:__health__()
