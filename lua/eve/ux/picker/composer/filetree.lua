@@ -1348,6 +1348,10 @@ function M:__open_node__(nodeuuid)
       local col = first_location and first_location.col or nil ---@type integer|nil
 
       local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
+      if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+        vim.api.nvim_set_current_win(winnr_sourcefile)
+      end
+
       composer:close()
       eve.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
       return
@@ -1373,6 +1377,10 @@ function M:__open_node__(nodeuuid)
   local col = first_location and first_location.col or nil ---@type integer|nil
 
   local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
+  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+    vim.api.nvim_set_current_win(winnr_sourcefile)
+  end
+
   composer:close()
   eve.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
@@ -1456,6 +1464,10 @@ function M:__toggle_node__(nodeuuid, recursively)
 
   if self._on_confirm == nil then
     local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
+    if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+      vim.api.nvim_set_current_win(winnr_sourcefile)
+    end
+
     composer:close()
     eve.win.open_filepath(winnr_sourcefile, node.data.filepath, nodestate.lnum, nodestate.col)
   end
