@@ -7,6 +7,7 @@ local __mods = {
   BasicComposer = "eve.ux.picker.composer.basic",
   FiletreeComposer = "eve.ux.picker.composer.filetree",
   ListComposer = "eve.ux.picker.composer.list",
+  TreeComposer = "eve.ux.picker.composer.tree",
 
   ListRetriever = "eve.ux.picker.retriever.list",
   TreeRetriever = "eve.ux.picker.retriever.tree",
@@ -22,6 +23,7 @@ local __mods = {
 ---@field public BasicComposer          eve.ux.picker.BasicComposer
 ---@field public FiletreeComposer       eve.ux.picker.FiletreeComposer
 ---@field public ListComposer           eve.ux.picker.ListComposer
+---@field public TreeComposer           eve.ux.picker.TreeComposer
 ---
 ---@field public ListRetriever          eve.ux.picker.ListRetriever
 ---@field public TreeRetriever          eve.ux.picker.TreeRetriever
