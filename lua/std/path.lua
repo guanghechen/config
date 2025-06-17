@@ -193,6 +193,10 @@ function M.normalize(filepath)
     return "/"
   end
 
+  if filepath == "" then
+    return "."
+  end
+
   filepath = filepath:gsub("%%(%x%x)", function(hex)
     return string.char(tonumber(hex, 16))
   end)
@@ -265,6 +269,10 @@ function M.relative(from, to, prefer_slash)
     i = i + 1
   end
 
+  if i == 2 and is_to_absolute then
+    return M.normalize(to)
+  end
+
   local sep = prefer_slash and "/" or SEP
   local p = "" ---@type string
   for _ = i, #from_pieces do
@@ -272,6 +280,10 @@ function M.relative(from, to, prefer_slash)
   end
   for j = i, #to_pieces do
     p = p .. sep .. to_pieces[j] ---@type string
+  end
+
+  if p == "" then
+    return "."
   end
   return #p > 1 and string.sub(p, 2) or p
 end
