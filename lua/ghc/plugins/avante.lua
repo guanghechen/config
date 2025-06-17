@@ -28,7 +28,7 @@ local o_flag_viewtype = std.Observable.from_value("tree")
 local o_input = eve.context.select.select_avante.input
 local o_input_history = eve.context.select.select_avante.input_history
 
-local _on_choice = std.fn.noop ---@type fun(items: eve.ux.select.IItem[] | nil): nil
+local _on_choice = std.fn.noop ---@type fun(filepaths: string[] | nil): nil
 local _filepaths = {} ---@type string[]
 local _winnr = nil ---@type integer|nil
 local _confirmed = false ---@type boolean
@@ -294,6 +294,13 @@ return {
     --- Hack: ensure the nerd fonts enabled.
     require("avante.utils").icons_enabled = function()
       return true
+    end
+
+    require("avante.utils").make_relative_path = function(filepath, basedir)
+      return std.path.relative(basedir, filepath, false)
+    end
+    require("avante.utils").norm = function(filepath)
+      return std.path.normalize(filepath)
     end
 
     require("avante").setup(opts)
