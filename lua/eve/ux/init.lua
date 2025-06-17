@@ -28,7 +28,6 @@ local __mods = {
 ---@field public SearchMain             eve.ux.SearchMain
 ---@field public SearchPreview          eve.ux.SearchPreview
 ---
----@field public Select                 eve.ux.Select
 ---@field public SelectPopup            eve.ux.SelectPopup
 ---
 ---@field public Board                  eve.ux.Board
