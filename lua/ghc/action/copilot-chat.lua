@@ -142,56 +142,62 @@ function M.prompt()
     return
   end
 
-  eve.ux.fn.select({
-    cfg_preview_wrap = true,
+  local items = {} ---@type string[]
+  local action_map = {} ---@type table<string, ghc.action.copilot_chat.prompt_actions.IItem>
+  for name, action in pairs(prompt_actions.actions) do
+    items[#items + 1] = name
+    action_map[name] = action
+  end
+  table.sort(items)
+
+  vim.ui.select(items, {
+    name = __module_name__,
+    prompt = prompt_actions.prompt or "Select prompt",
     dimension = {
-      width = 40,
-      height = 20,
-      width_preview = 80,
+      width = 80,
+      height = math.min(#items + 3, 20),
+      width_preview = 60,
     },
-    multiple = false,
-    title = prompt_actions.prompt,
-    fetch_items = function()
-      local select_items = {} ---@type eve.ux.select.IItem[]
-      for name, action in pairs(prompt_actions.actions) do
-        ---@type eve.ux.select.IItem
-        local item = {
-          uuid = name,
-          text = name,
-          data = action,
+    preview_render = function(composer, bufnr, _)
+      local item = composer:retrieve(composer.result.lnum_current:snapshot())
+      if not item then
+        ---@type eve.ux.picker.preview.IDrawResult
+        return {
+          cursorline = false,
+          number = false,
+          title = "Prompt Preview",
+          wrap = true,
+          whitespaces = false,
+          lnum = nil,
+          col = nil,
         }
-        select_items[select_items + 1] = item
       end
-      table.sort(select_items, function(a, b)
-        return a.text < b.text
-      end)
-      return select_items
-    end,
-    fetch_preview_data = function(item)
-      local data = item.data ---@type ghc.action.copilot_chat.prompt_actions.IItem
-      local lines = vim.split(data.prompt or "", "\n", { plain = true }) ---@type string[]
-
-      ---@type eve.ux.ISearchPreviewData
-      local result = {
-        title = "Prompt",
-        lines = lines,
-        highlights = {},
-        filetype = "text",
+      local selected_name = item.text ---@type string
+      local action = action_map[selected_name] ---@type ghc.action.copilot_chat.prompt_actions.IItem
+      local prompt_text = action.prompt or "" ---@type string
+      local lines = vim.split(prompt_text, "\n", { plain = true }) ---@type string[]
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.bo[bufnr].filetype = "text"
+      ---@type eve.ux.picker.preview.IDrawResult
+      return {
+        cursorline = false,
+        number = false,
+        title = "Prompt Preview",
+        wrap = true,
+        whitespaces = false,
+        lnum = 1,
+        col = 0,
       }
-      return result
     end,
-    on_confirm = function(widget, items)
-      if #items == 1 then
-        widget:close()
-
-        local data = items[1].data ---@type ghc.action.copilot_chat.prompt_actions.IItem
-        std.timer.set_timeout(function()
-          chat:focus()
-          require("CopilotChat").ask(data.prompt, data)
-        end, 100)
-      end
-    end,
-  })
+  }, function(choice)
+    if choice then
+      local action = action_map[choice] ---@type ghc.action.copilot_chat.prompt_actions.IItem
+      std.timer.set_timeout(function()
+        chat:focus()
+        require("CopilotChat").ask(action.prompt, action)
+      end, 100)
+    end
+  end)
 end
 
 ---@return nil

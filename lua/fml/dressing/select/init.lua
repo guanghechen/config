@@ -13,6 +13,7 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public kind                   ?string
 ---@field public dimension              ?fml.dressing.select.IDimension
 ---@field public result_render          ?eve.ux.picker.composer.list.IResultRender
+---@field public preview_render         ?eve.ux.picker.composer.list.IPreviewRender
 ---@field public uuid_current           ?string
 ---@field public uuid_present           ?string
 
@@ -51,6 +52,7 @@ function M.select(items, opts, on_choice)
   local kind = opts.kind or "fallback" ---@type string
   local create_provider = providers[kind] or providers.fallback ---@type fml.dressing.select.IDataProvider
   local data, width, result_render = create_provider(items, opts)
+  local preview_render = opts.preview_render ---@type eve.ux.picker.composer.list.IPreviewRender|nil
 
   if opts.result_render ~= nil then
     result_render = opts.result_render
@@ -117,6 +119,7 @@ function M.select(items, opts, on_choice)
     flag_sensitive = flag_sensitive,
 
     result_render = result_render,
+    preview_render = preview_render,
 
     on_cancel = function()
       if vim.api.nvim_win_is_valid(winnr) then
