@@ -155,21 +155,25 @@ local function get_git_branch_or_commit()
   return "HEAD"
 end
 
----@return string|nil
+---@return string|nil, integer, integer
 local function get_file_line()
   local mode = vim.fn.mode()
-  if  mode ~= "v" and mode ~= "V" then
-    vim.fn.line(".")
+  local line_start, line_end ---@type integer, integer
+
+  if mode == "v" or mode == "V" or mode == "\22" then
+    line_start = vim.fn.line("v")
+    line_end = vim.fn.line(".")
+
+    if line_start > line_end then
+      line_start, line_end = line_end, line_start
+    end
+  else
+    local current_line = vim.fn.line(".")
+    line_start = current_line
+    line_end = current_line
   end
 
-  local start_line = vim.fn.line("v")
-  local end_line = vim.fn.line(".")
-
-  -- Ensure start_line is always the smaller number
-  if start_line > end_line then
-    start_line, end_line = end_line, start_line
-  end
-  return start_line .. "-L" .. end_line
+  return line_start .. "-L" .. line_end, line_start, line_end
 end
 
 ---@param remote                        string
@@ -223,10 +227,17 @@ function M.browse()
   filepath = filepath ~= nil and std.path.is_under(workspace, filepath) and std.path.relative(workspace, filepath, true) or nil
 
   local remotes = {} ---@type fml.action.git.browse.IRemote[]
+  local line_fragment, line_start, line_end ---@type string|nil, integer|nil, integer|nil
+  if filepath then
+    line_fragment, line_start, line_end = get_file_line()
+  end
+
   local fields = {
     branch = get_git_branch_or_commit(),
     file = filepath,
-    line = filepath and get_file_line(),
+    line = line_fragment,
+    line_start = line_start,
+    line_end = line_end,
   }
 
   local scope = fields.file and "file" or (fields.branch and "branch" or "repo") ---@type fml.action.git.browse.TargetScope
@@ -262,32 +273,68 @@ function M.browse()
     return
   end
 
-  eve.ux.fn.select({
+  local max_name_width = 0 ---@type integer
+  for _, remote in ipairs(remotes) do
+    max_name_width = math.max(max_name_width, vim.api.nvim_strwidth(remote.name))
+  end
+
+  vim.ui.select(remotes, {
+    name = __module_name__,
+    prompt = "Select remote to browse",
     dimension = {
       row = 5,
       width = 80,
     },
-    flag_fuzzy = true,
-    flag_regex = false,
-    input = std.Observable.from_value(""),
-    multiple = false,
-    title = "Select remote to browse",
-    fetch_items = function()
-      local items = {} ---@type eve.ux.select.IItem[]
-      for _, remote in ipairs(remotes) do
-        local item = {uuid = remote.url, text = remote.name .. " | " .. remote.url, data = remote }---@type eve.ux.select.IItem
-        table.insert(items, item)
-      end
-      return items
+    format_item = function(remote)
+      local padded_name = std.string.pad_end(remote.name, max_name_width, " ")
+      return padded_name .. " │ " .. remote.url
     end,
-    on_confirm = function(widget, items)
-      if #items == 1 then
-        widget:close()
-        local item = items[1] ---@type eve.ux.select.IItem
-        open_remote(item.data)
+    result_render = function(_, bufnr, itemmap, matches)
+      local lines = {} ---@type string[]
+      local uuids = {} ---@type string[]
+
+      for _, match in ipairs(matches) do
+        local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+        lines[#lines + 1] = item.text
+        uuids[#uuids + 1] = item.uuid
       end
+
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local nsnr_content = eve.var.nsnr.picker_result ---@type integer
+      local nsnr_matches = eve.var.nsnr.picker_matches ---@type integer
+
+      for lnum, match in ipairs(matches) do
+        local row = lnum - 1 ---@type integer
+        local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+
+        if item and item.highlights then
+          for _, hl in ipairs(item.highlights) do
+            vim.hl.range(bufnr, nsnr_content, hl.hlname, { row, hl.coll }, { row, hl.colr }, { priority = 10 })
+          end
+        end
+
+        local separator_pos = max_name_width + 1 ---@type integer
+        vim.hl.range(bufnr, nsnr_content, "DiagnosticInfo", { row, 0 }, { row, max_name_width }, { priority = 15 })
+        vim.hl.range(bufnr, nsnr_content, "Comment", { row, separator_pos }, { row, separator_pos + 3 }, { priority = 15 })
+        vim.hl.range(bufnr, nsnr_content, "DiagnosticHint", { row, separator_pos + 3 }, { row, #item.text }, { priority = 15 })
+
+        if match.matches then
+          for _, m in ipairs(match.matches) do
+            vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+          end
+        end
+      end
+
+      ---@type eve.ux.picker.composer.list.IResultRenderData
+      local data = { uuids = uuids }
+      return data
+    end,
+  }, function(choice)
+    if choice then
+      open_remote(choice)
     end
-  })
+  end)
 end
 
 return M
