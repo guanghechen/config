@@ -772,6 +772,30 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
     },
     {
       disabled = finder_multiline,
+      modes = { "n", "v" },
+      key = "dd",
+      desc = "picker#finder: clear content",
+      callback = function()
+        self.finder:set_content("")
+      end,
+    },
+    {
+      disabled = not finder_multiline,
+      modes = { "n", "v" },
+      key = "dd",
+      desc = "picker#finder: clear content",
+      callback = function()
+        local bufnr = vim.api.nvim_get_current_buf()
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+        if #lines == 1 then
+          self.finder:set_content("")
+        else
+          vim.cmd("normal! dd")
+        end
+      end,
+    },
+    {
+      disabled = finder_multiline,
       modes = { "i" },
       key = "<enter>",
       desc = "picker#finder: noop",
