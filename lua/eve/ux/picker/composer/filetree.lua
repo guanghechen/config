@@ -572,7 +572,7 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
-      key = "<enter>",
+      key = "<Enter>",
       desc = "filetree: open",
       callback = actions.on_filetree_open,
     },
@@ -644,14 +644,14 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
-      aliases = { "o", "w" },
+      aliases = { "l", "w" },
       desc = "filetree: open",
       callback = actions.on_filetree_open,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Right>",
-      aliases = { "<Left>", "c", "h", "l" },
+      aliases = { "<Left>", "c", "h" },
       desc = "filetree: toggle",
       callback = actions.on_filetree_toggle,
     },
@@ -1372,11 +1372,10 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
-  local node, nodestate = self:__retrieve__(nodeuuid)
+  local node = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
-  local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
   local rootpath = rootnode and rootnode.data.filepath or std.path.cwd() ---@type string
@@ -1400,18 +1399,6 @@ function M:__resolve_confirmation__(nodeuuid)
       self._on_confirm(self, filepaths)
       return
     end
-  end
-
-  if nodestate.nodetype == "container" then
-    treeview:collapse(node.uuid, "toggle", false)
-    composer:mark_result_dirty()
-    return
-  end
-
-  if nodestate.nodetype == "leaf" and nodestate.collapsed then
-    treeview:collapse(node.uuid, "expand", false)
-    composer:mark_result_dirty()
-    return
   end
 
   local filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath, node.data.filepath, false)
