@@ -62,18 +62,20 @@ return {
           return
         end
 
-        local filepath = node:get_id()
-        local relative_path = require("avante.utils").relative_path(filepath)
-        local sidebar = require("avante").get()
-        if not sidebar then
-          return
-        end
+        local filepath = node:get_id() ---@type string
 
         -- ensure avante sidebar is open
-        if not sidebar:is_open() then
+        local sidebar = require("avante").get()
+        if sidebar == nil or not sidebar:is_open() then
           require("avante.api").ask()
           sidebar = require("avante").get()
+
+          if sidebar == nil or not sidebar:is_open() then
+            return
+          end
         end
+
+        local relative_path = require("avante.utils").relative_path(filepath)
         sidebar.file_selector:add_selected_file(relative_path)
         sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
         sidebar.file_selector:remove_selected_file("untitled-1")

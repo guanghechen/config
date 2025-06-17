@@ -34,15 +34,15 @@ local file_datamap = {} ---@type table<string, fml.action.find.explorer.IFileIte
 
 ---@param filepath                      string
 local function add_to_avante(filepath)
-  local sidebar = require("avante").get()
-  if not sidebar then
-    return
-  end
-
   -- ensure avante sidebar is open
-  if not sidebar:is_open() then
+  local sidebar = require("avante").get()
+  if sidebar == nil or not sidebar:is_open() then
     require("avante.api").ask()
     sidebar = require("avante").get()
+
+    if sidebar == nil or not sidebar:is_open() then
+      return
+    end
   end
 
   local relative_path = require("avante.utils").relative_path(filepath)

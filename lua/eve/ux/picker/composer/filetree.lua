@@ -301,46 +301,52 @@ function M.new(props)
   ---@type eve.ux.picker.composer.filetree.actions
   local actions = {
     on_add_node_to_avante = function()
-      local sidebar = require("avante").get()
-      if not sidebar then
-        return
-      end
-
       -- ensure avante sidebar is open
-      if not sidebar:is_open() then
+      local sidebar = require("avante").get()
+      if sidebar == nil or not sidebar:is_open() then
         require("avante.api").ask()
         sidebar = require("avante").get()
-      end
 
-      local _, lnum = retrieve() ---@type string|nil
-      local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-      if lnum_childline == nil and lnum > lnum_childline then
-        return
-      end
-
-      for index = lnum, lnum_childline, 1 do
-        local nodeuuid = retriever:retrieve_uuid(index) ---@type string|nil
-        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
-        if node ~= nil and node.data.filetype == "file" then
-          local filepath = node.data.filepath ---@type string
-          local relative_path = require("avante.utils").relative_path(filepath)
-          sidebar.file_selector:add_selected_file(relative_path)
+        if sidebar == nil or not sidebar:is_open() then
+          return
         end
       end
 
-      sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
-      sidebar.file_selector:remove_selected_file("untitled-1")
+      vim.schedule(function()
+        local _, lnum = retrieve() ---@type string|nil
+        local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+        if lnum_childline == nil and lnum > lnum_childline then
+          return
+        end
+
+        local has_selected = false ---@type boolean
+        for index = lnum, lnum_childline, 1 do
+          local nodeuuid = retriever:retrieve_uuid(index) ---@type string|nil
+          local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
+          if node ~= nil and node.data.filetype == "file" then
+            has_selected = true
+            local filepath = node.data.filepath ---@type string
+            local relative_path = require("avante.utils").relative_path(filepath)
+            sidebar.file_selector:add_selected_file(relative_path)
+          end
+        end
+
+        if has_selected then
+          sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
+          sidebar.file_selector:remove_selected_file("untitled-1")
+        end
+      end)
     end,
     on_add_subtree_to_avante = function()
-      local sidebar = require("avante").get()
-      if not sidebar then
-        return
-      end
-
       -- ensure avante sidebar is open
-      if not sidebar:is_open() then
+      local sidebar = require("avante").get()
+      if sidebar == nil or not sidebar:is_open() then
         require("avante.api").ask()
         sidebar = require("avante").get()
+
+        if sidebar == nil or not sidebar:is_open() then
+          return
+        end
       end
 
       local nodeuuid = retrieve() ---@type string|nil
