@@ -202,9 +202,6 @@ function M.pos(position)
     name = "win:pos",
     atomic = true,
     tight = true,
-    will_change = function(context, prev_context)
-      return prev_context == nil or context.winnr ~= prev_context.winnr or context.bufnr ~= prev_context.bufnr
-    end,
     render = function()
       local row, col, percentage = calc_row_percentage() ---@type integer, integer, string
       local text_percentage = " " .. percentage ---@type string
