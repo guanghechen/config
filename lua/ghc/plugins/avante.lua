@@ -296,13 +296,6 @@ return {
       return true
     end
 
-    require("avante.utils").make_relative_path = function(filepath, basedir)
-      return std.path.relative(basedir, filepath, false)
-    end
-    require("avante.utils").norm = function(filepath)
-      return std.path.normalize(filepath)
-    end
-
     require("avante").setup(opts)
     std.fn.observe({ eve.context.flight.ai_provider }, function()
       local ai_provider = eve.context.flight.ai_provider:snapshot()
