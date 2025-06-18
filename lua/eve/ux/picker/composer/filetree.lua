@@ -27,10 +27,20 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public col                    integer|nil
 
 ---@class eve.ux.picker.composer.filetree.actions
----@field public on_filetree_open       fun(): nil
----@field public on_filetree_toggle     fun(): nil
----@field public on_filetree_toggle_recursively fun(): nil
----@field public on_toggle_selection    fun(): nil
+---@field public add_node_to_avante     fun(): nil
+---@field public add_subtree_to_avante  fun(): nil
+---@field public attach_node            fun(): nil
+---@field public attach_parent          fun(): nil
+---@field public copy_node_filepath     fun(): nil
+---@field public goto_lnum_lastchild    fun(): nil
+---@field public goto_lnum_parent       fun(): nil
+---@field public mark_node_invisible    fun(): nil
+---@field public mark_subroot_invisible fun(): nil
+---@field public open_node              fun(): nil
+---@field public send_to_qflist         fun(): nil
+---@field public toggle_node            fun(): nil
+---@field public toggle_node_recursively fun(): nil
+---@field public toggle_selection       fun(): nil
 
 ----------------------------------------------------------------------------------------------------
 
@@ -121,7 +131,7 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local finder_input = props.finder_input ---@type std.collection.IObservable
+  local o_finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
   local finder_multiline = props.finder_multiline ---@type boolean|nil
 
@@ -181,7 +191,7 @@ function M.new(props)
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
-      local input = finder_input:snapshot() ---@type string
+      local input = o_finder_input:snapshot() ---@type string
       self:__match__(input)
       treeview:mark_cache_treeview_dirty()
       self:mark_result_dirty()
@@ -300,7 +310,7 @@ function M.new(props)
 
   ---@type eve.ux.picker.composer.filetree.actions
   local actions = {
-    on_add_node_to_avante = function()
+    add_node_to_avante = function()
       -- ensure avante sidebar is open
       local sidebar = require("avante").get()
       if sidebar == nil or not sidebar:is_open() then
@@ -337,7 +347,7 @@ function M.new(props)
         end
       end)
     end,
-    on_add_subtree_to_avante = function()
+    add_subtree_to_avante = function()
       -- ensure avante sidebar is open
       local sidebar = require("avante").get()
       if sidebar == nil or not sidebar:is_open() then
@@ -362,7 +372,37 @@ function M.new(props)
       sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
       sidebar.file_selector:remove_selected_file("untitled-1")
     end,
-    on_copy_node_filepath = function()
+    attach_node = function()
+      local nodeuuid = retrieve() ---@type string|nil
+      if nodeuuid ~= nil then
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.filetree.INodeState|nil
+        if nodestate ~= nil and nodestate.nodetype == "container" then
+          treeview:mark_cache_listview_dirty()
+          self._uuid_root = nodeuuid ---@type string
+          self:mark_result_dirty()
+
+          local next_rootnode = filetree:retrieve(nodeuuid)
+          if next_rootnode ~= nil then
+            on_attach(self, next_rootnode.data.filepath) ---@type eve.ux.picker.composer.filetree.IOnAttach
+          end
+        end
+      end
+    end,
+    attach_parent = function()
+      local rootuuid = self._uuid_root ---@type string
+      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+      if rootnode and rootnode.parent ~= rootuuid then
+        treeview:mark_cache_listview_dirty()
+        self._uuid_root = rootnode.parent ---@type string
+        self:mark_result_dirty()
+
+        local next_rootnode = filetree:retrieve(rootnode.parent)
+        if next_rootnode ~= nil then
+          on_attach(self, next_rootnode.data.filepath) ---@type eve.ux.picker.composer.filetree.IOnAttach
+        end
+      end
+    end,
+    copy_node_filepath = function()
       local nodeuuid = retrieve() ---@type string|nil
       local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
       if node == nil then
@@ -379,7 +419,16 @@ function M.new(props)
         },
       })
     end,
-    on_goto_lnum_parent = function()
+    goto_lnum_lastchild = function()
+      local nodeuuid, lnum = retrieve() ---@type string|nil, integer
+      if nodeuuid ~= nil then
+        local lnum_lastchild = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+        if lnum_lastchild ~= nil then
+          self._composer.result:set_lnum_current(lnum_lastchild)
+        end
+      end
+    end,
+    goto_lnum_parent = function()
       local nodeuuid, lnum = retrieve() ---@type string|nil, integer
       local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
       local lnum_parent = node ~= nil and retriever:retrieve_lnum(node.parent) or nil ---@type integer|nil
@@ -390,16 +439,35 @@ function M.new(props)
         self._composer.result:set_lnum_current(lnum_parent)
       end
     end,
-    on_goto_lnum_lastchild = function()
-      local nodeuuid, lnum = retrieve() ---@type string|nil, integer
-      if nodeuuid ~= nil then
-        local lnum_lastchild = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-        if lnum_lastchild ~= nil then
-          self._composer.result:set_lnum_current(lnum_lastchild)
+    mark_node_invisible = function()
+      local _, lnum = retrieve() ---@type string|nil, integer
+      local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+      if lnum_childline == nil and lnum > lnum_childline then
+        return
+      end
+
+      local finder_input = o_finder_input:snapshot() ---@type string
+      for index = lnum, lnum_childline, 1 do
+        local nodeuuid = retriever:retrieve_uuid(index) ---@type string|nil
+        if nodeuuid ~= nil then
+          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.filetree.INodeState|nil
+          if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
+            treeview:mark_node_invisible(nodeuuid)
+            treeview:mark_cache_treeview_dirty()
+            self._composer:mark_result_dirty()
+          end
         end
       end
     end,
-    on_filetree_open = function()
+    mark_subroot_invisible = function()
+      local nodeuuid = retrieve() ---@type string|nil
+      if nodeuuid ~= nil then
+        treeview:mark_node_invisible(nodeuuid)
+        treeview:mark_cache_treeview_dirty()
+        self._composer:mark_result_dirty()
+      end
+    end,
+    open_node = function()
       local nodeuuid = retrieve() ---@type string|nil
       if nodeuuid ~= nil then
         if on_confirm == nil then
@@ -409,49 +477,7 @@ function M.new(props)
         end
       end
     end,
-    on_filetree_toggle = function()
-      local nodeuuid = retrieve() ---@type string|nil
-      if nodeuuid ~= nil then
-        self:__toggle_node__(nodeuuid, false)
-      end
-    end,
-    on_filetree_attach = function()
-      local nodeuuid = retrieve() ---@type string|nil
-      if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.filetree.INodeState|nil
-        if nodestate ~= nil and nodestate.nodetype == "container" then
-          treeview:mark_cache_listview_dirty()
-          self._uuid_root = nodeuuid ---@type string
-          self:mark_result_dirty()
-
-          local next_rootnode = filetree:retrieve(nodeuuid)
-          if next_rootnode ~= nil then
-            on_attach(self, next_rootnode.data.filepath) ---@type eve.ux.picker.composer.filetree.IOnAttach
-          end
-        end
-      end
-    end,
-    on_filetree_attach_parent = function()
-      local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
-      if rootnode and rootnode.parent ~= rootuuid then
-        treeview:mark_cache_listview_dirty()
-        self._uuid_root = rootnode.parent ---@type string
-        self:mark_result_dirty()
-
-        local next_rootnode = filetree:retrieve(rootnode.parent)
-        if next_rootnode ~= nil then
-          on_attach(self, next_rootnode.data.filepath) ---@type eve.ux.picker.composer.filetree.IOnAttach
-        end
-      end
-    end,
-    on_filetree_toggle_recursively = function()
-      local nodeuuid = retrieve() ---@type string|nil
-      if nodeuuid ~= nil then
-        self:__toggle_node__(nodeuuid, true)
-      end
-    end,
-    on_send_to_qflist = function()
+    send_to_qflist = function()
       local cwd = std.path.cwd() ---@type string
       local quickfix_items = {} ---@type std.t.IQuickFixItem[]
 
@@ -491,7 +517,19 @@ function M.new(props)
         eve.qflist.open_qflist(false)
       end
     end,
-    on_toggle_selection = function()
+    toggle_node = function()
+      local nodeuuid = retrieve() ---@type string|nil
+      if nodeuuid ~= nil then
+        self:__toggle_node__(nodeuuid, false)
+      end
+    end,
+    toggle_node_recursively = function()
+      local nodeuuid = retrieve() ---@type string|nil
+      if nodeuuid ~= nil then
+        self:__toggle_node__(nodeuuid, true)
+      end
+    end,
+    toggle_selection = function()
       local nodeuuid = retrieve() ---@type string|nil
       if nodeuuid == nil then
         return
@@ -560,7 +598,7 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<C-q>",
       desc = "filetree: send to qflist",
-      callback = actions.on_send_to_qflist,
+      callback = actions.send_to_qflist,
     },
   }
 
@@ -570,68 +608,80 @@ function M.new(props)
       modes = { "n", "v" },
       key = ".",
       desc = "filetree: change root",
-      callback = actions.on_filetree_attach,
+      callback = actions.attach_node,
     },
     {
       modes = { "n", "v" },
       key = "<Backspace>",
       desc = "filetree: change root to parent",
-      callback = actions.on_filetree_attach_parent,
+      callback = actions.attach_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
       desc = "filetree: open",
-      callback = actions.on_filetree_open,
+      callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-h>",
       aliases = { "<C-l>" },
       desc = "filetree: toggle",
-      callback = actions.on_filetree_toggle,
+      callback = actions.toggle_node,
     },
     {
       modes = { "n", "v" },
       key = "<Tab>",
       desc = "filetree: toggle selection",
-      callback = actions.on_toggle_selection,
+      callback = actions.toggle_selection,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>D",
+      desc = "filetree: mark the subroot invisible",
+      callback = actions.mark_subroot_invisible,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>dd",
+      desc = "filetree: mark the node invisible",
+      callback = actions.mark_node_invisible,
     },
     {
       modes = { "n", "v" },
       key = "[i",
       desc = "filetree: goto the parent line",
-      callback = actions.on_goto_lnum_parent,
+      callback = actions.goto_lnum_parent,
     },
     {
       modes = { "n", "v" },
       key = "]i",
       desc = "filetree: goto the lastchild line",
-      callback = actions.on_goto_lnum_lastchild,
+      callback = actions.goto_lnum_lastchild,
     },
     {
       modes = { "n", "v" },
       key = "oA",
       desc = "filetree: add to avante (full subtree)",
-      callback = actions.on_add_subtree_to_avante,
+      callback = actions.add_subtree_to_avante,
     },
     {
       modes = { "n", "v" },
       key = "oa",
       desc = "filetree: add to avante",
-      callback = actions.on_add_node_to_avante,
+      callback = actions.add_node_to_avante,
     },
     {
       modes = { "n", "v" },
       key = "oc",
       desc = "filetree: copy filepath",
-      callback = actions.on_copy_node_filepath,
+      callback = actions.copy_node_filepath,
     },
     {
       modes = { "n", "v" },
       key = "z",
       desc = "filetree: toggle (recursively)",
-      callback = actions.on_filetree_toggle_recursively,
+      callback = actions.toggle_node_recursively,
     },
   }
 
@@ -641,27 +691,27 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = ".",
       desc = "filetree: change root",
-      callback = actions.on_filetree_attach,
+      callback = actions.attach_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Backspace>",
       desc = "filetree: change root to parent",
-      callback = actions.on_filetree_attach_parent,
+      callback = actions.attach_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
       aliases = { "l", "w" },
       desc = "filetree: open",
-      callback = actions.on_filetree_open,
+      callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Right>",
       aliases = { "<Left>", "c", "h" },
       desc = "filetree: toggle",
-      callback = actions.on_filetree_toggle,
+      callback = actions.toggle_node,
     },
     {
       modes = { "i", "n", "v" },
@@ -672,7 +722,7 @@ function M.new(props)
         if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
           local cursor = vim.fn.getmousepos()
           if cursor.winid == result_winnr then
-            actions.on_filetree_toggle()
+            actions.toggle_node()
           end
         end
       end,
@@ -681,43 +731,57 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<Tab>",
       desc = "filetree: toggle selection",
-      callback = actions.on_toggle_selection,
+      callback = actions.toggle_selection,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>D",
+      aliases = { "D" },
+      desc = "filetree: mark the subroot invisible",
+      callback = actions.mark_subroot_invisible,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>dd",
+      aliases = { "dd" },
+      desc = "filetree: mark the node invisible",
+      callback = actions.mark_node_invisible,
     },
     {
       modes = { "i", "n", "v" },
       key = "[i",
       desc = "filetree: goto the parent line",
-      callback = actions.on_goto_lnum_parent,
+      callback = actions.goto_lnum_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "]i",
       desc = "filetree: goto the lastchild line",
-      callback = actions.on_goto_lnum_lastchild,
+      callback = actions.goto_lnum_lastchild,
     },
     {
       modes = { "i", "n", "v" },
       key = "oA",
       desc = "filetree: add to avante (full subtree)",
-      callback = actions.on_add_subtree_to_avante,
+      callback = actions.add_subtree_to_avante,
     },
     {
       modes = { "i", "n", "v" },
       key = "oa",
       desc = "filetree: add to avante",
-      callback = actions.on_add_node_to_avante,
+      callback = actions.add_node_to_avante,
     },
     {
       modes = { "i", "n", "v" },
       key = "oc",
       desc = "filetree: copy filepath",
-      callback = actions.on_copy_node_filepath,
+      callback = actions.copy_node_filepath,
     },
     {
       modes = { "i", "n", "v" },
       key = "z",
       desc = "filetree: toggle (recursively)",
-      callback = actions.on_filetree_toggle_recursively,
+      callback = actions.toggle_node_recursively,
     },
   }
 
@@ -736,7 +800,7 @@ function M.new(props)
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
-    finder_input = finder_input,
+    finder_input = o_finder_input,
     finder_input_history = finder_input_history,
     finder_multiline = finder_multiline,
     finder_title = title,
@@ -753,7 +817,7 @@ function M.new(props)
     result_render = function(bufnr)
       local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
       local result ---@type eve.ux.view.tree.IRenderResult
-      local only_matched = finder_input:snapshot() ~= "" ---@type boolean
+      local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean
       local only_selected = flag_selected:snapshot() ---@type boolean
 
       if viewtype == "list" then
@@ -924,7 +988,7 @@ function M.new(props)
   self._on_disposed = on_disposed
 
   std.fn.observe(
-    { finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_selected, flag_viewtype },
+    { o_finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_selected, flag_viewtype },
     function()
       composer:mark_result_flags_dirty()
     end,
@@ -933,7 +997,7 @@ function M.new(props)
   std.fn.observe({ flag_selected, flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
+  std.fn.observe({ o_finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
     scheduler_match:schedule()
   end)
   std.fn.observe({ composer.result.lnum_current }, function()

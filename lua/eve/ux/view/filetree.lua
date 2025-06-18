@@ -181,6 +181,23 @@ function M:insert(uuid, nodestate)
   return self
 end
 
+---@param nodeuuid                      string
+---@return eve.ux.view.Filetree
+function M:mark_node_invisible(nodeuuid)
+  self:__health__()
+
+  local view = self._view ---@type eve.ux.view.Tree
+  local statemap = view.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  ---@cast statemap                     table<string, eve.ux.view.filetree.INodeState>
+
+  local nodestate = statemap[nodeuuid] ---@type eve.ux.view.filetree.INodeState|nil
+  if nodestate ~= nil then
+    nodestate.tick_invisible = view._tick_invisible ---@type integer
+  end
+
+  return self
+end
+
 ---@return eve.ux.view.Filetree
 function M:mark_cache_match_dirty()
   self._view:mark_cache_match_dirty()
