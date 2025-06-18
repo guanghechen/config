@@ -316,6 +316,12 @@ command
     end,
   })
   .implement({
+    uuid = K.find.lsp_symbols.uuid,
+    action = function()
+      require("fml.action.find.lsp_symbols").find_lsp_symbols()
+    end,
+  })
+  .implement({
     uuid = K.find.vim_options.uuid,
     action = function()
       require("fml.action.find.vim_options").find_vim_options()
