@@ -82,6 +82,7 @@ local FILETYPE_PRIORITY_MAP = {
 ---@field public calc_include_uuid_set  fun(self: std.collection.IFiletree, uuids: string[]): table<string, boolean>
 ---@field public empty                  fun(self: std.collection.IFiletree, uuid: string): std.collection.IFiletree
 ---@field public insert                 fun(self: std.collection.IFiletree, parent: string, uuid: string, data: std.collection.filetree.INodeData): std.collection.IFiletree
+---@field public print                  fun(self: std.collection.IFiletree, rootuuid: string|nil): string[]
 ---@field public remove                 fun(self: std.collection.IFiletree, uuid: string): std.collection.IFiletree
 ---@field public reset                  fun(self: std.collection.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): std.collection.IFiletree
 

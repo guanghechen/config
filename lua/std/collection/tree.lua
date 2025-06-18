@@ -513,6 +513,71 @@ function M:insert(parent, uuid, data)
   return self
 end
 
+---@param rootuuid                      string|nil
+---@return string[]
+function M:print(rootuuid)
+  self:__health__()
+
+  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  local rootnode = rootuuid and nodemap[rootuuid] or self._rootnode ---@type std.collection.tree.INode
+  local lines = {} ---@type string[]
+
+  ---@param node                        std.collection.tree.INode
+  ---@param indent                      string
+  ---@param is_lastchild                boolean
+  ---@param depth                       integer
+  local function recursive(node, indent, is_lastchild, depth)
+    local childindent = depth > 0 and (indent .. (is_lastchild and "  " or "│ ")) or "" ---@type string
+    local connector = depth > 0 and (is_lastchild and "╰─" or "├─") or "" ---@type string
+    lines[#lines + 1] = string.format("%s%s%s", indent, connector, node.data.name or node.uuid)
+
+    if node.dirty_co then
+      self:__sort_children__(node)
+    end
+
+    local N = #node.children ---@type integer
+    for index = 1, N, 1 do
+      local childuuid = node.children[index] ---@type string
+      local child = nodemap[childuuid] ---@type std.collection.tree.INode
+      if child then
+        recursive(child, childindent, index == N, depth + 1)
+      end
+    end
+  end
+
+  if rootnode == self._rootnode then
+    if rootnode.dirty_co then
+      self:__sort_children__(rootnode)
+    end
+
+    local N = #rootnode.children
+    for index = 1, N do
+      local childuuid = rootnode.children[index]
+      local child = nodemap[childuuid]
+      if child then
+        recursive(child, "", index == N, 0)
+      end
+    end
+    return lines
+  end
+
+  if rootnode.dirty_co then
+    self:__sort_children__(rootnode)
+  end
+
+  lines[#lines + 1] = (rootnode.data.name or rootnode.uuid) ---@type string
+
+  local N = #rootnode.children
+  for index = 1, N do
+    local childuuid = rootnode.children[index]
+    local child = nodemap[childuuid]
+    if child then
+      recursive(child, "", index == N, 1)
+    end
+  end
+  return lines
+end
+
 ---@param uuid                          string
 ---@return std.collection.Tree
 function M:remove(uuid)
