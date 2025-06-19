@@ -361,9 +361,6 @@ function M.new(props)
       if winnr == self._winnr then
         local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
         local row = cursor[1] ---@type integer
-        if cursor[2] ~= 0 then
-          vim.api.nvim_win_set_cursor(winnr, { row, 0 })
-        end
         _o_lnum_current:next(row)
       end
     end,
