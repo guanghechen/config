@@ -1257,32 +1257,6 @@ function M:__collect_selected_lnums__()
   return lnums
 end
 
----@protected
----@return string[]
-function M:__collect_selected_uuids__()
-  self:__health__()
-
-  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
-  if retriever:linecount() < 1 then
-    return {}
-  end
-
-  local treeview = self._treeview ---@type eve.ux.view.Filetree
-  local lastchild_lnum = retriever:retrieve_lastchild_lnum(1)
-
-  local uuids = {} ---@type string[]
-  for lnum = 1, lastchild_lnum, 1 do
-    local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-    if uuid ~= nil then
-      local isselected = treeview:isselected(uuid) ---@type boolean
-      if isselected then
-        uuids[#uuids + 1] = uuid
-      end
-    end
-  end
-  return uuids
-end
-
 ---@return integer|nil
 function M:__focus_source_win__()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -1301,14 +1275,14 @@ function M:__has_selected_node__()
   self:__health__()
 
   local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
-  if retriever:linecount() < 1 then
+  local linecount = retriever:linecount() ---@type integer
+  if linecount < 1 then
     return false
   end
 
   local treeview = self._treeview ---@type eve.ux.view.Filetree
-  local lastchild_lnum = retriever:retrieve_lastchild_lnum(1)
 
-  for lnum = 1, lastchild_lnum, 1 do
+  for lnum = 1, linecount, 1 do
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     if uuid ~= nil then
       local isselected = treeview:isselected(uuid) ---@type boolean
@@ -1392,23 +1366,30 @@ function M:__open_node__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   if self:__has_selected_node__() then
+    local linecount = retriever:linecount() ---@type integer
     local last_nodestate = nil ---@type eve.ux.view.filetree.IFileNodeState|nil
     local filepaths = {} ---@type string[]
 
-    local uuids_selected = self:__collect_selected_uuids__() ---@type string[]
-    local N = #uuids_selected ---@type integer
-    for index = 1, N, 1 do
-      local uuid = uuids_selected[index] ---@type string
-      local o = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
-      if o ~= nil and o.data.filetype == "file" then
-        local s = treeview:retrieve(nodeuuid) ---@type eve.ux.view.filetree.INodeState|nil
-        if s ~= nil then
-          ---@cast s                      eve.ux.view.filetree.IFileNodeState
-          last_nodestate = s
-          filepaths[#filepaths + 1] = o.data.filepath
+    for lnum = 1, linecount, 1 do
+      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+      if uuid ~= nil then
+        local isselected = treeview:isselected(uuid) ---@type boolean
+        if isselected then
+          local o = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
+          treeview:set_selected(uuid, false)
+          if o ~= nil and o.data.filetype == "file" then
+            filepaths[#filepaths + 1] = o.data.filepath
+
+            local s = treeview:retrieve(nodeuuid) ---@type eve.ux.view.filetree.INodeState|nil
+            if s ~= nil then
+              ---@cast s                      eve.ux.view.filetree.IFileNodeState
+              last_nodestate = s
+            end
+          end
         end
       end
     end
@@ -1426,6 +1407,7 @@ function M:__open_node__(nodeuuid)
       end
 
       composer:close()
+      composer:mark_result_dirty()
       eve.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
       return
     end
@@ -1465,26 +1447,32 @@ function M:__resolve_confirmation__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
+  local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
-  local rootpath = rootnode and rootnode.data.filepath or std.path.cwd() ---@type string
 
   if self:__has_selected_node__() then
+    local linecount = retriever:linecount() ---@type integer
     local filepaths = {} ---@type string[]
 
-    local uuids_selected = self:__collect_selected_uuids__() ---@type string[]
-    local N = #uuids_selected ---@type integer
-    for index = 1, N, 1 do
-      local uuid = uuids_selected[index] ---@type string
-      local o = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
-      if o ~= nil and o.data.filetype == "file" then
-        local filepath = std.path.relative(rootpath, o.data.filepath, false) ---@type string
-        filepaths[#filepaths + 1] = filepath
+    for lnum = 1, linecount, 1 do
+      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+      if uuid ~= nil then
+        local isselected = treeview:isselected(uuid) ---@type boolean
+        if isselected then
+          local o = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
+          treeview:set_selected(uuid, false)
+          if o ~= nil and o.data.filetype == "file" then
+            filepaths[#filepaths + 1] = o.data.filepath
+          end
+        end
       end
     end
 
     if #filepaths > 0 then
       composer:close()
+      composer:mark_result_dirty()
       self._on_confirm(self, filepaths)
       return
     end

@@ -915,29 +915,28 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@return string[]
-function M:__collect_selected_uuids__()
+---@return boolean
+function M:__has_selected_node__()
   self:__health__()
 
   local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
-  if retriever:linecount() < 1 then
-    return {}
+  local linecount = retriever:linecount() ---@type integer
+  if linecount < 1 then
+    return false
   end
 
   local treeview = self._treeview ---@type eve.ux.view.Tree
-  local lastchild_lnum = retriever:retrieve_lastchild_lnum(1)
 
-  local uuids = {} ---@type string[]
-  for lnum = 1, lastchild_lnum, 1 do
+  for lnum = 1, linecount, 1 do
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     if uuid ~= nil then
       local isselected = treeview:isselected(uuid) ---@type boolean
       if isselected then
-        uuids[#uuids + 1] = uuid
+        return true
       end
     end
   end
-  return uuids
+  return false
 end
 
 ---@protected
@@ -976,15 +975,34 @@ end
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
+  local treeview = self._treeview ---@type eve.ux.view.Tree
 
-  local uuids = self:__collect_selected_uuids__() ---@type string[]
-  if #uuids > 0 then
-    composer:close()
-    self._on_confirm(self, uuids)
-    return
+  if self:__has_selected_node__() then
+    local linecount = retriever:linecount() ---@type integer
+    local uuids = {} ---@type string[]
+
+    for lnum = 1, linecount, 1 do
+      local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+      if uuid ~= nil then
+        local isselected = treeview:isselected(uuid) ---@type boolean
+        if isselected then
+          treeview:set_selected(uuid, false)
+          uuids[#uuids + 1] = uuid
+        end
+      end
+    end
+
+    if #uuids > 0 then
+      composer:close()
+      composer:mark_result_dirty()
+      self._on_confirm(self, uuids)
+      return
+    end
   end
 
   composer:close()
+  composer:mark_result_dirty()
   self._on_confirm(self, { nodeuuid })
 end
 
