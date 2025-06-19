@@ -20,6 +20,7 @@ local __mods = {
 ---@field public fn                     eve.ux.fn
 ---@field public nvimbar                eve.ux.nvimbar
 ---@field public picker                 eve.ux.picker
+---@field public search2                eve.ux.search2
 ---@field public view                   eve.ux.view
 ---
 ---@field public Search                 eve.ux.Search
@@ -39,6 +40,7 @@ local M = setmetatable({
   fn = require("eve.ux.fn"),
   nvimbar = require("eve.ux.nvimbar"),
   picker = require("eve.ux.picker"),
+  search2 = require("eve.ux.search2"),
   view = require("eve.ux.view"),
 }, {
   __index = function(t, k)

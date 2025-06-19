@@ -72,7 +72,6 @@ local __module_name__ = "eve.ux.search2.composer.filetree" ---@type string
 ---
 ---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.IHistory
----@field public finder_multiline       ?boolean
 ---
 ---@field public on_attached            ?eve.ux.search2.composer.filetree.IOnAttached
 ---@field public on_closed              ?eve.ux.search2.composer.filetree.IOnClosed
@@ -103,7 +102,7 @@ local __module_name__ = "eve.ux.search2.composer.filetree" ---@type string
 ---@field protected _frecency           std.collection.IFrecency|nil
 ---@field protected _composer           eve.ux.search2.BasicComposer
 ---@field protected _plainfile          eve.ux.view.Plainfile
----@field protected _retriever          eve.ux.search2.TreeRetriever
+---@field protected _retriever          eve.ux.picker.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
 ---@field protected _treeview           eve.ux.view.Filetree
 ---
@@ -133,7 +132,6 @@ function M.new(props)
 
   local o_finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
-  local finder_multiline = props.finder_multiline ---@type boolean|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
@@ -165,8 +163,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type eve.ux.search2.TreeRetriever
-  local retriever = eve.ux.search2.TreeRetriever.new({
+  ---@type eve.ux.picker.TreeRetriever
+  local retriever = eve.ux.picker.TreeRetriever.new({
     name = fullname,
   })
 
@@ -811,7 +809,6 @@ function M.new(props)
 
     finder_input = o_finder_input,
     finder_input_history = finder_input_history,
-    finder_multiline = finder_multiline,
     finder_title = title,
 
     result_number = true,
@@ -1031,7 +1028,7 @@ function M:dispose()
   local on_dispose = self._on_disposed ---@type eve.ux.search2.composer.filetree.IOnDisposed
   local composer = self._composer ---@type eve.ux.search2.BasicComposer
   local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
-  local retriever = self._retriever ---@type eve.ux.search2.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
@@ -1236,7 +1233,7 @@ end
 function M:__collect_selected_lnums__()
   self:__health__()
 
-  local retriever = self._retriever ---@type eve.ux.search2.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local linecount = retriever:linecount() ---@type integer
@@ -1274,7 +1271,7 @@ end
 function M:__has_selected_node__()
   self:__health__()
 
-  local retriever = self._retriever ---@type eve.ux.search2.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
     return false
@@ -1366,7 +1363,7 @@ function M:__open_node__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.search2.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
-  local retriever = self._retriever ---@type eve.ux.search2.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   if self:__has_selected_node__() then
@@ -1447,7 +1444,7 @@ function M:__resolve_confirmation__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.search2.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
-  local retriever = self._retriever ---@type eve.ux.search2.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local treeview = self._treeview ---@type eve.ux.view.Filetree
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
@@ -1519,7 +1516,7 @@ end
 ---@return integer
 function M:__retrieve_lnum_range__()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._retriever ---@type eve.ux.search2.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
 
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()

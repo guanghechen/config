@@ -151,8 +151,8 @@ function M.new(props)
         end
       end,
     })
-    :place("left", c.search2.result_flags(position, flags, flags_start_index), 100)
-    :place("right", c.search2.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
+    :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
+    :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
 
   ---@type std.collection.Scheduler
   local scheduler_lnum_current = std.Scheduler.new({

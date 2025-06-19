@@ -11,7 +11,6 @@ local __module_name__ = "eve.ux.search2.finder" ---@type string
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
----@field public multiline              boolean
 ---@field public title                  string
 
 ---@class eve.ux.search2.Finder
@@ -19,7 +18,6 @@ local __module_name__ = "eve.ux.search2.finder" ---@type string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
 ---@field public linecount              std.collection.IObservable
----@field public multiline              boolean
 ---@field public title                  string
 ---
 ---@field protected _disposed           boolean
@@ -36,7 +34,6 @@ function M.new(props)
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
   local input = props.input ---@type std.collection.IObservable
   local linecount = std.Observable.from_value(0) ---@type std.collection.IObservable
-  local multiline = props.multiline ---@type boolean
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
 
   local self = setmetatable({}, M)
@@ -44,7 +41,6 @@ function M.new(props)
   self.keymaps = keymaps
   self.input = input
   self.linecount = linecount
-  self.multiline = multiline
   self.title = title
 
   self._disposed = false
@@ -68,7 +64,6 @@ function M:dispose()
   self.input = nil
   self.keymaps = nil
   self.linecount = nil
-  self.multiline = nil
   self.title = nil
   self._bufnr = nil
   self._winnr = nil
@@ -149,7 +144,7 @@ function M:create_buf()
   eve.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   local keyword = self.input:snapshot() ---@type string
-  local initial_lines = self.multiline and { keyword } or vim.split(keyword, "\n", { plain = true }) ---@type string[]
+  local initial_lines = vim.split(keyword, "\n", { plain = true }) ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, initial_lines)
   self:__set_prompt__(bufnr)
 
@@ -279,7 +274,7 @@ function M:set_content(content)
     return
   end
 
-  local lines = self.multiline and { content } or vim.split(content, "\n", { plain = true }) ---@type  string[]
+  local lines = vim.split(content, "\n", { plain = true }) ---@type  string[]
   if #lines < 1 then
     lines = { "" } ---@type string[]
   end

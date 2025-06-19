@@ -24,6 +24,9 @@ M.nsnr = {
   picker_matches        = cn("ux:picker:matches"),
   picker_preview        = cn("ux:picker:preview"),
   picker_result         = cn("ux:picker:result"),
+  search2_matches        = cn("ux:search2:matches"),
+  search2_preview        = cn("ux:search2:preview"),
+  search2_result         = cn("ux:search2:result"),
   search_count          = cn("ux:search_count"),
   search_input          = cn("ux:search_input"),
   search_main           = cn("ux:search_main"),
@@ -59,6 +62,19 @@ M.sign = {
   PICKER_RESULT_SELECTED          = "PickerResultSelected",
   PICKER_RESULT_SELECTED_CURRENT  = "PickerResultSelectedCurrent",
 
+  GROUP_SEARCH2_FINDER_PROMPT      = std.fn.uuid(),
+  GROUP_SEARCH2_RESULT_CURRENT     = std.fn.uuid(),
+  GROUP_SEARCH2_RESULT_PRESENT     = std.fn.uuid(),
+  GROUP_SEARCH2_RESULT_SELECTED    = std.fn.uuid(),
+  NR_SEARCH2_RESULT_CURRENT        = 3010,
+  NR_SEARCH2_RESULT_PRESENT        = 3011,
+  SEARCH2_FINDER_PROMPT            = "Search2FinderPrompt",
+  SEARCH2_RESULT_CURRENT           = "Search2ResultCurrent",
+  SEARCH2_RESULT_PRESENT           = "Search2ResultPresent",
+  SEARCH2_RESULT_PRESENT_CURRENT   = "Search2ResultPresentCurrent",
+  SEARCH2_RESULT_SELECTED          = "Search2ResultSelected",
+  SEARCH2_RESULT_SELECTED_CURRENT  = "Search2ResultSelectedCurrent",
+
   GROUP_SEARCH_MAIN_SELECTED      = std.fn.uuid(),
 
   DAP_BREAKPOINT                  = "DapBreakpoint",
@@ -85,13 +101,19 @@ sd(M.sign.DAP_BREAKPOINT_REJECTED,        { text = eve.icon.dap.BreakpointReject
 sd(M.sign.DAP_LOG_POINT,                  { text = eve.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
 sd(M.sign.DAP_STOPPED,                    { text = eve.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
+sd(M.sign.PICKER_FINDER_PROMPT,           { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
 sd(M.sign.PICKER_RESULT_CURRENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
 sd(M.sign.PICKER_RESULT_PRESENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
 sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,  { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
 sd(M.sign.PICKER_RESULT_SELECTED,         { text = eve.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
 sd(M.sign.PICKER_RESULT_SELECTED_CURRENT, { text = eve.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
 
-sd(M.sign.PICKER_FINDER_PROMPT,           { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
+sd(M.sign.SEARCH2_FINDER_PROMPT,           { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
+sd(M.sign.SEARCH2_RESULT_CURRENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
+sd(M.sign.SEARCH2_RESULT_PRESENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
+sd(M.sign.SEARCH2_RESULT_PRESENT_CURRENT,  { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
+sd(M.sign.SEARCH2_RESULT_SELECTED,         { text = eve.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
+sd(M.sign.SEARCH2_RESULT_SELECTED_CURRENT, { text = eve.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
 
 sd(M.sign.SEARCH_INPUT_CURSOR,            { text = eve.icon.ui.Telescope,            texthl = "fs_input_prompt"                 })
 sd(M.sign.SEARCH_MAIN_CURRENT,            { text = ' ',                              texthl = "fs_main_current"                 })
