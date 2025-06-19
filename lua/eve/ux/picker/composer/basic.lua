@@ -98,7 +98,6 @@ local __highlights__ = {
 ---
 ---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.IHistory
----@field public finder_multiline       ?boolean
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
@@ -166,7 +165,6 @@ function M.new(props)
 
   local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory
-  local finder_multiline = not not props.finder_multiline ---@type boolean
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean
@@ -209,12 +207,10 @@ function M.new(props)
     keymaps = self:__resolve_keymaps_finder__(
       flags,
       flags_start_index,
-      finder_multiline,
       has_finder_input_history,
       vim.list_extend(vim.list_slice(keymaps_common), keymaps_finder)
     ),
     input = finder_input,
-    multiline = finder_multiline,
     title = finder_title,
   })
 
@@ -634,12 +630,6 @@ function M:__layout__()
   local finder_height = 1 ---@type integer
   local preview_width = width - finder_width ---@type integer
 
-  local finder = self.finder ---@type eve.ux.picker.Finder
-  if finder.multiline then
-    local linecount = finder.linecount:snapshot() ---@type integer
-    finder_height = math.max(1, math.min(5, math.floor(height * 0.3), linecount)) ---@type integer
-  end
-
   ---@type std.t.IWinDimension
   local finder_dimension = {
     row = row,
@@ -756,22 +746,12 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   return builtin_keymaps
 end
 
----@param finder_multiline              boolean
 ---@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_history)
+function M:__resolve_builtin_keymaps_finder__(has_input_history)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
-      disabled = finder_multiline,
-      modes = { "n", "v" },
-      key = "o",
-      aliases = { "O", "<enter>" },
-      desc = "picker#finder: noop",
-      callback = std.fn.noop,
-    },
-    {
-      disabled = finder_multiline,
       modes = { "n", "v" },
       key = "dd",
       desc = "picker#finder: clear content",
@@ -780,7 +760,6 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
       end,
     },
     {
-      disabled = not finder_multiline,
       modes = { "n", "v" },
       key = "dd",
       desc = "picker#finder: clear content",
@@ -795,14 +774,12 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
       end,
     },
     {
-      disabled = finder_multiline,
       modes = { "i" },
       key = "<enter>",
       desc = "picker#finder: noop",
       callback = std.fn.noop,
     },
     {
-      disabled = finder_multiline,
       modes = { "n", "v" },
       key = "j",
       desc = "picker#finder: focus next item",
@@ -812,7 +789,6 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
       end,
     },
     {
-      disabled = finder_multiline,
       modes = { "i", "n", "v" },
       key = "<Down>",
       desc = "picker#finder: focus next item",
@@ -822,7 +798,6 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
       end,
     },
     {
-      disabled = finder_multiline,
       modes = { "n", "v" },
       key = "gg",
       desc = "picker#finder: focus first item",
@@ -831,7 +806,6 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
       end,
     },
     {
-      disabled = finder_multiline,
       modes = { "n", "v" },
       key = "G",
       desc = "picker#finder: focus last item",
@@ -841,7 +815,6 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
       end,
     },
     {
-      disabled = finder_multiline,
       modes = { "n", "v" },
       key = "k",
       desc = "picker#finder: focus prev item",
@@ -851,7 +824,6 @@ function M:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_histor
       end,
     },
     {
-      disabled = finder_multiline,
       modes = { "i", "n", "v" },
       key = "<Up>",
       desc = "picker#finder: focus prev item",
@@ -1032,36 +1004,6 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "n", "v" },
-      key = "O",
-      desc = "picker#result: back to edit (O)",
-      callback = function()
-        self:__focus_pane__("finder")
-
-        if self.finder.multiline then
-          local winnr = vim.api.nvim_get_current_win() ---@type integer
-          if winnr == self.finder:get_winnr() then
-            vim.api.nvim_feedkeys("O", "n", false)
-          end
-        end
-      end,
-    },
-    {
-      modes = { "n", "v" },
-      key = "o",
-      desc = "picker#result: back to edit (o)",
-      callback = function()
-        self:__focus_pane__("finder")
-
-        if self.finder.multiline then
-          local winnr = vim.api.nvim_get_current_win() ---@type integer
-          if winnr == self.finder:get_winnr() then
-            vim.api.nvim_feedkeys("o", "n", false)
-          end
-        end
-      end,
-    },
-    {
       disabled = true,
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
@@ -1229,36 +1171,6 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "n", "v" },
-      key = "O",
-      desc = "picker#preview: back to edit (O)",
-      callback = function()
-        self:__focus_pane__("finder")
-
-        if self.finder.multiline then
-          local winnr = vim.api.nvim_get_current_win() ---@type integer
-          if winnr == self.finder:get_winnr() then
-            vim.api.nvim_feedkeys("O", "n", false)
-          end
-        end
-      end,
-    },
-    {
-      modes = { "n", "v" },
-      key = "o",
-      desc = "picker#preview: back to edit (o)",
-      callback = function()
-        self:__focus_pane__("finder")
-
-        if self.finder.multiline then
-          local winnr = vim.api.nvim_get_current_win() ---@type integer
-          if winnr == self.finder:get_winnr() then
-            vim.api.nvim_feedkeys("o", "n", false)
-          end
-        end
-      end,
-    },
-    {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
@@ -1313,13 +1225,12 @@ end
 
 ---@param flags                         eve.ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param finder_multiline              boolean
 ---@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_finder__(flags, flags_start_index, finder_multiline, has_input_history, keymaps)
+function M:__resolve_keymaps_finder__(flags, flags_start_index, has_input_history, keymaps)
   local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__(finder_multiline, has_input_history) ---@type std.t.IKeymap[]
+  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__(has_input_history) ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps

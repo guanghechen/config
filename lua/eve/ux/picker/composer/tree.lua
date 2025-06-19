@@ -62,7 +62,6 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---
 ---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.IHistory
----@field public finder_multiline       ?boolean
 ---
 ---@field public render_preview             ?eve.ux.picker.preview.IDraw
 ---@field public render_listview_leaf       eve.ux.view.tree.IListviewLeafNodeRenderer
@@ -128,7 +127,6 @@ function M.new(props)
 
   local o_finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
-  local finder_multiline = props.finder_multiline ---@type boolean|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
@@ -632,7 +630,6 @@ function M.new(props)
 
     finder_input = o_finder_input,
     finder_input_history = finder_input_history,
-    finder_multiline = finder_multiline,
     finder_title = title,
 
     result_number = true,

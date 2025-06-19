@@ -313,7 +313,6 @@ function M.new(props)
 
     finder_input = finder_input,
     finder_input_history = finder_input_history,
-    finder_multiline = false,
     finder_title = title,
 
     result_number = false,
