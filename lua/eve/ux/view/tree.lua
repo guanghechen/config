@@ -1213,6 +1213,32 @@ function M:retrieve(uuid)
   return self.statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
 end
 
+---@param nodeuuid                      string
+---@param selected                      boolean
+---@return eve.ux.view.Tree
+function M:set_selected(nodeuuid, selected)
+  self:__health__()
+
+  local tick_selected = self._tick_selected ---@type integer
+  local nodestate = self.statemap[nodeuuid] ---@type eve.ux.view.tree.INodeState|nil
+  if nodestate ~= nil then
+    if selected then
+      if nodestate.tick_selected ~= tick_selected then
+        self._count_selected = self._count_selected + 1
+        nodestate.tick_selected = tick_selected ---@type integer
+      end
+    else
+      if nodestate.tick_selected == tick_selected then
+        self._count_selected = self._count_selected - 1
+        nodestate.tick_selected = -1 ---@type integer
+      end
+    end
+  end
+
+  self._dirty_selected = true
+  return self
+end
+
 ---@param uuid                          string
 ---@param selected                      boolean
 ---@param only_visible                  boolean|nil
@@ -1315,6 +1341,18 @@ function M:collapse(uuid, value, recursive)
     end
   end
 
+  return self
+end
+
+---@param nodeuuid                      string
+---@return eve.ux.view.Tree
+function M:mark_node_invisible(nodeuuid)
+  self:__health__()
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local nodestate = statemap[nodeuuid] ---@type eve.ux.view.tree.INodeState|nil
+  if nodestate ~= nil then
+    nodestate.tick_invisible = self._tick_invisible ---@type integer
+  end
   return self
 end
 

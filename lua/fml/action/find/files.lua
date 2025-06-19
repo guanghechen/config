@@ -199,7 +199,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
     },
   },
 
-  on_attach = function(_, rootpath)
+  on_attached = function(_, rootpath)
     o_rootpath:next(rootpath)
   end,
 

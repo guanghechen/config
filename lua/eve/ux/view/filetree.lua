@@ -184,17 +184,7 @@ end
 ---@param nodeuuid                      string
 ---@return eve.ux.view.Filetree
 function M:mark_node_invisible(nodeuuid)
-  self:__health__()
-
-  local view = self._view ---@type eve.ux.view.Tree
-  local statemap = view.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, eve.ux.view.filetree.INodeState>
-
-  local nodestate = statemap[nodeuuid] ---@type eve.ux.view.filetree.INodeState|nil
-  if nodestate ~= nil then
-    nodestate.tick_invisible = view._tick_invisible ---@type integer
-  end
-
+  self._view:mark_node_invisible(nodeuuid)
   return self
 end
 
@@ -242,6 +232,14 @@ function M:retrieve(uuid)
   local nodestate = self._view.statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
   ---@cast nodestate                    eve.ux.view.filetree.INodeState|nil
   return nodestate
+end
+
+---@param nodeuuid                      string
+---@param selected                      boolean
+---@return eve.ux.view.Filetree
+function M:set_selected(nodeuuid, selected)
+  self._view:set_selected(nodeuuid, selected)
+  return self
 end
 
 ---@param uuid                          string

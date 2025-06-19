@@ -23,10 +23,16 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---| fun(self: eve.ux.picker.TreeComposer, force: boolean): nil
 
 ---@class eve.ux.picker.composer.tree.actions
----@field public on_tree_open       fun(): nil
----@field public on_tree_toggle     fun(): nil
----@field public on_tree_toggle_recursively fun(): nil
----@field public on_toggle_selection    fun(): nil
+---@field public attach_node            fun(): nil
+---@field public attach_parent          fun(): nil
+---@field public goto_lnum_lastchild    fun(): nil
+---@field public goto_lnum_parent       fun(): nil
+---@field public mark_node_invisible    fun(): nil
+---@field public mark_subroot_invisible fun(): nil
+---@field public open_node              fun(): nil
+---@field public toggle_node            fun(): nil
+---@field public toggle_node_recursively fun(): nil
+---@field public toggle_selection       fun(): nil
 
 ----------------------------------------------------------------------------------------------------
 
@@ -90,14 +96,13 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field public flag_viewtype          std.collection.IObservable
 ---
 ---@field protected _disposed           boolean
----@field protected _tree           std.collection.Tree
+---@field protected _tree               std.collection.Tree
 ---@field protected _composer           eve.ux.picker.BasicComposer
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.ux.picker.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
 ---@field protected _treeview           eve.ux.view.Tree
 ---
----@field protected _last_preview_filepath  string|nil
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuids_file         string[]
@@ -121,7 +126,7 @@ function M.new(props)
   local width = props.width ---@type number|nil
   local node_sorter = props.node_sorter ---@type std.collection.tree.INodeSorter
 
-  local finder_input = props.finder_input ---@type std.collection.IObservable
+  local o_finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
   local finder_multiline = props.finder_multiline ---@type boolean|nil
 
@@ -130,12 +135,13 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
 
-  local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
-  local flag_regex = props.flag_regex ---@type std.collection.IObservable
-  local flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
-  local flag_sensitive = props.flag_sensitive ---@type std.collection.IObservable
-  local flag_selected = props.flag_selected ---@type std.collection.IObservable
-  local flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
+  local o_flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
+  local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
+  local o_flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
+  local o_flag_sensitive = props.flag_sensitive ---@type std.collection.IObservable
+  local o_flag_selected = props.flag_selected ---@type std.collection.IObservable
+  local o_flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
+
   local flags_append = props.flags_append ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
@@ -176,7 +182,7 @@ function M.new(props)
   local treeview = eve.ux.view.Tree.new({
     name = fullname,
     tree = tree,
-    flag_foldempty = flag_foldempty,
+    flag_foldempty = o_flag_foldempty,
     indent = "",
     indent_hln = "f_utw_indent_float",
     render_listview_leaf = render_listview_leaf,
@@ -194,20 +200,12 @@ function M.new(props)
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
-      local input = finder_input:snapshot() ---@type string
+      local input = o_finder_input:snapshot() ---@type string
       self:__match__(input)
       treeview:mark_cache_treeview_dirty()
       self:mark_result_dirty()
     end,
   })
-
-  ---@return string|nil
-  ---@return integer
-  local function retrieve()
-    local lnum = self._composer:get_result_lnum() ---@type integer
-    local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-    return uuid, lnum
-  end
 
   local flags = {} ---@type eve.ux.picker.result.IFlagItemRaw[]
   do
@@ -223,23 +221,23 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: selected only", name),
       callback = function()
-        local enabled = flag_selected:snapshot() ---@type boolean
-        flag_selected:next(not enabled)
+        local enabled = o_flag_selected:snapshot() ---@type boolean
+        o_flag_selected:next(not enabled)
       end,
       snapshot = function()
-        local enabled = flag_selected:snapshot() ---@type boolean
+        local enabled = o_flag_selected:snapshot() ---@type boolean
         return eve.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
-        local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
         local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type eve.ux.view.tree.ViewtypeEnum
-        flag_viewtype:next(next_viewtype)
+        o_flag_viewtype:next(next_viewtype)
       end,
       snapshot = function()
-        local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
         if viewtype == "tree" then
           return eve.icon.symbols.flag_tree, "picker_flag_aqua"
         end
@@ -254,49 +252,49 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: fold empty path", name),
       disabled = function()
-        local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
         return viewtype ~= "tree"
       end,
       callback = function()
-        local enabled = flag_foldempty:snapshot() ---@type boolean
-        flag_foldempty:next(not enabled)
+        local enabled = o_flag_foldempty:snapshot() ---@type boolean
+        o_flag_foldempty:next(not enabled)
         self._composer:mark_result_dirty()
       end,
       snapshot = function()
-        local enabled = flag_foldempty:snapshot() ---@type boolean
+        local enabled = o_flag_foldempty:snapshot() ---@type boolean
         return eve.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
       desc = string.format("%s: fuzzy", name),
       callback = function()
-        local enabled = flag_fuzzy:snapshot() ---@type boolean
-        flag_fuzzy:next(not enabled)
+        local enabled = o_flag_fuzzy:snapshot() ---@type boolean
+        o_flag_fuzzy:next(not enabled)
       end,
       snapshot = function()
-        local enabled = flag_fuzzy:snapshot() ---@type boolean
+        local enabled = o_flag_fuzzy:snapshot() ---@type boolean
         return eve.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
       desc = string.format("%s: sensitive", name),
       callback = function()
-        local enabled = flag_sensitive:snapshot() ---@type boolean
-        flag_sensitive:next(not enabled)
+        local enabled = o_flag_sensitive:snapshot() ---@type boolean
+        o_flag_sensitive:next(not enabled)
       end,
       snapshot = function()
-        local enabled = flag_sensitive:snapshot() ---@type boolean
+        local enabled = o_flag_sensitive:snapshot() ---@type boolean
         return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
       desc = string.format("%s: regex", name),
       callback = function()
-        local enabled = flag_regex:snapshot() ---@type boolean
-        flag_regex:next(not enabled)
+        local enabled = o_flag_regex:snapshot() ---@type boolean
+        o_flag_regex:next(not enabled)
       end,
       snapshot = function()
-        local enabled = flag_regex:snapshot() ---@type boolean
+        local enabled = o_flag_regex:snapshot() ---@type boolean
         return eve.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
@@ -313,8 +311,41 @@ function M.new(props)
 
   ---@type eve.ux.picker.composer.tree.actions
   local actions = {
-    on_goto_lnum_parent = function()
-      local nodeuuid, lnum = retrieve() ---@type string|nil, integer
+    attach_node = function()
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      if nodeuuid ~= nil then
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+        if nodestate ~= nil and nodestate.nodetype == "container" then
+          treeview:mark_cache_listview_dirty()
+          self._uuid_root = nodeuuid ---@type string
+          self:mark_result_dirty()
+
+          on_attached(self, nodeuuid)
+        end
+      end
+    end,
+    attach_parent = function()
+      local rootuuid = self._uuid_root ---@type string
+      local rootnode = tree:retrieve(rootuuid) ---@type std.collection.tree.INode|nil
+      if rootnode and rootnode.parent ~= rootuuid then
+        treeview:mark_cache_listview_dirty()
+        self._uuid_root = rootnode.parent ---@type string
+        self:mark_result_dirty()
+
+        on_attached(self, rootnode.parent)
+      end
+    end,
+    goto_lnum_lastchild = function()
+      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
+      if nodeuuid ~= nil then
+        local lnum_lastchild = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+        if lnum_lastchild ~= nil then
+          self._composer.result:set_lnum_current(lnum_lastchild)
+        end
+      end
+    end,
+    goto_lnum_parent = function()
+      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
       local node = nodeuuid ~= nil and tree:retrieve(nodeuuid) or nil ---@type std.collection.tree.INode|nil
       local lnum_parent = node ~= nil and retriever:retrieve_lnum(node.parent) or nil ---@type integer|nil
       if lnum_parent ~= nil then
@@ -324,117 +355,113 @@ function M.new(props)
         self._composer.result:set_lnum_current(lnum_parent)
       end
     end,
-    on_goto_lnum_lastchild = function()
-      local nodeuuid, lnum = retrieve() ---@type string|nil, integer
-      if nodeuuid ~= nil then
-        local lnum_lastchild = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-        if lnum_lastchild ~= nil then
-          self._composer.result:set_lnum_current(lnum_lastchild)
+    mark_node_invisible = function()
+      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
+      if lnum_from < 1 then
+        return
+      end
+
+      local finder_input = o_finder_input:snapshot() ---@type string
+      for lnum = lnum_from, lnum_to, 1 do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if nodeuuid ~= nil then
+          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+          if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
+            treeview:mark_node_invisible(nodeuuid)
+          end
         end
       end
+      self._composer:mark_result_dirty()
     end,
-    on_tree_open = function()
-      local nodeuuid = retrieve() ---@type string|nil
+    mark_subroot_invisible = function()
+      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
+      if lnum_from < 1 then
+        return
+      end
+
+      for lnum = lnum_from, lnum_to, 1 do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if nodeuuid ~= nil then
+          treeview:mark_node_invisible(nodeuuid)
+        end
+      end
+      self._composer:mark_result_dirty()
+    end,
+    open_node = function()
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
         self:__resolve_confirmation__(nodeuuid)
       end
     end,
-    on_tree_toggle = function()
-      local nodeuuid = retrieve() ---@type string|nil
+    toggle_node = function()
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
         self:__toggle_node__(nodeuuid, false)
       end
     end,
-    on_tree_attach = function()
-      local nodeuuid = retrieve() ---@type string|nil
-      if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
-        if nodestate ~= nil and nodestate.nodetype == "container" then
-          treeview:mark_cache_listview_dirty()
-          self._uuid_root = nodeuuid ---@type string
-          self:mark_result_dirty()
-
-          on_attached(self, nodeuuid) ---@type eve.ux.picker.composer.tree.IOnAttached
-        end
-      end
-    end,
-    on_tree_attach_parent = function()
-      local rootuuid = self._uuid_root ---@type string
-      local rootnode = tree:retrieve(rootuuid) ---@type std.collection.tree.INode|nil
-      if rootnode and rootnode.parent ~= rootuuid then
-        treeview:mark_cache_listview_dirty()
-        self._uuid_root = rootnode.parent ---@type string
-        self:mark_result_dirty()
-
-        on_attached(self, rootnode.parent) ---@type eve.ux.picker.composer.tree.IOnAttached
-      end
-    end,
-    on_tree_toggle_recursively = function()
-      local nodeuuid = retrieve() ---@type string|nil
+    toggle_node_recursively = function()
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
         self:__toggle_node__(nodeuuid, true)
       end
     end,
-    on_toggle_selection = function()
-      local nodeuuid = retrieve() ---@type string|nil
-      if nodeuuid == nil then
+    toggle_selection = function()
+      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
+      if lnum_from < 1 then
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
-      if nodestate == nil then
-        return
-      end
+      if lnum_from == lnum_to then
+        local nodeuuid = retriever:retrieve_uuid(lnum_from) ---@type string|nil
+        if nodeuuid == nil then
+          return
+        end
 
-      local composer = self._composer ---@type eve.ux.picker.BasicComposer
-      local lnum = retriever:retrieve_lnum(nodeuuid) ---@type integer|nil
-      if lnum == nil or lnum < 0 then
-        return
-      end
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+        if nodestate == nil then
+          return
+        end
 
-      if nodestate.nodetype == "container" then
-        local lastchild_index = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-        if lastchild_index ~= nil and lnum <= lastchild_index then
+        if nodestate.nodetype == "container" then
           local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
-          for index = lnum, lastchild_index, 1 do
-            local childuuid = retriever:retrieve_uuid(index) ---@type string|nil
-            if childuuid ~= nil then
-              local childstate = treeview:retrieve(childuuid) ---@type eve.ux.view.tree.INodeState|nil
-              if childstate ~= nil and childstate.nodetype ~= "location" then
-                treeview:toggle_select(childuuid, next_selected, true) ---@type boolean
-              end
+          treeview:toggle_select(nodeuuid, next_selected, true)
+        elseif nodestate.nodetype == "leaf" then
+          local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
+          treeview:toggle_select(nodeuuid, next_selected, true)
+        elseif nodestate.nodetype == "location" then
+          nodeuuid = nodestate.leafuuid ---@type string
+          local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
+          treeview:toggle_select(nodeuuid, next_selected, true)
+        end
+        self._composer.result:refresh_signs()
+        return
+      end
+
+      local next_selected = false ---@type boolean
+      for lnum = lnum_from, lnum_to, 1 do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if nodeuuid ~= nil then
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+          if childstate ~= nil and childstate.nodetype ~= "location" then
+            local isselected = treeview:isselected(nodeuuid) ---@type boolean
+            if not isselected then
+              next_selected = true
+              break
             end
           end
         end
-        composer.result:refresh_signs()
-        return
       end
 
-      if nodestate.nodetype == "leaf" then
-        local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
-        treeview:toggle_select(nodeuuid, next_selected, true) ---@type boolean
-        composer.result:refresh_signs()
-        return
+      for lnum = lnum_from, lnum_to, 1 do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if nodeuuid ~= nil then
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+          if childstate ~= nil and childstate.nodetype ~= "location" then
+            treeview:set_selected(nodeuuid, next_selected)
+          end
+        end
       end
-
-      if nodestate.nodetype == "location" then
-        nodeuuid = nodestate.leafuuid ---@type string
-        lnum = retriever:retrieve_lnum(nodeuuid) or lnum ---@type integer
-        local next_selected = not treeview:isselected(nodeuuid) ---@type boolean
-        treeview:toggle_select(nodeuuid, next_selected, true) ---@type boolean
-        composer.result:refresh_signs()
-        return
-      end
-
-      std.reporter.error({
-        from = self.fullname,
-        subject = "on_toggle_selection",
-        message = "Unknown nodetype",
-        details = {
-          nodeuuid = nodeuuid,
-          nodestate = nodestate,
-        },
-      })
+      self._composer.result:refresh_signs()
     end,
   }
 
@@ -447,50 +474,62 @@ function M.new(props)
       modes = { "n", "v" },
       key = ".",
       desc = "tree: change root",
-      callback = actions.on_tree_attach,
+      callback = actions.attach_node,
     },
     {
       modes = { "n", "v" },
       key = "<Backspace>",
       desc = "tree: change root to parent",
-      callback = actions.on_tree_attach_parent,
+      callback = actions.attach_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
       desc = "tree: open",
-      callback = actions.on_tree_open,
+      callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-h>",
       aliases = { "<C-l>" },
       desc = "tree: toggle",
-      callback = actions.on_tree_toggle,
+      callback = actions.toggle_node,
     },
     {
       modes = { "n", "v" },
       key = "<Tab>",
       desc = "tree: toggle selection",
-      callback = actions.on_toggle_selection,
+      callback = actions.toggle_selection,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>D",
+      desc = "tree: mark the subroot invisible",
+      callback = actions.mark_subroot_invisible,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>dd",
+      desc = "tree: mark the node invisible",
+      callback = actions.mark_node_invisible,
     },
     {
       modes = { "n", "v" },
       key = "[i",
       desc = "tree: goto the parent line",
-      callback = actions.on_goto_lnum_parent,
+      callback = actions.goto_lnum_parent,
     },
     {
       modes = { "n", "v" },
       key = "]i",
       desc = "tree: goto the lastchild line",
-      callback = actions.on_goto_lnum_lastchild,
+      callback = actions.goto_lnum_lastchild,
     },
     {
       modes = { "n", "v" },
       key = "z",
       desc = "tree: toggle (recursively)",
-      callback = actions.on_tree_toggle_recursively,
+      callback = actions.toggle_node_recursively,
     },
   }
 
@@ -500,27 +539,27 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = ".",
       desc = "tree: change root",
-      callback = actions.on_tree_attach,
+      callback = actions.attach_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Backspace>",
       desc = "tree: change root to parent",
-      callback = actions.on_tree_attach_parent,
+      callback = actions.attach_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
       aliases = { "l", "w" },
       desc = "tree: open",
-      callback = actions.on_tree_open,
+      callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Right>",
       aliases = { "<Left>", "c", "h" },
       desc = "tree: toggle",
-      callback = actions.on_tree_toggle,
+      callback = actions.toggle_node,
     },
     {
       modes = { "i", "n", "v" },
@@ -531,7 +570,7 @@ function M.new(props)
         if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
           local cursor = vim.fn.getmousepos()
           if cursor.winid == result_winnr then
-            actions.on_tree_toggle()
+            actions.toggle_node()
           end
         end
       end,
@@ -540,25 +579,39 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<Tab>",
       desc = "tree: toggle selection",
-      callback = actions.on_toggle_selection,
+      callback = actions.toggle_selection,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>D",
+      aliases = { "D" },
+      desc = "tree: mark the subroot invisible",
+      callback = actions.mark_subroot_invisible,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>dd",
+      aliases = { "dd" },
+      desc = "tree: mark the node invisible",
+      callback = actions.mark_node_invisible,
     },
     {
       modes = { "i", "n", "v" },
       key = "[i",
       desc = "tree: goto the parent line",
-      callback = actions.on_goto_lnum_parent,
+      callback = actions.goto_lnum_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "]i",
       desc = "tree: goto the lastchild line",
-      callback = actions.on_goto_lnum_lastchild,
+      callback = actions.goto_lnum_lastchild,
     },
     {
       modes = { "i", "n", "v" },
       key = "z",
       desc = "tree: toggle (recursively)",
-      callback = actions.on_tree_toggle_recursively,
+      callback = actions.toggle_node_recursively,
     },
   }
 
@@ -577,7 +630,7 @@ function M.new(props)
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
-    finder_input = finder_input,
+    finder_input = o_finder_input,
     finder_input_history = finder_input_history,
     finder_multiline = finder_multiline,
     finder_title = title,
@@ -592,10 +645,10 @@ function M.new(props)
 
     ---@type eve.ux.picker.result.IDraw
     result_render = function(bufnr)
-      local viewtype = flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+      local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
       local result ---@type eve.ux.view.tree.IRenderResult
-      local only_matched = finder_input:snapshot() ~= "" ---@type boolean
-      local only_selected = flag_selected:snapshot() ---@type boolean
+      local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean
+      local only_selected = o_flag_selected:snapshot() ---@type boolean
 
       if viewtype == "list" then
         result = treeview:render_listview({
@@ -607,7 +660,7 @@ function M.new(props)
           only_visible = true,
         })
       elseif viewtype == "tree" then
-        local foldempty = flag_foldempty:snapshot() ---@type boolean
+        local foldempty = o_flag_foldempty:snapshot() ---@type boolean
         result = treeview:render_treeview({
           bufnr = bufnr,
           rootuuid = self._uuid_root,
@@ -663,11 +716,11 @@ function M.new(props)
   self.result = composer.result
   self.preview = composer.preview
 
-  self.flag_foldempty = flag_foldempty
-  self.flag_fuzzy = flag_fuzzy
-  self.flag_regex = flag_regex
-  self.flag_sensitive = flag_sensitive
-  self.flag_selected = flag_selected
+  self.flag_foldempty = o_flag_foldempty
+  self.flag_fuzzy = o_flag_fuzzy
+  self.flag_regex = o_flag_regex
+  self.flag_sensitive = o_flag_sensitive
+  self.flag_selected = o_flag_selected
 
   self._disposed = false
   self._tree = tree
@@ -677,7 +730,6 @@ function M.new(props)
   self._scheduler_match = scheduler_match
   self._treeview = treeview
 
-  self._last_preview_filepath = nil
   self._uuid_root = nil
   self._uuids_file = {}
   self._uuids_order = {}
@@ -687,16 +739,16 @@ function M.new(props)
   self._on_disposed = on_disposed
 
   std.fn.observe(
-    { finder_input, flag_foldempty, flag_fuzzy, flag_regex, flag_sensitive, flag_selected, flag_viewtype },
+    { o_finder_input, o_flag_foldempty, o_flag_fuzzy, o_flag_regex, o_flag_sensitive, o_flag_selected, o_flag_viewtype },
     function()
       composer:mark_result_flags_dirty()
     end,
     true
   )
-  std.fn.observe({ flag_selected, flag_viewtype }, function()
+  std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
+  std.fn.observe({ o_finder_input, o_flag_fuzzy, o_flag_regex, o_flag_sensitive }, function()
     scheduler_match:schedule()
   end)
   std.fn.observe({ composer.result.lnum_current }, function()
@@ -766,7 +818,6 @@ function M:dispose()
   self._scheduler_match = nil
   self._treeview = nil
 
-  self._last_preview_filepath = nil
   self._uuid_root = nil
   self._uuids_file = nil
   self._uuids_order = nil
@@ -954,6 +1005,40 @@ function M:__retrieve__(nodeuuid)
   end
 
   return node, nodestate
+end
+
+---@return string|nil
+---@return integer
+function M:__retrieve_nodeuuid__()
+  local lnum = self.result.lnum_current:snapshot() ---@type integer
+  if lnum < 1 then
+    return nil, lnum
+  end
+
+  local nodeuuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
+  return nodeuuid, lnum
+end
+
+---@return integer
+---@return integer
+function M:__retrieve_lnum_range__()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
+
+  if winnr == self.result:get_winnr() then
+    local mode = vim.fn.mode()
+    if mode == "v" or mode == "V" or mode == "\22" then
+      local lnum_from, lnum_end = eve.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      return lnum_from, lnum_end
+    end
+  end
+
+  local lnum = self.result.lnum_current:snapshot() ---@type integer
+  local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) or lnum ---@type integer
+  if lnum < lnum_childline then
+    return lnum, lnum_childline
+  end
+  return lnum, lnum
 end
 
 ---@param nodeuuid                      string
