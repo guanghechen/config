@@ -1,9 +1,23 @@
 local __module_name__ = "fml.action.search.files" ---@type string
 
+local o_flag_case_sensitive = eve.context.select.search_file.flag_case_sensitive ---@type std.collection.IObservable
+local o_flag_exclude = eve.context.select.search_file.flag_exclude ---@type std.collection.IObservable
+local o_flag_gitignore = eve.context.select.search_file.flag_gitignore ---@type std.collection.IObservable
+local o_flag_regex = eve.context.select.search_file.flag_regex ---@type std.collection.IObservable
+local o_flag_selected = eve.context.select.search_file.flag_selected ---@type std.collection.IObservable
+local o_excludes = eve.context.select.search_file.excludes ---@type std.collection.IObservable
+local o_includes = eve.context.select.search_file.includes ---@type std.collection.IObservable
+local o_input = eve.context.select.search_file.input ---@type std.collection.IObservable
+local o_scope = eve.context.select.search_file_scope ---@type std.collection.IObservable
+local o_flag_replace = eve.context.search_file.flag_replace ---@type std.collection.IObservable
+local o_max_filesize = eve.context.search_file.max_filesize ---@type std.collection.IObservable
+local o_max_matches = eve.context.search_file.max_matches ---@type std.collection.IObservable
+local o_replacement = eve.context.search_file.replacement ---@type std.collection.IObservable
+
 ---@return std.e.SearchFileScope
 local function get_scope_carousel_next()
   local scopes = eve.context.select.search_file_scopes ---@type std.e.SearchFileScope[]
-  local scope = eve.context.select.search_file_scope:snapshot() ---@type std.e.SearchFileScope
+  local scope = o_scope:snapshot() ---@type std.e.SearchFileScope
   local idx = std.table.find_index(scopes, scope) or 1 ---@type integer
   local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
   return scopes[idx_next]
@@ -12,16 +26,16 @@ end
 ---@param scope                         std.e.SearchFileScope
 ---@return nil
 local function change_scope(scope)
-  local scope_current = eve.context.select.search_file_scope:snapshot() ---@type std.e.SearchFileScope
+  local scope_current = o_scope:snapshot() ---@type std.e.SearchFileScope
   if scope_current ~= scope then
-    eve.context.select.search_file_scope:next(scope)
+    o_scope:next(scope)
   end
 end
 
 ---@param dirpath                       string
 ---@return string
 local function get_scope_cwd(dirpath)
-  local scope = eve.context.select.search_file_scope:snapshot() ---@type std.e.SearchFileScope
+  local scope = o_scope:snapshot() ---@type std.e.SearchFileScope
 
   if scope == "W" then
     return std.path.workspace()
@@ -52,8 +66,8 @@ local state_cwd = std.Observable.from_value(get_scope_cwd(std.path.cwd()))
 
 ---@return string
 local function gen_title()
-  local scope = eve.context.select.search_file_scope:snapshot() ---@type std.e.SearchFileScope
-  local flag_replace = eve.context.search_file.flag_replace:snapshot() ---@type boolean
+  local scope = o_scope:snapshot() ---@type std.e.SearchFileScope
+  local flag_replace = o_flag_replace:snapshot() ---@type boolean
   local mode = flag_replace and "Replace" or "Search" ---@type string
 
   if scope == "W" then
@@ -89,7 +103,7 @@ local function gen_title()
   return mode .. "in buf#" .. tostring(bufnr_sourcefile) ---@type string
 end
 
-eve.context.select.search_file_scope:subscribe(
+o_scope:subscribe(
   std.Subscriber.new({
     on_next = function(scope, prev_scope)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -162,12 +176,12 @@ function M.edit_config()
   ---@field public includes             string[]
   ---@field public excludes             string[]
 
-  local s_keyword = eve.context.select.search_file.input:snapshot() ---@type string
-  local s_replacement = eve.context.search_file.replacement:snapshot() ---@type string
-  local s_max_filesize = eve.context.search_file.max_filesize:snapshot() ---@type string
-  local s_max_matches = eve.context.search_file.max_matches:snapshot() ---@type integer
-  local s_includes = eve.context.select.search_file.includes:snapshot() ---@type string[]
-  local s_excludes = eve.context.select.search_file.excludes:snapshot() ---@type string[]
+  local s_keyword = o_input:snapshot() ---@type string
+  local s_replacement = o_replacement:snapshot() ---@type string
+  local s_max_filesize = o_max_filesize:snapshot() ---@type string
+  local s_max_matches = o_max_matches:snapshot() ---@type integer
+  local s_includes = o_includes:snapshot() ---@type string[]
+  local s_excludes = o_excludes:snapshot() ---@type string[]
 
   ---@type fml.action.search.files.IConfigData
   local data = {
@@ -215,7 +229,7 @@ function M.edit_config()
     end,
     on_confirm = function(raw_data)
       vim.schedule(function()
-        local last_keyword = eve.context.select.search_file.input:snapshot() ---@type string
+        local last_keyword = o_input:snapshot() ---@type string
 
         local raw = vim.tbl_extend("force", data, raw_data)
         ---@cast raw                    fml.action.search.files.IConfigData
@@ -227,12 +241,12 @@ function M.edit_config()
         local includes = raw.includes ---@type string[]
         local excludes = raw.excludes ---@type string[]
 
-        eve.context.select.search_file.input:next(keyword)
-        eve.context.select.search_file.includes:next(includes)
-        eve.context.select.search_file.excludes:next(excludes)
-        eve.context.search_file.replacement:next(replacement)
-        eve.context.search_file.max_filesize:next(max_filesize)
-        eve.context.search_file.max_matches:next(max_matches)
+        o_input:next(keyword)
+        o_includes:next(includes)
+        o_excludes:next(excludes)
+        o_replacement:next(replacement)
+        o_max_filesize:next(max_filesize)
+        o_max_matches:next(max_matches)
 
         if keyword ~= last_keyword then
           M.reset_input(keyword)
@@ -272,7 +286,7 @@ function M.get_search()
       enable_multiline_input = true,
       fetch_data = api.fetch_data,
       flag_selected = eve.context.select.search_file.flag_selected,
-      input = eve.context.select.search_file.input,
+      input = o_input,
       input_history = eve.context.select.search_file.input_history,
       multiple = true,
       permanent = true,
@@ -289,13 +303,13 @@ function M.get_search()
       delay_render = 64,
       statusline_items = keybindings.statusline_items,
       on_invisible = function()
-        local scope = eve.context.select.search_file_scope:snapshot() ---@type std.e.SearchFileScope
+        local scope = o_scope:snapshot() ---@type std.e.SearchFileScope
         if scope == "B" then
           M.reload()
         end
       end,
       on_close = function()
-        local scope = eve.context.select.search_file_scope:snapshot() ---@type std.e.SearchFileScope
+        local scope = o_scope:snapshot() ---@type std.e.SearchFileScope
         if scope == "B" then
           M.reload()
         end
@@ -383,26 +397,26 @@ end
 
 ---@return nil
 function M.toggle_flag_case_sensitive()
-  local flag = eve.context.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
-  eve.context.select.search_file.flag_case_sensitive:next(not flag)
+  local flag = o_flag_case_sensitive:snapshot() ---@type boolean
+  o_flag_case_sensitive:next(not flag)
 end
 
 ---@return nil
 function M.toggle_flag_gitignore()
-  local flag = eve.context.select.search_file.flag_gitignore:snapshot() ---@type boolean
-  eve.context.select.search_file.flag_gitignore:next(not flag)
+  local flag = o_flag_gitignore:snapshot() ---@type boolean
+  o_flag_gitignore:next(not flag)
 end
 
 ---@return nil
 function M.toggle_mode()
-  local flag = eve.context.search_file.flag_replace:snapshot() ---@type boolean
-  eve.context.search_file.flag_replace:next(not flag)
+  local flag = o_flag_replace:snapshot() ---@type boolean
+  o_flag_replace:next(not flag)
 end
 
 ---@return nil
 function M.toggle_flag_regex()
-  local flag = eve.context.select.search_file.flag_regex:snapshot() ---@type boolean
-  eve.context.select.search_file.flag_regex:next(not flag)
+  local flag = o_flag_regex:snapshot() ---@type boolean
+  o_flag_regex:next(not flag)
 end
 
 ---@return nil
@@ -413,14 +427,14 @@ end
 
 ---@return nil
 function M.toggle_flag_selected()
-  local flag = eve.context.select.search_file.flag_selected:snapshot() ---@type boolean
-  eve.context.select.search_file.flag_selected:next(not flag)
+  local flag = o_flag_selected:snapshot() ---@type boolean
+  o_flag_selected:next(not flag)
 end
 
 ---@return nil
 function M.toggle_flag_exclude()
-  local flag = eve.context.select.search_file.flag_exclude:snapshot() ---@type boolean
-  eve.context.select.search_file.flag_exclude:next(not flag)
+  local flag = o_flag_exclude:snapshot() ---@type boolean
+  o_flag_exclude:next(not flag)
 end
 
 return M

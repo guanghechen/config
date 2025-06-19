@@ -2,6 +2,18 @@ local __module_name__ = "fml.action.search.files" ---@type string
 
 local context = require("fml.action.search.files.context")
 
+local o_flag_case_sensitive = eve.context.select.search_file.flag_case_sensitive ---@type std.collection.IObservable
+local o_flag_exclude = eve.context.select.search_file.flag_exclude ---@type std.collection.IObservable
+local o_flag_gitignore = eve.context.select.search_file.flag_gitignore ---@type std.collection.IObservable
+local o_flag_regex = eve.context.select.search_file.flag_regex ---@type std.collection.IObservable
+local o_flag_replace = eve.context.search_file.flag_replace ---@type std.collection.IObservable
+local o_excludes = eve.context.select.search_file.excludes ---@type std.collection.IObservable
+local o_includes = eve.context.select.search_file.includes ---@type std.collection.IObservable
+local o_input = eve.context.select.search_file.input ---@type std.collection.IObservable
+local o_max_filesize = eve.context.search_file.max_filesize ---@type std.collection.IObservable
+local o_max_matches = eve.context.search_file.max_matches ---@type std.collection.IObservable
+local o_replacement = eve.context.search_file.replacement ---@type std.collection.IObservable
+
 ---@class fml.action.search.files.IFileItem
 ---@field public children               string[]
 ---@field public fragmentary            boolean
@@ -31,7 +43,7 @@ local _last_search_result = nil ---@type eve.builtin.oxi.search.IResult|nil
 
 std.fn.observe({
   --
-  eve.context.search_file.flag_replace,
+  o_flag_replace,
   eve.context.select.search_file_scope,
   context.search_cwd,
 }, function()
@@ -39,14 +51,14 @@ std.fn.observe({
 end, true)
 
 std.fn.observe({
-  eve.context.select.search_file.flag_case_sensitive,
-  eve.context.select.search_file.flag_exclude,
-  eve.context.select.search_file.flag_gitignore,
-  eve.context.select.search_file.flag_regex,
-  eve.context.select.search_file.excludes,
-  eve.context.select.search_file.includes,
-  eve.context.search_file.max_filesize,
-  eve.context.search_file.max_matches,
+  o_flag_case_sensitive,
+  o_flag_exclude,
+  o_flag_gitignore,
+  o_flag_regex,
+  o_excludes,
+  o_includes,
+  o_max_filesize,
+  o_max_matches,
   context.search_cwd,
 }, function()
   _last_preview_data = nil
@@ -55,8 +67,8 @@ std.fn.observe({
   context.reload()
 end, true)
 std.fn.observe({
-  eve.context.search_file.flag_replace,
-  eve.context.search_file.replacement,
+  o_flag_replace,
+  o_replacement,
 }, function()
   _last_preview_data = nil
   context.reload()
@@ -118,11 +130,11 @@ function M.calc_preview_data(uuid)
   end
 
   local filetype = vim.filetype.match({ filename = filename }) ---@type string|nil
-  local flag_case_sensitive = eve.context.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = eve.context.select.search_file.flag_regex:snapshot() ---@type boolean
-  local flag_replace = eve.context.search_file.flag_replace:snapshot() ---@type boolean
-  local keyword = eve.context.select.search_file.input:snapshot() ---@type string
-  local replacement = eve.context.search_file.replacement:snapshot() ---@type string
+  local flag_case_sensitive = o_flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = o_flag_regex:snapshot() ---@type boolean
+  local flag_replace = o_flag_replace:snapshot() ---@type boolean
+  local keyword = o_input:snapshot() ---@type string
+  local replacement = o_replacement:snapshot() ---@type string
   local match_offset_cur = item.offset ---@type integer
   local match_offsets = M.collect_valid_match_offsets(uuid) ---@type integer[]
   local lines = {} ---@type string[]
@@ -304,16 +316,16 @@ function M.fetch_data(input_text, force, callback)
     return
   end
 
-  local flag_case_sensitive = eve.context.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_exclude = eve.context.select.search_file.flag_exclude:snapshot() ---@type boolean
-  local flag_gitignore = eve.context.select.search_file.flag_gitignore:snapshot() ---@type boolean
-  local flag_regex = eve.context.select.search_file.flag_regex:snapshot() ---@type boolean
-  local flag_replace = eve.context.search_file.flag_replace:snapshot() ---@type boolean
-  local max_filesize = eve.context.search_file.max_filesize:snapshot() ---@type string
-  local max_matches = eve.context.search_file.max_matches:snapshot() ---@type integer
-  local replacement = eve.context.search_file.replacement:snapshot() ---@type string
-  local includes = eve.context.select.search_file.includes:snapshot() ---@type string[]
-  local excludes = flag_exclude and eve.context.select.search_file.excludes:snapshot() or {} ---@type string[]
+  local flag_case_sensitive = o_flag_case_sensitive:snapshot() ---@type boolean
+  local flag_exclude = o_flag_exclude:snapshot() ---@type boolean
+  local flag_gitignore = o_flag_gitignore:snapshot() ---@type boolean
+  local flag_regex = o_flag_regex:snapshot() ---@type boolean
+  local flag_replace = o_flag_replace:snapshot() ---@type boolean
+  local max_filesize = o_max_filesize:snapshot() ---@type string
+  local max_matches = o_max_matches:snapshot() ---@type integer
+  local replacement = o_replacement:snapshot() ---@type string
+  local includes = o_includes:snapshot() ---@type string[]
+  local excludes = flag_exclude and o_excludes:snapshot() or {} ---@type string[]
 
   ---@type eve.builtin.oxi.search.IResult|nil
   local result = (
@@ -631,7 +643,7 @@ function M.patch_preview_data(search_item, last_search_item, last_data)
   local highlights = {} ---@type std.t.IHighlight[]
   local cur_lnum = -1 ---@type integer
   local cur_col = 0 ---@type integer
-  local flag_replace = eve.context.search_file.flag_replace:snapshot() ---@type boolean
+  local flag_replace = o_flag_replace:snapshot() ---@type boolean
   local match_offset_cur = item.offset ---@type integer
 
   if flag_replace then
@@ -694,14 +706,14 @@ end
 function M.refresh_file_item(filepath)
   if _last_search_result ~= nil then
     local cwd = context.search_cwd:snapshot() ---@type string
-    local flag_case_sensitive = eve.context.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
-    local flag_gitignore = eve.context.select.search_file.flag_gitignore:snapshot() ---@type boolean
-    local flag_regex = eve.context.select.search_file.flag_regex:snapshot() ---@type boolean
-    local includes = eve.context.select.search_file.includes:snapshot() ---@type string[]
-    local excludes = eve.context.select.search_file.excludes:snapshot() ---@type string[]
-    local max_filesize = eve.context.search_file.max_filesize:snapshot() ---@type string
-    local max_matches = eve.context.search_file.max_matches:snapshot() ---@type integer
-    local keyword = eve.context.select.search_file.input:snapshot() ---@type string
+    local flag_case_sensitive = o_flag_case_sensitive:snapshot() ---@type boolean
+    local flag_gitignore = o_flag_gitignore:snapshot() ---@type boolean
+    local flag_regex = o_flag_regex:snapshot() ---@type boolean
+    local includes = o_includes:snapshot() ---@type string[]
+    local excludes = o_excludes:snapshot() ---@type string[]
+    local max_filesize = o_max_filesize:snapshot() ---@type string
+    local max_matches = o_max_matches:snapshot() ---@type integer
+    local keyword = o_input:snapshot() ---@type string
     local specified_filepath = std.path.resolve(cwd, filepath) ---@type string
 
     ---@type eve.builtin.oxi.search.IResult|nil
@@ -754,10 +766,10 @@ function M.replace_file(uuid)
 
   local cwd = context.search_cwd:snapshot() ---@type string
   local filepath = item.filepath ---@type string
-  local flag_case_sensitive = eve.context.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = eve.context.select.search_file.flag_regex:snapshot() ---@type boolean
-  local keyword = eve.context.select.search_file.input:snapshot() ---@type string
-  local replacement = eve.context.search_file.replacement:snapshot() ---@type string
+  local flag_case_sensitive = o_flag_case_sensitive:snapshot() ---@type boolean
+  local flag_regex = o_flag_regex:snapshot() ---@type boolean
+  local keyword = o_input:snapshot() ---@type string
+  local replacement = o_replacement:snapshot() ---@type string
 
   if item.offset >= 0 then
     local children = fileitem.children ---@type string[]
@@ -883,10 +895,10 @@ end
 function M.replace_file_all()
   for filepath, fileitem in pairs(_fileitem_map) do
     local cwd = context.search_cwd:snapshot() ---@type string
-    local flag_case_sensitive = eve.context.select.search_file.flag_case_sensitive:snapshot() ---@type boolean
-    local flag_regex = eve.context.select.search_file.flag_regex:snapshot() ---@type boolean
-    local keyword = eve.context.select.search_file.input:snapshot() ---@type string
-    local replacement = eve.context.search_file.replacement:snapshot() ---@type string
+    local flag_case_sensitive = o_flag_case_sensitive:snapshot() ---@type boolean
+    local flag_regex = o_flag_regex:snapshot() ---@type boolean
+    local keyword = o_input:snapshot() ---@type string
+    local replacement = o_replacement:snapshot() ---@type string
 
     if not fileitem.fragmentary then
       for _, child_uuid in ipairs(fileitem.children) do

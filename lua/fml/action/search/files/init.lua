@@ -1,12 +1,17 @@
 local context = require("fml.action.search.files.context")
 
+local o_flag_regex = eve.context.select.search_file.flag_regex ---@type std.collection.IObservable
+local o_input = eve.context.select.search_file.input ---@type std.collection.IObservable
+local o_scope = eve.context.select.search_file_scope ---@type std.collection.IObservable
+local o_flag_replace = eve.context.search_file.flag_replace ---@type std.collection.IObservable
+
 ---@return nil
 local function focus()
   local selected_text = eve.buf.retrieve_selected_text() ---@type string
   if selected_text and #selected_text > 1 then
     local next_search_pattern = selected_text ---@type string
-    eve.context.select.search_file.flag_regex:next(false)
-    eve.context.select.search_file.input:next(next_search_pattern)
+    o_flag_regex:next(false)
+    o_input:next(next_search_pattern)
   end
 
   local search_context = require("fml.action.search.files.context")
@@ -19,20 +24,20 @@ local M = {}
 
 ---@return nil
 function M.search_files()
-  eve.context.search_file.flag_replace:next(false)
+  o_flag_replace:next(false)
   focus()
 end
 
 ---@return nil
 function M.search_files_in_buffer()
-  eve.context.search_file.flag_replace:next(false)
+  o_flag_replace:next(false)
   eve.context.select.search_file_scope:next("B")
   focus()
 end
 
 ---@return nil
 function M.search_files_in_cwd()
-  eve.context.search_file.flag_replace:next(false)
+  o_flag_replace:next(false)
   eve.context.select.search_file_scope:next("C")
   focus()
 end
@@ -58,36 +63,36 @@ function M.search_files_in_directory(specified_filepath)
     end
   end
 
-  eve.context.search_file.flag_replace:next(false)
-  eve.context.select.search_file_scope:next(next_scope, { silent = silent })
+  o_flag_replace:next(false)
+  o_scope:next(next_scope, { silent = silent })
   eve.status.dirtier_statusline:mark_dirty()
   focus()
 end
 
 ---@return nil
 function M.search_files_in_workspace()
-  eve.context.search_file.flag_replace:next(false)
-  eve.context.select.search_file_scope:next("W")
+  o_flag_replace:next(false)
+  o_scope:next("W")
   focus()
 end
 
 ---@return nil
 function M.replace_files()
-  eve.context.search_file.flag_replace:next(true)
+  o_flag_replace:next(true)
   focus()
 end
 
 ---@return nil
 function M.replace_files_in_buffer()
-  eve.context.search_file.flag_replace:next(true)
-  eve.context.select.search_file_scope:next("B")
+  o_flag_replace:next(true)
+  o_scope:next("B")
   focus()
 end
 
 ---@return nil
 function M.replace_files_in_cwd()
-  eve.context.search_file.flag_replace:next(true)
-  eve.context.select.search_file_scope:next("C")
+  o_flag_replace:next(true)
+  o_scope:next("C")
   focus()
 end
 
@@ -112,16 +117,16 @@ function M.replace_files_in_directory(specified_filepath)
     end
   end
 
-  eve.context.search_file.flag_replace:next(true)
-  eve.context.select.search_file_scope:next(next_scope, { silent = silent })
+  o_flag_replace:next(true)
+  o_scope:next(next_scope, { silent = silent })
   eve.status.dirtier_statusline:mark_dirty()
   focus()
 end
 
 ---@return nil
 function M.replace_files_in_workspace()
-  eve.context.search_file.flag_replace:next(true)
-  eve.context.select.search_file_scope:next("W")
+  o_flag_replace:next(true)
+  o_scope:next("W")
   focus()
 end
 
