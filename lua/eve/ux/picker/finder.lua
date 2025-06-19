@@ -64,25 +64,6 @@ function M:dispose()
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
   local linecount = self.linecount ---@type std.collection.IObservable
-  vim.schedule(function()
-    linecount:dispose()
-
-    local ok1, error1 = pcall(eve.win.close, winnr)
-    local ok2, error2 = pcall(eve.buf.close, bufnr)
-    if not (ok1 and ok2) then
-      std.reporter.error({
-        from = fullname,
-        subject = "dispose",
-        message = "Failed to dispose",
-        details = {
-          bufnr = bufnr,
-          winnr = winnr,
-          error1 = not ok1 and error1 or nil,
-          error2 = not ok2 and error2 or nil,
-        },
-      })
-    end
-  end)
 
   self.input = nil
   self.keymaps = nil
@@ -91,6 +72,24 @@ function M:dispose()
   self.title = nil
   self._bufnr = nil
   self._winnr = nil
+
+  local ok1, error1 = pcall(linecount.dispose, linecount)
+  local ok2, error2 = pcall(eve.win.close, winnr)
+  local ok3, error3 = pcall(eve.buf.close, bufnr)
+  if not (ok1 and ok2 and ok3) then
+    std.reporter.error({
+      from = fullname,
+      subject = "dispose",
+      message = "Failed to dispose",
+      details = {
+        bufnr = bufnr,
+        winnr = winnr,
+        error1 = not ok1 and error1 or nil,
+        error2 = not ok2 and error2 or nil,
+        error3 = not ok3 and error3 or nil,
+      },
+    })
+  end
 end
 
 ---@return boolean
@@ -227,22 +226,21 @@ function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
 
-  vim.schedule(function()
-    local ok1, error1 = pcall(eve.win.close, winnr)
-    if not ok1 then
-      std.reporter.error({
-        from = self.fullname,
-        subject = "hide",
-        message = "Failed to hide",
-        details = {
-          winnr = winnr,
-          error1 = not ok1 and error1 or nil,
-        },
-      })
-    end
-  end)
-
   self._winnr = nil
+
+  local ok1, error1 = pcall(eve.win.close, winnr)
+  if not ok1 then
+    std.reporter.error({
+      from = self.fullname,
+      subject = "hide",
+      message = "Failed to hide",
+      details = {
+        winnr = winnr,
+        error1 = not ok1 and error1 or nil,
+      },
+    })
+  end
+
   return self
 end
 

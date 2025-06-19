@@ -122,30 +122,29 @@ function M:dispose()
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
   local scheduler_content = self._scheduler_content ---@type std.collection.Scheduler
-  vim.schedule(function()
-    local ok1, error1 = pcall(eve.win.close, winnr)
-    local ok2, error2 = pcall(eve.buf.close, bufnr)
-    local ok3, error3 = pcall(scheduler_content.dispose, scheduler_content)
-    if not (ok1 and ok2) then
-      std.reporter.error({
-        from = fullname,
-        subject = "dispose",
-        message = "Failed to dispose",
-        details = {
-          bufnr = bufnr,
-          winnr = winnr,
-          error1 = not ok1 and error1 or nil,
-          error2 = not ok2 and error2 or nil,
-          error3 = not ok3 and error3 or nil,
-        },
-      })
-    end
-  end)
 
   self._bufnr = nil
   self._winnr = nil
   self._last_result = nil
   self._scheduler_content = nil
+
+  local ok1, error1 = pcall(eve.win.close, winnr)
+  local ok2, error2 = pcall(eve.buf.close, bufnr)
+  local ok3, error3 = pcall(scheduler_content.dispose, scheduler_content)
+  if not (ok1 and ok2 and ok3) then
+    std.reporter.error({
+      from = fullname,
+      subject = "dispose",
+      message = "Failed to dispose",
+      details = {
+        bufnr = bufnr,
+        winnr = winnr,
+        error1 = not ok1 and error1 or nil,
+        error2 = not ok2 and error2 or nil,
+        error3 = not ok3 and error3 or nil,
+      },
+    })
+  end
 end
 
 ---@return boolean
@@ -297,22 +296,21 @@ function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
 
-  vim.schedule(function()
-    local ok1, error1 = pcall(eve.win.close, winnr)
-    if not ok1 then
-      std.reporter.error({
-        from = self.fullname,
-        subject = "hide",
-        message = "Failed to hide",
-        details = {
-          winnr = winnr,
-          error1 = not ok1 and error1 or nil,
-        },
-      })
-    end
-  end)
-
   self._winnr = nil
+
+  local ok1, error1 = pcall(eve.win.close, winnr)
+  if not ok1 then
+    std.reporter.error({
+      from = self.fullname,
+      subject = "hide",
+      message = "Failed to hide",
+      details = {
+        winnr = winnr,
+        error1 = not ok1 and error1 or nil,
+      },
+    })
+  end
+
   return self
 end
 

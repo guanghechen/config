@@ -388,39 +388,6 @@ function M:dispose()
   local scheduler_lnum_current = self._scheduler_lnum_current ---@type std.collection.Scheduler
   local scheduler_lnum_present = self._scheduler_lnum_present ---@type std.collection.Scheduler
   local scheduler_lnums_selected = self._scheduler_lnums_selected ---@type std.collection.Scheduler
-  vim.schedule(function()
-    lnum_current:dispose()
-    lnum_present:dispose()
-    lnum_total:dispose()
-
-    local ok1, error1 = pcall(eve.win.close, winnr)
-    local ok2, error2 = pcall(eve.buf.close, bufnr)
-    local ok3, error3 = pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
-    local ok4, error4 = pcall(nvimbar.dispose, nvimbar)
-    local ok5, error5 = pcall(scheduler_content.dispose, scheduler_content)
-    local ok6, error6 = pcall(scheduler_lnum_current.dispose, scheduler_lnum_current)
-    local ok7, error7 = pcall(scheduler_lnum_present.dispose, scheduler_lnum_present)
-    local ok8, error8 = pcall(scheduler_lnums_selected.dispose, scheduler_lnums_selected)
-    if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
-      std.reporter.error({
-        from = fullname,
-        subject = "dispose",
-        message = "Failed to dispose",
-        details = {
-          bufnr = bufnr,
-          winnr = winnr,
-          error1 = not ok1 and error1 or nil,
-          error2 = not ok2 and error2 or nil,
-          error3 = not ok3 and error3 or nil,
-          error4 = not ok4 and error4 or nil,
-          error5 = not ok5 and error5 or nil,
-          error6 = not ok6 and error6 or nil,
-          error7 = not ok7 and error7 or nil,
-          error8 = not ok8 and error8 or nil,
-        },
-      })
-    end
-  end)
 
   self.draw = nil
   self.keymaps = nil
@@ -435,6 +402,40 @@ function M:dispose()
   self._scheduler_lnum_current = nil
   self._scheduler_lnum_present = nil
   self._scheduler_lnums_selected = nil
+
+  local ok1, error1 = pcall(lnum_current.dispose, lnum_current)
+  local ok2, error2 = pcall(lnum_present.dispose, lnum_present)
+  local ok3, error3 = pcall(lnum_total.dispose, lnum_total)
+  local ok4, error4 = pcall(eve.win.close, winnr)
+  local ok5, error5 = pcall(eve.buf.close, bufnr)
+  local ok6, error6 = pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
+  local ok7, error7 = pcall(nvimbar.dispose, nvimbar)
+  local ok8, error8 = pcall(scheduler_content.dispose, scheduler_content)
+  local ok9, error9 = pcall(scheduler_lnum_current.dispose, scheduler_lnum_current)
+  local ok10, error10 = pcall(scheduler_lnum_present.dispose, scheduler_lnum_present)
+  local ok11, error11 = pcall(scheduler_lnums_selected.dispose, scheduler_lnums_selected)
+  if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7 and ok8 and ok9 and ok10 and ok11) then
+    std.reporter.error({
+      from = fullname,
+      subject = "dispose",
+      message = "Failed to dispose",
+      details = {
+        bufnr = bufnr,
+        winnr = winnr,
+        error1 = not ok1 and error1 or nil,
+        error2 = not ok2 and error2 or nil,
+        error3 = not ok3 and error3 or nil,
+        error4 = not ok4 and error4 or nil,
+        error5 = not ok5 and error5 or nil,
+        error6 = not ok6 and error6 or nil,
+        error7 = not ok7 and error7 or nil,
+        error8 = not ok8 and error8 or nil,
+        error9 = not ok9 and error9 or nil,
+        error10 = not ok10 and error10 or nil,
+        error11 = not ok11 and error11 or nil,
+      },
+    })
+  end
 end
 
 ---@return boolean
@@ -568,22 +569,21 @@ function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
 
-  vim.schedule(function()
-    local ok1, error1 = pcall(eve.win.close, winnr)
-    if not ok1 then
-      std.reporter.error({
-        from = self.fullname,
-        subject = "hide",
-        message = "Failed to hide",
-        details = {
-          winnr = winnr,
-          error1 = not ok1 and error1 or nil,
-        },
-      })
-    end
-  end)
-
   self._winnr = nil
+
+  local ok1, error1 = pcall(eve.win.close, winnr)
+  if not ok1 then
+    std.reporter.error({
+      from = self.fullname,
+      subject = "hide",
+      message = "Failed to hide",
+      details = {
+        winnr = winnr,
+        error1 = not ok1 and error1 or nil,
+      },
+    })
+  end
+
   return self
 end
 
