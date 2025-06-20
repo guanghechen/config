@@ -4,24 +4,29 @@ $config_root_dir = "$env:XDG_CONFIG_HOME"
 $config_repo_branch = @(
   "conda",
   "fzf",
-  "helix",
   "lazygit",
   "lsd",
   "nvim",
-  "pm2",
   "pwsh",
   "ripgrep",
   "tsuki",
-  "yazi",
-  "yozora"
+  "yazi"
 )
 $optinal_config_repo_branch = @(
   "alacritty",
+  "alacritty-windows",
+  "btop",
+  "fish",
+  "ghostty",
+  "helix",
   "kitty",
   "neovide",
   "nvim-nvchad",
-  "nvim-debug",
-  "wezterm"
+  "plan",
+  "pm2",
+  "shell_gpt",
+  "wezterm",
+  "yozora"
 )
 
 # Function to clone or update a repository

@@ -8,13 +8,28 @@ clone_or_update_config_repo() {
     "conda"
     "fish"
     "fzf"
-    "helix"
     "lazygit"
     "lsd"
     "nvim"
     "ripgrep"
     "tmux"
     "yazi"
+  )
+  local OPTIONAL_CONFIG_BRANCHES=(
+    "alacritty"
+    "alacritty-windows"
+    "ghostty"
+    "helix"
+    "kitty"
+    "neovide"
+    "nvim-nvchad"
+    "plan"
+    "pm2"
+    "pwsh"
+    "shell_gpt"
+    "tsuki"
+    "wezterm"
+    "yozora"
   )
 
   for branch in "${CONFIG_BRANCHES[@]}"; do
@@ -24,6 +39,13 @@ clone_or_update_config_repo() {
     else
       mkdir -p "$repo_path"
       git clone $CONFIG_REPO "$repo_path" --single-branch --branch=$branch
+    fi
+  done
+
+  for branch in "${OPTIONAL_CONFIG_BRANCHES[@]}"; do
+    local repo_path="$CONFIG_ROOT_DIR/$branch"
+    if [ -d "$repo_path/.git" ]; then
+      git -C "$repo_path" pull origin $branch
     fi
   done
 }

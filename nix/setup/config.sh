@@ -8,13 +8,12 @@ clone_or_update_config_repo() {
     "conda"
     "fish"
     "fzf"
-    "helix"
     "lazygit"
     "lsd"
     "nvim"
+    "plan"
     "pm2"
     "ripgrep"
-    "shell_gpt"
     "tmux"
     "tsuki"
     "yazi"
@@ -22,10 +21,14 @@ clone_or_update_config_repo() {
   )
   local OPTIONAL_CONFIG_BRANCHES=(
     "alacritty"
+    "alacritty-windows"
+    "ghostty"
+    "helix"
     "kitty"
     "neovide"
     "nvim-nvchad"
-    "nvim-debug"
+    "pwsh"
+    "shell_gpt"
     "wezterm"
   )
 
