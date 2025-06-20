@@ -1,9 +1,9 @@
 function ghc-update
-    set primary_configs btop conda fish fzf guanghechen helix lazygit lsd nvim pm2 ripgrep shell_gpt tmux yazi yozora
-    set develop_configs alacritty kitty neovide nvim-nvchad wezterm
+    set required_configs btop conda fish fzf guanghechen lazygit lsd nvim pm2 ripgrep tmux yazi yozora
+    set optional_configs alacritty alacritty-windows ghostty helix kitty neovide nvim-nvchad plan pwsh shell_gpt tsuki wezterm
     set base_path "$HOME/.config"
 
-    for config in $primary_configs
+    for config in $required_configs
         set dir "$base_path/$config"
         if test -d "$dir"
             set cmd "cd $dir && git pull origin $config"
@@ -18,7 +18,7 @@ function ghc-update
         fish -c "$cmd"
     end
 
-    for config in $develop_configs
+    for config in $optional_configs
         set dir "$base_path/$config"
         if test -d "$dir"
             set cmd "cd $dir && git pull origin $config"
