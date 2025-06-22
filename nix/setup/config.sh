@@ -28,7 +28,6 @@ clone_or_update_config_repo() {
     "neovide"
     "nvim-nvchad"
     "pwsh"
-    "shell_gpt"
     "wezterm"
   )
 

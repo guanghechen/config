@@ -26,7 +26,6 @@ clone_or_update_config_repo() {
     "plan"
     "pm2"
     "pwsh"
-    "shell_gpt"
     "tsuki"
     "wezterm"
     "yozora"

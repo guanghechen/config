@@ -24,7 +24,6 @@ $optinal_config_repo_branch = @(
   "nvim-nvchad",
   "plan",
   "pm2",
-  "shell_gpt",
   "wezterm",
   "yozora"
 )
