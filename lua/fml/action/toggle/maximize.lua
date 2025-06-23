@@ -1,6 +1,16 @@
 ---@class fml.action.toggle.maximize
 local M = {}
 
+---@type string
+local WIN_HIGHLIGHT = table.concat({
+  "Cursor:f_ut_current",
+  "CursorColumn:f_ut_current",
+  "CursorLine:f_ut_current",
+  "CursorLineNr:f_ut_current",
+  "FloatBorder:FloatActiveBorder",
+  "Normal:f_ut_normal",
+}, ",")
+
 ---@return nil
 function M.maximize()
   local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
@@ -47,6 +57,7 @@ function M.maximize()
     vim.wo[winnr].number = true
     vim.wo[winnr].relativenumber = true
     vim.wo[winnr].signcolumn = "yes"
+    vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
     vim.wo[winnr].wrap = false
 
     vim.api.nvim_win_set_buf(winnr, bufnr)

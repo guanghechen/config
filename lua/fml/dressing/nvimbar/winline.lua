@@ -26,7 +26,8 @@ local function resolve_nvimbar(winnr, source)
       silent = silent,
       get_max_width = function()
         if vim.api.nvim_win_is_valid(winnr) then
-          return vim.api.nvim_win_get_width(winnr)
+          local width = vim.api.nvim_win_get_width(winnr) ---@type integer
+          return eve.win.is_float(winnr) and width - 2 or width
         end
         return 0
       end,
