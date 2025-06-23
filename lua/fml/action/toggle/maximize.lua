@@ -16,18 +16,12 @@ function M.maximize()
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  local winnr_maximized = nil ---@type integer|nil
   for _, winnr in ipairs(winnrs) do
     local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
     if meta ~= nil and meta.wintype == eve.win.Types.MAXIMIZE then
-      winnr_maximized = winnr
-      break
+      vim.api.nvim_tabpage_set_win(tabnr, winnr)
+      return
     end
-  end
-
-  if winnr_maximized ~= nil and vim.api.nvim_win_is_valid(winnr_maximized) then
-    vim.api.nvim_tabpage_set_win(tabnr, winnr_maximized)
-    return
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
@@ -41,6 +35,7 @@ function M.maximize()
       height = vim.o.lines - 4,
       border = "rounded",
       style = "minimal",
+      noautocmd = true,
       focusable = true,
       title = " MAXIMIZED ",
       title_pos = "center",
