@@ -1,3 +1,5 @@
+local __module_name__ = "eve.context.workspace.lsp" ---@type string
+
 ---@class eve.context.lsp.IBreakpointData
 ---@field public filepath               string
 ---@field public lnum                   integer
@@ -169,11 +171,21 @@ function M.get_python_bin_path()
   end
 
   local python_name = std.env.IS_WIN and "python.exe" or "python" ---@type string
-  local python_parent_path = std.env.IS_WIN and "Scripts" or "bin" ---@type string
+  local bin_home_name = std.env.IS_WIN and "Scripts" or "bin" ---@type string
+  local bin_home = std.path.join(venv_path, bin_home_name) ---@type string
+  local python_path ---@type string
 
-  local bin_path = std.path.join(venv_path, python_parent_path) ---@type string
-  local python_path = std.path.join(bin_path, python_name) ---@type string
-  return python_path, bin_path
+  python_path = std.path.join(venv_path, python_name) ---@type string
+  if std.path.is_exist_filepath(python_path) then
+    return python_path, bin_home
+  end
+
+  python_path = std.path.join(bin_home, python_name) ---@type string
+  if std.path.is_exist_filepath(python_path) then
+    return python_path, bin_home
+  end
+
+  error(string.format("[%s#get_python_bin_path] Cannot resolve the python env path.", __module_name__))
 end
 
 ---@return nil
