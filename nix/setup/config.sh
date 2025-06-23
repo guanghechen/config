@@ -11,11 +11,9 @@ clone_or_update_config_repo() {
     "lazygit"
     "lsd"
     "nvim"
-    "plan"
     "pm2"
     "ripgrep"
     "tmux"
-    "tsuki"
     "yazi"
     "yozora"
   )
@@ -27,7 +25,9 @@ clone_or_update_config_repo() {
     "kitty"
     "neovide"
     "nvim-nvchad"
+    "plan"
     "pwsh"
+    "tsuki"
     "wezterm"
   )
 

@@ -9,7 +9,6 @@ $config_repo_branch = @(
   "nvim",
   "pwsh",
   "ripgrep",
-  "tsuki",
   "yazi"
 )
 $optinal_config_repo_branch = @(
@@ -24,6 +23,7 @@ $optinal_config_repo_branch = @(
   "nvim-nvchad",
   "plan",
   "pm2",
+  "tsuki",
   "wezterm",
   "yozora"
 )
