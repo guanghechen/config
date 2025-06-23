@@ -102,5 +102,6 @@
 
 ---@alias std.e.AiProvider
 ---| "aoai"
+---| "azuredatabricks"
 ---| "copilot"
 ---| "deepseek"

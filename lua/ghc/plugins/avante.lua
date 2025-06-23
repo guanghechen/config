@@ -15,6 +15,7 @@ local __module_name__ = "ghc.plugins.avante" ---@type string
 
 local AI_PROVIDER_MAP = {
   aoai = "azure",
+  azuredatabricks = "azuredatabricks",
   copilot = "copilot",
   deepseek = "deepseek",
 }
@@ -163,16 +164,19 @@ return {
           api_key_name = "AZURE_OPENAI_API_KEY",
           api_version = vim.env.AZURE_OPENAI_API_VERSION,
         },
+        azuredatabricks = {
+          endpoint = vim.env.AZURE_DATABRICKS_ENDPOINT,
+          model = vim.env.AZURE_DATABRICKS_MODEL_CLAUDE_4_SONNET,
+          api_key_name = "AZURE_DATABRICKS_TOKEN",
+          timeout = 30000,
+          context_window = 200000,
+          extra_request_body = {
+            temperature = 0.75,
+            max_completion_tokens = 20480,
+          },
+        },
         copilot = {
           model = "claude-sonnet-4",
-        },
-        aoai2 = {
-          __inherited_from = "azure",
-          deployment = vim.env.AZURE_OPENAI_O4_MINI_DEPLOYMENT,
-          model = vim.env.AZURE_OPENAI_O4_MINI_MODEL,
-          endpoint = vim.env.AZURE_OPENAI_O4_MINI_ENDPOINT,
-          api_key_name = "AZURE_OPENAI_O4_MINI_API_KEY",
-          api_version = vim.env.AZURE_OPENAI_O4_MINI_API_VERSION,
         },
         claude4 = {
           __inherited_from = "copilot",
@@ -181,10 +185,6 @@ return {
         claude3_7 = {
           __inherited_from = "copilot",
           model = "claude-3.7-sonnet",
-        },
-        claude3_5 = {
-          __inherited_from = "copilot",
-          model = "claude-3.5-sonnet",
         },
         deepseek = {
           __inherited_from = "openai",

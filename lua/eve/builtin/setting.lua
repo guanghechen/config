@@ -7,9 +7,10 @@ M.feedkeys = {
 
 ---@class eve.builtin.setting.ai_providers
 M.ai_providers = {
+  "aoai",
+  "azuredatabricks",
   "copilot",
   "deepseek",
-  "aoai",
 }
 
 ---@class eve.builtin.setting.themes
