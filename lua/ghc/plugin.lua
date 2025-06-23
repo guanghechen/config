@@ -62,7 +62,6 @@ local raw_specs = {
   { name = "blink.compat",                main = "blink.compat",                  cond = conds.cmp                },
   { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode         },
   { name = "copilot.lua",                 main = "copilot",                       cond = conds.ai                 },
-  { name = "copilot-chat.nvim",           main = "CopilotChat",                   cond = conds.ai                 },
   { name = "diffview.nvim",               main = "diffview",                      cond = conds.not_vscode         },
   { name = "flash.nvim",                  main = "flash",                         cond = conds.common             },
   { name = "friendly-snippets",                                                   cond = conds.not_vscode         },

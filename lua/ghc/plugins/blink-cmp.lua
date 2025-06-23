@@ -24,7 +24,6 @@ local actions = {
 ---@type table<string, string[]>
 local sources_per_filetype = {
   [eve.filetype.AVANTE_INPUT] = { "copilot", "snippets", "avante_mentions", "avante_commands", "path", "buffer" },
-  [eve.filetype.COPILOT_CHAT] = { "copilot", "snippets", "path", "buffer" },
   [eve.filetype.SEARCH_INPUT] = { "path" },
 }
 for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do

@@ -11,7 +11,6 @@ ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 --- quick access widgets (diagnostic, explorer, terminal) -----
 ms({ "i", "n", "t", "v" }, { "<C-a>0", "<D-0>", "<M-0>" }, K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>`", K.ux.resume_last_widget)
-ms({ "n", "v" }, "<leader>;", K.ai.copilot_chat_toggle)
 ms({ "n", "v" }, "<leader>'", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
 ms({ "n", "v" }, "<leader>2", K.search.files_in_cwd)
@@ -23,12 +22,6 @@ ms({ "n", "v" }, "<leader>4", K.explorer.git_cwd)
 ms({ "n", "v" }, "<leader>aa", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>ae", K.ai.avante_edit)
 ms({ "n", "v" }, "<leader>ar", K.ai.avante_refresh)
-
-ms({ "n", "v" }, "<leader>ap", K.ai.copilot_chat_prompt)
-ms({ "n", "v" }, "<leader>aq", K.ai.copilot_chat_quick)
-ms({ "n", "v" }, "<leader>at", K.ai.copilot_chat_translate)
-ms({ "n", "v" }, "<leader>aS", K.ai.copilot_chat_stop)
-ms({ "n", "v" }, "<leader>aX", K.ai.copilot_chat_reset)
 ---------------------------------------------------------------------------------------------#[a]i--
 
 --#[b]uf--------------------------------------------------------------------------------------------

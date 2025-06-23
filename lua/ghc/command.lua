@@ -1,7 +1,7 @@
 local command = eve.command ---@type eve.builtin.command
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
---[ai] copilot -------------------------------------------------------------------------------------
+--[ai] avante --------------------------------------------------------------------------------------
 command
   .implement({
     uuid = K.ai.avante_ask.uuid,
@@ -19,42 +19,6 @@ command
     uuid = K.ai.avante_refresh.uuid,
     action = function()
       require("ghc.action.avante").refresh()
-    end,
-  })
-  .implement({
-    uuid = K.ai.copilot_chat_prompt.uuid,
-    action = function()
-      require("ghc.action.copilot-chat").prompt()
-    end,
-  })
-  .implement({
-    uuid = K.ai.copilot_chat_quick.uuid,
-    action = function()
-      require("ghc.action.copilot-chat").quick()
-    end,
-  })
-  .implement({
-    uuid = K.ai.copilot_chat_reset.uuid,
-    action = function()
-      require("ghc.action.copilot-chat").reset()
-    end,
-  })
-  .implement({
-    uuid = K.ai.copilot_chat_stop.uuid,
-    action = function()
-      require("ghc.action.copilot-chat").stop()
-    end,
-  })
-  .implement({
-    uuid = K.ai.copilot_chat_toggle.uuid,
-    action = function()
-      require("ghc.action.copilot-chat").toggle()
-    end,
-  })
-  .implement({
-    uuid = K.ai.copilot_chat_translate.uuid,
-    action = function()
-      require("ghc.action.copilot-chat").translate()
     end,
   })
 
