@@ -94,7 +94,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _composer           eve.ux.picker.BasicComposer
----@field protected _retriever          eve.ux.picker.ListRetriever
+---@field protected _retriever          eve.ux.retriever.ListRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler
 ---
 ---@field protected _autosort           boolean
@@ -188,8 +188,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type eve.ux.picker.ListRetriever
-  local retriever = eve.ux.picker.ListRetriever.new({
+  ---@type eve.ux.retriever.ListRetriever
+  local retriever = eve.ux.retriever.ListRetriever.new({
     name = fullname,
   })
 
@@ -411,7 +411,7 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local on_disposed = self._on_disposed ---@type eve.ux.picker.composer.list.IOnDisposed
   local composer = self._composer
-  local retriever = self._retriever ---@type eve.ux.picker.ListRetriever
+  local retriever = self._retriever ---@type eve.ux.retriever.ListRetriever
   local scheduler_match = self._scheduler_match
 
   vim.schedule(function()

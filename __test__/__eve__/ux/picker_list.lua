@@ -1,11 +1,12 @@
 ---@diagnostic disable: invisible
 require("plenary.reload").reload_module("std.collection.observable")
 require("plenary.reload").reload_module("std.collection.history")
+require("plenary.reload").reload_module("eve.ux.picker.composer.basic")
+require("plenary.reload").reload_module("eve.ux.picker.composer.list")
 require("plenary.reload").reload_module("eve.ux.picker.finder")
 require("plenary.reload").reload_module("eve.ux.picker.result")
 require("plenary.reload").reload_module("eve.ux.picker.preview")
-require("plenary.reload").reload_module("eve.ux.picker.composer.basic")
-require("plenary.reload").reload_module("eve.ux.picker.composer.list")
+require("plenary.reload").reload_module("eve.ux.retriever")
 
 local name = "test-list-picker"
 local finder_input = std.Observable.from_value("")

@@ -6,7 +6,6 @@ local __mods = {
   SearchMain = "eve.ux.search.main",
   SearchPreview = "eve.ux.search.preview",
 
-  Select = "eve.ux.select",
   SelectPopup = "eve.ux.select_popup",
 
   Board = "eve.ux.board",
@@ -20,6 +19,7 @@ local __mods = {
 ---@field public fn                     eve.ux.fn
 ---@field public nvimbar                eve.ux.nvimbar
 ---@field public picker                 eve.ux.picker
+---@field public retriever              eve.ux.retriever
 ---@field public search2                eve.ux.search2
 ---@field public view                   eve.ux.view
 ---
@@ -40,6 +40,7 @@ local M = setmetatable({
   fn = require("eve.ux.fn"),
   nvimbar = require("eve.ux.nvimbar"),
   picker = require("eve.ux.picker"),
+  retriever = require("eve.ux.retriever"),
   search2 = require("eve.ux.search2"),
   view = require("eve.ux.view"),
 }, {

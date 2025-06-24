@@ -1,9 +1,9 @@
-local __module_name__ = "eve.ux.picker.retriever.list" ---@type string
+local __module_name__ = "eve.ux.retriever.list" ---@type string
 
----@class eve.ux.picker.IListRetrieverProps
+---@class eve.ux.retriever.IListRetrieverProps
 ---@field public name                   string
 
----@class eve.ux.picker.ListRetriever
+---@class eve.ux.retriever.ListRetriever
 ---@field public fullname               string
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer
@@ -13,8 +13,8 @@ local __module_name__ = "eve.ux.picker.retriever.list" ---@type string
 local M = {}
 M.__index = M
 
----@param props eve.ux.picker.IListRetrieverProps
----@return eve.ux.picker.ListRetriever
+---@param props                         eve.ux.retriever.IListRetrieverProps
+---@return eve.ux.retriever.ListRetriever
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string

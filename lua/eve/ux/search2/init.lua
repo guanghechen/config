@@ -6,10 +6,8 @@ local __mods = {
 
   BasicComposer = "eve.ux.search2.composer.basic",
   FiletreeComposer = "eve.ux.search2.composer.filetree",
-  TreeComposer = "eve.ux.search2.composer.tree",
 
-  ListRetriever = "eve.ux.search2.retriever.list",
-  TreeRetriever = "eve.ux.search2.retriever.tree",
+  FiletreeView = "eve.ux.search2.view.filetree",
 }
 
 ---@class eve.ux.search2
@@ -21,6 +19,8 @@ local __mods = {
 ---
 ---@field public BasicComposer          eve.ux.search2.BasicComposer
 ---@field public FiletreeComposer       eve.ux.search2.FiletreeComposer
+---
+---@field public FiletreeView           eve.ux.search2.FiletreeView
 local M = setmetatable({
   __mods = __mods,
   fn = require("eve.ux.fn"),

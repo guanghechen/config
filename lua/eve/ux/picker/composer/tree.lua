@@ -98,7 +98,7 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field protected _tree               std.collection.Tree
 ---@field protected _composer           eve.ux.picker.BasicComposer
 ---@field protected _plainfile          eve.ux.view.Plainfile
----@field protected _retriever          eve.ux.picker.TreeRetriever
+---@field protected _retriever          eve.ux.retriever.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
 ---@field protected _treeview           eve.ux.picker.TreeView
 ---
@@ -166,8 +166,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type eve.ux.picker.TreeRetriever
-  local retriever = eve.ux.picker.TreeRetriever.new({
+  ---@type eve.ux.retriever.TreeRetriever
+  local retriever = eve.ux.retriever.TreeRetriever.new({
     name = fullname,
   })
 
@@ -770,7 +770,7 @@ function M:dispose()
   local on_dispose = self._on_disposed ---@type eve.ux.picker.composer.tree.IOnDisposed
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
-  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
   local treeview = self._treeview ---@type eve.ux.picker.TreeView
 
@@ -916,7 +916,7 @@ end
 function M:__has_selected_node__()
   self:__health__()
 
-  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
     return false
@@ -972,7 +972,7 @@ end
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
-  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
   local treeview = self._treeview ---@type eve.ux.picker.TreeView
 
   if self:__has_selected_node__() then
@@ -1038,7 +1038,7 @@ end
 ---@return integer
 function M:__retrieve_lnum_range__()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
+  local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
 
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
