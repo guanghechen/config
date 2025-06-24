@@ -104,7 +104,7 @@ local __module_name__ = "eve.ux.search2.composer.filetree" ---@type string
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.ux.retriever.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
----@field protected _treeview           eve.ux.picker.FiletreeView
+---@field protected _treeview           eve.ux.search2.FiletreeView
 ---
 ---@field protected _last_preview_filepath  string|nil
 ---@field protected _uuid_root          string|nil
@@ -173,8 +173,8 @@ function M.new(props)
     name = fullname,
   })
 
-  ---@type eve.ux.picker.FiletreeView
-  local treeview = eve.ux.picker.FiletreeView.new({
+  ---@type eve.ux.search2.FiletreeView
+  local treeview = eve.ux.search2.FiletreeView.new({
     name = fullname,
     tree = filetree,
     flag_foldempty = o_flag_foldempty,
@@ -381,7 +381,7 @@ function M.new(props)
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.search2.view.filetree.INodeState|nil
         if nodestate ~= nil and nodestate.nodetype == "container" then
           treeview:mark_cache_listview_dirty()
           self._uuid_root = nodeuuid ---@type string
@@ -455,7 +455,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.search2.view.filetree.INodeState|nil
           if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
@@ -500,8 +500,8 @@ function M.new(props)
             local filepath = node.data.filepath ---@type string
             local relative_filepath = std.path.relative(cwd, filepath, false) ---@type string
 
-            local nodestate = treeview:retrieve(uuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
-            local locations = nodestate and nodestate.locations or nil ---@type eve.ux.picker.view.filetree.ILocationNodeState[]|nil
+            local nodestate = treeview:retrieve(uuid) ---@type eve.ux.search2.view.filetree.INodeState|nil
+            local locations = nodestate and nodestate.locations or nil ---@type eve.ux.search2.view.filetree.ILocationNodeState[]|nil
             if locations == nil or #locations < 1 then
               table.insert(quickfix_items, {
                 filename = relative_filepath,
@@ -551,7 +551,7 @@ function M.new(props)
           return
         end
 
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.search2.view.filetree.INodeState|nil
         if nodestate == nil then
           return
         end
@@ -575,7 +575,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.search2.view.filetree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             local isselected = treeview:isselected(nodeuuid) ---@type boolean
             if not isselected then
@@ -589,7 +589,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.search2.view.filetree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             treeview:set_selected(nodeuuid, next_selected)
           end
@@ -898,7 +898,7 @@ function M.new(props)
               only_visible = false,
             })
 
-            ---@cast nodestate          eve.ux.picker.view.filetree.IDirectoryNodeState
+            ---@cast nodestate          eve.ux.search2.view.filetree.IDirectoryNodeState
             ---@type eve.ux.search2.preview.IDrawResult
             local result = {
               cursorline = true,
@@ -912,13 +912,13 @@ function M.new(props)
           end
 
           if nodestate.nodetype == "leaf" then
-            ---@cast nodestate          eve.ux.picker.view.filetree.IFileNodeState
+            ---@cast nodestate          eve.ux.search2.view.filetree.IFileNodeState
             if nodestate.locations ~= nil and #nodestate.locations > 0 then
               ---@diagnostic disable-next-line: cast-local-type
               nodestate = nodestate.locations[1]
             end
           end
-          ---@cast nodestate          eve.ux.picker.view.filetree.IFileNodeState|eve.ux.picker.view.filetree.ILocationNodeState
+          ---@cast nodestate          eve.ux.search2.view.filetree.IFileNodeState|eve.ux.search2.view.filetree.ILocationNodeState
 
           plainfile:render(bufnr, filepath, force)
 
@@ -1030,7 +1030,7 @@ function M:dispose()
   local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
   local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   vim.schedule(function()
     local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
@@ -1146,7 +1146,7 @@ function M:attach(rootuuid)
   end
 
   local filetree = self._filetree ---@type std.collection.Filetree
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
@@ -1199,7 +1199,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   self:__health__()
 
   local frecency = self._frecency ---@type std.collection.IFrecency|nil
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   cwd = std.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
@@ -1234,7 +1234,7 @@ function M:__collect_selected_lnums__()
   self:__health__()
 
   local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
@@ -1277,7 +1277,7 @@ function M:__has_selected_node__()
     return false
   end
 
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   for lnum = 1, linecount, 1 do
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
@@ -1305,7 +1305,7 @@ end
 ---@return nil
 function M:__match__(input)
   local frecency = self._frecency ---@type std.collection.IFrecency|nil
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   if #input < 1 then
     local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
@@ -1333,8 +1333,8 @@ function M:__match__(input)
     table.sort(uuids_order, function(a, b)
       local na = treeview:retrieve(a)
       local nb = treeview:retrieve(b)
-      ---@cast na                       eve.ux.picker.view.filetree.IFileNodeState
-      ---@cast nb                       eve.ux.picker.view.filetree.IFileNodeState
+      ---@cast na                       eve.ux.search2.view.filetree.IFileNodeState
+      ---@cast nb                       eve.ux.search2.view.filetree.IFileNodeState
 
       local sa = na.cache_match and na.cache_match.score or 0 + (frecency:score(a) or 0) ---@type integer
       local sb = nb.cache_match and nb.cache_match.score or 0 + (frecency:score(b) or 0) ---@type integer
@@ -1344,8 +1344,8 @@ function M:__match__(input)
     table.sort(uuids_order, function(a, b)
       local na = treeview:retrieve(a)
       local nb = treeview:retrieve(b)
-      ---@cast na                       eve.ux.picker.view.filetree.IFileNodeState
-      ---@cast nb                       eve.ux.picker.view.filetree.IFileNodeState
+      ---@cast na                       eve.ux.search2.view.filetree.IFileNodeState
+      ---@cast nb                       eve.ux.search2.view.filetree.IFileNodeState
 
       local sa = na.cache_match and na.cache_match.score or 0 ---@type integer
       local sb = nb.cache_match and nb.cache_match.score or 0 ---@type integer
@@ -1364,11 +1364,11 @@ function M:__open_node__(nodeuuid)
   local composer = self._composer ---@type eve.ux.search2.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
   local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
-    local last_nodestate = nil ---@type eve.ux.picker.view.filetree.IFileNodeState|nil
+    local last_nodestate = nil ---@type eve.ux.search2.view.filetree.IFileNodeState|nil
     local filepaths = {} ---@type string[]
 
     for lnum = 1, linecount, 1 do
@@ -1381,9 +1381,9 @@ function M:__open_node__(nodeuuid)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
 
-            local s = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+            local s = treeview:retrieve(nodeuuid) ---@type eve.ux.search2.view.filetree.INodeState|nil
             if s ~= nil then
-              ---@cast s                      eve.ux.picker.view.filetree.IFileNodeState
+              ---@cast s                      eve.ux.search2.view.filetree.IFileNodeState
               last_nodestate = s
             end
           end
@@ -1392,9 +1392,9 @@ function M:__open_node__(nodeuuid)
     end
 
     if #filepaths > 0 then
-      ---@cast last_nodestate             eve.ux.picker.view.filetree.IFileNodeState
+      ---@cast last_nodestate             eve.ux.search2.view.filetree.IFileNodeState
       local locations = last_nodestate.locations
-      local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.picker.view.filetree.ILocationNodeState|nil
+      local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.search2.view.filetree.ILocationNodeState|nil
       local lnum = first_location and first_location.lnum or nil ---@type integer|nil
       local col = first_location and first_location.col or nil ---@type integer|nil
 
@@ -1422,9 +1422,9 @@ function M:__open_node__(nodeuuid)
     return
   end
 
-  ---@cast nodestate                    eve.ux.picker.view.filetree.IFileNodeState
+  ---@cast nodestate                    eve.ux.search2.view.filetree.IFileNodeState
   local locations = nodestate.locations
-  local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.picker.view.filetree.ILocationNodeState|nil
+  local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.search2.view.filetree.ILocationNodeState|nil
   local lnum = first_location and first_location.lnum or nil ---@type integer|nil
   local col = first_location and first_location.col or nil ---@type integer|nil
 
@@ -1445,7 +1445,7 @@ function M:__resolve_confirmation__(nodeuuid)
   local composer = self._composer ---@type eve.ux.search2.BasicComposer
   local filetree = self._filetree ---@type std.collection.Filetree
   local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
 
@@ -1483,9 +1483,9 @@ end
 
 ---@param nodeuuid                      string
 ---@return std.collection.filetree.INode
----@return eve.ux.picker.view.filetree.INodeState
+---@return eve.ux.search2.view.filetree.INodeState
 function M:__retrieve__(nodeuuid)
-  ---@type eve.ux.picker.view.filetree.INodeState|nil
+  ---@type eve.ux.search2.view.filetree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
@@ -1541,7 +1541,7 @@ function M:__toggle_node__(nodeuuid, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.search2.BasicComposer
-  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type eve.ux.search2.FiletreeView
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", recursively)
     composer:mark_result_dirty()

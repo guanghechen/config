@@ -1160,24 +1160,6 @@ function M:attach(rootuuid)
 end
 
 ---@return eve.ux.picker.FiletreeComposer
-function M:clear_locations()
-  self:__health__()
-  self._treeview:clear_locations()
-  return self
-end
-
----@param fileuuid                     string
----@param lnum                          integer
----@param col                           integer|nil
----@param data                          unknown|nil
----@return eve.ux.picker.FiletreeComposer
-function M:insert_location(fileuuid, lnum, col, data)
-  self:__health__()
-  self._treeview:insert_location(fileuuid, lnum, col, data)
-  return self
-end
-
----@return eve.ux.picker.FiletreeComposer
 function M:mark_result_dirty()
   self:__health__()
   self._composer:mark_result_dirty()
