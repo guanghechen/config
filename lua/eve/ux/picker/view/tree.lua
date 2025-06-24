@@ -1,137 +1,137 @@
-local __module_name__ = "eve.ux.view.treeview" ---@type string
+local __module_name__ = "eve.ux.picker.view.treeview" ---@type string
 
----@alias eve.ux.view.tree.CollapseActionEnum
+---@alias eve.ux.picker.view.tree.CollapseActionEnum
 ---| "collapse"
 ---| "expand"
 ---| "toggle"
 
----@alias eve.ux.view.tree.NodeTypeEnum
+---@alias eve.ux.picker.view.tree.NodeTypeEnum
 ---| "container"
 ---| "leaf"
 
----@alias eve.ux.view.tree.ViewtypeEnum
+---@alias eve.ux.picker.view.tree.ViewtypeEnum
 ---| "tree"
 ---| "list"
 
----@alias eve.ux.view.tree.INodeState
----| eve.ux.view.tree.IContainerNodeState
----| eve.ux.view.tree.ILeafNodeState
----| eve.ux.view.tree.ILeafLocationState
+---@alias eve.ux.picker.view.tree.INodeState
+---| eve.ux.picker.view.tree.IContainerNodeState
+---| eve.ux.picker.view.tree.ILeafNodeState
+---| eve.ux.picker.view.tree.ILeafLocationState
 
----@alias eve.ux.view.tree.IRenderListviewLeafNode
----| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.view.tree.ILeafNodeState): nil
+---@alias eve.ux.picker.view.tree.IRenderListviewLeafNode
+---| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.picker.view.tree.ILeafNodeState): nil
 
----@alias eve.ux.view.tree.IRenderListviewLeafLocations
----| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.view.tree.ILeafNodeState): nil
+---@alias eve.ux.picker.view.tree.IRenderListviewLeafLocations
+---| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.picker.view.tree.ILeafNodeState): nil
 
----@alias eve.ux.view.tree.IRenderTreeviewContainerNode
----| fun(containernode: std.collection.tree.INode, containerstate: eve.ux.view.tree.IContainerNodeState, is_lastchild: boolean, cur: integer, dry: boolean): nil
+---@alias eve.ux.picker.view.tree.IRenderTreeviewContainerNode
+---| fun(containernode: std.collection.tree.INode, containerstate: eve.ux.picker.view.tree.IContainerNodeState, is_lastchild: boolean, cur: integer, dry: boolean): nil
 
----@alias eve.ux.view.tree.IRenderTreeviewLeafNode
----| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.view.tree.ILeafNodeState, is_lastchild: boolean, cur: integer): nil
+---@alias eve.ux.picker.view.tree.IRenderTreeviewLeafNode
+---| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.picker.view.tree.ILeafNodeState, is_lastchild: boolean, cur: integer): nil
 
----@alias eve.ux.view.tree.IRenderTreeviewLeafLocations
----| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.view.tree.ILeafNodeState, leafindent: string): nil
+---@alias eve.ux.picker.view.tree.IRenderTreeviewLeafLocations
+---| fun(leafnode: std.collection.tree.INode, leafstate: eve.ux.picker.view.tree.ILeafNodeState, leafindent: string): nil
 
----@alias eve.ux.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: eve.ux.view.tree.IListviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.view.tree.ILeafNodeState, lnum: integer): eve.ux.view.tree.INodeRenderResult
+---@alias eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+---| fun(ctx: eve.ux.picker.view.tree.IListviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.picker.view.tree.ILeafNodeState, lnum: integer): eve.ux.picker.view.tree.INodeRenderResult
 
----@alias eve.ux.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: eve.ux.view.tree.IListviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.view.tree.ILeafNodeState, location: eve.ux.view.tree.ILeafLocationState, lnum: integer): eve.ux.view.tree.INodeRenderResult
+---@alias eve.ux.picker.view.tree.IListviewLeafLocationRenderer
+---| fun(ctx: eve.ux.picker.view.tree.IListviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.picker.view.tree.ILeafNodeState, location: eve.ux.picker.view.tree.ILeafLocationState, lnum: integer): eve.ux.picker.view.tree.INodeRenderResult
 
----@alias eve.ux.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: eve.ux.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): eve.ux.view.tree.INodeRenderResult
+---@alias eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
+---| fun(ctx: eve.ux.picker.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): eve.ux.picker.view.tree.INodeRenderResult
 
----@alias eve.ux.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: eve.ux.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.view.tree.ILeafNodeState, lnum: integer): eve.ux.view.tree.INodeRenderResult
+---@alias eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+---| fun(ctx: eve.ux.picker.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.picker.view.tree.ILeafNodeState, lnum: integer): eve.ux.picker.view.tree.INodeRenderResult
 
----@alias eve.ux.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: eve.ux.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.view.tree.ILeafNodeState, location: eve.ux.view.tree.ILeafLocationState, lnum: integer): eve.ux.view.tree.INodeRenderResult
+---@alias eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
+---| fun(ctx: eve.ux.picker.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: eve.ux.picker.view.tree.ILeafNodeState, location: eve.ux.picker.view.tree.ILeafLocationState, lnum: integer): eve.ux.picker.view.tree.INodeRenderResult
 
----@class eve.ux.view.tree.IListviewRendererContext
+---@class eve.ux.picker.view.tree.IListviewRendererContext
 ---@field public rootnode               std.collection.tree.INode
----@field public rootstate              eve.ux.view.tree.IContainerNodeState
+---@field public rootstate              eve.ux.picker.view.tree.IContainerNodeState
 ---@field public tree                   std.collection.IReadonlyTree
----@field public view                   eve.ux.view.Tree
+---@field public view                   eve.ux.picker.TreeView
 
----@class eve.ux.view.tree.ITreeviewRendererContext
+---@class eve.ux.picker.view.tree.ITreeviewRendererContext
 ---@field public rootnode               std.collection.tree.INode
----@field public rootstate              eve.ux.view.tree.INodeState
+---@field public rootstate              eve.ux.picker.view.tree.INodeState
 ---@field public tree                   std.collection.IReadonlyTree
----@field public view                   eve.ux.view.Tree
+---@field public view                   eve.ux.picker.TreeView
 
----@class eve.ux.view.tree.IContainerNodeState
+---@class eve.ux.picker.view.tree.IContainerNodeState
 ---@field public nodetype               "container"
 ---@field public collapsed              boolean
 ---@field public tick_invisible         integer
 ---@field public tick_matched           integer
 ---@field public tick_selected          integer
 ---@field public tick_selected_maximum  integer
----@field public cache_treeview         eve.ux.view.tree.INodeTreeviewResultCache|nil
+---@field public cache_treeview         eve.ux.picker.view.tree.INodeTreeviewResultCache|nil
 
----@class eve.ux.view.tree.ILeafNodeState
+---@class eve.ux.picker.view.tree.ILeafNodeState
 ---@field public nodetype               "leaf"
 ---@field public collapsed              boolean
----@field public locations              eve.ux.view.tree.ILeafLocationState[]|nil
+---@field public locations              eve.ux.picker.view.tree.ILeafLocationState[]|nil
 ---@field public tick_invisible         integer
 ---@field public tick_matched           integer
 ---@field public tick_selected          integer
 ---@field public text                   string|nil
 ---@field public text_lower             string|nil
----@field public cache_match            eve.ux.view.tree.INodeMatchResultCache|nil
----@field public cache_listview         eve.ux.view.tree.INodeListviewResultCache|nil
----@field public cache_treeview         eve.ux.view.tree.INodeTreeviewResultCache|nil
+---@field public cache_match            eve.ux.picker.view.tree.INodeMatchResultCache|nil
+---@field public cache_listview         eve.ux.picker.view.tree.INodeListviewResultCache|nil
+---@field public cache_treeview         eve.ux.picker.view.tree.INodeTreeviewResultCache|nil
 
----@class eve.ux.view.tree.ILeafLocationState
+---@class eve.ux.picker.view.tree.ILeafLocationState
 ---@field public nodetype               "location"
 ---@field public leafuuid               string
 ---@field public locationuuid           string
 ---@field public tick_invisible         integer
 ---@field public data                   unknown|nil
 
----@class eve.ux.view.tree.INodeMatchContext
+---@class eve.ux.picker.view.tree.INodeMatchContext
 ---@field public rootuuid               string
 ---@field public pattern                string
 ---@field public case_sensitive         boolean
 ---@field public fuzzy                  boolean
 ---@field public regex                  boolean
 
----@class eve.ux.view.tree.INodeMatchResultCache
+---@class eve.ux.picker.view.tree.INodeMatchResultCache
 ---@field public score                  integer
 ---@field public matches                std.t.IMatchPoint[]
 
----@class eve.ux.view.tree.INodeListviewResultCache
+---@class eve.ux.picker.view.tree.INodeListviewResultCache
 ---@field public tick                   integer
 ---@field public text                   string
 ---@field public highlights             std.t.IHighlightInline[]
 
----@class eve.ux.view.tree.INodeTreeviewResultCache
+---@class eve.ux.picker.view.tree.INodeTreeviewResultCache
 ---@field public tick                   integer
 ---@field public text                   string
 ---@field public highlights             std.t.IHighlightInline[]
 
----@class eve.ux.view.tree.INodeMatchResult
----@field public context                eve.ux.view.tree.INodeMatchContext
+---@class eve.ux.picker.view.tree.INodeMatchResult
+---@field public context                eve.ux.picker.view.tree.INodeMatchContext
 ---@field public uuids                  string[]
 
----@class eve.ux.view.tree.INodeRenderResult
+---@class eve.ux.picker.view.tree.INodeRenderResult
 ---@field public text                   string
 ---@field public highlights             std.t.IHighlightInline[]|nil
 
----@class eve.ux.view.tree.IRenderResult
+---@class eve.ux.picker.view.tree.IRenderResult
 ---@field public childline              integer[]|nil
 ---@field public indents                string[]
 ---@field public lnum2uuid              table<integer, string>
 ---@field public uuid2lnum              table<string, integer>
 
----@class eve.ux.view.tree.IMatchParams
+---@class eve.ux.picker.view.tree.IMatchParams
 ---@field public rootuuid               string|nil
 ---@field public pattern                string
 ---@field public case_sensitive         boolean
 ---@field public fuzzy                  boolean
 ---@field public regex                  boolean
 
----@class eve.ux.view.tree.IRenderListviewParams
+---@class eve.ux.picker.view.tree.IRenderListviewParams
 ---@field public bufnr                  integer
 ---@field public rootuuid               string|nil
 ---@field public orders                 string[]|nil
@@ -139,7 +139,7 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 ---@field public only_selected          boolean
 ---@field public only_visible           boolean
 
----@class eve.ux.view.tree.IRenderTreeviewParams
+---@class eve.ux.picker.view.tree.IRenderTreeviewParams
 ---@field public bufnr                  integer
 ---@field public rootuuid               string|nil
 ---@field public foldempty              boolean
@@ -152,28 +152,28 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 
 local NSNR_DEFAULT = eve.var.nsnr.view_tree ---@type integer
 
----@class eve.ux.view.ITreeviewProps
+---@class eve.ux.picker.view.ITreeProps
 ---@field public name                   string
 ---@field public fullname               ?string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---@field public tree                   std.collection.IReadonlyTree
----@field public render_listview_leaf       eve.ux.view.tree.IListviewLeafNodeRenderer
----@field public render_listview_location   eve.ux.view.tree.IListviewLeafLocationRenderer
----@field public render_treeview_container  eve.ux.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf       eve.ux.view.tree.ITreeviewLeafNodeRenderer
----@field public render_treeview_location   eve.ux.view.tree.ITreeviewLeafLocationRenderer
+---@field public render_listview_leaf       eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+---@field public render_listview_location   eve.ux.picker.view.tree.IListviewLeafLocationRenderer
+---@field public render_treeview_container  eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
+---@field public render_treeview_leaf       eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+---@field public render_treeview_location   eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 
----@class eve.ux.view.Tree
+---@class eve.ux.picker.TreeView
 ---@field public fullname               string
----@field public statemap               table<string, eve.ux.view.tree.INodeState>
+---@field public statemap               table<string, eve.ux.picker.view.tree.INodeState>
 ---
 ---@field protected _disposed           boolean
 ---@field protected _indent             string
 ---@field protected _indent_hln         string
 ---@field protected _tree               std.collection.IReadonlyTree
 ---
----@field protected _last_match_result    eve.ux.view.tree.INodeMatchResult
+---@field protected _last_match_result    eve.ux.picker.view.tree.INodeMatchResult
 ---@field protected _count_selected       integer
 ---@field protected _dirty_selected       boolean
 ---@field protected _tick_invisible       integer
@@ -182,16 +182,16 @@ local NSNR_DEFAULT = eve.var.nsnr.view_tree ---@type integer
 ---@field protected _tick_render_listview integer
 ---@field protected _tick_render_treeview integer
 ---
----@field protected _render_listview_leaf       eve.ux.view.tree.IListviewLeafNodeRenderer
----@field protected _render_listview_location   eve.ux.view.tree.IListviewLeafLocationRenderer
----@field protected _render_treeview_container  eve.ux.view.tree.ITreeviewContainerNodeRenderer
----@field protected _render_treeview_leaf       eve.ux.view.tree.ITreeviewLeafNodeRenderer
----@field protected _render_treeview_location   eve.ux.view.tree.ITreeviewLeafLocationRenderer
+---@field protected _render_listview_leaf       eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+---@field protected _render_listview_location   eve.ux.picker.view.tree.IListviewLeafLocationRenderer
+---@field protected _render_treeview_container  eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
+---@field protected _render_treeview_leaf       eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+---@field protected _render_treeview_location   eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.view.ITreeviewProps
----@return eve.ux.view.Tree
+---@param props                         eve.ux.picker.view.ITreeProps
+---@return eve.ux.picker.TreeView
 function M.new(props)
   local name = props.name ---@type string
   local fullname = props.fullname or string.format("%s -> %s", name, __module_name__) ---@type string
@@ -199,13 +199,13 @@ function M.new(props)
   local indent_hln = props.indent_hln or "f_utw_indent" ---@type string
   local tree = props.tree ---@type std.collection.IReadonlyTree
 
-  local render_listview_leaf = props.render_listview_leaf ---@type eve.ux.view.tree.IListviewLeafNodeRenderer
-  local render_listview_location = props.render_listview_location ---@type eve.ux.view.tree.IListviewLeafLocationRenderer
-  local render_treeview_container = props.render_treeview_container ---@type eve.ux.view.tree.ITreeviewContainerNodeRenderer
-  local render_treeview_leaf = props.render_treeview_leaf ---@type eve.ux.view.tree.ITreeviewLeafNodeRenderer
-  local render_treeview_location = props.render_treeview_location ---@type eve.ux.view.tree.ITreeviewLeafLocationRenderer
+  local render_listview_leaf = props.render_listview_leaf ---@type eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+  local render_listview_location = props.render_listview_location ---@type eve.ux.picker.view.tree.IListviewLeafLocationRenderer
+  local render_treeview_container = props.render_treeview_container ---@type eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
+  local render_treeview_leaf = props.render_treeview_leaf ---@type eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+  local render_treeview_location = props.render_treeview_location ---@type eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 
-  local statemap = {} ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = {} ---@type table<string, eve.ux.picker.view.tree.INodeState>
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -232,7 +232,7 @@ function M.new(props)
   return self
 end
 
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:clear()
   self:__health__()
 
@@ -284,14 +284,14 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:isselected(uuid)
-  local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type eve.ux.view.tree.INodeState|nil
+  local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type eve.ux.picker.view.tree.INodeState|nil
   return nodestate ~= nil and nodestate.tick_selected == self._tick_selected
 end
 
 ---@param uuid                          string
 ---@return boolean
 function M:isvisible(uuid)
-  local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type eve.ux.view.tree.INodeState|nil
+  local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type eve.ux.picker.view.tree.INodeState|nil
   return nodestate ~= nil and nodestate.tick_invisible ~= self._tick_invisible
 end
 
@@ -302,12 +302,12 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param params                        eve.ux.view.tree.IRenderListviewParams
----@return eve.ux.view.tree.IRenderResult
+---@param params                        eve.ux.picker.view.tree.IRenderListviewParams
+---@return eve.ux.picker.view.tree.IRenderResult
 function M:render_listview(params)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   local tree = self._tree ---@type std.collection.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
@@ -323,10 +323,10 @@ function M:render_listview(params)
   local tick_render_listview = self._tick_render_listview ---@type integer
 
   local rootnode = tree:retrieve(rootuuid) ---@type std.collection.tree.INode|nil
-  local rootstate = statemap[rootuuid] ---@type eve.ux.view.tree.INodeState|nil
+  local rootstate = statemap[rootuuid] ---@type eve.ux.picker.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-    local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type eve.ux.view.tree.IRenderResult
+    local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type eve.ux.picker.view.tree.IRenderResult
     return result
   end
 
@@ -334,8 +334,8 @@ function M:render_listview(params)
     self:__refresh_selected_maximum__()
   end
 
-  ---@cast rootstate                    eve.ux.view.tree.IContainerNodeState
-  ---@type eve.ux.view.tree.IListviewRendererContext
+  ---@cast rootstate                    eve.ux.picker.view.tree.IContainerNodeState
+  ---@type eve.ux.picker.view.tree.IListviewRendererContext
   local ctx = {
     rootnode = rootnode,
     rootstate = rootstate,
@@ -345,8 +345,8 @@ function M:render_listview(params)
 
   local nsnr = NSNR_DEFAULT ---@type integer
   local INDENT_COMMON = self._indent ---@type string
-  local render_listview_leaf = self._render_listview_leaf ---@type eve.ux.view.tree.IListviewLeafNodeRenderer
-  local render_listview_location = self._render_listview_location ---@type eve.ux.view.tree.IListviewLeafLocationRenderer
+  local render_listview_leaf = self._render_listview_leaf ---@type eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+  local render_listview_location = self._render_listview_location ---@type eve.ux.picker.view.tree.IListviewLeafLocationRenderer
 
   local indent_leaf = INDENT_COMMON ---@type string
   local indent_location = indent_leaf .. "├─" ---@type string
@@ -361,7 +361,7 @@ function M:render_listview(params)
 
   local lnum = 0 ---@type integer
 
-  ---@type eve.ux.view.tree.IRenderListviewLeafLocations
+  ---@type eve.ux.picker.view.tree.IRenderListviewLeafLocations
   local function render_leaf_locations(leafnode, leafstate)
     if leafstate.locations == nil or #leafstate.locations <= 0 then
       return
@@ -370,7 +370,7 @@ function M:render_listview(params)
     local N = #leafstate.locations ---@type integer
     local last_child_index = 0 ---@type integer
     for index = N, 1, -1 do
-      local location = leafstate.locations[index] ---@type eve.ux.view.tree.ILeafLocationState
+      local location = leafstate.locations[index] ---@type eve.ux.picker.view.tree.ILeafLocationState
       if location.tick_invisible ~= tick_invisible then
         last_child_index = index ---@type integer
         break
@@ -379,7 +379,7 @@ function M:render_listview(params)
 
     if last_child_index > 0 then
       for index = 1, N, 1 do
-        local location = leafstate.locations[index] ---@type eve.ux.view.tree.ILeafLocationState
+        local location = leafstate.locations[index] ---@type eve.ux.picker.view.tree.ILeafLocationState
         if location.tick_invisible ~= tick_invisible then
           lnum = lnum + 1 ---@type integer
           local indent = index == last_child_index and indent_location_lastchild or indent_location ---@type string
@@ -398,17 +398,17 @@ function M:render_listview(params)
     return lnum
   end
 
-  ---@type eve.ux.view.tree.IRenderListviewLeafNode
+  ---@type eve.ux.picker.view.tree.IRenderListviewLeafNode
   local function render_leafnode(leafnode, leafstate)
     local indent = indent_leaf ---@type string
 
     lnum = lnum + 1 ---@type integer
     local lnum_leaf = lnum ---@type integer
 
-    local cache = leafstate.cache_listview ---@type eve.ux.view.tree.INodeListviewResultCache|nil
+    local cache = leafstate.cache_listview ---@type eve.ux.picker.view.tree.INodeListviewResultCache|nil
     if cache == nil or cache.tick ~= tick_render_listview then
       local result = render_listview_leaf(ctx, leafnode, leafstate, lnum)
-      ---@type eve.ux.view.tree.INodeListviewResultCache
+      ---@type eve.ux.picker.view.tree.INodeListviewResultCache
       cache = {
         tick = tick_render_listview,
         text = result.text,
@@ -434,7 +434,7 @@ function M:render_listview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -448,7 +448,7 @@ function M:render_listview(params)
       else
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -463,7 +463,7 @@ function M:render_listview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -476,7 +476,7 @@ function M:render_listview(params)
       else
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
             return "badroot"
           end
@@ -490,7 +490,7 @@ function M:render_listview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseHandler
         traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate ~= nil
             and nodestate.nodetype == "leaf"
@@ -504,7 +504,7 @@ function M:render_listview(params)
       else
         ---@type std.collection.tree.ITraverseHandler
         traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate ~= nil
             and nodestate.nodetype == "leaf"
@@ -519,7 +519,7 @@ function M:render_listview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseHandler
         traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate ~= nil
             and nodestate.nodetype == "leaf"
@@ -532,7 +532,7 @@ function M:render_listview(params)
       else
         ---@type std.collection.tree.ITraverseHandler
         traverse = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if nodestate ~= nil and nodestate.nodetype == "leaf" and nodestate.tick_invisible ~= tick_invisible then
             render_leafnode(node, nodestate)
           end
@@ -546,7 +546,7 @@ function M:render_listview(params)
       if only_selected then
         for _, uuid in ipairs(orders) do
           local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
-          local nodestate = statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             node ~= nil
             and nodestate ~= nil
@@ -561,7 +561,7 @@ function M:render_listview(params)
       else
         for _, uuid in ipairs(orders) do
           local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
-          local nodestate = statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             node ~= nil
             and nodestate ~= nil
@@ -577,7 +577,7 @@ function M:render_listview(params)
       if only_selected then
         for _, uuid in ipairs(orders) do
           local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
-          local nodestate = statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             node ~= nil
             and nodestate ~= nil
@@ -591,7 +591,7 @@ function M:render_listview(params)
       else
         for _, uuid in ipairs(orders) do
           local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
-          local nodestate = statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             node ~= nil
             and nodestate ~= nil
@@ -626,17 +626,17 @@ function M:render_listview(params)
     end
   end
 
-  ---@type eve.ux.view.tree.IRenderResult
+  ---@type eve.ux.picker.view.tree.IRenderResult
   local result = { childline = childline, indents = indents, lnum2uuid = lnum2uuid, uuid2lnum = uuid2lnum }
   return result
 end
 
----@param params eve.ux.view.tree.IRenderTreeviewParams
----@return eve.ux.view.tree.IRenderResult
+---@param params eve.ux.picker.view.tree.IRenderTreeviewParams
+---@return eve.ux.picker.view.tree.IRenderResult
 function M:render_treeview(params)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   local tree = self._tree ---@type std.collection.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
@@ -653,10 +653,10 @@ function M:render_treeview(params)
   local tick_render_treeview = self._tick_render_treeview ---@type integer
 
   local rootnode = tree:retrieve(root) ---@type std.collection.tree.INode|nil
-  local rootstate = statemap[root] ---@type eve.ux.view.tree.INodeState|nil
+  local rootstate = statemap[root] ---@type eve.ux.picker.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-    local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type eve.ux.view.tree.IRenderResult
+    local result = { indents = {}, lnum2uuid = {}, uuid2lnum = {} } ---@type eve.ux.picker.view.tree.IRenderResult
     return result
   end
 
@@ -664,8 +664,8 @@ function M:render_treeview(params)
     self:__refresh_selected_maximum__()
   end
 
-  ---@cast rootstate                    eve.ux.view.tree.IContainerNodeState
-  ---@type eve.ux.view.tree.ITreeviewRendererContext
+  ---@cast rootstate                    eve.ux.picker.view.tree.IContainerNodeState
+  ---@type eve.ux.picker.view.tree.ITreeviewRendererContext
   local ctx = {
     rootnode = rootnode,
     rootstate = rootstate,
@@ -675,9 +675,9 @@ function M:render_treeview(params)
 
   local nsnr = NSNR_DEFAULT ---@type integer
   local INDENT_COMMON = self._indent ---@type string
-  local render_treeview_container = self._render_treeview_container ---@type eve.ux.view.tree.ITreeviewContainerNodeRenderer
-  local render_treeview_leaf = self._render_treeview_leaf ---@type eve.ux.view.tree.ITreeviewLeafNodeRenderer
-  local render_treeview_location = self._render_treeview_location ---@type eve.ux.view.tree.ITreeviewLeafLocationRenderer
+  local render_treeview_container = self._render_treeview_container ---@type eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
+  local render_treeview_leaf = self._render_treeview_leaf ---@type eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+  local render_treeview_location = self._render_treeview_location ---@type eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 
   local childline = {} ---@type integer[]
   local indents = {} ---@type string[]
@@ -694,7 +694,7 @@ function M:render_treeview(params)
   local stack_depth = {} ---@type integer[]
   local stack_lnum_roots = {} ---@type integer[]
 
-  ---@type eve.ux.view.tree.IRenderTreeviewLeafLocations
+  ---@type eve.ux.picker.view.tree.IRenderTreeviewLeafLocations
   local function render_leaf_locations(leafnode, leafstate, leafindent)
     if leafstate.locations == nil or #leafstate.locations <= 0 or (leafstate.collapsed and only_expanded) then
       return
@@ -703,7 +703,7 @@ function M:render_treeview(params)
     local N = #leafstate.locations ---@type integer
     local last_child_index = 0 ---@type integer
     for index = N, 1, -1 do
-      local location = leafstate.locations[index] ---@type eve.ux.view.tree.ILeafLocationState
+      local location = leafstate.locations[index] ---@type eve.ux.picker.view.tree.ILeafLocationState
       if location.tick_invisible ~= tick_invisible then
         last_child_index = index ---@type integer
         break
@@ -712,7 +712,7 @@ function M:render_treeview(params)
 
     if last_child_index > 0 then
       for index = 1, N, 1 do
-        local location = leafstate.locations[index] ---@type eve.ux.view.tree.ILeafLocationState
+        local location = leafstate.locations[index] ---@type eve.ux.picker.view.tree.ILeafLocationState
         if location.tick_invisible ~= tick_invisible then
           lnum = lnum + 1 ---@type integer
           local indent = leafindent .. (index == last_child_index and "╰─" or "├─") ---@type string
@@ -731,7 +731,7 @@ function M:render_treeview(params)
     return lnum
   end
 
-  ---@type eve.ux.view.tree.IRenderTreeviewLeafNode
+  ---@type eve.ux.picker.view.tree.IRenderTreeviewLeafNode
   local function render_leaf(leafnode, leafstate, is_lastchild, cur)
     local depth = cur == 1 and 1 or (stack_depth[cur - 1] + 1) ---@type integer
     local indent = INDENT_COMMON ---@type string
@@ -751,10 +751,10 @@ function M:render_treeview(params)
     lnum = lnum + 1 ---@type integer
     local lnum_leaf = lnum ---@type integer
 
-    local cache = leafstate.cache_treeview ---@type eve.ux.view.tree.INodeTreeviewResultCache|nil
+    local cache = leafstate.cache_treeview ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache|nil
     if cache == nil or cache.tick ~= tick_render_treeview then
-      local result = render_treeview_leaf(ctx, leafnode, leafstate, lnum) ---@type eve.ux.view.tree.INodeRenderResult
-      ---@type eve.ux.view.tree.INodeTreeviewResultCache
+      local result = render_treeview_leaf(ctx, leafnode, leafstate, lnum) ---@type eve.ux.picker.view.tree.INodeRenderResult
+      ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache
       cache = {
         tick = tick_render_treeview,
         text = result.text,
@@ -774,9 +774,9 @@ function M:render_treeview(params)
     return lnum
   end
 
-  local render_container ---@type eve.ux.view.tree.IRenderTreeviewContainerNode
+  local render_container ---@type eve.ux.picker.view.tree.IRenderTreeviewContainerNode
   if foldempty then
-    ---@type eve.ux.view.tree.IRenderTreeviewContainerNode
+    ---@type eve.ux.picker.view.tree.IRenderTreeviewContainerNode
     render_container = function(containernode, containerstate, is_lastchild, cur, dry)
       local depth = cur == 1 and 1 or (stack_depth[cur - 1] + 1) ---@type integer
       local indent = INDENT_COMMON ---@type string
@@ -805,16 +805,16 @@ function M:render_treeview(params)
 
       lnum = lnum + 1 ---@type integer
 
-      local nodestate = statemap[containernode.uuid] ---@type eve.ux.view.tree.INodeState
-      local result ---@type eve.ux.view.tree.INodeTreeviewResultCache|eve.ux.view.tree.INodeRenderResult
+      local nodestate = statemap[containernode.uuid] ---@type eve.ux.picker.view.tree.INodeState
+      local result ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache|eve.ux.picker.view.tree.INodeRenderResult
 
       if folded_depth > 0 then
         result = render_treeview_container(ctx, containernode, containerstate, lnum, folded_depth)
       else
-        local cache = nodestate.cache_treeview ---@type eve.ux.view.tree.INodeTreeviewResultCache|nil
+        local cache = nodestate.cache_treeview ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache|nil
         if cache == nil or cache.tick ~= tick_render_treeview then
           result = render_treeview_container(ctx, containernode, containerstate, lnum, folded_depth)
-          ---@type eve.ux.view.tree.INodeTreeviewResultCache
+          ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache
           cache = {
             tick = tick_render_treeview,
             text = result.text,
@@ -836,7 +836,7 @@ function M:render_treeview(params)
       return lnum
     end
   else
-    ---@type eve.ux.view.tree.IRenderTreeviewContainerNode
+    ---@type eve.ux.picker.view.tree.IRenderTreeviewContainerNode
     render_container = function(containernode, containerstate, is_lastchild, cur, dry)
       local depth = cur == 1 and 1 or (stack_depth[cur - 1] + 1) ---@type integer
       local indent = INDENT_COMMON ---@type string
@@ -859,13 +859,13 @@ function M:render_treeview(params)
 
       lnum = lnum + 1 ---@type integer
 
-      local nodestate = statemap[containernode.uuid] ---@type eve.ux.view.tree.INodeState
-      local result ---@type eve.ux.view.tree.INodeTreeviewResultCache|eve.ux.view.tree.INodeRenderResult
+      local nodestate = statemap[containernode.uuid] ---@type eve.ux.picker.view.tree.INodeState
+      local result ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache|eve.ux.picker.view.tree.INodeRenderResult
 
-      local cache = nodestate.cache_treeview ---@type eve.ux.view.tree.INodeTreeviewResultCache|nil
+      local cache = nodestate.cache_treeview ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache|nil
       if cache == nil or cache.tick ~= tick_render_treeview then
         result = render_treeview_container(ctx, containernode, containerstate, lnum, 0)
-        ---@type eve.ux.view.tree.INodeTreeviewResultCache
+        ---@type eve.ux.picker.view.tree.INodeTreeviewResultCache
         cache = {
           tick = tick_render_treeview,
           text = result.text,
@@ -891,7 +891,7 @@ function M:render_treeview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -905,7 +905,7 @@ function M:render_treeview(params)
       else
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -920,7 +920,7 @@ function M:render_treeview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -933,7 +933,7 @@ function M:render_treeview(params)
       else
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
             return "badroot"
           end
@@ -946,7 +946,7 @@ function M:render_treeview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -960,7 +960,7 @@ function M:render_treeview(params)
       else
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -975,7 +975,7 @@ function M:render_treeview(params)
       if only_selected then
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if
             nodestate == nil
             or nodestate.tick_invisible == tick_invisible
@@ -988,7 +988,7 @@ function M:render_treeview(params)
       else
         ---@type std.collection.tree.ITraverseConditional
         conditional = function(_, node)
-          local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
             return "badroot"
           end
@@ -1012,9 +1012,9 @@ function M:render_treeview(params)
       local nodestate = statemap[node.uuid]
 
       if onlychild ~= nil then
-        local state_onlychild = statemap[onlychild] ---@type eve.ux.view.tree.INodeState
+        local state_onlychild = statemap[onlychild] ---@type eve.ux.picker.view.tree.INodeState
         if state_onlychild.nodetype == "container" then
-          ---@cast nodestate            eve.ux.view.tree.IContainerNodeState
+          ---@cast nodestate            eve.ux.picker.view.tree.IContainerNodeState
           render_container(node, nodestate, is_lastchild, cur, true)
           folded_depth = folded_depth + 1 ---@type integer
           return
@@ -1056,7 +1056,7 @@ function M:render_treeview(params)
         end
       end
 
-      local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+      local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
 
       if nodestate.nodetype == "leaf" then
         return render_leaf(node, nodestate, is_lastchild, cur)
@@ -1108,7 +1108,7 @@ function M:render_treeview(params)
     end
   end
 
-  ---@type eve.ux.view.tree.IRenderResult
+  ---@type eve.ux.picker.view.tree.IRenderResult
   local result = { childline = childline, indents = indents, lnum2uuid = lnum2uuid, uuid2lnum = uuid2lnum }
   return result
 end
@@ -1120,11 +1120,11 @@ end
 function M:collect_leafs(root)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   local uuids = {} ---@type string[]
 
   self._tree:quick_traverse(root, function(_, node)
-    local state = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+    local state = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
     if state ~= nil and state.nodetype == "leaf" then
       uuids[#uuids + 1] = node.uuid
     end
@@ -1137,12 +1137,12 @@ end
 function M:collect_selected(root)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   local tick_selected = self._tick_selected ---@type integer
   local selected_set = {} ---@type table<string, true>
 
   self._tree:quick_traverse(root, function(_, node)
-    local state = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+    local state = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
     if state ~= nil and state.tick_selected == tick_selected then
       selected_set[node.uuid] = true
     end
@@ -1151,10 +1151,10 @@ function M:collect_selected(root)
 end
 
 ---@param uuid                          string
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:empty(uuid)
   self:__health__()
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   self._tree:quick_traverse(uuid, function(_, node)
     if node.uuid ~= uuid then
       statemap[node.uuid] = nil
@@ -1164,8 +1164,8 @@ function M:empty(uuid)
 end
 
 ---@param uuid                          string
----@param state                         eve.ux.view.tree.INodeState
----@return eve.ux.view.Tree
+---@param state                         eve.ux.picker.view.tree.INodeState
+---@return eve.ux.picker.TreeView
 function M:insert(uuid, state)
   self:__health__()
   self.statemap[uuid] = state
@@ -1173,16 +1173,16 @@ function M:insert(uuid, state)
 end
 
 ---@param uuid                          string
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:invisible(uuid)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   local tree = self._tree ---@type std.collection.IReadonlyTree
   local tick_invisible = self._tick_invisible ---@type integer
 
   tree:quick_traverse(uuid, function(_, node)
-    local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+    local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
     if nodestate ~= nil then
       nodestate.tick_invisible = tick_invisible ---@type integer
     end
@@ -1192,11 +1192,11 @@ function M:invisible(uuid)
 end
 
 ---@param uuid                          string
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:remove(uuid)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   local tree = self._tree ---@type std.collection.IReadonlyTree
 
   tree:quick_traverse(uuid, function(_, node)
@@ -1207,20 +1207,20 @@ function M:remove(uuid)
 end
 
 ---@param uuid                          string
----@return eve.ux.view.tree.INodeState|nil
+---@return eve.ux.picker.view.tree.INodeState|nil
 function M:retrieve(uuid)
   self:__health__()
-  return self.statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
+  return self.statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
 end
 
 ---@param nodeuuid                      string
 ---@param selected                      boolean
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:set_selected(nodeuuid, selected)
   self:__health__()
 
   local tick_selected = self._tick_selected ---@type integer
-  local nodestate = self.statemap[nodeuuid] ---@type eve.ux.view.tree.INodeState|nil
+  local nodestate = self.statemap[nodeuuid] ---@type eve.ux.picker.view.tree.INodeState|nil
   if nodestate ~= nil then
     if selected then
       if nodestate.tick_selected ~= tick_selected then
@@ -1242,11 +1242,11 @@ end
 ---@param uuid                          string
 ---@param selected                      boolean
 ---@param only_visible                  boolean|nil
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:toggle_select(uuid, selected, only_visible)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
   local tree = self._tree ---@type std.collection.IReadonlyTree
   local count_selected = self._count_selected ---@type integer
   local tick_invisible = only_visible and self._tick_invisible or -1 ---@type integer
@@ -1254,7 +1254,7 @@ function M:toggle_select(uuid, selected, only_visible)
 
   if selected then
     tree:quick_traverse(uuid, function(_, node)
-      local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+      local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
       if
         nodestate ~= nil
         and nodestate.tick_invisible ~= tick_invisible
@@ -1266,7 +1266,7 @@ function M:toggle_select(uuid, selected, only_visible)
     end)
   else
     tree:quick_traverse(uuid, function(_, node)
-      local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+      local nodestate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
       if
         nodestate ~= nil
         and nodestate.tick_invisible ~= tick_invisible
@@ -1286,9 +1286,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param uuid                          string
----@param value                         eve.ux.view.tree.CollapseActionEnum
+---@param value                         eve.ux.picker.view.tree.CollapseActionEnum
 ---@param recursive                     ?boolean
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:collapse(uuid, value, recursive)
   self:__health__()
 
@@ -1303,8 +1303,8 @@ function M:collapse(uuid, value, recursive)
     return self
   end
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  local state = statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
+  local state = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
   if state == nil then
     std.reporter.error({
       from = self.fullname,
@@ -1326,7 +1326,7 @@ function M:collapse(uuid, value, recursive)
 
   if recursive then
     tree:quick_traverse(uuid, function(_, node)
-      local s = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState
+      local s = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState
       if s.collapsed ~= collapsed then
         s.collapsed = collapsed
         s.cache_listview = nil
@@ -1345,25 +1345,25 @@ function M:collapse(uuid, value, recursive)
 end
 
 ---@param nodeuuid                      string
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:mark_node_invisible(nodeuuid)
   self:__health__()
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  local nodestate = statemap[nodeuuid] ---@type eve.ux.view.tree.INodeState|nil
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
+  local nodestate = statemap[nodeuuid] ---@type eve.ux.picker.view.tree.INodeState|nil
   if nodestate ~= nil then
     nodestate.tick_invisible = self._tick_invisible ---@type integer
   end
   return self
 end
 
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:mark_cache_match_dirty()
   self:__health__()
-  self._last_match_result = nil ---@type eve.ux.view.tree.INodeMatchResult|nil
+  self._last_match_result = nil ---@type eve.ux.picker.view.tree.INodeMatchResult|nil
   return self
 end
 
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:mark_cache_selected_dirty()
   self:__health__()
   self._dirty_selected = true
@@ -1371,27 +1371,27 @@ function M:mark_cache_selected_dirty()
   return self
 end
 
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:mark_cache_listview_dirty()
   self:__health__()
   self._tick_render_listview = self._tick_render_listview + 1
   return self
 end
 
----@return eve.ux.view.Tree
+---@return eve.ux.picker.TreeView
 function M:mark_cache_treeview_dirty()
   self:__health__()
   self._tick_render_treeview = self._tick_render_treeview + 1
   return self
 end
 
----@param params                        eve.ux.view.tree.IMatchParams
+---@param params                        eve.ux.picker.view.tree.IMatchParams
 ---@return string[]
 function M:match(params)
   self:__health__()
 
   local tree = self._tree ---@type std.collection.IReadonlyTree
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
 
   local root = params.rootuuid or tree.root ---@type string
   local case_sensitive = params.case_sensitive ---@type boolean
@@ -1399,7 +1399,7 @@ function M:match(params)
   local regex = params.regex ---@type boolean
   local pattern = case_sensitive and params.pattern or params.pattern:lower() ---@type string
 
-  ---@type eve.ux.view.tree.INodeMatchContext
+  ---@type eve.ux.picker.view.tree.INodeMatchContext
   local context = {
     rootuuid = root,
     pattern = pattern,
@@ -1408,8 +1408,8 @@ function M:match(params)
     regex = regex,
   }
 
-  local last_match_result = self._last_match_result ---@type eve.ux.view.tree.INodeMatchResult|nil
-  local last_match_context = last_match_result and last_match_result.context or nil ---@type eve.ux.view.tree.INodeMatchContext|nil
+  local last_match_result = self._last_match_result ---@type eve.ux.picker.view.tree.INodeMatchResult|nil
+  local last_match_context = last_match_result and last_match_result.context or nil ---@type eve.ux.picker.view.tree.INodeMatchContext|nil
   local last_matched_uuids = last_match_result and last_match_result.uuids or nil ---@type string[]|nil
   local tick_matched = self._tick_matched + 1 ---@type integer
 
@@ -1433,7 +1433,7 @@ function M:match(params)
 
     ---@type std.collection.tree.IQuickTraverseHandler
     local collect = function(_, node)
-      local state = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState
+      local state = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState
       if state.nodetype == "leaf" then
         k = k + 1
         uuids[k] = node.uuid
@@ -1445,12 +1445,12 @@ function M:match(params)
   local lines = {} ---@type string[]
   if case_sensitive then
     for index, uuid in ipairs(uuids) do
-      local state = statemap[uuid] ---@type eve.ux.view.tree.INodeState
+      local state = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState
       lines[index] = state.text ---@type string
     end
   else
     for index, uuid in ipairs(uuids) do
-      local state = statemap[uuid] ---@type eve.ux.view.tree.INodeState
+      local state = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState
       lines[index] = state.text_lower ---@type string
     end
   end
@@ -1461,9 +1461,9 @@ function M:match(params)
       local lnum = oxi_match.lnum ---@type integer
       local uuid = uuids[lnum] ---@type string
       local matches = oxi_match.matches ---@type std.t.IMatchPoint[]
-      local state = statemap[uuid] ---@type eve.ux.view.tree.INodeState
+      local state = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState
       state.tick_matched = tick_matched ---@type integer
-      state.cache_match = { score = oxi_match.score, matches = matches } ---@type eve.ux.view.tree.INodeMatchResultCache
+      state.cache_match = { score = oxi_match.score, matches = matches } ---@type eve.ux.picker.view.tree.INodeMatchResultCache
     end
 
     local N = #oxi_matches ---@type integer
@@ -1485,7 +1485,7 @@ function M:match(params)
       o = tree:retrieve(o.parent)
       ---@cast o                        std.collection.tree.INode
 
-      local s = statemap[o.uuid] ---@type eve.ux.view.tree.INodeState
+      local s = statemap[o.uuid] ---@type eve.ux.picker.view.tree.INodeState
       if s.tick_matched == tick_matched then
         break
       end
@@ -1494,7 +1494,7 @@ function M:match(params)
     end
   end
 
-  ---@type eve.ux.view.tree.INodeMatchResult
+  ---@type eve.ux.picker.view.tree.INodeMatchResult
   local match_result = {
     context = context,
     uuids = uuids,
@@ -1523,7 +1523,7 @@ function M:__refresh_selected_maximum__()
   self._dirty_selected = false ---@type boolean
 
   local tree = self._tree ---@type std.collection.IReadonlyTree
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, eve.ux.picker.view.tree.INodeState>
 
   tree:unsafe_traverse(nil, function(ctx)
     local rootnode = ctx.rootnode ---@type std.collection.tree.INode
@@ -1532,7 +1532,7 @@ function M:__refresh_selected_maximum__()
     ---@param node                      std.collection.tree.INode
     ---@return integer
     local function recursive(node)
-      local childstate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState
+      local childstate = statemap[node.uuid] ---@type eve.ux.picker.view.tree.INodeState
       local tick = childstate.tick_selected ---@type integer
       for _, childuuid in ipairs(node.children) do
         local childnode = nodemap[childuuid] ---@type std.collection.tree.INode

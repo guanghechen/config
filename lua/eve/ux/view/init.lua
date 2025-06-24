@@ -8,19 +8,15 @@
 
 ---@class eve.ux.view.__mods
 local __mods = {
-  Filetree = "eve.ux.view.filetree",
   Plainfile = "eve.ux.view.plainfile",
   Printer = "eve.ux.view.printer",
-  Tree = "eve.ux.view.tree",
 }
 
 ---@class eve.ux.view
 ---@field public __mods                 eve.ux.view.__mods
 ---
----@field public Filetree               eve.ux.view.Filetree
 ---@field public Plainfile              eve.ux.view.Plainfile
 ---@field public Printer                eve.ux.view.Printer
----@field public Tree                   eve.ux.view.Tree
 local M = setmetatable({
   __mods = __mods,
 }, {

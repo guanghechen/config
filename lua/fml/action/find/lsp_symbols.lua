@@ -299,7 +299,7 @@ end
 ---@param picker                        eve.ux.picker.TreeComposer
 refresh = function(picker)
   local tree = picker._tree ---@type std.collection.Tree
-  local treeview = picker._treeview ---@type eve.ux.view.Tree
+  local treeview = picker._treeview ---@type eve.ux.picker.TreeView
 
   tree:clear()
   treeview:clear()
@@ -343,7 +343,7 @@ refresh = function(picker)
   end, picker)
 end
 
----@type eve.ux.view.tree.IListviewLeafNodeRenderer
+---@type eve.ux.picker.view.tree.IListviewLeafNodeRenderer
 local function render_listview_leaf(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   local icon = symbol_data.icon or "●"
@@ -360,7 +360,7 @@ local function render_listview_leaf(_, node)
   return { text = text, highlights = highlights }
 end
 
----@type eve.ux.view.tree.IListviewLeafLocationRenderer
+---@type eve.ux.picker.view.tree.IListviewLeafLocationRenderer
 local function render_listview_location(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   if symbol_data and symbol_data.line then
@@ -372,7 +372,7 @@ local function render_listview_location(_, node)
   return { text = "", highlights = {} }
 end
 
----@type eve.ux.view.tree.ITreeviewContainerNodeRenderer
+---@type eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
 local function render_treeview_container(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   local icon = symbol_data.icon or "●"
@@ -389,7 +389,7 @@ local function render_treeview_container(_, node)
   return { text = text, highlights = highlights }
 end
 
----@type eve.ux.view.tree.ITreeviewLeafNodeRenderer
+---@type eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
 local function render_treeview_leaf(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   local icon = symbol_data.icon or "●"
@@ -406,7 +406,7 @@ local function render_treeview_leaf(_, node)
   return { text = text, highlights = highlights }
 end
 
----@type eve.ux.view.tree.ITreeviewLeafLocationRenderer
+---@type eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 local function render_treeview_location(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   if symbol_data and symbol_data.line then

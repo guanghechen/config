@@ -11,6 +11,9 @@ local __mods = {
 
   ListRetriever = "eve.ux.picker.retriever.list",
   TreeRetriever = "eve.ux.picker.retriever.tree",
+
+  TreeView = "eve.ux.picker.view.tree",
+  FiletreeView = "eve.ux.picker.view.filetree",
 }
 
 ---@class eve.ux.picker
@@ -27,11 +30,11 @@ local __mods = {
 ---
 ---@field public ListRetriever          eve.ux.picker.ListRetriever
 ---@field public TreeRetriever          eve.ux.picker.TreeRetriever
+---
+---@field public TreeView               eve.ux.picker.TreeView
+---@field public FiletreeView           eve.ux.picker.FiletreeView
 local M = setmetatable({
   __mods = __mods,
-  fn = require("eve.ux.fn"),
-  nvimbar = require("eve.ux.nvimbar"),
-  view = require("eve.ux.view"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

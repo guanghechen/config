@@ -64,11 +64,11 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field public finder_input_history   ?std.collection.IHistory
 ---
 ---@field public render_preview             ?eve.ux.picker.preview.IDraw
----@field public render_listview_leaf       eve.ux.view.tree.IListviewLeafNodeRenderer
----@field public render_listview_location   eve.ux.view.tree.IListviewLeafLocationRenderer
----@field public render_treeview_container  eve.ux.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf       eve.ux.view.tree.ITreeviewLeafNodeRenderer
----@field public render_treeview_location   eve.ux.view.tree.ITreeviewLeafLocationRenderer
+---@field public render_listview_leaf       eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+---@field public render_listview_location   eve.ux.picker.view.tree.IListviewLeafLocationRenderer
+---@field public render_treeview_container  eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
+---@field public render_treeview_leaf       eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+---@field public render_treeview_location   eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 ---
 ---@field public on_attached            ?eve.ux.picker.composer.tree.IOnAttached
 ---@field public on_closed              ?eve.ux.picker.composer.tree.IOnClosed
@@ -100,7 +100,7 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.ux.picker.TreeRetriever
 ---@field protected _scheduler_match    std.collection.Scheduler|nil
----@field protected _treeview           eve.ux.view.Tree
+---@field protected _treeview           eve.ux.picker.TreeView
 ---
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
@@ -145,11 +145,11 @@ function M.new(props)
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local render_preview = props.render_preview ---@type eve.ux.picker.preview.IDraw|nil
-  local render_listview_leaf = props.render_listview_leaf ---@type eve.ux.view.tree.IListviewLeafNodeRenderer
-  local render_listview_location = props.render_listview_location ---@type eve.ux.view.tree.IListviewLeafLocationRenderer
-  local render_treeview_container = props.render_treeview_container ---@type eve.ux.view.tree.ITreeviewContainerNodeRenderer
-  local render_treeview_leaf = props.render_treeview_leaf ---@type eve.ux.view.tree.ITreeviewLeafNodeRenderer
-  local render_treeview_location = props.render_treeview_location ---@type eve.ux.view.tree.ITreeviewLeafLocationRenderer
+  local render_listview_leaf = props.render_listview_leaf ---@type eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+  local render_listview_location = props.render_listview_location ---@type eve.ux.picker.view.tree.IListviewLeafLocationRenderer
+  local render_treeview_container = props.render_treeview_container ---@type eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
+  local render_treeview_leaf = props.render_treeview_leaf ---@type eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+  local render_treeview_location = props.render_treeview_location ---@type eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 
   local on_attached = props.on_attached or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnAttached
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnClosed
@@ -176,8 +176,8 @@ function M.new(props)
     name = fullname,
   })
 
-  ---@type eve.ux.view.Tree
-  local treeview = eve.ux.view.Tree.new({
+  ---@type eve.ux.picker.TreeView
+  local treeview = eve.ux.picker.TreeView.new({
     name = fullname,
     tree = tree,
     flag_foldempty = o_flag_foldempty,
@@ -230,12 +230,12 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
-        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type eve.ux.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
+        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type eve.ux.picker.view.tree.ViewtypeEnum
         o_flag_viewtype:next(next_viewtype)
       end,
       snapshot = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
         if viewtype == "tree" then
           return eve.icon.symbols.flag_tree, "picker_flag_aqua"
         end
@@ -250,7 +250,7 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: fold empty path", name),
       disabled = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
         return viewtype ~= "tree"
       end,
       callback = function()
@@ -312,7 +312,7 @@ function M.new(props)
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
         if nodestate ~= nil and nodestate.nodetype == "container" then
           treeview:mark_cache_listview_dirty()
           self._uuid_root = nodeuuid ---@type string
@@ -363,7 +363,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
           if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
@@ -415,7 +415,7 @@ function M.new(props)
           return
         end
 
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
         if nodestate == nil then
           return
         end
@@ -439,7 +439,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             local isselected = treeview:isselected(nodeuuid) ---@type boolean
             if not isselected then
@@ -453,7 +453,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             treeview:set_selected(nodeuuid, next_selected)
           end
@@ -642,8 +642,8 @@ function M.new(props)
 
     ---@type eve.ux.picker.result.IDraw
     result_render = function(bufnr)
-      local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
-      local result ---@type eve.ux.view.tree.IRenderResult
+      local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
+      local result ---@type eve.ux.picker.view.tree.IRenderResult
       local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
@@ -772,7 +772,7 @@ function M:dispose()
   local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
   local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
-  local treeview = self._treeview ---@type eve.ux.view.Tree
+  local treeview = self._treeview ---@type eve.ux.picker.TreeView
 
   vim.schedule(function()
     local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
@@ -885,7 +885,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local treeview = self._treeview ---@type eve.ux.view.Tree
+  local treeview = self._treeview ---@type eve.ux.picker.TreeView
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
@@ -922,7 +922,7 @@ function M:__has_selected_node__()
     return false
   end
 
-  local treeview = self._treeview ---@type eve.ux.view.Tree
+  local treeview = self._treeview ---@type eve.ux.picker.TreeView
 
   for lnum = 1, linecount, 1 do
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
@@ -949,7 +949,7 @@ end
 ---@param input                         string
 ---@return nil
 function M:__match__(input)
-  local treeview = self._treeview ---@type eve.ux.view.Tree
+  local treeview = self._treeview ---@type eve.ux.picker.TreeView
 
   if #input < 1 then
     local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
@@ -973,7 +973,7 @@ end
 function M:__resolve_confirmation__(nodeuuid)
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
   local retriever = self._retriever ---@type eve.ux.picker.TreeRetriever
-  local treeview = self._treeview ---@type eve.ux.view.Tree
+  local treeview = self._treeview ---@type eve.ux.picker.TreeView
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
@@ -1005,9 +1005,9 @@ end
 
 ---@param nodeuuid                      string
 ---@return std.collection.tree.INode
----@return eve.ux.view.tree.INodeState
+---@return eve.ux.picker.view.tree.INodeState
 function M:__retrieve__(nodeuuid)
-  ---@type eve.ux.view.tree.INodeState|nil
+  ---@type eve.ux.picker.view.tree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
@@ -1063,7 +1063,7 @@ function M:__toggle_node__(nodeuuid, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
-  local treeview = self._treeview ---@type eve.ux.view.Tree
+  local treeview = self._treeview ---@type eve.ux.picker.TreeView
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", recursively)
     composer:mark_result_dirty()
