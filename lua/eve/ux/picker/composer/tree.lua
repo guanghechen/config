@@ -230,12 +230,12 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
-        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type eve.ux.picker.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type eve.ux.view.tree.ViewtypeEnum
         o_flag_viewtype:next(next_viewtype)
       end,
       snapshot = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
         if viewtype == "tree" then
           return eve.icon.symbols.flag_tree, "picker_flag_aqua"
         end
@@ -250,7 +250,7 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: fold empty path", name),
       disabled = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
         return viewtype ~= "tree"
       end,
       callback = function()
@@ -312,7 +312,7 @@ function M.new(props)
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
         if nodestate ~= nil and nodestate.nodetype == "container" then
           treeview:mark_cache_listview_dirty()
           self._uuid_root = nodeuuid ---@type string
@@ -363,7 +363,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
+          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
           if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
@@ -415,7 +415,7 @@ function M.new(props)
           return
         end
 
-        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
         if nodestate == nil then
           return
         end
@@ -439,7 +439,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             local isselected = treeview:isselected(nodeuuid) ---@type boolean
             if not isselected then
@@ -453,7 +453,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.tree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             treeview:set_selected(nodeuuid, next_selected)
           end
@@ -642,8 +642,8 @@ function M.new(props)
 
     ---@type eve.ux.picker.result.IDraw
     result_render = function(bufnr)
-      local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.picker.view.tree.ViewtypeEnum
-      local result ---@type eve.ux.picker.view.tree.IRenderResult
+      local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
+      local result ---@type eve.ux.view.tree.IRenderResult
       local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
@@ -1005,9 +1005,9 @@ end
 
 ---@param nodeuuid                      string
 ---@return std.collection.tree.INode
----@return eve.ux.picker.view.tree.INodeState
+---@return eve.ux.view.tree.INodeState
 function M:__retrieve__(nodeuuid)
-  ---@type eve.ux.picker.view.tree.INodeState|nil
+  ---@type eve.ux.view.tree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
