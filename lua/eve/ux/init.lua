@@ -20,7 +20,7 @@ local __mods = {
 ---@field public nvimbar                eve.ux.nvimbar
 ---@field public picker                 eve.ux.picker
 ---@field public retriever              eve.ux.retriever
----@field public search2                eve.ux.search2
+---@field public searcher                eve.ux.searcher
 ---@field public view                   eve.ux.view
 ---
 ---@field public Search                 eve.ux.Search
@@ -41,7 +41,7 @@ local M = setmetatable({
   nvimbar = require("eve.ux.nvimbar"),
   picker = require("eve.ux.picker"),
   retriever = require("eve.ux.retriever"),
-  search2 = require("eve.ux.search2"),
+  searcher = require("eve.ux.searcher"),
   view = require("eve.ux.view"),
 }, {
   __index = function(t, k)

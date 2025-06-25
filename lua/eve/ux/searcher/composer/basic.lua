@@ -1,38 +1,38 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "eve.ux.search2.composer.basic" ---@type string
+local __module_name__ = "eve.ux.searcher.composer.basic" ---@type string
 
----@alias eve.ux.search2.composer.basic.PaneEnum
+---@alias eve.ux.searcher.composer.basic.PaneEnum
 ---| "finder"
 ---| "preview"
 ---| "result"
 
----@alias eve.ux.search2.composer.basic.IOnCancel
+---@alias eve.ux.searcher.composer.basic.IOnCancel
 ---| fun(): nil
 
----@alias eve.ux.search2.composer.basic.IOnClosed
----| fun(self: eve.ux.search2.BasicComposer): nil
+---@alias eve.ux.searcher.composer.basic.IOnClosed
+---| fun(self: eve.ux.searcher.BasicComposer): nil
 
----@alias eve.ux.search2.composer.basic.IOnDisposed
+---@alias eve.ux.searcher.composer.basic.IOnDisposed
 ---| fun(): nil
 
----@alias eve.ux.search2.composer.basic.IOnFocused
----| fun(self: eve.ux.search2.BasicComposer): nil
+---@alias eve.ux.searcher.composer.basic.IOnFocused
+---| fun(self: eve.ux.searcher.BasicComposer): nil
 
----@alias eve.ux.search2.composer.basic.IOnHidden
----| fun(self: eve.ux.search2.BasicComposer): nil
+---@alias eve.ux.searcher.composer.basic.IOnHidden
+---| fun(self: eve.ux.searcher.BasicComposer): nil
 
----@alias eve.ux.search2.composer.basic.IOnRefresh
----| fun(self: eve.ux.search2.BasicComposer, force: boolean): nil
+---@alias eve.ux.searcher.composer.basic.IOnRefresh
+---| fun(self: eve.ux.searcher.BasicComposer, force: boolean): nil
 
----@alias eve.ux.search2.composer.basic.IOnResultRendered
----| fun(self: eve.ux.search2.BasicComposer, bufnr: integer): nil
+---@alias eve.ux.searcher.composer.basic.IOnResultRendered
+---| fun(self: eve.ux.searcher.BasicComposer, bufnr: integer): nil
 
----@alias eve.ux.search2.composer.basic.IOnPreviewRendered
----| fun(self: eve.ux.search2.BasicComposer, bufnr: integer): nil
+---@alias eve.ux.searcher.composer.basic.IOnPreviewRendered
+---| fun(self: eve.ux.searcher.BasicComposer, bufnr: integer): nil
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.search2.composer.basic.borders
+---@class eve.ux.searcher.composer.basic.borders
 ---@field public finder                 string[]
 ---@field public finder_with_preview    string[]
 ---@field public finder_without_result  string[]
@@ -50,7 +50,7 @@ local __borders__ = {
   -- stylua: ignore end
 }
 
----@class eve.ux.search2.composer.basic.highlights
+---@class eve.ux.searcher.composer.basic.highlights
 ---@field public finder                 string
 ---@field public result                 string
 ---@field public preview                string
@@ -81,12 +81,12 @@ local __highlights__ = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.search2.composer.IBasicProps
+---@class eve.ux.searcher.composer.IBasicProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
 ---
----@field public flags                  ?eve.ux.search2.result.IFlagItemRaw[]
+---@field public flags                  ?eve.ux.searcher.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
 ---@field public height                 ?number
 ---@field public width                  ?number
@@ -101,60 +101,60 @@ local __highlights__ = {
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
----@field public result_render          eve.ux.search2.result.IDraw
----@field public result_isselected      ?eve.ux.search2.result.IIsSelected
+---@field public result_render          eve.ux.searcher.result.IDraw
+---@field public result_isselected      ?eve.ux.searcher.result.IIsSelected
 ---
----@field public preview_render         ?eve.ux.search2.preview.IDraw
+---@field public preview_render         ?eve.ux.searcher.preview.IDraw
 ---
----@field public on_cancel              ?eve.ux.search2.composer.basic.IOnCancel
----@field public on_closed              ?eve.ux.search2.composer.basic.IOnClosed
----@field public on_disposed            ?eve.ux.search2.composer.basic.IOnDisposed
----@field public on_focused             ?eve.ux.search2.composer.basic.IOnFocused
----@field public on_hidden              ?eve.ux.search2.composer.basic.IOnHidden
----@field public on_refresh             ?eve.ux.search2.composer.basic.IOnRefresh
----@field public on_preview_rendered    ?eve.ux.search2.composer.basic.IOnPreviewRendered
----@field public on_result_rendered     ?eve.ux.search2.composer.basic.IOnResultRendered
+---@field public on_cancel              ?eve.ux.searcher.composer.basic.IOnCancel
+---@field public on_closed              ?eve.ux.searcher.composer.basic.IOnClosed
+---@field public on_disposed            ?eve.ux.searcher.composer.basic.IOnDisposed
+---@field public on_focused             ?eve.ux.searcher.composer.basic.IOnFocused
+---@field public on_hidden              ?eve.ux.searcher.composer.basic.IOnHidden
+---@field public on_refresh             ?eve.ux.searcher.composer.basic.IOnRefresh
+---@field public on_preview_rendered    ?eve.ux.searcher.composer.basic.IOnPreviewRendered
+---@field public on_result_rendered     ?eve.ux.searcher.composer.basic.IOnResultRendered
 
----@class eve.ux.search2.BasicComposer : std.t.ux.IWidget
+---@class eve.ux.searcher.BasicComposer : std.t.ux.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public permanent              boolean
 ---
----@field public finder                 eve.ux.search2.Finder
----@field public result                 eve.ux.search2.Result
----@field public preview                eve.ux.search2.Preview|nil
+---@field public finder                 eve.ux.searcher.Finder
+---@field public result                 eve.ux.searcher.Result
+---@field public preview                eve.ux.searcher.Preview|nil
 ---
 ---@field protected _result_number      boolean
 ---
 ---@field protected _disposed           boolean
----@field protected _pane_focused       eve.ux.search2.composer.basic.PaneEnum
----@field protected _pane_last_focused  eve.ux.search2.composer.basic.PaneEnum
+---@field protected _pane_focused       eve.ux.searcher.composer.basic.PaneEnum
+---@field protected _pane_last_focused  eve.ux.searcher.composer.basic.PaneEnum
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
 ---@field protected _finder_input_history ?std.collection.IHistory
 ---
----@field protected _on_cancel          eve.ux.search2.composer.basic.IOnCancel
----@field protected _on_closed          eve.ux.search2.composer.basic.IOnClosed
----@field protected _on_disposed        eve.ux.search2.composer.basic.IOnDisposed
----@field protected _on_focused         eve.ux.search2.composer.basic.IOnFocused
----@field protected _on_hidden          eve.ux.search2.composer.basic.IOnHidden
----@field protected _on_refresh         eve.ux.search2.composer.basic.IOnRefresh
+---@field protected _on_cancel          eve.ux.searcher.composer.basic.IOnCancel
+---@field protected _on_closed          eve.ux.searcher.composer.basic.IOnClosed
+---@field protected _on_disposed        eve.ux.searcher.composer.basic.IOnDisposed
+---@field protected _on_focused         eve.ux.searcher.composer.basic.IOnFocused
+---@field protected _on_hidden          eve.ux.searcher.composer.basic.IOnHidden
+---@field protected _on_refresh         eve.ux.searcher.composer.basic.IOnRefresh
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.search2.composer.IBasicProps
----@return eve.ux.search2.BasicComposer
+---@param props                         eve.ux.searcher.composer.IBasicProps
+---@return eve.ux.searcher.BasicComposer
 function M.new(props)
   local uuid = props.uuid or std.fn.uuid() ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local permanent = not not props.permanent ---@type boolean
 
-  local flags = props.flags ---@type eve.ux.search2.result.IFlagItemRaw[]
+  local flags = props.flags ---@type eve.ux.searcher.result.IFlagItemRaw[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
-  local pane_focused = "finder" ---@type eve.ux.search2.composer.basic.PaneEnum
-  local pane_last_focused = "finder" ---@type eve.ux.search2.composer.basic.PaneEnum
+  local pane_focused = "finder" ---@type eve.ux.searcher.composer.basic.PaneEnum
+  local pane_last_focused = "finder" ---@type eve.ux.searcher.composer.basic.PaneEnum
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
@@ -168,19 +168,19 @@ function M.new(props)
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean
-  local result_render = props.result_render ---@type eve.ux.search2.result.IDraw
-  local result_isselected = props.result_isselected ---@type eve.ux.search2.result.IIsSelected|nil
+  local result_render = props.result_render ---@type eve.ux.searcher.result.IDraw
+  local result_isselected = props.result_isselected ---@type eve.ux.searcher.result.IIsSelected|nil
 
-  local preview_render = props.preview_render ---@type eve.ux.search2.preview.IDraw|nil
+  local preview_render = props.preview_render ---@type eve.ux.searcher.preview.IDraw|nil
 
-  local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnCancel
-  local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnClosed
-  local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnDisposed
-  local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnFocused
-  local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnHidden
-  local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnRefresh
-  local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnPreviewRendered
-  local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.search2.composer.basic.IOnResultRendered
+  local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnCancel
+  local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnClosed
+  local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnDisposed
+  local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnFocused
+  local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnHidden
+  local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnRefresh
+  local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnPreviewRendered
+  local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnResultRendered
 
   local has_finder_input_history = finder_input_history ~= nil ---@type boolean
 
@@ -194,15 +194,15 @@ function M.new(props)
   self._recommended_height = recommended_height
   self._recommended_width = recommended_width
   self._finder_input_history = finder_input_history
-  self._on_cancel = on_cancel ---@type eve.ux.search2.composer.basic.IOnCancel
-  self._on_closed = on_closed ---@type eve.ux.search2.composer.basic.IOnClosed
-  self._on_disposed = on_disposed ---@type eve.ux.search2.composer.basic.IOnDisposed
-  self._on_focused = on_focused ---@type eve.ux.search2.composer.basic.IOnFocused
-  self._on_hidden = on_hidden ---@type eve.ux.search2.composer.basic.IOnHidden
-  self._on_refresh = on_refresh ---@type eve.ux.search2.composer.basic.IOnRefresh
+  self._on_cancel = on_cancel ---@type eve.ux.searcher.composer.basic.IOnCancel
+  self._on_closed = on_closed ---@type eve.ux.searcher.composer.basic.IOnClosed
+  self._on_disposed = on_disposed ---@type eve.ux.searcher.composer.basic.IOnDisposed
+  self._on_focused = on_focused ---@type eve.ux.searcher.composer.basic.IOnFocused
+  self._on_hidden = on_hidden ---@type eve.ux.searcher.composer.basic.IOnHidden
+  self._on_refresh = on_refresh ---@type eve.ux.searcher.composer.basic.IOnRefresh
 
-  ---@type eve.ux.search2.Finder
-  local finder = eve.ux.search2.Finder.new({
+  ---@type eve.ux.searcher.Finder
+  local finder = eve.ux.searcher.Finder.new({
     name = name,
     keymaps = self:__resolve_keymaps_finder__(
       flags,
@@ -214,8 +214,8 @@ function M.new(props)
     title = finder_title,
   })
 
-  ---@type eve.ux.search2.Result
-  local result = eve.ux.search2.Result.new({
+  ---@type eve.ux.searcher.Result
+  local result = eve.ux.searcher.Result.new({
     uuid = uuid,
     name = name,
     draw = function(bufnr)
@@ -235,17 +235,17 @@ function M.new(props)
     ),
     flags = flags,
     flags_start_index = flags_start_index,
-    ---@type eve.ux.search2.result.IOnDrawed
+    ---@type eve.ux.searcher.result.IOnDrawed
     on_drawed = function(bufnr)
       self:mark_preview_dirty()
       on_result_rendered(self, bufnr)
     end,
   })
 
-  ---@type eve.ux.search2.Preview|nil
+  ---@type eve.ux.searcher.Preview|nil
   local preview = nil
   if preview_render ~= nil then
-    preview = eve.ux.search2.Preview.new({
+    preview = eve.ux.searcher.Preview.new({
       uuid = uuid,
       name = name,
       draw = preview_render,
@@ -254,7 +254,7 @@ function M.new(props)
         flags_start_index,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_preview)
       ),
-      ---@type eve.ux.search2.preview.IOnDrawed
+      ---@type eve.ux.searcher.preview.IOnDrawed
       on_drawed = function(bufnr)
         on_preview_rendered(self, bufnr)
       end,
@@ -283,10 +283,10 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname ---@type string
-  local finder = self.finder ---@type eve.ux.search2.Finder
-  local result = self.result ---@type eve.ux.search2.Result
-  local preview = self.preview ---@type eve.ux.search2.Preview|nil
-  local on_disposed = self._on_disposed ---@type eve.ux.search2.composer.basic.IOnDisposed
+  local finder = self.finder ---@type eve.ux.searcher.Finder
+  local result = self.result ---@type eve.ux.searcher.Result
+  local preview = self.preview ---@type eve.ux.searcher.Preview|nil
+  local on_disposed = self._on_disposed ---@type eve.ux.searcher.composer.basic.IOnDisposed
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
     local ok2, error2 = pcall(result.dispose, result)
@@ -356,14 +356,14 @@ function M:close()
   end)
 end
 
----@param pane                         eve.ux.search2.composer.basic.PaneEnum|nil
+---@param pane                         eve.ux.searcher.composer.basic.PaneEnum|nil
 ---@return nil
 function M:focus(pane)
   self:__health__()
   eve.widget.push(self)
 
   local has_new_created = self:__create_wins__()
-  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type eve.ux.search2.composer.basic.PaneEnum
+  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type eve.ux.searcher.composer.basic.PaneEnum
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
@@ -434,7 +434,7 @@ function M:get_layout()
   return self:__layout__()
 end
 
----@return eve.ux.search2.BasicComposer
+---@return eve.ux.searcher.BasicComposer
 function M:mark_result_dirty()
   self:__health__()
   self.result:mark_content_dirty()
@@ -444,7 +444,7 @@ function M:mark_result_dirty()
   return self
 end
 
----@return eve.ux.search2.BasicComposer
+---@return eve.ux.searcher.BasicComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self.result:mark_nvimbar_dirty()
@@ -482,7 +482,7 @@ function M:resize()
 end
 
 ---@param lnum                          integer
----@return eve.ux.search2.BasicComposer
+---@return eve.ux.searcher.BasicComposer
 function M:set_result_lnum(lnum)
   self:__health__()
   self.result:set_lnum_current(lnum)
@@ -497,9 +497,9 @@ end
 ---@return integer
 ---@return integer|nil
 function M:__create_wins__()
-  local finder = self.finder ---@type eve.ux.search2.Finder
-  local result = self.result ---@type eve.ux.search2.Result
-  local preview = self.preview ---@type eve.ux.search2.Preview|nil
+  local finder = self.finder ---@type eve.ux.searcher.Finder
+  local result = self.result ---@type eve.ux.searcher.Result
+  local preview = self.preview ---@type eve.ux.searcher.Preview|nil
 
   local result_number = self._result_number ---@type boolean
 
@@ -531,14 +531,14 @@ function M:__create_wins__()
 
   local finder_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension, std.t.IWinDimension|nil
 
-  ---@type eve.ux.search2.finder.IWinOpts
+  ---@type eve.ux.searcher.finder.IWinOpts
   local finder_winopts = {
     border = should_show_preview and __borders__.finder_with_preview or __borders__.finder,
     winhighlight = __highlights__.finder,
   }
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
 
-  ---@type eve.ux.search2.result.IWinOpts
+  ---@type eve.ux.searcher.result.IWinOpts
   local result_winopts = {
     border = should_show_preview and __borders__.result_with_preview or __borders__.result,
     number = result_number,
@@ -547,7 +547,7 @@ function M:__create_wins__()
   result_winnr = result:create_win(result_winopts, result_dimension)
 
   if preview ~= nil and preview_dimension ~= nil and should_show_preview then
-    ---@type eve.ux.search2.preview.IWinOpts
+    ---@type eve.ux.searcher.preview.IWinOpts
     local preview_winopts = {
       border = __borders__.preview,
       winhighlight = __highlights__.preview,
@@ -559,7 +559,7 @@ function M:__create_wins__()
 end
 
 ---@protected
----@param pane_focused                  eve.ux.search2.composer.basic.PaneEnum
+---@param pane_focused                  eve.ux.searcher.composer.basic.PaneEnum
 ---@return nil
 function M:__focus_pane__(pane_focused)
   if pane_focused == "finder" then
@@ -592,9 +592,9 @@ end
 ---@protected
 ---@return nil
 function M:__hide__()
-  local finder = self.finder ---@type eve.ux.search2.Finder
-  local result = self.result ---@type eve.ux.search2.Result
-  local preview = self.preview ---@type eve.ux.search2.Preview|nil
+  local finder = self.finder ---@type eve.ux.searcher.Finder
+  local result = self.result ---@type eve.ux.searcher.Result
+  local preview = self.preview ---@type eve.ux.searcher.Preview|nil
 
   finder:hide()
   result:hide()
@@ -630,7 +630,7 @@ function M:__layout__()
   local finder_height = 1 ---@type integer
   local preview_width = width - finder_width ---@type integer
 
-  local finder = self.finder ---@type eve.ux.search2.Finder
+  local finder = self.finder ---@type eve.ux.searcher.Finder
   local linecount = finder.linecount:snapshot() ---@type integer
   finder_height = math.max(1, math.min(5, math.floor(height * 0.3), linecount)) ---@type integer
 
@@ -663,7 +663,7 @@ function M:__layout__()
   return finder_dimension, result_dimension, preview_dimension
 end
 
----@param flags                         eve.ux.search2.result.IFlagItemRaw[]
+---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@return std.t.IKeymap[]
 function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
@@ -672,7 +672,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
     {
       modes = { "n", "v" },
       key = "q",
-      desc = "search2: close",
+      desc = "searcher: close",
       callback = function()
         self:close()
 
@@ -694,7 +694,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       modes = { "i", "n", "v" },
       key = "<C-a>r",
       aliases = { "<D-r>", "<M-r>" },
-      desc = "search2: refresh",
+      desc = "searcher: refresh",
       callback = function()
         local refresh_ok, refresh_error = pcall(self._on_refresh, self, true)
         if not refresh_ok then
@@ -711,7 +711,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       disabled = self._finder_input_history == nil,
       modes = { "i", "n", "v" },
       key = "<C-i>",
-      desc = "search2: history backward",
+      desc = "searcher: history backward",
       callback = function()
         local present = self._finder_input_history:present() ---@type string|nil
         local finder_input = self._finder_input_history:backward() ---@type string|nil
@@ -724,7 +724,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       disabled = self._finder_input_history == nil,
       modes = { "i", "n", "v" },
       key = "<C-o>",
-      desc = "search2: history forward",
+      desc = "searcher: history forward",
       callback = function()
         local present = self._finder_input_history:present() ---@type string|nil
         local finder_input = self._finder_input_history:forward() ---@type string|nil
@@ -758,7 +758,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       modes = { "n", "v" },
       key = "dd",
-      desc = "search2#finder: clear content",
+      desc = "searcher#finder: clear content",
       callback = function()
         local bufnr = vim.api.nvim_get_current_buf()
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -772,7 +772,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       modes = { "i", "n", "v" },
       key = "<Down>",
-      desc = "search2#finder: focus next item",
+      desc = "searcher#finder: focus next item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(step)
@@ -781,7 +781,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       modes = { "i", "n", "v" },
       key = "<Up>",
-      desc = "search2#finder: focus prev item",
+      desc = "searcher#finder: focus prev item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(-step)
@@ -791,7 +791,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
       key = "<C-i>",
-      desc = "search2#finder: history backward",
+      desc = "searcher#finder: history backward",
       callback = function()
         local last_input = self._finder_input_history:backward() ---@type string|nil
         if last_input ~= nil then
@@ -803,7 +803,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
       key = "<C-o>",
-      desc = "search2#finder: history forward",
+      desc = "searcher#finder: history forward",
       callback = function()
         local next_input = self._finder_input_history:forward() ---@type string|nil
         if next_input ~= nil then
@@ -815,7 +815,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
-      desc = "search2#finder: focus down",
+      desc = "searcher#finder: focus down",
       callback = function()
         self:__focus_pane__("result")
       end,
@@ -824,7 +824,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       modes = { "i", "n", "v" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
-      desc = "search2#finder: focus left",
+      desc = "searcher#finder: focus left",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
@@ -844,7 +844,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       modes = { "i", "n", "v" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
-      desc = "search2#finder: focus right",
+      desc = "searcher#finder: focus right",
       callback = function()
         if self.preview ~= nil then
           local winnr = self.preview:get_winnr() ---@type integer|nil
@@ -863,7 +863,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       modes = { "i", "n", "v" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
-      desc = "search2#finder: focus up",
+      desc = "searcher#finder: focus up",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("k")
@@ -876,7 +876,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       modes = { "i", "n", "v" },
       key = "<C-j>",
-      desc = "search2#finder: focus next item",
+      desc = "searcher#finder: focus next item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(step)
@@ -885,7 +885,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       modes = { "i", "n", "v" },
       key = "<C-k>",
-      desc = "search2#finder: focus prev item",
+      desc = "searcher#finder: focus prev item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(-step)
@@ -903,13 +903,13 @@ function M:__resolve_builtin_keymaps_result__()
       modes = { "n", "v" },
       key = "d",
       aliases = { "dd", "X", "x" },
-      desc = "search2#result: noop",
+      desc = "searcher#result: noop",
       callback = std.fn.noop,
     },
     {
       modes = { "n", "v" },
       key = "A",
-      desc = "search2#result: back to edit (A)",
+      desc = "searcher#result: back to edit (A)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -922,7 +922,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "v" },
       key = "a",
-      desc = "search2#result: back to edit (a)",
+      desc = "searcher#result: back to edit (a)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -935,7 +935,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "v" },
       key = "I",
-      desc = "search2#result: back to edit (I)",
+      desc = "searcher#result: back to edit (I)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -948,7 +948,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "v" },
       key = "i",
-      desc = "search2#result: back to edit (i)",
+      desc = "searcher#result: back to edit (i)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -961,7 +961,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "v" },
       key = "O",
-      desc = "search2#result: back to edit (O)",
+      desc = "searcher#result: back to edit (O)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -974,7 +974,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "v" },
       key = "o",
-      desc = "search2#result: back to edit (o)",
+      desc = "searcher#result: back to edit (o)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -988,7 +988,7 @@ function M:__resolve_builtin_keymaps_result__()
       disabled = true,
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
-      desc = "search2#result: focus",
+      desc = "searcher#result: focus",
       callback = function()
         local cursor = vim.fn.getmousepos()
         if cursor.winid == self.result:get_winnr() then
@@ -1007,7 +1007,7 @@ function M:__resolve_builtin_keymaps_result__()
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
-      desc = "search2#result: focus down",
+      desc = "searcher#result: focus down",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("j")
@@ -1021,7 +1021,7 @@ function M:__resolve_builtin_keymaps_result__()
       modes = { "i", "n", "v" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
-      desc = "search2#result: focus left",
+      desc = "searcher#result: focus left",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
@@ -1041,7 +1041,7 @@ function M:__resolve_builtin_keymaps_result__()
       modes = { "i", "n", "v" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
-      desc = "search2#result: focus right",
+      desc = "searcher#result: focus right",
       callback = function()
         if self.preview ~= nil then
           local winnr = self.preview:get_winnr() ---@type integer|nil
@@ -1061,7 +1061,7 @@ function M:__resolve_builtin_keymaps_result__()
       modes = { "i", "n", "v" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
-      desc = "search2#result: focus up",
+      desc = "searcher#result: focus up",
       callback = function()
         self:__focus_pane__("finder")
       end,
@@ -1069,7 +1069,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "v" },
       key = "j",
-      desc = "search2#result: focus next item",
+      desc = "searcher#result: focus next item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(step)
@@ -1078,7 +1078,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "v" },
       key = "k",
-      desc = "search2#result: focus prev item",
+      desc = "searcher#result: focus prev item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(-step)
@@ -1096,13 +1096,13 @@ function M:__resolve_builtin_keymaps_preview__()
       modes = { "n", "v" },
       key = "d",
       aliases = { "dd", "X", "x" },
-      desc = "search2#preview: noop",
+      desc = "searcher#preview: noop",
       callback = std.fn.noop,
     },
     {
       modes = { "n", "v" },
       key = "A",
-      desc = "search2#preview: back to edit (A)",
+      desc = "searcher#preview: back to edit (A)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -1115,7 +1115,7 @@ function M:__resolve_builtin_keymaps_preview__()
     {
       modes = { "n", "v" },
       key = "a",
-      desc = "search2#preview: back to edit (a)",
+      desc = "searcher#preview: back to edit (a)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -1128,7 +1128,7 @@ function M:__resolve_builtin_keymaps_preview__()
     {
       modes = { "n", "v" },
       key = "I",
-      desc = "search2#preview: back to edit (I)",
+      desc = "searcher#preview: back to edit (I)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -1141,7 +1141,7 @@ function M:__resolve_builtin_keymaps_preview__()
     {
       modes = { "n", "v" },
       key = "i",
-      desc = "search2#preview: back to edit (i)",
+      desc = "searcher#preview: back to edit (i)",
       callback = function()
         self:__focus_pane__("finder")
 
@@ -1155,7 +1155,7 @@ function M:__resolve_builtin_keymaps_preview__()
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
-      desc = "search2#preview: focus down",
+      desc = "searcher#preview: focus down",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("j")
@@ -1167,9 +1167,9 @@ function M:__resolve_builtin_keymaps_preview__()
       modes = { "i", "n", "v" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
-      desc = "search2#result: focus left",
+      desc = "searcher#result: focus left",
       callback = function()
-        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.search2.composer.basic.PaneEnum
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.searcher.composer.basic.PaneEnum
         self:__focus_pane__(pane_focused)
       end,
     },
@@ -1177,14 +1177,14 @@ function M:__resolve_builtin_keymaps_preview__()
       modes = { "i", "n", "v" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
-      desc = "search2#result: focus right",
+      desc = "searcher#result: focus right",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("l")
           return
         end
 
-        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.search2.composer.basic.PaneEnum
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.searcher.composer.basic.PaneEnum
         self:__focus_pane__(pane_focused)
       end,
     },
@@ -1192,7 +1192,7 @@ function M:__resolve_builtin_keymaps_preview__()
       modes = { "i", "n", "v" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
-      desc = "search2#preview: focus up",
+      desc = "searcher#preview: focus up",
       callback = function()
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("k")
@@ -1204,7 +1204,7 @@ function M:__resolve_builtin_keymaps_preview__()
   return builtin_keymaps
 end
 
----@param flags                         eve.ux.search2.result.IFlagItemRaw[]
+---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
@@ -1217,7 +1217,7 @@ function M:__resolve_keymaps_finder__(flags, flags_start_index, has_input_histor
   return resolved_keymaps
 end
 
----@param flags                         eve.ux.search2.result.IFlagItemRaw[]
+---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
@@ -1229,7 +1229,7 @@ function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param flags                         eve.ux.search2.result.IFlagItemRaw[]
+---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]

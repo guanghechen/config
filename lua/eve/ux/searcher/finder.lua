@@ -1,19 +1,19 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "eve.ux.search2.finder" ---@type string
+local __module_name__ = "eve.ux.searcher.finder" ---@type string
 
----@class eve.ux.search2.finder.IWinOpts
+---@class eve.ux.searcher.finder.IWinOpts
 ---@field public border                 string|string[]
 ---@field public winhighlight           string
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.search2.IFinderProps
+---@class eve.ux.searcher.IFinderProps
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
 ---@field public title                  string
 
----@class eve.ux.search2.Finder
+---@class eve.ux.searcher.Finder
 ---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
@@ -26,8 +26,8 @@ local __module_name__ = "eve.ux.search2.finder" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.search2.IFinderProps
----@return eve.ux.search2.Finder
+---@param props                         eve.ux.searcher.IFinderProps
+---@return eve.ux.searcher.Finder
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -161,7 +161,7 @@ function M:create_buf()
   return bufnr, true
 end
 
----@param winopts                       eve.ux.search2.finder.IWinOpts
+---@param winopts                       eve.ux.searcher.finder.IWinOpts
 ---@param dimension                     std.t.IWinDimension
 ---@return integer
 ---@return boolean
@@ -206,7 +206,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.search2.Finder
+---@return eve.ux.searcher.Finder
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -216,7 +216,7 @@ function M:focus()
   return self
 end
 
----@return eve.ux.search2.Finder
+---@return eve.ux.searcher.Finder
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -240,7 +240,7 @@ function M:hide()
 end
 
 ---@param dimension                     std.t.IWinDimension,
----@return eve.ux.search2.Finder
+---@return eve.ux.searcher.Finder
 function M:resize(dimension)
   self:__health__()
 
@@ -292,7 +292,7 @@ function M:set_content(content)
 end
 
 ---@param title                         string
----@return eve.ux.search2.Finder
+---@return eve.ux.searcher.Finder
 function M:set_title(title)
   self:__health__()
   if self.title ~= title then
@@ -319,7 +319,7 @@ function M:__health__()
 end
 
 ---@param bufnr                         integer
----@return eve.ux.search2.Finder
+---@return eve.ux.searcher.Finder
 function M:__set_prompt__(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
     local group = eve.var.sign.GROUP_PICKER_FINDER_PROMPT ---@type string

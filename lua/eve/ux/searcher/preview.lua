@@ -1,13 +1,13 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "eve.ux.search2.preview" ---@type string
+local __module_name__ = "eve.ux.searcher.preview" ---@type string
 
----@alias eve.ux.search2.preview.IDraw
----| fun(bufnr: integer, force: boolean): eve.ux.search2.preview.IDrawResult
+---@alias eve.ux.searcher.preview.IDraw
+---| fun(bufnr: integer, force: boolean): eve.ux.searcher.preview.IDrawResult
 
----@alias eve.ux.search2.preview.IOnDrawed
+---@alias eve.ux.searcher.preview.IOnDrawed
 ---| fun(bufnr: integer): nil
 
----@class eve.ux.search2.preview.IDrawResult
+---@class eve.ux.searcher.preview.IDrawResult
 ---@field public cursorline             boolean
 ---@field public number                 boolean
 ---@field public title                  string
@@ -16,37 +16,37 @@ local __module_name__ = "eve.ux.search2.preview" ---@type string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 
----@class eve.ux.search2.preview.IWinOpts
+---@class eve.ux.searcher.preview.IWinOpts
 ---@field public border                 string|string[]
 ---@field public winhighlight           string
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.search2.IPreviewProps
+---@class eve.ux.searcher.IPreviewProps
 ---@field public name                   string
----@field public draw                   eve.ux.search2.preview.IDraw
+---@field public draw                   eve.ux.searcher.preview.IDraw
 ---@field public keymaps                std.t.IKeymap[]
----@field public on_drawed              ?eve.ux.search2.preview.IOnDrawed
+---@field public on_drawed              ?eve.ux.searcher.preview.IOnDrawed
 
----@class eve.ux.search2.Preview
+---@class eve.ux.searcher.Preview
 ---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected _last_result        eve.ux.search2.preview.IDrawResult|nil
+---@field protected _last_result        eve.ux.searcher.preview.IDrawResult|nil
 ---@field protected _scheduler_content  std.collection.Scheduler
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.search2.IPreviewProps
----@return eve.ux.search2.Preview
+---@param props                         eve.ux.searcher.IPreviewProps
+---@return eve.ux.searcher.Preview
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local draw = props.draw ---@type eve.ux.search2.preview.IDraw
+  local draw = props.draw ---@type eve.ux.searcher.preview.IDraw
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
-  local on_drawed = props.on_drawed or std.fn.noop ---@type eve.ux.search2.preview.IOnDrawed
+  local on_drawed = props.on_drawed or std.fn.noop ---@type eve.ux.searcher.preview.IOnDrawed
 
   local self = setmetatable({}, M)
 
@@ -65,7 +65,7 @@ function M.new(props)
 
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
-      local ok, result = pcall(draw, bufnr, false) ---@type boolean, eve.ux.search2.preview.IDrawResult
+      local ok, result = pcall(draw, bufnr, false) ---@type boolean, eve.ux.searcher.preview.IDrawResult
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
@@ -207,7 +207,7 @@ function M:create_buf()
   return bufnr, true
 end
 
----@param winopts                       eve.ux.search2.preview.IWinOpts
+---@param winopts                       eve.ux.searcher.preview.IWinOpts
 ---@param dimension                     std.t.IWinDimension
 ---@return integer
 ---@return boolean
@@ -219,7 +219,7 @@ function M:create_win(winopts, dimension)
     return winnr, false
   end
 
-  local result = self._last_result ---@type eve.ux.search2.preview.IDrawResult|nil
+  local result = self._last_result ---@type eve.ux.searcher.preview.IDrawResult|nil
   local bufnr = self:create_buf() ---@type integer
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local wincfg = {
@@ -281,7 +281,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.search2.Preview
+---@return eve.ux.searcher.Preview
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -291,7 +291,7 @@ function M:focus()
   return self
 end
 
----@return eve.ux.search2.Preview
+---@return eve.ux.searcher.Preview
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -315,7 +315,7 @@ function M:hide()
 end
 
 ---@param dimension                     std.t.IWinDimension,
----@return eve.ux.search2.Preview
+---@return eve.ux.searcher.Preview
 function M:resize(dimension)
   self:__health__()
 
@@ -335,7 +335,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.search2.Preview
+---@return eve.ux.searcher.Preview
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
@@ -352,9 +352,9 @@ function M:__health__()
   end
 end
 
----@return eve.ux.search2.Preview
+---@return eve.ux.searcher.Preview
 function M:__update_winopts__()
-  local result = self._last_result ---@type eve.ux.search2.preview.IDrawResult
+  local result = self._last_result ---@type eve.ux.searcher.preview.IDrawResult
   if result == nil then
     return self
   end

@@ -1,53 +1,53 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "eve.ux.search2.result" ---@type string
+local __module_name__ = "eve.ux.searcher.result" ---@type string
 
----@alias eve.ux.search2.result.IDraw
----| fun(bufnr: integer): eve.ux.search2.result.IDrawResult
+---@alias eve.ux.searcher.result.IDraw
+---| fun(bufnr: integer): eve.ux.searcher.result.IDrawResult
 
----@alias eve.ux.search2.result.IIsSelected
+---@alias eve.ux.searcher.result.IIsSelected
 ---| fun(bufnr: integer, lnum: integer): boolean
 
----@alias eve.ux.search2.result.IOnDrawed
+---@alias eve.ux.searcher.result.IOnDrawed
 ---| fun(bufnr: integer): nil
 
----@class eve.ux.search2.result.IDrawResult
+---@class eve.ux.searcher.result.IDrawResult
 ---@field public lnum_current           integer|nil
 ---@field public lnum_present           integer|nil
 
----@class eve.ux.search2.result.IFlagItemRaw
+---@class eve.ux.searcher.result.IFlagItemRaw
 ---@field public desc                   string
 ---@field public callback               fun(): nil
 ---@field public disabled               (fun(): boolean)|boolean|nil
 ---@field public snapshot               fun(): string, string
 
----@class eve.ux.search2.result.IFlagItem
+---@class eve.ux.searcher.result.IFlagItem
 ---@field public desc                   string
 ---@field public callback               string
 ---@field public disabled               fun(): boolean
 ---@field public snapshot               fun(): string, string
 
----@class eve.ux.search2.result.IWinOpts
+---@class eve.ux.searcher.result.IWinOpts
 ---@field public border                 string|string[]
 ---@field public number                 boolean
 ---@field public winhighlight           string
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.ux.search2.IResultProps
+---@class eve.ux.searcher.IResultProps
 ---@field public uuid                   string
 ---@field public name                   string
----@field public draw                   eve.ux.search2.result.IDraw
----@field public isselected             ?eve.ux.search2.result.IIsSelected
+---@field public draw                   eve.ux.searcher.result.IDraw
+---@field public isselected             ?eve.ux.searcher.result.IIsSelected
 ---@field public keymaps                std.t.IKeymap[]
----@field public flags                  eve.ux.search2.result.IFlagItemRaw[]
+---@field public flags                  eve.ux.searcher.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
----@field public on_drawed              ?eve.ux.search2.result.IOnDrawed
+---@field public on_drawed              ?eve.ux.searcher.result.IOnDrawed
 
----@class eve.ux.search2.Result
+---@class eve.ux.searcher.Result
 ---@field public uuid                   string
 ---@field public fullname               string
----@field public draw                   eve.ux.search2.result.IDraw
----@field public flags                  eve.ux.search2.result.IFlagItem[]
+---@field public draw                   eve.ux.searcher.result.IDraw
+---@field public flags                  eve.ux.searcher.result.IFlagItem[]
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public lnum_current           std.collection.IObservable
 ---@field public lnum_present           std.collection.IObservable
@@ -64,28 +64,28 @@ local __module_name__ = "eve.ux.search2.result" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         eve.ux.search2.IResultProps
----@return eve.ux.search2.Result
+---@param props                         eve.ux.searcher.IResultProps
+---@return eve.ux.searcher.Result
 function M.new(props)
   local uuid = props.uuid ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local draw = props.draw ---@type eve.ux.search2.result.IDraw
-  local isselected = props.isselected or std.fn.falsy ---@type eve.ux.search2.result.IIsSelected
+  local draw = props.draw ---@type eve.ux.searcher.result.IDraw
+  local isselected = props.isselected or std.fn.falsy ---@type eve.ux.searcher.result.IIsSelected
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
-  local on_drawed = props.on_drawed or std.fn.noop ---@type eve.ux.search2.result.IOnDrawed
-  local augroup_CursorMoved = eve.nvim.augroup(string.format("search2.result:CursorMoved#%s", uuid)) ---@type integer
+  local on_drawed = props.on_drawed or std.fn.noop ---@type eve.ux.searcher.result.IOnDrawed
+  local augroup_CursorMoved = eve.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = std.Observable.from_value(0) ---@type std.collection.IObservable
   local _o_lnum_present = std.Observable.from_value(-1) ---@type std.collection.IObservable
   local _o_lnum_total = std.Observable.from_value(0) ---@type std.collection.IObservable
 
-  local flags = {} ---@type eve.ux.search2.result.IFlagItem[]
+  local flags = {} ---@type eve.ux.searcher.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
     for _, flag in ipairs(props.flags) do
-      ---@cast flag                     eve.ux.search2.result.IFlagItemRaw
+      ---@cast flag                     eve.ux.searcher.result.IFlagItemRaw
       local raw_disabled = flag.disabled ---@type boolean|nil|(fun(): boolean)
       local callback = flag.callback ---@type fun(): nil
       local snapshot = flag.snapshot ---@type fun(): boolean, string
@@ -104,7 +104,7 @@ function M.new(props)
 
       local callback_fn = eve.G.register_anonymous_fn(callback) or "eve.G.noop" ---@type string
 
-      ---@type eve.ux.search2.result.IFlagItem
+      ---@type eve.ux.searcher.result.IFlagItem
       local item = {
         desc = flag.desc,
         callback = callback_fn,
@@ -125,8 +125,8 @@ function M.new(props)
     .new({
       name = string.format("%s#winline", fullname),
       comp_sep = "",
-      comp_sep_hlname = "f_wl_search2",
-      comp_sep_hlname_active = "f_wl_search2",
+      comp_sep_hlname = "f_wl_searcher",
+      comp_sep_hlname_active = "f_wl_searcher",
       delay = 128,
       silent = std.fn.falsy,
       get_max_width = function()
@@ -249,7 +249,7 @@ function M.new(props)
 
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
-      local ok, result = pcall(draw, bufnr) ---@type boolean, eve.ux.search2.result.IDrawResult
+      local ok, result = pcall(draw, bufnr) ---@type boolean, eve.ux.searcher.result.IDrawResult
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
@@ -503,7 +503,7 @@ function M:create_buf()
   return bufnr, true
 end
 
----@param winopts                       eve.ux.search2.result.IWinOpts
+---@param winopts                       eve.ux.searcher.result.IWinOpts
 ---@param dimension                     std.t.IWinDimension,
 ---@return integer
 ---@return boolean
@@ -554,7 +554,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -564,7 +564,7 @@ function M:focus()
   return self
 end
 
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -588,7 +588,7 @@ function M:hide()
 end
 
 ---@param dimension                     std.t.IWinDimension,
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:resize(dimension)
   self:__health__()
 
@@ -610,14 +610,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
   return self
 end
 
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:mark_nvimbar_dirty()
   self:__health__()
   self._nvimbar:render()
@@ -646,7 +646,7 @@ function M:moveto(next_lnum)
 end
 
 ---@param lnum                          integer
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:set_lnum_current(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -656,7 +656,7 @@ function M:set_lnum_current(lnum)
 end
 
 ---@param lnum                          integer
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:set_lnum_present(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -665,7 +665,7 @@ function M:set_lnum_present(lnum)
   return self
 end
 
----@return eve.ux.search2.Result
+---@return eve.ux.searcher.Result
 function M:refresh_signs()
   self:__health__()
   self._scheduler_lnum_current:schedule()
