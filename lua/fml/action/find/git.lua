@@ -42,8 +42,8 @@ picker = eve.ux.picker.FiletreeComposer.new({
   frecency = eve.context.frecency.files,
   permanent = true,
   title = "Find git (not committed)",
-  height = 0.80,
-  width = 0.50,
+  height = 0.90,
+  width = 120,
   preview = false,
 
   finder_input = finder_input,

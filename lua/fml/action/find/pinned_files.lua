@@ -25,8 +25,8 @@ local picker = eve.ux.picker.FiletreeComposer.new({
   frecency = eve.context.frecency.files,
   permanent = true,
   title = "Find pinned files",
-  height = 0.80,
-  width = 0.85,
+  height = 0.9,
+  width = 0.9,
 
   finder_input = finder_input,
   finder_input_history = finder_input_history,

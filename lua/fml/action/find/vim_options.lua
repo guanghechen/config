@@ -83,7 +83,7 @@ local picker = eve.ux.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Find Vim Options",
-  height = 25,
+  height = 0.9,
   width = 120,
 
   finder_input = finder_input,

@@ -47,7 +47,9 @@ local refresh
 local function fetch_symbols(tree, callback, picker)
   local bufnr = filepath_sourcefile and eve.buf.loadfile(filepath_sourcefile) or nil ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    if callback then callback() end
+    if callback then
+      callback()
+    end
     return
   end
 
@@ -85,28 +87,36 @@ local function fetch_symbols(tree, callback, picker)
 
     -- Wait a bit for buffer to load
     vim.defer_fn(function()
-      if callback then callback() end
+      if callback then
+        callback()
+      end
     end, 2000)
     return
   end
 
   -- Check if winline is disabled for this buffer
   if vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] then
-    if callback then callback() end
+    if callback then
+      callback()
+    end
     return
   end
 
   -- Check if LSP method is supported based on workspace mode
   local method = workspace_mode and "workspace/symbol" or "textDocument/documentSymbol"
   if not eve.lsp.has_support_method(bufnr, method) then
-    if callback then callback() end
+    if callback then
+      callback()
+    end
     return
   end
 
   -- Check if blink.cmp is visible (same as locate_symbols)
   local ok, cmp = pcall(require, "blink.cmp")
   if ok and cmp.is_visible() then
-    if callback then callback() end
+    if callback then
+      callback()
+    end
     return
   end
 
@@ -196,7 +206,14 @@ local function fetch_symbols(tree, callback, picker)
         local character = range.start.character
 
         -- Generate hierarchical UUID that reflects the symbol path
-        local symbol_uuid = path_prefix .. tostring(i) .. ":" .. name .. "@" .. tostring(line) .. ":" .. tostring(character)
+        local symbol_uuid = path_prefix
+          .. tostring(i)
+          .. ":"
+          .. name
+          .. "@"
+          .. tostring(line)
+          .. ":"
+          .. tostring(character)
 
         -- Create symbol data compatible with existing renderers
         local symbol_data = {
@@ -207,13 +224,21 @@ local function fetch_symbols(tree, callback, picker)
             start = { line = line, character = character },
             ["end"] = { line = range["end"].line + 1, character = range["end"].character },
           },
-          selection_range = symbol.selectionRange and {
-            start = { line = symbol.selectionRange.start.line + 1, character = symbol.selectionRange.start.character },
-            ["end"] = { line = symbol.selectionRange["end"].line + 1, character = symbol.selectionRange["end"].character },
-          } or {
-            start = { line = line, character = character },
-            ["end"] = { line = range["end"].line + 1, character = range["end"].character },
-          },
+          selection_range = symbol.selectionRange
+              and {
+                start = {
+                  line = symbol.selectionRange.start.line + 1,
+                  character = symbol.selectionRange.start.character,
+                },
+                ["end"] = {
+                  line = symbol.selectionRange["end"].line + 1,
+                  character = symbol.selectionRange["end"].character,
+                },
+              }
+            or {
+              start = { line = line, character = character },
+              ["end"] = { line = range["end"].line + 1, character = range["end"].character },
+            },
           detail = symbol.detail,
           icon = eve.icon.kind[kind_name] or "󰅩",
           icon_hl = "f_lsp_symbol_icon_" .. kind_name,
@@ -423,8 +448,8 @@ picker = eve.ux.picker.TreeComposer.new({
   name = __module_name__,
   permanent = true,
   title = "LSP Symbols",
-  height = 30,
-  width = 100,
+  height = 0.9,
+  width = 120,
   node_sorter = function(a, b)
     local a_line = a.data.line or 0
     local b_line = b.data.line or 0

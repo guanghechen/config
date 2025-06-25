@@ -618,8 +618,8 @@ picker = eve.ux.picker.ListComposer.new({
   autosort = false,
   permanent = true,
   title = gen_title(),
-  height = math.floor(0.8 * vim.o.lines),
-  width = math.floor(0.85 * vim.o.columns),
+  height = 0.9,
+  width = 0.9,
 
   finder_input = finder_input,
   flag_fuzzy = flag_fuzzy,

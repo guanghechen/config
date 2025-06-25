@@ -52,8 +52,8 @@ picker = eve.ux.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Find notifications",
-  height = 25,
-  width = 120,
+  height = 0.9,
+  width = 0.9,
 
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,

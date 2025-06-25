@@ -128,8 +128,8 @@ picker = eve.ux.picker.FiletreeComposer.new({
   frecency = eve.context.frecency.files,
   permanent = true,
   title = "Find files",
-  height = 0.80,
-  width = 0.85,
+  height = 0.90,
+  width = 0.90,
 
   keymaps_common = {
     {

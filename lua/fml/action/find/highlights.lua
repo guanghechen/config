@@ -61,8 +61,8 @@ local picker = eve.ux.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Find Highlights",
-  height = 25,
-  width = 80,
+  height = 0.9,
+  width = 0.9,
 
   finder_input = finder_input,
   flag_fuzzy = flag_fuzzy,

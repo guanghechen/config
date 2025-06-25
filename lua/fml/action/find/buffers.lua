@@ -135,7 +135,7 @@ picker = eve.ux.picker.ListComposer.new({
   name = "find-buffers",
   permanent = true,
   title = "Find buffers",
-  height = 25,
+  height = 0.8,
   width = 120,
 
   finder_input = o_finder_input,
