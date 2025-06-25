@@ -235,6 +235,11 @@ end)
 ---@class fml.action.find
 local M = {}
 
+---@return nil
+function M.reset_input()
+  picker.finder:set_content("")
+end
+
 ---@param rootpath                      string|nil
 ---@return nil
 function M.find_files(rootpath)

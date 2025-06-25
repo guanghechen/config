@@ -145,14 +145,16 @@ return {
         local node = state.tree:get_node()
 
         if node.type == "file" then
-          local filepath = std.path.dirname(node:get_id()) ---@type string
-          vim.cmd(eve.command.definitions.find.files.uuid .. " " .. filepath)
+          local dirpath = std.path.dirname(node:get_id()) ---@type string
+          require("fml.action.find.files"):reset_input()
+          vim.cmd(eve.command.definitions.find.files.uuid .. " " .. dirpath)
           return
         end
 
         if node.type == "directory" then
-          local filepath = node:get_id() ---@type string
-          vim.cmd(eve.command.definitions.find.files.uuid .. " " .. filepath)
+          local dirpath = node:get_id() ---@type string
+          require("fml.action.find.files"):reset_input()
+          vim.cmd(eve.command.definitions.find.files.uuid .. " " .. dirpath)
         end
       end,
       open_ghc_replacer = function(state)
