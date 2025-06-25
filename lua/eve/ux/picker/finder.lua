@@ -152,7 +152,14 @@ function M:create_buf()
     buffer = bufnr,
     callback = function()
       local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-      local content = table.concat(lines, "\n") ---@type string
+
+      if #lines > 1 then
+        local content = table.concat(lines, " ") ---@type string
+        self:set_content(content)
+        return
+      end
+
+      local content = lines[1] or "" ---@type string
       self.input:next(content)
       self.linecount:next(#lines)
       self:__set_prompt__(bufnr)
@@ -275,9 +282,6 @@ function M:set_content(content)
   end
 
   local lines = { content } ---@type  string[]
-  if #lines < 1 then
-    lines = { "" } ---@type string[]
-  end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   self.input:next(content)
   self.linecount:next(#lines)
@@ -285,9 +289,8 @@ function M:set_content(content)
 
   local winnr = self._winnr ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    local last_line = #lines ---@type integer
-    local last_col = #lines[last_line] ---@type integer
-    vim.api.nvim_win_set_cursor(winnr, { last_line, last_col })
+    local last_col = #lines[1] ---@type integer
+    vim.api.nvim_win_set_cursor(winnr, { 1, last_col })
   end
 end
 
