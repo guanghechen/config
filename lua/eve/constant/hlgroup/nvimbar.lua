@@ -32,6 +32,7 @@ function M.gen_hlgroup_map(context)
 
     ---! buf
     buf = { fg = c.bg4, bg = "bg_bar" },
+    buf_disambiguation = { fg = c.grey, bg = "bg_bar", italic = true },
     buf_indicator = { fg = c.fg4, bg = "bg_bar", bold = true },
     buf_mod = { fg = c.fg4, bg = "bg_bar" },
     buf_omitter = { fg = c.blue, bg = "bg_bar" },
@@ -40,6 +41,7 @@ function M.gen_hlgroup_map(context)
     buf_order = { fg = c.fg4, bg = "bg_bar" },
     buf_text = { fg = c.fg4, bg = "bg_bar" },
     bufc = { fg = c.fg2, bg = bg_bufc },
+    bufc_disambiguation = { link = t and "ms_i_none" or "ms_i_bg0" },
     bufc_indicator = { link = t and "ms_b_none" or "ms_b_bg0" },
     bufc_mod = { fg = c.green, bg = bg_bufc },
     bufc_pinned = { fg = c.fg0, bg = bg_bufc },

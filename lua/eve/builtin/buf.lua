@@ -23,9 +23,10 @@ local Types = {
 }
 
 ---@class eve.builtin.buf.IMeta
+---@field public dirpath_pieces         string[]
+---@field public filename               string
 ---@field public filepath               string
 ---@field public relpath                string
----@field public filename               string
 ---@field public fileicon               string
 ---@field public fileicon_hln           string
 
@@ -176,24 +177,27 @@ function M.resolve(bufnr, force)
   end
 
   local cwd = std.path.cwd() ---@type string
-  local relpath = std.path.relative(cwd, filepath, false) ---@type string
+  local dirpath_pieces = std.path.split(std.path.dirname(filepath)) ---@type string[]
   local filename = std.path.basename(filepath) ---@type string
   local fileicon, fileicon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
+  local relpath = std.path.relative(cwd, filepath, false) ---@type string
 
   if meta == nil then
     ---@type eve.builtin.buf.IMeta
     meta = {
+      dirpath_pieces = dirpath_pieces,
+      filename = filename,
       filepath = filepath,
       relpath = relpath,
-      filename = filename,
       fileicon = fileicon,
       fileicon_hln = fileicon_hln,
     }
     meta_map[bufnr] = meta
   else
+    meta.dirpath_pieces = dirpath_pieces
+    meta.filename = filename
     meta.filepath = filepath
     meta.relpath = relpath
-    meta.filename = filename
     meta.fileicon = fileicon
     meta.fileicon_hln = fileicon_hln
   end

@@ -266,12 +266,8 @@ function M.refresh_bufs(bufs)
     end
   end
 
-  if k <= N then
-    for i = N, k, -1 do
-      bufs[i] = nil
-    end
-  else
-    eve.status.dirtier_tabline:mark_dirty()
+  for index = N, k, -1 do
+    bufs[index] = nil
   end
 end
 

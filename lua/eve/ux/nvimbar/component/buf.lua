@@ -1,3 +1,7 @@
+---@class eve.ux.nvimbar.component.buf.IBufItem
+---@field bufnr                         integer
+---@field meta                          eve.builtin.buf.IMeta
+
 local btn = eve.nvim.btn
 local txt = eve.nvim.txt
 
@@ -16,6 +20,112 @@ local fn_focus_right_buf = eve.G.register_anonymous_fn(function()
   vim.cmd(eve.command.definitions.buf.focus_right.uuid)
 end) or ""
 
+---@param x                             eve.ux.nvimbar.component.buf.IBufItem
+---@param y                             eve.ux.nvimbar.component.buf.IBufItem
+---@return boolean
+local function cmp_rd_buf(x, y)
+  local mx = x.meta ---@type eve.builtin.buf.IMeta
+  local my = y.meta ---@type eve.builtin.buf.IMeta
+
+  if mx.filename ~= my.filename then
+    return mx.filename < my.filename
+  end
+
+  local dp1 = mx.dirpath_pieces ---@type string[]
+  local dp2 = my.dirpath_pieces ---@type string[]
+  local D1 = #dp1 ---@type integer
+  local D2 = #dp2 ---@type integer
+  local D = D1 < D2 and D1 or D2 ---@type integer
+
+  local i1 = D1 ---@type integer
+  local i2 = D2 ---@type integer
+  for _ = 1, D, 1 do
+    local p1 = dp1[i1] ---@type string
+    local p2 = dp2[i2] ---@type string
+    if p1 ~= p2 then
+      return p1 < p2
+    end
+
+    i1 = i1 - 1 ---@type integer
+    i2 = i2 - 1 ---@type integer
+  end
+  return D1 < D2
+end
+
+local rd_bufs = {} ---@type eve.ux.nvimbar.component.buf.IBufItem[]
+
+---Generate disambiguated filename display for buffers with same filenames
+---@param bufs                          eve.builtin.tab.IBufItem[]
+---@return table<integer, string> -- Map from bufnr to disambiguated filename
+local function resolve_disambiguations(bufs)
+  local N = 0 ---@type integer
+  for _, buf in ipairs(bufs) do
+    local meta = eve.buf.resolve(buf.bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+    if meta ~= nil then
+      local item = { bufnr = buf.bufnr, meta = meta } ---@type eve.ux.nvimbar.component.buf.IBufItem
+      N = N + 1
+      rd_bufs[N] = item
+    end
+  end
+
+  if N <= 1 then
+    return {}
+  end
+
+  table.sort(rd_bufs, cmp_rd_buf)
+
+  local depth = 0 ---@type integer
+  local disambiguated = {} ---@type table<integer, string>
+  for index = 1, N, 1 do
+    local item1 = rd_bufs[index] ---@type eve.ux.nvimbar.component.buf.IBufItem
+    local dp1 = item1.meta.dirpath_pieces ---@type string[]
+    local D1 = #dp1 ---@type integer
+
+    if index > 1 then
+      local item0 = rd_bufs[index - 1] ---@type eve.ux.nvimbar.component.buf.IBufItem
+      if item1.meta.filename ~= item0.meta.filename then
+        depth = 0 ---@type integer
+      end
+    end
+
+    local next_depth = 0 ---@type integer
+    if index + 1 < N then
+      local item2 = rd_bufs[index + 1] ---@type eve.ux.nvimbar.component.buf.IBufItem
+      if item1.meta.filename == item2.meta.filename then
+        local dp2 = item2.meta.dirpath_pieces ---@type string[]
+        local D2 = #dp2 ---@type integer
+        local D = D1 < D2 and D1 or D2 ---@type integer
+
+        local i1 = D1 ---@type integer
+        local i2 = D2 ---@type integer
+
+        next_depth = 1
+        while next_depth <= D do
+          local p1 = dp1[i1] ---@type string
+          local p2 = dp2[i2] ---@type string
+          if p1 ~= p2 then
+            break
+          end
+
+          i1 = i1 - 1 ---@type integer
+          i2 = i2 - 1 ---@type integer
+          next_depth = next_depth + 1 ---@type integer
+        end
+      end
+    end
+
+    depth = depth < next_depth and next_depth or depth ---@type integer
+    if depth > 0 then
+      local d = D1 - depth + 1 ---@type integer
+      local dirpath = D1 >= 1 and table.concat(dp1, std.env.PATH_SEP, d < 1 and 1 or d, D1) or "" ---@type string
+      disambiguated[item1.bufnr] = dirpath ~= std.env.PATH_SEP and dirpath .. std.env.PATH_SEP or dirpath ---@type string
+    end
+    depth = next_depth
+  end
+
+  return disambiguated
+end
+
 ---@class eve.ux.nvimbar.component.buf
 local M = {}
 
@@ -23,6 +133,7 @@ local M = {}
 ---@return eve.ux.nvimbar.IRawComponent
 function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string
+  local hln_buf_disambiguation = position .. "_buf_disambiguation" ---@type string
   local hln_buf_indicator = position .. "_buf_indicator" ---@type string
   local hln_buf_order = position .. "_buf_order" ---@type string
   local hln_buf_mod = position .. "_buf_mod" ---@type string
@@ -32,6 +143,7 @@ function M.bufs(position)
   local hln_buf_text = position .. "_buf_text" ---@type string
 
   local hln_bufc = position .. "_bufc" ---@type string
+  local hln_bufc_disambiguation = position .. "_bufc_disambiguation" ---@type string
   local hln_bufc_indicator = position .. "_bufc_indicator" ---@type string
   local hln_bufc_order = position .. "_bufc_order" ---@type string
   local hln_bufc_mod = position .. "_bufc_mod" ---@type string
@@ -45,9 +157,10 @@ function M.bufs(position)
   ---@param buf                         eve.builtin.tab.IBufItem
   ---@param index                       integer
   ---@param total                       integer
+  ---@param disambiguated_paths         table<integer, string>
   ---@return string
   ---@return string
-  local function render_bufc(buf, index, total)
+  local function render_bufc(buf, index, total, disambiguated_paths)
     local bufnr = buf.bufnr ---@type integer
     local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
     if meta == nil then
@@ -111,23 +224,46 @@ function M.bufs(position)
     local hl_text_title = txt(text_title, hln_bufc_text)
     local hl_text_status = txt(text_status, hln_status) ---@type string
 
-    local text = text_indicator .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status
+    local disambiguation = disambiguated_paths[bufnr] ---@type string|nil
+    if disambiguation == nil then
+      local text = text_indicator .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status
+      local hl_text = hl_text_indicator
+        .. hl_text_order
+        .. hl_text_icon
+        .. hl_text_title
+        .. hl_text_diagnostic
+        .. hl_text_status
+      return text, btn(hl_text, fn_active_buf, bufnr)
+    end
+
+    local text_disambiguation = " " .. disambiguation .. " " ---@type string
+    local hl_text_disambiguation = txt(text_disambiguation, hln_bufc_disambiguation) ---@type string
+
+    local text = text_indicator
+      .. text_order
+      .. text_icon
+      .. text_title
+      .. text_disambiguation
+      .. text_diagnostic
+      .. text_status
     local hl_text = hl_text_indicator
       .. hl_text_order
       .. hl_text_icon
       .. hl_text_title
+      .. hl_text_disambiguation
       .. hl_text_diagnostic
       .. hl_text_status
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
   ---@param buf                         eve.builtin.tab.IBufItem
-  ---@param index                         integer
-  ---@param order                         integer
-  ---@param marker                        string
+  ---@param index                       integer
+  ---@param order                       integer
+  ---@param marker                      string
+  ---@param disambiguated_paths         table<integer, string>
   ---@return string
   ---@return string
-  local function render_buf(buf, index, order, marker)
+  local function render_buf(buf, index, order, marker, disambiguated_paths)
     local bufnr = buf.bufnr ---@type integer
     local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
     if meta == nil then
@@ -181,17 +317,39 @@ function M.bufs(position)
     local hln_status = is_pinned and hln_pinned or hln_mod ---@type string
 
     local hl_text_indicator = txt(text_indicator, hln_buf_indicator)
-    local hl_order = #text_order > 0 and txt(text_order, hln_order) or "" ---@type string
+    local hl_text_order = #text_order > 0 and txt(text_order, hln_order) or "" ---@type string
     local hl_text_icon = txt(text_icon, hln_icon)
     local hl_text_title = txt(text_title, hln_text)
     local hl_text_diagnostic = txt(text_diagnostic, hln_title) ---@type string
     local hl_text_status = txt(text_status, hln_status) ---@type string
 
-    local text = text_indicator .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status
+    local disambiguation = disambiguated_paths[bufnr] ---@type string|nil
+    if disambiguation == nil then
+      local text = text_indicator .. text_order .. text_icon .. text_title .. text_diagnostic .. text_status
+      local hl_text = hl_text_indicator
+        .. hl_text_order
+        .. hl_text_icon
+        .. hl_text_title
+        .. hl_text_diagnostic
+        .. hl_text_status
+      return text, btn(hl_text, fn_active_buf, bufnr)
+    end
+
+    local text_disambiguation = " " .. disambiguation .. " " ---@type string
+    local hl_text_disambiguation = txt(text_disambiguation, hln_buf_disambiguation) ---@type string
+
+    local text = text_indicator
+      .. text_order
+      .. text_icon
+      .. text_title
+      .. text_disambiguation
+      .. text_diagnostic
+      .. text_status
     local hl_text = hl_text_indicator
-      .. hl_order
+      .. hl_text_order
       .. hl_text_icon
       .. hl_text_title
+      .. hl_text_disambiguation
       .. hl_text_diagnostic
       .. hl_text_status
     return text, btn(hl_text, fn_active_buf, bufnr)
@@ -210,6 +368,8 @@ function M.bufs(position)
       end
 
       local bufs = meta_tab.bufs ---@type eve.builtin.tab.IBufItem[]
+      eve.tab.refresh_bufs(bufs)
+
       if #bufs < 1 then
         return "", "", false
       end
@@ -219,12 +379,15 @@ function M.bufs(position)
       local relative_orders = bufid_middle == bufid_sourcefile and eve.context.behavior.bufs_relative:snapshot() ---@type boolean
       local N = #bufs ---@type integer
 
+      -- Generate disambiguated filenames for all buffers
+      local disambiguated_filenames = N > 1 and resolve_disambiguations(bufs) or {} ---@type table<integer, string>
+
       local text ---@type string
       local hl_text ---@type string
       if bufid_middle == bufid_sourcefile then
-        text, hl_text = render_bufc(bufs[bufid_middle], bufid_middle, N)
+        text, hl_text = render_bufc(bufs[bufid_middle], bufid_middle, N, disambiguated_filenames)
       else
-        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_middle, ".")
+        text, hl_text = render_buf(bufs[bufid_middle], bufid_middle, bufid_middle, ".", disambiguated_filenames)
       end
 
       remain_width = remain_width - vim.api.nvim_strwidth(text) ---@type integer
@@ -242,8 +405,13 @@ function M.bufs(position)
       ---@param order                   integer
       ---@return boolean
       local function render_left(bufid, order)
-        local t, hl_t =
-          render_buf(bufs[bufid], bufid, relative_orders and order or bufid, relative_orders and "₋" or ".")
+        local t, hl_t = render_buf(
+          bufs[bufid],
+          bufid,
+          relative_orders and order or bufid,
+          relative_orders and "₋" or ".",
+          disambiguated_filenames
+        )
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == 1 and remain_width + left_omitter_width >= w then
@@ -269,8 +437,13 @@ function M.bufs(position)
       ---@param order                   integer
       ---@return boolean
       local function render_right(bufid, order)
-        local t, hl_t =
-          render_buf(bufs[bufid], bufid, relative_orders and order or bufid, relative_orders and "₊" or ".")
+        local t, hl_t = render_buf(
+          bufs[bufid],
+          bufid,
+          relative_orders and order or bufid,
+          relative_orders and "₊" or ".",
+          disambiguated_filenames
+        )
         local w = vim.api.nvim_strwidth(t) ---@type integer
 
         if bufid == N and remain_width + right_omitter_width >= w then
