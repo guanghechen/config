@@ -30,6 +30,9 @@ local __module_name__ = "eve.ux.picker.view.filetree" ---@type string
 ---@class eve.ux.picker.view.filetree.ILocationNodeState : eve.ux.view.tree.ILeafLocationState
 ---@field public lnum                   integer
 ---@field public col                    ?integer
+---@field public col_end                ?integer
+---@field public text                   ?string
+---@field public highlights             ?std.t.IHighlightInline[]
 
 ---@class eve.ux.picker.view.filetree.IListviewRendererContext : eve.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               std.collection.filetree.INode
@@ -374,7 +377,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
 
     if with_locations then
       for _, p in ipairs(filepaths) do
-        local filepath, lnum, col = std.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
+        local filepath, lnum, col, col_end = std.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
         if lnum ~= nil then
           if not std.path.is_absolute(filepath) then
             filepath = cwd .. std.env.PATH_SEP .. filepath ---@type string
@@ -395,6 +398,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
               tick_invisible = 0,
               lnum = lnum,
               col = col,
+              col_end = col_end,
             }
             statemap[locationuuid] = location
 
@@ -408,6 +412,25 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
   end)
 
   return self
+end
+
+---@param root                          string|nil
+---@param handle                        fun(node: std.collection.filetree.INode, nodestate: eve.ux.picker.view.filetree.IFileNodeState): nil
+---@return string[]
+function M:traverse_filenode(root, handle)
+  self:__health__()
+
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local uuids = {} ---@type string[]
+
+  self._tree:quick_traverse(root, function(_, node)
+    local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+    if nodestate ~= nil and nodestate.nodetype == "leaf" then
+      ---@cast nodestate                eve.ux.picker.view.filetree.IFileNodeState
+      handle(node, nodestate)
+    end
+  end)
+  return uuids
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -642,10 +665,26 @@ end
 
 ---@type eve.ux.picker.view.filetree.ITreeviewLocationRenderer
 function M.default_render_treeview_location(_, _, _, locationstate)
-  local lnum = locationstate.lnum
-  local col = locationstate.col
+  local lnum = locationstate.lnum ---@type integer
+  local col = locationstate.col ---@type integer|nil
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
-  local highlights = { { coll = 0, colr = #text, hlname = "f_ft_position" } } ---@type std.t.IHighlightInline[]
+  local offset = #text ---@type integer
+
+  ---@type std.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = offset, hlname = "f_ft_position" },
+    { coll = offset, colr = -1, hlname = "f_ft_text" },
+  }
+
+  if locationstate.text ~= nil then
+    text = text .. " " .. locationstate.text ---@type string
+  end
+  if locationstate.highlights ~= nil then
+    for _, hl in ipairs(locationstate.highlights) do
+      highlights[#highlights + 1] =
+        { coll = offset + 1 + hl.coll, colr = hl.colr < 0 and -1 or offset + 1 + hl.colr, hlname = hl.hlname }
+    end
+  end
   return { text = text, highlights = highlights }
 end
 

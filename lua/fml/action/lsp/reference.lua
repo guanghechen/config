@@ -1,4 +1,11 @@
+---@diagnostic disable: invisible
 local __module_name__ = "fml.action.lsp.reference" ---@type string
+
+---@class fml.action.lsp.reference.IItem
+---@field public filepath               string
+---@field public lnum                   integer
+---@field public col                    integer
+---@field public col_end                integer
 
 local finder_input = std.Observable.from_value("")
 local flag_foldempty = eve.context.select.lsp_reference.flag_foldempty
@@ -34,7 +41,7 @@ local picker = eve.ux.picker.FiletreeComposer.new({
 
 ---@param method                        string
 ---@param additional_params             table<string, any>
----@param callback                      fun(ok: boolean, rootdir: string|nil, filepaths: string[]|nil): nil
+---@param callback                      fun(ok: boolean, items: fml.action.lsp.reference.IItem[]|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -61,7 +68,7 @@ local function fetch_data(method, additional_params, callback)
 
   vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
     local errors = {} ---@type string[]
-    local items = {} ---@type [string, integer, integer][]
+    local items = {} ---@type fml.action.lsp.reference.IItem[]
 
     local uri_cur = params.textDocument.uri ---@type string
     local line_cur = params.position.line ---@type integer
@@ -78,7 +85,7 @@ local function fetch_data(method, additional_params, callback)
               local uri = location.targetUri or location.uri
               local range = location.targetRange or location.range
               if uri ~= uri_cur or range.start.line ~= line_cur then
-                table.insert(locations, location)
+                locations[#locations + 1] = location
               end
             end
           else
@@ -86,7 +93,7 @@ local function fetch_data(method, additional_params, callback)
             local uri = location.targetUri or location.uri
             local range = location.targetRange or location.range
             if uri ~= uri_cur or range.start.line ~= line_cur then
-              table.insert(locations, location)
+              locations[#locations + 1] = location
             end
           end
 
@@ -96,12 +103,20 @@ local function fetch_data(method, additional_params, callback)
             ---@diagnostic disable-next-line: undefined-field
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
-              local filepath = std.path.normalize(uri:gsub("^file://", "")) ---@type string
+              local filepath = std.path.normalize(vim.uri_to_fname(uri)) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
-              local last_item = items[#items] ---@type [string, integer, integer]|nil
-              if last_item == nil or last_item[1] ~= filepath or last_item[2] ~= lnum then
-                local item = { filepath, lnum, col } ---@type [string, integer, integer]
+              local last_item = items[#items] ---@type fml.action.lsp.reference.IItem|nil
+              if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
+                local lnum_end = range["end"].line + 1 ---@type integer
+
+                ---@type fml.action.lsp.reference.IItem
+                local item = {
+                  filepath = filepath,
+                  lnum = lnum,
+                  col = col,
+                  col_end = lnum == lnum_end and range["end"].character or -1,
+                }
                 items[#items + 1] = item
               end
             end
@@ -127,29 +142,13 @@ local function fetch_data(method, additional_params, callback)
     end
 
     if #items == 1 then
-      local filepath, lnum, col = unpack(items[1]) ---@type string, integer, integer
-      eve.win.open_filepath(winnr_sourcefile, filepath, lnum, col)
+      local item = items[1] ---@type fml.action.lsp.reference.IItem
+      eve.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true)
       return
     end
 
-    local filepaths = {} ---@type string[]
-    local rootdir = std.path.cwd() ---@type string
-    for _, item in ipairs(items) do
-      local filepath = string.format("%s:%d:%d", item[1], item[2], item[3]) ---@type string
-      filepaths[#filepaths + 1] = filepath
-
-      if string.sub(filepath, 1, #rootdir) ~= rootdir then
-        while true do
-          local parent = std.path.dirname(rootdir) ---@type string
-          if parent == rootdir then
-            break
-          end
-          rootdir = parent
-        end
-      end
-    end
-    callback(true, rootdir, filepaths)
+    callback(true, items)
   end)
 end
 
@@ -158,10 +157,46 @@ end
 ---@param additional_params             table<string, any>
 ---@return nil
 local function focus(title, method, additional_params)
-  fetch_data(method, additional_params, function(ok, rootdir, filepaths)
-    if ok and rootdir ~= nil and filepaths ~= nil then
+  fetch_data(method, additional_params, function(ok, items)
+    if ok and items ~= nil then
+      local rootdir = std.path.cwd() ---@type string
+      local filepaths = {} ---@type string[]
+      for _, item in ipairs(items) do
+        local filepath = string.format("%s:%d:%d:%d", item.filepath, item.lnum, item.col, item.col_end) ---@type string
+        filepaths[#filepaths + 1] = filepath
+
+        if string.sub(filepath, 1, #rootdir) ~= rootdir then
+          while true do
+            local parent = std.path.dirname(rootdir) ---@type string
+            if parent == rootdir then
+              break
+            end
+            rootdir = parent
+          end
+        end
+      end
+
       picker.finder:set_title(title)
       picker:reset_filepaths(rootdir, filepaths, true)
+
+      local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
+      treeview:traverse_filenode(nil, function(node, nodestate)
+        if nodestate ~= nil and nodestate.locations ~= nil then
+          local locations = nodestate.locations ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
+          local lnum_maximum = 1 ---@type integer
+          for _, location in ipairs(locations) do
+            lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum
+          end
+
+          local lines = vim.fn.readfile(node.data.filepath, "", lnum_maximum) ---@type string[]
+          for _, location in ipairs(locations) do
+            local line = lines[location.lnum] or "" ---@type string
+            location.text = line
+            location.highlights = { { coll = location.col, colr = location.col_end, hlname = "f_ft_reference" } }
+          end
+        end
+      end)
+
       picker:mark_result_dirty()
       picker:focus()
     end

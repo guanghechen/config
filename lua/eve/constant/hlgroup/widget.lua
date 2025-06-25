@@ -71,6 +71,8 @@ function M.gen_hlgroup_map(context)
     f_ft_filename = { fg = c.fg2 },
     f_ft_pathsep = { fg = c.fg4 },
     f_ft_position = { fg = c.bg4 },
+    f_ft_reference = { fg = c.purple, bold = true, italic = true },
+    f_ft_text = { fg = c.fg4 },
 
     ---git hunk preview
     f_ghp_cursor = { bg = c.bg3 },

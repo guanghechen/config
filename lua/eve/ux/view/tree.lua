@@ -592,7 +592,7 @@ function M:render_listview(params)
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
         local coll = highlight.coll ---@type integer
-        vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+        vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, colr < 0 and -1 or offset + colr })
       end
     end
   end
@@ -1074,7 +1074,7 @@ function M:render_treeview(params)
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
         local coll = highlight.coll ---@type integer
-        vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, offset + colr })
+        vim.hl.range(bufnr, nsnr, hlname, { row, offset + coll }, { row, colr < 0 and -1 or offset + colr })
       end
     end
   end

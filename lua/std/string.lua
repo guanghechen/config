@@ -66,12 +66,14 @@ end
 ---@return string
 ---@return integer|nil
 ---@return integer|nil
+---@return integer|nil
 function M.parse_filepath_with_location(text)
   local pieces = vim.split(text, ":", { plain = true })
   local filepath = pieces[1] ---@type string
   local lnum = pieces[2] ~= nil and tonumber(pieces[2]) or nil ---@type integer|nil
   local col = pieces[3] ~= nil and tonumber(pieces[3]) or nil ---@type integer|nil
-  return filepath, lnum, col
+  local col_end = pieces[4] ~= nil and tonumber(pieces[4]) or nil ---@type integer|nil
+  return filepath, lnum, col, col_end
 end
 
 ---@param text                          string
