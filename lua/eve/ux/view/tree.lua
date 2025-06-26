@@ -1328,6 +1328,13 @@ function M:mark_subroot_invisible(uuid)
 end
 
 ---@return eve.ux.view.Tree
+function M:mark_cache_invisible_dirty()
+  self:__health__()
+  self._tick_invisible = self._tick_invisible + 1
+  return self
+end
+
+---@return eve.ux.view.Tree
 function M:mark_cache_selected_dirty()
   self:__health__()
   self._dirty_selected = true

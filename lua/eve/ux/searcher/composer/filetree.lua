@@ -157,11 +157,27 @@ function M.new(props)
   local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.searcher.composer.filetree.IOnDisposed
   local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.searcher.composer.filetree.IOnFocused
   local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.searcher.composer.filetree.IOnHidden
-  local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.searcher.composer.filetree.IOnRefresh
-
-  local filetree = std.Filetree.new({ name = fullname })
+  local _on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.searcher.composer.filetree.IOnRefresh
 
   local self = setmetatable({}, M)
+
+  ---@type std.collection.Filetree
+  local filetree = std.Filetree.new({ name = fullname })
+
+  ---@type eve.ux.searcher.FiletreeView
+  local treeview = eve.ux.searcher.FiletreeView.new({
+    name = fullname,
+    tree = filetree,
+    flag_foldempty = o_flag_foldempty,
+    indent = "",
+    indent_hln = "f_utw_indent_float",
+  })
+
+  ---@type eve.ux.searcher.composer.filetree.IOnRefresh
+  local function on_refresh(_, force)
+    treeview:mark_cache_invisible_dirty()
+    _on_refresh(self, force)
+  end
 
   ---@type eve.ux.retriever.TreeRetriever
   local retriever = eve.ux.retriever.TreeRetriever.new({
@@ -171,15 +187,6 @@ function M.new(props)
   ---@type eve.ux.view.Plainfile
   local plainfile = eve.ux.view.Plainfile.new({
     name = fullname,
-  })
-
-  ---@type eve.ux.searcher.FiletreeView
-  local treeview = eve.ux.searcher.FiletreeView.new({
-    name = fullname,
-    tree = filetree,
-    flag_foldempty = o_flag_foldempty,
-    indent = "",
-    indent_hln = "f_utw_indent_float",
   })
 
   local scheduler_match = std.Scheduler.new({

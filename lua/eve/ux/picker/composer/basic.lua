@@ -686,7 +686,6 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       end,
     },
     {
-      disabled = self._on_refresh == std.fn.noop,
       modes = { "i", "n", "v" },
       key = "<C-a>r",
       aliases = { "<D-r>", "<M-r>" },
