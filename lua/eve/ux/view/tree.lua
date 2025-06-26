@@ -1145,25 +1145,6 @@ end
 
 ---@param uuid                          string
 ---@return eve.ux.view.Tree
-function M:invisible(uuid)
-  self:__health__()
-
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  local tree = self._tree ---@type std.collection.IReadonlyTree
-  local tick_invisible = self._tick_invisible ---@type integer
-
-  tree:quick_traverse(uuid, function(_, node)
-    local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
-    if nodestate ~= nil then
-      nodestate.tick_invisible = tick_invisible ---@type integer
-    end
-  end)
-
-  return self
-end
-
----@param uuid                          string
----@return eve.ux.view.Tree
 function M:remove(uuid)
   self:__health__()
 
@@ -1324,6 +1305,25 @@ function M:mark_node_invisible(nodeuuid)
   if nodestate ~= nil then
     nodestate.tick_invisible = self._tick_invisible ---@type integer
   end
+  return self
+end
+
+---@param uuid                          string
+---@return eve.ux.view.Tree
+function M:mark_subroot_invisible(uuid)
+  self:__health__()
+
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tick_invisible = self._tick_invisible ---@type integer
+
+  tree:quick_traverse(uuid, function(_, node)
+    local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+    if nodestate ~= nil then
+      nodestate.tick_invisible = tick_invisible ---@type integer
+    end
+  end)
+
   return self
 end
 
