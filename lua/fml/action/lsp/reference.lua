@@ -157,6 +157,8 @@ end
 ---@param additional_params             table<string, any>
 ---@return nil
 local function focus(title, method, additional_params)
+  picker:focus()
+
   fetch_data(method, additional_params, function(ok, items)
     if ok and items ~= nil then
       local rootdir = std.path.cwd() ---@type string
@@ -178,27 +180,30 @@ local function focus(title, method, additional_params)
 
       picker.finder:set_title(title)
       picker:reset_filepaths(rootdir, filepaths, true)
-
-      local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
-      treeview:traverse_filenode(nil, function(node, nodestate)
-        if nodestate ~= nil and nodestate.locations ~= nil then
-          local locations = nodestate.locations ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
-          local lnum_maximum = 1 ---@type integer
-          for _, location in ipairs(locations) do
-            lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum
-          end
-
-          local lines = vim.fn.readfile(node.data.filepath, "", lnum_maximum) ---@type string[]
-          for _, location in ipairs(locations) do
-            local line = lines[location.lnum] or "" ---@type string
-            location.text = line
-            location.highlights = { { coll = location.col, colr = location.col_end, hlname = "f_ft_reference" } }
-          end
-        end
-      end)
-
       picker:mark_result_dirty()
-      picker:focus()
+
+      vim.schedule(function()
+        local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
+        treeview:traverse_filenode(nil, function(node, nodestate)
+          if nodestate ~= nil and nodestate.locations ~= nil then
+            local locations = nodestate.locations ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
+            local lnum_maximum = 1 ---@type integer
+            for _, location in ipairs(locations) do
+              lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum
+            end
+
+            local lines = vim.fn.readfile(node.data.filepath, "", lnum_maximum) ---@type string[]
+            for _, location in ipairs(locations) do
+              local line = lines[location.lnum] or "" ---@type string
+              location.text = line
+              location.highlights = { { coll = location.col, colr = location.col_end, hlname = "f_ft_reference" } }
+            end
+          end
+        end)
+
+        treeview:mark_cache_treeview_dirty()
+        picker:mark_result_dirty()
+      end)
     end
   end)
 end
