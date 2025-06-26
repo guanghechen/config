@@ -157,8 +157,6 @@ end
 ---@param additional_params             table<string, any>
 ---@return nil
 local function focus(title, method, additional_params)
-  picker:focus()
-
   fetch_data(method, additional_params, function(ok, items)
     if ok and items ~= nil then
       local rootdir = std.path.cwd() ---@type string
@@ -181,6 +179,7 @@ local function focus(title, method, additional_params)
       picker.finder:set_title(title)
       picker:reset_filepaths(rootdir, filepaths, true)
       picker:mark_result_dirty()
+      picker:focus()
 
       vim.schedule(function()
         local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
