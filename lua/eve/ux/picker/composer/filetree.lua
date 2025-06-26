@@ -1411,11 +1411,18 @@ function M:__open_node__(nodeuuid)
     return
   end
 
-  ---@cast nodestate                    eve.ux.picker.view.filetree.IFileNodeState
-  local locations = nodestate.locations
-  local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.picker.view.filetree.ILocationNodeState|nil
-  local lnum = first_location and first_location.lnum or nil ---@type integer|nil
-  local col = first_location and first_location.col or nil ---@type integer|nil
+  local lnum ---@type integer|nil
+  local col ---@type integer|nil
+  if nodestate.nodetype == "location" then
+    lnum = nodestate.lnum ---@type integer|nil
+    col = nodestate.col ---@type integer|nil
+  else
+    if nodestate.locations ~= nil and #nodestate.locations > 0 then
+      local first_location = nodestate.locations[1] ---@type eve.ux.picker.view.filetree.ILocationNodeState
+      lnum = first_location.lnum ---@type integer|nil
+      col = first_location.col ---@type integer|nil
+    end
+  end
 
   local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
   if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -1544,13 +1551,26 @@ function M:__toggle_node__(nodeuuid, recursively)
   end
 
   if self._on_confirm == nil then
+    local lnum ---@type integer|nil
+    local col ---@type integer|nil
+    if nodestate.nodetype == "location" then
+      lnum = nodestate.lnum ---@type integer|nil
+      col = nodestate.col ---@type integer|nil
+    else
+      if nodestate.locations ~= nil and #nodestate.locations > 0 then
+        local first_location = nodestate.locations[1] ---@type eve.ux.picker.view.filetree.ILocationNodeState
+        lnum = first_location.lnum ---@type integer|nil
+        col = first_location.col ---@type integer|nil
+      end
+    end
+
     local winnr_sourcefile = self:__focus_source_win__() ---@type integer|nil
     if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
       vim.api.nvim_set_current_win(winnr_sourcefile)
     end
 
     composer:close()
-    eve.win.open_filepath(winnr_sourcefile, node.data.filepath, nodestate.lnum, nodestate.col)
+    eve.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
   end
 end
 
