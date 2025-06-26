@@ -30,6 +30,9 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 ---@class eve.ux.searcher.view.filetree.ILocationNodeState : eve.ux.view.tree.ILeafLocationState
 ---@field public lnum                   integer
 ---@field public col                    ?integer
+---@field public col_end                ?integer
+---@field public text                   ?string
+---@field public highlights             ?std.t.IHighlightInline[]
 
 ---@class eve.ux.searcher.view.filetree.IListviewRendererContext : eve.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               std.collection.filetree.INode
@@ -632,10 +635,26 @@ end
 
 ---@type eve.ux.searcher.view.filetree.IListviewLocationRenderer
 function M.default_render_listview_location(_, _, _, locationstate)
-  local lnum = locationstate.lnum
-  local col = locationstate.col
+  local lnum = locationstate.lnum ---@type integer
+  local col = locationstate.col ---@type integer|nil
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
-  local highlights = { { coll = 0, colr = #text, hlname = "f_ft_position" } } ---@type std.t.IHighlightInline[]
+  local offset = #text ---@type integer
+
+  ---@type std.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = offset, hlname = "f_ft_position" },
+    { coll = offset, colr = -1, hlname = "f_ft_text" },
+  }
+
+  if locationstate.text ~= nil then
+    text = text .. " " .. locationstate.text ---@type string
+  end
+  if locationstate.highlights ~= nil then
+    for _, hl in ipairs(locationstate.highlights) do
+      highlights[#highlights + 1] =
+        { coll = offset + 1 + hl.coll, colr = hl.colr < 0 and -1 or offset + 1 + hl.colr, hlname = hl.hlname }
+    end
+  end
   return { text = text, highlights = highlights }
 end
 
@@ -714,10 +733,26 @@ end
 
 ---@type eve.ux.searcher.view.filetree.ITreeviewLocationRenderer
 function M.default_render_treeview_location(_, _, _, locationstate)
-  local lnum = locationstate.lnum
-  local col = locationstate.col
+  local lnum = locationstate.lnum ---@type integer
+  local col = locationstate.col ---@type integer|nil
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
-  local highlights = { { coll = 0, colr = #text, hlname = "f_ft_position" } } ---@type std.t.IHighlightInline[]
+  local offset = #text ---@type integer
+
+  ---@type std.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = offset, hlname = "f_ft_position" },
+    { coll = offset, colr = -1, hlname = "f_ft_text" },
+  }
+
+  if locationstate.text ~= nil then
+    text = text .. " " .. locationstate.text ---@type string
+  end
+  if locationstate.highlights ~= nil then
+    for _, hl in ipairs(locationstate.highlights) do
+      highlights[#highlights + 1] =
+        { coll = offset + 1 + hl.coll, colr = hl.colr < 0 and -1 or offset + 1 + hl.colr, hlname = hl.hlname }
+    end
+  end
   return { text = text, highlights = highlights }
 end
 
