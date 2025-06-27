@@ -13,6 +13,10 @@ brew update
 printf "\n\e[34m  [setup homebrew] installing fnm...\e[0m\n"
 brew install fnm
 
+### Install python
+printf "\n\e[34m  [setup homebrew] installing uv...\e[0m\n"
+brew install uv
+
 ### Install nvim
 printf "\n\e[34m  [setup homebrew] installing nvim...\e[0m\n"
 brew install nvim fd git-delta lazygit ripgrep
