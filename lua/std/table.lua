@@ -114,4 +114,55 @@ function M.truncate_inline(elements, max_length)
   end
 end
 
+--- Stable sort implementation using merge sort algorithm
+--- Sorts the table in-place while maintaining stability (equal elements keep their relative order)
+--- Memory-optimized version that reuses a single auxiliary array
+---@generic T
+---@param list                          T[]
+---@param cmp                           fun(a: T, b: T): integer
+---@return nil
+function M.stable_sort(list, cmp)
+  local n = #list
+  if n <= 1 then
+    return
+  end
+
+  local aux = {}
+  local function merge(left, mid, right)
+    for i = left, mid do
+      aux[i] = list[i]
+    end
+
+    local i, j, k = left, mid + 1, left
+
+    while i <= mid and j <= right do
+      if cmp(list[j], aux[i]) >= 0 then
+        list[k] = aux[i]
+        i = i + 1
+      else
+        list[k] = list[j]
+        j = j + 1
+      end
+      k = k + 1
+    end
+
+    while i <= mid do
+      list[k] = aux[i]
+      i = i + 1
+      k = k + 1
+    end
+  end
+
+  local function merge_sort_recursive(left, right)
+    if left < right then
+      local mid = math.floor((left + right) / 2)
+      merge_sort_recursive(left, mid)
+      merge_sort_recursive(mid + 1, right)
+      merge(left, mid, right)
+    end
+  end
+
+  merge_sort_recursive(1, n)
+end
+
 return M
