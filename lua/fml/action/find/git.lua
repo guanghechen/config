@@ -1,4 +1,5 @@
 local name = "fml.action.find.git" ---@type string
+local title = "Find Git" ---@type string
 
 local finder_input = eve.context.select.find_git.input
 local finder_input_history = std.InputHistory.new({
@@ -37,7 +38,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
   permanent = true,
-  title = "Find git (not committed)",
+  title = string.format("%s (not committed)", title),
   height = 0.90,
   width = 120,
   preview = false,

@@ -1,4 +1,5 @@
 local name = "fml.action.find.explorer" ---@type string
+local title = "Find Explorer" ---@type string
 
 ---@class fml.action.find.explorer.IDirItem
 ---@field public items                  fml.action.find.explorer.IFileItem[]
@@ -429,7 +430,7 @@ local function preview_render(composer, bufnr)
     local result = {
       cursorline = false,
       number = false,
-      title = "File Explorer",
+      title = title,
       whitespaces = true,
       wrap = false,
     }
@@ -443,7 +444,7 @@ local function preview_render(composer, bufnr)
     local result = {
       cursorline = false,
       number = false,
-      title = "File Explorer",
+      title = title,
       whitespaces = true,
       wrap = false,
     }
@@ -476,12 +477,11 @@ local function preview_render(composer, bufnr)
         vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
       end
 
-      local title = std.path.relative(std.path.cwd(), fileitem.path, false) ---@type string
       ---@type eve.ux.picker.preview.IDrawResult
       local result = {
         cursorline = true,
         number = true,
-        title = title,
+        title = std.path.relative(std.path.cwd(), fileitem.path, false),
         whitespaces = true,
         wrap = false,
       }
@@ -583,16 +583,16 @@ local function preview_render(composer, bufnr)
       end
     end
 
-    local title = std.path.relative(std.path.cwd(), fileitem.path, false) ---@type string
-    if #title < 1 or string.sub(title, 1, 1) == "." then
-      title = std.path.normalize(fileitem.path)
+    local result_title = std.path.relative(std.path.cwd(), fileitem.path, false) ---@type string
+    if #result_title < 1 or string.sub(result_title, 1, 1) == "." then
+      result_title = std.path.normalize(fileitem.path)
     end
 
     ---@type eve.ux.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
-      title = title,
+      title = result_title,
       whitespaces = true,
       wrap = false,
     }

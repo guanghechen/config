@@ -1,4 +1,6 @@
 local name = "fml.action.find.pinned_files" ---@type string
+local title = "Find Pinned Files" ---@type string
+
 local finder_input = std.Observable.from_value("")
 local finder_input_history = std.InputHistory.new({
   name = name,
@@ -24,7 +26,7 @@ local picker = eve.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
   permanent = true,
-  title = "Find pinned files",
+  title = title,
   height = 0.9,
   width = 0.9,
 

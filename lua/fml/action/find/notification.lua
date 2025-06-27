@@ -1,4 +1,5 @@
 local name = "fml.action.find.notification" ---@type string
+local title = "Find Notifications" ---@type string
 
 ---@class fml.action.find.notification.IItemData
 ---@field public task                   eve.builtin.notifier.ITask
@@ -51,7 +52,7 @@ local picker ---@type eve.ux.picker.ListComposer
 picker = eve.ux.picker.ListComposer.new({
   name = name,
   permanent = true,
-  title = "Find notifications",
+  title = title,
   height = 0.9,
   width = 0.9,
 

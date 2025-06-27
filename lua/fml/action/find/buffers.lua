@@ -1,5 +1,6 @@
 ---@diagnostic disable: invisible
 local name = "fml.action.find.buffers" ---@type string
+local title = "Find Buffers" ---@type string
 
 ---@class fml.action.find.buffers.IItem : eve.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.buffers.IItemData
@@ -135,7 +136,7 @@ local picker ---@type eve.ux.picker.ListComposer
 picker = eve.ux.picker.ListComposer.new({
   name = name,
   permanent = true,
-  title = "Find buffers",
+  title = title,
   height = 0.8,
   width = 120,
 

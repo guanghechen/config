@@ -1,4 +1,5 @@
 local name = "fml.action.find.files" ---@type string
+local title = "Find Files" ---@type string
 local o_rootpath = std.Observable.from_value(std.path.cwd())
 
 local o_flag_exclude = eve.context.select.find_file.flag_exclude
@@ -38,7 +39,7 @@ local function edit_setting(picker)
     .new({
       position = "center",
       width = 100,
-      title = "Edit Configuration (find files)",
+      title = string.format("Edit Configuration (%s)", title),
       validate = function(raw_data)
         if type(raw_data) ~= "table" then
           return "Invalid find_files configuration, expect an object."
@@ -127,7 +128,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
   permanent = true,
-  title = "Find files",
+  title = title,
   height = 0.90,
   width = 0.90,
 
@@ -214,12 +215,12 @@ std.fn.observe({ o_rootpath }, function()
   local workspace = std.path.workspace() ---@type string
   local cwd = std.path.cwd() ---@type string
   if rootpath == workspace then
-    picker.finder:set_title("find files (workspace)")
+    picker.finder:set_title(string.format("%s (workspace)", title))
   elseif rootpath == cwd then
-    picker.finder:set_title("find files (cwd)")
+    picker.finder:set_title(string.format("%s (cwd)", title))
   else
     local relative_path = std.path.is_under(workspace, rootpath) and std.path.relative(cwd, rootpath, false) or rootpath ---@type string
-    picker.finder:set_title(string.format("find files (%s)", relative_path))
+    picker.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)
 

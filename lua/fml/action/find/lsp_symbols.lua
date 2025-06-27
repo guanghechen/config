@@ -1,5 +1,6 @@
 ---@diagnostic disable: invisible
 local name = "fml.action.find.lsp_symbols" ---@type string
+local title = "LSP Symbols" ---@type string
 
 ---@class fml.action.find.lsp_symbols.ISymbolData
 ---@field public name                   string
@@ -187,7 +188,7 @@ local function fetch_symbols(tree, callback, picker)
       end
 
       for i, symbol in ipairs(symbol_list) do
-        local name = symbol.name or "Unknown"
+        local symbolname = symbol.name or "Unknown"
         local kind = symbol.kind or 1
         local kind_name = vim.lsp.protocol.SymbolKind[kind] or "Unknown"
 
@@ -209,7 +210,7 @@ local function fetch_symbols(tree, callback, picker)
         local symbol_uuid = path_prefix
           .. tostring(i)
           .. ":"
-          .. name
+          .. symbolname
           .. "@"
           .. tostring(line)
           .. ":"
@@ -217,28 +218,26 @@ local function fetch_symbols(tree, callback, picker)
 
         -- Create symbol data compatible with existing renderers
         local symbol_data = {
-          name = name,
+          name = symbolname,
           kind = kind,
           kind_name = kind_name,
           range = {
             start = { line = line, character = character },
             ["end"] = { line = range["end"].line + 1, character = range["end"].character },
           },
-          selection_range = symbol.selectionRange
-              and {
-                start = {
-                  line = symbol.selectionRange.start.line + 1,
-                  character = symbol.selectionRange.start.character,
-                },
-                ["end"] = {
-                  line = symbol.selectionRange["end"].line + 1,
-                  character = symbol.selectionRange["end"].character,
-                },
-              }
-            or {
-              start = { line = line, character = character },
-              ["end"] = { line = range["end"].line + 1, character = range["end"].character },
+          selection_range = symbol.selectionRange and {
+            start = {
+              line = symbol.selectionRange.start.line + 1,
+              character = symbol.selectionRange.start.character,
             },
+            ["end"] = {
+              line = symbol.selectionRange["end"].line + 1,
+              character = symbol.selectionRange["end"].character,
+            },
+          } or {
+            start = { line = line, character = character },
+            ["end"] = { line = range["end"].line + 1, character = range["end"].character },
+          },
           detail = symbol.detail,
           icon = eve.icon.kind[kind_name] or "󰅩",
           icon_hl = "f_lsp_symbol_icon_" .. kind_name,
@@ -372,9 +371,9 @@ end
 local function render_listview_leaf(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   local icon = symbol_data.icon or "●"
-  local name = symbol_data.name or "Unknown"
+  local symbolname = symbol_data.name or "Unknown"
 
-  local text = string.format("%s %s", icon, name)
+  local text = string.format("%s %s", icon, symbolname)
   local icon_end = #icon + 1
 
   local highlights = {
@@ -401,9 +400,9 @@ end
 local function render_treeview_container(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   local icon = symbol_data.icon or "●"
-  local name = symbol_data.name or "Unknown"
+  local symbolname = symbol_data.name or "Unknown"
 
-  local text = string.format("%s %s", icon, name)
+  local text = string.format("%s %s", icon, symbolname)
   local icon_end = #icon + 1
 
   local highlights = {
@@ -418,9 +417,9 @@ end
 local function render_treeview_leaf(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   local icon = symbol_data.icon or "●"
-  local name = symbol_data.name or "Unknown"
+  local symbolname = symbol_data.name or "Unknown"
 
-  local text = string.format("%s %s", icon, name)
+  local text = string.format("%s %s", icon, symbolname)
   local icon_end = #icon + 1
 
   local highlights = {
@@ -447,7 +446,7 @@ local picker ---@type eve.ux.picker.TreeComposer
 picker = eve.ux.picker.TreeComposer.new({
   name = name,
   permanent = true,
-  title = "LSP Symbols",
+  title = title,
   height = 0.9,
   width = 120,
   node_sorter = function(a, b)

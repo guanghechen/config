@@ -1,4 +1,5 @@
 local name = "fml.action.find.vim_options" ---@type string
+local title = "Find Vim Options" ---@type string
 
 ---@class fml.action.find.vim_options.IItemData
 ---@field public name                   string
@@ -30,8 +31,8 @@ local function fetch_data()
 
   local items = {} ---@type fml.action.find.vim_options.IItem[]
 
-  for name, info in pairs(vim.api.nvim_get_all_options_info()) do
-    local ok, value = pcall(vim.api.nvim_get_option_value, name, {})
+  for option_name, info in pairs(vim.api.nvim_get_all_options_info()) do
+    local ok, value = pcall(vim.api.nvim_get_option_value, option_name, {})
     if not ok or value == nil then
       value = info.default
     end
@@ -53,7 +54,7 @@ local function fetch_data()
 
     ---@type fml.action.find.vim_options.IItemData
     local data = {
-      name = name,
+      name = option_name,
       scope = info.scope,
       type = info.type,
       value = value,
@@ -62,7 +63,7 @@ local function fetch_data()
 
     ---@type fml.action.find.vim_options.IItem
     local item = {
-      uuid = name,
+      uuid = option_name,
       text = text_for_search,
       text_lower = text_for_search:lower(),
       highlights = highlights,
@@ -82,7 +83,7 @@ end
 local picker = eve.ux.picker.ListComposer.new({
   name = name,
   permanent = true,
-  title = "Find Vim Options",
+  title = title,
   height = 0.9,
   width = 120,
 

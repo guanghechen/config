@@ -1,5 +1,6 @@
 ---@diagnostic disable: invisible
 local name = "fml.action.find.highlights" ---@type string
+local title = "Find Highlights" ---@type string
 
 ---@class fml.action.find.highlights.IItem : eve.ux.picker.composer.list.IItem
 ---@field public data                        fml.action.find.highlights.IItemData
@@ -60,7 +61,7 @@ local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.
 local picker = eve.ux.picker.ListComposer.new({
   name = name,
   permanent = true,
-  title = "Find Highlights",
+  title = title,
   height = 0.9,
   width = 0.9,
 
