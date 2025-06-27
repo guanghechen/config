@@ -1,5 +1,5 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "fml.action.find.lsp_symbols" ---@type string
+local name = "fml.action.find.lsp_symbols" ---@type string
 
 ---@class fml.action.find.lsp_symbols.ISymbolData
 ---@field public name                   string
@@ -144,7 +144,7 @@ local function fetch_symbols(tree, callback, picker)
       end
 
       std.reporter.error({
-        from = __module_name__,
+        from = name,
         subject = "fetch_symbols",
         message = "Failed to request document symbols",
         details = { err = err, result = symbols, bufnr = bufnr },
@@ -445,7 +445,7 @@ end
 
 local picker ---@type eve.ux.picker.TreeComposer
 picker = eve.ux.picker.TreeComposer.new({
-  name = __module_name__,
+  name = name,
   permanent = true,
   title = "LSP Symbols",
   height = 0.9,
@@ -497,7 +497,7 @@ picker = eve.ux.picker.TreeComposer.new({
         -- Ensure we have a valid source file
         if not filepath_sourcefile or filepath_sourcefile == "" then
           std.reporter.warn({
-            from = __module_name__,
+            from = name,
             subject = "on_confirm",
             message = "No source file available for navigation",
           })
@@ -508,7 +508,7 @@ picker = eve.ux.picker.TreeComposer.new({
         local target_bufnr = eve.buf.loadfile(filepath_sourcefile)
         if not target_bufnr or not vim.api.nvim_buf_is_valid(target_bufnr) then
           std.reporter.error({
-            from = __module_name__,
+            from = name,
             subject = "on_confirm",
             message = "Failed to load source file buffer",
             details = { filepath = filepath_sourcefile },

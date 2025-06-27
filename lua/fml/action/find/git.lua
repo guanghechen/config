@@ -1,9 +1,5 @@
-local __module_name__ = "fml.action.find.git" ---@type string
+local name = "fml.action.find.git" ---@type string
 
----@class fml.action.find
-local M = {}
-
-local name = __module_name__ ---@type string
 local finder_input = eve.context.select.find_git.input
 local finder_input_history = std.InputHistory.new({
   name = name,
@@ -69,11 +65,14 @@ picker = eve.ux.picker.FiletreeComposer.new({
   end,
 })
 
+---@class fml.action.find
+local M = {}
+
 ---@return nil
 function M.find_git_not_committed()
   if not std.path.is_repo_git() then
     std.reporter.error({
-      from = __module_name__,
+      from = name,
       subject = "find_git_not_committed",
       message = "Not a git repository",
     })

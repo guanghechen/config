@@ -1,4 +1,4 @@
-local name = "fml.action.find" ---@type string
+local name = "fml.action.find.files" ---@type string
 local o_rootpath = std.Observable.from_value(std.path.cwd())
 
 local o_flag_exclude = eve.context.select.find_file.flag_exclude

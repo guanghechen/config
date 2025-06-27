@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.term" ---@type string
+local __module_name__ = "fml.action.term.toggle" ---@type string
 
 local terminal_map = {} ---@type table<string, eve.ux.ITerminal>
 

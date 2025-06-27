@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.buf" ---@type string
+local __module_name__ = "fml.action.buf.close" ---@type string
 
 ---@param tabnr                         integer
 ---@param bufnrs                        integer[]

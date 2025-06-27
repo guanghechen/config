@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.code" ---@type string
+local __module_name__ = "fml.action.code.run" ---@type string
 
 local code_runner_terminals = {} ---@type table<string, eve.ux.ITerminal>
 

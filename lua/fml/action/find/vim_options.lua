@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.find.vim_options" ---@type string
+local name = "fml.action.find.vim_options" ---@type string
 
 ---@class fml.action.find.vim_options.IItemData
 ---@field public name                   string
@@ -80,7 +80,7 @@ local function fetch_data()
 end
 
 local picker = eve.ux.picker.ListComposer.new({
-  name = __module_name__,
+  name = name,
   permanent = true,
   title = "Find Vim Options",
   height = 0.9,

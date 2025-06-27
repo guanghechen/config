@@ -1,9 +1,9 @@
-local __module_name__ = "fml.action.git" ---@type string
+local __module_name__ = "fml.action.git.browse" ---@type string
 
 ---@alias fml.action.git.browse.TargetScope
----|"branch"
----|"file"
----|"repo"
+---| "branch"
+---| "file"
+---| "repo"
 
 ---@class fml.action.git.browse.IRemote
 ---@field public name                   string

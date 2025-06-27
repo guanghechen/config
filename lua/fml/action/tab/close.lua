@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.tab" ---@type string
+local __module_name__ = "fml.action.tab.close" ---@type string
 
 ---@class fml.action.tab
 local M = {}

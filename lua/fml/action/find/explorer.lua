@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.find.explorer" ---@type string
+local name = "fml.action.find.explorer" ---@type string
 
 ---@class fml.action.find.explorer.IDirItem
 ---@field public items                  fml.action.find.explorer.IFileItem[]
@@ -614,7 +614,7 @@ end
 
 local picker ---@type eve.ux.picker.ListComposer
 picker = eve.ux.picker.ListComposer.new({
-  name = __module_name__,
+  name = name,
   autosort = false,
   permanent = true,
   title = gen_title(),
