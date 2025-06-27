@@ -20,56 +20,63 @@ local AI_PROVIDER_MAP = {
   deepseek = "deepseek",
 }
 
-local o_flag_foldempty = std.Observable.from_value(true)
-local o_flag_fuzzy = eve.context.select.select_avante.flag_fuzzy
-local o_flag_regex = eve.context.select.select_avante.flag_regex
-local o_flag_case_sensitive = eve.context.select.select_avante.flag_case_sensitive
-local o_flag_selected = eve.context.select.select_avante.flag_selected
-local o_flag_viewtype = std.Observable.from_value("tree")
-local o_input = eve.context.select.select_avante.input
-local o_input_history = eve.context.select.select_avante.input_history
-
 local _on_choice = std.fn.noop ---@type fun(filepaths: string[] | nil): nil
 local _filepaths = {} ---@type string[]
 local _winnr = nil ---@type integer|nil
 local _confirmed = false ---@type boolean
+local _picker ---@type eve.ux.picker.FiletreeComposer|nil
 
-local picker = eve.ux.picker.FiletreeComposer.new({
-  name = string.format("%s -- %s", __module_name__, "file_selector"),
-  permanent = true,
-  title = "(Avante) Add a file",
-  preview = false,
-  width = 100,
+---@return eve.ux.picker.FiletreeComposer
+local function get_picker()
+  if _picker == nil then
+    local o_flag_foldempty = std.Observable.from_value(true)
+    local o_flag_fuzzy = eve.context.select.select_avante.flag_fuzzy
+    local o_flag_regex = eve.context.select.select_avante.flag_regex
+    local o_flag_case_sensitive = eve.context.select.select_avante.flag_case_sensitive
+    local o_flag_selected = eve.context.select.select_avante.flag_selected
+    local o_flag_viewtype = std.Observable.from_value("tree")
+    local o_input = eve.context.select.select_avante.input
+    local o_input_history = eve.context.select.select_avante.input_history
 
-  flag_fuzzy = o_flag_fuzzy,
-  flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_case_sensitive,
-  flag_selected = o_flag_selected,
-  finder_input = o_input,
-  finder_input_history = o_input_history,
-  frecency = eve.context.frecency.files,
-  flag_foldempty = o_flag_foldempty,
-  flag_viewtype = o_flag_viewtype,
-  on_confirm = function(self, selected_filepaths)
-    _confirmed = true
-    _on_choice(selected_filepaths)
+    _picker = eve.ux.picker.FiletreeComposer.new({
+      name = string.format("%s -- %s", __module_name__, "file_selector"),
+      permanent = true,
+      title = "(Avante) Add a file",
+      preview = false,
+      width = 100,
 
-    self:close()
-    if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
-      vim.api.nvim_tabpage_set_win(0, _winnr)
-    end
-  end,
-  on_closed = function()
-    if not _confirmed then
-      _confirmed = true
-      _on_choice(nil)
-    end
+      flag_fuzzy = o_flag_fuzzy,
+      flag_regex = o_flag_regex,
+      flag_sensitive = o_flag_case_sensitive,
+      flag_selected = o_flag_selected,
+      finder_input = o_input,
+      finder_input_history = o_input_history,
+      frecency = eve.context.frecency.files,
+      flag_foldempty = o_flag_foldempty,
+      flag_viewtype = o_flag_viewtype,
+      on_confirm = function(self, selected_filepaths)
+        _confirmed = true
+        _on_choice(selected_filepaths)
 
-    if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
-      vim.api.nvim_tabpage_set_win(0, _winnr)
-    end
-  end,
-})
+        self:close()
+        if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
+          vim.api.nvim_tabpage_set_win(0, _winnr)
+        end
+      end,
+      on_closed = function()
+        if not _confirmed then
+          _confirmed = true
+          _on_choice(nil)
+        end
+
+        if _winnr ~= nil and vim.api.nvim_win_is_valid(_winnr) then
+          vim.api.nvim_tabpage_set_win(0, _winnr)
+        end
+      end,
+    })
+  end
+  return _picker
+end
 
 ---@param params                      ghc.plugins.avante.file_selector.IParams
 ---@return nil
@@ -88,6 +95,7 @@ local function file_selector_provider(params)
   _confirmed = false
   _winnr = vim.api.nvim_get_current_win()
 
+  local picker = get_picker() ---@type eve.ux.picker.FiletreeComposer
   picker:reset_filepaths(std.path.cwd(), _filepaths, false)
   picker:focus()
 end
