@@ -32,7 +32,6 @@ local picker = eve.ux.picker.FiletreeComposer.new({
 
   finder_input = finder_input,
   finder_input_history = finder_input_history,
-  finder_multiline = false,
 
   flag_foldempty = o_flag_foldempty,
   flag_fuzzy = o_flag_fuzzy,
