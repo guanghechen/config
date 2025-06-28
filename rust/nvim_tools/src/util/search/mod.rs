@@ -1,3 +1,3 @@
-mod search_files;
+mod files;
 
-pub use search_files::*;
+pub use files::*;

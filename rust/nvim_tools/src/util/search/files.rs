@@ -18,18 +18,18 @@ pub struct SearchFileMatch {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchFilesSucceedResult {
+pub struct ISearchInFilesSucceedResult {
     #[serde(skip_serializing)]
     pub cmd: String,
     #[serde(skip_serializing)]
     pub stdout: String,
 
-    pub items: HashMap<String, SearchFileMatch>,
     pub elapsed_time: String,
+    pub items: HashMap<String, SearchFileMatch>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchFilesFailedResult {
+pub struct ISearchInFilesFailedResult {
     #[serde(skip_serializing)]
     pub cmd: String,
 
@@ -38,7 +38,7 @@ pub struct SearchFilesFailedResult {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchFilesOptions {
+pub struct ISearchInFilesParams {
     pub cwd: Option<String>,
     pub max_matches: Option<i32>,
     pub flag_case_sensitive: bool,
@@ -52,18 +52,18 @@ pub struct SearchFilesOptions {
     pub specified_filepath: Option<String>,
 }
 
-pub fn search_files(
-    options: &SearchFilesOptions,
-) -> Result<SearchFilesSucceedResult, SearchFilesFailedResult> {
-    if options.search_pattern.is_empty() {
-        return Ok(SearchFilesSucceedResult {
+pub fn search_in_files(
+    params: &ISearchInFilesParams,
+) -> Result<ISearchInFilesSucceedResult, ISearchInFilesFailedResult> {
+    if params.search_pattern.is_empty() {
+        return Ok(ISearchInFilesSucceedResult {
             stdout: "".to_string(),
             cmd: "".to_string(),
             elapsed_time: "0s".to_string(),
             items: HashMap::new(),
         });
     }
-    let max_matches: u32 = match options.max_matches {
+    let max_matches: u32 = match params.max_matches {
         Some(value) => {
             if value < 0 {
                 u32::MAX
@@ -73,20 +73,20 @@ pub fn search_files(
         }
         None => u32::MAX,
     };
-    let flag_case_sensitive: bool = options.flag_case_sensitive;
-    let flag_gitignore: bool = options.flag_gitignore;
-    let flag_regex: bool = options.flag_regex;
-    let search_pattern: &String = &options.search_pattern;
-    let search_paths: Vec<String> = string::parse_comma_list(&options.search_paths);
-    let include_patterns: Vec<String> = string::parse_comma_list(&options.include_patterns);
-    let exclude_patterns: Vec<String> = string::parse_comma_list(&options.exclude_patterns);
+    let flag_case_sensitive: bool = params.flag_case_sensitive;
+    let flag_gitignore: bool = params.flag_gitignore;
+    let flag_regex: bool = params.flag_regex;
+    let search_pattern: &String = &params.search_pattern;
+    let search_paths: Vec<String> = string::parse_comma_list(&params.search_paths);
+    let include_patterns: Vec<String> = string::parse_comma_list(&params.include_patterns);
+    let exclude_patterns: Vec<String> = string::parse_comma_list(&params.exclude_patterns);
 
     let line_separator_regex = Regex::new(r"\s*(?:\r|\r\n|\n)\s*").unwrap();
     let elapsed_time: String;
 
     let (cmd, output) = {
         let mut cmd = Command::new("rg");
-        if let Some(cwd) = &options.cwd {
+        if let Some(cwd) = &params.cwd {
             cmd.current_dir(cwd);
         };
 
@@ -106,7 +106,7 @@ pub fn search_files(
             cmd.arg("--no-ignore-vcs");
         }
 
-        if let Some(max_filesize) = &options.max_filesize {
+        if let Some(max_filesize) = &params.max_filesize {
             if !max_filesize.is_empty() {
                 cmd.args(["--max-filesize", max_filesize]);
             }
@@ -133,7 +133,7 @@ pub fn search_files(
         }
 
         let mut search_in_single_file: bool = false;
-        if let Some(specified_filepath) = &options.specified_filepath {
+        if let Some(specified_filepath) = &params.specified_filepath {
             if !specified_filepath.is_empty() {
                 search_in_single_file = true;
                 cmd.arg(specified_filepath);
@@ -161,7 +161,7 @@ pub fn search_files(
     if output.status.success() {
         let mut matches_count: u32 = 0;
         let mut result_elapsed_time: String = "0s".to_string();
-        let mut file_matches: HashMap<String, SearchFileMatch> = HashMap::new();
+        let mut filematches: HashMap<String, SearchFileMatch> = HashMap::new();
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let parts = line_separator_regex
@@ -172,12 +172,12 @@ pub fn search_files(
                 break;
             }
 
-            if let Ok(event) = serde_json::from_str::<ripgrep::ResultItem>(part) {
+            if let Ok(event) = serde_json::from_str::<ripgrep::IRipgrepResult>(part) {
                 match event.data {
-                    ripgrep::ResultItemData::Begin { .. } => {}
-                    ripgrep::ResultItemData::Match {
+                    ripgrep::IRipgrepResultData::Begin { .. } => {}
+                    ripgrep::IRipgrepResultData::Match {
                         path,
-                        lines: ripgrep::Lines { text, .. },
+                        lines: ripgrep::IRipgrepResultMatchedLines { text, .. },
                         line_number: lnum,
                         absolute_offset: offset,
                         submatches,
@@ -189,10 +189,10 @@ pub fn search_files(
                         #[cfg(not(windows))]
                         let filepath: String = path.text.to_string();
 
-                        let file_item: &mut SearchFileMatch = file_matches
+                        let filematch: &mut SearchFileMatch = filematches
                             .entry(filepath)
                             .or_insert(SearchFileMatch { matches: vec![] });
-                        if file_item.matches.is_empty() {
+                        if filematch.matches.is_empty() {
                             matches_count += 1;
                         }
 
@@ -207,39 +207,39 @@ pub fn search_files(
                                 end: submatch.end,
                             });
                         }
-                        file_item.matches.push(SearchBlockMatch {
+                        filematch.matches.push(SearchBlockMatch {
                             lnum,
                             text,
                             offset,
                             matches,
                         });
                     }
-                    ripgrep::ResultItemData::End { .. } => {}
-                    ripgrep::ResultItemData::Summary { elapsed_total, .. } => {
+                    ripgrep::IRipgrepResultData::End { .. } => {}
+                    ripgrep::IRipgrepResultData::Summary { elapsed_total, .. } => {
                         result_elapsed_time = elapsed_total.human;
                     }
                 }
             }
         }
 
-        let result: SearchFilesSucceedResult = SearchFilesSucceedResult {
+        let result: ISearchInFilesSucceedResult = ISearchInFilesSucceedResult {
             cmd,
             stdout: stdout.to_string(),
             elapsed_time: result_elapsed_time,
-            items: file_matches,
+            items: filematches,
         };
         Ok(result)
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
-            Ok(SearchFilesSucceedResult {
+            Ok(ISearchInFilesSucceedResult {
                 cmd,
                 stdout: "".to_string(),
                 elapsed_time: format!("{}s", elapsed_time),
                 items: HashMap::new(),
             })
         } else {
-            Err(SearchFilesFailedResult {
+            Err(ISearchInFilesFailedResult {
                 cmd,
                 elapsed_time: format!("{}s", elapsed_time),
                 error: stderr.to_string(),

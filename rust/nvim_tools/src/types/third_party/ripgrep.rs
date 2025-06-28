@@ -1,75 +1,64 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ResultItem {
+pub struct IRipgrepResult {
     #[serde(rename = "type")]
     pub category: String,
-    pub data: ResultItemData,
+    pub data: IRipgrepResultData,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
-pub enum ResultItemData {
+pub enum IRipgrepResultData {
     Match {
-        path: Path,
-        lines: Lines,
+        path: IRipgrepResultMatchedPath,
+        lines: IRipgrepResultMatchedLines,
         line_number: usize,
         absolute_offset: usize,
-        submatches: Vec<SubMatch>,
+        submatches: Vec<IRipgrepResultSubmatch>,
     },
     End {
-        path: Path,
+        path: IRipgrepResultMatchedPath,
         binary_offset: Option<usize>,
-        stats: Stats,
+        stats: IRipgrepSummaryStats,
     },
     Begin {
-        path: Path,
+        path: IRipgrepResultMatchedPath,
     },
     Summary {
-        elapsed_total: Elapsed,
-        stats: SummaryStats,
+        elapsed_total: IRipgrepSummaryElapsed,
+        stats: IRipgrepSummaryStats,
     },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Path {
+pub struct IRipgrepResultMatchedPath {
     pub text: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Lines {
+pub struct IRipgrepResultMatchedLines {
     pub text: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct SubMatch {
+pub struct IRipgrepResultSubmatch {
     #[serde(rename = "match")]
-    pub match_text: MatchText,
+    pub detail: IRipgrepResultSubmatchDetail,
     pub start: usize,
     pub end: usize,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MatchText {
+pub struct IRipgrepResultSubmatchDetail {
     pub text: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Stats {
-    pub elapsed: Elapsed,
-    pub searches: usize,
-    pub searches_with_match: usize,
-    pub bytes_searched: usize,
-    pub bytes_printed: usize,
-    pub matched_lines: usize,
-    pub matches: usize,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SummaryStats {
+pub struct IRipgrepSummaryStats {
     pub bytes_printed: usize,
     pub bytes_searched: usize,
-    pub elapsed: Elapsed,
+    pub elapsed: IRipgrepSummaryElapsed,
     pub matched_lines: usize,
     pub matches: usize,
     pub searches: usize,
@@ -77,8 +66,8 @@ pub struct SummaryStats {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Elapsed {
-    pub secs: usize,
-    pub nanos: usize,
+pub struct IRipgrepSummaryElapsed {
     pub human: String,
+    pub nanos: usize,
+    pub secs: usize,
 }
