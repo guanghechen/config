@@ -86,6 +86,11 @@ end
 ---@return nil
 function M.setup_patches()
   table.unpack = table.unpack or unpack --- table.unpack is introduced in Lua 5.2
+  table.clear = table.clear or function(map)
+    for k in pairs(map) do
+      map[k] = nil
+    end
+  end
 end
 
 ---! Auto cd the directory:
