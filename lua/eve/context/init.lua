@@ -133,7 +133,7 @@ function M.load(storage, initialize)
     M.lsp.load(data_workspace.lsp)
     M.option.load(data_workspace.option)
     M.plugin.load(data_workspace.plugin)
-    M.search_file.load(data_workspace.search_select)
+    M.search_file.load(data_workspace.search_file)
     M.select.load(data_workspace.select)
   end
 
@@ -180,6 +180,7 @@ function M.save(storage)
       plugin = M.plugin.dump(),
       search = M.search_file.dump(),
       select = M.select.dump(),
+      search_file = M.search_file.dump(),
     }
     std.fs.write_json(storage.workspace, data, true)
   end
@@ -274,6 +275,10 @@ function M.watch_changes()
     M.lsp.python_venv_path,
     M.select.find_buffer_scope,
     M.select.find_file_scope,
+    M.search_file.flag_replace,
+    M.search_file.max_filesize,
+    M.search_file.max_matches,
+    M.search_file.replacement,
   }
   for _, key in ipairs(M.select.keys) do
     local select_item = M.select[key] ---@type eve.context.select.item.state
