@@ -374,7 +374,13 @@ function M.replace_file(params)
 
   local ok, data = M.resolve_fun_result(
     "replace_file",
-    nvim_tools.replace_file(filepath, search_pattern, params.replace_pattern, params.flag_regex)
+    nvim_tools.replace_file(
+      filepath,
+      search_pattern,
+      params.replace_pattern,
+      params.flag_regex,
+      params.flag_case_sensitive
+    )
   )
   return ok and data
 end
@@ -396,6 +402,7 @@ function M.replace_file_by_matches(params)
     search_pattern = search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
+    flag_case_sensitive = params.flag_case_sensitive,
     match_offsets = match_offsets,
   }
   local payload = std.json.stringify(resolved_params)
@@ -423,6 +430,7 @@ function M.replace_file_advance_by_matches(params)
     search_pattern = search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
+    flag_case_sensitive = params.flag_case_sensitive,
     match_offsets = match_offsets,
     remain_offsets = remain_offsets,
   }
@@ -448,7 +456,8 @@ function M.replace_file_preview(params)
       search_pattern,
       params.replace_pattern,
       params.keep_search_pieces,
-      params.flag_regex
+      params.flag_regex,
+      params.flag_case_sensitive
     )
   )
 
@@ -483,6 +492,7 @@ function M.replace_file_preview_by_matches(params)
     search_pattern = search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
+    flag_case_sensitive = params.flag_case_sensitive,
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
@@ -525,7 +535,8 @@ function M.replace_file_preview_advance(params)
       search_pattern,
       params.replace_pattern,
       params.keep_search_pieces,
-      params.flag_regex
+      params.flag_regex,
+      params.flag_case_sensitive
     )
   )
 
@@ -560,6 +571,7 @@ function M.replace_file_preview_advance_by_matches(params)
     search_pattern = search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
+    flag_case_sensitive = params.flag_case_sensitive,
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
@@ -599,7 +611,8 @@ function M.replace_text_preview(params)
       search_pattern,
       params.replace_pattern,
       params.keep_search_pieces,
-      params.flag_regex
+      params.flag_regex,
+      params.flag_case_sensitive
     )
   )
 
@@ -634,6 +647,7 @@ function M.replace_text_preview_by_matches(params)
     search_pattern = search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
+    flag_case_sensitive = params.flag_case_sensitive,
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }
@@ -676,7 +690,8 @@ function M.replace_text_preview_advance(params)
       search_pattern,
       params.replace_pattern,
       params.keep_search_pieces,
-      params.flag_regex
+      params.flag_regex,
+      params.flag_case_sensitive
     )
   )
 
@@ -715,6 +730,7 @@ function M.replace_text_preview_advance_by_matches(params)
     search_pattern = search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
+    flag_case_sensitive = params.flag_case_sensitive,
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
   }

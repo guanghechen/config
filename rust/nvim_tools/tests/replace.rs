@@ -17,6 +17,7 @@ fn test_replace() {
                 &search_pattern,
                 &replace_pattern,
                 true,
+                true,
                 true
             )
         );
@@ -27,6 +28,7 @@ fn test_replace() {
                 &search_pattern,
                 &replace_pattern,
                 false,
+                true,
                 true
             )
         );
@@ -46,7 +48,8 @@ fn test_replace() {
                 &search_pattern,
                 &replace_pattern,
                 true,
-                false
+                false,
+                true
             )
         );
         println!(
@@ -56,7 +59,8 @@ fn test_replace() {
                 &search_pattern,
                 &replace_pattern,
                 false,
-                false
+                false,
+                true
             )
         );
     }
@@ -117,6 +121,7 @@ fn test_replace_text_preview_with_matches() {
         replace_pattern,
         true,
         true,
+        true,
     );
     let result_without_regex = replace::replace_text_preview_advance(
         text,
@@ -124,6 +129,7 @@ fn test_replace_text_preview_with_matches() {
         replace_pattern,
         true,
         false,
+        true,
     );
 
     assert!(result_with_regex.is_ok());

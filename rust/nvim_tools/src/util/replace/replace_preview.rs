@@ -13,6 +13,7 @@ pub fn replace_file_preview(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
 ) -> Result<String, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
     let mut text = String::new();
@@ -23,6 +24,7 @@ pub fn replace_file_preview(
         replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
     )
 }
 
@@ -32,6 +34,7 @@ pub fn replace_file_preview_by_matches(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
     match_offsets: &[usize],
 ) -> Result<String, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
@@ -43,6 +46,7 @@ pub fn replace_file_preview_by_matches(
         replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
         match_offsets,
     )
 }
@@ -53,6 +57,7 @@ pub fn replace_file_preview_advance(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
 ) -> Result<ReplacePreview, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
     let mut text = String::new();
@@ -63,6 +68,7 @@ pub fn replace_file_preview_advance(
         replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
     )
 }
 
@@ -72,6 +78,7 @@ pub fn replace_file_preview_advance_by_matches(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
     match_offsets: &[usize],
 ) -> Result<ReplacePreview, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
@@ -83,6 +90,7 @@ pub fn replace_file_preview_advance_by_matches(
         replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
         match_offsets,
     )
 }
@@ -93,6 +101,7 @@ pub fn replace_text_preview(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
 ) -> Result<String, String> {
     if flag_regex {
         let result: Result<String, String> = match get_static_regex(search_pattern) {
@@ -123,8 +132,13 @@ pub fn replace_text_preview(
         return result;
     }
 
-    let match_points: Vec<usize> =
-        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+    let match_points: Vec<usize> = if flag_case_sensitive {
+        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+    } else {
+        let text_lower = text.to_lowercase();
+        let pattern_lower = search_pattern.to_lowercase();
+        find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+    };
     let len_of_search: usize = search_pattern.len();
     let mut pieces: Vec<&str> = vec![];
     let mut i: usize = 0;
@@ -149,6 +163,7 @@ pub fn replace_text_preview_by_matches(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
     match_offsets: &[usize],
 ) -> Result<String, String> {
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
@@ -186,8 +201,13 @@ pub fn replace_text_preview_by_matches(
         return result;
     }
 
-    let match_points: Vec<usize> =
-        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+    let match_points: Vec<usize> = if flag_case_sensitive {
+        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+    } else {
+        let text_lower = text.to_lowercase();
+        let pattern_lower = search_pattern.to_lowercase();
+        find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+    };
     let len_of_search: usize = search_pattern.len();
     let mut pieces: Vec<&str> = vec![];
     let mut i: usize = 0;
@@ -216,6 +236,7 @@ pub fn replace_text_preview_advance(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
 ) -> Result<ReplacePreview, String> {
     let mut matches: Vec<MatchPoint> = vec![];
     if flag_regex {
@@ -276,8 +297,13 @@ pub fn replace_text_preview_advance(
         return result;
     }
 
-    let match_points: Vec<usize> =
-        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+    let match_points: Vec<usize> = if flag_case_sensitive {
+        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+    } else {
+        let text_lower = text.to_lowercase();
+        let pattern_lower = search_pattern.to_lowercase();
+        find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+    };
     let len_of_search: usize = search_pattern.len();
     let len_of_replace: usize = replace_pattern.len();
     let mut total_search_len: usize = 0;
@@ -331,6 +357,7 @@ pub fn replace_text_preview_advance_by_matches(
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
     match_offsets: &[usize],
 ) -> Result<ReplacePreview, String> {
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
@@ -397,8 +424,13 @@ pub fn replace_text_preview_advance_by_matches(
         return result;
     }
 
-    let match_points: Vec<usize> =
-        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+    let match_points: Vec<usize> = if flag_case_sensitive {
+        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+    } else {
+        let text_lower = text.to_lowercase();
+        let pattern_lower = search_pattern.to_lowercase();
+        find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+    };
     let len_of_search: usize = search_pattern.len();
     let len_of_replace: usize = replace_pattern.len();
     let mut total_search_len: usize = 0;

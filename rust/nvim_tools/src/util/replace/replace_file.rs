@@ -19,6 +19,7 @@ pub fn replace_file(
     search_pattern: &str,
     replace_pattern: &str,
     flag_regex: bool,
+    flag_case_sensitive: bool,
 ) -> Result<bool, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
     let mut text = String::new();
@@ -42,8 +43,13 @@ pub fn replace_file(
                 .to_string();
         }
     } else {
-        let match_points: Vec<usize> =
-            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+        let match_points: Vec<usize> = if flag_case_sensitive {
+            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+        } else {
+            let text_lower = text.to_lowercase();
+            let pattern_lower = search_pattern.to_lowercase();
+            find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+        };
         let len_of_search: usize = search_pattern.len();
         let mut pieces: Vec<&str> = vec![];
         let mut i: usize = 0;
@@ -69,6 +75,7 @@ pub fn replace_file_by_matches(
     search_pattern: &str,
     replace_pattern: &str,
     flag_regex: bool,
+    flag_case_sensitive: bool,
     match_offsets: &[usize],
 ) -> Result<bool, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
@@ -101,8 +108,13 @@ pub fn replace_file_by_matches(
                 .to_string();
         }
     } else {
-        let match_points: Vec<usize> =
-            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+        let match_points: Vec<usize> = if flag_case_sensitive {
+            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+        } else {
+            let text_lower = text.to_lowercase();
+            let pattern_lower = search_pattern.to_lowercase();
+            find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+        };
         let mut pieces: Vec<&str> = vec![];
         let mut i: usize = 0;
         for m in match_points {
@@ -131,6 +143,7 @@ pub fn replace_file_advance_by_matches(
     search_pattern: &str,
     replace_pattern: &str,
     flag_regex: bool,
+    flag_case_sensitive: bool,
     match_offsets: &[usize],
     remain_offsets: &[usize],
 ) -> Result<ReplaceFileAdvanceByMatchesSucceedResult, String> {
@@ -181,8 +194,13 @@ pub fn replace_file_advance_by_matches(
                 .to_string();
         }
     } else {
-        let match_points: Vec<usize> =
-            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None);
+        let match_points: Vec<usize> = if flag_case_sensitive {
+            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+        } else {
+            let text_lower = text.to_lowercase();
+            let pattern_lower = search_pattern.to_lowercase();
+            find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+        };
         let len_of_replace: usize = replace_pattern.len();
         let delta: i64 = (len_of_replace as i64) - (len_of_search as i64);
         let mut pieces: Vec<&str> = vec![];

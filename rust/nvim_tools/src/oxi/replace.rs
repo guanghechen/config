@@ -9,6 +9,7 @@ pub struct ReplaceFileByMatchesParams {
     pub search_pattern: String,
     pub replace_pattern: String,
     pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
     pub match_offsets: Vec<usize>,
 }
 
@@ -18,6 +19,7 @@ pub struct ReplaceFileAdvanceByMatchesParams {
     pub search_pattern: String,
     pub replace_pattern: String,
     pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
     pub match_offsets: Vec<usize>,
     pub remain_offsets: Vec<usize>,
 }
@@ -29,6 +31,7 @@ pub struct ReplaceFilePreviewByMatchesParams {
     pub replace_pattern: String,
     pub keep_search_pieces: bool,
     pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
     pub match_offsets: Vec<usize>,
 }
 
@@ -39,6 +42,7 @@ pub struct ReplaceFilePreviewAdvanceByMatchesParams {
     pub replace_pattern: String,
     pub keep_search_pieces: bool,
     pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
     pub match_offsets: Vec<usize>,
 }
 
@@ -49,6 +53,7 @@ pub struct ReplaceTextPreviewByMatchesParams {
     pub replace_pattern: String,
     pub keep_search_pieces: bool,
     pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
     pub match_offsets: Vec<usize>,
 }
 
@@ -59,14 +64,15 @@ pub struct ReplaceTextPreviewAdvanceByMatchesParams {
     pub replace_pattern: String,
     pub keep_search_pieces: bool,
     pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
     pub match_offsets: Vec<usize>,
 }
 
 pub fn replace_file(
-    (filepath, search_pattern, replace_pattern, flag_regex): (String, String, String, bool),
+    (filepath, search_pattern, replace_pattern, flag_regex, flag_case_sensitive): (String, String, String, bool, bool),
 ) -> String {
     let result: FunResult<bool> =
-        match util::replace::replace_file(&filepath, &search_pattern, &replace_pattern, flag_regex)
+        match util::replace::replace_file(&filepath, &search_pattern, &replace_pattern, flag_regex, flag_case_sensitive)
         {
             Ok(succeed) => FunResult {
                 error: None,
@@ -87,6 +93,7 @@ pub fn replace_file_by_matches(params: String) -> String {
         &params.search_pattern,
         &params.replace_pattern,
         params.flag_regex,
+        params.flag_case_sensitive,
         &params.match_offsets,
     ) {
         Ok(data) => FunResult {
@@ -109,6 +116,7 @@ pub fn replace_file_advance_by_matches(params: String) -> String {
             &params.search_pattern,
             &params.replace_pattern,
             params.flag_regex,
+            params.flag_case_sensitive,
             &params.match_offsets,
             &params.remain_offsets,
         ) {
@@ -125,10 +133,11 @@ pub fn replace_file_advance_by_matches(params: String) -> String {
 }
 
 pub fn replace_file_preview(
-    (filepath, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
+    (filepath, search_pattern, replace_pattern, keep_search_pieces, flag_regex, flag_case_sensitive): (
         String,
         String,
         String,
+        bool,
         bool,
         bool,
     ),
@@ -139,6 +148,7 @@ pub fn replace_file_preview(
         &replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
     ) {
         Ok(next_text) => FunResult {
             error: None,
@@ -160,6 +170,7 @@ pub fn replace_file_preview_by_matches(params: String) -> String {
         &params.replace_pattern,
         params.keep_search_pieces,
         params.flag_regex,
+        params.flag_case_sensitive,
         &params.match_offsets,
     ) {
         Ok(next_text) => FunResult {
@@ -175,10 +186,11 @@ pub fn replace_file_preview_by_matches(params: String) -> String {
 }
 
 pub fn replace_file_preview_advance(
-    (filepath, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
+    (filepath, search_pattern, replace_pattern, keep_search_pieces, flag_regex, flag_case_sensitive): (
         String,
         String,
         String,
+        bool,
         bool,
         bool,
     ),
@@ -189,6 +201,7 @@ pub fn replace_file_preview_advance(
         &replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
     ) {
         Ok(data) => FunResult {
             error: None,
@@ -211,6 +224,7 @@ pub fn replace_file_preview_advance_by_matches(params: String) -> String {
             &params.replace_pattern,
             params.keep_search_pieces,
             params.flag_regex,
+            params.flag_case_sensitive,
             &params.match_offsets,
         ) {
             Ok(data) => FunResult {
@@ -226,10 +240,11 @@ pub fn replace_file_preview_advance_by_matches(params: String) -> String {
 }
 
 pub fn replace_text_preview(
-    (text, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
+    (text, search_pattern, replace_pattern, keep_search_pieces, flag_regex, flag_case_sensitive): (
         String,
         String,
         String,
+        bool,
         bool,
         bool,
     ),
@@ -240,6 +255,7 @@ pub fn replace_text_preview(
         &replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
     ) {
         Ok(next_text) => FunResult {
             error: None,
@@ -261,6 +277,7 @@ pub fn replace_text_preview_by_matches(params: String) -> String {
         &params.replace_pattern,
         params.keep_search_pieces,
         params.flag_regex,
+        params.flag_case_sensitive,
         &params.match_offsets,
     ) {
         Ok(next_text) => FunResult {
@@ -276,10 +293,11 @@ pub fn replace_text_preview_by_matches(params: String) -> String {
 }
 
 pub fn replace_text_preview_advance(
-    (text, search_pattern, replace_pattern, keep_search_pieces, flag_regex): (
+    (text, search_pattern, replace_pattern, keep_search_pieces, flag_regex, flag_case_sensitive): (
         String,
         String,
         String,
+        bool,
         bool,
         bool,
     ),
@@ -290,6 +308,7 @@ pub fn replace_text_preview_advance(
         &replace_pattern,
         keep_search_pieces,
         flag_regex,
+        flag_case_sensitive,
     ) {
         Ok(data) => FunResult {
             error: None,
@@ -312,6 +331,7 @@ pub fn replace_text_preview_advance_by_matches(params: String) -> String {
             &params.replace_pattern,
             params.keep_search_pieces,
             params.flag_regex,
+            params.flag_case_sensitive,
             &params.match_offsets,
         ) {
             Ok(data) => FunResult {

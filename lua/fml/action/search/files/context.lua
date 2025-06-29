@@ -71,23 +71,23 @@ local function gen_title()
   local mode = flag_replace and "Replace" or "Search" ---@type string
 
   if scope == "W" then
-    return mode .. "in files (workspace)" ---@type string
+    return mode .. " in files (workspace)" ---@type string
   elseif scope == "C" then
-    return mode .. "in files (cwd)" ---@type string
+    return mode .. " in files (cwd)" ---@type string
   elseif scope == "D" then
     local cwd = std.path.cwd() ---@type string
     local dirpath = state_cwd:snapshot() ---@type string
     if dirpath == cwd then
-      return mode .. "in files (dir: .)" ---@type string
+      return mode .. " in files (dir: .)" ---@type string
     end
 
     local relative_dirpath = std.path.relative(cwd, dirpath, false)
     if #relative_dirpath < 1 or relative_dirpath == "." then
-      return mode .. "in files (dir: .)" ---@type string
+      return mode .. " in files (dir: .)" ---@type string
     end
 
     dirpath = string.sub(relative_dirpath, 1, 1) ~= "." and relative_dirpath or dirpath
-    return mode .. "in files (dir: " .. dirpath .. ")" ---@type string
+    return mode .. " in files (dir: " .. dirpath .. ")" ---@type string
   end
 
   local cwd = std.path.cwd() ---@type string
@@ -97,10 +97,10 @@ local function gen_title()
     local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
     if std.path.is_exist_filepath(filepath) then
       local relative_filepath = std.path.relative(cwd, filepath, false)
-      return mode .. "in " .. relative_filepath ---@type string
+      return mode .. " in " .. relative_filepath ---@type string
     end
   end
-  return mode .. "in buf#" .. tostring(bufnr_sourcefile) ---@type string
+  return mode .. " in buf#" .. tostring(bufnr_sourcefile) ---@type string
 end
 
 o_scope:subscribe(
