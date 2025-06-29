@@ -225,6 +225,7 @@ end)
 
 std.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
   local rootpath = o_rootpath:snapshot() ---@type string
+  picker:mark_result_flags_dirty()
   refresh(picker, rootpath)
 end, true)
 
