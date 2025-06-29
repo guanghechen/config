@@ -18,6 +18,7 @@ local M = {}
 ---@param result_str                    string
 ---@return boolean
 ---@return any|nil
+---@return string|nil
 function M.resolve_cmd_result(subject, result_str)
   local result = std.json.parse(result_str)
   if result == nil or type(result.error) == "string" then
@@ -27,11 +28,11 @@ function M.resolve_cmd_result(subject, result_str)
       message = "Failed to run command.",
       details = (result or {}).error or result,
     })
-    return false, nil
+    return false
   end
 
   ---@cast result                       eve.builtin.oxi.ICmdResult
-  return true, result.data
+  return true, result.data, result.cmd
 end
 
 ---@param subject                          string
@@ -779,9 +780,10 @@ end
 
 ---@param params                        eve.builtin.oxi.search.IParams
 ---@return eve.builtin.oxi.search.IResult|nil
+---@return string|nil
 function M.search(params)
   local payload = std.json.stringify(params) ---@type string
-  local ok, data = M.run_cmd("search", nvim_tools.search, payload)
+  local ok, data, cmd = M.run_cmd("search", nvim_tools.search, payload)
 
   if ok and data ~= nil and data.items ~= nil then
     local items = {} ---@type table<string, eve.builtin.oxi.search.IFileMatch>
@@ -807,7 +809,7 @@ function M.search(params)
     data.item_orders = orders
   end
 
-  return data
+  return data, cmd
 end
 --[S]earch------------------------------------------------------------------------------------------
 
