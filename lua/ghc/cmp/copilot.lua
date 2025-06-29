@@ -1,4 +1,4 @@
----see https://github.com/fang2hou/blink-copilot/blob/71102fe2fa1616353f8cb315bb8b85db0812a218/lua/blink-copilot/source.lua#L1
+---see https://github.com/fang2hou/blink-copilot/blob/bdc45bbbed2ec252b3a29f4adecf031e157b5573/lua/blink-copilot/source.lua#L1
 
 ---@class ghc.cmp.copilot.config
 ---@field public max_completions        integer  Maximum number of completions to show
@@ -18,11 +18,17 @@ local trigger_kind = {
 }
 
 ---Cancel the LSP request
----@param client vim.lsp.Client
----@param req_id integer?
+---@param client                        ?vim.lsp.Client
+---@param req_id                        ?integer
 function util.cancel_request(client, req_id)
-  if client and req_id then
-    client:cancel_request(req_id)
+  if client and req_id and not client:is_stopped() then
+    local success, err = pcall(function()
+      client:cancel_request(req_id)
+    end)
+    if not success then
+      local error_msg = "Failed to cancel LSP request: " .. tostring(err) ---@type string
+      vim.notify(error_msg, vim.log.levels.WARN)
+    end
   end
 end
 
@@ -40,7 +46,7 @@ function util.get_lsp_params()
 end
 
 ---Convert the params from first completion to cycling completion
----@param params table
+---@param params                        table
 function util.to_cycling_lsp_params(params)
   return vim.tbl_deep_extend("force", params, {
     context = {
@@ -51,19 +57,23 @@ end
 
 ---Get the completions from Copilot LSP
 ---The arguments from copilot.vim
----@param client vim.lsp.Client
----@param params table
----@param cb lsp.Handler
+---@param client                        vim.lsp.Client
+---@param params                        table
+---@param cb                            lsp.Handler
 function util.get_completions_from_lsp(client, params, cb)
   return client:request("textDocument/inlineCompletion", params, cb)
 end
 
 ---Recalculate the length of the first line of the text
 ---Modified from copilot-cmp
----@param text string
----@param sep? string
+---@param text                          ?string
+---@param sep                           ?string
 ---@return integer
 function util.length_of_first_line(text, sep)
+  if not text or text == "" then
+    return 0
+  end
+
   sep = sep or (text:find("\r") and "\r" or "\n") or "\n"
 
   if not string.find(text, "[\r|\n]") then
@@ -75,9 +85,13 @@ function util.length_of_first_line(text, sep)
 end
 
 ---Remove the common indent from the text
----@param text string
+---@param text                          ?string
 ---@return string
 function util.unindent(text)
+  if not text or text == "" then
+    return ""
+  end
+
   local lines = vim.split(text, "\n")
 
   -- Cleanup the empty lines
@@ -144,16 +158,30 @@ function util.unindent(text)
 end
 
 ---Transforms a Copilot completion items to blink completion item
----@param completions table[]
----@param kind_name? string
----@param kind_icon? string
----@param kind_hl? string
+---@param completions                   table[]
+---@param kind_name                     ?string
+---@param kind_icon                     ?string
+---@param kind_hl                       ?string
 ---@return blink.cmp.CompletionItem[]
 function util.lsp_completion_items_to_blink_items(completions, kind_name, kind_icon, kind_hl)
   ---@type blink.cmp.CompletionItem[]
   local items = {}
 
+  if not completions or #completions == 0 then
+    return items
+  end
+
   for _, completion in ipairs(completions) do
+    -- Validate completion structure
+    if not completion or not completion.insertText or not completion.range then
+      goto continue
+    end
+
+    -- Validate range structure
+    if not completion.range["end"] or type(completion.range["end"]) ~= "table" then
+      goto continue
+    end
+
     -- The original range is the cursor position, so we need to update it to the end of the line
     completion.range["end"].character = util.length_of_first_line(completion.insertText)
 
@@ -167,6 +195,8 @@ function util.lsp_completion_items_to_blink_items(completions, kind_name, kind_i
       textEdit = { newText = completion.insertText, range = completion.range },
       detail = unindented_text,
     })
+
+    ::continue::
   end
 
   return items
@@ -188,18 +218,26 @@ M.__index = M
 function M.new()
   local self = setmetatable({}, M)
 
+  local max_completions = 3 ---@type integer
+  local max_attempts = 4 ---@type integer
+  local kind_name = "Copilot" ---@type string
+  local kind_icon = eve.icon.kind.Copilot ---@type string
+  local kind_hl = "BlinkCmpKindCopilot" ---@type string
+  local debounce = 200 ---@type integer
+  local auto_refresh = { ---@type { backward: boolean, forward: boolean }
+    backward = true,
+    forward = true,
+  }
+
   ---@type ghc.cmp.copilot.config
   local config = {
-    max_completions = 3,
-    max_attempts = 4,
-    kind_name = "Copilot",
-    kind_icon = eve.icon.kind.Copilot,
-    kind_hl = "BlinkCmpKindCopilot",
-    debounce = 200,
-    auto_refresh = {
-      backward = true,
-      forward = true,
-    },
+    max_completions = max_completions,
+    max_attempts = max_attempts,
+    kind_name = kind_name,
+    kind_icon = kind_icon,
+    kind_hl = kind_hl,
+    debounce = debounce,
+    auto_refresh = auto_refresh,
   }
   self.config = config
   self:detect_lsp_client()
@@ -213,30 +251,31 @@ function M:detect_lsp_client()
     return
   end
 
-  local copilot_lua_clients = vim.lsp.get_clients({ name = "copilot" })
-  local copilot_vim_clients = vim.lsp.get_clients({ name = "GitHub Copilot" })
-
-  if copilot_lua_clients and copilot_lua_clients[1] then
-    self.client = copilot_lua_clients[1]
-    local ok, clt = pcall(require, "copilot.client")
-    self.is_copilot_enabled = function()
-      return ok and clt and not clt.is_disabled()
+  local lsp_clients = vim.lsp.get_clients({ bufnr = 0, method = "textDocument/inlineCompletion" })
+  for _, client in ipairs(lsp_clients) do
+    if string.find(string.lower(client.name), "copilot") then
+      self.client = client
+      self.is_copilot_enabled = function()
+        local copilot_lua, clt = pcall(require, "copilot.client")
+        return (copilot_lua and clt and not clt.is_disabled()) or (vim.g.copilot_enabled ~= 0)
+      end
+      break
     end
-
-    return
-  end
-
-  self.client = copilot_vim_clients and copilot_vim_clients[1]
-  self.is_copilot_enabled = function()
-    return vim.g.copilot_enabled ~= 0
   end
 end
 
 ---Reset the context
----@param ts integer
+---@param ts                            integer
 function M:reset(ts)
+  -- Cancel existing requests
   util.cancel_request(self.client, self.context and self.context.first_req_id)
   util.cancel_request(self.client, self.context and self.context.cycling_req_id)
+
+  -- Clear debounce timer
+  if self.debounce_timer then
+    std.timer.clear_timer(self.debounce_timer)
+    self.debounce_timer = nil
+  end
 
   ---@class CompletionContext
   self.context = {
@@ -250,9 +289,9 @@ function M:reset(ts)
 end
 
 ---Add new completions to the context
----@param items blink.cmp.CompletionItem[]
+---@param items                         blink.cmp.CompletionItem[]
 function M:add_new_completions(items)
-  local new_completions = {}
+  local new_completions = {} ---@type blink.cmp.CompletionItem[]
 
   for _, item in ipairs(items) do
     if #self.context.completions < self.config.max_completions then
@@ -268,27 +307,35 @@ function M:add_new_completions(items)
 end
 
 ---Implement the get_completions method of the completion provider
----@param ctx blink.cmp.Context
----@param resolve fun(self: blink.cmp.CompletionResponse): nil
+---@param ctx                           blink.cmp.Context
+---@param resolve                       fun(self: blink.cmp.CompletionResponse): nil
 function M:get_completions(ctx, resolve)
-  if not self.client or not self.is_copilot_enabled() then
+  if not self.client or not self.is_copilot_enabled or not self.is_copilot_enabled() then
     return
   end
 
-  local current_state = { bufnr = ctx.bufnr, id = ctx.id, cursor = ctx.cursor }
+  local bufnr = ctx.bufnr ---@type integer
+  local id = ctx.id ---@type integer
+  local cursor = ctx.cursor ---@type { row: integer, col: integer }
+  local current_state = { bufnr = bufnr, id = id, cursor = cursor }
+
   if vim.deep_equal(current_state, self.context.state) then
+    local is_incomplete_forward = self.config.auto_refresh.forward ---@type boolean
+    local is_incomplete_backward = self.config.auto_refresh.backward ---@type boolean
+    local items = self.context.completions ---@type blink.cmp.CompletionItem[]
+
     resolve({
-      is_incomplete_forward = self.config.auto_refresh.forward,
-      is_incomplete_backward = self.config.auto_refresh.backward,
-      items = self.context.completions,
+      is_incomplete_forward = is_incomplete_forward,
+      is_incomplete_backward = is_incomplete_backward,
+      items = items,
     })
     return
   end
 
-  local now = util.timestamp()
+  local now = util.timestamp() ---@type integer
 
   if self.config.debounce ~= false and type(self.config.debounce) == "number" then
-    local since = now - self.context.start_ts
+    local since = now - self.context.start_ts ---@type integer
     if since < self.config.debounce then
       if self.debounce_timer then
         std.timer.clear_timer(self.debounce_timer)
@@ -305,68 +352,78 @@ function M:get_completions(ctx, resolve)
   self:reset(now)
 
   coroutine.wrap(function()
-    local co = coroutine.running()
-    local lsp_params = util.get_lsp_params()
+    local success, err = pcall(function()
+      local co = coroutine.running()
+      local lsp_params = util.get_lsp_params()
 
-    ---@type lsp.Handler
-    local function handle_lsp_response(err, response)
-      coroutine.resume(co, not err and response and response.items)
-    end
+      ---@type lsp.Handler
+      local function handle_lsp_response(err, response)
+        coroutine.resume(co, not err and response and response.items)
+      end
 
-    ---@param is_initial_request boolean
-    local function send_completion_request(is_initial_request)
-      local request_success, request_id = util.get_completions_from_lsp(self.client, lsp_params, handle_lsp_response)
+      ---@param is_initial_request      boolean
+      local function send_completion_request(is_initial_request)
+        if not self.client or self.client:is_stopped() then
+          return false
+        end
 
-      if request_success then
-        if is_initial_request then
-          self.context.first_req_id = request_id
-        else
-          self.context.cycling_req_id = request_id
+        local request_success, request_id = util.get_completions_from_lsp(self.client, lsp_params, handle_lsp_response)
+
+        if request_success then
+          if is_initial_request then
+            self.context.first_req_id = request_id
+          else
+            self.context.cycling_req_id = request_id
+          end
+        end
+        return request_success
+      end
+
+      local function process_and_resolve_items()
+        local lsp_items = coroutine.yield()
+        if self.context.start_ts ~= now or not lsp_items or #lsp_items == 0 then
+          return
+        end
+
+        local blink_items = util.lsp_completion_items_to_blink_items(
+          lsp_items,
+          self.config.kind_name,
+          self.config.kind_icon,
+          self.config.kind_hl
+        )
+
+        resolve({
+          is_incomplete_forward = self.config.auto_refresh.forward,
+          is_incomplete_backward = self.config.auto_refresh.backward,
+          items = self:add_new_completions(blink_items),
+        })
+      end
+
+      -- Get the first completions
+      if send_completion_request(true) then
+        process_and_resolve_items()
+        self.context.first_req_id = nil
+        self.context.state = current_state
+      end
+
+      -- Attempt to get more completions
+      lsp_params = util.to_cycling_lsp_params(lsp_params)
+      local attempts_made = 0 ---@type integer
+      while
+        now == self.context.start_ts -- If new blink request comes in, stop further attempts
+        and #self.context.completions < self.config.max_completions
+        and attempts_made < self.config.max_attempts
+      do
+        attempts_made = attempts_made + 1
+        if send_completion_request(false) then
+          process_and_resolve_items()
+          self.context.cycling_req_id = nil
         end
       end
-      return request_success
-    end
+    end)
 
-    local function process_and_resolve_items()
-      local lsp_items = coroutine.yield()
-      if self.context.start_ts ~= now or not lsp_items or #lsp_items == 0 then
-        return
-      end
-
-      local blink_items = util.lsp_completion_items_to_blink_items(
-        lsp_items,
-        self.config.kind_name,
-        self.config.kind_icon,
-        self.config.kind_hl
-      )
-
-      resolve({
-        is_incomplete_forward = self.config.auto_refresh.forward,
-        is_incomplete_backward = self.config.auto_refresh.backward,
-        items = self:add_new_completions(blink_items),
-      })
-    end
-
-    -- Get the first completions
-    if send_completion_request(true) then
-      process_and_resolve_items()
-      self.context.first_req_id = nil
-      self.context.state = current_state
-    end
-
-    -- Attempt to get more completions
-    lsp_params = util.to_cycling_lsp_params(lsp_params)
-    local attempts_made = 0
-    while
-      now == self.context.start_ts -- If new blink request comes in, stop further attempts
-      and #self.context.completions < self.config.max_completions
-      and attempts_made < self.config.max_attempts
-    do
-      attempts_made = attempts_made + 1
-      if send_completion_request(false) then
-        process_and_resolve_items()
-        self.context.cycling_req_id = nil
-      end
+    if not success then
+      vim.notify("Copilot completion error: " .. tostring(err), vim.log.levels.ERROR)
     end
   end)()
 end
