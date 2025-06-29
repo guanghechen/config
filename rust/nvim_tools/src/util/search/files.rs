@@ -76,7 +76,7 @@ pub fn search_in_files(
     let flag_case_sensitive: bool = params.flag_case_sensitive;
     let flag_gitignore: bool = params.flag_gitignore;
     let flag_regex: bool = params.flag_regex;
-    let search_pattern: &String = &params.search_pattern;
+    let search_pattern: &str = &params.search_pattern;
     let search_paths: Vec<String> = string::parse_comma_list(&params.search_paths);
     let include_patterns: Vec<String> = string::parse_comma_list(&params.include_patterns);
     let exclude_patterns: Vec<String> = string::parse_comma_list(&params.exclude_patterns);

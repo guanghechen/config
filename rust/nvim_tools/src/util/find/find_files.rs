@@ -36,12 +36,12 @@ pub struct FindFilesOptions {
 pub fn find_files(
     options: &FindFilesOptions,
 ) -> Result<FindFilesSucceedResult, FindFilesFailedResult> {
-    let workspace: &String = &options.workspace;
-    let cwd: &String = &options.cwd;
+    let workspace: &str = &options.workspace;
+    let cwd: &str = &options.cwd;
     let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_gitignore: bool = options.flag_gitignore;
     let flag_regex: bool = options.flag_regex;
-    let search_pattern: &String = &options.search_pattern;
+    let search_pattern: &str = &options.search_pattern;
     let search_paths: Vec<String> = string::parse_comma_list(&options.search_paths);
     let exclude_patterns: Vec<String> = string::parse_comma_list(&options.exclude_patterns);
 

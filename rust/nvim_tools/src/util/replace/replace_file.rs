@@ -13,10 +13,10 @@ pub struct ReplaceFileAdvanceByMatchesSucceedResult {
     pub locations: Vec<MatchLocation>,
 }
 
-/// Peform replacement on the entire file.
+/// Perform replacement on the entire file.
 pub fn replace_file(
     filepath: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     flag_regex: bool,
 ) -> Result<bool, String> {
@@ -58,15 +58,15 @@ pub fn replace_file(
     }
 
     if text != next_text {
-        let mut new_file = File::create(filepath).unwrap();
-        new_file.write_all(next_text.as_bytes()).unwrap();
+        let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
+        new_file.write_all(next_text.as_bytes()).map_err(|e| e.to_string())?;
     }
     Ok(true)
 }
 
 pub fn replace_file_by_matches(
     filepath: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     flag_regex: bool,
     match_offsets: &[usize],
@@ -120,15 +120,15 @@ pub fn replace_file_by_matches(
     }
 
     if text != next_text {
-        let mut new_file = File::create(filepath).unwrap();
-        new_file.write_all(next_text.as_bytes()).unwrap();
+        let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
+        new_file.write_all(next_text.as_bytes()).map_err(|e| e.to_string())?;
     }
     Ok(true)
 }
 
 pub fn replace_file_advance_by_matches(
     filepath: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     flag_regex: bool,
     match_offsets: &[usize],
@@ -223,8 +223,8 @@ pub fn replace_file_advance_by_matches(
     }
 
     if text != next_text {
-        let mut new_file = File::create(filepath).unwrap();
-        new_file.write_all(next_text.as_bytes()).unwrap();
+        let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
+        new_file.write_all(next_text.as_bytes()).map_err(|e| e.to_string())?;
     }
 
     let locations: Vec<MatchLocation> = get_locations(&next_text, &next_offsets);

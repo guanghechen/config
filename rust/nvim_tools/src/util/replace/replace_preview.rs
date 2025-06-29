@@ -9,7 +9,7 @@ use std::io::Read;
 
 pub fn replace_file_preview(
     filepath: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
@@ -28,7 +28,7 @@ pub fn replace_file_preview(
 
 pub fn replace_file_preview_by_matches(
     filepath: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
@@ -89,7 +89,7 @@ pub fn replace_file_preview_advance_by_matches(
 
 pub fn replace_text_preview(
     text: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
@@ -145,7 +145,7 @@ pub fn replace_text_preview(
 
 pub fn replace_text_preview_by_matches(
     text: &str,
-    search_pattern: &String,
+    search_pattern: &str,
     replace_pattern: &str,
     keep_search_pieces: bool,
     flag_regex: bool,
