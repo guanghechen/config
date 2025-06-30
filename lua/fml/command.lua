@@ -286,6 +286,12 @@ command
     end,
   })
   .implement({
+    uuid = K.find.files_directory.uuid,
+    action = function()
+      require("fml.action.find.files").find_files_directory()
+    end,
+  })
+  .implement({
     uuid = K.find.files_workspace.uuid,
     action = function()
       require("fml.action.find.files").find_files_workspace()

@@ -257,6 +257,19 @@ function M.find_files_cwd()
 end
 
 ---@return nil
+function M.find_files_directory()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_source = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  if winnr_source ~= nil then
+    local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    local dirpath = std.path.is_exist_dirpath(filepath) and filepath or std.path.dirname(filepath) ---@type string
+    attach(picker, dirpath)
+  end
+  picker:focus()
+end
+
+---@return nil
 function M.find_files_workspace()
   local workspace = std.path.workspace() ---@type string
   attach(picker, workspace)
