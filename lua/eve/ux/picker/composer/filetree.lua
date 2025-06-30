@@ -521,6 +521,7 @@ function M.new(props)
                   filename = relative_filepath,
                   lnum = location.lnum,
                   col = location.col or 0,
+                  text = location.text,
                 })
               end
             end
