@@ -165,8 +165,8 @@ else
   ms({ "n", "v" }, "<leader><leader>", K.find.explorer)
 end
 ms({ "n", "v" }, "<leader>fb", K.find.bufs)
-ms({ "n", "v" }, "<leader>fc", K.find.files_cwd)
-ms({ "n", "v" }, "<leader>fd", K.find.files_directory)
+ms({ "n", "v" }, "<leader>fc", K.find.files_in_cwd)
+ms({ "n", "v" }, "<leader>fd", K.find.files_in_directory)
 ms({ "n", "v" }, "<leader>fe", K.find.explorer)
 ms({ "n", "v" }, "<leader>ff", K.find.files)
 ms({ "n", "v" }, "<leader>fg", K.find.git_not_committed)
@@ -176,7 +176,7 @@ ms({ "n", "v" }, "<leader>fp", K.find.pinned_files)
 ms({ "n", "v" }, "<leader>fs", K.find.lsp_symbols)
 ms({ "n", "v" }, "<leader>ft", K.find.bufs_term)
 ms({ "n", "v" }, "<leader>fv", K.find.vim_options)
-ms({ "n", "v" }, "<leader>fw", K.find.files_workspace)
+ms({ "n", "v" }, "<leader>fw", K.find.files_in_workspace)
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------

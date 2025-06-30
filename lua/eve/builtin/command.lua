@@ -363,9 +363,9 @@ M.definitions.find = {
 
   explorer = def("Ffindexplorer", "find: explorer", "?"),
   files = def("Ffindfiles", "find: files", "?"),
-  files_cwd = def("Ffindfilescwd", "find: files (cwd)"),
-  files_directory = def("Ffindfilesdirectory", "find: files (directory)"),
-  files_workspace = def("Ffindfilesworkspace", "find: files (workspace)"),
+  files_in_cwd = def("Ffindfilesincwd", "find: files (cwd)"),
+  files_in_directory = def("Ffindfilesindirectory", "find: files (directory)"),
+  files_in_workspace = def("Ffindfilesinworkspace", "find: files (workspace)"),
   git_not_committed = def("Ffindgitnotcommitted", "find: git not committed"),
   highlights = def("Ffindhighlights", "find: highlights"),
   lsp_symbols = def("Ffindlspsymbols", "find: lsp symbols"),

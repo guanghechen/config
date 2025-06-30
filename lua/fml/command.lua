@@ -280,21 +280,21 @@ command
     end,
   })
   .implement({
-    uuid = K.find.files_cwd.uuid,
+    uuid = K.find.files_in_cwd.uuid,
     action = function()
-      require("fml.action.find.files").find_files_cwd()
+      require("fml.action.find.files").find_files_in_cwd()
     end,
   })
   .implement({
-    uuid = K.find.files_directory.uuid,
+    uuid = K.find.files_in_directory.uuid,
     action = function()
-      require("fml.action.find.files").find_files_directory()
+      require("fml.action.find.files").find_files_in_directory()
     end,
   })
   .implement({
-    uuid = K.find.files_workspace.uuid,
+    uuid = K.find.files_in_workspace.uuid,
     action = function()
-      require("fml.action.find.files").find_files_workspace()
+      require("fml.action.find.files").find_files_in_workspace()
     end,
   })
   .implement({

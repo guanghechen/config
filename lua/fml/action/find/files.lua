@@ -136,7 +136,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
     {
       modes = { "n", "v" },
       key = "<leader>c",
-      desc = "find-files: change root (cwd)",
+      desc = string.format("%s: change root (cwd)", title),
       callback = function()
         local cwd = std.path.cwd() ---@type string
         attach(picker, cwd)
@@ -145,7 +145,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
     {
       modes = { "n", "v" },
       key = "<leader>w",
-      desc = "find-files: change root (workspace)",
+      desc = string.format("%s: change root (workspace)", title),
       callback = function()
         local workspace = std.path.workspace() ---@type string
         attach(picker, workspace)
@@ -165,7 +165,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
   flags_start_index = 0,
   flags_prepend = {
     {
-      desc = "find-files: open settings",
+      desc = string.format("%s: open settings", title),
       callback = function()
         edit_setting(picker)
       end,
@@ -250,14 +250,14 @@ function M.find_files(rootpath)
 end
 
 ---@return nil
-function M.find_files_cwd()
+function M.find_files_in_cwd()
   local cwd = std.path.cwd() ---@type string
   attach(picker, cwd)
   picker:focus()
 end
 
 ---@return nil
-function M.find_files_directory()
+function M.find_files_in_directory()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_source = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_source ~= nil then
@@ -270,7 +270,7 @@ function M.find_files_directory()
 end
 
 ---@return nil
-function M.find_files_workspace()
+function M.find_files_in_workspace()
   local workspace = std.path.workspace() ---@type string
   attach(picker, workspace)
   picker:focus()
