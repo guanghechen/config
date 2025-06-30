@@ -209,7 +209,7 @@ end
 function M:clear()
   self:__health__()
 
-  self.statemap = {}
+  table.clear(self.statemap)
   self._count_selected = 0
   self._dirty_selected = false
   self._tick_invisible = self._tick_invisible + 1
@@ -250,6 +250,13 @@ end
 ---@return boolean
 function M:isdisposed()
   return self._disposed
+end
+
+---@param uuid                          string
+---@return boolean
+function M:ismatched(uuid)
+  local nodestate = self.statemap ~= nil and self.statemap[uuid] or nil ---@type eve.ux.view.tree.INodeState|nil
+  return nodestate ~= nil and nodestate.tick_matched ~= self._tick_matched
 end
 
 ---@param uuid                          string
