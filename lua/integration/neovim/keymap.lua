@@ -205,14 +205,6 @@ ms({ "n", "v" }, "<leader>qs", K.session.save)
 ms({ "i", "n", "v" }, { "<C-a>r", "<D-r>", "<M-r>" }, K.refresh.all)
 ---------------------------------------------------------------------------------------#[r]efresh---
 
---#[r]eplace----------------------------------------------------------------------------------------
-ms({ "n", "v" }, "<leader>rr", K.replace.files)
-ms({ "n", "v" }, "<leader>rb", K.replace.files_in_buffer)
-ms({ "n", "v" }, "<leader>rd", K.replace.files_in_directory)
-ms({ "n", "v" }, "<leader>rc", K.replace.files_in_cwd)
-ms({ "n", "v" }, "<leader>rw", K.replace.files_in_workspace)
----------------------------------------------------------------------------------------#[r]eplace---
-
 --#[s]earch-----------------------------------------------------------------------------------------
 ms({ "i", "n", "v" }, { "<C-a>f", "<D-f>", "<M-f>" }, K.search.files_in_buffer)
 ms({ "n", "v" }, "<leader>ss", K.search.files)

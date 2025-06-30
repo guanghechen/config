@@ -436,39 +436,6 @@ command.implement({
   end,
 })
 
---[replace] files-----------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.replace.files.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files()
-    end,
-  })
-  .implement({
-    uuid = K.replace.files_in_buffer.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_buffer()
-    end,
-  })
-  .implement({
-    uuid = K.replace.files_in_cwd.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_cwd()
-    end,
-  })
-  .implement({
-    uuid = K.replace.files_in_directory.uuid,
-    action = function(args)
-      require("fml.action.search.files").replace_files_in_directory(args)
-    end,
-  })
-  .implement({
-    uuid = K.replace.files_in_workspace.uuid,
-    action = function()
-      require("fml.action.search.files").replace_files_in_workspace()
-    end,
-  })
-
 --[search] files------------------------------------------------------------------------------------
 command
   .implement({

@@ -157,15 +157,6 @@ return {
           vim.cmd(eve.command.definitions.find.files.uuid .. " " .. dirpath)
         end
       end,
-      open_ghc_replacer = function(state)
-        local node = state.tree:get_node()
-        if node.type ~= "file" and node.type ~= "directory" then
-          return
-        end
-
-        local filepath = node:get_id() ---@type string
-        vim.cmd(eve.command.definitions.replace.files_in_directory.uuid .. " " .. filepath)
-      end,
       open_ghc_searcher = function(state)
         local node = state.tree:get_node()
         if node.type ~= "file" and node.type ~= "directory" then
@@ -429,7 +420,6 @@ return {
         ["oe"] = "open_ghc_file_explorer",
         ["of"] = "open_ghc_file_finder",
         ["oi"] = "show_file_info",
-        ["or"] = "open_ghc_replacer",
         ["os"] = "open_ghc_searcher",
 
         ---Sort

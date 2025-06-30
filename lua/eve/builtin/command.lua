@@ -408,15 +408,6 @@ M.definitions.refresh = {
   all = def("Frefreshall", "refresh: all"),
 }
 
----@class eve.builtin.command.definitions.replace
-M.definitions.replace = {
-  files = def("Freplacefiles", "replace: files"),
-  files_in_buffer = def("Freplacefilesinbuffer", "replace: files (buffer)"),
-  files_in_cwd = def("Freplacefilesincwd", "replace: files (cwd)"),
-  files_in_directory = def("Freplacefilesindirectory", "replace: files (directory)", "?"),
-  files_in_workspace = def("Freplacefilesinworkspace", "replace: files (workspace)"),
-}
-
 ---@class eve.builtin.command.definitions.search
 M.definitions.search = {
   files = def("Fsearchfiles", "search: files"),
