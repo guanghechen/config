@@ -52,12 +52,6 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::replace::replace_file_preview)),
         ),
         (
-            "replace_file_preview_by_matches",
-            Object::from(Function::from_fn(
-                oxi::replace::replace_file_preview_by_matches,
-            )),
-        ),
-        (
             "replace_file_preview_advance",
             Object::from(Function::from_fn(
                 oxi::replace::replace_file_preview_advance,

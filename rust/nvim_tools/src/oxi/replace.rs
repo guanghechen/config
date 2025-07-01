@@ -69,20 +69,30 @@ pub struct ReplaceTextPreviewAdvanceByMatchesParams {
 }
 
 pub fn replace_file(
-    (filepath, search_pattern, replace_pattern, flag_regex, flag_case_sensitive): (String, String, String, bool, bool),
+    (filepath, search_pattern, replace_pattern, flag_regex, flag_case_sensitive): (
+        String,
+        String,
+        String,
+        bool,
+        bool,
+    ),
 ) -> String {
-    let result: FunResult<bool> =
-        match util::replace::replace_file(&filepath, &search_pattern, &replace_pattern, flag_regex, flag_case_sensitive)
-        {
-            Ok(succeed) => FunResult {
-                error: None,
-                data: Some(succeed),
-            },
-            Err(error) => FunResult {
-                error: Some(error),
-                data: None,
-            },
-        };
+    let result: FunResult<bool> = match util::replace::replace_file(
+        &filepath,
+        &search_pattern,
+        &replace_pattern,
+        flag_regex,
+        flag_case_sensitive,
+    ) {
+        Ok(succeed) => FunResult {
+            error: None,
+            data: Some(succeed),
+        },
+        Err(error) => FunResult {
+            error: Some(error),
+            data: None,
+        },
+    };
     serde_json::to_string(&result).unwrap()
 }
 
@@ -133,14 +143,14 @@ pub fn replace_file_advance_by_matches(params: String) -> String {
 }
 
 pub fn replace_file_preview(
-    (filepath, search_pattern, replace_pattern, keep_search_pieces, flag_regex, flag_case_sensitive): (
-        String,
-        String,
-        String,
-        bool,
-        bool,
-        bool,
-    ),
+    (
+        filepath,
+        search_pattern,
+        replace_pattern,
+        keep_search_pieces,
+        flag_regex,
+        flag_case_sensitive,
+    ): (String, String, String, bool, bool, bool),
 ) -> String {
     let result: FunResult<String> = match util::replace::replace_file_preview(
         &filepath,
@@ -162,38 +172,15 @@ pub fn replace_file_preview(
     serde_json::to_string(&result).unwrap()
 }
 
-pub fn replace_file_preview_by_matches(params: String) -> String {
-    let params = serde_json::from_str::<ReplaceFilePreviewByMatchesParams>(&params).unwrap();
-    let result: FunResult<String> = match util::replace::replace_file_preview_by_matches(
-        &params.filepath,
-        &params.search_pattern,
-        &params.replace_pattern,
-        params.keep_search_pieces,
-        params.flag_regex,
-        params.flag_case_sensitive,
-        &params.match_offsets,
-    ) {
-        Ok(next_text) => FunResult {
-            error: None,
-            data: Some(next_text),
-        },
-        Err(error) => FunResult {
-            error: Some(error),
-            data: None,
-        },
-    };
-    serde_json::to_string(&result).unwrap()
-}
-
 pub fn replace_file_preview_advance(
-    (filepath, search_pattern, replace_pattern, keep_search_pieces, flag_regex, flag_case_sensitive): (
-        String,
-        String,
-        String,
-        bool,
-        bool,
-        bool,
-    ),
+    (
+        filepath,
+        search_pattern,
+        replace_pattern,
+        keep_search_pieces,
+        flag_regex,
+        flag_case_sensitive,
+    ): (String, String, String, bool, bool, bool),
 ) -> String {
     let result: FunResult<ReplacePreview> = match util::replace::replace_file_preview_advance(
         &filepath,

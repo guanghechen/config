@@ -158,14 +158,6 @@ end
 ---@field public match_offsets          integer[]
 ---@field public remain_offsets         integer[]
 
----@class eve.builtin.oxi.replace.replace_file_preview_by_matches.IRawParams
----@field public filepath               string
----@field public search_pattern         string
----@field public replace_pattern        string
----@field public flag_regex             boolean
----@field public keep_search_pieces     boolean
----@field public match_offsets          integer[]
-
 ---@class eve.builtin.oxi.replace_file_preview_advance_by_matches.IRawParams
 ---@field public filepath               string
 ---@field public search_pattern         string
@@ -195,9 +187,6 @@ end
 ---@field public error                  ?string
 
 ---@class eve.builtin.oxi.replace.replace_file_preview.IRawResult
----@field public text                   string
-
----@class eve.builtin.oxi.replace.replace_file_preview_by_matches.IRawResult
 ---@field public text                   string
 
 ---@class eve.builtin.oxi.replace.replace_file_preview_advance.IRawResult
@@ -233,10 +222,6 @@ end
 ---@field public locations              std.t.IMatchLocation[]
 
 ---@class eve.builtin.oxi.replace.replace_file_preview.IResult
----@field public lines                  string[]
----@field public lwidths                integer[]
-
----@class eve.builtin.oxi.replace.replace_file_preview_by_matches.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
 
@@ -302,15 +287,6 @@ end
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
 ---@field public filepath               string
-
----@class eve.builtin.oxi.replace.replace_file_preview_by_matches.IParams
----@field public flag_case_sensitive    boolean
----@field public flag_regex             boolean
----@field public keep_search_pieces     boolean
----@field public search_pattern         string
----@field public replace_pattern        string
----@field public filepath               string
----@field public match_offsets          integer[]
 
 ---@class eve.builtin.oxi.replace.replace_file_preview_advance.IParams
 ---@field public flag_case_sensitive    boolean
@@ -478,48 +454,6 @@ function M.replace_file_preview(params)
   return result
 end
 
----@param params                        eve.builtin.oxi.replace.replace_file_preview_by_matches.IParams
----@return eve.builtin.oxi.replace.replace_file_preview_by_matches.IResult
-function M.replace_file_preview_by_matches(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
-  ---@type eve.builtin.oxi.replace.replace_file_preview_by_matches.IRawParams
-  local payload_params = {
-    filepath = params.filepath,
-    search_pattern = search_pattern,
-    replace_pattern = params.replace_pattern,
-    flag_regex = params.flag_regex,
-    flag_case_sensitive = params.flag_case_sensitive,
-    keep_search_pieces = params.keep_search_pieces,
-    match_offsets = params.match_offsets,
-  }
-  local payload = std.json.stringify(payload_params)
-  local ok, data = M.run_fun( ---
-    "replace_file_preview_by_matches",
-    nvim_tools.replace_file_preview_by_matches,
-    payload
-  )
-
-  if ok then
-    ---@cast data                       string
-
-    local text = data ---@type string
-    local lwidths = M.get_line_widths(text) ---@type integer[]
-    local lines = M.parse_lines(text, lwidths) ---@type string[]
-
-    ---@type eve.builtin.oxi.replace.replace_file_preview_by_matches.IResult
-    local result = { lines = lines, lwidths = lwidths }
-    return result
-  end
-
-  ---@type eve.builtin.oxi.replace.replace_file_preview_by_matches.IResult
-  local result = { lines = {}, lwidths = {} }
-  return result
-end
-
 ---@param params                        eve.builtin.oxi.replace.replace_file_preview_advance.IParams
 ---@return eve.builtin.oxi.replace.replace_file_preview_advance.IResult
 function M.replace_file_preview_advance(params)
@@ -565,7 +499,7 @@ function M.replace_file_preview_advance_by_matches(params)
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type eve.builtin.oxi.replace.replace_file_preview_by_matches.IRawParams
+  ---@type eve.builtin.oxi.replace_file_preview_advance_by_matches.IRawParams
   local payload_params = {
     filepath = params.filepath,
     search_pattern = search_pattern,
