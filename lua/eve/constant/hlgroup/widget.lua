@@ -187,6 +187,18 @@ function M.gen_hlgroup_map(context)
     f_pk_sign_line_selected = { fg = c.purple, bg = c.none },
     f_pk_sign_line_selected_current = { fg = c.purple, bg = c.bg3 },
 
+    ---searcher
+    f_ss_matches = { fg = c.pink, bold = true, italic = true },
+    f_ss_search = { fg = c.red, bold = true, italic = true, strikethrough = true },
+    f_ss_replace = { fg = c.green, bold = true, italic = true },
+    f_ss_preview_error = { fg = c.red, bold = true },
+    f_ss_preview_match = { fg = c.bg1, bg = c.yellow },
+    f_ss_preview_match_cur = { fg = c.bg1, bg = c.red, bold = true, underline = true },
+    f_ss_preview_search = { fg = c.fg1, bg = c.diffDel, strikethrough = true },
+    f_ss_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
+    f_ss_preview_replace = { fg = c.bg1, bg = c.diffAdd },
+    f_ss_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
+
     ---popupmenu
     f_up_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },
     f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },

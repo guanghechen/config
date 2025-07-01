@@ -22,10 +22,6 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@alias eve.ux.searcher.composer.filetree.IOnRefresh
 ---| fun(self: eve.ux.searcher.FiletreeComposer, force: boolean): nil
 
----@class eve.ux.searcher.composer.filetree.ISelectedItemLocation
----@field public lnum                   integer
----@field public col                    integer|nil
-
 ---@class eve.ux.searcher.composer.filetree.actions
 ---@field public add_node_to_avante     fun(): nil
 ---@field public add_subtree_to_avante  fun(): nil
@@ -58,19 +54,28 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
+---@field public excludes               std.collection.IObservable
+---@field public flag_exclude           std.collection.IObservable
 ---@field public flag_foldempty         std.collection.IObservable
----@field public flag_fuzzy             std.collection.IObservable
+---@field public flag_gitignore         std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
+---@field public flag_replace           std.collection.IObservable
 ---@field public flag_sensitive         std.collection.IObservable
 ---@field public flag_selected          std.collection.IObservable
 ---@field public flag_viewtype          std.collection.IObservable
+---@field public includes               std.collection.IObservable
+---@field public max_filesize           std.collection.IObservable
+---@field public max_matches            std.collection.IObservable
+---@field public replace_pattern        std.collection.IObservable
+---@field public rootpath               std.collection.IObservable
+---@field public search_pattern         std.collection.IObservable
+---
 ---@field public flags_append           eve.ux.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          eve.ux.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public frecency               ?std.collection.IFrecency
 ---
----@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.IHistory
 ---
 ---@field public on_attached            ?eve.ux.searcher.composer.filetree.IOnAttached
@@ -90,20 +95,28 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field public result                 eve.ux.searcher.Result
 ---@field public preview                eve.ux.searcher.Preview
 ---
+---@field public excludes               std.collection.IObservable
+---@field public flag_exclude           std.collection.IObservable
 ---@field public flag_foldempty         std.collection.IObservable
----@field public flag_fuzzy             std.collection.IObservable
+---@field public flag_gitignore         std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
+---@field public flag_replace           std.collection.IObservable
 ---@field public flag_sensitive         std.collection.IObservable
 ---@field public flag_selected          std.collection.IObservable
----@field public flag_viewtype          std.collection.IObservable
+---@field public includes               std.collection.IObservable
+---@field public max_filesize           std.collection.IObservable
+---@field public max_matches            std.collection.IObservable
+---@field public replace_pattern        std.collection.IObservable
+---@field public rootpath               std.collection.IObservable
+---@field public search_pattern         std.collection.IObservable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
 ---@field protected _frecency           std.collection.IFrecency|nil
 ---@field protected _composer           eve.ux.searcher.BasicComposer
----@field protected _plainfile          eve.ux.view.Plainfile
+---@field protected _plainfile          eve.ux.searcher.PlainfileView
 ---@field protected _retriever          eve.ux.retriever.TreeRetriever
----@field protected _scheduler_match    std.collection.Scheduler|nil
+---@field protected _scheduler_search   std.collection.Scheduler|nil
 ---@field protected _treeview           eve.ux.searcher.FiletreeView
 ---
 ---@field protected _last_preview_filepath  string|nil
@@ -130,20 +143,28 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local o_finder_input = props.finder_input ---@type std.collection.IObservable
+  local o_excludes = props.excludes ---@type std.collection.IObservable
+  local o_flag_exclude = props.flag_exclude ---@type std.collection.IObservable
+  local o_flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
+  local o_flag_gitignore = props.flag_gitignore ---@type std.collection.IObservable
+  local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
+  local o_flag_replace = props.flag_replace ---@type std.collection.IObservable
+  local o_flag_case_sensitive = props.flag_sensitive ---@type std.collection.IObservable
+  local o_flag_selected = props.flag_selected ---@type std.collection.IObservable
+  local o_flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
+  local o_includes = props.includes ---@type std.collection.IObservable
+  local o_max_filesize = props.max_filesize ---@type std.collection.IObservable
+  local o_max_matches = props.max_matches ---@type std.collection.IObservable
+  local o_replace_pattern = props.replace_pattern ---@type std.collection.IObservable
+  local o_rootpath = props.rootpath ---@type std.collection.IObservable
+  local o_search_pattern = props.search_pattern ---@type std.collection.IObservable
+
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
   local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
-
-  local o_flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
-  local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
-  local o_flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
-  local o_flag_sensitive = props.flag_sensitive ---@type std.collection.IObservable
-  local o_flag_selected = props.flag_selected ---@type std.collection.IObservable
-  local o_flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
 
   local flags_append = props.flags_append ---@type eve.ux.searcher.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.searcher.result.IFlagItemRaw[]|nil
@@ -184,21 +205,20 @@ function M.new(props)
     name = fullname,
   })
 
-  ---@type eve.ux.view.Plainfile
-  local plainfile = eve.ux.view.Plainfile.new({
+  ---@type eve.ux.searcher.PlainfileView
+  local plainfile = eve.ux.searcher.PlainfileView.new({
     name = fullname,
   })
 
-  local scheduler_match = std.Scheduler.new({
-    name = string.format("%s#match", fullname),
+  local scheduler_search = std.Scheduler.new({
+    name = string.format("%s#search", fullname),
     mode = "debounce",
     delay = 64,
     timeout = 0,
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
-      local input = o_finder_input:snapshot() ---@type string
-      self:__match__(input)
+      self:__search__()
       treeview:mark_cache_treeview_dirty()
       self:mark_result_dirty()
     end,
@@ -223,7 +243,7 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_selected:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_selected, enabled and "searcher_flag_orange" or "searcher_flag_grey"
+        return eve.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -236,10 +256,10 @@ function M.new(props)
       snapshot = function()
         local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
         if viewtype == "tree" then
-          return eve.icon.symbols.flag_tree, "searcher_flag_aqua"
+          return eve.icon.symbols.flag_tree, "picker_flag_aqua"
         end
         if viewtype == "list" then
-          return eve.icon.symbols.flag_list, "searcher_flag_aqua"
+          return eve.icon.symbols.flag_list, "picker_flag_aqua"
         end
 
         local message = string.format("[%s#%s] Unknown viewtype: %s", __module_name__, name, viewtype)
@@ -259,29 +279,18 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_foldempty:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_fold_empty_path, enabled and "searcher_flag_blue" or "searcher_flag_grey"
-      end,
-    }
-    flags[#flags + 1] = {
-      desc = string.format("%s: fuzzy", name),
-      callback = function()
-        local enabled = o_flag_fuzzy:snapshot() ---@type boolean
-        o_flag_fuzzy:next(not enabled)
-      end,
-      snapshot = function()
-        local enabled = o_flag_fuzzy:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_fuzzy, enabled and "searcher_flag_blue" or "searcher_flag_grey"
+        return eve.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
       desc = string.format("%s: sensitive", name),
       callback = function()
-        local enabled = o_flag_sensitive:snapshot() ---@type boolean
-        o_flag_sensitive:next(not enabled)
+        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
+        o_flag_case_sensitive:next(not enabled)
       end,
       snapshot = function()
-        local enabled = o_flag_sensitive:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_case_sensitive, enabled and "searcher_flag_blue" or "searcher_flag_grey"
+        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -292,7 +301,18 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_regex:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_regex, enabled and "searcher_flag_blue" or "searcher_flag_grey"
+        return eve.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    }
+    flags[#flags + 1] = {
+      desc = string.format("%s: replace", name),
+      callback = function()
+        local enabled = o_flag_replace:snapshot() ---@type boolean
+        o_flag_replace:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = o_flag_replace:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_replace, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     if flags_append ~= nil then
@@ -458,7 +478,7 @@ function M.new(props)
         return
       end
 
-      local finder_input = o_finder_input:snapshot() ---@type string
+      local finder_input = o_search_pattern:snapshot() ---@type string
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
@@ -468,6 +488,8 @@ function M.new(props)
           end
         end
       end
+
+      plainfile:mark_dirty()
       self._composer:mark_result_dirty()
     end,
     mark_subroot_invisible = function()
@@ -486,12 +508,218 @@ function M.new(props)
     end,
     open_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      if nodeuuid ~= nil then
-        if on_confirm == nil then
-          self:__open_node__(nodeuuid)
-        else
-          self:__resolve_confirmation__(nodeuuid)
+      if nodeuuid == nil then
+        return
+      end
+
+      if on_confirm == nil then
+        self:__open_node__(nodeuuid)
+      else
+        self:__resolve_confirmation__(nodeuuid)
+      end
+    end,
+    replace_all = function()
+      local rootuuid = self._uuid_root ---@type string|nil
+      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type std.collection.filetree.INode|nil
+      if rootnode == nil then
+        return
+      end
+
+      local cwd = rootnode.data.filepath ---@type string
+      local dirtied = false ---@type boolean
+      local lnum_total = self.result.lnum_total:snapshot() ---@type integer
+      for lnum = 1, lnum_total, 1 do
+        local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if leafuuid ~= nil then
+          local leafnode = filetree:retrieve(leafuuid) ---@type std.collection.filetree.INode|nil
+          local leafnodestate = treeview:retrieve(leafuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
+          if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
+            ---@cast leafnode         std.collection.filetree.INode
+            ---@cast leafnodestate    eve.ux.searcher.view.filetree.IFileNodeState
+            dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
+          end
         end
+      end
+
+      if dirtied then
+        plainfile:mark_dirty()
+        self:mark_result_dirty()
+      end
+    end,
+    replace_in_node = function()
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      if nodeuuid == nil then
+        return
+      end
+
+      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
+      if nodestate == nil then
+        return
+      end
+
+      local rootuuid = self._uuid_root ---@type string|nil
+      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type std.collection.filetree.INode|nil
+      if rootnode == nil then
+        return
+      end
+
+      local cwd = rootnode.data.filepath ---@type string
+      local flag_case_sensitive = o_flag_case_sensitive:snapshot() ---@type boolean
+      local flag_regex = o_flag_regex:snapshot() ---@type boolean
+      local search_pattern = o_search_pattern:snapshot() ---@type string
+      local replace_pattern = o_replace_pattern:snapshot() ---@type string
+
+      if nodestate.nodetype == "location" then
+        ---@cast nodestate              eve.ux.searcher.view.filetree.ILeafLocationState
+
+        local leafnode = filetree:retrieve(nodestate.leafuuid) ---@type std.collection.filetree.INode|nil
+        if leafnode == nil then
+          std.reporter.error({
+            from = self.fullname,
+            subject = "replace_in_node",
+            message = string.format("Cannot retrieve the leaf node by the given leafuuid (%s)", nodestate.leafuuid),
+            details = {
+              nodeuuid = nodeuuid,
+              nodestate = nodestate,
+              rootuuid = rootuuid,
+              rootnode = rootnode,
+            },
+          })
+          return
+        end
+
+        local leafnodestate = treeview:retrieve(nodestate.leafuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
+        if leafnodestate == nil then
+          std.reporter.error({
+            from = self.fullname,
+            subject = "replace_in_node",
+            message = string.format(
+              "Cannot retrieve the leaf nodestate by the given leafuuid (%s)",
+              nodestate.leafuuid
+            ),
+            details = {
+              nodeuuid = nodeuuid,
+              nodestate = nodestate,
+              rootuuid = rootuuid,
+              rootnode = rootnode,
+            },
+          })
+          return
+        end
+        ---@cast leafnodestate          eve.ux.searcher.view.filetree.IFileNodeState
+
+        local offset_current = nodestate.match.preview.offset ---@type integer
+        local offsets_remain = {} ---@type integer[]
+        local locations = leafnodestate.locations ---@type eve.ux.searcher.view.filetree.ILeafLocationState[]|nil
+
+        if locations == nil then
+          std.reporter.error({
+            from = self.fullname,
+            subject = "replace_in_node",
+            message = string.format("The leaf node (%s) has no locations", nodestate.leafuuid),
+            details = {
+              nodeuuid = nodeuuid,
+              nodestate = nodestate,
+              rootuuid = rootuuid,
+              rootnode = rootnode,
+            },
+          })
+          return
+        end
+
+        local L = #locations ---@type integer
+        local st = 1 ---@type integer
+        while st <= L and locations[st].locationuuid ~= nodestate.locationuuid do
+          st = st + 1 ---@type integer
+        end
+
+        for i = st + 1, L, 1 do
+          local location = locations[i] ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+          if treeview:isvisible(location.locationuuid) then
+            offsets_remain[#offsets_remain + 1] = location.match.preview.offset ---@type integer
+          end
+        end
+
+        local succeed, preview_locations = eve.oxi.replace_file_advance_by_matches({
+          cwd = cwd,
+          filepath = leafnode.data.filepath,
+          flag_case_sensitive = flag_case_sensitive,
+          flag_regex = flag_regex,
+          search_pattern = search_pattern,
+          replace_pattern = replace_pattern,
+          match_offsets = { offset_current },
+          remain_offsets = offsets_remain,
+        })
+        if not succeed or preview_locations == nil then
+          return
+        end
+
+        local nt = 0 ---@type integer
+        for i = st + 1, L, 1 do
+          local location = locations[i] ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+          if treeview:isvisible(location.locationuuid) then
+            nt = nt + 1 ---@type integer
+            local pl = preview_locations[nt] ---@type std.t.IMatchLocation
+            location.match.preview.offset = pl.offset ---@type integer
+            location.match.preview.lnum = pl.lnum ---@type integer
+            location.match.preview.col = pl.col ---@type integer
+          end
+        end
+
+        plainfile:mark_dirty()
+        treeview:remove_location(leafnodestate, nodestate.locationuuid)
+        self:mark_result_dirty()
+        return
+      end
+
+      local node = filetree:retrieve(nodeuuid) ---@type std.collection.filetree.INode|nil
+      if node == nil then
+        std.reporter.error({
+          from = self.fullname,
+          subject = "replace_in_node",
+          message = string.format("Cannot retrieve the filetree node by the given nodeuuid (%s)", nodeuuid),
+          details = {
+            nodeuuid = nodeuuid,
+            nodestate = nodestate,
+            rootuuid = rootuuid,
+            rootnode = rootnode,
+          },
+        })
+        return
+      end
+
+      if nodestate.nodetype == "leaf" then
+        ---@cast nodestate              eve.ux.searcher.view.filetree.IFileNodeState
+
+        local dirtied = self:__replace_file__(cwd, node, nodestate) ---@type boolean
+        if dirtied then
+          plainfile:mark_dirty()
+          self:mark_result_dirty()
+        end
+        return
+      end
+
+      do
+        local dirtied = false ---@type boolean
+        local lnum_current, lnum_childline = self:__retrieve_lnum_range__() ---@type integer, integer
+        for lnum = lnum_current, lnum_childline, 1 do
+          local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+          if leafuuid ~= nil then
+            local leafnode = filetree:retrieve(leafuuid) ---@type std.collection.filetree.INode|nil
+            local leafnodestate = treeview:retrieve(leafuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
+            if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
+              ---@cast leafnode         std.collection.filetree.INode
+              ---@cast leafnodestate    eve.ux.searcher.view.filetree.IFileNodeState
+              dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
+            end
+          end
+        end
+
+        if dirtied then
+          plainfile:mark_dirty()
+          self:mark_result_dirty()
+        end
+        return
       end
     end,
     send_to_qflist = function()
@@ -508,7 +736,7 @@ function M.new(props)
             local relative_filepath = std.path.relative(cwd, filepath, false) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
-            local locations = nodestate and nodestate.locations or nil ---@type eve.ux.searcher.view.filetree.ILocationNodeState[]|nil
+            local locations = nodestate and nodestate.locations or nil ---@type eve.ux.searcher.view.filetree.ILeafLocationState[]|nil
             if locations == nil or #locations < 1 then
               table.insert(quickfix_items, {
                 filename = relative_filepath,
@@ -521,6 +749,7 @@ function M.new(props)
                   filename = relative_filepath,
                   lnum = location.lnum,
                   col = location.col or 0,
+                  text = location.text,
                 })
               end
             end
@@ -611,7 +840,7 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<C-q>",
-      desc = "filetree: send to qflist",
+      desc = "searcher: send to qflist",
       callback = actions.send_to_qflist,
     },
   }
@@ -620,81 +849,94 @@ function M.new(props)
   local preset_keymaps_finder = {
     {
       modes = { "n", "v" },
+      key = "<C-a><cr>",
+      aliases = { "<D-cr>", "<M-cr>" },
+      desc = "searcher: replace all files",
+      callback = actions.replace_all,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader><cr>",
+      desc = "search: replace file",
+      callback = actions.replace_in_node,
+    },
+    {
+      modes = { "n", "v" },
       key = ".",
-      desc = "filetree: change root",
+      desc = "searcher: change root",
       callback = actions.attach_node,
     },
     {
       modes = { "n", "v" },
       key = "<Backspace>",
-      desc = "filetree: change root to parent",
+      desc = "searcher: change root to parent",
       callback = actions.attach_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
-      desc = "filetree: open",
+      desc = "searcher: open",
       callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-h>",
       aliases = { "<C-l>" },
-      desc = "filetree: toggle",
+      desc = "searcher: toggle",
       callback = actions.toggle_node,
     },
     {
       modes = { "n", "v" },
       key = "<Tab>",
-      desc = "filetree: toggle selection",
+      desc = "searcher: toggle selection",
       callback = actions.toggle_selection,
     },
     {
       modes = { "n", "v" },
       key = "<leader>D",
-      desc = "filetree: mark the subroot invisible",
+      desc = "searcher: mark the subroot invisible",
       callback = actions.mark_subroot_invisible,
     },
     {
       modes = { "n", "v" },
       key = "<leader>dd",
-      desc = "filetree: mark the node invisible",
+      desc = "searcher: mark the node invisible",
       callback = actions.mark_node_invisible,
     },
     {
       modes = { "n", "v" },
       key = "[i",
-      desc = "filetree: goto the parent line",
+      desc = "searcher: goto the parent line",
       callback = actions.goto_lnum_parent,
     },
     {
       modes = { "n", "v" },
       key = "]i",
-      desc = "filetree: goto the lastchild line",
+      desc = "searcher: goto the lastchild line",
       callback = actions.goto_lnum_lastchild,
     },
     {
       modes = { "n", "v" },
       key = "oA",
-      desc = "filetree: add to avante (full subtree)",
+      desc = "searcher: add to avante (full subtree)",
       callback = actions.add_subtree_to_avante,
     },
     {
       modes = { "n", "v" },
       key = "oa",
-      desc = "filetree: add to avante",
+      desc = "searcher: add to avante",
       callback = actions.add_node_to_avante,
     },
     {
       modes = { "n", "v" },
       key = "oc",
-      desc = "filetree: copy filepath",
+      desc = "searcher: copy filepath",
       callback = actions.copy_node_filepath,
     },
     {
       modes = { "n", "v" },
       key = "z",
-      desc = "filetree: toggle (recursively)",
+      desc = "searcher: toggle (recursively)",
       callback = actions.toggle_node_recursively,
     },
   }
@@ -702,35 +944,48 @@ function M.new(props)
   ---@type std.t.IKeymap[]
   local preset_keymaps_result = {
     {
+      modes = { "n", "v" },
+      key = "<C-a><cr>",
+      aliases = { "<D-cr>", "<M-cr>" },
+      desc = "searcher: replace all files",
+      callback = actions.replace_all,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader><cr>",
+      desc = "search: replace file",
+      callback = actions.replace_in_node,
+    },
+    {
       modes = { "i", "n", "v" },
       key = ".",
-      desc = "filetree: change root",
+      desc = "searcher: change root",
       callback = actions.attach_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Backspace>",
-      desc = "filetree: change root to parent",
+      desc = "searcher: change root to parent",
       callback = actions.attach_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
       aliases = { "l", "w" },
-      desc = "filetree: open",
+      desc = "searcher: open",
       callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Right>",
       aliases = { "<Left>", "c", "h" },
-      desc = "filetree: toggle",
+      desc = "searcher: toggle",
       callback = actions.toggle_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<2-LeftMouse>",
-      desc = "filetree: toggle",
+      desc = "searcher: toggle",
       callback = function()
         local result_winnr = self._composer.result:get_winnr() ---@type integer|nil
         if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
@@ -744,57 +999,57 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<Tab>",
-      desc = "filetree: toggle selection",
+      desc = "searcher: toggle selection",
       callback = actions.toggle_selection,
     },
     {
       modes = { "i", "n", "v" },
       key = "<leader>D",
       aliases = { "D" },
-      desc = "filetree: mark the subroot invisible",
+      desc = "searcher: mark the subroot invisible",
       callback = actions.mark_subroot_invisible,
     },
     {
       modes = { "i", "n", "v" },
       key = "<leader>dd",
       aliases = { "dd" },
-      desc = "filetree: mark the node invisible",
+      desc = "searcher: mark the node invisible",
       callback = actions.mark_node_invisible,
     },
     {
       modes = { "i", "n", "v" },
       key = "[i",
-      desc = "filetree: goto the parent line",
+      desc = "searcher: goto the parent line",
       callback = actions.goto_lnum_parent,
     },
     {
       modes = { "i", "n", "v" },
       key = "]i",
-      desc = "filetree: goto the lastchild line",
+      desc = "searcher: goto the lastchild line",
       callback = actions.goto_lnum_lastchild,
     },
     {
       modes = { "i", "n", "v" },
       key = "oA",
-      desc = "filetree: add to avante (full subtree)",
+      desc = "searcher: add to avante (full subtree)",
       callback = actions.add_subtree_to_avante,
     },
     {
       modes = { "i", "n", "v" },
       key = "oa",
-      desc = "filetree: add to avante",
+      desc = "searcher: add to avante",
       callback = actions.add_node_to_avante,
     },
     {
       modes = { "i", "n", "v" },
       key = "oc",
-      desc = "filetree: copy filepath",
+      desc = "searcher: copy filepath",
       callback = actions.copy_node_filepath,
     },
     {
       modes = { "i", "n", "v" },
       key = "z",
-      desc = "filetree: toggle (recursively)",
+      desc = "searcher: toggle (recursively)",
       callback = actions.toggle_node_recursively,
     },
   }
@@ -814,7 +1069,7 @@ function M.new(props)
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
-    finder_input = o_finder_input,
+    finder_input = o_search_pattern,
     finder_input_history = finder_input_history,
     finder_title = title,
 
@@ -830,7 +1085,6 @@ function M.new(props)
     result_render = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
       local result ---@type eve.ux.view.tree.IRenderResult
-      local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
       if viewtype == "list" then
@@ -838,7 +1092,7 @@ function M.new(props)
           bufnr = bufnr,
           rootuuid = self._uuid_root,
           orders = self._uuids_order,
-          only_matched = only_matched,
+          only_matched = true,
           only_selected = only_selected,
           only_visible = true,
         })
@@ -849,7 +1103,7 @@ function M.new(props)
           rootuuid = self._uuid_root,
           foldempty = foldempty,
           only_expanded = true,
-          only_matched = only_matched,
+          only_matched = true,
           only_selected = only_selected,
           only_visible = true,
         })
@@ -925,9 +1179,48 @@ function M.new(props)
               nodestate = nodestate.locations[1]
             end
           end
-          ---@cast nodestate          eve.ux.searcher.view.filetree.IFileNodeState|eve.ux.searcher.view.filetree.ILocationNodeState
+          ---@cast nodestate            eve.ux.searcher.view.filetree.IFileNodeState|eve.ux.searcher.view.filetree.ILeafLocationState
 
-          plainfile:render(bufnr, filepath, force)
+          local leafnode = nodestate.nodetype == "location" and treeview:retrieve(nodestate.leafuuid) or nodestate
+          ---@cast leafnode             eve.ux.searcher.view.filetree.IFileNodeState
+
+          local locations = leafnode and leafnode.locations or nil ---@type eve.ux.searcher.view.filetree.ILeafLocationState[]|nil
+          local match_offsets = {} ---@type integer[]
+
+          if locations ~= nil then
+            local L = #locations ---@type integer
+            for i = 1, L, 1 do
+              local location = locations[i] ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+              if treeview:isvisible(location.locationuuid) then
+                match_offsets[#match_offsets + 1] = location.match.preview.offset
+              end
+            end
+          end
+
+          local location_current ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+          if nodestate.nodetype == "location" then
+            ---@cast nodestate          eve.ux.searcher.view.filetree.ILeafLocationState
+            location_current = nodestate
+          else
+            if locations ~= nil and #locations > 0 then
+              location_current = locations[1] ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+            end
+          end
+
+          ---@type eve.ux.searcher.IPlainfileViewContext
+          local plainfile_context = {
+            flag_case_sensitive = o_flag_case_sensitive,
+            flag_regex = o_flag_regex,
+            flag_replace = o_flag_replace,
+            search_pattern = o_search_pattern,
+            replace_pattern = o_replace_pattern,
+
+            filepath = filepath,
+            filematch = leafnode.filematch,
+            match_offsets = match_offsets,
+            offset_current = location_current ~= nil and location_current.match.preview.offset or -1,
+          }
+          plainfile:render(plainfile_context, bufnr, filepath, force)
 
           ---@type eve.ux.searcher.preview.IDrawResult
           local result = {
@@ -976,11 +1269,20 @@ function M.new(props)
   self.result = composer.result
   self.preview = composer.preview
 
+  self.excludes = o_excludes
+  self.flag_exclude = o_flag_exclude
   self.flag_foldempty = o_flag_foldempty
-  self.flag_fuzzy = o_flag_fuzzy
+  self.flag_gitignore = o_flag_gitignore
   self.flag_regex = o_flag_regex
-  self.flag_sensitive = o_flag_sensitive
+  self.flag_replace = o_flag_replace
+  self.flag_sensitive = o_flag_case_sensitive
   self.flag_selected = o_flag_selected
+  self.includes = o_includes
+  self.max_filesize = o_max_filesize
+  self.max_matches = o_max_matches
+  self.search_pattern = o_search_pattern
+  self.rootpath = o_rootpath
+  self.replace_pattern = o_replace_pattern
 
   self._disposed = false
   self._filetree = filetree
@@ -988,7 +1290,7 @@ function M.new(props)
   self._composer = composer
   self._plainfile = plainfile
   self._retriever = retriever
-  self._scheduler_match = scheduler_match
+  self._scheduler_search = scheduler_search
   self._treeview = treeview
 
   self._last_preview_filepath = nil
@@ -1000,18 +1302,22 @@ function M.new(props)
   self._on_confirm = on_confirm
   self._on_disposed = on_disposed
 
-  std.fn.observe(
-    { o_finder_input, o_flag_foldempty, o_flag_fuzzy, o_flag_regex, o_flag_sensitive, o_flag_selected, o_flag_viewtype },
-    function()
-      composer:mark_result_flags_dirty()
-    end,
-    true
-  )
+  std.fn.observe({
+    o_search_pattern,
+    o_flag_foldempty,
+    o_flag_regex,
+    o_flag_replace,
+    o_flag_case_sensitive,
+    o_flag_selected,
+    o_flag_viewtype,
+  }, function()
+    composer:mark_result_flags_dirty()
+  end, true)
   std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  std.fn.observe({ o_finder_input, o_flag_fuzzy, o_flag_regex, o_flag_sensitive }, function()
-    scheduler_match:schedule()
+  std.fn.observe({ o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive }, function()
+    scheduler_search:schedule()
   end)
   std.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
@@ -1034,13 +1340,13 @@ function M:dispose()
   local fullname = self.fullname
   local on_dispose = self._on_disposed ---@type eve.ux.searcher.composer.filetree.IOnDisposed
   local composer = self._composer ---@type eve.ux.searcher.BasicComposer
-  local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
+  local plainfile = self._plainfile ---@type eve.ux.searcher.PlainfileView
   local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
-  local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
+  local scheduler_search = self._scheduler_search ---@type std.collection.Scheduler
   local treeview = self._treeview ---@type eve.ux.searcher.FiletreeView
 
   vim.schedule(function()
-    local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
+    local ok1, error1 = pcall(scheduler_search.dispose, scheduler_search)
     local ok2, error2 = pcall(treeview.dispose, treeview)
     local ok3, error3 = pcall(composer.dispose, composer)
     local ok4, error4 = pcall(plainfile.dispose, plainfile)
@@ -1068,17 +1374,26 @@ function M:dispose()
   self.result = nil
   self.preview = nil
 
+  self.excludes = nil
+  self.flag_exclude = nil
   self.flag_foldempty = nil
-  self.flag_fuzzy = nil
+  self.flag_gitignore = nil
   self.flag_regex = nil
+  self.flag_replace = nil
   self.flag_sensitive = nil
   self.flag_selected = nil
+  self.includes = nil
+  self.max_filesize = nil
+  self.max_matches = nil
+  self.search_pattern = nil
+  self.rootpath = nil
+  self.replace_pattern = nil
 
   self._frecency = nil
   self._composer = nil
   self._plainfile = nil
   self._retriever = nil
-  self._scheduler_match = nil
+  self._scheduler_search = nil
   self._treeview = nil
 
   self._last_preview_filepath = nil
@@ -1157,30 +1472,12 @@ function M:attach(rootuuid)
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
-  self._scheduler_match:schedule()
+  self._scheduler_search:schedule()
 
   local next_rootnode = filetree:retrieve(rootuuid)
   if next_rootnode ~= nil then
     self._on_attached(self, next_rootnode.data.filepath)
   end
-  return self
-end
-
----@return eve.ux.searcher.FiletreeComposer
-function M:clear_locations()
-  self:__health__()
-  self._treeview:clear_locations()
-  return self
-end
-
----@param fileuuid                     string
----@param lnum                          integer
----@param col                           integer|nil
----@param data                          unknown|nil
----@return eve.ux.searcher.FiletreeComposer
-function M:insert_location(fileuuid, lnum, col, data)
-  self:__health__()
-  self._treeview:insert_location(fileuuid, lnum, col, data)
   return self
 end
 
@@ -1200,16 +1497,15 @@ end
 
 ---@param cwd                           string
 ---@param filepaths                     string[]
----@param with_positions                boolean
 ---@return eve.ux.searcher.FiletreeComposer
-function M:reset_filepaths(cwd, filepaths, with_positions)
+function M:reset_filepaths(cwd, filepaths)
   self:__health__()
 
   local frecency = self._frecency ---@type std.collection.IFrecency|nil
   local treeview = self._treeview ---@type eve.ux.searcher.FiletreeView
 
   cwd = std.path.normalize(cwd) ---@type string
-  treeview:reset_filepaths(cwd, filepaths, with_positions)
+  treeview:reset_filepaths(cwd, filepaths)
 
   local uuid_cwd = std.Filetree.uuid(cwd) ---@type string
   local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
@@ -1227,10 +1523,15 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   self._uuid_root = uuid_cwd
   self._uuids_file = uuids_file
   self._uuids_order = uuids_order
-  self._scheduler_match:schedule()
 
   self._on_attached(self, cwd)
   return self
+end
+
+---@return nil
+function M:schedule_search()
+  self:__health__()
+  self._scheduler_search:schedule()
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1259,6 +1560,22 @@ function M:__collect_selected_lnums__()
     end
   end
   return lnums
+end
+
+---@param offset_current                integer
+---@param leafnodestate                     eve.ux.searcher.view.filetree.IFileNodeState
+---@return integer[]
+function M:__collect_remain_offsets__(offset_current, leafnodestate)
+  local treeview = self._treeview ---@type eve.ux.searcher.FiletreeView
+  local offsets_remain = {} ---@type integer[]
+  if leafnodestate.locations ~= nil then
+    for _, location in ipairs(leafnodestate.locations) do
+      if location.s_offset ~= offset_current and treeview:isvisible(location.locationuuid) then
+        offsets_remain[#offsets_remain + 1] = location.s_offset ---@type integer
+      end
+    end
+  end
+  return offsets_remain
 end
 
 ---@return integer|nil
@@ -1308,13 +1625,35 @@ function M:__health__()
 end
 
 ---@protected
----@param input                         string
 ---@return nil
-function M:__match__(input)
+function M:__search__()
+  local rootpath = self.rootpath:snapshot() ---@type string
+
+  if not std.path.is_exist(rootpath) then
+    std.reporter.error({
+      from = self.fullname,
+      subject = "__search__",
+      message = string.format("Root path does not exist: %s", rootpath),
+    })
+    return
+  end
+
+  local cwd = rootpath ---@type string
+  local specified_filepath = nil ---@type string|nil
+
+  if not std.path.is_exist_dirpath(rootpath) then
+    cwd = std.path.dirname(rootpath) ---@type string
+    specified_filepath = rootpath ---@type string
+  end
+
+  local replace_pattern = self.replace_pattern:snapshot() ---@type string|nil
+  local search_pattern = self.search_pattern:snapshot() ---@type string
+
+  local filetree = self._filetree ---@type std.collection.Filetree
   local frecency = self._frecency ---@type std.collection.IFrecency|nil
   local treeview = self._treeview ---@type eve.ux.searcher.FiletreeView
 
-  if #input < 1 then
+  if #search_pattern < 1 then
     local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
     self._uuids_order = uuids_order
     if frecency ~= nil then
@@ -1327,40 +1666,144 @@ function M:__match__(input)
     return
   end
 
-  ---@type string[]
-  local uuids_order = treeview:match({
-    rootuuid = self._uuid_root,
-    pattern = input,
-    case_sensitive = self.flag_sensitive:snapshot(),
-    fuzzy = self.flag_fuzzy:snapshot(),
-    regex = self.flag_regex:snapshot(),
+  ---@type eve.ux.searcher.view.filetree.ISearchResult|nil
+  local result = treeview:search({
+    cwd = cwd,
+    specified_filepath = specified_filepath,
+    excludes = self.excludes:snapshot(),
+    includes = self.includes:snapshot(),
+
+    flag_case_sensitive = self.flag_sensitive:snapshot(),
+    flag_exclude = self.flag_exclude:snapshot(),
+    flag_gitignore = self.flag_gitignore:snapshot(),
+    flag_regex = self.flag_regex:snapshot(),
+    flag_replace = self.flag_replace:snapshot(),
+    max_filesize = self.max_filesize:snapshot(),
+    max_matches = self.max_matches:snapshot(),
+
+    search_pattern = search_pattern,
+    replace_pattern = replace_pattern,
   })
 
+  if result == nil then
+    return
+  end
+
+  local items = result.items ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
+  local filematch_map = result.filematch_map ---@type table<string, eve.builtin.oxi.search.IFileMatch>
+
+  local filepaths = {} ---@type string[]
+  local uuids = {} ---@type string[]
+  do
+    local N, i, j, k = #items, 1, 0, 0 ---@type integer, integer, integer
+    while i <= N do
+      local item = items[i] ---@type eve.ux.searcher.view.filetree.ISearchedItem
+      local nodeuuid = item.uuid ---@type string
+
+      j = i + 1 ---@type integer
+      while j <= N and items[j].uuid == nodeuuid do
+        j = j + 1
+      end
+
+      k = k + 1
+      filepaths[k] = item.filepath ---@type string
+      uuids[k] = item.uuid ---@type string
+
+      i = j
+    end
+  end
+
+  self:reset_filepaths(cwd, filepaths)
+  treeview:mark_cache_match_dirty()
+
+  local tick_matched = treeview._tick_matched ---@type integer
+  local statemap = treeview.statemap ---@type table<string, eve.ux.searcher.view.filetree.INodeState>
+
+  do
+    local N, i, j = #items, 1, 0 ---@type integer, integer, integer
+    while i <= N do
+      local nodeuuid = items[i].uuid ---@type string
+
+      j = i + 1 ---@type integer
+      while j <= N and items[j].uuid == nodeuuid do
+        j = j + 1
+      end
+
+      local leafnode = statemap[nodeuuid] ---@type eve.ux.searcher.view.filetree.INodeState|nil
+      if leafnode == nil then
+        std.reporter.error({
+          from = self.fullname,
+          subject = "__search__",
+          message = string.format("Cannot retrieve node state by the given uuid: %s", nodeuuid),
+          details = {
+            nodeuuid = nodeuuid,
+            items = vim.list_slice(items, i, j - 1),
+            N = N,
+          },
+        })
+      else
+        leafnode.filematch = filematch_map[nodeuuid]
+
+        local L = 0 ---@type integer
+        local locations = leafnode.locations or {} ---@type eve.ux.searcher.view.filetree.ILeafLocationState[]
+        for k = i, j - 1, 1 do
+          local item = items[k] ---@type eve.ux.searcher.view.filetree.ISearchedItem
+
+          ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+          local location = {
+            nodetype = "location",
+            leafuuid = nodeuuid,
+            locationuuid = string.format("%s:%d:%d", nodeuuid, item.lnum, item.col),
+            tick_invisible = 0,
+            lnum = item.lnum,
+            col = item.col,
+            text = item.text,
+            highlights = item.highlights,
+
+            match = item,
+          }
+
+          statemap[location.locationuuid] = location
+
+          L = L + 1 ---@type integer
+          locations[L] = location
+        end
+        std.table.truncate_inline(locations, L)
+        leafnode.locations = locations
+        leafnode.tick_matched = tick_matched
+      end
+
+      i = j
+    end
+  end
+
+  filetree:unsafe_traverse(nil, function(ctx)
+    local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
+    for _, uuid in ipairs(uuids) do
+      local o = nodemap[uuid] ---@type std.collection.filetree.INode
+
+      for _ = o.depth - 1, 1, -1 do
+        o = nodemap[o.parent] ---@type std.collection.filetree.INode
+
+        local s = statemap[o.uuid]
+        if s == nil or s.tick_matched == tick_matched then
+          break
+        end
+
+        s.tick_matched = tick_matched
+      end
+    end
+  end)
+
   if frecency ~= nil then
-    table.sort(uuids_order, function(a, b)
-      local na = treeview:retrieve(a)
-      local nb = treeview:retrieve(b)
-      ---@cast na                       eve.ux.searcher.view.filetree.IFileNodeState
-      ---@cast nb                       eve.ux.searcher.view.filetree.IFileNodeState
-
-      local sa = na.cache_match and na.cache_match.score or 0 + (frecency:score(a) or 0) ---@type integer
-      local sb = nb.cache_match and nb.cache_match.score or 0 + (frecency:score(b) or 0) ---@type integer
-      return sa > sb
-    end)
-  else
-    table.sort(uuids_order, function(a, b)
-      local na = treeview:retrieve(a)
-      local nb = treeview:retrieve(b)
-      ---@cast na                       eve.ux.searcher.view.filetree.IFileNodeState
-      ---@cast nb                       eve.ux.searcher.view.filetree.IFileNodeState
-
-      local sa = na.cache_match and na.cache_match.score or 0 ---@type integer
-      local sb = nb.cache_match and nb.cache_match.score or 0 ---@type integer
-      return sa > sb
+    std.table.stable_sort(uuids, function(a, b)
+      local sa = frecency:score(a) or 0 ---@type integer
+      local sb = frecency:score(b) or 0 ---@type integer
+      return sb - sa
     end)
   end
 
-  self._uuids_order = uuids_order
+  self._uuids_order = uuids
 end
 
 ---@param nodeuuid                      string
@@ -1401,7 +1844,7 @@ function M:__open_node__(nodeuuid)
     if #filepaths > 0 then
       ---@cast last_nodestate             eve.ux.searcher.view.filetree.IFileNodeState
       local locations = last_nodestate.locations
-      local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.searcher.view.filetree.ILocationNodeState|nil
+      local first_location = locations ~= nil and locations[1] or nil ---@type eve.ux.searcher.view.filetree.ILeafLocationState|nil
       local lnum = first_location and first_location.lnum or nil ---@type integer|nil
       local col = first_location and first_location.col or nil ---@type integer|nil
 
@@ -1449,6 +1892,89 @@ function M:__open_node__(nodeuuid)
 
   composer:close()
   eve.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
+end
+
+---@param cwd                           string
+---@param node                          std.collection.filetree.INode
+---@param nodestate                     eve.ux.searcher.view.filetree.IFileNodeState
+---@return boolean
+function M:__replace_file__(cwd, node, nodestate)
+  local locations = nodestate.locations ---@type eve.ux.searcher.view.filetree.ILeafLocationState[]|nil
+  if locations == nil then
+    return false
+  end
+
+  local treeview = self._treeview ---@type eve.ux.searcher.FiletreeView
+  local L = #locations ---@type integer
+  local count = 0 ---@type integer
+  for i = 1, L, 1 do
+    local location = locations[i] ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+    if treeview:isvisible(location.locationuuid) then
+      count = count + 1
+    end
+  end
+
+  if count == 0 then
+    return false
+  end
+
+  local flag_case_sensitive = self.flag_sensitive:snapshot() ---@type boolean
+  local flag_regex = self.flag_regex:snapshot() ---@type boolean
+  local search_pattern = self.search_pattern:snapshot() ---@type string
+  local replace_pattern = self.replace_pattern:snapshot() ---@type string
+
+  if count == L then
+    ---@type boolean
+    local succeed = eve.oxi.replace_file({
+      cwd = cwd,
+      filepath = node.data.filepath,
+      flag_case_sensitive = flag_case_sensitive,
+      flag_regex = flag_regex,
+      search_pattern = search_pattern,
+      replace_pattern = replace_pattern,
+    })
+
+    if succeed then
+      treeview:remove_all_locations(nodestate)
+    end
+    return succeed
+  end
+
+  local match_offsets = {} ---@type integer[]
+  for i = 1, L, 1 do
+    local location = locations[i] ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+    if treeview:isvisible(location.locationuuid) then
+      match_offsets[#match_offsets + 1] = location.match.preview.offset
+    end
+  end
+
+  ---@type boolean
+  local succeed = eve.oxi.replace_file_by_matches({
+    cwd = cwd,
+    filepath = node.data.filepath,
+    flag_case_sensitive = flag_case_sensitive,
+    flag_regex = flag_regex,
+    search_pattern = search_pattern,
+    replace_pattern = replace_pattern,
+    match_offsets = match_offsets,
+  })
+
+  if succeed then
+    local k = 0 ---@type integer
+    local statemap = treeview.statemap ---@type table<string, eve.ux.searcher.view.filetree.INodeState>
+
+    for i = 1, L, 1 do
+      local location = locations[i] ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+      if treeview:isvisible(location.locationuuid) then
+        statemap[location.locationuuid] = nil
+      else
+        k = k + 1 ---@type integer
+        locations[k] = location ---@type eve.ux.searcher.view.filetree.ILeafLocationState
+      end
+    end
+    std.table.truncate_inline(locations, k)
+  end
+  return succeed
 end
 
 ---@param nodeuuid                      string

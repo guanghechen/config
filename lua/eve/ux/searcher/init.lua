@@ -8,6 +8,7 @@ local __mods = {
   FiletreeComposer = "eve.ux.searcher.composer.filetree",
 
   FiletreeView = "eve.ux.searcher.view.filetree",
+  PlainfileView = "eve.ux.searcher.view.plainfile",
 }
 
 ---@class eve.ux.searcher
@@ -21,11 +22,9 @@ local __mods = {
 ---@field public FiletreeComposer       eve.ux.searcher.FiletreeComposer
 ---
 ---@field public FiletreeView           eve.ux.searcher.FiletreeView
+---@field public PlainfileView          eve.ux.searcher.PlainfileView
 local M = setmetatable({
   __mods = __mods,
-  fn = require("eve.ux.fn"),
-  nvimbar = require("eve.ux.nvimbar"),
-  view = require("eve.ux.view"),
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

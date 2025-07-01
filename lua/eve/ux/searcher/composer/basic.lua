@@ -181,7 +181,6 @@ function M.new(props)
   local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnRefresh
   local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnPreviewRendered
   local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnResultRendered
-
   local has_finder_input_history = finder_input_history ~= nil ---@type boolean
 
   local self = setmetatable({}, M)
@@ -231,6 +230,7 @@ function M.new(props)
     keymaps = self:__resolve_keymaps_result__(
       flags,
       flags_start_index,
+      has_finder_input_history,
       vim.list_extend(vim.list_slice(keymaps_common), keymaps_result)
     ),
     flags = flags,
@@ -252,6 +252,7 @@ function M.new(props)
       keymaps = self:__resolve_keymaps_preview__(
         flags,
         flags_start_index,
+        has_finder_input_history,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_preview)
       ),
       ---@type eve.ux.searcher.preview.IOnDrawed
@@ -665,8 +666,9 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
+---@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
+function M:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -707,7 +709,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       end,
     },
     {
-      disabled = self._finder_input_history == nil,
+      disabled = not has_input_history,
       modes = { "i", "n", "v" },
       key = "<C-i>",
       desc = "searcher: history backward",
@@ -720,7 +722,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       end,
     },
     {
-      disabled = self._finder_input_history == nil,
+      disabled = not has_input_history,
       modes = { "i", "n", "v" },
       key = "<C-o>",
       desc = "searcher: history forward",
@@ -754,20 +756,6 @@ end
 function M:__resolve_builtin_keymaps_finder__(has_input_history)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
-    {
-      modes = { "n", "v" },
-      key = "dd",
-      desc = "searcher#finder: clear content",
-      callback = function()
-        local bufnr = vim.api.nvim_get_current_buf()
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        if #lines == 1 then
-          self.finder:set_content("")
-        else
-          vim.cmd("normal! dd")
-        end
-      end,
-    },
     {
       modes = { "i", "n", "v" },
       key = "<Down>",
@@ -888,6 +876,74 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(-step)
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "j",
+      desc = "searcher#finder: focus next item",
+      callback = function()
+        local linecount = self.finder.linecount:snapshot() ---@type integer
+        if linecount > 1 then
+          vim.cmd("normal! j")
+        else
+          local step = vim.v.count1 or 1 ---@type integer
+          self:__result_move_down__(step)
+        end
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "k",
+      desc = "searcher#finder: focus prev item",
+      callback = function()
+        local linecount = self.finder.linecount:snapshot() ---@type integer
+        if linecount > 1 then
+          vim.cmd("normal! k")
+        else
+          local step = vim.v.count1 or 1 ---@type integer
+          self:__result_move_down__(-step)
+        end
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "gg",
+      desc = "searcher#finder: focus first item",
+      callback = function()
+        local linecount = self.finder.linecount:snapshot() ---@type integer
+        if linecount > 1 then
+          vim.cmd("normal! gg")
+        else
+          self:__result_move_to__(1)
+        end
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "G",
+      desc = "searcher#finder: focus last item",
+      callback = function()
+        local linecount = self.finder.linecount:snapshot() ---@type integer
+        if linecount > 1 then
+          vim.cmd("normal! G")
+        else
+          local total = self.result.lnum_total:snapshot() ---@type integer
+          self:__result_move_to__(total)
+        end
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "dd",
+      desc = "searcher#finder: clear content",
+      callback = function()
+        local linecount = self.finder.linecount:snapshot() ---@type integer
+        if linecount > 1 then
+          vim.cmd("normal! dd")
+        else
+          self.finder:set_content("")
+        end
       end,
     },
   }
@@ -1209,7 +1265,7 @@ end
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
 function M:__resolve_keymaps_finder__(flags, flags_start_index, has_input_history, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
   local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__(has_input_history) ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
@@ -1218,10 +1274,11 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
+---@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_result__(flags, flags_start_index, has_input_history, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
   local builtin_keymaps_result = self:__resolve_builtin_keymaps_result__() ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_result) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
@@ -1230,10 +1287,11 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
+---@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_preview__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_preview__(flags, flags_start_index, has_input_history, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
   local builtin_keymaps_preview = self:__resolve_builtin_keymaps_preview__() ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_preview) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)

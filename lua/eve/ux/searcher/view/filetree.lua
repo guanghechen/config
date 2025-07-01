@@ -4,13 +4,13 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 ---@alias eve.ux.searcher.view.filetree.INodeState
 ---| eve.ux.searcher.view.filetree.IDirectoryNodeState
 ---| eve.ux.searcher.view.filetree.IFileNodeState
----| eve.ux.searcher.view.filetree.ILocationNodeState
+---| eve.ux.searcher.view.filetree.ILeafLocationState
 
 ---@alias eve.ux.searcher.view.filetree.IListviewFileRenderer
 ---| fun(ctx: eve.ux.searcher.view.filetree.IListviewRendererContext, node: std.collection.filetree.INode, nodestate: eve.ux.searcher.view.filetree.IFileNodeState, lnum: integer): eve.ux.view.tree.INodeRenderResult
 
 ---@alias eve.ux.searcher.view.filetree.IListviewLocationRenderer
----| fun(ctx: eve.ux.searcher.view.filetree.IListviewRendererContext, node: std.collection.filetree.INode, nodestate: eve.ux.searcher.view.filetree.IFileNodeState, locationstate: eve.ux.searcher.view.filetree.ILocationNodeState, lnum: integer): eve.ux.view.tree.INodeRenderResult
+---| fun(ctx: eve.ux.searcher.view.filetree.IListviewRendererContext, node: std.collection.filetree.INode, nodestate: eve.ux.searcher.view.filetree.IFileNodeState, locationstate: eve.ux.searcher.view.filetree.ILeafLocationState, lnum: integer): eve.ux.view.tree.INodeRenderResult
 
 ---@alias eve.ux.searcher.view.filetree.ITreeviewDirectoryRenderer
 ---| fun(ctx: eve.ux.searcher.view.filetree.ITreeviewRendererContext, node: std.collection.filetree.INode, nodestate: eve.ux.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): eve.ux.view.tree.INodeRenderResult
@@ -19,20 +19,22 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 ---| fun(ctx: eve.ux.searcher.view.filetree.ITreeviewRendererContext, node: std.collection.filetree.INode, nodestate: eve.ux.searcher.view.filetree.IFileNodeState, lnum: integer): eve.ux.view.tree.INodeRenderResult
 
 ---@alias eve.ux.searcher.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: eve.ux.searcher.view.filetree.ITreeviewRendererContext, node: std.collection.filetree.INode, nodestate: eve.ux.searcher.view.filetree.IFileNodeState, locationstate: eve.ux.searcher.view.filetree.ILocationNodeState, lnum: integer): eve.ux.view.tree.INodeRenderResult
+---| fun(ctx: eve.ux.searcher.view.filetree.ITreeviewRendererContext, node: std.collection.filetree.INode, nodestate: eve.ux.searcher.view.filetree.IFileNodeState, locationstate: eve.ux.searcher.view.filetree.ILeafLocationState, lnum: integer): eve.ux.view.tree.INodeRenderResult
 
 ---@class eve.ux.searcher.view.filetree.IDirectoryNodeState : eve.ux.view.tree.IContainerNodeState
 
 ---@class eve.ux.searcher.view.filetree.IFileNodeState : eve.ux.view.tree.ILeafNodeState
----@field public locations              eve.ux.searcher.view.filetree.ILocationNodeState|nil
----@field public cache_match            eve.ux.searcher.view.filetree.INodeMatchResultCache|nil
+---@field public locations              eve.ux.searcher.view.filetree.ILeafLocationState|nil
+---@field public filematch              eve.builtin.oxi.search.IFileMatch|nil
 
----@class eve.ux.searcher.view.filetree.ILocationNodeState : eve.ux.view.tree.ILeafLocationState
+---@class eve.ux.searcher.view.filetree.ILeafLocationState : eve.ux.view.tree.ILeafLocationState
 ---@field public lnum                   integer
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
 ---@field public text                   ?string
 ---@field public highlights             ?std.t.IHighlightInline[]
+---
+---@field public match                  eve.ux.searcher.view.filetree.ISearchedItem
 
 ---@class eve.ux.searcher.view.filetree.IListviewRendererContext : eve.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               std.collection.filetree.INode
@@ -46,31 +48,68 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 ---@field public tree                   std.collection.IReadonlyFiletree
 ---@field public view                   eve.ux.searcher.FiletreeView
 
----@class eve.ux.searcher.view.filetree.INodeMatchContext
----@field public rootuuid               string
----@field public pattern                string
----@field public case_sensitive         boolean
----@field public fuzzy                  boolean
----@field public regex                  boolean
+---@class eve.ux.searcher.view.filetree.ISearchParams
+---@field public flag_case_sensitive    boolean
+---@field public flag_exclude           boolean
+---@field public flag_gitignore         boolean
+---@field public flag_regex             boolean
+---@field public flag_replace           boolean
+---@field public max_filesize           string
+---@field public max_matches            integer
+---
+---@field public excludes               string[]
+---@field public includes               string[]
+---
+---@field public cwd                    string
+---@field public specified_filepath     string|nil
+---@field public search_pattern         string
+---@field public replace_pattern        string|nil
 
----@class eve.ux.searcher.view.filetree.INodeMatchResult
----@field public context                eve.ux.searcher.view.filetree.INodeMatchContext
----@field public uuids                  string[]
+---@class eve.ux.searcher.view.filetree.ISearchResult
+---@field public items                  eve.ux.searcher.view.filetree.ISearchedItem[]
+---@field public filematch_map          table<string, eve.builtin.oxi.search.IFileMatch>
 
----@class eve.ux.searcher.view.filetree.INodeMatchResultCache
----@field public score                  integer
----@field public matches                std.t.IMatchPoint[]
+---@class eve.ux.searcher.view.filetree.ISearchedPreviewItem
+---@field public offset                 integer
+---@field public lnum                   integer
+---@field public col                    integer
+---@field public content                string
 
----@class eve.ux.searcher.view.filetree.IMatchParams
----@field public rootuuid               string|nil
----@field public pattern                string
----@field public case_sensitive         boolean
----@field public fuzzy                  boolean
----@field public regex                  boolean
+---@class eve.ux.searcher.view.filetree.ISearchedItem
+---@field public filepath               string
+---@field public uuid                   string
+---
+---@field public lnum                   integer
+---@field public col                    integer
+---@field public text                   string
+---@field public highlights             std.t.IHighlightInline[]
+---
+---@field public preview                eve.ux.searcher.view.filetree.ISearchedPreviewItem
 
 ----------------------------------------------------------------------------------------------------
 
-local DEFAULT_NSNR_MATCHES = eve.var.nsnr.view_filetree_matches ---@type integer
+---@param lwidths                       integer[]
+---@param l                             integer
+---@param r                             integer
+---@return integer
+---@return integer
+---@return integer
+local function calc_same_line_pos(lwidths, l, r)
+  local offset = 0 ---@type integer
+  local lwidth = lwidths[1] + 1 ---@type integer
+  local N, lnum = #lwidths, 1 ---@type integer, integer
+  while offset + lwidth <= l and lnum < N do
+    lnum = lnum + 1
+    offset = offset + lwidth
+    lwidth = lwidths[lnum] + 1
+  end
+
+  local col = l - offset ---@type integer
+  local col_end = r - offset ---@type integer
+  return lnum, col, col_end < lwidth and col_end or lwidth
+end
+
+----------------------------------------------------------------------------------------------------
 
 ---@class eve.ux.searcher.view.IFiletreeProps
 ---@field public name                   string
@@ -88,7 +127,7 @@ local P = eve.ux.view.Tree ---@type eve.ux.view.Tree
 
 ---@class eve.ux.searcher.FiletreeView : eve.ux.view.Tree
 ---@field protected _tree               std.collection.IFiletree
----@field protected _last_match_result  eve.ux.searcher.view.filetree.INodeMatchResult
+---@field public statemap               table<string, eve.ux.searcher.view.filetree.INodeState>
 ---@field public insert                 fun(self: eve.ux.searcher.FiletreeView, uuid: string, state: eve.ux.view.tree.INodeState): eve.ux.searcher.FiletreeView
 local M = {}
 M.__index = M
@@ -125,7 +164,6 @@ function M.new(props)
   local self = setmetatable(super, M)
   ---@cast self                         eve.ux.searcher.FiletreeView
 
-  self._last_match_result = nil
   return self
 end
 
@@ -136,7 +174,6 @@ function M:clear()
   self:__health__()
 
   P.clear(self)
-  self._last_match_result = nil
   return self
 end
 
@@ -147,13 +184,11 @@ function M:dispose()
   end
 
   P.dispose(self)
-  self._last_match_result = nil
 end
 
 ---@return eve.ux.searcher.FiletreeView
 function M:mark_cache_match_dirty()
   self:__health__()
-  self._last_match_result = nil ---@type eve.ux.searcher.view.filetree.INodeMatchResult|nil
   return self
 end
 
@@ -177,211 +212,198 @@ function M:collect_file_uuids(root)
   return self:collect_leafs(root)
 end
 
----@return eve.ux.searcher.FiletreeView
-function M:clear_locations()
+---@param params                        eve.ux.searcher.view.filetree.ISearchParams
+---@return eve.ux.searcher.view.filetree.ISearchResult|nil
+function M:search(params)
   self:__health__()
 
-  local filetree = self._tree ---@type std.collection.IReadonlyFiletree
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, eve.ux.searcher.view.filetree.INodeState>
+  local flag_case_sensitive = params.flag_case_sensitive ---@type boolean
+  local flag_exclude = params.flag_exclude ---@type boolean
+  local flag_gitignore = params.flag_gitignore ---@type boolean
+  local flag_regex = params.flag_regex ---@type boolean
+  local flag_replace = params.flag_replace ---@type boolean
+  local max_filesize = params.max_filesize ---@type string
+  local max_matches = params.max_matches ---@type integer
 
-  filetree:quick_traverse(filetree.root, function(_, node)
-    if node.data.filetype == "file" then
-      local nodestate = statemap[node.uuid]
-      if nodestate ~= nil then
-        nodestate.locations = nil
-      end
-    end
-  end)
-  return self
-end
+  local includes = params.includes ---@type string[]
+  local excludes = flag_exclude and params.excludes or {} ---@type string[]
 
----@param fileuuid                     string
----@param lnum                          integer
----@param col                           integer|nil
----@param data                          unknown|nil
----@return eve.ux.searcher.FiletreeView
-function M:insert_location(fileuuid, lnum, col, data)
-  self:__health__()
+  local cwd = params.cwd ---@type string
+  local specified_filepath = params.specified_filepath ---@type string|nil
+  local search_pattern = flag_case_sensitive and params.search_pattern or params.search_pattern:lower() ---@type string
+  local replace_pattern = params.replace_pattern ---@type string|nil
 
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, eve.ux.searcher.view.filetree.INodeState>
+  ---@type eve.builtin.oxi.search.IResult|nil
+  local results = eve.oxi.search({
+    cwd = cwd,
+    flag_case_sensitive = flag_case_sensitive,
+    flag_gitignore = flag_gitignore,
+    flag_regex = flag_regex,
+    max_filesize = max_filesize,
+    max_matches = max_matches,
+    search_pattern = search_pattern,
+    search_paths = "",
+    include_patterns = table.concat(includes, ","),
+    exclude_patterns = table.concat(excludes, ","),
+    specified_filepath = specified_filepath,
+  })
 
-  local leafstate = statemap[fileuuid]
-  if leafstate == nil or leafstate.nodetype ~= "leaf" then
+  if results == nil or results.error ~= nil or results.items == nil then
     std.reporter.error({
       from = self.fullname,
-      subject = "insert_location",
-      message = string.format("Cannot retrieve leaf state by the given fileuuid(%s)", fileuuid),
-      details = { fileuuid = fileuuid, lnum = lnum, col = col, data = data },
+      subject = "search",
+      message = "Failed to perform the search action.",
+      details = {
+        flag_case_sensitive = flag_case_sensitive,
+        flag_exclude = flag_exclude,
+        flag_gitignore = flag_gitignore,
+        flag_regex = flag_regex,
+        flag_replace = flag_replace,
+        max_filesize = max_filesize,
+        max_matches = max_matches,
+        includes = includes,
+        excludes = excludes,
+        cwd = cwd,
+        specified_filepath = specified_filepath,
+        search_pattern = search_pattern,
+        replacement = replace_pattern,
+        error = results ~= nil and results.error or nil,
+      },
     })
-    return self
+    return
   end
 
-  ---@type eve.ux.searcher.view.filetree.ILocationNodeState
-  local locationstate = {
-    nodetype = "location",
-    leafuuid = fileuuid,
-    locationuuid = string.format("%s:%d:%d", fileuuid, lnum, col or 0),
-    tick_invisible = 0,
-    lnum = lnum,
-    col = col,
-    data = data,
-  }
-  statemap[locationstate.locationuuid] = locationstate
+  local items = {} ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
+  local filematch_map = {} ---@type table<string, eve.builtin.oxi.search.IFileMatch>
 
-  if leafstate.locations == nil then
-    leafstate.locations = { locationstate } ---@type eve.ux.searcher.view.filetree.ILocationNodeState[]
-    return self
-  end
+  for _, filepath in ipairs(results.item_orders) do
+    local filematch = results.items[filepath] ---@type eve.builtin.oxi.search.IFileMatch
+    filepath = std.path.join(cwd, filepath) ---@type string
+    local uuid = std.Filetree.uuid(filepath) ---@type string
 
-  local N = #leafstate.locations ---@type integer
-  local index = N + 1 ---@type integer
-  for i = 1, N, 1 do
-    local location = leafstate.locations[i] ---@type eve.ux.searcher.view.filetree.ILocationNodeState
-    if location.locationuuid == locationstate.locationuuid then
-      index = i ---@type integer
-      break
-    end
-  end
+    filematch_map[uuid] = filematch ---@type eve.builtin.oxi.search.IFileMatch
 
-  leafstate.locations[index] = locationstate
-  return self
-end
+    if flag_replace and replace_pattern ~= nil then
+      local lnum_delta = 0 ---@type integer
+      for _, block_match in ipairs(filematch.matches) do
+        ---@type eve.builtin.oxi.replace.replace_text_preview_advance.IResult
+        local preview_result = eve.oxi.replace_text_preview_advance({
+          flag_case_sensitive = flag_case_sensitive,
+          flag_regex = flag_regex,
+          keep_search_pieces = true,
+          search_pattern = search_pattern,
+          replace_pattern = replace_pattern,
+          text = block_match.text,
+        })
 
----@param params                        eve.ux.searcher.view.filetree.IMatchParams
----@return string[]
-function M:match(params)
-  self:__health__()
+        local r_lines = preview_result.lines ---@type string[]
+        local r_lwidths = preview_result.lwidths ---@type integer[]
+        local r_matches = preview_result.matches ---@type std.t.IMatchPoint[]
+        local s_lines = block_match.lines ---@type string[]
+        local s_lwidths = block_match.lwidths ---@type integer[]
+        local s_matches = block_match.matches ---@type std.t.IMatchPoint[]
+        for i = 1, #s_matches, 1 do
+          local s_match = s_matches[i] ---@type std.t.IMatchPoint
+          local k, col, col_end = calc_same_line_pos(s_lwidths, s_match.l, s_match.r)
+          local line = s_lines[k] ---@type string
+          local lnum = block_match.lnum + k - 1 ---@type integer
 
-  local tree = self._tree ---@type std.collection.IReadonlyFiletree
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, eve.ux.searcher.view.filetree.INodeState>
+          local search_match = r_matches[i * 2 - 1] ---@type std.t.IMatchPoint
+          local s_k, s_col = calc_same_line_pos(r_lwidths, search_match.l, search_match.r)
+          local s_lnum = block_match.lnum + s_k - 1 + lnum_delta ---@type integer
 
-  local root = params.rootuuid or tree.root ---@type string
-  local case_sensitive = params.case_sensitive ---@type boolean
-  local fuzzy = params.fuzzy ---@type boolean
-  local regex = params.regex ---@type boolean
-  local pattern = case_sensitive and params.pattern or params.pattern:lower() ---@type string
+          local replace_match = r_matches[i * 2] ---@type std.t.IMatchPoint
+          local r_k, r_col, r_col_end = calc_same_line_pos(r_lwidths, replace_match.l, replace_match.r)
+          local r_line = r_lines[r_k] ---@type string
 
-  ---@type eve.ux.searcher.view.filetree.INodeMatchContext
-  local context = {
-    rootuuid = root,
-    pattern = pattern,
-    case_sensitive = case_sensitive,
-    fuzzy = fuzzy,
-    regex = regex,
-  }
+          local text ---@type string
+          local highlights ---@type std.t.IHighlightInline[]
 
-  local last_match_result = self._last_match_result ---@type eve.ux.searcher.view.filetree.INodeMatchResult|nil
-  local last_match_context = last_match_result and last_match_result.context or nil ---@type eve.ux.searcher.view.filetree.INodeMatchContext|nil
-  local last_matched_uuids = last_match_result and last_match_result.uuids or nil ---@type string[]|nil
-  local tick_matched = self._tick_matched + 1 ---@type integer
+          if s_k == r_k then
+            text = string.sub(line, 1, col_end)
+              .. string.sub(r_line, r_col + 1, r_col_end)
+              .. string.sub(line, col_end + 1)
+              .. eve.icon.listchars.eol
 
-  ---@type boolean
-  local is_limit_in_last_matched = (
-    last_match_context ~= nil
-    and last_matched_uuids ~= nil
-    and last_match_context.rootuuid == root
-    and last_match_context.case_sensitive == case_sensitive
-    and last_match_context.fuzzy == fuzzy
-    and (last_match_context.regex == regex and not regex)
-    and std.string.starts_with(pattern, last_match_context.pattern)
-  )
+            highlights = {
+              { coll = col, colr = col_end, hlname = "f_ss_search" },
+              { coll = col_end, colr = col_end + (r_col_end - r_col), hlname = "f_ss_replace" },
+            }
+          else
+            text = line .. eve.icon.listchars.eol
+            highlights = {
+              { coll = col, colr = col_end, hlname = "f_ss_matches" },
+            }
+          end
 
-  local uuids ---@type string[]
-  if is_limit_in_last_matched then
-    uuids = last_matched_uuids and vim.list_slice(last_matched_uuids) or {} ---@type string[]
-  else
-    local k = 0 ---@type integer
-    uuids = {} ---@type string[]
-
-    ---@type std.collection.tree.IQuickTraverseHandler
-    local collect = function(_, node)
-      local state = statemap[node.uuid]
-      if state.nodetype == "leaf" then
-        k = k + 1
-        uuids[k] = node.uuid
-      end
-    end
-    tree:quick_traverse(root, collect)
-  end
-
-  local lines = {} ---@type string[]
-  tree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
-    if case_sensitive then
-      for index, uuid in ipairs(uuids) do
-        local node = nodemap[uuid] ---@type std.collection.filetree.INode|nil
-        if node ~= nil then
-          lines[index] = node.data.filepath ---@type string
+          ---@type eve.ux.searcher.view.filetree.ISearchedItem
+          local item = {
+            filepath = filepath,
+            uuid = uuid,
+            lnum = lnum,
+            col = col,
+            text = text,
+            highlights = highlights,
+            preview = {
+              offset = block_match.offset + s_match.l,
+              lnum = s_lnum,
+              col = s_col,
+              content = s_lines[s_k],
+            },
+          }
+          items[#items + 1] = item
         end
+
+        lnum_delta = lnum_delta + #r_lwidths - #s_lwidths
       end
     else
-      for index, uuid in ipairs(uuids) do
-        local node = nodemap[uuid] ---@type std.collection.filetree.INode|nil
-        if node ~= nil then
-          lines[index] = node.data.filepath_lower ---@type string
+      for _, block_match in ipairs(filematch.matches) do
+        local lines = block_match.lines ---@type string[]
+        local lwidths = block_match.lwidths ---@type integer[]
+        for _, s_match in ipairs(block_match.matches) do
+          local k, col, col_end = calc_same_line_pos(lwidths, s_match.l, s_match.r)
+          local lnum = block_match.lnum + k - 1 ---@type integer
+
+          local text = lines[k] .. eve.icon.listchars.eol ---@type string
+
+          ---@type std.t.IHighlightInline[]
+          local highlights = {
+            { coll = col, colr = col_end, hlname = "f_ss_matches" },
+          }
+
+          ---@type eve.ux.searcher.view.filetree.ISearchedItem
+          local item = {
+            filepath = filepath,
+            uuid = uuid,
+            lnum = lnum,
+            col = col,
+            text = text,
+            highlights = highlights,
+            preview = {
+              offset = block_match.offset + s_match.l,
+              lnum = lnum,
+              col = col,
+              content = lines[k],
+            },
+          }
+          items[#items + 1] = item
         end
       end
-    end
-  end)
-
-  local oxi_matches = eve.oxi.find_match_points_line_by_line(pattern, lines, fuzzy, regex) ---@type eve.builtin.oxi.string.ILineMatch[]|nil
-  if oxi_matches ~= nil then
-    for _, oxi_match in ipairs(oxi_matches) do
-      local lnum = oxi_match.lnum ---@type integer
-      local uuid = uuids[lnum] ---@type string
-      local matches = oxi_match.matches ---@type std.t.IMatchPoint[]
-      local state = statemap[uuid]
-      state.tick_matched = tick_matched ---@type integer
-      state.cache_match = { score = oxi_match.score, matches = matches } ---@type eve.ux.searcher.view.filetree.INodeMatchResultCache
-    end
-
-    local N = #oxi_matches ---@type integer
-    if N < #uuids then
-      for index = 1, N, 1 do
-        local oxi_match = oxi_matches[index] ---@type eve.builtin.oxi.string.ILineMatch
-        local lnum = oxi_match.lnum ---@type integer
-        uuids[index] = uuids[lnum] ---@type string
-      end
-      std.table.truncate_inline(uuids, N)
     end
   end
 
-  tree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
-    for _, uuid in ipairs(uuids) do
-      local o = nodemap[uuid] ---@type std.collection.filetree.INode
-
-      for _ = o.depth - 1, 1, -1 do
-        o = nodemap[o.parent] ---@type std.collection.filetree.INode
-
-        local s = statemap[o.uuid]
-        if s.tick_matched == tick_matched then
-          break
-        end
-
-        s.tick_matched = tick_matched
-      end
-    end
-  end)
-
-  ---@type eve.ux.searcher.view.filetree.INodeMatchResult
-  local match_result = {
-    context = context,
-    uuids = uuids,
+  ---@type eve.ux.searcher.view.filetree.ISearchResult
+  local result = {
+    items = items,
+    filematch_map = filematch_map,
   }
-  self._last_match_result = match_result
-  self._tick_matched = tick_matched
-  return uuids
+  return result
 end
 
 ---@param cwd                           string
 ---@param filepaths                     string[]
----@param with_locations                boolean
 ---@return eve.ux.searcher.FiletreeView
-function M:reset_filepaths(cwd, filepaths, with_locations)
+function M:reset_filepaths(cwd, filepaths)
   self:__health__()
 
   local selected_set = self:collect_selected() ---@type table<string, true>
@@ -392,7 +414,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
   local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
   ---@cast statemap                     table<string, eve.ux.searcher.view.filetree.INodeState>
 
-  filetree:reset(cwd, filepaths, with_locations)
+  filetree:reset(cwd, filepaths, false)
   filetree:unsafe_traverse(filetree.root, function(ctx)
     local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
     local rootnode = ctx.rootnode ---@type std.collection.filetree.INode
@@ -446,177 +468,9 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
     end
 
     traverse(rootnode)
-
-    if with_locations then
-      for _, p in ipairs(filepaths) do
-        local filepath, lnum, col = std.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
-        if lnum ~= nil then
-          if not std.path.is_absolute(filepath) then
-            filepath = cwd .. std.env.PATH_SEP .. filepath ---@type string
-          end
-
-          local fileuuid = std.Filetree.uuid(filepath) ---@type string
-          local filenode = nodemap[fileuuid] ---@type std.collection.filetree.INode|nil
-          local nodestate = statemap[fileuuid]
-
-          if filenode ~= nil and nodestate ~= nil then
-            local locationuuid = string.format("%s:%d:%d", fileuuid, lnum, col or 0) ---@type string
-
-            ---@type eve.ux.searcher.view.filetree.ILocationNodeState
-            local location = {
-              nodetype = "location",
-              leafuuid = fileuuid,
-              locationuuid = locationuuid,
-              tick_invisible = 0,
-              lnum = lnum,
-              col = col,
-            }
-            statemap[locationuuid] = location
-
-            local locations = nodestate.locations or {} ---@type eve.ux.searcher.view.filetree.ILocationNodeState[]
-            locations[#locations + 1] = location ---@type eve.ux.searcher.view.filetree.ILocationNodeState
-            nodestate.locations = locations ---@type eve.ux.searcher.view.filetree.ILocationNodeState[]
-          end
-        end
-      end
-    end
   end)
 
   return self
-end
-
-----------------------------------------------------------------------------------------------------
-
----@param params                        eve.ux.view.tree.IRenderListviewParams
----@return eve.ux.view.tree.IRenderResult
-function M:render_listview(params)
-  self:__health__()
-
-  local nsnr = DEFAULT_NSNR_MATCHES ---@type integer
-  local bufnr = params.bufnr ---@type integer
-  local only_matched = params.only_matched ---@type boolean
-
-  local result = P.render_listview(self, params)
-  local uuids = result.lnum2uuid ---@type string[]
-  local N = #uuids ---@type integer
-
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-
-  if N < 1 then
-    return result
-  end
-
-  local filetree = self._tree ---@type std.collection.IReadonlyFiletree
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, eve.ux.searcher.view.filetree.INodeState>
-
-  local tick_matched = self._tick_matched ---@type integer
-
-  local rootuuid = params.rootuuid ~= nil and params.rootuuid or filetree.root ---@type string
-  local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
-  if rootnode == nil then
-    std.reporter.error({
-      from = self.fullname,
-      subject = "render_listview",
-      message = "Cannot retrieve the root node",
-      details = {
-        bufnr = bufnr,
-        rootuuid = rootuuid,
-      },
-    })
-    return result
-  end
-
-  if only_matched then
-    local indents = result.indents ---@type string[]
-    for lnum = 1, N, 1 do
-      local uuid = uuids[lnum] ---@type string
-      local nodestate = statemap[uuid] ---@type eve.ux.searcher.view.filetree.INodeState|nil
-      if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-        local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
-        if node ~= nil then
-          local row = lnum - 1 ---@type integer
-          local offset_final = #indents[lnum] + #node.data.fileicon + 1 ---@type integer
-          local rootpath = rootnode.data.filepath ---@type string
-          local displayed_filepath = #rootpath < 2 and node.data.filepath or node.data.filepath:sub(#rootpath + 2) ---@type string
-          local L = #displayed_filepath ---@type integer
-          local offset_filepath = #node.data.filepath - L ---@type integer
-
-          local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
-          for _, m in ipairs(matches) do
-            local l = m.l - offset_filepath
-            local r = m.r - offset_filepath
-            if r > 0 and l < L then
-              l = l < 0 and 0 or l ---@type integer
-              r = r < L and r or L ---@type integer
-              vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
-            end
-          end
-        end
-      end
-    end
-  end
-  return result
-end
-
----@param params                        eve.ux.view.tree.IRenderTreeviewParams
----@return eve.ux.view.tree.IRenderResult
-function M:render_treeview(params)
-  self:__health__()
-  local nsnr = DEFAULT_NSNR_MATCHES ---@type integer
-  local bufnr = params.bufnr ---@type integer
-  local only_matched = params.only_matched ---@type boolean
-
-  local result = P.render_treeview(self, params)
-  local uuids = result.lnum2uuid ---@type string[]
-  local N = #uuids ---@type integer
-
-  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
-
-  if N < 1 then
-    return result
-  end
-
-  local indents = result.indents ---@type string[]
-  local filetree = self._tree ---@type std.collection.IReadonlyFiletree
-  local tick_matched = self._tick_matched ---@type integer
-  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, eve.ux.searcher.view.filetree.INodeState>
-
-  if only_matched then
-    for lnum = 1, N, 1 do
-      local uuid = uuids[lnum] ---@type string
-      local nodestate = statemap[uuid] ---@type eve.ux.searcher.view.filetree.INodeState|nil
-      if
-        nodestate ~= nil
-        and nodestate.nodetype == "leaf"
-        and nodestate.tick_matched == tick_matched
-        and nodestate.cache_match ~= nil
-      then
-        local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
-        if node ~= nil then
-          local row = lnum - 1 ---@type integer
-          local offset_final = #indents[lnum] + #node.data.fileicon + 1 ---@type integer
-          local basename = node.data.basename ---@type string
-          local L = #basename ---@type integer
-          local offset_basename = #node.data.filepath - L ---@type integer
-
-          local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
-          for _, m in ipairs(matches) do
-            local l = m.l - offset_basename ---@type integer
-            local r = m.r - offset_basename ---@type integer
-            if r > 0 and l < L then
-              l = l < 0 and 0 or l ---@type integer
-              r = r < L and r or L ---@type integer
-              vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
-            end
-          end
-        end
-      end
-    end
-  end
-
-  return result
 end
 
 ----------------------------------------------------------------------------------------------------
