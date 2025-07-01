@@ -9,6 +9,7 @@ local o_flag_gitignore = eve.context.select.find_file.flag_gitignore
 local o_flag_regex = eve.context.select.find_file.flag_regex
 local o_flag_sensitive = eve.context.select.find_file.flag_case_sensitive
 local o_flag_selected = eve.context.select.find_file.flag_selected
+local o_flag_textonly = eve.context.select.find_file.flag_textonly
 local o_flag_viewtype = eve.context.select.find_file.flag_viewtype
 
 local o_input = eve.context.select.find_file.input
@@ -195,6 +196,17 @@ picker = eve.ux.picker.FiletreeComposer.new({
       snapshot = function()
         local enabled = o_flag_gitignore:snapshot() ---@type boolean
         return eve.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+    {
+      desc = string.format("%s: toggle textonly", name),
+      callback = function()
+        local enabled = o_flag_textonly:snapshot() ---@type boolean
+        o_flag_textonly:next(not enabled)
+      end,
+      snapshot = function()
+        local enabled = o_flag_textonly:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_textonly, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   },

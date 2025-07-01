@@ -91,6 +91,7 @@ M.symbols = {
   flag_replace = "",
   flag_reset = "󰝳",
   flag_selected = "󰔡",
+  flag_textonly = "󱄽",
   flag_tree = "",
   sep_left = "",
   sep_right = "",

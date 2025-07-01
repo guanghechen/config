@@ -1,11 +1,12 @@
 ---@class eve.context.select.item.data
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_exclude           boolean
+---@field public flag_foldempty         boolean
 ---@field public flag_fuzzy             boolean
 ---@field public flag_gitignore         boolean
 ---@field public flag_regex             boolean
 ---@field public flag_selected          boolean
----@field public flag_foldempty         boolean
+---@field public flag_textonly          boolean
 ---@field public flag_viewtype          string
 ---@field public includes               string[]
 ---@field public excludes               string[]
@@ -15,11 +16,12 @@
 ---@class eve.context.select.item.state
 ---@field public flag_case_sensitive    std.collection.IObservable
 ---@field public flag_exclude           std.collection.IObservable
+---@field public flag_foldempty         std.collection.IObservable
 ---@field public flag_fuzzy             std.collection.IObservable
 ---@field public flag_gitignore         std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
 ---@field public flag_selected          std.collection.IObservable
----@field public flag_foldempty         std.collection.IObservable
+---@field public flag_textonly          std.collection.IObservable
 ---@field public flag_viewtype          std.collection.IObservable
 ---@field public includes               std.collection.IObservable
 ---@field public excludes               std.collection.IObservable
@@ -45,6 +47,7 @@ function M.defaults()
     flag_selected = false,
     flag_foldempty = true,
     flag_viewtype = "tree",
+    flag_textonly = false,
     includes = {},
     excludes = {
       ".git/",
@@ -92,6 +95,9 @@ function M.normalize(data)
     if type(data.flag_foldempty) == "boolean" then
       resolved.flag_foldempty = data.flag_foldempty
     end
+    if type(data.flag_textonly) == "boolean" then
+      resolved.flag_textonly = data.flag_textonly
+    end
     if type(data.flag_viewtype) == "string" then
       if data.flag_viewtype == "tree" or data.flag_viewtype == "list" then
         resolved.flag_viewtype = data.flag_viewtype
@@ -127,11 +133,12 @@ function M.dump(state)
   return {
     flag_case_sensitive = state.flag_case_sensitive:snapshot(),
     flag_exclude = state.flag_exclude:snapshot(),
+    flag_foldempty = state.flag_foldempty:snapshot(),
     flag_fuzzy = state.flag_fuzzy:snapshot(),
     flag_gitignore = state.flag_gitignore:snapshot(),
     flag_regex = state.flag_regex:snapshot(),
     flag_selected = state.flag_selected:snapshot(),
-    flag_foldempty = state.flag_foldempty:snapshot(),
+    flag_textonly = state.flag_textonly:snapshot(),
     flag_viewtype = state.flag_viewtype:snapshot(),
     includes = state.includes:snapshot(),
     excludes = state.excludes:snapshot(),
@@ -152,11 +159,12 @@ function M.load(state, name, raw_data)
     state = {
       flag_case_sensitive = std.Observable.from_value(data.flag_case_sensitive),
       flag_exclude = std.Observable.from_value(data.flag_exclude),
+      flag_foldempty = std.Observable.from_value(data.flag_foldempty),
       flag_fuzzy = std.Observable.from_value(data.flag_fuzzy),
       flag_gitignore = std.Observable.from_value(data.flag_gitignore),
       flag_regex = std.Observable.from_value(data.flag_regex),
       flag_selected = std.Observable.from_value(data.flag_selected),
-      flag_foldempty = std.Observable.from_value(data.flag_foldempty),
+      flag_textonly = std.Observable.from_value(data.flag_textonly),
       flag_viewtype = std.Observable.from_value(data.flag_viewtype),
       includes = std.Observable.from_value(data.includes),
       excludes = std.Observable.from_value(data.excludes),
@@ -172,11 +180,12 @@ function M.load(state, name, raw_data)
 
   state.flag_case_sensitive:next(data.flag_case_sensitive)
   state.flag_exclude:next(data.flag_exclude)
+  state.flag_foldempty:next(data.flag_foldempty)
   state.flag_fuzzy:next(data.flag_fuzzy)
   state.flag_gitignore:next(data.flag_gitignore)
   state.flag_regex:next(data.flag_regex)
   state.flag_selected:next(data.flag_selected)
-  state.flag_foldempty:next(data.flag_foldempty)
+  state.flag_textonly:next(data.flag_textonly)
   state.flag_viewtype:next(data.flag_viewtype)
   if not std.fn.equals_list(state.includes:snapshot(), data.includes) then
     state.includes:next(data.includes)
