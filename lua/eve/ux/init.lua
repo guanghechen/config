@@ -1,11 +1,5 @@
 ---@class eve.ux.__mods
 local __mods = {
-  Search = "eve.ux.search.search",
-  SearchContext = "eve.ux.search.context",
-  SearchInput = "eve.ux.search.input",
-  SearchMain = "eve.ux.search.main",
-  SearchPreview = "eve.ux.search.preview",
-
   SelectPopup = "eve.ux.select_popup",
 
   Board = "eve.ux.board",
@@ -22,12 +16,6 @@ local __mods = {
 ---@field public retriever              eve.ux.retriever
 ---@field public searcher                eve.ux.searcher
 ---@field public view                   eve.ux.view
----
----@field public Search                 eve.ux.Search
----@field public SearchContext          eve.ux.SearchContext
----@field public SearchInput            eve.ux.SearchInput
----@field public SearchMain             eve.ux.SearchMain
----@field public SearchPreview          eve.ux.SearchPreview
 ---
 ---@field public SelectPopup            eve.ux.SelectPopup
 ---
