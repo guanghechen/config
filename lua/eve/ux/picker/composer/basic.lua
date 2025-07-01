@@ -759,20 +759,6 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       end,
     },
     {
-      modes = { "n", "v" },
-      key = "dd",
-      desc = "picker#finder: clear content",
-      callback = function()
-        local bufnr = vim.api.nvim_get_current_buf()
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        if #lines == 1 then
-          self.finder:set_content("")
-        else
-          vim.cmd("normal! dd")
-        end
-      end,
-    },
-    {
       modes = { "i" },
       key = "<enter>",
       desc = "picker#finder: noop",
@@ -798,23 +784,6 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     },
     {
       modes = { "n", "v" },
-      key = "gg",
-      desc = "picker#finder: focus first item",
-      callback = function()
-        self:__result_move_to__(1)
-      end,
-    },
-    {
-      modes = { "n", "v" },
-      key = "G",
-      desc = "picker#finder: focus last item",
-      callback = function()
-        local total = self.result.lnum_total:snapshot() ---@type integer
-        self:__result_move_to__(total)
-      end,
-    },
-    {
-      modes = { "n", "v" },
       key = "k",
       desc = "picker#finder: focus prev item",
       callback = function()
@@ -829,6 +798,23 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(-step)
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "gg",
+      desc = "picker#finder: focus first item",
+      callback = function()
+        self:__result_move_to__(1)
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "G",
+      desc = "picker#finder: focus last item",
+      callback = function()
+        local total = self.result.lnum_total:snapshot() ---@type integer
+        self:__result_move_to__(total)
       end,
     },
     {
