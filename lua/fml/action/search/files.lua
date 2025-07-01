@@ -249,6 +249,17 @@ std.fn.observe({ o_includes, o_excludes }, function()
   searcher:mark_result_dirty()
 end)
 
+---@return nil
+local function focus()
+  local selected_text = eve.buf.retrieve_selected_text() ---@type string
+  if selected_text and #selected_text > 1 then
+    local next_search_pattern = selected_text ---@type string
+    o_flag_regex:next(false)
+    searcher.finder:set_content(next_search_pattern)
+  end
+  searcher:focus()
+end
+
 ---@class fml.action.search.files.searcher
 local M = {}
 
@@ -262,14 +273,14 @@ end
 function M.search_files(rootpath)
   rootpath = (rootpath ~= nil and rootpath ~= "") and rootpath or o_rootpath:snapshot() ---@type string
   attach(searcher, rootpath)
-  searcher:focus()
+  focus()
 end
 
 ---@return nil
 function M.search_files_in_cwd()
   local cwd = std.path.cwd() ---@type string
   attach(searcher, cwd)
-  searcher:focus()
+  focus()
 end
 
 ---@return nil
@@ -282,14 +293,14 @@ function M.search_files_in_directory()
     local dirpath = std.path.is_exist_dirpath(filepath) and filepath or std.path.dirname(filepath) ---@type string
     attach(searcher, dirpath)
   end
-  searcher:focus()
+  focus()
 end
 
 ---@return nil
 function M.search_files_in_workspace()
   local workspace = std.path.workspace() ---@type string
   attach(searcher, workspace)
-  searcher:focus()
+  focus()
 end
 
 return M
