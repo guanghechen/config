@@ -1165,6 +1165,47 @@ function M:remove(uuid)
   return self
 end
 
+---@param leafnodestate                 eve.ux.view.tree.ILeafNodeState
+---@return nil
+function M:remove_all_locations(leafnodestate)
+  self:__health__()
+
+  if leafnodestate.locations ~= nil then
+    local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+    local locations = leafnodestate.locations ---@type eve.ux.view.tree.ILeafLocationState[]
+    local L = #locations ---@type integer
+    for i = 1, L, 1 do
+      local location = locations[i] ---@type eve.ux.view.tree.ILeafLocationState
+      statemap[location.locationuuid] = nil
+    end
+    leafnodestate.locations = nil ---@type eve.ux.view.tree.ILeafLocationState[]|nil
+  end
+end
+
+---@param leafnodestate                 eve.ux.view.tree.ILeafNodeState
+---@param locationuuid                  string
+---@return nil
+function M:remove_location(leafnodestate, locationuuid)
+  self:__health__()
+
+  if leafnodestate.locations ~= nil then
+    local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+    local locations = leafnodestate.locations ---@type eve.ux.view.tree.ILeafLocationState[]
+    local L = #locations ---@type integer
+    local k = 0 ---@type integer
+    for i = 1, L, 1 do
+      local location = locations[i] ---@type eve.ux.view.tree.ILeafLocationState
+      if location.locationuuid == locationuuid then
+        statemap[location.locationuuid] = nil
+      else
+        k = k + 1 ---@type integer
+        locations[k] = location ---@type eve.ux.view.tree.ILeafLocationState
+      end
+    end
+    std.table.truncate_inline(locations, k)
+  end
+end
+
 ---@param uuid                          string
 ---@return eve.ux.view.tree.INodeState|nil
 function M:retrieve(uuid)
