@@ -36,7 +36,6 @@ statusline
   :place("left", c.file.status(position))
   --
   :place("center", c.devmode.render_count(position), 100)
-  :place("center", c.widget.flags(position), 100)
   --
   :place("right", c.cwd.cwd(position), 100)
   :place("right", c.nvim.nr(position), 100)

@@ -14,7 +14,6 @@ local __mods = {
   plugin = "eve.ux.nvimbar.component.plugin",
   python = "eve.ux.nvimbar.component.python",
   sidebar = "eve.ux.nvimbar.component.sidebar",
-  widget = "eve.ux.nvimbar.component.widget",
 }
 
 ---@class eve.ux.nvimbar.component
@@ -34,7 +33,6 @@ local __mods = {
 ---@field public plugin                 eve.ux.nvimbar.component.plugin
 ---@field public python                 eve.ux.nvimbar.component.python
 ---@field public sidebar                eve.ux.nvimbar.component.sidebar
----@field public widget                 eve.ux.nvimbar.component.widget
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
