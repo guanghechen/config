@@ -65,7 +65,9 @@ pub fn replace_file(
 
     if text != next_text {
         let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
-        new_file.write_all(next_text.as_bytes()).map_err(|e| e.to_string())?;
+        new_file
+            .write_all(next_text.as_bytes())
+            .map_err(|e| e.to_string())?;
     }
     Ok(true)
 }
@@ -91,8 +93,8 @@ pub fn replace_file_by_matches(
             next_text = regex
                 .replace_all(&text, |caps: &Captures| {
                     let m = caps.get(0).unwrap();
-                    let should_replace: bool = match_offsets.contains(&m.start());
-                    if should_replace {
+                    let offset: usize = m.start();
+                    if match_offsets.contains(&offset) {
                         let mut replacement: String = replace_pattern.to_string();
                         for i in 1..caps.len() {
                             if let Some(cap) = caps.get(i) {
@@ -100,6 +102,7 @@ pub fn replace_file_by_matches(
                                 replacement = replacement.replace(&placeholder, cap.as_str());
                             }
                         }
+
                         replacement
                     } else {
                         m.as_str().to_string()
@@ -119,7 +122,8 @@ pub fn replace_file_by_matches(
         let mut i: usize = 0;
         for m in match_points {
             let j: usize = m + len_of_search;
-            if match_offsets.contains(&m) {
+            let offset: usize = m;
+            if match_offsets.contains(&offset) {
                 pieces.push(&text[i..m]);
                 pieces.push(replace_pattern);
             } else {
@@ -133,8 +137,11 @@ pub fn replace_file_by_matches(
 
     if text != next_text {
         let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
-        new_file.write_all(next_text.as_bytes()).map_err(|e| e.to_string())?;
+        new_file
+            .write_all(next_text.as_bytes())
+            .map_err(|e| e.to_string())?;
     }
+
     Ok(true)
 }
 
@@ -242,7 +249,9 @@ pub fn replace_file_advance_by_matches(
 
     if text != next_text {
         let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
-        new_file.write_all(next_text.as_bytes()).map_err(|e| e.to_string())?;
+        new_file
+            .write_all(next_text.as_bytes())
+            .map_err(|e| e.to_string())?;
     }
 
     let locations: Vec<MatchLocation> = get_locations(&next_text, &next_offsets);

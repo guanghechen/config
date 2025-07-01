@@ -406,7 +406,7 @@ function M.replace_file_by_matches(params)
     match_offsets = match_offsets,
   }
   local payload = std.json.stringify(resolved_params)
-  local ok, data = M.run_fun("replace_file_by_matches", nvim_tools.replace_file_advance_by_matches, payload)
+  local ok, data = M.run_fun("replace_file_by_matches", nvim_tools.replace_file_by_matches, payload)
   ---@cast data                         eve.builtin.oxi.replace.replace_file_by_matches.IResult
 
   return ok, data
