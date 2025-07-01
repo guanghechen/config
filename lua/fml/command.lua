@@ -440,14 +440,14 @@ command.implement({
 command
   .implement({
     uuid = K.search.files.uuid,
-    action = function()
-      require("fml.action.search.files").search_files()
+    action = function(args)
+      require("fml.action.search.files").search_files(args)
     end,
   })
   .implement({
     uuid = K.search.files_in_buffer.uuid,
-    action = function()
-      require("fml.action.search.files").search_files_in_buffer()
+    action = function(args)
+      require("fml.action.search.files").search_files(args)
     end,
   })
   .implement({
@@ -458,8 +458,8 @@ command
   })
   .implement({
     uuid = K.search.files_in_directory.uuid,
-    action = function(args)
-      require("fml.action.search.files").search_files_in_directory(args)
+    action = function()
+      require("fml.action.search.files").search_files_in_directory()
     end,
   })
   .implement({

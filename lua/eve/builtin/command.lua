@@ -410,10 +410,10 @@ M.definitions.refresh = {
 
 ---@class eve.builtin.command.definitions.search
 M.definitions.search = {
-  files = def("Fsearchfiles", "search: files"),
-  files_in_buffer = def("Fsearchfilesinbuffer", "search: files (buffer)"),
+  files = def("Fsearchfiles", "search: files", "?"),
+  files_in_buffer = def("Fsearchfilesinbuffer", "search: files (buffer)", "?"),
   files_in_cwd = def("Fsearchfilesincwd", "search: files (cwd)"),
-  files_in_directory = def("Fsearchfilesindirectory", "search: files (directory)", "?"),
+  files_in_directory = def("Fsearchfilesindirectory", "search: files (directory)"),
   files_in_workspace = def("Fsearchfilesinworkspace", "search: files (workspace)"),
 }
 
