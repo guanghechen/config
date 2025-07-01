@@ -7,7 +7,6 @@
 ---@field public isfocused              fun(self: std.t.ux.IWidget): boolean
 ---@field public isvisible              fun(self: std.t.ux.IWidget): boolean
 ---@field public resize                 fun(widget: std.t.ux.IWidget): nil
----@field public statusline_items       std.t.ux.widget.IStatuslineItem[]|nil
 
 ---@class std.t.ux.IWidget
 ---@field public name                   string|nil
@@ -18,18 +17,3 @@
 ---@field public isfocused              fun(self: std.t.ux.IWidget): boolean
 ---@field public isvisible              fun(self: std.t.ux.IWidget): boolean
 ---@field public resize                 fun(self: std.t.ux.IWidget): nil
----@field public statusline_items       std.t.ux.widget.IStatuslineItem[]|nil
-
----@class std.t.ux.widget.IStatuslineItem
----@field public type                   std.e.WidgetStatuslineItemType
----@field public state                  std.collection.IObservable
----@field public symbol                 string
----@field public callback_fn            string
-
----@class std.t.ux.widget.IRawStatuslineItem
----@field public disabled               boolean|nil
----@field public type                   std.e.WidgetStatuslineItemType
----@field public desc                   string
----@field public state                  std.collection.IObservable
----@field public symbol                 string
----@field public callback               fun(): nil
