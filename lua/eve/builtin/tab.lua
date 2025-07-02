@@ -162,8 +162,33 @@ end
 ---@param tabnr                         integer|nil
 ---@return integer|nil
 function M.retrieve_winnr_sourcefile(tabnr)
+  if tabnr == nil then
+    return nil
+  end
+
   local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
-  return meta ~= nil and meta.winnr_sourcefile:snapshot() or nil ---@type integer|nil
+  if meta == nil then
+    meta = M.resolve(tabnr, true) ---@type eve.builtin.tab.IMeta|nil
+  end
+  if meta == nil then
+    return nil
+  end
+
+  local o_winnr_sourcefile = meta.winnr_sourcefile ---@type std.collection.IObservable
+  local winnr_sourcefile = o_winnr_sourcefile:snapshot() ---@type integer|nil
+
+  if winnr_sourcefile == nil or not eve.win.is_sourcefile(winnr_sourcefile) then
+    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+    for _, winnr in ipairs(winnrs) do
+      if eve.win.is_sourcefile(winnr) then
+        winnr_sourcefile = winnr
+        o_winnr_sourcefile:next(winnr)
+        return winnr_sourcefile
+      end
+    end
+    return nil
+  end
+  return winnr_sourcefile
 end
 
 ----------------------------------------------------------------------------------------------------

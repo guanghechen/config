@@ -33,25 +33,6 @@ local title = "Find Explorer" ---@type string
 local dir_datamap = {} ---@type table<string, fml.action.find.explorer.IDirItem>
 local file_datamap = {} ---@type table<string, fml.action.find.explorer.IFileItem>
 
----@param filepath                      string
-local function add_to_avante(filepath)
-  -- ensure avante sidebar is open
-  local sidebar = require("avante").get()
-  if sidebar == nil or not sidebar:is_open() then
-    require("avante.api").ask()
-    sidebar = require("avante").get()
-
-    if sidebar == nil or not sidebar:is_open() then
-      return
-    end
-  end
-
-  local relative_path = require("avante.utils").relative_path(filepath)
-  sidebar.file_selector:add_selected_file(relative_path)
-  sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
-  sidebar.file_selector:remove_selected_file("untitled-1")
-end
-
 ---@param raw_item                      eve.builtin.oxi.IFileItemWithStatus
 ---@param dirpath                       string
 ---@return fml.action.find.explorer.IFileItem
@@ -639,7 +620,7 @@ picker = eve.ux.picker.ListComposer.new({
         ---@cast item                   fml.action.find.explorer.IItem|nil
 
         if item ~= nil then
-          add_to_avante(item.data.fileitem.path)
+          eve.plugin.avante_add_files({ item.data.fileitem.path })
         end
       end,
     },
@@ -656,7 +637,7 @@ picker = eve.ux.picker.ListComposer.new({
         ---@cast item                   fml.action.find.explorer.IItem|nil
 
         if item ~= nil then
-          add_to_avante(item.data.fileitem.path)
+          eve.plugin.avante_add_files({ item.data.fileitem.path })
         end
       end,
     },

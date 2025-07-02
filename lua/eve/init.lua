@@ -13,6 +13,7 @@ local __mods = {
   nvim = "eve.builtin.nvim",
   oxi = "eve.builtin.oxi",
   qflist = "eve.builtin.qflist",
+  plugin = "eve.builtin.plugin",
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
   shell = "eve.builtin.shell",
@@ -44,6 +45,7 @@ local __mods = {
 ---@field public nvim                   eve.builtin.nvim
 ---@field public oxi                    eve.builtin.oxi
 ---@field public qflist                 eve.builtin.qflist
+---@field public plugin                 eve.builtin.plugin
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting
 ---@field public shell                  eve.builtin.shell
