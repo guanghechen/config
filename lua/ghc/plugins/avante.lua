@@ -201,6 +201,10 @@ return {
           model = "deepseek-coder",
         },
       },
+      rules = {
+        project_dir = "local/",
+        global_dir = std.path.locate_app_config_home("guanghechen/airules/avante"),
+      },
       web_search_engine = {
         provider = "tavily",
         proxy = vim.env.https_proxy or vim.env.HTTPS_PROXY,
