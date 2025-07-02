@@ -1,8 +1,11 @@
-## REQUIREMENTS
+====
 
-1. **DON'T** run build or tests. Just run `yarn lintfix` to validate your changes.
-2. **SHOULD** use tailwindcss for changing the appearance of components.
-3. **SHOULD** use clsx to simplify the classnames merging. i.e.
+REQUIREMENTS
+
+1. **PREFER** the `I`-prefixed name for the types or interfaces, USE `IChatMessage` instead of `ChatMessage`.
+2. **DON'T** run build or tests. Just run `yarn lintfix` to validate your changes.
+3. **SHOULD** use tailwindcss for changing the appearance of components.
+4. **SHOULD** use clsx to simplify the classnames merging. i.e.
 
     ```tsx
     import cn from 'clsx';
@@ -15,4 +18,3 @@
       </div>
     )
     ```
-
