@@ -295,6 +295,10 @@ return {
           start_insert = false, -- Start insert mode when opening the edit window
         },
         position = "right",
+        spinner = {
+          editing = std.fn.spinner_chars(),
+          generating = std.fn.spinner_chars(),
+        },
         wrap = true,
       },
     }
