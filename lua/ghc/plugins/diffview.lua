@@ -220,8 +220,9 @@ return {
             { desc = "Bring the cursor to the previous file entry" },
           },
           { "n", "<Down>", actions.next_entry, { desc = "Bring the cursor to the next file entry" } },
-          { "n", "<Cr>", actions.select_entry, { desc = "Open the diff for the selected entry" } },
-          { "n", "<LeftRelease>", actions.select_entry, { desc = "Open the diff for the selected entry" } },
+          { "n", "<Cr>", actions.focus_entry, { desc = "Open the diff for the selected entry" } },
+          { "n", "<LeftRelease>", actions.focus_entry, { desc = "Open the diff for the selected entry" } },
+          { "n", "w", actions.focus_entry, { desc = "Open the diff for the selected entry" } },
           { "n", "S", actions.toggle_stage_entry, { desc = "Stage / unstage the selected entry" } },
           {
             "n",
@@ -330,7 +331,7 @@ return {
           {
             "n",
             "<Cr>",
-            actions.select_entry,
+            actions.focus_entry,
             { desc = "Open the diff for the selected entry" },
           },
           {
@@ -349,7 +350,7 @@ return {
           {
             "n",
             "<LeftRelease>",
-            actions.select_entry,
+            actions.focus_entry,
             { desc = "Open the diff for the selected entry" },
           },
           { "n", "<C-b>", actions.scroll_view(-0.25), { desc = "Scroll the view up" } },
@@ -364,7 +365,7 @@ return {
           { "n", "g!", actions.options, { desc = "Open the option panel" } },
         },
         option_panel = {
-          { "n", "<tab>", actions.select_entry, { desc = "Change the current option" } },
+          { "n", "<tab>", actions.focus_entry, { desc = "Change the current option" } },
           { "n", "q", actions.close, { desc = "Close the panel" } },
           { "n", "g?", actions.help("option_panel"), { desc = "Open the help panel" } },
         },
