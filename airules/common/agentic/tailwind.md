@@ -3,8 +3,7 @@
 WORKFLOW
 
 1. **MUST**: use `yarn` instead of `npm` to manage packages and run scripts.
-2. **MUST**: only run `yarn lintfix` to validate changes
-
+2. **MUST**: only run `yarn lintfix` to validate changes, **DON'T** try to run build or compile the files, the lintfix is enough for checks.
 
 ====
 
