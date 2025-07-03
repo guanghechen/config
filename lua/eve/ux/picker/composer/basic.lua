@@ -730,6 +730,8 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
     },
   }
 
+  local N = #builtin_keymaps ---@type integer
+
   local index = flags_start_index ---@type integer
   for _, item in ipairs(flags) do
     ---@type std.t.IKeymap
@@ -739,9 +741,17 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       desc = item.desc,
       callback = item.callback,
     }
-    builtin_keymaps[#builtin_keymaps + 1] = keymap
     index = index + 1
+
+    N = N + 1 ---@type integer
+    builtin_keymaps[N] = keymap
   end
+
+  for _, item in ipairs(eve.widget.get_keymaps(self)) do
+    N = N + 1 ---@type integer
+    builtin_keymaps[N] = item
+  end
+
   return builtin_keymaps
 end
 
