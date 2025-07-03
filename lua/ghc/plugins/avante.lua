@@ -159,6 +159,17 @@ return {
   opts = function()
     local ai_provider = eve.context.flight.ai_provider:snapshot() ---@type std.e.AiProvider
     local provider_name = AI_PROVIDER_MAP[ai_provider] or "copilot" ---@type string
+
+    local cwd = std.path.cwd() ---@type string
+    local workspace = std.path.workspace() ---@type string
+
+    local rules_project_dir = "local/" ---@type string
+    if std.path.is_exist_dirpath(std.path.join(cwd, ".neovim")) then
+      rules_project_dir = ".neovim/avante" ---@type string
+    elseif std.path.is_exist_dirpath(std.path.join(workspace, ".neovim")) then
+      rules_project_dir = std.path.join(workspace, ".neovim/avante") ---@type string
+    end
+
     return {
       debug = false,
       mode = "agentic",
@@ -202,7 +213,7 @@ return {
         },
       },
       rules = {
-        project_dir = "local/",
+        project_dir = rules_project_dir,
         global_dir = std.path.locate_app_config_home("guanghechen/airules/avante"),
       },
       web_search_engine = {
