@@ -48,6 +48,13 @@ command
     end,
   })
   .implement({
+    uuid = K.explorer.toggle.uuid,
+    tabtype = eve.tab.Types.DIFFVIEW,
+    action = function()
+      require("ghc.action.diffview").toggle()
+    end,
+  })
+  .implement({
     uuid = K.explorer.fs_cwd.uuid,
     tabtype = eve.tab.Types.NORMAL,
     action = function()
