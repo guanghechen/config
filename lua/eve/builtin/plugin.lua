@@ -9,6 +9,8 @@ function M.avante_add_files(filepaths)
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+
   eve.tab.focus_win_sourcefile(tabnr)
 
   local sidebar = require("avante").get()
@@ -29,6 +31,13 @@ function M.avante_add_files(filepaths)
 
     sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
     sidebar.file_selector:remove_selected_file("untitled-1")
+
+    ---! focus the original window
+    vim.schedule(function()
+      if vim.api.nvim_win_is_valid(winnr_current) then
+        vim.api.nvim_tabpage_set_win(tabnr, winnr_current)
+      end
+    end)
   end)
 end
 
