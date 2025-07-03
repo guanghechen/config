@@ -1,20 +1,24 @@
 ====
 
+WORKFLOW
+
+1. **MUST**: use `yarn` instead of `npm` to manage packages and run scripts.
+2. **MUST**: only run `yarn lintfix` to validate changes
+
+
+====
+
 REQUIREMENTS
 
-1. **PREFER** the `I`-prefixed name for the types or interfaces, USE `IChatMessage` instead of `ChatMessage`.
-2. **DON'T** run build or tests. Just run `yarn lintfix` to validate your changes.
-3. **SHOULD** use tailwindcss for changing the appearance of components.
-4. **SHOULD** use clsx to simplify the classnames merging. i.e.
+1. **MUST**: Use `I`-prefixed naming convention for types and interfaces.names for interfaces/types (`IChatMessage`, `IUser`)
+2. **MUST**: Use `React.useXX` instead of direct hook imports (`React.useState`, `React.useEffect`)
+3. **MUST**: Use Tailwind CSS classes only, no inline styles
+4. **MUST**: Use `clsx` imported as `cn` for conditional classes:
 
     ```tsx
     import cn from 'clsx';
-
-    ...
-
-    return (
-      <div className={cn('p-2', { 'm-2': hidden, 'm-0': !hidden })}>
-        ...
-      </div>
-    )
+    className={cn('base-class', { 'conditional': condition })}
     ```
+
+5. **SHOULD**: Keep components small, use clear names, maintain formatting
+

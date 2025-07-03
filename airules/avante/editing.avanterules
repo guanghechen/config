@@ -2,5 +2,5 @@
 
 REQUIREMENTS
 
-1. **PREFER** the `I`-prefixed name for the types or interfaces, USE `IChatMessage` instead of `ChatMessage`.
+1. **MUST**: Use `I`-prefixed naming convention for types and interfaces.names for interfaces/types (`IChatMessage`, `IUser`)
 
