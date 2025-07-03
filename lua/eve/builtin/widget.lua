@@ -167,14 +167,25 @@ end
 
 ---@return std.t.ux.IWidget|nil
 function M.resume()
-  local present = M.get_widget_current() ---@type std.t.ux.IWidget|nil
+  local present, present_index = M.get_widget_current() ---@type std.t.ux.IWidget|nil
   if present ~= nil then
     if present:isfocused() then
       present:hide()
     else
+      if present_index ~= nil then
+        for index = M.history:size(), 1, -1 do
+          local widget = M.history:at(index) ---@type std.t.ux.IWidget|nil
+          if widget ~= nil and widget:isvisible() then
+            M.history:go(index)
+            widget:focus()
+            return widget
+          end
+        end
+      end
       present:focus()
     end
   end
+
   return present
 end
 
