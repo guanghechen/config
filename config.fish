@@ -14,6 +14,9 @@ set -gx XDG_CONFIG_HOME "$HOME/.config"
 set -gx MYVIMRC "$HOME/.config/nvim/init.lua"
 set -gx no_proxy "localhost,127.0.0.1,::1"
 
+## setup options
+set -gx NODE_OPTIONS "--max-old-space-size=8192"
+
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
 if test -f /opt/homebrew/bin/brew
