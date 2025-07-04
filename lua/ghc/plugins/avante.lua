@@ -183,17 +183,17 @@ return {
           api_key_name = "AZURE_OPENAI_API_KEY",
           api_version = vim.env.AZURE_OPENAI_API_VERSION,
         },
-        azuredatabricks = {
-          endpoint = vim.env.AZURE_DATABRICKS_ENDPOINT,
-          model = vim.env.AZURE_DATABRICKS_MODEL_CLAUDE_4_SONNET,
-          api_key_name = "AZURE_DATABRICKS_TOKEN",
-          timeout = 30000,
-          context_window = 200000,
-          extra_request_body = {
-            temperature = 0.75,
-            max_completion_tokens = 20480,
-          },
-        },
+        -- azuredatabricks = {
+        --   endpoint = vim.env.AZURE_DATABRICKS_ENDPOINT,
+        --   model = vim.env.AZURE_DATABRICKS_MODEL_CLAUDE_4_SONNET,
+        --   api_key_name = "AZURE_DATABRICKS_TOKEN",
+        --   timeout = 30000,
+        --   context_window = 200000,
+        --   extra_request_body = {
+        --     temperature = 0.75,
+        --     max_completion_tokens = 20480,
+        --   },
+        -- },
         copilot = {
           model = "claude-sonnet-4",
         },
