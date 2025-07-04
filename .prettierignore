@@ -8,5 +8,6 @@
 .nx/
 .yarn/
 **/coverage/
+**/demo/
 **/dist/
 **/node_modules/
