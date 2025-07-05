@@ -252,12 +252,15 @@ end)
 ---@return nil
 local function focus()
   local selected_text = eve.buf.retrieve_selected_text() ---@type string
-  if selected_text and #selected_text > 1 then
-    local next_search_pattern = selected_text ---@type string
-    o_flag_regex:next(false)
-    searcher.finder:set_content(next_search_pattern)
-  end
   searcher:focus()
+
+  vim.schedule(function()
+    if selected_text and #selected_text > 1 then
+      local next_search_pattern = selected_text ---@type string
+      o_flag_regex:next(false)
+      searcher.finder:set_content(next_search_pattern)
+    end
+  end)
 end
 
 ---@class fml.action.search.files.searcher
