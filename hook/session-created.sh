@@ -11,6 +11,7 @@ function _ghc_tmux_hook_session_created {
   else
     # Show the status line
     tmux set-option status on
+    tmux rename-window "${new_session_name}"
   fi
 }
 
