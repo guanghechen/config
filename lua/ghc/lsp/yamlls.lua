@@ -4,17 +4,10 @@ capabilities.textDocument.foldingRange = capabilities.textDocument.foldingRange 
 capabilities.textDocument.foldingRange.dynamicRegistration = false
 capabilities.textDocument.foldingRange.lineFoldingOnly = true
 
--- lazy-load schemastore when needed
-local function on_new_config(new_config)
-  new_config.settings.yaml.schemas =
-    vim.tbl_deep_extend("force", new_config.settings.yaml.schemas or {}, require("schemastore").yaml.schemas())
-end
-
 return {
   capabilities = capabilities,
   on_attach = eve.lsp.on_attach,
   on_init = eve.lsp.on_init,
-  on_new_config = on_new_config,
   settings = {
     redhat = { telemetry = { enabled = false } },
     yaml = {
@@ -24,11 +17,135 @@ return {
       },
       validate = true,
       schemaStore = {
-        -- Must disable built-in schemaStore support to use
-        -- schemas from SchemaStore.nvim plugin
+        -- Must disable built-in schemaStore support to use customized schemas
         enable = false,
         -- Avoid TypeError: Cannot read properties of undefined (reading 'length')
         url = "",
+      },
+      schemas = {
+        {
+          description = "GitHub Action's dependabot.yml files",
+          fileMatch = { "**/.github/dependabot.yml", "**/.github/dependabot.yaml" },
+          name = "dependabot-v2.json",
+          url = "https://www.schemastore.org/dependabot-2.0.json",
+        },
+        {
+          description = "A bot that helps onboarding new open-source contributors",
+          fileMatch = { "**/.github/first-timers.yml" },
+          name = "first-timers-bot",
+          url = "https://www.schemastore.org/first-timers.json",
+        },
+        {
+          description = "YAML GitHub Discussions",
+          fileMatch = { "**/.github/DISCUSSION_TEMPLATE/*.yml", "**/.github/DISCUSSION_TEMPLATE/*.yaml" },
+          name = "GitHub Discussion",
+          url = "https://www.schemastore.org/github-discussion.json",
+        },
+        {
+          description = "YAML GitHub Funding",
+          fileMatch = {
+            "**/.github/FUNDING.yml",
+            "**/.github/FUNDING.yaml",
+            "**/.github/funding.yml",
+            "**/.github/funding.yaml",
+          },
+          name = "GitHub Funding",
+          url = "https://www.schemastore.org/github-funding.json",
+        },
+        {
+          description = "YAML configuring GitHub Issue Templates",
+          fileMatch = { "**/.github/ISSUE_TEMPLATE/config.yml", "**/.github/ISSUE_TEMPLATE/config.yaml" },
+          name = "GitHub Issue Template configuration",
+          url = "https://www.schemastore.org/github-issue-config.json",
+        },
+        {
+          description = "YAML GitHub issue forms",
+          fileMatch = { "**/.github/ISSUE_TEMPLATE/**.yml", "**/.github/ISSUE_TEMPLATE/**.yaml" },
+          name = "GitHub Issue Template forms",
+          url = "https://www.schemastore.org/github-issue-forms.json",
+        },
+        {
+          description = "YAML GitHub Workflow",
+          fileMatch = {
+            "**/.github/workflows/*.yml",
+            "**/.github/workflows/*.yaml",
+            "**/.gitea/workflows/*.yml",
+            "**/.gitea/workflows/*.yaml",
+            "**/.forgejo/workflows/*.yml",
+            "**/.forgejo/workflows/*.yaml",
+          },
+          name = "GitHub Workflow",
+          url = "https://www.schemastore.org/github-workflow.json",
+        },
+        {
+          description = "properties json file for a GitHub Workflow template",
+          fileMatch = { "**/.github/workflow-templates/**.properties.json" },
+          name = "GitHub Workflow Template Properties",
+          url = "https://www.schemastore.org/github-workflow-template-properties.json",
+        },
+        {
+          description = "YAML GitHub automatically generated release notes config",
+          fileMatch = { "**/.github/release.yml" },
+          name = "GitHub automatically generated release notes configuration",
+          url = "https://www.schemastore.org/github-release-config.json",
+        },
+        {
+          description = "A the configuration of the Label Commenter GitHub Action",
+          fileMatch = { "**/.github/label-commenter-config.yml" },
+          name = "label-commenter-config.yml",
+          url = "https://www.schemastore.org/label-commenter-config.json",
+        },
+        {
+          description = "Mergify configuration file",
+          fileMatch = { ".mergify.yml", "**/.github/mergify.yml", "**/.mergify/config.yml" },
+          name = "Mergify Configuration",
+          url = "https://raw.githubusercontent.com/Mergifyio/docs/main/public/mergify-configuration-schema.json",
+        },
+        {
+          description = "Mergify configuration file",
+          fileMatch = { ".mergify.yml", "**/.github/mergify.yml", "**/.mergify/config.yml" },
+          name = "Mergify Configuration",
+          url = "https://raw.githubusercontent.com/Mergifyio/docs/main/public/mergify-configuration-schema.json",
+        },
+        {
+          description = "Configuration file for Stale for closing abandoned issues and pull requests. Documentation: https://probot.github.io/apps/stale/",
+          fileMatch = { "**/.github/stale.yml" },
+          name = "Stale",
+          url = "https://www.schemastore.org/stale.json",
+        },
+        {
+          description = "Release Drafter configuration file",
+          fileMatch = { "**/.github/release-drafter.yml" },
+          name = "release drafter",
+          url = "https://raw.githubusercontent.com/release-drafter/release-drafter/master/schema.json",
+        },
+        {
+          description = "The Compose specification establishes a standard for the definition of multi-container platform-agnostic applications",
+          fileMatch = {
+            "**/docker-compose.yml",
+            "**/docker-compose.yaml",
+            "**/docker-compose.*.yml",
+            "**/docker-compose.*.yaml",
+            "**/compose.yml",
+            "**/compose.yaml",
+            "**/compose.*.yml",
+            "**/compose.*.yaml",
+          },
+          name = "docker-compose.yml",
+          url = "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json",
+        },
+        {
+          description = "lazydocker settings",
+          fileMatch = { "**/lazydocker/config.yml" },
+          name = "lazydocker",
+          url = "https://www.schemastore.org/lazydocker.json",
+        },
+        {
+          description = "lazygit settings",
+          fileMatch = { "**/lazygit/config.yml", "lazygit.yml", ".lazygit.yml" },
+          name = "lazygit",
+          url = "https://raw.githubusercontent.com/jesseduffield/lazygit/master/schema/config.json",
+        },
       },
     },
   },
