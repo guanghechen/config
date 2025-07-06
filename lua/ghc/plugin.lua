@@ -85,7 +85,6 @@ local raw_specs = {
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.common             },
   { name = "plenary.nvim",                main = "plenary",                       cond = conds.common             },
   { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode         },
-  { name = "schema-store.nvim",           main = "schemastore",                   cond = conds.lsp                },
   { name = "trouble.nvim",                main = "trouble",                       cond = conds.not_vscode         },
   { name = "which-key.nvim",              main = "which-key",                     cond = conds.common             },
   -- stylua: ignore end
@@ -125,7 +124,6 @@ local no_details_module_names = {
   "nui.nvim",
   "nvim-nio",
   "plenary.nvim",
-  "schema-store.nvim",
 }
 
 for index = 1, #specs, 1 do
