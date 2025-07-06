@@ -228,6 +228,15 @@ function M.locate_lsp_root(filepath, config_filenames)
   end
 end
 
+---@param bin                           string
+---@param silent                        ?boolean
+---@return string|nil
+function M.locate_mason_bin_path(bin, silent)
+  local root = vim.env.MASON or (std.env.HOME_NVIM_DATA .. std.env.PATH_SEP .. "mason")
+  local filepath = std.path.normalize(root .. "/bin/" .. bin)
+  return std.path.is_exist_filepath(filepath) and filepath or nil
+end
+
 ---@param pkg                           string
 ---@param pkg_path                      string
 ---@param silent                        ?boolean

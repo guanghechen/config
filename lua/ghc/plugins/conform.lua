@@ -69,7 +69,8 @@ local ignored = {
 
 ---@class ghc.plugin.conform.config
 local config = {
-  prettier_bin_path = std.path.normalize("node_modules/.bin/prettier") .. (std.env.IS_WIN and ".cmd" or ""),
+  prettier_bin_path = std.env.IS_WIN and std.path.normalize("node_modules/.bin/prettier.cmd")
+    or std.path.normalize("node_modules/.bin/prettier"),
 }
 
 local fns = {
@@ -77,7 +78,7 @@ local fns = {
   ---@return string
   find_prettier_binpath = function(dirname)
     local binpath = std.path.locate_nearest_filepath(dirname, { config.prettier_bin_path }) ---@type string|nil
-    return binpath or "prettier" ---@type string
+    return binpath or eve.lsp.locate_mason_bin_path("prettier") ---@type string
   end,
 }
 
@@ -106,33 +107,6 @@ return {
         prepend_args = { "--prose-wrap", "always" },
         command = function(_, ctx)
           return fns.find_prettier_binpath(ctx.dirname)
-        end,
-        condition = function(_, ctx)
-          local bufnr = ctx.buf ---@type integer
-          local filetype = vim.bo[bufnr].filetype
-          local formatters = formatters_by_ft[filetype] or {} ---@type string[]
-          if not vim.list_contains(formatters, "prettier") then
-            return false
-          end
-
-          local binpath = fns.find_prettier_binpath(ctx.dirname)
-
-          ---! Checks if a Prettier config file exists for the given context
-          vim.fn.system({ binpath, "--find-config-path", ctx.filename })
-          if vim.v.shell_error ~= 0 then
-            return false
-          end
-
-          ---! Check if a parser can be inferred
-          local ret = vim.fn.system({ binpath, "--file-info", ctx.filename })
-          local ok, parser = pcall(function()
-            return vim.fn.json_decode(ret).inferredParser
-          end)
-          if not ok or not parser or parser == vim.NIL then
-            return false
-          end
-
-          return true
         end,
       },
       rustfmt = {

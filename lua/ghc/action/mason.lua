@@ -33,7 +33,8 @@ function M.get_mason_ensure_installed()
 
     -- formatter --
     "black",
-    -- "prettier",
+    "isort",
+    "prettier",
     "shfmt",
     "stylua",
   }
