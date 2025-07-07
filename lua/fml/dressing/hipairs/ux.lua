@@ -1,7 +1,6 @@
 ---@class fml.dressing.hipairs.config
 local config = {
   DELAY = 50, ---How much (in milliseconds) should the cursor stay still to calculate and render a pair.
-  SEARCH_WINDOW_HEIGHT = vim.o.lines, ---How many lines to look backwards/forwards to find a pair.
   enabled_modes = {
     i = true,
     n = true,

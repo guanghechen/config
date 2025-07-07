@@ -587,13 +587,13 @@ function M:__match__(input)
     local use_regex = self.flag_regex:snapshot()
 
     local lines = {}
-    local search_input = case_sensitive and input or input:lower()
+    local search_pattern = case_sensitive and input or input:lower()
 
     for _, item in ipairs(items) do
       lines[#lines + 1] = case_sensitive and item.text or item.text_lower
     end
 
-    local oxi_matches = eve.oxi.find_match_points_line_by_line(search_input, lines, use_fuzzy, use_regex)
+    local oxi_matches = eve.oxi.find_match_points_line_by_line(search_pattern, lines, use_fuzzy, use_regex)
     if oxi_matches then
       for _, oxi_match in ipairs(oxi_matches) do
         matches[#matches + 1] = {

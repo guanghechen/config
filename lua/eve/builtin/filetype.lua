@@ -29,9 +29,6 @@ M.NOTIFY = "notify"
 M.LSPINFO = "lspinfo"
 M.PLENARY_TEST_POPUP = "PlenaryTestPopup"
 M.QUICKFIX = "qf"
-M.SEARCH_INPUT = "search-input"
-M.SEARCH_MAIN = "search-main"
-M.SEARCH_PREVIEW = "search-preview"
 M.SELECT_POPUP = "select-popup"
 M.STARTUPTIME = "startuptime"
 M.TERM = "term"
@@ -41,9 +38,12 @@ M.UX_CMDLINE = "ux-cmdline"
 M.UX_INPUT = "ux-input"
 M.UX_MESSAGE_HISTORY = "ux-message-history"
 M.UX_PICKER_FINDER = "ux-picker-finder"
-M.UX_PICKER_RESULT = "ux-picker-result"
 M.UX_PICKER_PREVIEW = "ux-picker-preview"
+M.UX_PICKER_RESULT = "ux-picker-result"
 M.UX_POPUPMENU = "ux-popupmenu"
+M.UX_SEARCHER_FINDER = "ux-searcher-finder"
+M.UX_SEARCHER_PREVIEW = "ux-searcher-preview"
+M.UX_SEARCHER_RESULT = "ux-searcher-result"
 M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
 M.YOZORA_VIEWER = "yozora-viewer"
@@ -109,7 +109,7 @@ local filetypes = {
   -- stylua: ignore end
   cmp_others = {
     [M.AVANTE_INPUT] = true,
-    -- [M.SEARCH_INPUT] = true,
+    [M.UX_PICKER_FINDER] = true,
   },
   has_external_winline = {
     [M.AVANTE] = true,
@@ -208,9 +208,6 @@ local filetypes = {
     [M.LSPINFO] = true,
     [M.PLENARY_TEST_POPUP] = true,
     [M.QUICKFIX] = true,
-    [M.SEARCH_INPUT] = true,
-    [M.SEARCH_MAIN] = true,
-    [M.SEARCH_PREVIEW] = true,
     [M.SELECT_POPUP] = true,
     [M.STARTUPTIME] = true,
     [M.TEMP_VIEWER] = true,
@@ -219,6 +216,12 @@ local filetypes = {
     [M.UX_CMDLINE] = true,
     [M.UX_INPUT] = true,
     [M.UX_MESSAGE_HISTORY] = true,
+    [M.UX_PICKER_FINDER] = true,
+    [M.UX_PICKER_PREVIEW] = true,
+    [M.UX_PICKER_RESULT] = true,
+    [M.UX_SEARCHER_FINDER] = true,
+    [M.UX_SEARCHER_PREVIEW] = true,
+    [M.UX_SEARCHER_RESULT] = true,
     [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
@@ -320,7 +323,7 @@ function M.is_not_indentline(filetype)
   if filetype == nil or #filetype < 1 then
     return false
   end
-  if filetype == M.SEARCH_PREVIEW then
+  if filetype == M.UX_PICKER_PREVIEW or filetype == M.UX_SEARCHER_PREVIEW then
     return false
   end
   return filetypes.code[filetype] ~= true

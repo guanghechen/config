@@ -22,12 +22,12 @@ local o_flag_regex = eve.context.select.find_buffer.flag_regex ---@type std.coll
 local o_flag_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type std.collection.IObservable
 
 local IGNORED_FILETYPES = {
-  eve.filetype.SEARCH_INPUT,
-  eve.filetype.SEARCH_MAIN,
-  eve.filetype.SEARCH_PREVIEW,
   eve.filetype.UX_PICKER_FINDER,
   eve.filetype.UX_PICKER_PREVIEW,
   eve.filetype.UX_PICKER_RESULT,
+  eve.filetype.UX_SEARCHER_FINDER,
+  eve.filetype.UX_SEARCHER_PREVIEW,
+  eve.filetype.UX_SEARCHER_RESULT,
   eve.filetype.WINSEP,
 }
 
