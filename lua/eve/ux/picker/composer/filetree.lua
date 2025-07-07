@@ -430,7 +430,7 @@ function M.new(props)
       end
 
       vim.ui.input({
-        prompt = string.format(" Create a new file (or folder end with a %s) ", std.env.PATH_SEP),
+        prompt = string.format(" New file / directory ", std.env.PATH_SEP),
         default = relpath,
         relative = "cursor",
       }, function(filepath)
@@ -560,7 +560,8 @@ function M.new(props)
       end
 
       vim.ui.input({
-        prompt = string.format(" Are you sure you want to delete '%s' (y/n)", relpath),
+        type = "confirmation",
+        prompt = string.format(" Delete '%s' ", relpath),
         relative = "cursor",
         startinsert = true,
       }, function(answer)

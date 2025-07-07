@@ -18,6 +18,7 @@ M.nsnr = {
   cmdline               = cn("ux:cmdline"),
   hipairs               = cn("ux:hipairs"),
   indentline            = cn("ux:indentline"),
+  input_confirmation    = cn("ux:input:confirmation"),
   matches               = cn("ux:matches"),
   notify                = cn("ux:notify"),
   picker                = cn("ux:picker"),

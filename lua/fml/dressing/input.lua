@@ -1,6 +1,7 @@
 ---@class fml.dressing.input.IOptions
 ---@field public relative               ?"editor"|"cursor"
 ---@field public width                  ?integer
+---@field public type                   ?"text"|"confirmation"
 ---
 ---@field public prompt                 ?string
 ---@field public default                ?string
@@ -10,6 +11,8 @@
 
 ---@class fml.dressing.input.IContext
 ---@field public opts                   fml.dressing.input.IOptions
+---@field public bufnr                  ?integer
+---@field public winnr                  ?integer
 
 local ctx = { opts = {} } ---@type fml.dressing.input.IContext
 
@@ -51,13 +54,14 @@ function M.input(opts, on_confirm)
   local parent_row = unpack(vim.api.nvim_win_get_cursor(parent_winnr))
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
-  local prompt = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
+  local prompt = opts.type == "confirmation" and "? (y/n) " or ""
+  local title = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
   local default = opts.default or "" ---@type string
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
+  vim.bo[bufnr].buftype = opts.type == "confirmation" and "prompt" or "nofile"
   vim.bo[bufnr].completefunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].omnifunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].filetype = eve.filetype.UX_INPUT
@@ -80,7 +84,7 @@ function M.input(opts, on_confirm)
     style = "minimal",
     focusable = true,
     noautocmd = true,
-    title = string.format(" %s %s ", eve.icon.ui.Edit, prompt),
+    title = string.format(" %s %s ", eve.icon.ui.Edit, title),
     title_pos = "center",
   })
 
@@ -90,7 +94,6 @@ function M.input(opts, on_confirm)
   vim.wo[winnr].cursorline = false
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].signcolumn = "no"
   vim.wo[winnr].winblend = winblend
   vim.wo[winnr].winfixbuf = true
   vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
@@ -99,11 +102,14 @@ function M.input(opts, on_confirm)
   ---@type fml.dressing.input.IContext
   ctx = {
     opts = {
-      prompt = prompt,
+      prompt = title,
       default = default,
       completion = opts.completion,
       highlight = opts.highlight,
+      type = opts.type,
     },
+    bufnr = bufnr,
+    winnr = winnr,
   }
 
   local disposed = false ---@type boolean
@@ -130,7 +136,7 @@ function M.input(opts, on_confirm)
         vim.cmd.stopinsert()
 
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-        local text = lines[1] or "" ---@type string
+        local text = string.sub(lines[1] or "", #prompt) ---@type string
 
         vim.api.nvim_win_close(winnr, true)
         vim.schedule(function()
@@ -143,9 +149,11 @@ function M.input(opts, on_confirm)
     end,
   }
 
-  vim.fn.prompt_setprompt(bufnr, "")
-  vim.fn.prompt_setcallback(bufnr, action.confirm)
-  vim.fn.prompt_setinterrupt(bufnr, action.cancel)
+  if #prompt > 0 then
+    vim.fn.prompt_setprompt(bufnr, prompt)
+    vim.fn.prompt_setcallback(bufnr, action.confirm)
+    vim.fn.prompt_setinterrupt(bufnr, action.cancel)
+  end
 
   ---@type std.t.IKeymap[]
   local keymaps = {
