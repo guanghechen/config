@@ -41,11 +41,20 @@ local FILEPATH_TO_UUID = {
   ["/"] = "6666cd76f96956469e7be39d750cc7d9",
 }
 
----@type table<string, std.collection.filetree.INodeData>
-local FILENODE_DATAMAP = {}
-
 local FILETREE_ROOT_FILEPATH = std.env.IS_WIN and "" or "/" ---@type string
 local FILETREE_ROOT_UUID = FILEPATH_TO_UUID[FILETREE_ROOT_FILEPATH] ---@type string
+
+---@type table<string, std.collection.filetree.INodeData>
+local FILENODE_DATAMAP = {
+  [FILETREE_ROOT_UUID] = {
+    basename = FILETREE_ROOT_FILEPATH,
+    fileicon = "󰙅",
+    fileicon_hln = "MiniIconsBlue",
+    filepath = FILETREE_ROOT_FILEPATH,
+    filepath_lower = FILETREE_ROOT_FILEPATH:lower(),
+    filetype = "directory",
+  },
+}
 
 local FILETYPE_PRIORITY_MAP = {
   directory = 5,
@@ -81,7 +90,11 @@ local FILETYPE_PRIORITY_MAP = {
 ---@field public unsafe_traverse        fun(self: std.collection.IFiletree, root: string|nil, traverse: std.collection.filetree.IUnsafeTraverseCallback): std.collection.IFiletree
 ---@field public calc_include_uuid_set  fun(self: std.collection.IFiletree, uuids: string[]): table<string, boolean>
 ---@field public empty                  fun(self: std.collection.IFiletree, uuid: string): std.collection.IFiletree
----@field public insert                 fun(self: std.collection.IFiletree, parent: string, uuid: string, data: std.collection.filetree.INodeData): std.collection.IFiletree
+---@field public insert                 fun(self: std.collection.IFiletree, parent: string, uuid: string, data: std.collection.filetree.INodeData): std.collection.filetree.INode
+---@field public insert_directory_absolute  fun(self: std.collection.IFiletree, dirpath: string): std.collection.filetree.INode
+---@field public insert_directory_relative  fun(self: std.collection.IFiletree, cwd: string, dirpath: string): std.collection.filetree.INode
+---@field public insert_file_absolute       fun(self: std.collection.IFiletree, filepath: string): std.collection.filetree.INode
+---@field public insert_file_relative       fun(self: std.collection.IFiletree, cwd: string, filepath: string): std.collection.filetree.INode
 ---@field public print                  fun(self: std.collection.IFiletree, rootuuid: string|nil): string[]
 ---@field public remove                 fun(self: std.collection.IFiletree, uuid: string): std.collection.IFiletree
 ---@field public reset                  fun(self: std.collection.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): std.collection.IFiletree
@@ -89,44 +102,70 @@ local FILETYPE_PRIORITY_MAP = {
 ---@class std.collection.Filetree : std.collection.IFiletree
 ---@field public fullname               string
 ---@field protected _disposed           boolean
+---@field protected _nodemap            table<string, std.collection.tree.INode>
 local M = {}
 M.__index = M
 setmetatable(M, std.Tree)
+
+---@param filepath                      string
+---@return boolean
+local function is_cwd_chain(filepath)
+  local cwd = std.path.cwd() ---@type string
+  if cwd == filepath or filepath == FILETREE_ROOT_FILEPATH then
+    return true
+  end
+
+  local N1 = #cwd ---@type integer
+  local N2 = #filepath ---@type integer
+  if N1 < N2 then
+    return filepath:sub(1, N1 + 1) == cwd .. std.env.PATH_SEP
+  end
+
+  return cwd:sub(1, N2 + 1) == filepath .. std.env.PATH_SEP
+end
 
 ---@param filepath                      string
 ---@return string
 function M.uuid(filepath)
   local uuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
   if uuid == nil then
-    if std.path.is_absolute(filepath) then
-      uuid = std.fn.md5(filepath) ---@type string
-      FILEPATH_TO_UUID[filepath] = uuid
-      return uuid
+    if not std.path.is_absolute(filepath) then
+      error(string.format("[%s.uuid] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
 
-    error("Cannot resolve UUID for relative path: " .. filepath)
+    uuid = std.fn.md5(filepath) ---@type string
+    if is_cwd_chain(filepath) then
+      FILEPATH_TO_UUID[filepath] = uuid
+    end
+
+    return uuid
   end
   return uuid
 end
 
 ---@param filepath                      string
----@param force                         ?boolean
----@return std.collection.filetree.INodeData|nil
-function M.resolve(filepath, force)
-  local uuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
-  if uuid == nil and std.path.is_absolute(filepath) then
-    uuid = std.fn.md5(filepath) ---@type string
-    FILEPATH_TO_UUID[filepath] = uuid
+---@param filetype                      "directory" | "file"
+---@param force                         boolean
+---@return std.collection.filetree.INodeData
+---@return string
+function M.resolve(filepath, filetype, force)
+  local nodeuuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
+  if nodeuuid == nil then
+    if not std.path.is_absolute(filepath) then
+      error(string.format("[%s.resolve] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
+    end
+    nodeuuid = std.fn.md5(filepath) ---@type string
   end
 
-  if uuid == nil then
-    return
-  end
-
-  local nodedata = FILENODE_DATAMAP[uuid]
-  if nodedata == nil or force then
+  local nodedata = FILENODE_DATAMAP[nodeuuid]
+  if nodedata == nil then
     local basename = std.path.basename(filepath) ---@type string
-    local fileicon, fileicon_hln = std.fileicon.get_file_icon(basename)
+    local fileicon, fileicon_hln ---@type string, string
+    if filetype == "directory" then
+      fileicon, fileicon_hln = std.fileicon.get_directory_icon(basename) ---@type string, string
+    else
+      fileicon, fileicon_hln = std.fileicon.get_file_icon(basename) ---@type string, string
+    end
 
     ---@type std.collection.filetree.INodeData
     nodedata = {
@@ -135,11 +174,27 @@ function M.resolve(filepath, force)
       fileicon_hln = fileicon_hln,
       filepath = filepath,
       filepath_lower = filepath:lower(),
-      filetype = "file",
+      filetype = filetype,
     }
-    FILENODE_DATAMAP[uuid] = nodedata
+
+    if is_cwd_chain(filepath) then
+      FILEPATH_TO_UUID[filepath] = nodeuuid
+      FILENODE_DATAMAP[nodeuuid] = nodedata
+    end
+  elseif force then
+    if nodedata.filetype ~= filetype then
+      local fileicon, fileicon_hln ---@type string, string
+      if filetype == "directory" then
+        fileicon, fileicon_hln = std.fileicon.get_directory_icon(nodedata.basename) ---@type string, string
+      else
+        fileicon, fileicon_hln = std.fileicon.get_file_icon(nodedata.basename) ---@type string, string
+      end
+      nodedata.fileicon = fileicon
+      nodedata.fileicon_hln = fileicon_hln
+      nodedata.filetype = filetype
+    end
   end
-  return nodedata
+  return nodedata, nodeuuid
 end
 
 ---@param props                         std.collection.IFiletreeProps
@@ -152,7 +207,7 @@ function M.new(props)
   local tree = std.Tree.new({
     name = name,
     fullname = fullname,
-    rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, false),
+    rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true),
     node_sorter = function(left, right)
       ---@cast left                     std.collection.filetree.INode
       ---@cast right                    std.collection.filetree.INode
@@ -172,6 +227,190 @@ function M.new(props)
   return self
 end
 
+---@param dirpath                       string
+---@return std.collection.filetree.INode
+function M:insert_directory_absolute(dirpath)
+  self:__health__()
+
+  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+
+  local nodeuuid = M.uuid(dirpath) ---@type string
+  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  if node == nil or node.data.filetype ~= "directory" then
+    local pieces = std.path.split(dirpath) ---@type string[]
+    local N = #pieces ---@type integer
+
+    local p = "" ---@type string
+    local uuid_parent = FILETREE_ROOT_UUID ---@type string
+
+    if std.env.IS_WIN then
+      p = pieces[1] ---@type string
+      nodeuuid = M.uuid(p) ---@type string
+      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      if node == nil or node.data.filetype ~= "directory" then
+        local nodedata = M.resolve(p, "directory", true)
+        node = self:insert(uuid_parent, nodeuuid, nodedata)
+      end
+      uuid_parent = nodeuuid ---@type string
+    end
+
+    for index = 2, N, 1 do
+      p = p .. std.env.PATH_SEP .. pieces[index] ---@type string
+      nodeuuid = M.uuid(p) ---@type string
+      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      if node == nil or node.data.filetype ~= "directory" then
+        local nodedata = M.resolve(p, "directory", true)
+        node = self:insert(uuid_parent, nodeuuid, nodedata)
+      end
+      uuid_parent = nodeuuid ---@type string
+    end
+  end
+
+  return node
+end
+
+---@param cwd                           string
+---@param dirpath                       string
+---@return std.collection.filetree.INode
+function M:insert_directory_relative(cwd, dirpath)
+  self:__health__()
+
+  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+
+  local cwduuid = M.uuid(cwd) ---@type string
+  local cwdnode = nodemap[cwduuid] ---@type std.collection.filetree.INode|nil
+  if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
+    cwdnode = self:insert_directory_absolute(cwd)
+  end
+
+  local nodeuuid = M.uuid(cwd .. std.env.PATH_SEP .. dirpath) ---@type string
+  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  if node == nil or node.data.filetype ~= "directory" then
+    local pieces = std.path.split(dirpath) ---@type string[]
+    local N = #pieces ---@type integer
+
+    local p = cwd ---@type string
+    local uuid_parent = cwduuid ---@type string
+
+    for index = 1, N, 1 do
+      p = p .. std.env.PATH_SEP .. pieces[index] ---@type string
+      nodeuuid = M.uuid(p) ---@type string
+      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      if node == nil or node.data.filetype ~= "directory" then
+        local nodedata = M.resolve(p, "directory", true)
+        node = self:insert(uuid_parent, nodeuuid, nodedata)
+      end
+      uuid_parent = nodeuuid ---@type string
+    end
+  end
+
+  return node
+end
+
+---@param filepath                      string
+---@return std.collection.filetree.INode
+function M:insert_file_absolute(filepath)
+  self:__health__()
+
+  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+
+  local nodeuuid = M.uuid(filepath) ---@type string
+  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  if node == nil or node.data.filetype ~= "file" then
+    local pieces = std.path.split(filepath) ---@type string[]
+    local N = #pieces - 1 ---@type integer
+
+    local p = "" ---@type string
+    local uuid_parent = FILETREE_ROOT_UUID ---@type string
+
+    if std.env.IS_WIN then
+      p = pieces[1] ---@type string
+      nodeuuid = M.uuid(p) ---@type string
+      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      if node == nil or node.data.filetype ~= "directory" then
+        local nodedata = M.resolve(p, "directory", true)
+        node = self:insert(uuid_parent, nodeuuid, nodedata)
+      end
+      uuid_parent = nodeuuid ---@type string
+    end
+
+    for index = 2, N, 1 do
+      p = p .. std.env.PATH_SEP .. pieces[index] ---@type string
+      nodeuuid = M.uuid(p) ---@type string
+      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      if node == nil or node.data.filetype ~= "directory" then
+        local nodedata = M.resolve(p, "directory", true)
+        node = self:insert(uuid_parent, nodeuuid, nodedata)
+      end
+
+      uuid_parent = nodeuuid ---@type string
+    end
+
+    local basename = pieces[N + 1] ---@type string
+    p = p .. std.env.PATH_SEP .. basename ---@type string
+    nodeuuid = M.uuid(p) ---@type string
+    node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+    if node == nil or node.data.filetype ~= "file" then
+      local nodedata = M.resolve(p, "file", true)
+      node = self:insert(uuid_parent, nodeuuid, nodedata)
+    end
+  end
+
+  return node
+end
+
+---@param cwd                           string
+---@param filepath                      string
+---@return std.collection.filetree.INode
+function M:insert_file_relative(cwd, filepath)
+  self:__health__()
+
+  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+
+  local cwduuid = M.uuid(cwd) ---@type string
+  local cwdnode = nodemap[cwduuid] ---@type std.collection.filetree.INode|nil
+  if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
+    cwdnode = self:insert_directory_absolute(cwd)
+  end
+
+  local nodeuuid = M.uuid(cwd .. std.env.PATH_SEP .. filepath) ---@type string
+  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  if node == nil or node.data.filetype ~= "file" then
+    local pieces = std.path.split(filepath) ---@type string[]
+    local N = #pieces - 1 ---@type integer
+
+    local p = cwd ---@type string
+    local uuid_parent = cwduuid ---@type string
+
+    for index = 1, N, 1 do
+      p = p .. std.env.PATH_SEP .. pieces[index] ---@type string
+      nodeuuid = M.uuid(p) ---@type string
+      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      if node == nil or node.data.filetype ~= "directory" then
+        local nodedata = M.resolve(p, "directory", true)
+        node = self:insert(uuid_parent, nodeuuid, nodedata)
+      end
+
+      uuid_parent = nodeuuid ---@type string
+    end
+
+    local basename = pieces[N + 1] ---@type string
+    p = p .. std.env.PATH_SEP .. basename ---@type string
+    nodeuuid = M.uuid(p) ---@type string
+    node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+    if node == nil or node.data.filetype ~= "file" then
+      local nodedata = M.resolve(p, "file", true)
+      node = self:insert(uuid_parent, nodeuuid, nodedata)
+    end
+  end
+
+  return node
+end
+
 ---@param cwd                           string
 ---@param filepaths                     string[]
 ---@param with_locations                boolean
@@ -184,156 +423,33 @@ function M:reset(cwd, filepaths, with_locations)
     return self
   end
 
-  ---@type std.collection.filetree.INodeData
-  local rootdata = {
-    basename = FILETREE_ROOT_FILEPATH,
-    fileicon = "󰙅",
-    fileicon_hln = "MiniIconsBlue",
-    filepath = FILETREE_ROOT_FILEPATH,
-    filepath_lower = FILETREE_ROOT_FILEPATH:lower(),
-    filetype = "directory",
-  }
-  self:insert(FILETREE_ROOT_UUID, FILETREE_ROOT_UUID, rootdata)
+  local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type std.collection.filetree.INodeData, string
+  self:insert(rootuuid, rootuuid, rootdata)
 
   cwd = std.path.normalize(cwd) ---@type string
-  local cwd_with_slash = cwd == "/" and "/" or (cwd .. std.env.PATH_SEP) ---@type string
-  local cwd_with_slash_length = #cwd_with_slash ---@type integer
-  if cwd ~= "/" then
-    local pieces = std.path.split(cwd) ---@type string[]
-    local N = #pieces ---@type integer
+  local P = cwd == "/" and "/" or (cwd .. std.env.PATH_SEP) ---@type string
+  local L = #P ---@type integer
 
-    local filepath = "" ---@type string
-    local uuid_parent = FILETREE_ROOT_UUID ---@type string
-    local start_index = std.env.IS_WIN and 1 or 2 ---@type integer
-    for index = start_index, N, 1 do
-      local basename = pieces[index] ---@type string
-      filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
-      local uuid = M.uuid(filepath) ---@type string
-      local fileicon, fileicon_hln = std.fileicon.get_directory_icon(basename)
+  local visited_filepaths = {} ---@type table<string, boolean>
 
-      ---@type std.collection.filetree.INodeData
-      local nodedata = {
-        basename = basename,
-        fileicon = fileicon,
-        fileicon_hln = fileicon_hln,
-        filepath = filepath,
-        filepath_lower = filepath:lower(),
-        filetype = "directory",
-      }
-      self:insert(uuid_parent, uuid, nodedata)
-      uuid_parent = uuid
-    end
-  end
-
-  local cwd_uuid = M.uuid(cwd) ---@type string
-  local visited_absolute_filepaths = {} ---@type table<string, boolean>
-  local visited_relative_filepaths = {} ---@type table<string, boolean>
-
-  ---@param p                           string
-  local function insert_absolute_filepath(p)
-    if visited_absolute_filepaths[p] then
+  ---@param filepath                    string
+  local function insert_relative_filepath(filepath)
+    if visited_filepaths[filepath] then
       return
     end
-    visited_absolute_filepaths[p] = true
+    visited_filepaths[filepath] = true
 
-    local pieces = std.path.split(p) ---@type string[]
-    local N = #pieces - 1 ---@type integer
-
-    local filepath = "" ---@type string
-    local uuid_parent = FILETREE_ROOT_UUID ---@type string
-    local start_index = std.env.IS_WIN and 1 or 2 ---@type integer
-    for index = start_index, N, 1 do
-      local basename = pieces[index] ---@type string
-      filepath = index == 1 and basename or (filepath .. std.env.PATH_SEP .. basename) ---@type string
-      local uuid = M.uuid(filepath) ---@type string
-      local fileicon, fileicon_hln = std.fileicon.get_directory_icon(basename)
-
-      ---@type std.collection.filetree.INodeData
-      local nodedata = {
-        basename = basename,
-        fileicon = fileicon,
-        fileicon_hln = fileicon_hln,
-        filepath = filepath,
-        filepath_lower = filepath:lower(),
-        filetype = "directory",
-      }
-      self:insert(uuid_parent, uuid, nodedata)
-      uuid_parent = uuid ---@type string
-    end
-
-    local basename = pieces[#pieces] ---@type string
-    filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
-    local uuid = M.uuid(filepath) ---@type string
-    local fileicon, fileicon_hln = std.fileicon.get_file_icon(basename)
-
-    ---@type std.collection.filetree.INodeData
-    local nodedata = {
-      basename = basename,
-      fileicon = fileicon,
-      fileicon_hln = fileicon_hln,
-      filepath = filepath,
-      filepath_lower = filepath:lower(),
-      filetype = "file",
-    }
-    self:insert(uuid_parent, uuid, nodedata)
-  end
-
-  ---@param p                           string
-  local function insert_relative_filepath(p)
-    if visited_relative_filepaths[p] then
-      return
-    end
-    visited_relative_filepaths[p] = true
-
-    local pieces = std.path.split(p) ---@type string[]
-    local N = #pieces - 1 ---@type integer
-
-    local filepath = cwd == "/" and "" or cwd ---@type string
-    local uuid_parent = cwd_uuid ---@type string
-    for index = 1, N, 1 do
-      local basename = pieces[index] ---@type string
-      filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
-      local uuid = M.uuid(filepath) ---@type string
-      local fileicon, fileicon_hln = std.fileicon.get_directory_icon(basename)
-
-      ---@type std.collection.filetree.INodeData
-      local nodedata = {
-        basename = basename,
-        fileicon = fileicon,
-        fileicon_hln = fileicon_hln,
-        filepath = filepath,
-        filepath_lower = filepath:lower(),
-        filetype = "directory",
-      }
-      self:insert(uuid_parent, uuid, nodedata)
-      uuid_parent = uuid ---@type string
-    end
-
-    local basename = pieces[#pieces] ---@type string
-    filepath = filepath .. std.env.PATH_SEP .. basename ---@type string
-    local uuid = M.uuid(filepath) ---@type string
-    local fileicon, fileicon_hln = std.fileicon.get_file_icon(basename)
-
-    ---@type std.collection.filetree.INodeData
-    local nodedata = {
-      basename = basename,
-      fileicon = fileicon,
-      fileicon_hln = fileicon_hln,
-      filepath = filepath,
-      filepath_lower = filepath:lower(),
-      filetype = "file",
-    }
-    self:insert(uuid_parent, uuid, nodedata)
+    self:insert_file_relative(cwd, filepath)
   end
 
   if with_locations then
     for _, p in ipairs(filepaths) do
       local filepath = std.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
       if std.path.is_absolute(filepath) then
-        if filepath:sub(1, cwd_with_slash_length) ~= cwd_with_slash then
-          insert_absolute_filepath(filepath)
+        if filepath:sub(1, L) ~= P then
+          self:insert_file_absolute(filepath)
         else
-          filepath = filepath:sub(cwd_with_slash_length + 1) ---@type string
+          filepath = filepath:sub(L + 1) ---@type string
           insert_relative_filepath(filepath)
         end
       else
@@ -343,10 +459,10 @@ function M:reset(cwd, filepaths, with_locations)
   else
     for _, filepath in ipairs(filepaths) do
       if std.path.is_absolute(filepath) then
-        if filepath:sub(1, cwd_with_slash_length) ~= cwd_with_slash then
-          insert_absolute_filepath(filepath)
+        if filepath:sub(1, L) ~= P then
+          self:insert_file_absolute(filepath)
         else
-          filepath = filepath:sub(cwd_with_slash_length + 1) ---@type string
+          filepath = filepath:sub(L + 1) ---@type string
           insert_relative_filepath(filepath)
         end
       else

@@ -72,7 +72,7 @@ local __module_name__ = "std.collection.tree" ---@type string
 ---@field public unsafe_traverse        fun(self: std.collection.ITree, root: string|nil, traverse: std.collection.tree.IUnsafeTraverseCallback): std.collection.ITree
 ---@field public calc_include_uuid_set  fun(self: std.collection.ITree, uuids: string[]): table<string, boolean>
 ---@field public empty                  fun(self: std.collection.ITree, uuid: string): std.collection.ITree
----@field public insert                 fun(self: std.collection.ITree, parent: string, uuid: string, data: table|nil): std.collection.ITree
+---@field public insert                 fun(self: std.collection.ITree, parent: string, uuid: string, data: table|nil): std.collection.tree.INode
 ---@field public remove                 fun(self: std.collection.ITree, uuid: string): std.collection.ITree
 
 ---@class std.collection.Tree : std.collection.ITree
@@ -471,13 +471,14 @@ end
 ---@param parent                        string
 ---@param uuid                          string
 ---@param data                          T
----@return std.collection.Tree
+---@return std.collection.tree.INode
 function M:insert(parent, uuid, data)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
-  local node_parent = parent ~= uuid and nodemap[parent] or self._rootnode ---@type std.collection.tree.INode
   local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
+
+  local node_parent = parent ~= uuid and nodemap[parent] or self._rootnode ---@type std.collection.tree.INode
   parent = node_parent.uuid ---@type string
 
   if node == nil then
@@ -494,7 +495,7 @@ function M:insert(parent, uuid, data)
   else
     node.data = data
     if node.parent == node_parent.uuid then
-      return self
+      return node
     end
 
     local old_node_parent = nodemap[node.parent] ---@type std.collection.tree.INode
@@ -510,7 +511,7 @@ function M:insert(parent, uuid, data)
 
   node_parent.children[#node_parent.children + 1] = uuid
   node_parent.dirty_co = true
-  return self
+  return node
 end
 
 ---@param rootuuid                      string|nil
