@@ -429,6 +429,15 @@ function M:insert_filepath(filepath, with_locations)
   return self
 end
 
+---@param nodeuuid                      string
+---@return nil
+function M:remove(nodeuuid)
+  self:__health__()
+
+  P.remove(self, nodeuuid)
+  self._tree:remove(nodeuuid)
+end
+
 ---@param cwd                           string
 ---@param filepaths                     string[]
 ---@param with_locations                boolean

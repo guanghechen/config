@@ -941,13 +941,6 @@ function M:__resolve_builtin_keymaps_result__()
   local builtin_keymaps = {
     {
       modes = { "n", "v" },
-      key = "d",
-      aliases = { "dd", "X", "x" },
-      desc = "picker#result: noop",
-      callback = std.fn.noop,
-    },
-    {
-      modes = { "n", "v" },
       key = "A",
       desc = "picker#result: back to edit (A)",
       callback = function()

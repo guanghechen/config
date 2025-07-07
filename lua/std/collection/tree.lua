@@ -579,35 +579,36 @@ function M:print(rootuuid)
   return lines
 end
 
----@param uuid                          string
+---@param nodeuuid                      string
 ---@return std.collection.Tree
-function M:remove(uuid)
+function M:remove(nodeuuid)
   self:__health__()
 
   local rootnode = self._rootnode ---@type std.collection.tree.INode
-  if uuid == rootnode.uuid then
+  if nodeuuid == rootnode.uuid then
     return self:clear()
   end
 
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
-  local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
+  local node = nodemap[nodeuuid] ---@type std.collection.tree.INode|nil
   if node == nil then
     std.reporter.error({
       from = self.fullname,
       subject = "remove",
-      message = string.format("Node with uuid '%s' does not exist.", uuid),
+      message = string.format("Node with uuid '%s' does not exist.", nodeuuid),
       details = {
-        uuid = uuid,
+        uuid = nodeuuid,
       },
     })
     return self
   end
 
   local node_parent = nodemap[node.parent] ---@type std.collection.tree.INode
-  std.table.filter_inline(node_parent.children, function(childuuid)
-    return childuuid ~= uuid
-  end)
+
   self:__remove_recursive__(node)
+  std.table.filter_inline(node_parent.children, function(childuuid)
+    return childuuid ~= nodeuuid
+  end)
 
   return self
 end

@@ -425,6 +425,9 @@ function M.new(props)
       local rootpath = rootnode.data.filepath ---@type string
       local nodepath = filenode.data.filepath ---@type string
       local relpath = std.path.relative(rootpath, nodepath, false) ---@type string
+      if filenode.data.filetype == "directory" and #relpath > 0 then
+        relpath = relpath .. std.env.PATH_SEP ---@type string
+      end
 
       vim.ui.input({
         prompt = string.format(" Create a new file (or folder end with a %s) ", std.env.PATH_SEP),
@@ -525,6 +528,80 @@ function M.new(props)
           self:__resolve_confirmation__(nodeuuid)
         end
       end
+    end,
+    remove_node = function()
+      local rootuuid = self._uuid_root ---@type string
+      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+      if rootnode == nil then
+        return
+      end
+
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      if nodeuuid == nil then
+        return
+      end
+
+      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+      if nodestate == nil then
+        return
+      end
+
+      local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
+      local filenode = filetree:retrieve(fileuuid) ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
+        return
+      end
+
+      local rootpath = rootnode.data.filepath ---@type string
+      local nodepath = filenode.data.filepath ---@type string
+      local relpath = std.path.relative(rootpath, nodepath, false) ---@type string
+      if filenode.data.filetype == "directory" and #relpath > 0 then
+        relpath = relpath .. std.env.PATH_SEP ---@type string
+      end
+
+      vim.ui.input({
+        prompt = string.format(" Are you sure you want to delete '%s' (y/n)", relpath),
+        relative = "cursor",
+      }, function(answer)
+        if answer == nil then
+          return
+        end
+
+        answer = vim.trim(answer:lower()) ---@type string
+        if answer:sub(1) ~= "y" then
+          return
+        end
+
+        local isdir = filenode.data.filetype == "directory" ---@type boolean
+
+        local success = false ---@type boolean
+        if isdir then
+          success = vim.fn.delete(nodepath, "rf") == 0
+        else
+          success = vim.fn.delete(nodepath) == 0
+        end
+
+        if not success then
+          std.reporter.error({
+            from = fullname,
+            subject = "remove_node",
+            message = string.format("Failed to delete %s.", isdir and "directory" or "file"),
+            details = { filepath = nodepath, isdir = isdir },
+          })
+          return
+        end
+
+        treeview:remove(fileuuid)
+        if not isdir then
+          std.table.filter_inline(self._uuids_file, function(uuid)
+            return uuid ~= fileuuid
+          end)
+          std.table.filter_inline(self._uuids_order, function(uuid)
+            return uuid ~= fileuuid
+          end)
+        end
+        scheduler_match:schedule()
+      end)
     end,
     send_to_qflist = function()
       local cwd = std.path.cwd() ---@type string
@@ -783,14 +860,12 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<leader>D",
-      aliases = { "D" },
       desc = "filetree: mark the subroot invisible",
       callback = actions.mark_subroot_invisible,
     },
     {
       modes = { "i", "n", "v" },
       key = "<leader>dd",
-      aliases = { "dd" },
       desc = "filetree: mark the node invisible",
       callback = actions.mark_node_invisible,
     },
@@ -805,6 +880,12 @@ function M.new(props)
       key = "]i",
       desc = "filetree: goto the lastchild line",
       callback = actions.goto_lnum_lastchild,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "d",
+      desc = "filetree: remove node",
+      callback = actions.remove_node,
     },
     {
       modes = { "i", "n", "v" },

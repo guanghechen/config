@@ -582,14 +582,12 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<leader>D",
-      aliases = { "D" },
       desc = "tree: mark the subroot invisible",
       callback = actions.mark_subroot_invisible,
     },
     {
       modes = { "i", "n", "v" },
       key = "<leader>dd",
-      aliases = { "dd" },
       desc = "tree: mark the node invisible",
       callback = actions.mark_node_invisible,
     },
