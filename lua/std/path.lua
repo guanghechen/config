@@ -109,10 +109,15 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
-  if IS_WIN then
+  return string.byte(filepath, 1, 1) == BYTE_PATHSEP
+end
+
+if IS_WIN then
+  ---@param filepath                      string
+  ---@return boolean
+  function M.is_absolute(filepath)
     return #filepath > 1 and string.byte(filepath, 2, 2) == BYTE_COLON
   end
-  return string.byte(filepath, 1, 1) == BYTE_PATHSEP
 end
 
 ---@param filepath                      string
