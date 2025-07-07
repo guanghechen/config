@@ -562,6 +562,7 @@ function M.new(props)
       vim.ui.input({
         prompt = string.format(" Are you sure you want to delete '%s' (y/n)", relpath),
         relative = "cursor",
+        startinsert = true,
       }, function(answer)
         if answer == nil then
           return

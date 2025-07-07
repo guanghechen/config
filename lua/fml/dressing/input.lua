@@ -5,6 +5,7 @@
 ---@field public prompt                 ?string
 ---@field public default                ?string
 ---@field public completion             ?string
+---@field public startinsert            ?boolean
 ---@field public highlight              ?fun(): string
 
 ---@class fml.dressing.input.IContext
@@ -161,6 +162,10 @@ function M.input(opts, on_confirm)
     { modes = { "n" }, key = "O", desc = "input: noop", callback = std.fn.noop },
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
+  if opts.startinsert then
+    vim.cmd.startinsert()
+  end
 
   return winnr
 end
