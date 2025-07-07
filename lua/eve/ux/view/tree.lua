@@ -1133,9 +1133,18 @@ end
 function M:empty(uuid)
   self:__health__()
   local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+
   self._tree:quick_traverse(uuid, function(_, node)
     if node.uuid ~= uuid then
-      statemap[node.uuid] = nil
+      local nodestate = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+      if nodestate ~= nil then
+        if nodestate.locations ~= nil then
+          statemap[node.uuid] = nil
+          for _, location in ipairs(nodestate.locations) do
+            statemap[location.locationuuid] = nil ---@type nil
+          end
+        end
+      end
     end
   end)
   return self
@@ -1146,7 +1155,21 @@ end
 ---@return eve.ux.view.Tree
 function M:insert(uuid, state)
   self:__health__()
-  self.statemap[uuid] = state
+
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  local oldstate = statemap[uuid] ---@type eve.ux.view.tree.INodeState|nil
+  if oldstate ~= nil and oldstate.locations ~= nil then
+    for _, location in ipairs(oldstate.locations) do
+      statemap[location.locationuuid] = nil ---@type nil
+    end
+  end
+
+  statemap[uuid] = state
+  if state.locations ~= nil then
+    for _, location in ipairs(state.locations) do
+      statemap[location.locationuuid] = location
+    end
+  end
   return self
 end
 
@@ -1159,7 +1182,15 @@ function M:remove(uuid)
   local tree = self._tree ---@type std.collection.IReadonlyTree
 
   tree:quick_traverse(uuid, function(_, node)
-    statemap[node.uuid] = nil
+    local state = statemap[node.uuid] ---@type eve.ux.view.tree.INodeState|nil
+    if state ~= nil then
+      statemap[node.uuid] = nil
+      if state.locations ~= nil then
+        for _, location in ipairs(state.locations) do
+          statemap[location.locationuuid] = nil ---@type nil
+        end
+      end
+    end
   end)
 
   return self
