@@ -218,7 +218,9 @@ function M.normalize(filepath)
   filepath = filepath:gsub("%%(%x%x)", function(hex)
     return string.char(tonumber(hex, 16))
   end)
-  return table.concat(M.split(filepath), SEP)
+
+  local pieces = M.split(filepath, true)
+  return table.concat(pieces, SEP)
 end
 
 ---@param from                          string
@@ -313,35 +315,43 @@ function M.resolve(cwd, to)
 end
 
 ---@param filepath                      string
+---@param keep_suffix_sep               ?boolean
 ---@return string[]
-function M.split(filepath)
+---@return boolean
+function M.split(filepath, keep_suffix_sep)
+  local L = #filepath ---@type integer
   local pieces = {} ---@type string[]
   local pattern = "([^/\\]+)" ---@type string
-  local has_sep_prefix = SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
-  local has_sep_suffix = #filepath > 1 and string.byte(filepath, #filepath, #filepath) == BYTE_PATHSEP ---@type boolean
+  local has_prefix_sep = SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
+  local has_suffix_sep = L > 1 and string.byte(filepath, L, L) == BYTE_PATHSEP ---@type boolean
 
-  if has_sep_prefix then
-    pieces[1] = ""
+  local k = 0 ---@type integer
+  if has_prefix_sep then
+    k = k + 1 ---@type integer
+    pieces[k] = ""
   end
 
   for piece in string.gmatch(filepath, pattern) do
     if piece ~= "" and piece ~= "." then
-      if piece == ".." and (has_sep_prefix or #pieces > 0) then
-        pieces[#pieces] = nil
+      if piece == ".." and (has_prefix_sep or k > 0) then
+        pieces[k] = nil
+        k = k - 1 ---@type integer
       else
-        pieces[#pieces + 1] = piece
+        k = k + 1 ---@type integer
+        pieces[k] = piece
       end
     end
   end
 
-  if has_sep_suffix then
-    pieces[#pieces + 1] = ""
+  if has_suffix_sep and keep_suffix_sep then
+    k = k + 1 ---@type integer
+    pieces[k] = ""
   end
 
-  if IS_WIN and #filepath > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
+  if IS_WIN and L > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
     pieces[1] = pieces[1]:upper()
   end
-  return pieces
+  return pieces, has_suffix_sep
 end
 
 ---! Check if the `to` path is under the `from` path.
