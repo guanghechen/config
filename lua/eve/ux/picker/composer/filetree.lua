@@ -399,6 +399,71 @@ function M.new(props)
         },
       })
     end,
+    create_node = function()
+      local rootuuid = self._uuid_root ---@type string
+      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+      if rootnode == nil then
+        return
+      end
+
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      if nodeuuid == nil then
+        return
+      end
+
+      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+      if nodestate == nil then
+        return
+      end
+
+      local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
+      local filenode = filetree:retrieve(leafuuid) ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
+        return
+      end
+
+      local rootpath = rootnode.data.filepath ---@type string
+      local nodepath = filenode.data.filepath ---@type string
+      local relpath = std.path.relative(rootpath, nodepath, false) ---@type string
+
+      vim.ui.input({
+        prompt = string.format(" Create a new file (or folder end with a %s) ", std.env.PATH_SEP),
+        default = relpath,
+        relative = "cursor",
+      }, function(filepath)
+        if filepath == nil or filepath == "" then
+          return
+        end
+
+        local isdir = std.path.is_dirpath(filepath) ---@type boolean
+        filepath = std.path.resolve(rootpath, filepath) ---@type string
+
+        if std.path.is_exist(filepath) then
+          std.reporter.error({
+            from = fullname,
+            subject = "create_node",
+            message = "The filepath is already exist.",
+            details = { filepath = filepath, isdir = isdir },
+          })
+          return
+        end
+
+        if isdir then
+          vim.fn.mkdir(filepath, "p")
+          treeview:insert_dirpath(filepath)
+        else
+          std.path.mkdir_if_nonexist(std.path.dirname(filepath))
+          vim.fn.writefile({}, filepath)
+          treeview:insert_filepath(filepath, false)
+
+          local uuid = std.Filetree.uuid(filepath)
+          table.insert(self._uuids_file, uuid)
+          table.insert(self._uuids_order, uuid)
+        end
+
+        scheduler_match:schedule()
+      end)
+    end,
     goto_lnum_lastchild = function()
       local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
       if nodeuuid ~= nil then
@@ -758,6 +823,12 @@ function M.new(props)
       key = "oc",
       desc = "filetree: copy filepath",
       callback = actions.copy_node_filepath,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "a",
+      desc = "filetree: create node",
+      callback = actions.create_node,
     },
     {
       modes = { "i", "n", "v" },

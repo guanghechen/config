@@ -305,6 +305,130 @@ function M:match(params)
   return uuids
 end
 
+---@param dirpath                       string
+---@return eve.ux.picker.FiletreeView
+function M:insert_dirpath(dirpath)
+  self:__health__()
+
+  local filetree = self._tree ---@type std.collection.IFiletree
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  ---@cast statemap                     table<string, eve.ux.picker.view.filetree.INodeState>
+
+  local filenode = filetree:insert_directory_absolute(dirpath)
+  local fileuuid = filenode.uuid ---@type string
+  local filestate = statemap[fileuuid] ---@type eve.ux.picker.view.filetree.INodeState|nil
+
+  if filestate == nil or filestate.nodetype ~= "container" then
+    local node = filetree:retrieve(filenode.parent) ---@type std.collection.filetree.INode|nil
+    while node ~= nil and node.uuid ~= node.parent do
+      local nodestate = statemap[filenode.uuid] ---@type eve.ux.picker.view.filetree.INodeState|nil
+      if nodestate ~= nil and nodestate.nodetype == "container" then
+        break
+      end
+
+      ---@type eve.ux.picker.view.filetree.IDirectoryNodeState
+      nodestate = {
+        nodetype = "container",
+        collapsed = false,
+        tick_invisible = 0,
+        tick_matched = 0,
+        tick_selected = 0,
+        tick_selected_maximum = 0,
+      }
+      statemap[node.uuid] = nodestate
+      node = filetree:retrieve(node.parent) ---@type std.collection.filetree.INode|nil
+    end
+
+    ---@type eve.ux.picker.view.filetree.IDirectoryNodeState
+    filestate = {
+      nodetype = "container",
+      collapsed = false,
+      tick_invisible = 0,
+      tick_matched = 0,
+      tick_selected = 0,
+      tick_selected_maximum = 0,
+    }
+    statemap[filenode.uuid] = filestate
+  end
+
+  return self
+end
+
+---@param filepath                      string
+---@param with_locations                boolean
+---@return eve.ux.picker.FiletreeView
+function M:insert_filepath(filepath, with_locations)
+  self:__health__()
+
+  local filetree = self._tree ---@type std.collection.IFiletree
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  ---@cast statemap                     table<string, eve.ux.picker.view.filetree.INodeState>
+
+  local lnum, col, col_end ---@type integer|nil, integer|nil, integer|nil
+
+  if with_locations then
+    filepath, lnum, col, col_end = std.string.parse_filepath_with_location(filepath)
+  end
+
+  local filenode = filetree:insert_file_absolute(filepath)
+  local fileuuid = filenode.uuid ---@type string
+  local filestate = statemap[fileuuid] ---@type eve.ux.picker.view.filetree.INodeState|nil
+
+  if filestate == nil or filestate.nodetype ~= "leaf" then
+    local node = filetree:retrieve(filenode.parent) ---@type std.collection.filetree.INode|nil
+    while node ~= nil and node.uuid ~= node.parent do
+      local nodestate = statemap[filenode.uuid] ---@type eve.ux.picker.view.filetree.INodeState|nil
+      if nodestate ~= nil and nodestate.nodetype == "container" then
+        break
+      end
+
+      ---@type eve.ux.picker.view.filetree.IDirectoryNodeState
+      nodestate = {
+        nodetype = "container",
+        collapsed = false,
+        tick_invisible = 0,
+        tick_matched = 0,
+        tick_selected = 0,
+        tick_selected_maximum = 0,
+      }
+      statemap[node.uuid] = nodestate
+      node = filetree:retrieve(node.parent) ---@type std.collection.filetree.INode|nil
+    end
+
+    ---@type eve.ux.picker.view.filetree.IFileNodeState
+    filestate = {
+      nodetype = "leaf",
+      collapsed = false,
+      tick_invisible = 0,
+      tick_matched = 0,
+      tick_selected = 0,
+    }
+    statemap[filenode.uuid] = filestate
+  end
+
+  if lnum ~= nil then
+    local locationuuid = string.format("%s:%d:%d", fileuuid, lnum, col or 0) ---@type string
+
+    ---@type eve.ux.picker.view.filetree.ILocationNodeState
+    local location = {
+      nodetype = "location",
+      leafuuid = fileuuid,
+      locationuuid = locationuuid,
+      tick_invisible = 0,
+      lnum = lnum,
+      col = col,
+      col_end = col_end,
+    }
+    statemap[locationuuid] = location
+
+    local locations = filestate.locations or {} ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
+    locations[#locations + 1] = location ---@type eve.ux.picker.view.filetree.ILocationNodeState
+    filestate.locations = locations ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
+  end
+
+  return self
+end
+
 ---@param cwd                           string
 ---@param filepaths                     string[]
 ---@param with_locations                boolean
