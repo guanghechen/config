@@ -70,7 +70,7 @@ keymap = [
 
   # Process
   { on = "<C-z>",             run = "suspend",                                        desc = "process: suspend" },
-  { on = "q",                 run = "quit",                                           desc = "process: quit" },
+  { on = "q",                 run = "quit --no-cwd-file",                             desc = "process: quit" },
   { on = "Q",                 run = "quit --no-cwd-file",                             desc = "process: quit without outputting cwd-file" },
 
   # Search
