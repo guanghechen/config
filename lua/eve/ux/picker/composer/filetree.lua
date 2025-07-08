@@ -602,7 +602,7 @@ function M.new(props)
         end
 
         answer = vim.trim(answer:lower()) ---@type string
-        if answer:sub(1) ~= "y" then
+        if answer:sub(1, 1) ~= "y" then
           return
         end
 
@@ -643,6 +643,7 @@ function M.new(props)
         vim.ui.input({
           type = "confirmation",
           prompt = string.format(" Delete '%s' ", relpath),
+          default = "yes",
           relative = "cursor",
           startinsert = true,
         }, function(answer)

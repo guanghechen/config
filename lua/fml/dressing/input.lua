@@ -15,6 +15,7 @@
 ---@field public winnr                  ?integer
 
 local ctx = { opts = {} } ---@type fml.dressing.input.IContext
+local NSNR_DEFAULT_CONFIRMATION = eve.var.nsnr.input_confirmation ---@type integer
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({
@@ -25,6 +26,7 @@ local WIN_HIGHLIGHT = table.concat({
   "FloatBorder:FloatActiveBorder",
   "FloatTitle:FloatActiveTitle",
   "Normal:f_ui_normal",
+  "SpecialKey:SpecialKey",
 }, ",")
 
 ---@class fml.dressing.input
@@ -66,7 +68,6 @@ function M.input(opts, on_confirm)
   vim.bo[bufnr].omnifunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].filetype = eve.filetype.UX_INPUT
   vim.bo[bufnr].swapfile = false
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
 
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local relative = opts.relative or "cursor"
@@ -97,7 +98,6 @@ function M.input(opts, on_confirm)
   vim.wo[winnr].winblend = winblend
   vim.wo[winnr].winfixbuf = true
   vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
-  vim.api.nvim_win_set_cursor(winnr, { 1, #default + 1 })
 
   ---@type fml.dressing.input.IContext
   ctx = {
@@ -137,7 +137,6 @@ function M.input(opts, on_confirm)
 
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
         local text = string.sub(lines[1] or "", #prompt) ---@type string
-
         vim.api.nvim_win_close(winnr, true)
         vim.schedule(function()
           if vim.api.nvim_win_is_valid(parent_winnr) then
@@ -171,11 +170,21 @@ function M.input(opts, on_confirm)
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
+  vim.api.nvim_set_current_win(winnr)
+
+  if prompt == "" then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
+    vim.api.nvim_win_set_cursor(winnr, { 1, #default })
+  else
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.hl.range(bufnr, NSNR_DEFAULT_CONFIRMATION, "SpecialKey", { 0, 0 }, { 0, #prompt }, {})
+    end
+  end
+
   if opts.startinsert then
     vim.cmd.startinsert()
   end
 
-  vim.api.nvim_set_current_win(winnr)
   vim.schedule(function()
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_set_current_win(winnr)
