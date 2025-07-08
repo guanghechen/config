@@ -525,7 +525,7 @@ function M.new(props)
     },
     {
       modes = { "n", "v" },
-      key = "z",
+      key = "oz",
       desc = "tree: toggle (recursively)",
       callback = actions.toggle_node_recursively,
     },
@@ -605,7 +605,7 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
-      key = "z",
+      key = "oz",
       desc = "tree: toggle (recursively)",
       callback = actions.toggle_node_recursively,
     },

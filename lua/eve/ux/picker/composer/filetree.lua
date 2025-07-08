@@ -805,7 +805,19 @@ function M.new(props)
     },
     {
       modes = { "n", "v" },
-      key = "z",
+      key = "od",
+      desc = "filetree: remove node",
+      callback = actions.remove_node,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oi",
+      desc = "filetree: create node",
+      callback = actions.create_node,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oz",
       desc = "filetree: toggle (recursively)",
       callback = actions.toggle_node_recursively,
     },
@@ -885,12 +897,6 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
-      key = "d",
-      desc = "filetree: remove node",
-      callback = actions.remove_node,
-    },
-    {
-      modes = { "i", "n", "v" },
       key = "oA",
       desc = "filetree: add to avante (full subtree)",
       callback = actions.add_subtree_to_avante,
@@ -909,13 +915,21 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
-      key = "a",
+      key = "od",
+      alias = { "d" },
+      desc = "filetree: remove node",
+      callback = actions.remove_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "oi",
+      alias = { "a" },
       desc = "filetree: create node",
       callback = actions.create_node,
     },
     {
       modes = { "i", "n", "v" },
-      key = "z",
+      key = "oz",
       desc = "filetree: toggle (recursively)",
       callback = actions.toggle_node_recursively,
     },
