@@ -32,6 +32,8 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public attach_node            fun(): nil
 ---@field public attach_parent          fun(): nil
 ---@field public copy_node_filepath     fun(): nil
+---@field public create_node            fun(): nil
+---@field public remove_node            fun(): nil
 ---@field public goto_lnum_lastchild    fun(): nil
 ---@field public goto_lnum_parent       fun(): nil
 ---@field public mark_node_invisible    fun(): nil
@@ -383,42 +385,58 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
-      if node == nil then
+      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
         return
       end
 
-      local filepath = node.data.filepath ---@type string
-      eve.ux.fn.select_copy_filepath({
-        filepath = filepath,
-        winopts = {
-          relative = "cursor",
-          row = 1,
-          col = 4,
-        },
-      })
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
+      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
+        return
+      end
+
+      ---@return nil
+      local function handle()
+        eve.ux.fn.select_copy_filepath({
+          filepath = filenode.data.filepath,
+          winopts = {
+            relative = "cursor",
+            row = 1,
+            col = 4,
+          },
+          on_completed = function()
+            if winnr_current ~= winnr_result then
+              vim.schedule(function()
+                if vim.api.nvim_win_is_valid(winnr_current) then
+                  vim.api.nvim_set_current_win(winnr_current)
+                end
+              end)
+            end
+          end,
+        })
+      end
+
+      if winnr_current == winnr_result then
+        handle()
+      else
+        vim.api.nvim_win_call(winnr_result, handle)
+      end
     end,
     create_node = function()
-      local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
+        return
+      end
+
+      local rootnode = self:__retrieve_rootnode__() ---@type std.collection.filetree.INode|nil
       if rootnode == nil then
         return
       end
 
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      if nodeuuid == nil then
-        return
-      end
-
-      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
-      if nodestate == nil then
-        return
-      end
-
-      local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-      local filenode = filetree:retrieve(leafuuid) ---@type std.collection.filetree.INode|nil
-      if filenode == nil then
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
+      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
         return
       end
 
@@ -429,11 +447,9 @@ function M.new(props)
         relpath = relpath .. std.env.PATH_SEP ---@type string
       end
 
-      vim.ui.input({
-        prompt = string.format(" New file / directory ", std.env.PATH_SEP),
-        default = relpath,
-        relative = "cursor",
-      }, function(filepath)
+      ---@param filepath                string|nil
+      ---@return nil
+      local function on_confirmed(filepath)
         if filepath == nil or filepath == "" then
           return
         end
@@ -465,7 +481,32 @@ function M.new(props)
         end
 
         scheduler_match:schedule()
-      end)
+      end
+
+      ---@return nil
+      local function handle()
+        vim.ui.input({
+          prompt = string.format(" New file / directory ", std.env.PATH_SEP),
+          default = relpath,
+          relative = "cursor",
+        }, function(filepath)
+          on_confirmed(filepath)
+
+          if winnr_current ~= winnr_result then
+            vim.schedule(function()
+              if vim.api.nvim_win_is_valid(winnr_current) then
+                vim.api.nvim_set_current_win(winnr_current)
+              end
+            end)
+          end
+        end)
+      end
+
+      if winnr_current == winnr_result then
+        handle()
+      else
+        vim.api.nvim_win_call(winnr_result, handle)
+      end
     end,
     goto_lnum_lastchild = function()
       local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
@@ -530,41 +571,32 @@ function M.new(props)
       end
     end,
     remove_node = function()
-      local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
-      if rootnode == nil then
-        return
-      end
-
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      if nodeuuid == nil then
-        return
-      end
-
-      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
-      if nodestate == nil then
-        return
-      end
-
-      local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-      local filenode = filetree:retrieve(fileuuid) ---@type std.collection.filetree.INode|nil
+      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
       if filenode == nil then
         return
       end
 
-      local rootpath = rootnode.data.filepath ---@type string
+      local rootnode = self:__retrieve_rootnode__() ---@type std.collection.filetree.INode|nil
+      if rootnode == nil then
+        return
+      end
+
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
+      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
+        return
+      end
+
       local nodepath = filenode.data.filepath ---@type string
+      local rootpath = rootnode.data.filepath ---@type string
       local relpath = std.path.relative(rootpath, nodepath, false) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
         relpath = relpath .. std.env.PATH_SEP ---@type string
       end
 
-      vim.ui.input({
-        type = "confirmation",
-        prompt = string.format(" Delete '%s' ", relpath),
-        relative = "cursor",
-        startinsert = true,
-      }, function(answer)
+      ---@param answer                  string|nil
+      ---@return nil
+      local function on_confirmed(answer)
         if answer == nil then
           return
         end
@@ -593,6 +625,7 @@ function M.new(props)
           return
         end
 
+        local fileuuid = filenode.uuid ---@type string
         treeview:remove(fileuuid)
         if not isdir then
           std.table.filter_inline(self._uuids_file, function(uuid)
@@ -603,7 +636,33 @@ function M.new(props)
           end)
         end
         scheduler_match:schedule()
-      end)
+      end
+
+      ---@return nil
+      local function handle()
+        vim.ui.input({
+          type = "confirmation",
+          prompt = string.format(" Delete '%s' ", relpath),
+          relative = "cursor",
+          startinsert = true,
+        }, function(answer)
+          on_confirmed(answer)
+
+          if winnr_current ~= winnr_result then
+            vim.schedule(function()
+              if vim.api.nvim_win_is_valid(winnr_current) then
+                vim.api.nvim_set_current_win(winnr_current)
+              end
+            end)
+          end
+        end)
+      end
+
+      if winnr_current == winnr_result then
+        handle()
+      else
+        vim.api.nvim_win_call(winnr_result, handle)
+      end
     end,
     send_to_qflist = function()
       local cwd = std.path.cwd() ---@type string
@@ -1630,6 +1689,35 @@ function M:__retrieve__(nodeuuid)
   end
 
   return node, nodestate
+end
+
+---@return std.collection.filetree.INode|nil
+function M:__retrieve_filenode__()
+  local lnum = self.result.lnum_current:snapshot() ---@type integer
+  if lnum < 1 then
+    return
+  end
+
+  local nodeuuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
+  if nodeuuid == nil then
+    return
+  end
+
+  local nodestate = self._treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+  if nodestate == nil then
+    return
+  end
+
+  local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
+  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type std.collection.filetree.INode|nil
+  return node
+end
+
+---@return std.collection.filetree.INode|nil
+function M:__retrieve_rootnode__()
+  local rootuuid = self._uuid_root ---@type string
+  local rootnode = self._filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+  return rootnode
 end
 
 ---@return string|nil

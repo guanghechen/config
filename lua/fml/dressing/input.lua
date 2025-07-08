@@ -175,6 +175,13 @@ function M.input(opts, on_confirm)
     vim.cmd.startinsert()
   end
 
+  vim.api.nvim_set_current_win(winnr)
+  vim.schedule(function()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_set_current_win(winnr)
+    end
+  end)
+
   return winnr
 end
 

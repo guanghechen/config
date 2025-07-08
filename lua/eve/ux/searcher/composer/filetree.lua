@@ -402,21 +402,43 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
-      if node == nil then
+      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
         return
       end
 
-      local filepath = node.data.filepath ---@type string
-      eve.ux.fn.select_copy_filepath({
-        filepath = filepath,
-        winopts = {
-          relative = "cursor",
-          row = 1,
-          col = 4,
-        },
-      })
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
+      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
+        return
+      end
+
+      ---@return nil
+      local function handle()
+        eve.ux.fn.select_copy_filepath({
+          filepath = filenode.data.filepath,
+          winopts = {
+            relative = "cursor",
+            row = 1,
+            col = 4,
+          },
+          on_completed = function()
+            if winnr_current ~= winnr_result then
+              vim.schedule(function()
+                if vim.api.nvim_win_is_valid(winnr_current) then
+                  vim.api.nvim_set_current_win(winnr_current)
+                end
+              end)
+            end
+          end,
+        })
+      end
+
+      if winnr_current == winnr_result then
+        handle()
+      else
+        vim.api.nvim_win_call(winnr_result, handle)
+      end
     end,
     goto_lnum_lastchild = function()
       local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
@@ -2004,6 +2026,35 @@ function M:__retrieve__(nodeuuid)
   end
 
   return node, nodestate
+end
+
+---@return std.collection.filetree.INode|nil
+function M:__retrieve_filenode__()
+  local lnum = self.result.lnum_current:snapshot() ---@type integer
+  if lnum < 1 then
+    return
+  end
+
+  local nodeuuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
+  if nodeuuid == nil then
+    return
+  end
+
+  local nodestate = self._treeview:retrieve(nodeuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
+  if nodestate == nil then
+    return
+  end
+
+  local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
+  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type std.collection.filetree.INode|nil
+  return node
+end
+
+---@return std.collection.filetree.INode|nil
+function M:__retrieve_rootnode__()
+  local rootuuid = self._uuid_root ---@type string
+  local rootnode = self._filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+  return rootnode
 end
 
 ---@return string|nil

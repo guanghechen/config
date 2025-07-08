@@ -13,7 +13,7 @@
 ---@class eve.ux.ISelectPopup
 ---@field public create_buf_as_needed   fun(self: eve.ux.ISelectPopup): integer
 ---@field public destroy                fun(self: eve.ux.ISelectPopup): nil
----@field public show                   fun(self: eve.ux.ISelectPopup): nil
+---@field public focus                  fun(self: eve.ux.ISelectPopup): integer
 
 ---@class eve.ux.SelectPopup : eve.ux.ISelectPopup
 ---@field protected _bufnr              integer|nil
@@ -238,12 +238,20 @@ function M:destroy()
   end
 end
 
----@return nil
+---@return integer
 function M:focus()
   local winnr = self:create_win_as_needed()
   local index = self._item_index_present ---@type integer
   vim.api.nvim_win_set_cursor(winnr, { index, 0 })
-  vim.api.nvim_tabpage_set_win(0, winnr)
+
+  vim.api.nvim_set_current_win(winnr)
+  vim.schedule(function()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_set_current_win(winnr)
+    end
+  end)
+
+  return winnr
 end
 
 return M
