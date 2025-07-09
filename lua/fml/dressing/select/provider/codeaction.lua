@@ -42,9 +42,12 @@ local function codeaction_provider(items)
   local width_content = 0 ---@type integer
   local width_client_name = 0 ---@type integer
   local item_data_list = {} ---@type fml.dressing.provider.codeaction.IItemData[]
+
   for index, item in ipairs(items) do
     local order = std.string.pad_start(tostring(index), width_order, " ") ---@type string
-    local content = item.action.title ---@type string
+    local title = item.action.title ---@type string
+    local lfi = title:find("\n") ---@type integer|nil The index of the first line feed character
+    local content = lfi and title:sub(1, lfi - 1) or title ---@type string
     local client_id = item.ctx.client_id ---@type integer
     local client = vim.lsp.get_client_by_id(client_id) ---@type vim.lsp.Client|nil
     local client_name = client and client.name or tostring(client_id) ---@type string
