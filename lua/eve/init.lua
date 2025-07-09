@@ -29,6 +29,7 @@ local __mods = {
 ---@field public __mods                 eve.__mods
 ---@field public constant               eve.constant
 ---@field public context                eve.context
+---@field public fn                     eve.fn
 ---@field public state                  eve.state
 ---@field public ux                     eve.ux
 ---
@@ -59,6 +60,7 @@ local M = setmetatable({
   __mods = __mods,
   constant = require("eve.constant"),
   context = require("eve.context"),
+  fn = require("eve.fn"),
   state = require("eve.state"),
   ux = require("eve.ux"),
 }, {
