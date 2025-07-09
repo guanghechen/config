@@ -25,6 +25,7 @@ clone_or_update_config_repo() {
     "kitty"
     "neovide"
     "nvim-nvchad"
+    "opencode"
     "plan"
     "pwsh"
     "tsuki"
