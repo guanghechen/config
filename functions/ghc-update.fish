@@ -1,5 +1,5 @@
 function ghc-update
-    set required_configs btop conda fish fzf guanghechen lazygit lsd nvim pm2 ripgrep tmux yazi yozora
+    set required_configs btop conda fish fzf guanghechen lazygit lsd nvim opencode pm2 ripgrep tmux yazi yozora
     set optional_configs alacritty alacritty-windows ghostty helix kitty neovide nvim-nvchad plan pwsh shell_gpt tsuki wezterm
     set base_path "$HOME/.config"
 

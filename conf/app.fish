@@ -39,6 +39,11 @@ set -gx VIM                             "$NEOVIM_HOME/share/nvim"
 set -gx VIMRUNTIME                      "$NEOVIM_HOME/share/nvim/runtime"
 fish_add_path "$NEOVIM_HOME/bin/" $PATH
 
+### opencode
+if test -f "$HOME/.opencode/bin/opencode"
+  fish_add_path "$HOME/.opencode/bin/"
+end
+
 ### tmux
 if test -n "$TMUX"
   set -x TERM tmux-256color
