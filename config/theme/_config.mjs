@@ -1,7 +1,7 @@
-import fs from 'node:fs/promises'
+import fs from "node:fs/promises";
 import path from "node:path";
-import { XDG_CONFIG_HOME } from '../_shared/env.mjs';
-import { is_directory, is_file, touch } from '../_shared/util.mjs';
+import { XDG_CONFIG_HOME } from "../_shared/env.mjs";
+import { is_directory, is_file, touch } from "../_shared/util.mjs";
 import { render_template, safe_exec } from "./_util.mjs";
 
 /** @type {import("./_env.mjs").IAppConfig[]} */
@@ -32,8 +32,8 @@ export const apps = [
     active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
-      let content = await fs.readFile(theme_filepath, 'utf8')
+      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local);
+      let content = await fs.readFile(theme_filepath, "utf8");
 
       // const backgroundImagePath =
       //   scheme.variant === "light"
@@ -41,7 +41,7 @@ export const apps = [
       //     : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
       //
       // content += '\n\n' + `background_image = ${backgroundImagePath}\n`
-      await fs.writeFile(theme_filepath, content, 'utf8')
+      await fs.writeFile(theme_filepath, content, "utf8");
     },
   },
   {
@@ -53,18 +53,24 @@ export const apps = [
     active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
-      let content = await fs.readFile(theme_filepath, 'utf8')
+      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local);
+      let content = await fs.readFile(theme_filepath, "utf8");
 
       const backgroundImagePath =
         scheme.variant === "light"
-          ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
-          : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+          ? path.resolve(
+              XDG_CONFIG_HOME,
+              "guanghechen/config/wallpaper/Barrett-Girl.jpg",
+            )
+          : path.resolve(
+              XDG_CONFIG_HOME,
+              "guanghechen/config/wallpaper/Flowerlit-Prayers.jpg",
+            );
 
-      if (scheme.theme === 'gruvbox-dark' || scheme.theme === 'gruvbox-light') {
-        content += '\n\n' + `background_image ${backgroundImagePath}\n`
+      if (scheme.theme === "gruvbox-dark" || scheme.theme === "gruvbox-light") {
+        content += "\n\n" + `background_image ${backgroundImagePath}\n`;
       }
-      await fs.writeFile(theme_filepath, content, 'utf8')
+      await fs.writeFile(theme_filepath, content, "utf8");
     },
   },
   {
@@ -96,7 +102,7 @@ export const apps = [
         {
           NVIM_APPNAME: app.name,
           GHC_THEME: scheme.theme,
-        }
+        },
       );
     },
   },
@@ -123,6 +129,15 @@ export const apps = [
         },
       );
     },
+  },
+  {
+    name: "opencode",
+    kind: "other",
+    themes: "themes/",
+    extname: ".json",
+    local: "themes/opencode.json",
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: "tmux",
@@ -154,13 +169,21 @@ export const apps = [
     after_apply: async (app, scheme) => {
       const backgroundImagePath =
         scheme.variant === "light"
-          ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
-          : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
+          ? path.resolve(
+              XDG_CONFIG_HOME,
+              "guanghechen/config/wallpaper/Barrett-Girl.jpg",
+            )
+          : path.resolve(
+              XDG_CONFIG_HOME,
+              "guanghechen/config/wallpaper/Flowerlit-Prayers.jpg",
+            );
 
-      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
-      let content = await fs.readFile(theme_filepath, 'utf8')
+      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local);
+      let content = await fs.readFile(theme_filepath, "utf8");
 
-      content = content.replace('return config', `
+      content = content.replace(
+        "return config",
+        `
 config.background ={
 {
 source = { Color = "${scheme.palette.bg0}" },
@@ -187,8 +210,9 @@ opacity = 0.9,
 }
 
 return config
-`.trim())
-      await fs.writeFile(theme_filepath, content, 'utf8')
+`.trim(),
+      );
+      await fs.writeFile(theme_filepath, content, "utf8");
     },
   },
   {
@@ -216,17 +240,22 @@ return config
         settings.schemes = [color_scheme];
       }
 
-      if (settings?.profiles?.defaults && typeof settings.profiles.defaults === 'object') {
+      if (
+        settings?.profiles?.defaults &&
+        typeof settings.profiles.defaults === "object"
+      ) {
         settings.profiles.defaults.colorScheme = color_scheme.name;
         switch (scheme.variant) {
-          case 'dark':
-            settings.profiles.defaults.backgroundImage = "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Flowerlit-Prayers.jpg";
-            break
-          case 'light':
-            settings.profiles.defaults.backgroundImage = "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Barrett-Girl.jpg";
-            break
-          case 'neutral':
-            break
+          case "dark":
+            settings.profiles.defaults.backgroundImage =
+              "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Flowerlit-Prayers.jpg";
+            break;
+          case "light":
+            settings.profiles.defaults.backgroundImage =
+              "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Barrett-Girl.jpg";
+            break;
+          case "neutral":
+            break;
           default:
         }
       }
