@@ -27,21 +27,23 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public col                    integer|nil
 
 ---@class eve.ux.picker.composer.filetree.actions
+---@field public attach_node            fun(): nil
+---@field public create_node            fun(): nil
+---@field public open_node              fun(): nil
+---@field public remove_node            fun(): nil
+---@field public rename_node            fun(): nil
+---@field public toggle_node            fun(): nil
+---@field public toggle_node_deeply     fun(): nil
+---
 ---@field public add_node_to_avante     fun(): nil
 ---@field public add_subtree_to_avante  fun(): nil
----@field public attach_node            fun(): nil
 ---@field public attach_parent          fun(): nil
 ---@field public copy_node_filepath     fun(): nil
----@field public create_node            fun(): nil
----@field public remove_node            fun(): nil
 ---@field public goto_lnum_lastchild    fun(): nil
 ---@field public goto_lnum_parent       fun(): nil
 ---@field public mark_node_invisible    fun(): nil
 ---@field public mark_subroot_invisible fun(): nil
----@field public open_node              fun(): nil
 ---@field public send_to_qflist         fun(): nil
----@field public toggle_node            fun(): nil
----@field public toggle_node_recursively fun(): nil
 ---@field public toggle_selection       fun(): nil
 
 ----------------------------------------------------------------------------------------------------
@@ -310,50 +312,6 @@ function M.new(props)
 
   ---@type eve.ux.picker.composer.filetree.actions
   local actions = {
-    add_node_to_avante = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      local filepaths = {} ---@type string[]
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
-        if node ~= nil and node.data.filetype == "file" then
-          filepaths[#filepaths + 1] = node.data.filepath
-        end
-      end
-
-      eve.plugin.avante_add_files(filepaths)
-    end,
-    add_subtree_to_avante = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      local filepaths = {} ---@type string[]
-      local lnum = lnum_from ---@type integer
-      while lnum <= lnum_to do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          local node = filetree:retrieve(nodeuuid) ---@type std.collection.filetree.INode|nil
-          if node ~= nil then
-            filepaths[#filepaths + 1] = node.data.filepath
-
-            if node.data.filetype == "directory" then
-              local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-              if lnum_childline ~= nil and lnum_childline > 0 then
-                lnum = lnum_childline
-              end
-            end
-          end
-        end
-        lnum = lnum + 1
-      end
-      eve.plugin.avante_add_files(filepaths)
-    end,
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
@@ -368,59 +326,6 @@ function M.new(props)
             on_attached(self, next_rootnode.data.filepath)
           end
         end
-      end
-    end,
-    attach_parent = function()
-      local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
-      if rootnode and rootnode.parent ~= rootuuid then
-        treeview:mark_cache_listview_dirty()
-        self._uuid_root = rootnode.parent ---@type string
-        self:mark_result_dirty()
-
-        local next_rootnode = filetree:retrieve(rootnode.parent)
-        if next_rootnode ~= nil then
-          on_attached(self, next_rootnode.data.filepath)
-        end
-      end
-    end,
-    copy_node_filepath = function()
-      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
-      if filenode == nil then
-        return
-      end
-
-      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
-      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
-        return
-      end
-
-      ---@return nil
-      local function handle()
-        eve.ux.fn.select_copy_filepath({
-          filepath = filenode.data.filepath,
-          winopts = {
-            relative = "cursor",
-            row = 1,
-            col = 4,
-          },
-          on_completed = function()
-            if winnr_current ~= winnr_result then
-              vim.schedule(function()
-                if vim.api.nvim_win_is_valid(winnr_current) then
-                  vim.api.nvim_set_current_win(winnr_current)
-                end
-              end)
-            end
-          end,
-        })
-      end
-
-      if winnr_current == winnr_result then
-        handle()
-      else
-        vim.api.nvim_win_call(winnr_result, handle)
       end
     end,
     create_node = function()
@@ -507,58 +412,6 @@ function M.new(props)
       else
         vim.api.nvim_win_call(winnr_result, handle)
       end
-    end,
-    goto_lnum_lastchild = function()
-      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
-      if nodeuuid ~= nil then
-        local lnum_lastchild = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
-        if lnum_lastchild ~= nil then
-          self._composer.result:set_lnum_current(lnum_lastchild)
-        end
-      end
-    end,
-    goto_lnum_parent = function()
-      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
-      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
-      local lnum_parent = node ~= nil and retriever:retrieve_lnum(node.parent) or nil ---@type integer|nil
-      if lnum_parent ~= nil then
-        if lnum == lnum_parent then
-          lnum_parent = lnum_parent > 1 and lnum_parent - 1 or lnum_parent ---@type integer
-        end
-        self._composer.result:set_lnum_current(lnum_parent)
-      end
-    end,
-    mark_node_invisible = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      local finder_input = o_finder_input:snapshot() ---@type string
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
-          if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
-            treeview:mark_node_invisible(nodeuuid)
-          end
-        end
-      end
-      self._composer:mark_result_dirty()
-    end,
-    mark_subroot_invisible = function()
-      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
-      if lnum_from < 1 then
-        return
-      end
-
-      for lnum = lnum_from, lnum_to, 1 do
-        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        if nodeuuid ~= nil then
-          treeview:mark_node_invisible(nodeuuid)
-        end
-      end
-      self._composer:mark_result_dirty()
     end,
     open_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -665,6 +518,172 @@ function M.new(props)
         vim.api.nvim_win_call(winnr_result, handle)
       end
     end,
+    rename_node = function() end,
+    toggle_node = function()
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      if nodeuuid ~= nil then
+        self:__toggle_node__(nodeuuid, false)
+      end
+    end,
+    toggle_node_deeply = function()
+      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
+      if nodeuuid ~= nil then
+        self:__toggle_node__(nodeuuid, true)
+      end
+    end,
+
+    ------------------------------------------------------------------------------------------------
+
+    add_node_to_avante = function()
+      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
+      if lnum_from < 1 then
+        return
+      end
+
+      local filepaths = {} ---@type string[]
+      for lnum = lnum_from, lnum_to, 1 do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
+        if node ~= nil and node.data.filetype == "file" then
+          filepaths[#filepaths + 1] = node.data.filepath
+        end
+      end
+
+      eve.plugin.avante_add_files(filepaths)
+    end,
+    add_subtree_to_avante = function()
+      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
+      if lnum_from < 1 then
+        return
+      end
+
+      local filepaths = {} ---@type string[]
+      local lnum = lnum_from ---@type integer
+      while lnum <= lnum_to do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if nodeuuid ~= nil then
+          local node = filetree:retrieve(nodeuuid) ---@type std.collection.filetree.INode|nil
+          if node ~= nil then
+            filepaths[#filepaths + 1] = node.data.filepath
+
+            if node.data.filetype == "directory" then
+              local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+              if lnum_childline ~= nil and lnum_childline > 0 then
+                lnum = lnum_childline
+              end
+            end
+          end
+        end
+        lnum = lnum + 1
+      end
+      eve.plugin.avante_add_files(filepaths)
+    end,
+
+    attach_parent = function()
+      local rootuuid = self._uuid_root ---@type string
+      local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+      if rootnode and rootnode.parent ~= rootuuid then
+        treeview:mark_cache_listview_dirty()
+        self._uuid_root = rootnode.parent ---@type string
+        self:mark_result_dirty()
+
+        local next_rootnode = filetree:retrieve(rootnode.parent)
+        if next_rootnode ~= nil then
+          on_attached(self, next_rootnode.data.filepath)
+        end
+      end
+    end,
+    copy_node_filepath = function()
+      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
+        return
+      end
+
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
+      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
+        return
+      end
+
+      ---@return nil
+      local function handle()
+        eve.ux.fn.select_copy_filepath({
+          filepath = filenode.data.filepath,
+          winopts = {
+            relative = "cursor",
+            row = 1,
+            col = 4,
+          },
+          on_completed = function()
+            if winnr_current ~= winnr_result then
+              vim.schedule(function()
+                if vim.api.nvim_win_is_valid(winnr_current) then
+                  vim.api.nvim_set_current_win(winnr_current)
+                end
+              end)
+            end
+          end,
+        })
+      end
+
+      if winnr_current == winnr_result then
+        handle()
+      else
+        vim.api.nvim_win_call(winnr_result, handle)
+      end
+    end,
+    goto_lnum_lastchild = function()
+      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
+      if nodeuuid ~= nil then
+        local lnum_lastchild = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
+        if lnum_lastchild ~= nil then
+          self._composer.result:set_lnum_current(lnum_lastchild)
+        end
+      end
+    end,
+    goto_lnum_parent = function()
+      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
+      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
+      local lnum_parent = node ~= nil and retriever:retrieve_lnum(node.parent) or nil ---@type integer|nil
+      if lnum_parent ~= nil then
+        if lnum == lnum_parent then
+          lnum_parent = lnum_parent > 1 and lnum_parent - 1 or lnum_parent ---@type integer
+        end
+        self._composer.result:set_lnum_current(lnum_parent)
+      end
+    end,
+    mark_node_invisible = function()
+      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
+      if lnum_from < 1 then
+        return
+      end
+
+      local finder_input = o_finder_input:snapshot() ---@type string
+      for lnum = lnum_from, lnum_to, 1 do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if nodeuuid ~= nil then
+          local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+          if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
+            treeview:mark_node_invisible(nodeuuid)
+          end
+        end
+      end
+      self._composer:mark_result_dirty()
+    end,
+    mark_subroot_invisible = function()
+      local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
+      if lnum_from < 1 then
+        return
+      end
+
+      for lnum = lnum_from, lnum_to, 1 do
+        local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+        if nodeuuid ~= nil then
+          treeview:mark_node_invisible(nodeuuid)
+        end
+      end
+      self._composer:mark_result_dirty()
+    end,
     send_to_qflist = function()
       local cwd = std.path.cwd() ---@type string
       local quickfix_items = {} ---@type std.t.IQuickFixItem[]
@@ -704,18 +723,6 @@ function M.new(props)
         self._composer:close()
         eve.qflist.push(quickfix_items)
         eve.qflist.open_qflist(false)
-      end
-    end,
-    toggle_node = function()
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      if nodeuuid ~= nil then
-        self:__toggle_node__(nodeuuid, false)
-      end
-    end,
-    toggle_node_recursively = function()
-      local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      if nodeuuid ~= nil then
-        self:__toggle_node__(nodeuuid, true)
       end
     end,
     toggle_selection = function()
@@ -879,7 +886,7 @@ function M.new(props)
       modes = { "n", "v" },
       key = "oz",
       desc = "filetree: toggle (recursively)",
-      callback = actions.toggle_node_recursively,
+      callback = actions.toggle_node_deeply,
     },
   }
 
@@ -991,7 +998,7 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "oz",
       desc = "filetree: toggle (recursively)",
-      callback = actions.toggle_node_recursively,
+      callback = actions.toggle_node_deeply,
     },
   }
 
