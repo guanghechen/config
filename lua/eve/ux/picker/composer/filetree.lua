@@ -516,7 +516,113 @@ function M.new(props)
         vim.api.nvim_win_call(winnr_result, handle)
       end
     end,
-    rename_node = function() end,
+    rename_node = function()
+      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
+        return
+      end
+
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
+      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
+        return
+      end
+
+      local filepath = filenode.data.filepath ---@type string
+      local dirname = std.path.dirname(filepath) ---@type string
+      local filename = std.path.basename(filepath) ---@type string
+
+      ---@param next_filename           string|nil
+      ---@return nil
+      local function on_confirmed(next_filename)
+        if next_filename == nil or next_filename == "" then
+          return
+        end
+
+        if next_filename:find("[/\\]") then
+          std.reporter.error({
+            from = fullname,
+            subject = "rename_node",
+            message = "Filename cannot contain path separators (/ or \\).",
+            details = { from = filepath, filename = filename, next_filename = next_filename },
+          })
+          return
+        end
+
+        local next_filepath = std.path.join(dirname, next_filename)
+        if std.path.is_exist(next_filepath) then
+          std.reporter.error({
+            from = fullname,
+            subject = "rename_node",
+            message = "A file or directory with this name already exists.",
+            details = { from = filepath, to = next_filepath },
+          })
+          return
+        end
+
+        local success = vim.fn.rename(filepath, next_filepath) == 0
+        if not success then
+          std.reporter.error({
+            from = fullname,
+            subject = "rename_node",
+            message = "Failed to rename file or directory.",
+            details = { from = filepath, to = next_filepath },
+          })
+          return
+        end
+
+        local fileuuid = filenode.uuid
+        treeview:remove(fileuuid)
+
+        local isdir = filenode.data.filetype == "directory"
+        if isdir then
+          treeview:insert_dirpath(next_filepath)
+        else
+          treeview:insert_filepath(next_filepath, false)
+
+          local new_uuid = std.Filetree.uuid(next_filepath)
+          for i, uuid in ipairs(self._uuids_file) do
+            if uuid == fileuuid then
+              self._uuids_file[i] = new_uuid
+              break
+            end
+          end
+          for i, uuid in ipairs(self._uuids_order) do
+            if uuid == fileuuid then
+              self._uuids_order[i] = new_uuid
+              break
+            end
+          end
+        end
+
+        scheduler_match:schedule()
+      end
+
+      ---@return nil
+      local function handle()
+        vim.ui.input({
+          prompt = string.format(' Rename for "%s" ', filename),
+          default = filename,
+          relative = "cursor",
+        }, function(next_filename)
+          on_confirmed(next_filename)
+
+          if winnr_current ~= winnr_result then
+            vim.schedule(function()
+              if vim.api.nvim_win_is_valid(winnr_current) then
+                vim.api.nvim_set_current_win(winnr_current)
+              end
+            end)
+          end
+        end)
+      end
+
+      if winnr_current == winnr_result then
+        handle()
+      else
+        vim.api.nvim_win_call(winnr_result, handle)
+      end
+    end,
     toggle_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
