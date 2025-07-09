@@ -494,11 +494,9 @@ function M.new(props)
       ---@return nil
       local function handle()
         vim.ui.input({
-          type = "confirmation",
+          inputtype = "confirmation",
           prompt = string.format(" Delete '%s' ", relpath),
-          default = "yes",
           relative = "cursor",
-          startinsert = true,
         }, function(answer)
           on_confirmed(answer)
 

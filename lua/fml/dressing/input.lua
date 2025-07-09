@@ -1,7 +1,11 @@
+---@alias fml.dressing.input.InputTypeEnum
+---| "text"
+---| "confirmation"
+
 ---@class fml.dressing.input.IOptions
 ---@field public relative               ?"editor"|"cursor"
 ---@field public width                  ?integer
----@field public type                   ?"text"|"confirmation"
+---@field public inputtype                   ?"text"|"confirmation"
 ---
 ---@field public prompt                 ?string
 ---@field public default                ?string
@@ -56,14 +60,17 @@ function M.input(opts, on_confirm)
   local parent_row = unpack(vim.api.nvim_win_get_cursor(parent_winnr))
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
-  local prompt = opts.type == "confirmation" and "? (y/n) " or ""
+  local inputtype = opts.inputtype or "text" ---@type fml.dressing.input.InputTypeEnum
+  local prompt = inputtype == "confirmation" and "? (y/n)  " or ""
   local title = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
   local default = opts.default or "" ---@type string
+
+  local override_text = nil ---@type string|nil
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = opts.type == "confirmation" and "prompt" or "nofile"
+  vim.bo[bufnr].buftype = inputtype == "confirmation" and "prompt" or "nofile"
   vim.bo[bufnr].completefunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].omnifunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].filetype = eve.filetype.UX_INPUT
@@ -106,7 +113,7 @@ function M.input(opts, on_confirm)
       default = default,
       completion = opts.completion,
       highlight = opts.highlight,
-      type = opts.type,
+      inputtype = inputtype,
     },
     bufnr = bufnr,
     winnr = winnr,
@@ -136,7 +143,7 @@ function M.input(opts, on_confirm)
         vim.cmd.stopinsert()
 
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-        local text = string.sub(lines[1] or "", #prompt) ---@type string
+        local text = override_text or string.sub(lines[1] or "", #prompt) ---@type string
         vim.api.nvim_win_close(winnr, true)
         vim.schedule(function()
           if vim.api.nvim_win_is_valid(parent_winnr) then
@@ -163,19 +170,41 @@ function M.input(opts, on_confirm)
       desc = "input: quit",
       callback = action.cancel,
     },
-    { modes = { "i", "n" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
-    { modes = { "n" }, key = "q", desc = "input: quit", callback = action.cancel },
-    { modes = { "n" }, key = "o", desc = "input: noop", callback = std.fn.noop },
-    { modes = { "n" }, key = "O", desc = "input: noop", callback = std.fn.noop },
+    { modes = { "i", "n", "v" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
+    { modes = { "n", "v" }, key = "q", desc = "input: quit", callback = action.cancel },
+    { modes = { "n", "v" }, key = "o", desc = "input: noop", callback = std.fn.noop },
+    { modes = { "n", "v" }, key = "O", desc = "input: noop", callback = std.fn.noop },
   }
+
+  -- Add y/n keymaps for confirmation type inputs
+  if opts.inputtype == "confirmation" then
+    table.insert(keymaps, {
+      modes = { "n", "v" },
+      key = "y",
+      desc = "input: confirm (yes)",
+      callback = function()
+        override_text = "y"
+        action.confirm()
+      end,
+    })
+    table.insert(keymaps, {
+      modes = { "n", "v" },
+      key = "n",
+      desc = "input: cancel (no)",
+      callback = function()
+        action.cancel()
+      end,
+    })
+  end
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.api.nvim_set_current_win(winnr)
-
   if prompt == "" then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { default })
     vim.api.nvim_win_set_cursor(winnr, { 1, #default })
   else
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { prompt })
+    vim.api.nvim_win_set_cursor(winnr, { 1, #prompt })
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.hl.range(bufnr, NSNR_DEFAULT_CONFIRMATION, "SpecialKey", { 0, 0 }, { 0, #prompt }, {})
     end

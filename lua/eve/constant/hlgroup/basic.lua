@@ -172,7 +172,7 @@ function M.gen_hlgroup_map(context)
     Removed = { fg = c.red },
     Search = { fg = c.bg0, bg = c.yellow, reverse = false },
     SignColumn = { bg = c.none },
-    SpecialKey = { fg = c.bg4 },
+    SpecialKey = { fg = c.fg4 },
     StatusLine = { fg = c.fg2, bg = c.none, reverse = false },
     StatusLineNC = { link = "StatusLine" },
     Substitute = { fg = c.bg1, bg = c.yellow, sp = c.none },

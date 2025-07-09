@@ -389,6 +389,7 @@
     "indentscope",
     "inodestate",
     "inputmethod",
+    "inputtype",
     "isactive",
     "isdescendant",
     "isdir",
