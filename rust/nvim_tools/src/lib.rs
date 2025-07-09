@@ -90,6 +90,10 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::file::readdir)),
         ),
         (
+            "rename_path",
+            Object::from(Function::from_fn(oxi::file::rename_path)),
+        ),
+        (
             "search",
             Object::from(Function::from_fn(oxi::search::search)),
         ),

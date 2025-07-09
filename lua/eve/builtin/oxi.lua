@@ -111,6 +111,26 @@ function M.get_filesize(filepath)
     return data
   end
 end
+
+---@class eve.builtin.oxi.IRenameParams
+---@field public old_path string
+---@field public new_path string
+---@field public force boolean
+
+---@class eve.builtin.oxi.IRenameResult
+---@field public old_path string
+---@field public new_path string
+---@field public message string
+
+---@param params eve.builtin.oxi.IRenameParams
+---@return eve.builtin.oxi.IRenameResult|nil
+function M.rename_path(params)
+  local params_json = std.json.stringify(params)
+  local ok, data = M.run_fun("rename_path", nvim_tools.rename_path, params_json)
+  if ok then
+    return data
+  end
+end
 --------------------------------------------------------------------------------------------[F]ile--
 
 --[F]ind--------------------------------------------------------------------------------------------
