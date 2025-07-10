@@ -1,4 +1,5 @@
 _G.std = require("std")
+_G.oxi = require("oxi")
 _G.eve = require("eve")
 
 if vim.g.vscode then

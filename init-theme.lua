@@ -1,4 +1,5 @@
 _G.std = require("std")
+_G.oxi = require("oxi")
 _G.eve = require("eve")
 eve.setup_patches()
 eve.setup_workspace()
