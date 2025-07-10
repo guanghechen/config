@@ -220,7 +220,7 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
     local text_name = display_filename
       .. string.rep(" ", math.max(1, filename_max_display_width - vim.api.nvim_strwidth(display_filename)))
     local filename_hl = fileitem.type == "directory" and "f_fe_name_dir" or "f_fe_name_file" ---@type string
-    byte_pos = apply_highlight(bufnr, row, byte_pos, text_name, filename_hl)
+    byte_pos = apply_highlight(bufnr, row, byte_pos, text_name, filename_hl) - 1
 
     -- Match highlights
     apply_match_highlights(
