@@ -9,13 +9,7 @@
 ---@class oxi.searcher.IFileMatch
 ---@field public matches                oxi.searcher.IBlockMatch[]
 
----@class oxi.searcher.ISearchResult
----@field public elapsed_time           string
----@field public items                  ?table<string, oxi.searcher.IFileMatch>
----@field public item_orders            ?string[]
----@field public error                  ?string
-
----@class oxi.searcher.ISearchParams
+---@class oxi.searcher.ISearchInFilesParams
 ---@field public cwd                    string
 ---@field public flag_regex             boolean
 ---@field public flag_gitignore         boolean
@@ -28,15 +22,23 @@
 ---@field public exclude_patterns       string
 ---@field public specified_filepath     ?string
 
+---@class oxi.searcher.ISearchInFilesResult
+---@field public elapsed_time           string
+---@field public items                  ?table<string, oxi.searcher.IFileMatch>
+---@field public item_orders            ?string[]
+---@field public error                  ?string
+
 ---@class oxi.searcher
 local M = {}
 
----@param params                        oxi.searcher.ISearchParams
----@return oxi.searcher.ISearchResult|nil
+---@param params                        oxi.searcher.ISearchInFilesParams
+---@return oxi.searcher.ISearchInFilesResult|nil
 ---@return string|nil
 function M.search_in_files(params)
   local data, cmd = oxi.fn.safe_execute("search_in_files", params)
   if data ~= nil and data.items ~= nil then
+    ---@cast data                       oxi.searcher.ISearchInFilesResult
+    ---
     local items = {} ---@type table<string, oxi.searcher.IFileMatch>
     local orders = {} ---@type string[]
 

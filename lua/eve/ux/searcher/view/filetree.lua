@@ -233,7 +233,7 @@ function M:search(params)
   local search_pattern = flag_case_sensitive and params.search_pattern or params.search_pattern:lower() ---@type string
   local replace_pattern = params.replace_pattern ---@type string|nil
 
-  ---@type oxi.searcher.ISearchResult|nil
+  ---@type oxi.searcher.ISearchInFilesResult|nil
   local results = oxi.searcher.search_in_files({
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,

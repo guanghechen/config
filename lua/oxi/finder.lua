@@ -16,17 +16,14 @@ local M = {}
 
 ---@param params                        oxi.finder.IFindFilesParams
 ---@return string[]
+---@return string|nil
 function M.find_files(params)
-  local options_stringified = std.json.stringify(params)
-
-  local nvim_tools = require("nvim_tools")
-  local result_str = nvim_tools.find_files(options_stringified)
-  local ok, data = oxi.fn.resolve_cmd_result("find_files", result_str)
-  if ok and data ~= nil then
+  local data, cmd = oxi.fn.safe_execute("find_files", params)
+  if data ~= nil and data.filepaths ~= nil then
     ---@cast data                       oxi.finder.IFindFilesResult
-    return data.filepaths
+    return data.filepaths, cmd
   end
-  return {}
+  return {}, cmd
 end
 
 return M

@@ -1,10 +1,66 @@
 use crate::types::CmdResult;
 use crate::util;
+use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
+use nvim_oxi::serde::{Deserializer, Serializer};
+use nvim_oxi::{lua, Object};
+use serde::{Deserialize, Serialize};
 
-pub fn find_files(options_json_str: String) -> String {
-    let cmd_result: CmdResult<util::find::FindFilesSucceedResult> = if let Ok(options) =
-        serde_json::from_str::<util::find::FindFilesOptions>(&options_json_str)
-    {
+#[derive(Serialize, Deserialize)]
+pub struct FindFilesParams {
+    pub workspace: String,
+    pub cwd: String,
+    pub flag_case_sensitive: bool,
+    pub flag_gitignore: bool,
+    pub flag_regex: bool,
+    pub search_pattern: String,
+    pub search_paths: String,
+    pub exclude_patterns: String,
+}
+
+impl FromObject for FindFilesParams {
+    fn from_object(obj: Object) -> Result<Self, ConversionError> {
+        Self::deserialize(Deserializer::new(obj)).map_err(Into::into)
+    }
+}
+
+impl ToObject for FindFilesParams {
+    fn to_object(self) -> Result<Object, ConversionError> {
+        self.serialize(Serializer::new()).map_err(Into::into)
+    }
+}
+
+impl lua::Poppable for FindFilesParams {
+    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+        unsafe {
+            let obj = Object::pop(lstate)?;
+            Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
+        }
+    }
+}
+
+impl lua::Pushable for FindFilesParams {
+    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+        unsafe {
+            self.to_object()
+                .map_err(lua::Error::push_error_from_err::<Self, _>)?
+                .push(lstate)
+        }
+    }
+}
+
+pub fn find_files(params: FindFilesParams) -> CmdResult<util::find::FindFilesSucceedResult> {
+    let options = util::find::FindFilesOptions {
+        workspace: params.workspace,
+        cwd: params.cwd,
+        flag_case_sensitive: params.flag_case_sensitive,
+        flag_gitignore: params.flag_gitignore,
+        flag_regex: params.flag_regex,
+        search_pattern: params.search_pattern,
+        search_paths: params.search_paths,
+        exclude_patterns: params.exclude_patterns,
+    };
+
+    let cmd_result: CmdResult<util::find::FindFilesSucceedResult> = {
         let result = util::find::find_files(&options);
         match result {
             Ok(data) => CmdResult {
@@ -18,13 +74,6 @@ pub fn find_files(options_json_str: String) -> String {
                 data: None,
             },
         }
-    } else {
-        CmdResult {
-            cmd: "null".to_string(),
-            error: Some("null".to_string()),
-            data: None,
-        }
     };
-
-    serde_json::to_string(&cmd_result).unwrap()
+    cmd_result
 }
