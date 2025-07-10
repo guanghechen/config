@@ -14,6 +14,10 @@ use nvim_oxi::Object;
 fn nvim_tools() -> Dictionary {
     Dictionary::from_iter([
         (
+            "collect_files",
+            Object::from(Function::from_fn(oxi::file::collect_files)),
+        ),
+        (
             "count_lines",
             Object::from(Function::from_fn(oxi::string::count_lines)),
         ),

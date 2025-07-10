@@ -9,6 +9,21 @@ struct RenameParams {
     force: bool,
 }
 
+pub fn collect_files((dirpath, recursive): (String, bool)) -> String {
+    let raw_result = util::file::collect_files(dirpath, recursive);
+    let result: FunResult<util::file::ReadAllFilesSucceedResult> = match raw_result {
+        Ok(data) => FunResult {
+            error: None,
+            data: Some(data),
+        },
+        Err(data) => FunResult {
+            error: Some(data.error),
+            data: None,
+        },
+    };
+    serde_json::to_string(&result).unwrap()
+}
+
 pub fn get_filesize(filepath: String) -> String {
     let raw_result = util::file::get_filesize(filepath);
     let result: FunResult<String> = match raw_result {

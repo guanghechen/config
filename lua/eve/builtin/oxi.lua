@@ -35,7 +35,7 @@ function M.resolve_cmd_result(subject, result_str)
   return true, result.data, result.cmd
 end
 
----@param subject                          string
+---@param subject                       string
 ---@param result_str                    string
 ---@return boolean
 ---@return any|nil
@@ -67,12 +67,21 @@ end
 
 ---@param subject                       string
 ---@param fn                            fun(...): string
----@param args                          any
+---@param ...                           any
 ---@return boolean
 ---@return any|nil
-function M.run_fun(subject, fn, args)
-  local result_str = fn(args) ---@type string
-  return M.resolve_fun_result(subject, result_str)
+function M.run_fun(subject, fn, ...)
+  local ok, result = pcall(fn, ...)
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = subject,
+      message = "Failed to run function",
+      details = { error = result },
+    })
+    return false, nil
+  end
+  return M.resolve_fun_result(subject, result)
 end
 
 --[F]ile--------------------------------------------------------------------------------------------
@@ -107,6 +116,19 @@ function M.get_filesize(filepath)
   end
 
   local ok, data = M.run_fun("get_filesize", nvim_tools.get_filesize, filepath)
+  if ok then
+    return data
+  end
+end
+
+---@class eve.builtin.oxi.ICollectFilesResult
+---@field public files string[] # List of absolute file paths
+
+---@param dirpath string
+---@param recursive boolean
+---@return eve.builtin.oxi.ICollectFilesResult|nil
+function M.collect_files(dirpath, recursive)
+  local ok, data = M.run_fun("collect_files", nvim_tools.collect_files, dirpath, recursive)
   if ok then
     return data
   end
