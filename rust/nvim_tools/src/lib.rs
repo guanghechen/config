@@ -31,7 +31,7 @@ fn nvim_tools() -> Dictionary {
         ("find", Object::from(Function::from_fn(oxi::finder::find))),
         (
             "find_match_points_line_by_line",
-            Object::from(Function::<(String, String, bool, bool), Result<Vec<LineMatch>, String>>::from_fn(
+            Object::from(Function::<(String, Vec<String>, bool, bool), Result<Vec<LineMatch>, String>>::from_fn(
                 oxi::string::find_match_points_line_by_line,
             )),
         ),

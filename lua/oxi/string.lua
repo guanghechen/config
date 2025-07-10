@@ -26,8 +26,7 @@ end
 ---@param flag_regex                    boolean
 ---@return oxi.string.ILineMatch[]|nil
 function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex)
-  local text = table.concat(lines, "\n") ---@type string
-  local result = oxi.fn.safe_run("find_match_points_line_by_line", pattern, text, flag_fuzzy, flag_regex)
+  local result = oxi.fn.safe_run("find_match_points_line_by_line", pattern, lines, flag_fuzzy, flag_regex)
   return result
 end
 

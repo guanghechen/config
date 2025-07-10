@@ -4,7 +4,7 @@ use regex::Regex;
 
 pub fn find_match_points_line_by_line(
     pattern: &str,
-    text: &str,
+    lines: &[String],
     flag_fuzzy: bool,
     flag_regex: bool,
 ) -> Result<Vec<LineMatch>, String> {
@@ -22,7 +22,7 @@ pub fn find_match_points_line_by_line(
         let regex = Regex::new(pattern);
         match regex {
             Ok(regex) => {
-                for (i, line) in text.lines().enumerate() {
+                for (i, line) in lines.iter().enumerate() {
                     if line.is_empty() {
                         continue;
                     }
@@ -56,7 +56,7 @@ pub fn find_match_points_line_by_line(
         let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
         calc_fails(pattern_bytes, &mut fails);
 
-        for (i, line) in text.lines().enumerate() {
+        for (i, line) in lines.iter().enumerate() {
             if line.is_empty() {
                 continue;
             }

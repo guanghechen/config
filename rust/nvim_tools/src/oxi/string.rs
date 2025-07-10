@@ -12,9 +12,9 @@ pub fn count_lines(text: String) -> u32 {
 }
 
 pub fn find_match_points_line_by_line(
-    (pattern, text, flag_fuzzy, flag_regex): (String, String, bool, bool),
+    (pattern, lines, flag_fuzzy, flag_regex): (String, Vec<String>, bool, bool),
 ) -> Result<Vec<LineMatch>, String> {
-    util::string::find_match_points_line_by_line(&pattern, &text, flag_fuzzy, flag_regex)
+    util::string::find_match_points_line_by_line(&pattern, &lines, flag_fuzzy, flag_regex)
 }
 
 pub fn uuid((): ()) -> String {
