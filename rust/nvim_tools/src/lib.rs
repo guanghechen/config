@@ -28,13 +28,20 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(oxi::fs::collect_files)),
         ),
         ////
-        ("find", Object::from(Function::from_fn(oxi::finder::find))),
+        (
+            "find_files",
+            Object::from(Function::from_fn(oxi::finder::find_files)),
+        ),
         (
             "find_match_points_line_by_line",
-            Object::from(Function::<(String, Vec<String>, bool, bool), Result<Vec<LineMatch>, String>>::from_fn(
-                oxi::string::find_match_points_line_by_line,
+            Object::from(Function::<
+                (String, Vec<String>, bool, bool),
+                Result<Vec<LineMatch>, String>,
+            >::from_fn(
+                oxi::string::find_match_points_line_by_line
             )),
         ),
+        ////
         (
             "get_filesize",
             Object::from(Function::from_fn(oxi::fs::get_filesize)),

@@ -96,7 +96,7 @@ local function refresh(picker, rootpath)
   local excludes = enabled_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
 
   ---@type string[]
-  local filepaths = oxi.finder.find({
+  local filepaths = oxi.finder.find_files({
     workspace = workspace,
     cwd = rootpath,
     flag_case_sensitive = false,

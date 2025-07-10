@@ -1,7 +1,7 @@
 use crate::types::CmdResult;
 use crate::util;
 
-pub fn find(options_json_str: String) -> String {
+pub fn find_files(options_json_str: String) -> String {
     let cmd_result: CmdResult<util::find::FindFilesSucceedResult> = if let Ok(options) =
         serde_json::from_str::<util::find::FindFilesOptions>(&options_json_str)
     {
