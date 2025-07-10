@@ -4,6 +4,14 @@ use crate::util;
 use md5::{Digest, Md5};
 use uuid::Uuid;
 
+pub fn calc_linewidths(text: String) -> Vec<u32> {
+    let mut lwidths: Vec<u32> = vec![];
+    for line in text.lines() {
+        lwidths.push(line.len() as u32);
+    }
+    lwidths
+}
+
 pub fn count_lines(text: String) -> u32 {
     text.lines().count() as u32
 }
@@ -24,11 +32,6 @@ pub fn find_match_points_line_by_line(
             },
         };
     serde_json::to_string(&result).unwrap()
-}
-
-pub fn get_line_widths(text: String) -> String {
-    let widths: Vec<u32> = util::string::get_line_widths(&text);
-    serde_json::to_string(&widths).unwrap()
 }
 
 pub fn uuid((): ()) -> String {

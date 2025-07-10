@@ -7,10 +7,17 @@
 local M = {}
 
 ---@param text                          string
+---@return integer[]
+function M.calc_linewidths(text)
+  local result = oxi.fn.safe_run("calc_linewidths", text)
+  return result or {}
+end
+
+---@param text                          string
 ---@return integer
 function M.count_lines(text)
-  local nvim_tools = require("nvim_tools")
-  return nvim_tools.count_lines(text)
+  local result = oxi.fn.safe_run("count_lines", text)
+  return result or 0
 end
 
 ---@param pattern                       string
@@ -35,22 +42,10 @@ function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex
 end
 
 ---@param text                          string
----@return integer[]
-function M.get_line_widths(text)
-  local nvim_tools = require("nvim_tools")
-  local str = nvim_tools.get_line_widths(text)
-  local raw_result = std.json.parse(str)
-  ---@cast raw_result                   integer[]
-
-  local result = raw_result ---@type integer[]
-  return result
-end
-
----@param text                          string
 ---@param lwidths                       ?integer[]
 ---@return string[]
 function M.parse_lines(text, lwidths)
-  lwidths = lwidths or M.get_line_widths(text) ---@type integer[]
+  lwidths = lwidths or M.calc_linewidths(text) ---@type integer[]
   local offset = 0 ---@type integer
   local lines = {} ---@type string[]
   for _, lwidth in ipairs(lwidths) do

@@ -1,10 +1,11 @@
-use nvim_tools::util::string;
+use nvim_tools::oxi::string;
 
 #[test]
-fn test_get_line_widths() {
-    let widths = string::get_line_widths("abc\ndef\nghi");
+fn test_calc_linewidths() {
+    let text = "abc\ndef\nghi";
+    let widths = string::calc_linewidths(text.to_string());
     assert_eq!(widths, vec![3, 3, 3]);
 
-    let widths = string::get_line_widths("abc\ndef\nghi\n");
+    let widths = string::calc_linewidths(text.to_string());
     assert_eq!(widths, vec![3, 3, 3]);
 }

@@ -52,7 +52,7 @@ function M.search(params)
 
       for _, block_match in ipairs(item.matches) do
         local text = block_match.text ---@type string
-        local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+        local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
         local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
         block_match.lines = lines
         block_match.lwidths = lwidths

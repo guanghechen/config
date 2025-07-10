@@ -13,15 +13,20 @@ use nvim_oxi::Object;
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
     Dictionary::from_iter([
-        ("now", Object::from(Function::from_fn(oxi::date::now))),
         (
-            "collect_files",
-            Object::from(Function::from_fn(oxi::fs::collect_files)),
+            "calc_linewidths",
+            Object::from(Function::from_fn(oxi::string::calc_linewidths)),
         ),
         (
             "count_lines",
             Object::from(Function::from_fn(oxi::string::count_lines)),
         ),
+        ////
+        (
+            "collect_files",
+            Object::from(Function::from_fn(oxi::fs::collect_files)),
+        ),
+        ////
         ("find", Object::from(Function::from_fn(oxi::finder::find))),
         (
             "find_match_points_line_by_line",
@@ -33,10 +38,7 @@ fn nvim_tools() -> Dictionary {
             "get_filesize",
             Object::from(Function::from_fn(oxi::fs::get_filesize)),
         ),
-        (
-            "get_line_widths",
-            Object::from(Function::from_fn(oxi::string::get_line_widths)),
-        ),
+        ("now", Object::from(Function::from_fn(oxi::date::now))),
         (
             "replace_file",
             Object::from(Function::from_fn(oxi::replacer::replace_file)),

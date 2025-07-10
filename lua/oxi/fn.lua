@@ -31,6 +31,28 @@ function M.uuid()
   return nvim_tools.uuid()
 end
 
+---@param method                        string
+---@param ...                           any
+---@return any|nil
+function M.safe_run(method, ...)
+  local nvim_tools = require("nvim_tools")
+  local ok, result = pcall(nvim_tools[method], ...)
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "calc_linewidths",
+      message = "Failed to calculate line widths",
+      details = {
+        args = { ... },
+        error = result,
+        method = method,
+      },
+    })
+    return nil
+  end
+  return result
+end
+
 ---@param subject                       string
 ---@param result_str                    string
 ---@return boolean

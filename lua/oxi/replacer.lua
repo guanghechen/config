@@ -307,7 +307,7 @@ function M.replace_file_preview(params)
     ---@cast data                       string
 
     local text = data ---@type string
-    local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+    local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
     ---@type oxi.replacer.replace_file_preview.IResult
@@ -345,7 +345,7 @@ function M.replace_file_preview_advance(params)
     ---@cast data                       oxi.replacer.replace_file_preview_advance.IRawResult
 
     local text = data.text ---@type string
-    local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+    local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
     ---@type oxi.replacer.replace_file_preview_advance.IResult
@@ -389,7 +389,7 @@ function M.replace_file_preview_advance_by_matches(params)
     ---@cast data                       oxi.replacer.replace_file_preview_advance_by_matches.IRawResult
 
     local text = data.text ---@type string
-    local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+    local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
     ---@type oxi.replacer.replace_file_preview_advance_by_matches.IResult
@@ -427,7 +427,7 @@ function M.replace_text_preview(params)
     ---@cast data                       string
 
     local text = data ---@type string
-    local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+    local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
     ---@type oxi.replacer.replace_text_preview.IResult
@@ -471,7 +471,7 @@ function M.replace_text_preview_by_matches(params)
     ---@cast data                       string
 
     local text = data ---@type string
-    local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+    local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
     ---@type oxi.replacer.replace_text_preview_by_matches.IResult
@@ -509,7 +509,7 @@ function M.replace_text_preview_advance(params)
     ---@cast data                       oxi.replacer.replace_text_preview_advance.IRawResult
 
     local text = data.text ---@type string
-    local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+    local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
     ---@type oxi.replacer.replace_text_preview_advance.IResult
@@ -557,7 +557,7 @@ function M.replace_text_preview_advance_by_matches(params)
     ---@cast data                       oxi.replacer.replace_text_preview_advance_by_matches.IRawResult
 
     local text = data.text ---@type string
-    local lwidths = oxi.string.get_line_widths(text) ---@type integer[]
+    local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
     ---@type oxi.replacer.replace_text_preview_advance_by_matches.IResult
