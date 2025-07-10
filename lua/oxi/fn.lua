@@ -12,6 +12,25 @@ local __module_name__ = "oxi.fn" ---@type string
 ---@class oxi.fn
 local M = {}
 
+---@param text                          string
+---@return string
+function M.md5(text)
+  local nvim_tools = require("nvim_tools")
+  return nvim_tools.md5(text)
+end
+
+---@return integer
+function M.now()
+  local nvim_tools = require("nvim_tools")
+  return nvim_tools.now()
+end
+
+---@return string
+function M.uuid()
+  local nvim_tools = require("nvim_tools")
+  return nvim_tools.uuid()
+end
+
 ---@param subject                       string
 ---@param result_str                    string
 ---@return boolean

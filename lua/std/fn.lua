@@ -1,5 +1,3 @@
-local nvim_tools = require("nvim_tools")
-
 ---@class std.fn
 local M = {}
 
@@ -32,24 +30,6 @@ end
 ---@param ...                           any[]
 ---@return any
 function M.noop(...) end
-
-----------------------------------------------------------------------------------------------------
-
----@param text                          string
----@return string
-function M.md5(text)
-  return nvim_tools.md5(text)
-end
-
----@return integer
-function M.now()
-  return nvim_tools.now()
-end
-
----@return string
-function M.uuid()
-  return nvim_tools.uuid()
-end
 
 ----------------------------------------------------------------------------------------------------
 

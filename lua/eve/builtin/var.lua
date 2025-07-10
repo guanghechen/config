@@ -45,10 +45,10 @@ M.nsnr = {
 M.sign = {
   -- stylua: ignore start
   ---! picker
-  GROUP_PICKER_FINDER_PROMPT            = std.fn.uuid(),
-  GROUP_PICKER_RESULT_CURRENT           = std.fn.uuid(),
-  GROUP_PICKER_RESULT_PRESENT           = std.fn.uuid(),
-  GROUP_PICKER_RESULT_SELECTED          = std.fn.uuid(),
+  GROUP_PICKER_FINDER_PROMPT            = oxi.fn.uuid(),
+  GROUP_PICKER_RESULT_CURRENT           = oxi.fn.uuid(),
+  GROUP_PICKER_RESULT_PRESENT           = oxi.fn.uuid(),
+  GROUP_PICKER_RESULT_SELECTED          = oxi.fn.uuid(),
   NR_PICKER_RESULT_CURRENT              = 3010,
   NR_PICKER_RESULT_PRESENT              = 3011,
   PICKER_FINDER_PROMPT                  = "PickerFinderPrompt",
@@ -58,10 +58,10 @@ M.sign = {
   PICKER_RESULT_SELECTED                = "PickerResultSelected",
   PICKER_RESULT_SELECTED_CURRENT        = "PickerResultSelectedCurrent",
 
-  GROUP_SEARCHER_FINDER_PROMPT          = std.fn.uuid(),
-  GROUP_SEARCHER_RESULT_CURRENT         = std.fn.uuid(),
-  GROUP_SEARCHER_RESULT_PRESENT         = std.fn.uuid(),
-  GROUP_SEARCHER_RESULT_SELECTED        = std.fn.uuid(),
+  GROUP_SEARCHER_FINDER_PROMPT          = oxi.fn.uuid(),
+  GROUP_SEARCHER_RESULT_CURRENT         = oxi.fn.uuid(),
+  GROUP_SEARCHER_RESULT_PRESENT         = oxi.fn.uuid(),
+  GROUP_SEARCHER_RESULT_SELECTED        = oxi.fn.uuid(),
   NR_SEARCHER_RESULT_CURRENT            = 3010,
   NR_SEARCHER_RESULT_PRESENT            = 3011,
   SEARCHER_FINDER_PROMPT                = "SearcherFinderPrompt",

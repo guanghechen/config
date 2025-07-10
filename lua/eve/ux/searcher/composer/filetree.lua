@@ -136,7 +136,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local searcher_uuid = props.uuid or std.fn.uuid() ---@type string
+  local searcher_uuid = props.uuid or oxi.fn.uuid() ---@type string
   local permanent = props.permanent ---@type boolean
   local preview = props.preview ~= false ---@type boolean
   local title = props.title ---@type string

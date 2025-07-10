@@ -146,7 +146,7 @@ M.__index = M
 ---@param props                         eve.ux.picker.composer.IBasicProps
 ---@return eve.ux.picker.BasicComposer
 function M.new(props)
-  local uuid = props.uuid or std.fn.uuid() ---@type string
+  local uuid = props.uuid or oxi.fn.uuid() ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local permanent = not not props.permanent ---@type boolean
