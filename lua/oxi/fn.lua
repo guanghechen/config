@@ -52,6 +52,49 @@ function M.safe_run(method, ...)
   return result
 end
 
+---@param method                        string
+---@param ...                           any
+---@return any|nil
+---@return string|nil
+function M.safe_execute(method, ...)
+  local nvim_tools = require("nvim_tools")
+  local ok, result = pcall(nvim_tools[method], ...)
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = string.format("[safe_execute] failed on calling nvim_tools.%s", method),
+      details = {
+        args = { ... },
+        error = result,
+        method = method,
+      },
+    })
+    return nil, nil
+  end
+
+  if result == nil or type(result.error) == "string" then
+    result = result or {}
+    local cmd = result.cmd ---@type string|nil
+    local err = result.error or result ---@type unknown|nil
+
+    std.reporter.error({
+      from = __module_name__,
+      subject = string.format("[safe_execute] failed on calling nvim_tools.%s", method),
+      details = {
+        args = { ... },
+        cmd = cmd,
+        error = err,
+        method = method,
+      },
+    })
+    return nil
+  end
+
+  return result.data, result.cmd
+end
+
+----------------------------------------------------------------------------------------------------
+
 ---@param subject                       string
 ---@param result_str                    string
 ---@return boolean

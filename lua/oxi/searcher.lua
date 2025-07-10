@@ -35,12 +35,8 @@ local M = {}
 ---@return oxi.searcher.ISearchResult|nil
 ---@return string|nil
 function M.search_in_files(params)
-  local payload = std.json.stringify(params) ---@type string
-
-  local nvim_tools = require("nvim_tools")
-  local ok, data, cmd = oxi.fn.run_cmd("search_in_files", nvim_tools.search_in_files, payload)
-
-  if ok and data ~= nil and data.items ~= nil then
+  local data, cmd = oxi.fn.safe_execute("search_in_files", params)
+  if data ~= nil and data.items ~= nil then
     local items = {} ---@type table<string, oxi.searcher.IFileMatch>
     local orders = {} ---@type string[]
 
@@ -63,7 +59,6 @@ function M.search_in_files(params)
     data.items = items
     data.item_orders = orders
   end
-
   return data, cmd
 end
 
