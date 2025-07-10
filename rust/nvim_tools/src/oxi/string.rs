@@ -1,15 +1,10 @@
 use crate::types::r#match::LineMatch;
-use crate::types::FunResult;
 use crate::util;
 use md5::{Digest, Md5};
 use uuid::Uuid;
 
 pub fn calc_linewidths(text: String) -> Vec<u32> {
-    let mut lwidths: Vec<u32> = vec![];
-    for line in text.lines() {
-        lwidths.push(line.len() as u32);
-    }
-    lwidths
+    util::string::calc_linewidths(&text)
 }
 
 pub fn count_lines(text: String) -> u32 {
@@ -18,20 +13,8 @@ pub fn count_lines(text: String) -> u32 {
 
 pub fn find_match_points_line_by_line(
     (pattern, text, flag_fuzzy, flag_regex): (String, String, bool, bool),
-) -> String {
-    let result: FunResult<Vec<LineMatch>> =
-        match util::string::find_match_points_line_by_line(&pattern, &text, flag_fuzzy, flag_regex)
-        {
-            Ok(data) => FunResult {
-                error: None,
-                data: Some(data),
-            },
-            Err(data) => FunResult {
-                error: Some(data),
-                data: None,
-            },
-        };
-    serde_json::to_string(&result).unwrap()
+) -> Result<Vec<LineMatch>, String> {
+    util::string::find_match_points_line_by_line(&pattern, &text, flag_fuzzy, flag_regex)
 }
 
 pub fn uuid((): ()) -> String {

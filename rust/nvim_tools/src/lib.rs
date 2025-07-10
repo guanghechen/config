@@ -9,6 +9,7 @@ extern crate lazy_static;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
+use types::r#match::LineMatch;
 
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
@@ -30,7 +31,7 @@ fn nvim_tools() -> Dictionary {
         ("find", Object::from(Function::from_fn(oxi::finder::find))),
         (
             "find_match_points_line_by_line",
-            Object::from(Function::from_fn(
+            Object::from(Function::<(String, String, bool, bool), Result<Vec<LineMatch>, String>>::from_fn(
                 oxi::string::find_match_points_line_by_line,
             )),
         ),
