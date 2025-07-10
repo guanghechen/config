@@ -36,7 +36,7 @@ pub fn uuid((): ()) -> String {
     uuid.to_string()
 }
 
-pub fn get_md5(input: String) -> String {
+pub fn md5(input: String) -> String {
     let mut hasher = Md5::new();
     hasher.update(input);
     let hash = hasher.finalize();
