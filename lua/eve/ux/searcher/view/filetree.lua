@@ -234,7 +234,7 @@ function M:search(params)
   local replace_pattern = params.replace_pattern ---@type string|nil
 
   ---@type oxi.searcher.ISearchResult|nil
-  local results = oxi.searcher.search({
+  local results = oxi.searcher.search_in_text({
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,
     flag_gitignore = flag_gitignore,

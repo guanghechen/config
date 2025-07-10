@@ -593,7 +593,7 @@ function M:__match__(input)
       lines[#lines + 1] = case_sensitive and item.text or item.text_lower
     end
 
-    local oxi_matches = oxi.string.find_match_points_line_by_line(search_pattern, lines, use_fuzzy, use_regex)
+    local oxi_matches = oxi.searcher.search_in_lines(search_pattern, lines, use_fuzzy, use_regex)
     if oxi_matches then
       for _, oxi_match in ipairs(oxi_matches) do
         matches[#matches + 1] = {

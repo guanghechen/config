@@ -20,16 +20,6 @@ function M.count_lines(text)
   return result or 0
 end
 
----@param pattern                       string
----@param lines                         string[]
----@param flag_fuzzy                    boolean
----@param flag_regex                    boolean
----@return oxi.string.ILineMatch[]|nil
-function M.find_match_points_line_by_line(pattern, lines, flag_fuzzy, flag_regex)
-  local result = oxi.fn.safe_run("find_match_points_line_by_line", pattern, lines, flag_fuzzy, flag_regex)
-  return result
-end
-
 ---@param text                          string
 ---@param lwidths                       ?integer[]
 ---@return string[]

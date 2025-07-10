@@ -40,8 +40,7 @@ function M.safe_run(method, ...)
   if not ok then
     std.reporter.error({
       from = __module_name__,
-      subject = "calc_linewidths",
-      message = "Failed to calculate line widths",
+      subject = string.format("[safe_run] failed on calling nvim_tools.%s", method),
       details = {
         args = { ... },
         error = result,

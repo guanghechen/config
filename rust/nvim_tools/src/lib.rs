@@ -32,14 +32,17 @@ fn nvim_tools() -> Dictionary {
             "find_files",
             Object::from(Function::from_fn(oxi::finder::find_files)),
         ),
+        ////
         (
-            "find_match_points_line_by_line",
+            "search",
+            Object::from(Function::from_fn(oxi::searcher::search)),
+        ),
+        (
+            "search_in_lines",
             Object::from(Function::<
                 (String, Vec<String>, bool, bool),
                 Result<Vec<LineMatch>, String>,
-            >::from_fn(
-                oxi::string::find_match_points_line_by_line
-            )),
+            >::from_fn(oxi::searcher::search_in_lines)),
         ),
         ////
         (
@@ -103,10 +106,6 @@ fn nvim_tools() -> Dictionary {
         (
             "rename_path",
             Object::from(Function::from_fn(oxi::fs::rename_path)),
-        ),
-        (
-            "search",
-            Object::from(Function::from_fn(oxi::searcher::search)),
         ),
         ("uuid", Object::from(Function::from_fn(oxi::string::uuid))),
         ("md5", Object::from(Function::from_fn(oxi::string::md5))),

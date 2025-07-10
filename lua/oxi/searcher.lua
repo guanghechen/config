@@ -31,10 +31,20 @@
 ---@class oxi.searcher
 local M = {}
 
+---@param pattern                       string
+---@param lines                         string[]
+---@param flag_fuzzy                    boolean
+---@param flag_regex                    boolean
+---@return oxi.string.ILineMatch[]|nil
+function M.search_in_lines(pattern, lines, flag_fuzzy, flag_regex)
+  local result = oxi.fn.safe_run("search_in_lines", pattern, lines, flag_fuzzy, flag_regex)
+  return result
+end
+
 ---@param params                        oxi.searcher.ISearchParams
 ---@return oxi.searcher.ISearchResult|nil
 ---@return string|nil
-function M.search(params)
+function M.search_in_text(params)
   local payload = std.json.stringify(params) ---@type string
 
   local nvim_tools = require("nvim_tools")

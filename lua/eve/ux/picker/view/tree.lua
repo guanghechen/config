@@ -228,7 +228,7 @@ function M:match(params)
     end
   end
 
-  local oxi_matches = oxi.string.find_match_points_line_by_line(pattern, lines, fuzzy, regex) ---@type oxi.string.ILineMatch[]|nil
+  local oxi_matches = oxi.searcher.search_in_lines(pattern, lines, fuzzy, regex) ---@type oxi.string.ILineMatch[]|nil
   if oxi_matches ~= nil then
     for _, oxi_match in ipairs(oxi_matches) do
       local lnum = oxi_match.lnum ---@type integer

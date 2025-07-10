@@ -1,4 +1,4 @@
-use nvim_tools::util::search;
+use nvim_tools::util::searcher;
 
 #[test]
 fn test_rg() {
@@ -10,7 +10,7 @@ fn test_rg() {
         }
     };
 
-    let replace_options = search::ISearchInFilesParams {
+    let replace_options = searcher::ISearchInFilesParams {
         cwd: Some(cwd),
         flag_case_sensitive: true,
         flag_gitignore: true,
@@ -23,16 +23,16 @@ fn test_rg() {
         exclude_patterns: ".git, c.txt".to_string(),
         specified_filepath: None,
     };
-    let result = search::search_in_files(&replace_options);
+    let result = searcher::search_in_files(&replace_options);
 
     match result {
         Ok(data) => {
             let serialized_result: String = serde_json::to_string_pretty(&data.items).unwrap();
-            let formated_output: String = data.stdout.trim().to_string();
+            let formatted_output: String = data.stdout.trim().to_string();
 
             println!(
                 "\n{}\n-----stdout-----\n{}\n----------------\n{}\n----------------",
-                data.cmd, serialized_result, formated_output,
+                data.cmd, serialized_result, formatted_output,
             );
         }
         Err(data) => {

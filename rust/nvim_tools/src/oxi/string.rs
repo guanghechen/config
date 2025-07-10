@@ -1,4 +1,3 @@
-use crate::types::r#match::LineMatch;
 use crate::util;
 use md5::{Digest, Md5};
 use uuid::Uuid;
@@ -9,12 +8,6 @@ pub fn calc_linewidths(text: String) -> Vec<u32> {
 
 pub fn count_lines(text: String) -> u32 {
     text.lines().count() as u32
-}
-
-pub fn find_match_points_line_by_line(
-    (pattern, lines, flag_fuzzy, flag_regex): (String, Vec<String>, bool, bool),
-) -> Result<Vec<LineMatch>, String> {
-    util::string::find_match_points_line_by_line(&pattern, &lines, flag_fuzzy, flag_regex)
 }
 
 pub fn uuid((): ()) -> String {

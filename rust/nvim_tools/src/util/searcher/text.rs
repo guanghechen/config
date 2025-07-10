@@ -2,7 +2,7 @@ use crate::algorithm::kmp::{calc_fails, find_all_matched_points};
 use crate::types::r#match::{LineMatch, MatchPoint};
 use regex::Regex;
 
-pub fn find_match_points_line_by_line(
+pub fn search_in_lines(
     pattern: &str,
     lines: &[String],
     flag_fuzzy: bool,
