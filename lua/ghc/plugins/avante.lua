@@ -111,7 +111,7 @@ local selector_provider_opts = {
     local excludes = flag_exclude and eve.context.select.select_avante.excludes:snapshot() or {} ---@type string[]
 
     ---@type string[]
-    local filepaths = eve.oxi.find({
+    local filepaths = oxi.finder.find({
       workspace = workspace,
       cwd = cwd,
       flag_case_sensitive = false,

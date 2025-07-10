@@ -255,7 +255,7 @@ function M:match(params)
     end
   end)
 
-  local oxi_matches = eve.oxi.find_match_points_line_by_line(pattern, lines, fuzzy, regex) ---@type eve.builtin.oxi.string.ILineMatch[]|nil
+  local oxi_matches = oxi.string.find_match_points_line_by_line(pattern, lines, fuzzy, regex) ---@type oxi.string.ILineMatch[]|nil
   if oxi_matches ~= nil then
     for _, oxi_match in ipairs(oxi_matches) do
       local lnum = oxi_match.lnum ---@type integer
@@ -269,7 +269,7 @@ function M:match(params)
     local N = #oxi_matches ---@type integer
     if N < #uuids then
       for index = 1, N, 1 do
-        local oxi_match = oxi_matches[index] ---@type eve.builtin.oxi.string.ILineMatch
+        local oxi_match = oxi_matches[index] ---@type oxi.string.ILineMatch
         local lnum = oxi_match.lnum ---@type integer
         uuids[index] = uuids[lnum] ---@type string
       end

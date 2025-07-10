@@ -8,7 +8,7 @@ local __module_name__ = "eve.ux.searcher.view.plainfile" ---@type string
 ---@field public replace_pattern        std.collection.IObservable
 ---
 ---@field public filepath               string
----@field public filematch              eve.builtin.oxi.search.IFileMatch|nil
+---@field public filematch              oxi.searcher.IFileMatch|nil
 ---@field public offset_current         integer
 ---@field public match_offsets          integer[]
 
@@ -109,8 +109,8 @@ function M:calc_preview_data(context)
   local highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
 
   if flag_replace then
-    ---@type eve.builtin.oxi.replace.replace_file_preview_advance_by_matches.IResult
-    local preview_result = eve.oxi.replace_file_preview_advance_by_matches({
+    ---@type oxi.replacer.replace_file_preview_advance_by_matches.IResult
+    local preview_result = oxi.replacer.replace_file_preview_advance_by_matches({
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
       search_pattern = search_pattern,

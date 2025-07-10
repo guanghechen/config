@@ -628,7 +628,7 @@ function M.new(props)
           end
         end
 
-        local succeed, preview_locations = eve.oxi.replace_file_advance_by_matches({
+        local succeed, preview_locations = oxi.replacer.replace_file_advance_by_matches({
           cwd = cwd,
           filepath = leafnode.data.filepath,
           flag_case_sensitive = flag_case_sensitive,
@@ -1678,7 +1678,7 @@ function M:__search__()
   end
 
   local items = result.items ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = result.filematch_map ---@type table<string, eve.builtin.oxi.search.IFileMatch>
+  local filematch_map = result.filematch_map ---@type table<string, oxi.searcher.IFileMatch>
 
   local filepaths = {} ---@type string[]
   local uuids = {} ---@type string[]
@@ -1913,7 +1913,7 @@ function M:__replace_file__(cwd, node, nodestate)
 
   if count == L then
     ---@type boolean
-    local succeed = eve.oxi.replace_file({
+    local succeed = oxi.replacer.replace_file({
       cwd = cwd,
       filepath = node.data.filepath,
       flag_case_sensitive = flag_case_sensitive,
@@ -1937,7 +1937,7 @@ function M:__replace_file__(cwd, node, nodestate)
   end
 
   ---@type boolean
-  local succeed = eve.oxi.replace_file_by_matches({
+  local succeed = oxi.replacer.replace_file_by_matches({
     cwd = cwd,
     filepath = node.data.filepath,
     flag_case_sensitive = flag_case_sensitive,
