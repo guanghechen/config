@@ -9,8 +9,8 @@ extern crate lazy_static;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
-use types::r#match::LineMatch;
 use oxi::fs::RenameParams;
+use types::r#match::LineMatch;
 
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
@@ -39,87 +39,89 @@ fn nvim_tools() -> Dictionary {
         ////
         (
             "search_in_files",
-            Object::from(Function::from_fn(oxi::searcher::search_in_files)),
+            Object::from(Function::from_fn(oxi::search::search_in_files)),
         ),
         (
             "search_in_lines",
             Object::from(Function::<
                 (String, Vec<String>, bool, bool),
                 Result<Vec<LineMatch>, String>,
-            >::from_fn(oxi::searcher::search_in_lines)),
+            >::from_fn(oxi::search::search_in_lines)),
         ),
         (
             "search_in_text",
             Object::from(Function::<
                 (String, String, bool, bool),
                 Result<Vec<LineMatch>, String>,
-            >::from_fn(oxi::searcher::search_in_text)),
+            >::from_fn(oxi::search::search_in_text)),
         ),
         ////
         (
             "get_filesize",
-            Object::from(Function::<
-                String,
-                Result<String, String>,
-            >::from_fn(oxi::fs::get_filesize)),
+            Object::from(Function::<String, Result<String, String>>::from_fn(
+                oxi::fs::get_filesize,
+            )),
         ),
         ("now", Object::from(Function::from_fn(oxi::date::now))),
         (
             "replace_file",
-            Object::from(Function::from_fn(oxi::replacer::replace_file)),
+            Object::from(Function::from_fn(oxi::replace::replace_file)),
         ),
         (
             "replace_file_by_matches",
-            Object::from(Function::from_fn(oxi::replacer::replace_file_by_matches)),
+            Object::from(Function::from_fn(oxi::replace::replace_file_by_matches)),
         ),
         (
             "replace_file_advance_by_matches",
             Object::from(Function::from_fn(
-                oxi::replacer::replace_file_advance_by_matches,
+                oxi::replace::replace_file_advance_by_matches,
             )),
         ),
         (
             "replace_file_preview",
-            Object::from(Function::from_fn(oxi::replacer::replace_file_preview)),
+            Object::from(Function::from_fn(oxi::replace::replace_file_preview)),
         ),
         (
             "replace_file_preview_advance",
             Object::from(Function::from_fn(
-                oxi::replacer::replace_file_preview_advance,
+                oxi::replace::replace_file_preview_advance,
             )),
         ),
         (
             "replace_file_preview_advance_by_matches",
             Object::from(Function::from_fn(
-                oxi::replacer::replace_file_preview_advance_by_matches,
+                oxi::replace::replace_file_preview_advance_by_matches,
             )),
         ),
         (
             "replace_text_preview",
-            Object::from(Function::from_fn(oxi::replacer::replace_text_preview)),
+            Object::from(Function::from_fn(oxi::replace::replace_text_preview)),
         ),
         (
             "replace_text_preview_by_matches",
             Object::from(Function::from_fn(
-                oxi::replacer::replace_text_preview_by_matches,
+                oxi::replace::replace_text_preview_by_matches,
             )),
         ),
         (
             "replace_text_preview_advance",
             Object::from(Function::from_fn(
-                oxi::replacer::replace_text_preview_advance,
+                oxi::replace::replace_text_preview_advance,
             )),
         ),
         (
             "replace_text_preview_advance_by_matches",
             Object::from(Function::from_fn(
-                oxi::replacer::replace_text_preview_advance_by_matches,
+                oxi::replace::replace_text_preview_advance_by_matches,
             )),
         ),
-        ("readdir", Object::from(Function::<
-            String,
-            Result<util::file::ReaddirSucceedResult, String>,
-        >::from_fn(oxi::fs::readdir))),
+        (
+            "readdir",
+            Object::from(Function::<
+                String,
+                Result<util::file::ReaddirSucceedResult, String>,
+            >::from_fn(oxi::fs::readdir)),
+        ),
         (
             "rename_path",
             Object::from(Function::<

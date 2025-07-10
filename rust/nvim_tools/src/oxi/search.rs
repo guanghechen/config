@@ -55,17 +55,19 @@ impl lua::Pushable for SearchInFilesParams {
 pub fn search_in_lines(
     (pattern, lines, flag_fuzzy, flag_regex): (String, Vec<String>, bool, bool),
 ) -> Result<Vec<LineMatch>, String> {
-    util::searcher::search_in_lines(&pattern, &lines, flag_fuzzy, flag_regex)
+    util::search::search_in_lines(&pattern, &lines, flag_fuzzy, flag_regex)
 }
 
 pub fn search_in_text(
     (pattern, text, flag_fuzzy, flag_regex): (String, String, bool, bool),
 ) -> Result<Vec<LineMatch>, String> {
-    util::searcher::search_in_text(&pattern, &text, flag_fuzzy, flag_regex)
+    util::search::search_in_text(&pattern, &text, flag_fuzzy, flag_regex)
 }
 
-pub fn search_in_files(params: SearchInFilesParams) -> CmdResult<util::searcher::ISearchInFilesSucceedResult> {
-    let options = util::searcher::ISearchInFilesParams {
+pub fn search_in_files(
+    params: SearchInFilesParams,
+) -> CmdResult<util::search::ISearchInFilesSucceedResult> {
+    let options = util::search::ISearchInFilesParams {
         cwd: params.cwd,
         max_matches: params.max_matches,
         flag_case_sensitive: params.flag_case_sensitive,
@@ -79,8 +81,8 @@ pub fn search_in_files(params: SearchInFilesParams) -> CmdResult<util::searcher:
         specified_filepath: params.specified_filepath,
     };
 
-    let cmd_result: CmdResult<util::searcher::ISearchInFilesSucceedResult> = {
-        let result = util::searcher::search_in_files(&options);
+    let cmd_result: CmdResult<util::search::ISearchInFilesSucceedResult> = {
+        let result = util::search::search_in_files(&options);
         match result {
             Ok(data) => CmdResult {
                 cmd: data.cmd.to_owned(),

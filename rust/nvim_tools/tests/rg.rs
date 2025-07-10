@@ -1,4 +1,4 @@
-use nvim_tools::util::searcher;
+use nvim_tools::util::search;
 
 #[test]
 fn test_rg() {
@@ -10,7 +10,7 @@ fn test_rg() {
         }
     };
 
-    let replace_options = searcher::ISearchInFilesParams {
+    let replace_options = search::ISearchInFilesParams {
         cwd: Some(cwd),
         flag_case_sensitive: true,
         flag_gitignore: true,
@@ -23,7 +23,7 @@ fn test_rg() {
         exclude_patterns: ".git, c.txt".to_string(),
         specified_filepath: None,
     };
-    let result = searcher::search_in_files(&replace_options);
+    let result = search::search_in_files(&replace_options);
 
     match result {
         Ok(data) => {
