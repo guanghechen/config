@@ -44,6 +44,13 @@ fn nvim_tools() -> Dictionary {
                 Result<Vec<LineMatch>, String>,
             >::from_fn(oxi::searcher::search_in_lines)),
         ),
+        (
+            "search_in_text",
+            Object::from(Function::<
+                (String, String, bool, bool),
+                Result<Vec<LineMatch>, String>,
+            >::from_fn(oxi::searcher::search_in_text)),
+        ),
         ////
         (
             "get_filesize",

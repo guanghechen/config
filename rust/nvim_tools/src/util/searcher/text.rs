@@ -2,12 +2,16 @@ use crate::algorithm::kmp::{calc_fails, find_all_matched_points};
 use crate::types::r#match::{LineMatch, MatchPoint};
 use regex::Regex;
 
-pub fn search_in_lines(
+pub fn search_in_lines<I, S>(
     pattern: &str,
-    lines: &[String],
+    lines: I,
     flag_fuzzy: bool,
     flag_regex: bool,
-) -> Result<Vec<LineMatch>, String> {
+) -> Result<Vec<LineMatch>, String>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
     if pattern.is_empty() {
         return Ok(vec![]);
     }
@@ -22,7 +26,8 @@ pub fn search_in_lines(
         let regex = Regex::new(pattern);
         match regex {
             Ok(regex) => {
-                for (i, line) in lines.iter().enumerate() {
+                for (i, s) in lines.into_iter().enumerate() {
+                    let line = s.as_ref();
                     if line.is_empty() {
                         continue;
                     }
@@ -56,7 +61,8 @@ pub fn search_in_lines(
         let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
         calc_fails(pattern_bytes, &mut fails);
 
-        for (i, line) in lines.iter().enumerate() {
+        for (i, s) in lines.into_iter().enumerate() {
+            let line = s.as_ref();
             if line.is_empty() {
                 continue;
             }
@@ -170,4 +176,13 @@ pub fn search_in_lines(
         }
     }
     Ok(matches)
+}
+
+pub fn search_in_text(
+    pattern: &str,
+    text: &str,
+    flag_fuzzy: bool,
+    flag_regex: bool,
+) -> Result<Vec<LineMatch>, String> {
+    search_in_lines(pattern, text.lines(), flag_fuzzy, flag_regex)
 }
