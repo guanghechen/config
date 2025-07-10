@@ -1,81 +1,75 @@
-use crate::types::FunResult;
 use crate::util;
-use serde::Deserialize;
+use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
+use nvim_oxi::lua::{Poppable, Pushable};
+use nvim_oxi::serde::{Deserializer, Serializer};
+use nvim_oxi::Object;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-struct RenameParams {
-    old_path: String,
-    new_path: String,
-    force: bool,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RenameParams {
+    pub old_path: String,
+    pub new_path: String,
+    pub force: bool,
 }
 
-pub fn collect_files((dirpath, recursive): (String, bool)) -> String {
+impl FromObject for RenameParams {
+    fn from_object(obj: Object) -> Result<Self, ConversionError> {
+        Self::deserialize(Deserializer::new(obj)).map_err(Into::into)
+    }
+}
+
+impl ToObject for RenameParams {
+    fn to_object(self) -> Result<Object, ConversionError> {
+        self.serialize(Serializer::new()).map_err(Into::into)
+    }
+}
+
+impl Poppable for RenameParams {
+    unsafe fn pop(
+        lstate: *mut nvim_oxi::lua::ffi::lua_State,
+    ) -> Result<Self, nvim_oxi::lua::Error> {
+        let obj = Object::pop(lstate)?;
+        Self::from_object(obj).map_err(nvim_oxi::lua::Error::pop_error_from_err::<Self, _>)
+    }
+}
+
+impl Pushable for RenameParams {
+    unsafe fn push(
+        self,
+        lstate: *mut nvim_oxi::lua::ffi::lua_State,
+    ) -> Result<std::ffi::c_int, nvim_oxi::lua::Error> {
+        self.to_object()
+            .map_err(nvim_oxi::lua::Error::push_error_from_err::<Self, _>)?
+            .push(lstate)
+    }
+}
+
+pub fn collect_files(
+    (dirpath, recursive): (String, bool),
+) -> Result<util::file::ReadAllFilesSucceedResult, String> {
     let raw_result = util::file::collect_files(dirpath, recursive);
-    let result: FunResult<util::file::ReadAllFilesSucceedResult> = match raw_result {
-        Ok(data) => FunResult {
-            error: None,
-            data: Some(data),
-        },
-        Err(data) => FunResult {
-            error: Some(data.error),
-            data: None,
-        },
-    };
-    serde_json::to_string(&result).unwrap()
+    match raw_result {
+        Ok(data) => Ok(data),
+        Err(data) => Err(data.error),
+    }
 }
 
-pub fn get_filesize(filepath: String) -> String {
-    let raw_result = util::file::get_filesize(filepath);
-    let result: FunResult<String> = match raw_result {
-        Ok(data) => FunResult {
-            error: None,
-            data: Some(data),
-        },
-        Err(data) => FunResult {
-            error: Some(data),
-            data: None,
-        },
-    };
-    serde_json::to_string(&result).unwrap()
+pub fn get_filesize(filepath: String) -> Result<String, String> {
+    util::file::get_filesize(filepath)
 }
 
-pub fn readdir(dirpath: String) -> String {
+pub fn readdir(dirpath: String) -> Result<util::file::ReaddirSucceedResult, String> {
     let raw_result = util::file::readdir(dirpath);
-    let result: FunResult<util::file::ReaddirSucceedResult> = match raw_result {
-        Ok(data) => FunResult {
-            error: None,
-            data: Some(data),
-        },
-        Err(data) => FunResult {
-            error: Some(data.error),
-            data: None,
-        },
-    };
-    serde_json::to_string(&result).unwrap()
+    match raw_result {
+        Ok(data) => Ok(data),
+        Err(data) => Err(data.error),
+    }
 }
 
-pub fn rename_path(stringified_params: String) -> String {
-    let params: RenameParams = match serde_json::from_str(&stringified_params) {
-        Ok(p) => p,
-        Err(e) => {
-            let result: FunResult<util::file::RenameSucceedResult> = FunResult {
-                error: Some(format!("Failed to parse JSON parameters: {}", e)),
-                data: None,
-            };
-            return serde_json::to_string(&result).unwrap();
-        }
-    };
-
+pub fn rename_path(params: RenameParams) -> Result<util::file::RenameSucceedResult, String> {
     let raw_result = util::file::rename_path(params.old_path, params.new_path, params.force);
-    let result: FunResult<util::file::RenameSucceedResult> = match raw_result {
-        Ok(data) => FunResult {
-            error: None,
-            data: Some(data),
-        },
-        Err(data) => FunResult {
-            error: Some(data.error),
-            data: None,
-        },
-    };
-    serde_json::to_string(&result).unwrap()
+    match raw_result {
+        Ok(data) => Ok(data),
+        Err(data) => Err(data.error),
+    }
 }

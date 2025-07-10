@@ -10,6 +10,7 @@ use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
 use types::r#match::LineMatch;
+use oxi::fs::RenameParams;
 
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
@@ -25,7 +26,10 @@ fn nvim_tools() -> Dictionary {
         ////
         (
             "collect_files",
-            Object::from(Function::from_fn(oxi::fs::collect_files)),
+            Object::from(Function::<
+                (String, bool),
+                Result<util::file::ReadAllFilesSucceedResult, String>,
+            >::from_fn(oxi::fs::collect_files)),
         ),
         ////
         (
@@ -54,7 +58,10 @@ fn nvim_tools() -> Dictionary {
         ////
         (
             "get_filesize",
-            Object::from(Function::from_fn(oxi::fs::get_filesize)),
+            Object::from(Function::<
+                String,
+                Result<String, String>,
+            >::from_fn(oxi::fs::get_filesize)),
         ),
         ("now", Object::from(Function::from_fn(oxi::date::now))),
         (
@@ -109,10 +116,16 @@ fn nvim_tools() -> Dictionary {
                 oxi::replacer::replace_text_preview_advance_by_matches,
             )),
         ),
-        ("readdir", Object::from(Function::from_fn(oxi::fs::readdir))),
+        ("readdir", Object::from(Function::<
+            String,
+            Result<util::file::ReaddirSucceedResult, String>,
+        >::from_fn(oxi::fs::readdir))),
         (
             "rename_path",
-            Object::from(Function::from_fn(oxi::fs::rename_path)),
+            Object::from(Function::<
+                RenameParams,
+                Result<util::file::RenameSucceedResult, String>,
+            >::from_fn(oxi::fs::rename_path)),
         ),
         ("uuid", Object::from(Function::from_fn(oxi::string::uuid))),
         ("md5", Object::from(Function::from_fn(oxi::string::md5))),
