@@ -9,8 +9,8 @@ extern crate lazy_static;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
+use types::dto::FsRenameParams;
 use types::dto::LineMatch;
-use types::dto::RenameParams;
 
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
@@ -125,7 +125,7 @@ fn nvim_tools() -> Dictionary {
         (
             "rename_path",
             Object::from(Function::<
-                RenameParams,
+                FsRenameParams,
                 Result<util::file::RenameSucceedResult, String>,
             >::from_fn(oxi::fs::rename_path)),
         ),

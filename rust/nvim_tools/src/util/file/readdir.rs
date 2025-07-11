@@ -9,7 +9,7 @@ use std::os::windows::fs::MetadataExt;
 use std::path::Path;
 use std::{fs, time::SystemTime}; // Import for Windows-specific metadata extensions
 
-use crate::types::file::{FileItemWithStatus, FileType};
+use crate::types::dto::{FileItemWithStatus, FileType};
 use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
 use nvim_oxi::serde::{Deserializer, Serializer};
 use nvim_oxi::{lua, Object};

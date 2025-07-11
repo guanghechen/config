@@ -1,63 +1,17 @@
-use crate::types::dto::MatchPoint;
+use crate::types::dto::search::search_in_files::{
+    SearchInFilesFailedResult, SearchInFilesSucceedResult,
+};
+use crate::types::dto::{MatchPoint, SearchBlockMatch, SearchFileMatch, SearchInFilesParams};
 use crate::types::third_party::ripgrep;
 use crate::util::string;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, process::Command, time::SystemTime};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchBlockMatch {
-    pub lnum: usize,  // start line number
-    pub text: String, // block match lines.
-    pub offset: usize,
-    pub matches: Vec<MatchPoint>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SearchFileMatch {
-    pub matches: Vec<SearchBlockMatch>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchInFilesSucceedResult {
-    #[serde(skip_serializing)]
-    pub cmd: String,
-    #[serde(skip_serializing)]
-    pub stdout: String,
-
-    pub elapsed_time: String,
-    pub items: HashMap<String, SearchFileMatch>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchInFilesFailedResult {
-    #[serde(skip_serializing)]
-    pub cmd: String,
-
-    pub elapsed_time: String,
-    pub error: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchInFilesParams {
-    pub cwd: Option<String>,
-    pub max_matches: Option<i32>,
-    pub flag_case_sensitive: bool,
-    pub flag_gitignore: bool,
-    pub flag_regex: bool,
-    pub max_filesize: Option<String>,
-    pub search_pattern: String,
-    pub search_paths: String,
-    pub include_patterns: String,
-    pub exclude_patterns: String,
-    pub specified_filepath: Option<String>,
-}
-
 pub fn search_in_files(
-    params: &ISearchInFilesParams,
-) -> Result<ISearchInFilesSucceedResult, ISearchInFilesFailedResult> {
+    params: &SearchInFilesParams,
+) -> Result<SearchInFilesSucceedResult, SearchInFilesFailedResult> {
     if params.search_pattern.is_empty() {
-        return Ok(ISearchInFilesSucceedResult {
+        return Ok(SearchInFilesSucceedResult {
             stdout: "".to_string(),
             cmd: "".to_string(),
             elapsed_time: "0s".to_string(),
@@ -223,7 +177,7 @@ pub fn search_in_files(
             }
         }
 
-        let result: ISearchInFilesSucceedResult = ISearchInFilesSucceedResult {
+        let result: SearchInFilesSucceedResult = SearchInFilesSucceedResult {
             cmd,
             stdout: stdout.to_string(),
             elapsed_time: result_elapsed_time,
@@ -233,14 +187,14 @@ pub fn search_in_files(
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
-            Ok(ISearchInFilesSucceedResult {
+            Ok(SearchInFilesSucceedResult {
                 cmd,
                 stdout: "".to_string(),
                 elapsed_time: format!("{}s", elapsed_time),
                 items: HashMap::new(),
             })
         } else {
-            Err(ISearchInFilesFailedResult {
+            Err(SearchInFilesFailedResult {
                 cmd,
                 elapsed_time: format!("{}s", elapsed_time),
                 error: stderr.to_string(),

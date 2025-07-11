@@ -1,4 +1,4 @@
-use nvim_tools::util::search;
+use nvim_tools::{types::dto::SearchInFilesParams, util::search};
 
 #[test]
 fn test_rg() {
@@ -10,7 +10,7 @@ fn test_rg() {
         }
     };
 
-    let replace_options = search::ISearchInFilesParams {
+    let replace_options = SearchInFilesParams {
         cwd: Some(cwd),
         flag_case_sensitive: true,
         flag_gitignore: true,

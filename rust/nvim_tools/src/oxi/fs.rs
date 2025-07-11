@@ -1,4 +1,4 @@
-use crate::types::dto::RenameParams;
+use crate::types::dto::FsRenameParams;
 use crate::util;
 
 pub fn collect_files(
@@ -23,7 +23,7 @@ pub fn readdir(dirpath: String) -> Result<util::file::ReaddirSucceedResult, Stri
     }
 }
 
-pub fn rename_path(params: RenameParams) -> Result<util::file::RenameSucceedResult, String> {
+pub fn rename_path(params: FsRenameParams) -> Result<util::file::RenameSucceedResult, String> {
     let raw_result = util::file::rename_path(params.old_path, params.new_path, params.force);
     match raw_result {
         Ok(data) => Ok(data),

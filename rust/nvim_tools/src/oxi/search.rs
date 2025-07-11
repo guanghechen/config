@@ -1,6 +1,7 @@
+use crate::types::dto::CmdResult;
 use crate::types::dto::LineMatch;
 use crate::types::dto::SearchInFilesParams;
-use crate::types::CmdResult;
+use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
 use crate::util;
 
 pub fn search_in_lines(
@@ -17,8 +18,8 @@ pub fn search_in_text(
 
 pub fn search_in_files(
     params: SearchInFilesParams,
-) -> CmdResult<util::search::ISearchInFilesSucceedResult> {
-    let options = util::search::ISearchInFilesParams {
+) -> CmdResult<SearchInFilesSucceedResult> {
+    let options = SearchInFilesParams {
         cwd: params.cwd,
         max_matches: params.max_matches,
         flag_case_sensitive: params.flag_case_sensitive,
@@ -32,7 +33,7 @@ pub fn search_in_files(
         specified_filepath: params.specified_filepath,
     };
 
-    let cmd_result: CmdResult<util::search::ISearchInFilesSucceedResult> = {
+    let cmd_result: CmdResult<SearchInFilesSucceedResult> = {
         let result = util::search::search_in_files(&options);
         match result {
             Ok(data) => CmdResult {

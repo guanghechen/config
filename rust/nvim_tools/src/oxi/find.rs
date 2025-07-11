@@ -1,5 +1,5 @@
+use crate::types::dto::CmdResult;
 use crate::types::dto::FindFilesParams;
-use crate::types::CmdResult;
 use crate::util;
 
 pub fn find_files(params: FindFilesParams) -> CmdResult<util::find::FindFilesSucceedResult> {
