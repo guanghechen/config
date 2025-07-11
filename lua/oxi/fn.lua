@@ -28,23 +28,41 @@ end
 
 ---@param method                        string
 ---@param ...                           any
+---@return boolean
 ---@return any|nil
-function M.safe_run(method, ...)
+function M.safe_call(method, ...)
   local nvim_tools = require("nvim_tools")
   local ok, result = pcall(nvim_tools[method], ...)
   if not ok then
     std.reporter.error({
       from = __module_name__,
-      subject = string.format("[safe_run] failed on calling nvim_tools.%s", method),
+      subject = string.format("[safe_call] failed on calling nvim_tools.%s", method),
       details = {
         args = { ... },
         error = result,
         method = method,
       },
     })
-    return nil
+    return false, nil
   end
-  return result
+
+  if result == nil or type(result.error) == "string" then
+    result = result or {}
+    local err = result.error or result ---@type unknown|nil
+
+    std.reporter.error({
+      from = __module_name__,
+      subject = string.format("[safe_call] failed on calling nvim_tools.%s", method),
+      details = {
+        args = { ... },
+        error = err,
+        method = method,
+      },
+    })
+    return false, nil
+  end
+
+  return true, result.data
 end
 
 ---@param method                        string
@@ -88,45 +106,25 @@ function M.safe_execute(method, ...)
   return result.data, result.cmd
 end
 
-----------------------------------------------------------------------------------------------------
-
----@param subject                       string
----@param result_str                    string
----@return boolean
----@return any|nil
-function M.resolve_fun_result(subject, result_str)
-  local result = std.json.parse(result_str)
-  if result == nil or type(result.error) == "string" then
-    std.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = "Failed to run function",
-      details = (result or {}).error or result,
-    })
-    return false, nil
-  end
-
-  ---@cast result                       oxi.fn.IFunResult
-  return true, result.data
-end
-
----@param subject                       string
----@param fn                            fun(...): string
+---@param method                        string
 ---@param ...                           any
----@return boolean
 ---@return any|nil
-function M.run_fun(subject, fn, ...)
-  local ok, result = pcall(fn, ...)
+function M.safe_run(method, ...)
+  local nvim_tools = require("nvim_tools")
+  local ok, result = pcall(nvim_tools[method], ...)
   if not ok then
     std.reporter.error({
       from = __module_name__,
-      subject = subject,
-      message = "Failed to run function",
-      details = { error = result },
+      subject = string.format("[safe_run] failed on calling nvim_tools.%s", method),
+      details = {
+        args = { ... },
+        error = result,
+        method = method,
+      },
     })
-    return false, nil
+    return nil
   end
-  return M.resolve_fun_result(subject, result)
+  return result
 end
 
 return M

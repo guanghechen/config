@@ -9,8 +9,8 @@ extern crate lazy_static;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
-use oxi::fs::RenameParams;
-use types::r#match::LineMatch;
+use types::dto::LineMatch;
+use types::dto::RenameParams;
 
 #[nvim_oxi::plugin]
 fn nvim_tools() -> Dictionary {
@@ -34,7 +34,7 @@ fn nvim_tools() -> Dictionary {
         ////
         (
             "find_files",
-            Object::from(Function::from_fn(oxi::finder::find_files)),
+            Object::from(Function::from_fn(oxi::find::find_files)),
         ),
         ////
         (
@@ -56,13 +56,6 @@ fn nvim_tools() -> Dictionary {
             >::from_fn(oxi::search::search_in_text)),
         ),
         ////
-        (
-            "get_filesize",
-            Object::from(Function::<String, Result<String, String>>::from_fn(
-                oxi::fs::get_filesize,
-            )),
-        ),
-        ("now", Object::from(Function::from_fn(oxi::date::now))),
         (
             "replace_file",
             Object::from(Function::from_fn(oxi::replace::replace_file)),
@@ -115,6 +108,13 @@ fn nvim_tools() -> Dictionary {
                 oxi::replace::replace_text_preview_advance_by_matches,
             )),
         ),
+        ////
+        (
+            "get_filesize",
+            Object::from(Function::<String, Result<String, String>>::from_fn(
+                oxi::fs::get_filesize,
+            )),
+        ),
         (
             "readdir",
             Object::from(Function::<
@@ -129,7 +129,9 @@ fn nvim_tools() -> Dictionary {
                 Result<util::file::RenameSucceedResult, String>,
             >::from_fn(oxi::fs::rename_path)),
         ),
-        ("uuid", Object::from(Function::from_fn(oxi::string::uuid))),
+        ////
+        ("now", Object::from(Function::from_fn(oxi::date::now))),
         ("md5", Object::from(Function::from_fn(oxi::string::md5))),
+        ("uuid", Object::from(Function::from_fn(oxi::string::uuid))),
     ])
 }

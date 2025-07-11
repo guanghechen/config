@@ -1,5 +1,5 @@
 pub mod date;
-pub mod finder;
+pub mod find;
 pub mod fs;
 pub mod replace;
 pub mod search;

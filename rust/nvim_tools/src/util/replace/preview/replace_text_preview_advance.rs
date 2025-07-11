@@ -1,14 +1,7 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::types::r#match::MatchPoint;
+use crate::types::dto::{MatchPoint, ReplacePreviewResult};
 use crate::util::regex::get_static_regex;
 use regex::Captures;
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplacePreviewResult {
-    pub text: String,
-    pub matches: Vec<MatchPoint>,
-}
 
 pub fn replace_text_preview_advance(
     text: &str,

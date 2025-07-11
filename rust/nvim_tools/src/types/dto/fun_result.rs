@@ -1,20 +1,15 @@
-pub mod dto;
-pub mod file;
-pub mod third_party;
-
 use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
 use nvim_oxi::serde::{Deserializer, Serializer};
 use nvim_oxi::{lua, Object};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CmdResult<T> {
-    pub cmd: String,
+pub struct FunResult<T> {
     pub error: Option<String>,
     pub data: Option<T>,
 }
 
-impl<T> FromObject for CmdResult<T>
+impl<T> FromObject for FunResult<T>
 where
     T: for<'de> Deserialize<'de>,
 {
@@ -23,7 +18,7 @@ where
     }
 }
 
-impl<T> ToObject for CmdResult<T>
+impl<T> ToObject for FunResult<T>
 where
     T: Serialize,
 {
@@ -32,7 +27,7 @@ where
     }
 }
 
-impl<T> lua::Poppable for CmdResult<T>
+impl<T> lua::Poppable for FunResult<T>
 where
     T: for<'de> Deserialize<'de>,
 {
@@ -44,7 +39,7 @@ where
     }
 }
 
-impl<T> lua::Pushable for CmdResult<T>
+impl<T> lua::Pushable for FunResult<T>
 where
     T: Serialize,
 {
@@ -56,3 +51,4 @@ where
         }
     }
 }
+

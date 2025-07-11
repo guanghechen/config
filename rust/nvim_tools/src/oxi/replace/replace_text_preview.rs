@@ -1,23 +1,14 @@
-use crate::types::FunResult;
+use crate::types::dto::{FunResult, ReplaceTextPreviewParams};
 use crate::util;
 
-pub fn replace_text_preview(
-    (text, search_pattern, replace_pattern, keep_search_pieces, flag_regex, flag_case_sensitive): (
-        String,
-        String,
-        String,
-        bool,
-        bool,
-        bool,
-    ),
-) -> String {
-    let result: FunResult<String> = match util::replace::replace_text_preview(
-        &text,
-        &search_pattern,
-        &replace_pattern,
-        keep_search_pieces,
-        flag_regex,
-        flag_case_sensitive,
+pub fn replace_text_preview(params: ReplaceTextPreviewParams) -> FunResult<String> {
+    match util::replace::replace_text_preview(
+        &params.text,
+        &params.search_pattern,
+        &params.replace_pattern,
+        params.keep_search_pieces,
+        params.flag_regex,
+        params.flag_case_sensitive,
     ) {
         Ok(next_text) => FunResult {
             error: None,
@@ -27,7 +18,5 @@ pub fn replace_text_preview(
             error: Some(error),
             data: None,
         },
-    };
-    serde_json::to_string(&result).unwrap()
+    }
 }
-

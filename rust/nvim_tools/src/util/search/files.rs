@@ -1,4 +1,5 @@
-use crate::types::{r#match::MatchPoint, third_party::ripgrep};
+use crate::types::dto::MatchPoint;
+use crate::types::third_party::ripgrep;
 use crate::util::string;
 use regex::Regex;
 use serde::{Deserialize, Serialize};

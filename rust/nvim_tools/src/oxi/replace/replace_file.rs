@@ -1,21 +1,13 @@
-use crate::types::FunResult;
+use crate::types::dto::{FunResult, ReplaceFileParams};
 use crate::util;
 
-pub fn replace_file(
-    (filepath, search_pattern, replace_pattern, flag_regex, flag_case_sensitive): (
-        String,
-        String,
-        String,
-        bool,
-        bool,
-    ),
-) -> String {
-    let result: FunResult<bool> = match util::replace::replace_file(
-        &filepath,
-        &search_pattern,
-        &replace_pattern,
-        flag_regex,
-        flag_case_sensitive,
+pub fn replace_file(params: ReplaceFileParams) -> FunResult<bool> {
+    match util::replace::replace_file(
+        &params.filepath,
+        &params.search_pattern,
+        &params.replace_pattern,
+        params.flag_regex,
+        params.flag_case_sensitive,
     ) {
         Ok(succeed) => FunResult {
             error: None,
@@ -25,7 +17,5 @@ pub fn replace_file(
             error: Some(error),
             data: None,
         },
-    };
-    serde_json::to_string(&result).unwrap()
+    }
 }
-

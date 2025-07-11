@@ -1,5 +1,5 @@
 use crate::algorithm::kmp::{calc_fails, find_all_matched_points};
-use crate::types::r#match::{LineMatch, MatchPoint};
+use crate::types::dto::{LineMatch, MatchPoint};
 use regex::Regex;
 
 pub fn search_in_lines<I, S>(

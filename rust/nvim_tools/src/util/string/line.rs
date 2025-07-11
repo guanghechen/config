@@ -1,4 +1,4 @@
-use crate::types::r#match::MatchLocation;
+use crate::types::dto::MatchLocation;
 
 pub fn calc_linewidths(text: &str) -> Vec<u32> {
     let mut lwidths: Vec<u32> = vec![];

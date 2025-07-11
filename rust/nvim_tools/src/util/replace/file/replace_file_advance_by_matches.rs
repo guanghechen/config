@@ -1,17 +1,12 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::types::r#match::MatchLocation;
+use crate::types::dto::MatchLocation;
+use crate::types::dto::ReplaceFileResult;
 use crate::util::regex::get_static_regex;
 use crate::util::string::get_locations;
 use regex::Captures;
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{Read, Write};
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceFileResult {
-    pub locations: Vec<MatchLocation>,
-}
 
 pub fn replace_file_advance_by_matches(
     filepath: &str,

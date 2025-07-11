@@ -1,4 +1,4 @@
-use crate::util::replace::ReplacePreviewResult;
+use crate::types::dto::ReplacePreviewResult;
 use std::fs::File;
 use std::io::Read;
 
