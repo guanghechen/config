@@ -397,6 +397,7 @@ function M.locate_symbols(winnr, callback)
   end
 
   local row, col = unpack(vim.api.nvim_win_get_cursor(winnr)) ---@type integer, integer
+  local textDocument = vim.lsp.util.make_text_document_params(bufnr) ---@type lsp.TextDocumentIdentifier
 
   -- Handle the lsp request response.
   ---@param err                         any|nil
@@ -433,7 +434,13 @@ function M.locate_symbols(winnr, callback)
         from = __module_name__,
         subject = "locate_symbols",
         message = "Failed to request document symbols",
-        details = { err = err, result = symbols, bufnr = bufnr, winnr = winnr },
+        details = {
+          err = err,
+          result = symbols,
+          bufnr = bufnr,
+          winnr = winnr,
+          textDocument = textDocument,
+        },
       })
       callback(false)
       return
@@ -465,12 +472,7 @@ function M.locate_symbols(winnr, callback)
   end
 
   ---! Make the request to the LSP server
-  vim.lsp.buf_request(
-    bufnr,
-    "textDocument/documentSymbol",
-    { textDocument = vim.lsp.util.make_text_document_params() },
-    handler
-  )
+  vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", { textDocument = textDocument }, handler)
 end
 
 ---@param winnr_source                  integer|nil
