@@ -628,7 +628,7 @@ function M.new(props)
           end
         end
 
-        local succeed, preview_locations = oxi.replacer.replace_file_advance_by_matches({
+        local succeed, preview_locations = oxi.replacer.replace_file_by_matches_advance({
           cwd = cwd,
           filepath = leafnode.data.filepath,
           flag_case_sensitive = flag_case_sensitive,

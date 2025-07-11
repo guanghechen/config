@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{Read, Write};
 
-pub fn replace_file_advance_by_matches(
+pub fn replace_file_by_matches_advance(
     filepath: &str,
     search_pattern: &str,
     replace_pattern: &str,

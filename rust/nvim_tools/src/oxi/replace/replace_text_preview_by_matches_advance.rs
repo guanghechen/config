@@ -1,12 +1,12 @@
-use crate::types::dto::{FunResult, ReplaceFilePreviewAdvanceByMatchesParams};
+use crate::types::dto::{FunResult, ReplaceTextPreviewByMatchesAdvanceParams};
 use crate::util;
 use crate::types::dto::ReplacePreviewResult;
 
-pub fn replace_file_preview_advance_by_matches(
-    params: ReplaceFilePreviewAdvanceByMatchesParams,
+pub fn replace_text_preview_by_matches_advance(
+    params: ReplaceTextPreviewByMatchesAdvanceParams,
 ) -> FunResult<ReplacePreviewResult> {
-    match util::replace::replace_file_preview_advance_by_matches(
-        &params.filepath,
+    match util::replace::replace_text_preview_by_matches_advance(
+        &params.text,
         &params.search_pattern,
         &params.replace_pattern,
         params.keep_search_pieces,

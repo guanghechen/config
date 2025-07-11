@@ -5,7 +5,7 @@ use crate::types::dto::ReplacePreviewResult;
 use regex::Captures;
 use std::collections::HashSet;
 
-pub fn replace_text_preview_advance_by_matches(
+pub fn replace_text_preview_by_matches_advance(
     text: &str,
     search_pattern: &str,
     replace_pattern: &str,

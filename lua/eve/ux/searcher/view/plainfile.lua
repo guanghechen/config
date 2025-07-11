@@ -109,8 +109,8 @@ function M:calc_preview_data(context)
   local highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
 
   if flag_replace then
-    ---@type oxi.replacer.replace_file_preview_advance_by_matches.IResult
-    local preview_result = oxi.replacer.replace_file_preview_advance_by_matches({
+    ---@type oxi.replacer.replace_file_preview_by_matches_advance.IResult
+    local preview_result = oxi.replacer.replace_file_preview_by_matches_advance({
       flag_case_sensitive = flag_case_sensitive,
       flag_regex = flag_regex,
       search_pattern = search_pattern,

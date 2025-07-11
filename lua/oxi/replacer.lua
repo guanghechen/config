@@ -18,7 +18,7 @@ local M = {}
 ---@field public replace_pattern        string
 ---@field public match_offsets          integer[]
 
----@class oxi.replacer.replace_file_advance_by_matches.IParams
+---@class oxi.replacer.replace_file_by_matches_advance.IParams
 ---@field public cwd                    string
 ---@field public filepath               string
 ---@field public flag_case_sensitive    boolean
@@ -44,7 +44,7 @@ local M = {}
 ---@field public replace_pattern        string
 ---@field public filepath               string
 
----@class oxi.replacer.replace_file_preview_advance_by_matches.IParams
+---@class oxi.replacer.replace_file_preview_by_matches_advance.IParams
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_regex             boolean
 ---@field public keep_search_pieces     boolean
@@ -78,7 +78,7 @@ local M = {}
 ---@field public replace_pattern        string
 ---@field public text                   string
 
----@class oxi.replacer.replace_text_preview_advance_by_matches.IParams
+---@class oxi.replacer.replace_text_preview_by_matches_advance.IParams
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_regex             boolean
 ---@field public keep_search_pieces     boolean
@@ -98,7 +98,7 @@ local M = {}
 ---@field public lwidths                integer[]
 ---@field public matches                std.t.IMatchPoint[]
 
----@class oxi.replacer.replace_file_preview_advance_by_matches.IResult
+---@class oxi.replacer.replace_file_preview_by_matches_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
 ---@field public matches                std.t.IMatchPoint[]
@@ -116,7 +116,7 @@ local M = {}
 ---@field public lwidths                integer[]
 ---@field public matches                std.t.IMatchPoint[]
 
----@class oxi.replacer.replace_text_preview_advance_by_matches.IResult
+---@class oxi.replacer.replace_text_preview_by_matches_advance.IResult
 ---@field public lines                  string[]
 ---@field public lwidths                integer[]
 ---@field public matches                std.t.IMatchPoint[]
@@ -138,7 +138,7 @@ local M = {}
 ---@field public replace_pattern        string
 ---@field public search_pattern         string
 
----@class oxi.replacer.replace_file_advance_by_matches.IPayload
+---@class oxi.replacer.replace_file_by_matches_advance.IPayload
 ---@field public filepath               string
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_regex             boolean
@@ -163,7 +163,7 @@ local M = {}
 ---@field public replace_pattern        string
 ---@field public search_pattern         string
 
----@class oxi.replacer.replace_file_preview_advance_by_matches.IPayload
+---@class oxi.replacer.replace_file_preview_by_matches_advance.IPayload
 ---@field public filepath               string
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_regex             boolean
@@ -197,7 +197,7 @@ local M = {}
 ---@field public search_pattern         string
 ---@field public text                   string
 
----@class oxi.replacer.replace_text_preview_advance_by_matches.IPayload
+---@class oxi.replacer.replace_text_preview_by_matches_advance.IPayload
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_regex             boolean
 ---@field public keep_search_pieces     boolean
@@ -212,7 +212,7 @@ local M = {}
 ---@field public text                   string
 ---@field public matches                std.t.IMatchPoint[]
 
----@class oxi.replacer.replace_file_preview_advance_by_matches.IResponseData
+---@class oxi.replacer.replace_file_preview_by_matches_advance.IResponseData
 ---@field public text                   string
 ---@field public matches                std.t.IMatchPoint[]
 
@@ -220,11 +220,11 @@ local M = {}
 ---@field public text                   string
 ---@field public matches                std.t.IMatchPoint[]
 
----@class oxi.replacer.replace_text_preview_advance_by_matches.IResponseData
+---@class oxi.replacer.replace_text_preview_by_matches_advance.IResponseData
 ---@field public text                   string
 ---@field public matches                std.t.IMatchPoint[]
 
----@class oxi.replacer.replace_file_advance_by_matches.IResponseData
+---@class oxi.replacer.replace_file_by_matches_advance.IResponseData
 ---@field public locations              std.t.IMatchLocation[]
 
 ---@param params                        oxi.replacer.replace_file.IParams
@@ -274,10 +274,10 @@ function M.replace_file_by_matches(params)
   return ok, data
 end
 
----@param params                        oxi.replacer.replace_file_advance_by_matches.IParams
+---@param params                        oxi.replacer.replace_file_by_matches_advance.IParams
 ---@return boolean
 ---@return std.t.IMatchLocation[]
-function M.replace_file_advance_by_matches(params)
+function M.replace_file_by_matches_advance(params)
   local search_pattern = params.search_pattern ---@type string
   local filepath = std.path.resolve(params.cwd, params.filepath) ---@type string
   local match_offsets = params.match_offsets ---@type integer[]
@@ -286,7 +286,7 @@ function M.replace_file_advance_by_matches(params)
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type oxi.replacer.replace_file_advance_by_matches.IPayload
+  ---@type oxi.replacer.replace_file_by_matches_advance.IPayload
   local payload = {
     filepath = filepath,
     flag_case_sensitive = params.flag_case_sensitive,
@@ -297,8 +297,8 @@ function M.replace_file_advance_by_matches(params)
     search_pattern = search_pattern,
   }
 
-  local ok, data = oxi.fn.safe_call("replace_file_advance_by_matches", payload)
-  ---@cast data                         oxi.replacer.replace_file_advance_by_matches.IResponseData
+  local ok, data = oxi.fn.safe_call("replace_file_by_matches_advance", payload)
+  ---@cast data                         oxi.replacer.replace_file_by_matches_advance.IResponseData
 
   return ok, ok and data.locations or {}
 end
@@ -371,15 +371,15 @@ function M.replace_file_preview_advance(params)
   return { lines = {}, lwidths = {}, matches = {} }
 end
 
----@param params                        oxi.replacer.replace_file_preview_advance_by_matches.IParams
----@return oxi.replacer.replace_file_preview_advance_by_matches.IResult
-function M.replace_file_preview_advance_by_matches(params)
+---@param params                        oxi.replacer.replace_file_preview_by_matches_advance.IParams
+---@return oxi.replacer.replace_file_preview_by_matches_advance.IResult
+function M.replace_file_preview_by_matches_advance(params)
   local search_pattern = params.search_pattern
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type oxi.replacer.replace_file_preview_advance_by_matches.IPayload
+  ---@type oxi.replacer.replace_file_preview_by_matches_advance.IPayload
   local payload = {
     filepath = params.filepath,
     flag_case_sensitive = params.flag_case_sensitive,
@@ -390,19 +390,19 @@ function M.replace_file_preview_advance_by_matches(params)
     search_pattern = search_pattern,
   }
 
-  local ok, data = oxi.fn.safe_call("replace_file_preview_advance_by_matches", payload)
+  local ok, data = oxi.fn.safe_call("replace_file_preview_by_matches_advance", payload)
   if ok then
-    ---@cast data                       oxi.replacer.replace_file_preview_advance_by_matches.IResponseData
+    ---@cast data                       oxi.replacer.replace_file_preview_by_matches_advance.IResponseData
 
     local text = data.text ---@type string
     local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
-    ---@type oxi.replacer.replace_file_preview_advance_by_matches.IResult
+    ---@type oxi.replacer.replace_file_preview_by_matches_advance.IResult
     return { lines = lines, lwidths = lwidths, matches = data.matches }
   end
 
-  ---@type oxi.replacer.replace_file_preview_advance_by_matches.IResult
+  ---@type oxi.replacer.replace_file_preview_by_matches_advance.IResult
   return { lines = {}, lwidths = {}, matches = {} }
 end
 
@@ -509,15 +509,15 @@ function M.replace_text_preview_advance(params)
   return { lines = {}, lwidths = {}, matches = {} }
 end
 
----@param params                        oxi.replacer.replace_text_preview_advance_by_matches.IParams
----@return oxi.replacer.replace_text_preview_advance_by_matches.IResult
-function M.replace_text_preview_advance_by_matches(params)
+---@param params                        oxi.replacer.replace_text_preview_by_matches_advance.IParams
+---@return oxi.replacer.replace_text_preview_by_matches_advance.IResult
+function M.replace_text_preview_by_matches_advance(params)
   local search_pattern = params.search_pattern
   if params.flag_regex and not params.flag_case_sensitive then
     search_pattern = "(?i)" .. search_pattern:lower()
   end
 
-  ---@type oxi.replacer.replace_text_preview_advance_by_matches.IPayload
+  ---@type oxi.replacer.replace_text_preview_by_matches_advance.IPayload
   local payload = {
     text = params.text,
     search_pattern = search_pattern,
@@ -528,19 +528,19 @@ function M.replace_text_preview_advance_by_matches(params)
     match_offsets = params.match_offsets,
   }
 
-  local ok, data = oxi.fn.safe_call("replace_text_preview_advance_by_matches", payload)
+  local ok, data = oxi.fn.safe_call("replace_text_preview_by_matches_advance", payload)
   if ok then
-    ---@cast data                       oxi.replacer.replace_text_preview_advance_by_matches.IResponseData
+    ---@cast data                       oxi.replacer.replace_text_preview_by_matches_advance.IResponseData
 
     local text = data.text ---@type string
     local lwidths = oxi.string.calc_linewidths(text) ---@type integer[]
     local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
 
-    ---@type oxi.replacer.replace_text_preview_advance_by_matches.IResult
+    ---@type oxi.replacer.replace_text_preview_by_matches_advance.IResult
     return { lines = lines, lwidths = lwidths, matches = data.matches }
   end
 
-  ---@type oxi.replacer.replace_text_preview_advance_by_matches.IResult
+  ---@type oxi.replacer.replace_text_preview_by_matches_advance.IResult
   return { lines = {}, lwidths = {}, matches = {} }
 end
 

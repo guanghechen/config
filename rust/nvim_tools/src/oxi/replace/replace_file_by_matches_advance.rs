@@ -1,11 +1,11 @@
 use crate::types::dto::ReplaceFileResult;
-use crate::types::dto::{FunResult, ReplaceFileAdvanceByMatchesParams};
+use crate::types::dto::{FunResult, ReplaceFileByMatchesAdvanceParams};
 use crate::util;
 
-pub fn replace_file_advance_by_matches(
-    params: ReplaceFileAdvanceByMatchesParams,
+pub fn replace_file_by_matches_advance(
+    params: ReplaceFileByMatchesAdvanceParams,
 ) -> FunResult<ReplaceFileResult> {
-    match util::replace::replace_file_advance_by_matches(
+    match util::replace::replace_file_by_matches_advance(
         &params.filepath,
         &params.search_pattern,
         &params.replace_pattern,
