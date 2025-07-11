@@ -1,8 +1,14 @@
 use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::r#match::MatchPoint;
-use crate::types::replace::ReplacePreview;
 use crate::util::regex::get_static_regex;
 use regex::Captures;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReplacePreviewResult {
+    pub text: String,
+    pub matches: Vec<MatchPoint>,
+}
 
 pub fn replace_text_preview_advance(
     text: &str,
@@ -11,10 +17,10 @@ pub fn replace_text_preview_advance(
     keep_search_pieces: bool,
     flag_regex: bool,
     flag_case_sensitive: bool,
-) -> Result<ReplacePreview, String> {
+) -> Result<ReplacePreviewResult, String> {
     let mut matches: Vec<MatchPoint> = vec![];
     if flag_regex {
-        let result: Result<ReplacePreview, String> = match get_static_regex(search_pattern) {
+        let result: Result<ReplacePreviewResult, String> = match get_static_regex(search_pattern) {
             Ok(r) => {
                 let regex = r.lock().unwrap();
                 let mut total_search_len: usize = 0;
@@ -61,7 +67,7 @@ pub fn replace_text_preview_advance(
                         }
                     })
                     .to_string();
-                Ok(ReplacePreview {
+                Ok(ReplacePreviewResult {
                     text: next_text,
                     matches,
                 })
@@ -119,9 +125,8 @@ pub fn replace_text_preview_advance(
     }
     pieces.push(&text[i..]);
     let next_text: String = pieces.join("");
-    Ok(ReplacePreview {
+    Ok(ReplacePreviewResult {
         text: next_text,
         matches,
     })
 }
-

@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 
 pub mod file;
 pub mod r#match;
-pub mod replace;
 pub mod third_party;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

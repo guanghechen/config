@@ -1,7 +1,7 @@
 use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::r#match::MatchPoint;
-use crate::types::replace::ReplacePreview;
 use crate::util::regex::get_static_regex;
+use crate::util::replace::ReplacePreviewResult;
 use regex::Captures;
 use std::collections::HashSet;
 
@@ -13,11 +13,11 @@ pub fn replace_text_preview_advance_by_matches(
     flag_regex: bool,
     flag_case_sensitive: bool,
     match_offsets: &[usize],
-) -> Result<ReplacePreview, String> {
+) -> Result<ReplacePreviewResult, String> {
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let mut matches: Vec<MatchPoint> = vec![];
     if flag_regex {
-        let result: Result<ReplacePreview, String> = match get_static_regex(search_pattern) {
+        let result: Result<ReplacePreviewResult, String> = match get_static_regex(search_pattern) {
             Ok(r) => {
                 let regex = r.lock().unwrap();
                 let mut total_search_len: usize = 0;
@@ -68,7 +68,7 @@ pub fn replace_text_preview_advance_by_matches(
                         }
                     })
                     .to_string();
-                Ok(ReplacePreview {
+                Ok(ReplacePreviewResult {
                     text: next_text,
                     matches,
                 })
@@ -130,9 +130,8 @@ pub fn replace_text_preview_advance_by_matches(
     }
     pieces.push(&text[i..]);
     let next_text: String = pieces.join("");
-    Ok(ReplacePreview {
+    Ok(ReplacePreviewResult {
         text: next_text,
         matches,
     })
 }
-

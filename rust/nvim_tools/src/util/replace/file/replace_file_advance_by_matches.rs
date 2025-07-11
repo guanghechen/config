@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ReplaceFileAdvanceByMatchesSucceedResult {
+pub struct ReplaceFileResult {
     pub locations: Vec<MatchLocation>,
 }
 
@@ -21,7 +21,7 @@ pub fn replace_file_advance_by_matches(
     flag_case_sensitive: bool,
     match_offsets: &[usize],
     remain_offsets: &[usize],
-) -> Result<ReplaceFileAdvanceByMatchesSucceedResult, String> {
+) -> Result<ReplaceFileResult, String> {
     let mut file = File::open(filepath).map_err(|e| e.to_string())?;
     let mut text = String::new();
     file.read_to_string(&mut text).map_err(|e| e.to_string())?;
@@ -123,6 +123,5 @@ pub fn replace_file_advance_by_matches(
     }
 
     let locations: Vec<MatchLocation> = get_locations(&next_text, &next_offsets);
-    Ok(ReplaceFileAdvanceByMatchesSucceedResult { locations })
+    Ok(ReplaceFileResult { locations })
 }
-
