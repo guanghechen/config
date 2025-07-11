@@ -33,8 +33,9 @@ function util.cancel_request(client, req_id)
 end
 
 ---Get the LSP params for the first completion
-function util.get_lsp_params()
-  return vim.tbl_deep_extend("force", vim.lsp.util.make_position_params(0, "utf-16"), {
+---@param winnr                        integer
+function util.get_lsp_params(winnr)
+  return vim.tbl_deep_extend("force", vim.lsp.util.make_position_params(winnr, "utf-16"), {
     formattingOptions = {
       insertSpaces = vim.bo.expandtab,
       tabSize = vim.fn.shiftwidth(),
@@ -314,6 +315,7 @@ function M:get_completions(ctx, resolve)
     return
   end
 
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = ctx.bufnr ---@type integer
   local id = ctx.id ---@type integer
   local cursor = ctx.cursor ---@type { row: integer, col: integer }
@@ -353,8 +355,12 @@ function M:get_completions(ctx, resolve)
 
   coroutine.wrap(function()
     local success, err = pcall(function()
+      if not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+
+      local lsp_params = util.get_lsp_params(winnr)
       local co = coroutine.running()
-      local lsp_params = util.get_lsp_params()
 
       ---@type lsp.Handler
       local function handle_lsp_response(err, response)
