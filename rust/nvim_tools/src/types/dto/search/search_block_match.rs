@@ -1,9 +1,14 @@
 use crate::types::dto::MatchPoint;
-use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
-use nvim_oxi::lua::{Poppable, Pushable};
-use nvim_oxi::serde::{Deserializer, Serializer};
+use nvim_oxi::conversion::Error as ConversionError;
+use nvim_oxi::conversion::FromObject;
+use nvim_oxi::conversion::ToObject;
+use nvim_oxi::lua::Poppable;
+use nvim_oxi::lua::Pushable;
+use nvim_oxi::serde::Deserializer;
+use nvim_oxi::serde::Serializer;
 use nvim_oxi::Object;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SearchBlockMatch {

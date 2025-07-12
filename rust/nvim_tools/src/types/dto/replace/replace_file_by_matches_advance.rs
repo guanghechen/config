@@ -1,8 +1,13 @@
 use crate::types::dto::MatchLocation;
-use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
-use nvim_oxi::serde::{Deserializer, Serializer};
-use nvim_oxi::{lua, Object};
-use serde::{Deserialize, Serialize};
+use nvim_oxi::conversion::Error as ConversionError;
+use nvim_oxi::conversion::FromObject;
+use nvim_oxi::conversion::ToObject;
+use nvim_oxi::serde::Deserializer;
+use nvim_oxi::serde::Serializer;
+use nvim_oxi::lua;
+use nvim_oxi::Object;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ReplaceFileByMatchesAdvanceParams {

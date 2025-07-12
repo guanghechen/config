@@ -1,11 +1,15 @@
-use crate::types::dto::search::search_in_files::{
-    SearchInFilesFailedResult, SearchInFilesSucceedResult,
-};
-use crate::types::dto::{MatchPoint, SearchBlockMatch, SearchFileMatch, SearchInFilesParams};
+use crate::types::dto::search::search_in_files::SearchInFilesFailedResult;
+use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
+use crate::types::dto::MatchPoint;
+use crate::types::dto::SearchBlockMatch;
+use crate::types::dto::SearchFileMatch;
+use crate::types::dto::SearchInFilesParams;
 use crate::types::third_party::ripgrep;
 use crate::util::string;
 use regex::Regex;
-use std::{collections::HashMap, process::Command, time::SystemTime};
+use std::collections::HashMap;
+use std::process::Command;
+use std::time::SystemTime;
 
 pub fn search_in_files(
     params: &SearchInFilesParams,

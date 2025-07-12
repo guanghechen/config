@@ -1,5 +1,6 @@
 use crate::util;
-use md5::{Digest, Md5};
+use md5::Digest;
+use md5::Md5;
 use uuid::Uuid;
 
 pub fn calc_linewidths(text: String) -> Vec<u32> {

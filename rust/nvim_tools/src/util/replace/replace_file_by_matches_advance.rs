@@ -6,7 +6,8 @@ use crate::util::string::get_locations;
 use regex::Captures;
 use std::collections::HashSet;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
+use std::io::Write;
 
 pub fn replace_file_by_matches_advance(
     filepath: &str,

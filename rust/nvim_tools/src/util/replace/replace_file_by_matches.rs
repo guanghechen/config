@@ -3,7 +3,8 @@ use crate::util::regex::get_static_regex;
 use regex::Captures;
 use std::collections::HashSet;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
+use std::io::Write;
 
 pub fn replace_file_by_matches(
     filepath: &str,

@@ -1,5 +1,6 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::types::dto::{MatchPoint, ReplacePreviewResult};
+use crate::types::dto::MatchPoint;
+use crate::types::dto::ReplacePreviewResult;
 use crate::util::regex::get_static_regex;
 use regex::Captures;
 

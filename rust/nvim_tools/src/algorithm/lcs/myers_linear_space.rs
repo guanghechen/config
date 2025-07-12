@@ -42,7 +42,8 @@
 // }
 //
 // mod internals {
-//     use std::{cmp::PartialEq, collections::HashMap};
+//     use std::cmp::PartialEq;
+//     use std::collections::HashMap;
 //
 //     pub fn find_minimal_step<T>(
 //         diagonals: &mut [usize],

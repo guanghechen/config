@@ -2,7 +2,8 @@ use crate::algorithm::kmp::find_all_matched_points;
 use crate::util::regex::get_static_regex;
 use regex::Captures;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
+use std::io::Write;
 
 /// Perform replacement on the entire file.
 pub fn replace_file(

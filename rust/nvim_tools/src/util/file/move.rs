@@ -1,9 +1,14 @@
-use serde::{Deserialize, Serialize};
+use nvim_oxi::conversion::Error as ConversionError;
+use nvim_oxi::conversion::FromObject;
+use nvim_oxi::conversion::ToObject;
+use nvim_oxi::lua;
+use nvim_oxi::serde::Deserializer;
+use nvim_oxi::serde::Serializer;
+use nvim_oxi::Object;
+use serde::Deserialize;
+use serde::Serialize;
 use std::fs;
 use std::path::Path;
-use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
-use nvim_oxi::serde::{Deserializer, Serializer};
-use nvim_oxi::{lua, Object};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RenameSucceedResult {
@@ -113,7 +118,7 @@ pub fn rename_path<P: AsRef<Path>, Q: AsRef<Path>>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::{self, File};
+    use std::fs::File;
     use std::io::Write;
 
     fn create_test_file(path: &str, content: &str) -> std::io::Result<()> {

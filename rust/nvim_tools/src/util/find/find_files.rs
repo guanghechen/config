@@ -1,5 +1,6 @@
 use crate::util::string;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 use std::path::PathBuf;
 use std::process::Command;
 
