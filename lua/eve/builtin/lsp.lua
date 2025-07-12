@@ -283,11 +283,10 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "K",
       callback = function()
-        vim.lsp.buf.hover()
-
-        std.timer.set_timeout(function()
-          vim.lsp.buf.hover()
-        end, 100)
+        vim.lsp.buf.hover({
+          focus = true,
+          focusable = true,
+        })
       end,
       desc = "lsp: hover",
     },
@@ -297,10 +296,6 @@ function M.on_attach(client, bufnr)
       callback = function()
         vim.cmd("normal! m'")
         vim.lsp.buf.declaration()
-
-        std.timer.set_timeout(function()
-          vim.lsp.buf.declaration()
-        end, 100)
       end,
       desc = "lsp: goto declaration",
     },
@@ -308,11 +303,10 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "gK",
       callback = function()
-        vim.lsp.buf.signature_help()
-
-        std.timer.set_timeout(function()
-          vim.lsp.buf.signature_help()
-        end, 100)
+        vim.lsp.buf.signature_help({
+          focus = true,
+          focusable = true,
+        })
       end,
       desc = "lsp: show signature help",
     },
@@ -405,7 +399,7 @@ function M.on_attach(client, bufnr)
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
-        vim.lsp.buf.rename()
+        vim.lsp.buf.rename(nil, { bufnr = bufnr })
         vim.schedule(function()
           vim.cmd("stopinsert")
         end)

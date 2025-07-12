@@ -64,7 +64,8 @@ local function on_attach(client, bufnr)
       modes = { "n" },
       key = "gD",
       callback = function()
-        local params = vim.lsp.util.make_position_params(nil, "utf-8")
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
+        local params = vim.lsp.util.make_position_params(winnr, "utf-8")
         require("trouble").open({
           mode = "lsp_command",
           params = {
@@ -153,6 +154,7 @@ local function on_attach(client, bufnr)
       key = "<leader>cr",
       callback = function()
         local old_name = vim.fn.expand("<cword>")
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
         vim.ui.input({ prompt = "New Name", default = old_name }, function(new_name)
           if new_name == nil or old_name == new_name then
             return
@@ -160,7 +162,7 @@ local function on_attach(client, bufnr)
 
           vim.api.nvim_feedkeys("l", "n", false)
 
-          local params = vim.lsp.util.make_position_params(nil, "utf-8")
+          local params = vim.lsp.util.make_position_params(winnr, "utf-8")
           params.position.character = params.position.character + 1
           ---@diagnostic disable-next-line: inject-field
           params.newName = new_name

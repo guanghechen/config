@@ -91,11 +91,13 @@ return {
       if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean
         if enable_code_lens then
-          vim.lsp.codelens.refresh()
+          vim.lsp.codelens.refresh({ bufnr = bufnr })
           --- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
           vim.api.nvim_create_autocmd({ "InsertLeave" }, {
             buffer = bufnr,
-            callback = vim.lsp.codelens.refresh,
+            callback = function()
+              vim.lsp.codelens.refresh({ bufnr = bufnr })
+            end,
           })
         end
       end
