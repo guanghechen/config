@@ -1,9 +1,9 @@
-use crate::types::dto::FsRenameParams;
+use crate::types::dto::{FsRenameParams, ReadAllFilesSucceedResult, ReaddirSucceedResult};
 use crate::util;
 
 pub fn collect_files(
     (dirpath, recursive): (String, bool),
-) -> Result<util::file::ReadAllFilesSucceedResult, String> {
+) -> Result<ReadAllFilesSucceedResult, String> {
     let raw_result = util::file::collect_files(dirpath, recursive);
     match raw_result {
         Ok(data) => Ok(data),
@@ -15,7 +15,7 @@ pub fn get_filesize(filepath: String) -> Result<String, String> {
     util::file::get_filesize(filepath)
 }
 
-pub fn readdir(dirpath: String) -> Result<util::file::ReaddirSucceedResult, String> {
+pub fn readdir(dirpath: String) -> Result<ReaddirSucceedResult, String> {
     let raw_result = util::file::readdir(dirpath);
     match raw_result {
         Ok(data) => Ok(data),
