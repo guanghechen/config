@@ -40,3 +40,13 @@ pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
 
     locations
 }
+
+#[test]
+fn test_calc_linewidths() {
+    let text = "abc\ndef\nghi";
+    let widths = calc_linewidths(text);
+    assert_eq!(widths, vec![3, 3, 3]);
+
+    let widths = calc_linewidths(text);
+    assert_eq!(widths, vec![3, 3, 3]);
+}
