@@ -2,13 +2,12 @@ use std::fs;
 use std::path::Path;
 
 use crate::types::dto::FileMoveFailedResult;
-use crate::types::dto::FileMoveSucceedResult;
 
-pub fn move_file<P: AsRef<Path>, Q: AsRef<Path>>(
+pub fn r#move<P: AsRef<Path>, Q: AsRef<Path>>(
     old_path: P,
     new_path: Q,
     force: bool,
-) -> Result<FileMoveSucceedResult, FileMoveFailedResult> {
+) -> Result<bool, FileMoveFailedResult> {
     let old_path = old_path.as_ref();
     let new_path = new_path.as_ref();
 
@@ -55,17 +54,17 @@ pub fn move_file<P: AsRef<Path>, Q: AsRef<Path>>(
         });
     }
 
-    Ok(FileMoveSucceedResult { ok: true })
+    Ok(true)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::fs::File;
+    use std::fs;
     use std::io::Write;
+    use std::path::Path;
 
     fn create_test_file(path: &str, content: &str) -> std::io::Result<()> {
-        let mut file = File::create(path)?;
+        let mut file = fs::File::create(path)?;
         file.write_all(content.as_bytes())?;
         Ok(())
     }
@@ -79,7 +78,7 @@ mod tests {
         create_test_file(old_path, "test content").unwrap();
 
         // Rename the file
-        assert!(move_file(old_path, new_path, false).is_ok());
+        assert!(super::r#move(old_path, new_path, false).is_ok());
 
         // Check that old file doesn't exist and new file exists
         assert!(!Path::new(old_path).exists());
@@ -98,7 +97,7 @@ mod tests {
         fs::create_dir(old_path).unwrap();
 
         // Rename the directory
-        assert!(move_file(old_path, new_path, false).is_ok());
+        assert!(super::r#move(old_path, new_path, false).is_ok());
 
         // Check that old directory doesn't exist and new directory exists
         assert!(!Path::new(old_path).exists());
@@ -114,7 +113,7 @@ mod tests {
         let new_path = "new_file.txt";
 
         // Try to rename a nonexistent file
-        let result = move_file(old_path, new_path, false);
+        let result = super::r#move(old_path, new_path, false);
         assert!(result.is_err());
         let error = result.unwrap_err();
         assert!(error.error.contains("[rename] Source path does not exist"));
@@ -130,7 +129,7 @@ mod tests {
         create_test_file(new_path, "new content").unwrap();
 
         // Try to rename to existing destination
-        let result = move_file(old_path, new_path, false);
+        let result = super::r#move(old_path, new_path, false);
         assert!(result.is_err());
         let error = result.unwrap_err();
         assert!(error
@@ -152,7 +151,7 @@ mod tests {
         create_test_file(new_path, "new content").unwrap();
 
         // Rename with overwrite (force = true)
-        assert!(move_file(old_path, new_path, true).is_ok());
+        assert!(super::r#move(old_path, new_path, true).is_ok());
 
         // Check that only new file exists
         assert!(!Path::new(old_path).exists());

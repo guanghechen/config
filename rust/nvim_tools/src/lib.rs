@@ -6,9 +6,8 @@ pub mod util;
 #[macro_use]
 extern crate lazy_static;
 
-use crate::types::dto::FileMoveParams;
-use crate::types::dto::FileMoveSucceedResult;
 use crate::types::dto::LineMatch;
+use crate::types::dto::MoveParams;
 use crate::types::dto::ReadAllFilesSucceedResult;
 use crate::types::dto::ReaddirSucceedResult;
 use nvim_oxi::Dictionary;
@@ -121,17 +120,14 @@ fn nvim_tools() -> Dictionary {
         (
             "readdir",
             Object::from(
-                Function::<String, Result<ReaddirSucceedResult, String>>::from_fn(
-                    oxi::fs::readdir,
-                ),
+                Function::<String, Result<ReaddirSucceedResult, String>>::from_fn(oxi::fs::readdir),
             ),
         ),
         (
-            "rename_path",
-            Object::from(Function::<
-                FileMoveParams,
-                Result<FileMoveSucceedResult, String>,
-            >::from_fn(oxi::fs::rename_path)),
+            "move",
+            Object::from(Function::<MoveParams, Result<bool, String>>::from_fn(
+                oxi::fs::r#move,
+            )),
         ),
         ////
         ("now", Object::from(Function::from_fn(oxi::date::now))),

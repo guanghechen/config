@@ -21,7 +21,7 @@ function M.readdir(dirpath)
   return result
 end
 
----@param filepath string
+---@param filepath                      string
 ---@return string|nil
 function M.get_filesize(filepath)
   local stat = vim.uv.fs_stat(filepath)
@@ -36,29 +36,24 @@ end
 ---@class oxi.fs.ICollectFilesResult
 ---@field public files string[] # List of absolute file paths
 
----@param dirpath string
----@param recursive boolean
+---@param dirpath                       string
+---@param recursive                     boolean
 ---@return oxi.fs.ICollectFilesResult|nil
 function M.collect_files(dirpath, recursive)
   local result = oxi.fn.safe_run("collect_files", dirpath, recursive)
   return result
 end
 
----@class oxi.fs.IRenameParams
----@field public old_path string
----@field public new_path string
----@field public force boolean
+---@class oxi.fs.IMoveParams
+---@field public old_path               string
+---@field public new_path               string
+---@field public force                  boolean
 
----@class oxi.fs.IRenameResult
----@field public old_path string
----@field public new_path string
----@field public message string
-
----@param params oxi.fs.IRenameParams
----@return oxi.fs.IRenameResult|nil
-function M.rename_path(params)
-  local result = oxi.fn.safe_run("rename_path", params)
-  return result
+---@param params                        oxi.fs.IMoveParams
+---@return boolean
+function M.move(params)
+  local result = oxi.fn.safe_run("move", params)
+  return result == true
 end
 
 return M
