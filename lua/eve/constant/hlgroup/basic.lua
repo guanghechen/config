@@ -23,6 +23,10 @@ function M.gen_hlgroup_map(context)
 
     ---diagnostic
     Error = { fg = c.red, bold = true },
+    Diagnostic_ERROR = { fg = c.red },
+    Diagnostic_HINT = { fg = c.purple },
+    Diagnostic_INFO = { fg = c.green },
+    Diagnostic_WARN = { fg = c.yellow },
     DiagnosticError = { fg = c.red },
     DiagnosticHint = { fg = c.purple },
     DiagnosticInfo = { fg = c.green },

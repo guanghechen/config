@@ -247,7 +247,7 @@ command
     end,
   })
 
---[find] buffers------------------------------------------------------------------------------------
+--[find] -------------------------------------------------------------------------------------------
 command
   .implement({
     uuid = K.find.bufs.uuid,
@@ -265,6 +265,12 @@ command
     uuid = K.find.bufs_term.uuid,
     action = function()
       require("fml.action.find.buffers").find_bufs_term()
+    end,
+  })
+  .implement({
+    uuid = K.find.diagnostics.uuid,
+    action = function()
+      require("fml.action.find.diagnostics").find_diagnostics()
     end,
   })
   .implement({

@@ -165,6 +165,11 @@ M.dap = {
 
 ---@class eve.builtin.icon.diagnostic
 M.diagnostic = {
+  ERROR = "",
+  WARN = "",
+  INFO = "",
+  HINT = "",
+
   Error = "",
   Error_alt = "󰅚",
   Hint = "",
