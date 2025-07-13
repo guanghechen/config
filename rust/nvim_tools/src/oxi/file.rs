@@ -1,4 +1,5 @@
-use crate::types::dto::FsRenameParams;
+use crate::types::dto::FileMoveParams;
+use crate::types::dto::FileMoveSucceedResult;
 use crate::types::dto::ReadAllFilesSucceedResult;
 use crate::types::dto::ReaddirSucceedResult;
 use crate::util;
@@ -25,8 +26,8 @@ pub fn readdir(dirpath: String) -> Result<ReaddirSucceedResult, String> {
     }
 }
 
-pub fn rename_path(params: FsRenameParams) -> Result<util::file::RenameSucceedResult, String> {
-    let raw_result = util::file::rename_path(params.old_path, params.new_path, params.force);
+pub fn rename_path(params: FileMoveParams) -> Result<FileMoveSucceedResult, String> {
+    let raw_result = util::file::move_file(params.old_path, params.new_path, params.force);
     match raw_result {
         Ok(data) => Ok(data),
         Err(data) => Err(data.error),

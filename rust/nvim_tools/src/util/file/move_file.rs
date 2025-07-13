@@ -1,69 +1,19 @@
-use nvim_oxi::conversion::Error as ConversionError;
-use nvim_oxi::conversion::FromObject;
-use nvim_oxi::conversion::ToObject;
-use nvim_oxi::lua;
-use nvim_oxi::serde::Deserializer;
-use nvim_oxi::serde::Serializer;
-use nvim_oxi::Object;
-use serde::Deserialize;
-use serde::Serialize;
 use std::fs;
 use std::path::Path;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RenameSucceedResult {
-    pub old_path: String,
-    pub new_path: String,
-    pub message: String,
-}
+use crate::types::dto::{FileMoveFailedResult, FileMoveSucceedResult};
 
-impl FromObject for RenameSucceedResult {
-    fn from_object(obj: Object) -> Result<Self, ConversionError> {
-        Self::deserialize(Deserializer::new(obj)).map_err(Into::into)
-    }
-}
-
-impl ToObject for RenameSucceedResult {
-    fn to_object(self) -> Result<Object, ConversionError> {
-        self.serialize(Serializer::new()).map_err(Into::into)
-    }
-}
-
-impl lua::Poppable for RenameSucceedResult {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
-        unsafe {
-            let obj = Object::pop(lstate)?;
-            Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
-        }
-    }
-}
-
-impl lua::Pushable for RenameSucceedResult {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
-        unsafe {
-            self.to_object()
-                .map_err(lua::Error::push_error_from_err::<Self, _>)?
-                .push(lstate)
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RenameFailedResult {
-    pub error: String,
-}
-
-pub fn rename_path<P: AsRef<Path>, Q: AsRef<Path>>(
+pub fn move_file<P: AsRef<Path>, Q: AsRef<Path>>(
     old_path: P,
     new_path: Q,
     force: bool,
-) -> Result<RenameSucceedResult, RenameFailedResult> {
+) -> Result<FileMoveSucceedResult, FileMoveFailedResult> {
     let old_path = old_path.as_ref();
     let new_path = new_path.as_ref();
 
     // Check if the source path exists
     if !old_path.exists() {
-        return Err(RenameFailedResult {
+        return Err(FileMoveFailedResult {
             error: format!(
                 "[rename] Source path does not exist: {}",
                 old_path.display()
@@ -77,18 +27,18 @@ pub fn rename_path<P: AsRef<Path>, Q: AsRef<Path>>(
             // If force is true, remove the destination first
             if new_path.is_dir() {
                 if let Err(e) = fs::remove_dir_all(new_path) {
-                    return Err(RenameFailedResult {
+                    return Err(FileMoveFailedResult {
                         error: format!("[rename] Failed to remove existing directory: {}", e),
                     });
                 }
             } else if let Err(e) = fs::remove_file(new_path) {
-                return Err(RenameFailedResult {
+                return Err(FileMoveFailedResult {
                     error: format!("[rename] Failed to remove existing file: {}", e),
                 });
             }
         } else {
             // If force is false, return an error
-            return Err(RenameFailedResult {
+            return Err(FileMoveFailedResult {
                 error: format!(
                     "[rename] Destination path already exists: {}",
                     new_path.display()
@@ -99,12 +49,12 @@ pub fn rename_path<P: AsRef<Path>, Q: AsRef<Path>>(
 
     // Perform the rename operation
     if let Err(e) = fs::rename(old_path, new_path) {
-        return Err(RenameFailedResult {
+        return Err(FileMoveFailedResult {
             error: format!("[rename] Failed to rename file: {}", e),
         });
     }
 
-    Ok(RenameSucceedResult {
+    Ok(FileMoveSucceedResult {
         old_path: old_path.display().to_string(),
         new_path: new_path.display().to_string(),
         message: format!(
@@ -136,7 +86,7 @@ mod tests {
         create_test_file(old_path, "test content").unwrap();
 
         // Rename the file
-        assert!(rename_path(old_path, new_path, false).is_ok());
+        assert!(move_file(old_path, new_path, false).is_ok());
 
         // Check that old file doesn't exist and new file exists
         assert!(!Path::new(old_path).exists());
@@ -155,7 +105,7 @@ mod tests {
         fs::create_dir(old_path).unwrap();
 
         // Rename the directory
-        assert!(rename_path(old_path, new_path, false).is_ok());
+        assert!(move_file(old_path, new_path, false).is_ok());
 
         // Check that old directory doesn't exist and new directory exists
         assert!(!Path::new(old_path).exists());
@@ -171,7 +121,7 @@ mod tests {
         let new_path = "new_file.txt";
 
         // Try to rename a nonexistent file
-        let result = rename_path(old_path, new_path, false);
+        let result = move_file(old_path, new_path, false);
         assert!(result.is_err());
         let error = result.unwrap_err();
         assert!(error.error.contains("[rename] Source path does not exist"));
@@ -187,7 +137,7 @@ mod tests {
         create_test_file(new_path, "new content").unwrap();
 
         // Try to rename to existing destination
-        let result = rename_path(old_path, new_path, false);
+        let result = move_file(old_path, new_path, false);
         assert!(result.is_err());
         let error = result.unwrap_err();
         assert!(error
@@ -209,7 +159,7 @@ mod tests {
         create_test_file(new_path, "new content").unwrap();
 
         // Rename with overwrite (force = true)
-        assert!(rename_path(old_path, new_path, true).is_ok());
+        assert!(move_file(old_path, new_path, true).is_ok());
 
         // Check that only new file exists
         assert!(!Path::new(old_path).exists());

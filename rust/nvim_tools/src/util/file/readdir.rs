@@ -8,8 +8,8 @@ use std::path::Path;
 use std::fs; // Import for Windows-specific metadata extensions
 use std::time::SystemTime; // Import for Windows-specific metadata extensions
 
-use crate::types::dto::fs::readdir::ReaddirFailedResult;
-use crate::types::dto::fs::readdir::ReaddirSucceedResult;
+use crate::types::dto::ReaddirFailedResult;
+use crate::types::dto::ReaddirSucceedResult;
 use crate::types::dto::FileItemWithStatus;
 use crate::types::dto::FileType;
 

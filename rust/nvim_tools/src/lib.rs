@@ -6,7 +6,8 @@ pub mod util;
 #[macro_use]
 extern crate lazy_static;
 
-use crate::types::dto::FsRenameParams;
+use crate::types::dto::FileMoveParams;
+use crate::types::dto::FileMoveSucceedResult;
 use crate::types::dto::LineMatch;
 use crate::types::dto::ReadAllFilesSucceedResult;
 use crate::types::dto::ReaddirSucceedResult;
@@ -31,7 +32,7 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::<
                 (String, bool),
                 Result<ReadAllFilesSucceedResult, String>,
-            >::from_fn(oxi::fs::collect_files)),
+            >::from_fn(oxi::file::collect_files)),
         ),
         ////
         (
@@ -114,21 +115,23 @@ fn nvim_tools() -> Dictionary {
         (
             "get_filesize",
             Object::from(Function::<String, Result<String, String>>::from_fn(
-                oxi::fs::get_filesize,
+                oxi::file::get_filesize,
             )),
         ),
         (
             "readdir",
             Object::from(
-                Function::<String, Result<ReaddirSucceedResult, String>>::from_fn(oxi::fs::readdir),
+                Function::<String, Result<ReaddirSucceedResult, String>>::from_fn(
+                    oxi::file::readdir,
+                ),
             ),
         ),
         (
             "rename_path",
             Object::from(Function::<
-                FsRenameParams,
-                Result<util::file::RenameSucceedResult, String>,
-            >::from_fn(oxi::fs::rename_path)),
+                FileMoveParams,
+                Result<FileMoveSucceedResult, String>,
+            >::from_fn(oxi::file::rename_path)),
         ),
         ////
         ("now", Object::from(Function::from_fn(oxi::date::now))),
