@@ -1,7 +1,8 @@
 use std::fs;
 use std::path::Path;
 
-use crate::types::dto::{FileMoveFailedResult, FileMoveSucceedResult};
+use crate::types::dto::FileMoveFailedResult;
+use crate::types::dto::FileMoveSucceedResult;
 
 pub fn move_file<P: AsRef<Path>, Q: AsRef<Path>>(
     old_path: P,

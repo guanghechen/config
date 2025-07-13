@@ -41,12 +41,16 @@ pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
     locations
 }
 
-#[test]
-fn test_calc_linewidths() {
-    let text = "abc\ndef\nghi";
-    let widths = calc_linewidths(text);
-    assert_eq!(widths, vec![3, 3, 3]);
+#[cfg(test)]
+mod tests {
 
-    let widths = calc_linewidths(text);
-    assert_eq!(widths, vec![3, 3, 3]);
+    #[test]
+    fn test_calc_linewidths() {
+        let text = "abc\ndef\nghi";
+        let widths = super::calc_linewidths(text);
+        assert_eq!(widths, vec![3, 3, 3]);
+
+        let widths = super::calc_linewidths(text);
+        assert_eq!(widths, vec![3, 3, 3]);
+    }
 }

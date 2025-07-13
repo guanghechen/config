@@ -125,75 +125,77 @@ pub fn replace_text_preview_advance(
     })
 }
 
-#[test]
-fn test_replace_text_preview_advance_1() {
-    let text = r#"require("node.path")"#.to_string();
-    {
-        let search_pattern = r#"require\(([\w\W]+?)\)"#.to_string();
-        let replace_pattern = r#"import $1"#.to_string();
-        println!(
-            "text: {}, search: {}, replace: {}",
-            text, search_pattern, replace_pattern
-        );
-        println!(
-            "{:?}",
-            replace_text_preview_advance(
-                &text,
-                &search_pattern,
-                &replace_pattern,
-                true,
-                true,
-                true
-            )
-        );
-        println!(
-            "{:?}",
-            replace_text_preview_advance(
-                &text,
-                &search_pattern,
-                &replace_pattern,
-                false,
-                true,
-                true
-            )
-        );
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_replace_text_preview_advance_1() {
+        let text = r#"require("node.path")"#.to_string();
+        {
+            let search_pattern = r#"require\(([\w\W]+?)\)"#.to_string();
+            let replace_pattern = r#"import $1"#.to_string();
+            println!(
+                "text: {}, search: {}, replace: {}",
+                text, search_pattern, replace_pattern
+            );
+            println!(
+                "{:?}",
+                super::replace_text_preview_advance(
+                    &text,
+                    &search_pattern,
+                    &replace_pattern,
+                    true,
+                    true,
+                    true
+                )
+            );
+            println!(
+                "{:?}",
+                super::replace_text_preview_advance(
+                    &text,
+                    &search_pattern,
+                    &replace_pattern,
+                    false,
+                    true,
+                    true
+                )
+            );
+        }
+
+        {
+            let search_pattern = r#"require("node.path")"#.to_string();
+            let replace_pattern = r#"import $1"#.to_string();
+            println!(
+                "text: {}, search: {}, replace: {}",
+                text, search_pattern, replace_pattern
+            );
+            println!(
+                "{:?}",
+                super::replace_text_preview_advance(
+                    &text,
+                    &search_pattern,
+                    &replace_pattern,
+                    true,
+                    false,
+                    true
+                )
+            );
+            println!(
+                "{:?}",
+                super::replace_text_preview_advance(
+                    &text,
+                    &search_pattern,
+                    &replace_pattern,
+                    false,
+                    false,
+                    true
+                )
+            );
+        }
     }
 
-    {
-        let search_pattern = r#"require("node.path")"#.to_string();
-        let replace_pattern = r#"import $1"#.to_string();
-        println!(
-            "text: {}, search: {}, replace: {}",
-            text, search_pattern, replace_pattern
-        );
-        println!(
-            "{:?}",
-            replace_text_preview_advance(
-                &text,
-                &search_pattern,
-                &replace_pattern,
-                true,
-                false,
-                true
-            )
-        );
-        println!(
-            "{:?}",
-            replace_text_preview_advance(
-                &text,
-                &search_pattern,
-                &replace_pattern,
-                false,
-                false,
-                true
-            )
-        );
-    }
-}
-
-#[test]
-fn test_replace_text_preview_advance_2() {
-    let text: &str = r#"
+    #[test]
+    fn test_replace_text_preview_advance_2() {
+        let text: &str = r#"
 ### Requirements
 
 * fd: https://github.com/sharkdp/fd?tab=readme-ov-file#installation
@@ -238,18 +240,31 @@ fn test_replace_text_preview_advance_2() {
   ```
     "#;
 
-    let search_pattern: &str = "lazygit";
-    let replace_pattern: &str = "__waw__";
-    let result_with_regex =
-        replace_text_preview_advance(text, search_pattern, replace_pattern, true, true, true);
-    let result_without_regex =
-        replace_text_preview_advance(text, search_pattern, replace_pattern, true, false, true);
+        let search_pattern: &str = "lazygit";
+        let replace_pattern: &str = "__waw__";
+        let result_with_regex = super::replace_text_preview_advance(
+            text,
+            search_pattern,
+            replace_pattern,
+            true,
+            true,
+            true,
+        );
+        let result_without_regex = super::replace_text_preview_advance(
+            text,
+            search_pattern,
+            replace_pattern,
+            true,
+            false,
+            true,
+        );
 
-    assert!(result_with_regex.is_ok());
-    assert!(result_without_regex.is_ok());
+        assert!(result_with_regex.is_ok());
+        assert!(result_without_regex.is_ok());
 
-    let result_with_regex = result_with_regex.unwrap();
-    let result_without_regex = result_without_regex.unwrap();
-    assert_eq!(result_with_regex.text, result_without_regex.text);
-    assert_eq!(result_with_regex.matches, result_without_regex.matches);
+        let result_with_regex = result_with_regex.unwrap();
+        let result_without_regex = result_without_regex.unwrap();
+        assert_eq!(result_with_regex.text, result_without_regex.text);
+        assert_eq!(result_with_regex.matches, result_without_regex.matches);
+    }
 }

@@ -1,4 +1,5 @@
-use nvim_tools::{types::dto::SearchInFilesParams, util::search};
+use nvim_tools::types::dto::SearchInFilesParams;
+use nvim_tools::util::search;
 
 #[test]
 fn test_rg() {
