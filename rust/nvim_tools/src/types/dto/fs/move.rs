@@ -57,9 +57,7 @@ impl Pushable for FileMoveParams {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FileMoveSucceedResult {
-    pub old_path: String,
-    pub new_path: String,
-    pub message: String,
+    pub ok: bool,
 }
 
 impl FromObject for FileMoveSucceedResult {

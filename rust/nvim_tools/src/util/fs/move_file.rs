@@ -55,15 +55,7 @@ pub fn move_file<P: AsRef<Path>, Q: AsRef<Path>>(
         });
     }
 
-    Ok(FileMoveSucceedResult {
-        old_path: old_path.display().to_string(),
-        new_path: new_path.display().to_string(),
-        message: format!(
-            "Successfully renamed '{}' to '{}'",
-            old_path.display(),
-            new_path.display()
-        ),
-    })
+    Ok(FileMoveSucceedResult { ok: true })
 }
 
 #[cfg(test)]

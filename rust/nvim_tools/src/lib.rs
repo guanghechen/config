@@ -32,7 +32,7 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::<
                 (String, bool),
                 Result<ReadAllFilesSucceedResult, String>,
-            >::from_fn(oxi::file::collect_files)),
+            >::from_fn(oxi::fs::collect_files)),
         ),
         ////
         (
@@ -115,14 +115,14 @@ fn nvim_tools() -> Dictionary {
         (
             "get_filesize",
             Object::from(Function::<String, Result<String, String>>::from_fn(
-                oxi::file::get_filesize,
+                oxi::fs::get_filesize,
             )),
         ),
         (
             "readdir",
             Object::from(
                 Function::<String, Result<ReaddirSucceedResult, String>>::from_fn(
-                    oxi::file::readdir,
+                    oxi::fs::readdir,
                 ),
             ),
         ),
@@ -131,7 +131,7 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::<
                 FileMoveParams,
                 Result<FileMoveSucceedResult, String>,
-            >::from_fn(oxi::file::rename_path)),
+            >::from_fn(oxi::fs::rename_path)),
         ),
         ////
         ("now", Object::from(Function::from_fn(oxi::date::now))),
