@@ -1,18 +1,14 @@
 local name = "fml.action.find.git" ---@type string
 local title = "Find Git" ---@type string
 
-local finder_input = eve.context.select.find_git.input
-local finder_input_history = std.InputHistory.new({
-  name = name,
-  capacity = 5,
-  input = finder_input,
-})
-local flag_foldempty = eve.context.select.find_git.flag_foldempty
-local flag_fuzzy = eve.context.select.find_git.flag_fuzzy
-local flag_regex = eve.context.select.find_git.flag_regex
-local flag_sensitive = eve.context.select.find_git.flag_case_sensitive
-local flag_selected = eve.context.select.find_git.flag_selected
-local flag_viewtype = eve.context.select.find_git.flag_viewtype
+local finder_input_history = std.InputHistory.new({ name = name, capacity = 5 })
+local o_finder_input = eve.context.select.find_git.input
+local o_flag_foldempty = eve.context.select.find_git.flag_foldempty
+local o_flag_fuzzy = eve.context.select.find_git.flag_fuzzy
+local o_flag_regex = eve.context.select.find_git.flag_regex
+local o_flag_sensitive = eve.context.select.find_git.flag_case_sensitive
+local o_flag_selected = eve.context.select.find_git.flag_selected
+local o_flag_viewtype = eve.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
 local picker ---@type eve.ux.picker.FiletreeComposer
@@ -43,15 +39,15 @@ picker = eve.ux.picker.FiletreeComposer.new({
   width = 120,
   preview = false,
 
-  finder_input = finder_input,
+  finder_input = o_finder_input,
   finder_input_history = finder_input_history,
 
-  flag_foldempty = flag_foldempty,
-  flag_fuzzy = flag_fuzzy,
-  flag_regex = flag_regex,
-  flag_sensitive = flag_sensitive,
-  flag_selected = flag_selected,
-  flag_viewtype = flag_viewtype,
+  flag_foldempty = o_flag_foldempty,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_sensitive = o_flag_sensitive,
+  flag_selected = o_flag_selected,
+  flag_viewtype = o_flag_viewtype,
   flags_start_index = 1,
 
   on_closed = function()
