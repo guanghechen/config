@@ -74,7 +74,15 @@ function M:render(bufnr, filepath, force)
     local filename = std.path.basename(filepath) ---@type string
     local lines ---@type string[]
     local filetype ---@type string
-    if std.path.is_exist_filepath(filepath) then
+
+    local bufnr_sourcefile = eve.buf.locate_bufnr(filepath) ---@type integer|nil
+    if bufnr_sourcefile ~= nil then
+      lines = vim.api.nvim_buf_get_lines(bufnr_sourcefile, 0, -1, false) ---@type string[]
+      filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
+      if filetype == "" then
+        filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
+      end
+    elseif std.path.is_exist_filepath(filepath) then
       lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
       filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
     else

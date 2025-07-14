@@ -90,13 +90,10 @@ function M.loadfile(filepath)
     return nil
   end
 
-  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  for _, bufnr in ipairs(bufnrs) do
-    local bufpath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if bufpath == filepath then
-      vim.bo[bufnr].buflisted = true
-      return bufnr
-    end
+  local bufnr_sourcefile = M.locate_bufnr(filepath) ---@type integer|nil)
+  if bufnr_sourcefile ~= nil then
+    vim.bo[bufnr_sourcefile].buflisted = true
+    return bufnr_sourcefile
   end
 
   if std.path.is_exist_filepath(filepath) then
@@ -108,6 +105,7 @@ function M.loadfile(filepath)
     vim.bo[bufnr].buflisted = true
     vim.bo[bufnr].buftype = ""
     vim.bo[bufnr].swapfile = false
+
     local ok, error = pcall(vim.fn.bufload, bufnr)
     if not ok then
       std.reporter.error({
@@ -127,6 +125,19 @@ function M.loadfile(filepath)
     -- vim.api.nvim_exec_autocmds("FileReadPost", { buffer = bufnr })
     -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = bufnr })
     return bufnr
+  end
+end
+
+---@param filepath                      string
+---@return integer|nil
+function M.locate_bufnr(filepath)
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    local bufpath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    if bufpath == filepath then
+      vim.bo[bufnr].buflisted = true
+      return bufnr
+    end
   end
 end
 
