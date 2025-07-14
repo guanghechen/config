@@ -12,8 +12,8 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public format_item            ?fun(item): string
 ---@field public kind                   ?string
 ---@field public dimension              ?fml.dressing.select.IDimension
----@field public result_render          ?eve.ux.picker.composer.list.IResultRender
----@field public render_preview         ?eve.ux.picker.composer.list.IPreviewRender
+---@field public render_result          ?eve.ux.picker.composer.list.IRenderResult
+---@field public render_preview         ?eve.ux.picker.composer.list.IRenderPreview
 ---@field public uuid_current           ?string
 ---@field public uuid_present           ?string
 
@@ -24,7 +24,7 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public data                   fml.dressing.select.IItemData
 
 ---@alias fml.dressing.select.IDataProvider
----| fun(items: any[], opts: fml.dressing.select.IOptions): eve.ux.picker.composer.list.IResetData, integer, eve.ux.picker.composer.list.IResultRender|nil
+---| fun(items: any[], opts: fml.dressing.select.IOptions): eve.ux.picker.composer.list.IResetData, integer, eve.ux.picker.composer.list.IRenderResult|nil
 
 local codeaction_provider = require("fml.dressing.select.provider.codeaction")
 local fallback_provider = require("fml.dressing.select.provider.fallback")
@@ -51,11 +51,11 @@ function M.select(items, opts, on_choice)
   local title = (opts.prompt or opts.kind or "--"):gsub(":$", "") ---@type string
   local kind = opts.kind or "fallback" ---@type string
   local create_provider = providers[kind] or providers.fallback ---@type fml.dressing.select.IDataProvider
-  local data, width, result_render = create_provider(items, opts)
-  local render_preview = opts.render_preview ---@type eve.ux.picker.composer.list.IPreviewRender|nil
+  local data, width, render_result = create_provider(items, opts)
+  local render_preview = opts.render_preview ---@type eve.ux.picker.composer.list.IRenderPreview|nil
 
-  if opts.result_render ~= nil then
-    result_render = opts.result_render
+  if opts.render_result ~= nil then
+    render_result = opts.render_result
   end
 
   local uuid_current = nil ---@type string|nil
@@ -118,7 +118,7 @@ function M.select(items, opts, on_choice)
     flag_regex = flag_regex,
     flag_sensitive = flag_sensitive,
 
-    result_render = result_render,
+    render_result = render_result,
     render_preview = render_preview,
 
     on_cancel = function()

@@ -289,7 +289,7 @@ function M.browse()
       local padded_name = std.string.pad_end(remote.name, max_name_width, " ")
       return padded_name .. " │ " .. remote.url
     end,
-    result_render = function(_, bufnr, itemmap, matches)
+    render_result = function(_, bufnr, itemmap, matches)
       local lines = {} ---@type string[]
       local uuids = {} ---@type string[]
 
@@ -326,7 +326,7 @@ function M.browse()
         end
       end
 
-      ---@type eve.ux.picker.composer.list.IResultRenderData
+      ---@type eve.ux.picker.composer.list.IRenderResultData
       local data = { uuids = uuids }
       return data
     end,

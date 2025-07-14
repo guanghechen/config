@@ -166,7 +166,7 @@ picker = eve.ux.picker.ListComposer.new({
   },
   flags_start_index = 0,
 
-  result_render = function(composer, bufnr, itemmap, matches)
+  render_result = function(composer, bufnr, itemmap, matches)
     ---@cast itemmap                    table<string, fml.action.find.buffers.IItem>
     ---
     local lines = {} ---@type string[]
@@ -200,7 +200,7 @@ picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
+    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IRenderResultData
     return data
   end,
 

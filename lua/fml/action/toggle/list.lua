@@ -577,8 +577,8 @@ local function execute_action(picker)
   end
 end
 
----@type eve.ux.picker.composer.list.IResultRender
-local function result_render(_, bufnr, itemmap, matches)
+---@type eve.ux.picker.composer.list.IRenderResult
+local function render_result(_, bufnr, itemmap, matches)
   local lines = {} ---@type string[]
   local uuids = {} ---@type string[]
 
@@ -613,7 +613,7 @@ local function result_render(_, bufnr, itemmap, matches)
     end
   end
 
-  ---@type eve.ux.picker.composer.list.IResultRenderData
+  ---@type eve.ux.picker.composer.list.IRenderResultData
   return { uuids = uuids }
 end
 
@@ -640,7 +640,7 @@ picker = eve.ux.picker.ListComposer.new({
   flag_regex = flag_regex,
   flag_sensitive = flag_sensitive,
 
-  result_render = result_render,
+  render_result = render_result,
 
   keymaps_finder = {
     {

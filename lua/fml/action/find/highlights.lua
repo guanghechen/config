@@ -70,7 +70,7 @@ local picker = eve.ux.picker.ListComposer.new({
   flag_regex = flag_regex,
   flag_sensitive = flag_sensitive,
 
-  result_render = function(composer, bufnr, itemmap, matches)
+  render_result = function(composer, bufnr, itemmap, matches)
     ---@cast itemmap                         table<string, fml.action.find.highlights.IItem>
 
     local lines = {} ---@type string[]
@@ -107,7 +107,7 @@ local picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
+    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IRenderResultData
     return data
   end,
   render_preview = function(composer, bufnr, force)

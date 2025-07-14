@@ -101,10 +101,10 @@ local __highlights__ = {
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
----@field public result_render          eve.ux.picker.result.IDraw
 ---@field public result_isselected      ?eve.ux.picker.result.IIsSelected
 ---
 ---@field public render_preview         ?eve.ux.picker.preview.IDraw
+---@field public render_result          eve.ux.picker.result.IDraw
 ---
 ---@field public on_cancel              ?eve.ux.picker.composer.basic.IOnCancel
 ---@field public on_closed              ?eve.ux.picker.composer.basic.IOnClosed
@@ -168,10 +168,10 @@ function M.new(props)
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean
-  local result_render = props.result_render ---@type eve.ux.picker.result.IDraw
   local result_isselected = props.result_isselected ---@type eve.ux.picker.result.IIsSelected|nil
 
   local render_preview = props.render_preview ---@type eve.ux.picker.preview.IDraw|nil
+  local render_result = props.render_result ---@type eve.ux.picker.result.IDraw
 
   local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnCancel
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnClosed
@@ -225,7 +225,7 @@ function M.new(props)
           finder_input_history:push(keyword)
         end
       end
-      return result_render(bufnr)
+      return render_result(bufnr)
     end,
     isselected = result_isselected,
     keymaps = self:__resolve_keymaps_result__(

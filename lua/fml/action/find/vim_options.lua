@@ -92,7 +92,7 @@ local picker = eve.ux.picker.ListComposer.new({
   flag_regex = o_flag_regex,
   flag_sensitive = o_flag_sensitive,
 
-  result_render = function(_, bufnr, itemmap, matches)
+  render_result = function(_, bufnr, itemmap, matches)
     ---@cast itemmap                    table<string, fml.action.find.vim_options.IItem>
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
@@ -129,7 +129,7 @@ local picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
+    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IRenderResultData
     return data
   end,
 

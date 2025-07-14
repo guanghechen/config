@@ -22,11 +22,11 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@alias eve.ux.picker.composer.list.IOnRefresh
 ---| fun(self: eve.ux.picker.ListComposer, force: boolean): nil
 
----@alias eve.ux.picker.composer.list.IPreviewRender
+---@alias eve.ux.picker.composer.list.IRenderPreview
 ---| fun(self: eve.ux.picker.ListComposer, bufnr: integer, force: boolean): eve.ux.picker.preview.IDrawResult
 
----@alias eve.ux.picker.composer.list.IResultRender
----| fun(self: eve.ux.picker.ListComposer, bufnr: integer, itemmap: table<string, eve.ux.picker.composer.list.IItem>, matches: std.t.IScoredMatch[]): eve.ux.picker.composer.list.IResultRenderData
+---@alias eve.ux.picker.composer.list.IRenderResult
+---| fun(self: eve.ux.picker.ListComposer, bufnr: integer, itemmap: table<string, eve.ux.picker.composer.list.IItem>, matches: std.t.IScoredMatch[]): eve.ux.picker.composer.list.IRenderResultData
 
 ---@class eve.ux.picker.composer.list.IItem
 ---@field public uuid                   string
@@ -39,7 +39,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field public uuid_present           string|nil
 ---@field public uuid_current           string|nil
 
----@class eve.ux.picker.composer.list.IResultRenderData
+---@class eve.ux.picker.composer.list.IRenderResultData
 ---@field public uuids                  string[]
 
 ----------------------------------------------------------------------------------------------------
@@ -68,8 +68,8 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.IHistory
 ---
----@field public result_render          ?eve.ux.picker.composer.list.IResultRender
----@field public render_preview         ?eve.ux.picker.composer.list.IPreviewRender
+---@field public render_preview         ?eve.ux.picker.composer.list.IRenderPreview
+---@field public render_result          ?eve.ux.picker.composer.list.IRenderResult
 ---
 ---@field public on_cancel              ?eve.ux.picker.composer.list.IOnCancel
 ---@field public on_closed              ?eve.ux.picker.composer.list.IOnClosed
@@ -144,8 +144,8 @@ function M.new(props)
   local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker.composer.list.IOnHidden
   local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.picker.composer.list.IOnRefresh
 
-  ---@type eve.ux.picker.composer.list.IResultRender
-  local result_render = props.result_render
+  ---@type eve.ux.picker.composer.list.IRenderResult
+  local render_result = props.render_result
     or function(_, bufnr, itemmap, matches)
       local lines = {} ---@type string[]
       local uuids = {} ---@type string[]
@@ -178,12 +178,12 @@ function M.new(props)
         end
       end
 
-      ---@type eve.ux.picker.composer.list.IResultRenderData
+      ---@type eve.ux.picker.composer.list.IRenderResultData
       local data = { uuids = uuids }
       return data
     end
 
-  ---@type eve.ux.picker.composer.list.IPreviewRender|nil
+  ---@type eve.ux.picker.composer.list.IRenderPreview|nil
   local render_preview = props.render_preview
 
   local self = setmetatable({}, M)
@@ -317,8 +317,8 @@ function M.new(props)
 
     result_number = false,
 
-    result_render = function(bufnr)
-      local data = result_render(self, bufnr, self._itemmap, self._matches)
+    render_result = function(bufnr)
+      local data = render_result(self, bufnr, self._itemmap, self._matches)
       local uuids = data.uuids ---@type string[]
       retriever:attach(bufnr, uuids)
 

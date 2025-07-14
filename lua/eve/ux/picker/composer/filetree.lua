@@ -1144,7 +1144,7 @@ function M.new(props)
     end,
 
     ---@type eve.ux.picker.result.IDraw
-    result_render = function(bufnr)
+    render_result = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
       local result ---@type eve.ux.view.tree.IRenderResult
       local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean

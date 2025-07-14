@@ -643,7 +643,7 @@ picker = eve.ux.picker.ListComposer.new({
     },
   },
 
-  result_render = function(composer, bufnr, itemmap, matches)
+  render_result = function(composer, bufnr, itemmap, matches)
     ---@cast itemmap                    table<string, fml.action.find.explorer.IItem>
 
     local winnr = composer.result:get_winnr() or 0 ---@type integer

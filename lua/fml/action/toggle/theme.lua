@@ -37,8 +37,8 @@ local MAX_WIDTH_THEMENAME = 24 ---@type integer
 local themes = eve.command.definitions.toggle.theme.candidates ---@type string[]
 local o_theme = eve.context.theme.theme ---@type std.collection.IObservable
 
----@type eve.ux.picker.composer.list.IResultRender
-local function result_render(_, bufnr, itemmap, matches)
+---@type eve.ux.picker.composer.list.IRenderResult
+local function render_result(_, bufnr, itemmap, matches)
   local lines = {} ---@type string[]
   local uuids = {} ---@type string[]
 
@@ -83,7 +83,7 @@ local function result_render(_, bufnr, itemmap, matches)
     end
   end
 
-  ---@type eve.ux.picker.composer.list.IResultRenderData
+  ---@type eve.ux.picker.composer.list.IRenderResultData
   local result = { uuids = uuids }
   return result
 end
@@ -140,7 +140,7 @@ function M.theme(arg)
         row = 5,
         width = 80, -- Increased width for color squares
       },
-      result_render = result_render, -- Add the custom renderer
+      render_result = render_result, -- Add the custom renderer
     }, function(choice)
       if choice then
         apply_theme(choice)

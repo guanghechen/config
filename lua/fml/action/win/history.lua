@@ -136,7 +136,7 @@ local picker = eve.ux.picker.ListComposer.new({
   flag_regex = flag_regex,
   flag_sensitive = flag_sensitive,
 
-  result_render = function(composer, bufnr, _, matches)
+  render_result = function(composer, bufnr, _, matches)
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     local cwd = std.path.cwd() ---@type string
@@ -183,7 +183,7 @@ local picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
+    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IRenderResultData
     return data
   end,
 

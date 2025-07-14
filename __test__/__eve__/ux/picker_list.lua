@@ -137,8 +137,8 @@ picker = eve.ux.picker.ListComposer.new({
       end,
     },
   },
-  ---@type eve.ux.picker.composer.list.IResultRender
-  result_render = function(_, bufnr, itemmap, matches)
+  ---@type eve.ux.picker.composer.list.IRenderResult
+  render_result = function(_, bufnr, itemmap, matches)
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     local prefix = "📋 " ---@type string
@@ -184,7 +184,7 @@ picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    ---@type eve.ux.picker.composer.list.IResultRenderData
+    ---@type eve.ux.picker.composer.list.IRenderResultData
     local result = { uuids = uuids }
     return result
   end,
