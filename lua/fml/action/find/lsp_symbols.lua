@@ -4,11 +4,13 @@ local title = "LSP Symbols" ---@type string
 
 ---@class fml.action.find.lsp_symbols.ISymbolData
 ---@field public name                   string
----@field public kind              string
+---@field public kind                   string
 ---@field public icon                   string
----@field public icon_hln                string
+---@field public icon_hln               string
 ---@field public lnum                   integer
----@field public col              integer
+---@field public col                    integer
+---@field public end_lnum               integer
+---@field public end_col                integer
 
 local filepath_sourcefile = nil ---@type string|nil
 local plainfile = eve.ux.view.Plainfile.new({ name = name }) ---@type eve.ux.view.Plainfile
@@ -73,11 +75,11 @@ local function fetch_symbols(tree, callback)
           kind = kindname,
           lnum = lnum,
           col = col,
+          end_lnum = symbol.range["end"].line + 1,
+          end_col = symbol.range["end"].character,
           icon = eve.icon.kind[kindname] or "󰅩",
           icon_hln = "f_lsp_symbol_icon_" .. kindname,
         }
-
-        -- Insert into tree
         tree:insert(parent_uuid, uuid, data)
 
         if symbol.children then
@@ -274,7 +276,14 @@ local function render_preview(bufnr, force)
 
   plainfile:render(bufnr, filepath_sourcefile, force)
 
+  local nsnr = eve.var.nsnr.picker_preview_visual ---@type integer
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+
   local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  if data.end_lnum and data.end_col and data.lnum and data.col then
+    vim.hl.range(bufnr, nsnr, "Visual", { data.lnum - 1, data.col }, { data.end_lnum - 1, data.end_col })
+  end
+
   return {
     cursorline = true,
     number = true,

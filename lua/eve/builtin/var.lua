@@ -25,6 +25,7 @@ M.nsnr = {
   picker                = cn("ux:picker"),
   picker_matches        = cn("ux:picker:matches"),
   picker_preview        = cn("ux:picker:preview"),
+  picker_preview_visual = cn("ux:picker:preview:visual"),
   picker_result         = cn("ux:picker:result"),
   searcher_matches      = cn("ux:searcher:matches"),
   searcher_preview      = cn("ux:searcher:preview"),
