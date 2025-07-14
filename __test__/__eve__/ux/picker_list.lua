@@ -188,7 +188,7 @@ picker = eve.ux.picker.ListComposer.new({
     local result = { uuids = uuids }
     return result
   end,
-  preview_render = function(self, bufnr)
+  render_preview = function(self, bufnr)
     local lnum = self.result.lnum_current:snapshot()
     local uuid = self._retriever:retrieve_uuid(lnum)
 

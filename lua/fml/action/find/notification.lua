@@ -61,7 +61,7 @@ picker = eve.ux.picker.ListComposer.new({
   flag_regex = o_flag_regex,
   flag_sensitive = o_flag_sensitive,
 
-  preview_render = function(composer, bufnr)
+  render_preview = function(composer, bufnr)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
 
     if lnum_current < 1 then

@@ -62,6 +62,8 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
+---@field public render_preview         ?eve.ux.picker.preview.IDraw
+---
 ---@field public flag_foldempty         std.collection.IObservable
 ---@field public flag_fuzzy             std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
@@ -134,14 +136,15 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local o_finder_input = props.finder_input ---@type std.collection.IObservable
-  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
-
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
   local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
 
+  local render_preview = props.render_preview ---@type eve.ux.picker.preview.IDraw|nil
+
+  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
+  local o_finder_input = props.finder_input ---@type std.collection.IObservable
   local o_flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
   local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
   local o_flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
@@ -1106,6 +1109,13 @@ function M.new(props)
     },
   }
 
+  if preview and render_preview == nil then
+    ---@type eve.ux.picker.preview.IDraw|nil
+    render_preview = function(bufnr, force)
+      return self:render_preview(bufnr, force)
+    end
+  end
+
   local composer = eve.ux.picker.BasicComposer.new({
     uuid = picker_uuid,
     name = fullname,
@@ -1171,9 +1181,7 @@ function M.new(props)
     end,
 
     ---@type eve.ux.picker.preview.IDraw|nil
-    preview_render = preview and function(bufnr, force)
-      return self:render_preview(bufnr, force)
-    end or nil,
+    render_preview = render_preview,
 
     on_cancel = function()
       if on_confirm ~= nil then

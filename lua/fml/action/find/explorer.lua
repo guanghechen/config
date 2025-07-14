@@ -607,7 +607,7 @@ picker = eve.ux.picker.ListComposer.new({
   flag_regex = flag_regex,
   flag_sensitive = flag_sensitive,
 
-  preview_render = preview_render,
+  render_preview = preview_render,
 
   keymaps_finder = {
     {

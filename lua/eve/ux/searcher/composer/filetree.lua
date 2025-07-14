@@ -1106,7 +1106,7 @@ function M.new(props)
     end,
 
     ---@type eve.ux.searcher.preview.IDraw|nil
-    preview_render = preview
+    render_preview = preview
         and function(bufnr)
           local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
           if nodeuuid == nil then

@@ -104,7 +104,7 @@ local __highlights__ = {
 ---@field public result_render          eve.ux.picker.result.IDraw
 ---@field public result_isselected      ?eve.ux.picker.result.IIsSelected
 ---
----@field public preview_render         ?eve.ux.picker.preview.IDraw
+---@field public render_preview         ?eve.ux.picker.preview.IDraw
 ---
 ---@field public on_cancel              ?eve.ux.picker.composer.basic.IOnCancel
 ---@field public on_closed              ?eve.ux.picker.composer.basic.IOnClosed
@@ -171,7 +171,7 @@ function M.new(props)
   local result_render = props.result_render ---@type eve.ux.picker.result.IDraw
   local result_isselected = props.result_isselected ---@type eve.ux.picker.result.IIsSelected|nil
 
-  local preview_render = props.preview_render ---@type eve.ux.picker.preview.IDraw|nil
+  local render_preview = props.render_preview ---@type eve.ux.picker.preview.IDraw|nil
 
   local on_cancel = props.on_cancel or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnCancel
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnClosed
@@ -244,11 +244,11 @@ function M.new(props)
 
   ---@type eve.ux.picker.Preview|nil
   local preview = nil
-  if preview_render ~= nil then
+  if render_preview ~= nil then
     preview = eve.ux.picker.Preview.new({
       uuid = uuid,
       name = name,
-      draw = preview_render,
+      draw = render_preview,
       keymaps = self:__resolve_keymaps_preview__(
         flags,
         flags_start_index,

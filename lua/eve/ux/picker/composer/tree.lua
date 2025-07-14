@@ -676,7 +676,7 @@ function M.new(props)
     end,
 
     ---@type eve.ux.picker.preview.IDraw|nil
-    preview_render = render_preview,
+    render_preview = render_preview,
 
     on_cancel = function()
       if on_confirm ~= nil then

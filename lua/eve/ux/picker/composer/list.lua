@@ -69,7 +69,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field public finder_input_history   ?std.collection.IHistory
 ---
 ---@field public result_render          ?eve.ux.picker.composer.list.IResultRender
----@field public preview_render         ?eve.ux.picker.composer.list.IPreviewRender
+---@field public render_preview         ?eve.ux.picker.composer.list.IPreviewRender
 ---
 ---@field public on_cancel              ?eve.ux.picker.composer.list.IOnCancel
 ---@field public on_closed              ?eve.ux.picker.composer.list.IOnClosed
@@ -184,7 +184,7 @@ function M.new(props)
     end
 
   ---@type eve.ux.picker.composer.list.IPreviewRender|nil
-  local preview_render = props.preview_render
+  local render_preview = props.render_preview
 
   local self = setmetatable({}, M)
 
@@ -330,8 +330,8 @@ function M.new(props)
     end,
 
     ---@type eve.ux.picker.preview.IDraw|nil
-    preview_render = preview_render and function(bufnr, force)
-      return preview_render(self, bufnr, force)
+    render_preview = render_preview and function(bufnr, force)
+      return render_preview(self, bufnr, force)
     end or nil,
 
     on_cancel = function()

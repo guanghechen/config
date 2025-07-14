@@ -110,7 +110,7 @@ local picker = eve.ux.picker.ListComposer.new({
     local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IResultRenderData
     return data
   end,
-  preview_render = function(composer, bufnr, force)
+  render_preview = function(composer, bufnr, force)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
 
     if lnum_current < 1 then
