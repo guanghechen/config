@@ -313,13 +313,28 @@ function M.new(props)
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
         local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
-        if nodestate ~= nil and nodestate.nodetype == "container" then
+        if nodestate == nil then
+          return
+        end
+
+        if nodestate.nodetype == "container" then
           treeview:mark_cache_listview_dirty()
           self._uuid_root = nodeuuid ---@type string
           self:mark_result_dirty()
-
           on_attached(self, nodeuuid)
+          return
         end
+
+        local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
+        local leafnode = tree:retrieve(leafuuid) ---@type std.collection.tree.INode|nil
+        if leafnode == nil then
+          return
+        end
+
+        treeview:mark_cache_listview_dirty()
+        self._uuid_root = leafuuid ---@type string
+        self:mark_result_dirty()
+        on_attached(self, leafuuid)
       end
     end,
     attach_parent = function()
