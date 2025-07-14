@@ -176,6 +176,7 @@ ms({ "n", "v" }, "<leader>fp", K.find.pinned_files)
 ms({ "n", "v" }, "<leader>fs", K.find.lsp_symbols)
 ms({ "n", "v" }, "<leader>ft", K.find.bufs_term)
 ms({ "n", "v" }, "<leader>fv", K.find.vim_options)
+ms({ "n", "v" }, "<leader>fx", K.find.diagnostics_in_workspace)
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
