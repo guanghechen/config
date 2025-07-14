@@ -40,4 +40,5 @@ When you trying to modify codes under the lua/oxi/ or rust/src/, please refer be
 
 1. **MUST** avoid unnecessary comments except the typing comments like `---@type string`.
 2. **MUST** make the type of param start at col#41 like `---@param name                          string`.
+3. **MUST** use `vim.hl.range` api instead of the deprecated `vim.api.nvim_buf_add_highlight`.
 
