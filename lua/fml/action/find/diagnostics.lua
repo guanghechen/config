@@ -72,9 +72,9 @@ local function refresh(force)
   local filepaths = {} ---@type string[]
   for _, diagnostic in ipairs(diagnostics) do
     local bufnr = diagnostic.bufnr
-    if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+    if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if filepaths[#filepaths] ~= filepath then
+      if filepath ~= "" and filepaths[#filepaths] ~= filepath then
         filepaths[#filepaths + 1] = filepath
       end
     end
