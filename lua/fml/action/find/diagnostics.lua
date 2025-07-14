@@ -19,6 +19,7 @@ local name = "fml.action.find.diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
 local finder_input_history = std.InputHistory.new({ name = name, capacity = 5 })
+local o_rootpath = std.Observable.from_value(std.path.cwd())
 local o_finder_input = std.Observable.from_value("")
 local o_flag_foldempty = std.Observable.from_value(true)
 local o_flag_fuzzy = std.Observable.from_value(false)
@@ -48,8 +49,23 @@ local function refresh(force)
 
   local filetree = picker._filetree ---@type std.collection.Filetree
   local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
+
+  local rootpath = o_rootpath:snapshot() ---@type string
   local flag_severity = o_flag_severity:snapshot() ---@type string
-  local diagnostics = vim.diagnostic.get(_bufnr, { severity = flag_severity }) ---@type vim.Diagnostic[]
+  local original_diagnostics = vim.diagnostic.get(_bufnr, { severity = flag_severity }) ---@type vim.Diagnostic[]
+
+  local diagnostics = {} ---@type vim.Diagnostic[]
+  local filepaths = {} ---@type string[]
+  for _, diagnostic in ipairs(original_diagnostics) do
+    local bufnr = diagnostic.bufnr
+    if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      if filepath ~= "" and std.path.is_under(rootpath, filepath) then
+        diagnostics[#diagnostics + 1] = diagnostic
+        filepaths[#filepaths + 1] = filepath
+      end
+    end
+  end
 
   table.sort(diagnostics, function(a, b)
     if a.bufnr == b.bufnr then
@@ -64,22 +80,10 @@ local function refresh(force)
     return a_filepath < b_filepath
   end)
 
-  local cwd = std.path.cwd() ---@type string
-
   filetree:clear()
   treeview:clear()
 
-  local filepaths = {} ---@type string[]
-  for _, diagnostic in ipairs(diagnostics) do
-    local bufnr = diagnostic.bufnr
-    if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
-      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if filepath ~= "" and filepaths[#filepaths] ~= filepath then
-        filepaths[#filepaths + 1] = filepath
-      end
-    end
-  end
-  picker:reset_filepaths(cwd, filepaths, false)
+  picker:reset_filepaths(rootpath, filepaths, false)
 
   local statemap = treeview.statemap ---@type table<string, eve.ux.view.tree.INodeState>
   ---@cast statemap                     table<string, eve.ux.picker.view.filetree.INodeState>
@@ -172,6 +176,29 @@ picker = eve.ux.picker.FiletreeComposer.new({
   width = 0.9,
   preview = true,
 
+  keymaps_common = {
+    {
+      modes = { "n", "v" },
+      key = "<leader>c",
+      desc = string.format("%s: change root (cwd)", title),
+      callback = function()
+        local cwd = std.path.cwd() ---@type string
+        o_rootpath:next(cwd)
+        refresh(false)
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>w",
+      desc = string.format("%s: change root (workspace)", title),
+      callback = function()
+        local workspace = std.path.workspace() ---@type string
+        o_rootpath:next(workspace)
+        refresh(false)
+      end,
+    },
+  },
+
   finder_input_history = finder_input_history,
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,
@@ -180,6 +207,10 @@ picker = eve.ux.picker.FiletreeComposer.new({
   flag_viewtype = o_flag_viewtype,
   flag_foldempty = o_flag_foldempty,
   flag_selected = o_flag_selected,
+
+  on_attached = function(_, rootpath)
+    o_rootpath:next(rootpath)
+  end,
 
   on_refresh = function(_)
     refresh(false)
@@ -220,6 +251,20 @@ picker = eve.ux.picker.FiletreeComposer.new({
     })
   end,
 })
+
+std.fn.observe({ o_rootpath }, function()
+  local rootpath = o_rootpath:snapshot() ---@type string
+  local workspace = std.path.workspace() ---@type string
+  local cwd = std.path.cwd() ---@type string
+  if rootpath == workspace then
+    picker.finder:set_title(string.format("%s (workspace)", title))
+  elseif rootpath == cwd then
+    picker.finder:set_title(string.format("%s (cwd)", title))
+  else
+    local relative_path = std.path.is_under(workspace, rootpath) and std.path.relative(cwd, rootpath, false) or rootpath ---@type string
+    picker.finder:set_title(string.format("%s (%s)", title, relative_path))
+  end
+end)
 
 ---@class fml.action.find
 local M = {}
