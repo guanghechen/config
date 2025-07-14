@@ -2,23 +2,25 @@ use chrono::DateTime;
 use chrono::Local;
 #[cfg(unix)]
 use std::ffi::CStr;
+use std::fs; // Import for Windows-specific metadata extensions
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt; // Import for Unix-specific metadata extensions
+#[cfg(windows)]
+use std::os::windows::fs::MetadataExt;
 use std::path::Path;
-use std::fs; // Import for Windows-specific metadata extensions
 use std::time::SystemTime; // Import for Windows-specific metadata extensions
 
-use crate::types::dto::ReaddirFailedResult;
-use crate::types::dto::ReaddirSucceedResult;
 use crate::types::dto::FileItemWithStatus;
 use crate::types::dto::FileType;
+use crate::types::dto::ReaddirFailedResult;
+use crate::types::dto::ReaddirSucceedResult;
 
 pub fn readdir<P: AsRef<Path>>(dirpath: P) -> Result<ReaddirSucceedResult, ReaddirFailedResult> {
     let itself: FileItemWithStatus = match flat_filestatus(dirpath.as_ref()) {
         Ok(item) => item,
         Err(e) => {
             return Err(ReaddirFailedResult {
-                error: format!("[readdir] Failed to flat filestatus: {}", e),
+                error: format!("[readdir] Failed to flat filestatus: {e}"),
             });
         }
     };
@@ -34,13 +36,13 @@ pub fn readdir<P: AsRef<Path>>(dirpath: P) -> Result<ReaddirSucceedResult, Readd
                         }
                         Err(e) => {
                             return Err(ReaddirFailedResult {
-                                error: format!("[readdir] Failed to flat filestatus: {}", e),
+                                error: format!("[readdir] Failed to flat filestatus: {e}"),
                             });
                         }
                     },
                     Err(e) => {
                         return Err(ReaddirFailedResult {
-                            error: format!("[readdir] Failed to resolve entry: {}", e),
+                            error: format!("[readdir] Failed to resolve entry: {e}"),
                         });
                     }
                 }
@@ -63,7 +65,7 @@ pub fn readdir<P: AsRef<Path>>(dirpath: P) -> Result<ReaddirSucceedResult, Readd
             Ok(ReaddirSucceedResult { itself, items })
         }
         Err(e) => Err(ReaddirFailedResult {
-            error: format!("[readdir] Failed to read directory: {}", e),
+            error: format!("[readdir] Failed to read directory: {e}"),
         }),
     }
 }
@@ -72,7 +74,7 @@ pub fn get_filesize<P: AsRef<Path>>(filepath: P) -> Result<String, String> {
     let metadata = match fs::metadata(filepath) {
         Ok(metadata) => metadata,
         Err(e) => {
-            return Err(format!("Failed to get metadata {}", e));
+            return Err(format!("Failed to get metadata {e}"));
         }
     };
 
@@ -85,9 +87,8 @@ pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
         Ok(metadata) => metadata,
         Err(e) => {
             return Err(format!(
-                "Failed to get metadata for {}: {}",
-                path.display(),
-                e
+                "Failed to get metadata for {}: {e}",
+                path.display()
             ));
         }
     };
@@ -122,7 +123,7 @@ pub fn flat_filestatus(path: &Path) -> Result<FileItemWithStatus, String> {
     let filesize: String = format_filesize(metadata.len());
     let modify_time = match metadata.modified() {
         Ok(modified) => format_time(modified),
-        Err(e) => return Err(format!("Failed to get date: {}", e)),
+        Err(e) => return Err(format!("Failed to get date: {e}")),
     };
 
     let item: FileItemWithStatus = FileItemWithStatus {
@@ -194,16 +195,16 @@ pub fn format_filesize(size_bytes: u64) -> String {
     } else if size_bytes >= KB {
         (size_bytes as f64 / KB as f64, "KB")
     } else {
-        return format!("{}B", size_bytes);
+        return format!("{size_bytes}B");
     };
 
     let remain: u32 = ((value * 100.0).round() as u32) % 100;
     if remain == 0 {
-        format!("{}{}", value.round(), unit)
+        format!("{}{unit}", value.round())
     } else if remain % 10 == 0 {
-        format!("{:.1}{}", value, unit)
+        format!("{value:.1}{unit}")
     } else {
-        format!("{:.2}{}", value, unit)
+        format!("{value:.2}{unit}")
     }
 }
 
