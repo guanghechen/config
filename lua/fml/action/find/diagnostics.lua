@@ -241,8 +241,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
   flag_foldempty = o_flag_foldempty,
   flag_selected = o_flag_selected,
 
-  flags_start_index = 0,
-  flags_prepend = {
+  flags_append = {
     {
       desc = string.format("%s: buffer only", name),
       callback = function()
