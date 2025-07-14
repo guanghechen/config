@@ -32,7 +32,7 @@ impl ToObject for ReplaceTextPreviewAdvanceParams {
 }
 
 impl lua::Poppable for ReplaceTextPreviewAdvanceParams {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
@@ -41,7 +41,7 @@ impl lua::Poppable for ReplaceTextPreviewAdvanceParams {
 }
 
 impl lua::Pushable for ReplaceTextPreviewAdvanceParams {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+    unsafe fn push(self, lstate: *mut lua::ffi::State) -> Result<std::ffi::c_int, lua::Error> {
         unsafe {
             self.to_object()
                 .map_err(lua::Error::push_error_from_err::<Self, _>)?
@@ -71,7 +71,7 @@ impl ToObject for ReplacePreviewResult {
 }
 
 impl lua::Poppable for ReplacePreviewResult {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
@@ -80,7 +80,7 @@ impl lua::Poppable for ReplacePreviewResult {
 }
 
 impl lua::Pushable for ReplacePreviewResult {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+    unsafe fn push(self, lstate: *mut lua::ffi::State) -> Result<std::ffi::c_int, lua::Error> {
         unsafe {
             self.to_object()
                 .map_err(lua::Error::push_error_from_err::<Self, _>)?

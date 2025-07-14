@@ -39,7 +39,7 @@ impl ToObject for SearchInFilesParams {
 }
 
 impl lua::Poppable for SearchInFilesParams {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
@@ -48,7 +48,7 @@ impl lua::Poppable for SearchInFilesParams {
 }
 
 impl lua::Pushable for SearchInFilesParams {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+    unsafe fn push(self, lstate: *mut lua::ffi::State) -> Result<std::ffi::c_int, lua::Error> {
         unsafe {
             self.to_object()
                 .map_err(lua::Error::push_error_from_err::<Self, _>)?
@@ -83,7 +83,7 @@ impl ToObject for SearchInFilesSucceedResult {
 }
 
 impl lua::Poppable for SearchInFilesSucceedResult {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
@@ -92,7 +92,7 @@ impl lua::Poppable for SearchInFilesSucceedResult {
 }
 
 impl lua::Pushable for SearchInFilesSucceedResult {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+    unsafe fn push(self, lstate: *mut lua::ffi::State) -> Result<std::ffi::c_int, lua::Error> {
         unsafe {
             self.to_object()
                 .map_err(lua::Error::push_error_from_err::<Self, _>)?
@@ -125,7 +125,7 @@ impl ToObject for SearchInFilesFailedResult {
 }
 
 impl lua::Poppable for SearchInFilesFailedResult {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
@@ -134,7 +134,7 @@ impl lua::Poppable for SearchInFilesFailedResult {
 }
 
 impl lua::Pushable for SearchInFilesFailedResult {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+    unsafe fn push(self, lstate: *mut lua::ffi::State) -> Result<std::ffi::c_int, lua::Error> {
         unsafe {
             self.to_object()
                 .map_err(lua::Error::push_error_from_err::<Self, _>)?

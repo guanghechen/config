@@ -31,7 +31,7 @@ impl ToObject for MoveParams {
 
 impl Poppable for MoveParams {
     unsafe fn pop(
-        lstate: *mut nvim_oxi::lua::ffi::lua_State,
+        lstate: *mut nvim_oxi::lua::ffi::State,
     ) -> Result<Self, nvim_oxi::lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
@@ -43,7 +43,7 @@ impl Poppable for MoveParams {
 impl Pushable for MoveParams {
     unsafe fn push(
         self,
-        lstate: *mut nvim_oxi::lua::ffi::lua_State,
+        lstate: *mut nvim_oxi::lua::ffi::State,
     ) -> Result<std::ffi::c_int, nvim_oxi::lua::Error> {
         unsafe {
             self.to_object()
@@ -73,7 +73,7 @@ impl ToObject for FileMoveFailedResult {
 }
 
 impl lua::Poppable for FileMoveFailedResult {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
@@ -82,7 +82,7 @@ impl lua::Poppable for FileMoveFailedResult {
 }
 
 impl lua::Pushable for FileMoveFailedResult {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+    unsafe fn push(self, lstate: *mut lua::ffi::State) -> Result<std::ffi::c_int, lua::Error> {
         unsafe {
             self.to_object()
                 .map_err(lua::Error::push_error_from_err::<Self, _>)?

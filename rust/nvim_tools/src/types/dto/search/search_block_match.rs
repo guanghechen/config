@@ -32,7 +32,7 @@ impl ToObject for SearchBlockMatch {
 
 impl Poppable for SearchBlockMatch {
     unsafe fn pop(
-        lua_state: *mut nvim_oxi::lua::ffi::lua_State,
+        lua_state: *mut nvim_oxi::lua::ffi::State,
     ) -> Result<Self, nvim_oxi::lua::Error> {
         unsafe {
             let obj = Object::pop(lua_state)?;
@@ -44,7 +44,7 @@ impl Poppable for SearchBlockMatch {
 impl Pushable for SearchBlockMatch {
     unsafe fn push(
         self,
-        lua_state: *mut nvim_oxi::lua::ffi::lua_State,
+        lua_state: *mut nvim_oxi::lua::ffi::State,
     ) -> Result<std::os::raw::c_int, nvim_oxi::lua::Error> {
         unsafe {
             let obj = self

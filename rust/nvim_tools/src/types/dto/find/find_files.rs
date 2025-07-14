@@ -33,7 +33,7 @@ impl ToObject for FindFilesParams {
 }
 
 impl lua::Poppable for FindFilesParams {
-    unsafe fn pop(lstate: *mut lua::ffi::lua_State) -> Result<Self, lua::Error> {
+    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(lua::Error::pop_error_from_err::<Self, _>)
@@ -42,7 +42,7 @@ impl lua::Poppable for FindFilesParams {
 }
 
 impl lua::Pushable for FindFilesParams {
-    unsafe fn push(self, lstate: *mut lua::ffi::lua_State) -> Result<std::ffi::c_int, lua::Error> {
+    unsafe fn push(self, lstate: *mut lua::ffi::State) -> Result<std::ffi::c_int, lua::Error> {
         unsafe {
             self.to_object()
                 .map_err(lua::Error::push_error_from_err::<Self, _>)?
