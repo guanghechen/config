@@ -18,17 +18,18 @@ local severity2numhl = eve.constant.diagnostic.severity2numhl ---@type table<vim
 local name = "fml.action.find.diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
+local o_finder_input = eve.context.select.find_diagnostics.input ---@type std.collection.IObservable
+local o_flag_foldempty = eve.context.select.find_diagnostics.flag_foldempty ---@type std.collection.IObservable
+local o_flag_fuzzy = eve.context.select.find_diagnostics.flag_fuzzy ---@type std.collection.IObservable
+local o_flag_regex = eve.context.select.find_diagnostics.flag_regex ---@type std.collection.IObservable
+local o_flag_sensitive = eve.context.select.find_diagnostics.flag_case_sensitive ---@type std.collection.IObservable
+local o_flag_selected = eve.context.select.find_diagnostics.flag_selected ---@type std.collection.IObservable
+local o_flag_viewtype = eve.context.select.find_diagnostics.flag_viewtype ---@type std.collection.IObservable
+
 local finder_input_history = std.InputHistory.new({ name = name, capacity = 5 })
-local o_finder_input = std.Observable.from_value("")
-local o_bufnr_sourcefile = std.Observable.from_value(nil)
-local o_rootpath = std.Observable.from_value(std.path.cwd())
-local o_flag_buffer = std.Observable.from_value(false)
-local o_flag_foldempty = std.Observable.from_value(true)
-local o_flag_fuzzy = std.Observable.from_value(false)
-local o_flag_regex = std.Observable.from_value(false)
-local o_flag_sensitive = std.Observable.from_value(false)
-local o_flag_selected = std.Observable.from_value(false)
-local o_flag_viewtype = std.Observable.from_value("tree")
+local o_bufnr_sourcefile = std.Observable.from_value(nil)---@type std.collection.IObservable
+local o_rootpath = std.Observable.from_value(std.path.cwd())---@type std.collection.IObservable
+local o_flag_buffer = std.Observable.from_value(false)---@type std.collection.IObservable
 local o_flag_severity = std.Observable.from_value(nil)
 
 local picker ---@type eve.ux.picker.FiletreeComposer

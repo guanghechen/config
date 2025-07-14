@@ -2,6 +2,7 @@ local select_item = require("eve.context.workspace.select_item")
 
 ---@class eve.context.select.data
 ---@field public find_buffer            eve.context.select.item.data
+---@field public find_diagnostics       eve.context.select.item.data
 ---@field public find_explorer          eve.context.select.item.data
 ---@field public find_file              eve.context.select.item.data
 ---@field public find_git               eve.context.select.item.data
@@ -20,6 +21,7 @@ local select_item = require("eve.context.workspace.select_item")
 
 ---@class eve.context.select.state
 ---@field public find_buffer            eve.context.select.item.state
+---@field public find_diagnostics       eve.context.select.item.state
 ---@field public find_explorer          eve.context.select.item.state
 ---@field public find_file              eve.context.select.item.state
 ---@field public find_git               eve.context.select.item.state
@@ -53,6 +55,7 @@ function M.defaults()
   ---@type eve.context.select.data
   return {
     find_buffer = select_item.defaults(),
+    find_diagnostics = select_item.defaults(),
     find_explorer = select_item.defaults(),
     find_file = select_item.defaults(),
     find_git = select_item.defaults(),
@@ -79,6 +82,7 @@ function M.normalize(data)
   ---@type eve.context.select.data
   local resolved = {
     find_buffer = select_item.normalize(data.find_buffer),
+    find_diagnostics = select_item.normalize(data.find_diagnostics),
     find_explorer = select_item.normalize(data.find_explorer),
     find_file = select_item.normalize(data.find_file),
     find_git = select_item.normalize(data.find_git),
@@ -113,6 +117,7 @@ function M.dump()
   ---@type eve.context.select.data
   return {
     find_buffer = select_item.dump(M.find_buffer),
+    find_diagnostics = select_item.dump(M.find_diagnostics),
     find_explorer = select_item.dump(M.find_explorer),
     find_file = select_item.dump(M.find_file),
     find_git = select_item.dump(M.find_git),
@@ -137,6 +142,7 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.context.select.data
 
   M.find_buffer = select_item.load(M.find_buffer, "find_buffer", data.find_buffer)
+  M.find_diagnostics = select_item.load(M.find_diagnostics, "find_diagnostics", data.find_diagnostics)
   M.find_explorer = select_item.load(M.find_explorer, "find_explorer", data.find_explorer)
   M.find_file = select_item.load(M.find_file, "find_file", data.find_file)
   M.find_git = select_item.load(M.find_git, "find_git", data.find_git)
@@ -158,6 +164,7 @@ end
 
 local _defaults = M.defaults() ---@type eve.context.select.data
 M.find_buffer = select_item.load(nil, "find_buffer", _defaults.find_buffer)
+M.find_diagnostics = select_item.load(nil, "find_diagnostics", _defaults.find_diagnostics)
 M.find_explorer = select_item.load(nil, "find_explorer", _defaults.find_explorer)
 M.find_file = select_item.load(nil, "find_file", _defaults.find_file)
 M.find_git = select_item.load(nil, "find_git", _defaults.find_git)
@@ -177,6 +184,7 @@ M.search_file_scope = std.Observable.from_value(_defaults.search_file_scope)
 ---@return string[]
 M.keys = {
   "find_buffer",
+  "find_diagnostics",
   "find_explorer",
   "find_file",
   "find_git",
