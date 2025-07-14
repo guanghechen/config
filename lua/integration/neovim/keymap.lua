@@ -1,4 +1,3 @@
-local mk = eve.nvim.make_keys
 local ms = eve.nvim.make_shortcut
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
@@ -164,11 +163,10 @@ if std.path.is_repo_git() then
 else
   ms({ "n", "v" }, "<leader><leader>", K.find.explorer)
 end
-ms({ "n", "v" }, "<leader>fC", K.find.files_in_cwd)
-ms({ "n", "v" }, "<leader>fD", K.find.files_in_directory)
-ms({ "n", "v" }, "<leader>fW", K.find.files_in_workspace)
+ms({ "n", "v" }, "<leader>fc", K.find.files_in_cwd)
+ms({ "n", "v" }, "<leader>fd", K.find.files_in_directory)
+ms({ "n", "v" }, "<leader>fw", K.find.files_in_workspace)
 ms({ "n", "v" }, "<leader>fb", K.find.bufs)
-ms({ "n", "v" }, "<leader>fd", K.find.diagnostics_in_workspace)
 ms({ "n", "v" }, "<leader>fe", K.find.explorer)
 ms({ "n", "v" }, "<leader>ff", K.find.files)
 ms({ "n", "v" }, "<leader>fg", K.find.git_not_committed)
