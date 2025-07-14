@@ -1,7 +1,6 @@
 ---@class eve.builtin.filetype
 local M = {}
 
-M.AERIAL = "aerial"
 M.AVANTE = "Avante"
 M.AVANTE_INPUT = "AvanteInput"
 M.AVANTE_SELECTED_FILES = "AvanteSelectedFiles"
@@ -181,7 +180,6 @@ local filetypes = {
     [M.YOZORA_VIEWER] = true,
   },
   not_sourcefile = {
-    [M.AERIAL] = true,
     [M.AVANTE] = true,
     [M.AVANTE_INPUT] = true,
     [M.AVANTE_SELECTED_FILES] = true,
@@ -237,7 +235,6 @@ local filetypes = {
     [M.UX_POPUPMENU] = true,
   },
   quitable_with_q = {
-    [M.AERIAL] = true,
     [M.CHECKHEALTH] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_UI_HOVER] = true,

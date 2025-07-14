@@ -56,7 +56,6 @@ local conds = {
 ---@type ghc.plugin.IRawSpec[]
 local raw_specs = {
   -- stylua: ignore start
-  { name = "aerial.nvim",                 main = "aerial",                        cond = conds.not_vscode         },
   { name = "avante.nvim",                 main = "avante",                        cond = conds.ai                 },
   { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                },
   { name = "blink.compat",                main = "blink.compat",                  cond = conds.cmp                },

@@ -30,14 +30,6 @@ command.implement({
   end,
 })
 
---[diagnostic] -------------------------------------------------------------------------------------
-command.implement({
-  uuid = K.diagnostic.outline.uuid,
-  action = function()
-    require("aerial").toggle()
-  end,
-})
-
 --[explorer] -------------------------------------------------------------------------------------
 command
   .implement({

@@ -1163,7 +1163,6 @@ local ICONS_FILETYPE = {
 
   -- Popular Lua plugins which have a dedicated "current window" workflow (i.e.
   -- when displaying filetype might make sense, especially with "laststatus=3")
-  aerial                  = { glyph = "󱘎", hl = "MiniIconsPurple" },
   alpha                   = { glyph = "󰀫", hl = "MiniIconsOrange" },
   dapui_breakpoints       = { glyph = "󰃤", hl = "MiniIconsRed"    },
   dapui_console           = { glyph = "󰃤", hl = "MiniIconsRed"    },
