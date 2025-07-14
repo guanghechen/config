@@ -80,6 +80,7 @@ M.listchars = {
 ---@class eve.builtin.icon.symbols
 M.symbols = {
   setting = "",
+  flag_buffer = "",
   flag_case_sensitive = "",
   flag_exclude = "",
   flag_fold_empty_path = "",

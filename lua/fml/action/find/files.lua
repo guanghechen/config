@@ -136,7 +136,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
   keymaps_common = {
     {
       modes = { "n", "v" },
-      key = "<leader>c",
+      key = "tc",
       desc = string.format("%s: change root (cwd)", title),
       callback = function()
         local cwd = std.path.cwd() ---@type string
@@ -145,7 +145,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
     },
     {
       modes = { "n", "v" },
-      key = "<leader>w",
+      key = "tw",
       desc = string.format("%s: change root (workspace)", title),
       callback = function()
         local workspace = std.path.workspace() ---@type string
