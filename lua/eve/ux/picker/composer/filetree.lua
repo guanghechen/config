@@ -1171,84 +1171,9 @@ function M.new(props)
     end,
 
     ---@type eve.ux.picker.preview.IDraw|nil
-    preview_render = preview
-        and function(bufnr)
-          local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
-          if nodeuuid == nil then
-            local lines = { string.format("Error: cannot retrieve node by the given lnum: %d", lnum) } ---@type string[]
-            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-            self._last_preview_filepath = nil
-
-            ---@type eve.ux.picker.preview.IDrawResult
-            local result = {
-              cursorline = true,
-              number = true,
-              title = string.format("Unknown lnum(%d)", lnum),
-              wrap = true,
-              whitespaces = nil,
-              lnum = 1,
-            }
-            return result
-          end
-
-          local node, nodestate = self:__retrieve__(nodeuuid)
-          local force = node.data.filepath ~= self._last_preview_filepath ---@type boolean
-          self._last_preview_filepath = node.data.filepath ---@type string|nil
-
-          local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
-          local filepath = node.data.filepath ---@type string
-          local relative_filepath = rootnode ~= nil
-              and std.path.relative(rootnode.data.filepath or std.path.cwd(), filepath, false)
-            or filepath
-
-          if nodestate.nodetype == "container" then
-            treeview:render_treeview({
-              bufnr = bufnr,
-              rootuuid = nodeuuid,
-              foldempty = o_flag_foldempty:snapshot(),
-              only_expanded = false,
-              only_matched = false,
-              only_selected = false,
-              only_visible = false,
-            })
-
-            ---@cast nodestate          eve.ux.picker.view.filetree.IDirectoryNodeState
-            ---@type eve.ux.picker.preview.IDrawResult
-            local result = {
-              cursorline = true,
-              number = true,
-              title = relative_filepath,
-              whitespaces = false,
-              wrap = false,
-              lnum = 1,
-            }
-            return result
-          end
-
-          if nodestate.nodetype == "leaf" then
-            ---@cast nodestate          eve.ux.picker.view.filetree.IFileNodeState
-            if nodestate.locations ~= nil and #nodestate.locations > 0 then
-              ---@diagnostic disable-next-line: cast-local-type
-              nodestate = nodestate.locations[1]
-            end
-          end
-          ---@cast nodestate          eve.ux.picker.view.filetree.IFileNodeState|eve.ux.picker.view.filetree.ILocationNodeState
-
-          plainfile:render(bufnr, filepath, force)
-
-          ---@type eve.ux.picker.preview.IDrawResult
-          local result = {
-            cursorline = true,
-            number = true,
-            title = relative_filepath,
-            whitespaces = true,
-            wrap = false,
-            lnum = nodestate.lnum,
-            col = nodestate.col,
-          }
-          return result
-        end
-      or nil,
+    preview_render = preview and function(bufnr, force)
+      return self:render_preview(bufnr, force)
+    end or nil,
 
     on_cancel = function()
       if on_confirm ~= nil then
@@ -1520,6 +1445,94 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
 
   self._on_attached(self, cwd)
   return self
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@param bufnr                         integer
+---@param force                         boolean
+---@return eve.ux.picker.preview.IDrawResult
+function M:render_preview(bufnr, force)
+  local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
+  if nodeuuid == nil then
+    local lines = { string.format("Error: cannot retrieve node by the given lnum: %d", lnum) } ---@type string[]
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    self._last_preview_filepath = nil
+
+    ---@type eve.ux.picker.preview.IDrawResult
+    local result = {
+      cursorline = true,
+      number = true,
+      title = string.format("Unknown lnum(%d)", lnum),
+      wrap = true,
+      whitespaces = nil,
+      lnum = 1,
+    }
+    return result
+  end
+
+  local filetree = self._filetree ---@type std.collection.Filetree
+  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local plainfile = self._plainfile ---@type eve.ux.view.Plainfile
+  local o_flag_foldempty = self.flag_foldempty ---@type std.collection.IObservable
+
+  local node, nodestate = self:__retrieve__(nodeuuid)
+
+  force = force or node.data.filepath ~= self._last_preview_filepath ---@type boolean
+  self._last_preview_filepath = node.data.filepath ---@type string|nil
+
+  local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
+  local filepath = node.data.filepath ---@type string
+  local relative_filepath = rootnode ~= nil
+      and std.path.relative(rootnode.data.filepath or std.path.cwd(), filepath, false)
+    or filepath
+
+  if nodestate.nodetype == "container" then
+    treeview:render_treeview({
+      bufnr = bufnr,
+      rootuuid = nodeuuid,
+      foldempty = o_flag_foldempty:snapshot(),
+      only_expanded = false,
+      only_matched = false,
+      only_selected = false,
+      only_visible = false,
+    })
+
+    ---@cast nodestate          eve.ux.picker.view.filetree.IDirectoryNodeState
+    ---@type eve.ux.picker.preview.IDrawResult
+    local result = {
+      cursorline = true,
+      number = true,
+      title = relative_filepath,
+      whitespaces = false,
+      wrap = false,
+      lnum = 1,
+    }
+    return result
+  end
+
+  if nodestate.nodetype == "leaf" then
+    ---@cast nodestate          eve.ux.picker.view.filetree.IFileNodeState
+    if nodestate.locations ~= nil and #nodestate.locations > 0 then
+      ---@diagnostic disable-next-line: cast-local-type
+      nodestate = nodestate.locations[1]
+    end
+  end
+  ---@cast nodestate          eve.ux.picker.view.filetree.IFileNodeState|eve.ux.picker.view.filetree.ILocationNodeState
+
+  plainfile:render(bufnr, filepath, force)
+
+  ---@type eve.ux.picker.preview.IDrawResult
+  local result = {
+    cursorline = true,
+    number = true,
+    title = relative_filepath,
+    whitespaces = true,
+    wrap = false,
+    lnum = nodestate.lnum,
+    col = nodestate.col,
+  }
+  return result
 end
 
 ----------------------------------------------------------------------------------------------------
