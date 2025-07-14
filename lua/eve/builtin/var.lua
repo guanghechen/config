@@ -16,6 +16,7 @@ M.nsnr = {
   -- stylua: ignore start
   attach                = cn("ux:attach"),
   cmdline               = cn("ux:cmdline"),
+  diagnostic            = cn("ux:diagnostic"),
   hipairs               = cn("ux:hipairs"),
   indentline            = cn("ux:indentline"),
   input_confirmation    = cn("ux:input:confirmation"),

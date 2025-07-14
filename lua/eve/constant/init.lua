@@ -1,3 +1,8 @@
+---@class eve.constant.__mods
+local __mods = {
+  diagnostic = "eve.constant.diagnostic",
+}
+
 ---@class eve.constant.hlgroup.__mods
 local hlgroup__mods = {
   basic = "eve.constant.hlgroup.basic",
@@ -92,13 +97,25 @@ local theme = setmetatable({
 })
 
 ---@class eve.constant
+---@field public __mods                 eve.constant.__mods
 ---@field public hlgroup                eve.constant.hlgroup
 ---@field public lang                   eve.constant.lang
 ---@field public theme                  eve.constant.theme
-local M = {
+---
+---@field public diagnostic             eve.constant.diagnostic
+local M = setmetatable({
+  __mods = __mods,
   hlgroup = hlgroup,
   lang = lang,
   theme = theme,
-}
+}, {
+  __index = function(t, k)
+    local m = __mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
 
 return M

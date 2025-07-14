@@ -22,6 +22,12 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@alias eve.ux.picker.composer.filetree.IOnRefresh
 ---| fun(self: eve.ux.picker.FiletreeComposer, force: boolean): nil
 
+---@alias eve.ux.picker.composer.filetree.IOnResultRendered
+---| fun(self: eve.ux.picker.FiletreeComposer, bufnr: integer): nil
+
+---@alias eve.ux.picker.composer.filetree.IOnPreviewRendered
+---| fun(self: eve.ux.picker.FiletreeComposer, bufnr: integer): nil
+
 ---@class eve.ux.picker.composer.filetree.ISelectedItemLocation
 ---@field public lnum                   integer
 ---@field public col                    integer|nil
@@ -86,6 +92,8 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public on_focused             ?eve.ux.picker.composer.filetree.IOnFocused
 ---@field public on_hidden              ?eve.ux.picker.composer.filetree.IOnHidden
 ---@field public on_refresh             ?eve.ux.picker.composer.filetree.IOnRefresh
+---@field public on_preview_rendered    ?eve.ux.picker.composer.filetree.IOnPreviewRendered
+---@field public on_result_rendered     ?eve.ux.picker.composer.filetree.IOnResultRendered
 
 ---@class eve.ux.picker.FiletreeComposer
 ---@field public uuid                   string
@@ -165,6 +173,8 @@ function M.new(props)
   local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker.composer.filetree.IOnFocused
   local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker.composer.filetree.IOnHidden
   local _on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.picker.composer.filetree.IOnRefresh
+  local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.picker.composer.filetree.IOnResultRendered
+  local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.picker.composer.filetree.IOnPreviewRendered
 
   local self = setmetatable({}, M)
 
@@ -1206,6 +1216,12 @@ function M.new(props)
       picker:mark_preview_dirty()
       picker:mark_result_flags_dirty()
       picker:mark_result_dirty()
+    end,
+    on_preview_rendered = function(_, bufnr)
+      on_preview_rendered(self, bufnr)
+    end,
+    on_result_rendered = function(_, bufnr)
+      on_result_rendered(self, bufnr)
     end,
   })
 

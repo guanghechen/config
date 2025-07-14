@@ -1,6 +1,4 @@
 ---@diagnostic disable: invisible
-local name = "fml.action.find.diagnostics" ---@type string
-local title = "Find diagnostics" ---@type string
 
 ---@alias fml.action.find.diagnostics.SeverityEnum
 ---| "ERROR"
@@ -12,6 +10,13 @@ local title = "Find diagnostics" ---@type string
 ---@field public bufnr                  integer
 ---@field public diagnostic             vim.Diagnostic
 ---@field public severity               fml.action.find.diagnostics.SeverityEnum
+
+local severity2prefixicon = eve.constant.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string> {
+local severity2texticon = eve.constant.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
+local severity2numhl = eve.constant.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
+
+local name = "fml.action.find.diagnostics" ---@type string
+local title = "Find diagnostics" ---@type string
 
 local finder_input_history = std.InputHistory.new({ name = name, capacity = 5 })
 local o_finder_input = std.Observable.from_value("")
@@ -145,7 +150,7 @@ local function refresh(force)
         locationuuid = locationuuid,
         tick_invisible = 0,
         data = data,
-        lnum = diagnostic.lnum,
+        lnum = diagnostic.lnum + 1,
         col = diagnostic.col,
         col_end = diagnostic.end_col or diagnostic.col,
         text = text,
@@ -178,6 +183,41 @@ picker = eve.ux.picker.FiletreeComposer.new({
 
   on_refresh = function(_)
     refresh(false)
+  end,
+
+  on_preview_rendered = function(_, bufnr)
+    local filenode = picker:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
+    if filenode == nil then
+      return
+    end
+
+    local bufnr_sourcefile = eve.buf.loadfile(filenode.data.filepath) ---@type integer|nil)
+    if bufnr_sourcefile == nil then
+      return
+    end
+
+    local diagnostics = vim.diagnostic.get(bufnr_sourcefile) ---@type vim.Diagnostic[]
+    vim.diagnostic.set(eve.var.nsnr.diagnostic, bufnr, diagnostics, {
+      virtual_text = false,
+      virtual_lines = {
+        format = function(diagnostic)
+          local icon = severity2prefixicon[diagnostic.severity] or ""
+          return string.format("%s %s", icon, diagnostic.message)
+        end,
+      },
+      signs = {
+        text = severity2texticon,
+        numhl = severity2numhl,
+      },
+      severity_sort = true,
+      underline = true,
+      update_in_insert = false,
+      float = {
+        focus = true,
+        focusable = true,
+        border = "rounded",
+      },
+    })
   end,
 })
 
