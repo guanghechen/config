@@ -733,11 +733,15 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   local N = #builtin_keymaps ---@type integer
 
   local index = flags_start_index ---@type integer
+  local index_maximum = index + #flags - 1 ---@type integer
+  local index_width = #(tostring(index_maximum)) ---@type integer
+  local index_format = string.format("t%%0%dd", index_width) ---@type string
+
   for _, item in ipairs(flags) do
     ---@type std.t.IKeymap
     local keymap = {
       modes = { "n" },
-      key = string.format("<leader>%d", index),
+      key = string.format(index_format, index),
       desc = item.desc,
       callback = item.callback,
     }
