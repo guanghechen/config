@@ -1194,7 +1194,6 @@ local ICONS_FILETYPE = {
   overseerform            = { glyph = "󰜎", hl = "MiniIconsBlue"   },
   overseerlist            = { glyph = "󰜎", hl = "MiniIconsBlue"   },
   telescopeprompt         = { glyph = "󰭎", hl = "MiniIconsAzure"  },
-  trouble                 = { glyph = "󰙅", hl = "MiniIconsRed"    },
   unknown                 = { glyph = "󰈚", hl = "MiniIconsRed"    },
 }
 -- stylua: ignore end

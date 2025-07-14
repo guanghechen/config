@@ -61,36 +61,6 @@ local function on_attach(client, bufnr)
   ---@type std.t.IKeymap[]
   local keymaps = {
     {
-      modes = { "n" },
-      key = "gD",
-      callback = function()
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        local params = vim.lsp.util.make_position_params(winnr, "utf-8")
-        require("trouble").open({
-          mode = "lsp_command",
-          params = {
-            command = "typescript.goToSourceDefinition",
-            arguments = { params.textDocument.uri, params.position },
-          },
-        })
-      end,
-      desc = "lsp: goto source definition",
-    },
-    {
-      modes = { "n" },
-      key = "gR",
-      callback = function()
-        require("trouble").open({
-          mode = "lsp_command",
-          params = {
-            command = "typescript.findAllFileReferences",
-            arguments = { vim.uri_from_bufnr(0) },
-          },
-        })
-      end,
-      desc = "lsp: find all references",
-    },
-    {
       modes = { "n", "v" },
       key = "<leader>co",
       callback = function()

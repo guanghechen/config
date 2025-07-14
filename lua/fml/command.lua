@@ -274,6 +274,12 @@ command
     end,
   })
   .implement({
+    uuid = K.find.diagnostics_in_workspace.uuid,
+    action = function()
+      require("fml.action.find.diagnostics").find_diagnostics()
+    end,
+  })
+  .implement({
     uuid = K.find.explorer.uuid,
     action = function(args)
       require("fml.action.find.explorer").find_explorer(args)

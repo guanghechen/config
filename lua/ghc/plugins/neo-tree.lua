@@ -13,7 +13,7 @@ return {
     close_if_last_window = false,
     enable_git_status = true,
     enable_diagnostics = true,
-    open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "Outline" },
+    open_files_do_not_replace_types = { "terminal", "qf", "Outline" },
     popup_border_style = "rounded",
     sort_case_insensitive = true,
     sources = sources,

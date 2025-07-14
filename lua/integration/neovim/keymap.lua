@@ -168,7 +168,7 @@ ms({ "n", "v" }, "<leader>fC", K.find.files_in_cwd)
 ms({ "n", "v" }, "<leader>fD", K.find.files_in_directory)
 ms({ "n", "v" }, "<leader>fW", K.find.files_in_workspace)
 ms({ "n", "v" }, "<leader>fb", K.find.bufs)
-ms({ "n", "v" }, "<leader>fd", K.find.diagnostics)
+ms({ "n", "v" }, "<leader>fd", K.find.diagnostics_in_workspace)
 ms({ "n", "v" }, "<leader>fe", K.find.explorer)
 ms({ "n", "v" }, "<leader>ff", K.find.files)
 ms({ "n", "v" }, "<leader>fg", K.find.git_not_committed)
@@ -286,15 +286,8 @@ ms({ "n", "v" }, "<leader>sk", K.win.scroll_up)
 --------------------------------------------------------------------------------------------#[w]in--
 
 --#[x] diagnostic-----------------------------------------------------------------------------------
-mk({ "n", "v" }, "<leader>xD", "<cmd>Trouble diagnostics toggle<cr>", "diagnostic: open diagnostics (workspace)")
-mk(
-  { "n", "v" },
-  "<leader>xd",
-  "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
-  "diagnostic: open diagnostics (document)"
-)
-mk({ "n", "v" }, "<leader>xL", "<cmd>Trouble loclist toggle<cr>", "diagnostic: open location list (Trouble)")
-mk({ "n", "v" }, "<leader>xq", "<cmd>Trouble qflist toggle<cr>", "diagnostic: open quickfix list (Trouble)")
+ms({ "n", "v" }, "<leader>xD", K.find.diagnostics_in_workspace)
+ms({ "n", "v" }, "<leader>xd", K.find.diagnostics)
 ms({ "n", "v" }, "[d", K.diagnostic.goto_prev)
 ms({ "n", "v" }, "]d", K.diagnostic.goto_next)
 ms({ "n", "v" }, "[e", K.diagnostic.goto_prev_error)

@@ -54,16 +54,8 @@ function M.is_quickfix_opened()
   return false
 end
 
----@param prefer_trouble                boolean
 ---@return nil
-function M.open_qflist(prefer_trouble)
-  if prefer_trouble then
-    ---@diagnostic disable-next-line: param-type-mismatch
-    local ok = pcall(vim.cmd, "Trouble qflist toggle")
-    if ok then
-      return
-    end
-  end
+function M.open_qflist()
   vim.cmd([[botright copen]])
 end
 
