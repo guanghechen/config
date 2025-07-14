@@ -4,31 +4,28 @@ local title = "LSP Symbols" ---@type string
 
 ---@class fml.action.find.lsp_symbols.ISymbolData
 ---@field public name                   string
----@field public kind                   integer
----@field public kind_name              string
----@field public range                  { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }
----@field public selection_range        { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }
----@field public detail                 string|nil
+---@field public kind              string
 ---@field public icon                   string
----@field public icon_hl                string
----@field public line                   integer
----@field public character              integer
+---@field public icon_hln                string
+---@field public lnum                   integer
+---@field public col              integer
 
 local filepath_sourcefile = nil ---@type string|nil
-local workspace_mode = false ---@type boolean
+local plainfile = eve.ux.view.Plainfile.new({ name = name }) ---@type eve.ux.view.Plainfile
+local _tick_refresh = 0 ---@type integer
 
--- Symbol filtering configuration by filetype
-local symbol_filter_config = {
-  default = true, -- Show all symbols by default
-  lua = { "Function", "Method", "Class", "Interface", "Module", "Variable", "Constant" },
-  javascript = { "Function", "Method", "Class", "Interface", "Variable", "Constant", "Constructor" },
-  typescript = { "Function", "Method", "Class", "Interface", "Variable", "Constant", "Constructor", "Property" },
-  python = { "Function", "Method", "Class", "Variable", "Module" },
-  go = { "Function", "Method", "Struct", "Interface", "Variable", "Constant", "Package" },
-  rust = { "Function", "Method", "Struct", "Enum", "Trait", "Module", "Variable", "Constant" },
-  c = { "Function", "Variable", "Struct", "Enum", "Union", "Typedef" },
-  cpp = { "Function", "Method", "Class", "Struct", "Enum", "Variable", "Namespace" },
-  java = { "Function", "Method", "Class", "Interface", "Variable", "Field", "Constructor" },
+local WANT_SYMBOLS = {
+  ["Class"] = true,
+  ["Constructor"] = true,
+  ["Enum"] = true,
+  ["File"] = true,
+  ["Function"] = true,
+  ["Interface"] = true,
+  ["Method"] = true,
+  ["Module"] = true,
+  ["Namespace"] = true,
+  ["Package"] = true,
+  ["Struct"] = true,
 }
 
 local o_finder_input = eve.context.select.lsp_symbols.input ---@type std.collection.IObservable
@@ -37,418 +34,264 @@ local o_flag_regex = eve.context.select.lsp_symbols.flag_regex ---@type std.coll
 local o_flag_sensitive = eve.context.select.lsp_symbols.flag_case_sensitive ---@type std.collection.IObservable
 local o_flag_viewtype = eve.context.select.lsp_symbols.flag_viewtype ---@type std.collection.IObservable
 local o_flag_foldempty = eve.context.select.lsp_symbols.flag_foldempty ---@type std.collection.IObservable
+local picker ---@type eve.ux.picker.TreeComposer
 
--- Forward declaration
-local refresh
-
----@param tree std.collection.Tree
----@param callback fun()|nil
----@param picker eve.ux.picker.TreeComposer|nil
+---@param tree                          std.collection.Tree
+---@param callback                      fun(): nil
 ---@return nil
-local function fetch_symbols(tree, callback, picker)
-  local bufnr = filepath_sourcefile and eve.buf.loadfile(filepath_sourcefile) or nil ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    if callback then
-      callback()
-    end
+local function fetch_symbols(tree, callback)
+  local bufnr = filepath_sourcefile and eve.buf.loadfile(filepath_sourcefile) or nil
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    callback()
     return
   end
 
-  -- For unloaded buffers, load the buffer and refresh on LspAttach
   if not vim.api.nvim_buf_is_loaded(bufnr) then
-    local autocmd_id = vim.api.nvim_create_autocmd("LspAttach", {
-      buffer = bufnr,
-      callback = vim.schedule_wrap(function()
-        if picker and picker._tree and picker._tree.root then
-          local root_node = picker._tree:retrieve(picker._tree.root)
-          if root_node and #root_node.children > 0 then
-            return true -- Remove autocmd
-          end
-        end
-        if picker then
-          refresh(picker)
-          vim.defer_fn(function()
-            if picker._tree and picker._tree.root then
-              local root_node = picker._tree:retrieve(picker._tree.root)
-              if not root_node or #root_node.children == 0 then
-                refresh(picker)
-              end
-            end
-          end, 1000)
-        end
-      end),
-    })
-
     pcall(vim.fn.bufload, bufnr)
-
-    -- Clean up autocmd after 10 seconds
-    vim.defer_fn(function()
-      vim.api.nvim_del_autocmd(autocmd_id)
-    end, 10000)
-
-    -- Wait a bit for buffer to load
-    vim.defer_fn(function()
-      if callback then
-        callback()
-      end
-    end, 2000)
+    vim.defer_fn(callback, 100)
     return
   end
 
-  -- Check if winline is disabled for this buffer
-  if vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] then
-    if callback then
-      callback()
-    end
+  if not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
+    callback()
     return
   end
 
-  -- Check if LSP method is supported based on workspace mode
-  local method = workspace_mode and "workspace/symbol" or "textDocument/documentSymbol"
-  if not eve.lsp.has_support_method(bufnr, method) then
-    if callback then
-      callback()
-    end
-    return
-  end
+  local tick_refresh = _tick_refresh ---@type integer
 
-  -- Check if blink.cmp is visible (same as locate_symbols)
-  local ok, cmp = pcall(require, "blink.cmp")
-  if ok and cmp.is_visible() then
-    if callback then
-      callback()
-    end
-    return
-  end
+  local function process_symbols(symbols, parent_uuid, prefix)
+    for _, symbol in ipairs(symbols) do
+      local kindname = vim.lsp.protocol.SymbolKind[symbol.kind] or "Unknown"
+      if WANT_SYMBOLS[kindname] and symbol.range then
+        local lnum = symbol.range.start.line + 1 ---@type integer
+        local col = symbol.range.start.character ---@type integer
+        local uuid = string.format("%s%s@%d:%d", prefix, symbol.name, lnum, col)
 
-  -- LSP request handler following locate_symbols pattern
-  local function handler(err, symbols)
-    if err then
-      if type(err) == "table" then
-        if err.message == "Content modified." then
-          return
-        end
+        ---@class fml.action.find.lsp_symbols.ISymbolData
+        local data = {
+          name = symbol.name,
+          kind = kindname,
+          lnum = lnum,
+          col = col,
+          icon = eve.icon.kind[kindname] or "󰅩",
+          icon_hln = "f_lsp_symbol_icon_" .. kindname,
+        }
 
-        if err.message == "trying to get AST for non-added document" then
-          if vim.api.nvim_buf_is_valid(bufnr) then
-            vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] = true
-          end
-          return
+        -- Insert into tree
+        tree:insert(parent_uuid, uuid, data)
+
+        if symbol.children then
+          process_symbols(symbol.children, uuid, uuid .. "/")
         end
       end
+    end
+  end
 
-      if eve.status.suppress_warning:snapshot() then
-        if callback then
-          callback()
-        end
-        return
-      end
-
-      std.reporter.error({
-        from = name,
-        subject = "fetch_symbols",
-        message = "Failed to request document symbols",
-        details = { err = err, result = symbols, bufnr = bufnr },
-      })
-      if callback then
-        callback()
-      end
+  vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", {
+    textDocument = vim.lsp.util.make_text_document_params(bufnr),
+  }, function(err, symbols)
+    if tick_refresh ~= _tick_refresh then
       return
     end
 
-    if not symbols then
-      if callback then
-        callback()
-      end
-      return
+    if not err and symbols then
+      process_symbols(symbols, tree.root, "/")
     end
-
-    -- Get filetype for filtering
-    local filetype = vim.bo[bufnr].filetype
-    local filter = symbol_filter_config[filetype] or symbol_filter_config.default
-
-    -- Helper function to check if symbol kind should be included
-    local function want_symbol(kind_name)
-      if type(filter) == "boolean" then
-        return filter
-      end
-      return vim.tbl_contains(filter, kind_name or "Unknown")
-    end
-
-    -- Collect all items first for sorting and last marking
-    local items = {}
-
-    -- Process LSP documentSymbol response recursively
-    ---@param symbol_list any[]
-    ---@param parent_uuid string
-    ---@param path_prefix string
-    local function process_symbols_recursive(symbol_list, parent_uuid, path_prefix)
-      if not symbol_list then
-        return
-      end
-
-      for i, symbol in ipairs(symbol_list) do
-        local symbolname = symbol.name or "Unknown"
-        local kind = symbol.kind or 1
-        local kind_name = vim.lsp.protocol.SymbolKind[kind] or "Unknown"
-
-        -- Skip symbols that don't match the filter
-        if not want_symbol(kind_name) then
-          goto continue
-        end
-
-        -- Get position information - handle both documentSymbol and SymbolInformation
-        local range = symbol.range or (symbol.location and symbol.location.range)
-        if not range then
-          goto continue
-        end
-
-        local line = range.start.line + 1
-        local character = range.start.character
-
-        -- Generate hierarchical UUID that reflects the symbol path
-        local symbol_uuid = path_prefix
-          .. tostring(i)
-          .. ":"
-          .. symbolname
-          .. "@"
-          .. tostring(line)
-          .. ":"
-          .. tostring(character)
-
-        -- Create symbol data compatible with existing renderers
-        local symbol_data = {
-          name = symbolname,
-          kind = kind,
-          kind_name = kind_name,
-          range = {
-            start = { line = line, character = character },
-            ["end"] = { line = range["end"].line + 1, character = range["end"].character },
-          },
-          selection_range = symbol.selectionRange and {
-            start = {
-              line = symbol.selectionRange.start.line + 1,
-              character = symbol.selectionRange.start.character,
-            },
-            ["end"] = {
-              line = symbol.selectionRange["end"].line + 1,
-              character = symbol.selectionRange["end"].character,
-            },
-          } or {
-            start = { line = line, character = character },
-            ["end"] = { line = range["end"].line + 1, character = range["end"].character },
-          },
-          detail = symbol.detail,
-          icon = eve.icon.kind[kind_name] or "󰅩",
-          icon_hl = "f_lsp_symbol_icon_" .. kind_name,
-          line = line,
-          character = character,
-          parent = parent_uuid,
-        }
-
-        -- Store item for processing
-        local item = {
-          uuid = symbol_uuid,
-          parent = parent_uuid,
-          data = symbol_data,
-        }
-        items[#items + 1] = item
-
-        -- Process children recursively if they exist (IMPORTANT: do this immediately)
-        if symbol.children and #symbol.children > 0 then
-          process_symbols_recursive(symbol.children, symbol_uuid, symbol_uuid .. "/")
-        end
-
-        ::continue::
-      end
-    end
-
-    -- Start processing from root level
-    process_symbols_recursive(symbols, tree.root, "")
-
-    -- Sort items by position
-    table.sort(items, function(a, b)
-      local a_line = a.data.line or 0
-      local b_line = b.data.line or 0
-      if a_line == b_line then
-        return (a.data.character or 0) < (b.data.character or 0)
-      end
-      return a_line < b_line
-    end)
-
-    -- Fix last child marking - group by parent
-    local parent_groups = {}
-    for _, item in ipairs(items) do
-      local parent_uuid = item.parent
-      if not parent_groups[parent_uuid] then
-        parent_groups[parent_uuid] = {}
-      end
-      parent_groups[parent_uuid][#parent_groups[parent_uuid] + 1] = item
-    end
-
-    -- Mark last items for each parent
-    for _, children in pairs(parent_groups) do
-      if #children > 0 then
-        local last_item = children[#children]
-        last_item.data.last = true
-      end
-    end
-
-    -- Add all items to tree (children are already processed recursively)
-    for _, item in ipairs(items) do
-      tree:insert(item.uuid, item.parent, item.data)
-    end
-
-    -- Call the callback to trigger UI update
-    if callback then
-      callback()
-    end
-  end
-
-  -- Make LSP request for symbols following locate_symbols pattern
-  local request_method = workspace_mode and "workspace/symbol" or "textDocument/documentSymbol"
-  local request_params
-
-  if workspace_mode then
-    -- For workspace symbols, use query parameter (could be from finder input)
-    request_params = { query = o_finder_input:snapshot() or "" }
-  else
-    -- For document symbols, use text document params
-    request_params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
-  end
-
-  vim.lsp.buf_request(bufnr, request_method, request_params, handler)
+    callback()
+  end)
 end
 
----@param picker                        eve.ux.picker.TreeComposer
-refresh = function(picker)
+---@return nil
+local function refresh()
   local tree = picker._tree ---@type std.collection.Tree
   local treeview = picker._treeview ---@type eve.ux.picker.TreeView
+
+  _tick_refresh = _tick_refresh + 1 ---@type integer
+  local tick_refresh = _tick_refresh ---@type integer
 
   tree:clear()
   treeview:clear()
 
   fetch_symbols(tree, function()
-    -- This callback is called after LSP symbols are processed
-    tree:unsafe_traverse(tree.root, function(ctx)
-      local nodemap = ctx.nodemap ---@type table<string, std.collection.tree.INode>
-      for uuid, node in pairs(nodemap) do
-        local has_children = #node.children > 0
-        if has_children then
-          local nodestate = {
-            nodetype = "container",
-            collapsed = false,
-            tick_invisible = 0,
-            tick_matched = 0,
-            tick_selected = 0,
-            tick_selected_maximum = 0,
-            text = node.data.name,
-            text_lower = node.data.name:lower(),
-          }
-          treeview:insert(uuid, nodestate)
-        else
-          -- Leaf node (symbol without children)
-          local nodestate = {
-            nodetype = "leaf",
-            collapsed = false,
-            tick_invisible = 0,
-            tick_matched = 0,
-            tick_selected = 0,
-            text = node.data.name,
-            text_lower = node.data.name:lower(),
-          }
-          treeview:insert(uuid, nodestate)
-        end
-      end
-    end)
+    if _tick_refresh == tick_refresh then
+      tree:quick_traverse(tree.root, function(_, node)
+        -- Insert into treeview with appropriate nodestate
+        local has_children = node.children and #node.children > 0
+        local nodestate = {
+          nodetype = has_children and "container" or "leaf",
+          collapsed = false,
+          tick_invisible = 0,
+          tick_matched = 0,
+          tick_selected = 0,
+          tick_selected_maximum = 0,
+          cache_treeview = nil,
+        }
+        treeview:insert(node.uuid, nodestate)
+      end)
 
-    picker:attach(tree.root)
-    picker:mark_result_dirty()
-  end, picker)
+      picker:attach(tree.root)
+      picker:mark_result_dirty()
+    end
+  end)
 end
 
----@type eve.ux.picker.view.tree.IListviewLeafNodeRenderer
-local function render_listview_leaf(_, node)
-  local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-  local icon = symbol_data.icon or "●"
-  local symbolname = symbol_data.name or "Unknown"
-
+local function render_symbol(_, node)
+  local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  local icon = data.icon or "●"
+  local symbolname = data.name or "Unknown"
   local text = string.format("%s %s", icon, symbolname)
   local icon_end = #icon + 1
 
-  local highlights = {
-    { coll = 0, colr = icon_end, hlname = symbol_data.icon_hl or "DiagnosticInfo" },
-    { coll = icon_end, colr = #text, hlname = "f_lsp_symbol_text" },
+  return {
+    text = text,
+    highlights = {
+      { coll = 0, colr = icon_end, hlname = data.icon_hln or "DiagnosticInfo" },
+      { coll = icon_end, colr = #text, hlname = "f_lsp_symbol_text" },
+    },
   }
-
-  return { text = text, highlights = highlights }
-end
-
----@type eve.ux.picker.view.tree.IListviewLeafLocationRenderer
-local function render_listview_location(_, node)
-  local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-  if symbol_data and symbol_data.line then
-    return {
-      text = string.format(":%d", symbol_data.line),
-      highlights = { { coll = 0, colr = 10, hlname = "LineNr" } },
-    }
-  end
-  return { text = "", highlights = {} }
 end
 
 ---@type eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
-local function render_treeview_container(_, node)
-  local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-  local icon = symbol_data.icon or "●"
-  local symbolname = symbol_data.name or "Unknown"
+local function render_treeview_container(_, node, _, _, folded_depth)
+  if folded_depth == 0 then
+    return render_symbol(_, node)
+  end
 
-  local text = string.format("%s %s", icon, symbolname)
-  local icon_end = #icon + 1
+  local N = folded_depth + 1 ---@type integer
+  local items = {} ---@type fml.action.find.lsp_symbols.ISymbolData[]
+  items[N] = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
 
-  local highlights = {
-    { coll = 0, colr = icon_end, hlname = symbol_data.icon_hl or "DiagnosticInfo" },
-    { coll = icon_end, colr = #text, hlname = "f_lsp_symbol_text" },
+  local o = node ---@type std.collection.tree.INode
+  for i = folded_depth, 1, -1 do
+    local v = picker._tree:retrieve(o.parent)
+    ---@cast v                          std.collection.tree.INode
+
+    o = v
+    items[i] = o.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  end
+
+  local text = "" ---@type string
+  local highlights = {} ---@type table[]
+  local offset = 0 ---@type integer
+
+  local sep = "  " ---@type string
+  for i = 1, N, 1 do
+    local item = items[i] ---@type fml.action.find.lsp_symbols.ISymbolData
+
+    if i > 1 then
+      text = text .. sep
+      highlights[#highlights + 1] = {
+        coll = offset,
+        colr = offset + #sep,
+        hlname = "f_lsp_symbol_sep",
+      }
+      offset = offset + #sep
+    end
+
+    local icon = item.icon or "●"
+    local symbol_name = item.name or "Unknown"
+    local part_text = string.format("%s %s", icon, symbol_name)
+
+    text = text .. part_text
+    highlights[#highlights + 1] = {
+      coll = offset,
+      colr = offset + #icon,
+      hlname = item.icon_hln or "DiagnosticInfo",
+    }
+    highlights[#highlights + 1] = {
+      coll = offset + #icon + 1,
+      colr = offset + #part_text,
+      hlname = "f_lsp_symbol_text",
+    }
+
+    offset = offset + #part_text
+  end
+
+  return {
+    text = text,
+    highlights = highlights,
   }
-
-  return { text = text, highlights = highlights }
 end
 
----@type eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
-local function render_treeview_leaf(_, node)
+local function render_location(_, node)
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-  local icon = symbol_data.icon or "●"
-  local symbolname = symbol_data.name or "Unknown"
-
-  local text = string.format("%s %s", icon, symbolname)
-  local icon_end = #icon + 1
-
-  local highlights = {
-    { coll = 0, colr = icon_end, hlname = symbol_data.icon_hl or "DiagnosticInfo" },
-    { coll = icon_end, colr = #text, hlname = "f_lsp_symbol_text" },
-  }
-
-  return { text = text, highlights = highlights }
-end
-
----@type eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
-local function render_treeview_location(_, node)
-  local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-  if symbol_data and symbol_data.line then
+  if symbol_data and symbol_data.lnum then
     return {
-      text = string.format(":%d", symbol_data.line),
+      text = string.format(":%d", symbol_data.lnum),
       highlights = { { coll = 0, colr = 10, hlname = "LineNr" } },
     }
   end
   return { text = "", highlights = {} }
 end
 
-local picker ---@type eve.ux.picker.TreeComposer
+local function render_preview(bufnr, force)
+  if not filepath_sourcefile then
+    if force then
+      local lines = { "No source file available for preview" }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    end
+    return {
+      cursorline = true,
+      number = true,
+      title = "No Source File",
+      wrap = false,
+      whitespaces = nil,
+      lnum = 1,
+    }
+  end
+
+  local nodeuuid = picker:__retrieve_nodeuuid__() ---@type string|nil
+  if not nodeuuid then
+    if force then
+      local lines = { "No symbol selected" }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    end
+    return {
+      cursorline = true,
+      number = true,
+      title = "No Symbol Selected",
+      wrap = false,
+      whitespaces = nil,
+      lnum = 1,
+    }
+  end
+
+  local node = picker._tree:retrieve(nodeuuid) ---@type std.collection.tree.INode|nil
+  if node == nil or node.data == nil then
+    if force then
+      local lines = { "Invalid symbol data" }
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    end
+    return {
+      cursorline = true,
+      number = true,
+      title = "Invalid Symbol",
+      wrap = false,
+      whitespaces = nil,
+      lnum = 1,
+    }
+  end
+
+  plainfile:render(bufnr, filepath_sourcefile, force)
+
+  local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  return {
+    cursorline = true,
+    number = true,
+    title = vim.fn.fnamemodify(filepath_sourcefile, ":t") .. ":" .. data.lnum,
+    wrap = false,
+    whitespaces = true,
+    lnum = data.lnum,
+    col = data.col,
+  }
+end
+
 picker = eve.ux.picker.TreeComposer.new({
   name = name,
   permanent = true,
   title = title,
   height = 0.9,
-  width = 120,
+  width = 0.9,
   node_sorter = function(a, b)
     local a_line = a.data.line or 0
     local b_line = b.data.line or 0
@@ -467,110 +310,49 @@ picker = eve.ux.picker.TreeComposer.new({
   flag_selected = std.Observable.from_value(false),
 
   -- Required renderer functions
-  render_listview_leaf = render_listview_leaf,
-  render_listview_location = render_listview_location,
+  render_listview_leaf = render_symbol,
+  render_listview_location = render_location,
   render_treeview_container = render_treeview_container,
-  render_treeview_leaf = render_treeview_leaf,
-  render_treeview_location = render_treeview_location,
+  render_treeview_leaf = render_symbol,
+  render_treeview_location = render_location,
+
+  render_preview = render_preview,
 
   on_confirm = function(self, selected_uuids)
-    if selected_uuids and #selected_uuids > 0 then
-      self:close()
+    if not selected_uuids or #selected_uuids == 0 then
+      return
+    end
 
-      -- Get symbol data from the first selected node
-      local symbol_uuid = selected_uuids[1]
-      local node = picker._tree:retrieve(symbol_uuid)
-      if node and node.data then
-        local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+    self:close()
 
-        -- Use selection_range if available for more precise positioning
-        local target_line, target_col
-        if symbol_data.selection_range then
-          target_line = symbol_data.selection_range.start.line
-          target_col = symbol_data.selection_range.start.character
-        else
-          target_line = symbol_data.line or 1
-          target_col = symbol_data.character or 0
-        end
+    local node = picker._tree:retrieve(selected_uuids[1])
+    if not (node and node.data and filepath_sourcefile) then
+      return
+    end
 
-        -- Ensure we have a valid source file
-        if not filepath_sourcefile or filepath_sourcefile == "" then
-          std.reporter.warn({
-            from = name,
-            subject = "on_confirm",
-            message = "No source file available for navigation",
-          })
-          return
-        end
+    local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+    local target_bufnr = eve.buf.loadfile(filepath_sourcefile)
+    if not target_bufnr then
+      return
+    end
 
-        -- Get or load the buffer for the source file
-        local target_bufnr = eve.buf.loadfile(filepath_sourcefile)
-        if not target_bufnr or not vim.api.nvim_buf_is_valid(target_bufnr) then
-          std.reporter.error({
-            from = name,
-            subject = "on_confirm",
-            message = "Failed to load source file buffer",
-            details = { filepath = filepath_sourcefile },
-          })
-          return
-        end
-
-        -- Find a window displaying the target buffer, or use current window
-        local target_winid = nil
-        for _, winid in ipairs(vim.api.nvim_list_wins()) do
-          if vim.api.nvim_win_get_buf(winid) == target_bufnr then
-            target_winid = winid
-            break
-          end
-        end
-
-        -- If no window is displaying the buffer, use the current window
-        if not target_winid then
-          target_winid = vim.api.nvim_get_current_win()
-          -- Switch to the target buffer in current window
-          vim.api.nvim_win_set_buf(target_winid, target_bufnr)
-        end
-
-        -- Validate line number against buffer content
-        local line_count = vim.api.nvim_buf_line_count(target_bufnr)
-        if target_line > line_count then
-          target_line = line_count
-        end
-        if target_line < 1 then
-          target_line = 1
-        end
-
-        -- Validate column position against line content
-        local line_content = vim.api.nvim_buf_get_lines(target_bufnr, target_line - 1, target_line, false)[1] or ""
-        local line_length = #line_content
-        if target_col > line_length then
-          target_col = line_length
-        end
-        if target_col < 0 then
-          target_col = 0
-        end
-
-        -- Focus the target window and set cursor position
-        vim.api.nvim_set_current_win(target_winid)
-        vim.api.nvim_win_set_cursor(target_winid, { target_line, target_col })
-
-        -- Center the line and open folds if necessary
-        vim.cmd("normal! zv") -- Open folds
-        vim.cmd("normal! zz") -- Center the line
-
-        -- Flash the cursor location for better visibility
-        vim.defer_fn(function()
-          if vim.api.nvim_win_is_valid(target_winid) and vim.api.nvim_get_current_win() == target_winid then
-            vim.cmd("normal! zv") -- Ensure folds are still open
-          end
-        end, 50)
+    -- Find existing window or use current one
+    local target_winid = vim.api.nvim_get_current_win()
+    for _, winid in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_get_buf(winid) == target_bufnr then
+        target_winid = winid
+        break
       end
     end
+
+    -- Navigate to symbol location
+    vim.api.nvim_win_set_buf(target_winid, target_bufnr)
+    vim.api.nvim_set_current_win(target_winid)
+    vim.api.nvim_win_set_cursor(target_winid, { symbol_data.lnum, symbol_data.col })
+    vim.cmd("normal! zv zz")
   end,
 
-  on_refresh = function(self)
-    refresh(self)
-  end,
+  on_refresh = refresh,
 })
 
 ---@class fml.action.find
@@ -598,7 +380,7 @@ function M.find_lsp_symbols()
   picker:focus()
 
   if dirty then
-    refresh(picker)
+    refresh()
   end
 end
 

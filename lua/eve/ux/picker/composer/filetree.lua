@@ -1255,6 +1255,7 @@ function M.new(props)
   self.flag_regex = o_flag_regex
   self.flag_sensitive = o_flag_sensitive
   self.flag_selected = o_flag_selected
+  self.flag_viewtype = o_flag_viewtype
 
   self._disposed = false
   self._filetree = filetree

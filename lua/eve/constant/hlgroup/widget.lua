@@ -132,6 +132,7 @@ function M.gen_hlgroup_map(context)
     f_lsp_symbol_icon_Unit = { fg = c.brightPurple },
     f_lsp_symbol_icon_Value = { fg = c.aqua },
     f_lsp_symbol_icon_Variable = { fg = c.brightPurple },
+    f_lsp_symbol_sep = { fg = c.bg4 },
     f_lsp_symbol_text = { fg = c.fg2 },
 
     ---message
