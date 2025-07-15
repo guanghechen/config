@@ -1,0 +1,6 @@
+projects/
+shell-snapshots/
+statsig/
+todos/
+.claude.json*
+*.local.json
