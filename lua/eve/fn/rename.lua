@@ -47,7 +47,11 @@ local function rename(params)
 
   if not ok then
     local entity_type = isdir and "directory" or "file"
-    vim.notify("Failed to rename " .. entity_type .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+    std.reporter.error({
+      from = "eve.fn.rename",
+      subject = "rename_failed",
+      message = string.format("Failed to rename %s: %s", entity_type, err or "unknown error"),
+    })
     return
   end
 

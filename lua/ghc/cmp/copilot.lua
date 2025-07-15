@@ -26,8 +26,11 @@ function util.cancel_request(client, req_id)
       client:cancel_request(req_id)
     end)
     if not success then
-      local error_msg = "Failed to cancel LSP request: " .. tostring(err) ---@type string
-      vim.notify(error_msg, vim.log.levels.WARN)
+      std.reporter.warn({
+        from = "ghc.cmp.copilot",
+        subject = "cancel_request_failed",
+        message = string.format("Failed to cancel LSP request: %s", tostring(err)),
+      })
     end
   end
 end
@@ -429,7 +432,11 @@ function M:get_completions(ctx, resolve)
     end)
 
     if not success then
-      vim.notify("Copilot completion error: " .. tostring(err), vim.log.levels.ERROR)
+      std.reporter.error({
+        from = "ghc.cmp.copilot",
+        subject = "completion_error",
+        message = string.format("Copilot completion error: %s", tostring(err)),
+      })
     end
   end)()
 end
