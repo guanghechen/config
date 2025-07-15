@@ -20,6 +20,7 @@ clone_or_update_config_repo() {
   local OPTIONAL_CONFIG_BRANCHES=(
     "alacritty"
     "alacritty-windows"
+    "claude"
     "ghostty"
     "helix"
     "kitty"

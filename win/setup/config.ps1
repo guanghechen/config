@@ -14,6 +14,7 @@ $optinal_config_repo_branch = @(
   "alacritty",
   "alacritty-windows",
   "btop",
+  "claude",
   "fish",
   "ghostty",
   "helix",
