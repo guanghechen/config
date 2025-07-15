@@ -3,6 +3,14 @@ fish_vi_key_bindings
 ## Reset fish_user_paths (prevent duplication)
 set -U fish_user_paths
 
+## Setup bootstrap envs
+set -gx XDG_CONFIG_HOME "$HOME/.config"
+set -gx LC_CTYPE en_US.UTF-8
+set -gx LC_ALL en_US.UTF-8
+set -gx LANG en_US.UTF-8
+set -gx TZ Asia/Shanghai
+set -gx no_proxy "localhost,127.0.0.1,::1"
+
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
 if test -f /opt/homebrew/bin/brew
@@ -31,25 +39,14 @@ fish_add_path "$HOMEBREW_PREFIX/bin/"
 fish_add_path "$HOME/.local/bin/"
 
 ## setup environments
-set -gx LC_CTYPE en_US.UTF-8
-set -gx LC_ALL en_US.UTF-8
-set -gx LANG en_US.UTF-8
-set -gx TZ Asia/Shanghai
-
-set -gx XDG_CONFIG_HOME "$HOME/.config"
-
 set -gx EDITOR "$NEOVIM_HOME/bin/nvim"
 set -gx VISUAL "$NEOVIM_HOME/bin/nvim"
 set -gx MYVIMRC "$HOME/.config/nvim/init.lua"
 set -gx VIM "$NEOVIM_HOME/share/nvim"
 set -gx VIMRUNTIME "$NEOVIM_HOME/share/nvim/runtime"
-
 set -gx NODE_OPTIONS "--max-old-space-size=8192"
-
 set -gx PYTHONIOENCODING utf8
 set -gx PYTHONUTF8 1
-
-set -gx no_proxy "localhost,127.0.0.1,::1"
 
 ## platform specific
 if test (uname) = Darwin
