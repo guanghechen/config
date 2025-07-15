@@ -10,6 +10,12 @@ Set-PSReadLineOption -Colors @{
   Default                 = "White"
 }
 
+. "$env:XDG_CONFIG_HOME\pwsh\config.ps1"
+$localConfigPath = "$env:XDG_CONFIG_HOME\pwsh\local\config.ps1"
+if (Test-Path $localConfigPath) {
+  . $localConfigPath
+}
+
 ## Setup conda
 If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
   (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
