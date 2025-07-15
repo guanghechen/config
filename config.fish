@@ -32,11 +32,11 @@ if not set -q PREFER_STABLE_NEOVIM; or test "$PREFER_STABLE_NEOVIM" != true
     else if test -f /opt/me/app/neovim/bin/nvim
         set -gx NEOVIM_HOME /opt/me/app/neovim
     end
-    fish_add_path "$NEOVIM_HOME/bin/" $PATH
+    fish_add_path --append "$NEOVIM_HOME/bin/" $PATH
 end
-fish_add_path /usr/local/bin/
-fish_add_path "$HOMEBREW_PREFIX/bin/"
-fish_add_path "$HOME/.local/bin/"
+fish_add_path --append /usr/local/bin/
+fish_add_path --append "$HOMEBREW_PREFIX/bin/"
+fish_add_path --append "$HOME/.local/bin/"
 
 ## setup environments
 set -gx EDITOR "$NEOVIM_HOME/bin/nvim"

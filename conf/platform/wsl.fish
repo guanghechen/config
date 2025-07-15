@@ -1,3 +1,8 @@
+# Setup path
+fish_add_path --append /mnt/c/WINDOWS/System32/
+fish_add_path --append /mnt/c/WINDOWS
+fish_add_path --append "/mnt/c/Program Files/PowerShell/7/"
+
 ## Aliases
 alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.
 alias code='env -u TMUX -u TERM /mnt/c/app/vscode/bin/code'
