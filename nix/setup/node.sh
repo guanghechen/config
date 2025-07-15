@@ -9,5 +9,5 @@ else
 fi
 
 printf "\n\e[34m  [setup node] setup yozora...\e[0m\n"
-fish -c "npm install -g npm pm2 yarn prettier"
+fish -c "npm install -g npm bun pm2 yarn prettier"
 fish -c "cd $HOME/.config/yozora && yarn install"
