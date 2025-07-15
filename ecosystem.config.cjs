@@ -4,6 +4,10 @@ const ROOT_CONFIG = path.resolve(__dirname, "..");
 const ROOT_SOURCECODES = process.env.ROOT_SOURCECODES;
 const USERHOME = path.dirname(ROOT_CONFIG);
 
+const COPILOT_API_PORT = Number.parseInt(
+  String(process.env.COPILOT_API_PORT || 4343),
+);
+
 module.exports = {
   apps: [
     {
@@ -22,7 +26,7 @@ module.exports = {
         path.resolve(ROOT_SOURCECODES, "github/ericc-ch/copilot-api"),
       ),
       script: "bun",
-      args: "run start start --port=4343",
+      args: `run start start --port=${COPILOT_API_PORT}`,
       env: {
         NODE_ENV: "production",
         HOST: "127.0.0.1",
