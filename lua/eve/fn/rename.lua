@@ -33,6 +33,9 @@ local function rename(params)
     }
   end
 
+  -- Preload files to ensure LSP is triggered
+  eve.lsp.preload_rename_files(changes.files)
+
   local clients = vim.lsp.get_clients()
   for _, client in ipairs(clients) do
     if client:supports_method("workspace/willRenameFiles") then
@@ -60,6 +63,9 @@ local function rename(params)
       client:notify("workspace/didRenameFiles", changes)
     end
   end
+
+  -- Replace old buffers with new buffers after rename
+  eve.lsp.replace_renamed_buffers(changes.files)
 end
 
 return rename

@@ -151,6 +151,63 @@ function M.on_supports_method(method, callback)
   })
 end
 
+---@param files                         { oldUri: string, newUri: string }[]
+---@return nil
+function M.preload_rename_files(files)
+  for _, file_change in ipairs(files) do
+    local old_filepath = vim.uri_to_fname(file_change.oldUri)
+    if std.path.is_exist_filepath(old_filepath) then
+      eve.buf.loadfile(old_filepath)
+    end
+  end
+end
+
+---@param files                         { oldUri: string, newUri: string }[]
+---@return nil
+function M.replace_renamed_buffers(files)
+  for _, file_change in ipairs(files) do
+    local old_filepath = vim.uri_to_fname(file_change.oldUri)
+    local new_filepath = vim.uri_to_fname(file_change.newUri)
+
+    -- Find buffer with old filepath
+    local old_bufnr = vim.fn.bufnr(old_filepath)
+    if old_bufnr ~= -1 and vim.api.nvim_buf_is_valid(old_bufnr) then
+      -- Check if buffer is currently displayed in any windows
+      local windows_with_buffer = {}
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_get_buf(win) == old_bufnr then
+          windows_with_buffer[#windows_with_buffer + 1] = win
+        end
+      end
+
+      -- Create new buffer with new filepath
+      local new_bufnr = vim.fn.bufadd(new_filepath)
+      if new_bufnr and vim.api.nvim_buf_is_valid(new_bufnr) then
+        -- Load the new buffer content
+        vim.fn.bufload(new_bufnr)
+
+        -- Copy buffer-local settings from old to new buffer
+        local old_bo = vim.bo[old_bufnr]
+        local new_bo = vim.bo[new_bufnr]
+        new_bo.filetype = old_bo.filetype
+        new_bo.buflisted = old_bo.buflisted
+
+        -- Replace old buffer with new buffer in all windows
+        for _, win in ipairs(windows_with_buffer) do
+          vim.api.nvim_win_set_buf(win, new_bufnr)
+        end
+
+        -- Delete the old buffer
+        vim.schedule(function()
+          if vim.api.nvim_buf_is_valid(old_bufnr) then
+            vim.api.nvim_buf_delete(old_bufnr, { force = true })
+          end
+        end)
+      end
+    end
+  end
+end
+
 M.get_capabilities = function()
   local has_blink, blink = pcall(require, "blink.cmp")
   local capabilities = vim.tbl_deep_extend(
