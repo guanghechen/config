@@ -131,13 +131,10 @@ end
 ---@param filepath                      string
 ---@return integer|nil
 function M.locate_bufnr(filepath)
-  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  for _, bufnr in ipairs(bufnrs) do
-    local bufpath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if bufpath == filepath then
-      vim.bo[bufnr].buflisted = true
-      return bufnr
-    end
+  local bufnr = vim.fn.bufnr(filepath) ---@type integer
+  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.bo[bufnr].buflisted = true
+    return bufnr
   end
 end
 
