@@ -1,2 +1,2 @@
 export { GlobalLayout } from './GlobalLayout'
-export { FloatingNavigation } from './FloatingNavigation'
+export { FloatingGate } from './FloatingNavigation'

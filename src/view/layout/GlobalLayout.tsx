@@ -1,5 +1,5 @@
 import React from 'react'
-import { FloatingNavigation } from './FloatingNavigation'
+import { FloatingGate } from './FloatingNavigation'
 
 interface GlobalLayoutProps {
   children: React.ReactNode
@@ -9,7 +9,7 @@ export const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
     <div className="relative min-h-screen">
       {children}
-      <FloatingNavigation />
+      <FloatingGate />
     </div>
   )
 }
