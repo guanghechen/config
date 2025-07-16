@@ -1,6 +1,7 @@
 import cn from 'clsx'
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { ThemeToggle } from '@/container/ThemeToggle'
 
 interface RouteItem {
   path: string
@@ -26,7 +27,7 @@ export const FloatingNavigation: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false)
   const [position, setPosition] = useState<Position>(DEFAULT_POSITION)
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 })
-  
+
   const location = useLocation()
   const navigate = useNavigate()
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -54,10 +55,10 @@ export const FloatingNavigation: React.FC = () => {
   const constrainPosition = useCallback((newPosition: Position): Position => {
     const buttonSize = 48 // 12 * 4 (w-12 h-12)
     const padding = 8
-    
+
     return {
       x: Math.max(padding, Math.min(window.innerWidth - buttonSize - padding, newPosition.x)),
-      y: Math.max(padding, Math.min(window.innerHeight - buttonSize - padding, newPosition.y))
+      y: Math.max(padding, Math.min(window.innerHeight - buttonSize - padding, newPosition.y)),
     }
   }, [])
 
@@ -65,27 +66,30 @@ export const FloatingNavigation: React.FC = () => {
     // Prevent click event when starting drag
     e.preventDefault()
     e.stopPropagation()
-    
+
     if (!buttonRef.current) return
-    
+
     const rect = buttonRef.current.getBoundingClientRect()
     setDragOffset({
       x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      y: e.clientY - rect.top,
     })
     setIsDragging(true)
   }, [])
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return
-    
-    const newPosition = constrainPosition({
-      x: window.innerWidth - (e.clientX - dragOffset.x) - 48, // Convert to right offset
-      y: window.innerHeight - (e.clientY - dragOffset.y) - 48  // Convert to bottom offset
-    })
-    
-    setPosition(newPosition)
-  }, [isDragging, dragOffset, constrainPosition])
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return
+
+      const newPosition = constrainPosition({
+        x: window.innerWidth - (e.clientX - dragOffset.x) - 48, // Convert to right offset
+        y: window.innerHeight - (e.clientY - dragOffset.y) - 48, // Convert to bottom offset
+      })
+
+      setPosition(newPosition)
+    },
+    [isDragging, dragOffset, constrainPosition],
+  )
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false)
@@ -97,7 +101,7 @@ export const FloatingNavigation: React.FC = () => {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
       document.body.style.userSelect = 'none' // Prevent text selection while dragging
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
@@ -112,7 +116,8 @@ export const FloatingNavigation: React.FC = () => {
   }
 
   const toggleExpanded = (): void => {
-    if (!isDragging) { // Only toggle if not dragging
+    if (!isDragging) {
+      // Only toggle if not dragging
       setIsExpanded(!isExpanded)
     }
   }
@@ -122,27 +127,28 @@ export const FloatingNavigation: React.FC = () => {
     const handleResize = () => {
       setPosition(current => constrainPosition(current))
     }
-    
+
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [constrainPosition])
 
   return (
-    <div 
+    <div
       className="fixed z-50"
-      style={{ 
-        right: `${position.x}px`, 
-        bottom: `${position.y}px` 
+      style={{
+        right: `${position.x}px`,
+        bottom: `${position.y}px`,
       }}
     >
       {/* Floating Navigation Menu */}
       <div
         className={cn(
           'mb-3 flex flex-col gap-2 overflow-hidden transition-all duration-300 ease-in-out',
-          isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0',
         )}
       >
-        {routes.map((route) => {
+        {/* Route Navigation Buttons */}
+        {routes.map(route => {
           const isActive =
             location.pathname === route.path ||
             (route.path === '/' && location.pathname === '/workspace/')
@@ -157,7 +163,7 @@ export const FloatingNavigation: React.FC = () => {
                 'hover:scale-105 hover:shadow-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500',
                 isActive
                   ? 'bg-blue-500/90 text-white'
-                  : 'bg-white/90 text-gray-700 hover:bg-white dark:bg-gray-800/90 dark:text-gray-200 dark:hover:bg-gray-700/90'
+                  : 'bg-white/90 text-gray-700 hover:bg-white dark:bg-gray-800/90 dark:text-gray-200 dark:hover:bg-gray-700/90',
               )}
               title={`Navigate to ${route.label}`}
             >
@@ -166,6 +172,20 @@ export const FloatingNavigation: React.FC = () => {
             </button>
           )
         })}
+
+        {/* Theme Toggle */}
+        <div
+          className={cn(
+            'flex items-center justify-center rounded-lg px-2 py-2 shadow-lg backdrop-blur-md',
+            'border border-white/20 transition-all duration-200',
+            'bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-700/90',
+            'hover:scale-105 hover:shadow-xl',
+          )}
+        >
+          <div className="[&>div]:ml-0">
+            <ThemeToggle />
+          </div>
+        </div>
       </div>
 
       {/* Toggle Button */}
@@ -178,23 +198,33 @@ export const FloatingNavigation: React.FC = () => {
           'border border-white/20 transition-all duration-200',
           'hover:scale-110 hover:shadow-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500',
           'bg-blue-500/90 text-white hover:bg-blue-600/90',
-          isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab'
+          isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab',
         )}
         title={isExpanded ? 'Hide navigation' : 'Show navigation'}
       >
         <svg
           className={cn(
             'h-6 w-6 transition-transform duration-300',
-            isExpanded ? 'rotate-45' : 'rotate-0'
+            isExpanded ? 'rotate-45' : 'rotate-0',
           )}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
           {isExpanded ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           )}
         </svg>
       </button>

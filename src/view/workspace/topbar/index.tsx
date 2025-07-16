@@ -2,7 +2,6 @@ import cn from 'clsx'
 import React from 'react'
 import { CopyButton } from '@/component/CopyButton'
 import { DockToRightIcon, OpenInNewIcon, OpenWithIcon } from '@/component/icon/material'
-import { ThemeToggle } from '@/container/ThemeToggle'
 import type { WorkspaceViewModel } from '@/context/workspace'
 import {
   useCurrentFilepath,
@@ -74,22 +73,16 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
               <OpenInNewIcon className="size-4" />
             </a>
           </div>
-          <div className="w-28">
-            <CopyButton
-              className={cn(
-                'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
-                'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-                'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
-              )}
-              calcContentForCopy={() => filepath || ''}
-            />
-          </div>
+          <CopyButton
+            className={cn(
+              'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+              'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
+              'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+            )}
+            calcContentForCopy={() => filepath || ''}
+          />
         </div>
       )}
-      <div className="w-full flex-auto" />
-      <div className="flex-initial">
-        <ThemeToggle />
-      </div>
     </div>
   )
 }
