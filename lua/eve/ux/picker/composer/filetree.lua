@@ -599,7 +599,7 @@ function M.new(props)
               })
 
               if success then
-                self:__update_tree_after_rename__(filenode, next_filepath, isdir)
+                self:__update_tree_after_rename__(filepath, next_filepath, isdir)
               end
             end
           end)
@@ -618,7 +618,7 @@ function M.new(props)
           return
         end
 
-        self:__update_tree_after_rename__(filenode, next_filepath, isdir)
+        self:__update_tree_after_rename__(filepath, next_filepath, isdir)
       end
 
       ---@return nil
@@ -1886,36 +1886,100 @@ function M:__retrieve_filenode__()
   return node
 end
 
----@param filenode                      std.collection.filetree.INode
----@param next_filepath                 string
+---@param from                          string
+---@param to                            string
 ---@param isdir                         boolean
 ---@return nil
-function M:__update_tree_after_rename__(filenode, next_filepath, isdir)
-  local treeview = self._treeview
-  local scheduler_match = self._scheduler_match
+function M:__update_tree_after_rename__(from, to, isdir)
+  local from_nodeuuid = std.Filetree.uuid(from) ---@type string
+  local to_nodeuuid = std.Filetree.uuid(to) ---@type string
 
-  treeview:remove(filenode.uuid)
+  local filepaths = {} ---@type string[]
 
   if isdir then
-    treeview:insert_dirpath(next_filepath)
+    local result = oxi.fs.collect_files(from, true)
+    if result and result.files then
+      for _, relative_filepath in ipairs(result.files) do
+        local to_filepath = to .. std.env.PATH_SEP .. relative_filepath ---@type string
+        filepaths[#filepaths + 1] = to_filepath
+      end
+    end
   else
-    treeview:insert_filepath(next_filepath, false)
-
-    local new_uuid = std.Filetree.uuid(next_filepath)
-    for i, uuid in ipairs(self._uuids_file) do
-      if uuid == filenode.uuid then
-        self._uuids_file[i] = new_uuid
-        break
-      end
-    end
-    for i, uuid in ipairs(self._uuids_order) do
-      if uuid == filenode.uuid then
-        self._uuids_order[i] = new_uuid
-        break
-      end
-    end
+    filepaths[#filepaths + 1] = to ---@type string
   end
 
+  local filetree = self._filetree ---@type std.collection.Filetree
+  local treeview = self._treeview ---@type eve.ux.picker.FiletreeView
+  local selected_set = treeview:collect_selected() ---@type table<string, true>
+  local scheduler_match = self._scheduler_match
+
+  treeview:remove(from_nodeuuid)
+  filetree:remove(from_nodeuuid)
+
+  for _, filepath in ipairs(filepaths) do
+    filetree:insert_file_absolute(filepath)
+  end
+
+  local tick_selected = treeview._tick_selected ---@type integer
+  local statemap = treeview.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  ---@cast statemap                     table<string, eve.ux.picker.view.filetree.INodeState>
+
+  filetree:unsafe_traverse(to_nodeuuid, function(ctx)
+    local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
+
+    ---@param node                      std.collection.filetree.INode
+    ---@return nil
+    local function traverse(node)
+      if node.data.filetype == "directory" then
+        ---@type eve.ux.picker.view.filetree.IDirectoryNodeState
+        local nodestate = {
+          nodetype = "container",
+          collapsed = false,
+          tick_invisible = 0,
+          tick_matched = 0,
+          tick_selected = selected_set[node.uuid] and tick_selected or 0,
+          tick_selected_maximum = 0,
+        }
+        statemap[node.uuid] = nodestate
+
+        for _, uuid in ipairs(node.children) do
+          local childnode = nodemap[uuid] ---@type std.collection.filetree.INode|nil
+          if childnode ~= nil then
+            traverse(childnode)
+          end
+        end
+        return
+      end
+
+      if node.data.filetype == "file" then
+        ---@type eve.ux.picker.view.filetree.IFileNodeState
+        local nodestate = {
+          nodetype = "leaf",
+          collapsed = false,
+          tick_invisible = 0,
+          tick_matched = 0,
+          tick_selected = selected_set[node.uuid] and tick_selected or 0,
+        }
+        statemap[node.uuid] = nodestate
+        return
+      end
+
+      std.reporter.error({
+        from = self.fullname,
+        subject = "reset_filepaths",
+        message = "Unexpected filetype",
+        details = {
+          nodeuuid = node.uuid,
+          nodedata = node.data,
+        },
+      })
+    end
+
+    traverse(ctx.rootnode)
+  end)
+
+  treeview:mark_cache_treeview_dirty()
+  self:mark_result_dirty()
   scheduler_match:schedule()
 end
 
