@@ -3,6 +3,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { SiteContextProvider } from './context/site'
+import { GlobalLayout } from './view/layout'
 import './index.css'
 
 const WorkspaceView = React.lazy(() => import('@/view/workspace'))
@@ -27,7 +28,9 @@ const App: React.FC = () => {
         <MathJaxProvider>
           <SiteContextProvider>
             <BrowserRouter>
-              <AppRoutes />
+              <GlobalLayout>
+                <AppRoutes />
+              </GlobalLayout>
             </BrowserRouter>
           </SiteContextProvider>
         </MathJaxProvider>
