@@ -117,7 +117,7 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field protected _composer           eve.ux.picker.BasicComposer
 ---@field protected _plainfile          eve.ux.view.Plainfile
 ---@field protected _retriever          eve.ux.retriever.TreeRetriever
----@field protected _scheduler_match    std.collection.Scheduler|nil
+---@field protected _scheduler_match    std.collection.Scheduler
 ---@field protected _treeview           eve.ux.picker.FiletreeView
 ---
 ---@field protected _last_preview_filepath  string|nil
@@ -582,51 +582,43 @@ function M.new(props)
 
         local next_filepath = std.path.join(dirname, next_filename)
         if std.path.is_exist(next_filepath) then
-          std.reporter.error({
-            from = fullname,
-            subject = "rename_node",
-            message = "A file or directory with this name already exists.",
-            details = { from = filepath, to = next_filepath },
-          })
+          -- Ask user if they want to overwrite
+          vim.ui.select({ "No", "Yes" }, {
+            prompt = string.format('File "%s" already exists. Overwrite?', next_filename),
+            format_item = function(item)
+              return item
+            end,
+          }, function(choice)
+            if choice == "Yes" then
+              local isdir = filenode.data.filetype == "directory"
+              local success = eve.fn.rename({
+                from = filepath,
+                to = next_filepath,
+                isdir = isdir,
+                force = true,
+              })
+
+              if success then
+                self:__update_tree_after_rename__(filenode, next_filepath, isdir)
+              end
+            end
+          end)
           return
         end
-
-        local success = vim.fn.rename(filepath, next_filepath) == 0
-        if not success then
-          std.reporter.error({
-            from = fullname,
-            subject = "rename_node",
-            message = "Failed to rename file or directory.",
-            details = { from = filepath, to = next_filepath },
-          })
-          return
-        end
-
-        local fileuuid = filenode.uuid
-        treeview:remove(fileuuid)
 
         local isdir = filenode.data.filetype == "directory"
-        if isdir then
-          treeview:insert_dirpath(next_filepath)
-        else
-          treeview:insert_filepath(next_filepath, false)
+        local success = eve.fn.rename({
+          from = filepath,
+          to = next_filepath,
+          isdir = isdir,
+        })
 
-          local new_uuid = std.Filetree.uuid(next_filepath)
-          for i, uuid in ipairs(self._uuids_file) do
-            if uuid == fileuuid then
-              self._uuids_file[i] = new_uuid
-              break
-            end
-          end
-          for i, uuid in ipairs(self._uuids_order) do
-            if uuid == fileuuid then
-              self._uuids_order[i] = new_uuid
-              break
-            end
-          end
+        if not success then
+          -- Error already reported by eve.fn.rename, just return
+          return
         end
 
-        scheduler_match:schedule()
+        self:__update_tree_after_rename__(filenode, next_filepath, isdir)
       end
 
       ---@return nil
@@ -1019,6 +1011,12 @@ function M.new(props)
     },
     {
       modes = { "n", "v" },
+      key = "or",
+      desc = "filetree: rename node",
+      callback = actions.rename_node,
+    },
+    {
+      modes = { "n", "v" },
       key = "oz",
       desc = "filetree: toggle (recursively)",
       callback = actions.toggle_node_deeply,
@@ -1128,6 +1126,13 @@ function M.new(props)
       alias = { "a" },
       desc = "filetree: create node",
       callback = actions.create_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "or",
+      alias = { "r" },
+      desc = "filetree: rename node",
+      callback = actions.rename_node,
     },
     {
       modes = { "i", "n", "v" },
@@ -1879,6 +1884,39 @@ function M:__retrieve_filenode__()
   local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
   local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type std.collection.filetree.INode|nil
   return node
+end
+
+---@param filenode                      std.collection.filetree.INode
+---@param next_filepath                 string
+---@param isdir                         boolean
+---@return nil
+function M:__update_tree_after_rename__(filenode, next_filepath, isdir)
+  local treeview = self._treeview
+  local scheduler_match = self._scheduler_match
+
+  treeview:remove(filenode.uuid)
+
+  if isdir then
+    treeview:insert_dirpath(next_filepath)
+  else
+    treeview:insert_filepath(next_filepath, false)
+
+    local new_uuid = std.Filetree.uuid(next_filepath)
+    for i, uuid in ipairs(self._uuids_file) do
+      if uuid == filenode.uuid then
+        self._uuids_file[i] = new_uuid
+        break
+      end
+    end
+    for i, uuid in ipairs(self._uuids_order) do
+      if uuid == filenode.uuid then
+        self._uuids_order[i] = new_uuid
+        break
+      end
+    end
+  end
+
+  scheduler_match:schedule()
 end
 
 ---@return std.collection.filetree.INode|nil
