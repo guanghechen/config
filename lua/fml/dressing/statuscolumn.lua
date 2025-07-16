@@ -34,12 +34,13 @@ local icon_cache = {} ---@type table<string, string>
 local cache = {} ---@type table<string, string>
 
 local did_setup = false
+local cleanup_timer = nil ---@type uv.uv_timer_t|nil
 
 ---@return nil
 local function setup()
   if not did_setup then
     did_setup = true
-    std.timer.set_interval(function()
+    cleanup_timer = std.timer.set_interval(function()
       sign_cache = {}
       cache = {}
     end, config.refresh)
@@ -104,7 +105,7 @@ local function get_buf_signs(bufnr)
       ---@type fml.dressing.statuscolumn.ISign
       local sign = {
         type = "mark",
-        text = mark.string.sub(mark, 2),
+        text = string.sub(mark.mark, 2),
         texthl = "DiagnosticSignHint",
         priority = 0,
       }
@@ -266,6 +267,16 @@ function M.statuscolumn()
     return result
   end
   return ""
+end
+
+---@return nil
+function M.cleanup()
+  if cleanup_timer then
+    cleanup_timer:stop()
+    cleanup_timer:close()
+    cleanup_timer = nil
+    did_setup = false
+  end
 end
 
 vim.schedule(function()

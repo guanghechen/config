@@ -68,7 +68,7 @@ vim.api.nvim_create_autocmd("ModeChanged", {
       vim.schedule(function()
         local result = statusline:render(true) ---@type string
         vim.o.statusline = result
-        vim.api.nvim__redraw({ statusline = true, flush = true })
+        vim.cmd.redraw()
       end)
     end
     statusline:render()

@@ -26,10 +26,12 @@ function M.refresh_all()
   end)
 
   if devmode then
-    require("plenary.reload").reload_module("eve.constant.lang")
-    require("plenary.reload").reload_module("eve.constant.theme")
-    require("plenary.reload").reload_module("eve.constant.hlgroup")
-    vim.cmd(eve.command.definitions.ux.reload_theme.uuid .. " force")
+    pcall(function()
+      require("plenary.reload").reload_module("eve.constant.lang")
+      require("plenary.reload").reload_module("eve.constant.theme")
+      require("plenary.reload").reload_module("eve.constant.hlgroup")
+      vim.cmd(eve.command.definitions.ux.reload_theme.uuid .. " force")
+    end)
   end
 
   eve.status.suppress_warning:next(true)
