@@ -110,11 +110,29 @@ function M.setup_workspace()
     local B = std.path.locate_git_repo(cwd)
 
     if A == nil then
-      pcall(function()
+      local ok, err = pcall(function()
         vim.api.nvim_set_current_dir(p)
       end)
+      if not ok then
+        std.reporter.warn({
+          from = "eve.init",
+          subject = "setup_workspace",
+          message = "Failed to change directory to file directory",
+          details = { path = p, error = err },
+        })
+      end
     elseif A ~= B then
-      vim.api.nvim_set_current_dir(A)
+      local ok, err = pcall(function()
+        vim.api.nvim_set_current_dir(A)
+      end)
+      if not ok then
+        std.reporter.warn({
+          from = "eve.init",
+          subject = "setup_workspace", 
+          message = "Failed to change directory to git repo",
+          details = { repo_path = A, error = err },
+        })
+      end
     end
   end
 

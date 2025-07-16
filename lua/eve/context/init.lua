@@ -269,27 +269,10 @@ function M.watch_changes()
     M.lsp.code_lens,
     M.lsp.diagnostics_virt_lines,
     M.lsp.inlay_hints,
-    M.lsp.spellcheck,
     M.lsp.python_debug_host,
     M.lsp.python_debug_port,
     M.lsp.python_venv_path,
-    M.select.find_buffer_scope,
-    M.select.find_file_scope,
-    M.search_file.flag_replace,
-    M.search_file.max_filesize,
-    M.search_file.max_matches,
-    M.search_file.replacement,
   }
-  for _, key in ipairs(M.select.keys) do
-    local select_item = M.select[key] ---@type eve.context.select.item.state
-    table.insert(select_states, select_item.flag_case_sensitive)
-    table.insert(select_states, select_item.flag_gitignore)
-    table.insert(select_states, select_item.flag_exclude)
-    table.insert(select_states, select_item.flag_fuzzy)
-    table.insert(select_states, select_item.flag_regex)
-    table.insert(select_states, select_item.includes)
-    table.insert(select_states, select_item.excludes)
-  end
   std.fn.observe(select_states, function()
     ticker_workspace:tick()
     eve.status.dirtier_statusline:mark_dirty()
