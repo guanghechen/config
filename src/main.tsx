@@ -7,12 +7,14 @@ import './index.css'
 
 const WorkspaceView = React.lazy(() => import('@/view/workspace'))
 const NotFoundView = React.lazy(() => import('@/view/not-found'))
+const ExcalidrawPlayground = React.lazy(() => import('@/view/playground/excalidraw'))
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/" Component={WorkspaceView} />
       <Route path="/workspace/" Component={WorkspaceView} />
+      <Route path="/playground/excalidraw" Component={ExcalidrawPlayground} />
       <Route path="*" Component={NotFoundView} />
     </Routes>
   )
