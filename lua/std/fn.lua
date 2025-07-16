@@ -49,7 +49,7 @@ function M.equals_deep(left, right)
     return false
   end
 
-  for i = 0, #left, 1 do
+  for i = 1, #left, 1 do
     if not M.equals_deep(left[i], right[i]) then
       return false
     end
@@ -116,17 +116,13 @@ end
 ---@param total                         integer  total index
 ---@return integer
 function M.navigate_circular(current, step, total)
-  local candidate = (current + step - 1) % total
-
-  while candidate < 0 do
-    candidate = candidate + total
+  if total <= 0 then
+    return 1
   end
-
-  while candidate >= total do
-    candidate = candidate - total
-  end
-
-  return candidate + 1
+  
+  -- Convert to 0-based indexing, apply step, then normalize and convert back
+  local candidate = ((current - 1 + step) % total + total) % total + 1
+  return candidate
 end
 
 ---@param current                       integer  current index
@@ -270,12 +266,26 @@ end
 
 local BUFNR_DETECT_FILETYPE = -1 ---@type integer
 
+---@return nil
+local function cleanup_filetype_buffer()
+  if BUFNR_DETECT_FILETYPE > 0 and vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
+    vim.api.nvim_buf_delete(BUFNR_DETECT_FILETYPE, { force = true })
+    BUFNR_DETECT_FILETYPE = -1
+  end
+end
+
 ---@param filename                      string
 ---@return string|nil
 function M.detect_filetype(filename)
   if BUFNR_DETECT_FILETYPE < 1 or not vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
     BUFNR_DETECT_FILETYPE = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_name(BUFNR_DETECT_FILETYPE, "guanghechen://detect-filetype/" .. BUFNR_DETECT_FILETYPE)
+    
+    -- Set up cleanup when Neovim exits
+    vim.api.nvim_create_autocmd("VimLeavePre", {
+      callback = cleanup_filetype_buffer,
+      once = true,
+    })
   end
   return vim.filetype.match({ filename = filename, buf = BUFNR_DETECT_FILETYPE })
 end

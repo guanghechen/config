@@ -49,15 +49,55 @@ function M.copy_file(filepath_source, filepath_target, force)
     end
   end
 
-  local fin = assert(io.open(filepath_source, "rb"))
-  local content = fin:read("*all")
+  local fin, err_open = io.open(filepath_source, "rb")
+  if not fin then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "copy_file",
+      message = "Failed to open source file.",
+      details = { filepath_source = filepath_source, error = err_open },
+    })
+    return false
+  end
+
+  local content, err_read = fin:read("*all")
   fin:close()
+  
+  if not content then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "copy_file", 
+      message = "Failed to read source file.",
+      details = { filepath_source = filepath_source, error = err_read },
+    })
+    return false
+  end
 
   vim.fn.mkdir(std.path.dirname(filepath_target), "p")
 
-  local fout = assert(io.open(filepath_target, "wb"))
-  fout:write(content)
+  local fout, err_create = io.open(filepath_target, "wb")
+  if not fout then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "copy_file",
+      message = "Failed to create target file.",
+      details = { filepath_target = filepath_target, error = err_create },
+    })
+    return false
+  end
+
+  local ok, err_write = fout:write(content)
   fout:close()
+  
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "copy_file",
+      message = "Failed to write to target file.",
+      details = { filepath_target = filepath_target, error = err_write },
+    })
+    return false
+  end
 
   return true
 end
@@ -299,28 +339,28 @@ end
 function M.write_file(filepath, content)
   vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
 
-  local file = io.open(filepath, "wb")
+  local file, err_open = io.open(filepath, "wb")
   if not file then
     std.reporter.error({
       from = __module_name__,
       subject = "write_file",
       message = "Failed to open filepath.",
-      details = { filepath = filepath },
+      details = { filepath = filepath, error = err_open },
     })
     return
   end
 
-  local ok, err = pcall(file.write, file, content)
+  local ok, err_write = pcall(file.write, file, content)
+  file:close()
+  
   if not ok then
     std.reporter.error({
       from = __module_name__,
       subject = "write_file",
       message = "Failed to write content.",
-      details = { filepath = filepath, content = content, err = err },
+      details = { filepath = filepath, content = content, error = err_write },
     })
   end
-
-  file:close()
 end
 
 ---@param filepath                      string

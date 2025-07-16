@@ -44,7 +44,7 @@ function M.filter_inline(elements, filter)
       end
     end
 
-    for index = N, k, 1 do
+    for index = N, k, -1 do
       elements[index] = nil
     end
   end
@@ -121,48 +121,61 @@ end
 ---@param list                          T[]
 ---@param cmp                           fun(a: T, b: T): integer
 ---@return nil
-function M.stable_sort(list, cmp)
-  local n = #list
-  if n <= 1 then
-    return
-  end
-
-  local aux = {}
-  local function merge(left, mid, right)
-    for i = left, mid do
-      aux[i] = list[i]
+do
+  local aux_pool = {} ---@type any[]
+  local pool_size = 0 ---@type integer
+  
+  function M.stable_sort(list, cmp)
+    local n = #list
+    if n <= 1 then
+      return
     end
 
-    local i, j, k = left, mid + 1, left
+    -- Reuse or expand auxiliary array
+    local aux = aux_pool
+    if pool_size < n then
+      for i = pool_size + 1, n do
+        aux[i] = nil
+      end
+      pool_size = n
+    end
+    
+    local function merge(left, mid, right)
+      for i = left, mid do
+        aux[i] = list[i]
+      end
 
-    while i <= mid and j <= right do
-      if cmp(list[j], aux[i]) >= 0 then
+      local i, j, k = left, mid + 1, left
+
+      while i <= mid and j <= right do
+        if cmp(list[j], aux[i]) >= 0 then
+          list[k] = aux[i]
+          i = i + 1
+        else
+          list[k] = list[j]
+          j = j + 1
+        end
+        k = k + 1
+      end
+
+      while i <= mid do
         list[k] = aux[i]
         i = i + 1
-      else
-        list[k] = list[j]
-        j = j + 1
+        k = k + 1
       end
-      k = k + 1
     end
 
-    while i <= mid do
-      list[k] = aux[i]
-      i = i + 1
-      k = k + 1
+    local function merge_sort_recursive(left, right)
+      if left < right then
+        local mid = math.floor((left + right) / 2)
+        merge_sort_recursive(left, mid)
+        merge_sort_recursive(mid + 1, right)
+        merge(left, mid, right)
+      end
     end
+
+    merge_sort_recursive(1, n)
   end
-
-  local function merge_sort_recursive(left, right)
-    if left < right then
-      local mid = math.floor((left + right) / 2)
-      merge_sort_recursive(left, mid)
-      merge_sort_recursive(mid + 1, right)
-      merge(left, mid, right)
-    end
-  end
-
-  merge_sort_recursive(1, n)
 end
 
 return M

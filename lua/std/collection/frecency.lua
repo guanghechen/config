@@ -50,7 +50,7 @@ function M.deserialize(props)
   local data = props.data ---@type std.collection.frecency.ISerializedData
   local normalize = props.normalize ---@type (fun(key: string): string)|nil
   return M.new({
-    MAX_TIMESTAMP = data.MAX_TIMESTAMPS,
+    MAX_TIMESTAMPS = data.MAX_TIMESTAMPS,
     items = data.items,
     normalize = normalize,
   })
