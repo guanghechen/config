@@ -191,14 +191,14 @@ local keymaps = {
           key = "<C-a>q",
           aliases = { "<D-q>", "<M-q>" },
           callback = function()
-            pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+            eve.buf.close(bufnr)
           end,
         },
         {
           modes = { "n" },
           key = "q",
           callback = function()
-            pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+            eve.buf.close(bufnr)
           end,
         },
       }

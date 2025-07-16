@@ -1,4 +1,4 @@
----@param config {type?:string, args?:string[]|fun():string[]?}
+---@param config                        {type?:string, args?:string[]|fun():string[]?}
 local function get_args(config)
   local args = type(config.args) == "function" and (config.args() or {}) or config.args or {} --[[@as string[] | string ]]
   local args_str = type(args) == "table" and table.concat(args, " ") or args --[[@as string]]

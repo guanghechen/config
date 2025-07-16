@@ -174,7 +174,7 @@ return {
         end
 
         local filepath = node.path ---@type string
-        local stat = vim.loop.fs_stat(filepath)
+        local stat = vim.uv.fs_stat(filepath)
         if not stat then
           std.reporter.error({
             from = __module_name__,

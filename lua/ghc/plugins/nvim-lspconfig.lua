@@ -100,18 +100,40 @@ return {
       "vtsls",
       "yamlls",
     }
+
+    local lspconfig = require("lspconfig")
     for _, server in ipairs(enabled) do
+      -- Validate that lspconfig has the server definition
+      if not lspconfig[server] then
+        std.reporter.warn({
+          from = "ghc.plugins.nvim-lspconfig",
+          subject = "server_not_available",
+          message = "LSP server definition not found in lspconfig",
+          details = { server = server },
+        })
+        goto continue
+      end
+
       local module_name = "ghc.lsp." .. server
       local has_config, config_or_err = pcall(require, module_name)
       if has_config then
-        require("lspconfig")[server].setup(config_or_err)
-      else
-        if string.match(config_or_err, "module '" .. module_name:gsub("%.", "%%.") .. "' not found") then
-          require("lspconfig")[server].setup({})
-        else
-          error(config_or_err)
-        end
+        lspconfig[server].setup(config_or_err)
+        goto continue
       end
+
+      if string.match(config_or_err, "module '" .. module_name:gsub("%.", "%%.") .. "' not found") then
+        lspconfig[server].setup({})
+        goto continue
+      end
+
+      std.reporter.error({
+        from = "ghc.plugins.nvim-lspconfig",
+        subject = "config_load_error",
+        message = "Failed to load LSP server configuration",
+        details = { server = server, module = module_name, error = config_or_err },
+      })
+
+      ::continue::
     end
   end,
   dependencies = {

@@ -29,7 +29,15 @@ function M.stop()
   local command =
     string.format("inferno-flamegraph %s > %s", vim.fn.fnameescape(log_filepath), vim.fn.fnameescape(svg_filepath))
   vim.schedule(function()
-    pcall(vim.fn.system, command)
+    local success, result = pcall(vim.fn.system, command)
+    if not success then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "stop_flamegraph_generation_failed",
+        message = "Failed to generate flamegraph",
+        details = { command = command, error = result },
+      })
+    end
   end)
 
   std.reporter.info({
