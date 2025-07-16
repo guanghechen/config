@@ -40,12 +40,13 @@ local function rename(params)
   if isdir then
     local result = oxi.fs.collect_files(from, true)
     if result and result.files then
-      for _, filepath in ipairs(result.files) do
-        local relative_path = filepath:sub(#from + 2) -- +2 to skip the directory separator
-        local new_filepath = to .. "/" .. relative_path
+      for _, relative_filepath in ipairs(result.files) do
+        local from_filepath = from .. std.env.PATH_SEP .. relative_filepath ---@type string
+        local to_filepath = to .. std.env.PATH_SEP .. relative_filepath ---@type string
+
         changes.files[#changes.files + 1] = {
-          oldUri = vim.uri_from_fname(filepath),
-          newUri = vim.uri_from_fname(new_filepath),
+          oldUri = vim.uri_from_fname(from_filepath),
+          newUri = vim.uri_from_fname(to_filepath),
         }
       end
     end
