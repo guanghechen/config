@@ -45,6 +45,7 @@ gui:
       - red
   border: "rounded"
   expandFocusedSidePanel: false
+  language: 'en'
   mainPanelSplitMode: flexible
   mouseEvents: true
   nerdFontsVersion: "3"
@@ -53,8 +54,15 @@ gui:
   showFileTree: true
   showIcons: true
   showRandomTip: true
+  skipAmendWarning: false
+  skipDiscardChangeWarning: false
+  skipStashWarning: false
+  skipNoStagedFilesWarning: false
+  skipRewordInEditorWarning: false
   splitDiff: auto
+  tabWidth: 2
   useHunkModeInStagingView: true
+  wrapLinesInStagingView: false
 notARepository: skip
 os:
   edit: "nvim"
@@ -63,4 +71,7 @@ os:
   editInTerminal: true
   editPreset: "nvim-remote"
   openDirInEditor: "nvim {{dir}}"
+keybinding:
+  main:
+    toggleSelectHunk: '`'
 promptToReturnFromSubprocess: true
