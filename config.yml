@@ -1,16 +1,22 @@
 git:
-  autoFetch: false
   commit:
     signOff: false
   log:
     order: topo-order
     showGraph: "always"
     showWholeGraph: false
+  mainBranches:
+    - main
+    - master
   paging:
     # cargo install git-delta
     colorArg: always
     useConfig: false
     pager: delta --paging=never
+  autoFetch: false
+  autoRefresh: true
+  fetchAll: false
+  ignoreWhitespaceInDiffView: false,
   parseEmoji: true
   skipHookPrefix: WIP
 gui:
