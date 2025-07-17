@@ -38,6 +38,7 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public open_node              fun(): nil
 ---@field public remove_node            fun(): nil
 ---@field public rename_node            fun(): nil
+---@field public move_node              fun(): nil
 ---@field public toggle_node            fun(): nil
 ---@field public toggle_node_deeply     fun(): nil
 ---
@@ -672,6 +673,128 @@ function M.new(props)
         vim.api.nvim_win_call(winnr_result, handle)
       end
     end,
+    move_node = function()
+      local filenode = self:__retrieve_filenode__() ---@type std.collection.filetree.INode|nil
+      if filenode == nil then
+        return
+      end
+
+      local rootnode = self:__retrieve_rootnode__() ---@type std.collection.filetree.INode|nil
+      if rootnode == nil then
+        return
+      end
+
+      local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
+      if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
+        return
+      end
+
+      local filepath = filenode.data.filepath ---@type string
+
+      ---@param next_filepath           string|nil
+      ---@return nil
+      local function on_confirmed(next_filepath)
+        if next_filepath == nil or next_filepath == "" then
+          return
+        end
+
+        -- Normalize the new filepath to absolute path
+        next_filepath = std.path.normalize(next_filepath)
+
+        -- Validate that source and destination types match
+        local source_is_dir = filenode.data.filetype == "directory"
+        local dest_is_dir = std.path.is_dirpath(next_filepath)
+
+        if source_is_dir ~= dest_is_dir then
+          local source_type = source_is_dir and "directory" or "file"
+          local dest_type = dest_is_dir and "directory" or "file"
+          std.reporter.error({
+            from = fullname,
+            subject = "move_node",
+            message = string.format(
+              "Cannot move %s to %s path. %s nodes can only be moved to %s paths.",
+              source_type,
+              dest_type,
+              source_type:gsub("^%l", string.upper),
+              source_type
+            ),
+            details = { from = filepath, to = next_filepath, source_type = source_type, dest_type = dest_type },
+          })
+          return
+        end
+
+        -- Ensure destination directory exists
+        local dest_dir = std.path.dirname(next_filepath)
+        if not std.path.is_exist(dest_dir) then
+          vim.fn.mkdir(dest_dir, "p")
+        end
+
+        if std.path.is_exist(next_filepath) then
+          -- Ask user if they want to overwrite
+          vim.ui.select({ "No", "Yes" }, {
+            prompt = string.format('File "%s" already exists. Overwrite?', std.path.basename(next_filepath)),
+            format_item = function(item)
+              return item
+            end,
+          }, function(choice)
+            if choice == "Yes" then
+              local isdir = filenode.data.filetype == "directory"
+              local success = eve.fn.rename({
+                from = filepath,
+                to = next_filepath,
+                isdir = isdir,
+                force = true,
+              })
+
+              if success then
+                self:__update_tree_after_rename__(filepath, next_filepath, isdir)
+              end
+            end
+          end)
+          return
+        end
+
+        local isdir = filenode.data.filetype == "directory"
+        local success = eve.fn.rename({
+          from = filepath,
+          to = next_filepath,
+          isdir = isdir,
+        })
+
+        if not success then
+          -- Error already reported by eve.fn.rename, just return
+          return
+        end
+
+        self:__update_tree_after_rename__(filepath, next_filepath, isdir)
+      end
+
+      ---@return nil
+      local function handle()
+        vim.ui.input({
+          prompt = string.format(' Move "%s" to: ', std.path.basename(filepath)),
+          default = filepath,
+          relative = "cursor",
+        }, function(next_filepath)
+          on_confirmed(next_filepath)
+
+          if winnr_current ~= winnr_result then
+            vim.schedule(function()
+              if vim.api.nvim_win_is_valid(winnr_current) then
+                vim.api.nvim_set_current_win(winnr_current)
+              end
+            end)
+          end
+        end)
+      end
+
+      if winnr_current == winnr_result then
+        handle()
+      else
+        vim.api.nvim_win_call(winnr_result, handle)
+      end
+    end,
     toggle_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
@@ -1037,6 +1160,12 @@ function M.new(props)
     },
     {
       modes = { "n", "v" },
+      key = "om",
+      desc = "filetree: move node",
+      callback = actions.move_node,
+    },
+    {
+      modes = { "n", "v" },
       key = "or",
       desc = "filetree: rename node",
       callback = actions.rename_node,
@@ -1152,6 +1281,12 @@ function M.new(props)
       alias = { "a" },
       desc = "filetree: create node",
       callback = actions.create_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "om",
+      desc = "filetree: move node",
+      callback = actions.move_node,
     },
     {
       modes = { "i", "n", "v" },
