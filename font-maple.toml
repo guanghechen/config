@@ -5,7 +5,7 @@ size = 15
 family = "Maple Mono NF CN"
 style = "Bold"
 
-[font."bold_italic"]
+[font.bold_italic]
 family = "Maple Mono NF CN"
 style = "Bold Italic"
 
@@ -15,13 +15,13 @@ style = "Italic"
 
 [font.normal]
 family = "Maple Mono NF CN"
-style = "Regular"
+style = "Light"
 
 # Offset is the extra space around each character.
 # `offset.y` can be thought of as modifying the line spacing, and `offset.x` as modifying the letter spacing.
 [font.offset]
 x = 0
-y = 0
+y = 1
 
 # Glyph offset determines the locations of the glyphs within their cells with the default being at the bottom.
 # Increasing `x` moves the glyph to the right, increasing `y` moves the glyph upwards.
