@@ -6,6 +6,7 @@ fish_add_path --append "/mnt/c/Program Files/PowerShell/7/"
 ## Aliases
 alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.
 alias code='env -u TMUX -u TERM /mnt/c/app/vscode/bin/code'
+alias cursor='env -u TMUX -u TERM /mnt/c/app/cursor/resources/app/bin/cursor'
 alias open="explorer.exe"
 alias pbpaste="powershell.exe Get-Clipboard >"
 
