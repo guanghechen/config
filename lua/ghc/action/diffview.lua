@@ -45,13 +45,9 @@ end
 ---@return nil
 function M.toggle()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
-  if bufnr_sourcefile == nil then
-    return
-  end
-
-  local filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
-  if filetype == eve.filetype.DIFFVIEW_FILES or filetype == eve.filetype.DIFFVIEW_FILE_HISTORY then
+  local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
+  
+  if tabtype == eve.tab.Types.DIFFVIEW then
     vim.cmd("DiffviewToggleFiles")
   else
     vim.cmd("DiffviewFocusFiles")
