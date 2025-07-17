@@ -44,6 +44,7 @@ set -gx VISUAL "$NEOVIM_HOME/bin/nvim"
 set -gx MYVIMRC "$HOME/.config/nvim/init.lua"
 set -gx VIM "$NEOVIM_HOME/share/nvim"
 set -gx VIMRUNTIME "$NEOVIM_HOME/share/nvim/runtime"
+set -gx LG_CONFIG_FILE "$XDG_CONFIG_HOME/lazygit/config.yml,$XDG_CONFIG_HOME/lazygit/local/theme.yml"
 set -gx NODE_OPTIONS "--max-old-space-size=8192"
 set -gx PYTHONIOENCODING utf8
 set -gx PYTHONUTF8 1
