@@ -54,6 +54,7 @@ gui:
   showIcons: true
   showRandomTip: true
   splitDiff: auto
+  useHunkModeInStagingView: true
 notARepository: skip
 os:
   edit: "nvim"
