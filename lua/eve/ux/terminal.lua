@@ -245,8 +245,8 @@ end
 ---@return integer
 ---@return integer
 function M:__create_win_as_needed__()
-  local width = math.ceil(0.9 * vim.o.columns) ---@type integer
-  local height = math.ceil(0.9 * vim.o.lines) ---@type integer
+  local width = vim.o.columns - 2 ---@type integer
+  local height = vim.o.lines - 3 ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
