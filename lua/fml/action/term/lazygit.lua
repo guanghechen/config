@@ -1,32 +1,24 @@
 local toggle_term = require("fml.action.term.toggle").toggle
 
----@return string|nil
-local function get_lazygit_config_filepath()
-  local HOME_LAZYGIT = std.path.locate_app_config_home("lazygit") ---@type string
+local HOME_LAZYGIT = std.path.locate_app_config_home("lazygit") ---@type string
+local lazygit_config_theme_filepath = std.path.join(HOME_LAZYGIT, "local/theme.yml") ---@type string
+local lazygit_config_filepath = std.path.join(HOME_LAZYGIT, "config.yml") ---@type string
 
-  ---@type string[]
-  local candidate_config_filepaths = {
-    std.path.join(HOME_LAZYGIT, "local/theme.yml"),
-    std.path.join(HOME_LAZYGIT, "config.yml"),
-  }
-
-  for _, config_filepath in ipairs(candidate_config_filepaths) do
-    if vim.fn.filereadable(config_filepath) ~= 0 then
-      return config_filepath
-    end
-  end
-  return nil
-end
+local ucf_filepath = vim.fn.shellescape(lazygit_config_filepath) ---@type string
+local ucf_filepath_with_theme = table.concat({
+  vim.fn.shellescape(lazygit_config_filepath),
+  vim.fn.shellescape(lazygit_config_theme_filepath),
+}, ",")
 
 ---@param name                          string
 ---@param cwd                           string
 ---@param args                          ?string[]
 ---@return nil
 local function open_lazygit(name, cwd, args)
-  local config_path = get_lazygit_config_filepath() ---@type string|nil
-  local cmd = config_path and "lazygit -ucf " .. vim.fn.shellescape(config_path) .. " " .. table.concat(args or {}, " ")
-    or "lazygit " .. table.concat(args or {}, " ")
-
+  local cf = std.path.is_exist_filepath(lazygit_config_theme_filepath) and ucf_filepath_with_theme or ucf_filepath ---@type string
+  local argv = table.concat(args or {}, " ") ---@type string
+  local cmd = #argv > 0 and string.format("lazygit --use-config-file=%s %s", cf, argv)
+    or string.format("lazygit --use-config-file=%s", cf)
   toggle_term({
     name = name,
     cmd = cmd,
