@@ -25,11 +25,11 @@ function fish_prompt --description 'Write out the prompt'
   set -l suffix
   set -l user_separator
   if functions -q fish_is_root_user; and fish_is_root_user
-    set suffix          '#'
-    set user_separator  '#'
+    set suffix          '󰽭'
+    set user_separator  '󰽭'
   else
-    set suffix          '$'
-    set user_separator  '@'
+    set suffix          ''
+    set user_separator  ''
   end
 
   # PWD
