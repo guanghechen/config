@@ -553,6 +553,11 @@ function M.new(props)
         return
       end
 
+      local rootnode = self:__retrieve_rootnode__() ---@type std.collection.filetree.INode|nil
+      if rootnode == nil then
+        return
+      end
+
       local winnr_current = vim.api.nvim_get_current_win() ---@type integer
       local winnr_result = self._composer.result:get_winnr() ---@type integer|nil
       if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
@@ -560,6 +565,7 @@ function M.new(props)
       end
 
       local filepath = filenode.data.filepath ---@type string
+      local rootpath = rootnode.data.filepath ---@type string
       local dirname = std.path.dirname(filepath) ---@type string
       local filename = std.path.basename(filepath) ---@type string
 
@@ -570,17 +576,37 @@ function M.new(props)
           return
         end
 
-        if next_filename:find("[/\\]") then
+        local next_filepath = next_filename:match("[/\\]") and std.path.resolve(rootpath, next_filename)
+          or std.path.join(dirname, next_filename)
+
+        -- Validate that source and destination types match
+        local source_is_dir = filenode.data.filetype == "directory"
+        local dest_is_dir = std.path.is_dirpath(next_filepath)
+
+        if source_is_dir ~= dest_is_dir then
+          local source_type = source_is_dir and "directory" or "file"
+          local dest_type = dest_is_dir and "directory" or "file"
           std.reporter.error({
             from = fullname,
             subject = "rename_node",
-            message = "Filename cannot contain path separators (/ or \\).",
-            details = { from = filepath, filename = filename, next_filename = next_filename },
+            message = string.format(
+              "Cannot rename %s to %s path. %s nodes can only be renamed to %s paths.",
+              source_type,
+              dest_type,
+              source_type:gsub("^%l", string.upper),
+              source_type
+            ),
+            details = { from = filepath, to = next_filepath, source_type = source_type, dest_type = dest_type },
           })
           return
         end
 
-        local next_filepath = std.path.join(dirname, next_filename)
+        -- Ensure destination directory exists
+        local dest_dir = std.path.dirname(next_filepath)
+        if not std.path.is_exist(dest_dir) then
+          vim.fn.mkdir(dest_dir, "p")
+        end
+
         if std.path.is_exist(next_filepath) then
           -- Ask user if they want to overwrite
           vim.ui.select({ "No", "Yes" }, {
@@ -624,7 +650,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         vim.ui.input({
-          prompt = string.format(' Rename for "%s" ', filename),
+          prompt = string.format(' Rename "%s" to: ', filename),
           default = filename,
           relative = "cursor",
         }, function(next_filename)
@@ -1897,7 +1923,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
   local filepaths = {} ---@type string[]
 
   if isdir then
-    local result = oxi.fs.collect_files(from, true)
+    local result = oxi.fs.collect_files(to, true)
     if result and result.files then
       for _, relative_filepath in ipairs(result.files) do
         local to_filepath = to .. std.env.PATH_SEP .. relative_filepath ---@type string
