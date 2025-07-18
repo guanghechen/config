@@ -3,6 +3,7 @@ if (fnm list | Select-String -Quiet "v20") {
 } else {
   fnm install 20
   npm install -g npm bun pm2 yarn prettier
+  npm install -g @anthropic-ai/claude-code @google/gemini-cli
 }
 
 # Setup yozora
