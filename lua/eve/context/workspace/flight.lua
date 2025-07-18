@@ -64,7 +64,7 @@ function M.defaults()
     dressing_select = true,
     dressing_winsep = true,
 
-    gitdiff_expand_all = is_git_repo,
+    gitdiff_expand_all = false,
   }
 end
 
