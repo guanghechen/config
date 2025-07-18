@@ -10,9 +10,11 @@ return {
       enabled = true,
     },
     code = {
+      conceal_delimiters = false,
+      render_modes = true,
+      right_pad = 1,
       sign = false,
       width = "block",
-      right_pad = 1,
     },
     completions = {
       blink = { enabled = true },
