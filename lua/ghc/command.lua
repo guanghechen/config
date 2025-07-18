@@ -128,6 +128,15 @@ command
     end,
   })
 
+--[refresh] ----------------------------------------------------------------------------------------
+command.implement({
+  uuid = K.refresh.all.uuid,
+  tabtype = eve.tab.Types.DIFFVIEW,
+  action = function()
+    require("ghc.action.diffview").refresh()
+  end,
+})
+
 --[ux] notifications -------------------------------------------------------------------------------
 command.implement({
   uuid = K.ux.dismiss_notifications.uuid,

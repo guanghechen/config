@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.action.diffview" ---@type string
+
 ---@class ghc.action.diffview
 local M = {}
 
@@ -43,10 +45,19 @@ function M.fs_cwd()
 end
 
 ---@return nil
+function M.refresh()
+  vim.cmd("DiffviewRefresh")
+  std.reporter.info({
+    from = __module_name__,
+    message = "Refreshed!",
+  })
+end
+
+---@return nil
 function M.toggle()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
-  
+
   if tabtype == eve.tab.Types.DIFFVIEW then
     vim.cmd("DiffviewToggleFiles")
   else
