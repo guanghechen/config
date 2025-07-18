@@ -29,7 +29,7 @@ function fish_prompt --description 'Write out the prompt'
     set user_separator  '󰽭'
   else
     set suffix          ''
-    set user_separator  ''
+    set user_separator  '@'
   end
 
   # PWD
