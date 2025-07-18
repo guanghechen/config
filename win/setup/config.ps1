@@ -30,37 +30,26 @@ $optinal_config_repo_branch = @(
   "yozora"
 )
 
-# Function to clone or update a repository
-function CloneOrUpdateRepo {
-  param (
-    [string]$branch,
-    [bool]$required
-  )
+foreach ($branch in $config_repo_branch) {
+  $dir = Join-Path $env:XDG_CONFIG_HOME $branch
+  if (Test-Path -Path $dir) {
+    Write-Host "[setup config] fetching $branch into $dir..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$dir' pull origin $branch"
+  } else {
+    Write-Host "[setup config] cloning $branch into $dir..." -ForegroundColor DarkBlue
+    $cmd = "git clone https://github.com/guanghechen/config.git --single-branch --branch=$branch '$dir'"
+  }
+  Invoke-Expression $cmd
+}
 
-  $repo_url = "https://github.com/guanghechen/config.git"
-  $repo_path = Join-Path $config_root_dir $branch
-  $repo_path_git_dir = Join-Path $repo_path ".git"
-
-  # Check if the directory exists
-  if (Test-Path $repo_path_git_dir) {
-    Write-Host "[setup config] fetching $branch into $repo_path..." -ForegroundColor DarkBlue
-    Set-Location -Path $repo_path
-    git pull origin $branch
-  } elseif ($required) {
-    Write-Host "[setup config] cloning $branch into $repo_path..." -ForegroundColor DarkBlue
-    Set-Location -Path $config_root_dir
-    git clone $repo_url --single-branch --branch=$branch $repo_path
+foreach ($branch in $optinal_config_repo_branch) {
+  $dir = Join-Path $env:XDG_CONFIG_HOME $branch
+  if (Test-Path -Path $dir) {
+    Write-Host "[setup config] fetching $branch into $dir..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$dir' pull origin $branch"
+    Invoke-Expression $cmd
   }
 }
-
-# Loop through the repositories and clone or update each one
-foreach ($branch in $config_repo_branch) {
-  CloneOrUpdateRepo -branch $branch $True
-}
-foreach ($branch in $optinal_config_repo_branch) {
-  CloneOrUpdateRepo -branch $branch $False
-}
-
 
 # Define the source and destination paths
 Write-Host "[setup config] copying pwsh profile.ps1..." -ForegroundColor DarkBlue
