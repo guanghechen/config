@@ -102,6 +102,7 @@ return {
           { "n", "gf", actions.goto_file_edit, { desc = "Open the file in the previous tabpage" } },
           { "n", "[x", actions.prev_conflict, { desc = "In the merge-tool: jump to the previous conflict" } },
           { "n", "]x", actions.next_conflict, { desc = "In the merge-tool: jump to the next conflict" } },
+          { "n", "gs", actions.toggle_stage_entry, { desc = "Stage / unstage the selected hunk" } },
           { "n", "co", actions.conflict_choose("ours"), { desc = "Choose the OURS version of a conflict" } },
           { "n", "ct", actions.conflict_choose("theirs"), { desc = "Choose the THEIRS version of a conflict" } },
           { "n", "cb", actions.conflict_choose("base"), { desc = "Choose the BASE version of a conflict" } },
