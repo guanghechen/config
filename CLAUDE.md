@@ -18,6 +18,8 @@ This is a sophisticated Neovim configuration that combines Lua and Rust for enha
 - `queries/`: TreeSitter queries for syntax highlighting and parsing
 - `rust/`: Rust source code for performance-critical operations
 
+!!! for lua/eve/builtin/*.lua, when you try to use these code, you should use `eve.<name>` instead of `eve.builtin.<name>`. For example, if you want to use `lua/eve/builtin/file.lua`, you should use `eve.file` instead of `eve.builtin.file`. But for types comments, it still need to use `eve.builtin.<name>` like `---@type eve.builtin.file.File`.
+
 ### Integration Points
 The configuration supports multiple environments:
 - Standard Neovim (`integration/neovim/`)
