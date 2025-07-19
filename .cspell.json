@@ -651,6 +651,7 @@
     "tempname",
     "termcodes",
     "termguicolors",
+    "termline",
     "termopen",
     "texthl",
     "texticon",
