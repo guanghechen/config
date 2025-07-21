@@ -589,6 +589,12 @@ command
 --[term] term---------------------------------------------------------------------------------------
 command
   .implement({
+    uuid = K.term.create.uuid,
+    action = function()
+      require("fml.action.term.create").show_profile_selector()
+    end,
+  })
+  .implement({
     uuid = K.term.toggle_cwd.uuid,
     action = function()
       require("fml.action.term.toggle").toggle_cwd()

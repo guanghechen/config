@@ -8,24 +8,7 @@ end) or ""
 
 ---@type string
 local fn_add_term = eve.G.register_anonymous_fn(function()
-  vim.ui.input({
-    prompt = "Terminal name: ",
-    default = "terminal",
-    relative = "editor",
-    row = 3,
-    col = math.floor((vim.o.columns - 40) / 2),
-  }, function(terminal_name)
-    if terminal_name == nil or terminal_name == "" then
-      return -- User cancelled
-    end
-
-    eve.term.create({
-      uuid = oxi.fn.uuid(),
-      name = terminal_name,
-      permanent = false,
-    })
-    eve.ux.widget.Terminal:focus()
-  end)
+  vim.cmd("Ftermcreate")
 end) or ""
 
 ---@class eve.ux.nvimbar.component.term
@@ -102,7 +85,7 @@ function M.terms(position)
   ---@return string
   ---@return string
   local function render_add_button()
-    local text = " + " ---@type string
+    local text = " +" ---@type string
     local hl_text = txt(text, hln_term_button) ---@type string
     return text, btn(hl_text, fn_add_term)
   end

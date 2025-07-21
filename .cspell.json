@@ -1,7 +1,5 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua"
-  ],
+  "ignorePaths": ["lua/std/fileicon.lua"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -340,6 +338,16 @@
     "formatoptions",
     "fout",
     "frecency",
+    "ftermcreate",
+    "ftermfocus1",
+    "ftermfocus2",
+    "ftermfocus3",
+    "ftermfocus4",
+    "ftermfocus5",
+    "ftermfocus6",
+    "ftermfocus7",
+    "ftermfocus8",
+    "ftermfocus9",
     "ftplugin",
     "ftplugins",
     "fzfrc",
@@ -754,3 +762,4 @@
     "zindex"
   ]
 }
+

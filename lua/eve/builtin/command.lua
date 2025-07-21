@@ -454,6 +454,8 @@ M.definitions.tab = {
 
 ---@class eve.builtin.command.definitions.term
 M.definitions.term = {
+  create = def("Ftermcreate", "term: create"),
+
   toggle_cwd = def("Ftermcwd", "term: toggle (cwd)"),
   toggle_directory = def("Ftermdirectory", "term: toggle (directory)"),
   toggle_workspace = def("Ftermworkspace", "term: toggle (workspace)"),
