@@ -894,43 +894,43 @@
     },
     {
       "id": "Terminal.SwitchToTab0",
-      "keys": "ctrl+1"
+      "keys": "ctrl+alt+1"
     },
     {
       "id": "Terminal.SwitchToTab1",
-      "keys": "ctrl+2"
+      "keys": "ctrl+alt+2"
     },
     {
       "id": "Terminal.SwitchToTab2",
-      "keys": "ctrl+3"
+      "keys": "ctrl+alt+3"
     },
     {
       "id": "Terminal.SwitchToTab3",
-      "keys": "ctrl+4"
+      "keys": "ctrl+alt+4"
     },
     {
       "id": "Terminal.SwitchToTab4",
-      "keys": "ctrl+5"
+      "keys": "ctrl+alt+5"
     },
     {
       "id": "Terminal.SwitchToTab5",
-      "keys": "ctrl+6"
+      "keys": "ctrl+alt+6"
     },
     {
       "id": "Terminal.SwitchToTab6",
-      "keys": "ctrl+7"
+      "keys": "ctrl+alt+7"
     },
     {
       "id": "Terminal.SwitchToTab7",
-      "keys": "ctrl+8"
+      "keys": "ctrl+alt+8"
     },
     {
       "id": "Terminal.SwitchToTab8",
-      "keys": "ctrl+9"
+      "keys": "ctrl+alt+9"
     },
     {
       "id": "Terminal.SwitchToTab9",
-      "keys": "ctrl+0"
+      "keys": "ctrl+alt+0"
     }
   ]
 }
