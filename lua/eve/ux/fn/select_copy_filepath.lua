@@ -17,6 +17,7 @@ local function select_copy_filepath(params)
       width = 16,
       title = "Copy filepath",
     }, winopts),
+    item_present_uuid = "relative",
     items = {
           -- stylua: ignore start
           { uuid = "absolute", text = "absolute", },
