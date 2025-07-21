@@ -176,6 +176,17 @@ function M.gen_hlgroup_map(context)
     sidebar_blank = { fg = c.fg1, bg = "bg_bar" },
     sidebar_split = { fg = c.bg4, bg = "bg_bar" },
 
+    ---! term
+    term_index = { fg = c.fg3, bg = c.bg4 },
+    term_name = { fg = c.fg3, bg = c.bg3 },
+    term_sep_left = { fg = c.bg3, bg = "bg_bar" },
+    term_sep_right = { fg = c.bg4, bg = "bg_bar" },
+    termc_index = { link = "mf_b_bg0" },
+    termc_name = { link = "mf_b_bg0" },
+    termc_sep_left = { link = "ms_b_none" },
+    termc_sep_middle = { link = "mf_b_bg0" },
+    termc_sep_right = { link = "ms_b_none" },
+
     ---! widget
     widget_flag = { fg = c.fg1, bg = t and c.bg2 or c.bg3 },
     widget_flag_sep = { fg = c.bg4, bg = t and c.bg2 or c.bg3 },

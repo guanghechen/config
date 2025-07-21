@@ -18,6 +18,7 @@ local __mods = {
   shell = "eve.builtin.shell",
   status = "eve.builtin.status",
   tab = "eve.builtin.tab",
+  term = "eve.builtin.term",
   var = "eve.builtin.var",
   widget = "eve.builtin.widget",
   win = "eve.builtin.win",
@@ -50,6 +51,7 @@ local __mods = {
 ---@field public shell                  eve.builtin.shell
 ---@field public status                 eve.builtin.status
 ---@field public tab                    eve.builtin.tab
+---@field public term                   eve.builtin.term
 ---@field public var                    eve.builtin.var
 ---@field public widget                 eve.builtin.widget
 ---@field public win                    eve.builtin.win
@@ -128,7 +130,7 @@ function M.setup_workspace()
       if not ok then
         std.reporter.warn({
           from = "eve.init",
-          subject = "setup_workspace", 
+          subject = "setup_workspace",
           message = "Failed to change directory to git repo",
           details = { repo_path = A, error = err },
         })

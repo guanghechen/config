@@ -161,6 +161,10 @@ local function render(winnr)
     return
   end
 
+  if buftype == "terminal" then
+    return
+  end
+
   if not eve.win.is_sourcefile(winnr) then
     return
   end

@@ -465,6 +465,16 @@ M.definitions.term = {
   yazi_cwd = def("Ftermyazicwd", "term: yazi (cwd)"),
   yazi_reveal = def("Ftermyazireveal", "term: yazi (reveal)"),
   yazi_workspace = def("Ftermyaziworkspace", "term: yazi (workspace)"),
+
+  focus_1 = def("Ftermfocus1", "term: focus 1"),
+  focus_2 = def("Ftermfocus2", "term: focus 2"),
+  focus_3 = def("Ftermfocus3", "term: focus 3"),
+  focus_4 = def("Ftermfocus4", "term: focus 4"),
+  focus_5 = def("Ftermfocus5", "term: focus 5"),
+  focus_6 = def("Ftermfocus6", "term: focus 6"),
+  focus_7 = def("Ftermfocus7", "term: focus 7"),
+  focus_8 = def("Ftermfocus8", "term: focus 8"),
+  focus_9 = def("Ftermfocus9", "term: focus 9"),
 }
 
 ---@class eve.builtin.command.definitions.toggle

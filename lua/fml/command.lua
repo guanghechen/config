@@ -643,6 +643,16 @@ command
     end,
   })
 
+--[term] focus-----------------------------------------------------------------------------------------
+for i = 1, 9, 1 do
+  command.implement({
+    uuid = K.term["focus_" .. tostring(i)].uuid,
+    action = function()
+      require("fml.action.term.focus").focus(i)
+    end,
+  })
+end
+
 --[toggle] -----------------------------------------------------------------------------------------
 command
   .implement({
