@@ -13,7 +13,7 @@ local __module_name__ = "eve.builtin.win"
 ---| "ux:search-input"
 ---| "ux:search-main"
 ---| "ux:search-preview"
----| "ux:select-popup"
+---| "ux:select"
 ---| "ux:terminal"
 ---| "ux:textarea"
 ---| "ux:winpicker"
@@ -52,7 +52,7 @@ local Types = {
   SEARCHER_FINDER   = "ux:searcher-finder",
   SEARCHER_PREVIEW  = "ux:searcher-preview",
   SEARCHER_RESULT   = "ux:searcher-result",
-  SELECT_POPUP      = "ux:select-popup",
+  SELECT            = "ux:select",
   TERMINAL          = "ux:terminal",
   TEXTAREA          = "ux:textarea",
   WINPICKER         = "ux:winpicker",
@@ -76,7 +76,7 @@ local wintype_attrs = {
     [Types.SEARCHER_FINDER] = true,
     [Types.SEARCHER_PREVIEW] = true,
     [Types.SEARCHER_RESULT] = true,
-    [Types.SELECT_POPUP] = true,
+    [Types.SELECT] = true,
     [Types.TERMINAL] = true,
     [Types.TEXTAREA] = true,
 

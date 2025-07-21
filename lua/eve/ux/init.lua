@@ -1,7 +1,7 @@
 ---@class eve.ux.__mods
 local __mods = {
   Board = "eve.ux.board",
-  SelectPopup = "eve.ux.select_popup",
+  Select = "eve.ux.select",
   Setting = "eve.ux.setting",
   Textarea = "eve.ux.textarea",
 }
@@ -17,7 +17,7 @@ local __mods = {
 ---@field public widget                 eve.ux.widget
 ---
 ---@field public Board                  eve.ux.Board
----@field public SelectPopup            eve.ux.SelectPopup
+---@field public Select                 eve.ux.Select
 ---@field public Setting                eve.ux.Setting
 ---@field public Textarea               eve.ux.Textarea
 local M = setmetatable({

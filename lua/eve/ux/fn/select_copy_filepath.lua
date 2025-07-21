@@ -12,7 +12,7 @@ local function select_copy_filepath(params)
   local winopts = params.winopts or {} ---@type vim.api.keyset.win_config
   local on_completed = params.on_completed or std.fn.noop ---@type fun(): nil
 
-  local popup = eve.ux.SelectPopup.new({
+  local popup = eve.ux.Select.new({
     wincfg = vim.tbl_extend("force", {
       width = 16,
       title = "Copy filepath",

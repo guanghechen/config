@@ -167,7 +167,7 @@ local group_items = {
         if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
           reopen()
         else
-          eve.ux.SelectPopup
+          eve.ux.Select
             .new({
               wincfg = {
                 relative = "editor",
@@ -240,10 +240,10 @@ local group_items = {
         local offset_right = #cwd_name + 4 ---@type integer
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
-        ---@param callback              fun(widget: eve.ux.ISelectPopup, fileformat_next: string|nil): nil
+        ---@param callback              fun(widget: eve.ux.ISelect, fileformat_next: string|nil): nil
         ---@return nil
         local function select_fileformat(callback)
-          eve.ux.SelectPopup
+          eve.ux.Select
             .new({
               wincfg = {
                 relative = "editor",

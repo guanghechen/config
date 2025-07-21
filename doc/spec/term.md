@@ -20,7 +20,7 @@
       - [x] When click the button, it should switch to the corresponding terminal buffer.
 
     - [x] An **Add** button to create new terminal.
-      - [x] When click the button, it should launch a select_popup list profiles for create terminal.
+      - [x] When click the button, it should launch a select list profiles for create terminal.
         - [x] fish
         - [x] yazi 
         - [x] lazygit

@@ -1,32 +1,32 @@
----@class eve.ux.ISelectPopupItem
+---@class eve.ux.ISelectItem
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public highlights             std.t.IHighlightInline[]|nil
 
----@class eve.ux.ISelectPopupProps
+---@class eve.ux.ISelectProps
 ---@field public wincfg                 vim.api.keyset.win_config|nil
 ---@field public keymaps                std.t.IKeymap[]|nil
----@field public items                  eve.ux.ISelectPopupItem[]
+---@field public items                  eve.ux.ISelectItem[]
 ---@field public item_present_uuid      string|nil
----@field public on_select              fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem|nil): nil
+---@field public on_select              fun(widget: eve.ux.ISelect, item: eve.ux.ISelectItem|nil): nil
 
----@class eve.ux.ISelectPopup
----@field public create_buf_as_needed   fun(self: eve.ux.ISelectPopup): integer
----@field public destroy                fun(self: eve.ux.ISelectPopup): nil
----@field public focus                  fun(self: eve.ux.ISelectPopup): integer
+---@class eve.ux.ISelect
+---@field public create_buf_as_needed   fun(self: eve.ux.ISelect): integer
+---@field public destroy                fun(self: eve.ux.ISelect): nil
+---@field public focus                  fun(self: eve.ux.ISelect): integer
 
----@class eve.ux.SelectPopup : eve.ux.ISelectPopup
+---@class eve.ux.Select : eve.ux.ISelect
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _wincfg             vim.api.keyset.win_config
 ---@field protected _keymaps            std.t.IKeymap[]
----@field protected _items              eve.ux.ISelectPopupItem[]
+---@field protected _items              eve.ux.ISelectItem[]
 ---@field protected _item_index_present integer
----@field protected _on_select          fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem)
+---@field protected _on_select          fun(widget: eve.ux.ISelect, item: eve.ux.ISelectItem)
 local M = {}
 M.__index = M
 
----@class eve.ux.select_popup.config
+---@class eve.ux.select.config
 local config = {
   winhighlight = table.concat({
     "Cursor:f_us_main_current",
@@ -39,14 +39,14 @@ local config = {
   }, ","),
 }
 
----@param props                         eve.ux.ISelectPopupProps
----@return eve.ux.SelectPopup
+---@param props                         eve.ux.ISelectProps
+---@return eve.ux.Select
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local items = props.items ---@type eve.ux.ISelectPopupItem[]
+  local items = props.items ---@type eve.ux.ISelectItem[]
   local item_present_uuid = props.item_present_uuid ---@type string|nil
-  local on_select = props.on_select ---@type fun(widget: eve.ux.ISelectPopup, item: eve.ux.ISelectPopupItem|nil): nil
+  local on_select = props.on_select ---@type fun(widget: eve.ux.ISelect, item: eve.ux.ISelectItem|nil): nil
 
   local width = 0 ---@type integer
   local item_present_index = 1 ---@type integer
@@ -74,14 +74,14 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<Left>",
       aliases = { "<Right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
-      desc = "select_popup: noop",
+      desc = "select: noop",
       callback = std.fn.noop,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>q",
       aliases = { "<D-q>", "<M-q>", "<Esc>" },
-      desc = "select_popup: noop",
+      desc = "select: noop",
       callback = function()
         on_select(self, nil)
         self:destroy()
@@ -90,7 +90,7 @@ function M.new(props)
     {
       modes = { "n", "v" },
       key = "q",
-      desc = "select_popup: quit",
+      desc = "select: quit",
       callback = function()
         on_select(self, nil)
         self:destroy()
@@ -99,7 +99,7 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<LeftMouse>",
-      desc = "select_popup: confirm",
+      desc = "select: confirm",
       callback = function()
         local winnr = vim.api.nvim_get_current_win() ---@type integer
         ---@diagnostic disable-next-line: invisible
@@ -115,7 +115,7 @@ function M.new(props)
       modes = { "i", "n", "v" },
       key = "<2-LeftMouse>",
       aliases = { "<cr>", "o" },
-      desc = "select_popup: confirm",
+      desc = "select: confirm",
       callback = function()
         ---@diagnostic disable-next-line: invisible
         local winnr = self._winnr ---@type integer|nil
@@ -127,7 +127,7 @@ function M.new(props)
 
         local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
         local index = cursor[1] ---@type integer
-        local item = items[index] ---@type eve.ux.ISelectPopupItem
+        local item = items[index] ---@type eve.ux.ISelectItem
 
         on_select(self, item)
         self:destroy()
@@ -139,9 +139,9 @@ function M.new(props)
   self._winnr = nil ---@type integer|nil
   self._wincfg = wincfg ---@type vim.api.keyset.win_config
   self._keymaps = keymaps ---@type std.t.IKeymap[]
-  self._items = items ---@type eve.ux.ISelectPopupItem[]
+  self._items = items ---@type eve.ux.ISelectItem[]
   self._item_index_present = item_present_index ---@type integer
-  self._on_select = on_select ---@type fun(item: eve.ux.ISelectPopupItem|nil): nil
+  self._on_select = on_select ---@type fun(item: eve.ux.ISelectItem|nil): nil
   return self
 end
 
@@ -162,7 +162,7 @@ function M:create_buf_as_needed()
   end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local nsnr = eve.var.nsnr.select_popup ---@type integer
+  local nsnr = eve.var.nsnr.select ---@type integer
   for lnum, item in ipairs(self._items) do
     if item.highlights ~= nil then
       for _, hl in ipairs(item.highlights) do
@@ -175,7 +175,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = eve.filetype.SELECT_POPUP
+  vim.bo[bufnr].filetype = eve.filetype.SELECT
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
@@ -201,7 +201,7 @@ function M:create_win_as_needed()
 
     winnr_new_created = true
 
-    eve.win.set_type(winnr, eve.win.Types.SELECT_POPUP)
+    eve.win.set_type(winnr, eve.win.Types.SELECT)
     vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
 
     vim.wo[winnr].number = false
