@@ -247,14 +247,6 @@
       }
     },
     {
-      "id": "ghc.pane.close.current",
-      "command": "closePane"
-    },
-    {
-      "id": "ghc.pane.zoom.toggle",
-      "command": "togglePaneZoom"
-    },
-    {
       "id": "ghc.window.focus.above",
       "command": {
         "action": "moveFocus",
@@ -805,14 +797,6 @@
       "keys": "shift+insert"
     },
     {
-      "id": "ghc.pane.close.current",
-      "keys": "ctrl+alt+w"
-    },
-    {
-      "id": "ghc.pane.zoom.toggle",
-      "keys": "ctrl+alt+z"
-    },
-    {
       "id": "ghc.window.focus.above",
       "keys": "ctrl+alt+k"
     },
@@ -877,20 +861,32 @@
       "keys": "ctrl+alt+shift+left"
     },
     {
-      "id": "Terminal.OpenNewWindow",
-      "keys": "ctrl+alt+shift+n"
-    },
-    {
-      "id": "Terminal.ClosePane",
-      "keys": "ctrl+alt+shift+w"
-    },
-    {
       "id": "Terminal.IncreaseFontSize",
       "keys": "ctrl+alt+shift+plus"
     },
     {
       "id": "Terminal.DecreaseFontSize",
       "keys": "ctrl+alt+shift+minus"
+    },
+    {
+      "id": "Terminal.OpenTabRenamer",
+      "keys": "ctrl+alt+f2"
+    },
+    {
+      "id": "Terminal.MoveTabBackward",
+      "keys": "ctrl+alt+shift+["
+    },
+    {
+      "id": "Terminal.MoveTabForward",
+      "keys": "ctrl+alt+shift+]"
+    },
+    {
+      "id": "Terminal.PrevTab",
+      "keys": "ctrl+alt+["
+    },
+    {
+      "id": "Terminal.NextTab",
+      "keys": "ctrl+alt+]"
     },
     {
       "id": "Terminal.SwitchToTab0",
@@ -931,6 +927,22 @@
     {
       "id": "Terminal.SwitchToTab9",
       "keys": "ctrl+alt+0"
+    },
+    {
+      "id": "Terminal.OpenNewTabDropdown",
+      "keys": "ctrl+alt+n"
+    },
+    {
+      "id": "Terminal.OpenNewTabProfile1",
+      "keys": "ctrl+alt+p"
+    },
+    {
+      "id": "Terminal.ClosePane",
+      "keys": "ctrl+alt+w"
+    },
+    {
+      "id": "Terminal.TogglePaneZoom",
+      "keys": "ctrl+alt+z"
     }
   ]
 }
