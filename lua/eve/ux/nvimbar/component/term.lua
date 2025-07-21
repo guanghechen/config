@@ -6,12 +6,35 @@ local fn_switch_term = eve.G.register_anonymous_fn(function(bufnr)
   eve.term.o_bufnr:next(bufnr) ---@type integer
 end) or ""
 
+---@type string
+local fn_add_term = eve.G.register_anonymous_fn(function()
+  vim.ui.input({
+    prompt = "Terminal name: ",
+    default = "terminal",
+    relative = "editor",
+    row = 3,
+    col = math.floor((vim.o.columns - 40) / 2),
+  }, function(terminal_name)
+    if terminal_name == nil or terminal_name == "" then
+      return -- User cancelled
+    end
+
+    eve.term.create({
+      uuid = oxi.fn.uuid(),
+      name = terminal_name,
+      permanent = false,
+    })
+    eve.ux.widget.Terminal:focus()
+  end)
+end) or ""
+
 ---@class eve.ux.nvimbar.component.term
 local M = {}
 
 ---@param position                      eve.ux.nvimbar.PositionEnum
 ---@return eve.ux.nvimbar.IRawComponent
 function M.terms(position)
+  local hln_term_button = position .. "_term_button" ---@type string
   local hln_term_index = position .. "_term_index" ---@type string
   local hln_term_name = position .. "_term_name" ---@type string
   local hln_term_sep_left = position .. "_term_sep_left" ---@type string
@@ -76,36 +99,54 @@ function M.terms(position)
     return text, btn(hl_text, fn_switch_term, term.bufnr)
   end
 
+  ---@return string
+  ---@return string
+  local function render_add_button()
+    local text = " + " ---@type string
+    local hl_text = txt(text, hln_term_button) ---@type string
+    return text, btn(hl_text, fn_add_term)
+  end
+
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "term:terms",
     atomic = false,
     render = function(_, remain_width)
       local term_bufnr_current = eve.term.o_bufnr:snapshot() ---@type integer|nil
-      if term_bufnr_current == nil or term_bufnr_current < 1 or not vim.api.nvim_buf_is_valid(term_bufnr_current) then
-        return "", "", false
-      end
 
       local text = " " ---@type string
       local hl_text = " " ---@type string
       local index = 0 ---@type integer
-      for termmeta in eve.term:iterator() do
-        if termmeta ~= nil then
-          index = index + 1 ---@type integer
-          local render = termmeta.bufnr == term_bufnr_current and render_termc or render_term
-          local t, ht = render(termmeta, index)
-          local w = vim.api.nvim_strwidth(t) ---@type integer
-          if remain_width < w then
-            break
-          end
 
-          text = text .. t .. " "
-          hl_text = hl_text .. ht .. " "
-          remain_width = remain_width - w
+      -- Render existing terminal buttons
+      if term_bufnr_current ~= nil and term_bufnr_current > 0 and vim.api.nvim_buf_is_valid(term_bufnr_current) then
+        for termmeta in eve.term:iterator() do
+          if termmeta ~= nil then
+            index = index + 1 ---@type integer
+            local render = termmeta.bufnr == term_bufnr_current and render_termc or render_term
+            local t, ht = render(termmeta, index)
+            local w = vim.api.nvim_strwidth(t) ---@type integer
+            if remain_width < w then
+              break
+            end
+
+            text = text .. t .. " "
+            hl_text = hl_text .. ht .. " "
+            remain_width = remain_width - w
+          end
         end
       end
 
-      if index == 0 then
+      -- Always render the Add button
+      local add_t, add_ht = render_add_button()
+      local add_w = vim.api.nvim_strwidth(add_t) ---@type integer
+      if remain_width >= add_w then
+        text = text .. add_t .. " "
+        hl_text = hl_text .. add_ht .. " "
+      end
+
+      -- Return empty if no content to show
+      if text == " " or text == "  " then
         return "", "", false
       end
       return text, hl_text, true

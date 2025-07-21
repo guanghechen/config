@@ -177,6 +177,7 @@ function M.gen_hlgroup_map(context)
     sidebar_split = { fg = c.bg4, bg = "bg_bar" },
 
     ---! term
+    term_button = { fg = c.fg3, bg = c.bg4 },
     term_index = { fg = c.fg3, bg = c.bg4 },
     term_name = { fg = c.fg3, bg = c.bg3 },
     term_sep_left = { fg = c.bg3, bg = "bg_bar" },

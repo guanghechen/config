@@ -1,11 +1,26 @@
-# Terminal Specification
+## Terminal Conventions
 
-## Behaviors
+1. **TerminalWindow**: the widget to places all maintained terminal buffers, support to switching, closing, renaming, and creating new terminal buffers.
+2. **termline**: the winbar of the TerminalWindow,.
 
-* There is one and only one window to rendering the terminal, let's call it as the TerminalWindow.
-  - No matter where we open or create a new terminal, it should immediately open the TerminalWindow and render the terminal buffer into it.
-  - The TerminalWindow should be a floating window and exist a winbar to display the terminal buffer list.
-  - Keep in mind, the nvimbar of TerminalWindow should be a single instance, that is, although the TerminalWindow could be rebuild caused by it could be closed before, but we still can reuse the nvimbar instance into the new TerminalWindow.
 
-* When open a new terminal, we should maintain the terminal meta and state into the `lua/eve/builtin/term.lua`.
+### TerminalWindow
+
+* [x] The TerminalWindow should be a single instance across the whole lifecycle of the neovim instance, but its managed neovim window could be recreated/destroyed many times.
+* [x] The TerminalWindow should be a floating window and exist a winbar to display the terminal buffer list.
+* [x] We only show those terminal buffers that are maintained in the lua/eve/builtin/term.lua.
+
+### Termline
+
+1. [x] The termline should be a single instance across the whole lifecycle of the TerminalWindow.
+
+2. [x] From the left to right of the termline:
+    - [x] A list of buttons for terminals we maintained in the lua/eve/builtin/term.lua 
+      - [x] Each button contains the truncated terminal name and its index.
+      - [x] When click the button, it should switch to the corresponding terminal buffer.
+
+    - [x] An **Add** button to create new terminal.
+      - [x] When click the button, it should launch an inputbox to input the terminal name.
+      - [x] After input, it should create a new terminal with the given name and switch to it.
+
 
