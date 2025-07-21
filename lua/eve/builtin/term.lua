@@ -4,7 +4,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public uuid                   string
 ---@field public bufnr                  integer
 ---@field public name                   string
----@field public cmd                    string
+---@field public cmd                    string[]|string
 ---@field public cwd                    string
 ---@field public env                    table<string, string>|nil
 ---@field public permanent              boolean
@@ -15,7 +15,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@class eve.builtin.term.ICreateParams
 ---@field public uuid                   string
 ---@field public name                   string
----@field public cmd                    ?string
+---@field public cmd                    ?string[]|string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
@@ -24,7 +24,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 
 ---@class eve.builtin.term.IUpdateParams
 ---@field public name                   ?string
----@field public cmd                    ?string
+---@field public cmd                    ?string[]|string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public on_closed              ?fun(): nil
@@ -36,6 +36,8 @@ local o_bufnr = std.Observable.from_value(0) ---@type std.collection.Observable
 ---@class eve.builtin.term
 ---@field public o_bufnr                std.collection.IObservable
 local M = {}
+
+M.o_bufnr = o_bufnr ---@type std.collection.IObservable
 
 ---@param params                        eve.builtin.term.ICreateParams
 ---@return eve.builtin.term.IMeta
@@ -57,11 +59,18 @@ function M.create(params)
   end
 
   local name = params.name ---@type string
-  local cmd = params.cmd or vim.env.SHELL or vim.o.shell ---@type string
+  local cmd = params.cmd or vim.env.SHELL or vim.o.shell ---@type string[]|string
   local cwd = params.cwd or std.path.cwd() ---@type string
   local env = params.env ---@type table<string, string>|nil
   local permanent = not not params.permanent ---@type boolean
   local on_closed = params.on_closed or std.fn.noop ---@type fun(): nil|nil
+
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.bo[bufnr].buflisted = false
+  vim.bo[bufnr].filetype = eve.filetype.TERM
+  vim.bo[bufnr].modifiable = false
+  vim.bo[bufnr].readonly = false
+  vim.bo[bufnr].swapfile = false
 
   local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type std.t.IKeymap[]
   for i = 1, 9 do
@@ -76,11 +85,20 @@ function M.create(params)
       end,
     }
   end
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "v" },
+    key = "q",
+    desc = "term: close",
+    callback = function()
+      eve.buf.close(bufnr)
+    end,
+  }
+  eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   ---@type eve.builtin.term.IMeta
   termmeta = {
     uuid = termuuid,
-    bufnr = 0,
+    bufnr = bufnr,
     name = name,
     cmd = cmd,
     cwd = cwd,
@@ -93,104 +111,79 @@ function M.create(params)
   metamap[termuuid] = termmeta
   termlist[#termlist + 1] = termuuid
 
-  M.start_as_needed(termuuid) ---@type integer
   o_bufnr:next(termmeta.bufnr)
   return termmeta
 end
 
----@return integer|nil
+---@return eve.builtin.term.IMeta|nil
 function M.current()
   local bufnr = o_bufnr:snapshot() ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    return bufnr
-  end
-
-  for _, termuuid in ipairs(termlist) do
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
-      o_bufnr:next(termmeta.bufnr)
-      return termmeta.bufnr
-    end
-  end
-end
-
----@param bufnr                         integer|nil
----@return nil
-function M.destroy_by_bufnr(bufnr)
-  if bufnr == nil or bufnr < 1 then
-    return
-  end
-
-  local bufnr_next = nil ---@type integer|nil
-  local target_meta = nil ---@type eve.builtin.term.IMeta|nil
-  for index = 1, #termlist, 1 do
-    local termuuid = termlist[index] ---@type string
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil then
-      if termmeta.bufnr == bufnr then
-        target_meta = termmeta
-        break
+    for index = 1, #termlist, 1 do
+      local uuid = termlist[index] ---@type string
+      local termmeta = metamap[uuid] ---@type eve.builtin.term.IMeta|nil
+      if termmeta ~= nil and termmeta.bufnr == bufnr then
+        return termmeta
       end
     end
   end
 
-  if target_meta ~= nil then
-    if target_meta.jobid ~= nil then
-      vim.fn.jobstop(target_meta.jobid)
-      target_meta.jobid = nil
-    end
-    eve.buf.close(bufnr)
+  local termmeta = M.__pick_next_termmeta__() ---@type eve.builtin.term.IMeta|nil
+  if termmeta ~= nil then
+    o_bufnr:next(termmeta.bufnr)
   end
-
-  if bufnr_next ~= nil then
-    M.switch(bufnr_next)
-  end
+  return termmeta
 end
 
----@param name                          string
----@return nil
-function M.destroy_by_name(name)
-  local N = 0 ---@type integer
-  local k = 0 ---@type integer
-  local target_meta = nil ---@type eve.builtin.term.IMeta|nil
-  for index = 1, N, 1 do
-    local termuuid = termlist[index] ---@type string
+---@param index                         integer
+---@return boolean
+function M.focus(index)
+  local count = 0 ---@type integer
+  for i = 1, #termlist, 1 do
+    local termuuid = termlist[i] ---@type string
     local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil then
-      if termmeta.name == name then
-        target_meta = termmeta
-      else
-        k = k + 1
-        termlist[k] = termuuid ---@type string
+    if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
+      count = count + 1
+      if count == index then
+        o_bufnr:next(termmeta.bufnr)
+        return true
       end
     end
   end
-  std.table.truncate_inline(termlist, k)
-
-  if target_meta ~= nil then
-    if target_meta.jobid ~= nil then
-      vim.fn.jobstop(target_meta.jobid)
-      target_meta.jobid = nil
-    end
-    eve.buf.close(target_meta.bufnr)
-  end
+  return false
 end
 
 ---@return fun(): eve.builtin.term.IMeta|nil, integer|nil
 function M:iterator()
+  local i = 0 ---@type integer
   local index = 0 ---@type integer
 
   ---@return eve.builtin.term.IMeta|nil
   ---@return integer|nil
   return function()
-    index = index + 1 ---@type integer
-    local termuuid = termlist[index] ---@type string|nil
-    if termuuid == nil then
-      return nil, nil
-    end
+    while i < #termlist do
+      i = i + 1 ---@type integer
+      local termuuid = termlist[i] ---@type string|nil
+      if termuuid == nil then
+        return nil, nil
+      end
 
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    return termmeta, index
+      local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
+      if termmeta == nil then
+        std.reporter.error({
+          from = __module_name__,
+          subject = "Invalid termuuid",
+          message = string.format("Cannot retrieve the termmeta by the given termuuid: %s", termuuid),
+          details = { termuuid = termuuid, index = i },
+        })
+      else
+        if termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
+          index = index + 1 ---@type integer
+          return termmeta, index
+        end
+      end
+    end
+    return nil, nil
   end
 end
 
@@ -222,27 +215,6 @@ function M.resolve_by_name(name)
   end
 end
 
----@param bufnr                         integer|nil
----@return nil
-function M.switch(bufnr)
-  if bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "terminal" then
-    o_bufnr:next(bufnr)
-    return true
-  end
-
-  local bufnr_current = o_bufnr:snapshot() ---@type integer|nil
-  if bufnr_current == nil or not vim.api.nvim_buf_is_valid(bufnr_current) then
-    for index = 1, #termlist, 1 do
-      local termuuid = termlist[index] ---@type string
-      local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-      if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
-        o_bufnr:next(termmeta.bufnr)
-        return
-      end
-    end
-  end
-end
-
 ---@param termmeta                      eve.builtin.term.IMeta
 ---@param params                        eve.builtin.term.IUpdateParams
 ---@return boolean
@@ -262,99 +234,67 @@ function M.update(termmeta, params)
   return true
 end
 
----@param termuuid                      string
----@return nil
-function M.start_as_needed(termuuid)
-  local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-  if termmeta == nil then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "Start Terminal",
-      message = "Terminal metadata not found.",
-      details = { termuuid = termuuid },
-    })
-    return
-  end
-
-  local bufnr = termmeta.bufnr ---@type integer
-  if bufnr <= 0 or not vim.api.nvim_buf_is_valid(bufnr) then
-    bufnr = vim.api.nvim_create_buf(false, true)
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].filetype = eve.filetype.TERM
-    vim.bo[bufnr].swapfile = false
-    eve.nvim.bindkeys(termmeta.keymaps, { bufnr = bufnr, noremap = true, silent = true })
-    termmeta.bufnr = bufnr
-  end
-
-  if termmeta.jobid ~= nil and vim.fn.jobwait({ termmeta.jobid }, 0)[1] == -1 then
-    return
-  end
-
-  vim.schedule(function()
-    termmeta.jobid = nil
-
-    local cmd = eve.shell.format_command(termmeta.cmd) ---@type string
-    local jobid = vim.fn.jobstart(cmd, {
-      cwd = termmeta.cwd,
-      env = termmeta.env,
-      term = true,
-    })
-    if jobid <= 0 then
-      return
-    end
-
-    termmeta.jobid = jobid
-
-    -- Clean up job reference when terminal closes
-    vim.api.nvim_create_autocmd("TermClose", {
-      once = true,
-      buffer = bufnr,
-      callback = function()
-        termmeta.jobid = nil
-        eve.buf.close(bufnr)
-      end,
-    })
-  end)
-end
-
 ----------------------------------------------------------------------------------------------------
 
----@param bufnr                         integer|nil
+---@param termmeta                      eve.builtin.term.IMeta
 ---@return nil
-function M.on_close(bufnr)
-  local termmeta = M.resolve_by_bufnr(bufnr) ---@type eve.builtin.term.IMeta|nil
-  if termmeta == nil then
-    return
-  end
-
+function M.on_closed(termmeta)
   if termmeta.jobid ~= nil then
     vim.fn.jobstop(termmeta.jobid)
     termmeta.jobid = nil
   end
 
-  local k = 0 ---@type integer
-  local bufnr_next = nil ---@type integer|nil
-  for index = 1, #termlist, 1 do
-    local termuuid = termlist[index] ---@type string
-    if termuuid ~= termmeta.uuid then
-      k = k + 1
-      termlist[k] = termuuid ---@type string
+  if not termmeta.permanent then
+    local k = 0 ---@type integer
+    for index = 1, #termlist, 1 do
+      local termuuid = termlist[index] ---@type string
+      if termuuid ~= termmeta.uuid then
+        k = k + 1
+        termlist[k] = termuuid ---@type string
+      end
+    end
+    std.table.truncate_inline(termlist, k)
+    metamap[termmeta.uuid] = nil
+  end
 
-      if bufnr_next == nil then
-        local meta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-        if meta ~= nil and meta.bufnr > 0 and vim.api.nvim_buf_is_valid(meta.bufnr) then
-          bufnr_next = meta.bufnr ---@type integer|nil
-        end
+  local bufnr = termmeta.bufnr ---@type integer
+  termmeta.bufnr = 0
+
+  local next_termmeta = M.__pick_next_termmeta__(termmeta.uuid) ---@type eve.builtin.term.IMeta|nil
+  if next_termmeta ~= nil then
+    o_bufnr:next(next_termmeta.bufnr)
+  end
+
+  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+    eve.buf.close(bufnr)
+  end
+  termmeta.on_closed()
+end
+
+---@param bufnr                         integer|nil
+---@return nil
+function M.on_buf_deleted(bufnr)
+  local termmeta = M.resolve_by_bufnr(bufnr) ---@type eve.builtin.term.IMeta|nil
+  if termmeta ~= nil then
+    M.on_closed(termmeta)
+  end
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param termuuid                      string|nil
+---@return eve.builtin.term.IMeta|nil
+function M.__pick_next_termmeta__(termuuid)
+  for index = 1, #termlist, 1 do
+    local uuid = termlist[index] ---@type string
+    if uuid ~= termuuid then
+      local termmeta = metamap[uuid] ---@type eve.builtin.term.IMeta|nil
+      if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
+        return termmeta
       end
     end
   end
-  std.table.truncate_inline(termlist, k)
-
-  if bufnr_next ~= nil then
-    M.switch(bufnr_next)
-  end
-
-  termmeta.on_closed()
 end
 
 return M

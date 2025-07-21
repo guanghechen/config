@@ -1,15 +1,12 @@
-local __module_name__ = "fml.action.term.toggle" ---@type string
-
-local terminal_map = {} ---@type table<string, eve.ux.ITerminal>
-
 ---@class fml.action.term.IProps
+---@field public uuid                   string
 ---@field public name                   string
----@field public cmd                    ?string
+---@field public cmd                    ?string[]|string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
----@field public title                  ?string
----@field public on_exit                ?fun(): nil
+---@field public keymaps                ?std.t.IKeymap[]
+---@field public on_closed              ?fun(): nil
 
 ---@class fml.action.term.toggle.IParams : fml.action.term.IProps
 ---@field public selected_text          string|nil
@@ -17,60 +14,47 @@ local terminal_map = {} ---@type table<string, eve.ux.ITerminal>
 ---@class fml.action.term
 local M = {}
 
----@param props                        fml.action.term.IProps
----@return eve.ux.ITerminal
-function M.new(props)
-  local name = props.name ---@type string
-  local cmd = props.cmd or vim.env.SHELL or vim.o.shell ---@type string
-  local cwd = props.cwd or std.path.cwd() ---@type string
-  local env = props.env ---@type table<string, string>|nil
-  local permanent = props.permanent ---@type boolean|nil
-  local title = props.title ---@type string|nil
-
-  local terminal = terminal_map[name] ---@type eve.ux.ITerminal|nil
-  if terminal ~= nil then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "new",
-      message = "The term with the given name already exists.",
-      details = { name = name, cmd = cmd, cwd = cwd, env = env },
-    })
-    return terminal
-  end
-
-  ---@type eve.ux.ITerminal
-  terminal = eve.ux.Terminal.new({
-    cmd = cmd,
-    cwd = cwd,
-    env = env,
-    permanent = permanent,
-    title = title,
-  })
-  terminal_map[name] = terminal
-
-  terminal:focus()
-  return terminal
-end
-
 ---@param params                        fml.action.term.toggle.IParams
----@return eve.ux.ITerminal
+---@return nil
 function M.toggle(params)
+  local uuid = params.uuid ---@type string
   local name = params.name ---@type string
-
-  local terminal = terminal_map[name] ---@type eve.ux.ITerminal|nil
-  if terminal == nil or terminal:isdisposed() then
-    terminal_map[name] = nil
-    terminal = M.new(params)
-  else
-    terminal:update({
+  local termmeta = eve.term.resolve_by_name(name) ---@type eve.builtin.term.IMeta|nil
+  if termmeta == nil then
+    termmeta = eve.term.create({
+      uuid = uuid,
+      name = name,
       cmd = params.cmd,
       cwd = params.cwd,
       env = params.env,
-      title = params.title,
-      on_exit = params.on_exit,
+      permanent = params.permanent,
+      keymaps = params.keymaps,
+      on_closed = params.on_closed,
     })
-    terminal:toggle()
+  else
+    eve.term.update(termmeta, {
+      name = name,
+      cmd = params.cmd,
+      env = params.env,
+      on_closed = params.on_closed,
+    })
   end
+
+  local terminal = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
+  if terminal:isvisible() then
+    local winnr = terminal:get_winnr() ---@type integer|nil
+    if winnr ~= nil then
+      local current_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+      local current_term = eve.term.resolve_by_bufnr(current_bufnr) ---@type eve.builtin.term.IMeta|nil
+      if current_term ~= nil and current_term.name == name then
+        terminal:hide()
+        return terminal
+      end
+    end
+  end
+
+  eve.term.o_bufnr:next(termmeta.bufnr)
+  terminal:focus()
 
   if terminal:isvisible() then
     local selected_text = params.selected_text ---@type string|nil
@@ -80,7 +64,7 @@ function M.toggle(params)
       if winnr ~= nil and bufnr ~= nil then
         if selected_text and #selected_text > 1 then
           vim.api.nvim_set_current_win(winnr)
-          vim.api.nvim_feedkeys("i" .. selected_text, "n", true) -- Insert the text without newline
+          vim.api.nvim_feedkeys("i" .. selected_text, "n", true)
         end
       end
     end
@@ -91,8 +75,8 @@ end
 ---@return nil
 function M.toggle_cwd()
   local cwd = std.path.cwd()
-
   M.toggle({
+    uuid = "452e019a-3c93-439b-8671-8c418ef3516b#terminal",
     name = "cwd",
     cwd = cwd,
     permanent = true,
@@ -110,8 +94,8 @@ function M.toggle_directory()
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
   local cwd = std.path.dirname(filepath) ---@type string
-
   M.toggle({
+    uuid = "452e019a-3c93-439b-8671-8c418ef3516b#terminal",
     name = "directory",
     cwd = cwd,
     permanent = true,
@@ -122,8 +106,8 @@ end
 ---@return nil
 function M.toggle_workspace()
   local cwd = std.path.workspace()
-
   M.toggle({
+    uuid = "452e019a-3c93-439b-8671-8c418ef3516b#terminal",
     name = "workspace",
     cwd = cwd,
     permanent = true,

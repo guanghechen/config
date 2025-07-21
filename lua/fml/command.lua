@@ -29,26 +29,26 @@ command
   })
 
 --[buf] focus---------------------------------------------------------------------------------------
-for i = 1, 49, 1 do
-  local bufid = i < 10 and ("0" .. tostring(i)) or tostring(i)
+for index = 1, 49, 1 do
+  local bufid = index < 10 and ("0" .. tostring(index)) or tostring(index)
   command.implement({
     uuid = K.buf["focus_" .. bufid].uuid,
     action = function()
-      require("fml.action.buf.focus").focus(i)
+      require("fml.action.buf.focus").focus(index)
     end,
   })
 end
-for i = 1, 9, 1 do
+for index = 1, 9, 1 do
   command.implement({
-    uuid = K.buf["focus_left_" .. tostring(i)].uuid,
+    uuid = K.buf["focus_left_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.buf.focus").focus_left(i)
+      require("fml.action.buf.focus").focus_left(index)
     end,
   })
   command.implement({
-    uuid = K.buf["focus_right_" .. tostring(i)].uuid,
+    uuid = K.buf["focus_right_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.buf.focus").focus_right(i)
+      require("fml.action.buf.focus").focus_right(index)
     end,
   })
 end
@@ -644,11 +644,13 @@ command
   })
 
 --[term] focus-----------------------------------------------------------------------------------------
-for i = 1, 9, 1 do
+for index = 1, 9, 1 do
   command.implement({
-    uuid = K.term["focus_" .. tostring(i)].uuid,
+    uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.term.focus").focus(i)
+      if eve.term.focus(index) then
+        eve.ux.widget.Terminal:focus()
+      end
     end,
   })
 end

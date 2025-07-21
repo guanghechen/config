@@ -3,7 +3,7 @@ local txt = eve.nvim.txt
 
 ---@type string
 local fn_switch_term = eve.G.register_anonymous_fn(function(bufnr)
-  eve.term.switch(bufnr) ---@type boolean
+  eve.term.o_bufnr:next(bufnr) ---@type integer
 end) or ""
 
 ---@class eve.ux.nvimbar.component.term
@@ -81,7 +81,7 @@ function M.terms(position)
     name = "term:terms",
     atomic = false,
     render = function(_, remain_width)
-      local term_bufnr_current = eve.term.current() ---@type integer|nil
+      local term_bufnr_current = eve.term.o_bufnr:snapshot() ---@type integer|nil
       if term_bufnr_current == nil or term_bufnr_current < 1 or not vim.api.nvim_buf_is_valid(term_bufnr_current) then
         return "", "", false
       end
@@ -105,6 +105,9 @@ function M.terms(position)
         end
       end
 
+      if index == 0 then
+        return "", "", false
+      end
       return text, hl_text, true
     end,
   }

@@ -1,5 +1,3 @@
-local toggle_term = require("fml.action.term.toggle").toggle
-
 ---@param name                          string
 ---@param cwd                           string
 ---@param args                          ?string[]
@@ -7,7 +5,8 @@ local toggle_term = require("fml.action.term.toggle").toggle
 local function open_lazygit(name, cwd, args)
   local argv = table.concat(args or {}, " ") ---@type string
   local cmd = #argv > 0 and string.format("lazygit %s", argv) or "lazygit"
-  toggle_term({
+  require("fml.action.term.toggle").toggle({
+    uuid = "1c2b6245-da30-499a-8e23-8c33b5bd1a77#lazygit",
     name = name,
     cmd = cmd,
     cwd = cwd,

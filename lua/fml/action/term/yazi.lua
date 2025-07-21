@@ -6,16 +6,17 @@ local toggle_term = require("fml.action.term.toggle").toggle
 ---@return nil
 local function open_yazi(name, cwd, filepath)
   local tempname = std.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
-  local terminal ---@type eve.ux.ITerminal|nil
+  local terminal ---@type eve.ux.widget.Terminal|nil
 
   local dirpath = std.path.dirname(filepath) ---@type string
   local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string
   terminal = toggle_term({
+    uuid = string.format("69f6829d-c54a-46a2-8c52-5f2f2d40aa93#%s", name),
     name = name,
     cmd = cmd,
     cwd = cwd,
     permanent = false,
-    on_exit = function()
+    on_closed = function()
       pcall(function()
         if terminal == nil then
           return

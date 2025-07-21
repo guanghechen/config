@@ -1,6 +1,6 @@
 local __module_name__ = "fml.action.code.run" ---@type string
 
-local code_runner_terminals = {} ---@type table<string, eve.ux.ITerminal>
+local runner_termmeta_map = {} ---@type table<string, eve.builtin.term.IMeta>
 
 ---@class fml.action.code.IRunner
 ---@field public run                    fun(filepath: string, force: boolean): nil
@@ -30,10 +30,10 @@ local runners = {
   },
   mjs = {
     run = function(filepath)
-      ---@param terminal                eve.ux.ITerminal
+      ---@param termmeta                eve.builtin.term.IMeta
       ---@return nil
-      local function handle(terminal)
-        local bufnr = terminal:get_bufnr() ---@type integer|nil
+      local function handle(termmeta)
+        local bufnr = termmeta.bufnr ---@type integer|nil
         if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
           local channel_id = vim.bo[bufnr].channel ---@type integer
           local cmd = "node " .. vim.fn.shellescape(filepath) .. "\n" ---@type string
@@ -41,23 +41,23 @@ local runners = {
         end
       end
 
-      local terminal = code_runner_terminals.mjs ---@type eve.ux.ITerminal|nil
-      if terminal == nil then
-        terminal = eve.ux.Terminal.new({
+      local termmeta = runner_termmeta_map.mjs ---@type eve.builtin.term.IMeta|nil
+      if termmeta == nil then
+        termmeta = eve.term.create({
+          uuid = string.format("9b2efac7-b9e3-4ee3-aa51-2dc394b500f5"),
+          name = "code runner (mjs)",
           cwd = std.path.cwd(),
           permanent = false,
-          title = "code run (mjs)",
         })
-        code_runner_terminals.mjs = terminal
+        runner_termmeta_map.mjs = termmeta
 
-        terminal:focus()
         std.timer.set_timeout(function()
-          handle(terminal)
+          handle(termmeta)
         end, 1500)
       else
-        terminal:focus()
+        termmeta:focus()
         std.timer.set_timeout(function()
-          handle(terminal)
+          handle(termmeta)
         end, 100)
       end
     end,
