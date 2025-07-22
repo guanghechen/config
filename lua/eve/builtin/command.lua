@@ -456,8 +456,7 @@ M.definitions.tab = {
 M.definitions.term = {
   create = def("Ftermcreate", "term: create"),
   rename = def("Ftermrename", "term: rename"),
-
-  toggle_cwd = def("Ftermcwd", "term: toggle (cwd)"),
+  toggle = def("Ftermtoggle", "term: toggle"),
 
   lazygit_cwd = def("Ftermlazygitcwd", "term: lazygit (cwd)"),
   lazygit_workspace = def("Ftermlazygitworkspace", "term: lazygit (workspace)"),

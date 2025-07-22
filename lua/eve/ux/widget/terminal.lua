@@ -1,5 +1,8 @@
 local __module_name__ = "eve.ux.widget.terminal" ---@type string
 
+---@class eve.ux.widget.terminal.IToggleHardParams : eve.builtin.term.ICreateParams
+---@field public selected_text          string|nil
+
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Cursor:f_us_terminal_current",
   "CursorColumn:f_us_terminal_current",
@@ -164,6 +167,73 @@ function M:toggle()
   else
     self:focus()
   end
+end
+
+---@class eve.ux.widget.terminal.IToggleAndFocusParams : eve.builtin.term.ICreateParams
+---@field public selected_text          string|nil
+---@field public autofocus              boolean|nil
+
+---@param params                        eve.ux.widget.terminal.IToggleAndFocusParams
+---@return nil
+function M:toggle_and_focus(params)
+  local uuid = params.uuid ---@type string
+  local name = params.name ---@type string
+  local termmeta = eve.term.resolve_by_name(name) ---@type eve.builtin.term.IMeta|nil
+  if termmeta == nil then
+    termmeta = eve.term.create({
+      uuid = uuid,
+      name = name,
+      cmd = params.cmd,
+      cwd = params.cwd,
+      env = params.env,
+      permanent = params.permanent,
+      keymaps = params.keymaps,
+      on_closed = params.on_closed,
+    })
+  else
+    eve.term.update(termmeta, {
+      name = name,
+      cmd = params.cmd,
+      env = params.env,
+      on_closed = params.on_closed,
+    })
+  end
+
+  if self:isvisible() then
+    self:hide()
+    return
+  end
+
+  if params.autofocus then
+    eve.term.o_bufnr:next(termmeta.bufnr)
+  end
+
+  self:focus()
+
+  local selected_text = params.selected_text ---@type string|nil
+  if selected_text ~= nil and #selected_text > 0 then
+    vim.schedule(function()
+      if self:isfocused() then
+        if termmeta.jobid ~= nil then
+          local ok, reason = pcall(function()
+            vim.api.nvim_chan_send(termmeta.jobid, selected_text)
+          end)
+          if not ok then
+            std.reporter.error({
+              from = __module_name__,
+              subject = "toggle_and_focus",
+              message = "Failed to send content to the target terminal",
+              details = {
+                selected_text = selected_text,
+                reason = reason,
+              },
+            })
+          end
+        end
+      end
+    end)
+  end
+  return self
 end
 
 ----------------------------------------------------------------------------------------------------

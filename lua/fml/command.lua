@@ -601,9 +601,9 @@ command
     end,
   })
   .implement({
-    uuid = K.term.toggle_cwd.uuid,
+    uuid = K.term.toggle.uuid,
     action = function()
-      require("fml.action.term.toggle").toggle_cwd()
+      require("fml.action.term.create").toggle()
     end,
   })
   .implement({

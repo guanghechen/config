@@ -1,5 +1,7 @@
 {
-  "ignorePaths": ["lua/std/fileicon.lua"],
+  "ignorePaths": [
+    "lua/std/fileicon.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -163,6 +165,7 @@
     "augroup",
     "autocmd",
     "autocmds",
+    "autofocus",
     "autoindent",
     "autojump",
     "autopair",
@@ -348,6 +351,8 @@
     "ftermfocus7",
     "ftermfocus8",
     "ftermfocus9",
+    "ftermrename",
+    "ftermtoggle",
     "ftplugin",
     "ftplugins",
     "fzfrc",
@@ -762,4 +767,3 @@
     "zindex"
   ]
 }
-

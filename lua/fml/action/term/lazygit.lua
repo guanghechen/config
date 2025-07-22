@@ -5,12 +5,14 @@
 local function open_lazygit(name, cwd, args)
   local argv = table.concat(args or {}, " ") ---@type string
   local cmd = #argv > 0 and string.format("lazygit %s", argv) or "lazygit"
-  require("fml.action.term.toggle").toggle({
-    uuid = "1c2b6245-da30-499a-8e23-8c33b5bd1a77#lazygit",
+  local terminal = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
+  terminal:toggle_and_focus({
+    uuid = string.format("1c2b6245-da30-499a-8e23-8c33b5bd1a77#%s", name),
     name = name,
     cmd = cmd,
     cwd = cwd,
     permanent = true,
+    autofocus = true,
   })
 end
 
