@@ -94,6 +94,14 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "v" },
+    key = "<C-r>",
+    desc = eve.command.definitions.term.rename.desc,
+    callback = function()
+      vim.cmd(eve.command.definitions.term.rename.uuid)
+    end,
+  }
+  keymaps[#keymaps + 1] = {
     modes = { "i", "n", "v" },
     key = "q",
     desc = "term: close",

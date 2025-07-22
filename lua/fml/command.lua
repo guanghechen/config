@@ -595,6 +595,12 @@ command
     end,
   })
   .implement({
+    uuid = K.term.rename.uuid,
+    action = function()
+      require("fml.action.term.create").rename()
+    end,
+  })
+  .implement({
     uuid = K.term.toggle_cwd.uuid,
     action = function()
       require("fml.action.term.toggle").toggle_cwd()

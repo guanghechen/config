@@ -41,4 +41,33 @@ function M.show_profile_selector()
   end)
 end
 
+---@return nil
+function M.rename()
+  local current_term = eve.term.current() ---@type eve.builtin.term.IMeta|nil
+  if current_term == nil then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "rename",
+      message = "No active terminal found to rename.",
+    })
+    return
+  end
+
+  vim.ui.input({
+    prompt = "Enter new terminal name: ",
+    default = current_term.name,
+  }, function(new_name)
+    if new_name == nil or #new_name == 0 then
+      return -- User cancelled or entered empty name
+    end
+
+    if new_name == current_term.name then
+      return -- No change
+    end
+
+    eve.term.update(current_term, { name = new_name })
+    eve.status.dirtier_termline:mark_dirty()
+  end)
+end
+
 return M
