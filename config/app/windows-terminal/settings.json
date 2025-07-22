@@ -16,6 +16,83 @@
   "useAcrylicInTabRow": true,
   "actions": [
     {
+      "id": "ghc.input.ctrl_/",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[47;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_0",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[48;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_1",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[49;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_2",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[50;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_3",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[51;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_4",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[52;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_5",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[53;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_6",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[54;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_7",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[55;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_8",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[56;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_9",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[57;5u"
+      }
+    },
+    {
       "id": "ghc.input.001b_0001",
       "command": {
         "action": "sendInput",
@@ -675,6 +752,50 @@
     {
       "id": null,
       "keys": "ctrl+shift+tab"
+    },
+    {
+      "id": "ghc.input.ctrl_/",
+      "keys": "ctrl+/"
+    },
+    {
+      "id": "ghc.input.ctrl_0",
+      "keys": "ctrl+0"
+    },
+    {
+      "id": "ghc.input.ctrl_1",
+      "keys": "ctrl+1"
+    },
+    {
+      "id": "ghc.input.ctrl_2",
+      "keys": "ctrl+2"
+    },
+    {
+      "id": "ghc.input.ctrl_3",
+      "keys": "ctrl+3"
+    },
+    {
+      "id": "ghc.input.ctrl_4",
+      "keys": "ctrl+4"
+    },
+    {
+      "id": "ghc.input.ctrl_5",
+      "keys": "ctrl+5"
+    },
+    {
+      "id": "ghc.input.ctrl_6",
+      "keys": "ctrl+6"
+    },
+    {
+      "id": "ghc.input.ctrl_7",
+      "keys": "ctrl+7"
+    },
+    {
+      "id": "ghc.input.ctrl_8",
+      "keys": "ctrl+8"
+    },
+    {
+      "id": "ghc.input.ctrl_9",
+      "keys": "ctrl+9"
     },
     {
       "id": "ghc.input.001b_0001",

@@ -21,8 +21,10 @@
     "pwsh",
     "rustup",
     "stylua",
+    "titlebar",
     "usermod",
     "wezterm",
     "winget"
   ]
 }
+
