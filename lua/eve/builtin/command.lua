@@ -458,8 +458,6 @@ M.definitions.term = {
   rename = def("Ftermrename", "term: rename"),
 
   toggle_cwd = def("Ftermcwd", "term: toggle (cwd)"),
-  toggle_directory = def("Ftermdirectory", "term: toggle (directory)"),
-  toggle_workspace = def("Ftermworkspace", "term: toggle (workspace)"),
 
   lazygit_cwd = def("Ftermlazygitcwd", "term: lazygit (cwd)"),
   lazygit_workspace = def("Ftermlazygitworkspace", "term: lazygit (workspace)"),

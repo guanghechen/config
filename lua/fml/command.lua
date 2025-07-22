@@ -607,18 +607,6 @@ command
     end,
   })
   .implement({
-    uuid = K.term.toggle_directory.uuid,
-    action = function()
-      require("fml.action.term.toggle").toggle_directory()
-    end,
-  })
-  .implement({
-    uuid = K.term.toggle_workspace.uuid,
-    action = function()
-      require("fml.action.term.toggle").toggle_workspace()
-    end,
-  })
-  .implement({
     uuid = K.term.lazygit_cwd.uuid,
     action = function()
       require("fml.action.term.lazygit").lazygit_cwd()

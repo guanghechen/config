@@ -84,35 +84,4 @@ function M.toggle_cwd()
   })
 end
 
----@return nil
-function M.toggle_directory()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
-  if bufnr_sourcefile == nil then
-    return
-  end
-
-  local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-  local cwd = std.path.dirname(filepath) ---@type string
-  M.toggle({
-    uuid = "452e019a-3c93-439b-8671-8c418ef3516b#terminal",
-    name = "directory",
-    cwd = cwd,
-    permanent = true,
-    selected_text = eve.buf.retrieve_selected_text(),
-  })
-end
-
----@return nil
-function M.toggle_workspace()
-  local cwd = std.path.workspace()
-  M.toggle({
-    uuid = "452e019a-3c93-439b-8671-8c418ef3516b#terminal",
-    name = "workspace",
-    cwd = cwd,
-    permanent = true,
-    selected_text = eve.buf.retrieve_selected_text(),
-  })
-end
-
 return M
