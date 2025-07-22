@@ -2,8 +2,8 @@ local btn = eve.nvim.btn
 local txt = eve.nvim.txt
 
 ---@type string
-local fn_switch_term = eve.G.register_anonymous_fn(function(bufnr)
-  eve.term.o_bufnr:next(bufnr) ---@type integer
+local fn_switch_term = eve.G.register_anonymous_fn(function(termuuid)
+  eve.term.o_termuuid:next(termuuid) ---@type string
 end) or ""
 
 ---@type string
@@ -95,28 +95,25 @@ function M.terms(position)
     name = "term:terms",
     atomic = false,
     render = function(_, remain_width)
-      local term_bufnr_current = eve.term.o_bufnr:snapshot() ---@type integer|nil
-
+      local term_current = eve.term.o_termuuid:snapshot() ---@type string
       local text = " " ---@type string
       local hl_text = " " ---@type string
       local index = 0 ---@type integer
 
       -- Render existing terminal buttons
-      if term_bufnr_current ~= nil and term_bufnr_current > 0 and vim.api.nvim_buf_is_valid(term_bufnr_current) then
-        for termmeta in eve.term:iterator() do
-          if termmeta ~= nil then
-            index = index + 1 ---@type integer
-            local render = termmeta.bufnr == term_bufnr_current and render_termc or render_term
-            local t, ht = render(termmeta, index)
-            local w = vim.api.nvim_strwidth(t) ---@type integer
-            if remain_width < w then
-              break
-            end
-
-            text = text .. t .. " "
-            hl_text = hl_text .. ht .. " "
-            remain_width = remain_width - w
+      for termmeta in eve.term:iterator() do
+        if termmeta ~= nil then
+          index = index + 1 ---@type integer
+          local render = termmeta.uuid == term_current and render_termc or render_term
+          local t, ht = render(termmeta, index)
+          local w = vim.api.nvim_strwidth(t) ---@type integer
+          if remain_width < w then
+            break
           end
+
+          text = text .. t .. " "
+          hl_text = hl_text .. ht .. " "
+          remain_width = remain_width - w
         end
       end
 

@@ -39,13 +39,13 @@ local __module_name__ = "eve.builtin.term" ---@type string
 
 local metamap = {} ---@type table<string, eve.builtin.term.IMeta>
 local termlist = {} ---@type string[]
-local o_bufnr = std.Observable.from_value(0) ---@type std.collection.Observable
+local o_termuuid = std.Observable.from_value("") ---@type std.collection.Observable
 
 ---@class eve.builtin.term
----@field public o_bufnr                std.collection.IObservable
+---@field public o_termuuid             std.collection.IObservable
 local M = {}
 
-M.o_bufnr = o_bufnr ---@type std.collection.IObservable
+M.o_termuuid = o_termuuid ---@type std.collection.IObservable
 
 ---@param params                        eve.builtin.term.ICreateParams
 ---@return eve.builtin.term.IMeta
@@ -177,26 +177,21 @@ function M.create(params)
   metamap[termuuid] = termmeta
   termlist[#termlist + 1] = termuuid
 
-  o_bufnr:next(termmeta.bufnr)
+  o_termuuid:next(termuuid)
   return termmeta
 end
 
 ---@return eve.builtin.term.IMeta|nil
 function M.current()
-  local bufnr = o_bufnr:snapshot() ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    for index = 1, #termlist, 1 do
-      local uuid = termlist[index] ---@type string
-      local termmeta = metamap[uuid] ---@type eve.builtin.term.IMeta|nil
-      if termmeta ~= nil and termmeta.bufnr == bufnr then
-        return termmeta
-      end
-    end
+  local termuuid = o_termuuid:snapshot() ---@type string
+  local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
+  if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
+    return termmeta
   end
 
-  local termmeta = M.__pick_next_termmeta__() ---@type eve.builtin.term.IMeta|nil
+  termmeta = M.__pick_next_termmeta__() ---@type eve.builtin.term.IMeta|nil
   if termmeta ~= nil then
-    o_bufnr:next(termmeta.bufnr)
+    o_termuuid:next(termmeta.uuid)
   end
   return termmeta
 end
@@ -211,7 +206,7 @@ function M.focus(index)
     if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
       count = count + 1
       if count == index then
-        o_bufnr:next(termmeta.bufnr)
+        o_termuuid:next(termmeta.uuid)
         return true
       end
     end
@@ -222,11 +217,7 @@ end
 ---@param step                          integer|nil
 ---@return nil
 function M.focus_left(step)
-  local bufnr_current = o_bufnr:snapshot() ---@type integer|nil
-  if bufnr_current == nil or not vim.api.nvim_buf_is_valid(bufnr_current) then
-    return
-  end
-
+  local termuuid_current = o_termuuid:snapshot() ---@type string
   local current_index = nil ---@type integer|nil
   local valid_terms = {} ---@type eve.builtin.term.IMeta[]
 
@@ -235,7 +226,7 @@ function M.focus_left(step)
     local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
     if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
       valid_terms[#valid_terms + 1] = termmeta
-      if termmeta.bufnr == bufnr_current then
+      if termmeta.uuid == termuuid_current then
         current_index = #valid_terms
       end
     end
@@ -247,17 +238,13 @@ function M.focus_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local next_index = std.fn.navigate_circular(current_index, -step, #valid_terms) ---@type integer
-  o_bufnr:next(valid_terms[next_index].bufnr)
+  o_termuuid:next(valid_terms[next_index].uuid)
 end
 
 ---@param step                          integer|nil
 ---@return nil
 function M.focus_right(step)
-  local current_bufnr = o_bufnr:snapshot() ---@type integer|nil
-  if current_bufnr == nil or not vim.api.nvim_buf_is_valid(current_bufnr) then
-    return
-  end
-
+  local termuuid_current = o_termuuid:snapshot() ---@type string
   local current_index = nil ---@type integer|nil
   local valid_terms = {} ---@type eve.builtin.term.IMeta[]
 
@@ -266,7 +253,7 @@ function M.focus_right(step)
     local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
     if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
       valid_terms[#valid_terms + 1] = termmeta
-      if termmeta.bufnr == current_bufnr then
+      if termmeta.uuid == termuuid_current then
         current_index = #valid_terms
       end
     end
@@ -278,22 +265,18 @@ function M.focus_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local next_index = std.fn.navigate_circular(current_index, step, #valid_terms) ---@type integer
-  o_bufnr:next(valid_terms[next_index].bufnr)
+  o_termuuid:next(valid_terms[next_index].uuid)
 end
 
 ---@param step                          integer|nil
 ---@return nil
 function M.swap_left(step)
-  local current_bufnr = o_bufnr:snapshot() ---@type integer|nil
-  if current_bufnr == nil or not vim.api.nvim_buf_is_valid(current_bufnr) then
-    return
-  end
+  local termuuid_current = o_termuuid:snapshot() ---@type string
 
   local current_index = nil ---@type integer|nil
   for i = 1, #termlist, 1 do
     local termuuid = termlist[i] ---@type string
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and termmeta.bufnr == current_bufnr then
+    if termuuid == termuuid_current then
       current_index = i
       break
     end
@@ -309,24 +292,19 @@ function M.swap_left(step)
     return
   end
 
-  local termuuid_current = termlist[current_index] ---@type string
+  local termuuid_swap = termlist[current_index] ---@type string
   termlist[current_index] = termlist[next_index]
-  termlist[next_index] = termuuid_current
+  termlist[next_index] = termuuid_swap
 end
 
 ---@param step                          integer|nil
 ---@return nil
 function M.swap_right(step)
-  local current_bufnr = o_bufnr:snapshot() ---@type integer|nil
-  if current_bufnr == nil or not vim.api.nvim_buf_is_valid(current_bufnr) then
-    return
-  end
-
+  local termuuid_current = o_termuuid:snapshot() ---@type string
   local current_index = nil ---@type integer|nil
   for i = 1, #termlist, 1 do
     local termuuid = termlist[i] ---@type string
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and termmeta.bufnr == current_bufnr then
+    if termuuid == termuuid_current then
       current_index = i
       break
     end
@@ -342,9 +320,9 @@ function M.swap_right(step)
     return
   end
 
-  local termuuid_current = termlist[current_index] ---@type string
+  local termuuid_swap = termlist[current_index] ---@type string
   termlist[current_index] = termlist[next_index]
-  termlist[next_index] = termuuid_current
+  termlist[next_index] = termuuid_swap
 end
 
 ---@return fun(): eve.builtin.term.IMeta|nil, integer|nil
@@ -480,7 +458,7 @@ function M.on_closed(termmeta)
 
   local next_termmeta = M.__pick_next_termmeta__(termmeta.uuid) ---@type eve.builtin.term.IMeta|nil
   if next_termmeta ~= nil then
-    o_bufnr:next(next_termmeta.bufnr)
+    o_termuuid:next(next_termmeta.uuid)
   end
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then

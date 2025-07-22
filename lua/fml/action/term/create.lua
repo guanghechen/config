@@ -78,10 +78,10 @@ function M.toggle()
     uuid = "452e019a-3c93-439b-8671-8c418ef3516b",
     name = "shell",
     cwd = cwd,
+    autofocus = true,
     permanent = true,
     selected_text = eve.buf.retrieve_selected_text(),
   })
 end
 
 return M
-

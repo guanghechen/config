@@ -48,23 +48,26 @@ local c = eve.ux.nvimbar.component
 local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
 termline:place("left", c.term.terms(position), 100)
 
-std.fn.observe({ eve.term.o_bufnr }, function()
+std.fn.observe({ eve.term.o_termuuid }, function()
   local winnr = _terminal_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return
   end
 
-  local bufnr_current = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local bufnr = eve.term.o_bufnr:snapshot() ---@type integer
-  if bufnr == bufnr_current then
+  local termuuid = eve.term.o_termuuid:snapshot() ---@type string
+  local termmeta = eve.term.resolve(termuuid) ---@type eve.builtin.term.IMeta|nil
+  if termmeta == nil or termmeta.bufnr <= 0 or not vim.api.nvim_buf_is_valid(termmeta.bufnr) then
     return
   end
 
-  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.wo[winnr].winfixbuf = false
-    vim.api.nvim_win_set_buf(winnr, bufnr)
-    vim.wo[winnr].winfixbuf = true
+  local bufnr_current = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if termmeta.bufnr == bufnr_current then
+    return
   end
+
+  vim.wo[winnr].winfixbuf = false
+  vim.api.nvim_win_set_buf(winnr, termmeta.bufnr)
+  vim.wo[winnr].winfixbuf = true
   eve.status.dirtier_termline:mark_dirty()
 end, true)
 
@@ -202,13 +205,17 @@ function M:toggle_and_focus(params)
     })
   end
 
+  local autofocus = not not params.autofocus ---@type boolean
+  local termuuid_current = eve.term.o_termuuid:snapshot() ---@type string
   if self:isvisible() then
-    self:hide()
-    return
+    if termmeta.uuid == termuuid_current or not autofocus then
+      self:hide()
+      return
+    end
   end
 
-  if params.autofocus then
-    eve.term.o_bufnr:next(termmeta.bufnr)
+  if autofocus then
+    eve.term.o_termuuid:next(termmeta.uuid)
   end
 
   self:focus()
