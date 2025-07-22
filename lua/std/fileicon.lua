@@ -163,6 +163,7 @@ local ICONS_EXTENSION = {
   xltm                    = { glyph = "󱎏", hl = "MiniIconsGreen"  },
   xltx                    = { glyph = "󱎏", hl = "MiniIconsGreen"  },
   ["code-snippets"]       = "json",
+  excalidraw              = { glyph = "󰽽", hl = "MiniIconsPurple" },
   unknown                 = { glyph = "󰈔", hl = "MiniIconsGrey"   },
 }
 -- stylua: ignore end

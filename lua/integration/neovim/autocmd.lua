@@ -66,6 +66,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 vim.filetype.add({
   extension = {
     avanterules = "jinja",
+    excalidraw = "excalidraw",
     log = "text",
     md = "markdown",
     rasi = "rasi",

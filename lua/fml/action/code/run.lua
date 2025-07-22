@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.code.run" ---@type string
 
-local runner_termmeta_map = {} ---@type table<string, eve.builtin.term.IMeta>
-
 ---@class fml.action.code.IRunner
 ---@field public run                    fun(filepath: string, force: boolean): nil
 
@@ -28,6 +26,17 @@ local runners = {
       vim.system({ "curl", "-X", "POST", url }, { detach = true })
     end,
   },
+  excalidraw = {
+    run = function(filepath, force)
+      local url = string.format(
+        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+        YOZORA_SERVER_PORT,
+        std.string.escape_url_component(filepath),
+        force and "true" or "false"
+      )
+      vim.system({ "curl", "-X", "POST", url }, { detach = true })
+    end,
+  },
   mjs = {
     run = function(filepath)
       ---@param termmeta                eve.builtin.term.IMeta
@@ -41,25 +50,21 @@ local runners = {
         end
       end
 
-      local termmeta = runner_termmeta_map.mjs ---@type eve.builtin.term.IMeta|nil
-      if termmeta == nil then
-        termmeta = eve.term.create({
-          uuid = string.format("9b2efac7-b9e3-4ee3-aa51-2dc394b500f5"),
-          name = "code runner (mjs)",
-          cwd = std.path.cwd(),
-          permanent = false,
-        })
-        runner_termmeta_map.mjs = termmeta
+      local termuuid = "9b2efac7-b9e3-4ee3-aa51-2dc394b500f5" ---@type string
+      eve.ux.widget.Terminal:toggle_and_focus({
+        uuid = termuuid,
+        name = "code runner (mjs)",
+        cwd = std.path.cwd(),
+        autofocus = true,
+        permanent = false,
+      })
 
-        std.timer.set_timeout(function()
+      std.timer.set_timeout(function()
+        local termmeta = eve.term.get(termuuid) ---@type eve.builtin.term.IMeta|nil
+        if termmeta ~= nil then
           handle(termmeta)
-        end, 1500)
-      else
-        termmeta:focus()
-        std.timer.set_timeout(function()
-          handle(termmeta)
-        end, 100)
-      end
+        end
+      end, 1000)
     end,
   },
 }
