@@ -123,6 +123,12 @@ return {
       },
     },
   },
+  config = function(_, opts)
+    require("nvim-treesitter.configs").setup(opts)
+    
+    -- Configure excalidraw filetype to use JSON parser
+    vim.treesitter.language.register("json", "excalidraw")
+  end,
   dependencies = {
     "nvim-treesitter-textobjects",
   },

@@ -7,6 +7,7 @@ return {
   on_attach = eve.lsp.on_attach,
   on_init = eve.lsp.on_init,
   flags = { debounce_text_changes = 500 },
+  filetypes = { "json", "jsonc", "excalidraw" },
   settings = {
     json = {
       format = {
