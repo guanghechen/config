@@ -12,16 +12,9 @@ local function open_lazygit(name, cwd, args)
     name = name,
     cmd = cmd,
     cwd = cwd,
-    permanent = false,
+    permanent = true,
     autofocus = true,
-    on_focused = function()
-      local termmeta = eve.term.resolve(termuuid) ---@type eve.builtin.term.IMeta|nil
-      vim.schedule(function()
-        if termmeta ~= nil and termmeta.jobid ~= nil then
-          vim.api.nvim_chan_send(termmeta.jobid, "\x1c")
-        end
-      end)
-    end,
+    hidewipe = true,
   })
 end
 

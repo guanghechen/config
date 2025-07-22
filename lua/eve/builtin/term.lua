@@ -8,6 +8,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public cwd                    string
 ---@field public env                    table<string, string>|nil
 ---@field public permanent              boolean
+---@field public hidewipe               boolean
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public jobid                  integer|nil
 ---@field public on_closed              fun(): nil
@@ -20,6 +21,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
+---@field public hidewipe               ?boolean
 ---@field public keymaps                ?std.t.IKeymap[]
 ---@field public on_closed              ?fun(): nil
 ---@field public on_focused             ?fun(): nil
@@ -66,6 +68,7 @@ function M.create(params)
   local cwd = params.cwd or std.path.cwd() ---@type string
   local env = params.env ---@type table<string, string>|nil
   local permanent = not not params.permanent ---@type boolean
+  local hidewipe = not not params.hidewipe ---@type boolean
   local on_closed = params.on_closed or std.fn.noop ---@type fun(): nil|nil
   local on_focused = params.on_focused or std.fn.noop ---@type fun(): nil|nil
 
@@ -75,6 +78,10 @@ function M.create(params)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
+
+  if hidewipe then
+    vim.bo[bufnr].bufhidden = "wipe"
+  end
 
   local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type std.t.IKeymap[]
   for i = 1, 9 do
@@ -125,6 +132,7 @@ function M.create(params)
     env = env,
     keymaps = keymaps,
     permanent = permanent,
+    hidewipe = hidewipe,
     on_closed = on_closed,
     on_focused = on_focused,
     jobid = nil,
