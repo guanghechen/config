@@ -65,4 +65,6 @@ source ~/.config/fish/conf/theme.fish
 source ~/.config/fish/conf/fzf.fish
 source ~/.config/fish/conf/alias.fish
 
+ghc-claude-local
+
 complete -c ghc-theme-apply -a "catppuccin-latte catppuccin-mocha gruvbox-dark gruvbox-light nord one-half-dark one-half-light rose-pine-main rose-pine-moon rose-pine-dawn"
