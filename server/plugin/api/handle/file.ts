@@ -8,6 +8,7 @@ import type { IApiHandle, IApiHandleData } from '../types'
 const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.avi': 'video/x-msvideo',
   '.bmp': 'image/bmp',
+  '.excalidraw': 'application/json',
   '.gif': 'image/gif',
   '.html': 'text/html',
   '.ico': 'image/x-icon',
@@ -78,6 +79,7 @@ export const fetchFile: IApiHandle = async params => {
   state.watch(filepath)
 
   switch (extname) {
+    case '.excalidraw':
     case '.json': {
       let data: IApiHandleData
       try {

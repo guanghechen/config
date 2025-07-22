@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { WorkspaceViewModel } from '@/context/workspace'
+const ExcalidrawContainer = React.lazy(() => import('./excalidraw'))
 const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
 const MarkdownContainer = React.lazy(() => import('./markdown'))
@@ -25,6 +26,8 @@ export const WorkspaceMain: React.FC<IProps> = props => {
 
   const container: React.ReactElement = React.useMemo<React.ReactElement>(() => {
     switch (extname.toLowerCase()) {
+      case '.excalidraw':
+        return <ExcalidrawContainer />
       case '.json':
         return <JsonContainer />
       case '.md':

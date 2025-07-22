@@ -5,6 +5,7 @@ import type { ICodeMetaData } from '@/util/parseCodeMeta'
 const EmbedMath = React.lazy(() => import('./math'))
 const EmbedMermaid = React.lazy(() => import('./mermaid'))
 const EmbedMarkdown = React.lazy(() => import('./markdown'))
+const EmbedExcalidraw = React.lazy(() => import('./excalidraw'))
 
 interface IProps {
   readonly code: string
@@ -25,6 +26,8 @@ export class Embed extends React.Component<IProps> {
         return <EmbedMermaid code={code} />
       case 'markdown':
         return <EmbedMarkdown code={code} />
+      case 'excalidraw':
+        return <EmbedExcalidraw code={code} />
       default:
         return <React.Fragment />
     }
