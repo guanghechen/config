@@ -351,6 +351,8 @@
     "ftermfocus7",
     "ftermfocus8",
     "ftermfocus9",
+    "ftermfocusleft",
+    "ftermfocusright",
     "ftermrename",
     "ftermtoggle",
     "ftplugin",

@@ -655,6 +655,28 @@ for index = 1, 9, 1 do
   })
 end
 
+command
+  .implement({
+    uuid = K.term.focus_left.uuid,
+    action = function(arg)
+      local step, ok = nil, false
+      if arg and arg ~= "" then
+        step, ok = tonumber(arg), true
+      end
+      eve.term.focus_left(ok and step or nil)
+    end,
+  })
+  .implement({
+    uuid = K.term.focus_right.uuid,
+    action = function(arg)
+      local step, ok = nil, false
+      if arg and arg ~= "" then
+        step, ok = tonumber(arg), true
+      end
+      eve.term.focus_right(ok and step or nil)
+    end,
+  })
+
 --[toggle] -----------------------------------------------------------------------------------------
 command
   .implement({
