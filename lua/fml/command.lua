@@ -613,12 +613,6 @@ command
     end,
   })
   .implement({
-    uuid = K.term.lazygit_workspace.uuid,
-    action = function()
-      require("fml.action.term.lazygit").lazygit_workspace()
-    end,
-  })
-  .implement({
     uuid = K.term.lazygit_file_history.uuid,
     action = function()
       require("fml.action.term.lazygit").lazygit_file_history()

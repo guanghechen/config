@@ -459,7 +459,6 @@ M.definitions.term = {
   toggle = def("Ftermtoggle", "term: toggle"),
 
   lazygit_cwd = def("Ftermlazygitcwd", "term: lazygit (cwd)"),
-  lazygit_workspace = def("Ftermlazygitworkspace", "term: lazygit (workspace)"),
   lazygit_file_history = def("Ftermlazygitfilehistory", "term: lazygit (file history)"),
 
   yazi_cwd = def("Ftermyazicwd", "term: yazi (cwd)"),

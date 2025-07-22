@@ -27,12 +27,6 @@ function M.lazygit_cwd()
 end
 
 ---@return nil
-function M.lazygit_workspace()
-  local cwd = std.path.workspace() ---@type string
-  open_lazygit("lazygit_workspace", cwd)
-end
-
----@return nil
 function M.lazygit_file_history()
   local cwd = std.path.cwd() ---@type string
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
