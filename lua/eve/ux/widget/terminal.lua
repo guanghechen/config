@@ -189,6 +189,7 @@ function M:toggle_and_focus(params)
       keymaps = params.keymaps,
       on_closed = params.on_closed,
       on_focused = params.on_focused,
+      on_resized = params.on_resized,
     })
   else
     eve.term.update(termmeta, {
@@ -197,6 +198,7 @@ function M:toggle_and_focus(params)
       env = params.env,
       on_closed = params.on_closed,
       on_focused = params.on_focused,
+      on_resized = params.on_resized,
     })
   end
 
@@ -312,6 +314,8 @@ function M:__create_win_as_needed__(termmeta)
   vim.wo[winnr].winblend = winblend
   vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
   eve.status.dirtier_termline:mark_dirty()
+
+  termmeta.on_resized()
   return winnr
 end
 
@@ -327,7 +331,9 @@ function M:__start__(termmeta)
     local channelid = vim.fn.jobstart(termmeta.cmd, {
       cwd = termmeta.cwd,
       env = termmeta.env,
+      pty = true,
       term = true,
+      detach = false,
       on_exit = function(jobid, code, event)
         if code ~= 0 then
           std.reporter.error({

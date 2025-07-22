@@ -13,6 +13,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public jobid                  integer|nil
 ---@field public on_closed              fun(): nil
 ---@field public on_focused             fun(): nil
+---@field public on_resized             fun(): nil
 
 ---@class eve.builtin.term.ICreateParams
 ---@field public uuid                   string
@@ -25,6 +26,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public keymaps                ?std.t.IKeymap[]
 ---@field public on_closed              ?fun(): nil
 ---@field public on_focused             ?fun(): nil
+---@field public on_resized             ?fun(): nil
 
 ---@class eve.builtin.term.IUpdateParams
 ---@field public name                   ?string
@@ -33,6 +35,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public env                    ?table<string, string>
 ---@field public on_closed              ?fun(): nil
 ---@field public on_focused             ?fun(): nil
+---@field public on_resized             ?fun(): nil
 
 local metamap = {} ---@type table<string, eve.builtin.term.IMeta>
 local termlist = {} ---@type string[]
@@ -71,6 +74,7 @@ function M.create(params)
   local hidewipe = not not params.hidewipe ---@type boolean
   local on_closed = params.on_closed or std.fn.noop ---@type fun(): nil|nil
   local on_focused = params.on_focused or std.fn.noop ---@type fun(): nil|nil
+  local on_resized = params.on_resized or std.fn.noop ---@type fun(): nil|nil
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].buflisted = false
@@ -135,6 +139,7 @@ function M.create(params)
     hidewipe = hidewipe,
     on_closed = on_closed,
     on_focused = on_focused,
+    on_resized = on_resized,
     jobid = nil,
   }
   metamap[termuuid] = termmeta
@@ -271,6 +276,9 @@ function M.update(termmeta, params)
   end
   if params.on_focused ~= nil then
     termmeta.on_focused = params.on_focused
+  end
+  if params.on_resized ~= nil then
+    termmeta.on_resized = params.on_resized
   end
   return true
 end
