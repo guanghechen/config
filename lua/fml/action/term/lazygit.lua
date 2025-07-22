@@ -18,10 +18,7 @@ local function open_lazygit(name, cwd, args)
       local termmeta = eve.term.resolve(termuuid) ---@type eve.builtin.term.IMeta|nil
       vim.schedule(function()
         if termmeta ~= nil and termmeta.jobid ~= nil then
-          local pid = vim.fn.jobpid(termmeta.jobid) ---@type integer
-          if pid > 0 then
-            vim.fn.jobstart({ "kill", "-WINCH", tostring(pid) }, { detach = true })
-          end
+          vim.api.nvim_chan_send(termmeta.jobid, "\x1c")
         end
       end)
     end,
