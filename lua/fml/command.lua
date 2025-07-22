@@ -658,42 +658,30 @@ end
 command
   .implement({
     uuid = K.term.focus_left.uuid,
-    action = function(arg)
-      local step, ok = nil, false
-      if arg and arg ~= "" then
-        step, ok = tonumber(arg), true
-      end
-      eve.term.focus_left(ok and step or nil)
+    action = function(args)
+      local ok, step = pcall(tonumber, args)
+      require("fml.action.term.focus").focus_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.focus_right.uuid,
-    action = function(arg)
-      local step, ok = nil, false
-      if arg and arg ~= "" then
-        step, ok = tonumber(arg), true
-      end
-      eve.term.focus_right(ok and step or nil)
+    action = function(args)
+      local ok, step = pcall(tonumber, args)
+      require("fml.action.term.focus").focus_right(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.swap_left.uuid,
-    action = function(arg)
-      local step, ok = nil, false
-      if arg and arg ~= "" then
-        step, ok = tonumber(arg), true
-      end
-      eve.term.swap_left(ok and step or nil)
+    action = function(args)
+      local ok, step = pcall(tonumber, args)
+      require("fml.action.term.swap").swap_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.swap_right.uuid,
-    action = function(arg)
-      local step, ok = nil, false
-      if arg and arg ~= "" then
-        step, ok = tonumber(arg), true
-      end
-      eve.term.swap_right(ok and step or nil)
+    action = function(args)
+      local ok, step = pcall(tonumber, args)
+      require("fml.action.term.swap").swap_right(ok and step or nil)
     end,
   })
 

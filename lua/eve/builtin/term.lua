@@ -47,6 +47,114 @@ local M = {}
 
 M.o_termuuid = o_termuuid ---@type std.collection.IObservable
 
+---@param index                         integer
+---@return string|nil
+---@return eve.builtin.term.IMeta|nil
+function M.at(index)
+  local termuuid = termlist[index] ---@type string|nil
+  if termuuid then
+    return termuuid, metamap[termuuid]
+  end
+end
+
+---@return integer
+---@return string|nil
+function M.current()
+  local termuuid = o_termuuid:snapshot() ---@type string
+  local index = M.indexof(termuuid) ---@type integer
+  return index, termuuid
+end
+
+---@param index                         integer
+---@return boolean
+function M.focus(index)
+  local termuuid = termlist[index] ---@type string|nil
+  if termuuid == nil then
+    return false
+  end
+  o_termuuid:next(termuuid)
+  return true
+end
+
+---@param termuuid                      string
+---@return eve.builtin.term.IMeta|nil
+function M.get(termuuid)
+  return metamap[termuuid]
+end
+
+---@param termuuid                      string
+---@return integer
+function M.indexof(termuuid)
+  local N = #termlist ---@type integer
+  for index = 1, N, 1 do
+    if termlist[index] == termuuid then
+      return index
+    end
+  end
+  return -1
+end
+
+---@param bufnr                         integer|nil
+---@return integer
+function M.indexof_by_bufnr(bufnr)
+  if bufnr == nil or bufnr < 1 then
+    return -1
+  end
+
+  for index = 1, #termlist, 1 do
+    local termuuid = termlist[index] ---@type string
+    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
+    if termmeta ~= nil and termmeta.bufnr == bufnr then
+      return index
+    end
+  end
+  return -1
+end
+
+---@return fun(): eve.builtin.term.IMeta|nil, integer|nil
+function M:iterator()
+  local i = 0 ---@type integer
+  local index = 0 ---@type integer
+
+  ---@return eve.builtin.term.IMeta|nil
+  ---@return integer|nil
+  return function()
+    while i < #termlist do
+      i = i + 1 ---@type integer
+      local termuuid = termlist[i] ---@type string|nil
+      if termuuid == nil then
+        return nil, nil
+      end
+
+      local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
+      if termmeta ~= nil then
+        return termmeta, index
+      end
+
+      std.reporter.error({
+        from = __module_name__,
+        subject = "Invalid termuuid",
+        message = string.format("Cannot retrieve the termmeta by the given termuuid: %s", termuuid),
+        details = { termuuid = termuuid, index = i },
+      })
+    end
+    return nil, nil
+  end
+end
+
+---@param index                         integer
+---@param termuuid                      string
+function M.put(index, termuuid)
+  termlist[index] = termuuid
+end
+
+---@return integer
+function M.size()
+  return #termlist
+end
+
+----------------------------------------------------------------------------------------------------
+
 ---@param params                        eve.builtin.term.ICreateParams
 ---@return eve.builtin.term.IMeta
 function M.create(params)
@@ -118,7 +226,7 @@ function M.create(params)
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
-    key = "<C-S-{>",
+    key = "<C-S-[>",
     desc = eve.command.definitions.term.swap_left.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.swap_left.uuid)
@@ -126,7 +234,7 @@ function M.create(params)
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
-    key = "<C-S-}>",
+    key = "<C-S-]>",
     desc = eve.command.definitions.term.swap_right.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.swap_right.uuid)
@@ -181,218 +289,6 @@ function M.create(params)
   return termmeta
 end
 
----@return eve.builtin.term.IMeta|nil
-function M.current()
-  local termuuid = o_termuuid:snapshot() ---@type string
-  local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-  if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
-    return termmeta
-  end
-
-  termmeta = M.__pick_next_termmeta__() ---@type eve.builtin.term.IMeta|nil
-  if termmeta ~= nil then
-    o_termuuid:next(termmeta.uuid)
-  end
-  return termmeta
-end
-
----@param index                         integer
----@return boolean
-function M.focus(index)
-  local count = 0 ---@type integer
-  for i = 1, #termlist, 1 do
-    local termuuid = termlist[i] ---@type string
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
-      count = count + 1
-      if count == index then
-        o_termuuid:next(termmeta.uuid)
-        return true
-      end
-    end
-  end
-  return false
-end
-
----@param step                          integer|nil
----@return nil
-function M.focus_left(step)
-  local termuuid_current = o_termuuid:snapshot() ---@type string
-  local current_index = nil ---@type integer|nil
-  local valid_terms = {} ---@type eve.builtin.term.IMeta[]
-
-  for i = 1, #termlist, 1 do
-    local termuuid = termlist[i] ---@type string
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
-      valid_terms[#valid_terms + 1] = termmeta
-      if termmeta.uuid == termuuid_current then
-        current_index = #valid_terms
-      end
-    end
-  end
-
-  if current_index == nil or #valid_terms == 0 then
-    return
-  end
-
-  step = math.max(1, step or vim.v.count1 or 1)
-  local next_index = std.fn.navigate_circular(current_index, -step, #valid_terms) ---@type integer
-  o_termuuid:next(valid_terms[next_index].uuid)
-end
-
----@param step                          integer|nil
----@return nil
-function M.focus_right(step)
-  local termuuid_current = o_termuuid:snapshot() ---@type string
-  local current_index = nil ---@type integer|nil
-  local valid_terms = {} ---@type eve.builtin.term.IMeta[]
-
-  for i = 1, #termlist, 1 do
-    local termuuid = termlist[i] ---@type string
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
-      valid_terms[#valid_terms + 1] = termmeta
-      if termmeta.uuid == termuuid_current then
-        current_index = #valid_terms
-      end
-    end
-  end
-
-  if current_index == nil or #valid_terms == 0 then
-    return
-  end
-
-  step = math.max(1, step or vim.v.count1 or 1)
-  local next_index = std.fn.navigate_circular(current_index, step, #valid_terms) ---@type integer
-  o_termuuid:next(valid_terms[next_index].uuid)
-end
-
----@param step                          integer|nil
----@return nil
-function M.swap_left(step)
-  local termuuid_current = o_termuuid:snapshot() ---@type string
-
-  local current_index = nil ---@type integer|nil
-  for i = 1, #termlist, 1 do
-    local termuuid = termlist[i] ---@type string
-    if termuuid == termuuid_current then
-      current_index = i
-      break
-    end
-  end
-
-  if current_index == nil or #termlist <= 1 then
-    return
-  end
-
-  step = math.max(1, step or vim.v.count1 or 1)
-  local next_index = std.fn.navigate_circular(current_index, -step, #termlist) ---@type integer
-  if current_index == next_index then
-    return
-  end
-
-  local termuuid_swap = termlist[current_index] ---@type string
-  termlist[current_index] = termlist[next_index]
-  termlist[next_index] = termuuid_swap
-end
-
----@param step                          integer|nil
----@return nil
-function M.swap_right(step)
-  local termuuid_current = o_termuuid:snapshot() ---@type string
-  local current_index = nil ---@type integer|nil
-  for i = 1, #termlist, 1 do
-    local termuuid = termlist[i] ---@type string
-    if termuuid == termuuid_current then
-      current_index = i
-      break
-    end
-  end
-
-  if current_index == nil or #termlist <= 1 then
-    return
-  end
-
-  step = math.max(1, step or vim.v.count1 or 1)
-  local next_index = std.fn.navigate_circular(current_index, step, #termlist) ---@type integer
-  if current_index == next_index then
-    return
-  end
-
-  local termuuid_swap = termlist[current_index] ---@type string
-  termlist[current_index] = termlist[next_index]
-  termlist[next_index] = termuuid_swap
-end
-
----@return fun(): eve.builtin.term.IMeta|nil, integer|nil
-function M:iterator()
-  local i = 0 ---@type integer
-  local index = 0 ---@type integer
-
-  ---@return eve.builtin.term.IMeta|nil
-  ---@return integer|nil
-  return function()
-    while i < #termlist do
-      i = i + 1 ---@type integer
-      local termuuid = termlist[i] ---@type string|nil
-      if termuuid == nil then
-        return nil, nil
-      end
-
-      local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-      if termmeta == nil then
-        std.reporter.error({
-          from = __module_name__,
-          subject = "Invalid termuuid",
-          message = string.format("Cannot retrieve the termmeta by the given termuuid: %s", termuuid),
-          details = { termuuid = termuuid, index = i },
-        })
-      else
-        if termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
-          index = index + 1 ---@type integer
-          return termmeta, index
-        end
-      end
-    end
-    return nil, nil
-  end
-end
-
----@param termuuid                      string
----@return eve.builtin.term.IMeta|nil
-function M.resolve(termuuid)
-  return metamap[termuuid]
-end
-
----@param bufnr                         integer|nil
----@return eve.builtin.term.IMeta|nil
-function M.resolve_by_bufnr(bufnr)
-  if bufnr == nil or bufnr < 1 then
-    return
-  end
-
-  for index = 1, #termlist, 1 do
-    local termuuid = termlist[index] ---@type string
-    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and termmeta.bufnr == bufnr then
-      return termmeta
-    end
-  end
-end
-
----@param name                          string
----@return eve.builtin.term.IMeta|nil
-function M.resolve_by_name(name)
-  for index = 1, #termlist, 1 do
-    local uuid = termlist[index] ---@type string
-    local termmeta = metamap[uuid] ---@type eve.builtin.term.IMeta|nil
-    if termmeta ~= nil and termmeta.name == name then
-      return termmeta
-    end
-  end
-end
-
 ---@param termmeta                      eve.builtin.term.IMeta
 ---@param params                        eve.builtin.term.IUpdateParams
 ---@return boolean
@@ -426,7 +322,13 @@ end
 ---@param bufnr                         integer|nil
 ---@return nil
 function M.on_buf_deleted(bufnr)
-  local termmeta = M.resolve_by_bufnr(bufnr) ---@type eve.builtin.term.IMeta|nil
+  local index = M.indexof_by_bufnr(bufnr) ---@type integer
+  if index < 1 then
+    return
+  end
+
+  local termuuid = termlist[index] ---@type string
+  local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
   if termmeta ~= nil then
     M.on_closed(termmeta)
   end

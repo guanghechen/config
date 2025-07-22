@@ -55,7 +55,7 @@ std.fn.observe({ eve.term.o_termuuid }, function()
   end
 
   local termuuid = eve.term.o_termuuid:snapshot() ---@type string
-  local termmeta = eve.term.resolve(termuuid) ---@type eve.builtin.term.IMeta|nil
+  local termmeta = eve.term.get(termuuid) ---@type eve.builtin.term.IMeta|nil
   if termmeta == nil or termmeta.bufnr <= 0 or not vim.api.nvim_buf_is_valid(termmeta.bufnr) then
     return
   end
@@ -111,7 +111,8 @@ end
 function M:focus()
   eve.widget.push(self)
 
-  local termmeta = eve.term.current() ---@type eve.builtin.term.IMeta|nil
+  local termindex = eve.term.current() ---@type integer
+  local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
   if termmeta == nil then
     eve.win.close(_terminal_winnr)
     _terminal_winnr = nil
@@ -139,7 +140,8 @@ end
 
 ---@return integer|nil
 function M:get_bufnr()
-  local termmeta = eve.term.current() ---@type eve.builtin.term.IMeta|nil
+  local termindex = eve.term.current() ---@type integer
+  local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
   return termmeta and termmeta.bufnr or nil ---@type integer|nil
 end
 
@@ -151,7 +153,8 @@ end
 ---@return nil
 function M:resize()
   if self:isvisible() then
-    local termmeta = eve.term.current() ---@type eve.builtin.term.IMeta|nil
+    local termindex = eve.term.current() ---@type integer
+    local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
     if termmeta == nil then
       eve.win.close(_terminal_winnr)
       _terminal_winnr = nil
@@ -179,7 +182,8 @@ end
 function M:toggle_and_focus(params)
   local uuid = params.uuid ---@type string
   local name = params.name ---@type string
-  local termmeta = eve.term.resolve_by_name(name) ---@type eve.builtin.term.IMeta|nil
+  local termindex = eve.term.indexof(params.uuid) ---@type integer
+  local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
   if termmeta == nil then
     termmeta = eve.term.create({
       uuid = uuid,
