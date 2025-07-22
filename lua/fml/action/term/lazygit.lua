@@ -14,7 +14,6 @@ local function open_lazygit(name, cwd, args)
     cwd = cwd,
     permanent = true,
     autofocus = true,
-    hidewipe = true,
   })
 end
 
