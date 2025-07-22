@@ -4,8 +4,10 @@ const path = require("node:path");
 const ROOT_CONFIG = path.resolve(__dirname, "..");
 const ROOT_SOURCECODES = process.env.ROOT_SOURCECODES;
 
-const COPILOT_API_PORT = Number.parseInt(
-  String(process.env.COPILOT_API_PORT || 4343),
+const GHC_COPILOT_API_HOST =
+  String(process.env.GHC_COPILOT_API_HOST) || "127.0.0.1";
+const GHC_COPILOT_API_PORT = Number.parseInt(
+  String(process.env.GHC_COPILOT_API_PORT || 4343),
 );
 
 let LOCAL_TASKS = {};
@@ -42,10 +44,10 @@ const config = {
           path.resolve(ROOT_SOURCECODES, "github/ericc-ch/copilot-api"),
         ),
         script: "bun",
-        args: `run start start --port=${COPILOT_API_PORT}`,
+        args: `run start start --port=${GHC_COPILOT_API_PORT}`,
         env: {
           NODE_ENV: "production",
-          HOST: "127.0.0.1",
+          HOST: GHC_COPILOT_API_HOST,
         },
       },
     ...(LOCAL_TASKS.apps || []),
