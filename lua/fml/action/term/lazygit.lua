@@ -23,7 +23,7 @@ local M = {}
 ---@return nil
 function M.lazygit_cwd()
   local cwd = std.path.cwd() ---@type string
-  open_lazygit("lazygit_cwd", cwd)
+  open_lazygit("lazygit", cwd)
 end
 
 ---@return nil
@@ -32,7 +32,7 @@ function M.lazygit_file_history()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local args = { "-f", vim.fn.shellescape(filepath) } ---@type string[]
-  open_lazygit("lazygit_file_history", cwd, args)
+  open_lazygit("lazygit (file history)", cwd, args)
 end
 
 return M
