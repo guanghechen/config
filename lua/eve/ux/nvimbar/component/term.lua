@@ -95,26 +95,24 @@ function M.terms(position)
     name = "term:terms",
     atomic = false,
     render = function(_, remain_width)
-      local term_current = eve.term.o_termuuid:snapshot() ---@type string
+      local termindex = eve.term.current() ---@type integer
       local text = " " ---@type string
       local hl_text = " " ---@type string
       local index = 0 ---@type integer
 
       -- Render existing terminal buttons
       for termmeta in eve.term:iterator() do
-        if termmeta ~= nil then
-          index = index + 1 ---@type integer
-          local render = termmeta.uuid == term_current and render_termc or render_term
-          local t, ht = render(termmeta, index)
-          local w = vim.api.nvim_strwidth(t) ---@type integer
-          if remain_width < w then
-            break
-          end
-
-          text = text .. t .. " "
-          hl_text = hl_text .. ht .. " "
-          remain_width = remain_width - w
+        index = index + 1 ---@type integer
+        local render = index == termindex and render_termc or render_term
+        local t, ht = render(termmeta, index)
+        local w = vim.api.nvim_strwidth(t) ---@type integer
+        if remain_width < w then
+          break
         end
+
+        text = text .. t .. " "
+        hl_text = hl_text .. ht .. " "
+        remain_width = remain_width - w
       end
 
       -- Always render the Add button

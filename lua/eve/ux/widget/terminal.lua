@@ -180,13 +180,16 @@ end
 ---@param params                        eve.ux.widget.terminal.IToggleAndFocusParams
 ---@return nil
 function M:toggle_and_focus(params)
-  local uuid = params.uuid ---@type string
+  local termuuid = params.uuid ---@type string
   local name = params.name ---@type string
+  local autofocus = not not params.autofocus ---@type boolean
   local termindex = eve.term.indexof(params.uuid) ---@type integer
+  local _, termuuid_current = eve.term.current() ---@type integer, string|nil
+
   local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
   if termmeta == nil then
     termmeta = eve.term.create({
-      uuid = uuid,
+      uuid = termuuid,
       name = name,
       cmd = params.cmd,
       cwd = params.cwd,
@@ -209,10 +212,8 @@ function M:toggle_and_focus(params)
     })
   end
 
-  local autofocus = not not params.autofocus ---@type boolean
-  local termuuid_current = eve.term.o_termuuid:snapshot() ---@type string
   if self:isvisible() then
-    if termmeta.uuid == termuuid_current or not autofocus then
+    if termuuid == termuuid_current or not autofocus then
       self:hide()
       return
     end
