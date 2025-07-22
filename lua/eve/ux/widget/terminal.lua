@@ -66,10 +66,6 @@ std.fn.observe({ eve.term.o_bufnr }, function()
     vim.wo[winnr].winfixbuf = true
   end
   eve.status.dirtier_termline:mark_dirty()
-
-  vim.schedule(function()
-    vim.cmd("redraw")
-  end)
 end, true)
 
 eve.status.dirtier_termline:subscribe(
@@ -122,6 +118,8 @@ function M:focus()
   local winnr = self:__create_win_as_needed__(termmeta)
   vim.api.nvim_set_current_win(winnr)
   self:__start__(termmeta)
+
+  eve.term.on_focused(termmeta)
 end
 
 ---@return nil
@@ -189,6 +187,7 @@ function M:toggle_and_focus(params)
       permanent = params.permanent,
       keymaps = params.keymaps,
       on_closed = params.on_closed,
+      on_focused = params.on_focused,
     })
   else
     eve.term.update(termmeta, {
@@ -196,6 +195,7 @@ function M:toggle_and_focus(params)
       cmd = params.cmd,
       env = params.env,
       on_closed = params.on_closed,
+      on_focused = params.on_focused,
     })
   end
 

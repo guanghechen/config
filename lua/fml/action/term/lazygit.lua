@@ -5,14 +5,26 @@
 local function open_lazygit(name, cwd, args)
   local argv = table.concat(args or {}, " ") ---@type string
   local cmd = #argv > 0 and string.format("lazygit %s", argv) or "lazygit"
-  local terminal = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
-  terminal:toggle_and_focus({
-    uuid = string.format("1c2b6245-da30-499a-8e23-8c33b5bd1a77#%s", name),
+  local termuuid = string.format("1c2b6245-da30-499a-8e23-8c33b5bd1a77#%s", name)
+
+  eve.ux.widget.Terminal:toggle_and_focus({
+    uuid = termuuid,
     name = name,
     cmd = cmd,
     cwd = cwd,
-    permanent = true,
+    permanent = false,
     autofocus = true,
+    on_focused = function()
+      local termmeta = eve.term.resolve(termuuid) ---@type eve.builtin.term.IMeta|nil
+      vim.schedule(function()
+        if termmeta ~= nil and termmeta.jobid ~= nil then
+          local pid = vim.fn.jobpid(termmeta.jobid) ---@type integer
+          if pid > 0 then
+            vim.fn.jobstart({ "kill", "-WINCH", tostring(pid) }, { detach = true })
+          end
+        end
+      end)
+    end,
   })
 end
 

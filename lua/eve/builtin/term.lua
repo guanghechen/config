@@ -11,6 +11,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public jobid                  integer|nil
 ---@field public on_closed              fun(): nil
+---@field public on_focused             fun(): nil
 
 ---@class eve.builtin.term.ICreateParams
 ---@field public uuid                   string
@@ -21,6 +22,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public permanent              ?boolean
 ---@field public keymaps                ?std.t.IKeymap[]
 ---@field public on_closed              ?fun(): nil
+---@field public on_focused             ?fun(): nil
 
 ---@class eve.builtin.term.IUpdateParams
 ---@field public name                   ?string
@@ -28,6 +30,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
 ---@field public on_closed              ?fun(): nil
+---@field public on_focused             ?fun(): nil
 
 local metamap = {} ---@type table<string, eve.builtin.term.IMeta>
 local termlist = {} ---@type string[]
@@ -64,6 +67,7 @@ function M.create(params)
   local env = params.env ---@type table<string, string>|nil
   local permanent = not not params.permanent ---@type boolean
   local on_closed = params.on_closed or std.fn.noop ---@type fun(): nil|nil
+  local on_focused = params.on_focused or std.fn.noop ---@type fun(): nil|nil
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].buflisted = false
@@ -122,6 +126,7 @@ function M.create(params)
     keymaps = keymaps,
     permanent = permanent,
     on_closed = on_closed,
+    on_focused = on_focused,
     jobid = nil,
   }
   metamap[termuuid] = termmeta
@@ -203,6 +208,12 @@ function M:iterator()
   end
 end
 
+---@param termuuid                      string
+---@return eve.builtin.term.IMeta|nil
+function M.resolve(termuuid)
+  return metamap[termuuid]
+end
+
 ---@param bufnr                         integer|nil
 ---@return eve.builtin.term.IMeta|nil
 function M.resolve_by_bufnr(bufnr)
@@ -247,10 +258,25 @@ function M.update(termmeta, params)
   if params.env ~= nil then
     termmeta.env = params.env
   end
+  if params.on_closed ~= nil then
+    termmeta.on_closed = params.on_closed
+  end
+  if params.on_focused ~= nil then
+    termmeta.on_focused = params.on_focused
+  end
   return true
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@param bufnr                         integer|nil
+---@return nil
+function M.on_buf_deleted(bufnr)
+  local termmeta = M.resolve_by_bufnr(bufnr) ---@type eve.builtin.term.IMeta|nil
+  if termmeta ~= nil then
+    M.on_closed(termmeta)
+  end
+end
 
 ---@param termmeta                      eve.builtin.term.IMeta
 ---@return nil
@@ -287,13 +313,10 @@ function M.on_closed(termmeta)
   termmeta.on_closed()
 end
 
----@param bufnr                         integer|nil
+---@param termmeta                      eve.builtin.term.IMeta
 ---@return nil
-function M.on_buf_deleted(bufnr)
-  local termmeta = M.resolve_by_bufnr(bufnr) ---@type eve.builtin.term.IMeta|nil
-  if termmeta ~= nil then
-    M.on_closed(termmeta)
-  end
+function M.on_focused(termmeta)
+  termmeta.on_focused()
 end
 
 ----------------------------------------------------------------------------------------------------
