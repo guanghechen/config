@@ -477,6 +477,8 @@ M.definitions.term = {
   focus_9 = def("Ftermfocus9", "term: focus 9"),
   focus_left = def("Ftermfocusleft", "term: focus left", "?"),
   focus_right = def("Ftermfocusright", "term: focus right", "?"),
+  swap_left = def("Ftermswapleft", "term: swap left", "?"),
+  swap_right = def("Ftermswapright", "term: swap right", "?"),
 }
 
 ---@class eve.builtin.command.definitions.toggle

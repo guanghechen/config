@@ -118,6 +118,22 @@ function M.create(params)
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
+    key = "<C-S-{>",
+    desc = eve.command.definitions.term.swap_left.desc,
+    callback = function()
+      vim.cmd(eve.command.definitions.term.swap_left.uuid)
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "v" },
+    key = "<C-S-}>",
+    desc = eve.command.definitions.term.swap_right.desc,
+    callback = function()
+      vim.cmd(eve.command.definitions.term.swap_right.uuid)
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "v" },
     key = "<C-/>",
     desc = eve.command.definitions.term.create.desc,
     callback = function()
@@ -263,6 +279,72 @@ function M.focus_right(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local next_index = std.fn.navigate_circular(current_index, step, #valid_terms) ---@type integer
   o_bufnr:next(valid_terms[next_index].bufnr)
+end
+
+---@param step                          integer|nil
+---@return nil
+function M.swap_left(step)
+  local current_bufnr = o_bufnr:snapshot() ---@type integer|nil
+  if current_bufnr == nil or not vim.api.nvim_buf_is_valid(current_bufnr) then
+    return
+  end
+
+  local current_index = nil ---@type integer|nil
+  for i = 1, #termlist, 1 do
+    local termuuid = termlist[i] ---@type string
+    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
+    if termmeta ~= nil and termmeta.bufnr == current_bufnr then
+      current_index = i
+      break
+    end
+  end
+
+  if current_index == nil or #termlist <= 1 then
+    return
+  end
+
+  step = math.max(1, step or vim.v.count1 or 1)
+  local next_index = std.fn.navigate_circular(current_index, -step, #termlist) ---@type integer
+  if current_index == next_index then
+    return
+  end
+
+  local termuuid_current = termlist[current_index] ---@type string
+  termlist[current_index] = termlist[next_index]
+  termlist[next_index] = termuuid_current
+end
+
+---@param step                          integer|nil
+---@return nil
+function M.swap_right(step)
+  local current_bufnr = o_bufnr:snapshot() ---@type integer|nil
+  if current_bufnr == nil or not vim.api.nvim_buf_is_valid(current_bufnr) then
+    return
+  end
+
+  local current_index = nil ---@type integer|nil
+  for i = 1, #termlist, 1 do
+    local termuuid = termlist[i] ---@type string
+    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
+    if termmeta ~= nil and termmeta.bufnr == current_bufnr then
+      current_index = i
+      break
+    end
+  end
+
+  if current_index == nil or #termlist <= 1 then
+    return
+  end
+
+  step = math.max(1, step or vim.v.count1 or 1)
+  local next_index = std.fn.navigate_circular(current_index, step, #termlist) ---@type integer
+  if current_index == next_index then
+    return
+  end
+
+  local termuuid_current = termlist[current_index] ---@type string
+  termlist[current_index] = termlist[next_index]
+  termlist[next_index] = termuuid_current
 end
 
 ---@return fun(): eve.builtin.term.IMeta|nil, integer|nil

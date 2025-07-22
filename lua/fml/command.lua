@@ -676,6 +676,26 @@ command
       eve.term.focus_right(ok and step or nil)
     end,
   })
+  .implement({
+    uuid = K.term.swap_left.uuid,
+    action = function(arg)
+      local step, ok = nil, false
+      if arg and arg ~= "" then
+        step, ok = tonumber(arg), true
+      end
+      eve.term.swap_left(ok and step or nil)
+    end,
+  })
+  .implement({
+    uuid = K.term.swap_right.uuid,
+    action = function(arg)
+      local step, ok = nil, false
+      if arg and arg ~= "" then
+        step, ok = tonumber(arg), true
+      end
+      eve.term.swap_right(ok and step or nil)
+    end,
+  })
 
 --[toggle] -----------------------------------------------------------------------------------------
 command

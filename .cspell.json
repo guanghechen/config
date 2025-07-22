@@ -354,6 +354,8 @@
     "ftermfocusleft",
     "ftermfocusright",
     "ftermrename",
+    "ftermswapleft",
+    "ftermswapright",
     "ftermtoggle",
     "ftplugin",
     "ftplugins",
