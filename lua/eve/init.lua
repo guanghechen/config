@@ -75,7 +75,7 @@ local M = setmetatable({
 
 ---@return eve.context.storage
 function M.get_default_storage()
-  local is_git_repo = std.path.is_repo_git() ---@type boolean
+  local is_git_repo = std.env.IS_GIT_REPO ---@type boolean
 
   ---@type eve.context.storage
   return {

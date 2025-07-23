@@ -384,14 +384,8 @@ function M.split_prettier(root_pieces, from_pieces, to)
 end
 
 ---@return boolean
-function M.is_repo_git()
-  local cwd = vim.uv.cwd() ---@type string|nil
-  return M.locate_git_repo(cwd) ~= nil
-end
-
----@return boolean
 function M.is_repo_personal_public()
-  if not M.is_repo_git() then
+  if not std.env.IS_GIT_REPO then
     return false
   end
 
@@ -409,7 +403,7 @@ end
 
 ---@return boolean
 function M.is_repo_playground()
-  if not M.is_repo_git() then
+  if not std.env.IS_GIT_REPO then
     return false
   end
 
@@ -420,7 +414,7 @@ end
 
 ---@return boolean
 function M.is_repo_thirdparty()
-  if not M.is_repo_git() then
+  if not std.env.IS_GIT_REPO then
     return false
   end
 
@@ -431,14 +425,12 @@ end
 
 ---@return string
 function M.workspace()
-  local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
-  return M.locate_git_repo(cwd) or cwd
+  return std.env.WORKSPACE ---@type string
 end
 
 ---@return string
 function M.cwd()
-  local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
-  return cwd
+  return std.env.CWD ---@type string
 end
 
 ----------------------------------------------------------------------------------------------------

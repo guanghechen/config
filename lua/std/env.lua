@@ -17,6 +17,17 @@ M.PATH_ENV_SEP = M.IS_WIN and ";" or ":" ---@type string
 M.PATH_SEP = M.IS_WIN and "\\" or "/" ---@type string
 M.USERNAME = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 
+do
+  local cwd = vim.fn.getcwd() ---@type string
+  local ok, p = pcall(vim.fn.system, { "git", "-C", cwd, "rev-parse", "--show-toplevel" }) ---@type boolean, string
+  local is_git_repo = ok and not not p and p:sub(1, 5) ~= "fatal" ---@type boolean
+  local workspace = is_git_repo and vim.trim(p) or cwd ---@type string
+
+  M.CWD = vim.fn.getcwd() ---@type string
+  M.WORKSPACE = workspace ---@type string
+  M.IS_GIT_REPO = is_git_repo ---@type boolean
+end
+
 ---! Path settings
 
 M.HOME_USER = vim.env.HOME --[[@as string]]

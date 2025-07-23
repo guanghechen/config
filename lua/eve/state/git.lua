@@ -74,7 +74,7 @@ local M = {}
 function M.status(base)
   local workspace = std.path.workspace() ---@type string
 
-  if not std.path.is_repo_git() then
+  if not std.env.IS_GIT_REPO then
     return workspace, {}
   end
 

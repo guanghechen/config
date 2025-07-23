@@ -66,7 +66,7 @@ local M = {}
 
 ---@return nil
 function M.find_git_not_committed()
-  if not std.path.is_repo_git() then
+  if not std.env.IS_GIT_REPO then
     std.reporter.error({
       from = name,
       subject = "find_git_not_committed",
