@@ -1,8 +1,9 @@
+require("std.bootstrap").setup_patches()
+require("std.bootstrap").setup_workspace()
+
 _G.std = require("std")
 _G.oxi = require("oxi")
 _G.eve = require("eve")
-eve.setup_patches()
-eve.setup_workspace()
 require("eve.option")
 require("eve.keymap")
 require("integration.neovim.autocmd")

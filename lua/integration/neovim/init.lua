@@ -1,6 +1,3 @@
-eve.setup_patches()
-eve.setup_workspace()
-
 require("eve.option")
 require("eve.keymap")
 require("eve.autocmd")

@@ -582,6 +582,7 @@
     "renderered",
     "reponame",
     "reponames",
+    "repopath",
     "reposcope",
     "rg",
     "ripgreprc",

@@ -114,17 +114,17 @@ function M.truncate_inline(elements, max_length)
   end
 end
 
---- Stable sort implementation using merge sort algorithm
---- Sorts the table in-place while maintaining stability (equal elements keep their relative order)
---- Memory-optimized version that reuses a single auxiliary array
----@generic T
----@param list                          T[]
----@param cmp                           fun(a: T, b: T): integer
----@return nil
 do
   local aux_pool = {} ---@type any[]
   local pool_size = 0 ---@type integer
-  
+
+  --- Stable sort implementation using merge sort algorithm
+  --- Sorts the table in-place while maintaining stability (equal elements keep their relative order)
+  --- Memory-optimized version that reuses a single auxiliary array
+  ---@generic T
+  ---@param list                        T[]
+  ---@param cmp                         fun(a: T, b: T): integer
+  ---@return nil
   function M.stable_sort(list, cmp)
     local n = #list
     if n <= 1 then
@@ -139,7 +139,7 @@ do
       end
       pool_size = n
     end
-    
+
     local function merge(left, mid, right)
       for i = left, mid do
         aux[i] = list[i]
