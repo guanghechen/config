@@ -343,6 +343,7 @@
     "fout",
     "frecency",
     "ftermcreate",
+    "ftermdestroy",
     "ftermfocus1",
     "ftermfocus2",
     "ftermfocus3",

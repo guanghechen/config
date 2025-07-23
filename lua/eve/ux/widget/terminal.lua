@@ -183,10 +183,9 @@ function M:toggle_and_focus(params)
   local termuuid = params.uuid ---@type string
   local name = params.name ---@type string
   local autofocus = not not params.autofocus ---@type boolean
-  local termindex = eve.term.indexof(params.uuid) ---@type integer
   local _, termuuid_current = eve.term.current() ---@type integer, string|nil
 
-  local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
+  local termmeta = eve.term.get(termuuid) ---@type eve.builtin.term.IMeta|nil
   if termmeta == nil then
     termmeta = eve.term.create({
       uuid = termuuid,
@@ -210,6 +209,8 @@ function M:toggle_and_focus(params)
       on_focused = params.on_focused,
       on_resized = params.on_resized,
     })
+
+    eve.term.append(termuuid)
   end
 
   if self:isvisible() then
@@ -268,6 +269,21 @@ function M.__create_buf_as_needed__(termmeta)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
+
+  vim.api.nvim_create_autocmd("TermClose", {
+    buffer = bufnr,
+    callback = function()
+      vim.schedule(function()
+        local _, _termmeta = eve.term.indexof_by_bufnr(bufnr)
+        if _termmeta then
+          eve.term.on_closed(_termmeta)
+        else
+          eve.buf.close(bufnr)
+        end
+      end)
+    end,
+  })
+
   eve.nvim.bindkeys(termmeta.keymaps, { bufnr = bufnr, noremap = true, silent = true })
   termmeta.bufnr = bufnr
   return bufnr
@@ -347,7 +363,7 @@ function M:__start__(termmeta)
       term = true,
       detach = false,
       on_exit = function(jobid, code, event)
-        if code ~= 0 then
+        if code ~= 0 and code ~= 129 then
           std.reporter.error({
             from = __module_name__,
             subject = "terminal unexpected exit",

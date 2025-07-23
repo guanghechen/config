@@ -455,6 +455,7 @@ M.definitions.tab = {
 ---@class eve.builtin.command.definitions.term
 M.definitions.term = {
   create = def("Ftermcreate", "term: create"),
+  destroy = def("Ftermdestroy", "term: destroy"),
   rename = def("Ftermrename", "term: rename"),
   toggle = def("Ftermtoggle", "term: toggle"),
 

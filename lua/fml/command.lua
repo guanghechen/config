@@ -595,6 +595,12 @@ command
     end,
   })
   .implement({
+    uuid = K.term.destroy.uuid,
+    action = function()
+      require("fml.action.term.destroy").destroy()
+    end,
+  })
+  .implement({
     uuid = K.term.rename.uuid,
     action = function()
       require("fml.action.term.create").rename()
