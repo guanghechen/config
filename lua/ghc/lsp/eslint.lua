@@ -1,6 +1,9 @@
 ---@type string[]
 local CONFIG_FILENAMES = {
   "eslint.config.js",
+  "eslint.config.ts",
+  "eslint.config.mjs",
+  "eslint.config.cjs",
   ".eslintrc",
   ".eslintrc.json",
   ".eslintrc.js",
@@ -18,6 +21,8 @@ return {
   settings = {
     eslint = {
       workingDirectories = { mode = "auto" },
+      format = { enable = true },
+      lint = { enable = true },
     },
   },
 }

@@ -101,11 +101,6 @@ return {
       "yamlls",
     }
 
-    local get_capabilities = require("ghc.lsp.common").get_capabilities
-    local handlers = require("ghc.lsp.common").handlers
-    local on_attach = require("ghc.lsp.common").on_attach
-    local on_init = require("ghc.lsp.common").on_init
-
     local lspconfig = require("lspconfig")
     for _, server in ipairs(enabled) do
       -- Validate that lspconfig has the server definition
@@ -127,12 +122,11 @@ return {
       end
 
       if string.match(config_or_err, "module '" .. module_name:gsub("%.", "%%.") .. "' not found") then
-        local capabilities = get_capabilities()
+        local capabilities = eve.lsp.get_capabilities()
         lspconfig[server].setup({
           capabilities = capabilities,
-          handlers = handlers,
-          on_attach = on_attach,
-          on_init = on_init,
+          on_attach = eve.lsp.on_attach,
+          on_init = eve.lsp.on_init,
         })
         goto continue
       end
