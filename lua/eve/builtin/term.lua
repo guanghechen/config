@@ -218,6 +218,7 @@ function M.create(params)
   local on_closed = params.on_closed or std.fn.noop ---@type fun(): nil|nil
   local on_focused = params.on_focused or std.fn.noop ---@type fun(): nil|nil
   local on_resized = params.on_resized or std.fn.noop ---@type fun(): nil|nil
+  local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type std.t.IKeymap[]
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].buflisted = false
@@ -244,7 +245,23 @@ function M.create(params)
     end,
   })
 
-  local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type std.t.IKeymap[]
+  ---@type eve.builtin.term.IMeta
+  termmeta = {
+    uuid = termuuid,
+    bufnr = bufnr,
+    name = name,
+    cmd = cmd,
+    cwd = cwd,
+    env = env,
+    keymaps = keymaps,
+    permanent = permanent,
+    hidewipe = hidewipe,
+    on_closed = on_closed,
+    on_focused = on_focused,
+    on_resized = on_resized,
+    jobid = nil,
+  }
+
   for i = 1, 9 do
     local key = string.format("<C-%d>", i) ---@type string
     local definition = eve.command.definitions.term["focus_" .. tostring(i)] ---@type eve.builtin.command.IDefinition
@@ -318,32 +335,21 @@ function M.create(params)
     key = "q",
     desc = "term: close",
     callback = function()
-      local _, _termmeta = M.indexof_by_bufnr(bufnr)
-      if _termmeta ~= nil then
-        M.on_closed(_termmeta)
-      else
-        eve.buf.close(bufnr)
+      M.on_closed(termmeta)
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "v" },
+    key = "<esc><esc>",
+    desc = "term: feedback esc to terminal (fix the conflict caused by  the csi u)",
+    callback = function()
+      if termmeta.jobid ~= nil then
+        vim.fn.chansend(termmeta.jobid, "\x1b")
       end
     end,
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-  ---@type eve.builtin.term.IMeta
-  termmeta = {
-    uuid = termuuid,
-    bufnr = bufnr,
-    name = name,
-    cmd = cmd,
-    cwd = cwd,
-    env = env,
-    keymaps = keymaps,
-    permanent = permanent,
-    hidewipe = hidewipe,
-    on_closed = on_closed,
-    on_focused = on_focused,
-    on_resized = on_resized,
-    jobid = nil,
-  }
   metamap[termuuid] = termmeta
   termlist[#termlist + 1] = termuuid
 
