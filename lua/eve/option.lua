@@ -1,6 +1,7 @@
 if std.env.IS_MAC then
-  -- vim.o.shell = "/bin/bash"
+  vim.o.shell = "/bin/bash"
 elseif std.env.IS_NIX or std.env.IS_WSL then
+  vim.o.shell = "/usr/bin/bash"
   -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
 elseif std.env.IS_WIN then
   vim.o.shell = "pwsh"
