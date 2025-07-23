@@ -435,20 +435,6 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return string|nil
-function M.locate_git_repo(filepath)
-  local path_pieces = M.split(filepath) ---@type string[]
-  while #path_pieces > 0 do
-    local current_path = table.concat(path_pieces, SEP) ---@type string
-    local git_dir_path = current_path .. SEP .. ".git" ---@type string
-    if vim.fn.isdirectory(git_dir_path) ~= 0 then
-      return current_path
-    end
-    table.remove(path_pieces, #path_pieces)
-  end
-  return nil
-end
-
 ---@param app                           string
 ---@return string
 function M.locate_app_config_home(app)
