@@ -3,13 +3,14 @@ import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
 import state from '../../state'
 import { normalizeUrlPath } from '../../util/url'
-import { fetchFile, switchFile } from './handle/file'
+import { fetchFile, saveExcalidrawFile, switchFile } from './handle/file'
 import { list_workspace_files, list_workspaces } from './handle/workspace'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
   '/api/file': fetchFile,
   '/api/file-switch': switchFile,
+  '/api/excalidraw/save': saveExcalidrawFile,
   '/api/workspaces': list_workspaces,
   '/api/workspace/files': list_workspace_files,
 }
@@ -35,7 +36,16 @@ const middleware = async (
 
   const handle: IApiHandle | undefined = handle_map[pathname]
   if (handle) {
-    const params: IApiHandleParams = { req, res, next, pathname, search, searchParams }
+    let body: string | undefined
+    if (req.method === 'POST' && req.headers['content-type']?.includes('application/json')) {
+      const chunks: Buffer[] = []
+      for await (const chunk of req) {
+        chunks.push(chunk)
+      }
+      body = Buffer.concat(chunks).toString('utf8')
+    }
+
+    const params: IApiHandleParams = { req, res, next, pathname, search, searchParams, body }
     const result: IApiHandleResult | true = await handle(params)
     if (result === true) return
 

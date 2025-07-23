@@ -1,3 +1,5 @@
+import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
+import type { AppState } from '@excalidraw/excalidraw/types'
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
@@ -17,10 +19,59 @@ const ExcalidrawContainer: React.FC = () => {
   const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, tick)
 
   const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
+  const [isSaving, setIsSaving] = React.useState(false)
+  const [saveStatus, setSaveStatus] = React.useState<string | null>(null)
 
   const onScrollToTop = useEventCallback((): void => {
     if (container) container.scrollTo({ top: 0, behavior: 'smooth' })
   })
+
+  const onSave = useEventCallback(
+    async (elements: ReadonlyArray<ExcalidrawElement>, appState: AppState): Promise<void> => {
+      if (!workspace || !filepath) return
+
+      setIsSaving(true)
+      setSaveStatus(null)
+
+      try {
+        const excalidrawData = {
+          type: 'excalidraw',
+          version: 2,
+          source: 'https://excalidraw.com',
+          elements: elements,
+          appState: {
+            gridSize: appState.gridSize,
+            viewBackgroundColor: appState.viewBackgroundColor,
+          },
+        }
+
+        const response = await fetch(
+          `/api/excalidraw/save?workspace=${encodeURIComponent(workspace)}&filepath=${encodeURIComponent(filepath)}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(excalidrawData),
+          },
+        )
+
+        if (response.ok) {
+          setSaveStatus('Saved successfully')
+          setTimeout(() => setSaveStatus(null), 2000)
+        } else {
+          const errorData = await response.json()
+          setSaveStatus(`Save failed: ${errorData.error || 'Unknown error'}`)
+          setTimeout(() => setSaveStatus(null), 5000)
+        }
+      } catch (error) {
+        setSaveStatus(`Save failed: ${String(error)}`)
+        setTimeout(() => setSaveStatus(null), 5000)
+      } finally {
+        setIsSaving(false)
+      }
+    },
+  )
 
   React.useEffect(() => {
     if (!container) return
@@ -44,9 +95,26 @@ const ExcalidrawContainer: React.FC = () => {
       )}
       {!!data && (
         <div className="relative w-full">
-          <ExcalidrawComposer content={data?.content} />
+          <ExcalidrawComposer content={data?.content} onSave={onSave} />
         </div>
       )}
+
+      {(isSaving || saveStatus) && (
+        <div className="fixed top-20 right-4 z-50 flex items-center gap-2 rounded-lg bg-gray-100 bg-opacity-95 px-3 py-2 text-sm shadow-md dark:bg-gray-800 dark:bg-opacity-95">
+          {isSaving && (
+            <React.Fragment>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+              <span>Saving...</span>
+            </React.Fragment>
+          )}
+          {saveStatus && !isSaving && (
+            <span className={cn(saveStatus.includes('failed') ? 'text-red-500' : 'text-green-500')}>
+              {saveStatus}
+            </span>
+          )}
+        </div>
+      )}
+
       <button
         onClick={onScrollToTop}
         className={cn(

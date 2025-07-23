@@ -9,6 +9,7 @@ export interface IApiHandleParams {
   readonly pathname: string
   readonly search: string
   readonly searchParams: URLSearchParams
+  readonly body?: string
 }
 
 export interface IApiHandleData {
