@@ -16,6 +16,20 @@
   "useAcrylicInTabRow": true,
   "actions": [
     {
+      "id": "ghc.input.ctrl_,",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[44;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_.",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[46;5u"
+      }
+    },
+    {
       "id": "ghc.input.ctrl_/",
       "command": {
         "action": "sendInput",
@@ -90,6 +104,55 @@
       "command": {
         "action": "sendInput",
         "input": "\u001b[57;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_[",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[91;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_]",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[93;5u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_,",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[44;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_.",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[46;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_/",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[47;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_[",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[91;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_]",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[93;6u"
       }
     },
     {
@@ -754,6 +817,14 @@
       "keys": "ctrl+shift+tab"
     },
     {
+      "id": "ghc.input.ctrl_,",
+      "keys": "ctrl+,"
+    },
+    {
+      "id": "ghc.input.ctrl_.",
+      "keys": "ctrl+."
+    },
+    {
       "id": "ghc.input.ctrl_/",
       "keys": "ctrl+/"
     },
@@ -796,6 +867,34 @@
     {
       "id": "ghc.input.ctrl_9",
       "keys": "ctrl+9"
+    },
+    {
+      "id": "ghc.input.ctrl_[",
+      "keys": "ctrl+["
+    },
+    {
+      "id": "ghc.input.ctrl_]",
+      "keys": "ctrl+]"
+    },
+    {
+      "id": "ghc.input.ctrl_shift_,",
+      "keys": "ctrl+shift+,"
+    },
+    {
+      "id": "ghc.input.ctrl_shift_.",
+      "keys": "ctrl+shift+."
+    },
+    {
+      "id": "ghc.input.ctrl_shift_/",
+      "keys": "ctrl+shift+/"
+    },
+    {
+      "id": "ghc.input.ctrl_shift_[",
+      "keys": "ctrl+shift+["
+    },
+    {
+      "id": "ghc.input.ctrl_shift_]",
+      "keys": "ctrl+shift+]"
     },
     {
       "id": "ghc.input.001b_0001",
