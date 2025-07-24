@@ -23,17 +23,6 @@ hide_when_typing = true
 [keyboard]
 bindings = [
   # ----- unbinding ----- 
-  { key = "Slash",      mods = "Control",                   chars = "\u001b[47;5u" },
-  { key = "Key0",       mods = "Control",                   chars = "\u001b[48;5u" },
-  { key = "Key1",       mods = "Control",                   chars = "\u001b[49;5u" },
-  { key = "Key2",       mods = "Control",                   chars = "\u001b[50;5u" },
-  { key = "Key3",       mods = "Control",                   chars = "\u001b[51;5u" },
-  { key = "Key4",       mods = "Control",                   chars = "\u001b[52;5u" },
-  { key = "Key6",       mods = "Control",                   chars = "\u001b[53;5u" },
-  { key = "Key6",       mods = "Control",                   chars = "\u001b[54;5u" },
-  { key = "Key7",       mods = "Control",                   chars = "\u001b[55;5u" },
-  { key = "Key8",       mods = "Control",                   chars = "\u001b[56;5u" },
-  { key = "Key9",       mods = "Control",                   chars = "\u001b[57;5u" },
   { key = "A",          mods = "Control",                   action = "ReceiveChar" },
   { key = "B",          mods = "Control",                   action = "ReceiveChar" },
   { key = "C",          mods = "Control",                   action = "ReceiveChar" },
@@ -96,6 +85,28 @@ bindings = [
   { key = "X",          mods = "Control|Shift",             chars = "\u001b\u0018" },       # Esc<c-x>
   { key = "Y",          mods = "Control|Shift",             chars = "\u001b\u0019" },       # Esc<c-y>
   { key = "Z",          mods = "Control|Shift",             chars = "\u001b\u001a" },       # Esc<c-z>
+
+  # ----- csi u keybindings ----- 
+  { key = "Comma",      mods = "Control",                   chars = "\u001b[44;5u" },
+  { key = "Period",     mods = "Control",                   chars = "\u001b[46;5u" },
+  { key = "Slash",      mods = "Control",                   chars = "\u001b[47;5u" },
+  { key = "Key0",       mods = "Control",                   chars = "\u001b[48;5u" },
+  { key = "Key1",       mods = "Control",                   chars = "\u001b[49;5u" },
+  { key = "Key2",       mods = "Control",                   chars = "\u001b[50;5u" },
+  { key = "Key3",       mods = "Control",                   chars = "\u001b[51;5u" },
+  { key = "Key4",       mods = "Control",                   chars = "\u001b[52;5u" },
+  { key = "Key6",       mods = "Control",                   chars = "\u001b[53;5u" },
+  { key = "Key6",       mods = "Control",                   chars = "\u001b[54;5u" },
+  { key = "Key7",       mods = "Control",                   chars = "\u001b[55;5u" },
+  { key = "Key8",       mods = "Control",                   chars = "\u001b[56;5u" },
+  { key = "Key9",       mods = "Control",                   chars = "\u001b[57;5u" },
+  { key = "LBracket",   mods = "Control",                   chars = "\u001b[91;5u" },
+  { key = "RBracket",   mods = "Control",                   chars = "\u001b[93;5u" },
+  { key = "Comma",      mods = "Control|Shift",             chars = "\u001b[44;6u" },
+  { key = "Period",     mods = "Control|Shift",             chars = "\u001b[46;6u" },
+  { key = "Slash",      mods = "Control|Shift",             chars = "\u001b[47;6u" },
+  { key = "LBracket",   mods = "Control|Shift",             chars = "\u001b[91;6u" },
+  { key = "RBracket",   mods = "Control|Shift",             chars = "\u001b[93;6u" },
 
   # ----- tmux -----
   { key = "F1",                                             chars = "\u001b[11~" },         # F1
