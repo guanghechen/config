@@ -8,6 +8,7 @@ target/
 tmp/
 
 *.local/
+*.local.*
 .opencode/
 local.*/
 
