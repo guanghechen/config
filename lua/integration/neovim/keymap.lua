@@ -29,7 +29,6 @@ ms({ "i", "n", "v" }, "<C-]>", K.buf.focus_right)
 ms({ "i", "n", "v" }, "<C-S-[>", K.buf.swap_left)
 ms({ "i", "n", "v" }, "<C-S-]>", K.buf.swap_right)
 ms({ "i", "n", "v" }, { "<C-a>s", "<D-s>", "<M-s>" }, K.buf.save)
-ms({ "i", "n", "v" }, { "<C-a>w", "<D-w>", "<M-w>" }, K.buf.close)
 ms({ "n", "v" }, "[b", K.buf.focus_left)
 ms({ "n", "v" }, "[1", K.buf.focus_left_1)
 ms({ "n", "v" }, "[2", K.buf.focus_left_2)
@@ -267,6 +266,7 @@ ms({ "n", "v" }, "<leader>un", K.ux.dismiss_notifications)
 ---------------------------------------------------------------------------------------------#[u]x--
 
 --#[w]in--------------------------------------------------------------------------------------------
+ms({ "i", "n", "v" }, { "<C-w>" }, K.win.close)
 ms({ "i", "n", "v" }, { "<C-a><Left>", "<D-Left>", "<M-Left>" }, K.win.resize_vertical_minus)
 ms({ "i", "n", "v" }, { "<C-a><Down>", "<D-Down>", "<M-Down>" }, K.win.resize_horizontal_minus)
 ms({ "i", "n", "v" }, { "<C-a><Up>", "<D-Up>", "<M-Up>" }, K.win.resize_horizontal_plus)
