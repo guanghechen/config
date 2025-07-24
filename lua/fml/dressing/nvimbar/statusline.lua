@@ -38,6 +38,7 @@ statusline
   :place("center", c.devmode.render_count(position), 100)
   --
   :place("right", c.cwd.cwd(position), 100)
+  :place("right", c.nvim.pid(position), 100)
   :place("right", c.nvim.nr(position), 100)
   :place("right", c.file.format(position), 95)
   :place("right", c.file.indent(position), 95)

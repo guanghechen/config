@@ -189,6 +189,30 @@ end
 
 ---@param position                      eve.ux.nvimbar.PositionEnum
 ---@return eve.ux.nvimbar.IRawComponent
+function M.pid(position)
+  local hln_text = position .. "_nvim_pid" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "nvim:pid",
+    atomic = true,
+    render = function(context)
+      local bufnr = context.bufnr ---@type integer
+      local pid = vim.b[bufnr].terminal_job_pid ---@type integer|nil
+      if pid == nil or pid <= 0 then
+        return "", "", true
+      end
+
+      local text = string.format("%s %d", "", pid) ---@type string
+      local hl_text = txt(text, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.PositionEnum
+---@return eve.ux.nvimbar.IRawComponent
 function M.pos(position)
   local hln_sep = position .. "_nvim_pos_sep" ---@type string
   local hln_text_anchor = position .. "_nvim_pos_text_anchor" ---@type string
