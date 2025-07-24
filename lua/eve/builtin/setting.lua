@@ -2,7 +2,7 @@
 local M = {}
 
 M.feedkeys = {
-  UNDO = vim.api.nvim_replace_termcodes("<C-G>u", true, true, true),
+  UNDO = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true),
 }
 
 ---@class eve.builtin.setting.ai_providers

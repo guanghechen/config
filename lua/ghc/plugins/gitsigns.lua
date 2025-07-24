@@ -361,7 +361,7 @@ return {
     },
     on_attach = function(bufnr)
       eve.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
-      vim.keymap.set({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<cr>", {
+      vim.keymap.set({ "o", "x" }, "ih", ":<C-u>Gitsigns select_hunk<cr>", {
         buffer = bufnr,
         noremap = true,
         silent = true,
