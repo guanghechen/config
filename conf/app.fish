@@ -33,6 +33,10 @@ if test -f "$HOME/.opencode/bin/opencode"
 end
 
 ### tmux
+if test -f "$ROOT_SOURCECODES/github/tmux/tmux/tmux"
+    fish_add_path --prepend "$ROOT_SOURCECODES/github/tmux/tmux"
+end
+
 if test -n "$TMUX"
     set -x TERM tmux-256color
 else
