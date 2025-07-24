@@ -2,6 +2,25 @@ config-file = local/theme
 config-file = keymap-unbind
 config-file = keymap
 
+# Font
 font-size = 15
 font-family = "Maple Mono NF CN"
-font-feature = -cv01 -ss02 -ss04 -ss05 -zero
+font-feature = +cv01 +ss02 +ss04 +ss05 +zero
+
+# General behavior (matching Kitty)
+copy-on-select = true
+link-url = true
+
+# Scrollback
+scrollback-limit = 10000
+
+# Window settings
+window-decoration = false
+window-width = 1600
+window-height = 1000
+window-padding-x = 0
+window-padding-y = 0
+
+# Cursor
+cursor-style = block
+cursor-style-blink = false
