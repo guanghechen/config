@@ -265,14 +265,61 @@ for _, key in ipairs(letters) do
 		}),
 	})
 
+	-- CSI u format for ctrl+shift+letter: \u001b[{ascii_code};6u
+	local ascii_code = string.byte(key:upper())
 	table.insert(config.keys, {
 		key = key:upper(),
 		mods = "CTRL|SHIFT",
-		action = act.Multiple({
-			act.SendKey({ key = "Escape" }),
-			act.SendKey({ key = key:upper(), mods = "CTRL" }),
-		}),
+		action = act.SendString(string.format("\x1b[%d;6u", ascii_code)),
 	})
+end
+
+do
+	-- CSI u format for ctrl keys (matching kitty bindings)
+	local keys = {
+		{ key = ",", code = 44 }, -- ctrl+comma
+		{ key = ".", code = 46 }, -- ctrl+period
+		{ key = "/", code = 47 }, -- ctrl+slash
+		{ key = "0", code = 48 }, -- ctrl+0
+		{ key = "1", code = 49 }, -- ctrl+1
+		{ key = "2", code = 50 }, -- ctrl+2
+		{ key = "3", code = 51 }, -- ctrl+3
+		{ key = "4", code = 52 }, -- ctrl+4
+		{ key = "5", code = 53 }, -- ctrl+5
+		{ key = "6", code = 54 }, -- ctrl+6
+		{ key = "7", code = 55 }, -- ctrl+7
+		{ key = "8", code = 56 }, -- ctrl+8
+		{ key = "9", code = 57 }, -- ctrl+9
+		{ key = "[", code = 91 }, -- ctrl+left bracket
+		{ key = "]", code = 93 }, -- ctrl+right bracket
+	}
+
+	for _, entry in ipairs(keys) do
+		table.insert(config.keys, {
+			key = entry.key,
+			mods = "CTRL",
+			action = act.SendString(string.format("\x1b[%d;5u", entry.code)),
+		})
+	end
+end
+
+do
+	-- CSI u format for ctrl+shift+punctuation
+	local keys = {
+		{ key = "<", code = 44 }, -- comma
+		{ key = ">", code = 46 }, -- period
+		{ key = "?", code = 47 }, -- slash
+		{ key = "{", code = 91 }, -- left bracket
+		{ key = "}", code = 93 }, -- right bracket
+	}
+
+	for _, entry in ipairs(keys) do
+		table.insert(config.keys, {
+			key = entry.key,
+			mods = "CTRL|SHIFT",
+			action = act.SendString(string.format("\x1b[%d;6u", entry.code)),
+		})
+	end
 end
 
 return config
