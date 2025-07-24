@@ -340,7 +340,7 @@ function M.create(params)
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
-    key = "<esc><esc>",
+    key = "<esc>",
     desc = "term: feedback esc to terminal (fix the conflict caused by  the csi u)",
     callback = function()
       if termmeta.jobid ~= nil then
