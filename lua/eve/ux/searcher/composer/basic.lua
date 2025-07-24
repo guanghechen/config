@@ -744,9 +744,21 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_inpu
   local index_format = string.format("t%%0%dd", index_width) ---@type string
 
   for _, item in ipairs(flags) do
+    if index <= 9 then
+      ---@type std.t.IKeymap
+      local keymap = {
+        modes = { "i", "n", "v" },
+        key = string.format("<C-%d>", index),
+        desc = item.desc,
+        callback = item.callback,
+      }
+      N = N + 1 ---@type integer
+      builtin_keymaps[N] = keymap
+    end
+
     ---@type std.t.IKeymap
     local keymap = {
-      modes = { "n" },
+      modes = { "n", "v" },
       key = string.format(index_format, index),
       desc = item.desc,
       callback = item.callback,
