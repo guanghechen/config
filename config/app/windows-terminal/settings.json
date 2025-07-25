@@ -121,6 +121,13 @@
       }
     },
     {
+      "id": "ghc.input.ctrl_`",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[96;5u"
+      }
+    },
+    {
       "id": "ghc.input.ctrl_shift_,",
       "command": {
         "action": "sendInput",
@@ -335,223 +342,6 @@
       "command": {
         "action": "sendInput",
         "input": "\u001b[93;6u"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0001",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0001"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0002",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0002"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0003",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0003"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0004",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0004"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0005",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0005"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0006",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0006"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0007",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0007"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0008",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0008"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0009",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0009"
-      }
-    },
-    {
-      "id": "ghc.input.001b_000a",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u000a"
-      }
-    },
-    {
-      "id": "ghc.input.001b_000b",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u000b"
-      }
-    },
-    {
-      "id": "ghc.input.001b_000c",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u000c"
-      }
-    },
-    {
-      "id": "ghc.input.001b_000d",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u000d"
-      }
-    },
-    {
-      "id": "ghc.input.001b_000e",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u000e"
-      }
-    },
-    {
-      "id": "ghc.input.001b_000f",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u000f"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0010",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0010"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0011",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0011"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0012",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0012"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0013",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0013"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0014",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0014"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0015",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0015"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0016",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0016"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0017",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0017"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0018",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0018"
-      }
-    },
-    {
-      "id": "ghc.input.001b_0019",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u0019"
-      }
-    },
-    {
-      "id": "ghc.input.001b_001a",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u001a"
-      }
-    },
-    {
-      "id": "ghc.input.001b_001b",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u001b"
-      }
-    },
-    {
-      "id": "ghc.input.001b_001c",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u001c"
-      }
-    },
-    {
-      "id": "ghc.input.001b_001d",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u001d"
-      }
-    },
-    {
-      "id": "ghc.input.001b_001e",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u001e"
-      }
-    },
-    {
-      "id": "ghc.input.001b_001f",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\u001f"
       }
     },
     {
@@ -1059,6 +849,10 @@
       "keys": "ctrl+]"
     },
     {
+      "id": "ghc.input.ctrl_`",
+      "keys": "ctrl+`"
+    },
+    {
       "id": "ghc.input.ctrl_shift_,",
       "keys": "ctrl+shift+,"
     },
@@ -1079,107 +873,107 @@
       "keys": "ctrl+shift+]"
     },
     {
-      "id": "ghc.input.001b_0001",
+      "id": "ghc.input.ctrl_shift_a",
       "keys": "ctrl+shift+a"
     },
     {
-      "id": "ghc.input.001b_0002",
+      "id": "ghc.input.ctrl_shift_b",
       "keys": "ctrl+shift+b"
     },
     {
-      "id": "ghc.input.001b_0003",
+      "id": "ghc.input.ctrl_shift_c",
       "keys": "ctrl+shift+c"
     },
     {
-      "id": "ghc.input.001b_0004",
+      "id": "ghc.input.ctrl_shift_d",
       "keys": "ctrl+shift+d"
     },
     {
-      "id": "ghc.input.001b_0005",
+      "id": "ghc.input.ctrl_shift_e",
       "keys": "ctrl+shift+e"
     },
     {
-      "id": "ghc.input.001b_0006",
+      "id": "ghc.input.ctrl_shift_f",
       "keys": "ctrl+shift+f"
     },
     {
-      "id": "ghc.input.001b_0007",
+      "id": "ghc.input.ctrl_shift_g",
       "keys": "ctrl+shift+g"
     },
     {
-      "id": "ghc.input.001b_0008",
+      "id": "ghc.input.ctrl_shift_h",
       "keys": "ctrl+shift+h"
     },
     {
-      "id": "ghc.input.001b_0009",
+      "id": "ghc.input.ctrl_shift_i",
       "keys": "ctrl+shift+i"
     },
     {
-      "id": "ghc.input.001b_000a",
+      "id": "ghc.input.ctrl_shift_j",
       "keys": "ctrl+shift+j"
     },
     {
-      "id": "ghc.input.001b_000b",
+      "id": "ghc.input.ctrl_shift_k",
       "keys": "ctrl+shift+k"
     },
     {
-      "id": "ghc.input.001b_000c",
+      "id": "ghc.input.ctrl_shift_l",
       "keys": "ctrl+shift+l"
     },
     {
-      "id": "ghc.input.001b_000d",
+      "id": "ghc.input.ctrl_shift_m",
       "keys": "ctrl+shift+m"
     },
     {
-      "id": "ghc.input.001b_000e",
+      "id": "ghc.input.ctrl_shift_n",
       "keys": "ctrl+shift+n"
     },
     {
-      "id": "ghc.input.001b_000f",
+      "id": "ghc.input.ctrl_shift_o",
       "keys": "ctrl+shift+o"
     },
     {
-      "id": "ghc.input.001b_0010",
+      "id": "ghc.input.ctrl_shift_p",
       "keys": "ctrl+shift+p"
     },
     {
-      "id": "ghc.input.001b_0011",
+      "id": "ghc.input.ctrl_shift_q",
       "keys": "ctrl+shift+q"
     },
     {
-      "id": "ghc.input.001b_0012",
+      "id": "ghc.input.ctrl_shift_r",
       "keys": "ctrl+shift+r"
     },
     {
-      "id": "ghc.input.001b_0013",
+      "id": "ghc.input.ctrl_shift_s",
       "keys": "ctrl+shift+s"
     },
     {
-      "id": "ghc.input.001b_0014",
+      "id": "ghc.input.ctrl_shift_t",
       "keys": "ctrl+shift+t"
     },
     {
-      "id": "ghc.input.001b_0015",
+      "id": "ghc.input.ctrl_shift_u",
       "keys": "ctrl+shift+u"
     },
     {
-      "id": "ghc.input.001b_0016",
+      "id": "ghc.input.ctrl_shift_v",
       "keys": "ctrl+shift+v"
     },
     {
-      "id": "ghc.input.001b_0017",
+      "id": "ghc.input.ctrl_shift_w",
       "keys": "ctrl+shift+w"
     },
     {
-      "id": "ghc.input.001b_0018",
+      "id": "ghc.input.ctrl_shift_x",
       "keys": "ctrl+shift+x"
     },
     {
-      "id": "ghc.input.001b_0019",
+      "id": "ghc.input.ctrl_shift_y",
       "keys": "ctrl+shift+y"
     },
     {
-      "id": "ghc.input.001b_001a",
+      "id": "ghc.input.ctrl_shift_z",
       "keys": "ctrl+shift+z"
     },
     {
