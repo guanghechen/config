@@ -14,6 +14,7 @@ keybind = ctrl+eight=csi:56;5u
 keybind = ctrl+nine=csi:57;5u
 keybind = ctrl+left_bracket=csi:91;5u
 keybind = ctrl+right_bracket=csi:93;5u
+keybind = ctrl+grave_accent=csi:96;5u
 
 # Control + Shift + Keys to CSI u format
 keybind = ctrl+shift+comma=csi:44;6u
