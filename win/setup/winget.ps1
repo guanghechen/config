@@ -19,8 +19,9 @@ winget install -e --source winget --id lsd-rs.lsd
 winget install -e --source winget --id BurntSushi.ripgrep.MSVC
 winget install -e --source winget --id sxyazi.yazi
 winget install -e --source winget --id ajeetdsouza.zoxide
-winget install -e --source winget --id LGUG2Z.komorebi
 
+winget install -e --source winget --id LGUG2Z.komorebi
+winget install -e --source winget --id AmN.yasb
 
 ## Cargo version is updated too frequently and sometimes could build failed.
 # cargo install --locked git-delta
