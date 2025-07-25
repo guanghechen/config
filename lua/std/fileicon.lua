@@ -1,4 +1,4 @@
----@see https://github.com/echasnovski/mini.icons/blob/397ed3807e96b59709ef3292f0a3e253d5c1dc0a/lua/mini/icons.lua#L1
+---@see https://github.com/echasnovski/mini.icons/blob/b8f6fa6f5a3fd0c56936252edcd691184e5aac0c/lua/mini/icons.lua#L1
 
 -- stylua: ignore start
 local BYTE_SLASH      = std.byte.BYTES.SLASH ---@type integer
@@ -185,11 +185,17 @@ local ICONS_FILE = {
   [".keep"]               = { glyph = "󰊢", hl = "MiniIconsGrey"   },
   [".mailmap"]            = { glyph = "󰊢", hl = "MiniIconsCyan"   },
   [".node-version"]       = { glyph = "", hl = "MiniIconsGreen"  },
-  [".npmignore"]          = { glyph = "󰒓", hl = "MiniIconsGrey"   },
   [".nvmrc"]              = { glyph = "󰒓", hl = "MiniIconsGreen"  },
   [".prettierrc"]         = { glyph = "", hl = "MiniIconsPurple" },
   [".prettierrc.js"]      = { glyph = "", hl = "MiniIconsPurple" },
-  [".prettierignore"]     = { glyph = "", hl = "MiniIconsOrange" },
+  ['.containerignore'] = { glyph = '󰒓', hl = 'MiniIconsGrey' },
+  ['.dockerignore']    = { glyph = '󰡨', hl = 'MiniIconsOrange' },
+  ['.fdignore']        = { glyph = '󰒓', hl = 'MiniIconsYellow' },
+  ['.ignore']          = { glyph = '󰒓', hl = 'MiniIconsGrey' },
+  ['.npmignore']       = { glyph = '󰒓', hl = 'MiniIconsGrey' },
+  ['.prettierignore']  = { glyph = '', hl = 'MiniIconsOrange' },
+  ['.rgignore']        = { glyph = '󰒓', hl = 'MiniIconsYellow' },
+  ['.vscodeignore']    = { glyph = '', hl = 'MiniIconsAzure' },
   [".xinitrc"]            = { glyph = "󰒓", hl = "MiniIconsBlue"   },
   [".yarnrc.yml"]         = { glyph = "", hl = "MiniIconsBlue"   },
   [".zshrc"]              = { glyph = "󰒓", hl = "MiniIconsGreen"  },
