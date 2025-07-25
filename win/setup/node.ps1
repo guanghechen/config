@@ -7,6 +7,8 @@ if (fnm list | Select-String -Quiet "v20") {
 }
 
 # Setup yozora
-Write-Host "[setup node] setup yozora..." -ForegroundColor DarkBlue
 $yozora_repo_path = Join-Path $config_root_dir "yozora"
-pwsh -Command "cd '$yozora_repo_path'; yarn install"
+if (Test-Path $yozora_repo_path) {
+    Write-Host "[setup node] setup yozora..." -ForegroundColor DarkBlue
+    pwsh -Command "cd '$yozora_repo_path'; yarn install"
+}
