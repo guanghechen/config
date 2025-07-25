@@ -9,7 +9,7 @@ local M = {}
 
 ---@type fml.action.term.create.IProfile[]
 local profiles = {
-  { name = "fish", cmd = "fish" },
+  { name = "shell", cmd = vim.o.shell },
   { name = "yazi", cmd = "yazi" },
   { name = "lazygit", cmd = "lazygit" },
 }
