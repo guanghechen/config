@@ -292,6 +292,7 @@ do
 		{ key = "9", code = 57 }, -- ctrl+9
 		{ key = "[", code = 91 }, -- ctrl+left bracket
 		{ key = "]", code = 93 }, -- ctrl+right bracket
+		{ key = "`", code = 96 }, -- ctrl+backtick
 	}
 
 	for _, entry in ipairs(keys) do
