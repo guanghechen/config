@@ -142,6 +142,188 @@
       }
     },
     {
+      "id": "ghc.input.ctrl_shift_a",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[65;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_b",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[66;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_c",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[67;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_d",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[68;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_e",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[69;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_f",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[70;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_g",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[71;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_h",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[72;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_i",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[73;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_j",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[74;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_k",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[75;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_l",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[76;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_m",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[77;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_n",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[78;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_o",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[79;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_p",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[80;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_q",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[81;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_r",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[82;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_s",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[83;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_t",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[84;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_u",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[85;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_v",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[86;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_w",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[87;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_x",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[88;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_y",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[89;6u"
+      }
+    },
+    {
+      "id": "ghc.input.ctrl_shift_z",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[90;6u"
+      }
+    },
+    {
       "id": "ghc.input.ctrl_shift_[",
       "command": {
         "action": "sendInput",
