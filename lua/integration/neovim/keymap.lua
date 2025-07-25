@@ -8,7 +8,7 @@ vim.cmd.menu(("PopUp.%s :%s<cr>"):format("Add\\ word\\ to\\ cspell", K.lint.spel
 ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 
 --- quick access widgets (diagnostic, explorer, terminal) -----
-ms({ "i", "n", "t", "v" }, { "<C-a>0", "<D-0>", "<M-0>" }, K.ux.resume_last_widget)
+ms({ "i", "n", "t", "v" }, { "<C-`>" }, K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>`", K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>'", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
