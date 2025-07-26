@@ -25,6 +25,16 @@ gui:
     "*": white
   branchColors:
     main: blue
+  spiner:
+    frames:
+      - ⣾
+      - ⣽
+      - ⣻
+      - ⢿
+      - ⡿
+      - ⣟
+      - ⣯
+      - ⣷
   theme:
     defaultFgColor:
       - default
@@ -55,7 +65,7 @@ gui:
   mainPanelSplitMode: flexible
   mouseEvents: true
   nerdFontsVersion: "3"
-  showBottomLine: true
+  showBottomLine: false
   showCommandLog: true
   showFileTree: true
   showIcons: true
@@ -80,4 +90,4 @@ os:
 keybinding:
   main:
     toggleSelectHunk: '`'
-promptToReturnFromSubprocess: true
+promptToReturnFromSubprocess: false
