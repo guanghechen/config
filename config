@@ -5,6 +5,9 @@ config-file = keymap
 # Font
 font-size = 15
 font-family = "Maple Mono NF CN"
+font-family-bold = "Maple Mono NF CN Bold"
+font-family-italic = "Maple Mono NF CN Italic"
+font-family-bold-italic = "Maple Mono NF CN Bold Italic"
 font-feature = +cv01 +ss02 +ss04 +ss05 +zero
 
 # General behavior (matching Kitty)
@@ -24,3 +27,4 @@ window-padding-y = 0
 # Cursor
 cursor-style = block
 cursor-style-blink = false
+mouse-hide-while-typing = true
