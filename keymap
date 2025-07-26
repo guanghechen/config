@@ -192,3 +192,47 @@ keybind = cmd+grave_accent=text:\x01\x60
 keybind = cmd+v=paste_from_clipboard
 keybind = ctrl+insert=copy_to_clipboard
 keybind = shift+insert=paste_from_clipboard
+
+# Tab management
+keybind = cmd+ctrl+n=new_tab
+keybind = cmd+ctrl+w=close_surface
+keybind = cmd+ctrl+left_bracket=previous_tab
+keybind = cmd+ctrl+right_bracket=next_tab
+keybind = cmd+ctrl+shift+left_bracket=move_tab:-1
+keybind = cmd+ctrl+shift+right_bracket=move_tab:1
+keybind = cmd+ctrl+one=goto_tab:1
+keybind = cmd+ctrl+two=goto_tab:2
+keybind = cmd+ctrl+three=goto_tab:3
+keybind = cmd+ctrl+four=goto_tab:4
+keybind = cmd+ctrl+five=goto_tab:5
+keybind = cmd+ctrl+six=goto_tab:6
+keybind = cmd+ctrl+seven=goto_tab:7
+keybind = cmd+ctrl+eight=goto_tab:8
+keybind = cmd+ctrl+nine=goto_tab:9
+
+# Window/split management
+# keybind = cmd+ctrl+shift+left=swap_split:left
+# keybind = cmd+ctrl+shift+down=swap_split:down
+# keybind = cmd+ctrl+shift+up=swap_split:up
+# keybind = cmd+ctrl+shift+right=swap_split:right
+keybind = cmd+ctrl+left=resize_split:left,10
+keybind = cmd+ctrl+down=resize_split:down,10
+keybind = cmd+ctrl+up=resize_split:up,10
+keybind = cmd+ctrl+right=resize_split:right,10
+keybind = cmd+ctrl+shift+h=new_split:left
+keybind = cmd+ctrl+shift+j=new_split:down
+keybind = cmd+ctrl+shift+k=new_split:up
+keybind = cmd+ctrl+shift+l=new_split:right
+keybind = cmd+ctrl+h=goto_split:left
+keybind = cmd+ctrl+j=goto_split:bottom
+keybind = cmd+ctrl+k=goto_split:top
+keybind = cmd+ctrl+l=goto_split:right
+
+# Font size controls
+keybind = cmd+ctrl+equal=increase_font_size:1
+keybind = cmd+ctrl+minus=decrease_font_size:1
+keybind = cmd+ctrl+zero=reset_font_size
+
+# Configuration functions
+keybind = cmd+ctrl+f5=reload_config
+keybind = cmd+ctrl+f11=toggle_fullscreen
