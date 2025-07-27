@@ -9,3 +9,6 @@ cmd + ctrl + alt - left   :  yabai -m window --swap west
 cmd + ctrl + alt - down   :  yabai -m window --swap south
 cmd + ctrl + alt - up     :  yabai -m window --swap north
 cmd + ctrl + alt - right  :  yabai -m window --swap east
+
+# zoom window
+cmd + ctrl + alt - z      :  yabai -m window --toggle zoom-parent
