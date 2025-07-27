@@ -4,7 +4,7 @@ function _ghc_tmux_status_toggle_ {
   local mode=$(tmux show -gqv @GHC_SL_MODE)
 
   if [ -z "$mode" ]; then
-    tmux set -g @GHC_SL_MODE "01"
+    tmux set -g @GHC_SL_MODE "11"
   elif [ "$mode" == "00" ]; then
     tmux set -g @GHC_SL_MODE "01"
   elif [ "$mode" == "01" ]; then
