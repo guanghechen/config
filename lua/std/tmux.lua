@@ -1,6 +1,12 @@
 --- https://github.com/alexghergh/nvim-tmux-navigation/blob/4898c98702954439233fdaf764c39636681e2861/lua/nvim-tmux-navigation/tmux_util.lua#L1
 
 local tmux_directions = { ["p"] = "l", ["h"] = "L", ["j"] = "D", ["k"] = "U", ["l"] = "R", ["n"] = "t:.+" }
+local tmux_direction_cmds = {
+  h = "if -F '#{pane_at_left}'    ''  'select-pane -L'",
+  j = "if -F '#{pane_at_bottom}'  ''  'select-pane -D'",
+  k = "if -F '#{pane_at_top}'     ''  'select-pane -U'",
+  l = "if -F '#{pane_at_right}'   ''  'select-pane -R'",
+}
 
 -- send the tmux command to the server running on the socket
 -- given by the environment variable $TMUX
@@ -83,6 +89,11 @@ if vim.env.TMUX ~= nil then
   ---@param direction                   "p"|"h"|"j"|"k"|"l"|"n"
   ---@return nil
   function M.change_pane(direction)
+    local cmd = tmux_direction_cmds[direction] ---@type string|nil
+    if cmd ~= nil then
+      tmux_command(cmd)
+      return
+    end
     tmux_command("select-pane -" .. tmux_directions[direction])
   end
 
