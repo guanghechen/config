@@ -33,6 +33,10 @@ function _ghc_tmux_status_load_ {
     tmux source-file "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
     tmux set-option -s status on
     tmux set-option -s status-position top
+  elif [ "$status_mode" == "03" ]; then
+    tmux source-file "$HOME/.config/tmux/conf/theme/status03.tmux.conf"
+    tmux set-option -s status on
+    tmux set-option -s status-position top
   elif [ "$status_mode" == "10" ]; then
     tmux set-option -s status off
     tmux set-option -s status-position bottom
@@ -42,6 +46,10 @@ function _ghc_tmux_status_load_ {
     tmux set-option -s status-position bottom
   elif [ "$status_mode" == "12" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
+    tmux set-option -s status on
+    tmux set-option -s status-position bottom
+  elif [ "$status_mode" == "13" ]; then
+    tmux source-file "$HOME/.config/tmux/conf/theme/status03.tmux.conf"
     tmux set-option -s status on
     tmux set-option -s status-position bottom
   fi
