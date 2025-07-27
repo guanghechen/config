@@ -94,6 +94,9 @@ function M.terms(position)
   local component = {
     name = "term:terms",
     atomic = false,
+    condition = function(context)
+      return vim.bo[context.bufnr].buftype == "terminal"
+    end,
     render = function(_, remain_width)
       local termindex = eve.term.current() ---@type integer
       local text = " " ---@type string

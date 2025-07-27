@@ -13,7 +13,25 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
   "Normal:f_us_terminal_bg",
 }, ",")
 
+local _terminal_mask_bufnr = nil ---@type integer|nil
 local _terminal_winnr = nil ---@type integer|nil
+
+---@protected
+---@return integer
+local function __create_mask_buf_as_needed__()
+  local bufnr = _terminal_mask_bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = vim.api.nvim_create_buf(false, true)
+    _terminal_mask_bufnr = bufnr
+
+    vim.bo[bufnr].buflisted = false
+    vim.bo[bufnr].filetype = eve.filetype.TERM_MASK
+    vim.bo[bufnr].modifiable = false
+    vim.bo[bufnr].readonly = true
+    vim.bo[bufnr].swapfile = false
+  end
+  return bufnr
+end
 
 ---@type eve.ux.nvimbar.Nvimbar
 local termline = eve.ux.nvimbar.Nvimbar.new({
@@ -293,6 +311,7 @@ end
 ---@param termmeta                      eve.builtin.term.IMeta
 ---@return integer
 function M:__create_win_as_needed__(termmeta)
+  local bufnr_mask = __create_mask_buf_as_needed__() ---@type integer
   local width = vim.o.columns - 2 ---@type integer
   local height = vim.o.lines - 3 ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
@@ -316,7 +335,7 @@ function M:__create_win_as_needed__(termmeta)
   local winnr = _terminal_winnr ---@type integer|nil
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    winnr = vim.api.nvim_open_win(bufnr, true, wincfg)
+    winnr = vim.api.nvim_open_win(bufnr_mask, true, wincfg)
     eve.win.set_type(winnr, eve.win.Types.TERMINAL)
 
     vim.wo[winnr].cursorline = false
@@ -335,7 +354,7 @@ function M:__create_win_as_needed__(termmeta)
   else
     vim.wo[winnr].winfixbuf = false
     vim.api.nvim_win_set_config(winnr, wincfg)
-    vim.api.nvim_win_set_buf(winnr, bufnr)
+    vim.api.nvim_win_set_buf(winnr, bufnr_mask)
     vim.wo[winnr].winfixbuf = true
   end
 
@@ -344,6 +363,10 @@ function M:__create_win_as_needed__(termmeta)
   eve.status.dirtier_termline:mark_dirty()
 
   termmeta.on_resized()
+
+  vim.wo[winnr].winfixbuf = false
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.wo[winnr].winfixbuf = true
   return winnr
 end
 
