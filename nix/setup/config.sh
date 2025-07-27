@@ -29,7 +29,9 @@ clone_or_update_config_repo() {
     "opencode"
     "plan"
     "pwsh"
+    "skhd"
     "tsuki"
+    "yabai"
     "wezterm"
   )
 
