@@ -1,5 +1,4 @@
 {
-  "avante.nvim": { "branch": "nvim@avante.nvim", "commit": "bd69ae14f6f1f21642e16c16cbd18954f62365aa" },
   "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "a0bcedefce8d74179d0f2401d9915eaaf16974ce" },
   "blink.compat": { "branch": "nvim@blink.compat", "commit": "1454f14a8d855a578ceeba77c62538fa1459a67c" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "973f3cb73887d510321653044791d7937c7ec0fa" },

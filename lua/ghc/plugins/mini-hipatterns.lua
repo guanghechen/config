@@ -85,13 +85,5 @@ return {
         highlighted = {}
       end,
     })
-
-    vim.api.nvim_create_autocmd("FileType", {
-      group = eve.nvim.augroup("mini-hipatterns_on_FileType"),
-      pattern = { eve.filetype.AVANTE, eve.filetype.AVANTE_INPUT },
-      callback = function(arg)
-        require("mini.hipatterns").enable(arg.buf)
-      end,
-    })
   end,
 }

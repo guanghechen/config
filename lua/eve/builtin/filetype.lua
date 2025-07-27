@@ -1,9 +1,6 @@
 ---@class eve.builtin.filetype
 local M = {}
 
-M.AVANTE = "Avante"
-M.AVANTE_INPUT = "AvanteInput"
-M.AVANTE_SELECTED_FILES = "AvanteSelectedFiles"
 M.BIGFILE = "bigfile"
 M.CHECKHEALTH = "checkhealth"
 M.DAP_FLOAT = "dap-float"
@@ -107,13 +104,9 @@ local filetypes = {
   },
   -- stylua: ignore end
   cmp_others = {
-    [M.AVANTE_INPUT] = true,
     [M.UX_PICKER_FINDER] = true,
   },
   has_external_winline = {
-    [M.AVANTE] = true,
-    [M.AVANTE_INPUT] = true,
-    [M.AVANTE_SELECTED_FILES] = true,
     [M.DAP_REPL] = true,
     [M.DAP_UI_BREAKPOINTS] = true,
     [M.DAP_UI_CONSOLE] = true,
@@ -121,10 +114,7 @@ local filetypes = {
     [M.DAP_UI_STACKS] = true,
     [M.DAP_UI_WATCHES] = true,
   },
-  hipattern = {
-    [M.AVANTE] = true,
-    [M.AVANTE_INPUT] = true,
-  },
+  hipattern = {},
   language = {
     -- stylua: ignore start
     assembly         = true,
@@ -177,13 +167,9 @@ local filetypes = {
   },
   markdown = {
     ["markdown"] = true,
-    [M.AVANTE] = true,
     [M.YOZORA_VIEWER] = true,
   },
   not_sourcefile = {
-    [M.AVANTE] = true,
-    [M.AVANTE_INPUT] = true,
-    [M.AVANTE_SELECTED_FILES] = true,
     [M.CHECKHEALTH] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_REPL] = true,

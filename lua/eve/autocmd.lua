@@ -263,35 +263,6 @@ vim.api.nvim_create_autocmd("WinNew", {
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
 
-    if eve.win.is_fixed(winnr) then
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local filetype = vim.bo[bufnr].filetype ---@type string
-
-      if filetype == "Avante" or filetype == "AvanteInput" or filetype == "AvanteSelectedFiles" then
-        local winid_k = vim.fn.winnr("k") ---@type integer
-        local winnr_k = vim.fn.win_getid(winid_k) ---@type integer
-        if winnr_k ~= nil and winnr_k ~= winnr then
-          local bufnr_k = vim.api.nvim_win_get_buf(winnr_k) ---@type integer
-          local filetype_k = vim.bo[bufnr_k].filetype ---@type string
-          if filetype_k == "Avante" or filetype_k == "AvanteInput" or filetype_k == "AvanteSelectedFiles" then
-            eve.win.set_type(winnr, eve.win.Types.AVANTE)
-            return
-          end
-        end
-
-        local winid_j = vim.fn.winnr("j") ---@type integer
-        local winnr_j = vim.fn.win_getid(winid_j) ---@type integer
-        if winnr_j ~= nil and winnr_j ~= winnr then
-          local bufnr_j = vim.api.nvim_win_get_buf(winnr_j) ---@type integer
-          local filetype_j = vim.bo[bufnr_j].filetype ---@type string
-          if filetype_j == "Avante" or filetype_j == "AvanteInput" or filetype_j == "AvanteSelectedFiles" then
-            eve.win.set_type(winnr, eve.win.Types.AVANTE)
-            return
-          end
-        end
-      end
-    end
-
     vim.schedule(function()
       if not vim.api.nvim_win_is_valid(winnr) then
         return
@@ -302,11 +273,6 @@ vim.api.nvim_create_autocmd("WinNew", {
 
       if filetype == "neo-tree" then
         eve.win.set_type(winnr, eve.win.Types.NEOTREE)
-        return
-      end
-
-      if filetype == "Avante" or filetype == "AvanteInput" or filetype == "AvanteSelectedFiles" then
-        eve.win.set_type(winnr, eve.win.Types.AVANTE)
         return
       end
     end)

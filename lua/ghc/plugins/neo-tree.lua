@@ -56,14 +56,14 @@ return {
       return a.type < b.type
     end,
     commands = {
-      avante_add_files = function(state)
+      add_files_to_ai = function(state)
         local node = state.tree:get_node()
         if node.type ~= "file" and node.type ~= "directory" then
           return
         end
 
         local filepath = node:get_id() ---@type string
-        eve.plugin.avante_add_files({ filepath })
+        eve.plugin.add_files_to_ai({ filepath })
       end,
       copy_filepath = function(state)
         local node = state.tree:get_node()
@@ -400,7 +400,7 @@ return {
         ["<leader>]"] = "goto_next_source",
         ["[["] = "goto_prev_source",
         ["]]"] = "goto_next_source",
-        ["oa"] = "avante_add_files",
+        ["oa"] = "add_files_to_ai",
         ["oc"] = "copy_filepath",
         ["oe"] = "open_ghc_file_explorer",
         ["of"] = "open_ghc_file_finder",

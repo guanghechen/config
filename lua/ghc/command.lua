@@ -1,27 +1,6 @@
 local command = eve.command ---@type eve.builtin.command
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
---[ai] avante --------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.ai.avante_ask.uuid,
-    action = function()
-      require("ghc.action.avante").ask()
-    end,
-  })
-  .implement({
-    uuid = K.ai.avante_edit.uuid,
-    action = function()
-      require("ghc.action.avante").edit()
-    end,
-  })
-  .implement({
-    uuid = K.ai.avante_refresh.uuid,
-    action = function()
-      require("ghc.action.avante").refresh()
-    end,
-  })
-
 --[code] -------------------------------------------------------------------------------------------
 command.implement({
   uuid = K.code.swap_conditional_branches.uuid,

@@ -13,7 +13,6 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public lsp_reference          eve.context.select.item.data
 ---@field public lsp_symbols            eve.context.select.item.data
 ---@field public search_file            eve.context.select.item.data
----@field public select_avante          eve.context.select.item.data
 ---
 ---@field public find_buffer_scope      std.e.FindBufferScope
 ---@field public find_file_scope        std.e.FindFileScope
@@ -32,7 +31,6 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public lsp_reference          eve.context.select.item.state
 ---@field public lsp_symbols            eve.context.select.item.state
 ---@field public search_file            eve.context.select.item.state
----@field public select_avante          eve.context.select.item.state
 ---
 ---@field public find_buffer_scope      std.collection.IObservable
 ---@field public find_file_scope        std.collection.IObservable
@@ -66,7 +64,6 @@ function M.defaults()
     lsp_reference = select_item.defaults(),
     lsp_symbols = select_item.defaults(),
     search_file = select_item.defaults(),
-    select_avante = select_item.defaults(),
 
     find_buffer_scope = "A",
     find_file_scope = "C",
@@ -93,7 +90,6 @@ function M.normalize(data)
     lsp_reference = select_item.normalize(data.lsp_reference),
     lsp_symbols = select_item.normalize(data.lsp_symbols),
     search_file = select_item.normalize(data.search_file),
-    select_avante = select_item.normalize(data.select_avante),
 
     find_buffer_scope = "A",
     find_file_scope = "C",
@@ -128,7 +124,6 @@ function M.dump()
     lsp_reference = select_item.dump(M.lsp_reference),
     lsp_symbols = select_item.dump(M.lsp_symbols),
     search_file = select_item.dump(M.search_file),
-    select_avante = select_item.dump(M.select_avante),
 
     find_buffer_scope = M.find_buffer_scope:snapshot(),
     find_file_scope = M.find_buffer_scope:snapshot(),
@@ -153,7 +148,6 @@ function M.load(raw_data)
   M.lsp_reference = select_item.load(M.lsp_reference, "lsp_reference", data.lsp_reference)
   M.lsp_symbols = select_item.load(M.lsp_symbols, "lsp_symbols", data.lsp_symbols)
   M.search_file = select_item.load(M.search_file, "search_file", data.search_file)
-  M.select_avante = select_item.load(M.select_avante, "select_avante", data.select_avante)
 
   M.find_buffer_scope:next(data.find_buffer_scope)
   M.find_file_scope:next(data.find_file_scope)
@@ -175,7 +169,6 @@ M.find_vim_option = select_item.load(nil, "find_vim_option", _defaults.find_vim_
 M.lsp_reference = select_item.load(nil, "lsp_reference", _defaults.lsp_reference)
 M.lsp_symbols = select_item.load(nil, "lsp_symbols", _defaults.lsp_symbols)
 M.search_file = select_item.load(nil, "search_file", _defaults.search_file)
-M.select_avante = select_item.load(nil, "select_avante", _defaults.select_avante)
 
 M.find_buffer_scope = std.Observable.from_value(_defaults.find_file_scope)
 M.find_file_scope = std.Observable.from_value(_defaults.find_file_scope)
@@ -195,7 +188,6 @@ M.keys = {
   "lsp_reference",
   "lsp_symbols",
   "search_file",
-  "select_avante",
 }
 M.find_buffer_scopes = { "A", "F", "L", "T" } ---@type std.e.FindBufferScope[]
 M.find_file_scopes = { "W", "C", "D" } ---@type std.e.FindFileScope[]

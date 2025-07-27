@@ -20,7 +20,6 @@ local __module_name__ = "eve.builtin.win"
 ---| "ux:winpicker"
 ---| "ux:winsep"
 ---
----| "plugin:avante"
 ---| "plugin:neotree"
 
 ---@class eve.builtin.win.IFilepathHistoryItem
@@ -60,7 +59,6 @@ local Types = {
   WINPICKER         = "ux:winpicker",
   WINSEP            = "ux:winsep",
 
-  AVANTE            = "plugin:avante",
   NEOTREE           = "plugin:neotree",
   -- stylua: ignore end
 }
@@ -82,7 +80,6 @@ local wintype_attrs = {
     [Types.TERMINAL] = true,
     [Types.TEXTAREA] = true,
 
-    [Types.AVANTE] = true,
     [Types.NEOTREE] = true,
   },
   projectable = {},

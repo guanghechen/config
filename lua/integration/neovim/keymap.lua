@@ -10,7 +10,6 @@ ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 --- quick access widgets (diagnostic, explorer, terminal) -----
 ms({ "i", "n", "t", "v" }, { "<C-`>" }, K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>`", K.ux.resume_last_widget)
-ms({ "n", "v" }, "<leader>'", K.ai.avante_ask)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
 ms({ "n", "v" }, "<leader>2", K.search.files_in_cwd)
 ms({ "n", "v" }, "<leader>3", K.find.git_not_committed)
@@ -18,9 +17,9 @@ ms({ "n", "v" }, "<leader>4", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------
-ms({ "n", "v" }, "<leader>aa", K.ai.avante_ask)
-ms({ "n", "v" }, "<leader>ae", K.ai.avante_edit)
-ms({ "n", "v" }, "<leader>ar", K.ai.avante_refresh)
+ms({ "n", "v" }, "<leader>aa", K.ai.ask)
+ms({ "n", "v" }, "<leader>ae", K.ai.edit)
+ms({ "n", "v" }, "<leader>ar", K.ai.refresh)
 ---------------------------------------------------------------------------------------------#[a]i--
 
 --#[b]uf--------------------------------------------------------------------------------------------

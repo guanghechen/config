@@ -23,7 +23,6 @@ local actions = {
 
 ---@type table<string, string[]>
 local sources_per_filetype = {
-  [eve.filetype.AVANTE_INPUT] = { "copilot", "snippets", "avante_mentions", "avante_commands", "path", "buffer" },
   [eve.filetype.UX_PICKER_FINDER] = { "path" },
 }
 for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do
@@ -207,18 +206,6 @@ return {
       default = {},
       per_filetype = sources_per_filetype,
       providers = {
-        avante_commands = {
-          name = "avante_commands",
-          module = "blink.compat.source",
-          score_offset = 120,
-          opts = {},
-        },
-        avante_mentions = {
-          name = "avante_mentions",
-          module = "blink.compat.source",
-          score_offset = 120,
-          opts = {},
-        },
         buffer = {
           score_offset = 100,
           opts = {

@@ -196,9 +196,9 @@ M.definitions = {}
 
 ---@class eve.builtin.command.definitions.ai
 M.definitions.ai = {
-  avante_ask = def("Faiavanteask", "ai: avante ask"),
-  avante_edit = def("Faiavanteedit", "ai: avante edit"),
-  avante_refresh = def("Faiavanterefresh", "ai: avante refresh"),
+  ask = def("Faiask", "ai: ask"),
+  edit = def("Faiedit", "ai: edit"),
+  refresh = def("Fairefresh", "ai: refresh"),
 }
 
 ---@class eve.builtin.command.definitions.buf

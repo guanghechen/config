@@ -613,14 +613,14 @@ picker = eve.ux.picker.ListComposer.new({
     {
       modes = { "n", "v" },
       key = "oa",
-      desc = "filetree: add to avante",
+      desc = "filetree: add to ai",
       callback = function()
         local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
         local item = picker:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
         ---@cast item                   fml.action.find.explorer.IItem|nil
 
         if item ~= nil then
-          eve.plugin.avante_add_files({ item.data.fileitem.path })
+          eve.plugin.add_files_to_ai({ item.data.fileitem.path })
         end
       end,
     },
@@ -630,14 +630,14 @@ picker = eve.ux.picker.ListComposer.new({
     {
       modes = { "i", "n", "v" },
       key = "oa",
-      desc = "filetree: add to avante",
+      desc = "filetree: add to ai",
       callback = function()
         local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
         local item = picker:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
         ---@cast item                   fml.action.find.explorer.IItem|nil
 
         if item ~= nil then
-          eve.plugin.avante_add_files({ item.data.fileitem.path })
+          eve.plugin.add_files_to_ai({ item.data.fileitem.path })
         end
       end,
     },

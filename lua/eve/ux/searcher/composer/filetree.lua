@@ -23,8 +23,8 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---| fun(self: eve.ux.searcher.FiletreeComposer, force: boolean): nil
 
 ---@class eve.ux.searcher.composer.filetree.actions
----@field public add_node_to_avante     fun(): nil
----@field public add_subtree_to_avante  fun(): nil
+---@field public add_node_to_ai         fun(): nil
+---@field public add_subtree_to_ai      fun(): nil
 ---@field public attach_node            fun(): nil
 ---@field public attach_parent          fun(): nil
 ---@field public copy_node_filepath     fun(): nil
@@ -328,7 +328,7 @@ function M.new(props)
 
   ---@type eve.ux.searcher.composer.filetree.actions
   local actions = {
-    add_node_to_avante = function()
+    add_node_to_ai = function()
       local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
       if lnum_from < 1 then
         return
@@ -342,9 +342,9 @@ function M.new(props)
           filepaths[#filepaths + 1] = node.data.filepath
         end
       end
-      eve.plugin.avante_add_files(filepaths)
+      eve.plugin.add_files_to_ai(filepaths)
     end,
-    add_subtree_to_avante = function()
+    add_subtree_to_ai = function()
       local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
       if lnum_from < 1 then
         return
@@ -369,7 +369,7 @@ function M.new(props)
         end
         lnum = lnum + 1
       end
-      eve.plugin.avante_add_files(filepaths)
+      eve.plugin.add_files_to_ai(filepaths)
     end,
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -924,14 +924,14 @@ function M.new(props)
     {
       modes = { "n", "v" },
       key = "oA",
-      desc = "searcher: add to avante (full subtree)",
-      callback = actions.add_subtree_to_avante,
+      desc = "searcher: add to ai (full subtree)",
+      callback = actions.add_subtree_to_ai,
     },
     {
       modes = { "n", "v" },
       key = "oa",
-      desc = "searcher: add to avante",
-      callback = actions.add_node_to_avante,
+      desc = "searcher: add to ai",
+      callback = actions.add_node_to_ai,
     },
     {
       modes = { "n", "v" },
@@ -1037,14 +1037,14 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "oA",
-      desc = "searcher: add to avante (full subtree)",
-      callback = actions.add_subtree_to_avante,
+      desc = "searcher: add to ai (full subtree)",
+      callback = actions.add_subtree_to_ai,
     },
     {
       modes = { "i", "n", "v" },
       key = "oa",
-      desc = "searcher: add to avante",
-      callback = actions.add_node_to_avante,
+      desc = "searcher: add to ai",
+      callback = actions.add_node_to_ai,
     },
     {
       modes = { "i", "n", "v" },

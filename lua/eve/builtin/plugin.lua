@@ -3,42 +3,12 @@ local M = {}
 
 ---@param filepaths                     string[]|nil
 ---@return nil
-function M.avante_add_files(filepaths)
+function M.add_files_to_ai(filepaths)
   if filepaths == nil or #filepaths == 0 then
     return
   end
 
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-
-  eve.tab.focus_win_sourcefile(tabnr)
-
-  local sidebar = require("avante").get()
-  if sidebar == nil or not sidebar:is_open() then
-    require("avante.api").ask()
-    sidebar = require("avante").get()
-
-    if sidebar == nil or not sidebar:is_open() then
-      return
-    end
-  end
-
-  vim.schedule(function()
-    for _, filepath in ipairs(filepaths) do
-      local relative_path = require("avante.utils").relative_path(filepath) ---@type string
-      sidebar.file_selector:add_selected_file(relative_path)
-    end
-
-    sidebar.file_selector:remove_selected_file("neo-tree filesystem [1]")
-    sidebar.file_selector:remove_selected_file("untitled-1")
-
-    ---! focus the original window
-    vim.schedule(function()
-      if vim.api.nvim_win_is_valid(winnr_current) then
-        vim.api.nvim_tabpage_set_win(tabnr, winnr_current)
-      end
-    end)
-  end)
+  ---FIXME add files to ai
 end
 
 return M

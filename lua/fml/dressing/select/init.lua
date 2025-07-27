@@ -35,9 +35,7 @@ local providers = {
 }
 
 ---@type table<string, eve.context.select.item.state>
-local states_by_title = {
-  ["(Avante) Add a file"] = eve.context.select.select_avante,
-}
+local states_by_title = {}
 
 ---@class fml.dressing.select
 local M = {}
