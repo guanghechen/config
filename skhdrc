@@ -1,14 +1,19 @@
-# focus window
-cmd + ctrl + alt - h      :  yabai -m window --focus west
-cmd + ctrl + alt - j      :  yabai -m window --focus south
-cmd + ctrl + alt - k      :  yabai -m window --focus north
-cmd + ctrl + alt - l      :  yabai -m window --focus east
+# window
+cmd + ctrl + alt - h                    : yabai -m window --focus west
+cmd + ctrl + alt - j                    : yabai -m window --focus south
+cmd + ctrl + alt - k                    : yabai -m window --focus north
+cmd + ctrl + alt - l                    : yabai -m window --focus east
+cmd + ctrl + alt + shift - h            : yabai -m window --swap west
+cmd + ctrl + alt + shift - j            : yabai -m window --swap south
+cmd + ctrl + alt + shift - k            : yabai -m window --swap north
+cmd + ctrl + alt + shift - l            : yabai -m window --swap east
 
-# move window
-cmd + ctrl + alt - left   :  yabai -m window --swap west
-cmd + ctrl + alt - down   :  yabai -m window --swap south
-cmd + ctrl + alt - up     :  yabai -m window --swap north
-cmd + ctrl + alt - right  :  yabai -m window --swap east
+# workspace (need close SIP)
+cmd + ctrl + alt - left                 : yabai -m space --focus prev
+cmd + ctrl + alt - right                : yabai -m space --focus next
+cmd + ctrl + alt + shift - left         : yabai -m space --move prev
+cmd + ctrl + alt + shift - right        : yabai -m space --move next
 
 # zoom window
-cmd + ctrl + alt - z      :  yabai -m window --toggle zoom-parent
+cmd + ctrl + alt - f      :  yabai -m window --toggle float
+cmd + ctrl + alt - z      :  yabai -m window --toggle zoom-fullscreen
