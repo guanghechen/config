@@ -311,7 +311,6 @@ end
 ---@param termmeta                      eve.builtin.term.IMeta
 ---@return integer
 function M:__create_win_as_needed__(termmeta)
-  local bufnr_mask = __create_mask_buf_as_needed__() ---@type integer
   local width = vim.o.columns - 2 ---@type integer
   local height = vim.o.lines - 3 ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
@@ -335,8 +334,10 @@ function M:__create_win_as_needed__(termmeta)
   local winnr = _terminal_winnr ---@type integer|nil
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    local bufnr_mask = __create_mask_buf_as_needed__() ---@type integer
     winnr = vim.api.nvim_open_win(bufnr_mask, true, wincfg)
     eve.win.set_type(winnr, eve.win.Types.TERMINAL)
+    vim.api.nvim_win_set_buf(winnr, bufnr)
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
@@ -354,7 +355,7 @@ function M:__create_win_as_needed__(termmeta)
   else
     vim.wo[winnr].winfixbuf = false
     vim.api.nvim_win_set_config(winnr, wincfg)
-    vim.api.nvim_win_set_buf(winnr, bufnr_mask)
+    vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.wo[winnr].winfixbuf = true
   end
 
@@ -363,10 +364,6 @@ function M:__create_win_as_needed__(termmeta)
   eve.status.dirtier_termline:mark_dirty()
 
   termmeta.on_resized()
-
-  vim.wo[winnr].winfixbuf = false
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  vim.wo[winnr].winfixbuf = true
   return winnr
 end
 
