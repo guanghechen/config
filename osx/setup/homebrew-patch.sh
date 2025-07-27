@@ -17,3 +17,8 @@ brew install --cask kitty
 
 ### Install wezterm
 brew install --cask wezterm
+
+### Install yabai
+brew install koekeishiya/formulae/skhd
+brew install koekeishiya/formulae/yabai
+brew install FelixKratz/formulae/borders
