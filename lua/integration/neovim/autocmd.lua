@@ -79,8 +79,9 @@ vim.filetype.add({
     [".eslintignore"] = "ignore",
     [".git-credentials"] = "git-credentials",
     [".prettierignore"] = "ignore",
-    ["log"] = "text",
-    ["vimrc"] = "vim",
+    log = "text",
+    vimrc = "vim",
+    yabairc = "sh",
   },
   pattern = {
     [".*"] = {
