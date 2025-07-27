@@ -23,23 +23,45 @@ function _ghc_tmux_status_load_ {
   fi
 
   if [ "$status_mode" == "00" ]; then
-    tmux set-option status off
+    tmux set-option -s status off
+    tmux set-option -s status-position top
   elif [ "$status_mode" == "01" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
-    tmux set-option status on
+    tmux set-option -s status on
+    tmux set-option -s status-position top
   elif [ "$status_mode" == "02" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-    tmux set-option status on
+    tmux set-option -s status on
+    tmux set-option -s status-position top
+  elif [ "$status_mode" == "10" ]; then
+    tmux set-option -s status off
+    tmux set-option -s status-position bottom
+  elif [ "$status_mode" == "11" ]; then
+    tmux source-file "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
+    tmux set-option -s status on
+    tmux set-option -s status-position bottom
+  elif [ "$status_mode" == "12" ]; then
+    tmux source-file "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
+    tmux set-option -s status on
+    tmux set-option -s status-position bottom
   fi
 
   if [ "$panestatus_mode" == "00" ]; then
-    tmux set-option pane-border-status off
+    tmux set-option -s pane-border-status off
   elif [ "$panestatus_mode" == "01" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/panestatus01.tmux.conf"
-    tmux set-option pane-border-status top
+    tmux set-option -s pane-border-status top
   elif [ "$panestatus_mode" == "02" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
-    tmux set-option pane-border-status top
+    tmux set-option -s pane-border-status top
+  elif [ "$panestatus_mode" == "10" ]; then
+    tmux set-option -s pane-border-status off
+  elif [ "$panestatus_mode" == "11" ]; then
+    tmux source-file "$HOME/.config/tmux/conf/theme/panestatus01.tmux.conf"
+    tmux set-option -s pane-border-status bottom
+  elif [ "$panestatus_mode" == "12" ]; then
+    tmux source-file "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
+    tmux set-option -s pane-border-status bottom
   fi
 }
 
