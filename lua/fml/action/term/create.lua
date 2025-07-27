@@ -16,29 +16,53 @@ local profiles = {
 
 ---@return nil
 function M.show_profile_selector()
-  vim.ui.select(profiles, {
-    name = __module_name__,
-    prompt = "Select terminal profile:",
-    format_item = function(profile)
-      return profile.name
-    end,
-    dimension = {
-      row = 3,
-      width = 30,
-    },
-  }, function(selected_profile)
-    if selected_profile == nil then
-      return -- User cancelled
-    end
-
-    eve.term.create({
-      uuid = oxi.fn.uuid(),
-      name = selected_profile.name,
-      cmd = selected_profile.cmd,
-      permanent = false,
+  local items = {} ---@type eve.ux.ISelectItem[]
+  for _, profile in ipairs(profiles) do
+    table.insert(items, {
+      uuid = profile.name,
+      text = profile.name,
     })
-    eve.ux.widget.Terminal:focus()
-  end)
+  end
+
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local mouse = vim.fn.getmousepos()
+  local select_widget = eve.ux.Select.new({
+    items = items,
+    wincfg = {
+      title = "Select terminal profile:",
+      width = 30,
+      height = 3,
+      relative = "win",
+      win = winnr,
+      row = 0,
+      col = mouse.wincol - 3,
+    },
+    on_select = function(_, selected_item)
+      if selected_item == nil then
+        return
+      end
+
+      local selected_profile = nil ---@type fml.action.term.create.IProfile|nil
+      for _, profile in ipairs(profiles) do
+        if profile.name == selected_item.uuid then
+          selected_profile = profile
+          break
+        end
+      end
+
+      if selected_profile then
+        eve.term.create({
+          uuid = oxi.fn.uuid(),
+          name = selected_profile.name,
+          cmd = selected_profile.cmd,
+          permanent = false,
+        })
+        eve.ux.widget.Terminal:focus()
+      end
+    end,
+  })
+
+  select_widget:focus()
 end
 
 ---@return nil
