@@ -80,6 +80,7 @@ vim.filetype.add({
     [".git-credentials"] = "git-credentials",
     [".prettierignore"] = "ignore",
     log = "text",
+    skhdrc = "conf",
     vimrc = "vim",
     yabairc = "sh",
   },
