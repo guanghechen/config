@@ -1,5 +1,16 @@
 #! /usr/bin/env bash
 
+## Preparation
+sudo apt update
+sudo apt dist-upgrade -y
+sudo apt remove -y tmux
+sudo apt install -y curl git wget
+sudo apt install -y clangd colordiff file fontconfig gcc locales make net-tools vim
+sudo apt install -y build-essential libvips-dev unixodbc
+sudo apt autoremove
+sudo apt autoclean
+printf "\e[32m  [preparation] done.\e[0m\n"
+
 ## Download core configurations
 CONFIG_ROOT_DIR="$HOME/.config"
 CONFIG_MAIN_DIR="$CONFIG_ROOT_DIR/guanghechen"
@@ -12,9 +23,6 @@ else
 fi
 
 source $HOME/.config/guanghechen/nix/setup/path.sh
-
-## Update system
-source $HOME/.config/guanghechen/nix/setup/prepare.sh
 
 ## Fix locale issues
 sudo locale-gen en_US.UTF-8
