@@ -50,18 +50,18 @@ keybind = ctrl+shift+left_bracket=csi:91;6u
 keybind = ctrl+shift+right_bracket=csi:93;6u
 
 # Function keys
-keybind = cmd+f1=text:\x01f1
-keybind = cmd+f2=text:\x01f2
-keybind = cmd+f3=text:\x01f3
-keybind = cmd+f4=text:\x01f4
-keybind = cmd+f5=text:\x01f5
-keybind = cmd+f6=text:\x01f6
-keybind = cmd+f7=text:\x01f7
-keybind = cmd+f8=text:\x01f8
-keybind = cmd+f9=text:\x01f9
-keybind = cmd+f10=text:\x01f10
-keybind = cmd+f11=text:\x01f11
-keybind = cmd+f12=text:\x01f12
+keybind = cmd+f1=text:\x01\x1b[112;5u
+keybind = cmd+f2=text:\x01\x1b[113;5u
+keybind = cmd+f3=text:\x01\x1b[114;5u
+keybind = cmd+f4=text:\x01\x1b[115;5u
+keybind = cmd+f5=text:\x01\x1b[116;5u
+keybind = cmd+f6=text:\x01\x1b[117;5u
+keybind = cmd+f7=text:\x01\x1b[118;5u
+keybind = cmd+f8=text:\x01\x1b[119;5u
+keybind = cmd+f9=text:\x01\x1b[120;5u
+keybind = cmd+f10=text:\x01\x1b[121;5u
+keybind = cmd+f11=text:\x01\x1b[122;5u
+keybind = cmd+f12=text:\x01\x1b[123;5u
 
 # Arrow keys
 keybind = cmd+up=text:\x01\x1b[A
