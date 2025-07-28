@@ -12,14 +12,14 @@ sudo apt autoclean
 printf "\e[32m  [preparation] done.\e[0m\n"
 
 ## Download core configurations
-CONFIG_ROOT_DIR="$HOME/.config"
-CONFIG_MAIN_DIR="$CONFIG_ROOT_DIR/guanghechen"
-if [ -e "$CONFIG_MAIN_DIR/.git" ]; then
-  git -C "$CONFIG_MAIN_DIR" fetch origin
-  git -C "$CONFIG_MAIN_DIR" merge origin/guanghechen --ff-only
+reporoot="$HOME/.config"
+repomain="$reporoot/guanghechen"
+if [ -e "$repomain/.git" ]; then
+  git -C "$repomain" fetch origin
+  git -C "$repomain" merge origin/guanghechen --ff-only
 else
-  mkdir -p "$CONFIG_MAIN_DIR"
-  git clone https://github.com/guanghechen/config.git --branch=guanghechen "$CONFIG_MAIN_DIR"
+  mkdir -p "$repomain"
+  git clone https://github.com/guanghechen/config.git --branch=guanghechen "$repomain"
 fi
 
 source $HOME/.config/guanghechen/nix/setup/path.sh

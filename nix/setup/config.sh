@@ -1,10 +1,9 @@
 #! /usr/bin/env bash
 
 clone_or_update_config_repo() {
-  local CONFIG_ROOT_DIR="$HOME/.config"
-  local CONFIG_MAIN_DIR="$CONFIG_ROOT_DIR/guanghechen"
-  local CONFIG_REPO="https://github.com/guanghechen/config.git"
-  local CONFIG_BRANCHES=(
+  local reporoot="$HOME/.config"
+  local repomain="$reporoot/guanghechen"
+  local repo_required_branches=(
     "btop"
     "conda"
     "fish"
@@ -18,7 +17,7 @@ clone_or_update_config_repo() {
     "yazi"
     "yozora"
   )
-  local OPTIONAL_CONFIG_BRANCHES=(
+  local repo_optional_branches=(
     "alacritty"
     "alacritty-windows"
     "claude"
@@ -38,23 +37,23 @@ clone_or_update_config_repo() {
     "yasb"
   )
 
-  for branch in "${CONFIG_BRANCHES[@]}"; do
-    local repo_path="$CONFIG_ROOT_DIR/$branch"
-    if [ -e "$repo_path/.git" ]; then
-      printf "\e[34m  [setup config] merging origin/$branch into $repo_path\e[0m\n"
-      git -C "$repo_path" merge origin/$branch --ff-only
+  for branch in "${repo_required_branches[@]}"; do
+    local repopath="$reporoot/$branch"
+    if [ -e "$repopath/.git" ]; then
+      printf "\e[34m  [setup config] merging origin/$branch into $repopath\e[0m\n"
+      git -C "$repopath" merge origin/$branch --ff-only
     else
-      printf "\e[34m  [setup config] add new worktree of $branch into $repo_path\e[0m\n"
-      git -C "$CONFIG_MAIN_DIR" worktree add "$repo_path" $branch
+      printf "\e[34m  [setup config] add new worktree of $branch into $repopath\e[0m\n"
+      git -C "$repomain" worktree add "$repopath" $branch
     fi
     printf "\n"
   done
 
-  for branch in "${OPTIONAL_CONFIG_BRANCHES[@]}"; do
-    local repo_path="$CONFIG_ROOT_DIR/$branch"
-    if [ -e "$repo_path/.git" ]; then
-      printf "\e[34m  [setup config] merging origin/$branch into $repo_path\e[0m\n"
-      git -C "$repo_path" merge origin/$branch --ff-only
+  for branch in "${repo_optional_branches[@]}"; do
+    local repopath="$reporoot/$branch"
+    if [ -e "$repopath/.git" ]; then
+      printf "\e[34m  [setup config] merging origin/$branch into $repopath\e[0m\n"
+      git -C "$repopath" merge origin/$branch --ff-only
       printf "\n"
     fi
   done
