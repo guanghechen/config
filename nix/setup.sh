@@ -1,13 +1,14 @@
 #! /usr/bin/env bash
 
 ## Download core configurations
-CONFIG_ROOT_DIR="$HOME/.config/guanghechen"
-if [ -e "$CONFIG_ROOT_DIR/.git" ]; then
-  git -C "$CONFIG_ROOT_DIR" fetch origin
-  git -C "$CONFIG_ROOT_DIR" merge origin/guanghechen --ff-only
+CONFIG_ROOT_DIR="$HOME/.config"
+CONFIG_MAIN_DIR="$CONFIG_ROOT_DIR/guanghechen"
+if [ -e "$CONFIG_MAIN_DIR/.git" ]; then
+  git -C "$CONFIG_MAIN_DIR" fetch origin
+  git -C "$CONFIG_MAIN_DIR" merge origin/guanghechen --ff-only
 else
-  mkdir -p "$CONFIG_ROOT_DIR"
-  git clone https://github.com/guanghechen/config.git --branch=guanghechen "$CONFIG_ROOT_DIR"
+  mkdir -p "$CONFIG_MAIN_DIR"
+  git clone https://github.com/guanghechen/config.git --branch=guanghechen "$CONFIG_MAIN_DIR"
 fi
 
 source $HOME/.config/guanghechen/nix/setup/path.sh
