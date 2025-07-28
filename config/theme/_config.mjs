@@ -131,15 +131,6 @@ export const apps = [
     },
   },
   {
-    name: "opencode",
-    kind: "other",
-    themes: "themes/",
-    extname: ".json",
-    local: "themes/opencode.json",
-    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
-    render: (_, template, scheme) => render_template(template, scheme),
-  },
-  {
     name: "tmux",
     kind: "terminal",
     themes: "theme/",

@@ -22,7 +22,6 @@ $optinal_config_repo_branch = @(
   "lsd",
   "neovide",
   "nvim-nvchad",
-  "opencode",
   "plan",
   "pm2",
   "tsuki",
