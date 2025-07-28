@@ -76,7 +76,7 @@ bindings = [
   { key = "Key9",       mods = "Control",                   chars = "\u001b[57;5u" },
   { key = "LBracket",   mods = "Control",                   chars = "\u001b[91;5u" },
   { key = "RBracket",   mods = "Control",                   chars = "\u001b[93;5u" },
-  { key = "Grave",      mods = "Control",                   chars = "\u001b[96;5u" },
+  { key = "`",          mods = "Control",                   chars = "\u001b[96;5u" },
   { key = "Comma",      mods = "Control|Shift",             chars = "\u001b[44;6u" },
   { key = "Period",     mods = "Control|Shift",             chars = "\u001b[46;6u" },
   { key = "Slash",      mods = "Control|Shift",             chars = "\u001b[47;6u" },
