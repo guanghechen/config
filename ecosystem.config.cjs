@@ -54,20 +54,6 @@ const config = {
         HOST: GHC_COPILOT_API_HOST,
       },
     },
-    {
-      enabled: command_exist("yabai"),
-      name: "yabai",
-      cwd: repos.yabai,
-      script: "yabai",
-      args: "--start-service",
-    },
-    {
-      enabled: command_exist("skhd"),
-      name: "skhd",
-      cwd: repos.skhd,
-      script: "skhd",
-      args: "--start-service",
-    },
     ...(LOCAL_TASKS.apps || []),
   ].filter((x) => !!x && x.enabled),
 };
