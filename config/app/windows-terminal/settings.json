@@ -1065,6 +1065,18 @@
       "keys": "ctrl+alt+shift+minus"
     },
     {
+      "id": "Terminal.IncreaseFontSize",
+      "keys": "ctrl+alt+plus"
+    },
+    {
+      "id": "Terminal.DecreaseFontSize",
+      "keys": "ctrl+alt+minus"
+    },
+    {
+      "id": "Terminal.ResetFontSize",
+      "keys": "ctrl+alt+0"
+    },
+    {
       "id": "Terminal.OpenTabRenamer",
       "keys": "ctrl+alt+f2"
     },
