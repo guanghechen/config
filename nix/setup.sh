@@ -2,7 +2,7 @@
 
 ## Download core configurations
 CONFIG_ROOT_DIR="$HOME/.config/guanghechen"
-if [ -d "$CONFIG_ROOT_DIR/.git" ]; then
+if [ -e "$CONFIG_ROOT_DIR/.git" ]; then
   git -C "$CONFIG_ROOT_DIR" fetch origin
   git -C "$CONFIG_ROOT_DIR" merge origin/guanghechen
 else

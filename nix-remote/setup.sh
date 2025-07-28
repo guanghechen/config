@@ -2,7 +2,7 @@
 
 ## Download core configurations
 CONFIG_ROOT_DIR="$HOME/.config/guanghechen"
-if [ -d "$CONFIG_ROOT_DIR/.git" ]; then
+if [ -e "$CONFIG_ROOT_DIR/.git" ]; then
   git -C "$CONFIG_ROOT_DIR" pull origin guanghechen
 else
   mkdir -p "$CONFIG_ROOT_DIR"

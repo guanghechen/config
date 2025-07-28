@@ -40,7 +40,7 @@ clone_or_update_config_repo() {
 
   for branch in "${CONFIG_BRANCHES[@]}"; do
     local repo_path="$CONFIG_ROOT_DIR/$branch"
-    if [ -d "$repo_path/.git" ]; then
+    if [ -e "$repo_path/.git" ]; then
       printf "\e[34m  [setup config] fetching $branch into $repo_path\e[0m\n"
       git -C "$repo_path" pull origin $branch
     else
@@ -52,7 +52,7 @@ clone_or_update_config_repo() {
 
   for branch in "${OPTIONAL_CONFIG_BRANCHES[@]}"; do
     local repo_path="$CONFIG_ROOT_DIR/$branch"
-    if [ -d "$repo_path/.git" ]; then
+    if [ -e "$repo_path/.git" ]; then
       printf "\e[34m  [setup config] fetching $branch into $repo_path\e[0m\n"
       git -C "$repo_path" pull origin $branch
       printf "\n"
