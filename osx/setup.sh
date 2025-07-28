@@ -1,15 +1,15 @@
 #! /usr/bin/env bash
 
-source $HOME/.config/guanghechen/nix/setup/path.sh
-
 ## Download core configurations
 CONFIG_ROOT_DIR="$HOME/.config/guanghechen"
 if [ -d "$CONFIG_ROOT_DIR/.git" ]; then
   git -C "$CONFIG_ROOT_DIR" pull origin guanghechen
 else
   mkdir -p "$CONFIG_ROOT_DIR"
-  git clone https://github.com/guanghechen/config.git --single-branch --branch=guanghechen "$CONFIG_ROOT_DIR"
+  git clone https://github.com/guanghechen/config.git --branch=guanghechen "$CONFIG_ROOT_DIR"
 fi
+
+source $HOME/.config/guanghechen/nix/setup/path.sh
 
 ## Setup app configs
 printf "\n\e[32m  [setup config] preparing...\e[0m\n"

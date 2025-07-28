@@ -2,6 +2,7 @@
 
 clone_or_update_config_repo() {
   local CONFIG_ROOT_DIR="$HOME/.config"
+  local CONFIG_PRIMARY_DIR="$HOME/.config/guanghechen"
   local CONFIG_REPO="https://github.com/guanghechen/config.git"
   local CONFIG_BRANCHES=(
     "btop"
@@ -40,9 +41,8 @@ clone_or_update_config_repo() {
       printf "\e[34m  [setup config] fetching $branch into $repo_path\e[0m\n"
       git -C "$repo_path" pull origin $branch
     else
-      printf "\e[34m  [setup config] cloning $branch into $repo_path\e[0m\n"
-      mkdir -p "$repo_path"
-      git clone $CONFIG_REPO "$repo_path" --single-branch --branch=$branch
+      printf "\e[34m  [setup config] add new worktree of $branch into $repo_path\e[0m\n"
+      git -C "$CONFIG_PRIMARY_DIR" worktree add "$repo_path" $branch
     fi
     printf "\n"
   done

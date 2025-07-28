@@ -1,6 +1,7 @@
 Write-Host "[setup config] preparing" -ForegroundColor DarkGreen
 
 $config_root_dir = "$env:XDG_CONFIG_HOME"
+$config_primary_dir = Join-Path $env:XDG_CONFIG_HOME guanghechen
 $config_repo_branch = @(
   "conda",
   "fzf",
@@ -35,10 +36,11 @@ foreach ($branch in $config_repo_branch) {
     Write-Host "[setup config] fetching $branch into $dir..." -ForegroundColor DarkBlue
     $cmd = "git -C '$dir' pull origin $branch"
   } else {
-    Write-Host "[setup config] cloning $branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git clone https://github.com/guanghechen/config.git --single-branch --branch=$branch '$dir'"
+    Write-Host "[setup config] add new worktree of $branch into $dir..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$config_primary_dir' worktree add '$dir' $branch"
   }
   Invoke-Expression $cmd
+  Write-Host
 }
 
 foreach ($branch in $optinal_config_repo_branch) {
@@ -47,6 +49,7 @@ foreach ($branch in $optinal_config_repo_branch) {
     Write-Host "[setup config] fetching $branch into $dir..." -ForegroundColor DarkBlue
     $cmd = "git -C '$dir' pull origin $branch"
     Invoke-Expression $cmd
+    Write-Host
   }
 }
 

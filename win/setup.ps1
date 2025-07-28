@@ -34,7 +34,7 @@ if (Test-Path $config_repo_path) {
   git pull origin "guanghechen"
 } else {
   Set-Location -Path $config_root_dir
-  git clone https://github.com/guanghechen/config.git --single-branch --branch=guanghechen $config_repo_path
+  git clone https://github.com/guanghechen/config.git --branch=guanghechen $config_repo_path
 }
 
 Set-Location -Path $config_repo_path
