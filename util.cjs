@@ -1,4 +1,4 @@
-const { exec } = require("node:child_process");
+const { execSync } = require("node:child_process");
 const fs = require("node:fs");
 
 function iswsl() {
@@ -21,11 +21,14 @@ function platform() {
 }
 
 function command_exist(command) {
-  return new Promise((resolve) => {
-    exec(`which ${command}`, (error, stdout) => {
-      resolve(!error && !!stdout.trim());
-    });
-  });
+  try {
+    const result = execSync(`which ${command}`, { stdio: "pipe" })
+      .toString()
+      .trim();
+    return !!result;
+  } catch (e) {
+    return false;
+  }
 }
 
 module.exports = {
