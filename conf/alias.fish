@@ -37,9 +37,9 @@ alias fvim='FZF_DEFAULT_OPTS_FILE=$HOME/.config/fzf/nvim.fzfrc $HOMEBREW_PREFIX/
 
 ### lazygit
 if test -f "$HOME/.config/lazygit/local/theme.yml"
-    alias lg="lazygit -ucf $HOME/.config/lazygit/local/theme.yml"
+    alias lg="lazygit -ucf '$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml'"
 else
-    alias lg="lazygit -ucf $HOME/.config/lazygit/config.yml"
+    alias lg="lazygit -ucf '$HOME/.config/lazygit/config.yml'"
 end
 
 ### nvim
