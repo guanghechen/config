@@ -1,7 +1,7 @@
 Write-Host "[setup config] preparing" -ForegroundColor DarkGreen
 
 $config_root_dir = "$env:XDG_CONFIG_HOME"
-$config_primary_dir = Join-Path $env:XDG_CONFIG_HOME guanghechen
+$config_main_dir = Join-Path $config_root_dir guanghechen
 $config_repo_branch = @(
   "conda",
   "fzf",
@@ -38,11 +38,11 @@ $optinal_config_repo_branch = @(
 foreach ($branch in $config_repo_branch) {
   $dir = Join-Path $env:XDG_CONFIG_HOME $branch
   if (Test-Path -Path $dir) {
-    Write-Host "[setup config] fetching $branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$dir' pull origin $branch"
+    Write-Host "[setup config] merging origin/$branch into $dir..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$dir' merge origin/$branch"
   } else {
     Write-Host "[setup config] add new worktree of $branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$config_primary_dir' worktree add '$dir' $branch"
+    $cmd = "git -C '$config_main_dir worktree add '$dir' $branch"
   }
   Invoke-Expression $cmd
   Write-Host
@@ -51,8 +51,8 @@ foreach ($branch in $config_repo_branch) {
 foreach ($branch in $optinal_config_repo_branch) {
   $dir = Join-Path $env:XDG_CONFIG_HOME $branch
   if (Test-Path -Path $dir) {
-    Write-Host "[setup config] fetching $branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$dir' pull origin $branch"
+    Write-Host "[setup config] merging origin/$branch into $dir..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$dir' merge origin/$branch"
     Invoke-Expression $cmd
     Write-Host
   }

@@ -2,7 +2,7 @@
 
 clone_or_update_config_repo() {
   local CONFIG_ROOT_DIR="$HOME/.config"
-  local CONFIG_PRIMARY_DIR="$HOME/.config/guanghechen"
+  local CONFIG_MAIN_DIR="$CONFIG_ROOT_DIR/guanghechen"
   local CONFIG_REPO="https://github.com/guanghechen/config.git"
   local CONFIG_BRANCHES=(
     "btop"
@@ -41,11 +41,11 @@ clone_or_update_config_repo() {
   for branch in "${CONFIG_BRANCHES[@]}"; do
     local repo_path="$CONFIG_ROOT_DIR/$branch"
     if [ -e "$repo_path/.git" ]; then
-      printf "\e[34m  [setup config] fetching $branch into $repo_path\e[0m\n"
-      git -C "$repo_path" pull origin $branch
+      printf "\e[34m  [setup config] merging origin/$branch into $repo_path\e[0m\n"
+      git -C "$repo_path" merge origin/$branch
     else
       printf "\e[34m  [setup config] add new worktree of $branch into $repo_path\e[0m\n"
-      git -C "$CONFIG_PRIMARY_DIR" worktree add "$repo_path" $branch
+      git -C "$CONFIG_MAIN_DIR" worktree add "$repo_path" $branch
     fi
     printf "\n"
   done
@@ -53,8 +53,8 @@ clone_or_update_config_repo() {
   for branch in "${OPTIONAL_CONFIG_BRANCHES[@]}"; do
     local repo_path="$CONFIG_ROOT_DIR/$branch"
     if [ -e "$repo_path/.git" ]; then
-      printf "\e[34m  [setup config] fetching $branch into $repo_path\e[0m\n"
-      git -C "$repo_path" pull origin $branch
+      printf "\e[34m  [setup config] merging origin/$branch into $repo_path\e[0m\n"
+      git -C "$repo_path" merge origin/$branch
       printf "\n"
     fi
   done
