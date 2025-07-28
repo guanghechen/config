@@ -5,10 +5,19 @@ function ghc-upgrade {
 
 # Update config repositories.
 function ghc-update {
+  $reporoot = "$env:XDG_CONFIG_HOME"
+  $repomain = Join-Path $reporoot "guanghechen"
+
+  if (Test-Path $repomain) {
+    git -C "$repomain" fetch origin
+    git -C "$repomain" merge origin/guanghechen --ff-only
+  } else {
+    git -C "$reporoot" clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
+  }
+
   $required_configs = @(
     "conda",
     "fzf",
-    'guanghechen',
     "lazygit",
     "nvim",
     "pwsh",
@@ -24,35 +33,39 @@ function ghc-update {
     "ghostty",
     "helix",
     "kitty",
+    "komorebi",
     "lsd",
     "neovide",
+    "nvim-lazy",
     "nvim-nvchad",
-    "opencode",
     "plan",
     "pm2",
+    "skhd",
     "tsuki",
     "wezterm",
+    "yabai",
+    "yasb",
     "yozora"
   )
 
-  foreach ($branch in $required_configs) {
+  foreach ($branch in $config_repo_branch) {
     $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
     if (Test-Path -Path $repopath) {
-      Write-Host "fetching $branch into $repopath" -ForegroundColor DarkBlue
-      $cmd = "git -C '$repopath' pull origin $branch"
+      Write-Host "merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
+      $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
     } else {
-      Write-Host "cloning $branch into $repopath" -ForegroundColor DarkBlue
-      $cmd = "git clone https://github.com/guanghechen/config.git --single-branch --branch=$branch '$repopath'"
+      Write-Host "add new worktree of $branch into $repopath..." -ForegroundColor DarkBlue
+      $cmd = "git -C '$config_main_dir worktree add '$repopath' $branch"
     }
     Invoke-Expression $cmd
     Write-Host
   }
 
-  foreach ($branch in $optional_configs) {
+  foreach ($branch in $optinal_config_repo_branch) {
     $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
     if (Test-Path -Path $repopath) {
-      Write-Host "fetching $branch into $repopath" -ForegroundColor DarkBlue
-      $cmd = "git -C '$repopath' pull origin $branch"
+      Write-Host "merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
+      $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
       Invoke-Expression $cmd
       Write-Host
     }
