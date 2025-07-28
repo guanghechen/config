@@ -18,7 +18,7 @@ link-url = true
 scrollback-limit = 10000
 
 # Window settings
-window-decoration = client
+window-decoration = none
 window-width = 1600
 window-height = 1000
 window-padding-x = 0
