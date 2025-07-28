@@ -30,7 +30,8 @@ setx YAZI_FILE_ONE        "$env:YAZI_FILE_ONE"
 $config_root_dir = "$env:XDG_CONFIG_HOME"
 $config_repo_path = Join-Path $config_root_dir "guanghechen"
 if (Test-Path $config_repo_path) {
-  git -C "$config_repo_path" pull origin "guanghechen"
+  git -C "$config_repo_path" fetch origin guanghechen
+  git -C "$config_repo_path" merge origin/guanghechen --ff-only
 } else {
   git -C "$config_root_dir" clone https://github.com/guanghechen/config.git --branch=guanghechen $config_repo_path
 }

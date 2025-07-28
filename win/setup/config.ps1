@@ -39,7 +39,7 @@ foreach ($branch in $config_repo_branch) {
   $dir = Join-Path $env:XDG_CONFIG_HOME $branch
   if (Test-Path -Path $dir) {
     Write-Host "[setup config] merging origin/$branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$dir' merge origin/$branch"
+    $cmd = "git -C '$dir' merge origin/$branch --ff-only"
   } else {
     Write-Host "[setup config] add new worktree of $branch into $dir..." -ForegroundColor DarkBlue
     $cmd = "git -C '$config_main_dir worktree add '$dir' $branch"
@@ -52,7 +52,7 @@ foreach ($branch in $optinal_config_repo_branch) {
   $dir = Join-Path $env:XDG_CONFIG_HOME $branch
   if (Test-Path -Path $dir) {
     Write-Host "[setup config] merging origin/$branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$dir' merge origin/$branch"
+    $cmd = "git -C '$dir' merge origin/$branch --ff-only"
     Invoke-Expression $cmd
     Write-Host
   }

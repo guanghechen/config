@@ -42,7 +42,7 @@ clone_or_update_config_repo() {
     local repo_path="$CONFIG_ROOT_DIR/$branch"
     if [ -e "$repo_path/.git" ]; then
       printf "\e[34m  [setup config] merging origin/$branch into $repo_path\e[0m\n"
-      git -C "$repo_path" merge origin/$branch
+      git -C "$repo_path" merge origin/$branch --ff-only
     else
       printf "\e[34m  [setup config] add new worktree of $branch into $repo_path\e[0m\n"
       git -C "$CONFIG_MAIN_DIR" worktree add "$repo_path" $branch
@@ -54,7 +54,7 @@ clone_or_update_config_repo() {
     local repo_path="$CONFIG_ROOT_DIR/$branch"
     if [ -e "$repo_path/.git" ]; then
       printf "\e[34m  [setup config] merging origin/$branch into $repo_path\e[0m\n"
-      git -C "$repo_path" merge origin/$branch
+      git -C "$repo_path" merge origin/$branch --ff-only
       printf "\n"
     fi
   done
