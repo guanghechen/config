@@ -20,13 +20,18 @@ $optinal_config_repo_branch = @(
   "ghostty",
   "helix",
   "kitty",
+  "komorebi",
   "lsd",
   "neovide",
+  "nvim-lazy",
   "nvim-nvchad",
   "plan",
   "pm2",
+  "skhd",
   "tsuki",
   "wezterm",
+  "yabai",
+  "yasb",
   "yozora"
 )
 

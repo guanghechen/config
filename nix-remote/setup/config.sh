@@ -23,13 +23,18 @@ clone_or_update_config_repo() {
     "ghostty"
     "helix"
     "kitty"
+    "komorebi"
     "neovide"
+    "nvim-lazy"
     "nvim-nvchad"
     "plan"
     "pm2"
     "pwsh"
+    "skhd"
     "tsuki"
     "wezterm"
+    "yabai"
+    "yasb"
     "yozora"
   )
 

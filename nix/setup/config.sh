@@ -25,14 +25,17 @@ clone_or_update_config_repo() {
     "ghostty"
     "helix"
     "kitty"
+    "komorebi"
     "neovide"
+    "nvim-lazy"
     "nvim-nvchad"
     "plan"
     "pwsh"
     "skhd"
     "tsuki"
-    "yabai"
     "wezterm"
+    "yabai"
+    "yasb"
   )
 
   for branch in "${CONFIG_BRANCHES[@]}"; do
