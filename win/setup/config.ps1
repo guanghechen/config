@@ -36,23 +36,23 @@ $optinal_config_repo_branch = @(
 )
 
 foreach ($branch in $config_repo_branch) {
-  $dir = Join-Path $env:XDG_CONFIG_HOME $branch
-  if (Test-Path -Path $dir) {
-    Write-Host "[setup config] merging origin/$branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$dir' merge origin/$branch --ff-only"
+  $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
+  if (Test-Path -Path $repopath) {
+    Write-Host "[setup config] merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
   } else {
-    Write-Host "[setup config] add new worktree of $branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$config_main_dir worktree add '$dir' $branch"
+    Write-Host "[setup config] add new worktree of $branch into $repopath..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$config_main_dir worktree add '$repopath' $branch"
   }
   Invoke-Expression $cmd
   Write-Host
 }
 
 foreach ($branch in $optinal_config_repo_branch) {
-  $dir = Join-Path $env:XDG_CONFIG_HOME $branch
-  if (Test-Path -Path $dir) {
-    Write-Host "[setup config] merging origin/$branch into $dir..." -ForegroundColor DarkBlue
-    $cmd = "git -C '$dir' merge origin/$branch --ff-only"
+  $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
+  if (Test-Path -Path $repopath) {
+    Write-Host "[setup config] merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
+    $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
     Invoke-Expression $cmd
     Write-Host
   }

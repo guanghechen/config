@@ -4,7 +4,7 @@
 CONFIG_ROOT_DIR="$HOME/.config"
 CONFIG_MAIN_DIR="$CONFIG_ROOT_DIR/guanghechen"
 if [ -e "$CONFIG_MAIN_DIR/.git" ]; then
-  git -C "$CONFIG_MAIN_DIR" fetch origin guanghechen
+  git -C "$CONFIG_MAIN_DIR" fetch origin
   git -C "$CONFIG_MAIN_DIR" merge origin/guanghechen --ff-only
 else
   mkdir -p "$CONFIG_MAIN_DIR"

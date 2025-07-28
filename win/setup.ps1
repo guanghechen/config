@@ -27,27 +27,27 @@ setx YAZI_CONFIG_HOME     "$env:YAZI_CONFIG_HOME"
 setx YAZI_FILE_ONE        "$env:YAZI_FILE_ONE"
 
 # Define the local path and repositories
-$config_root_dir = "$env:XDG_CONFIG_HOME"
-$config_repo_main = Join-Path $config_root_dir "guanghechen"
-if (Test-Path $config_repo_main) {
-  git -C "$config_repo_main" fetch origin guanghechen
-  git -C "$config_repo_main" merge origin/guanghechen --ff-only
+$reporoot = "$env:XDG_CONFIG_HOME"
+$repomain = Join-Path $reporoot "guanghechen"
+if (Test-Path $repomain) {
+  git -C "$repomain" fetch origin
+  git -C "$repomain" merge origin/guanghechen --ff-only
 } else {
-  git -C "$config_root_dir" clone https://github.com/guanghechen/config.git --branch=guanghechen $config_repo_main
+  git -C "$reporoot" clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
 }
 
-Set-Location -Path $config_repo_main
+Set-Location -Path $repomain
 . .\win\setup\config.ps1
 
-Set-Location -Path $config_repo_main
+Set-Location -Path $repomain
 . .\win\setup\winget.ps1
 
-Set-Location -Path $config_repo_main
+Set-Location -Path $repomain
 . .\win\setup\node.ps1
 
-Set-Location -Path $config_repo_main
+Set-Location -Path $repomain
 . .\win\setup\miniforge.ps1
 
-Set-Location -Path $config_repo_main
+Set-Location -Path $repomain
 . .\win\setup\theme.ps1
 
