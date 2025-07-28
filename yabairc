@@ -46,6 +46,6 @@ yabai -m config \
 
 yabai -m rule --add app="^(System Settings)" manage=off sub-layer=normal
 
-borders active_color=0xFFF4BAE3 inactive_color=0XFF494D64 width=3.0 &
+borders active_color=0xFFF4BAE3 inactive_color=0XFF494D64 width=6.0 &
 
 echo "yabai configuration loaded.."
