@@ -15,7 +15,7 @@ function ghc-update {
     git -C "$reporoot" clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
   }
 
-  $required_configs = @(
+  $repo_required_branches = @(
     "conda",
     "fzf",
     "lazygit",
@@ -24,7 +24,7 @@ function ghc-update {
     "ripgrep",
     "yazi"
   )
-  $optional_configs = @(
+  $repo_optional_branches = @(
     "alacritty",
     "alacritty-windows",
     "btop",
@@ -48,20 +48,20 @@ function ghc-update {
     "yozora"
   )
 
-  foreach ($branch in $config_repo_branch) {
+  foreach ($branch in $repo_required_branches) {
     $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
     if (Test-Path -Path $repopath) {
       Write-Host "merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
       $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
     } else {
       Write-Host "add new worktree of $branch into $repopath..." -ForegroundColor DarkBlue
-      $cmd = "git -C '$config_main_dir worktree add '$repopath' $branch"
+      $cmd = "git -C '$repomain' worktree add '$repopath' $branch"
     }
     Invoke-Expression $cmd
     Write-Host
   }
 
-  foreach ($branch in $optinal_config_repo_branch) {
+  foreach ($branch in $repo_optional_branches) {
     $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
     if (Test-Path -Path $repopath) {
       Write-Host "merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
