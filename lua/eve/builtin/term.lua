@@ -432,6 +432,10 @@ function M.on_closed(termmeta)
     eve.buf.close(bufnr)
   end
   termmeta.on_closed()
+
+  vim.schedule(function()
+    vim.cmd.checktime()
+  end)
 end
 
 ---@param termmeta                      eve.builtin.term.IMeta
