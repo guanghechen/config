@@ -100,15 +100,33 @@ end
 function M.toggle()
   local cwd = std.path.cwd()
   local terminal = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
-  terminal:toggle_and_focus({
-    uuid = "452e019a-3c93-439b-8671-8c418ef3516b",
-    type = "shell",
-    name = "shell",
-    cwd = cwd,
-    autofocus = true,
-    permanent = true,
-    selected_text = eve.buf.retrieve_selected_text(),
-  })
+
+  if eve.term.size() > 0 then
+    terminal:toggle()
+  else
+    local _, termmeta = eve.term.find_index_by_type("shell") ---@type integer, eve.builtin.term.IMeta|nil
+    if termmeta == nil then
+      terminal:toggle_and_focus({
+        uuid = oxi.fn.uuid(),
+        type = "shell",
+        name = "shell",
+        cwd = cwd,
+        autofocus = true,
+        permanent = true,
+        selected_text = eve.buf.retrieve_selected_text(),
+      })
+    else
+      terminal:toggle_and_focus({
+        uuid = termmeta.uuid,
+        type = termmeta.type,
+        name = termmeta.name,
+        cwd = termmeta.cwd,
+        autofocus = true,
+        permanent = true,
+        selected_text = eve.buf.retrieve_selected_text(),
+      })
+    end
+  end
 end
 
 return M

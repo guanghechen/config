@@ -84,6 +84,20 @@ function M.current()
   return index, termuuid
 end
 
+---@param typ                           string
+---@return integer
+---@return eve.builtin.term.IMeta|nil
+function M.find_index_by_type(typ)
+  for index = 1, #termlist, 1 do
+    local termuuid = termlist[index] ---@type string
+    local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
+    if termmeta ~= nil and termmeta.type == typ then
+      return index, termmeta
+    end
+  end
+  return -1
+end
+
 ---@param index                         integer
 ---@return boolean
 function M.focus(index)
@@ -131,7 +145,7 @@ function M.indexof_by_bufnr(bufnr)
     local termuuid = termlist[index] ---@type string
     local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
     if termmeta ~= nil and termmeta.bufnr == bufnr then
-      return index
+      return index, termmeta
     end
   end
   return -1
