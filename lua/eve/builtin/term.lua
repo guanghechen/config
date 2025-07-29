@@ -1,9 +1,12 @@
 local __module_name__ = "eve.builtin.term" ---@type string
 
+local DEFAULT_TERM_TYPE = oxi.fn.uuid() ---@type string
+
 ---@class eve.builtin.term.IMeta
 ---@field public uuid                   string
----@field public bufnr                  integer
+---@field public type                   string
 ---@field public name                   string
+---@field public bufnr                  integer
 ---@field public cmd                    string[]|string
 ---@field public cwd                    string
 ---@field public env                    table<string, string>|nil
@@ -17,6 +20,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 
 ---@class eve.builtin.term.ICreateParams
 ---@field public uuid                   string
+---@field public type                   string
 ---@field public name                   string
 ---@field public cmd                    ?string[]|string
 ---@field public cwd                    ?string
@@ -30,6 +34,7 @@ local __module_name__ = "eve.builtin.term" ---@type string
 
 ---@class eve.builtin.term.IUpdateParams
 ---@field public name                   ?string
+---@field public type                   ?string
 ---@field public cmd                    ?string[]|string
 ---@field public cwd                    ?string
 ---@field public env                    ?table<string, string>
@@ -198,6 +203,8 @@ function M.create(params)
     error(string.format("Invalid UUID: '%s'", termuuid), 2)
   end
 
+  local typ = params.type or DEFAULT_TERM_TYPE ---@type string
+
   local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
   if termmeta ~= nil then
     std.reporter.error({
@@ -248,8 +255,9 @@ function M.create(params)
   ---@type eve.builtin.term.IMeta
   termmeta = {
     uuid = termuuid,
-    bufnr = bufnr,
+    type = typ,
     name = name,
+    bufnr = bufnr,
     cmd = cmd,
     cwd = cwd,
     env = env,
@@ -363,6 +371,9 @@ end
 function M.update(termmeta, params)
   if params.name ~= nil then
     termmeta.name = params.name
+  end
+  if params.type ~= nil then
+    termmeta.type = params.type
   end
   if params.cmd ~= nil then
     termmeta.cmd = params.cmd

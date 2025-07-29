@@ -200,6 +200,7 @@ end
 function M:toggle_and_focus(params)
   local termuuid = params.uuid ---@type string
   local name = params.name ---@type string
+  local typ = params.type ---@type string
   local autofocus = not not params.autofocus ---@type boolean
   local _, termuuid_current = eve.term.current() ---@type integer, string|nil
 
@@ -207,6 +208,7 @@ function M:toggle_and_focus(params)
   if termmeta == nil then
     termmeta = eve.term.create({
       uuid = termuuid,
+      type = typ,
       name = name,
       cmd = params.cmd,
       cwd = params.cwd,
@@ -221,6 +223,7 @@ function M:toggle_and_focus(params)
   else
     eve.term.update(termmeta, {
       name = name,
+      type = typ,
       cmd = params.cmd,
       env = params.env,
       on_closed = params.on_closed,

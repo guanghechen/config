@@ -2,6 +2,7 @@ local __module_name__ = "fml.action.term.create" ---@type string
 
 ---@class fml.action.term.create.IProfile
 ---@field public name                     string
+---@field public type                     string
 ---@field public cmd                      string
 
 ---@class fml.action.term.create
@@ -9,8 +10,8 @@ local M = {}
 
 ---@type fml.action.term.create.IProfile[]
 local profiles = {
-  { name = "shell", cmd = vim.o.shell },
-  { name = "claude", cmd = "claude" },
+  { name = "shell", type = "shell", cmd = vim.o.shell },
+  { name = "claude", type = "claude", cmd = "claude" },
 }
 
 ---@return nil
@@ -52,6 +53,7 @@ function M.show_profile_selector()
       if selected_profile then
         eve.term.create({
           uuid = oxi.fn.uuid(),
+          type = selected_profile.type,
           name = selected_profile.name,
           cmd = selected_profile.cmd,
           permanent = false,
@@ -100,6 +102,7 @@ function M.toggle()
   local terminal = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
   terminal:toggle_and_focus({
     uuid = "452e019a-3c93-439b-8671-8c418ef3516b",
+    type = "shell",
     name = "shell",
     cwd = cwd,
     autofocus = true,

@@ -53,6 +53,7 @@ local runners = {
       local termuuid = "9b2efac7-b9e3-4ee3-aa51-2dc394b500f5" ---@type string
       eve.ux.widget.Terminal:toggle_and_focus({
         uuid = termuuid,
+        type = "runner",
         name = "code runner (mjs)",
         cwd = std.path.cwd(),
         autofocus = true,

@@ -11,6 +11,7 @@ local function open_yazi(name, cwd, filepath)
   terminal:toggle_and_focus({
     uuid = string.format("69f6829d-c54a-46a2-8c52-5f2f2d40aa93#%s", name),
     name = name,
+    type = "yazi",
     cmd = cmd,
     cwd = cwd,
     permanent = false,

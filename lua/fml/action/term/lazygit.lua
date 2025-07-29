@@ -10,6 +10,7 @@ local function open_lazygit(name, cwd, args)
   eve.ux.widget.Terminal:toggle_and_focus({
     uuid = termuuid,
     name = name,
+    type = "lazygit",
     cmd = cmd,
     cwd = cwd,
     permanent = true,
