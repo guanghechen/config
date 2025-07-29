@@ -1,7 +1,6 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#jsonls
 
 local capabilities = eve.lsp.get_capabilities()
-capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer

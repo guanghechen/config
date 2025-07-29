@@ -214,6 +214,10 @@ M.get_capabilities = function()
   if has_blink then
     capabilities = vim.tbl_deep_extend("force", capabilities, blink.get_lsp_capabilities({}, false))
   end
+  capabilities.textDocument = capabilities.textDocument or {}
+  capabilities.textDocument.completion = capabilities.textDocument.completion or {}
+  capabilities.textDocument.completion.completionItem = capabilities.textDocument.completion.completionItem or {}
+  capabilities.textDocument.completion.completionItem.snippetSupport = true
   return capabilities
 end
 

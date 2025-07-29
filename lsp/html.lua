@@ -2,7 +2,6 @@
 -- https://github.com/vscode-langservers/vscode-html-languageserver-bin
 
 local capabilities = eve.lsp.get_capabilities()
-capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
