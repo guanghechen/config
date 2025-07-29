@@ -59,6 +59,7 @@ function M.gen_hlgroup_map(context)
     BlinkCmpDocBorder = { link = "FloatBorder" },
     BlinkCmpDocSeparator = { fg = c.bg4, bg = c.none },
     BlinkCmpGhostText = { link = "Comment", default = true },
+    BlinkCmpItemIdx = { fg = c.fg3, bg = item_kind_bg },
     BlinkCmpKindClass = { fg = c.aqua, bg = item_kind_bg },
     BlinkCmpKindCodeium = { fg = c.green, bg = item_kind_bg },
     BlinkCmpKindColor = { fg = c.fg1, bg = item_kind_bg },

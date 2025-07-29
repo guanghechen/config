@@ -93,11 +93,18 @@ return {
         draw = {
           treesitter = { "lsp" },
           columns = {
+            -- { "item_idx" },
             -- { "kind_icon", "source_name" },
             { "kind_icon" },
             { "label", "label_description", gap = 1 },
           },
           components = {
+            item_idx = {
+              text = function(ctx)
+                return ctx.idx == 10 and "0" or ctx.idx >= 10 and " " or tostring(ctx.idx)
+              end,
+              highlight = "BlinkCmpItemIdx",
+            },
             kind = {
               highlight = function(ctx)
                 return "BlinkCmpKind" .. ctx.kind
@@ -126,6 +133,24 @@ return {
             },
           },
         },
+        direction_priority = function()
+          local ctx = require("blink.cmp").get_context()
+          local item = require("blink.cmp").get_selected_item()
+          if ctx == nil or item == nil then
+            return { "s", "n" }
+          end
+
+          local item_text = item.textEdit ~= nil and item.textEdit.newText or item.insertText or item.label
+          local is_multiline = item_text:find("\n") ~= nil
+
+          -- after showing the menu upwards, we want to maintain that direction
+          -- until we re-open the menu, so store the context id in a global variable
+          if is_multiline or vim.g.blink_cmp_upwards_ctx_id == ctx.id then
+            vim.g.blink_cmp_upwards_ctx_id = ctx.id
+            return { "n", "s" }
+          end
+          return { "s", "n" }
+        end,
       },
     },
     fuzzy = {
@@ -153,6 +178,19 @@ return {
       ["<C-p>"] = { "show_signature", "hide_signature", "fallback" },
       ["<C-b>"] = { "scroll_documentation_up", "fallback" },
       ["<C-f>"] = { "scroll_documentation_down", "fallback" },
+
+      -- stylua: ignore start
+      ['<C-1>'] = { function(cmp) cmp.accept({ index = 1 }) end },
+      ['<C-2>'] = { function(cmp) cmp.accept({ index = 2 }) end },
+      ['<C-3>'] = { function(cmp) cmp.accept({ index = 3 }) end },
+      ['<C-4>'] = { function(cmp) cmp.accept({ index = 4 }) end },
+      ['<C-5>'] = { function(cmp) cmp.accept({ index = 5 }) end },
+      ['<C-6>'] = { function(cmp) cmp.accept({ index = 6 }) end },
+      ['<C-7>'] = { function(cmp) cmp.accept({ index = 7 }) end },
+      ['<C-8>'] = { function(cmp) cmp.accept({ index = 8 }) end },
+      ['<C-9>'] = { function(cmp) cmp.accept({ index = 9 }) end },
+      ['<C-0>'] = { function(cmp) cmp.accept({ index = 10 }) end },
+      -- stylua: ignore end
     },
     signature = {
       enabled = true,
@@ -183,11 +221,29 @@ return {
         },
         buffer = {
           score_offset = 100,
+          opts = {
+            get_bufnrs = function()
+              local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+              local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+              if meta == nil then
+                return {}
+              end
+
+              local bufnrs = {} ---@type integer[]
+              for _, buf in ipairs(meta.bufs) do
+                local bufnr = buf.bufnr ---@type integer
+                if vim.bo[bufnr].buftype == "" then
+                  bufnrs[#bufnrs + 1] = bufnr
+                end
+              end
+              return bufnrs
+            end,
+          },
         },
         copilot = {
           name = "copilot",
           module = "ghc.cmp.copilot",
-          score_offset = 200,
+          score_offset = 300,
           async = true,
         },
         lsp = {

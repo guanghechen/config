@@ -209,30 +209,11 @@ function M.replace_renamed_buffers(files)
 end
 
 M.get_capabilities = function()
+  local capabilities = vim.lsp.protocol.make_client_capabilities() ---@type lsp.ClientCapabilities
   local has_blink, blink = pcall(require, "blink.cmp")
-  local capabilities = vim.tbl_deep_extend(
-    "force",
-    {},
-    vim.lsp.protocol.make_client_capabilities(),
-    has_blink and blink.get_lsp_capabilities() or {}
-  )
-  capabilities.textDocument.completion.completionItem = {
-    documentationFormat = { "markdown", "plaintext" },
-    snippetSupport = true,
-    preselectSupport = true,
-    insertReplaceSupport = true,
-    labelDetailsSupport = true,
-    deprecatedSupport = true,
-    commitCharactersSupport = true,
-    tagSupport = { valueSet = { 1 } },
-    resolveSupport = {
-      properties = {
-        "documentation",
-        "detail",
-        "additionalTextEdits",
-      },
-    },
-  }
+  if has_blink then
+    capabilities = vim.tbl_deep_extend("force", capabilities, blink.get_lsp_capabilities({}, false))
+  end
   return capabilities
 end
 
