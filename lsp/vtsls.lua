@@ -1,4 +1,14 @@
-local __module_name__ = "ghc.lsp.vtsls" ---@type string
+-- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#vtsls
+local __module_name__ = "lsp.vtsls" ---@type string
+
+local capabilities = eve.lsp.get_capabilities()
+
+---@type string[]
+local CONFIG_FILENAMES = {
+  "package.json",
+  "tsconfig.json",
+  "jsconfig.json",
+}
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
@@ -157,16 +167,27 @@ local function on_attach(client, bufnr)
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
+---@param client                        vim.lsp.Client
+---@param config                        any
+local function on_init(client, config)
+  eve.lsp.on_init(client, config)
+end
+
+---@param bufnr                         integer
+---@param on_dir                        fun(rootdir: string|nil)
+local function root_dir(bufnr, on_dir)
+  local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local rootdir = eve.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
+  on_dir(rootdir)
+end
+
 local plugins = {
   vue = eve.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
 
-local capabilities = eve.lsp.get_capabilities()
-
 return {
   capabilities = capabilities,
-  on_attach = on_attach,
-  on_init = eve.lsp.on_init,
+  cmd = { "vtsls", "--stdio" },
   filetypes = {
     "javascript",
     "javascriptreact",
@@ -176,11 +197,7 @@ return {
     "typescript.tsx",
     "vue",
   },
-  root_dir = function(filename)
-    local util = require("lspconfig.util")
-    return util.root_pattern(".git")(filename)
-      or util.root_pattern("package.json", "tsconfig.json", "jsconfig.json")(filename)
-  end,
+  root_markers = { "tsconfig.json", "package.json", "jsconfig.json", ".git" },
   settings = {
     complete_function_calls = true,
     vtsls = {
@@ -243,4 +260,7 @@ return {
       },
     },
   },
+  root_dir = root_dir,
+  on_attach = on_attach,
+  on_init = on_init,
 }

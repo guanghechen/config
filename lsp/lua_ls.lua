@@ -1,4 +1,4 @@
-local capabilities = eve.lsp.get_capabilities()
+-- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#lua_ls
 
 local nvim_config = nil ---@type string|nil
 local workspace = std.path.workspace() ---@type string
@@ -8,10 +8,33 @@ elseif workspace == std.path.locate_app_config_home("nvim-nvchad") then
   nvim_config = std.path.join(workspace, "lua")
 end
 
+local capabilities = eve.lsp.get_capabilities()
+
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+local function on_attach(client, bufnr)
+  eve.lsp.on_attach(client, bufnr)
+end
+
+---@param client                        vim.lsp.Client
+---@param config                        any
+local function on_init(client, config)
+  eve.lsp.on_init(client, config)
+end
+
 return {
   capabilities = capabilities,
-  on_attach = eve.lsp.on_attach,
-  on_init = eve.lsp.on_init,
+  cmd = { "lua-language-server" },
+  filetypes = { "lua" },
+  log_level = vim.lsp.protocol.MessageType.Warning,
+  root_markers = {
+    ".luarc.json",
+    ".luarc.jsonc",
+    ".luacheckrc",
+    ".stylua.toml",
+    "stylua.toml",
+    ".git",
+  },
   settings = {
     Lua = {
       codeLens = {
@@ -43,7 +66,7 @@ return {
         arrayIndex = "Disable",
       },
       runtime = {
-        path = { "?.lua", "?/init.lua" },
+        path = { "lua/?.lua", "lua/?/init.lua" },
         pathStrict = true,
         version = "LuaJIT",
       },
@@ -58,4 +81,6 @@ return {
       },
     },
   },
+  on_attach = on_attach,
+  on_init = on_init,
 }

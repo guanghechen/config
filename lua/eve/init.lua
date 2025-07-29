@@ -134,4 +134,107 @@ function M.setup_breakpoints()
   end, 100)
 end
 
+---@return nil
+function M.setup_lsp()
+  local severity2prefixicon = eve.constant.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string> {
+  local severity2texticon = eve.constant.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
+  local severity2numhl = eve.constant.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
+
+  local enable_diagnostic_virt_lines = eve.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
+  local virtual_text_current_line = nil ---@type boolean|nil
+  if enable_diagnostic_virt_lines then
+    virtual_text_current_line = false ---@type boolean|nil
+  end
+
+  vim.lsp.enable({
+    -- "basedpyright",
+    "bashls",
+    "clangd",
+    "cssls",
+    "docker_compose_language_service",
+    "dockerls",
+    "eslint",
+    "html",
+    "jsonls",
+    "lua_ls",
+    "pyright",
+    "ruff",
+    "rust_analyzer",
+    "tailwindcss",
+    "taplo",
+    "vtsls",
+    "yamlls",
+  })
+
+  vim.diagnostic.config({
+    virtual_text = {
+      current_line = virtual_text_current_line,
+      source = "if_many",
+      spacing = 4,
+      prefix = function(diagnostic)
+        return severity2prefixicon[diagnostic.severity] or ""
+      end,
+    },
+    virtual_lines = enable_diagnostic_virt_lines and {
+      current_line = true,
+      format = function(diagnostic)
+        local icon = severity2prefixicon[diagnostic.severity] or ""
+        return string.format("%s %s", icon, diagnostic.message)
+      end,
+    } or nil,
+    signs = {
+      text = severity2texticon,
+      numhl = severity2numhl,
+    },
+    severity_sort = true,
+    underline = true,
+    update_in_insert = false,
+    float = {
+      border = "rounded",
+      focus = true,
+      focusable = true,
+      source = true,
+    },
+  })
+
+  local original_register_capability = vim.lsp.handlers["client/registerCapability"]
+  vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
+    local ret = original_register_capability(err, res, ctx)
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    if client then
+      for bufnr in pairs(client.attached_buffers) do
+        eve.lsp.check_methods(client, bufnr)
+      end
+    end
+    return ret
+  end
+
+  -- inlay hints
+  ---@diagnostic disable-next-line: unused-local
+  eve.lsp.on_supports_method("textDocument/inlayHint", function(client, bufnr)
+    if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
+      local enable_inlay_hints = eve.context.lsp.inlay_hints:snapshot() ---@type boolean
+      vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
+    end
+  end)
+
+  -- code lens
+  ---@diagnostic disable-next-line: unused-local
+  eve.lsp.on_supports_method("textDocument/codeLens", function(client, bufnr)
+    if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
+      local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean
+      if enable_code_lens then
+        vim.lsp.codelens.refresh({ bufnr = bufnr })
+        --- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
+        vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+          buffer = bufnr,
+          callback = function()
+            vim.lsp.codelens.refresh({ bufnr = bufnr })
+          end,
+        })
+      end
+    end
+  end)
+end
+
 return M

@@ -1,8 +1,13 @@
--- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ruff
+-- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#ruff
 
+local capabilities = eve.lsp.get_capabilities()
+
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  client.server_capabilities.hoverProvider = false
   eve.lsp.on_attach(client, bufnr)
+
+  client.server_capabilities.hoverProvider = false
 
   ---@type std.t.IKeymap[]
   local keymaps = {
@@ -24,12 +29,17 @@ local function on_attach(client, bufnr)
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
-local capabilities = eve.lsp.get_capabilities()
+---@param client                        vim.lsp.Client
+---@param config                        any
+local function on_init(client, config)
+  eve.lsp.on_init(client, config)
+end
 
 return {
   capabilities = capabilities,
-  on_attach = on_attach,
-  on_init = eve.lsp.on_init,
+  cmd = { "ruff", "server" },
+  filetypes = { "python" },
+  root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },
   settings = {
     ruff = {
       cmd_env = { RUFF_TRACE = "messages" },
@@ -40,4 +50,6 @@ return {
       },
     },
   },
+  on_attach = on_attach,
+  on_init = on_init,
 }

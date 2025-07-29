@@ -16,6 +16,7 @@ require("fml.dressing.nvimbar.statusline")
 require("fml.dressing.nvimbar.tabline")
 require("fml.dressing.nvimbar.winline")
 eve.setup_theme()
+eve.setup_lsp()
 
 require("fml.command")
 require("ghc.plugin")

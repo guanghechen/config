@@ -1,0 +1,120 @@
+-- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#tailwindcss
+
+---@type string[]
+local CONFIG_FILENAMES = {
+  "tailwind.config.ts",
+  "tailwind.config.js",
+  "tailwind.config.mjs",
+  "vite.config.ts",
+}
+
+---@type string[]
+local filetypes = {
+  "css",
+  "less",
+  "postcss",
+  "sass",
+  "scss",
+  "stylus",
+  "handlebars",
+  "hbs",
+  "html",
+  "javascript",
+  "javascript.jsx",
+  "javascriptreact",
+  "markdown",
+  "mdx",
+  "svelte",
+  "typescript",
+  "typescript.tsx",
+  "typescriptreact",
+  "vue",
+}
+
+local capabilities = eve.lsp.get_capabilities()
+
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+local function on_attach(client, bufnr)
+  eve.lsp.on_attach(client, bufnr)
+end
+
+---@param client                        vim.lsp.Client
+---@param config                        any
+local function on_init(client, config)
+  eve.lsp.on_init(client, config)
+end
+
+---@param bufnr                         integer
+---@param on_dir                        fun(rootdir: string|nil)
+local function root_dir(bufnr, on_dir)
+  local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local rootdir = eve.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
+  on_dir(rootdir)
+end
+
+---@return string|nil
+local function detectLspServer()
+  local _, binPath = eve.lsp.locate_lsp_root(
+    std.path.cwd() .. std.env.PATH_SEP .. "a.css",
+    { "./node_modules/.bin/tailwindcss-language-server" }
+  )
+  if binPath ~= nil and vim.fn.executable(binPath) == 1 then
+    return binPath
+  end
+  return nil
+end
+
+local lspBinPath = detectLspServer()
+
+return {
+  capabilities = capabilities,
+  cmd = lspBinPath and { lspBinPath, "--stdio" } or nil,
+  filetypes = filetypes,
+  filetypes_exclude = { "markdown" },
+  filetypes_include = { "css", "javascriptreact", "javascript.jsx", "typescriptreact", "typescript.tsx" },
+  workspace_required = true,
+  settings = {
+    tailwindCSS = {
+      validate = true,
+      lint = {
+        cssConflict = "warning",
+        invalidApply = "error",
+        invalidScreen = "error",
+        invalidVariant = "error",
+        invalidConfigPath = "error",
+        invalidTailwindDirective = "error",
+        recommendedVariantOrder = "warning",
+      },
+      classAttributes = {
+        "class",
+        "className",
+        "class:list",
+        "classList",
+        "ngClass",
+      },
+      includeLanguages = {
+        eelixir = "html-eex",
+        elixir = "phoenix-heex",
+        eruby = "erb",
+        heex = "phoenix-heex",
+        htmlangular = "html",
+        templ = "html",
+      },
+    },
+  },
+  before_init = function(_, config)
+    if not config.settings then
+      config.settings = {}
+    end
+    if not config.settings.editor then
+      config.settings.editor = {}
+    end
+    if not config.settings.editor.tabSize then
+      config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop()
+    end
+  end,
+  root_dir = root_dir,
+  on_attach = on_attach,
+  on_init = on_init,
+}
