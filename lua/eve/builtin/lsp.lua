@@ -273,6 +273,7 @@ end
 ---@param bin                           string
 ---@param silent                        ?boolean
 ---@return string|nil
+---@diagnostic disable-next-line: unused-local
 function M.locate_mason_bin_path(bin, silent)
   local root = vim.env.MASON or (std.env.HOME_NVIM_DATA .. std.env.PATH_SEP .. "mason")
   local filepath = std.path.normalize(root .. "/bin/" .. bin)

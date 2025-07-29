@@ -62,11 +62,11 @@ function M.copy_file(filepath_source, filepath_target, force)
 
   local content, err_read = fin:read("*all")
   fin:close()
-  
+
   if not content then
     std.reporter.error({
       from = __module_name__,
-      subject = "copy_file", 
+      subject = "copy_file",
       message = "Failed to read source file.",
       details = { filepath_source = filepath_source, error = err_read },
     })
@@ -88,7 +88,7 @@ function M.copy_file(filepath_source, filepath_target, force)
 
   local ok, err_write = fout:write(content)
   fout:close()
-  
+
   if not ok then
     std.reporter.error({
       from = __module_name__,
@@ -352,7 +352,7 @@ function M.write_file(filepath, content)
 
   local ok, err_write = pcall(file.write, file, content)
   file:close()
-  
+
   if not ok then
     std.reporter.error({
       from = __module_name__,

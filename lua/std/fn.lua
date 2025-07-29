@@ -119,7 +119,7 @@ function M.navigate_circular(current, step, total)
   if total <= 0 then
     return 1
   end
-  
+
   -- Convert to 0-based indexing, apply step, then normalize and convert back
   local candidate = ((current - 1 + step) % total + total) % total + 1
   return candidate
@@ -280,7 +280,7 @@ function M.detect_filetype(filename)
   if BUFNR_DETECT_FILETYPE < 1 or not vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
     BUFNR_DETECT_FILETYPE = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_name(BUFNR_DETECT_FILETYPE, "guanghechen://detect-filetype/" .. BUFNR_DETECT_FILETYPE)
-    
+
     -- Set up cleanup when Neovim exits
     vim.api.nvim_create_autocmd("VimLeavePre", {
       callback = cleanup_filetype_buffer,

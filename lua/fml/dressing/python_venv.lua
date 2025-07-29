@@ -33,7 +33,7 @@ end
 local function hook_pyright(venv_path, venv_python)
   local client = vim.lsp.get_clients({ name = "pyright" })[1]
   if client then
-    client.settings.python.pythonPath = venv_python
+    client.settings.python["pythonPath"] = venv_python
     client:notify("workspace/didChangeConfiguration", { settings = nil })
   end
 end
@@ -158,6 +158,7 @@ function M.deactivate_venv()
   end
 
   -- Remove VIRTUAL_ENV environment variable.
+  ---@diagnostic disable-next-line: param-type-mismatch
   vim.fn.setenv("VIRTUAL_ENV", nil)
 
   -- TODO: Set pyright to use system python if it exists.
