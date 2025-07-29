@@ -144,7 +144,7 @@ function M.gen_hlgroup_map(context)
     LazyH1 = { fg = c.bg2, bg = c.orange, bold = true },
     LazyH2 = { fg = c.fg2, bold = true, underline = true },
     LazyNoCond = { fg = c.red },
-    LazyNormal = { bg = t and c.none or c.bg0, blend = 50 },
+    LazyNormal = { bg = cs.mix(c.bg0, c.bg1, 80), blend = 50 },
     LazyOperator = { fg = c.fg1 },
     LazyProgressDone = { fg = c.green },
     LazyReasonCmd = { fg = c.yellow },
@@ -169,6 +169,7 @@ function M.gen_hlgroup_map(context)
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = c.fg4 },
     MasonMutedBlock = { fg = c.bg4, bg = c.bg1 },
+    MasonNormal = { bg = cs.mix(c.bg0, c.bg1, 80), blend = 50 },
 
     ---! mini.hipatterns
     MiniHipatternsFixme = { fg = c.bg0, bg = c.red, bold = true, italic = true, underline = true },
