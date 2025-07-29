@@ -250,10 +250,10 @@ return {
           score_offset = 150,
         },
         path = {
-          score_offset = 120,
+          score_offset = 200,
         },
         snippets = {
-          score_offset = 120,
+          score_offset = 160,
         },
       },
     },
