@@ -15,12 +15,6 @@ command
       require("fml.action.ai").edit()
     end,
   })
-  .implement({
-    uuid = K.ai.refresh.uuid,
-    action = function()
-      require("fml.action.ai").refresh()
-    end,
-  })
 
 --[buf] close---------------------------------------------------------------------------------------
 command

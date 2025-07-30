@@ -198,7 +198,6 @@ M.definitions = {}
 M.definitions.ai = {
   ask = def("Faiask", "ai: ask"),
   edit = def("Faiedit", "ai: edit"),
-  refresh = def("Fairefresh", "ai: refresh"),
 }
 
 ---@class eve.builtin.command.definitions.buf
