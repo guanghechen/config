@@ -19,7 +19,7 @@ function M.defaults()
 
   ---@type eve.context.plugin.data
   return {
-    render_markdown = true,
+    render_markdown = false,
     treesitter_context = is_git_repo,
   }
 end
