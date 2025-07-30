@@ -133,6 +133,7 @@ ms({ "i", "n", "v" }, "<leader>cp", K.clipboard.paste)
 --#[c]ode-------------------------------------------------------------------------------------------
 ms({ "i", "n", "v" }, "<F5>", K.code.run)
 ms({ "i", "n", "v" }, "<F17>", K.code.run_force) -- F5 mapped to F17
+ms({ "n", "v" }, "<leader>cR", K.lsp.restart)
 ms({ "n" }, "<leader>cs", K.code.swap_conditional_branches)
 -------------------------------------------------------------------------------------------#[c]ode--
 

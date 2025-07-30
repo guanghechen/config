@@ -440,6 +440,12 @@ command
     end,
   })
   .implement({
+    uuid = K.lsp.restart.uuid,
+    action = function()
+      require("fml.action.lsp.server").restart()
+    end,
+  })
+  .implement({
     uuid = K.lsp.select_python_venv.uuid,
     action = function()
       require("fml.action.lsp.python_venv").activate_venv()
