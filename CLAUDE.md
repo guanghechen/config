@@ -6,7 +6,8 @@ file tree navigation, and support for various file formats (markdown, JSON, PDF,
 
 ## Requirements
 
-- **MUST**: Use `I`-prefixed naming convention for types and interfaces.names for interfaces/types (`IChatMessage`, `IUser`)
+- **MUST**: Use `I`-prefixed naming convention for types and interfaces.names for interfaces/types
+  (`IChatMessage`, `IUser`)
 - **MUST**: Run `yarn format` is enough to check if the code is formatted correctly.
 
 ## Architecture

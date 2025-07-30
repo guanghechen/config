@@ -1,14 +1,32 @@
-import type { IKeyBinding, IKeyBindingManager } from './types'
+import type { IKeyBinding, IKeyBindingManager, Platform } from './types'
+
+function getCurrentPlatform(): Platform {
+  const userAgent = navigator.userAgent
+  if (userAgent.includes('Mac')) return 'osx'
+  if (userAgent.includes('Win')) return 'win'
+  return 'nix'
+}
 
 export class KeyBindingManagerImpl implements IKeyBindingManager {
   private bindings: IKeyBinding[] = []
   private isListening = false
+  private currentPlatform: Platform
 
   constructor() {
     this.handleKeyDown = this.handleKeyDown.bind(this)
+    this.currentPlatform = getCurrentPlatform()
   }
 
   public register(binding: IKeyBinding): void {
+    // Only register bindings that match current platform or are universal
+    if (
+      binding.platform &&
+      binding.platform !== 'all' &&
+      binding.platform !== this.currentPlatform
+    ) {
+      return
+    }
+
     this.bindings.push(binding)
     this.bindings.sort((a, b) => (b.priority || 0) - (a.priority || 0))
 

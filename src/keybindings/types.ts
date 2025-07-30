@@ -1,3 +1,5 @@
+export type Platform = 'osx' | 'win' | 'nix' | 'all'
+
 export interface IKeyBinding {
   key: string
   ctrlKey?: boolean
@@ -6,6 +8,7 @@ export interface IKeyBinding {
   metaKey?: boolean
   callback: (event: KeyboardEvent) => void
   priority?: number
+  platform?: Platform
 }
 
 export interface IKeyBindingManager {

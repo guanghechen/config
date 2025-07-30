@@ -12,3 +12,19 @@ export function useKeyBinding(binding: IKeyBinding): void {
     }
   }, [binding])
 }
+
+export function useKeyBindings(bindings: IKeyBinding[]): void {
+  React.useEffect(() => {
+    const manager = getKeyBindingManager()
+
+    for (const binding of bindings) {
+      manager.register(binding)
+    }
+
+    return () => {
+      for (const binding of bindings) {
+        manager.unregister(binding)
+      }
+    }
+  }, [bindings])
+}
