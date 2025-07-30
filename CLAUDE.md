@@ -1,22 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this
-repository.
-
-## Project Overview
-
 This is Yozora, a Neovim markdown preview application built with TypeScript, React, and Vite. It
 provides real-time markdown preview with advanced features like syntax highlighting, math rendering,
 file tree navigation, and support for various file formats (markdown, JSON, PDF, SVG, images).
 
-## Development Commands
+## Requirements
 
-- **Start development server**: `yarn start` (runs on port 7071 by default)
-- **Format code**: `yarn format` (runs linting and prettier)
-- **Lint fix**: `yarn format:lintfix`
-- **Prettier format**: `yarn format:prettier`
-- **Run TypeScript**: `yarn run:ts` (for server-side scripts)
-- **Upgrade dependencies**: `yarn :upgrade`
+- **MUST**: Use `I`-prefixed naming convention for types and interfaces.names for interfaces/types (`IChatMessage`, `IUser`)
+- **MUST**: Run `yarn format` is enough to check if the code is formatted correctly.
 
 ## Architecture
 
