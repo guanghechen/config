@@ -18,6 +18,7 @@ local __mods = {
   table = "std.table",
   timer = "std.timer",
   tmux = "std.tmux",
+  uri = "std.uri",
 
   BatchDisposable = "std.collection.batch_disposable",
   BatchHandler = "std.collection.batch_handler",
@@ -61,6 +62,7 @@ local __mods = {
 ---@field public table                  std.table
 ---@field public timer                  std.timer
 ---@field public tmux                   std.tmux
+---@field public uri                    std.uri
 ---
 ---@field public BatchDisposable        std.collection.BatchDisposable
 ---@field public BatchHandler           std.collection.BatchHandler
