@@ -232,12 +232,66 @@ end
 ---@return integer
 ---@return integer
 function M.retrieve_visual_lnum_range()
-  local lnum_1 = vim.fn.getcurpos()[2] ---@type integer
-  local lnum_2 = vim.fn.line("v") ---@type integer
-  if lnum_1 < lnum_2 then
-    return lnum_1, lnum_2
+  local start_pos = vim.fn.getpos("v") -- visual selection start
+  local end_pos = vim.fn.getpos(".") -- visual selection end (cursor)
+
+  local lnum_start = start_pos[2] ---@type integer
+  local lnum_end = end_pos[2] ---@type integer
+
+  if lnum_start < lnum_end then
+    return lnum_start, lnum_end
   end
-  return lnum_2, lnum_1
+  return lnum_end, lnum_start
+end
+
+---@return integer
+---@return integer
+---@return integer
+---@return integer
+function M.retrieve_visual_range()
+  local start_pos = vim.fn.getpos("v") -- visual selection start
+  local end_pos = vim.fn.getpos(".") -- visual selection end (cursor)
+
+  local lnum_start = start_pos[2] ---@type integer
+  local col_start = start_pos[3] ---@type integer
+  local lnum_end = end_pos[2] ---@type integer
+  local col_end = end_pos[3] ---@type integer
+
+  if lnum_start < lnum_end then
+    return lnum_start, col_start, lnum_end, col_end
+  end
+
+  if lnum_start == lnum_end and col_start < col_end then
+    return lnum_start, col_start, lnum_end, col_end
+  end
+
+  return lnum_end, col_end, lnum_start, col_start
+end
+
+---@param bufnr                         integer
+---@param lnum_start                    integer
+---@param col_start                     integer
+---@param lnum_end                      integer
+---@param col_end                       integer
+---@return string[]
+function M.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, lnum_start - 1, lnum_end, false) ---@type string[]
+  local N = #lines ---@type integer
+
+  if N == 0 then
+    return {}
+  end
+
+  if N == 1 then
+    lines[1] = string.sub(lines[1], col_start, col_end)
+  end
+
+  if N > 1 then
+    lines[1] = string.sub(lines[1], 1, col_start)
+    lines[N] = string.sub(lines[N], 1, col_end)
+  end
+
+  return lines
 end
 
 ----------------------------------------------------------------------------------------------------

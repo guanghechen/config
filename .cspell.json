@@ -250,6 +250,7 @@
     "cuda",
     "culhl",
     "curdir",
+    "curpos",
     "cursorcolumn",
     "cursorline",
     "cursorlineopt",
