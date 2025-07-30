@@ -2,6 +2,7 @@ local __module_name__ = "eve.builtin.win"
 
 ---@alias eve.builtin.win.TypeEnum
 ---| "ux:board"
+---| "ux:chatbox"
 ---| "ux:cmdline"
 ---| "ux:input"
 ---| "ux:maximize"
@@ -41,6 +42,7 @@ local __module_name__ = "eve.builtin.win"
 local Types = {
   -- stylua: ignore start
   BOARD             = "ux:board",
+  CHATBOX           = "ux:chatbox",
   CMDLINE           = "ux:cmdline",
   INPUT             = "ux:input",
   MAXIMIZE          = "ux:maximize",
