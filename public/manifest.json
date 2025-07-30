@@ -38,6 +38,14 @@
       ],
       "js": ["inject/bilibili.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.reddit.com/*",
+        "https://old.reddit.com/*"
+      ],
+      "js": ["inject/reddit.js"],
+      "run_at": "document_start"
     }
   ],
   "host_permissions": ["http://localhost/*", "https://localhost/*"]
