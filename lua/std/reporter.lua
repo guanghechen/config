@@ -7,7 +7,8 @@ local Levels = {
 }
 
 ---@class std.reporter.IOptions
----@field from string
+---@field from                          string
+---@field group                         ?string
 ---@field subject                       ?string
 ---@field message                       ?string
 ---@field details                       ?any
@@ -22,6 +23,7 @@ local M = {}
 ---@return nil
 local function log(options, level)
   local title = options.from ---@type string
+  local group = options.group ---@type string|nil
   local text = options.message or "" ---@type string
   local anonymous = options.anonymous or false ---@type boolean
   local silent = options.silent or false ---@type boolean
@@ -40,7 +42,7 @@ local function log(options, level)
   end
 
   vim.notify(text, vim.log.levels[level], {
-    group = nil,
+    group = group,
     title = title,
     timeout = 3000,
     message = text,
