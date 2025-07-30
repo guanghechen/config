@@ -5,6 +5,7 @@ import React from 'react'
 import { FileTypeIcon } from '@/component/icon/filetype'
 import type { WorkspaceViewModel } from '@/context/workspace'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
+import { useKeyBinding } from '@/keybindings'
 
 interface FileItem {
   filepath: string
@@ -29,7 +30,6 @@ export const FileSearch: React.FC<IProps> = props => {
 
   const inputRef = React.useRef<HTMLInputElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
-  const lastSpaceTimeRef = React.useRef<number>(0)
 
   React.useEffect(() => {
     if (isVisible) {
@@ -65,28 +65,6 @@ export const FileSearch: React.FC<IProps> = props => {
   }, [fileList, searchQuery])
 
   const onKeyDown = useEventCallback((e: KeyboardEvent) => {
-    if (e.key === ' ') {
-      if (lastSpaceTimeRef.current === 0) {
-        e.preventDefault()
-        lastSpaceTimeRef.current = e.timeStamp
-
-        setTimeout(() => {
-          if (lastSpaceTimeRef.current === e.timeStamp) {
-            lastSpaceTimeRef.current = 0
-          }
-        }, 500)
-      }
-      // If this is the second space pressed within 500ms
-      else if (e.timeStamp - lastSpaceTimeRef.current < 500) {
-        e.preventDefault()
-        setIsVisible(true)
-        setTimeout(() => {
-          inputRef.current?.focus()
-        }, 10)
-        lastSpaceTimeRef.current = 0
-      }
-    }
-
     // Handle search window navigation
     if (isVisible) {
       switch (e.key) {
@@ -143,7 +121,23 @@ export const FileSearch: React.FC<IProps> = props => {
     onClose()
   })
 
+  // Register Ctrl+; keybinding to open file search
+  useKeyBinding({
+    key: ';',
+    ctrlKey: true,
+    callback: (e: KeyboardEvent) => {
+      e.preventDefault()
+      setIsVisible(true)
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 10)
+    },
+    priority: 100,
+  })
+
   React.useEffect(() => {
+    if (!isVisible) return
+
     document.addEventListener('keydown', onKeyDown)
     return () => {
       document.removeEventListener('keydown', onKeyDown)

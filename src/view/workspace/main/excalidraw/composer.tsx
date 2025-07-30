@@ -24,14 +24,14 @@ export const ExcalidrawComposer: React.FC<IProps> = props => {
   }, [content])
 
   React.useEffect(() => {
-    const handleKeyDown = async (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
       if ((event.metaKey || event.ctrlKey) && event.key === 's') {
         event.preventDefault()
 
         if (excalidrawRef.current) {
           const elements = excalidrawRef.current.getSceneElements()
           const appState = excalidrawRef.current.getAppState()
-          await onSave(elements, appState)
+          void onSave(elements, appState)
         }
       }
     }
@@ -51,7 +51,9 @@ export const ExcalidrawComposer: React.FC<IProps> = props => {
   return (
     <div className="fixed inset-0 top-16">
       <$Excalidraw
-        excalidrawAPI={(api) => (excalidrawRef.current = api)}
+        excalidrawAPI={api => {
+          excalidrawRef.current = api
+        }}
         initialData={excalidrawData}
         viewModeEnabled={false}
         zenModeEnabled={false}
