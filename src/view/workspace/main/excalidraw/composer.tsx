@@ -4,6 +4,7 @@ import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
 import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types'
 import React from 'react'
 import '@excalidraw/excalidraw/index.css'
+import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
 
 interface IProps {
   readonly content: string | undefined
@@ -23,24 +24,39 @@ export const ExcalidrawComposer: React.FC<IProps> = props => {
     }
   }, [content])
 
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 's') {
-        event.preventDefault()
+  const handleSave = React.useCallback(
+    (event: KeyboardEvent): void => {
+      event.preventDefault()
 
-        if (excalidrawRef.current) {
-          const elements = excalidrawRef.current.getSceneElements()
-          const appState = excalidrawRef.current.getAppState()
-          void onSave(elements, appState)
-        }
+      if (excalidrawRef.current) {
+        const elements = excalidrawRef.current.getSceneElements()
+        const appState = excalidrawRef.current.getAppState()
+        void onSave(elements, appState)
       }
-    }
+    },
+    [onSave],
+  )
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [onSave])
+  const keybindings = React.useMemo(
+    () => [
+      // Alt+S keybinding for all platforms
+      {
+        key: 's',
+        altKey: true,
+        callback: handleSave,
+        priority: 100,
+        platform: 'all' as const,
+      },
+      // Cross-platform Cmd+S (macOS) / Ctrl+S (Windows/Linux) keybindings
+      ...createCrossPlatformKeybinding('s', handleSave, {
+        useCtrl: true,
+        priority: 100,
+      }),
+    ],
+    [handleSave],
+  )
+
+  useKeyBindings(keybindings)
 
   if (!excalidrawData) {
     return (
