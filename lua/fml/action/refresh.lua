@@ -39,6 +39,15 @@ function M.refresh_all()
   eve.status.dirtier_tabline:mark_dirty()
   vim.cmd("redraw!")
 
+  local clients = vim.lsp.get_clients({ bufnr = bufnr_sourcefile }) ---@type vim.lsp.Client[]
+  for _, client in ipairs(clients) do
+    vim.lsp.stop_client(client.id)
+  end
+
+  vim.defer_fn(function()
+    vim.cmd.edit()
+  end, 100)
+
   std.reporter.info({
     from = __module_name__,
     message = "Refreshed all!",
