@@ -535,6 +535,7 @@
     "nosplit",
     "noswapfile",
     "nowait",
+    "nowinbar",
     "nowrite",
     "nsnr",
     "nsnrs",

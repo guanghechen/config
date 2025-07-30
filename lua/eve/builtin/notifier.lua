@@ -7,6 +7,7 @@ local __module_name__ = "eve.builtin.notifier" ---@type string
 ---@field public title                  string
 ---@field public content                string
 ---@field public highlights             std.t.IHighlight[]|nil
+---@field public isempty                boolean
 ---@field public lines                  string[]
 ---@field public times                  integer
 ---@field public timeout                integer
@@ -93,6 +94,13 @@ local config = {
     WARN = "f_un_winbar_warn",
     ERROR = "f_un_winbar_error",
   },
+  winbar_like = {
+    TRACE = "f_un_winbar_like_trace",
+    DEBUG = "f_un_winbar_like_debug",
+    INFO = "f_un_winbar_like_info",
+    WARN = "f_un_winbar_like_warn",
+    ERROR = "f_un_winbar_like_error",
+  },
 }
 
 local __TASKS__ = std.CircularQueue.new({ capacity = 50 })
@@ -121,6 +129,10 @@ end
 ---@param task                          eve.builtin.notifier.ITask
 ---@return integer
 local function measure_task_height(task)
+  if task.isempty then
+    return 0
+  end
+
   local height = #task.lines + 1 ---@type integer
   return math.min(height, 42, math.floor(vim.o.lines * 0.4)) ---@type integer
 end
@@ -177,7 +189,7 @@ local scheduler = std.Scheduler.new({
       return true
     end
 
-    local ok, error = pcall(M.handle)
+    local ok, error = pcall(M.__handle__)
     if ok then
       return true
     end
@@ -207,7 +219,7 @@ function M.dismiss_all()
   local wins = __WINS__ ---@type eve.builtin.notifier.IWindow[]
   __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
   for _, win in ipairs(wins) do
-    M.destroy_win(win)
+    M.__destroy_win__(win)
   end
 end
 
@@ -242,17 +254,18 @@ end
 ---@param params                        eve.builtin.notifier.INotifyParams
 ---@return nil
 function M.notify(params)
+  local timestamp = os.time() ---@type integer
   local group = params.group ---@type string|nil
   local level = params.level ---@type string
   local title = params.title ---@type string
-  local content = params.content ---@type string
+  local content = vim.trim(params.content) ---@type string
   local highlights = params.highlights ---@type std.t.IHighlight[]|nil
   local timeout = params.timeout ---@type integer
   local anonymous = params.anonymous ---@type boolean
   local silent = params.silent ---@type boolean
 
-  local timestamp = os.time() ---@type integer
-  local lines = vim.split(content, "\n", { plain = true }) ---@type string[]
+  local isempty = content == "" ---@type boolean
+  local lines = isempty and {} or vim.split(content, "\n", { plain = true }) ---@type string[]
   local uuid = oxi.fn.md5(string.format("%s:%s:%s:%s", level, group or "", title, content)) ---@type string
 
   ---@type eve.builtin.notifier.ITask
@@ -263,6 +276,7 @@ function M.notify(params)
     title = title,
     content = content,
     highlights = highlights,
+    isempty = isempty,
     lines = lines,
     times = 1,
     timeout = timeout,
@@ -322,7 +336,7 @@ end
 ---@protected
 ---@param win                           eve.builtin.notifier.IWindow
 ---@return integer
-function M.create_buf_as_needed(win)
+function M.__create_buf_as_needed__(win)
   local bufnr = win.bufnr ---@type integer|nil
   if bufnr == nil or not eve.buf.is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -362,7 +376,20 @@ function M.create_buf_as_needed(win)
   end
 
   vim.bo[bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(bufnr, 1, -1, false, win.task.lines)
+
+  local lines = win.task.lines ---@type string[]
+  if win.task.isempty then
+    local line, highlights = M.__gen_winbar_like_text__(win.task, win.task.width or 80) ---@type string
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line })
+
+    for _, highlight in ipairs(highlights) do
+      local nsnr = eve.var.nsnr.notify ---@type integer
+      vim.hl.range(bufnr, nsnr, highlight.hlname, { 0, highlight.coll }, { 0, highlight.colr })
+    end
+  else
+    vim.api.nvim_buf_set_lines(bufnr, 1, -1, false, lines)
+  end
+
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
@@ -381,7 +408,7 @@ end
 ---@protected
 ---@param win                           eve.builtin.notifier.IWindow
 ---@return integer
-function M.create_win_as_needed(win)
+function M.__create_win_as_needed__(win)
   local task = win.task ---@type eve.builtin.notifier.ITask
   local width = measure_task_width(task) ---@type integer
   local height = measure_task_height(task) ---@type integer
@@ -400,7 +427,7 @@ function M.create_win_as_needed(win)
     focusable = true,
   }
 
-  local bufnr = M.create_buf_as_needed(win) ---@type integer
+  local bufnr = M.__create_buf_as_needed__(win) ---@type integer
   local winnr = win.winnr ---@type integer|nil
 
   if winnr == nil or not eve.win.is_valid(winnr) then
@@ -425,7 +452,7 @@ function M.create_win_as_needed(win)
     vim.api.nvim_win_set_config(winnr, wincfg)
   end
 
-  local winbar = M.gen_winbar(task, width) ---@type string
+  local winbar = M.__gen_winbar__(task, width) ---@type string
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local winhighlight = config.winhighlight[task.level] ---@type string
 
@@ -439,7 +466,7 @@ end
 ---@protected
 ---@param win                           eve.builtin.notifier.IWindow
 ---@return nil
-function M.destroy_win(win)
+function M.__destroy_win__(win)
   if win.winnr ~= nil and vim.api.nvim_win_is_valid(win.winnr) then
     vim.api.nvim_win_close(win.winnr, true)
     win.winnr = nil
@@ -456,7 +483,11 @@ end
 ---@param task                          eve.builtin.notifier.ITask
 ---@param width                         integer
 ---@return string
-function M.gen_winbar(task, width)
+function M.__gen_winbar__(task, width)
+  if task.isempty then
+    return ""
+  end
+
   local max_width_title = width - 14 ---@type integer
   local text_title = task.times > 1 and string.format("%s (x%d) ", task.title, task.times) or task.title ---@type string
   local width_title = vim.api.nvim_strwidth(text_title) ---@type integer
@@ -473,8 +504,37 @@ function M.gen_winbar(task, width)
 end
 
 ---@protected
+---@param task                          eve.builtin.notifier.ITask
+---@param width                         integer
+---@return string
+---@return std.t.IHighlightInline[]
+function M.__gen_winbar_like_text__(task, width)
+  local max_width_title = width - 14 ---@type integer
+  local text_title = task.times > 1 and string.format("%s (x%d) ", task.title, task.times) or task.title ---@type string
+  local width_title = vim.api.nvim_strwidth(text_title) ---@type integer
+  if width_title > max_width_title then
+    text_title = string.sub(text_title, 1, max_width_title)
+    width_title = vim.api.nvim_strwidth(text_title) ---@type integer
+  end
+
+  local hlname = config.winbar_like[task.level] ---@type string
+  local text_left = string.format("%s %s", eve.icon.loglevel[task.level], text_title) ---@type string
+  local text_right = string.format("%s", os.date("%H:%M:%S", task.timestamp)) ---@type string
+
+  local width_left = vim.api.nvim_strwidth(text_left) ---@type integer
+  local width_right = vim.api.nvim_strwidth(text_right) ---@type integer
+  local width_blank = width - width_left - width_right ---@type integer
+  local text_blank = width_blank > 0 and string.rep(" ", width_blank) or "" ---@type string
+  local text = text_left .. text_blank .. text_right ---@type string
+
+  ---@type std.t.IHighlightInline[]
+  local highlights = { { coll = 0, colr = -1, hlname = hlname } }
+  return text, highlights
+end
+
+---@protected
 ---@return nil
-function M.handle()
+function M.__handle__()
   local N = 0 ---@type integer
   local invalid_wins = {} ---@type eve.builtin.notifier.IWindow[]
   for _, win in ipairs(__WINS__) do
@@ -568,7 +628,7 @@ function M.handle()
   end
 
   for _, win in ipairs(invalid_wins) do
-    M.destroy_win(win)
+    M.__destroy_win__(win)
   end
 
   for _, win in ipairs(__WINS__) do
@@ -578,7 +638,7 @@ function M.handle()
       win.tick = win.tick + 1 ---@type integer
 
       local tick = win.tick ---@type integer
-      local winnr = M.create_win_as_needed(win) ---@type integer
+      local winnr = M.__create_win_as_needed__(win) ---@type integer
       std.timer.set_timeout(function()
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and win.tick == tick then
           vim.api.nvim_win_close(winnr, true)
@@ -589,7 +649,7 @@ function M.handle()
       local width = measure_task_width(task) ---@type integer
       local height = measure_task_height(task) ---@type integer
       local wincfg = vim.api.nvim_win_get_config(win.winnr) ---@type vim.api.keyset.win_config
-      local winbar = wincfg.width ~= width and M.gen_winbar(task, width) or vim.wo[win.winnr].winbar
+      local winbar = wincfg.width ~= width and M.__gen_winbar__(task, width) or vim.wo[win.winnr].winbar
 
       wincfg.row = win.row
       wincfg.width = width

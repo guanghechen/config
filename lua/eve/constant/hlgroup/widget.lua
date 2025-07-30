@@ -170,6 +170,11 @@ function M.gen_hlgroup_map(context)
     f_un_winbar_info  = { fg = c.blue,    bg = c.none, sp = c.blue,   bold = true, underline = true },
     f_un_winbar_warn  = { fg = c.yellow,  bg = c.none, sp = c.yellow, bold = true, underline = true },
     f_un_winbar_error = { fg = c.red,     bg = c.none, sp = c.red,    bold = true, underline = true },
+    f_un_winbar_like_trace = { fg = c.fg2,     bg = c.none, sp = c.bg2,    bold = true },
+    f_un_winbar_like_debug = { fg = c.green,   bg = c.none, sp = c.green,  bold = true },
+    f_un_winbar_like_info  = { fg = c.blue,    bg = c.none, sp = c.blue,   bold = true },
+    f_un_winbar_like_warn  = { fg = c.yellow,  bg = c.none, sp = c.yellow, bold = true },
+    f_un_winbar_like_error = { fg = c.red,     bg = c.none, sp = c.red,    bold = true },
     -- stylua: ignore end
 
     ---picker
