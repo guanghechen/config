@@ -1,6 +1,6 @@
 import type { Image } from '@yozora/ast'
 import React from 'react'
-import type { INodeRenderer } from '../context'
+import type { INodeRenderer } from '../types'
 import { ImageRendererInner } from './inner/ImageRendererInner'
 
 /**

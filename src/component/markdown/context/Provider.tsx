@@ -2,9 +2,9 @@ import { useDeepCompareMemo } from '@guanghechen/react-hooks'
 import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
 import React from 'react'
 import { buildNodeRendererMap } from '../renderer'
+import type { INodeRendererMap } from '../types'
 import type { IMarkdownContext } from './context'
 import { MarkdownContextType } from './context'
-import type { INodeRendererMap } from './types'
 import { MarkdownViewModel } from './viewmodel'
 
 interface IProps {

@@ -1,8 +1,8 @@
 import { useComputed, useStateValue } from '@guanghechen/react-viewmodel'
 import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
 import React from 'react'
+import type { INodeRendererMap } from '../types'
 import { MarkdownContextType } from './context'
-import type { INodeRendererMap } from './types'
 import type { MarkdownViewModel } from './viewmodel'
 
 export const useMarkdownViewmodel = (): MarkdownViewModel =>

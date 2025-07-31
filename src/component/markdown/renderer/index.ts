@@ -27,7 +27,7 @@ import {
   TextType,
   ThematicBreakType,
 } from '@yozora/ast'
-import type { INodeRendererMap } from '../context'
+import type { INodeRendererMap } from '../types'
 import { AdmonitionRenderer } from './admonition'
 import { BlockquoteRenderer } from './blockquote'
 import { BreakRenderer } from './break'

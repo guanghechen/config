@@ -10,7 +10,7 @@ import {
   traverseAst,
 } from '@yozora/ast-util'
 import { parseMarkdown } from '../parser'
-import type { IMarkdownImageItem, INodeRendererMap } from './types'
+import type { IMarkdownImageItem, INodeRendererMap } from '../types'
 
 export interface IMarkdownViewModelProps {
   /**

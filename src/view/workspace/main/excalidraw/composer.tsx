@@ -5,7 +5,7 @@ import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/t
 import type { Root } from '@yozora/ast'
 import React from 'react'
 import '@excalidraw/excalidraw/index.css'
-import { ReactMarkdown, parseMarkdown } from '@/component/markdown'
+import { MarkdownProvider, ReactMarkdown, parseMarkdown } from '@/component/markdown'
 import { SiteTheme } from '@/context/site'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
 
@@ -175,7 +175,9 @@ export const ExcalidrawComposer: React.FC<IProps> = props => {
                 maxWidth: '300px',
               }}
             >
-              <ReactMarkdown ast={element.ast} dontShowFirstHeading={false} className="text-sm" />
+              <MarkdownProvider ast={element.ast} theme={theme}>
+                <ReactMarkdown ast={element.ast} dontShowFirstHeading={false} className="text-sm" />
+              </MarkdownProvider>
             </div>
           ))}
         </div>

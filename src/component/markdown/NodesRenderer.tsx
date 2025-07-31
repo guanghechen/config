@@ -1,7 +1,7 @@
 import type { Node } from '@yozora/ast'
 import React from 'react'
-import type { INodeRenderer } from './context'
 import { useMarkdownRendererMap } from './context'
+import type { INodeRenderer } from './types'
 import './style.css'
 
 export interface IProps {
