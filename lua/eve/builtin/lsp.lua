@@ -1,6 +1,7 @@
 local __module_name__ = "eve.builtin.lsp"
 
 local Methods = vim.lsp.protocol.Methods
+local augroup_illuminate = eve.nvim.augroup("eve.builtin.lsp.illuminate") ---@type integer
 
 ---@class eve.builtin.lsp.ISymbolPos
 ---@field public line                   integer
@@ -255,7 +256,6 @@ end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
----@diagnostic disable-next-line: unused-local
 function M.on_attach(client, bufnr)
   local support_codelens = vim.b[bufnr].support_codelens or 0 ---@type integer
   local support_inlayhint = vim.b[bufnr].support_inlayhint or 0 ---@type integer
@@ -333,6 +333,24 @@ function M.on_attach(client, bufnr)
           callback = function()
             vim.lsp.codelens.refresh({ bufnr = bufnr })
           end,
+        })
+      end
+    end
+
+    -- illuminate
+    if support_documentHighlight == 1 then
+      local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
+      if enabled then
+        vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+          group = augroup_illuminate,
+          buffer = bufnr,
+          callback = vim.lsp.buf.document_highlight,
+        })
+
+        vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+          group = augroup_illuminate,
+          buffer = bufnr,
+          callback = vim.lsp.buf.clear_references,
         })
       end
     end
@@ -491,6 +509,22 @@ function M.on_attach(client, bufnr)
     },
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
+end
+
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+---@diagnostic disable-next-line: unused-local
+function M.on_detach(client, bufnr)
+  local support_documentHighlight = vim.b[bufnr].support_documentHighlight or 0 ---@type integer
+  vim.b[bufnr].support_documentHighlight = support_documentHighlight - 1 ---@type integer
+
+  if support_documentHighlight == 1 then
+    vim.lsp.buf.clear_references()
+    vim.api.nvim_clear_autocmds({
+      group = augroup_illuminate,
+      buffer = bufnr,
+    })
+  end
 end
 
 function M.on_init(client, _)

@@ -5,7 +5,8 @@ local M = {}
 function M.foldexpr()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local lnum = vim.v.lnum ---@type integer
-  if vim.b[bufnr].support_foldingRange > 0 then
+  local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
+  if support_foldingRange > 0 then
     return vim.lsp.foldexpr(lnum) or "0" ---@type string
   end
 

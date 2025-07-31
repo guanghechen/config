@@ -383,7 +383,8 @@ function M.locate_symbols(winnr, callback)
 
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  if vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] or vim.b[bufnr].support_documentSymbol < 1 then
+  local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
+  if vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] or support_documentSymbol < 1 then
     callback(false)
     return
   end

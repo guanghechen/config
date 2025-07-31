@@ -13,6 +13,12 @@ local function on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+local function on_detach(client, bufnr)
+  eve.lsp.on_detach(client, bufnr)
+end
+
+---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
   eve.lsp.on_init(client, config)
@@ -25,5 +31,6 @@ return {
   root_markers = { "docker-compose.yaml", "docker-compose.yml", "compose.yaml", "compose.yml" },
   before_init = before_init,
   on_attach = on_attach,
+  on_detach = on_detach,
   on_init = on_init,
 }

@@ -6,48 +6,15 @@ local __module_name__ = "fml.dressing.illumniate" ---@type string
 ---@field public from { [1]: number, [2]: number }
 ---@field public to   { [1]: number, [2]: number }
 
-local illuminate_group = eve.nvim.augroup("fml.dressing.illumniate") ---@type integer
-local ns = vim.api.nvim_create_namespace("vim_lsp_references") ---@type integer
-local ns2 = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
+local nsnr = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
 
 ---@class fml.dressing.illumniate.IConfig
 local config = {
-  debounce = 200, -- time in ms to wait before updating
   notify_jump = false, -- show a notification when jumping
   notify_end = true, -- show a notification when reaching the end
   foldopen = true, -- open folds after jumping
   jumplist = true, -- set jump point before jumping
-  modes = { "n", "i", "c" }, -- modes to show references
 }
-
----@param bufnr                         ?integer
----@param modes                         ?boolean if modes is true, also check if the current mode is enabled
----@return boolean
-local function is_enabled(bufnr, modes)
-  local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
-  if not enabled then
-    return false
-  end
-
-  bufnr = bufnr or vim.api.nvim_get_current_buf() ---@type integer
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if buftype == "nofile" or #filetype < 0 then
-    return false
-  end
-
-  if modes then
-    local mode = vim.api.nvim_get_mode().mode:lower()
-    mode = mode:gsub("\22", "v"):gsub("\19", "s")
-    mode = string.sub(mode, 1, 2) == "no" and "o" or mode
-    mode = string.sub(mode, 1, 1):match("[ncitsvo]") or "n"
-    if not vim.tbl_contains(config.modes, mode) then
-      return false
-    end
-  end
-
-  return vim.b[bufnr].support_documentHighlight > 0
-end
 
 ---@private
 ---@return fml.dressing.illumniate.ILspWord[]
@@ -58,8 +25,7 @@ local function get_reference_words()
   local words = {} ---@type fml.dressing.illumniate.ILspWord[]
 
   local cursor = vim.api.nvim_win_get_cursor(0)
-  vim.list_extend(extmarks, vim.api.nvim_buf_get_extmarks(0, ns, 0, -1, { details = true }))
-  vim.list_extend(extmarks, vim.api.nvim_buf_get_extmarks(0, ns2, 0, -1, { details = true }))
+  vim.list_extend(extmarks, vim.api.nvim_buf_get_extmarks(0, nsnr, 0, -1, { details = true }))
   for _, extmark in ipairs(extmarks) do
     local w = {
       from = { extmark[2] + 1, extmark[3] },
@@ -72,44 +38,6 @@ local function get_reference_words()
   end
   return words, current
 end
-
-std.fn.observe({ eve.context.flight.dressing_illumniate }, function()
-  local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
-
-  if enabled then
-    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "ModeChanged" }, {
-      group = illuminate_group,
-      callback = function()
-        if not is_enabled(nil, true) then
-          vim.lsp.buf.clear_references()
-          return
-        end
-
-        local _, reference_cur = get_reference_words()
-        if not reference_cur then
-          local buf = vim.api.nvim_get_current_buf()
-          std.timer.set_timeout(function()
-            if vim.api.nvim_buf_is_valid(buf) then
-              vim.api.nvim_buf_call(buf, function()
-                if not is_enabled(nil, true) then
-                  return
-                end
-                vim.lsp.buf.document_highlight()
-                vim.lsp.buf.clear_references()
-              end)
-            end
-          end, config.debounce)
-        end
-      end,
-    })
-  else
-    vim.api.nvim_del_augroup_by_id(illuminate_group)
-    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-      vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
-      vim.api.nvim_buf_clear_namespace(buf, ns2, 0, -1)
-    end
-  end
-end)
 
 ---@class fml.dressing.illumniate
 local M = {}

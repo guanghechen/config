@@ -56,7 +56,8 @@ local function fetch_symbols(tree, callback)
     return
   end
 
-  if vim.b[bufnr].support_documentSymbol < 1 then
+  local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
+  if support_documentSymbol < 1 then
     callback()
     return
   end
