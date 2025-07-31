@@ -161,20 +161,55 @@ export const FloatingGate: React.FC = () => {
           </React.Fragment>
         )}
 
-        {/* Theme Toggle - Only show in first level or when in settings */}
-        {menuLevel === 'first' && (
-          <div
-            className={cn(
-              'flex items-center justify-center rounded-lg px-2 py-2 shadow-lg backdrop-blur-md',
-              'border border-white/20 transition-all duration-200',
-              'bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-700/90',
-              'hover:scale-105 hover:shadow-xl',
-            )}
-          >
-            <div className="[&>div]:ml-0">
-              <ThemeToggle />
+        {/* Settings Menu */}
+        {menuLevel === 'settings' && (
+          <React.Fragment>
+            {/* Back Button */}
+            <button
+              onClick={goBackToFirstLevel}
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-lg backdrop-blur-md',
+                'border border-white/20 transition-all duration-200 whitespace-nowrap',
+                'hover:scale-105 hover:shadow-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500',
+                'bg-gray-500/90 text-white hover:bg-gray-600/90',
+              )}
+              title="Back"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span>Back</span>
+            </button>
+
+            {/* Settings Card */}
+            <div
+              className={cn(
+                'rounded-lg px-4 py-3 shadow-lg backdrop-blur-md',
+                'border border-white/20 transition-all duration-200',
+                'bg-white/95 dark:bg-gray-800/95',
+                'min-w-[200px]',
+              )}
+            >
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-200">Settings</div>
+
+                {/* Theme Section */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                    Theme
+                  </label>
+                  <div className="flex items-center justify-center">
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </React.Fragment>
         )}
       </div>
 

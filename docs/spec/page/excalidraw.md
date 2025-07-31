@@ -4,7 +4,8 @@
        file.
 2. [x] **VIEW**:
    - [x] Let's render the content of the excalidraw texts with the Markdown renderer.
-         (@src/component/markdown)
+         (@src/component/markdown) ✅ Implemented using markdown overlay approach - text elements
+         are parsed as markdown and rendered as positioned overlays.
 
 ## References
 
