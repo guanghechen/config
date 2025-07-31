@@ -1090,11 +1090,11 @@
     },
     {
       "id": "Terminal.PrevTab",
-      "keys": "ctrl+alt+["
+      "keys": "ctrl+alt+,"
     },
     {
       "id": "Terminal.NextTab",
-      "keys": "ctrl+alt+]"
+      "keys": "ctrl+alt+."
     },
     {
       "id": "Terminal.SwitchToTab0",
