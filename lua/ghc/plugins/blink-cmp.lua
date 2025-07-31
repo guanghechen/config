@@ -234,7 +234,7 @@ return {
           async = true,
         },
         lsp = {
-          score_offset = 150,
+          score_offset = 180,
         },
         path = {
           score_offset = 200,
