@@ -1,5 +1,7 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#basedpyright
 
+local Methods = vim.lsp.protocol.Methods
+
 ---@param path                          string
 ---@return nil
 local function set_python_path(path)
@@ -11,7 +13,7 @@ local function set_python_path(path)
     client.settings = client.settings or {}
     client.settings.python = client.settings.python or {}
     client.settings.python["pythonPath"] = path
-    client:notify("workspace/didChangeConfiguration", { settings = nil })
+    client:notify(Methods.workspace_didChangeConfiguration, { settings = nil })
   end
 end
 

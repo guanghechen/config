@@ -2,6 +2,8 @@
 local name = "fml.action.find.lsp_symbols" ---@type string
 local title = "LSP Symbols" ---@type string
 
+local Methods = vim.lsp.protocol.Methods
+
 ---@class fml.action.find.lsp_symbols.ISymbolData
 ---@field public name                   string
 ---@field public kind                   string
@@ -54,7 +56,7 @@ local function fetch_symbols(tree, callback)
     return
   end
 
-  if not vim.b[bufnr].support_documentSymbol then
+  if vim.b[bufnr].support_documentSymbol < 1 then
     callback()
     return
   end
@@ -89,7 +91,7 @@ local function fetch_symbols(tree, callback)
     end
   end
 
-  vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", {
+  vim.lsp.buf_request(bufnr, Methods.textDocument_documentSymbol, {
     textDocument = vim.lsp.util.make_text_document_params(bufnr),
   }, function(err, symbols)
     if tick_refresh ~= _tick_refresh then

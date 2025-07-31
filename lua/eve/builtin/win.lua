@@ -1,5 +1,7 @@
 local __module_name__ = "eve.builtin.win"
 
+local Methods = vim.lsp.protocol.Methods
+
 ---@alias eve.builtin.win.TypeEnum
 ---| "ux:board"
 ---| "ux:chatbox"
@@ -381,7 +383,7 @@ function M.locate_symbols(winnr, callback)
 
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  if vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] or not vim.b[bufnr].support_documentSymbol then
+  if vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] or vim.b[bufnr].support_documentSymbol < 1 then
     callback(false)
     return
   end
@@ -468,7 +470,7 @@ function M.locate_symbols(winnr, callback)
   end
 
   ---! Make the request to the LSP server
-  vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", { textDocument = textDocument }, handler)
+  vim.lsp.buf_request(bufnr, Methods.textDocument_documentSymbol, { textDocument = textDocument }, handler)
 end
 
 ---@param winnr_source                  integer|nil

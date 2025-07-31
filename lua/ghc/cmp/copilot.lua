@@ -1,5 +1,7 @@
 ---see https://github.com/fang2hou/blink-copilot/blob/bdc45bbbed2ec252b3a29f4adecf031e157b5573/lua/blink-copilot/source.lua#L1
 
+local Methods = vim.lsp.protocol.Methods
+
 ---@class ghc.cmp.copilot.config
 ---@field public max_completions        integer  Maximum number of completions to show
 ---@field public max_attempts           integer  Maximum number of attempts to fetch completions
@@ -65,7 +67,7 @@ end
 ---@param params                        table
 ---@param cb                            lsp.Handler
 function util.get_completions_from_lsp(client, params, cb)
-  return client:request("textDocument/inlineCompletion", params, cb)
+  return client:request(Methods.textDocument_inlineCompletion, params, cb)
 end
 
 ---Recalculate the length of the first line of the text
@@ -255,7 +257,7 @@ function M:detect_lsp_client()
     return
   end
 
-  local lsp_clients = vim.lsp.get_clients({ bufnr = 0, method = "textDocument/inlineCompletion" })
+  local lsp_clients = vim.lsp.get_clients({ bufnr = 0, method = Methods.textDocument_inlineCompletion })
   for _, client in ipairs(lsp_clients) do
     if string.find(string.lower(client.name), "copilot") then
       self.client = client

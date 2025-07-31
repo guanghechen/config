@@ -1,5 +1,7 @@
 local __module_name__ = "eve.builtin.lsp"
 
+local Methods = vim.lsp.protocol.Methods
+
 ---@class eve.builtin.lsp.ISymbolPos
 ---@field public line                   integer
 ---@field public character              integer
@@ -65,8 +67,8 @@ function M.on_rename(from, to, rename)
 
   local clients = vim.lsp.get_clients()
   for _, client in ipairs(clients) do
-    if client:supports_method("workspace/willRenameFiles") then
-      local resp = client:request_sync("workspace/willRenameFiles", changes, 1000, 0)
+    if client:supports_method(Methods.workspace_willRenameFiles) then
+      local resp = client:request_sync(Methods.workspace_willRenameFiles, changes, 1000, 0)
       if resp and resp.result ~= nil then
         vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
       end
@@ -78,8 +80,8 @@ function M.on_rename(from, to, rename)
   end
 
   for _, client in ipairs(clients) do
-    if client:supports_method("workspace/didRenameFiles") then
-      client:notify("workspace/didRenameFiles", changes)
+    if client:supports_method(Methods.workspace_didRenameFiles) then
+      client:notify(Methods.workspace_didRenameFiles, changes)
     end
   end
 end
@@ -255,39 +257,73 @@ end
 ---@param bufnr                         integer
 ---@diagnostic disable-next-line: unused-local
 function M.on_attach(client, bufnr)
-  local support_codelens = vim.b[bufnr].support_codelens or client:supports_method("textDocument/codeLens")
-  local support_rename = vim.b[bufnr].support_rename or client:supports_method("rename")
-  local support_codeAction = vim.b[bufnr].support_codeAction or client:supports_method("codeAction")
-  local support_documentHighlight = vim.b[bufnr].support_documentHighlight
-    or client:supports_method("documentHighlight")
-  local support_documentSymbol = vim.b[bufnr].support_documentSymbol
-    or client:supports_method("textDocument/documentSymbol")
-  local support_definition = vim.b[bufnr].support_definition or client:supports_method("textDocument/definition")
-  local support_implementation = vim.b[bufnr].support_implementation
-    or client:supports_method("textDocument/implementation")
-  local support_references = vim.b[bufnr].support_references or client:supports_method("textDocument/references")
-  local support_typeDefinition = vim.b[bufnr].support_typeDefinition
-    or client:supports_method("textDocument/typeDefinition")
+  local support_codelens = vim.b[bufnr].support_codelens or 0 ---@type integer
+  local support_inlayhint = vim.b[bufnr].support_inlayhint or 0 ---@type integer
+  local support_rename = vim.b[bufnr].support_rename or 0 ---@type integer
+  local support_codeAction = vim.b[bufnr].support_codeAction or 0 ---@type integer
+  local support_documentHighlight = vim.b[bufnr].support_documentHighlight or 0 ---@type integer
+  local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
+  local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
+  local support_definition = vim.b[bufnr].support_definition or 0 ---@type integer
+  local support_implementation = vim.b[bufnr].support_implementation or 0 ---@type integer
+  local support_references = vim.b[bufnr].support_references or 0 ---@type integer
+  local support_typeDefinition = vim.b[bufnr].support_typeDefinition or 0 ---@type integer
 
-  vim.b[bufnr].support_codelens = support_codelens ---@type boolean
-  vim.b[bufnr].support_rename = support_rename ---@type boolean
-  vim.b[bufnr].support_codeAction = support_codeAction ---@type boolean
-  vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type boolean
-  vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type boolean
-  vim.b[bufnr].support_definition = support_definition ---@type boolean
-  vim.b[bufnr].support_implementation = support_implementation ---@type boolean
-  vim.b[bufnr].support_references = support_references ---@type boolean
-  vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type boolean
+  if support_codelens > 0 or client:supports_method(Methods.textDocument_codeLens) then
+    support_codelens = support_codelens + 1
+  end
+  if support_inlayhint > 0 or client:supports_method(Methods.textDocument_inlayHint) then
+    support_inlayhint = support_inlayhint + 1
+  end
+  if support_rename > 0 or client:supports_method(Methods.textDocument_rename) then
+    support_rename = support_rename + 1
+  end
+  if support_codeAction > 0 or client:supports_method(Methods.textDocument_codeAction) then
+    support_codeAction = support_codeAction + 1
+  end
+  if support_documentHighlight > 0 or client:supports_method(Methods.textDocument_documentHighlight) then
+    support_documentHighlight = support_documentHighlight + 1
+  end
+  if support_documentSymbol > 0 or client:supports_method(Methods.textDocument_documentSymbol) then
+    support_documentSymbol = support_documentSymbol + 1
+  end
+  if support_foldingRange > 0 or client:supports_method(Methods.textDocument_foldingRange) then
+    support_foldingRange = support_foldingRange + 1
+  end
+  if support_definition > 0 or client:supports_method(Methods.textDocument_definition) then
+    support_definition = support_definition + 1
+  end
+  if support_implementation > 0 or client:supports_method(Methods.textDocument_implementation) then
+    support_implementation = support_implementation + 1
+  end
+  if support_references > 0 or client:supports_method(Methods.textDocument_references) then
+    support_references = support_references + 1
+  end
+  if support_typeDefinition > 0 or client:supports_method(Methods.textDocument_typeDefinition) then
+    support_typeDefinition = support_typeDefinition + 1
+  end
+
+  vim.b[bufnr].support_codelens = support_codelens ---@type integer
+  vim.b[bufnr].support_inlayhint = support_inlayhint ---@type integer
+  vim.b[bufnr].support_rename = support_rename ---@type integer
+  vim.b[bufnr].support_codeAction = support_codeAction ---@type integer
+  vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type integer
+  vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type integer
+  vim.b[bufnr].support_foldingRange = support_foldingRange ---@type integer
+  vim.b[bufnr].support_definition = support_definition ---@type integer
+  vim.b[bufnr].support_implementation = support_implementation ---@type integer
+  vim.b[bufnr].support_references = support_references ---@type integer
+  vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type integer
 
   if vim.bo[bufnr].buftype == "" then
     -- inlay hints
-    if client:supports_method("textDocument/inlayHint") then
+    if support_inlayhint == 1 then
       local enable_inlay_hints = eve.context.lsp.inlay_hints:snapshot() ---@type boolean
       vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
     end
 
     -- code lens
-    if client:supports_method("textDocument/codeLens") then
+    if support_codelens == 1 then
       local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean
       if enable_code_lens then
         vim.lsp.codelens.refresh({ bufnr = bufnr })
@@ -336,6 +372,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show signature help",
     },
     {
+      disabled = support_definition < 1,
       modes = { "n" },
       key = "gd",
       callback = function()
@@ -345,6 +382,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto definition",
     },
     {
+      disabled = support_implementation < 1,
       modes = { "n" },
       key = "gi",
       callback = function()
@@ -354,6 +392,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto implementation",
     },
     {
+      disabled = support_references < 1,
       modes = { "n" },
       key = "gr",
       callback = function()
@@ -363,6 +402,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show references",
     },
     {
+      disabled = support_typeDefinition < 1,
       modes = { "n" },
       key = "gt",
       callback = function()
@@ -372,7 +412,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto type definition",
     },
     {
-      disabled = not support_codeAction,
+      disabled = support_codeAction < 1,
       modes = { "n", "v" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
@@ -385,7 +425,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: code action",
     },
     {
-      disabled = not support_codelens,
+      disabled = support_codelens < 1,
       modes = { "n", "v" },
       key = "<leader>cc",
       callback = function()
@@ -394,7 +434,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: codelens",
     },
     {
-      disabled = not support_codelens,
+      disabled = support_codelens < 1,
       modes = { "n", "v" },
       key = "<leader>cC",
       callback = function()
@@ -403,7 +443,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: refresh & display codelens",
     },
     {
-      disabled = not support_codeAction,
+      disabled = support_codeAction < 1,
       modes = { "n" },
       key = "<leader>ca",
       callback = function()
@@ -420,7 +460,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: source action",
     },
     {
-      disabled = not support_rename,
+      disabled = support_rename < 1,
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
@@ -432,7 +472,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: rename",
     },
     {
-      disabled = not support_documentHighlight,
+      disabled = support_documentHighlight < 1,
       modes = { "n", "v" },
       key = "[[",
       callback = function()
@@ -441,7 +481,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto prev reference",
     },
     {
-      disabled = not support_documentHighlight,
+      disabled = support_documentHighlight < 1,
       modes = { "n", "v" },
       key = "]]",
       callback = function()
@@ -454,7 +494,7 @@ function M.on_attach(client, bufnr)
 end
 
 function M.on_init(client, _)
-  if client:supports_method("textDocument/semanticTokens") then
+  if client:supports_method(Methods.textDocument_semanticTokens_full) then
     client.server_capabilities.semanticTokensProvider = nil
   end
 end

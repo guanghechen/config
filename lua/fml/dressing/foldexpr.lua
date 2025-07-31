@@ -4,6 +4,11 @@ local M = {}
 ---@return string
 function M.foldexpr()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local lnum = vim.v.lnum ---@type integer
+  if vim.b[bufnr].support_foldingRange > 0 then
+    return vim.lsp.foldexpr(lnum) or "0" ---@type string
+  end
+
   if not vim.api.nvim_buf_is_loaded(bufnr) then
     return "0"
   end
@@ -24,8 +29,6 @@ function M.foldexpr()
     vim.b[bufnr].has_ts_parser = ok
     has_ts_parser = ok
   end
-
-  local lnum = vim.v.lnum ---@type integer|nil
   return has_ts_parser and vim.treesitter.foldexpr(lnum) or "0" ---@type string
 end
 

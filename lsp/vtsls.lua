@@ -1,6 +1,8 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#vtsls
 local __module_name__ = "lsp.vtsls" ---@type string
 
+local Methods = vim.lsp.protocol.Methods
+
 ---@type string[]
 local CONFIG_FILENAMES = {
   "package.json",
@@ -25,14 +27,14 @@ local function on_attach(client, bufnr)
     ---@cast range                      lsp.Range
 
     local function move(new_filename)
-      client:request("workspace/executeCommand", {
+      client:request(Methods.workspace_executeCommand, {
         command = lsp_command.command,
         arguments = { action, uri, range, new_filename },
       })
     end
 
     local fname = vim.uri_to_fname(uri)
-    client:request("workspace/executeCommand", {
+    client:request(Methods.workspace_executeCommand, {
       command = "typescript.tsserverRequest",
       arguments = {
         "getMoveToRefactoringFileSuggestions",
@@ -151,7 +153,7 @@ local function on_attach(client, bufnr)
           ---@diagnostic disable-next-line: inject-field
           params.newName = new_name
 
-          vim.lsp.buf_request(bufnr, "textDocument/rename", params, function(err, result, ctx, config)
+          vim.lsp.buf_request(bufnr, Methods.textDocument_rename, params, function(err, result, ctx, config)
             if err then
               std.reporter.error({
                 from = __module_name__,
@@ -161,7 +163,7 @@ local function on_attach(client, bufnr)
               })
               return
             end
-            vim.lsp.handlers["textDocument/rename"](err, result, ctx, config)
+            vim.lsp.handlers[Methods.textDocument_rename](err, result, ctx, config)
           end)
         end)
       end,

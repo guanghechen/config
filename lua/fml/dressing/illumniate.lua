@@ -46,13 +46,7 @@ local function is_enabled(bufnr, modes)
     end
   end
 
-  local clients = vim.lsp.get_clients({ bufnr = bufnr })
-  for _, client in ipairs(clients) do
-    if client:supports_method("textDocument/documentHighlight", bufnr) then
-      return true
-    end
-  end
-  return false
+  return vim.b[bufnr].support_documentHighlight > 0
 end
 
 ---@private

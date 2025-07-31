@@ -1,3 +1,5 @@
+local Methods = vim.lsp.protocol.Methods
+
 ---@alias eve.fn.rename
 ---| function(params: eve.fn.rename.IParams): boolean
 
@@ -62,7 +64,7 @@ local function rename(params)
 
   local clients = vim.lsp.get_clients()
   for _, client in ipairs(clients) do
-    if client:supports_method("workspace/willRenameFiles") then
+    if client:supports_method(Methods.workspace_willRenameFiles) then
       -- Ensure the client is attached to buffers for relevant file types
       local buffers = vim.lsp.get_buffers_by_client_id(client.id)
       local client_active = false
@@ -76,7 +78,7 @@ local function rename(params)
       end
 
       if client_active then
-        local resp = client:request_sync("workspace/willRenameFiles", changes, 3000, 0)
+        local resp = client:request_sync(Methods.workspace_willRenameFiles, changes, 3000, 0)
         if resp and resp.result ~= nil then
           vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
         end
@@ -103,8 +105,8 @@ local function rename(params)
 
   -- LSP didRenameFiles notification
   for _, client in ipairs(clients) do
-    if client:supports_method("workspace/didRenameFiles") then
-      client:notify("workspace/didRenameFiles", changes)
+    if client:supports_method(Methods.workspace_didRenameFiles) then
+      client:notify(Methods.workspace_didRenameFiles, changes)
     end
   end
 
