@@ -79,6 +79,7 @@ function M.line()
     focus = true,
     focusable = true,
     border = "rounded",
+    source = true,
   })
 
   vim.schedule(function()

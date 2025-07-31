@@ -4,9 +4,6 @@ local __module_name__ = "eve.builtin.lsp"
 ---@field public line                   integer
 ---@field public character              integer
 
----@type table<string, table<vim.lsp.Client, table<number, boolean>>>
-local supports_method = {}
-
 ---! Check if cursor is within range
 ---@param cursor                      eve.builtin.lsp.ISymbolPos
 ---@param range                       { start: eve.builtin.lsp.ISymbolPos, end: eve.builtin.lsp.ISymbolPos }
@@ -20,38 +17,6 @@ end
 
 ---@class eve.builtin.lsp
 local M = {}
-
----@param client                        vim.lsp.Client
----@return nil
-function M.check_methods(client, bufnr)
-  -- don't trigger on invalid buffers
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-
-  -- don't trigger on non-listed buffers
-  if not vim.bo[bufnr].buflisted then
-    return
-  end
-
-  -- don't trigger on nofile buffers
-  if vim.bo[bufnr].buftype == "nofile" then
-    return
-  end
-
-  for method, clients in pairs(supports_method) do
-    clients[client] = clients[client] or {}
-    if not clients[client][bufnr] then
-      if client:supports_method(method, bufnr) then
-        clients[client][bufnr] = true
-        vim.api.nvim_exec_autocmds("User", {
-          pattern = "LspSupportsMethod",
-          data = { client_id = client.id, buffer = bufnr, method = method },
-        })
-      end
-    end
-  end
-end
 
 ---! Find the symbol path recursively
 ---@param cursor                      eve.builtin.lsp.ISymbolPos
@@ -87,20 +52,6 @@ function M.find_symbol_path(cursor, symbols)
   return nil
 end
 
----@param bufnr                         integer
----@param method                        string
----@return boolean
-function M.has_support_method(bufnr, method)
-  method = method:find("/") and method or "textDocument/" .. method
-  local clients = vim.lsp.get_clients({ bufnr = bufnr })
-  for _, client in ipairs(clients) do
-    if client:supports_method(method) then
-      return true
-    end
-  end
-  return false
-end
-
 ---@param from                          string
 ---@param to                            string
 ---@param rename                        ?fun(): nil
@@ -131,24 +82,6 @@ function M.on_rename(from, to, rename)
       client:notify("workspace/didRenameFiles", changes)
     end
   end
-end
-
----@param method                        string
----@param callback                      fun(client: vim.lsp.Client, bufnr: integer): nil
-function M.on_supports_method(method, callback)
-  supports_method[method] = supports_method[method] or setmetatable({}, { __mode = "k" })
-
-  return vim.api.nvim_create_autocmd("User", {
-    pattern = "LspSupportsMethod",
-    group = eve.nvim.augroup("on_supports_method:" .. method),
-    callback = function(args)
-      local bufnr = args.data.buffer ---@type number
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if client and method == args.data.method then
-        return callback(client, bufnr)
-      end
-    end,
-  })
 end
 
 ---@param files                         { oldUri: string, newUri: string }[]
@@ -206,12 +139,6 @@ function M.replace_renamed_buffers(files)
       end
     end
   end
-end
-
----@return lsp.ClientCapabilities
-M.get_capabilities = function()
-  local capabilities = vim.lsp.protocol.make_client_capabilities() ---@type lsp.ClientCapabilities
-  return capabilities
 end
 
 ---@param dirpath                       string
@@ -302,6 +229,12 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@return lsp.ClientCapabilities
+M.get_capabilities = function()
+  local capabilities = vim.lsp.protocol.make_client_capabilities() ---@type lsp.ClientCapabilities
+  return capabilities
+end
+
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 ---@diagnostic disable-next-line: unused-local
@@ -322,13 +255,51 @@ end
 ---@param bufnr                         integer
 ---@diagnostic disable-next-line: unused-local
 function M.on_attach(client, bufnr)
-  local has_support_codeLens = M.has_support_method(bufnr, "codeLens") ---@type boolean
-  local has_support_codeAction = M.has_support_method(bufnr, "codeAction") ---@type boolean
-  local has_support_rename = M.has_support_method(bufnr, "rename") ---@type boolean
-  local has_support_documentHighlight = M.has_support_method(bufnr, "documentHighlight") ---@type boolean
+  local support_codelens = vim.b[bufnr].support_codelens or client:supports_method("textDocument/codeLens")
+  local support_rename = vim.b[bufnr].support_rename or client:supports_method("rename")
+  local support_codeAction = vim.b[bufnr].support_codeAction or client:supports_method("codeAction")
+  local support_documentHighlight = vim.b[bufnr].support_documentHighlight
+    or client:supports_method("documentHighlight")
+  local support_documentSymbol = vim.b[bufnr].support_documentSymbol
+    or client:supports_method("textDocument/documentSymbol")
+  local support_definition = vim.b[bufnr].support_definition or client:supports_method("textDocument/definition")
+  local support_implementation = vim.b[bufnr].support_implementation
+    or client:supports_method("textDocument/implementation")
+  local support_references = vim.b[bufnr].support_references or client:supports_method("textDocument/references")
+  local support_typeDefinition = vim.b[bufnr].support_typeDefinition
+    or client:supports_method("textDocument/typeDefinition")
 
-  if client then
-    M.check_methods(client, bufnr)
+  vim.b[bufnr].support_codelens = support_codelens ---@type boolean
+  vim.b[bufnr].support_rename = support_rename ---@type boolean
+  vim.b[bufnr].support_codeAction = support_codeAction ---@type boolean
+  vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type boolean
+  vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type boolean
+  vim.b[bufnr].support_definition = support_definition ---@type boolean
+  vim.b[bufnr].support_implementation = support_implementation ---@type boolean
+  vim.b[bufnr].support_references = support_references ---@type boolean
+  vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type boolean
+
+  if vim.bo[bufnr].buftype == "" then
+    -- inlay hints
+    if client:supports_method("textDocument/inlayHint") then
+      local enable_inlay_hints = eve.context.lsp.inlay_hints:snapshot() ---@type boolean
+      vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
+    end
+
+    -- code lens
+    if client:supports_method("textDocument/codeLens") then
+      local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean
+      if enable_code_lens then
+        vim.lsp.codelens.refresh({ bufnr = bufnr })
+        --- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
+        vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+          buffer = bufnr,
+          callback = function()
+            vim.lsp.codelens.refresh({ bufnr = bufnr })
+          end,
+        })
+      end
+    end
   end
 
   ---@type std.t.IKeymap[]
@@ -401,7 +372,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto type definition",
     },
     {
-      disabled = not has_support_codeAction,
+      disabled = not support_codeAction,
       modes = { "n", "v" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
@@ -414,7 +385,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: code action",
     },
     {
-      disabled = not has_support_codeLens,
+      disabled = not support_codelens,
       modes = { "n", "v" },
       key = "<leader>cc",
       callback = function()
@@ -423,7 +394,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: codelens",
     },
     {
-      disabled = not has_support_codeLens,
+      disabled = not support_codelens,
       modes = { "n", "v" },
       key = "<leader>cC",
       callback = function()
@@ -432,7 +403,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: refresh & display codelens",
     },
     {
-      disabled = not has_support_codeAction,
+      disabled = not support_codeAction,
       modes = { "n" },
       key = "<leader>ca",
       callback = function()
@@ -449,7 +420,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: source action",
     },
     {
-      disabled = not has_support_rename,
+      disabled = not support_rename,
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
@@ -461,7 +432,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: rename",
     },
     {
-      disabled = not has_support_documentHighlight,
+      disabled = not support_documentHighlight,
       modes = { "n", "v" },
       key = "[[",
       callback = function()
@@ -470,7 +441,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto prev reference",
     },
     {
-      disabled = not has_support_documentHighlight,
+      disabled = not support_documentHighlight,
       modes = { "n", "v" },
       key = "]]",
       callback = function()

@@ -54,7 +54,7 @@ local function fetch_symbols(tree, callback)
     return
   end
 
-  if not eve.lsp.has_support_method(bufnr, "textDocument/documentSymbol") then
+  if not vim.b[bufnr].support_documentSymbol then
     callback()
     return
   end

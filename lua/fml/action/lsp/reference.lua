@@ -39,10 +39,11 @@ local picker = eve.ux.picker.FiletreeComposer.new({
 })
 
 ---@param method                        string
+---@param buf_flagname                  string
 ---@param additional_params             table<string, any>
 ---@param callback                      fun(ok: boolean, items: fml.action.lsp.reference.IItem[]|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
-local function fetch_data(method, additional_params, callback)
+local function fetch_data(method, buf_flagname, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil then
@@ -51,7 +52,7 @@ local function fetch_data(method, additional_params, callback)
   end
 
   local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
-  if not eve.lsp.has_support_method(bufnr_sourcefile, method) then
+  if not vim.b[bufnr_sourcefile][buf_flagname] then
     std.reporter.error({
       from = __module_name__,
       subject = "fetch_data",
@@ -153,10 +154,11 @@ end
 
 ---@param title                         string
 ---@param method                        string
+---@param buf_flagname                  string
 ---@param additional_params             table<string, any>
 ---@return nil
-local function focus(title, method, additional_params)
-  fetch_data(method, additional_params, function(ok, items)
+local function focus(title, method, buf_flagname, additional_params)
+  fetch_data(method, buf_flagname, additional_params, function(ok, items)
     if ok and items ~= nil then
       local rootdir = std.path.cwd() ---@type string
       local filepaths = {} ---@type string[]
@@ -211,22 +213,22 @@ local M = {}
 
 ---@return nil
 function M.goto_definitions()
-  focus("LSP Definitions", "textDocument/definition", {})
+  focus("LSP Definitions", "textDocument/definition", "support_definition", {})
 end
 
 ---@return nil
 function M.goto_implementations()
-  focus("LSP Implementations", "textDocument/implementation", {})
+  focus("LSP Implementations", "textDocument/implementation", "support_implementation", {})
 end
 
 ---@return nil
 function M.goto_references()
-  focus("LSP References", "textDocument/references", { context = { includeDeclaration = true } })
+  focus("LSP References", "textDocument/references", "support_references", { context = { includeDeclaration = true } })
 end
 
 ---@return nil
 function M.goto_type_definitions()
-  focus("LSP Type Definitions", "textDocument/typeDefinition", {})
+  focus("LSP Type Definitions", "textDocument/typeDefinition", "support_typeDefinition", {})
 end
 
 return M

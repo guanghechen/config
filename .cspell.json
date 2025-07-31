@@ -323,6 +323,7 @@
     "findstart",
     "firstc",
     "flagmap",
+    "flagname",
     "flamegraph",
     "flintspellcheckregisterss",
     "fnameescape",
