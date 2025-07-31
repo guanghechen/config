@@ -1,24 +1,19 @@
 /* eslint-disable react/jsx-pascal-case */
 import { Excalidraw as $Excalidraw } from '@excalidraw/excalidraw'
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
+import type {
+  ExcalidrawElement,
+  ExcalidrawEmbeddableElement,
+} from '@excalidraw/excalidraw/element/types'
 import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types'
-import type { Root } from '@yozora/ast'
+import { useEventCallback } from '@guanghechen/react-hooks'
 import React from 'react'
-import '@excalidraw/excalidraw/index.css'
-import { MarkdownProvider, ReactMarkdown, parseMarkdown } from '@/component/markdown'
 import { SiteTheme } from '@/context/site'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
+import '@excalidraw/excalidraw/index.css'
+import { ExcalidrawElementRenderer } from './ExcalidrawElement'
 
-interface IExcalidrawTextElement {
-  readonly id: string
-  readonly type: 'text'
-  readonly x: number
-  readonly y: number
-  readonly text: string
-  readonly fontSize: number
-  readonly fontFamily: number
-  readonly textAlign: string
-  readonly verticalAlign: string
+type NonDeleted<TElement extends ExcalidrawElement> = TElement & {
+  isDeleted: boolean
 }
 
 interface IExcalidrawData {
@@ -31,21 +26,6 @@ interface IExcalidrawData {
     readonly viewBackgroundColor: string
   }
 }
-
-interface ITextElement {
-  readonly id: string
-  readonly text: string
-  readonly x: number
-  readonly y: number
-}
-
-interface IRenderedTextElement {
-  readonly id: string
-  readonly ast: Root
-  readonly x: number
-  readonly y: number
-}
-
 interface IProps {
   readonly content: string | undefined
   readonly onSave: (elements: ReadonlyArray<ExcalidrawElement>, appState: AppState) => Promise<void>
@@ -55,11 +35,8 @@ interface IProps {
 export const ExcalidrawComposer: React.FC<IProps> = props => {
   const { content, onSave, theme } = props
   const excalidrawRef = React.useRef<ExcalidrawImperativeAPI>(null)
-
-  // Convert SiteTheme to Excalidraw theme format
-  const excalidrawTheme = React.useMemo((): 'light' | 'dark' => {
-    return theme === SiteTheme.DARKEN ? 'dark' : 'light'
-  }, [theme])
+  const [elements, setElements] = React.useState<ReadonlyArray<ExcalidrawElement>>([])
+  const excalidrawTheme = theme === SiteTheme.DARKEN ? 'dark' : 'light'
 
   const excalidrawData = React.useMemo((): IExcalidrawData | null => {
     if (!content) return null
@@ -70,55 +47,42 @@ export const ExcalidrawComposer: React.FC<IProps> = props => {
     }
   }, [content])
 
-  // Extract text elements and render them as markdown
-  const textElements = React.useMemo((): ITextElement[] => {
-    if (!excalidrawData?.elements) return []
+  // Validate if text element should be rendered as markdown embeddable
+  const validateMarkdownEmbeddable = React.useCallback((link: string): boolean => {
+    return link.startsWith('md:')
+  }, [])
 
-    return excalidrawData.elements
-      .filter(
-        (element: any): element is IExcalidrawTextElement =>
-          element.type === 'text' && 'text' in element && typeof (element as any).text === 'string',
-      )
-      .map(
-        (element): ITextElement => ({
-          id: element.id,
-          text: (element as any).text,
-          x: element.x,
-          y: element.y,
-        }),
-      )
-  }, [excalidrawData])
-
-  const renderedTextElements = React.useMemo((): IRenderedTextElement[] => {
-    return textElements
-      .map((element): IRenderedTextElement | null => {
-        try {
-          const ast = parseMarkdown(element.text)
-          return {
-            ast,
-            id: element.id,
-            x: element.x,
-            y: element.y,
-          }
-        } catch {
-          return null
-        }
-      })
-      .filter((element): element is IRenderedTextElement => element !== null)
-  }, [textElements])
-
-  const handleSave = React.useCallback(
-    (event: KeyboardEvent): void => {
-      event.preventDefault()
-
-      if (excalidrawRef.current) {
-        const elements = excalidrawRef.current.getSceneElements()
-        const appState = excalidrawRef.current.getAppState()
-        void onSave(elements, appState)
+  const renderEmbeddable = useEventCallback(
+    (
+      element: NonDeleted<ExcalidrawEmbeddableElement>,
+      appState: AppState,
+    ): React.ReactElement | null => {
+      const textElement = elements.find(el => el.id === element.id) as any
+      if (!textElement || textElement.type !== 'text') {
+        return <React.Fragment />
       }
+
+      if (textElement.type === 'text') {
+        if (textElement.text?.startsWith('md:')) {
+          return (
+            <ExcalidrawElementRenderer element={textElement} theme={theme} appState={appState} />
+          )
+        }
+      }
+
+      return <React.Fragment />
     },
-    [onSave],
   )
+
+  const handleSave = useEventCallback((event: KeyboardEvent): void => {
+    event.preventDefault()
+
+    if (excalidrawRef.current) {
+      const elements = excalidrawRef.current.getSceneElements()
+      const appState = excalidrawRef.current.getAppState()
+      void onSave(elements, appState)
+    }
+  })
 
   const keybindings = React.useMemo(
     () => [
@@ -159,29 +123,11 @@ export const ExcalidrawComposer: React.FC<IProps> = props => {
           zenModeEnabled={false}
           gridModeEnabled={true}
           theme={excalidrawTheme}
+          onChange={setElements}
+          validateEmbeddable={validateMarkdownEmbeddable}
+          renderEmbeddable={renderEmbeddable}
         />
       </div>
-
-      {/* Render text elements as markdown overlays */}
-      {renderedTextElements.length > 0 && (
-        <div className="fixed inset-0 top-16 pointer-events-none z-10">
-          {renderedTextElements.map(element => (
-            <div
-              key={element.id}
-              className="absolute bg-white/90 dark:bg-gray-800/90 rounded p-2 border border-gray-200 dark:border-gray-600 shadow-sm pointer-events-auto"
-              style={{
-                left: element.x,
-                top: element.y,
-                maxWidth: '300px',
-              }}
-            >
-              <MarkdownProvider ast={element.ast} theme={theme}>
-                <ReactMarkdown ast={element.ast} dontShowFirstHeading={false} className="text-sm" />
-              </MarkdownProvider>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
