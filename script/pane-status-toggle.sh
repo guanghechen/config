@@ -19,7 +19,7 @@ function _ghc_tmux_pane_status_toggle_ {
     tmux set -g @GHC_PSL_MODE "00"
   fi
 
-  tmux source-file "$HOME/.config/tmux/conf/variable.tmux.conf"
+  bash "$HOME/.config/tmux/script/status-load.sh"
   tmux refresh-client -S
 }
 
