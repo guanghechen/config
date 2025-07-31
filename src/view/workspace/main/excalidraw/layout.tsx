@@ -4,12 +4,17 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
+import type { SiteTheme } from '@/context/site'
 import { useWorkspaceViewmodel } from '@/context/workspace'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IJsonFileData } from '@/util/fetch'
 import { ExcalidrawComposer } from './composer'
 
-export const ExcalidrawLayout: React.FC = () => {
+interface IProps {
+  readonly theme: SiteTheme
+}
+
+export const ExcalidrawLayout: React.FC<IProps> = ({ theme }) => {
   const workspaceVM = useWorkspaceViewmodel()
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
   const filepath = useStateValue(workspaceVM.filepath$)
@@ -95,7 +100,7 @@ export const ExcalidrawLayout: React.FC = () => {
       )}
       {!!data && (
         <div className="relative w-full">
-          <ExcalidrawComposer content={data?.content} onSave={onSave} />
+          <ExcalidrawComposer content={data?.content} onSave={onSave} theme={theme} />
         </div>
       )}
 

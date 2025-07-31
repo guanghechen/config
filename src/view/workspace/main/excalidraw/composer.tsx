@@ -6,6 +6,7 @@ import type { Root } from '@yozora/ast'
 import React from 'react'
 import '@excalidraw/excalidraw/index.css'
 import { ReactMarkdown, parseMarkdown } from '@/component/markdown'
+import { SiteTheme } from '@/context/site'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
 
 interface IExcalidrawTextElement {
@@ -48,11 +49,17 @@ interface IRenderedTextElement {
 interface IProps {
   readonly content: string | undefined
   readonly onSave: (elements: ReadonlyArray<ExcalidrawElement>, appState: AppState) => Promise<void>
+  readonly theme: SiteTheme
 }
 
 export const ExcalidrawComposer: React.FC<IProps> = props => {
-  const { content, onSave } = props
+  const { content, onSave, theme } = props
   const excalidrawRef = React.useRef<ExcalidrawImperativeAPI>(null)
+
+  // Convert SiteTheme to Excalidraw theme format
+  const excalidrawTheme = React.useMemo((): 'light' | 'dark' => {
+    return theme === SiteTheme.DARKEN ? 'dark' : 'light'
+  }, [theme])
 
   const excalidrawData = React.useMemo((): IExcalidrawData | null => {
     if (!content) return null
@@ -151,7 +158,7 @@ export const ExcalidrawComposer: React.FC<IProps> = props => {
           viewModeEnabled={false}
           zenModeEnabled={false}
           gridModeEnabled={true}
-          theme="light"
+          theme={excalidrawTheme}
         />
       </div>
 

@@ -17,7 +17,7 @@ const ExcalidrawView: React.FC = () => {
 
   return (
     <MarkdownProvider ast={emptyAst} theme={theme}>
-      <ExcalidrawLayout />
+      <ExcalidrawLayout theme={theme} />
     </MarkdownProvider>
   )
 }
