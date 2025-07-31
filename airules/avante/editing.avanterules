@@ -1,6 +1,0 @@
-====
-
-REQUIREMENTS
-
-1. **MUST**: Use `I`-prefixed naming convention for types and interfaces.names for interfaces/types (`IChatMessage`, `IUser`)
-
