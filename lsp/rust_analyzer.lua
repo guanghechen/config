@@ -1,9 +1,5 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#rust_analyzer
 
-local capabilities = eve.lsp.get_capabilities()
-capabilities.experimental = capabilities.experimental or {}
-capabilities.experimental.serverStatusNotification = true
-
 local function reload_workspace(bufnr)
   local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "rust_analyzer" })
   for _, client in ipairs(clients) do
@@ -34,6 +30,16 @@ local function is_library(fname)
   end
 end
 
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
+
+  local capabilities = params.capabilities
+  capabilities.experimental = capabilities.experimental or {}
+  capabilities.experimental.serverStatusNotification = true
+end
+
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
@@ -51,7 +57,7 @@ local function on_init(client, config)
 end
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = { "rust-analyzer" },
   filetypes = { "rust" },
   settings = {
@@ -124,6 +130,7 @@ return {
       end
     end)
   end,
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

@@ -1,6 +1,10 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#docker_compose_language_service
 
-local capabilities = eve.lsp.get_capabilities()
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
+end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
@@ -15,10 +19,11 @@ local function on_init(client, config)
 end
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = { "docker-compose-langserver", "--stdio" },
   filetypes = { "yaml.docker-compose" },
   root_markers = { "docker-compose.yaml", "docker-compose.yml", "compose.yaml", "compose.yml" },
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

@@ -8,7 +8,11 @@ elseif workspace == std.path.locate_app_config_home("nvim-nvchad") then
   nvim_config = std.path.join(workspace, "lua")
 end
 
-local capabilities = eve.lsp.get_capabilities()
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
+end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
@@ -23,7 +27,7 @@ local function on_init(client, config)
 end
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = { "lua-language-server" },
   filetypes = { "lua" },
   log_level = vim.lsp.protocol.MessageType.Warning,
@@ -81,6 +85,7 @@ return {
       },
     },
   },
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

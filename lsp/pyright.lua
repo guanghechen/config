@@ -1,20 +1,23 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#pyright
 
-local capabilities = eve.lsp.get_capabilities()
-
-local function set_python_path(path)
+---@param pythonPath                    string
+local function set_python_path(pythonPath)
   local clients = vim.lsp.get_clients({
     bufnr = vim.api.nvim_get_current_buf(),
     name = "pyright",
   })
   for _, client in ipairs(clients) do
-    if client.settings then
-      client.settings.python = vim.tbl_deep_extend("force", client.settings.python, { pythonPath = path })
-    else
-      client.config.settings = vim.tbl_deep_extend("force", client.config.settings, { python = { pythonPath = path } })
-    end
+    client.settings = client.settings or {}
+    client.settings.python = client.settings.python or {}
+    client.settings.python["pythonPath"] = pythonPath
     client:notify("workspace/didChangeConfiguration", { settings = nil })
   end
+end
+
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
@@ -45,7 +48,7 @@ local function on_init(client, config)
 end
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = { "pyright-langserver", "--stdio" },
   filetypes = { "python" },
   root_markers = {
@@ -71,6 +74,7 @@ return {
       },
     },
   },
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

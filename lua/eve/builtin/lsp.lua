@@ -208,16 +208,9 @@ function M.replace_renamed_buffers(files)
   end
 end
 
+---@return lsp.ClientCapabilities
 M.get_capabilities = function()
   local capabilities = vim.lsp.protocol.make_client_capabilities() ---@type lsp.ClientCapabilities
-  local has_blink, blink = pcall(require, "blink.cmp")
-  if has_blink then
-    capabilities = vim.tbl_deep_extend("force", capabilities, blink.get_lsp_capabilities({}, false))
-  end
-  capabilities.textDocument = capabilities.textDocument or {}
-  capabilities.textDocument.completion = capabilities.textDocument.completion or {}
-  capabilities.textDocument.completion.completionItem = capabilities.textDocument.completion.completionItem or {}
-  capabilities.textDocument.completion.completionItem.snippetSupport = true
   return capabilities
 end
 
@@ -305,6 +298,24 @@ function M.locate_mason_pkg_path(pkg, pkg_path, silent)
   end
 
   return filepath
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@param params                        lsp.InitializeParams
+---@param config                        table
+---@diagnostic disable-next-line: unused-local
+function M.before_init(params, config)
+  local has_blink, blink = pcall(require, "blink.cmp")
+  if has_blink then
+    params.capabilities = vim.tbl_deep_extend("force", params.capabilities, blink.get_lsp_capabilities({}, false))
+  end
+
+  local capabilities = params.capabilities ---@type lsp.ClientCapabilities
+  capabilities.textDocument = capabilities.textDocument or {}
+  capabilities.textDocument.completion = capabilities.textDocument.completion or {}
+  capabilities.textDocument.completion.completionItem = capabilities.textDocument.completion.completionItem or {}
+  capabilities.textDocument.completion.completionItem.snippetSupport = true
 end
 
 ---@param client                        vim.lsp.Client

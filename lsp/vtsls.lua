@@ -1,14 +1,18 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#vtsls
 local __module_name__ = "lsp.vtsls" ---@type string
 
-local capabilities = eve.lsp.get_capabilities()
-
 ---@type string[]
 local CONFIG_FILENAMES = {
   "package.json",
   "tsconfig.json",
   "jsconfig.json",
 }
+
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
+end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
@@ -186,7 +190,7 @@ local plugins = {
 }
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = { "vtsls", "--stdio" },
   filetypes = {
     "javascript",
@@ -261,6 +265,7 @@ return {
     },
   },
   root_dir = root_dir,
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

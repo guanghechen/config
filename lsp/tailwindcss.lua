@@ -31,20 +31,6 @@ local filetypes = {
   "vue",
 }
 
-local capabilities = eve.lsp.get_capabilities()
-
----@param client                        vim.lsp.Client
----@param bufnr                         integer
-local function on_attach(client, bufnr)
-  eve.lsp.on_attach(client, bufnr)
-end
-
----@param client                        vim.lsp.Client
----@param config                        any
-local function on_init(client, config)
-  eve.lsp.on_init(client, config)
-end
-
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
@@ -65,10 +51,32 @@ local function detectLspServer()
   return nil
 end
 
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
+
+  config.settings = config.settings or {}
+  config.settings.editor = config.settings.editor or {}
+  config.settings.editor.tabSize = config.settings.editor.tabSize or vim.lsp.util.get_effective_tabstop()
+end
+
+---@param client                        vim.lsp.Client
+---@param bufnr                         integer
+local function on_attach(client, bufnr)
+  eve.lsp.on_attach(client, bufnr)
+end
+
+---@param client                        vim.lsp.Client
+---@param config                        any
+local function on_init(client, config)
+  eve.lsp.on_init(client, config)
+end
+
 local lspBinPath = detectLspServer()
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = lspBinPath and { lspBinPath, "--stdio" } or nil,
   filetypes = filetypes,
   filetypes_exclude = { "markdown" },
@@ -103,18 +111,8 @@ return {
       },
     },
   },
-  before_init = function(_, config)
-    if not config.settings then
-      config.settings = {}
-    end
-    if not config.settings.editor then
-      config.settings.editor = {}
-    end
-    if not config.settings.editor.tabSize then
-      config.settings.editor.tabSize = vim.lsp.util.get_effective_tabstop()
-    end
-  end,
   root_dir = root_dir,
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

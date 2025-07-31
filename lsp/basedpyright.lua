@@ -1,7 +1,5 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#basedpyright
 
-local capabilities = eve.lsp.get_capabilities()
-
 ---@param path                          string
 ---@return nil
 local function set_python_path(path)
@@ -15,6 +13,12 @@ local function set_python_path(path)
     client.settings.python["pythonPath"] = path
     client:notify("workspace/didChangeConfiguration", { settings = nil })
   end
+end
+
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
@@ -46,7 +50,7 @@ local function on_init(client, config)
 end
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = { "basedpyright-langserver", "--stdio" },
   filetypes = { "python" },
   root_markers = {
@@ -67,6 +71,7 @@ return {
       },
     },
   },
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }

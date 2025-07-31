@@ -1,11 +1,5 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#clangd
 
-local capabilities = eve.lsp.get_capabilities()
-capabilities.textDocument = capabilities.textDocument or {}
-capabilities.textDocument.completion = capabilities.textDocument.completion or {}
-capabilities.textDocument.completion.editsNearCursor = true
-capabilities.offsetEncoding = { "utf-8", "utf-16" }
-
 -- https://clangd.llvm.org/extensions.html#switch-between-sourceheader
 local function switch_source_header(bufnr)
   local method_name = "textDocument/switchSourceHeader"
@@ -52,6 +46,20 @@ local function symbol_info()
   end, bufnr)
 end
 
+---@param params                        lsp.InitializeParams
+---@param config                        table
+local function before_init(params, config)
+  eve.lsp.before_init(params, config)
+
+  local capabilities = params.capabilities
+  capabilities.textDocument = capabilities.textDocument or {}
+  capabilities.textDocument.completion = capabilities.textDocument.completion or {}
+  ---@diagnostic disable-next-line: inject-field
+  capabilities.textDocument.completion.editsNearCursor = true
+  ---@diagnostic disable-next-line: inject-field
+  capabilities.offsetEncoding = { "utf-8", "utf-16" }
+end
+
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
@@ -73,7 +81,7 @@ local function on_init(client, config)
 end
 
 return {
-  capabilities = capabilities,
+  capabilities = eve.lsp.get_capabilities(),
   cmd = {
     "clangd",
     "--background-index",
@@ -98,6 +106,7 @@ return {
     "configure.ac", -- AutoTools
     ".git",
   },
+  before_init = before_init,
   on_attach = on_attach,
   on_init = on_init,
 }
