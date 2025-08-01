@@ -1,6 +1,5 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { command_exist } = require("./util.cjs");
 
 const ROOT_CONFIG = path.resolve(__dirname, "..");
 const ROOT_SOURCECODES = process.env.ROOT_SOURCECODES;
