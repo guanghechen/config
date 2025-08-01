@@ -39,6 +39,7 @@
 
 ---@class std.t.theme.IScheme
 ---@field public theme                  std.e.Theme
+---@field public opposite               std.e.Theme
 ---@field public variant                std.e.ThemeVariant
 ---@field public palette                std.t.theme.IPalette
 

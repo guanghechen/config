@@ -91,13 +91,8 @@ end
 ---@param theme                          string
 ---@return nil
 local function apply_theme(theme)
-  if not vim.list_contains(themes, theme) then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "apply_theme",
-      message = "Unknown theme.",
-      details = { theme = theme },
-    })
+  local scheme = eve.context.theme.get_scheme(theme) ---@type std.t.theme.IScheme|nil
+  if scheme == nil then
     return
   end
 
@@ -117,6 +112,10 @@ local function apply_theme(theme)
       message = "Failed to toggle theme.",
       details = { theme = theme, app_home = app_home, script_path = script_path, error = err },
     })
+  end
+
+  if scheme ~= nil then
+    vim.o.background = scheme.variant == "dark" and "dark" or "light"
   end
 end
 

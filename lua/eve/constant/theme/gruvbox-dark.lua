@@ -1,6 +1,7 @@
 ---@type std.t.theme.IScheme
 local M = {
   theme = "gruvbox-dark",
+  opposite = "gruvbox-light",
   variant = "dark",
   -- stylua: ignore start
   palette = {

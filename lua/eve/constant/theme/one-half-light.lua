@@ -1,6 +1,7 @@
 ---@type std.t.theme.IScheme
 local M = {
   theme = "one-half-light",
+  opposite = "one-half-dark",
   variant = "light",
   -- stylua: ignore start
   palette = {

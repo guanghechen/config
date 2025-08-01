@@ -8,13 +8,12 @@ function M.gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
 
-  ---@type string
-  local item_kind_bg = t and c.none or c.bg0
+  local item_kind_bg = c.none ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
     ---! cmp
-    BlinkCmpDoc = { bg = t and c.none or c.bg0 },
+    BlinkCmpDoc = { bg = c.none },
     BlinkCmpDocBorder = { link = "FloatBorder" },
     BlinkCmpDocSeparator = { fg = c.bg4, bg = c.none },
     BlinkCmpGhostText = { link = "Comment", default = true },
@@ -53,7 +52,7 @@ function M.gen_hlgroup_map(context)
     BlinkCmpLabel = { fg = c.fg4, italic = true, bg = item_kind_bg },
     BlinkCmpMenu = { fg = c.fg4, italic = true },
     BlinkCmpMenuBorder = { link = "FloatBorder" },
-    BlinkCmpSignatureHelp = { bg = t and c.none or c.bg0 },
+    BlinkCmpSignatureHelp = { bg = c.none },
     BlinkCmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
     BlinkCmpSignatureHelpBorder = { link = "FloatBorder" },
     BlinkCmpSource = { fg = c.fg3, bg = item_kind_bg },
@@ -65,11 +64,11 @@ function M.gen_hlgroup_map(context)
 
     ---! flash.nvim
     FlashBackdrop = { fg = c.bg4, bg = c.none },
-    FlashCurrent = { fg = c.orange, bg = t and c.none or c.bg2, italic = true },
-    FlashLabel = { fg = c.blue, bg = t and c.none or c.bg0, bold = true },
-    FlashMatch = { fg = c.yellow, bg = t and c.none or c.bg1, italic = true },
+    FlashCurrent = { fg = c.orange, bg = c.none, italic = true },
+    FlashLabel = { fg = c.blue, bg = c.none, bold = true },
+    FlashMatch = { fg = c.yellow, bg = c.none, italic = true },
     FlashPrompt = { fg = c.yellow, bg = c.bg2 },
-    FlashPromptIcon = { fg = c.orange, bg = t and c.none or c.bg2 },
+    FlashPromptIcon = { fg = c.orange, bg = c.none },
 
     ---! gitsigns.nvim
     GitSignsAdd = { fg = c.green },

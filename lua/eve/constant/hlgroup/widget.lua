@@ -9,8 +9,9 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or c.bg0 ---@type string
-  local bg_main = t and c.bg0 or c.none ---@type string
-  local bg_preview = t and c.bg0 or c.none ---@type string
+  local bg_pane = t and c.bg0 or c.none ---@type string
+  local bg_notify = t and c.none or c.bg0 ---@type string
+  local c_pane_fancy = t and "ms_b_bg0" or "ms_b_none" ---@type string
 
   return {
     ---common
@@ -91,8 +92,8 @@ function M.gen_hlgroup_map(context)
     f_uc_type_lua = { fg = c.blue, bg = bg },
 
     ---input
-    f_ui_current = { bg = bg },
-    f_ui_normal = { bg = bg },
+    f_ui_current = { bg = c.bg3 },
+    f_ui_normal = { bg = bg_pane },
 
     ---lsp symbols
     f_lsp_symbol_icon = { fg = c.brightPurple },
@@ -141,53 +142,53 @@ function M.gen_hlgroup_map(context)
 
     ---notify
     -- stylua: ignore start
-    f_un_border_trace = { fg = c.fg2,     bg = bg },
-    f_un_border_debug = { fg = c.green,   bg = bg },
-    f_un_border_info  = { fg = c.blue,    bg = bg },
-    f_un_border_warn  = { fg = c.yellow,  bg = bg },
-    f_un_border_error = { fg = c.red,     bg = bg },
-    f_un_icon_trace   = { fg = c.fg2,     bg = c.none },
-    f_un_icon_debug   = { fg = c.green,   bg = c.none },
-    f_un_icon_info    = { fg = c.blue,    bg = c.none },
-    f_un_icon_warn    = { fg = c.yellow,  bg = c.none },
-    f_un_icon_error   = { fg = c.red,     bg = c.none },
-    f_un_level_trace  = { fg = c.fg2,     bg = c.none },
-    f_un_level_debug  = { fg = c.green,   bg = c.none },
-    f_un_level_info   = { fg = c.blue,    bg = c.none },
-    f_un_level_warn   = { fg = c.yellow,  bg = c.none },
-    f_un_level_error  = { fg = c.red,     bg = c.none },
-    f_un_normal_trace = { fg = c.fg2,     bg = bg },
-    f_un_normal_debug = { fg = c.fg2,     bg = bg },
-    f_un_normal_info  = { fg = c.fg2,     bg = bg },
-    f_un_normal_warn  = { fg = c.fg2,     bg = bg },
-    f_un_normal_error = { fg = c.fg2,     bg = bg },
-    f_un_title_trace  = { fg = c.fg2,     bg = c.none },
-    f_un_title_debug  = { fg = c.green,   bg = c.none },
-    f_un_title_info   = { fg = c.blue,    bg = c.none },
-    f_un_title_warn   = { fg = c.yellow,  bg = c.none },
-    f_un_title_error  = { fg = c.red,     bg = c.none },
-    f_un_winbar_trace = { fg = c.fg2,     bg = c.none, sp = c.bg2,    bold = true, underline = true },
-    f_un_winbar_debug = { fg = c.green,   bg = c.none, sp = c.green,  bold = true, underline = true },
-    f_un_winbar_info  = { fg = c.blue,    bg = c.none, sp = c.blue,   bold = true, underline = true },
-    f_un_winbar_warn  = { fg = c.yellow,  bg = c.none, sp = c.yellow, bold = true, underline = true },
-    f_un_winbar_error = { fg = c.red,     bg = c.none, sp = c.red,    bold = true, underline = true },
-    f_un_winbar_like_trace = { fg = c.fg2,     bg = c.none, sp = c.bg2,    bold = true },
-    f_un_winbar_like_debug = { fg = c.green,   bg = c.none, sp = c.green,  bold = true },
-    f_un_winbar_like_info  = { fg = c.blue,    bg = c.none, sp = c.blue,   bold = true },
-    f_un_winbar_like_warn  = { fg = c.yellow,  bg = c.none, sp = c.yellow, bold = true },
-    f_un_winbar_like_error = { fg = c.red,     bg = c.none, sp = c.red,    bold = true },
+    f_un_border_trace       = { fg = c.fg2,     bg = bg_notify },
+    f_un_border_debug       = { fg = c.green,   bg = bg_notify },
+    f_un_border_info        = { fg = c.blue,    bg = bg_notify },
+    f_un_border_warn        = { fg = c.yellow,  bg = bg_notify },
+    f_un_border_error       = { fg = c.red,     bg = bg_notify },
+    f_un_icon_trace         = { fg = c.fg2,     bg = bg_notify },
+    f_un_icon_debug         = { fg = c.green,   bg = bg_notify },
+    f_un_icon_info          = { fg = c.blue,    bg = bg_notify },
+    f_un_icon_warn          = { fg = c.yellow,  bg = bg_notify },
+    f_un_icon_error         = { fg = c.red,     bg = bg_notify },
+    f_un_level_trace        = { fg = c.fg2,     bg = bg_notify },
+    f_un_level_debug        = { fg = c.green,   bg = bg_notify },
+    f_un_level_info         = { fg = c.blue,    bg = bg_notify },
+    f_un_level_warn         = { fg = c.yellow,  bg = bg_notify },
+    f_un_level_error        = { fg = c.red,     bg = bg_notify },
+    f_un_normal_trace       = { fg = c.fg2,     bg = bg_notify },
+    f_un_normal_debug       = { fg = c.fg2,     bg = bg_notify },
+    f_un_normal_info        = { fg = c.fg2,     bg = bg_notify },
+    f_un_normal_warn        = { fg = c.fg2,     bg = bg_notify },
+    f_un_normal_error       = { fg = c.fg2,     bg = bg_notify },
+    f_un_title_trace        = { fg = c.fg2,     bg = bg_notify },
+    f_un_title_debug        = { fg = c.green,   bg = bg_notify },
+    f_un_title_info         = { fg = c.blue,    bg = bg_notify },
+    f_un_title_warn         = { fg = c.yellow,  bg = bg_notify },
+    f_un_title_error        = { fg = c.red,     bg = bg_notify },
+    f_un_winbar_trace       = { fg = c.fg2,     bg = bg_notify, sp = c.bg2,    bold = true, underline = true },
+    f_un_winbar_debug       = { fg = c.green,   bg = bg_notify, sp = c.green,  bold = true, underline = true },
+    f_un_winbar_info        = { fg = c.blue,    bg = bg_notify, sp = c.blue,   bold = true, underline = true },
+    f_un_winbar_warn        = { fg = c.yellow,  bg = bg_notify, sp = c.yellow, bold = true, underline = true },
+    f_un_winbar_error       = { fg = c.red,     bg = bg_notify, sp = c.red,    bold = true, underline = true },
+    f_un_winbar_like_trace  = { fg = c.fg2,     bg = bg_notify, sp = c.bg2,    bold = true },
+    f_un_winbar_like_debug  = { fg = c.green,   bg = bg_notify, sp = c.green,  bold = true },
+    f_un_winbar_like_info   = { fg = c.blue,    bg = bg_notify, sp = c.blue,   bold = true },
+    f_un_winbar_like_warn   = { fg = c.yellow,  bg = bg_notify, sp = c.yellow, bold = true },
+    f_un_winbar_like_error  = { fg = c.red,     bg = bg_notify, sp = c.red,    bold = true },
     -- stylua: ignore end
 
     ---picker
-    f_pk_finder_normal = { fg = c.fg1, bg = bg },
+    f_pk_finder_normal = { fg = c.fg1, bg = bg_pane },
     f_pk_finder_title = { link = t and "ms_b_bg0" or "ms_b_none" },
+    f_pk_finder_prompt = { fg = c.red, bg = bg_pane },
     f_pk_matches = { fg = c.pink, bold = true, italic = true },
-    f_pk_finder_prompt = { fg = c.red, bg = bg },
     f_pk_preview_current = { bg = c.bg2 },
-    f_pk_preview_normal = { bg = bg_preview },
-    f_pk_preview_title = { fg = c.green, bg = bg, bold = true },
+    f_pk_preview_normal = { bg = bg_pane },
+    f_pk_preview_title = { fg = c.green, bg = bg_pane, bold = true },
     f_pk_result_current = { bg = c.bg3 },
-    f_pk_result_normal = { bg = bg_main },
+    f_pk_result_normal = { bg = bg_pane },
     f_pk_sign_line_current = { bg = c.bg3 },
     f_pk_sign_line_present = { fg = c.pink, bg = c.none, bold = true },
     f_pk_sign_line_present_current = { fg = c.pink, bg = c.bg3, bold = true },
@@ -207,7 +208,7 @@ function M.gen_hlgroup_map(context)
     f_ss_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
 
     ---popupmenu
-    f_up_normal = { fg = c.fg2, bg = t and c.none or c.bg0 },
+    f_up_normal = { fg = c.fg2, bg = bg_pane },
     f_up_border = { link = t and "ms_b_bg0" or "ms_b_none" },
     f_up_selected = { fg = c.bg1, bg = c.blue, bold = true, italic = true },
 
@@ -215,18 +216,18 @@ function M.gen_hlgroup_map(context)
     f_us_input_normal = { fg = c.fg1, bg = bg },
     f_us_input_prompt = { fg = c.red, bg = bg },
     f_us_input_title = { link = t and "ms_b_bg0" or "ms_b_none" },
-    f_us_main_bg = { bg = bg_main },
+    f_us_main_bg = { bg = bg_pane },
     f_us_main_current = { bg = c.bg3 },
     f_us_main_match = { fg = c.blue },
     f_us_main_match_lnum = { fg = c.fg4 },
     f_us_main_present = { fg = c.blue, bg = c.none },
     f_us_main_present_cur = { fg = c.blue, bg = c.bg3 },
-    f_us_main_normal = { bg = bg_main },
+    f_us_main_normal = { bg = bg_pane },
     f_us_main_replace = { fg = c.green },
     f_us_main_search = { fg = c.red, strikethrough = true },
     f_us_preview_current = { bg = c.bg2 },
     f_us_preview_error = { fg = c.red, bold = true },
-    f_us_preview_normal = { bg = bg_preview },
+    f_us_preview_normal = { bg = bg_pane },
     f_us_preview_search = { fg = c.fg1, bg = c.diffDel, strikethrough = true },
     f_us_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
     f_us_preview_replace = { fg = c.bg1, bg = c.diffAdd },
@@ -254,7 +255,7 @@ function M.gen_hlgroup_map(context)
 
     ---textarea
     f_ut_current = { bg = c.bg3 },
-    f_ut_normal = { bg = t and c.none or c.bg0 },
+    f_ut_normal = { bg = bg_pane },
 
     ---treeview
     f_utw_indent = { fg = c.bg2 },

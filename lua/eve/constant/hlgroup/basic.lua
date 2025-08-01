@@ -8,7 +8,7 @@ function M.gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type std.e.Theme
   local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
-  local bg_main = t and c.none or c.bg0 ---@type string
+  local bg = t and c.none or c.bg0 ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
@@ -50,14 +50,14 @@ function M.gen_hlgroup_map(context)
     DiagnosticSignWarn = { fg = c.yellow },
 
     ---diff
-    DiffAddLeft = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
-    DiffAddRight = { bg = c.diffAdd or cs.mix(bg_main, c.aqua, 30) },
-    DiffDelLeft = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
-    DiffDelRight = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
-    DiffModLeft = { bg = c.diffDel or cs.mix(bg_main, c.red, 30) },
-    DiffModRight = { bg = c.diffAdd or cs.mix(bg_main, c.aqua, 30) },
-    DiffWordLeft = { bg = c.diffDelInline or cs.mix(bg_main, c.brightRed, 60) },
-    DiffWordRight = { bg = c.diffAddInline or cs.mix(bg_main, c.brightGreen, 60) },
+    DiffAddLeft = { bg = c.diffDel or cs.mix(bg, c.red, 30) },
+    DiffAddRight = { bg = c.diffAdd or cs.mix(bg, c.aqua, 30) },
+    DiffDelLeft = { bg = c.diffDel or cs.mix(bg, c.red, 30) },
+    DiffDelRight = { bg = c.diffDel or cs.mix(bg, c.red, 30) },
+    DiffModLeft = { bg = c.diffDel or cs.mix(bg, c.red, 30) },
+    DiffModRight = { bg = c.diffAdd or cs.mix(bg, c.aqua, 30) },
+    DiffWordLeft = { bg = c.diffDelInline or cs.mix(bg, c.brightRed, 60) },
+    DiffWordRight = { bg = c.diffAddInline or cs.mix(bg, c.brightGreen, 60) },
 
     DiffAdd = { link = "DiffAddRight" },
     DiffChange = { link = "DiffModRight" },
@@ -73,7 +73,8 @@ function M.gen_hlgroup_map(context)
     DiffIndexLine = { link = "diffChanged" },
 
     ---lsp
-    LspInlayHint = { fg = c.fg4, bg = c.bg1, italic = true },
+    LspCodeLens = { fg = c.bg4, bg = c.none, italic = true },
+    LspInlayHint = { fg = c.fg4, bg = c.none, italic = true },
     LspReferenceRead = { bold = true, underline = true, sp = c.purple },
     LspReferenceText = { bold = true, underline = true, sp = c.purple },
     LspReferenceWrite = { bold = true, underline = true, sp = c.purple },
@@ -151,19 +152,19 @@ function M.gen_hlgroup_map(context)
     DevIconDefault = { fg = c.red },
     Directory = { fg = c.blue, bold = true },
     Exception = { fg = c.red },
-    FloatActiveBorder = { link = "ms_b_none" },
-    FloatActiveTitle = { link = "ms_b_none" },
+    FloatActiveBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
+    FloatActiveTitle = { link = "ms_b_bg0" },
     FloatBorder = { fg = c.bg2, bg = t and c.bg0 or c.none, bold = true },
-    FloatNormal = { fg = c.fg1, bg = t and c.none or c.bg0 },
-    FloatTitle = { link = "ms_b_none" },
-    FoldColumn = { fg = c.fg4, bg = t and c.none or c.bg1 },
+    FloatNormal = { fg = c.fg1, bg = c.bg0 },
+    FloatTitle = { link = "ms_b_bg0" },
+    FoldColumn = { fg = c.fg4, bg = c.none },
     Folded = { fg = c.fg4 },
     IncSearch = { fg = c.bg0, bg = c.orange },
     Italic = { italic = true },
     LineNr = { fg = c.bg4 },
     MatchParen = { bg = c.bg3, bold = true },
     MatchWord = { fg = c.fg1, bg = c.bg4 },
-    Normal = { fg = c.fg1, bg = t and c.none or c.bg0 },
+    Normal = { fg = c.fg1, bg = c.none },
     NormalFloat = { link = "FloatNormal" },
     NormalNC = { link = "Normal" },
     NvimInternalError = { fg = c.red },

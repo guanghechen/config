@@ -1,6 +1,7 @@
 ---@type std.t.theme.IScheme
 local M = {
   theme = "rose-pine-moon",
+  opposite = "rose-pine-dawn",
   variant = "dark",
   -- stylua: ignore start
   palette = {

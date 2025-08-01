@@ -430,19 +430,13 @@ local group_items = {
       end,
       action = function()
         local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
-        local app_home = std.path.locate_app_config_home("guanghechen")
-        local script_path = std.path.join(app_home, "config/theme/toggle_theme.mjs")
-        local ok, error = pcall(function()
-          vim.fn.system({ "node", script_path, theme })
-        end)
-        if not ok then
-          std.reporter.error({
-            from = __module_name__,
-            subject = "toggle_theme_variant",
-            message = "Failed to toggle theme variant.",
-            details = { theme = theme, app_home = app_home, script_path = script_path, error = error },
-          })
+        local scheme = eve.context.theme.get_scheme(theme) ---@type std.t.theme.IScheme|nil
+        if scheme == nil then
+          return
         end
+
+        local next_theme = scheme.opposite or "default" ---@type std.e.Theme
+        eve.command.execute(eve.command.definitions.toggle.theme.uuid, next_theme)
       end,
     },
   },
