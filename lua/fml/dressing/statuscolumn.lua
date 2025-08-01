@@ -4,14 +4,6 @@
 local config = {
   left = { "mark", "sign" }, -- priority of signs on the left (high to low)
   right = { "fold", "git" }, -- priority of signs on the right (high to low)
-  folds = {
-    open = true, -- show open fold icons
-    git_hl = true, -- use Git Signs hl for fold icons
-  },
-  git = {
-    -- patterns to match Git signs
-    patterns = { "GitSign", "MiniDiffSign" },
-  },
   refresh = 200, -- refresh at most every 50ms
 }
 
@@ -62,12 +54,7 @@ end
 ---@param name                          string
 ---@return boolean
 local function is_git_sign(name)
-  for _, pattern in ipairs(config.git.patterns) do
-    if name:find(pattern) then
-      return true
-    end
-  end
-  return false
+  return name:find("GitSign") ~= nil
 end
 
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
@@ -141,15 +128,31 @@ local function line_signs(winnr, bufnr, lnum)
         texthl = "Folded",
         priority = 0,
       }
-      table.insert(signs, sign)
-    elseif config.folds.open and vim.fn.foldlevel(lnum) > vim.fn.foldlevel(lnum - 1) then
+      signs[#signs + 1] = sign
+      return
+    end
+
+    local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
+    if support_foldingRange > 0 and vim.lsp.foldexpr(lnum):sub(1, 1) == ">" then
       ---@type fml.dressing.statuscolumn.ISign
       local sign = {
         type = "fold",
         text = eve.icon.fillchars.foldopen,
         priority = 0,
       }
-      table.insert(signs, sign)
+      signs[#signs + 1] = sign
+      return
+    end
+
+    if vim.fn.foldlevel(lnum) > vim.fn.foldlevel(lnum - 1) then
+      ---@type fml.dressing.statuscolumn.ISign
+      local sign = {
+        type = "fold",
+        text = eve.icon.fillchars.foldopen,
+        priority = 0,
+      }
+      signs[#signs + 1] = sign
+      return
     end
   end)
 
@@ -216,14 +219,12 @@ local function statuscolumn()
       local left = find_sign(signs_by_type, config.left)
       local right = find_sign(signs_by_type, config.right)
 
-      if config.folds.git_hl then
-        local git = signs_by_type.git
-        if git and left and left.type == "fold" then
-          left.texthl = git.texthl
-        end
-        if git and right and right.type == "fold" then
-          right.texthl = git.texthl
-        end
+      local git = signs_by_type.git
+      if git and left and left.type == "fold" then
+        left.texthl = git.texthl
+      end
+      if git and right and right.type == "fold" then
+        right.texthl = git.texthl
       end
 
       components[1] = left and get_icon(left) or "  " -- left
