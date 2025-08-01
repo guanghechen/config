@@ -1,6 +1,7 @@
 local __module_name__ = "eve.builtin.lsp"
 
 local Methods = vim.lsp.protocol.Methods
+local augroup_codelens = eve.nvim.augroup("eve.builtin.lsp.codelens") ---@type integer
 local augroup_illuminate = eve.nvim.augroup("eve.builtin.lsp.illuminate") ---@type integer
 
 ---@class eve.builtin.lsp.ISymbolPos
@@ -321,9 +322,9 @@ function M.on_attach(client, bufnr)
       local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean
       if enable_code_lens then
         vim.lsp.codelens.refresh({ bufnr = bufnr })
-        --- vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "InsertLeave" }, {
-        vim.api.nvim_create_autocmd({ "InsertLeave" }, {
+        vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave" }, {
           buffer = bufnr,
+          group = augroup_codelens,
           callback = function()
             vim.lsp.codelens.refresh({ bufnr = bufnr })
           end,
@@ -529,6 +530,13 @@ function M.on_detach(client, bufnr)
 
   if support_codelens > 0 and client:supports_method(Methods.textDocument_codeLens) then
     support_codelens = support_codelens - 1
+
+    if support_codelens == 0 then
+      vim.api.nvim_clear_autocmds({
+        group = augroup_codelens, -- You need to define this augroup
+        buffer = bufnr,
+      })
+    end
   end
   if support_inlayhint > 0 and client:supports_method(Methods.textDocument_inlayHint) then
     support_inlayhint = support_inlayhint - 1

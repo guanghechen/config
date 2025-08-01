@@ -40,13 +40,15 @@ function M.refresh_all()
   vim.cmd("redraw!")
 
   local clients = vim.lsp.get_clients({ bufnr = bufnr_sourcefile }) ---@type vim.lsp.Client[]
-  for _, client in ipairs(clients) do
-    vim.lsp.stop_client(client.id)
-  end
+  if #clients > 0 then
+    for _, client in ipairs(clients) do
+      vim.lsp.stop_client(client.id)
+    end
 
-  vim.defer_fn(function()
-    vim.cmd.edit()
-  end, 100)
+    vim.defer_fn(function()
+      vim.cmd.edit()
+    end, 100)
+  end
 
   std.reporter.info({
     from = __module_name__,

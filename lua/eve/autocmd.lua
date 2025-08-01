@@ -67,27 +67,6 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
-vim.api.nvim_create_autocmd("LspProgress", {
-  group = eve.nvim.augroup("bootstrap_on_LspProgress"),
-  callback = function(event)
-    local data = event.data.params.value
-    local progress = ""
-
-    if data.percentage then
-      local icon = std.fn.spinner() ---@type string
-      progress = icon .. " " .. data.percentage .. "%% "
-    end
-
-    local str = progress .. (data.message or "") .. " " .. (data.title or "")
-    local msg_lsp = data.kind == "end" and "" or str ---@type string
-    eve.status.msg_lsp:next(msg_lsp)
-
-    if data.kind == "end" then
-      eve.status.suppress_warning:next(false)
-    end
-  end,
-})
-
 vim.api.nvim_create_autocmd("ModeChanged", {
   group = eve.nvim.augroup("bootstrap_on_ModeChanged"),
   callback = function()
@@ -286,6 +265,41 @@ vim.api.nvim_create_autocmd("WinResized", {
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       eve.status.dirty_winline_nr:next(winnr)
     end)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
+vim.api.nvim_create_autocmd("LspDetach", {
+  group = eve.nvim.augroup("bootstrap_on_LspDetach"),
+  callback = function(args)
+    local client_id = args.data.client_id
+    local client = vim.lsp.get_client_by_id(client_id)
+    local bufnr = args.buf
+    if client ~= nil then
+      eve.lsp.on_detach(client, bufnr)
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("LspProgress", {
+  group = eve.nvim.augroup("bootstrap_on_LspProgress"),
+  callback = function(event)
+    local data = event.data.params.value
+    local progress = ""
+
+    if data.percentage then
+      local icon = std.fn.spinner() ---@type string
+      progress = icon .. " " .. data.percentage .. "%% "
+    end
+
+    local str = progress .. (data.message or "") .. " " .. (data.title or "")
+    local msg_lsp = data.kind == "end" and "" or str ---@type string
+    eve.status.msg_lsp:next(msg_lsp)
+
+    if data.kind == "end" then
+      eve.status.suppress_warning:next(false)
+    end
   end,
 })
 
