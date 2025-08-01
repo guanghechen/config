@@ -231,25 +231,25 @@ return config
         settings.schemes = [color_scheme];
       }
 
-      if (
-        settings?.profiles?.defaults &&
-        typeof settings.profiles.defaults === "object"
-      ) {
-        settings.profiles.defaults.colorScheme = color_scheme.name;
-        switch (scheme.variant) {
-          case "dark":
-            settings.profiles.defaults.backgroundImage =
-              "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Flowerlit-Prayers.jpg";
-            break;
-          case "light":
-            settings.profiles.defaults.backgroundImage =
-              "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Barrett-Girl.jpg";
-            break;
-          case "neutral":
-            break;
-          default:
-        }
-      }
+      settings.profiles = settings.profiles || {};
+      settings.profiles.defaults = settings.profiles.defaults || {};
+      settings.profiles.defaults.colorScheme = color_scheme.name;
+      settings.profiles.defaults.opacity = 80;
+      settings.profiles.defaults.useAcrylic = true;
+
+      // switch (scheme.variant) {
+      //   case "dark":
+      //     settings.profiles.defaults.backgroundImage =
+      //       "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Flowerlit-Prayers.jpg";
+      //     break;
+      //   case "light":
+      //     settings.profiles.defaults.backgroundImage =
+      //       "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Barrett-Girl.jpg";
+      //     break;
+      //   case "neutral":
+      //     break;
+      //   default:
+      // }
 
       return JSON.stringify(settings, null, 2);
     },
