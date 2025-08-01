@@ -279,8 +279,6 @@ function M.cleanup()
   end
 end
 
-vim.schedule(function()
-  vim.o.statuscolumn = "%!v:lua.require'fml.dressing.statuscolumn'.statuscolumn()"
-end)
+vim.o.statuscolumn = "%!v:lua.require'fml.dressing.statuscolumn'.statuscolumn()"
 
 return M
