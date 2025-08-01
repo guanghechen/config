@@ -2,18 +2,30 @@
   "alwaysOnTop": false,
   "alwaysShowNotificationIcon": true,
   "alwaysShowTabs": false,
-  "copyFormatting": "none",
+  "autoHideWindow": false,
+  "confirmCloseAllTabs": true,
+  "copyFormatting": false,
   "copyOnSelect": true,
   "language": "en-US",
+  "largePasteWarning": true,
   "launchMode": "maximized",
+  "multiLinePasteWarning": true,
+  "newTabPosition": "afterLastTab",
+  "showTabsInTitlebar": true,
+  "showTerminalTitleInTitlebar": true,
+  "startOnUserLogin": false,
+  "tabWidthMode": "equal",
+  "trimBlockSelection": true,
+  "trimPaste": true,
+  "useAcrylicInTabRow": true,
+  "compatibility": {
+    "enableUnfocusedAcrylic": true
+  },
   "newTabMenu": [
     {
       "type": "remainingProfiles"
     }
   ],
-  "showTabsInTitlebar": true,
-  "showTerminalTitleInTitlebar": true,
-  "useAcrylicInTabRow": true,
   "actions": [
     {
       "id": "ghc.input.ctrl_,",
