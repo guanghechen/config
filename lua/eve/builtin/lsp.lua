@@ -269,37 +269,37 @@ function M.on_attach(client, bufnr)
   local support_references = vim.b[bufnr].support_references or 0 ---@type integer
   local support_typeDefinition = vim.b[bufnr].support_typeDefinition or 0 ---@type integer
 
-  if support_codelens > 0 or client:supports_method(Methods.textDocument_codeLens) then
+  if client:supports_method(Methods.textDocument_codeLens) then
     support_codelens = support_codelens + 1
   end
-  if support_inlayhint > 0 or client:supports_method(Methods.textDocument_inlayHint) then
+  if client:supports_method(Methods.textDocument_inlayHint) then
     support_inlayhint = support_inlayhint + 1
   end
-  if support_rename > 0 or client:supports_method(Methods.textDocument_rename) then
+  if client:supports_method(Methods.textDocument_rename) then
     support_rename = support_rename + 1
   end
-  if support_codeAction > 0 or client:supports_method(Methods.textDocument_codeAction) then
+  if client:supports_method(Methods.textDocument_codeAction) then
     support_codeAction = support_codeAction + 1
   end
-  if support_documentHighlight > 0 or client:supports_method(Methods.textDocument_documentHighlight) then
+  if client:supports_method(Methods.textDocument_documentHighlight) then
     support_documentHighlight = support_documentHighlight + 1
   end
-  if support_documentSymbol > 0 or client:supports_method(Methods.textDocument_documentSymbol) then
+  if client:supports_method(Methods.textDocument_documentSymbol) then
     support_documentSymbol = support_documentSymbol + 1
   end
-  if support_foldingRange > 0 or client:supports_method(Methods.textDocument_foldingRange) then
+  if client:supports_method(Methods.textDocument_foldingRange) then
     support_foldingRange = support_foldingRange + 1
   end
-  if support_definition > 0 or client:supports_method(Methods.textDocument_definition) then
+  if client:supports_method(Methods.textDocument_definition) then
     support_definition = support_definition + 1
   end
-  if support_implementation > 0 or client:supports_method(Methods.textDocument_implementation) then
+  if client:supports_method(Methods.textDocument_implementation) then
     support_implementation = support_implementation + 1
   end
-  if support_references > 0 or client:supports_method(Methods.textDocument_references) then
+  if client:supports_method(Methods.textDocument_references) then
     support_references = support_references + 1
   end
-  if support_typeDefinition > 0 or client:supports_method(Methods.textDocument_typeDefinition) then
+  if client:supports_method(Methods.textDocument_typeDefinition) then
     support_typeDefinition = support_typeDefinition + 1
   end
 
@@ -515,16 +515,71 @@ end
 ---@param bufnr                         integer
 ---@diagnostic disable-next-line: unused-local
 function M.on_detach(client, bufnr)
+  local support_codelens = vim.b[bufnr].support_codelens or 0 ---@type integer
+  local support_inlayhint = vim.b[bufnr].support_inlayhint or 0 ---@type integer
+  local support_rename = vim.b[bufnr].support_rename or 0 ---@type integer
+  local support_codeAction = vim.b[bufnr].support_codeAction or 0 ---@type integer
   local support_documentHighlight = vim.b[bufnr].support_documentHighlight or 0 ---@type integer
-  vim.b[bufnr].support_documentHighlight = support_documentHighlight - 1 ---@type integer
+  local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
+  local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
+  local support_definition = vim.b[bufnr].support_definition or 0 ---@type integer
+  local support_implementation = vim.b[bufnr].support_implementation or 0 ---@type integer
+  local support_references = vim.b[bufnr].support_references or 0 ---@type integer
+  local support_typeDefinition = vim.b[bufnr].support_typeDefinition or 0 ---@type integer
 
-  if support_documentHighlight == 1 then
-    vim.lsp.buf.clear_references()
-    vim.api.nvim_clear_autocmds({
-      group = augroup_illuminate,
-      buffer = bufnr,
-    })
+  if support_codelens > 0 and client:supports_method(Methods.textDocument_codeLens) then
+    support_codelens = support_codelens - 1
   end
+  if support_inlayhint > 0 and client:supports_method(Methods.textDocument_inlayHint) then
+    support_inlayhint = support_inlayhint - 1
+  end
+  if support_rename > 0 and client:supports_method(Methods.textDocument_rename) then
+    support_rename = support_rename - 1
+  end
+  if support_codeAction > 0 and client:supports_method(Methods.textDocument_codeAction) then
+    support_codeAction = support_codeAction - 1
+  end
+  if support_documentHighlight > 0 and client:supports_method(Methods.textDocument_documentHighlight) then
+    support_documentHighlight = support_documentHighlight - 1
+
+    if support_documentHighlight == 0 then
+      vim.lsp.buf.clear_references()
+      vim.api.nvim_clear_autocmds({
+        group = augroup_illuminate,
+        buffer = bufnr,
+      })
+    end
+  end
+  if support_documentSymbol > 0 and client:supports_method(Methods.textDocument_documentSymbol) then
+    support_documentSymbol = support_documentSymbol - 1
+  end
+  if support_foldingRange > 0 and client:supports_method(Methods.textDocument_foldingRange) then
+    support_foldingRange = support_foldingRange - 1
+  end
+  if support_definition > 0 and client:supports_method(Methods.textDocument_definition) then
+    support_definition = support_definition - 1
+  end
+  if support_implementation > 0 and client:supports_method(Methods.textDocument_implementation) then
+    support_implementation = support_implementation - 1
+  end
+  if support_references > 0 and client:supports_method(Methods.textDocument_references) then
+    support_references = support_references - 1
+  end
+  if support_typeDefinition > 0 and client:supports_method(Methods.textDocument_typeDefinition) then
+    support_typeDefinition = support_typeDefinition - 1
+  end
+
+  vim.b[bufnr].support_codelens = support_codelens ---@type integer
+  vim.b[bufnr].support_inlayhint = support_inlayhint ---@type integer
+  vim.b[bufnr].support_rename = support_rename ---@type integer
+  vim.b[bufnr].support_codeAction = support_codeAction ---@type integer
+  vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type integer
+  vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type integer
+  vim.b[bufnr].support_foldingRange = support_foldingRange ---@type integer
+  vim.b[bufnr].support_definition = support_definition ---@type integer
+  vim.b[bufnr].support_implementation = support_implementation ---@type integer
+  vim.b[bufnr].support_references = support_references ---@type integer
+  vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type integer
 end
 
 function M.on_init(client, _)
