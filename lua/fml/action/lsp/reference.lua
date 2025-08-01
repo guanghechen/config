@@ -139,14 +139,14 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
     end
 
     if #items <= 0 then
-      callback(true)
+      callback(true, {})
       return
     end
 
     if #items == 1 then
       local item = items[1] ---@type fml.action.lsp.reference.IItem
       eve.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
-      callback(true)
+      callback(true, { item })
       return
     end
 
@@ -161,52 +161,68 @@ end
 ---@return nil
 local function focus(title, method, buf_flagname, additional_params)
   fetch_data(method, buf_flagname, additional_params, function(ok, items)
-    if ok and items ~= nil then
-      local rootdir = std.path.cwd() ---@type string
-      local filepaths = {} ---@type string[]
-      for _, item in ipairs(items) do
-        local filepath = string.format("%s:%d:%d:%d", item.filepath, item.lnum, item.col, item.col_end) ---@type string
-        filepaths[#filepaths + 1] = filepath
+    if not ok or items == nil then
+      return
+    end
 
-        if string.sub(filepath, 1, #rootdir) ~= rootdir then
-          while true do
-            local parent = std.path.dirname(rootdir) ---@type string
-            if parent == rootdir then
-              break
-            end
-            rootdir = parent
+    if #items <= 0 then
+      std.reporter.info({
+        from = __module_name__,
+        subject = title,
+        message = "No items found.",
+        details = { title = title, method = method, buf_flagname = buf_flagname, additional_params = additional_params },
+      })
+      return
+    end
+
+    if #items == 1 then
+      return
+    end
+
+    local rootdir = std.path.cwd() ---@type string
+    local filepaths = {} ---@type string[]
+    for _, item in ipairs(items) do
+      local filepath = string.format("%s:%d:%d:%d", item.filepath, item.lnum, item.col, item.col_end) ---@type string
+      filepaths[#filepaths + 1] = filepath
+
+      if string.sub(filepath, 1, #rootdir) ~= rootdir then
+        while true do
+          local parent = std.path.dirname(rootdir) ---@type string
+          if parent == rootdir then
+            break
           end
+          rootdir = parent
         end
       end
-
-      picker.finder:set_title(title)
-      picker:reset_filepaths(rootdir, filepaths, true)
-      picker:mark_result_dirty()
-      picker:focus()
-
-      vim.schedule(function()
-        local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
-        treeview:traverse_filenode(nil, function(node, nodestate)
-          if nodestate ~= nil and nodestate.locations ~= nil then
-            local locations = nodestate.locations ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
-            local lnum_maximum = 1 ---@type integer
-            for _, location in ipairs(locations) do
-              lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum
-            end
-
-            local lines = vim.fn.readfile(node.data.filepath, "", lnum_maximum) ---@type string[]
-            for _, location in ipairs(locations) do
-              local line = lines[location.lnum] or "" ---@type string
-              location.text = line
-              location.highlights = { { coll = location.col, colr = location.col_end, hlname = "f_ft_reference" } }
-            end
-          end
-        end)
-
-        treeview:mark_cache_treeview_dirty()
-        picker:mark_result_dirty()
-      end)
     end
+
+    picker.finder:set_title(title)
+    picker:reset_filepaths(rootdir, filepaths, true)
+    picker:mark_result_dirty()
+    picker:focus()
+
+    vim.schedule(function()
+      local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
+      treeview:traverse_filenode(nil, function(node, nodestate)
+        if nodestate ~= nil and nodestate.locations ~= nil then
+          local locations = nodestate.locations ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
+          local lnum_maximum = 1 ---@type integer
+          for _, location in ipairs(locations) do
+            lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum
+          end
+
+          local lines = vim.fn.readfile(node.data.filepath, "", lnum_maximum) ---@type string[]
+          for _, location in ipairs(locations) do
+            local line = lines[location.lnum] or "" ---@type string
+            location.text = line
+            location.highlights = { { coll = location.col, colr = location.col_end, hlname = "f_ft_reference" } }
+          end
+        end
+      end)
+
+      treeview:mark_cache_treeview_dirty()
+      picker:mark_result_dirty()
+    end)
   end)
 end
 
