@@ -316,12 +316,6 @@ function M.on_attach(client, bufnr)
   vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type integer
 
   if vim.bo[bufnr].buftype == "" then
-    -- inlay hints
-    if support_inlayhint == 1 then
-      local enable_inlay_hints = eve.context.lsp.inlay_hints:snapshot() ---@type boolean
-      vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
-    end
-
     -- code lens
     if support_codelens == 1 then
       local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean
@@ -336,23 +330,29 @@ function M.on_attach(client, bufnr)
         })
       end
     end
+  end
 
-    -- illuminate
-    if support_documentHighlight == 1 then
-      local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
-      if enabled then
-        vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-          group = augroup_illuminate,
-          buffer = bufnr,
-          callback = vim.lsp.buf.document_highlight,
-        })
+  -- inlay hints
+  if support_inlayhint == 1 then
+    local enable_inlay_hints = eve.context.lsp.inlay_hints:snapshot() ---@type boolean
+    vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
+  end
 
-        vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-          group = augroup_illuminate,
-          buffer = bufnr,
-          callback = vim.lsp.buf.clear_references,
-        })
-      end
+  -- illuminate
+  if support_documentHighlight == 1 then
+    local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
+    if enabled then
+      vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+        group = augroup_illuminate,
+        buffer = bufnr,
+        callback = vim.lsp.buf.document_highlight,
+      })
+
+      vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+        group = augroup_illuminate,
+        buffer = bufnr,
+        callback = vim.lsp.buf.clear_references,
+      })
     end
   end
 
@@ -390,7 +390,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show signature help",
     },
     {
-      disabled = support_definition < 1,
+      disabled = support_definition ~= 1,
       modes = { "n" },
       key = "gd",
       callback = function()
@@ -400,7 +400,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto definition",
     },
     {
-      disabled = support_implementation < 1,
+      disabled = support_implementation ~= 1,
       modes = { "n" },
       key = "gi",
       callback = function()
@@ -410,7 +410,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto implementation",
     },
     {
-      disabled = support_references < 1,
+      disabled = support_references ~= 1,
       modes = { "n" },
       key = "gr",
       callback = function()
@@ -420,7 +420,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show references",
     },
     {
-      disabled = support_typeDefinition < 1,
+      disabled = support_typeDefinition ~= 1,
       modes = { "n" },
       key = "gt",
       callback = function()
@@ -430,7 +430,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto type definition",
     },
     {
-      disabled = support_codeAction < 1,
+      disabled = support_codeAction ~= 1,
       modes = { "n", "v" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
@@ -443,7 +443,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: code action",
     },
     {
-      disabled = support_codelens < 1,
+      disabled = support_codelens ~= 1,
       modes = { "n", "v" },
       key = "<leader>cc",
       callback = function()
@@ -452,7 +452,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: codelens",
     },
     {
-      disabled = support_codelens < 1,
+      disabled = support_codelens ~= 1,
       modes = { "n", "v" },
       key = "<leader>cC",
       callback = function()
@@ -461,7 +461,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: refresh & display codelens",
     },
     {
-      disabled = support_codeAction < 1,
+      disabled = support_codeAction ~= 1,
       modes = { "n" },
       key = "<leader>ca",
       callback = function()
@@ -478,7 +478,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: source action",
     },
     {
-      disabled = support_rename < 1,
+      disabled = support_rename ~= 1,
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
@@ -490,7 +490,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: rename",
     },
     {
-      disabled = support_documentHighlight < 1,
+      disabled = support_documentHighlight ~= 1,
       modes = { "n", "v" },
       key = "[[",
       callback = function()
@@ -499,7 +499,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto prev reference",
     },
     {
-      disabled = support_documentHighlight < 1,
+      disabled = support_documentHighlight ~= 1,
       modes = { "n", "v" },
       key = "]]",
       callback = function()
