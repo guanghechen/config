@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { XDG_CONFIG_HOME } from '../_shared/env.mjs';
+import { XDG_CONFIG_HOME } from "../_shared/env.mjs";
 import { HOME_THEME_SCHEME, HOME_THEME_APP, cwd, themes } from "./_env.mjs";
 
 /**
@@ -12,11 +12,13 @@ import { HOME_THEME_SCHEME, HOME_THEME_APP, cwd, themes } from "./_env.mjs";
  */
 export async function render_template(template, scheme) {
   const variant = scheme.variant;
+  const opposite = scheme.opposite;
   const c = scheme.palette;
 
   const data = {
     ...c,
     variant,
+    opposite,
     theme: scheme.theme,
   };
   const content = template.replace(
@@ -88,10 +90,14 @@ export async function load_theme_scheme(theme) {
   }
   const content = await fs.readFile(filepath, "utf8");
   try {
-    return JSON.parse(content)
+    return JSON.parse(content);
   } catch (error) {
-    console.error('[load_theme_scheme] Bad scheme, not a valid json.', { theme, filepath, content })
-    return
+    console.error("[load_theme_scheme] Bad scheme, not a valid json.", {
+      theme,
+      filepath,
+      content,
+    });
+    return;
   }
 }
 
@@ -104,9 +110,10 @@ export async function apply_theme_per_app(app, scheme) {
   if (!app.active(app)) return;
 
   /** @type {import('./_env.mjs').IThemeScheme} */
-  const resolvedScheme = app.kind === "terminal" && scheme.theme.startsWith('gruvbox-')
-    ? swapNormalAndBrightColors(scheme)
-    : scheme
+  const resolvedScheme =
+    app.kind === "terminal" && scheme.theme.startsWith("gruvbox-")
+      ? swapNormalAndBrightColors(scheme)
+      : scheme;
 
   if (app.local) {
     const template_filepath = path.join(HOME_THEME_APP, `${app.name}.hbs`);
@@ -153,9 +160,10 @@ export async function gen_themes_per_app(app) {
     if (!scheme) return;
 
     /** @type {import('./_env.mjs').IThemeScheme} */
-    const resolvedScheme = app.kind === "terminal" && scheme.theme.startsWith('gruvbox-')
-      ? swapNormalAndBrightColors(scheme)
-      : scheme
+    const resolvedScheme =
+      app.kind === "terminal" && scheme.theme.startsWith("gruvbox-")
+        ? swapNormalAndBrightColors(scheme)
+        : scheme;
 
     const content = await app.render(app, template, resolvedScheme);
     const theme_filepath = path.resolve(THEME_HOME, `${theme}${app.extname}`);
@@ -190,6 +198,6 @@ export function swapNormalAndBrightColors(scheme) {
       brightAqua: scheme.palette.aqua,
       brightOrange: scheme.palette.orange,
     },
-  }
+  };
   return newScheme;
 }
