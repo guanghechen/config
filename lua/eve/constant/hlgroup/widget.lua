@@ -8,6 +8,7 @@ function M.gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
 
+  local bg = t and c.none or c.bg0 ---@type string
   local bg_main = t and c.bg0 or c.none ---@type string
   local bg_preview = t and c.bg0 or c.none ---@type string
 
@@ -19,7 +20,7 @@ function M.gen_hlgroup_map(context)
     f_lnum_hint = { fg = c.purple },
     f_transparent = { bg = c.none },
     f_fold_virt_text = { fg = c.bg2, bg = c.yellow, italic = true },
-    f_fold_virt_text_inv = { fg = c.yellow, bg = t and c.bg0 or c.none, italic = true },
+    f_fold_virt_text_inv = { fg = c.yellow, bg = bg, italic = true },
 
     ---buffers
     f_buf_nr = { fg = c.fg4 },
@@ -80,18 +81,18 @@ function M.gen_hlgroup_map(context)
 
     ---cmdline
     f_uc_border = { link = "FloatActiveBorder" },
-    f_uc_icon_command = { fg = c.aqua, bg = t and c.bg0 or c.none },
-    f_uc_icon_command_help = { fg = c.purple, bg = t and c.bg0 or c.none },
-    f_uc_icon_command_lua = { fg = c.blue, bg = t and c.bg0 or c.none },
-    f_uc_icon_search_forward = { fg = c.yellow, bg = t and c.bg0 or c.none },
-    f_uc_icon_search_backward = { fg = c.yellow, bg = t and c.bg0 or c.none },
+    f_uc_icon_command = { fg = c.aqua, bg = bg },
+    f_uc_icon_command_help = { fg = c.purple, bg = bg },
+    f_uc_icon_command_lua = { fg = c.blue, bg = bg },
+    f_uc_icon_search_forward = { fg = c.yellow, bg = bg },
+    f_uc_icon_search_backward = { fg = c.yellow, bg = bg },
     f_uc_option = { fg = c.fg1, bg = c.bg1 },
     f_uc_option_current = { fg = c.bg0, bg = c.pink, bold = true },
-    f_uc_type_lua = { fg = c.blue, bg = t and c.bg0 or c.none },
+    f_uc_type_lua = { fg = c.blue, bg = bg },
 
     ---input
-    f_ui_current = { bg = t and c.bg0 or c.none },
-    f_ui_normal = { bg = t and c.bg0 or c.none },
+    f_ui_current = { bg = bg },
+    f_ui_normal = { bg = bg },
 
     ---lsp symbols
     f_lsp_symbol_icon = { fg = c.brightPurple },
@@ -140,11 +141,11 @@ function M.gen_hlgroup_map(context)
 
     ---notify
     -- stylua: ignore start
-    f_un_border_trace = { fg = c.fg2,     bg = t and c.bg0 or c.none },
-    f_un_border_debug = { fg = c.green,   bg = t and c.bg0 or c.none },
-    f_un_border_info  = { fg = c.blue,    bg = t and c.bg0 or c.none },
-    f_un_border_warn  = { fg = c.yellow,  bg = t and c.bg0 or c.none },
-    f_un_border_error = { fg = c.red,     bg = t and c.bg0 or c.none },
+    f_un_border_trace = { fg = c.fg2,     bg = bg },
+    f_un_border_debug = { fg = c.green,   bg = bg },
+    f_un_border_info  = { fg = c.blue,    bg = bg },
+    f_un_border_warn  = { fg = c.yellow,  bg = bg },
+    f_un_border_error = { fg = c.red,     bg = bg },
     f_un_icon_trace   = { fg = c.fg2,     bg = c.none },
     f_un_icon_debug   = { fg = c.green,   bg = c.none },
     f_un_icon_info    = { fg = c.blue,    bg = c.none },
@@ -155,11 +156,11 @@ function M.gen_hlgroup_map(context)
     f_un_level_info   = { fg = c.blue,    bg = c.none },
     f_un_level_warn   = { fg = c.yellow,  bg = c.none },
     f_un_level_error  = { fg = c.red,     bg = c.none },
-    f_un_normal_trace = { fg = c.fg2,     bg = t and c.bg0 or c.none },
-    f_un_normal_debug = { fg = c.fg2,     bg = t and c.bg0 or c.none },
-    f_un_normal_info  = { fg = c.fg2,     bg = t and c.bg0 or c.none },
-    f_un_normal_warn  = { fg = c.fg2,     bg = t and c.bg0 or c.none },
-    f_un_normal_error = { fg = c.fg2,     bg = t and c.bg0 or c.none },
+    f_un_normal_trace = { fg = c.fg2,     bg = bg },
+    f_un_normal_debug = { fg = c.fg2,     bg = bg },
+    f_un_normal_info  = { fg = c.fg2,     bg = bg },
+    f_un_normal_warn  = { fg = c.fg2,     bg = bg },
+    f_un_normal_error = { fg = c.fg2,     bg = bg },
     f_un_title_trace  = { fg = c.fg2,     bg = c.none },
     f_un_title_debug  = { fg = c.green,   bg = c.none },
     f_un_title_info   = { fg = c.blue,    bg = c.none },
@@ -178,13 +179,13 @@ function M.gen_hlgroup_map(context)
     -- stylua: ignore end
 
     ---picker
-    f_pk_finder_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },
+    f_pk_finder_normal = { fg = c.fg1, bg = bg },
     f_pk_finder_title = { link = t and "ms_b_bg0" or "ms_b_none" },
     f_pk_matches = { fg = c.pink, bold = true, italic = true },
-    f_pk_finder_prompt = { fg = c.red, bg = t and c.bg0 or c.none },
+    f_pk_finder_prompt = { fg = c.red, bg = bg },
     f_pk_preview_current = { bg = c.bg2 },
     f_pk_preview_normal = { bg = bg_preview },
-    f_pk_preview_title = { fg = c.green, bg = t and c.bg0 or c.none, bold = true },
+    f_pk_preview_title = { fg = c.green, bg = bg, bold = true },
     f_pk_result_current = { bg = c.bg3 },
     f_pk_result_normal = { bg = bg_main },
     f_pk_sign_line_current = { bg = c.bg3 },
@@ -211,8 +212,8 @@ function M.gen_hlgroup_map(context)
     f_up_selected = { fg = c.bg1, bg = c.blue, bold = true, italic = true },
 
     ---search
-    f_us_input_normal = { fg = c.fg1, bg = t and c.bg0 or c.none },
-    f_us_input_prompt = { fg = c.red, bg = t and c.bg0 or c.none },
+    f_us_input_normal = { fg = c.fg1, bg = bg },
+    f_us_input_prompt = { fg = c.red, bg = bg },
     f_us_input_title = { link = t and "ms_b_bg0" or "ms_b_none" },
     f_us_main_bg = { bg = bg_main },
     f_us_main_current = { bg = c.bg3 },
@@ -230,7 +231,7 @@ function M.gen_hlgroup_map(context)
     f_us_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
     f_us_preview_replace = { fg = c.bg1, bg = c.diffAdd },
     f_us_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
-    f_us_preview_title = { fg = c.green, bg = t and c.bg0 or c.none, bold = true },
+    f_us_preview_title = { fg = c.green, bg = bg, bold = true },
     f_us_match = { fg = c.bg1, bg = c.yellow },
     f_us_match_cur = { fg = c.bg1, bg = c.red, bold = true, underline = true },
 
@@ -240,7 +241,7 @@ function M.gen_hlgroup_map(context)
     f_us_codeaction_client_name = { fg = c.fg4, bg = c.none },
 
     ---signs
-    fs_input_prompt = { fg = c.red, bg = t and c.bg0 or c.none },
+    fs_input_prompt = { fg = c.red, bg = bg },
     fs_main_current = { bg = c.bg3 },
     fs_main_present = { fg = c.blue, bg = c.none },
     fs_main_present_cur = { fg = c.blue, bg = c.bg3 },
@@ -267,7 +268,7 @@ function M.gen_hlgroup_map(context)
 
     ---winsep
     f_winsep_border = {},
-    f_winsep_normal = { link = "ms_bg0" },
+    f_winsep_normal = { link = "ms_none" },
     f_winsep_title = {},
   }
 end

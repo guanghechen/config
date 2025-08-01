@@ -8,7 +8,7 @@ function M.gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
   local bg_bufc = t and c.none or c.bg0 ---@type string
-  local bg_pos = t and c.bg0 or c.bg2 ---@type string
+  local bg_pos = c.bg2 ---@type string
 
   local bgs = {
     f_sl = c.none,
@@ -59,7 +59,7 @@ function M.gen_hlgroup_map(context)
     ---! devmode
     devmode_devmode_text = { fg = c.bg0, bg = c.yellow, bold = true },
     devmode_render_count_text = { fg = c.bg0, bg = c.orange, bold = true },
-    devmode_render_count_sep = { fg = c.orange, bg = c.bg1, bold = true },
+    devmode_render_count_sep = { fg = c.orange, bg = c.none, bold = true },
 
     ---! dir
     dir_path_blur_sep = { fg = c.fg3, bg = "bg_bar" },
@@ -85,8 +85,8 @@ function M.gen_hlgroup_map(context)
     git_branch_text = { fg = c.fg1, bg = "bg_bar" },
 
     ---! host
-    host_username_text = { link = t and "ms_b_bg0" or "ms_b_none" },
-    host_username_sep = { link = t and "mf_b_bg0" or "mf_b_none" },
+    host_username_text = { link = "ms_b_none" },
+    host_username_sep = { link = "mf_b_none" },
 
     ---! lsp
     lsp_client_text = { fg = c.fg2, bg = "bg_bar" },
@@ -137,7 +137,7 @@ function M.gen_hlgroup_map(context)
 
     ---! nvim
     nvim_mode_text = { link = "mf_b_bg0" },
-    nvim_mode_sep = { link = t and "ms_b_none" or "ms_b_bg2" },
+    nvim_mode_sep = { link = "ms_b_bg2" },
     nvim_msg_changes = { fg = c.fg3, bg = "bg_bar" },
     nvim_msg_command = { fg = c.pink, bg = "bg_bar" },
     nvim_msg_lsp = { fg = c.fg4, bg = "bg_bar" },
@@ -165,9 +165,9 @@ function M.gen_hlgroup_map(context)
     picker_result_pos_text = { fg = c.fg4, bg = "bg_bar", sp = c.pink, underline = true },
 
     ---! plugin
-    plugin_neotree_blank = { fg = c.fg1, bg = "bg_bar" },
-    plugin_neotree_sep = { fg = bg_pos, bg = bg_pos, bold = true },
-    plugin_neotree_split = { fg = c.bg4, bg = "bg_bar" },
+    plugin_neotree_blank = { fg = c.fg1, bg = c.none },
+    plugin_neotree_sep = { fg = bg_pos, bg = c.none, bold = true },
+    plugin_neotree_split = { fg = c.bg4, bg = c.none },
     plugin_neotree_text = { fg = c.fg4, bg = bg_pos, bold = true },
 
     ---! python
