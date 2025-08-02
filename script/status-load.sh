@@ -29,14 +29,17 @@ function _ghc_tmux_status_load_ {
     tmux source-file "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
     tmux set-option -g status on
     tmux set-option -g status-position top
+    tmux set-option -g status-justify "left"
   elif [ "$status_mode" == "02" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
     tmux set-option -g status on
     tmux set-option -g status-position top
+    tmux set-option -g status-justify "left"
   elif [ "$status_mode" == "03" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/status03.tmux.conf"
     tmux set-option -g status on
     tmux set-option -g status-position top
+    tmux set-option -g status-justify "centre"
   elif [ "$status_mode" == "10" ]; then
     tmux set-option -g status off
     tmux set-option -g status-position bottom
@@ -44,14 +47,17 @@ function _ghc_tmux_status_load_ {
     tmux source-file "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
     tmux set-option -g status on
     tmux set-option -g status-position bottom
+    tmux set-option -g status-justify "left"
   elif [ "$status_mode" == "12" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
     tmux set-option -g status on
     tmux set-option -g status-position bottom
+    tmux set-option -g status-justify "left"
   elif [ "$status_mode" == "13" ]; then
     tmux source-file "$HOME/.config/tmux/conf/theme/status03.tmux.conf"
     tmux set-option -g status on
     tmux set-option -g status-position bottom
+    tmux set-option -g status-justify "centre"
   fi
 
   if [ "$panestatus_mode" == "00" ]; then
