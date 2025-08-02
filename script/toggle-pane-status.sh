@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-function _ghc_tmux_pane_status_toggle_ {
+function _ghc_tmux_toggle_pane_status_ {
   local mode=$(tmux show -gqv @GHC_PSL_MODE)
 
   if [ -z "$mode" ]; then
@@ -19,8 +19,7 @@ function _ghc_tmux_pane_status_toggle_ {
     tmux set -g @GHC_PSL_MODE "00"
   fi
 
-  bash "$HOME/.config/tmux/script/status-load.sh"
-  tmux refresh-client -S
+  bash "$HOME/.config/tmux/script/load-theme.sh"
 }
 
-_ghc_tmux_pane_status_toggle_
+_ghc_tmux_toggle_pane_status_

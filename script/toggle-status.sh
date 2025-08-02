@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-function _ghc_tmux_status_toggle_ {
+function _ghc_tmux_toggle_status_ {
   local mode=$(tmux show -gqv @GHC_SL_MODE)
 
   if [ -z "$mode" ]; then
@@ -23,8 +23,7 @@ function _ghc_tmux_status_toggle_ {
     tmux set -g @GHC_SL_MODE "00"
   fi
 
-  bash "$HOME/.config/tmux/script/status-load.sh"
-  tmux refresh-client -S
+  bash "$HOME/.config/tmux/script/load-theme.sh"
 }
 
-_ghc_tmux_status_toggle_
+_ghc_tmux_toggle_status_
