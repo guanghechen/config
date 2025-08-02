@@ -1,3 +1,8 @@
+local enabled = eve.context.flight.dressing_hipairs:snapshot() ---@type boolean
+if not enabled then
+  return
+end
+
 local ux = require("fml.dressing.hipairs.ux")
 
 local timer = nil ---@type any|nil
@@ -25,11 +30,6 @@ vim.api.nvim_create_autocmd({
   group = eve.nvim.augroup("hipairs_render"),
   callback = function()
     close_timer()
-
-    local enabled = eve.context.flight.dressing_hipairs:snapshot() ---@type boolean
-    if not enabled then
-      return
-    end
 
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     timer = ux.render(winnr)

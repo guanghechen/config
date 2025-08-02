@@ -58,7 +58,7 @@ function M.defaults()
     devmode = is_home_config_dir,
 
     dressing_clipboard = false,
-    dressing_hipairs = true,
+    dressing_hipairs = false,
     dressing_illumniate = true,
     dressing_input = true,
     dressing_select = true,
