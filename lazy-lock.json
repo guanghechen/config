@@ -1,6 +1,7 @@
 {
   "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "33f0789297cfec5279c30c8f8980c035fdc91e34" },
   "blink.compat": { "branch": "nvim@blink.compat", "commit": "1454f14a8d855a578ceeba77c62538fa1459a67c" },
+  "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "1acae697e5ed31c4f9031b4feda4affe542106ca" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "973f3cb73887d510321653044791d7937c7ec0fa" },
   "copilot.lua": { "branch": "nvim@copilot.lua", "commit": "0f2fd3829dd27d682e46c244cf48d9715726f612" },
   "diffview.nvim": { "branch": "nvim@diffview.nvim", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
