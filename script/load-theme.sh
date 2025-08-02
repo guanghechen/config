@@ -14,57 +14,57 @@ function _ghc_tmux_load_theme_ {
   fi
 
   if [ "$status_mode" == "00" ]; then
-    tmux set -g status off
+    tmux set -s status off
   elif [ "$status_mode" == "01" ]; then
-    tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
-    tmux set -g status-position top
+    tmux set -s status on
     tmux set -g status-justify left
-    tmux set -g status on
+    tmux set -g status-position top
+    tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
   elif [ "$status_mode" == "02" ]; then
-    tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-    tmux set -g status-position top
+    tmux set -s status on
     tmux set -g status-justify left
-    tmux set -g status on
+    tmux set -g status-position top
+    tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
   elif [ "$status_mode" == "03" ]; then
-    tmux source "$HOME/.config/tmux/conf/theme/status03.tmux.conf"
+    tmux set -s status on
+    tmux set -g status-justify centre
     tmux set -g status-position top
-    tmux set -g status-justify centre
-    tmux set -g status on
-  elif [ "$status_mode" == "10" ]; then
-    tmux set -g status off
-  elif [ "$status_mode" == "11" ]; then
-    tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
-    tmux set -g status-position bottom
-    tmux set -g status-justify left
-    tmux set -g status on
-  elif [ "$status_mode" == "12" ]; then
-    tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-    tmux set -g status-position bottom
-    tmux set -g status-justify left
-    tmux set -g status on
-  elif [ "$status_mode" == "13" ]; then
     tmux source "$HOME/.config/tmux/conf/theme/status03.tmux.conf"
+  elif [ "$status_mode" == "10" ]; then
+    tmux set -s status off
+  elif [ "$status_mode" == "11" ]; then
+    tmux set -s status on
+    tmux set -g status-justify left
     tmux set -g status-position bottom
+    tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
+  elif [ "$status_mode" == "12" ]; then
+    tmux set -s status on
+    tmux set -g status-justify left
+    tmux set -g status-position bottom
+    tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
+  elif [ "$status_mode" == "13" ]; then
+    tmux set -s status on
     tmux set -g status-justify centre
-    tmux set -g status on
+    tmux set -g status-position bottom
+    tmux source "$HOME/.config/tmux/conf/theme/status03.tmux.conf"
   fi
 
   if [ "$panestatus_mode" == "00" ]; then
     tmux set -g pane-border-status off
   elif [ "$panestatus_mode" == "01" ]; then
+    tmux set -g pane-border-status top
     tmux source "$HOME/.config/tmux/conf/theme/panestatus01.tmux.conf"
-    tmux set -g pane-border-status top
   elif [ "$panestatus_mode" == "02" ]; then
-    tmux source "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
     tmux set -g pane-border-status top
+    tmux source "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
   elif [ "$panestatus_mode" == "10" ]; then
     tmux set -g pane-border-status off
   elif [ "$panestatus_mode" == "11" ]; then
+    tmux set -g pane-border-status bottom
     tmux source "$HOME/.config/tmux/conf/theme/panestatus01.tmux.conf"
-    tmux set -g pane-border-status bottom
   elif [ "$panestatus_mode" == "12" ]; then
-    tmux source "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
     tmux set -g pane-border-status bottom
+    tmux source "$HOME/.config/tmux/conf/theme/panestatus02.tmux.conf"
   fi
 
   if [ -f "$HOME/.config/tmux/local/theme.tmux.conf" ]; then
