@@ -143,7 +143,7 @@ export const apps = [
         const script_filepath = path.join(
           XDG_CONFIG_HOME,
           app.name,
-          "script/theme-reload.sh",
+          "script/load-theme.sh",
         );
         await safe_exec("/bin/bash", [script_filepath]);
       }
