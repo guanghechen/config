@@ -11,7 +11,6 @@ function M.gen_hlgroup_map(context)
   local bg = t and c.none or c.bg0 ---@type string
   local bg_pane = t and c.bg0 or c.none ---@type string
   local bg_notify = t and c.none or c.bg0 ---@type string
-  local c_pane_fancy = t and "ms_b_bg0" or "ms_b_none" ---@type string
 
   return {
     ---common
