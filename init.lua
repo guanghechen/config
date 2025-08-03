@@ -1,6 +1,12 @@
-require("full-border"):setup({ type = ui.Border.ROUNDED })
-require("starship"):setup({ config_file = "~/.config/yazi/starship.toml" })
 require("git"):setup()
+require("full-border"):setup({
+	type = ui.Border.ROUNDED,
+})
+require("starship"):setup({
+	hide_flags = false,
+	flags_after_prompt = true,
+	config_file = "~/.config/yazi/starship.toml",
+})
 
 Header:children_add(function()
 	if ya.target_family() ~= "unix" then
@@ -12,17 +18,12 @@ end, 500, Header.LEFT)
 function Status:name()
 	local h = self._current.hovered
 	if not h then
-		return ui.Line("")
+		return ""
 	end
 
 	local linked = ""
 	if h.link_to ~= nil then
 		linked = " -> " .. tostring(h.link_to)
 	end
-
-	-- Apply proper styling to the status line text
-	return ui.Line({
-		ui.Span(" " .. h.name):fg("black"),
-		ui.Span(linked):fg("cyan"),
-	})
+	return ui.Line(" " .. h.name .. linked)
 end

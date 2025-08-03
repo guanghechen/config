@@ -1,16 +1,30 @@
 [mgr]
 linemode            = "permissions"
-mouse_events        = ["click", "scroll"]
+mouse_events        = ["click", "scroll", "touch", "move", "drag"]
 ratio               = [1, 3, 4]
 scrolloff           = 5
 show_hidden         = true
 show_symlink        = true
-sort_by             = "alphabetical"
+sort_by             = "natural"
 sort_dir_first      = true
 sort_reverse        = false
 sort_sensitive      = false
 sort_translit       = false
-title_format        = "Yazi: {cwd}"
+title_format        = "yazi: {cwd}"
+
+[confirm]
+delete_title        = "Delete {n} selected file{s} permanently? (y/N)"
+delete_origin       = "top-center"
+delete_offset       = [0, 2, 50, 3]
+overwrite_title     = "Overwrite an existing file? (y/N)"
+overwrite_origin    = "top-center"
+overwrite_offset    = [0, 2, 50, 3]
+quit_title          = "{n} task{s} running, sure to quit? (y/N)"
+quit_origin         = "top-center"
+quit_offset         = [0, 2, 50, 3]
+trash_title         = "Move {n} selected file{s} to trash? (y/N)"
+trash_origin        = "top-center"
+trash_offset        = [0, 2, 50, 3]
 
 [input]
 cursor_blink        = true
@@ -20,21 +34,12 @@ cd_offset           = [0, 2, 50, 3]
 create_title        = ["Create:", "Create (dir):"]
 create_origin       = "top-center"
 create_offset       = [0, 2, 50, 3]
-delete_title        = "Delete {n} selected file{s} permanently? (y/N)"
-delete_origin       = "top-center"
-delete_offset       = [0, 2, 50, 3]
 filter_title        = "Filter:"
 filter_origin       = "top-center"
 filter_offset       = [0, 2, 50, 3]
 find_title          = ["Find next:", "Find previous:"]
 find_origin         = "top-center"
 find_offset         = [0, 2, 50, 3]
-overwrite_title     = "Overwrite an existing file? (y/N)"
-overwrite_origin    = "top-center"
-overwrite_offset    = [0, 2, 50, 3]
-quit_title          = "{n} task{s} running, sure to quit? (y/N)"
-quit_origin         = "top-center"
-quit_offset         = [0, 2, 50, 3]
 rename_title        = "Rename:"
 rename_origin       = "hovered"
 rename_offset       = [0, 1, 50, 3]
@@ -44,9 +49,6 @@ search_offset       = [0, 2, 50, 3]
 shell_title         = ["Shell:", "Shell (block):"]
 shell_origin        = "top-center"
 shell_offset        = [0, 2, 50, 3]
-trash_title         = "Move {n} selected file{s} to trash? (y/N)"
-trash_origin        = "top-center"
-trash_offset        = [0, 2, 50, 3]
 
 [pick]
 open_title          = "Open with:"
@@ -55,7 +57,8 @@ open_offset         = [0, 1, 50, 7]
 
 [preview]
 max_width           = 600
-max_height          = 900
+max_height          = 600
+image_delay         = 100
 image_filter        = "triangle"
 image_quality       = 75
 sixel_fraction      = 15
@@ -82,8 +85,7 @@ sort_translit       = false
 
 [open]
 prepend_rules = [
-  { name = "*.json", use = [ "edit" ] },
-  { name = "*.html", use = [ "edit" ] },
+  { mime = "video/*", use = "play" },
 ]
 append_rules = [
   { name = "*", use = [ "edit" ]},
