@@ -20,10 +20,12 @@
     "pwsh",
     "rustup",
     "stylua",
+    "syntect",
     "titlebar",
     "usermod",
     "wezterm",
     "winget",
-    "wulala"
+    "wulala",
+    "yazi"
   ]
 }

@@ -254,4 +254,13 @@ return config
       return JSON.stringify(settings, null, 2);
     },
   },
+  {
+    name: "yazi",
+    kind: "other",
+    themes: "theme/",
+    extname: ".toml",
+    local: "theme.toml",
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
+  },
 ];
