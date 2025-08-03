@@ -3,6 +3,9 @@
 "$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
 
 [mgr]
+prepend_keymap = [
+  { on   = [ "c", "m" ],      run  = "plugin chmod",                                  desc = "change: chmod on selected files"} 
+]
 keymap = [
   # Navigation
   { on = "<Up>",              run = "arrow -1",                                       desc = "move: cursor up" },
