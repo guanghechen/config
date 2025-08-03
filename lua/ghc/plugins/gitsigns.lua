@@ -97,7 +97,11 @@ local keymaps = {
     key = "[h",
     desc = "git: goto prev hunk (all)",
     callback = function()
-      require("gitsigns").nav_hunk("prev", { foldopen = true, target = "all" })
+      if vim.wo.diff then
+        vim.cmd.normal({ "[c", bang = true })
+      else
+        require("gitsigns").nav_hunk("prev", { foldopen = true, target = "all" })
+      end
     end,
   },
   {
@@ -105,12 +109,16 @@ local keymaps = {
     key = "]h",
     desc = "git: goto next hunk (all)",
     callback = function()
-      require("gitsigns").nav_hunk("next", { foldopen = true, target = "all" })
+      if vim.wo.diff then
+        vim.cmd.normal({ "]c", bang = true })
+      else
+        require("gitsigns").nav_hunk("next", { foldopen = true, target = "all" })
+      end
     end,
   },
   {
     modes = { "n" },
-    key = "<leader>gb",
+    key = "ghb",
     desc = "git: blame line",
     callback = function()
       local lnum = vim.fn.line(".") ---@type integer
@@ -229,7 +237,7 @@ local keymaps = {
   },
   {
     modes = { "n" },
-    key = "<leader>ghd",
+    key = "ghd",
     desc = "git: diff current file",
     callback = function()
       require("gitsigns").diffthis("~")
@@ -237,7 +245,15 @@ local keymaps = {
   },
   {
     modes = { "n", "v" },
-    key = "<leader>ghp",
+    key = "ghi",
+    desc = "git: select hunk",
+    callback = function()
+      require("gitsigns").select_hunk()
+    end,
+  },
+  {
+    modes = { "n", "v" },
+    key = "ghp",
     desc = "git: preview hunk inline",
     callback = function()
       require("gitsigns").preview_hunk()
@@ -266,7 +282,7 @@ local keymaps = {
   },
   {
     modes = { "n" },
-    key = "<leader>ghr",
+    key = "ghr",
     desc = "git: reset hunk",
     callback = function()
       require("gitsigns").reset_hunk()
@@ -275,15 +291,16 @@ local keymaps = {
 
   {
     modes = { "v" },
-    key = "<leader>ghr",
+    key = "ghr",
     desc = "git: reset hunk",
     callback = function()
-      require("gitsigns").reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+      local lnum_start, lnum_end = eve.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      require("gitsigns").reset_hunk({ lnum_start, lnum_end })
     end,
   },
   {
     modes = { "n" },
-    key = "<leader>ghs",
+    key = "ghs",
     desc = "git: stage hunk",
     callback = function()
       require("gitsigns").stage_hunk()
@@ -291,18 +308,27 @@ local keymaps = {
   },
   {
     modes = { "v" },
-    key = "<leader>ghs",
+    key = "ghs",
     desc = "git: stage hunk",
     callback = function()
-      require("gitsigns").stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+      local lnum_start, lnum_end = eve.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      require("gitsigns").stage_hunk({ lnum_start, lnum_end })
     end,
   },
   {
     modes = { "n", "v" },
-    key = "<leader>ghu",
+    key = "ghu",
     desc = "git: undo stage hunk",
     callback = function()
       require("gitsigns").undo_stage_hunk()
+    end,
+  },
+  {
+    modes = { "n", "v" },
+    key = "ghw",
+    desc = "git: toggle word_diff",
+    callback = function()
+      require("gitsigns").toggle_word_diff()
     end,
   },
 }
@@ -316,13 +342,22 @@ return {
   opts = {
     current_line_blame = true,
     current_line_blame_formatter = "    <author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
+    current_line_blame_opts = {
+      virt_text = true,
+      virt_text_pos = "eol",
+      delay = 2000,
+      ignore_whitespace = false,
+      virt_text_priority = 200,
+      use_focus = true,
+    },
+    max_file_length = 3000, -- Disable if file is longer than this (in lines)
     numhl = false,
     linehl = false,
     culhl = false,
     signcolumn = true,
     signs_staged_enable = true,
+    update_debounce = 200,
     word_diff = false,
-    max_file_length = 3000, -- Disable if file is longer than this (in lines)
     diff_opts = {
       algorithm = "minimal",
       ignore_blank_lines = false,
@@ -337,7 +372,7 @@ return {
 
       title = config.win.preview_hunk.title,
       title_pos = "center",
-      border = { " ", " ", " ", " ", " ", " ", " ", " " },
+      border = "rounded",
       style = "minimal",
       width = 124,
 
@@ -346,27 +381,21 @@ return {
     signs = {
       add = { text = "▎" },
       change = { text = "▎" },
-      delete = { text = "▁" },
-      topdelete = { text = "▔" },
-      changedelete = { text = "󱕖" },
+      delete = { text = "_" },
+      topdelete = { text = "‾" },
+      changedelete = { text = "~" },
       untracked = { text = "┆" },
     },
     signs_staged = {
       add = { text = "▎" },
       change = { text = "▎" },
-      delete = { text = "▁" },
-      topdelete = { text = "▔" },
-      changedelete = { text = "󱕖" },
+      delete = { text = "_" },
+      topdelete = { text = "‾" },
+      changedelete = { text = "~" },
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
       eve.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
-      vim.keymap.set({ "o", "x" }, "ih", ":<C-u>Gitsigns select_hunk<cr>", {
-        buffer = bufnr,
-        noremap = true,
-        silent = true,
-        desc = "git: select hunk",
-      })
     end,
   },
 }
