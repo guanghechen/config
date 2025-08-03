@@ -110,7 +110,7 @@ keymap = [
 
   # Tab
   { on = ["t", "t"],          run = "tab_create --current",                           desc = "tab: new (cwd)" },
-  { on = ["t", "d"],          run = "close",                                          desc = "tab: close" },
+  { on = ["t", "d"],          run = "tab_close",                                      desc = "tab: close" },
   { on = ["t", "1"],          run = "tab_switch 0",                                   desc = "tab: focus 1" },
   { on = ["t", "2"],          run = "tab_switch 1",                                   desc = "tab: focus 2" },
   { on = ["t", "3"],          run = "tab_switch 2",                                   desc = "tab: focus 3" },
@@ -121,6 +121,10 @@ keymap = [
   { on = ["t", "8"],          run = "tab_switch 7",                                   desc = "tab: focus 8" },
   { on = ["t", "9"],          run = "tab_switch 8",                                   desc = "tab: focus 9" },
   { on = ["t", "0"],          run = "tab_switch 9",                                   desc = "tab: focus 10" },
+  { on = ["t", ","],          run = "tab_switch -1 --relative",                       desc = "tab: focus left" },
+  { on = ["t", "."],          run = "tab_switch 1 --relative",                        desc = "tab: focus right" },
+  { on = ["t", "<"],          run = "tab_swap -1",                                    desc = "tab: swap left" },
+  { on = ["t", ">"],          run = "tab_swap 1",                                     desc = "tab: swap right" },
   { on = ["t", "["],          run = "tab_switch -1 --relative",                       desc = "tab: focus left" },
   { on = ["t", "]"],          run = "tab_switch 1 --relative",                        desc = "tab: focus right" },
   { on = ["t", "{"],          run = "tab_swap -1",                                    desc = "tab: swap left" },
@@ -139,7 +143,7 @@ keymap = [
 
   # Misc
   { on = "z",                 run = "plugin zoxide",                                  desc = "Jump to a directory via zoxide" },
-  { on = "Z",                 run = "plugin fzf",                                     desc = "Jump to a file/directory via fzf" },
+  { on = ["f", "f"],          run = "plugin fzf",                                     desc = "Jump to a file/directory via fzf" },
 ]
 
 [help]
