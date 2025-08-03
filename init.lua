@@ -12,12 +12,17 @@ end, 500, Header.LEFT)
 function Status:name()
 	local h = self._current.hovered
 	if not h then
-		return ""
+		return ui.Line("")
 	end
 
 	local linked = ""
 	if h.link_to ~= nil then
 		linked = " -> " .. tostring(h.link_to)
 	end
-	return ui.Line(" " .. h.name .. linked)
+
+	-- Apply proper styling to the status line text
+	return ui.Line({
+		ui.Span(" " .. h.name):fg("black"),
+		ui.Span(linked):fg("cyan"),
+	})
 end
