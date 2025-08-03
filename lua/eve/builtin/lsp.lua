@@ -233,6 +233,59 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@param filepath                      string
+---@param offset                        integer
+---@param highlights                    std.t.IHighlightInline[]
+---@return string
+function M.calc_diagnostic_info(filepath, offset, highlights)
+  local bufnr = eve.buf.locate_bufnr(filepath) ---@type integer|nil
+  if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return ""
+  end
+
+  local text = "" ---@type string
+
+  local count_error = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
+  if count_error > 0 then
+    local part = " " .. eve.icon.diagnostic.Error .. " " .. count_error ---@type string
+    local offset_next = offset + #part ---@type integer
+    text = text .. part ---@type string
+    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_error" }
+    offset = offset_next
+  end
+
+  local count_warn = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
+  if count_warn > 0 then
+    local part = " " .. eve.icon.diagnostic.Warning .. " " .. count_warn ---@type string
+    local offset_next = offset + #part ---@type integer
+    text = text .. part ---@type string
+    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_warn" }
+    offset = offset_next
+  end
+
+  local count_hint = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
+  if count_hint > 0 then
+    local part = " " .. eve.icon.diagnostic.Hint .. " " .. count_hint ---@type string
+    local offset_next = offset + #part ---@type integer
+    text = text .. part ---@type string
+    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_hint" }
+    offset = offset_next
+  end
+
+  local count_info = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
+  if count_info > 0 then
+    local part = " " .. eve.icon.diagnostic.Information .. " " .. count_info ---@type string
+    local offset_next = offset + #part ---@type integer
+    text = text .. part ---@type string
+    highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_info" }
+    offset = offset_next
+  end
+
+  return text
+end
+
+----------------------------------------------------------------------------------------------------
+
 ---@return lsp.ClientCapabilities
 M.get_capabilities = function()
   local capabilities = vim.lsp.protocol.make_client_capabilities() ---@type lsp.ClientCapabilities

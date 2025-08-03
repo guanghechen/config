@@ -103,6 +103,12 @@ function M.gen_hlgroup_map(context)
     f_ui_current = { bg = c.bg3 },
     f_ui_normal = { bg = bg_pane },
 
+    ---lsp
+    f_lsp_diagnostic_error = { fg = c.red, bg = bg_pane },
+    f_lsp_diagnostic_warn = { fg = c.yellow, bg = bg_pane },
+    f_lsp_diagnostic_hint = { fg = c.purple, bg = bg_pane },
+    f_lsp_diagnostic_info = { fg = c.green, bg = bg_pane },
+
     ---lsp symbols
     f_lsp_symbol_icon = { fg = c.brightPurple },
     f_lsp_symbol_icon_Array = { fg = c.blue },

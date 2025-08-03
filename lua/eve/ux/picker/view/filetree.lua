@@ -701,7 +701,14 @@ function M.default_render_listview_leaf(ctx, node)
   local filepath = #rootnode.data.filepath < 2 and node.data.filepath
     or node.data.filepath:sub(#rootnode.data.filepath + 2)
   local text = string.format("%s %s", fileicon, filepath) ---@type string
-  local highlights = { { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln } } ---@type std.t.IHighlightInline[]
+
+  ---@type std.t.IHighlightInline[]
+  local highlights = {
+    { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
+  }
+
+  local diagnostic_text = eve.lsp.calc_diagnostic_info(node.data.filepath, #text, highlights) ---@type string
+  text = text .. diagnostic_text ---@type string
   return { text = text, highlights = highlights }
 end
 
@@ -800,6 +807,9 @@ function M.default_render_treeview_leaf(_, node)
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "f_ft_filename" },
   }
+
+  local diagnostic_text = eve.lsp.calc_diagnostic_info(node.data.filepath, #text, highlights) ---@type string
+  text = text .. diagnostic_text ---@type string
   return { text = text, highlights = highlights }
 end
 
