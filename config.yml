@@ -16,7 +16,7 @@ git:
   autoFetch: false
   autoRefresh: true
   fetchAll: false
-  ignoreWhitespaceInDiffView: false,
+  ignoreWhitespaceInDiffView: false
   parseEmoji: true
   skipHookPrefix: WIP
 gui:
