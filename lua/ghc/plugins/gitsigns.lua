@@ -359,7 +359,7 @@ return {
     update_debounce = 200,
     word_diff = false,
     diff_opts = {
-      algorithm = "minimal",
+      algorithm = "histogram",
       ignore_blank_lines = false,
       ignore_whitespace = false,
       ignore_whitespace_change = false,
