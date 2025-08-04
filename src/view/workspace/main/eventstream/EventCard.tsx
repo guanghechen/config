@@ -2,17 +2,23 @@ import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
 import type { IEventStreamEvent } from './utils'
-import { parseJsonData } from './utils'
+import { parseJsonData, extractValueFromPath } from './utils'
 
 interface IProps {
   event: IEventStreamEvent
   index: number
   isExpanded: boolean
   onToggle: () => void
+  chainPath?: string
 }
 
-export const EventCard: React.FC<IProps> = ({ event, index, isExpanded, onToggle }) => {
+export const EventCard: React.FC<IProps> = ({ event, index, isExpanded, onToggle, chainPath }) => {
   const { parsed, isJson } = event.data ? parseJsonData(event.data) : { parsed: '', isJson: false }
+  
+  const extractedValue = React.useMemo(() => {
+    if (!chainPath || !chainPath.trim() || !isJson) return null
+    return extractValueFromPath(parsed, chainPath)
+  }, [parsed, chainPath, isJson])
 
   return (
     <div className="mb-3 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -24,6 +30,11 @@ export const EventCard: React.FC<IProps> = ({ event, index, isExpanded, onToggle
           <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
             #{index + 1}
           </span>
+          {extractedValue && (
+            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+              {extractedValue}
+            </span>
+          )}
           {event.event && (
             <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
               {event.event}

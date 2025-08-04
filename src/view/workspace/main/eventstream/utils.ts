@@ -61,3 +61,28 @@ export const parseJsonData = (data: string): { parsed: unknown; isJson: boolean 
     return { parsed: data, isJson: false }
   }
 }
+
+export const extractValueFromPath = (obj: unknown, path: string): string => {
+  if (!path || !path.trim()) return 'undefined'
+
+  try {
+    const cleanPath = path.startsWith('.') ? path.slice(1) : path
+    const pathParts = cleanPath.split('.').filter(part => part.length > 0)
+
+    let current = obj
+    for (const part of pathParts) {
+      if (current == null || typeof current !== 'object') {
+        return 'undefined'
+      }
+      current = (current as Record<string, unknown>)[part]
+    }
+
+    if (current === undefined || current === null) {
+      return 'undefined'
+    }
+
+    return String(current)
+  } catch {
+    return 'undefined'
+  }
+}

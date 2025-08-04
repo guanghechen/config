@@ -28,6 +28,7 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
   const [mode, setMode] = React.useState<number>(EventStreamModeEnum.VIEW)
   const [activeEventIndex, setActiveEventIndex] = React.useState<number | null>(null)
   const [expandedEvents, setExpandedEvents] = React.useState<Set<number>>(new Set())
+  const [chainPath, setChainPath] = React.useState<string>('')
   const contentContainerRef = React.useRef<HTMLDivElement | null>(null)
 
   const showView = mode === 0 || (mode & EventStreamModeEnum.VIEW) !== 0
@@ -119,9 +120,20 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
           >
             <div className="p-6">
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Event Stream
-                </h1>
+                <div className="flex items-center gap-4 mb-3">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    Event Stream
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="JSON path (e.g., .data.type)"
+                      value={chainPath}
+                      onChange={(e) => setChainPath(e.target.value)}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
+                    />
+                  </div>
+                </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {events.length} event{events.length !== 1 ? 's' : ''} found
                 </p>
@@ -135,6 +147,7 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
                       index={index}
                       isExpanded={expandedEvents.has(index)}
                       onToggle={() => toggleEvent(index)}
+                      chainPath={chainPath}
                     />
                   </div>
                 ))}
