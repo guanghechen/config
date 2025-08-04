@@ -45,6 +45,7 @@ yabai -m config \
   window_zoom_persist on
 
 yabai -m rule --add app="^(System Settings)" manage=off sub-layer=normal
+yabai -m rule --add app="^(Finder)" manage=off sub-layer=normal
 
 borders active_color=0xFFF4BAE3 inactive_color=0XFF494D64 width=6.0 &
 
