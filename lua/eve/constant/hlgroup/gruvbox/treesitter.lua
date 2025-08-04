@@ -1,19 +1,9 @@
----@class eve.constant.hlgroup.treesitter
+---@class eve.constant.hlgroup.gruvbox.treesitter
 local M = {}
 
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local theme = context.scheme.theme ---@type std.e.Theme
-  if theme == "gruvbox-dark" or theme == "gruvbox-light" then
-    return require("eve.constant.hlgroup.gruvbox.treesitter").gen_hlgroup_map(context)
-  end
-  return M.default_gen_hlgroup_map(context)
-end
-
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
-function M.default_gen_hlgroup_map(context)
   local c = context.scheme.palette ---@type std.t.theme.IPalette
 
   return {
@@ -48,8 +38,10 @@ function M.default_gen_hlgroup_map(context)
     ["@function.call"] = { link = "Function" },
     ["@function.macro"] = { link = "Macro" },
     ["@function.method"] = { link = "Method" },
+    ["@function.method.call"] = { fg = c.aqua },
     ["@include"] = { link = "Include" },
     ["@keyword"] = { link = "Keyword" },
+    ["@keyword.break"] = { link = "Conditional" },
     ["@keyword.conditional"] = { link = "Conditional" },
     ["@keyword.conditional.ternary"] = { link = "Keyword" },
     ["@keyword.debug"] = { link = "Debug" },
@@ -60,7 +52,7 @@ function M.default_gen_hlgroup_map(context)
     ["@keyword.import"] = { link = "Include" },
     ["@keyword.operator"] = { link = "Keyword" },
     ["@keyword.repeat"] = { link = "Repeat" },
-    ["@keyword.return"] = { link = "Keyword" },
+    ["@keyword.return"] = { link = "Conditional" },
     ["@keyword.storage"] = { link = "StorageClass" },
     ["@label"] = { link = "Label" },
     ["@macro"] = { link = "Macro" },
@@ -101,6 +93,7 @@ function M.default_gen_hlgroup_map(context)
     ["@number"] = { link = "Number" },
     ["@number.float"] = { link = "Float" },
     ["@operator"] = { link = "Operator" },
+    ["@operator.unary.not"] = { fg = c.red },
     ["@parameter"] = { link = "Identifier" },
     ["@preproc"] = { link = "PreProc" },
     ["@property"] = { link = "Identifier" },

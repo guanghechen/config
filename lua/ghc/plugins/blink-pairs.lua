@@ -17,8 +17,6 @@ return {
         "f_matched_pairs_3",
         "f_matched_pairs_4",
         "f_matched_pairs_5",
-        "f_matched_pairs_6",
-        "f_matched_pairs_7",
       },
       unmatched_group = "f_unmatched_pairs",
       matchparen = {

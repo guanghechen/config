@@ -1,21 +1,9 @@
----@class eve.constant.hlgroup.basic
+---@class eve.constant.hlgroup.gruvbox.basic
 local M = {}
 
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local theme = context.scheme.theme ---@type std.e.Theme
-  if theme == "gruvbox-dark" or theme == "gruvbox-light" then
-    return require("eve.constant.hlgroup.gruvbox.basic").gen_hlgroup_map(context)
-  elseif theme == "one-half-dark" or theme == "one-half-light" then
-    return require("eve.constant.hlgroup.one-half.basic").gen_hlgroup_map(context)
-  end
-  return M.default_gen_hlgroup_map(context)
-end
-
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
-function M.default_gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
@@ -109,7 +97,7 @@ function M.default_gen_hlgroup_map(context)
     SpellRare = { undercurl = true, sp = c.purple },
 
     ---special
-    Delimiter = { fg = c.orange },
+    Delimiter = { fg = c.aqua },
     EndOfBuffer = { fg = c.bg2 },
     NonText = { fg = c.bg2 },
     Whitespace = { fg = c.bg4 },
@@ -122,16 +110,16 @@ function M.default_gen_hlgroup_map(context)
     Constant = { fg = c.purple },
     Define = { fg = c.aqua },
     Float = { fg = c.purple },
-    Function = { fg = c.yellow, bold = true },
+    Function = { fg = c.aqua, bold = true },
     Identifier = { fg = c.blue },
-    Include = { fg = c.purple },
-    Keyword = { fg = c.purple },
+    Include = { fg = c.red },
+    Keyword = { fg = c.orange },
     Label = { fg = c.red },
     Macro = { fg = c.aqua },
-    Member = { fg = c.aqua },
+    Member = { fg = c.blue },
     Method = { fg = c.blue, bold = true },
     Number = { fg = c.purple },
-    Operator = { fg = c.fg1 },
+    Operator = { fg = c.aqua, bold = true },
     Parameter = { fg = c.blue },
     PreCondit = { fg = c.aqua },
     PreProc = { fg = c.yellow },
@@ -207,6 +195,7 @@ function M.default_gen_hlgroup_map(context)
     WinBarNC = { fg = c.blue, bg = c.none },
     WinSeparator = { fg = c.bg2, bg = c.none },
   }
+
   return hlgroup_map
 end
 

@@ -1,21 +1,10 @@
----@class eve.constant.hlgroup.basic
+---@class eve.constant.hlgroup.one_half.basic
 local M = {}
 
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type std.e.Theme
-  if theme == "gruvbox-dark" or theme == "gruvbox-light" then
-    return require("eve.constant.hlgroup.gruvbox.basic").gen_hlgroup_map(context)
-  elseif theme == "one-half-dark" or theme == "one-half-light" then
-    return require("eve.constant.hlgroup.one-half.basic").gen_hlgroup_map(context)
-  end
-  return M.default_gen_hlgroup_map(context)
-end
-
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
-function M.default_gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette ---@type std.t.theme.IPalette
   local t = context.transparency ---@type boolean
@@ -26,8 +15,8 @@ function M.default_gen_hlgroup_map(context)
     ---cursor
     Cursor = { fg = c.bg1, bg = c.pink },
     CursorColumn = { bg = c.bg1 },
-    CursorLine = { bg = c.bg1 },
-    CursorLineNr = { fg = c.fg2, bg = c.bg1, bold = true },
+    CursorLine = { bg = c.bg2 },
+    CursorLineNr = { fg = c.fg2, bg = c.bg2, bold = true },
     vCursor = { link = "Cursor" },
     iCursor = { link = "Cursor" },
     lCursor = { link = "Cursor" },
@@ -123,7 +112,7 @@ function M.default_gen_hlgroup_map(context)
     Define = { fg = c.aqua },
     Float = { fg = c.purple },
     Function = { fg = c.yellow, bold = true },
-    Identifier = { fg = c.blue },
+    Identifier = { fg = c.red },
     Include = { fg = c.purple },
     Keyword = { fg = c.purple },
     Label = { fg = c.red },
@@ -156,7 +145,7 @@ function M.default_gen_hlgroup_map(context)
     Bold = { bold = true },
     Changed = { fg = c.yellow },
     ColorColumn = { fg = c.fg2, bg = cs.mix(c.bg0, c.red, 10) },
-    Comment = { fg = c.grey, italic = true },
+    Comment = { fg = cs.change_hex_lightness(c.bg4, 20), italic = true },
     Conceal = { fg = c.blue },
     CurSearch = { fg = c.bg0, bg = c.orange },
     Debug = { fg = c.red },
@@ -207,6 +196,7 @@ function M.default_gen_hlgroup_map(context)
     WinBarNC = { fg = c.blue, bg = c.none },
     WinSeparator = { fg = c.bg2, bg = c.none },
   }
+
   return hlgroup_map
 end
 
