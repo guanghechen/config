@@ -1,4 +1,3 @@
-import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
@@ -6,6 +5,7 @@ import { useWorkspaceViewmodel } from '@/context/workspace'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IEventStreamFileData } from '@/util/fetch'
 import { EventStreamComposer } from './composer'
+import { useScrollToTop } from './useScrollToTop'
 
 const EventStreamContainer: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
@@ -15,25 +15,7 @@ const EventStreamContainer: React.FC = () => {
   const container = useStateValue(workspaceVM.mainScrollableContainer$)
 
   const { data, error } = useFileResult<IEventStreamFileData>(workspace, filepath, tick)
-
-  const [visibleOfScrollToTop, setVisibleOfScrollToTop] = React.useState(false)
-
-  const onScrollToTop = useEventCallback((): void => {
-    if (container) container.scrollTo({ top: 0, behavior: 'smooth' })
-  })
-
-  React.useEffect(() => {
-    if (!container) return
-
-    const onScroll = (): void => {
-      if (container.scrollTop > 100) setVisibleOfScrollToTop(true)
-      else setVisibleOfScrollToTop(false)
-    }
-
-    onScroll()
-    container.addEventListener('scroll', onScroll)
-    return () => container.removeEventListener('scroll', onScroll)
-  }, [container])
+  const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(container)
 
   return (
     <div className="w-full pt-8">
@@ -48,10 +30,10 @@ const EventStreamContainer: React.FC = () => {
         </div>
       )}
       <button
-        onClick={onScrollToTop}
+        onClick={scrollToTop}
         className={cn(
           'cursor-pointer fixed bottom-8 right-8 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
-          visibleOfScrollToTop
+          visibleScrollToTop
             ? 'translate-y-0 opacity-90'
             : 'pointer-events-none translate-y-16 opacity-0',
         )}

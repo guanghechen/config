@@ -1,167 +1,39 @@
 import cn from 'clsx'
 import React from 'react'
-import { Json } from '@/component/json'
 import { PRESET_CLASSES } from '@/constant/classes'
+import { EventCard } from './EventCard'
 import { EventStreamNavigation } from './navigation'
+import { parseEventStream } from './utils'
 
 enum EventStreamModeEnum {
   VIEW = 1,
   NAVIGATION = 2,
 }
 
-interface IEventStreamEvent {
-  id?: string
-  event?: string
-  data?: string
-  retry?: number
-}
-
 interface IProps {
   readonly content: string | undefined
 }
 
-const parseEventStream = (content: string): IEventStreamEvent[] => {
-  if (!content) return []
-
-  const events: IEventStreamEvent[] = []
-  const lines = content.split('\n')
-  let currentEvent: IEventStreamEvent = {}
-
-  for (const line of lines) {
-    const trimmedLine = line.trim()
-
-    // Empty line indicates end of event
-    if (trimmedLine === '') {
-      if (Object.keys(currentEvent).length > 0) {
-        events.push(currentEvent)
-        currentEvent = {}
-      }
-      continue
-    }
-
-    // Skip comments
-    if (trimmedLine.startsWith(':')) {
-      continue
-    }
-
-    // Parse field: value
-    const colonIndex = trimmedLine.indexOf(':')
-    if (colonIndex === -1) continue
-
-    const field = trimmedLine.slice(0, colonIndex).trim()
-    const value = trimmedLine.slice(colonIndex + 1).trim()
-
-    switch (field) {
-      case 'id':
-        currentEvent.id = value
-        break
-      case 'event':
-        currentEvent.event = value
-        break
-      case 'data':
-        currentEvent.data = currentEvent.data ? `${currentEvent.data}\n${value}` : value
-        break
-      case 'retry':
-        currentEvent.retry = parseInt(value, 10)
-        break
-    }
-  }
-
-  // Add final event if exists
-  if (Object.keys(currentEvent).length > 0) {
-    events.push(currentEvent)
-  }
-
-  return events
-}
-
-const parseJsonData = (data: string): { parsed: unknown; isJson: boolean } => {
-  try {
-    const parsed = JSON.parse(data)
-    return {
-      parsed,
-      isJson: true,
-    }
-  } catch {
-    return {
-      parsed: data,
-      isJson: false,
-    }
-  }
-}
-
-const EventCard: React.FC<{ event: IEventStreamEvent; index: number }> = ({ event, index }) => {
-  const { parsed, isJson } = event.data ? parseJsonData(event.data) : { parsed: '', isJson: false }
-  const [isExpanded, setIsExpanded] = React.useState(false)
-
-  return (
-    <div className="mb-3 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-      <div
-        className="flex cursor-pointer items-center justify-between p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-750"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex select-none items-center gap-2">
-          <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-            #{index + 1}
-          </span>
-          {event.event && (
-            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
-              {event.event}
-            </span>
-          )}
-          {event.id && (
-            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-              {event.id}
-            </span>
-          )}
-          {event.retry && (
-            <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-300">
-              {event.retry}ms
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {event.data && (
-            <span className="select-none text-xs text-gray-500 dark:text-gray-400">
-              {event.data.length} chars | {isJson ? 'JSON' : 'Text'}
-            </span>
-          )}
-          <svg
-            className={cn('h-4 w-4 transition-transform text-gray-400', {
-              'rotate-180': isExpanded,
-            })}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
-      {isExpanded && event.data && (
-        <div className="border-t border-gray-200 p-3 dark:border-gray-700">
-          {isJson ? (
-            <Json json={parsed} initialCollapsed="expanded" />
-          ) : (
-            <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">
-              {String(parsed)}
-            </pre>
-          )}
-        </div>
-      )}
+const EmptyState: React.FC<{ message: string }> = ({ message }) => (
+  <div className="flex h-full items-center justify-center">
+    <div className="text-center text-gray-500 dark:text-gray-400">
+      <div className="mb-2 text-4xl">📡</div>
+      <div>{message}</div>
     </div>
-  )
-}
+  </div>
+)
 
 export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
   const events = React.useMemo(() => parseEventStream(content || ''), [content])
   const [mode, setMode] = React.useState<number>(EventStreamModeEnum.VIEW)
   const [activeEventIndex, setActiveEventIndex] = React.useState<number | null>(null)
+  const [expandedEvents, setExpandedEvents] = React.useState<Set<number>>(new Set())
   const contentContainerRef = React.useRef<HTMLDivElement | null>(null)
 
-  const showView: boolean = mode === 0 || (mode & EventStreamModeEnum.VIEW) !== 0
-  const showNavigation: boolean = (mode & EventStreamModeEnum.NAVIGATION) !== 0
-  const columns: number = (showView ? 1 : 0) + (showNavigation ? 1 : 0)
+  const showView = mode === 0 || (mode & EventStreamModeEnum.VIEW) !== 0
+  const showNavigation = (mode & EventStreamModeEnum.NAVIGATION) !== 0
+  const columns = (showView ? 1 : 0) + (showNavigation ? 1 : 0)
+  const allExpanded = events.length > 0 && expandedEvents.size === events.length
 
   const scrollToEvent = React.useCallback((index: number) => {
     const container = contentContainerRef.current
@@ -174,27 +46,21 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
     }
   }, [])
 
-  if (!content) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <div className="mb-2 text-4xl">📡</div>
-          <div>No event stream data to display</div>
-        </div>
-      </div>
-    )
-  }
+  const toggleEvent = React.useCallback((index: number) => {
+    setExpandedEvents(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(index)) newSet.delete(index)
+      else newSet.add(index)
+      return newSet
+    })
+  }, [])
 
-  if (events.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <div className="mb-2 text-4xl">📡</div>
-          <div>No valid events found in stream</div>
-        </div>
-      </div>
-    )
-  }
+  const toggleAllEvents = React.useCallback(() => {
+    setExpandedEvents(allExpanded ? new Set() : new Set(events.map((_, index) => index)))
+  }, [allExpanded, events])
+
+  if (!content) return <EmptyState message="No event stream data to display" />
+  if (events.length === 0) return <EmptyState message="No valid events found in stream" />
 
   return (
     <div
@@ -203,10 +69,10 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
       })}
     >
       {/* Mode Toggle */}
-      <div className="fixed right-4 top-16 z-50 flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95">
+      <div className="fixed right-4 top-16 z-50 flex select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95">
         <button
           className={cn(
-            'box-border px-3 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
+            'box-border px-3 py-1 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
             showView
               ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
               : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
@@ -217,7 +83,7 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
         </button>
         <button
           className={cn(
-            'box-border px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
+            'box-border px-3 py-1 transition-all duration-200 focus:outline-none focus:ring-0',
             showNavigation
               ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
               : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
@@ -225,6 +91,18 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
           onClick={() => setMode(m => m ^ EventStreamModeEnum.NAVIGATION)}
         >
           nav
+        </button>
+        <button
+          className={cn(
+            'box-border px-3 py-1 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
+            allExpanded
+              ? 'bg-green-500 bg-opacity-90 font-medium text-white shadow-inner'
+              : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+          )}
+          onClick={toggleAllEvents}
+          title={allExpanded ? 'Collapse all events' : 'Expand all events'}
+        >
+          {allExpanded ? 'collapse' : 'expand'}
         </button>
       </div>
       {showView && (
@@ -252,7 +130,12 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
               <div className="space-y-4">
                 {events.map((event, index) => (
                   <div key={`${event.id || index}`} data-event-index={index}>
-                    <EventCard event={event} index={index} />
+                    <EventCard
+                      event={event}
+                      index={index}
+                      isExpanded={expandedEvents.has(index)}
+                      onToggle={() => toggleEvent(index)}
+                    />
                   </div>
                 ))}
               </div>

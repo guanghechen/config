@@ -1,13 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/constant/classes'
-
-interface IEventStreamEvent {
-  id?: string
-  event?: string
-  data?: string
-  retry?: number
-}
+import type { IEventStreamEvent } from './utils'
 
 interface IProps {
   readonly events: IEventStreamEvent[]
