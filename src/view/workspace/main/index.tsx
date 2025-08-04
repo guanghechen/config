@@ -5,6 +5,7 @@ const EventStreamContainer = React.lazy(() => import('./eventstream'))
 const ExcalidrawContainer = React.lazy(() => import('./excalidraw'))
 const ImageContainer = React.lazy(() => import('./image'))
 const JsonContainer = React.lazy(() => import('./json'))
+const JsonlContainer = React.lazy(() => import('./jsonl'))
 const MarkdownContainer = React.lazy(() => import('./markdown'))
 const PDFContainer = React.lazy(() => import('./pdf'))
 const SvgContainer = React.lazy(() => import('./svg'))
@@ -33,6 +34,8 @@ export const WorkspaceMain: React.FC<IProps> = props => {
         return <ExcalidrawContainer />
       case '.json':
         return <JsonContainer />
+      case '.jsonl':
+        return <JsonlContainer />
       case '.md':
         return <MarkdownContainer />
       case '.pdf':

@@ -16,6 +16,7 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.jpeg': 'image/jpeg',
   '.jpg': 'image/jpeg',
   '.json': 'application/json',
+  '.jsonl': 'application/json',
   '.md': 'application/json',
   '.mkv': 'video/x-matroska',
   '.mov': 'video/quicktime',
@@ -82,7 +83,8 @@ export const fetchFile: IApiHandle = async params => {
   switch (extname) {
     case '.eventstream':
     case '.excalidraw':
-    case '.json': {
+    case '.json':
+    case '.jsonl': {
       let data: IApiHandleData
       try {
         const content: string = await fs.readFile(filepath, 'utf8')
