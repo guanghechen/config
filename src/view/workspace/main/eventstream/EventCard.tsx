@@ -24,12 +24,10 @@ export const EventCard: React.FC<IProps> = ({
   const extractedValues = React.useMemo(() => {
     if (!chainPaths.length || !isJson) return []
 
-    return chainPaths
-      .map(path => ({
-        path,
-        value: extractValueFromPath(parsed, path),
-      }))
-      .filter(item => item.value !== 'undefined')
+    return chainPaths.map(path => ({
+      path,
+      value: extractValueFromPath(parsed, path),
+    }))
   }, [parsed, chainPaths, isJson])
 
   return (
@@ -45,7 +43,12 @@ export const EventCard: React.FC<IProps> = ({
           {extractedValues.map((item, idx) => (
             <span
               key={idx}
-              className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+              className={cn(
+                'rounded px-2 py-0.5 text-xs font-medium',
+                item.value === 'undefined'
+                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+              )}
               title={`${item.path}: ${item.value}`}
             >
               {item.value}
