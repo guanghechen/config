@@ -2,6 +2,7 @@ import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/constant/classes'
 import { EventCard } from './EventCard'
+import { MultiPathInput } from './MultiPathInput'
 import { EventStreamNavigation } from './navigation'
 import { parseEventStream } from './utils'
 
@@ -28,7 +29,7 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
   const [mode, setMode] = React.useState<number>(EventStreamModeEnum.VIEW)
   const [activeEventIndex, setActiveEventIndex] = React.useState<number | null>(null)
   const [expandedEvents, setExpandedEvents] = React.useState<Set<number>>(new Set())
-  const [chainPath, setChainPath] = React.useState<string>('')
+  const [chainPaths, setChainPaths] = React.useState<string[]>([])
   const contentContainerRef = React.useRef<HTMLDivElement | null>(null)
 
   const showView = mode === 0 || (mode & EventStreamModeEnum.VIEW) !== 0
@@ -124,13 +125,11 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     Event Stream
                   </h1>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="JSON path (e.g., .data.type)"
-                      value={chainPath}
-                      onChange={(e) => setChainPath(e.target.value)}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
+                  <div className="flex-1 max-w-md">
+                    <MultiPathInput
+                      paths={chainPaths}
+                      onChange={setChainPaths}
+                      placeholder="Add JSON paths (e.g., .data.type, .message)"
                     />
                   </div>
                 </div>
@@ -147,7 +146,7 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
                       index={index}
                       isExpanded={expandedEvents.has(index)}
                       onToggle={() => toggleEvent(index)}
-                      chainPath={chainPath}
+                      chainPaths={chainPaths}
                     />
                   </div>
                 ))}

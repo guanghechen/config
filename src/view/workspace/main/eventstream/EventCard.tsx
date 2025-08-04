@@ -2,23 +2,35 @@ import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
 import type { IEventStreamEvent } from './utils'
-import { parseJsonData, extractValueFromPath } from './utils'
+import { extractValueFromPath, parseJsonData } from './utils'
 
 interface IProps {
   event: IEventStreamEvent
   index: number
   isExpanded: boolean
   onToggle: () => void
-  chainPath?: string
+  chainPaths?: string[]
 }
 
-export const EventCard: React.FC<IProps> = ({ event, index, isExpanded, onToggle, chainPath }) => {
+export const EventCard: React.FC<IProps> = ({
+  event,
+  index,
+  isExpanded,
+  onToggle,
+  chainPaths = [],
+}) => {
   const { parsed, isJson } = event.data ? parseJsonData(event.data) : { parsed: '', isJson: false }
-  
-  const extractedValue = React.useMemo(() => {
-    if (!chainPath || !chainPath.trim() || !isJson) return null
-    return extractValueFromPath(parsed, chainPath)
-  }, [parsed, chainPath, isJson])
+
+  const extractedValues = React.useMemo(() => {
+    if (!chainPaths.length || !isJson) return []
+
+    return chainPaths
+      .map(path => ({
+        path,
+        value: extractValueFromPath(parsed, path),
+      }))
+      .filter(item => item.value !== 'undefined')
+  }, [parsed, chainPaths, isJson])
 
   return (
     <div className="mb-3 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -30,11 +42,15 @@ export const EventCard: React.FC<IProps> = ({ event, index, isExpanded, onToggle
           <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
             #{index + 1}
           </span>
-          {extractedValue && (
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-              {extractedValue}
+          {extractedValues.map((item, idx) => (
+            <span
+              key={idx}
+              className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+              title={`${item.path}: ${item.value}`}
+            >
+              {item.value}
             </span>
-          )}
+          ))}
           {event.event && (
             <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
               {event.event}
