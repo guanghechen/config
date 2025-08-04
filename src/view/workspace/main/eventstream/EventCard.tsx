@@ -2,6 +2,7 @@ import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
 import type { IEventStreamEvent } from './utils'
+import type { IChainPath } from './usePersistedChainPaths'
 import { extractValueFromPath, parseJsonData, getPathColorClasses } from './utils'
 
 interface IProps {
@@ -9,7 +10,7 @@ interface IProps {
   index: number
   isExpanded: boolean
   onToggle: () => void
-  chainPaths?: string[]
+  chainPaths?: IChainPath[]
 }
 
 export const EventCard: React.FC<IProps> = ({
@@ -21,14 +22,17 @@ export const EventCard: React.FC<IProps> = ({
 }) => {
   const { parsed, isJson } = event.data ? parseJsonData(event.data) : { parsed: '', isJson: false }
 
-  const extractedValues = React.useMemo(() => {
-    if (!chainPaths.length || !isJson) return []
+  const visibleChainPaths = React.useMemo(() => chainPaths.filter(cp => cp.visible), [chainPaths])
+  const allPathStrings = React.useMemo(() => chainPaths.map(cp => cp.path), [chainPaths])
 
-    return chainPaths.map(path => ({
-      path,
-      value: extractValueFromPath(parsed, path),
+  const extractedValues = React.useMemo(() => {
+    if (!visibleChainPaths.length || !isJson) return []
+
+    return visibleChainPaths.map(chainPath => ({
+      path: chainPath.path,
+      value: extractValueFromPath(parsed, chainPath.path),
     }))
-  }, [parsed, chainPaths, isJson])
+  }, [parsed, visibleChainPaths, isJson])
 
   return (
     <div className="mb-3 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -47,7 +51,7 @@ export const EventCard: React.FC<IProps> = ({
                 'rounded px-2 py-0.5 text-xs font-medium',
                 item.value === 'undefined'
                   ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                  : getPathColorClasses(item.path, chainPaths)
+                  : getPathColorClasses(item.path, allPathStrings)
               )}
               title={`${item.path}: ${item.value}`}
             >

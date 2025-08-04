@@ -1,19 +1,19 @@
 /* eslint-disable no-param-reassign */
 import cn from 'clsx'
 import React from 'react'
-import type { DisplayMode } from './usePersistedChainPaths'
+import type { DisplayMode, IChainPath } from './usePersistedChainPaths'
 import { getPathColorClasses } from './utils'
 
 interface IProps {
-  paths: string[]
-  onChange: (paths: string[]) => void
+  chainPaths: IChainPath[]
+  onChange: (chainPaths: IChainPath[]) => void
   placeholder?: string
   displayMode: DisplayMode
   onDisplayModeChange: (mode: DisplayMode) => void
 }
 
 export const MultiPathInput: React.FC<IProps> = ({
-  paths,
+  chainPaths,
   onChange,
   placeholder = 'Add JSON paths (e.g., .data.type)',
   displayMode,
@@ -25,25 +25,34 @@ export const MultiPathInput: React.FC<IProps> = ({
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
 
+  const pathStrings = React.useMemo(() => chainPaths.map(cp => cp.path), [chainPaths])
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault()
       addPath()
-    } else if (e.key === 'Backspace' && inputValue === '' && paths.length > 0) {
-      removePath(paths.length - 1)
+    } else if (e.key === 'Backspace' && inputValue === '' && chainPaths.length > 0) {
+      removePath(chainPaths.length - 1)
     }
   }
 
   const addPath = (): void => {
     const trimmedValue = inputValue.trim()
-    if (trimmedValue && !paths.includes(trimmedValue)) {
-      onChange([...paths, trimmedValue])
+    if (trimmedValue && !pathStrings.includes(trimmedValue)) {
+      onChange([...chainPaths, { path: trimmedValue, visible: true }])
     }
     setInputValue('')
   }
 
   const removePath = (index: number): void => {
-    const newPaths = paths.filter((_, i) => i !== index)
+    const newPaths = chainPaths.filter((_, i) => i !== index)
+    onChange(newPaths)
+  }
+
+  const toggleVisibility = (index: number): void => {
+    const newPaths = chainPaths.map((cp, i) => 
+      i === index ? { ...cp, visible: !cp.visible } : cp
+    )
     onChange(newPaths)
   }
 
@@ -76,7 +85,7 @@ export const MultiPathInput: React.FC<IProps> = ({
       return
     }
 
-    const newPaths = [...paths]
+    const newPaths = [...chainPaths]
     const [draggedPath] = newPaths.splice(draggedIndex, 1)
     newPaths.splice(dropIndex, 0, draggedPath)
 
@@ -103,7 +112,7 @@ export const MultiPathInput: React.FC<IProps> = ({
         )}
       >
         {displayMode === 'inline' &&
-          paths.map((path, index) => (
+          chainPaths.map((chainPath, index) => (
             <span
               key={index}
               draggable={true}
@@ -114,7 +123,8 @@ export const MultiPathInput: React.FC<IProps> = ({
               onDragEnd={handleDragEnd}
               className={cn(
                 'inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md cursor-move transition-all',
-                getPathColorClasses(path, paths),
+                getPathColorClasses(chainPath.path, pathStrings),
+                !chainPath.visible && 'opacity-50',
                 draggedIndex === index && 'opacity-50 scale-95',
                 dragOverIndex === index &&
                   draggedIndex !== index &&
@@ -124,14 +134,34 @@ export const MultiPathInput: React.FC<IProps> = ({
               <svg className="w-3 h-3 opacity-60" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
               </svg>
-              {path}
+              {chainPath.path}
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  toggleVisibility(index)
+                }}
+                className="inline-flex items-center justify-center w-3 h-3 hover:opacity-70 transition-opacity"
+                aria-label={chainPath.visible ? `Hide ${chainPath.path}` : `Show ${chainPath.path}`}
+              >
+                {chainPath.visible ? (
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                  </svg>
+                ) : (
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"/>
+                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>
+                  </svg>
+                )}
+              </button>
               <button
                 onClick={e => {
                   e.stopPropagation()
                   removePath(index)
                 }}
                 className="inline-flex items-center justify-center w-3 h-3 hover:opacity-70 transition-opacity"
-                aria-label={`Remove ${path}`}
+                aria-label={`Remove ${chainPath.path}`}
               >
                 <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
                   <path
@@ -153,7 +183,7 @@ export const MultiPathInput: React.FC<IProps> = ({
           onKeyDown={handleInputKeyDown}
           onFocus={() => setIsInputFocused(true)}
           onBlur={() => setIsInputFocused(false)}
-          placeholder={displayMode === 'inline' && paths.length > 0 ? '' : placeholder}
+          placeholder={displayMode === 'inline' && chainPaths.length > 0 ? '' : placeholder}
           className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
         />
         <button
@@ -196,9 +226,9 @@ export const MultiPathInput: React.FC<IProps> = ({
           )}
         </button>
       </div>
-      {displayMode === 'lines' && paths.length > 0 && (
+      {displayMode === 'lines' && chainPaths.length > 0 && (
         <div className="space-y-1">
-          {paths.map((path, index) => (
+          {chainPaths.map((chainPath, index) => (
             <div
               key={index}
               draggable={true}
@@ -209,8 +239,9 @@ export const MultiPathInput: React.FC<IProps> = ({
               onDragEnd={handleDragEnd}
               className={cn(
                 'flex items-center gap-2 px-3 py-2 rounded-md cursor-move transition-all border',
-                getPathColorClasses(path, paths),
+                getPathColorClasses(chainPath.path, pathStrings),
                 'border-current border-opacity-20',
+                !chainPath.visible && 'opacity-50',
                 draggedIndex === index && 'opacity-50 scale-98',
                 dragOverIndex === index &&
                   draggedIndex !== index &&
@@ -224,14 +255,34 @@ export const MultiPathInput: React.FC<IProps> = ({
               >
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
               </svg>
-              <span className="flex-1 text-sm font-medium">{path}</span>
+              <span className="flex-1 text-sm font-medium">{chainPath.path}</span>
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  toggleVisibility(index)
+                }}
+                className="flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10 transition-colors"
+                aria-label={chainPath.visible ? `Hide ${chainPath.path}` : `Show ${chainPath.path}`}
+              >
+                {chainPath.visible ? (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"/>
+                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>
+                  </svg>
+                )}
+              </button>
               <button
                 onClick={e => {
                   e.stopPropagation()
                   removePath(index)
                 }}
                 className="flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10 transition-colors"
-                aria-label={`Remove ${path}`}
+                aria-label={`Remove ${chainPath.path}`}
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 8 8">
                   <path

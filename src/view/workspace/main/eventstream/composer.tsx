@@ -121,10 +121,9 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
             )}
           >
             <div className="relative w-full">
-              {/* Chainpaths Input Header */}
               <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <MultiPathInput
-                  paths={chainPaths}
+                  chainPaths={chainPaths}
                   onChange={setChainPaths}
                   displayMode={displayMode}
                   onDisplayModeChange={setDisplayMode}

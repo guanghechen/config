@@ -5,42 +5,62 @@ const DISPLAY_MODE_KEY = 'yozora-eventstream-display-mode'
 
 export type DisplayMode = 'inline' | 'lines'
 
+export interface IChainPath {
+  path: string
+  visible: boolean
+}
+
 interface IPersistedState {
-  paths: string[]
+  chainPaths: IChainPath[]
   displayMode: DisplayMode
 }
 
 export const usePersistedChainPaths = (): [
-  string[],
-  (paths: string[]) => void,
+  IChainPath[],
+  (chainPaths: IChainPath[]) => void,
   DisplayMode,
-  (mode: DisplayMode) => void
+  (mode: DisplayMode) => void,
 ] => {
   const [state, setState] = React.useState<IPersistedState>(() => {
     try {
       const storedPaths = localStorage.getItem(STORAGE_KEY)
       const storedDisplayMode = localStorage.getItem(DISPLAY_MODE_KEY)
-      
+
+      let chainPaths: IChainPath[] = []
+      if (storedPaths) {
+        const parsed = JSON.parse(storedPaths)
+        // Handle legacy format (array of strings) and migrate to new format
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (typeof parsed[0] === 'string') {
+            // Legacy format - convert to new format
+            chainPaths = parsed.map(path => ({ path, visible: true }))
+          } else {
+            // New format
+            chainPaths = parsed
+          }
+        }
+      }
+
       return {
-        paths: storedPaths ? JSON.parse(storedPaths) : [],
-        displayMode: storedDisplayMode ? JSON.parse(storedDisplayMode) : 'inline'
+        chainPaths,
+        displayMode: storedDisplayMode ? JSON.parse(storedDisplayMode) : 'inline',
       }
     } catch (error) {
       console.warn('Failed to load chain paths from localStorage:', error)
       return {
-        paths: [],
-        displayMode: 'inline'
+        chainPaths: [],
+        displayMode: 'inline',
       }
     }
   })
 
-  const setPersistedChainPaths = React.useCallback((paths: string[]) => {
+  const setPersistedChainPaths = React.useCallback((chainPaths: IChainPath[]) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(paths))
-      setState(prev => ({ ...prev, paths }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(chainPaths))
+      setState(prev => ({ ...prev, chainPaths }))
     } catch (error) {
       console.warn('Failed to save chain paths to localStorage:', error)
-      setState(prev => ({ ...prev, paths })) // Still update state even if persistence fails
+      setState(prev => ({ ...prev, chainPaths })) // Still update state even if persistence fails
     }
   }, [])
 
@@ -54,5 +74,5 @@ export const usePersistedChainPaths = (): [
     }
   }, [])
 
-  return [state.paths, setPersistedChainPaths, state.displayMode, setPersistedDisplayMode]
+  return [state.chainPaths, setPersistedChainPaths, state.displayMode, setPersistedDisplayMode]
 }
