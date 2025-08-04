@@ -15,6 +15,8 @@ export const MultiPathInput: React.FC<IProps> = ({
 }) => {
   const [inputValue, setInputValue] = React.useState('')
   const [isInputFocused, setIsInputFocused] = React.useState(false)
+  const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -44,6 +46,45 @@ export const MultiPathInput: React.FC<IProps> = ({
     inputRef.current?.focus()
   }
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', '')
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+
+    const newPaths = [...paths]
+    const [draggedPath] = newPaths.splice(draggedIndex, 1)
+    newPaths.splice(dropIndex, 0, draggedPath)
+    
+    onChange(newPaths)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
   return (
     <div
       onClick={handleContainerClick}
@@ -58,11 +99,22 @@ export const MultiPathInput: React.FC<IProps> = ({
       {paths.map((path, index) => (
         <span
           key={index}
+          draggable
+          onDragStart={(e) => handleDragStart(e, index)}
+          onDragOver={(e) => handleDragOver(e, index)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, index)}
+          onDragEnd={handleDragEnd}
           className={cn(
-            "inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md",
-            getPathColorClasses(path, paths)
+            "inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md cursor-move transition-all",
+            getPathColorClasses(path, paths),
+            draggedIndex === index && "opacity-50 scale-95",
+            dragOverIndex === index && draggedIndex !== index && "ring-2 ring-blue-400 ring-opacity-50"
           )}
         >
+          <svg className="w-3 h-3 opacity-60" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+          </svg>
           {path}
           <button
             onClick={(e) => {
