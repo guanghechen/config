@@ -120,39 +120,31 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
               },
             )}
           >
-            <div className="p-6">
-              <div className="mb-6">
-                <div className="flex items-center gap-4 mb-3">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    Event Stream
-                  </h1>
-                  <div className="flex-1 max-w-md">
-                    <MultiPathInput
-                      paths={chainPaths}
-                      onChange={setChainPaths}
-                      displayMode={displayMode}
-                      onDisplayModeChange={setDisplayMode}
-                      placeholder="Add JSON paths (e.g., .data.type, .message)"
-                    />
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {events.length} event{events.length !== 1 ? 's' : ''} found
-                </p>
+            <div className="relative w-full">
+              {/* Chainpaths Input Header */}
+              <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <MultiPathInput
+                  paths={chainPaths}
+                  onChange={setChainPaths}
+                  displayMode={displayMode}
+                  onDisplayModeChange={setDisplayMode}
+                  placeholder="Add JSON paths (e.g., .data.type, .message)"
+                />
               </div>
-
-              <div className="space-y-4">
-                {events.map((event, index) => (
-                  <div key={`${event.id || index}`} data-event-index={index}>
-                    <EventCard
-                      event={event}
-                      index={index}
-                      isExpanded={expandedEvents.has(index)}
-                      onToggle={() => toggleEvent(index)}
-                      chainPaths={chainPaths}
-                    />
-                  </div>
-                ))}
+              <div className="p-6 pt-4">
+                <div className="space-y-4">
+                  {events.map((event, index) => (
+                    <div key={`${event.id || index}`} data-event-index={index}>
+                      <EventCard
+                        event={event}
+                        index={index}
+                        isExpanded={expandedEvents.has(index)}
+                        onToggle={() => toggleEvent(index)}
+                        chainPaths={chainPaths}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
