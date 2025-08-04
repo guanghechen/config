@@ -1,13 +1,13 @@
 import React from 'react'
+import type { IMultiInputItem } from '@/component/MultiInput'
 
 const STORAGE_KEY = 'yozora-eventstream-chain-paths'
 const DISPLAY_MODE_KEY = 'yozora-eventstream-display-mode'
 
 export type DisplayMode = 'inline' | 'lines'
 
-export interface IChainPath {
+export interface IChainPath extends IMultiInputItem {
   path: string
-  visible: boolean
 }
 
 interface IPersistedState {
@@ -33,10 +33,14 @@ export const usePersistedChainPaths = (): [
         if (Array.isArray(parsed) && parsed.length > 0) {
           if (typeof parsed[0] === 'string') {
             // Legacy format - convert to new format
-            chainPaths = parsed.map(path => ({ path, visible: true }))
+            chainPaths = parsed.map(path => ({ path, value: path, visible: true }))
           } else {
-            // New format
-            chainPaths = parsed
+            // New format - ensure backward compatibility
+            chainPaths = parsed.map(item => ({
+              path: item.path || item.value,
+              value: item.path || item.value,
+              visible: item.visible,
+            }))
           }
         }
       }
