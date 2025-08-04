@@ -26,6 +26,17 @@ local runners = {
       vim.cmd("luafile " .. filepath)
     end,
   },
+  jsonl = {
+    run = function(filepath, force)
+      local url = string.format(
+        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+        YOZORA_SERVER_PORT,
+        std.string.escape_url_component(filepath),
+        force and "true" or "false"
+      )
+      vim.system({ "curl", "-X", "POST", url }, { detach = true })
+    end,
+  },
   md = {
     run = function(filepath, force)
       local url = string.format(
