@@ -1,26 +1,28 @@
 /* eslint-disable no-param-reassign */
 import cn from 'clsx'
 import React from 'react'
+import type { DisplayMode } from './usePersistedChainPaths'
 import { getPathColorClasses } from './utils'
 
 interface IProps {
   paths: string[]
   onChange: (paths: string[]) => void
   placeholder?: string
+  displayMode: DisplayMode
+  onDisplayModeChange: (mode: DisplayMode) => void
 }
-
-type DisplayMode = 'inline' | 'lines'
 
 export const MultiPathInput: React.FC<IProps> = ({
   paths,
   onChange,
   placeholder = 'Add JSON paths (e.g., .data.type)',
+  displayMode,
+  onDisplayModeChange,
 }) => {
   const [inputValue, setInputValue] = React.useState('')
   const [isInputFocused, setIsInputFocused] = React.useState(false)
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null)
-  const [displayMode, setDisplayMode] = React.useState<DisplayMode>('lines')
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -157,7 +159,7 @@ export const MultiPathInput: React.FC<IProps> = ({
         <button
           onClick={e => {
             e.stopPropagation()
-            setDisplayMode(displayMode === 'inline' ? 'lines' : 'inline')
+            onDisplayModeChange(displayMode === 'inline' ? 'lines' : 'inline')
           }}
           className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
           title={displayMode === 'inline' ? 'Switch to lines mode' : 'Switch to inline mode'}

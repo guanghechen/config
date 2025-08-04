@@ -30,7 +30,7 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
   const [mode, setMode] = React.useState<number>(EventStreamModeEnum.VIEW)
   const [activeEventIndex, setActiveEventIndex] = React.useState<number | null>(null)
   const [expandedEvents, setExpandedEvents] = React.useState<Set<number>>(new Set())
-  const [chainPaths, setChainPaths] = usePersistedChainPaths()
+  const [chainPaths, setChainPaths, displayMode, setDisplayMode] = usePersistedChainPaths()
   const contentContainerRef = React.useRef<HTMLDivElement | null>(null)
 
   const showView = mode === 0 || (mode & EventStreamModeEnum.VIEW) !== 0
@@ -130,6 +130,8 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
                     <MultiPathInput
                       paths={chainPaths}
                       onChange={setChainPaths}
+                      displayMode={displayMode}
+                      onDisplayModeChange={setDisplayMode}
                       placeholder="Add JSON paths (e.g., .data.type, .message)"
                     />
                   </div>
