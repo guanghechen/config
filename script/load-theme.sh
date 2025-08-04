@@ -34,12 +34,12 @@ function _ghc_tmux_load_theme_ {
     tmux set -s status off
   elif [ "$status_mode" == "11" ]; then
     tmux set -s status on
-    tmux set -g status-justify left
+    tmux set -g status-justify centre
     tmux set -g status-position bottom
     tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
   elif [ "$status_mode" == "12" ]; then
     tmux set -s status on
-    tmux set -g status-justify left
+    tmux set -g status-justify centre
     tmux set -g status-position bottom
     tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
   elif [ "$status_mode" == "13" ]; then
