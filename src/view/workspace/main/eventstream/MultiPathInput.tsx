@@ -1,5 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
+import { getPathColorClasses } from './utils'
 
 interface IProps {
   paths: string[]
@@ -57,7 +58,10 @@ export const MultiPathInput: React.FC<IProps> = ({
       {paths.map((path, index) => (
         <span
           key={index}
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-md dark:bg-blue-900 dark:text-blue-300"
+          className={cn(
+            "inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md",
+            getPathColorClasses(path, paths)
+          )}
         >
           {path}
           <button
@@ -65,7 +69,7 @@ export const MultiPathInput: React.FC<IProps> = ({
               e.stopPropagation()
               removePath(index)
             }}
-            className="inline-flex items-center justify-center w-3 h-3 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors"
+            className="inline-flex items-center justify-center w-3 h-3 hover:opacity-70 transition-opacity"
             aria-label={`Remove ${path}`}
           >
             <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">

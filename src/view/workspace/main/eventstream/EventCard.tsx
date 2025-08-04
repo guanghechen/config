@@ -2,7 +2,7 @@ import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
 import type { IEventStreamEvent } from './utils'
-import { extractValueFromPath, parseJsonData } from './utils'
+import { extractValueFromPath, parseJsonData, getPathColorClasses } from './utils'
 
 interface IProps {
   event: IEventStreamEvent
@@ -47,7 +47,7 @@ export const EventCard: React.FC<IProps> = ({
                 'rounded px-2 py-0.5 text-xs font-medium',
                 item.value === 'undefined'
                   ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                  : getPathColorClasses(item.path, chainPaths)
               )}
               title={`${item.path}: ${item.value}`}
             >
