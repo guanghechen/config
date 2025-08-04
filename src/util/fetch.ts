@@ -11,7 +11,11 @@ export interface IJsonFileData {
   readonly content: string
 }
 
-export type IFetchFileData = IMarkdownFileData | IJsonFileData
+export interface IEventStreamFileData {
+  readonly content: string
+}
+
+export type IFetchFileData = IMarkdownFileData | IJsonFileData | IEventStreamFileData
 
 export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly loading?: boolean

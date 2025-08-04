@@ -25,6 +25,8 @@ export const FileTypeIcon: React.FC<{ extname: string; className?: string }> = p
       return <span className={cn('mx-1 text-gray-700', className)}>󰍔 </span>
     case '.json':
       return <span className={cn('mx-1 text-yellow-700', className)}>󰘦 </span>
+    case '.eventstream':
+      return <span className={cn('mx-1 text-green-700', className)}>📡 </span>
     case '.pdf':
       return <span className={cn('mx-1 text-yellow-700', className)}> </span>
     case '.png':
