@@ -306,4 +306,5 @@ ms({ "n", "v" }, "[w", K.diagnostic.goto_prev_warn)
 ms({ "n", "v" }, "]w", K.diagnostic.goto_next_warn)
 ms({ "n", "v" }, "<leader>xl", K.diagnostic.line)
 ms({ "n", "v" }, "<leader>xo", K.diagnostic.outline)
+ms({ "n", "v" }, "<leader>xp", K.diagnostic.to_md)
 -----------------------------------------------------------------------------------#[x] diagnostic--

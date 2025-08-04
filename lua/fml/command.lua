@@ -267,6 +267,12 @@ command
       require("fml.action.find.diagnostics").find_diagnostics()
     end,
   })
+  .implement({
+    uuid = K.diagnostic.to_md.uuid,
+    action = function()
+      require("fml.action.diagnostic").to_md()
+    end,
+  })
 
 --[find] -------------------------------------------------------------------------------------------
 command

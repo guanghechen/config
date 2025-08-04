@@ -339,6 +339,7 @@ M.definitions.diagnostic = {
 
   line = def("Fdiagnosticline", "diagnostic: line"),
   outline = def("Fdiagnosticoutline", "diagnostic: outline"),
+  to_md = def("Fdiagnostictomd", "diagnostic: export to markdown"),
 }
 
 ---@class eve.builtin.command.definitions.explorer
