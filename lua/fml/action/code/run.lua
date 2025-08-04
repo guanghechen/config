@@ -10,6 +10,17 @@ local YOZORA_SERVER_PORT = type(vim.env.YOZORA_SERVER_PORT) == "string" and vim.
 
 ---@type fml.action.code.IRunners
 local runners = {
+  eventstream = {
+    run = function(filepath, force)
+      local url = string.format(
+        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+        YOZORA_SERVER_PORT,
+        std.string.escape_url_component(filepath),
+        force and "true" or "false"
+      )
+      vim.system({ "curl", "-X", "POST", url }, { detach = true })
+    end,
+  },
   lua = {
     run = function(filepath)
       vim.cmd("luafile " .. filepath)
