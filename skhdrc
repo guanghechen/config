@@ -1,19 +1,19 @@
 # window
-cmd + ctrl + alt - h                    : yabai -m window --focus west
-cmd + ctrl + alt - j                    : yabai -m window --focus south
-cmd + ctrl + alt - k                    : yabai -m window --focus north
-cmd + ctrl + alt - l                    : yabai -m window --focus east
-cmd + ctrl + alt + shift - h            : yabai -m window --swap west
-cmd + ctrl + alt + shift - j            : yabai -m window --swap south
-cmd + ctrl + alt + shift - k            : yabai -m window --swap north
-cmd + ctrl + alt + shift - l            : yabai -m window --swap east
-
-# workspace (need close SIP)
-cmd + ctrl + alt - left                 : yabai -m space --focus prev
-cmd + ctrl + alt - right                : yabai -m space --focus next
-cmd + ctrl + alt + shift - left         : yabai -m space --move prev
-cmd + ctrl + alt + shift - right        : yabai -m space --move next
-
-# zoom window
-cmd + ctrl + alt - f      :  yabai -m window --toggle float
-cmd + ctrl + alt - z      :  yabai -m window --toggle zoom-fullscreen
+cmd + ctrl + alt - h                    : yabai -m window --focus   west
+cmd + ctrl + alt - j                    : yabai -m window --focus   south
+cmd + ctrl + alt - k                    : yabai -m window --focus   north
+cmd + ctrl + alt - l                    : yabai -m window --focus   east
+cmd + ctrl + alt + shift - h            : yabai -m window --swap    west
+cmd + ctrl + alt + shift - j            : yabai -m window --swap    south
+cmd + ctrl + alt + shift - k            : yabai -m window --swap    north
+cmd + ctrl + alt + shift - l            : yabai -m window --swap    east
+cmd + ctrl + alt - left                 : yabai -m window --resize  right:-20:0   2> /dev/null || yabai -m window --resize left:-20:0 2> /dev/null
+cmd + ctrl + alt - down                 : yabai -m window --resize  bottom:0:20   2> /dev/null || yabai -m window --resize top:0:20   2> /dev/null
+cmd + ctrl + alt - up                   : yabai -m window --resize  bottom:0:-20  2> /dev/null || yabai -m window --resize top:0:-20  2> /dev/null
+cmd + ctrl + alt - right                : yabai -m window --resize  right:20:0    2> /dev/null || yabai -m window --resize left:20:0  2> /dev/null
+cmd + ctrl + alt + shift - left         : yabai -m window --warp    west
+cmd + ctrl + alt + shift - down         : yabai -m window --warp    south
+cmd + ctrl + alt + shift - up           : yabai -m window --warp    north
+cmd + ctrl + alt + shift - right        : yabai -m window --warp    east
+cmd + ctrl + alt - f                    : yabai -m window --toggle  float
+cmd + ctrl + alt - z                    : yabai -m window --toggle  zoom-fullscreen
