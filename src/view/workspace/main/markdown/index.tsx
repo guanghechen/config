@@ -7,13 +7,14 @@ import React from 'react'
 import { MarkdownProvider } from '@/component/markdown'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
-import { useWorkspaceViewmodel } from '@/context/workspace'
+import { useTopbarVisible, useWorkspaceViewmodel } from '@/context/workspace'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IMarkdownFileData } from '@/util/fetch'
 import { MarkdownComposer } from './composer'
 import { MarkdownModeToggle } from './mode'
 
 const MarkdownContainer: React.FC = () => {
+  const topbarVisible = useTopbarVisible()
   const siteVM = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(siteVM.theme$)
 
@@ -54,7 +55,7 @@ const MarkdownContainer: React.FC = () => {
           <code>error: {String(error)}</code>
         </div>
       )}
-      <div className="fixed right-4 top-16 z-50">
+      <div className={cn('fixed right-4 z-50', topbarVisible ? 'top-16' : 'top-4')}>
         <MarkdownModeToggle />
       </div>
       {!!ast && (

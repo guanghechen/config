@@ -22,6 +22,11 @@ export const useSidebarVisible = (): boolean => {
   return useStateValue(viewmodel.sidebarVisible$)
 }
 
+export const useTopbarVisible = (): boolean => {
+  const viewmodel = useWorkspaceViewmodel()
+  return useStateValue(viewmodel.topbarVisible$)
+}
+
 export const useSidebarWidth = (): number => {
   const viewmodel = useWorkspaceViewmodel()
   return useStateValue(viewmodel.sidebarWidth$)
@@ -32,6 +37,11 @@ export const useSidebarWidth = (): number => {
 export const useSetSidebarVisible = (): ISetState<boolean> => {
   const viewmodel = useWorkspaceViewmodel()
   return useSetState(viewmodel.sidebarVisible$)
+}
+
+export const useSetTopbarVisible = (): ISetState<boolean> => {
+  const viewmodel = useWorkspaceViewmodel()
+  return useSetState(viewmodel.topbarVisible$)
 }
 
 export const useSetSidebarWidth = (): ISetState<number> => {
@@ -45,4 +55,23 @@ export const useToggleSidebarVisible = (): (() => void) => {
     const visible = viewmodel.sidebarVisible$.getSnapshot()
     viewmodel.sidebarVisible$.next(!visible)
   }, [viewmodel.sidebarVisible$])
+}
+
+export const useToggleTopbarVisible = (): (() => void) => {
+  const viewmodel = useWorkspaceViewmodel()
+  return React.useCallback(() => {
+    const visible = viewmodel.topbarVisible$.getSnapshot()
+    viewmodel.topbarVisible$.next(!visible)
+  }, [viewmodel.topbarVisible$])
+}
+
+export const useToggleBothSidebarAndTopbar = (): (() => void) => {
+  const viewmodel = useWorkspaceViewmodel()
+  return React.useCallback(() => {
+    const sidebarVisible = viewmodel.sidebarVisible$.getSnapshot()
+    const topbarVisible = viewmodel.topbarVisible$.getSnapshot()
+    const newVisibility = !(sidebarVisible && topbarVisible)
+    viewmodel.sidebarVisible$.next(newVisibility)
+    viewmodel.topbarVisible$.next(newVisibility)
+  }, [viewmodel.sidebarVisible$, viewmodel.topbarVisible$])
 }

@@ -16,6 +16,7 @@ interface IProps {
 
   readonly sidebarVisible: boolean
   readonly sidebarWidth: number
+  readonly topbarVisible: boolean
 }
 
 const DEFAULT_WORKSPACE_DATA: IWorkspaceData = {
@@ -28,6 +29,7 @@ const DEFAULT_WORKSPACE_DATA: IWorkspaceData = {
   markdownMode: MarkdownModeEnum.VIEW,
   sidebarVisible: true,
   sidebarWidth: 300,
+  topbarVisible: false,
 }
 
 export class WorkspaceViewModel extends ViewModel {
@@ -42,6 +44,7 @@ export class WorkspaceViewModel extends ViewModel {
 
   public readonly sidebarVisible$: State<boolean>
   public readonly sidebarWidth$: State<number>
+  public readonly topbarVisible$: State<boolean>
 
   public readonly tocActivatedIdentifier$: State<string | null>
   public readonly specifiedTocActivatedIdentifier$: State<string | null>
@@ -65,6 +68,7 @@ export class WorkspaceViewModel extends ViewModel {
       markdownMode,
       sidebarVisible,
       sidebarWidth,
+      topbarVisible,
     }: IWorkspaceData = this.normalize(DEFAULT_WORKSPACE_DATA, data)
     return new WorkspaceViewModel({
       filepath,
@@ -76,6 +80,7 @@ export class WorkspaceViewModel extends ViewModel {
       markdownMode,
       sidebarVisible,
       sidebarWidth,
+      topbarVisible,
     })
   }
 
@@ -93,6 +98,7 @@ export class WorkspaceViewModel extends ViewModel {
       markdownMode,
       sidebarVisible,
       sidebarWidth,
+      topbarVisible,
     } = data || {}
     const normalizedFilepath = typeof filepath === 'string' ? filepath : base.filepath
     const normalizedWorkspace = typeof workspace === 'string' ? workspace : base.workspace
@@ -123,6 +129,8 @@ export class WorkspaceViewModel extends ViewModel {
 
     const normalizedVisible: boolean = typeof sidebarVisible === 'boolean' ? sidebarVisible : true
     const normalizedWidth: number = typeof sidebarWidth === 'number' ? sidebarWidth : 300
+    const normalizedTopbarVisible: boolean =
+      typeof topbarVisible === 'boolean' ? topbarVisible : false
     const normalizedData: IWorkspaceData = {
       filepath: normalizedFilepath,
       workspace: normalizedWorkspace,
@@ -133,6 +141,7 @@ export class WorkspaceViewModel extends ViewModel {
       markdownMode: normalizedMarkdownMode,
       sidebarVisible: normalizedVisible,
       sidebarWidth: normalizedWidth,
+      topbarVisible: normalizedTopbarVisible,
     }
     return normalizedData
   }
@@ -150,6 +159,7 @@ export class WorkspaceViewModel extends ViewModel {
       markdownMode,
       sidebarWidth,
       sidebarVisible,
+      topbarVisible,
     } = props
 
     const filepath$ = new State<string | null>(filepath)
@@ -163,6 +173,7 @@ export class WorkspaceViewModel extends ViewModel {
 
     const sidebarVisible$ = new State<boolean>(sidebarVisible)
     const sidebarWidth$ = new State<number>(sidebarWidth)
+    const topbarVisible$ = new State<boolean>(topbarVisible)
 
     const tocActivatedIdentifier$ = new State<string | null>(null)
     const specifiedTocActivatedIdentifier$ = new State<string | null>(null)
@@ -182,6 +193,7 @@ export class WorkspaceViewModel extends ViewModel {
     this.markdownMode$ = markdownMode$
     this.sidebarVisible$ = sidebarVisible$
     this.sidebarWidth$ = sidebarWidth$
+    this.topbarVisible$ = topbarVisible$
     this.tocActivatedIdentifier$ = tocActivatedIdentifier$
     this.specifiedTocActivatedIdentifier$ = specifiedTocActivatedIdentifier$
     this.filepathDirtyTick$ = filepathDirtyTick$
@@ -228,6 +240,7 @@ export class WorkspaceViewModel extends ViewModel {
     const markdownMode: MarkdownModeEnum = this.markdownMode$.getSnapshot()
     const sidebarVisible: boolean = this.sidebarVisible$.getSnapshot()
     const sidebarWidth: number = this.sidebarWidth$.getSnapshot()
+    const topbarVisible: boolean = this.topbarVisible$.getSnapshot()
     return {
       filepath,
       workspace,
@@ -238,6 +251,7 @@ export class WorkspaceViewModel extends ViewModel {
       markdownMode,
       sidebarVisible,
       sidebarWidth,
+      topbarVisible,
     }
   }
 
@@ -252,6 +266,7 @@ export class WorkspaceViewModel extends ViewModel {
       markdownMode,
       sidebarVisible,
       sidebarWidth,
+      topbarVisible,
     }: IWorkspaceData = WorkspaceViewModel.normalize(this.dump(), data)
     this.workspaces$.next(workspaces)
     this.workspace$.next(workspace)
@@ -262,5 +277,6 @@ export class WorkspaceViewModel extends ViewModel {
     this.filepath$.next(filepath)
     this.sidebarVisible$.next(sidebarVisible)
     this.sidebarWidth$.next(sidebarWidth)
+    this.topbarVisible$.next(topbarVisible)
   }
 }

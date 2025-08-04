@@ -68,6 +68,7 @@ const PersistSideEffect: React.FC<ISideEffectProps> = props => {
         viewmodel.markdownMode$,
         viewmodel.sidebarWidth$,
         viewmodel.sidebarVisible$,
+        viewmodel.topbarVisible$,
       ],
       () => {
         const data: IWorkspaceData = viewmodel.dump()

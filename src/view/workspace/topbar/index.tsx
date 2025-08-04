@@ -6,7 +6,7 @@ import type { WorkspaceViewModel } from '@/context/workspace'
 import {
   useCurrentFilepath,
   useSidebarVisible,
-  useToggleSidebarVisible,
+  useToggleBothSidebarAndTopbar,
   useWorkspace,
   useWorkspaceViewmodel,
 } from '@/context/workspace'
@@ -21,7 +21,7 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
   const viewmodel = useWorkspaceViewmodel()
   const workspace: string | null = useWorkspace()
   const sidebarVisible: boolean = useSidebarVisible()
-  const onToggleSidebarVisible: () => void = useToggleSidebarVisible()
+  const onToggleBothSidebarAndTopbar: () => void = useToggleBothSidebarAndTopbar()
   const filepath: string | null = useCurrentFilepath()
 
   const url = React.useMemo<string>(() => {
@@ -40,9 +40,9 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
     <div className="flex h-full items-center backdrop-blur-md backdrop-saturate-150 bg-white/70 border-b border-white/20 text-slate-800 px-4 dark:bg-gray-800/70 dark:border-gray-700/30 dark:text-gray-200">
       <div className="box-border flex flex-initial justify-center gap-4">
         <button
-          onClick={onToggleSidebarVisible}
+          onClick={onToggleBothSidebarAndTopbar}
           className="text-gray-600 hover:text-gray-800 focus:outline-hidden dark:text-gray-400 dark:hover:text-gray-200"
-          title={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
+          title={sidebarVisible ? 'Hide sidebar and topbar' : 'Show sidebar and topbar'}
         >
           <DockToRightIcon />
         </button>

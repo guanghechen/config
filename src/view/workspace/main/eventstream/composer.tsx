@@ -1,6 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/constant/classes'
+import { useTopbarVisible } from '@/context/workspace'
 import { EventCard } from './EventCard'
 import { MultiPathInput } from './MultiPathInput'
 import { EventStreamNavigation } from './navigation'
@@ -26,6 +27,7 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
 )
 
 export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
+  const topbarVisible = useTopbarVisible()
   const events = React.useMemo(() => parseEventStream(content || ''), [content])
   const [mode, setMode] = React.useState<number>(EventStreamModeEnum.VIEW)
   const [activeEventIndex, setActiveEventIndex] = React.useState<number | null>(null)
@@ -72,7 +74,12 @@ export const EventStreamComposer: React.FC<IProps> = ({ content }) => {
       })}
     >
       {/* Mode Toggle */}
-      <div className="fixed right-4 top-16 z-50 flex select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95">
+      <div
+        className={cn(
+          'fixed right-4 z-50 flex select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95',
+          topbarVisible ? 'top-16' : 'top-4',
+        )}
+      >
         <button
           className={cn(
             'box-border px-3 py-1 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
