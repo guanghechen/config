@@ -28,6 +28,20 @@
   ],
   "actions": [
     {
+      "id": "ghc.input.alt_lbracket",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[97;5u\u001b[91;1u"
+      }
+    },
+    {
+      "id": "ghc.input.alt_rbracket",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[97;5u\u001b[93;1u"
+      }
+    },
+    {
       "id": "ghc.input.ctrl_,",
       "command": {
         "action": "sendInput",
@@ -488,6 +502,14 @@
     }
   ],
   "keybindings": [
+    {
+      "id": "ghc.input.alt_lbracket",
+      "keys": "alt+["
+    },
+    {
+      "id": "ghc.input.alt_rbracket",
+      "keys": "alt+]"
+    },
     {
       "id": null,
       "keys": "alt+1"
@@ -987,10 +1009,6 @@
     {
       "id": "ghc.input.ctrl_shift_z",
       "keys": "ctrl+shift+z"
-    },
-    {
-      "id": "ghc.input.0001_005b",
-      "keys": "alt+["
     },
     {
       "id": "ghc.input.shift_enter",
