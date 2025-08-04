@@ -43,6 +43,9 @@ else
     set -x TERM xterm-256color
 end
 
+### yazi
+set -gx FZF_DEFAULT_COMMAND "fd --type f"
+
 ### zoxide
 if type -q zoxide
     zoxide init fish | source

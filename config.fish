@@ -62,7 +62,6 @@ source ~/.config/fish/conf/platform/local.fish
 
 source ~/.config/fish/conf/app.fish
 source ~/.config/fish/conf/theme.fish
-source ~/.config/fish/conf/fzf.fish
 source ~/.config/fish/conf/alias.fish
 
 ghc-claude-local
