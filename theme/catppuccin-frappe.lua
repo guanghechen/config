@@ -1,4 +1,5 @@
 -- catppuccin-frappe
+
 local config = {
   colors = {
     -- Primary colors

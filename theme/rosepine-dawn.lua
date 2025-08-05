@@ -1,4 +1,5 @@
--- rose-pine-dawn
+-- rosepine-dawn
+
 local config = {
   colors = {
     -- Primary colors
@@ -29,7 +30,7 @@ local config = {
     -- Bright colors
     brights = {
       "#9893A5",
-      "#B4637A",
+      "#D7827E",
       "#6D8F89",
       "#EA9D34",
       "#286983",

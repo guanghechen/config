@@ -1,4 +1,5 @@
 -- catppuccin-mocha
+
 local config = {
   colors = {
     -- Primary colors

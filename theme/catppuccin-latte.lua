@@ -1,4 +1,5 @@
 -- catppuccin-latte
+
 local config = {
   colors = {
     -- Primary colors
@@ -29,7 +30,7 @@ local config = {
     -- Bright colors
     brights = {
       "#9CA0B0",
-      "#D20F39",
+      "#E64553",
       "#40A02B",
       "#DF8E1D",
       "#1E66F5",

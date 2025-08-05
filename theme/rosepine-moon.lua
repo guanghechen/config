@@ -1,26 +1,27 @@
--- rose-pine-main
+-- rosepine-moon
+
 local config = {
   colors = {
     -- Primary colors
-    background    = "#191724",
+    background    = "#232136",
     foreground    = "#E0DEF4",
 
     -- Cursor colors
     cursor_bg     = "#EB6F92",
-    cursor_fg     = "#1F1D2E",
-    cursor_border = "#1F1D2E",
+    cursor_fg     = "#2A273F",
+    cursor_border = "#2A273F",
 
     -- Selection colors
     selection_bg  = "#F6C177",
-    selection_fg  = "#1F1D2E",
+    selection_fg  = "#2A273F",
 
     -- Normal colors
     ansi = {
-      "#191724",
+      "#232136",
       "#EB6F92",
       "#95B1AC",
       "#F6C177",
-      "#31748F",
+      "#3E8FB0",
       "#C4A7E7",
       "#9CCFD8",
       "#6E6A86",
@@ -32,7 +33,7 @@ local config = {
       "#EB6F92",
       "#95B1AC",
       "#F6C177",
-      "#31748F",
+      "#3E8FB0",
       "#C4A7E7",
       "#9CCFD8",
       "#E0DEF4",

@@ -1,8 +1,9 @@
 -- gruvbox-dark
+
 local config = {
   colors = {
     -- Primary colors
-    background    = "#282828",
+    background    = "#32302F",
     foreground    = "#EBDBB2",
 
     -- Cursor colors
@@ -16,7 +17,7 @@ local config = {
 
     -- Normal colors
     ansi = {
-      "#282828",
+      "#32302F",
       "#CC241D",
       "#98971A",
       "#D79921",

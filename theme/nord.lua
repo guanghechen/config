@@ -1,4 +1,5 @@
 -- nord
+
 local config = {
   colors = {
     -- Primary colors

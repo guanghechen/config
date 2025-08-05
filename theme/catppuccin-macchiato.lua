@@ -1,4 +1,5 @@
 -- catppuccin-macchiato
+
 local config = {
   colors = {
     -- Primary colors
