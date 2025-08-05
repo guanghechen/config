@@ -1,8 +1,9 @@
 ---@type std.t.theme.IScheme
 local M = {
-  theme = "gruvbox-light",
-  opposite = "gruvbox-dark",
+  theme = "gruvbox",
   variant = "light",
+  opposite = "dark",
+  darken = false,
   -- stylua: ignore start
   palette = {
     none =            "none",
@@ -36,7 +37,7 @@ local M = {
     brightOrange =    "#D65D0E",
 
     grey =            "#928374",
-    pink =            "#D3869B",
+    pink =            "#8F3F71",
 
     diffDel =         "#FCC19F",
     diffDelInline =   "#EB9D82",

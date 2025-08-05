@@ -59,6 +59,6 @@ do
     vim.g.terminal_color_14 = c.brightAqua
     vim.g.terminal_color_15 = c.fg1
 
-    vim.g.neovide_theme = scheme.variant == "light" and "light" or "dark"
+    vim.g.neovide_theme = scheme.darken and "dark" or "light"
   end
 end

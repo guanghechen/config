@@ -431,11 +431,11 @@ local group_items = {
       action = function()
         local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
         local scheme = eve.context.theme.get_scheme(theme) ---@type std.t.theme.IScheme|nil
-        if scheme == nil then
+        if scheme == nil or scheme.opposite == nil then
           return
         end
 
-        local next_theme = scheme.opposite or "default" ---@type std.e.Theme
+        local next_theme = string.format("%s-%s", scheme.theme, scheme.opposite) ---@type std.e.Theme
         eve.command.execute(eve.command.definitions.toggle.theme.uuid, next_theme)
       end,
     },

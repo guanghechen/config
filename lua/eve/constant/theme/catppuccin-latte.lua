@@ -1,8 +1,9 @@
 ---@type std.t.theme.IScheme
 local M = {
-  theme = "catppuccin-latte",
-  opposite = "catppuccin-frappe",
-  variant = "light",
+  theme = "catppuccin",
+  variant = "latte",
+  opposite = "frappe",
+  darken = false,
   -- stylua: ignore start
   palette = {
     none =            "none",

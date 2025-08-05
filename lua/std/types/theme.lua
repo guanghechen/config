@@ -39,12 +39,14 @@
 
 ---@class std.t.theme.IScheme
 ---@field public theme                  std.e.Theme
----@field public opposite               std.e.Theme
----@field public variant                std.e.ThemeVariant
+---@field public variant                std.e.ThemeVariant|nil
+---@field public opposite               std.e.ThemeVariant|nil
+---@field public darken                 boolean
 ---@field public palette                std.t.theme.IPalette
 
 ---@class std.t.theme.IContext
 ---@field public theme                  string
+---@field public variant                string|nil
 ---@field public scheme                 std.t.theme.IScheme
 ---@field public transparency           boolean
 

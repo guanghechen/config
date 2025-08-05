@@ -22,11 +22,11 @@ M.themes = {
   "gruvbox-dark",
   "gruvbox-light",
   "nord",
-  "one-half-dark",
-  "one-half-light",
-  "rose-pine-main",
-  "rose-pine-moon",
-  "rose-pine-dawn",
+  "onehalf-dark",
+  "onehalf-light",
+  "rosepine-main",
+  "rosepine-moon",
+  "rosepine-dawn",
 }
 
 ---@class eve.builtin.setting.togglers

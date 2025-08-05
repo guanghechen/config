@@ -63,11 +63,11 @@ local theme__mods = {
   ["gruvbox-light"] = "eve.constant.theme.gruvbox-light",
   ["gruvbox-dark"] = "eve.constant.theme.gruvbox-dark",
   ["nord"] = "eve.constant.theme.nord",
-  ["one-half-light"] = "eve.constant.theme.one-half-light",
-  ["one-half-dark"] = "eve.constant.theme.one-half-dark",
-  ["rose-pine-main"] = "eve.constant.theme.rose-pine-main",
-  ["rose-pine-moon"] = "eve.constant.theme.rose-pine-moon",
-  ["rose-pine-dawn"] = "eve.constant.theme.rose-pine-dawn",
+  ["onehalf-light"] = "eve.constant.theme.onehalf-light",
+  ["onehalf-dark"] = "eve.constant.theme.onehalf-dark",
+  ["rosepine-main"] = "eve.constant.theme.rosepine-main",
+  ["rosepine-moon"] = "eve.constant.theme.rosepine-moon",
+  ["rosepine-dawn"] = "eve.constant.theme.rosepine-dawn",
 }
 
 ---@class eve.constant.theme
@@ -79,11 +79,11 @@ local theme__mods = {
 ---@field public ["gruvbox-light"]      std.t.theme.IScheme
 ---@field public ["gruvbox-dark"]       std.t.theme.IScheme
 ---@field public ["nord"]               std.t.theme.IScheme
----@field public ["one-half-light"]     std.t.theme.IScheme
----@field public ["one-half-dark"]      std.t.theme.IScheme
----@field public ["rose-pine-main"]     std.t.theme.IScheme
----@field public ["rose-pine-moon"]     std.t.theme.IScheme
----@field public ["rose-pine-dawn"]     std.t.theme.IScheme
+---@field public ["onehalf-light"]      std.t.theme.IScheme
+---@field public ["onehalf-dark"]       std.t.theme.IScheme
+---@field public ["rosepine-main"]      std.t.theme.IScheme
+---@field public ["rosepine-moon"]      std.t.theme.IScheme
+---@field public ["rosepine-dawn"]      std.t.theme.IScheme
 local theme = setmetatable({
   __mods = theme__mods,
 }, {

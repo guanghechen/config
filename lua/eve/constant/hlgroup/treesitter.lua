@@ -5,7 +5,7 @@ local M = {}
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type std.e.Theme
-  if theme == "gruvbox-dark" or theme == "gruvbox-light" then
+  if theme == "gruvbox" then
     return require("eve.constant.hlgroup.gruvbox.treesitter").gen_hlgroup_map(context)
   end
   return M.default_gen_hlgroup_map(context)

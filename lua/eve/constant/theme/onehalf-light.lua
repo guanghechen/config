@@ -1,15 +1,16 @@
 ---@type std.t.theme.IScheme
 local M = {
-  theme = "one-half-light",
-  opposite = "one-half-dark",
+  theme = "onehalf",
   variant = "light",
+  opposite = "dark",
+  darken = false,
   -- stylua: ignore start
   palette = {
     none =            "none",
 
     bg0 =             "#FAFAFA",
     bg1 =             "#F0F0F0",
-    bg2 =             "#E5E5E5",
+    bg2 =             "#EAEAEA",
     bg3 =             "#DCDCDC",
     bg4 =             "#D3D3D3",
 
@@ -27,10 +28,10 @@ local M = {
     aqua =            "#0B8EC6",
     orange =          "#FF6A00",
 
-    brightRed =       "#E06C75",
+    brightRed =       "#E45649",
     brightGreen =     "#7ECA9C",
-    brightYellow =    "#D19A66",
-    brightBlue =      "#61AFEF",
+    brightYellow =    "#C18401",
+    brightBlue =      "#4078F2",
     brightPurple =    "#B294BB",
     brightAqua =      "#4EC9B0",
     brightOrange =    "#FE8655",

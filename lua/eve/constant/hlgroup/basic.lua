@@ -5,10 +5,10 @@ local M = {}
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local theme = context.scheme.theme ---@type std.e.Theme
-  if theme == "gruvbox-dark" or theme == "gruvbox-light" then
+  if theme == "gruvbox" then
     return require("eve.constant.hlgroup.gruvbox.basic").gen_hlgroup_map(context)
-  elseif theme == "one-half-dark" or theme == "one-half-light" then
-    return require("eve.constant.hlgroup.one-half.basic").gen_hlgroup_map(context)
+  elseif theme == "onehalf" then
+    return require("eve.constant.hlgroup.onehalf.basic").gen_hlgroup_map(context)
   end
   return M.default_gen_hlgroup_map(context)
 end

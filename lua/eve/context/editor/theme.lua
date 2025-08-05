@@ -125,6 +125,7 @@ function M.apply_integration(params)
     ---@type std.t.theme.IContext
     local themeContext = {
       theme = scheme.theme,
+      variant = scheme.variant,
       scheme = scheme,
       transparency = transparency,
     }
@@ -231,7 +232,7 @@ function M.reload_theme(force, reload_plugins)
 
   local scheme = M.get_scheme(theme) ---@type std.t.theme.IScheme|nil
   if scheme ~= nil then
-    vim.o.background = scheme.variant == "dark" and "dark" or "light"
+    vim.o.background = scheme.darken and "dark" or "light"
   end
 
   local theme_path = get_theme_path() ---@type string

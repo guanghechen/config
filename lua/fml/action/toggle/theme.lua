@@ -115,7 +115,7 @@ local function apply_theme(theme)
   end
 
   if scheme ~= nil then
-    vim.o.background = scheme.variant == "dark" and "dark" or "light"
+    vim.o.background = scheme.darken and "dark" or "light"
   end
 end
 

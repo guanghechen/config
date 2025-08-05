@@ -1,8 +1,9 @@
 ---@type std.t.theme.IScheme
 local M = {
   theme = "nord",
-  opposite = "{{opposite}}",
-  variant = "neutral",
+  variant = nil,
+  opposite = nil,
+  darken = true,
   -- stylua: ignore start
   palette = {
     none =            "none",
