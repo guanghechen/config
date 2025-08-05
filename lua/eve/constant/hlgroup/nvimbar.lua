@@ -5,7 +5,7 @@ local M = {}
 ---@return eve.constant.hlgroup.nvimbar
 function M.gen_hlgroup_map(context)
   local cs = std.color
-  local c = context.scheme.palette ---@type std.t.theme.IPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
   local t = context.transparency ---@type boolean
   local bg_bufc = t and c.none or c.bg0 ---@type string
   local bg_pos = c.bg2 ---@type string

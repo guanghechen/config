@@ -22,7 +22,7 @@
 ---|"D"
 ---|"B"
 
----@alias std.e.Theme
+---@alias std.e.ThemeFullName
 ---|"catppuccin-frappe"
 ---|"catppuccin-latte"
 ---|"catppuccin-macchiato"
@@ -35,6 +35,13 @@
 ---|"rosepine-main"
 ---|"rosepine-moon"
 ---|"rosepine-dawn"
+
+---@alias std.e.ThemeFamily
+---|"catppuccin"
+---|"gruvbox"
+---|"nord"
+---|"onehalf"
+---|"rosepine"
 
 ---@alias std.e.ThemeVariant
 ---|"frappe"

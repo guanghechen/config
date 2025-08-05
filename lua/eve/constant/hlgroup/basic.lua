@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local theme = context.scheme.theme ---@type std.e.Theme
+  local theme = context.scheme.theme ---@type std.e.ThemeFamily
   if theme == "gruvbox" then
     return require("eve.constant.hlgroup.gruvbox.basic").gen_hlgroup_map(context)
   elseif theme == "onehalf" then
@@ -17,7 +17,7 @@ end
 ---@return table<string, std.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
   local cs = std.color
-  local c = context.scheme.palette ---@type std.t.theme.IPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
   local t = context.transparency ---@type boolean
   local bg = t and c.none or c.bg0 ---@type string
 

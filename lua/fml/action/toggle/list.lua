@@ -414,7 +414,7 @@ local group_items = {
     theme = {
       title = "theme",
       snapshot = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type std.e.ThemeFullName
         return theme, "String"
       end,
       action = function()
@@ -424,18 +424,18 @@ local group_items = {
     theme_variant = {
       title = "theme variant",
       snapshot = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type std.e.ThemeFullName
         local scheme = eve.context.theme.get_scheme(theme) ---@type std.t.theme.IScheme|nil
         return scheme and scheme.variant or "", "String"
       end,
       action = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type std.e.Theme
+        local theme = eve.context.theme.theme:snapshot() ---@type std.e.ThemeFullName
         local scheme = eve.context.theme.get_scheme(theme) ---@type std.t.theme.IScheme|nil
         if scheme == nil or scheme.opposite == nil then
           return
         end
 
-        local next_theme = string.format("%s-%s", scheme.theme, scheme.opposite) ---@type std.e.Theme
+        local next_theme = string.format("%s-%s", scheme.theme, scheme.opposite) ---@type std.e.ThemeFullName
         eve.command.execute(eve.command.definitions.toggle.theme.uuid, next_theme)
       end,
     },

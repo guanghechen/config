@@ -129,7 +129,7 @@ function M.theme(arg)
   if vim.list_contains(themes, theme_name) then
     apply_theme(theme_name)
   else
-    local current_theme = o_theme:snapshot() ---@type std.e.Theme
+    local current_theme = o_theme:snapshot() ---@type std.e.ThemeFullName
     vim.ui.select(themes, {
       name = __module_name__,
       prompt = "Toggle Theme",

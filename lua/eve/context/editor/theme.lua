@@ -1,19 +1,19 @@
 local __module_name__ = "eve.status.theme" ---@type string
 
 ---@class eve.context.theme.ILoadIntegrationParams
----@field public theme                  std.e.Theme
+---@field public theme                  std.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public integration            std.e.ThemeIntegration
 ---@field public nsnr                   ?integer
 
 ---@class eve.context.theme.ILoadThemeParams
----@field public theme                  std.e.Theme
+---@field public theme                  std.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public persistent             boolean
 ---@field public nsnr                   ?integer
 
 ---@class eve.context.theme.data
----@field public theme                  std.e.Theme
+---@field public theme                  std.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public username               boolean
 
@@ -26,7 +26,7 @@ local __module_name__ = "eve.status.theme" ---@type string
 ---
 ---@field public apply_integration      fun(params: eve.context.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.context.theme.ILoadThemeParams): nil
----@field public get_scheme             fun(theme: std.e.Theme): std.t.theme.IScheme | nil
+---@field public get_scheme             fun(theme: std.e.ThemeFullName): std.t.theme.IScheme | nil
 ---@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
 ---@field public set_term_colors        fun(scheme: std.t.theme.IScheme): nil
 
@@ -115,7 +115,7 @@ end
 ---@param params                        eve.context.theme.ILoadIntegrationParams
 ---@return nil
 function M.apply_integration(params)
-  local theme = params.theme ---@type std.e.Theme
+  local theme = params.theme ---@type std.e.ThemeFullName
   local transparency = params.transparency ---@type boolean
   local integration = params.integration ---@type std.e.ThemeIntegration
   local nsnr = params.nsnr or 0 ---@type integer
@@ -140,7 +140,7 @@ end
 ---@param params                        eve.context.theme.ILoadThemeParams
 ---@return nil
 function M.apply_theme(params)
-  local theme = params.theme ---@type std.e.Theme
+  local theme = params.theme ---@type std.e.ThemeFullName
   local transparency = params.transparency ---@type boolean
   local persistent = params.persistent ---@type boolean
   local nsnr = params.nsnr or 0 ---@type integer
@@ -208,7 +208,7 @@ function M.apply_theme(params)
   return scheme
 end
 
----@param theme                         std.e.Theme
+---@param theme                         std.e.ThemeFullName
 ---@return std.t.theme.IScheme | nil
 function M.get_scheme(theme)
   if not vim.list_contains(eve.setting.themes, theme) then
@@ -227,7 +227,7 @@ end
 ---@param reload_plugins                boolean
 ---@return nil
 function M.reload_theme(force, reload_plugins)
-  local theme = M.theme:snapshot() ---@type std.e.Theme
+  local theme = M.theme:snapshot() ---@type std.e.ThemeFullName
   local transparency = M.transparency:snapshot() ---@type boolean
 
   local scheme = M.get_scheme(theme) ---@type std.t.theme.IScheme|nil
@@ -268,7 +268,7 @@ end
 ---@param scheme                        std.t.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette ---@type std.t.theme.IPalette
+  local c = scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.red
   vim.g.terminal_color_2 = c.green

@@ -1,4 +1,14 @@
----@class std.t.theme.IPalette
+---@class std.t.theme.CatppuccinPalette
+
+---@class std.t.theme.GruvboxPalette
+
+---@class std.t.theme.NordPalette
+
+---@class std.t.theme.OnehalfPalette
+
+---@class std.t.theme.RosepinePalette
+
+---@class std.t.theme.IUnifiedPalette
 ---@field public none                   string
 ---
 ---@field public bg0                    string
@@ -37,8 +47,16 @@
 ---@field public diffAdd                string
 ---@field public diffAddInline          string
 
+---@class std.t.theme.IPalette
+---@field public unified                std.t.theme.IUnifiedPalette
+---@field public catppuccin             std.t.theme.CatppuccinPalette|nil
+---@field public gruvbox                std.t.theme.GruvboxPalette|nil
+---@field public nord                   std.t.theme.NordPalette|nil
+---@field public onehalf                std.t.theme.OnehalfPalette|nil
+---@field public rosepine               std.t.theme.RosepinePalette|nil
+
 ---@class std.t.theme.IScheme
----@field public theme                  std.e.Theme
+---@field public theme                  std.e.ThemeFamily
 ---@field public variant                std.e.ThemeVariant|nil
 ---@field public opposite               std.e.ThemeVariant|nil
 ---@field public darken                 boolean

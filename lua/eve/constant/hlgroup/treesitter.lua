@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local theme = context.scheme.theme ---@type std.e.Theme
+  local theme = context.scheme.theme ---@type std.e.ThemeFamily
   if theme == "gruvbox" then
     return require("eve.constant.hlgroup.gruvbox.treesitter").gen_hlgroup_map(context)
   end
@@ -14,7 +14,7 @@ end
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type std.t.theme.IPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
 
   return {
     ["@annotation"] = { fg = c.brightRed },

@@ -10,7 +10,7 @@ local default_storage = eve.get_default_storage() ---@type eve.context.storage
 local storage = { editor = default_storage.editor } ---@type eve.context.storage
 eve.setup_context(storage)
 
-local theme = vim.env.GHC_THEME or "catppuccin-mocha" ---@type std.e.Theme
+local theme = vim.env.GHC_THEME or "catppuccin-mocha" ---@type std.e.ThemeFullName
 
 if not vim.list_contains(eve.setting.themes, theme) then
   print("Unknown theme: " .. theme)

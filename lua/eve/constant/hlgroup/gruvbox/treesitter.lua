@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette ---@type std.t.theme.IPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
 
   return {
     ["@annotation"] = { fg = c.brightRed },
