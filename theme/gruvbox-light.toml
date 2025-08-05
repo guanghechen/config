@@ -41,21 +41,21 @@ border_symbol           = "│"
 border_style            = { fg = "#A89984" }
 count_copied            = { fg = "#EBDBB2",     bg = "#79740E" }
 count_cut               = { fg = "#EBDBB2",     bg = "#9D0006" }
-count_selected          = { fg = "#EBDBB2",     bg = "#D3869B" }
+count_selected          = { fg = "#EBDBB2",     bg = "#B16286" }
 find_keyword            = { fg = "#B57614",  bold = true, italic = true }
 find_position           = { fg = "#8F3F71",  bg = "reset", bold = true, italic = true }
-hovered                 = { fg = "#EBDBB2",     bg = "#D3869B", bold = true }
+hovered                 = { fg = "#EBDBB2",     bg = "#B16286", bold = true }
 marker_copied           = { fg = "#79740E",   bg = "#79740E" }
 marker_cut              = { fg = "#9D0006",     bg = "#9D0006" }
 marker_marked           = { fg = "#427B58",    bg = "#427B58" }
-marker_selected         = { fg = "#D3869B",    bg = "#D3869B", dim = true, blink = true }
-preview_hovered         = { fg = "#D3869B",    underline = true }
+marker_selected         = { fg = "#B16286",    bg = "#B16286", dim = true, blink = true }
+preview_hovered         = { fg = "#B16286",    underline = true }
 syntect_theme           = ""
 
 [mode]
 normal_main             = { fg = "#EBDBB2",     bg = "#427B58",    bold = true }
 normal_alt              = { fg = "#504945",     bg = "#D5C4A1" }
-select_main             = { fg = "#EBDBB2",     bg = "#D3869B",    bold = true }
+select_main             = { fg = "#EBDBB2",     bg = "#B16286",    bold = true }
 select_alt              = { fg = "#504945",     bg = "#D5C4A1" }
 unset_main              = { fg = "#EBDBB2",     bg = "#79740E",  bold = true }
 unset_alt               = { fg = "#504945",     bg = "#D5C4A1",  bold = true }
@@ -88,8 +88,8 @@ sep_left                = { open = "",         close = "" }
 sep_right               = { open = "",         close = "" }
 
 [tabs]
-active                  = { fg = "#EBDBB2",     bg = "#D3869B", bold = true }
-inactive                = { fg = "#D3869B",    bg = "#D5C4A1" }
+active                  = { fg = "#EBDBB2",     bg = "#B16286", bold = true }
+inactive                = { fg = "#B16286",    bg = "#D5C4A1" }
 sep_inner               = { open = "",         close = "" }
 sep_outer               = { open = "",         close = "" }
 

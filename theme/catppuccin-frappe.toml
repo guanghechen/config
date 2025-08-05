@@ -38,7 +38,7 @@ selected                = { reversed = true }
 [mgr]
 cwd                     = { fg = "#81C8BE" }
 border_symbol           = "│"
-border_style            = { fg = "#181926" }
+border_style            = { fg = "#51576D" }
 count_copied            = { fg = "#292C3C",     bg = "#A6D189" }
 count_cut               = { fg = "#292C3C",     bg = "#E78284" }
 count_selected          = { fg = "#292C3C",     bg = "#F4B8E4" }

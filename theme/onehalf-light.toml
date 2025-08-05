@@ -54,11 +54,11 @@ syntect_theme           = ""
 
 [mode]
 normal_main             = { fg = "#F0F0F0",     bg = "#0B8EC6",    bold = true }
-normal_alt              = { fg = "#5C5F66",     bg = "#E5E5E5" }
+normal_alt              = { fg = "#5C5F66",     bg = "#EAEAEA" }
 select_main             = { fg = "#F0F0F0",     bg = "#F07178",    bold = true }
-select_alt              = { fg = "#5C5F66",     bg = "#E5E5E5" }
+select_alt              = { fg = "#5C5F66",     bg = "#EAEAEA" }
 unset_main              = { fg = "#F0F0F0",     bg = "#50A14F",  bold = true }
-unset_alt               = { fg = "#5C5F66",     bg = "#E5E5E5",  bold = true }
+unset_alt               = { fg = "#5C5F66",     bg = "#EAEAEA",  bold = true }
 
 [notify]
 title_info              = { fg = "#50A14F" }
@@ -89,7 +89,7 @@ sep_right               = { open = "",         close = "" }
 
 [tabs]
 active                  = { fg = "#F0F0F0",     bg = "#F07178", bold = true }
-inactive                = { fg = "#F07178",    bg = "#E5E5E5" }
+inactive                = { fg = "#F07178",    bg = "#EAEAEA" }
 sep_inner               = { open = "",         close = "" }
 sep_outer               = { open = "",         close = "" }
 
@@ -105,7 +105,7 @@ cand                    = { fg = "#0B8EC6" }
 rest                    = { fg = "#5C5F66" }
 desc                    = { fg = "#A28DCD" }
 separator               = "  "
-separator_style         = { fg = "#E5E5E5" }
+separator_style         = { fg = "#EAEAEA" }
 
 [filetype]
 rules = [
