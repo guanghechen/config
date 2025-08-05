@@ -24,19 +24,19 @@ export async function render_template(template, scheme) {
   const variant = scheme.variant;
   const opposite = scheme.opposite;
   const darken = scheme.darken;
-  const catppuccin = scheme.palette.catppuccin || {};
-  const gruvbox = scheme.palette.gruvbox || {};
-  const nord = scheme.palette.nord || {};
-  const onehalf = scheme.palette.onehalf || {};
-  const rosepine = scheme.palette.rosepine || {};
-  const unified = scheme.palette.unified || {};
+  const catppuccin = scheme.palette.catppuccin;
+  const gruvbox = scheme.palette.gruvbox;
+  const nord = scheme.palette.nord;
+  const onehalf = scheme.palette.onehalf;
+  const rosepine = scheme.palette.rosepine;
+  const unified = scheme.palette.unified;
   const palette = Object.fromEntries(
     Object.entries({ catppuccin, gruvbox, nord, onehalf, rosepine }).filter(
-      ([_, v]) => !!v && Object.entries(v).length > 0,
+      ([_, v]) => !!v,
     ),
   );
 
-  const content = template.replace(/\{{2}([^\n]+)\}{2}/g, (_, key) => {
+  const content = template.replace(/\{{2}([^\n]+?)\}{2}/g, (_, key) => {
     const fn = new Function(
       "theme",
       "variant",
@@ -45,12 +45,11 @@ export async function render_template(template, scheme) {
       "unified",
       "palette",
       "expression",
-      `try { return ${key} || expression; } catch { return \`{{\${expression}}}\`; }`,
+      `try { return (${key}) || expression; } catch { return \`{{\${expression}}}\`; }`,
     );
     const result = fn(theme, variant, opposite, darken, unified, palette);
     return result;
   });
-
   return content;
 }
 
@@ -116,11 +115,13 @@ export async function load_theme_scheme(theme) {
   }
   const content = await fs.readFile(filepath, "utf8");
   try {
-    let data = {};
     const scheme = JSON.parse(content);
-    const keys = Object.keys(scheme.palette).filter((x) => x !== "unified");
-    for (const key of keys) {
-      data = { ...data, ...scheme.palette[key] };
+
+    let data = {};
+    for (const key of Object.keys(scheme.palette)) {
+      if (key !== "unified") {
+        data = { ...data, ...scheme.palette[key] };
+      }
     }
     const resolvedContent = content.replaceAll(
       /\{{2}([\w]+)\}{2}/g,
@@ -144,13 +145,6 @@ export async function load_theme_scheme(theme) {
  */
 export async function apply_theme_per_app(app, scheme) {
   if (!app.active(app)) return;
-
-  /** @type {import('./_env.mjs').IThemeScheme} */
-  const resolvedScheme =
-    app.kind === "terminal" && scheme.theme == "gruvbox"
-      ? swapNormalAndBrightColors(scheme)
-      : scheme;
-
   if (app.local) {
     const template_filepath = path.join(HOME_THEME_APP, `${app.name}.hbs`);
     if (!existsSync(template_filepath)) {
@@ -158,14 +152,14 @@ export async function apply_theme_per_app(app, scheme) {
       return;
     }
     const template = await fs.readFile(template_filepath, "utf8");
-    const content = await app.render(app, template, resolvedScheme);
+    const content = await app.render(app, template, scheme);
 
     const theme_filepath = path.resolve(XDG_CONFIG_HOME, app.name, app.local);
     mkdirSync(path.dirname(theme_filepath), { recursive: true });
     await fs.writeFile(theme_filepath, content, "utf8");
   }
 
-  await app.after_apply?.(app, resolvedScheme);
+  await app.after_apply?.(app, scheme);
 }
 
 /**
@@ -195,45 +189,9 @@ export async function gen_themes_per_app(app) {
     const scheme = await load_theme_scheme(theme);
     if (!scheme) return;
 
-    /** @type {import('./_env.mjs').IThemeScheme} */
-    const resolvedScheme =
-      app.kind === "terminal" && scheme.theme == "gruvbox"
-        ? swapNormalAndBrightColors(scheme)
-        : scheme;
-
-    const content = await app.render(app, template, resolvedScheme);
+    const content = await app.render(app, template, scheme);
     const theme_filepath = path.resolve(THEME_HOME, `${theme}${app.extname}`);
     mkdirSync(path.dirname(theme_filepath), { recursive: true });
     await fs.writeFile(theme_filepath, content, "utf8");
   }
-}
-
-/**
- * @param {import('./_env.mjs').IThemeScheme} scheme
- * @return {import('./_env.mjs').IThemeScheme}
- */
-export function swapNormalAndBrightColors(scheme) {
-  /** @type {import('./_env.mjs').IThemeScheme} */
-  const newScheme = {
-    ...scheme,
-    palette: {
-      ...scheme.palette,
-      red: scheme.palette.brightRed,
-      green: scheme.palette.brightGreen,
-      yellow: scheme.palette.brightYellow,
-      blue: scheme.palette.brightBlue,
-      purple: scheme.palette.brightPurple,
-      aqua: scheme.palette.brightAqua,
-      orange: scheme.palette.brightOrange,
-
-      brightRed: scheme.palette.red,
-      brightGreen: scheme.palette.green,
-      brightYellow: scheme.palette.yellow,
-      brightBlue: scheme.palette.blue,
-      brightPurple: scheme.palette.purple,
-      brightAqua: scheme.palette.aqua,
-      brightOrange: scheme.palette.orange,
-    },
-  };
-  return newScheme;
 }

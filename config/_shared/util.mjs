@@ -5,10 +5,10 @@ import { existsSync, statSync, utimesSync } from "node:fs";
  * @return {string} the rgb color
  */
 export function hex2rgb(hex) {
-  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
-  const rr = Number.parseInt(r, 16)
-  const gg = Number.parseInt(g, 16)
-  const bb = Number.parseInt(b, 16)
+  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex);
+  const rr = Number.parseInt(r, 16);
+  const gg = Number.parseInt(g, 16);
+  const bb = Number.parseInt(b, 16);
   return `rgb(${rr}, ${gg}, ${bb})`;
 }
 
@@ -18,10 +18,10 @@ export function hex2rgb(hex) {
  * @return {string} the rgb color
  */
 export function hex2rgba(hex, alpha) {
-  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
-  const rr = Number.parseInt(r, 16)
-  const gg = Number.parseInt(g, 16)
-  const bb = Number.parseInt(b, 16)
+  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex);
+  const rr = Number.parseInt(r, 16);
+  const gg = Number.parseInt(g, 16);
+  const bb = Number.parseInt(b, 16);
   return `rgba(${rr}, ${gg}, ${bb}, ${alpha})`;
 }
 
@@ -51,4 +51,3 @@ export async function touch(filepath) {
     }
   }
 }
-

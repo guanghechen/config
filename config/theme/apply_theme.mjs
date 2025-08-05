@@ -9,7 +9,7 @@ await handle();
  * @return {Promise<void>}
  */
 async function handle() {
-  const data = await settings.load()
+  const data = await settings.load();
   const theme = process.argv[2]?.toLowerCase() || data.theme;
   if (!themes.includes(theme)) {
     console.error("[apply_theme] Cannot find the given theme:", theme);
@@ -21,15 +21,18 @@ async function handle() {
   if (!scheme) return;
 
   const tasks = apps.map((app) => apply_theme_per_app(app, scheme));
-  const errors = await Promise.allSettled(tasks).then(results =>
-    results.filter(result => result.status === 'rejected')
-      .map(result => result.reason || result.message || result.stack || result)
+  const errors = await Promise.allSettled(tasks).then((results) =>
+    results
+      .filter((result) => result.status === "rejected")
+      .map(
+        (result) => result.reason || result.message || result.stack || result,
+      ),
   );
 
   if (errors.length > 0) {
-    console.error("[apply_theme] Errors encountered:", errors)
+    console.error("[apply_theme] Errors encountered:", errors);
   } else {
-    data.theme = theme
-    await settings.save(data)
+    data.theme = theme;
+    await settings.save(data);
   }
 }

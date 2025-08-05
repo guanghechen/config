@@ -66,9 +66,7 @@ export const apps = [
             "guanghechen/config/wallpaper/Barrett-Girl.jpg",
           );
 
-      if (scheme.theme === "gruvbox") {
-        content += "\n\n" + `background_image ${backgroundImagePath}\n`;
-      }
+      content += "\n\n" + `background_image ${backgroundImagePath}\n`;
       await fs.writeFile(theme_filepath, content, "utf8");
     },
   },
@@ -175,7 +173,7 @@ export const apps = [
         `
 config.background ={
 {
-source = { Color = "${scheme.palette.bg0}" },
+source = { Color = "${scheme.palette.unified.bg0}" },
 height = "100%",
 width = "100%",
 },
@@ -191,7 +189,7 @@ horizontal_align = "Right",
 vertical_align = "Middle",
 },
 {
-source = { Color = "${scheme.palette.bg0}" },
+source = { Color = "${scheme.palette.unified.bg0}" },
 height = "100%",
 width = "100%",
 opacity = 0.9,
