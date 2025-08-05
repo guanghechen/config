@@ -8,6 +8,15 @@ if type -q fnm
     fnm env --use-on-cd --shell fish | source
 end
 
+## fzf
+fzf_configure_bindings \
+    --directory=\cf \
+    --git_log=\cg \
+    --git_status=\cs \
+    --history=\co \
+    --processes=\cp \
+    --variables=\cv
+
 ### miniforge3
 if test -f "$HOME/.app/miniforge3/bin/conda"
     fish_add_path --prepend "$HOME/.app/miniforge3/bin/conda"
