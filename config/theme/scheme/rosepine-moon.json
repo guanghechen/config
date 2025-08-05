@@ -1,0 +1,63 @@
+{
+  "theme": "rosepine",
+  "variant": "moon",
+  "opposite": "dawn",
+  "darken": true,
+  "palette": {
+    "rosepine": {
+      "base":           "#232136",
+      "foam":           "#9CCFD8",
+      "gold":           "#F6C177",
+      "highlightHigh":  "#56526E",
+      "highlightLow":   "#2A283E",
+      "highlightMed":   "#44415A",
+      "iris":           "#C4A7E7",
+      "love":           "#EB6F92",
+      "muted":          "#6E6A86",
+      "overlay":        "#393552",
+      "pine":           "#3E8FB0",
+      "rose":           "#EA9A97",
+      "subtle":         "#908CAA",
+      "surface":        "#2A273F",
+      "text":           "#E0DEF4"
+    },
+    "unified": {
+      "bg0":            "{{base}}",
+      "bg1":            "{{surface}}",
+      "bg2":            "{{overlay}}",
+      "bg3":            "{{highlightMed}}",
+      "bg4":            "{{highlightHigh}}",
+
+      "fg0":            "{{text}}",
+      "fg1":            "{{text}}",
+      "fg2":            "{{subtle}}",
+      "fg3":            "{{muted}}",
+      "fg4":            "{{muted}}",
+
+      "red":            "{{love}}",
+      "green":          "#95B1AC",
+      "yellow":         "{{gold}}",
+      "blue":           "{{pine}}",
+      "purple":         "{{iris}}",
+      "aqua":           "{{foam}}",
+      "orange":         "{{rose}}",
+
+      "brightRed":      "{{love}}",
+      "brightGreen":    "#95B1AC",
+      "brightYellow":   "{{gold}}",
+      "brightBlue":     "{{pine}}",
+      "brightPurple":   "{{iris}}",
+      "brightAqua":     "{{foam}}",
+      "brightOrange":   "{{rose}}",
+
+      "grey":           "{{subtle}}",
+      "pink":           "{{love}}",
+
+      "diffDel":        "#362436",
+      "diffDelInline":  "#442430",
+      "diffAdd":        "#2A3645",
+      "diffAddInline":  "#254055"
+    }
+  }
+}
+

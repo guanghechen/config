@@ -1,43 +1,43 @@
-##  {{theme}}
+# {{variant ? `${theme}-${variant}` : theme}}
 
 set -g @GHC_SL_BG                       "default"
 set -g @GHC_PSL_BG                      "default"
 
 ## Message
-set -g @GHC_SL_BG_MESSAGE               "{{yellow}}"
-set -g @GHC_SL_FG_MESSAGE               "{{bg0}}"
+set -g @GHC_SL_BG_MESSAGE               "{{unified.yellow}}"
+set -g @GHC_SL_FG_MESSAGE               "{{unified.bg0}}"
 
 ## Pane
-set -g @GHC_PSL_FG_BORDER               "{{bg4}}"
-set -g @GHC_PSL_FG_BORDER_CUR           "{{pink}}"
+set -g @GHC_PSL_FG_BORDER               "{{unified.bg4}}"
+set -g @GHC_PSL_FG_BORDER_CUR           "{{unified.pink}}"
 
 set -g @GHC_PSL_BG_SYM                  "default"
-set -g @GHC_PSL_FG_SYM                  "{{fg4}}"
+set -g @GHC_PSL_FG_SYM                  "{{unified.fg4}}"
 set -g @GHC_PSL_BG_TXT                  "default"
-set -g @GHC_PSL_FG_TXT                  "{{fg4}}"
+set -g @GHC_PSL_FG_TXT                  "{{unified.fg4}}"
 
 set -g @GHC_PSL_BG_SYM_ACTIVE           "default"
-set -g @GHC_PSL_FG_SYM_ACTIVE           "{{pink}}"
+set -g @GHC_PSL_FG_SYM_ACTIVE           "{{unified.pink}}"
 set -g @GHC_PSL_BG_TXT_ACTIVE           "default"
-set -g @GHC_PSL_FG_TXT_ACTIVE           "{{fg3}}"
+set -g @GHC_PSL_FG_TXT_ACTIVE           "{{unified.fg3}}"
 
 ## Statusbar
 
-set -g @GHC_SL_FG_BORDER                "{{bg4}}"
-set -g @GHC_SL_FG_BORDER_CUR            "{{pink}}"
+set -g @GHC_SL_FG_BORDER                "{{unified.bg4}}"
+set -g @GHC_SL_FG_BORDER_CUR            "{{unified.pink}}"
 
 set -g @GHC_SL_BG_SYM                   "default"
-set -g @GHC_SL_FG_SYM                   "{{pink}}"
+set -g @GHC_SL_FG_SYM                   "{{unified.pink}}"
 set -g @GHC_SL_BG_TXT                   "default"
-set -g @GHC_SL_FG_TXT                   "{{fg3}}"
+set -g @GHC_SL_FG_TXT                   "{{unified.fg3}}"
 
-set -g @GHC_SL_BG_WIN_NAME              "{{bg2}}"
-set -g @GHC_SL_FG_WIN_NAME              "{{fg3}}"
-set -g @GHC_SL_BG_WIN_NUM               "{{bg4}}"
-set -g @GHC_SL_FG_WIN_NUM               "{{fg3}}"
+set -g @GHC_SL_BG_WIN_NAME              "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_NAME              "{{unified.fg3}}"
+set -g @GHC_SL_BG_WIN_NUM               "{{unified.bg4}}"
+set -g @GHC_SL_FG_WIN_NUM               "{{unified.fg3}}"
 
-set -g @GHC_SL_BG_WIN_NAME_ACTIVE       "{{pink}}"
-set -g @GHC_SL_FG_WIN_NAME_ACTIVE       "{{bg0}}"
-set -g @GHC_SL_BG_WIN_NUM_ACTIVE        "{{pink}}"
-set -g @GHC_SL_FG_WIN_NUM_ACTIVE        "{{bg0}}"
+set -g @GHC_SL_BG_WIN_NAME_ACTIVE       "{{unified.pink}}"
+set -g @GHC_SL_FG_WIN_NAME_ACTIVE       "{{unified.bg0}}"
+set -g @GHC_SL_BG_WIN_NUM_ACTIVE        "{{unified.pink}}"
+set -g @GHC_SL_FG_WIN_NUM_ACTIVE        "{{unified.bg0}}"
 

@@ -1,23 +1,23 @@
-# {{theme}}
+# {{variant ? `${theme}-${variant}` : theme}}
 
 gui:
   authorColors:
     guanghechen: "blue"
-    "*": "{{fg2}}"
+    "*": "{{unified.fg2}}"
   branchColors:
     main: "blue"
   theme:
     defaultFgColor:
-      - "{{fg2}}"
+      - "{{unified.fg2}}"
     activeBorderColor:
       - "magenta"
       - bold
     inactiveBorderColor:
-      - "{{fg4}}"
+      - "{{unified.fg4}}"
     optionsTextColor:
-      -  "{{orange}}"
+      -  "{{unified.orange}}"
     selectedLineBgColor:
-      - "{{bg2}}"
+      - "{{unified.bg2}}"
     cherryPickedCommitFgColor:
       - "blue"
     cherryPickedCommitBgColor:

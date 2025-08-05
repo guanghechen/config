@@ -1,41 +1,41 @@
--- {{theme}}
+-- {{variant ? `${theme}-${variant}` : theme}}
 local config = {
   colors = {
     -- Primary colors
-    background    = "{{bg0}}",
-    foreground    = "{{fg1}}",
+    background    = "{{unified.bg0}}",
+    foreground    = "{{unified.fg1}}",
 
     -- Cursor colors
-    cursor_bg     = "{{pink}}",
-    cursor_fg     = "{{bg1}}",
-    cursor_border = "{{bg1}}",
+    cursor_bg     = "{{unified.pink}}",
+    cursor_fg     = "{{unified.bg1}}",
+    cursor_border = "{{unified.bg1}}",
 
     -- Selection colors
-    selection_bg  = "{{brightYellow}}",
-    selection_fg  = "{{bg1}}",
+    selection_bg  = "{{unified.brightYellow}}",
+    selection_fg  = "{{unified.bg1}}",
 
     -- Normal colors
     ansi = {
-      "{{bg0}}",
-      "{{red}}",
-      "{{green}}",
-      "{{yellow}}",
-      "{{blue}}",
-      "{{purple}}",
-      "{{aqua}}",
-      "{{fg4}}",
+      "{{unified.bg0}}",
+      "{{unified.red}}",
+      "{{unified.green}}",
+      "{{unified.yellow}}",
+      "{{unified.blue}}",
+      "{{unified.purple}}",
+      "{{unified.aqua}}",
+      "{{unified.fg4}}",
     },
 
     -- Bright colors
     brights = {
-      "{{grey}}",
-      "{{brightRed}}",
-      "{{brightGreen}}",
-      "{{brightYellow}}",
-      "{{brightBlue}}",
-      "{{brightPurple}}",
-      "{{brightAqua}}",
-      "{{fg1}}",
+      "{{unified.grey}}",
+      "{{unified.brightRed}}",
+      "{{unified.brightGreen}}",
+      "{{unified.brightYellow}}",
+      "{{unified.brightBlue}}",
+      "{{unified.brightPurple}}",
+      "{{unified.brightAqua}}",
+      "{{unified.fg1}}",
     },
   },
 }

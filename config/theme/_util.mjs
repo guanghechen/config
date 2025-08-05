@@ -6,25 +6,51 @@ import { XDG_CONFIG_HOME } from "../_shared/env.mjs";
 import { HOME_THEME_SCHEME, HOME_THEME_APP, cwd, themes } from "./_env.mjs";
 
 /**
+ * @param {string}                            theme
+ * @param {string|undefined|null}             variant
+ * @return {string}
+ */
+export function gen_full_theme_name(theme, variant) {
+  return variant ? `${theme}-${variant}` : theme;
+}
+
+/**
  * @param {string}                            template
  * @param {import('./_env.mjs').IThemeScheme} scheme
  * @return {Promise<string>}
  */
 export async function render_template(template, scheme) {
+  const theme = scheme.theme;
   const variant = scheme.variant;
   const opposite = scheme.opposite;
-  const c = scheme.palette;
-
-  const data = {
-    ...c,
-    variant,
-    opposite,
-    theme: scheme.theme,
-  };
-  const content = template.replace(
-    /\{{2}([\w]+)\}{2}/g,
-    (_, key) => data[key] || `{{${key}}}`,
+  const darken = scheme.darken;
+  const catppuccin = scheme.palette.catppuccin || {};
+  const gruvbox = scheme.palette.gruvbox || {};
+  const nord = scheme.palette.nord || {};
+  const onehalf = scheme.palette.onehalf || {};
+  const rosepine = scheme.palette.rosepine || {};
+  const unified = scheme.palette.unified || {};
+  const palette = Object.fromEntries(
+    Object.entries({ catppuccin, gruvbox, nord, onehalf, rosepine }).filter(
+      ([_, v]) => !!v && Object.entries(v).length > 0,
+    ),
   );
+
+  const content = template.replace(/\{{2}([^\n]+)\}{2}/g, (_, key) => {
+    const fn = new Function(
+      "theme",
+      "variant",
+      "opposite",
+      "darken",
+      "unified",
+      "palette",
+      "expression",
+      `try { return ${key} || expression; } catch { return \`{{\${expression}}}\`; }`,
+    );
+    const result = fn(theme, variant, opposite, darken, unified, palette);
+    return result;
+  });
+
   return content;
 }
 
@@ -90,7 +116,17 @@ export async function load_theme_scheme(theme) {
   }
   const content = await fs.readFile(filepath, "utf8");
   try {
-    return JSON.parse(content);
+    let data = {};
+    const scheme = JSON.parse(content);
+    const keys = Object.keys(scheme.palette).filter((x) => x !== "unified");
+    for (const key of keys) {
+      data = { ...data, ...scheme.palette[key] };
+    }
+    const resolvedContent = content.replaceAll(
+      /\{{2}([\w]+)\}{2}/g,
+      (_, key) => data[key] || `{{${key}}}`,
+    );
+    return JSON.parse(resolvedContent);
   } catch (error) {
     console.error("[load_theme_scheme] Bad scheme, not a valid json.", {
       theme,
@@ -111,7 +147,7 @@ export async function apply_theme_per_app(app, scheme) {
 
   /** @type {import('./_env.mjs').IThemeScheme} */
   const resolvedScheme =
-    app.kind === "terminal" && scheme.theme.startsWith("gruvbox-")
+    app.kind === "terminal" && scheme.theme == "gruvbox"
       ? swapNormalAndBrightColors(scheme)
       : scheme;
 
@@ -161,7 +197,7 @@ export async function gen_themes_per_app(app) {
 
     /** @type {import('./_env.mjs').IThemeScheme} */
     const resolvedScheme =
-      app.kind === "terminal" && scheme.theme.startsWith("gruvbox-")
+      app.kind === "terminal" && scheme.theme == "gruvbox"
         ? swapNormalAndBrightColors(scheme)
         : scheme;
 
