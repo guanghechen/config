@@ -2,12 +2,12 @@
 
 # Primary colors
 [colors.primary]
-background  = "#FBF1C7"
+background  = "#F2E5BC"
 foreground  = "#3C3836"
 
 # Cursor colors
 [colors.cursor]
-cursor      = "#D3869B"
+cursor      = "#B16286"
 text        = "#EBDBB2"
 
 # Selection colors
@@ -17,7 +17,7 @@ text        = "#EBDBB2"
 
 # Normal colors
 [colors.normal]
-black       = "#FBF1C7"
+black       = "#F2E5BC"
 red         = "#CC241D"
 green       = "#98971A"
 yellow      = "#D79921"

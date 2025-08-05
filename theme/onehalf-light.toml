@@ -1,4 +1,4 @@
-# one-half-light
+# onehalf-light
 
 # Primary colors
 [colors.primary]
@@ -18,7 +18,7 @@ text        = "#F0F0F0"
 # Normal colors
 [colors.normal]
 black       = "#FAFAFA"
-red         = "#D84A3D"
+red         = "#E45649"
 green       = "#50A14F"
 yellow      = "#DEA95F"
 blue        = "#4078F2"
@@ -29,10 +29,10 @@ white       = "#383A42"
 # Bright colors
 [colors.bright]
 black       = "#B7B7B7"
-red         = "#E06C75"
+red         = "#D84A3D"
 green       = "#7ECA9C"
-yellow      = "#D19A66"
-blue        = "#61AFEF"
+yellow      = "#C18401"
+blue        = "#4078F2"
 magenta     = "#B294BB"
 cyan        = "#4EC9B0"
 white       = "#696D75"

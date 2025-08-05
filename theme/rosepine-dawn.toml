@@ -1,4 +1,4 @@
-# rose-pine-dawn
+# rosepine-dawn
 
 # Primary colors
 [colors.primary]
@@ -29,7 +29,7 @@ white       = "#9893A5"
 # Bright colors
 [colors.bright]
 black       = "#9893A5"
-red         = "#B4637A"
+red         = "#D7827E"
 green       = "#6D8F89"
 yellow      = "#EA9D34"
 blue        = "#286983"
