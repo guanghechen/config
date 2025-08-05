@@ -1,23 +1,23 @@
-# one-half-dark
+# rosepine-main
 
 gui:
   authorColors:
     guanghechen: "blue"
-    "*": "#C8CCD4"
+    "*": "#908CAA"
   branchColors:
     main: "blue"
   theme:
     defaultFgColor:
-      - "#C8CCD4"
+      - "#908CAA"
     activeBorderColor:
       - "magenta"
       - bold
     inactiveBorderColor:
-      - "#ABB2BF"
+      - "#6E6A86"
     optionsTextColor:
-      -  "#D75F00"
+      -  "#EBBCBA"
     selectedLineBgColor:
-      - "#3E4451"
+      - "#26233A"
     cherryPickedCommitFgColor:
       - "blue"
     cherryPickedCommitBgColor:

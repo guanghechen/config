@@ -1,23 +1,23 @@
-# one-half-light
+# rosepine-dawn
 
 gui:
   authorColors:
     guanghechen: "blue"
-    "*": "#5C5F66"
+    "*": "#797593"
   branchColors:
     main: "blue"
   theme:
     defaultFgColor:
-      - "#5C5F66"
+      - "#797593"
     activeBorderColor:
       - "magenta"
       - bold
     inactiveBorderColor:
-      - "#383A42"
+      - "#9893A5"
     optionsTextColor:
-      -  "#FF6A00"
+      -  "#D7827E"
     selectedLineBgColor:
-      - "#E5E5E5"
+      - "#F2E9E1"
     cherryPickedCommitFgColor:
       - "blue"
     cherryPickedCommitBgColor:

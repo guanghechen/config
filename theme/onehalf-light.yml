@@ -1,23 +1,23 @@
-# rose-pine-main
+# onehalf-light
 
 gui:
   authorColors:
     guanghechen: "blue"
-    "*": "#908CAA"
+    "*": "#5C5F66"
   branchColors:
     main: "blue"
   theme:
     defaultFgColor:
-      - "#908CAA"
+      - "#5C5F66"
     activeBorderColor:
       - "magenta"
       - bold
     inactiveBorderColor:
-      - "#6E6A86"
+      - "#383A42"
     optionsTextColor:
-      -  "#EBBCBA"
+      -  "#FF6A00"
     selectedLineBgColor:
-      - "#26233A"
+      - "#EAEAEA"
     cherryPickedCommitFgColor:
       - "blue"
     cherryPickedCommitBgColor:
