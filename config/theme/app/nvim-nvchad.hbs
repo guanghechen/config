@@ -45,7 +45,7 @@ local M = {
       diffAdd       = "{{unified.diffAdd}}",
       diffAddInline = "{{unified.diffAddInline}}",
     },
-    {{Object.entries(palette).map(([theme, colors]) => `${theme} = {\n` +  Object.entries(colors).map(([k, v]) => `      ${k.padEnd(13, ' ')} = "${v}",`).join('\n') + '\n    },').join('\n')}}
+    {{Object.entries(palette).map(([theme, colors]) => `${theme} = {\n      none          = "none",\n\n` +  Object.entries(colors).map(([k, v]) => `      ${k.padEnd(13, ' ')} = "${v}",`).join('\n') + '\n    },').join('\n')}}
   },
   -- stylua: ignore end
 }
