@@ -113,7 +113,7 @@ function M.gen_hlgroup_map(context)
     Function = { fg = c.brightAqua, bold = true },
     Identifier = { fg = c.brightBlue },
     Include = { fg = c.brightRed },
-    Keyword = { fg = c.brightOrange },
+    Keyword = { fg = c.brightYellow, bold = true },
     Label = { fg = c.brightRed },
     Macro = { fg = c.brightAqua },
     Member = { fg = c.brightBlue },
