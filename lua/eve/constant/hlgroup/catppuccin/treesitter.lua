@@ -145,7 +145,7 @@ function M.gen_hlgroup_map(context)
     ["@text.diff.add"] = { fg = c.green },
     ["@text.diff.delete"] = { fg = c.red },
     ["@type"] = { fg = c.yellow },
-    ["@type.tsx"] = { fg = c.text },
+    ["@type.tsx"] = { fg = c.yellow, italic = true, bold = true },
     ["@type.builtin"] = { fg = c.mauve },
     ["@type.definition"] = { fg = c.yellow },
     ["@type.qualifier"] = { fg = c.yellow },
