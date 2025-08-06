@@ -62,6 +62,8 @@ export const themes = readdirSync(HOME_THEME_SCHEME).map((p) =>
  * @property {string}                   dark_yellow
  * @property {string}                   fg
  * @property {string}                   fg0
+ * @property {string}                   fg0_h
+ * @property {string}                   fg0_s
  * @property {string}                   fg1
  * @property {string}                   fg2
  * @property {string}                   fg3

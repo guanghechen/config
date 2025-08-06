@@ -25,6 +25,8 @@
       "dark_yellow":    "#D79921",
       "fg":             "#EBDBB2",
       "fg0":            "#FBF1C7",
+      "fg0_h":          "#F9F5D7",
+      "fg0_s":          "#F2E5BC",
       "fg1":            "#EBDBB2",
       "fg2":            "#D5C4A1",
       "fg3":            "#BDAE93",
@@ -38,13 +40,13 @@
       "yellow":         "#FABD2F"
     },
     "unified": {
-      "bg0":            "{{bg0}}",
+      "bg0":            "{{bg0_s}}",
       "bg1":            "{{bg1}}",
       "bg2":            "{{bg2}}",
       "bg3":            "{{bg3}}",
       "bg4":            "{{bg4}}",
 
-      "fg0":            "{{fg0}}",
+      "fg0":            "{{fg0_s}}",
       "fg1":            "{{fg1}}",
       "fg2":            "{{fg2}}",
       "fg3":            "{{fg3}}",
