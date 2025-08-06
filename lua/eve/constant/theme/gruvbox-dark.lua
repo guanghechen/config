@@ -46,6 +46,8 @@ local M = {
       diffAddInline = "#3F4531",
     },
     gruvbox = {
+      none          = "none",
+
       aqua          = "#8EC07C",
       bg            = "#282828",
       bg0           = "#282828",

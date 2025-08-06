@@ -46,6 +46,8 @@ local M = {
       diffAddInline = "#D4ECCD",
     },
     onehalf = {
+      none          = "none",
+
       background    = "#FAFAFA",
       black         = "#383A42",
       blue          = "#4078F2",

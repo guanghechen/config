@@ -8,7 +8,7 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
 
-  local bg = t and c.base or c.base ---@type string
+  local bg = t and c.none or c.base ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
@@ -154,7 +154,7 @@ function M.gen_hlgroup_map(context)
     Exception = { fg = c.mauve },
     FloatActiveBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
     FloatActiveTitle = { link = "ms_b_bg0" },
-    FloatBorder = { fg = c.blue, bg = t and c.mantle or c.mantle },
+    FloatBorder = { fg = c.blue, bg = t and c.none or c.mantle },
     FloatNormal = { fg = c.text, bg = c.mantle },
     FloatTitle = { fg = c.subtext0, bg = c.mantle },
     FoldColumn = { fg = c.overlay0 },
@@ -164,7 +164,7 @@ function M.gen_hlgroup_map(context)
     LineNr = { fg = c.surface1 },
     MatchParen = { fg = c.peach, bg = c.surface1, bold = true },
     MatchWord = { fg = c.text, bg = c.surface1 },
-    Normal = { fg = c.text, bg = t and c.base or c.base },
+    Normal = { fg = c.text, bg = t and c.none or c.base },
     NormalFloat = { link = "FloatNormal" },
     NormalNC = { link = "Normal" },
     NvimInternalError = { fg = c.red },
@@ -178,11 +178,11 @@ function M.gen_hlgroup_map(context)
     Search = { bg = cs.change_hex_lightness(c.sky, -30), fg = c.text },
     SignColumn = { fg = c.surface1 },
     SpecialKey = { fg = c.overlay0 },
-    StatusLine = { fg = c.text, bg = t and c.base or c.mantle },
-    StatusLineNC = { fg = c.surface1, bg = t and c.base or c.mantle },
+    StatusLine = { fg = c.text, bg = t and c.none or c.mantle },
+    StatusLineNC = { fg = c.surface1, bg = t and c.none or c.mantle },
     Substitute = { bg = c.surface1, fg = c.pink },
     TabLine = { bg = c.crust, fg = c.overlay0 },
-    TabLineFill = { bg = t and c.base or c.mantle },
+    TabLineFill = { bg = t and c.none or c.mantle },
     TabLineSel = { link = "Normal" },
     Title = { fg = c.blue, bold = true },
     TooLong = { fg = c.red },

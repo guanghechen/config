@@ -1,4 +1,6 @@
 ---@class std.t.theme.CatppuccinPalette
+---@field public none                   string
+---
 ---@field public base                   string
 ---@field public blue                   string
 ---@field public crust                  string
@@ -27,6 +29,8 @@
 ---@field public yellow                 string
 
 ---@class std.t.theme.GruvboxPalette
+---@field public none                   string
+---
 ---@field public aqua                   string
 ---@field public bg                     string
 ---@field public bg0                    string
@@ -62,6 +66,8 @@
 ---@field public yellow                 string
 
 ---@class std.t.theme.NordPalette
+---@field public none                   string
+---
 ---@field public nord0                  string
 ---@field public nord1                  string
 ---@field public nord2                  string
@@ -96,6 +102,8 @@
 ---@field public aurora4                string
 
 ---@class std.t.theme.OnehalfPalette
+---@field public none                   string
+---
 ---@field public background             string
 ---@field public black                  string
 ---@field public blue                   string
@@ -113,6 +121,8 @@
 ---@field public yellow                 string
 
 ---@class std.t.theme.RosepinePalette
+---@field public none                   string
+---
 ---@field public base                   string
 ---@field public foam                   string
 ---@field public gold                   string

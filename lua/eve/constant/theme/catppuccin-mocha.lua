@@ -46,6 +46,8 @@ local M = {
       diffAddInline = "#476E6E",
     },
     catppuccin = {
+      none          = "none",
+
       base          = "#1E1E2E",
       blue          = "#89B4FA",
       crust         = "#11111B",

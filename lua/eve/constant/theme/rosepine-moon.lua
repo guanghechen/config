@@ -46,6 +46,8 @@ local M = {
       diffAddInline = "#254055",
     },
     rosepine = {
+      none          = "none",
+
       base          = "#232136",
       foam          = "#9CCFD8",
       gold          = "#F6C177",

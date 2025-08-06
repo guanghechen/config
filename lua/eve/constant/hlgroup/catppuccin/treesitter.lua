@@ -4,6 +4,7 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
+  local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
 
   return {
@@ -13,11 +14,11 @@ function M.gen_hlgroup_map(context)
     ["@character"] = { fg = c.teal },
     ["@character.special"] = { fg = c.pink },
     ["@comment"] = { fg = c.overlay2 },
-    ["@comment.danger"] = { fg = c.base, bg = c.red },
-    ["@comment.error"] = { fg = c.base, bg = c.red },
-    ["@comment.note"] = { fg = c.base, bg = c.rosewater },
-    ["@comment.todo"] = { fg = c.base, bg = c.flamingo },
-    ["@comment.warning"] = { fg = c.base, bg = c.yellow },
+    ["@comment.danger"] = { fg = c.base, bg = t and c.none or c.red },
+    ["@comment.error"] = { fg = c.base, bg = t and c.none or c.red },
+    ["@comment.note"] = { fg = c.base, bg = t and c.none or c.rosewater },
+    ["@comment.todo"] = { fg = c.base, bg = t and c.none or c.flamingo },
+    ["@comment.warning"] = { fg = c.base, bg = t and c.none or c.yellow },
     ["@conditional"] = { fg = c.mauve },
     ["@constant"] = { fg = c.peach },
     ["@constant.builtin"] = { fg = c.peach },
@@ -134,14 +135,14 @@ function M.gen_hlgroup_map(context)
     ["@text.environment"] = { fg = c.pink },
     ["@text.environment.name"] = { fg = c.blue },
     ["@text.reference"] = { fg = c.lavender },
-    ["@text.todo"] = { fg = c.base, bg = c.flamingo },
+    ["@text.todo"] = { fg = c.base, bg = t and c.none or c.flamingo },
     ["@text.todo.checked"] = { fg = c.green },
     ["@text.todo.unchecked"] = { fg = c.overlay1 },
-    ["@text.note"] = { fg = c.base, bg = c.rosewater },
+    ["@text.note"] = { fg = c.base, bg = t and c.none or c.rosewater },
     ["@text.note.comment"] = { fg = c.mauve, bold = true },
-    ["@text.warning"] = { fg = c.base, bg = c.yellow },
-    ["@text.danger"] = { fg = c.base, bg = c.red },
-    ["@text.danger.comment"] = { fg = c.text, bg = c.red, bold = true },
+    ["@text.warning"] = { fg = c.base, bg = t and c.none or c.yellow },
+    ["@text.danger"] = { fg = c.base, bg = t and c.none or c.red },
+    ["@text.danger.comment"] = { fg = c.text, bg = t and c.none or c.red, bold = true },
     ["@text.diff.add"] = { fg = c.green },
     ["@text.diff.delete"] = { fg = c.red },
     ["@type"] = { fg = c.yellow },

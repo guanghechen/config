@@ -46,6 +46,8 @@ local M = {
       diffAddInline = "#505F5D",
     },
     nord = {
+      none          = "none",
+
       nord0         = "#2E3440",
       nord1         = "#3B4252",
       nord2         = "#434C5E",
