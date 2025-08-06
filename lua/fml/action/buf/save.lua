@@ -3,8 +3,10 @@ local __module_name__ = "fml.action.buf.save" ---@type string
 ---@class fml.action.buf
 local M = {}
 
+---@param args                          string|nil
 ---@return nil
-function M.save()
+function M.save(args)
+  local noformat = args == "noformat" ---@type boolean
   local cwd = std.path.cwd() ---@type string
   local workspace = std.path.workspace() ---@type string
 
@@ -50,7 +52,11 @@ function M.save()
       for _, bufnr in ipairs(bufnrs_modified) do
         if vim.api.nvim_buf_is_valid(bufnr) then
           vim.api.nvim_buf_call(bufnr, function()
-            vim.cmd("write")
+            if noformat then
+              vim.cmd("noautocmd write")
+            else
+              vim.cmd("write")
+            end
           end)
         end
       end

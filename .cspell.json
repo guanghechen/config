@@ -1,8 +1,5 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua",
-    "lsp/yamlls.lua"
-  ],
+  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -16,6 +13,7 @@
     "Fbufnew",
     "Fbufpin",
     "Fbufsave",
+    "Fbufsavenoformat",
     "Fbufswapleft",
     "Fbufswapright",
     "Fclipboardpaste",
@@ -806,3 +804,4 @@
     "zindex"
   ]
 }
+

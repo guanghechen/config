@@ -285,7 +285,8 @@ M.definitions.buf = {
 
   new = def("Fbufnew", "buf: new"),
   pin = def("Fbufpin", "buf: pin"),
-  save = def("Fbufsave", "buf: save"),
+  save = def("Fbufsave", "buf: save", "?"),
+  save_no_format = def("Fbufsavenoformat", "buf: save without format"),
 }
 
 ---@class eve.builtin.command.definitions.clipboard

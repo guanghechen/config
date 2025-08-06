@@ -119,12 +119,19 @@ command.implement({
 })
 
 --[buf] save----------------------------------------------------------------------------------------
-command.implement({
-  uuid = K.buf.save.uuid,
-  action = function()
-    require("fml.action.buf.save").save()
-  end,
-})
+command
+  .implement({
+    uuid = K.buf.save.uuid,
+    action = function(args)
+      require("fml.action.buf.save").save(args)
+    end,
+  })
+  .implement({
+    uuid = K.buf.save_no_format.uuid,
+    action = function()
+      require("fml.action.buf.save").save("noformat")
+    end,
+  })
 
 --[buf] swap----------------------------------------------------------------------------------------
 command
