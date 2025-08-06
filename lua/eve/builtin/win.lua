@@ -492,7 +492,7 @@ function M.open_filepath(winnr_source, filepath, lnum, col)
 
   vim.api.nvim_win_set_buf(winnr, bufnr)
   vim.schedule(function()
-    vim.cmd.stopinsert()
+    vim.cmd("stopinsert")
 
     if lnum ~= nil and col ~= nil and vim.api.nvim_win_is_valid(winnr) then
       pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, col })
@@ -533,7 +533,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
   end
 
   vim.schedule(function()
-    vim.cmd.stopinsert()
+    vim.cmd("stopinsert")
 
     if lnum ~= nil and col ~= nil and vim.api.nvim_win_is_valid(winnr) then
       pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, col })

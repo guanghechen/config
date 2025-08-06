@@ -29,7 +29,7 @@ local M = {
       aqua          = "#179299",
       orange        = "#FE640B",
 
-      brightRed     = "#D20F39",
+      brightRed     = "#E64553",
       brightGreen   = "#40A02B",
       brightYellow  = "#DF8E1D",
       brightBlue    = "#1E66F5",

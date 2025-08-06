@@ -50,7 +50,7 @@ function M.save()
       for _, bufnr in ipairs(bufnrs_modified) do
         if vim.api.nvim_buf_is_valid(bufnr) then
           vim.api.nvim_buf_call(bufnr, function()
-            vim.cmd.write()
+            vim.cmd("write")
           end)
         end
       end

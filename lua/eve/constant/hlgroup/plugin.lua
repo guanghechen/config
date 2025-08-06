@@ -6,7 +6,6 @@ local M = {}
 function M.gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
-  local t = context.transparency ---@type boolean
 
   local item_kind_bg = c.none ---@type string
 
@@ -136,15 +135,15 @@ function M.gen_hlgroup_map(context)
     MiniHipatternsNote = { fg = c.bg0, bg = c.purple, bold = true, italic = true, underline = true },
 
     ---! mini.icons
-    MiniIconsAzure = { fg = c.blue },
-    MiniIconsBlue = { fg = c.blue },
-    MiniIconsCyan = { fg = c.aqua },
-    MiniIconsGreen = { fg = c.green },
+    MiniIconsAzure = { fg = c.brightBlue },
+    MiniIconsBlue = { fg = c.brightBlue },
+    MiniIconsCyan = { fg = c.brightAqua },
+    MiniIconsGreen = { fg = c.brightGreen },
     MiniIconsGrey = { fg = c.fg2 },
-    MiniIconsOrange = { fg = c.orange },
-    MiniIconsPurple = { fg = c.purple },
-    MiniIconsRed = { fg = c.red },
-    MiniIconsYellow = { fg = c.yellow },
+    MiniIconsOrange = { fg = c.brightOrange },
+    MiniIconsPurple = { fg = c.brightPurple },
+    MiniIconsRed = { fg = c.brightRed },
+    MiniIconsYellow = { fg = c.brightYellow },
 
     ---! mini.indentscope
     MiniIndentscopeSymbol = { fg = c.pink },
@@ -153,14 +152,14 @@ function M.gen_hlgroup_map(context)
     ---! neo-tree.nvim
     NeoTreeCursorLine = { bg = c.bg2 },
     NeoTreeDirectoryIcon = { link = "Directory" },
-    NeoTreeDirectoryName = { fg = c.blue },
+    NeoTreeDirectoryName = { fg = c.brightBlue },
     NeoTreeExpander = { fg = c.fg4 },
     NeoTreeFileName = { fg = c.fg2 },
     NeoTreeFloatBorder = { link = "FloatBorder" },
     NeoTreeFloatTitle = { link = "FloatTitle" },
     NeoTreeGitIgnored = { fg = c.fg4 },
-    NeoTreeGitModified = { fg = c.yellow },
-    NeoTreeGitUntracked = { fg = c.orange },
+    NeoTreeGitModified = { fg = c.brightYellow },
+    NeoTreeGitUntracked = { fg = c.brightOrange },
     NeoTreeHiddenByName = { fg = c.fg4 },
     NeoTreeIndentMarker = { fg = c.bg2 },
     NeoTreeMessage = { fg = c.grey },

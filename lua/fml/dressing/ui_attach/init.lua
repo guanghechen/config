@@ -155,7 +155,7 @@ eve.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
   if searching then
     eve.status.searching:next(false)
     vim.schedule(function()
-      vim.cmd.noh()
+      vim.cmd("noh")
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
       for _, bufnr in ipairs(bufnrs) do
         vim.api.nvim_buf_clear_namespace(bufnr, eve.var.nsnr.search_count, 0, -1)

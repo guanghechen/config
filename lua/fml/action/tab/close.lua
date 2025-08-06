@@ -14,7 +14,7 @@ function M.close()
     })
     return
   end
-  vim.cmd.tabclose()
+  vim.cmd("tabclose")
 end
 
 ---@return nil

@@ -9,7 +9,7 @@ function M.refresh_all()
   local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
 
-  vim.cmd.checktime()
+  vim.cmd("checktime")
   eve.tab.refresh()
 
   pcall(function()
@@ -50,7 +50,7 @@ function M.refresh_all()
     end
 
     vim.defer_fn(function()
-      vim.cmd.edit()
+      vim.cmd("edit")
     end, 100)
   end
 

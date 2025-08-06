@@ -156,7 +156,7 @@ local group_items = {
                 if vim.api.nvim_buf_is_valid(bufnr) then
                   vim.api.nvim_buf_call(bufnr, function()
                     vim.bo[bufnr].fileencoding = encoding ---@type string
-                    vim.cmd.write()
+                    vim.cmd("write")
                   end)
                 end
               end

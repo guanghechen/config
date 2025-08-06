@@ -35,7 +35,7 @@ end
 
 ---@return nil
 function M.goto_next_quickfix()
-  vim.cmd.cnext()
+  vim.cmd("cnext")
 end
 
 ---@return nil
@@ -70,7 +70,7 @@ end
 
 ---@return nil
 function M.goto_prev_quickfix()
-  vim.cmd.cprev()
+  vim.cmd("cprev")
 end
 
 ---@return nil

@@ -78,15 +78,15 @@ end
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
   local mc = {
-    command = c.blue,
+    command = c.brightBlue,
     confirm = c.brightAqua,
-    insert = c.purple,
+    insert = c.brightPurple,
     normal = c.aqua,
     nterminal = c.yellow,
     replace = c.brightYellow,
-    select = c.orange,
-    terminal = c.blue,
-    visual = c.orange,
+    select = c.brightOrange,
+    terminal = c.brightBlue,
+    visual = c.brightOrange,
   }
 
   local hlgroup_map = {} ---@type table<string, std.t.theme.IHlgroup>

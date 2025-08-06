@@ -38,7 +38,7 @@ return {
     dap.listeners.after.event_initialized["dapui_config"] = function()
       dapui.open({})
       vim.cmd("DapVirtualTextEnable")
-      vim.cmd.stopinsert()
+      vim.cmd("stopinsert")
     end
     dap.listeners.before.event_terminated["dapui_config"] = function()
       vim.cmd("DapVirtualTextDisable")

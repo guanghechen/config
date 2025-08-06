@@ -18,7 +18,7 @@ function M.restart()
   end
 
   vim.defer_fn(function()
-    vim.cmd.edit()
+    vim.cmd("edit")
   end, 100)
 end
 

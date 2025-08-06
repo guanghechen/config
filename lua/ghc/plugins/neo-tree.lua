@@ -208,7 +208,7 @@ return {
             modes = { "n" },
             key = "q",
             callback = function()
-              vim.cmd.close()
+              vim.cmd("close")
               pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
             end,
             desc = "quit",
@@ -328,9 +328,18 @@ return {
         event = "neo_tree_popup_input_ready",
         ---@param args { bufnr: integer, winid: integer }
         handler = function(args)
-          local keymaps = { { modes = { "i" }, key = "<esc>", callback = vim.cmd.stopinsert } } ---@type std.t.IKeymap[]
+          ---@type std.t.IKeymap[]
+          local keymaps = {
+            {
+              modes = { "i" },
+              key = "<esc>",
+              callback = function()
+                vim.cmd("stopinsert")
+              end,
+            },
+          }
           eve.nvim.bindkeys(keymaps, { bufnr = args.bufnr, noremap = true })
-          vim.cmd.stopinsert()
+          vim.cmd("stopinsert")
         end,
       },
     },

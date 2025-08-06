@@ -21,7 +21,7 @@ local M = {
       fg3           = "#4F525A",
       fg4           = "#383A42",
 
-      red           = "#D84A3D",
+      red           = "#E45649",
       green         = "#50A14F",
       yellow        = "#DEA95F",
       blue          = "#4078F2",
@@ -29,7 +29,7 @@ local M = {
       aqua          = "#0B8EC6",
       orange        = "#FF6A00",
 
-      brightRed     = "#E45649",
+      brightRed     = "#D84A3D",
       brightGreen   = "#7ECA9C",
       brightYellow  = "#C18401",
       brightBlue    = "#4078F2",

@@ -56,7 +56,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   group = eve.nvim.augroup("check_file_change"),
   callback = function()
     if vim.bo.buftype == "" or vim.bo.buftype == "nowrite" then
-      vim.cmd.checktime()
+      vim.cmd("checktime")
     end
   end,
 })
@@ -214,7 +214,7 @@ vim.api.nvim_create_autocmd("FileType", {
     if bufnr ~= nil then
       vim.bo[bufnr].buflisted = false
       local function action()
-        vim.cmd.close()
+        vim.cmd("close")
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
       end
       vim.keymap.set({ "n", "v" }, "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })

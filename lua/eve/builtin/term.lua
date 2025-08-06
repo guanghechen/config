@@ -459,7 +459,7 @@ function M.on_closed(termmeta)
   termmeta.on_closed()
 
   vim.schedule(function()
-    vim.cmd.checktime()
+    vim.cmd("checktime")
   end)
 end
 

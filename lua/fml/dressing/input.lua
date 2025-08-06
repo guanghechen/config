@@ -125,7 +125,7 @@ function M.input(opts, on_confirm)
       if not disposed then
         disposed = true
         ctx.opts = {}
-        vim.cmd.stopinsert()
+        vim.cmd("stopinsert")
 
         vim.api.nvim_win_close(winnr, true)
         vim.schedule(function()
@@ -140,7 +140,7 @@ function M.input(opts, on_confirm)
       if not disposed then
         disposed = true
         ctx.opts = {}
-        vim.cmd.stopinsert()
+        vim.cmd("stopinsert")
 
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
         local text = override_text or string.sub(lines[1] or "", #prompt) ---@type string
@@ -211,7 +211,7 @@ function M.input(opts, on_confirm)
   end
 
   if opts.startinsert then
-    vim.cmd.startinsert()
+    vim.cmd("startinsert")
   end
 
   vim.schedule(function()

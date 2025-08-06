@@ -285,7 +285,7 @@ function M.watch_changes()
     M.lsp.inlay_hints,
   }, function()
     pcall(function()
-      vim.cmd.LspRestart()
+      eve.command.execute(eve.command.definitions.lsp.restart.uuid)
     end)
   end, true)
 

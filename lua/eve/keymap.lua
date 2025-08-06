@@ -43,7 +43,7 @@ mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add abo
 
 ---! enhancement
 mk({ "i", "n", "s" }, "<esc>", function()
-  vim.cmd.noh()
+  vim.cmd("noh")
   if vim.snippet then
     vim.snippet.stop()
   end
