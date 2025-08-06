@@ -77,7 +77,7 @@ local raw_specs = {
   { name = "nvim-dap-virtual-text",       main = "nvim-dap-virtual-text",         cond = conds.dap                },
   { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                },
   { name = "nvim-nio",                    main = "nio",                           cond = conds.not_vscode         },
-  { name = "nvim-treesitter",             main = "nvim-treesitter.configs",       cond = conds.common             },
+  { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.common             },
   { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.common             },
   { name = "plenary.nvim",                main = "plenary",                       cond = conds.common             },

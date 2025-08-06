@@ -7,22 +7,8 @@ return {
   event = "VeryLazy",
   build = ":TSUpdate",
   cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
-  keys = {
-    { "<C-space>", desc = "Increment Selection" },
-    { "<bs>", desc = "Decrement Selection", mode = "x" },
-  },
-  init = function(plugin)
-    -- add nvim-treesitter queries to the rtp and it's custom query predicates early
-    -- This is needed because a bunch of plugins no longer `require("nvim-treesitter")`, which
-    -- no longer trigger the **nvim-treesitter** module to be loaded in time.
-    -- Luckily, the only things that those plugins need are the custom queries, which we make available
-    -- during startup.
-    require("lazy.core.loader").add_to_rtp(plugin)
-    require("nvim-treesitter.query_predicates")
-  end,
   opts = {
     highlight = {
-      enable = not vim.g.vscode,
       additional_vim_regex_highlighting = false,
       use_languagetree = true,
       disable = function(_, bufnr)
@@ -90,41 +76,9 @@ return {
         node_decremental = "<bs>",
       },
     },
-    textobjects = {
-      move = {
-        enable = true,
-        set_jumps = true,
-        goto_next_start = {
-          ["]a"] = "@parameter.inner",
-          ["]b"] = "@block.outer",
-          ["]c"] = "@class.outer",
-          ["]f"] = "@function.outer",
-          ["]s"] = { query = "@local.scope", query_group = "locals", desc = "goto: next scope" },
-          ["]z"] = { query = "@fold", query_group = "folds", desc = "goto: next fold" },
-        },
-        goto_next_end = {
-          ["]A"] = "@parameter.inner",
-          ["]C"] = "@class.outer",
-          ["]F"] = "@function.outer",
-        },
-        goto_previous_start = {
-          ["[a"] = "@parameter.inner",
-          ["[b"] = "@block.outer",
-          ["[c"] = "@class.outer",
-          ["[f"] = "@function.outer",
-          ["[s"] = { query = "@local.scope", query_group = "locals", desc = "goto: prev scope" },
-          ["[z"] = { query = "@fold", query_group = "folds", desc = "goto: prev fold" },
-        },
-        goto_previous_end = {
-          ["[A"] = "@parameter.inner",
-          ["[C"] = "@class.outer",
-          ["[F"] = "@function.outer",
-        },
-      },
-    },
   },
   config = function(_, opts)
-    require("nvim-treesitter.configs").setup(opts)
+    require("nvim-treesitter").setup(opts)
     vim.treesitter.language.register("json", "excalidraw")
   end,
   dependencies = {
