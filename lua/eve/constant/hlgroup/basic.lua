@@ -4,12 +4,12 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local theme = context.scheme.theme ---@type std.e.ThemeFamily
-  if theme == "gruvbox" then
-    return require("eve.constant.hlgroup.gruvbox.basic").gen_hlgroup_map(context)
-  elseif theme == "onehalf" then
-    return require("eve.constant.hlgroup.onehalf.basic").gen_hlgroup_map(context)
+  local md = string.format("eve.constant.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local ok, mod = pcall(require, md)
+  if ok and mod then
+    return mod.gen_hlgroup_map(context)
   end
+
   return M.default_gen_hlgroup_map(context)
 end
 
