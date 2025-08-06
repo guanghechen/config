@@ -34,7 +34,7 @@
       "fg3":            "#4F525A",
       "fg4":            "{{foreground}}",
 
-      "red":            "#D84A3D",
+      "red":            "{{red}}",
       "green":          "{{green}}",
       "yellow":         "#DEA95F",
       "blue":           "{{blue}}",
@@ -42,7 +42,7 @@
       "aqua":           "#0B8EC6",
       "orange":         "#FF6A00",
 
-      "brightRed":      "{{red}}",
+      "brightRed":      "#D84A3D",
       "brightGreen":    "#7ECA9C",
       "brightYellow":   "{{orange}}",
       "brightBlue":     "{{blue}}",
