@@ -393,9 +393,12 @@ function M.on_attach(client, bufnr)
   end
 
   -- highlighting: stop treesitter
-  if client.server_capabilities.semanticTokensProvider ~= nil then
+  if client.server_capabilities.semanticTokensProvider then
     vim.highlight.priorities.semantic_tokens = 125
-    -- vim.treesitter.stop(bufnr)
+  end
+
+  if support_foldingRange == 1 then
+    vim.wo.foldexpr = "v:lua.vim.lsp.foldexpr()"
   end
 
   -- illuminate

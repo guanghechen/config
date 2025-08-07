@@ -72,20 +72,4 @@ vim.o.foldmethod = "expr"
 vim.o.foldexpr = "v:lua.require'fml.dressing.foldexpr'.foldexpr()"
 vim.o.foldtext = "v:lua.require'fml.dressing.foldexpr'.foldtext()"
 
-vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-  group = eve.nvim.augroup("fml_dressing_foldexpr"),
-  callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
-    if support_foldingRange > 0 then
-      vim.wo[winnr].foldmethod = "expr"
-      vim.wo[winnr].foldexpr = "v:lua.vim.lsp.foldexpr()"
-    else
-      vim.wo[winnr].foldmethod = "expr"
-      vim.wo[winnr].foldexpr = "v:lua.require'fml.dressing.foldexpr'.foldexpr()"
-    end
-  end,
-})
-
 return M
