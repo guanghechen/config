@@ -98,6 +98,8 @@ vim.o.fileencodings = "utf-8,gbk,latin1"
 vim.o.fileformat = "unix"
 
 ---! format
+vim.o.foldmethod = "expr"
+vim.o.foldexpr = "0"
 vim.o.formatoptions = table.concat({
   --  "c", -- Auto wrap using 'textwidth'
   "r", -- Auto insert comment leader

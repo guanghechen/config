@@ -1,37 +1,5 @@
----@class fml.dressing.foldexpr
+---@class fml.dressing.foldtext
 local M = {}
-
----@return string
-function M.foldexpr()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local lnum = vim.v.lnum ---@type integer
-  local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
-  if support_foldingRange > 0 then
-    return vim.lsp.foldexpr(lnum) or "0" ---@type string
-  end
-
-  if not vim.api.nvim_buf_is_loaded(bufnr) then
-    return "0"
-  end
-
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if not eve.filetype.is_language(filetype) then
-    return "0"
-  end
-
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  if buftype == "terminal" then
-    return "0"
-  end
-
-  local has_ts_parser = vim.b[bufnr].has_ts_parser ---@type boolean|nil
-  if has_ts_parser == nil then
-    local ok = pcall(vim.treesitter.get_parser, bufnr)
-    vim.b[bufnr].has_ts_parser = ok
-    has_ts_parser = ok
-  end
-  return has_ts_parser and vim.treesitter.foldexpr(lnum) or "0" ---@type string
-end
 
 ---@return [string, string][]
 ---@see https://www.reddit.com/r/neovim/comments/1fzn1zt/custom_fold_text_function_with_treesitter_syntax/
@@ -68,8 +36,6 @@ function M.foldtext()
   return result
 end
 
-vim.o.foldmethod = "expr"
-vim.o.foldexpr = "v:lua.require'fml.dressing.foldexpr'.foldexpr()"
-vim.o.foldtext = "v:lua.require'fml.dressing.foldexpr'.foldtext()"
+vim.o.foldtext = "v:lua.require'fml.dressing.foldtext'.foldtext()"
 
 return M
