@@ -196,6 +196,12 @@ function M.setup_lsp()
       source = true,
     },
   })
+
+  if vim.fn.expand("%") ~= "" then
+    vim.schedule(function()
+      vim.cmd("edit")
+    end)
+  end
 end
 
 return M

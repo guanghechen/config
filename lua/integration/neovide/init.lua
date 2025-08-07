@@ -47,6 +47,7 @@ vim.schedule(function()
   require("fml.dressing.winsep")
   pcall(require, "integration.neovide.dressing")
   pcall(require, "integration.local.dressing")
-  eve.setup_lsp()
+
   eve.setup_breakpoints()
+  eve.setup_lsp()
 end)
