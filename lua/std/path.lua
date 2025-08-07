@@ -12,6 +12,20 @@ local BYTE_COLON      = std.byte.BYTES.COLON      ---@type integer ':'
 local BYTE_PATHSEP    = string.byte(SEP)          ---@type integer
 -- stylua: ignore end
 
+local CWD ---@type string
+local WORKSPACE ---@type string
+local IS_GIT_REPO ---@type boolean
+do
+  local cwd = vim.fn.getcwd() ---@type string
+  local ok, p = pcall(vim.fn.system, { "git", "-C", cwd, "rev-parse", "--show-toplevel" }) ---@type boolean, string
+  local is_git_repo = ok and not not p and p:sub(1, 5) ~= "fatal" ---@type boolean
+  local workspace = is_git_repo and vim.trim(p) or cwd ---@type string
+
+  CWD = vim.fn.getcwd() ---@type string
+  WORKSPACE = workspace ---@type string
+  IS_GIT_REPO = is_git_repo ---@type boolean
+end
+
 ---@class std.path.reposcope_map
 local repo_map = {
   public = {
@@ -59,6 +73,9 @@ local repo_map = {
 
 ---@class std.path
 local M = {}
+
+M.normalize = std.env.normalize_path
+M.split = std.env.split_path
 
 ---@param filepath                      string
 ---@return string
@@ -153,6 +170,11 @@ function M.is_exist_filepath(filepath)
   return stat ~= nil and stat.type == "file"
 end
 
+---@return boolean
+function M.is_git_repo()
+  return IS_GIT_REPO
+end
+
 ---@param filepath                      string
 ---@return boolean
 function M.is_git_ignored(filepath)
@@ -202,25 +224,6 @@ function M.mkdir_if_nonexist(dirpath)
   if not M.is_exist(dirpath) then
     vim.fn.mkdir(dirpath, "p")
   end
-end
-
----@param filepath                      string
----@return string
-function M.normalize(filepath)
-  if filepath == "/" and not IS_WIN then
-    return "/"
-  end
-
-  if filepath == "" then
-    return "."
-  end
-
-  filepath = filepath:gsub("%%(%x%x)", function(hex)
-    return string.char(tonumber(hex, 16))
-  end)
-
-  local pieces = M.split(filepath, true)
-  return table.concat(pieces, SEP)
 end
 
 ---@param from                          string
@@ -314,78 +317,9 @@ function M.resolve(cwd, to)
   return M.is_absolute(to) and M.normalize(to) or M.normalize(cwd .. SEP .. to)
 end
 
----@param filepath                      string
----@param keep_suffix_sep               ?boolean
----@return string[]
----@return boolean
-function M.split(filepath, keep_suffix_sep)
-  local L = #filepath ---@type integer
-  local pieces = {} ---@type string[]
-  local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
-  local has_suffix_sep = L > 1 and string.byte(filepath, L, L) == BYTE_PATHSEP ---@type boolean
-
-  local k = 0 ---@type integer
-  if has_prefix_sep then
-    k = k + 1 ---@type integer
-    pieces[k] = ""
-  end
-
-  for piece in string.gmatch(filepath, pattern) do
-    if piece ~= "" and piece ~= "." then
-      if piece == ".." and (has_prefix_sep or k > 0) then
-        pieces[k] = nil
-        k = k - 1 ---@type integer
-      else
-        k = k + 1 ---@type integer
-        pieces[k] = piece
-      end
-    end
-  end
-
-  if has_suffix_sep and keep_suffix_sep then
-    k = k + 1 ---@type integer
-    pieces[k] = ""
-  end
-
-  if IS_WIN and L > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
-    pieces[1] = pieces[1]:upper()
-  end
-  return pieces, has_suffix_sep
-end
-
----! Check if the `to` path is under the `from` path.
----@param root_pieces                   string[]
----@param from_pieces                   string[]
----@param to                            string
----@return string[]
-function M.split_prettier(root_pieces, from_pieces, to)
-  local to_pieces = M.split(to) ---@type string[]
-  local is_under = true ---@type boolean
-  for i = 1, #root_pieces do
-    if to_pieces[i] ~= root_pieces[i] then
-      is_under = false
-      break
-    end
-  end
-
-  if is_under then
-    local k = 1 ---@type integer
-    local N = #to_pieces ---@type integer
-    for i = #from_pieces + 1, N, 1 do
-      to_pieces[k] = to_pieces[i]
-      k = k + 1
-    end
-    for i = N, k, -1 do
-      to_pieces[i] = nil
-    end
-  end
-  return to_pieces
-end
-
 ---@return boolean
 function M.is_repo_personal_public()
-  if not std.env.IS_GIT_REPO then
+  if not IS_GIT_REPO then
     return false
   end
 
@@ -403,7 +337,7 @@ end
 
 ---@return boolean
 function M.is_repo_playground()
-  if not std.env.IS_GIT_REPO then
+  if not IS_GIT_REPO then
     return false
   end
 
@@ -414,7 +348,7 @@ end
 
 ---@return boolean
 function M.is_repo_thirdparty()
-  if not std.env.IS_GIT_REPO then
+  if not IS_GIT_REPO then
     return false
   end
 
@@ -425,12 +359,12 @@ end
 
 ---@return string
 function M.workspace()
-  return std.env.WORKSPACE ---@type string
+  return WORKSPACE ---@type string
 end
 
 ---@return string
 function M.cwd()
-  return std.env.CWD ---@type string
+  return CWD ---@type string
 end
 
 ----------------------------------------------------------------------------------------------------

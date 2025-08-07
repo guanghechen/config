@@ -43,7 +43,7 @@ local M = {}
 function M.defaults()
   local workspace = std.path.workspace() ---@type string
   local is_home_config_dir = workspace == std.env.HOME_NVIM_CONFIG ---@type boolean
-  local is_git_repo = std.env.IS_GIT_REPO ---@type boolean
+  local is_git_repo = std.path.is_git_repo() ---@type boolean
   local is_thirdparty = std.path.is_repo_thirdparty() ---@type boolean
   local is_playground = std.path.is_repo_playground() ---@type boolean
   local is_personal_public = std.path.is_repo_personal_public() ---@type boolean

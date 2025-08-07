@@ -1,76 +1,5 @@
 local __module_name__ = "std.bootstrap" ---@type string
 
-local os_name = vim.uv.os_uname().sysname ---@type string|nil
-local IS_WIN = os_name == "Windows_NT" ---@type boolean
-local PATH_SEP = IS_WIN and "\\" or "/" ---@type string
-local BYTE_COLON = 0x3a --[[ ':'  ]]
-local BYTE_PATHSEP = string.byte(PATH_SEP) ---@type integer
-
----@param filepath                      string
----@return string[]
-local function split_path(filepath)
-  local L = #filepath ---@type integer
-  local pieces = {} ---@type string[]
-  local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = PATH_SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
-
-  local k = 0 ---@type integer
-  if has_prefix_sep then
-    k = k + 1 ---@type integer
-    pieces[k] = ""
-  end
-
-  for piece in string.gmatch(filepath, pattern) do
-    if piece ~= "" and piece ~= "." then
-      if piece == ".." and (has_prefix_sep or k > 0) then
-        pieces[k] = nil
-        k = k - 1 ---@type integer
-      else
-        k = k + 1 ---@type integer
-        pieces[k] = piece
-      end
-    end
-  end
-
-  if IS_WIN and L > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
-    pieces[1] = pieces[1]:upper()
-  end
-  return pieces
-end
-
----@param dirpath                       string
----@return string|nil
-local function locate_gitroot_by_cmd(dirpath)
-  local ok, p = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
-  if not ok then
-    return nil
-  end
-
-  if p:sub(1, 5) ~= "fatal" then
-    return vim.trim(p)
-  end
-
-  return nil
-end
-
----@param dirpath                       string
----@return string|nil
-local function locate_gitroot(dirpath)
-  if vim.uv.fs_stat(dirpath .. PATH_SEP .. ".git") ~= nil then
-    return dirpath
-  end
-
-  local pieces = split_path(dirpath) ---@type string[]
-  for index = #pieces - 1, 1, -1 do
-    local p = table.concat(pieces, PATH_SEP, 1, index) ---@type string
-    if vim.uv.fs_stat(p .. PATH_SEP .. ".git") ~= nil then
-      return p
-    end
-  end
-
-  return locate_gitroot_by_cmd(dirpath)
-end
-
 ---@class std.bootstrap
 local M = {}
 
@@ -92,11 +21,14 @@ end
 ---! 2. the opened file is not under a git repo, then auto cd the directory of the opened file.
 ---@return nil
 function M.setup_workspace()
-  if vim.fn.expand("%") ~= "" then
+  local INITIAL_FILEPATH = vim.fn.expand("%") ---@type string
+  if INITIAL_FILEPATH ~= "" then
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
-    local A = locate_gitroot(p)
-    local B = locate_gitroot(cwd)
+
+    local env = require("std.env")
+    local A = env.locate_gitroot(p)
+    local B = env.locate_gitroot(cwd)
 
     if A == nil then
       local ok, err = pcall(function()

@@ -15,7 +15,7 @@ local M = {}
 
 ---@return eve.context.plugin.data
 function M.defaults()
-  local is_git_repo = std.env.IS_GIT_REPO ---@type boolean
+  local is_git_repo = std.path.is_git_repo() ---@type boolean
 
   ---@type eve.context.plugin.data
   return {

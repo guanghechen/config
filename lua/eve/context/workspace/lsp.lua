@@ -56,7 +56,7 @@ end
 
 ---@return eve.context.lsp.data
 function M.defaults()
-  local is_git_repo = std.env.IS_GIT_REPO ---@type boolean
+  local is_git_repo = std.path.is_git_repo() ---@type boolean
   local is_repo_personal = std.path.is_repo_personal_public() ---@type boolean
 
   ---@type eve.context.lsp.data
