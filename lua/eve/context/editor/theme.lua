@@ -57,8 +57,8 @@ end
 function M.defaults()
   ---@type eve.context.theme.data
   return {
-    theme = "catppuccin-mocha",
-    transparency = false,
+    theme = "gruvbox-dark",
+    transparency = true,
     username = true,
   }
 end
