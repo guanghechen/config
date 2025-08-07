@@ -534,6 +534,7 @@
     "nodetype",
     "nodeuuid",
     "nofile",
+    "noformat",
     "noinsert",
     "nonblank",
     "nonexist",
