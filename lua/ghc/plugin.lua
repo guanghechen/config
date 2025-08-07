@@ -179,6 +179,9 @@ require("lazy").setup({
   checker = {
     enabled = false, -- set true to automatically check for plugin updates
   },
+  git = {
+    timeout = 60 * 60 * 24, -- 24h
+  },
   performance = {
     rtp = {
       -- disable some rtp plugins
