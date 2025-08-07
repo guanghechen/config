@@ -75,7 +75,7 @@ function M.gen_hlgroup_map(context)
     f_fe_size = { fg = c.green },
 
     ---filetree
-    f_ft_dirname = { fg = c.blue },
+    f_ft_dirname = { fg = c.brightBlue },
     f_ft_filename = { fg = c.fg2 },
     f_ft_pathsep = { fg = c.fg4 },
     f_ft_position = { fg = c.bg4 },

@@ -154,13 +154,13 @@ function M.gen_hlgroup_map(context)
     ---! picker
     picker = { sp = c.pink, underline = true },
     picker_flag_grey = { fg = c.fg3, bg = c.bg2, sp = c.pink, underline = true },
-    picker_flag_red = { fg = c.bg0, bg = c.red, sp = c.pink, underline = true },
-    picker_flag_green = { fg = c.bg0, bg = c.green, sp = c.pink, underline = true },
-    picker_flag_yellow = { fg = c.bg0, bg = c.yellow, sp = c.pink, underline = true },
-    picker_flag_blue = { fg = c.bg0, bg = c.blue, sp = c.pink, underline = true },
-    picker_flag_purple = { fg = c.bg0, bg = c.purple, sp = c.pink, underline = true },
-    picker_flag_aqua = { fg = c.bg0, bg = c.aqua, sp = c.pink, underline = true },
-    picker_flag_orange = { fg = c.bg0, bg = c.orange, sp = c.pink, underline = true },
+    picker_flag_red = { fg = c.bg0, bg = c.brightRed, sp = c.pink, underline = true },
+    picker_flag_green = { fg = c.bg0, bg = c.brightGreen, sp = c.pink, underline = true },
+    picker_flag_yellow = { fg = c.bg0, bg = c.brightYellow, sp = c.pink, underline = true },
+    picker_flag_blue = { fg = c.bg0, bg = c.brightBlue, sp = c.pink, underline = true },
+    picker_flag_purple = { fg = c.bg0, bg = c.brightPurple, sp = c.pink, underline = true },
+    picker_flag_aqua = { fg = c.bg0, bg = c.brightAqua, sp = c.pink, underline = true },
+    picker_flag_orange = { fg = c.bg0, bg = c.brightOrange, sp = c.pink, underline = true },
     picker_result_pos_text = { fg = c.fg4, bg = "bg_bar", sp = c.pink, underline = true },
 
     ---! plugin
@@ -191,12 +191,12 @@ function M.gen_hlgroup_map(context)
     ---! widget
     widget_flag = { fg = c.fg1, bg = t and c.bg2 or c.bg3 },
     widget_flag_sep = { fg = c.bg4, bg = t and c.bg2 or c.bg3 },
-    widget_flag_enabled = { fg = c.bg1, bg = c.blue },
-    widget_flag_enabled_sep = { fg = c.bg4, bg = c.blue },
-    widget_flag_scope = { fg = c.bg1, bg = c.blue },
-    widget_flag_scope_sep = { fg = c.bg4, bg = c.blue },
-    widget_flag_popup = { fg = c.bg1, bg = c.purple },
-    widget_flag_popup_sep = { fg = c.bg1, bg = c.purple },
+    widget_flag_enabled = { fg = c.bg1, bg = c.brightBlue },
+    widget_flag_enabled_sep = { fg = c.bg4, bg = c.brightBlue },
+    widget_flag_scope = { fg = c.bg1, bg = c.brightBlue },
+    widget_flag_scope_sep = { fg = c.bg4, bg = c.brightBlue },
+    widget_flag_popup = { fg = c.bg1, bg = c.brightPurple },
+    widget_flag_popup_sep = { fg = c.bg1, bg = c.brightPurple },
   }
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type eve.ux.nvimbar.PositionEnum[]
