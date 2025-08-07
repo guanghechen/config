@@ -977,14 +977,26 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
-      aliases = { "l", "w" },
+      aliases = { "w" },
       desc = "searcher: open",
       callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Right>",
-      aliases = { "<Left>", "c", "h" },
+      aliases = { "<Left>", "c" },
+      desc = "searcher: toggle",
+      callback = actions.toggle_node,
+    },
+    {
+      modes = { "i", "n" },
+      key = "l",
+      desc = "searcher: open",
+      callback = actions.open_node,
+    },
+    {
+      modes = { "i", "n" },
+      key = "h",
       desc = "searcher: toggle",
       callback = actions.toggle_node,
     },

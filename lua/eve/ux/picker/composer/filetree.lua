@@ -1195,14 +1195,26 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<Enter>",
-      aliases = { "l", "w" },
+      aliases = { "w" },
       desc = "filetree: open",
       callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
       key = "<Right>",
-      aliases = { "<Left>", "c", "h" },
+      aliases = { "<Left>", "c" },
+      desc = "filetree: toggle",
+      callback = actions.toggle_node,
+    },
+    {
+      modes = { "i", "n" },
+      key = "l",
+      desc = "filetree: open",
+      callback = actions.open_node,
+    },
+    {
+      modes = { "i", "n" },
+      key = "h",
       desc = "filetree: toggle",
       callback = actions.toggle_node,
     },
