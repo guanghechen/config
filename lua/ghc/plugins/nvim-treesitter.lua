@@ -53,16 +53,15 @@ local opts = {
 return {
   name = "nvim-treesitter",
   lazy = false,
-  build = function()
-    require("nvim-treesitter").setup(opts)
-    require("nvim-treesitter").install(ensure_installed)
-  end,
   opts = opts,
   config = function()
     require("nvim-treesitter").setup(opts)
 
-    vim.treesitter.language.register("json", "excalidraw")
+    vim.api.nvim_create_user_command("TreesitterInstallAll", function()
+      require("nvim-treesitter").install(ensure_installed)
+    end, {})
 
+    vim.treesitter.language.register("json", "excalidraw")
     vim.api.nvim_create_autocmd("FileType", {
       pattern = {
         "bash",

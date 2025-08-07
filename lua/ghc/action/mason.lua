@@ -79,7 +79,7 @@ end
 ---@param on_close                      fun(): nil
 ---@return nil
 function M.install_all(force, on_close)
-  vim.cmd("Mason")
+  require("mason.ui").open()
   local packages = M.get_mason_ensure_installed() ---@type string[]
   M.install(packages, force, on_close)
 end

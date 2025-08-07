@@ -1,10 +1,6 @@
 return {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
-  build = function()
-    local action = require("ghc.action.mason")
-    action.install_all(false, std.fn.noop)
-  end,
   opts = {
     PATH = "prepend",
     log_level = vim.log.levels.INFO,
