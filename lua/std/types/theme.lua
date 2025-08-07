@@ -139,7 +139,7 @@
 ---@field public surface                string
 ---@field public text                   string
 
----@class std.t.theme.IUnifiedPalette
+---@class std.t.theme.UnifiedPalette
 ---@field public none                   string
 ---
 ---@field public bg0                    string
@@ -179,7 +179,7 @@
 ---@field public diffAddInline          string
 
 ---@class std.t.theme.IPalette
----@field public unified                std.t.theme.IUnifiedPalette
+---@field public unified                std.t.theme.UnifiedPalette
 ---@field public catppuccin             std.t.theme.CatppuccinPalette|nil
 ---@field public gruvbox                std.t.theme.GruvboxPalette|nil
 ---@field public nord                   std.t.theme.NordPalette|nil

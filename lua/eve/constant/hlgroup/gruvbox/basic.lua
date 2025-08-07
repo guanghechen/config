@@ -5,9 +5,13 @@ local M = {}
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
-  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
   local t = context.transparency ---@type boolean
   local bg = t and c.none or c.bg0 ---@type string
+
+  local function mix_bg(color, ratio)
+    return cs.mix(bg, color, ratio or 20)
+  end
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
@@ -33,7 +37,7 @@ function M.gen_hlgroup_map(context)
     DiagnosticFloatingError = { fg = c.red },
     DiagnosticFloatingHint = { fg = c.purple },
     DiagnosticFloatingInfo = { fg = c.green },
-    DiagnosticFloatingWarn = { fg = c.orange },
+    DiagnosticFloatingWarn = { fg = c.yellow },
     DiagnosticUnderlineError = { undercurl = true, sp = c.red },
     DiagnosticUnderlineHint = { undercurl = true, sp = c.purple },
     DiagnosticUnderlineInfo = { undercurl = true, sp = c.green },
@@ -58,10 +62,10 @@ function M.gen_hlgroup_map(context)
     DiffWordLeft = { bg = c.diffDelInline or cs.mix(bg, c.brightRed, 60) },
     DiffWordRight = { bg = c.diffAddInline or cs.mix(bg, c.brightGreen, 60) },
 
-    DiffAdd = { link = "DiffAddRight" },
-    DiffChange = { link = "DiffModRight" },
-    DiffDelete = { link = "DiffDelRight" },
-    DiffText = { link = "DiffWordRight" },
+    DiffAdd = { bg = mix_bg(c.green, 25) },
+    DiffChange = { bg = mix_bg(c.yellow, 25) },
+    DiffDelete = { bg = mix_bg(c.red, 25) },
+    DiffText = { bg = mix_bg(c.green, 45) },
     DiffAdded = { link = "DiffAdd" },
     DiffRemoved = { link = "DiffDelete" },
     DiffChanged = { link = "DiffChange" },
@@ -103,7 +107,7 @@ function M.gen_hlgroup_map(context)
     Whitespace = { fg = c.bg4 },
 
     ---syntax
-    Boolean = { fg = c.brightPurple },
+    Boolean = { fg = c.brightPurple, bold = true },
     Builtin = { fg = c.brightPurple },
     Character = { fg = c.brightPurple },
     Conditional = { fg = c.brightRed },

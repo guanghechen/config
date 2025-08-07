@@ -16,7 +16,7 @@ end
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   return {
     ["@annotation"] = { fg = c.brightRed },

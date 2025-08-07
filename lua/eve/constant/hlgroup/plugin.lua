@@ -5,7 +5,7 @@ local M = {}
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
-  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   local item_kind_bg = c.none ---@type string
 

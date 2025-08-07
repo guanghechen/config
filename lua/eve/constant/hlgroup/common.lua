@@ -76,7 +76,7 @@ end
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
   local mc = {
     command = c.brightBlue,
     confirm = c.brightAqua,

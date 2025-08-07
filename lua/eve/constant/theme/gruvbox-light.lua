@@ -9,13 +9,13 @@ local M = {
     unified = {
       none          = "none",
 
-      bg0           = "#FBF1C7",
+      bg0           = "#F2E5BC",
       bg1           = "#EBDBB2",
       bg2           = "#D5C4A1",
       bg3           = "#BDAE93",
       bg4           = "#A89984",
 
-      fg0           = "#282828",
+      fg0           = "#32302F",
       fg1           = "#3C3836",
       fg2           = "#504945",
       fg3           = "#665C54",

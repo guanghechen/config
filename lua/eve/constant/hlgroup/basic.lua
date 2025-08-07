@@ -17,7 +17,7 @@ end
 ---@return table<string, std.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
   local cs = std.color
-  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
   local t = context.transparency ---@type boolean
   local bg = t and c.none or c.bg0 ---@type string
 

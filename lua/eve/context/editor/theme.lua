@@ -269,7 +269,7 @@ end
 ---@param scheme                        std.t.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
+  local c = scheme.palette.unified ---@type std.t.theme.UnifiedPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.red
   vim.g.terminal_color_2 = c.green

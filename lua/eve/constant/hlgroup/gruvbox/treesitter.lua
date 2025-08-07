@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   return {
     ["@annotation"] = { fg = c.brightRed },
@@ -36,10 +36,10 @@ function M.gen_hlgroup_map(context)
     ["@function"] = { link = "Function" },
     ["@function.builtin"] = { link = "Builtin" },
     ["@function.call"] = { link = "Function" },
-    ["@function.lua"] = { fg = c.brightYellow },
+    ["@function.lua"] = { fg = c.brightAqua, bold = true },
     ["@function.macro"] = { link = "Macro" },
     ["@function.method"] = { link = "Method" },
-    ["@function.method.call"] = { fg = c.aqua },
+    ["@function.method.call"] = { fg = c.brightBlue },
     ["@include"] = { link = "Include" },
     ["@keyword"] = { link = "Keyword", bold = true },
     ["@keyword.break"] = { link = "Conditional", bold = true },
@@ -96,7 +96,7 @@ function M.gen_hlgroup_map(context)
     ["@number"] = { link = "Number" },
     ["@number.float"] = { link = "Float" },
     ["@operator"] = { link = "Operator" },
-    ["@operator.unary.not"] = { fg = c.red },
+    ["@operator.unary.not"] = { fg = c.brightRed, bold = true },
     ["@parameter"] = { link = "Identifier" },
     ["@preproc"] = { link = "PreProc" },
     ["@property"] = { link = "Identifier" },
@@ -138,7 +138,7 @@ function M.gen_hlgroup_map(context)
     ["@text.todo.checked"] = { fg = c.green },
     ["@text.todo.unchecked"] = { fg = c.fg4 },
     ["@text.note"] = { link = "SpecialComment" },
-    ["@text.note.comment"] = { fg = c.purple, bold = true },
+    ["@text.note.comment"] = { fg = c.brightPurple, bold = true },
     ["@text.warning"] = { link = "WarningMsg" },
     ["@text.danger"] = { link = "ErrorMsg" },
     ["@text.danger.comment"] = { fg = c.fg0, bg = c.red, bold = true },
@@ -150,14 +150,14 @@ function M.gen_hlgroup_map(context)
     ["@type.definition"] = { link = "Typedef" },
     ["@type.qualifier"] = { link = "Type" },
     ["@variable"] = { link = "Variable" },
-    ["@variable.lua"] = { fg = c.brightBlue },
-    ["@variable.jsx"] = { fg = c.blue },
-    ["@variable.tsx"] = { fg = c.blue },
+    ["@variable.lua"] = { fg = c.fg2 },
+    ["@variable.jsx"] = { fg = c.brightBlue },
+    ["@variable.tsx"] = { fg = c.brightBlue },
     ["@variable.builtin"] = { link = "Builtin" },
     ["@variable.member"] = { link = "Member" },
-    ["@variable.member.lua"] = { fg = c.fg1 },
+    ["@variable.member.lua"] = { fg = c.brightBlue },
     ["@variable.parameter"] = { link = "Parameter" },
-    ["@variable.parameter.luadoc"] = { fg = c.brightYellow, italic = true },
+    ["@variable.parameter.luadoc"] = { fg = c.brightBlue, italic = true },
 
     -----
 
