@@ -59,7 +59,7 @@ function M.defaults()
   return {
     theme = "gruvbox-dark",
     transparency = true,
-    username = true,
+    username = false,
   }
 end
 

@@ -12,20 +12,11 @@ function M.username(position)
   local text_with_icon = " " .. eve.icon.os.current .. " " .. std.env.USERNAME ---@type string
   local text_icon_only = eve.icon.os.current .. " " ---@type string
 
-  local invalid = false ---@type boolean
-  std.fn.observe({ eve.context.theme.username }, function()
-    invalid = true
-  end, true)
-
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
     name = "host:username",
     atomic = true,
-    will_change = function()
-      return invalid
-    end,
     render = function()
-      invalid = false
       local show_username = eve.context.theme.username:snapshot() ---@type boolean
       if not show_username then
         local text = text_icon_only ---@type string

@@ -85,7 +85,7 @@ function M.gen_hlgroup_map(context)
 
     ---! host
     host_username_text = { link = "ms_b_none" },
-    host_username_sep = { link = "mf_b_none" },
+    host_username_sep = { link = "mf_b_bg0" },
 
     ---! lsp
     lsp_client_text = { fg = c.fg2, bg = "bg_bar" },
