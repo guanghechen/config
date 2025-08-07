@@ -14,3 +14,5 @@ if [ -d "$HOME/.config/nvim-nvchad/" ]; then
     && nvchad --headless -u ./init-update.lua\
   "
 fi
+
+cargo install tree-sitter-cli # [treesitter-cli]
