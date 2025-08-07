@@ -393,8 +393,9 @@ function M.on_attach(client, bufnr)
   end
 
   -- highlighting: stop treesitter
-  if client.server_capabilities.semanticTokensProvider then
-    vim.treesitter.stop(bufnr)
+  if client.server_capabilities.semanticTokensProvider ~= nil then
+    vim.highlight.priorities.semantic_tokens = 125
+    -- vim.treesitter.stop(bufnr)
   end
 
   -- illuminate
