@@ -234,11 +234,11 @@ return config
       settings.profiles.defaults.useAcrylic = true;
 
       if (scheme.darken) {
-        settings.profiles.defaults.backgroundImage =
-          "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Flowerlit-Prayers.jpg";
+        settings.profiles.defaults.backgroundImage = null;
+        // "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Flowerlit-Prayers.jpg";
       } else {
-        settings.profiles.defaults.backgroundImage =
-          "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Barrett-Girl.jpg";
+        settings.profiles.defaults.backgroundImage = null;
+        // "%XDG_CONFIG_HOME%\\guanghechen\\config\\wallpaper\\Barrett-Girl.jpg";
       }
       return JSON.stringify(settings, null, 2);
     },
