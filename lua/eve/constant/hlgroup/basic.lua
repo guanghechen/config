@@ -2,6 +2,18 @@
 local M = {}
 
 ---@param context                       std.t.theme.IContext
+---@return eve.constant.hlgroup.common.modes_color_map
+function M.gen_modes_color_map(context)
+  local md = string.format("eve.constant.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local ok, mod = pcall(require, md)
+  if ok and mod then
+    return mod.gen_modes_color_map(context)
+  end
+
+  return M.default_gen_modes_color_map(context)
+end
+
+---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("eve.constant.hlgroup.%s.basic", context.scheme.theme) ---@type string
@@ -11,6 +23,24 @@ function M.gen_hlgroup_map(context)
   end
 
   return M.default_gen_hlgroup_map(context)
+end
+
+---@param context                       std.t.theme.IContext
+---@return eve.constant.hlgroup.common.modes_color_map
+function M.default_gen_modes_color_map(context)
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local mc = {
+    command = c.brightBlue,
+    confirm = c.brightAqua,
+    insert = c.brightPurple,
+    normal = c.brightAqua,
+    nterminal = c.yellow,
+    replace = c.brightYellow,
+    select = c.brightOrange,
+    terminal = c.brightBlue,
+    visual = c.brightOrange,
+  }
+  return mc
 end
 
 ---@param context                       std.t.theme.IContext

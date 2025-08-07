@@ -2,6 +2,24 @@
 local M = {}
 
 ---@param context                       std.t.theme.IContext
+---@return eve.constant.hlgroup.common.modes_color_map
+function M.gen_modes_color_map(context)
+  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local mc = {
+    command = c.brightBlue,
+    confirm = c.brightAqua,
+    insert = c.brightPurple,
+    normal = c.brightAqua,
+    nterminal = c.yellow,
+    replace = c.brightYellow,
+    select = c.brightOrange,
+    terminal = c.brightBlue,
+    visual = c.brightOrange,
+  }
+  return mc
+end
+
+---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color

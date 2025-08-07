@@ -1,3 +1,12 @@
+---@class eve.constant.hlgroup.common.modes_color_map
+---@field public command                std.t.theme.IHlgroup
+---@field public confirm                std.t.theme.IHlgroup
+---@field public insert                 std.t.theme.IHlgroup
+---@field public normal                 std.t.theme.IHlgroup
+---@field public select                 std.t.theme.IHlgroup
+---@field public terminal               std.t.theme.IHlgroup
+---@field public visual                 std.t.theme.IHlgroup
+
 ---@class eve.constant.hlgroup.common.modes_map
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
@@ -77,17 +86,8 @@ end
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
-  local mc = {
-    command = c.brightBlue,
-    confirm = c.brightAqua,
-    insert = c.brightPurple,
-    normal = c.aqua,
-    nterminal = c.yellow,
-    replace = c.brightYellow,
-    select = c.brightOrange,
-    terminal = c.brightBlue,
-    visual = c.brightOrange,
-  }
+  local basic = require("eve.constant.hlgroup.basic") ---@type eve.constant.hlgroup.basic
+  local mc = basic.gen_modes_color_map(context) ---@type eve.constant.hlgroup.common.modes_color_map
 
   local hlgroup_map = {} ---@type table<string, std.t.theme.IHlgroup>
   for _, color in ipairs(colors) do
