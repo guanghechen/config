@@ -7,6 +7,7 @@ local __mods = {
 local hlgroup__mods = {
   basic = "eve.constant.hlgroup.basic",
   common = "eve.constant.hlgroup.common",
+  lsp = "eve.constant.hlgroup.lsp",
   nvimbar = "eve.constant.hlgroup.nvimbar",
   plugin = "eve.constant.hlgroup.plugin",
   treesitter = "eve.constant.hlgroup.treesitter",
@@ -17,6 +18,7 @@ local hlgroup__mods = {
 ---@field public __mods                 eve.constant.hlgroup.__mods
 ---@field public basic                  eve.constant.hlgroup.basic
 ---@field public common                 eve.constant.hlgroup.common
+---@field public lsp                    eve.constant.hlgroup.lsp
 ---@field public nvimbar                eve.constant.hlgroup.nvimbar
 ---@field public plugin                 eve.constant.hlgroup.plugin
 ---@field public widget                 eve.constant.hlgroup.widget

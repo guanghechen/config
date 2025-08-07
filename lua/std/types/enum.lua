@@ -57,6 +57,7 @@
 ---@alias std.e.ThemeIntegration
 ---|"basic"
 ---|"common"
+---|"lsp"
 ---|"nvimbar"
 ---|"widget"
 ---|"treesitter"

@@ -41,6 +41,7 @@ local M = {}
 local integrations = {
   "common",
   "basic",
+  "lsp",
   "nvimbar",
   "widget",
   "treesitter",
