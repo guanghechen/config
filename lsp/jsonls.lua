@@ -1,5 +1,16 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#jsonls
 
+---@param bufnr                         integer
+---@param on_dir                        fun(rootdir: string|nil)
+local function root_dir(bufnr, on_dir)
+  local workspace = std.path.workspace() ---@type string
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  if #filepath > #workspace and filepath:sub(1, #workspace) == workspace then
+    on_dir(workspace)
+    return
+  end
+end
+
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
@@ -31,7 +42,6 @@ return {
   init_options = {
     provideFormatter = true,
   },
-  root_markers = { ".git" },
   settings = {
     json = {
       format = {
@@ -59,6 +69,7 @@ return {
       },
     },
   },
+  root_dir = root_dir,
   before_init = before_init,
   on_attach = on_attach,
   on_detach = on_detach,

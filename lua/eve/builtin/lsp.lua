@@ -392,6 +392,11 @@ function M.on_attach(client, bufnr)
     vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
   end
 
+  -- highlighting: stop treesitter
+  if client.server_capabilities.semanticTokensProvider then
+    vim.treesitter.stop(bufnr)
+  end
+
   -- illuminate
   if support_documentHighlight == 1 then
     local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
@@ -643,10 +648,9 @@ function M.on_detach(client, bufnr)
   vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type integer
 end
 
-function M.on_init(client, _)
-  if client:supports_method(Methods.textDocument_semanticTokens_full) then
-    client.server_capabilities.semanticTokensProvider = nil
-  end
-end
+---@param client                        vim.lsp.Client
+---@param config                        any
+---@diagnostic disable-next-line: unused-local
+function M.on_init(client, config) end
 
 return M

@@ -10,6 +10,14 @@ local CONFIG_FILENAMES = {
   "jsconfig.json",
 }
 
+---@param bufnr                         integer
+---@param on_dir                        fun(rootdir: string|nil)
+local function root_dir(bufnr, on_dir)
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local rootdir = eve.lsp.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
+  on_dir(rootdir)
+end
+
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
@@ -183,14 +191,6 @@ end
 ---@param config                        any
 local function on_init(client, config)
   eve.lsp.on_init(client, config)
-end
-
----@param bufnr                         integer
----@param on_dir                        fun(rootdir: string|nil)
-local function root_dir(bufnr, on_dir)
-  local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = eve.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
-  on_dir(rootdir)
 end
 
 local plugins = {

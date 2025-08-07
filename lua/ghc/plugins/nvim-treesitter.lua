@@ -3,10 +3,8 @@
 -- syntax highlighting.
 return {
   name = "nvim-treesitter",
-  lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
-  event = "VeryLazy",
+  lazy = false,
   build = ":TSUpdate",
-  cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
   opts = {
     highlight = {
       additional_vim_regex_highlighting = false,
