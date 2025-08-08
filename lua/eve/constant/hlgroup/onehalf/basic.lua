@@ -161,7 +161,7 @@ function M.gen_hlgroup_map(context)
     Added = { fg = c.green },
     Bold = { bold = true },
     Changed = { fg = c.yellow },
-    ColorColumn = { fg = c.fg2, bg = cs.mix(c.bg0, c.red, 10) },
+    ColorColumn = { fg = c.fg2, bg = cs.mix(c.bg0, c.pink, 20) },
     Comment = { fg = cs.change_hex_lightness(c.bg4, 20), italic = true },
     Conceal = { fg = c.blue },
     CurSearch = { fg = c.bg0, bg = c.orange },
