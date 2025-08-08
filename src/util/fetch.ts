@@ -19,11 +19,16 @@ export interface IJsonlFileData {
   readonly content: string
 }
 
+export interface IPdfFileData {
+  readonly url: string
+}
+
 export type IFetchFileData =
   | IMarkdownFileData
   | IJsonFileData
   | IEventStreamFileData
   | IJsonlFileData
+  | IPdfFileData
 
 export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly loading?: boolean

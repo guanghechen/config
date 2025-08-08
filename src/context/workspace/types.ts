@@ -1,14 +1,10 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 import type { FileTreeModeEnum } from '@/component/filetree/context/types'
+import { ModeEnum as MarkdownModeEnum } from '@/view/filetype/markdown/context/types'
+
+export { MarkdownModeEnum }
 
 const bit: number = 1
-
-export enum MarkdownModeEnum {
-  VIEW = bit << 0,
-  AST = bit << 1,
-  TOC = bit << 2,
-  FM = bit << 3,
-}
 
 export enum JsonModeEnum {
   LITERAL = bit << 0,
