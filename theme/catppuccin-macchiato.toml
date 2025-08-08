@@ -1,39 +1,66 @@
 # catppuccin-macchiato
 
-# Primary colors
-[colors.primary]
-background  = "#24273A"
-foreground  = "#B8C0E0"
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
 
-# Cursor colors
 [colors.cursor]
-cursor      = "#F5BDE6"
-text        = "#1E2030"
+cursor            = "#F5BDE6"
+text              = "#1E2030"
 
-# Selection colors
+[colors.vi_mode_cursor]
+cursor            = "#F5BDE6"
+text              = "#1E2030"
+
+[colors.search.matches]
+background        = "#EED49F"
+foreground        = "#1E2030"
+
+[colors.search.focused_match]
+background        = "#EED49F"
+foreground        = "#1E2030"
+
 [colors.selection]
-background  = "#F5A97F"
-text        = "#1E2030"
+background        = "#F5A97F"
+text              = "#1E2030"
 
-# Normal colors
+[colors.footer_bar]
+background        = "#363A4F"
+foreground        = "#B8C0E0"
+
+[colors.primary]
+background        = "#24273A"
+foreground        = "#B8C0E0"
+dim_foreground    = "#B8C0E0"
+bright_foreground = "#B8C0E0"
+
 [colors.normal]
-black       = "#24273A"
-red         = "#ED8796"
-green       = "#A6DA95"
-yellow      = "#EED49F"
-blue        = "#8AADF4"
-magenta     = "#C6A0F6"
-cyan        = "#8BD5CA"
-white       = "#8087A2"
+black             = "#24273A"
+blue              = "#8AADF4"
+cyan              = "#8BD5CA"
+green             = "#A6DA95"
+magenta           = "#C6A0F6"
+red               = "#ED8796"
+yellow            = "#EED49F"
+white             = "#8087A2"
 
-# Bright colors
 [colors.bright]
-black       = "#6E738D"
-red         = "#ED8796"
-green       = "#A6DA95"
-yellow      = "#EED49F"
-blue        = "#8AADF4"
-magenta     = "#C6A0F6"
-cyan        = "#8BD5CA"
-white       = "#B8C0E0"
+black             = "#6E738D"
+blue              = "#8AADF4"
+cyan              = "#8BD5CA"
+green             = "#A6DA95"
+magenta           = "#C6A0F6"
+red               = "#ED8796"
+yellow            = "#EED49F"
+white             = "#B8C0E0"
+
+[colors.dim]
+black             = "#24273A"
+blue              = "#8AADF4"
+cyan              = "#8BD5CA"
+green             = "#A6DA95"
+magenta           = "#C6A0F6"
+red               = "#ED8796"
+yellow            = "#EED49F"
+white             = "#8087A2"
 
