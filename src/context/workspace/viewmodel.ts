@@ -46,6 +46,9 @@ export class WorkspaceViewModel extends ViewModel {
   public readonly sidebarWidth$: State<number>
   public readonly topbarVisible$: State<boolean>
 
+  public readonly tocActivatedIdentifier$: State<string | null>
+  public readonly specifiedTocActivatedIdentifier$: State<string | null>
+
   public readonly filepathDirtyTick$: State<number>
   public readonly revealTick$: State<number>
   public readonly workspacesDirtyTick$: State<number>
@@ -172,6 +175,9 @@ export class WorkspaceViewModel extends ViewModel {
     const sidebarWidth$ = new State<number>(sidebarWidth)
     const topbarVisible$ = new State<boolean>(topbarVisible)
 
+    const tocActivatedIdentifier$ = new State<string | null>(null)
+    const specifiedTocActivatedIdentifier$ = new State<string | null>(null)
+
     const filepathDirtyTick$ = new State<number>(0)
     const revealTick$ = new State<number>(0)
     const workspacesDirtyTick$ = new State<number>(0)
@@ -188,6 +194,8 @@ export class WorkspaceViewModel extends ViewModel {
     this.sidebarVisible$ = sidebarVisible$
     this.sidebarWidth$ = sidebarWidth$
     this.topbarVisible$ = topbarVisible$
+    this.tocActivatedIdentifier$ = tocActivatedIdentifier$
+    this.specifiedTocActivatedIdentifier$ = specifiedTocActivatedIdentifier$
     this.filepathDirtyTick$ = filepathDirtyTick$
     this.revealTick$ = revealTick$
     this.workspacesDirtyTick$ = workspacesDirtyTick$

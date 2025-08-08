@@ -19,6 +19,7 @@ export const MarkdownComposer: React.FC<IProps> = props => {
   const { toc, frontmatter, filepath } = props
   const { markdownMode$, tocActivatedIdentifier$, specifiedTocActivatedIdentifier$ } =
     useWorkspaceViewmodel()
+
   const ast: Root = useMarkdownAst()
 
   const mode: MarkdownModeEnum = useStateValue(markdownMode$)
