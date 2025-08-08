@@ -19,7 +19,10 @@ shape = "Block"
 
 # Env
 [env]
-TERM = "xterm-256color"
+TERM = "tmux-256color"
+
+# [terminal]
+# shell = "/opt/homebrew/bin/fish"
 
 [scrolling]
 history = 10000 # Maximum number of lines in the scrollback buffer. Specifying '0' will disable scrolling.
@@ -34,16 +37,10 @@ blur = true
 decorations = "Buttonless"
 dynamic_padding = false
 dynamic_title = true
-# opacity = 0.9
-option_as_alt = "Both"
+level = "Normal"
+opacity = 1.0
+option_as_alt = "None"
 resize_increments = true
 startup_mode = "Windowed"
-
-# Window dimensions in character columns and lines (changes require restart)
-[window.dimensions]
-columns = 160
-lines = 40
-
-[window.padding]
-x = 0
-y = 0
+dimensions = { columns = 160, lines = 40 }
+padding = { x = 0, y = 0 }
