@@ -1,39 +1,66 @@
 # {{variant ? `${theme}-${variant}` : theme}}
 
-# Primary colors
-[colors.primary]
-background  = "{{unified.bg0}}"
-foreground  = "{{unified.fg1}}"
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
 
-# Cursor colors
 [colors.cursor]
-cursor      = "{{unified.pink}}"
-text        = "{{unified.bg1}}"
+cursor            = "{{unified.pink}}"
+text              = "{{unified.bg1}}"
 
-# Selection colors
+[colors.vi_mode_cursor]
+cursor            = "{{unified.pink}}"
+text              = "{{unified.bg1}}"
+
+[colors.search.matches]
+background        = "{{unified.yellow}}"
+foreground        = "{{unified.bg1}}"
+
+[colors.search.focused_match]
+background        = "{{unified.brightYellow}}"
+foreground        = "{{unified.bg1}}"
+
 [colors.selection]
-background  = "{{unified.orange}}"
-text        = "{{unified.bg1}}"
+background        = "{{unified.brightOrange}}"
+text              = "{{unified.bg1}}"
 
-# Normal colors
+[colors.footer_bar]
+background        = "{{unified.bg2}}"
+foreground        = "{{unified.fg1}}"
+
+[colors.primary]
+background        = "{{unified.bg0}}"
+foreground        = "{{unified.fg1}}"
+dim_foreground    = "{{unified.fg1}}"
+bright_foreground = "{{unified.fg1}}"
+
 [colors.normal]
-black       = "{{unified.bg0}}"
-red         = "{{unified.red}}"
-green       = "{{unified.green}}"
-yellow      = "{{unified.yellow}}"
-blue        = "{{unified.blue}}"
-magenta     = "{{unified.purple}}"
-cyan        = "{{unified.aqua}}"
-white       = "{{unified.fg4}}"
+black             = "{{unified.bg0}}"
+blue              = "{{unified.blue}}"
+cyan              = "{{unified.aqua}}"
+green             = "{{unified.green}}"
+magenta           = "{{unified.purple}}"
+red               = "{{unified.red}}"
+yellow            = "{{unified.yellow}}"
+white             = "{{unified.fg4}}"
 
-# Bright colors
 [colors.bright]
-black       = "{{unified.grey}}"
-red         = "{{unified.brightRed}}"
-green       = "{{unified.brightGreen}}"
-yellow      = "{{unified.brightYellow}}"
-blue        = "{{unified.brightBlue}}"
-magenta     = "{{unified.brightPurple}}"
-cyan        = "{{unified.brightAqua}}"
-white       = "{{unified.fg1}}"
+black             = "{{unified.grey}}"
+blue              = "{{unified.brightBlue}}"
+cyan              = "{{unified.brightAqua}}"
+green             = "{{unified.brightGreen}}"
+magenta           = "{{unified.brightPurple}}"
+red               = "{{unified.brightRed}}"
+yellow            = "{{unified.brightYellow}}"
+white             = "{{unified.fg1}}"
+
+[colors.dim]
+black             = "{{unified.bg0}}"
+blue              = "{{unified.blue}}"
+cyan              = "{{unified.aqua}}"
+green             = "{{unified.green}}"
+magenta           = "{{unified.purple}}"
+red               = "{{unified.red}}"
+yellow            = "{{unified.yellow}}"
+white             = "{{unified.fg4}}"
 
