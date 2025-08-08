@@ -4,6 +4,7 @@
 .prettierrc
 
 **/*.hbs
+**/*.md
 
 .nx/
 .yarn/

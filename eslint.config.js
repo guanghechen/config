@@ -14,6 +14,7 @@ const configs = [
   {
     files: ['src/**/*.{ts,cts,mts}'],
     rules: {
+      '@stylistic/eol-last': ['error', 'always'],
       '@typescript-eslint/no-unused-vars': 'off',
       'no-plusplus': 'off',
       'no-unused-vars': 'off',
