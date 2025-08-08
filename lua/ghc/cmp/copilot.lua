@@ -1,5 +1,6 @@
 ---see https://github.com/fang2hou/blink-copilot/blob/bdc45bbbed2ec252b3a29f4adecf031e157b5573/lua/blink-copilot/source.lua#L1
 
+local __module_name__ = "ghc.cmp.copilot" ---@type string
 local Methods = vim.lsp.protocol.Methods
 
 ---@class ghc.cmp.copilot.config
@@ -29,7 +30,7 @@ function util.cancel_request(client, req_id)
     end)
     if not success then
       std.reporter.warn({
-        from = "ghc.cmp.copilot",
+        from = __module_name__,
         subject = "cancel_request_failed",
         message = string.format("Failed to cancel LSP request: %s", tostring(err)),
       })
@@ -67,7 +68,52 @@ end
 ---@param params                        table
 ---@param cb                            lsp.Handler
 function util.get_completions_from_lsp(client, params, cb)
-  return client:request(Methods.textDocument_inlineCompletion, params, cb)
+  if not client or client:is_stopped() then
+    cb(
+      { code = -1, message = "LSP client is not available" },
+      nil,
+      { method = Methods.textDocument_inlineCompletion, client_id = client and client.id or nil }
+    )
+    return false, nil
+  end
+
+  local success, request_id = pcall(function()
+    return client:request(Methods.textDocument_inlineCompletion, params, cb)
+  end)
+
+  if not success then
+    local error_msg = tostring(request_id)
+    -- Handle specific "Resource temporarily unavailable" errors more gracefully
+    if string.find(error_msg:lower(), "resource") and string.find(error_msg:lower(), "unavailable") then
+      -- This is likely an EAGAIN error - don't spam logs for this common issue
+      cb(
+        {
+          code = 11,
+          message = "Resource temporarily unavailable - will retry later",
+        },
+        nil,
+        {
+          method = Methods.textDocument_inlineCompletion,
+          client_id = client and client.id or nil,
+        }
+      )
+      return false, nil
+    end
+
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "lsp_request_failed",
+      message = string.format("Failed to send LSP request: %s", error_msg),
+    })
+    cb(
+      { code = -1, message = "Failed to send LSP request" },
+      nil,
+      { method = Methods.textDocument_inlineCompletion, client_id = client and client.id or nil }
+    )
+    return false, nil
+  end
+
+  return success, request_id
 end
 
 ---Recalculate the length of the first line of the text
@@ -224,12 +270,12 @@ M.__index = M
 function M.new()
   local self = setmetatable({}, M)
 
-  local max_completions = 3 ---@type integer
-  local max_attempts = 4 ---@type integer
+  local max_completions = 2 ---@type integer
+  local max_attempts = 1 ---@type integer
   local kind_name = "Copilot" ---@type string
   local kind_icon = eve.icon.kind.Copilot ---@type string
   local kind_hl = "BlinkCmpKindCopilot" ---@type string
-  local debounce = 200 ---@type integer
+  local debounce = 800 ---@type integer
   local auto_refresh = { ---@type { backward: boolean, forward: boolean }
     backward = true,
     forward = true,
@@ -291,6 +337,8 @@ function M:reset(ts)
     first_req_id = nil,
     cycling_req_id = nil,
     start_ts = ts,
+    last_request_ts = 0,
+    min_request_interval = 200, -- Minimum 200ms between requests
   }
 end
 
@@ -378,6 +426,13 @@ function M:get_completions(ctx, resolve)
           return false
         end
 
+        -- Rate limiting: prevent too frequent requests
+        local current_time = util.timestamp()
+        if current_time - self.context.last_request_ts < self.context.min_request_interval then
+          return false
+        end
+        self.context.last_request_ts = current_time
+
         local request_success, request_id = util.get_completions_from_lsp(self.client, lsp_params, handle_lsp_response)
 
         if request_success then
@@ -417,7 +472,7 @@ function M:get_completions(ctx, resolve)
         self.context.state = current_state
       end
 
-      -- Attempt to get more completions
+      -- Attempt to get more completions with longer delay between attempts
       lsp_params = util.to_cycling_lsp_params(lsp_params)
       local attempts_made = 0 ---@type integer
       while
@@ -426,16 +481,25 @@ function M:get_completions(ctx, resolve)
         and attempts_made < self.config.max_attempts
       do
         attempts_made = attempts_made + 1
+
+        -- Add delay between cycling requests to reduce pressure
+        if attempts_made >= 1 then
+          vim.wait(100) -- 100ms delay between additional requests
+        end
+
         if send_completion_request(false) then
           process_and_resolve_items()
           self.context.cycling_req_id = nil
+        else
+          -- If request failed, break to avoid rapid retries
+          break
         end
       end
     end)
 
     if not success then
       std.reporter.error({
-        from = "ghc.cmp.copilot",
+        from = __module_name__,
         subject = "completion_error",
         message = string.format("Copilot completion error: %s", tostring(err)),
       })

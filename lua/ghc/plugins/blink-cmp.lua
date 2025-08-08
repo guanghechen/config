@@ -25,9 +25,15 @@ local actions = {
 local sources_per_filetype = {
   [eve.filetype.UX_PICKER_FINDER] = { "path" },
 }
-for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do
-  if sources_per_filetype[cmp_code] == nil then
-    sources_per_filetype[cmp_code] = { "copilot", "lsp", "path", "snippets", "buffer" }
+do
+  local code_sources = { "lsp", "path", "snippets", "buffer" }
+  if eve.context.flight.ai:snapshot() then
+    table.insert(code_sources, 1, "copilot") -- Insert at beginning for higher priority
+  end
+  for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do
+    if sources_per_filetype[cmp_code] == nil then
+      sources_per_filetype[cmp_code] = code_sources
+    end
   end
 end
 
