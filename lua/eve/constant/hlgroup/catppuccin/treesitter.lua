@@ -93,7 +93,7 @@ function M.gen_hlgroup_map(context)
     ["@modifier"] = { fg = c.red },
     ["@module"] = { fg = c.yellow },
     ["@namespace"] = { fg = c.yellow },
-    ["@none"] = {},
+    ["@none"] = { fg = c.lavender },
     ["@number"] = { fg = c.peach },
     ["@number.float"] = { fg = c.peach },
     ["@operator"] = { fg = c.sky },

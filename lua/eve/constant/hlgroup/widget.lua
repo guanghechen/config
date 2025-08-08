@@ -54,14 +54,14 @@ function M.gen_hlgroup_map(context)
     indentline_7 = { fg = cs.mix(c.bg0, c.orange, 20) },
 
     ---diff
-    f_diff_add_left = { bg = c.diffDel, fg = c.none },
-    f_diff_add_right = { bg = c.diffAdd, fg = c.none },
-    f_diff_del_left = { bg = c.diffDel, fg = c.none },
-    f_diff_del_right = { bg = c.diffDel, fg = c.none },
-    f_diff_mod_left = { bg = c.diffDel, fg = c.none },
-    f_diff_mod_right = { bg = c.diffAdd, fg = c.none },
-    f_diff_word_left = { bg = c.diffDelInline, fg = c.none },
-    f_diff_word_right = { bg = c.diffAddInline, fg = c.none },
+    f_diff_add_left = { bg = c.diffDel },
+    f_diff_add_right = { bg = c.diffAdd },
+    f_diff_del_left = { bg = c.diffDel },
+    f_diff_del_right = { bg = c.diffDel },
+    f_diff_mod_left = { bg = c.diffDel },
+    f_diff_mod_right = { bg = c.diffAdd },
+    f_diff_word_left = { bg = c.diffDelInline },
+    f_diff_word_right = { bg = c.diffAddInline },
 
     ---file explorer
     f_fe_date = { fg = c.fg4 },

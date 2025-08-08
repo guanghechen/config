@@ -99,7 +99,7 @@ function M.default_gen_hlgroup_map(context)
     ["@modifier"] = { fg = c.red },
     ["@module"] = { fg = c.fg1 },
     ["@namespace"] = { fg = c.fg1 },
-    ["@none"] = { fg = c.none, bg = c.none },
+    ["@none"] = { fg = c.fg1 },
     ["@number"] = { link = "Number" },
     ["@number.float"] = { link = "Float" },
     ["@operator"] = { link = "Operator" },
