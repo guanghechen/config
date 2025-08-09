@@ -1,4 +1,4 @@
-; inherits: typescript
+;; extends
 
 "break" @keyword.conditional
 

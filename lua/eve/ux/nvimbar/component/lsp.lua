@@ -154,7 +154,7 @@ function M.symbols(position)
   local hln_lsp_sep = position .. "_lsp_symbol_sep" ---@type string
   local hln_lsp_text = position .. "_lsp_symbol_text" ---@type string
 
-  local sep = "  " ---@type string
+  local sep = " " .. eve.icon.fillchars.foldclose .. " " ---@type string
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type eve.ux.nvimbar.IRawComponent
