@@ -3,7 +3,7 @@
 source $HOME/.config/guanghechen/nix/setup/path.sh
 
 if fnm list | grep -q "v20"; then
-  printf "\n\e[33;5;214m  [setup node] node@20 is already installed. (skipped)\e[0m\n"
+  printf "\n\e[93m  [setup node] node@20 is already installed. (skipped)\e[0m\n"
 else
   fnm install 20
   fish -c "npm install -g npm bun pm2 yarn prettier"
@@ -11,7 +11,7 @@ else
 fi
 
 if [ -d "$HOME/.config/yozora" ]; then
-  printf "\n\e[34m  [setup node] setup yozora...\e[0m\n"
+  printf "\n\e[94m  [setup node] setup yozora...\e[0m\n"
   fish -c "cd $HOME/.config/yozora && yarn install"
 fi
 
