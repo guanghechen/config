@@ -1,5 +1,5 @@
 if (fnm list | Select-String -Quiet "v20") {
-  Write-Host "[setup node] node@20 is already installed. (skipped)" -ForegroundColor DarkYellow
+  Write-Host "  [setup node] node@20 is already installed. (skipped)" -ForegroundColor Yellow
 } else {
   fnm install 20
   npm install -g npm bun pm2 yarn prettier
@@ -9,6 +9,6 @@ if (fnm list | Select-String -Quiet "v20") {
 # Setup yozora
 $yozora_repopath = Join-Path "$env:XDG_CONFIG_HOME" "yozora"
 if (Test-Path $yozora_repopath) {
-    Write-Host "[setup node] setup yozora..." -ForegroundColor DarkBlue
+    Write-Host "  [setup node] setup yozora..." -ForegroundColor Cyan
     pwsh -Command "cd '$yozora_repopath'; yarn install"
 }

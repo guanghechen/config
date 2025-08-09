@@ -1,5 +1,5 @@
 # Setting up conda
-Write-Host "[setup miniforge] setting up conda..." -ForegroundColor DarkBlue
+Write-Host "  [setup miniforge] setting up conda..." -ForegroundColor Cyan
 
 # Source conda environment script
 If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
@@ -11,9 +11,9 @@ conda config --set auto_activate_base false
 
 # Check if 'lemon' environment exists
 if (conda env list | Select-String -Pattern "^lemon\s") {
-    Write-Host "[setup miniforge] the 'lemon' env is already created. (skipped)" -ForegroundColor DarkYellow
+    Write-Host "  [setup miniforge] the 'lemon' env is already created. (skipped)" -ForegroundColor Yellow
 } else {
-    Write-Host "[setup miniforge] creating 'lemon' env with conda..." -ForegroundColor DarkBlue
+    Write-Host "  [setup miniforge] creating 'lemon' env with conda..." -ForegroundColor Cyan
     conda create --yes --name lemon python=3.12
     conda activate lemon
     pip install debugpy httpie ipython you-get
@@ -22,11 +22,11 @@ if (conda env list | Select-String -Pattern "^lemon\s") {
 # Setup ipython configuration
 $ipythonConfigPath = "$env:USERPROFILE\.ipython\profile_default\ipython_config.py"
 if (Test-Path $ipythonConfigPath) {
-    Write-Host "[setup miniforge] $ipythonConfigPath already exists. (skipped)" -ForegroundColor DarkYellow
+    Write-Host "  [setup miniforge] $ipythonConfigPath already exists. (skipped)" -ForegroundColor Yellow
 } else {
-    Write-Host "[setup miniforge] setting up ipython..." -ForegroundColor DarkBlue
+    Write-Host "  [setup miniforge] setting up ipython..." -ForegroundColor Cyan
     ipython profile create
     Add-Content $ipythonConfigPath "`nc.TerminalInteractiveShell.editing_mode = 'vi'"
 }
 
-Write-Host "[setup miniforge] done..." -ForegroundColor DarkGreen
+Write-Host "  [setup miniforge] done..." -ForegroundColor Green

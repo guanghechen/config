@@ -1,4 +1,4 @@
-Write-Host "[setup winget] preparing..." -ForegroundColor Green
+Write-Host "  [setup winget] preparing..." -ForegroundColor Green
 
 winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
 winget install -e --source winget --id Microsoft.PowerShell
@@ -32,4 +32,4 @@ winget install -e --source winget --id ajeetdsouza.zoxide
 # cargo install --locked yazi-fm yazi-cli
 # cargo install --locked zoxide
 
-Write-Host "[setup winget] done." -ForegroundColor Green
+Write-Host "  [setup winget] done." -ForegroundColor Green
