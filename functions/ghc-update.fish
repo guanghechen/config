@@ -17,10 +17,10 @@ function ghc-update
     for branch in $required_configs
         set repopath "$reporoot/$branch"
         if test -d "$repopath"
-            printf "\e[34mmerging origin/$branch into $repopath\e[0m\n"
+            printf "\e[94m  merging origin/$branch into $repopath\e[0m\n"
             set cmd "git -C '$repopath' merge origin/$branch --ff-only"
         else
-            printf "\e[34madd new worktree of $branch into $repopath\e[0m\n"
+            printf "\e[94m  add new worktree of $branch into $repopath\e[0m\n"
             set cmd "git -C '$repomain' worktree add '$repopath' $branch"
         end
 
@@ -31,7 +31,7 @@ function ghc-update
     for branch in $optional_configs
         set repopath "$reporoot/$branch"
         if test -d "$repopath"
-            printf "\e[34mmerging origin/$branch into $repopath\e[0m\n"
+            printf "\e[94m  merging origin/$branch into $repopath\e[0m\n"
             set cmd "git -C '$repopath' merge origin/$branch --ff-only"
 
             fish -c "$cmd"
