@@ -1,16 +1,16 @@
 [font]
 builtin_box_drawing = false
-size = 15
+size = 18
 glyph_offset = { x = 0, y = 0 }
 offset = { x = 0, y = 1 }
 
 [font.bold]
 family = "Maple Mono NF CN"
-style = "Bold"
+style = "Medium"
 
 [font.bold_italic]
 family = "Maple Mono NF CN"
-style = "Bold Italic"
+style = "Medium Italic"
 
 [font.italic]
 family = "Maple Mono NF CN"
@@ -18,5 +18,5 @@ style = "Italic"
 
 [font.normal]
 family = "Maple Mono NF CN"
-style = "Light"
+style = "Regular"
 
