@@ -20,6 +20,9 @@ export function gen_full_theme_name(theme, variant) {
  * @return {Promise<string>}
  */
 export async function render_template(template, scheme) {
+  const name = scheme.variant
+    ? scheme.theme + "-" + scheme.variant
+    : scheme.theme;
   const theme = scheme.theme;
   const variant = scheme.variant;
   const opposite = scheme.opposite;
@@ -36,20 +39,31 @@ export async function render_template(template, scheme) {
     ),
   );
 
-  const content = template.replace(/\{{2}([^\n]+?)\}{2}/g, (_, key) => {
-    const fn = new Function(
-      "theme",
-      "variant",
-      "opposite",
-      "darken",
-      "unified",
-      "palette",
-      "expression",
-      `try { return (${key}) || expression; } catch { return \`{{\${expression}}}\`; }`,
-    );
-    const result = fn(theme, variant, opposite, darken, unified, palette);
-    return result;
-  });
+  const content = template
+    .replace(/\\{3}\n[ \t ]*/g, "")
+    .replace(/\{{2}([^\n]+?)\}{2}/g, (_, key) => {
+      const fn = new Function(
+        "name",
+        "theme",
+        "variant",
+        "opposite",
+        "darken",
+        "unified",
+        "palette",
+        "expression",
+        `try { return (${key}) ?? expression; } catch { return \`{{\${expression}}}\`; }`,
+      );
+      const result = fn(
+        name,
+        theme,
+        variant,
+        opposite,
+        darken,
+        unified,
+        palette,
+      );
+      return result;
+    });
   return content;
 }
 
