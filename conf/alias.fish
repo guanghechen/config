@@ -32,8 +32,8 @@ alias tls='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
 ### fzf
-alias fzf="FZF_DEFAULT_OPTS_FILE=$HOME/.config/fzf/default.fzfrc $HOMEBREW_PREFIX/bin/fzf"
-alias fvim='FZF_DEFAULT_OPTS_FILE=$HOME/.config/fzf/nvim.fzfrc $HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim'
+alias fzf="$HOMEBREW_PREFIX/bin/fzf"
+alias fvim='$HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim'
 
 ### lazygit
 if test -f "$HOME/.config/lazygit/local/theme.yml"
