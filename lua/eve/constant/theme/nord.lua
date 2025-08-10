@@ -1,3 +1,5 @@
+--- nord
+
 ---@type std.t.theme.IScheme
 local M = {
   theme = "nord",

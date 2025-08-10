@@ -1,3 +1,5 @@
+--- catppuccin-mocha
+
 ---@type std.t.theme.IScheme
 local M = {
   theme = "catppuccin",

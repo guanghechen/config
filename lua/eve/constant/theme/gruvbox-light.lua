@@ -1,3 +1,5 @@
+--- gruvbox-light
+
 ---@type std.t.theme.IScheme
 local M = {
   theme = "gruvbox",

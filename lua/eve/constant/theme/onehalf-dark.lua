@@ -1,3 +1,5 @@
+--- onehalf-dark
+
 ---@type std.t.theme.IScheme
 local M = {
   theme = "onehalf",

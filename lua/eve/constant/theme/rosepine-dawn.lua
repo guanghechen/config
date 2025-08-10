@@ -1,3 +1,5 @@
+--- rosepine-dawn
+
 ---@type std.t.theme.IScheme
 local M = {
   theme = "rosepine",
