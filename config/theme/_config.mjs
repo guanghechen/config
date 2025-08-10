@@ -24,6 +24,15 @@ export const apps = [
     },
   },
   {
+    name: "git-delta",
+    kind: "other",
+    themes: "theme/",
+    extname: ".conf",
+    local: "config.conf",
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
+  },
+  {
     name: "ghostty",
     kind: "terminal",
     themes: "theme/",

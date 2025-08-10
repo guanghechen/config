@@ -34,12 +34,6 @@ gui:
 git:
   paging:
     colorArg: always
-    useConfig: false
-    pager: delta \\\
-      --paging=never \\\
-      --side-by-side \\\
-      --{{darken ? 'dark' : 'light'}}\\\
-      {{theme === 'gruvbox' ? ` --syntax-theme='gruvbox-${darken ? 'dark' : 'light'}'` : ''}}\\\
-      {{theme === 'nord'    ? ' --syntax-theme=nord' : ''}}\\\
-      {{theme == 'onehalf'  ? ` --syntax-theme='${darken ? 'OneHalfDark' : 'OneHalfLight'}'` : ''}}\\\
+    useConfig: true
+    pager: delta --diff-so-fancy --{{darken ? 'dark' : 'light'}}
 

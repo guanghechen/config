@@ -1,0 +1,27 @@
+# https://github.com/dandavison/delta/blob/main/themes.gitconfig
+# {{name}}
+
+[delta]
+hunk-header-style             = raw
+hunk-header-decoration-style  = ul
+hyperlinks                    = true
+hyperlinks-file-link-format   = file://{path}:{line}
+detect-dark-light             = auto
+line-numbers                  = true
+navigate                      = true    # use n and N to move between diff sections
+paging                        = never
+side-by-side                  = true
+
+\\\
+{{theme === "gruvbox" ? `syntax-theme                  = gruvbox-${darken ? "dark" : "light"}` : ""}}\\\
+{{theme === "nord"    ? `syntax-theme                  = nord` : ""}}\\\
+{{theme == "onehalf"  ? `syntax-theme                  = ${darken ? "OneHalfDark" : "OneHalfLight"}` : ""}}
+{{darken ? "dark                          = true" : "light                         = true"}}
+plus-style                    = syntax "{{unified.diffAdd}}"
+plus-emph-style               = syntax "{{unified.diffAddInline}}" bold
+plus-non-emph-style           = syntax auto
+minus-style                   = syntax "{{unified.diffDel}}"
+minus-emph-style              = syntax "{{unified.diffDelInline}}" bold
+minus-non-emph-style          = syntax auto
+true-color                    = always
+
