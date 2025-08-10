@@ -46,6 +46,15 @@ export const apps = [
     },
   },
   {
+    name: "fzf",
+    kind: "other",
+    themes: "themes/",
+    extname: ".fzfrc",
+    local: "fzf.fzfrc",
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
+  },
+  {
     name: "git-delta",
     kind: "other",
     themes: "theme/",
