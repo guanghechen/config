@@ -1,0 +1,14 @@
+# rosepine-dawn
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#464261,bg+:#F2E9E1,hl+:#B4637A"
+--color="fg:#9893A5,bg:#FAF4ED,hl:#EA9D34"
+--color="gutter:#FAF4ED,pointer:#B4637A,spinner:#286983"
+--color="info:#286983,prompt:#6D8F89,marker:#B4637A,query:#464261"
+--preview='bat --line-range=:500 --style=snip --theme=rosepine-dawn --number --color=always {} || cat -n {}'

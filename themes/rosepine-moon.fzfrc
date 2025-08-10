@@ -1,0 +1,14 @@
+# rosepine-moon
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#E0DEF4,bg+:#393552,hl+:#EB6F92"
+--color="fg:#6E6A86,bg:#232136,hl:#F6C177"
+--color="gutter:#232136,pointer:#EB6F92,spinner:#3E8FB0"
+--color="info:#3E8FB0,prompt:#95B1AC,marker:#EB6F92,query:#E0DEF4"
+--preview='bat --line-range=:500 --style=snip --theme=rosepine-moon --number --color=always {} || cat -n {}'

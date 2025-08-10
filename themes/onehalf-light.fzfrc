@@ -1,0 +1,14 @@
+# onehalf-light
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#696D75,bg+:#EAEAEA,hl+:#F07178"
+--color="fg:#4F525A,bg:#FAFAFA,hl:#DEA95F"
+--color="gutter:#FAFAFA,pointer:#F07178,spinner:#4078F2"
+--color="info:#4078F2,prompt:#7ECA9C,marker:#F07178,query:#696D75"
+--preview='bat --line-range=:500 --style=snip --theme=onehalf-light --number --color=always {} || cat -n {}'

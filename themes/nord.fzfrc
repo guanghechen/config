@@ -1,0 +1,14 @@
+# nord
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#E5E9F0,bg+:#434C5E,hl+:#FFA3A3"
+--color="fg:#C8CCD4,bg:#2E3440,hl:#EBCB8B"
+--color="gutter:#2E3440,pointer:#FFA3A3,spinner:#5E81AC"
+--color="info:#81A1C1,prompt:#A3BE8C,marker:#FFA3A3,query:#E5E9F0"
+--preview='bat --line-range=:500 --style=snip --theme=nord --number --color=always {} || cat -n {}'

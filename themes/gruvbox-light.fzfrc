@@ -1,0 +1,14 @@
+# gruvbox-light
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#3C3836,bg+:#D5C4A1,hl+:#B16286"
+--color="fg:#665C54,bg:#F2E5BC,hl:#D79921"
+--color="gutter:#F2E5BC,pointer:#B16286,spinner:#458588"
+--color="info:#076678,prompt:#79740E,marker:#B16286,query:#3C3836"
+--preview='bat --line-range=:500 --style=snip --theme=gruvbox-light --number --color=always {} || cat -n {}'

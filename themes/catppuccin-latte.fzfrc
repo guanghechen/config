@@ -1,0 +1,14 @@
+# catppuccin-latte
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#5C5F77,bg+:#CCD0DA,hl+:#EA76CB"
+--color="fg:#7C7F93,bg:#EFF1F5,hl:#DF8E1D"
+--color="gutter:#EFF1F5,pointer:#EA76CB,spinner:#1E66F5"
+--color="info:#1E66F5,prompt:#40A02B,marker:#EA76CB,query:#5C5F77"
+--preview='bat --line-range=:500 --style=snip --theme=catppuccin-latte --number --color=always {} || cat -n {}'

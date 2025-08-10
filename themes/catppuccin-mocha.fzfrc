@@ -1,0 +1,14 @@
+# catppuccin-mocha
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#CDD6F4,bg+:#313244,hl+:#F5C2E7"
+--color="fg:#A6ADC8,bg:#1E1E2E,hl:#F9E2AF"
+--color="gutter:#1E1E2E,pointer:#F5C2E7,spinner:#89B4FA"
+--color="info:#89B4FA,prompt:#A6E3A1,marker:#F5C2E7,query:#CDD6F4"
+--preview='bat --line-range=:500 --style=snip --theme=catppuccin-mocha --number --color=always {} || cat -n {}'

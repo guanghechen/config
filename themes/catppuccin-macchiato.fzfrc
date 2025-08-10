@@ -1,0 +1,14 @@
+# catppuccin-macchiato
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#B8C0E0,bg+:#363A4F,hl+:#F5BDE6"
+--color="fg:#939AB7,bg:#24273A,hl:#EED49F"
+--color="gutter:#24273A,pointer:#F5BDE6,spinner:#8AADF4"
+--color="info:#8AADF4,prompt:#A6DA95,marker:#F5BDE6,query:#B8C0E0"
+--preview='bat --line-range=:500 --style=snip --theme=catppuccin-macchiato --number --color=always {} || cat -n {}'

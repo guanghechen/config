@@ -1,0 +1,14 @@
+# rosepine-main
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#E0DEF4,bg+:#26233A,hl+:#EB6F92"
+--color="fg:#6E6A86,bg:#191724,hl:#F6C177"
+--color="gutter:#191724,pointer:#EB6F92,spinner:#31748F"
+--color="info:#31748F,prompt:#95B1AC,marker:#EB6F92,query:#E0DEF4"
+--preview='bat --line-range=:500 --style=snip --theme=rosepine-main --number --color=always {} || cat -n {}'

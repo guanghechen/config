@@ -1,0 +1,14 @@
+# catppuccin-frappe
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#B5BFE2,bg+:#232634,hl+:#F4B8E4"
+--color="fg:#949CBB,bg:#303446,hl:#E5C890"
+--color="gutter:#303446,pointer:#F4B8E4,spinner:#8CAAEE"
+--color="info:#8CAAEE,prompt:#A6D189,marker:#F4B8E4,query:#B5BFE2"
+--preview='bat --line-range=:500 --style=snip --theme=catppuccin-frappe --number --color=always {} || cat -n {}'
