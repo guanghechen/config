@@ -24,6 +24,14 @@ export const apps = [
     },
   },
   {
+    name: "bat",
+    kind: "other",
+    themes: "themes/",
+    extname: ".tmTheme",
+    active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    render: (_, template, scheme) => render_template(template, scheme),
+  },
+  {
     name: "git-delta",
     kind: "other",
     themes: "theme/",
