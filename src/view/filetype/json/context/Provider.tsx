@@ -1,10 +1,12 @@
 import React from 'react'
 import { JsonViewContextType } from './context'
-import type { IJsonViewViewModelProps } from './viewmodel'
+import type { ModeEnum } from './types'
 import { JsonViewViewModel } from './viewmodel'
 
-interface IProps extends IJsonViewViewModelProps {
+interface IProps {
   readonly children: React.ReactNode
+  readonly mode?: ModeEnum
+  readonly content?: string | null
 }
 
 export const JsonProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {

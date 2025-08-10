@@ -1,7 +1,6 @@
 import React from 'react'
 import { MultiInput } from '@/component/MultiInput'
-import type { DisplayMode } from '../context'
-import type { IChainPath } from '../hook/usePersistedChainPaths'
+import type { DisplayMode, IChainPath } from '../context'
 import { getPathColorClasses } from '../utils'
 
 interface IProps {

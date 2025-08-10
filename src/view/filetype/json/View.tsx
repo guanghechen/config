@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTopbarVisible } from '@/context/workspace'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IJsonFileData } from '@/util/fetch'
 import { Composer } from './Composer'
@@ -16,6 +17,7 @@ const JsonView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
 
   const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)
+  const topbarVisible = useTopbarVisible()
 
   return (
     <div className="w-full pt-8">
@@ -27,7 +29,7 @@ const JsonView: React.FC<IProps> = props => {
       {!!data && (
         <div className="relative w-full">
           <JsonProvider>
-            <ModeToggle />
+            <ModeToggle topbarVisible={topbarVisible} />
             <Composer mainScrollableContainer={mainScrollableContainer} />
           </JsonProvider>
         </div>

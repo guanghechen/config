@@ -1,16 +1,31 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { useTopbarVisible } from '@/context/workspace'
-import { ModeEnum, useJsonlActions, useJsonlState, useJsonlViewViewModel } from '../context'
+import { ModeEnum, useJsonlViewViewModel } from '../context'
 
-export const ModeToggle: React.FC = () => {
-  const topbarVisible = useTopbarVisible()
+interface IProps {
+  readonly topbarVisible: boolean
+}
+
+export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
   const viewmodel = useJsonlViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
   const expandedRecords: ReadonlySet<number> = useStateValue(viewmodel.expandedRecords$)
-  const { records } = useJsonlState()
-  const { toggleAllRecords } = useJsonlActions()
+
+  // TODO: Records should come from a data source, not from hooks
+  const records: any[] = React.useMemo(() => [], [])
+
+  const toggleAllRecords = React.useCallback(() => {
+    // Implementation to toggle all records expand/collapse
+    const currentExpanded = viewmodel.expandedRecords$.getSnapshot()
+    const allExpanded = records.length > 0 && currentExpanded.size === records.length
+
+    if (allExpanded) {
+      viewmodel.expandedRecords$.next(new Set())
+    } else {
+      viewmodel.expandedRecords$.next(new Set(records.map((_, index) => index)))
+    }
+  }, [viewmodel, records])
 
   const showNavigation = (mode & ModeEnum.NAVIGATION) !== 0
   const allExpanded = records.length > 0 && expandedRecords.size === records.length
@@ -29,7 +44,7 @@ export const ModeToggle: React.FC = () => {
             ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
-        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.VIEW)}
+        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.VIEW)}
       >
         view
       </button>
@@ -40,7 +55,7 @@ export const ModeToggle: React.FC = () => {
             ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
-        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.NAVIGATION)}
+        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.NAVIGATION)}
       >
         nav
       </button>

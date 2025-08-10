@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
-import type { IChainPath } from '../hook/usePersistedChainPaths'
+import type { IChainPath } from '../context'
 import type { IJsonlRecord } from '../utils'
 import { extractValueFromPath, getPathColorClasses } from '../utils'
 

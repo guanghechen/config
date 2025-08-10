@@ -1,14 +1,16 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { useTopbarVisible } from '@/context/workspace'
 import { useJsonViewViewModel } from '../context'
 import { ModeEnum } from '../context/types'
 
-export const ModeToggle: React.FC = () => {
+interface IProps {
+  readonly topbarVisible: boolean
+}
+
+export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
   const viewmodel = useJsonViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
-  const topbarVisible = useTopbarVisible()
 
   return (
     <div
@@ -25,7 +27,7 @@ export const ModeToggle: React.FC = () => {
             ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
-        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.VIEW)}
+        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.VIEW)}
       >
         view
       </button>
@@ -36,7 +38,7 @@ export const ModeToggle: React.FC = () => {
             ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
-        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.LITERAL)}
+        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.LITERAL)}
       >
         literal
       </button>

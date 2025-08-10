@@ -7,7 +7,8 @@ export type DisplayMode = 'inline' | 'lines'
 
 export interface IChainPath {
   readonly path: string
-  readonly expanded?: boolean
+  readonly value: string
+  readonly visible: boolean
 }
 
 export interface IJsonlViewRecord {

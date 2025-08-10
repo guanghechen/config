@@ -1,7 +1,9 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/constant/classes'
-import { useJsonlActions, useJsonlContext, useJsonlState } from '../context/hook'
+import { useTopbarVisible } from '@/context/workspace'
+import { type DisplayMode, type IChainPath, useJsonlViewViewModel } from '../context'
 import { JsonlModeEnum } from '../context/Provider'
 import { Card } from './Card'
 import { ModeToggle } from './ModeToggle'
@@ -18,21 +20,60 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
 )
 
 export const JsonlContainer: React.FC = () => {
-  const {
-    content,
-    records,
-    mode,
-    activeRecordIndex,
-    expandedRecords,
-    chainPaths,
-    displayMode,
-    contentContainerRef,
-  } = useJsonlState()
+  const topbarVisible = useTopbarVisible()
+  const viewmodel = useJsonlViewViewModel()
 
-  const { setChainPaths, setDisplayMode } = useJsonlContext()
-  const { scrollToRecord, toggleRecord } = useJsonlActions()
+  const mode = useStateValue(viewmodel.mode$)
+  const activeRecordIndex = useStateValue(viewmodel.activeRecordIndex$)
+  const expandedRecords = useStateValue(viewmodel.expandedRecords$)
+  const chainPaths = useStateValue(viewmodel.chainPaths$)
+  const displayMode = useStateValue(viewmodel.displayMode$)
 
-  const showView = mode === 0 || (mode & JsonlModeEnum.VIEW) !== 0
+  // TODO: These should come from proper data sources
+  const content = null // This needs to be implemented
+  const records: any[] = [] // This needs to be implemented
+  const contentContainerRef = React.useRef<HTMLDivElement>(null)
+
+  const setChainPaths = React.useCallback(
+    (paths: IChainPath[] | ((prev: IChainPath[]) => IChainPath[])) => {
+      const newPaths =
+        typeof paths === 'function' ? paths(viewmodel.chainPaths$.getSnapshot()) : paths
+      viewmodel.chainPaths$.next(newPaths)
+    },
+    [viewmodel],
+  )
+
+  const setDisplayMode = React.useCallback(
+    (mode: DisplayMode | ((prev: DisplayMode) => DisplayMode)) => {
+      const newMode = typeof mode === 'function' ? mode(viewmodel.displayMode$.getSnapshot()) : mode
+      viewmodel.displayMode$.next(newMode)
+    },
+    [viewmodel],
+  )
+
+  const scrollToRecord = React.useCallback(
+    (index: number) => {
+      viewmodel.activeRecordIndex$.next(index)
+      // TODO: Implement actual scrolling logic
+    },
+    [viewmodel],
+  )
+
+  const toggleRecord = React.useCallback(
+    (index: number) => {
+      const currentExpanded = viewmodel.expandedRecords$.getSnapshot()
+      const newExpanded = new Set(currentExpanded)
+      if (newExpanded.has(index)) {
+        newExpanded.delete(index)
+      } else {
+        newExpanded.add(index)
+      }
+      viewmodel.expandedRecords$.next(newExpanded)
+    },
+    [viewmodel],
+  )
+
+  const showView = (mode & JsonlModeEnum.VIEW) !== 0
   const showNavigation = (mode & JsonlModeEnum.NAVIGATION) !== 0
   const columns = (showView ? 1 : 0) + (showNavigation ? 1 : 0)
 
@@ -45,7 +86,7 @@ export const JsonlContainer: React.FC = () => {
         'h-[calc(100vh-7rem)]': columns > 1,
       })}
     >
-      <ModeToggle />
+      <ModeToggle topbarVisible={topbarVisible} />
       {showView && (
         <React.Fragment>
           <div
