@@ -30,6 +30,20 @@ export const apps = [
     extname: ".tmTheme",
     active: (app) => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
     render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (app, scheme) => {
+      const main_config_filepath = path.join(
+        XDG_CONFIG_HOME,
+        app.name,
+        "config",
+      );
+      const content = [
+        `--theme=${scheme.variant ? scheme.theme + "-" + scheme.variant : scheme.theme}`,
+      ].join("\n");
+      await fs.writeFile(main_config_filepath, content, "utf8");
+    },
+    after_gen: async () => {
+      await safe_exec("bat", ["cache", "--build"]);
+    },
   },
   {
     name: "git-delta",
