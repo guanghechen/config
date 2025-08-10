@@ -17,9 +17,13 @@ side-by-side                  = true
 syntax-theme                  = {{name}}
 plus-style                    = syntax "{{unified.diffAdd}}"
 plus-emph-style               = syntax "{{unified.diffAddInline}}" bold
-plus-non-emph-style           = syntax auto
+plus-non-emph-style           = syntax "{{unified.diffAdd}}" bold
 minus-style                   = syntax "{{unified.diffDel}}"
 minus-emph-style              = syntax "{{unified.diffDelInline}}" bold
-minus-non-emph-style          = syntax auto
+minus-non-emph-style          = syntax "{{unified.diffDel}}" bold
+line-numbers-left-style       = "{{unified.fg1}}"
+line-numbers-right-style      = "{{unified.fg1}}"
+line-numbers-minus-style      = "{{unified.fg0}}" "{{unified.diffDel}}" bold
+line-numbers-plus-style       = "{{unified.fg0}}" "{{unified.diffAdd}}" bold
 true-color                    = always
 
