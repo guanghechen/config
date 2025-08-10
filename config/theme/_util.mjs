@@ -193,6 +193,7 @@ export async function gen_themes_per_app(app) {
   const THEME_HOME = path.join(XDG_CONFIG_HOME, app.name, app.themes);
   const tasks_gen_theme = themes.map((theme) => gen_theme(theme));
   await Promise.allSettled(tasks_gen_theme);
+  await app.after_gen?.(app);
 
   /**
    * @param {string}      theme

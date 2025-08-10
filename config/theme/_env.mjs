@@ -181,6 +181,8 @@ export const themes = readdirSync(HOME_THEME_SCHEME).map((p) =>
  * @property {string}                   brightAqua
  * @property {string}                   brightOrange
  *
+ * @property {string}                   black
+ * @property {string}                   white
  * @property {string}                   grey
  * @property {string}                   pink
  *
@@ -217,4 +219,5 @@ export const themes = readdirSync(HOME_THEME_SCHEME).map((p) =>
  * @property {(app: IAppConfig) => boolean}  active
  * @property {(app: IAppConfig, template: string, scheme: IThemeScheme) => string}  render
  * @property {?((app: IAppConfig, scheme: IThemeScheme) => Promise<void>)} after_apply
+ * @property {?((app: IAppConfig) => Promise<void>)} after_gen
  */
