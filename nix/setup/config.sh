@@ -6,6 +6,7 @@ clone_or_update_config_repo() {
   local repo_required_branches=(
     "btop"
     "conda"
+    "git-delta"
     "fish"
     "fzf"
     "lazygit"

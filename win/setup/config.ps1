@@ -4,6 +4,7 @@ $reporoot = "$env:XDG_CONFIG_HOME"
 $repomain = Join-Path $reporoot guanghechen
 $repo_required_branches = @(
   "conda",
+  "git-delta",
   "fzf",
   "lazygit",
   "nvim",
