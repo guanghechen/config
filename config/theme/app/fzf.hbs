@@ -1,12 +1,14 @@
 # {{name}}
 
+--padding=0
+--margin=0
 --border=rounded
---color="fg:{{unified.brightAqua}},bg:{{unified.bg0}},hl:{{unified.orange}}"
---color="fg+:{{unified.brightAqua}},bg+:{{unified.bg0}},hl+:{{unified.orange}}"
---color="info:{{unified.brightBlue}},prompt:{{unified.brightAqua}},pointer:{{unified.brightAqua}}"
---color="marker:{{unified.brightGreen}},spinner:{{unified.brightGreen}},header:{{unified.brightGreen}}"
---height="40%"
---info=inline-right
 --layout=reverse
+--info=right
+--scrollbar="┃"
 --multi
+--color="fg+:{{unified.fg1}},bg+:{{unified.bg2}},hl+:{{unified.pink}}"
+--color="fg:{{unified.fg3}},bg:{{unified.bg0}},hl:{{unified.yellow}}"
+--color="gutter:{{unified.bg0}},pointer:{{unified.pink}},spinner:{{unified.blue}}"
+--color="info:{{unified.brightBlue}},prompt:{{unified.brightGreen}},marker:{{unified.pink}},query:{{unified.fg1}}"
 --preview='bat --line-range=:500 --style=snip --theme={{name}} --number --color=always {} || cat -n {}'
