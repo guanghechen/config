@@ -318,7 +318,6 @@ function M:__create_win_as_needed__(termmeta)
   local height = vim.o.lines - 3 ---@type integer
   local row = math.floor((vim.o.lines - height) / 2) - 1 ---@type integer
   local col = math.floor((vim.o.columns - width) / 2) ---@type integer
-  local winblend = eve.context.theme.get_float_winblend() ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
@@ -362,7 +361,7 @@ function M:__create_win_as_needed__(termmeta)
     vim.wo[winnr].winfixbuf = true
   end
 
-  vim.wo[winnr].winblend = winblend
+  vim.wo[winnr].winblend = 0
   vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
   eve.status.dirtier_termline:mark_dirty()
 
