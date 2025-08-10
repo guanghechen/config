@@ -220,7 +220,7 @@ return config
     },
   },
   {
-    name: "windows_terminal",
+    name: "windows-terminal",
     kind: "terminal",
     themes: null,
     extname: ".json",
