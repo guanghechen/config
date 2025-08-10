@@ -65,6 +65,8 @@
       "brightAqua":     "{{nord7}}",
       "brightOrange":   "{{nord12}}",
 
+      "black":          "{{bg0}}",
+      "white":          "{{fg4}}",
       "grey":           "{{nord3}}",
       "pink":           "#FFA3A3",
 

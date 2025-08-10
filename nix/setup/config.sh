@@ -4,6 +4,7 @@ clone_or_update_config_repo() {
   local reporoot="$HOME/.config"
   local repomain="$reporoot/guanghechen"
   local repo_required_branches=(
+    "bat"
     "btop"
     "conda"
     "git-delta"

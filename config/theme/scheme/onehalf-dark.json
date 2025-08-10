@@ -50,6 +50,8 @@
       "brightAqua":     "#4EC9B0",
       "brightOrange":   "#FE8655",
 
+      "black":          "{{background}}",
+      "white":          "#D7DAE0",
       "grey":           "#42464E",
       "pink":           "#DE8C92",
 

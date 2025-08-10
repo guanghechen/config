@@ -50,6 +50,8 @@
       "brightAqua":     "{{foam}}",
       "brightOrange":   "{{rose}}",
 
+      "black":          "{{base}}",
+      "white":          "{{text}}",
       "grey":           "{{subtle}}",
       "pink":           "{{love}}",
 

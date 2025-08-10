@@ -61,6 +61,8 @@
       "brightAqua":     "{{teal}}",
       "brightOrange":   "{{peach}}",
 
+      "black":          "{{subtext1}}",
+      "white":          "{{base}}",
       "grey":           "{{overlay0}}",
       "pink":           "{{pink}}",
 

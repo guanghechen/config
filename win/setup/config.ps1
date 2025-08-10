@@ -3,6 +3,7 @@ Write-Host "  [setup config] preparing" -ForegroundColor Green
 $reporoot = "$env:XDG_CONFIG_HOME"
 $repomain = Join-Path $reporoot guanghechen
 $repo_required_branches = @(
+  "bat",
   "conda",
   "git-delta",
   "fzf",
