@@ -13,10 +13,8 @@ paging                        = never
 side-by-side                  = true
 
 \\\
-{{theme === "gruvbox" ? `syntax-theme                  = gruvbox-${darken ? "dark" : "light"}` : ""}}\\\
-{{theme === "nord"    ? `syntax-theme                  = nord` : ""}}\\\
-{{theme == "onehalf"  ? `syntax-theme                  = ${darken ? "OneHalfDark" : "OneHalfLight"}` : ""}}
 {{darken ? "dark                          = true" : "light                         = true"}}
+syntax-theme                  = {{name}}
 plus-style                    = syntax "{{unified.diffAdd}}"
 plus-emph-style               = syntax "{{unified.diffAddInline}}" bold
 plus-non-emph-style           = syntax auto
