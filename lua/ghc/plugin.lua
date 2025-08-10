@@ -57,7 +57,6 @@ local conds = {
 local raw_specs = {
   -- stylua: ignore start
   { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                },
-  { name = "blink.compat",                main = "blink.compat",                  cond = conds.cmp                },
   { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode         },
   { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode         },
   { name = "copilot.lua",                 main = "copilot",                       cond = conds.ai                 },

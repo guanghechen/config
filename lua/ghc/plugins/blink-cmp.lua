@@ -42,7 +42,6 @@ return {
   build = "cargo build --release",
   event = { "InsertEnter" },
   dependencies = {
-    "blink.compat",
     "friendly-snippets",
   },
   opts = {
