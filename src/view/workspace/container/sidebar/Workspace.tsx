@@ -74,3 +74,5 @@ export const Workspace: React.FC = () => {
     </div>
   )
 }
+
+Workspace.displayName = 'Workspace'

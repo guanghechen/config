@@ -6,7 +6,7 @@ interface IProps {
   readonly viewmodel: WorkspaceViewModel
 }
 
-export class WorkspaceFloat extends React.Component<IProps> {
+export class Float extends React.Component<IProps> {
   public static readonly displayName = 'WorkspaceFloat'
 
   public override render(): React.ReactElement {
@@ -23,5 +23,3 @@ export class WorkspaceFloat extends React.Component<IProps> {
     return props.viewmodel !== nextProps.viewmodel
   }
 }
-
-export default WorkspaceFloat

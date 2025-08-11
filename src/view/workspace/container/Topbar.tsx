@@ -11,13 +11,13 @@ import {
   useWorkspaceViewmodel,
 } from '@/context/workspace'
 import { toSearch } from '@/util/url'
-import { Workspace } from '../sidebar/Workspace'
+import { Workspace } from './sidebar/Workspace'
 
 interface IProps {
   readonly viewmodel: WorkspaceViewModel
 }
 
-export const WorkspaceTopbar: React.FC<IProps> = () => {
+export const Topbar: React.FC<IProps> = () => {
   const viewmodel = useWorkspaceViewmodel()
   const workspace: string | null = useWorkspace()
   const sidebarVisible: boolean = useSidebarVisible()
@@ -87,5 +87,4 @@ export const WorkspaceTopbar: React.FC<IProps> = () => {
   )
 }
 
-WorkspaceTopbar.displayName = 'WorkspaceTopbar'
-export default WorkspaceTopbar
+Topbar.displayName = 'WorkspaceTopbar'

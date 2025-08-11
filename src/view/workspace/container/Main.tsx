@@ -16,7 +16,7 @@ interface IProps {
   readonly viewmodel: WorkspaceViewModel
 }
 
-export const WorkspaceMain: React.FC<IProps> = props => {
+export const Main: React.FC<IProps> = props => {
   const { viewmodel } = props
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath = useStateValue(viewmodel.filepath$)
@@ -74,5 +74,5 @@ export const WorkspaceMain: React.FC<IProps> = props => {
 
   return container
 }
-WorkspaceMain.displayName = 'WorkspaceMain'
-export default WorkspaceMain
+
+Main.displayName = 'WorkspaceMain'

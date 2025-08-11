@@ -1,22 +1,20 @@
 import React from 'react'
 import { DockToRightIcon } from '@/component/icon/material'
-import type { WorkspaceViewModel } from '@/context/workspace'
-import { useToggleBothSidebarAndTopbar, useTopbarVisible } from '@/context/workspace'
-import WorkspaceFloat from './float'
-import WorkspaceMain from './main'
-import WorkspaceSidebar from './sidebar'
-import WorkspaceTopbar from './topbar'
+import {
+  useToggleBothSidebarAndTopbar,
+  useTopbarVisible,
+  useWorkspaceViewmodel,
+} from '@/context/workspace'
+import { Float } from './container/float'
+import { Main } from './container/Main'
+import { Sidebar } from './container/sidebar'
+import { Topbar } from './container/Topbar'
 
-interface IProps {
-  readonly viewmodel: WorkspaceViewModel
-}
-
-export const WorkspaceLayout: React.FC<IProps> = ({ viewmodel }) => {
+export const Composer: React.FC = () => {
+  const viewmodel = useWorkspaceViewmodel()
   const topbarVisible = useTopbarVisible()
   const onToggleBothSidebarAndTopbar = useToggleBothSidebarAndTopbar()
   const topbarHeight = topbarVisible ? '3rem' : '0rem'
-
-  console.log('topbarVisible:', topbarVisible)
 
   return (
     <div className="relative box-border flex w-full bg-gray-50 font-['Maple_Mono_NF_CN','Roboto_Mono',monospace,sans-serif] text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-900 dark:text-gray-200 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-50 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2">
@@ -32,7 +30,7 @@ export const WorkspaceLayout: React.FC<IProps> = ({ viewmodel }) => {
       {topbarVisible && (
         <div className="sticky top-0 z-30 box-border h-[3rem] w-0 flex-initial">
           <div className="box-border h-full w-screen border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-            <WorkspaceTopbar viewmodel={viewmodel} />
+            <Topbar viewmodel={viewmodel} />
           </div>
         </div>
       )}
@@ -44,18 +42,18 @@ export const WorkspaceLayout: React.FC<IProps> = ({ viewmodel }) => {
           height: `calc(100vh - ${topbarHeight})`,
         }}
       >
-        <WorkspaceSidebar viewmodel={viewmodel} />
+        <Sidebar viewmodel={viewmodel} />
       </div>
       <div className="box-border min-h-screen w-0 flex-auto" style={{ paddingTop: topbarHeight }}>
         <div className="box-border flex w-full justify-center p-4">
-          <WorkspaceMain viewmodel={viewmodel} />
+          <Main viewmodel={viewmodel} />
         </div>
       </div>
       <div className="absolute right-0 top-0">
-        <WorkspaceFloat viewmodel={viewmodel} />
+        <Float viewmodel={viewmodel} />
       </div>
     </div>
   )
 }
 
-WorkspaceLayout.displayName = 'WorkspaceLayout'
+Composer.displayName = 'WorkspaceComposer'

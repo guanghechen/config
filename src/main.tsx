@@ -6,7 +6,9 @@ import { SiteContextProvider } from './context/site'
 import { GlobalLayout } from './view/layout'
 import './index.css'
 
-const WorkspaceView = React.lazy(() => import('@/view/workspace'))
+const WorkspaceView = React.lazy(() =>
+  import('@/view/workspace').then(md => ({ default: md.WorkspaceView })),
+)
 const NotFoundView = React.lazy(() => import('@/view/not-found'))
 const ExcalidrawPlayground = React.lazy(() => import('@/view/playground/excalidraw'))
 

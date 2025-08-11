@@ -1,19 +1,13 @@
 import React from 'react'
-import { WorkspaceContextProvider, useWorkspaceViewmodel } from '@/context/workspace'
-import { WorkspaceLayout } from './Layout'
-
-export const WorkspaceContainer: React.FC = () => {
-  const viewmodel = useWorkspaceViewmodel()
-  return <WorkspaceLayout viewmodel={viewmodel} />
-}
+import { WorkspaceContextProvider } from '@/context/workspace'
+import { Composer } from './Composer'
 
 export const WorkspaceView: React.FC = () => {
   return (
     <WorkspaceContextProvider>
-      <WorkspaceContainer />
+      <Composer />
     </WorkspaceContextProvider>
   )
 }
 
 WorkspaceView.displayName = 'WorkspaceView'
-export default WorkspaceView

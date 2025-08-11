@@ -8,7 +8,7 @@ interface IProps {
   readonly viewmodel: WorkspaceViewModel
 }
 
-export const WorkspaceSidebar: React.FC<IProps> = props => {
+export const Sidebar: React.FC<IProps> = props => {
   const { viewmodel } = props
 
   const visible: boolean = useSidebarVisible()
@@ -80,5 +80,4 @@ export const WorkspaceSidebar: React.FC<IProps> = props => {
   )
 }
 
-WorkspaceSidebar.displayName = 'WorkspaceSidebar'
-export default WorkspaceSidebar
+Sidebar.displayName = 'WorkspaceSidebar'
