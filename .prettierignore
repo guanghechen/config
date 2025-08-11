@@ -9,6 +9,9 @@
 .nx/
 .yarn/
 **/coverage/
-**/demo/
+
+**/demo/**
+!**/demo/**/*.html
+
 **/dist/
 **/node_modules/
