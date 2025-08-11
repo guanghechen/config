@@ -211,33 +211,37 @@ export const apps = [
       content = content.replace(
         "return config",
         `
-config.background ={
-{
-source = { Color = "${scheme.palette.unified.bg0}" },
-height = "100%",
-width = "100%",
-},
-{
-source = { File = '${backgroundImagePath}' },
-attachment = "Fixed",
-height = "Contain",
-width = "100%",
-opacity = 0.9,
-repeat_x = "Mirror",
-repeat_y = "NoRepeat",
-horizontal_align = "Right",
-vertical_align = "Middle",
-},
-{
-source = { Color = "${scheme.palette.unified.bg0}" },
-height = "100%",
-width = "100%",
-opacity = 0.9,
-},
-}
+          config.background ={
+            {
+              source = { Color = "${scheme.palette.unified.bg0}" },
+              height = "100%",
+              width = "100%",
+            },
+            {
+              source = { File = '${backgroundImagePath}' },
+              attachment = "Fixed",
+              height = "Contain",
+              width = "100%",
+              opacity = 0.9,
+              repeat_x = "Mirror",
+              repeat_y = "NoRepeat",
+              horizontal_align = "Right",
+              vertical_align = "Middle",
+            },
+            {
+              source = { Color = "${scheme.palette.unified.bg0}" },
+              height = "100%",
+              width = "100%",
+              opacity = 0.9,
+            },
+          }
 
-return config
-`.trim(),
+          return config
+        `
+          .trim()
+          .split(/\n/g)
+          .map((line) => line.replace(/^[ ]{10}/g, ""))
+          .join("\n"),
       );
       await fs.writeFile(theme_filepath, content, "utf8");
     },
