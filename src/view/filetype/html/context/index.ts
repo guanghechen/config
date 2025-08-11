@@ -1,0 +1,5 @@
+export { HtmlViewProvider } from './Provider'
+export { useHtmlViewViewModel } from './context'
+export type { IHtmlViewContext } from './context'
+export { HtmlViewViewModel } from './viewmodel'
+export type { IHtmlViewScale } from './types'

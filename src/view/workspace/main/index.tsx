@@ -3,6 +3,7 @@ import React from 'react'
 import type { WorkspaceViewModel } from '@/context/workspace'
 import { EventStreamView } from '@/view/filetype/eventstream/View'
 import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
+import { HtmlView } from '@/view/filetype/html/View'
 import { ImageView } from '@/view/filetype/image/View'
 import { JsonView } from '@/view/filetype/json/View'
 import { JsonlView } from '@/view/filetype/jsonl/View'
@@ -49,6 +50,9 @@ export const WorkspaceMain: React.FC<IProps> = props => {
         return <EventStreamView {...commonProps} />
       case '.excalidraw':
         return <ExcalidrawView {...commonProps} />
+      case '.html':
+      case '.htm':
+        return <HtmlView {...commonProps} />
       case '.json':
         return <JsonView {...commonProps} />
       case '.jsonl':
