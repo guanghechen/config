@@ -11,3 +11,8 @@ export const SvgViewContextType = React.createContext<ISvgViewContext>({
     filepath: '/dev/null',
   }),
 })
+
+export const useSvgViewViewModel = (): SvgViewViewModel => {
+  const context = React.useContext(SvgViewContextType)
+  return context.viewmodel
+}

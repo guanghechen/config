@@ -6,7 +6,7 @@ interface IProps extends IEventStreamViewViewModelProps {
   readonly children: React.ReactNode
 }
 
-export const EventStreamProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
+export const EventStreamViewProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
   const viewmodel = React.useMemo(
     () => new EventStreamViewViewModel(viewModelProps),
     [viewModelProps],
@@ -26,8 +26,4 @@ export const EventStreamProvider: React.FC<IProps> = ({ children, ...viewModelPr
   )
 }
 
-// Keep the old name for backwards compatibility
-export const EventStreamViewProvider = EventStreamProvider
-
-// Export ModeEnum as EventStreamModeEnum for backwards compatibility
-export { ModeEnum as EventStreamModeEnum } from './types'
+EventStreamViewProvider.displayName = 'EventStreamViewProvider'

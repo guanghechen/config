@@ -6,6 +6,8 @@ export interface IFileTreeContext {
 }
 
 export const FileTreeContextType = React.createContext<IFileTreeContext>({
-  viewmodel: new FileTreeViewModel({}),
+  viewmodel: new FileTreeViewModel({
+    currentFilepath: null,
+  }),
 })
 FileTreeContextType.displayName = 'FileTreeContextType'

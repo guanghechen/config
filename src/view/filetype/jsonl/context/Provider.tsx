@@ -23,5 +23,4 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
   return <JsonlViewContextType.Provider value={value}>{children}</JsonlViewContextType.Provider>
 }
 
-// Export ModeEnum as JsonlModeEnum for backwards compatibility
-export { ModeEnum as JsonlModeEnum } from './types'
+JsonlViewProvider.displayName = 'JsonlViewProvider'

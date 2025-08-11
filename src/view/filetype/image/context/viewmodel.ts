@@ -2,7 +2,7 @@ import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { IImageViewPosition } from './types'
 
-export interface IImageViewViewModelProps {
+interface IProps {
   readonly workspace?: string | null
   readonly filepath?: string | null
   readonly scale?: number
@@ -17,7 +17,7 @@ export class ImageViewViewModel extends ViewModel {
   public readonly rotation$: IState<number>
   public readonly position$: IState<IImageViewPosition>
 
-  constructor(props: IImageViewViewModelProps = {}) {
+  constructor(props: IProps = {}) {
     super()
     this.workspace$ = new State<string | null>(props.workspace ?? null)
     this.filepath$ = new State<string | null>(props.filepath ?? null)

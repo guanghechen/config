@@ -1,3 +1,4 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import {
@@ -7,41 +8,45 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
 } from '@/component/icon/material'
-import { useImageActions, useImageState } from '../context/hook'
+import { useImageViewViewModel } from '../context'
 
 export const ImageTopbar: React.FC = () => {
-  const { scale } = useImageState()
-  const { setPosition, setRotation, setScale } = useImageActions()
+  const viewmodel = useImageViewViewModel()
+  const scale = useStateValue(viewmodel.scale$)
 
   const onZoomIn = React.useCallback((): void => {
-    setScale((prevScale: number) => Math.min(prevScale + 0.2, 5))
-  }, [setScale])
+    const currentScale = viewmodel.scale$.getSnapshot()
+    viewmodel.scale$.next(Math.min(currentScale + 0.2, 5))
+  }, [viewmodel])
 
   const onZoomOut = React.useCallback((): void => {
-    setScale((prevScale: number) => Math.max(prevScale - 0.2, 0.1))
-  }, [setScale])
+    const currentScale = viewmodel.scale$.getSnapshot()
+    viewmodel.scale$.next(Math.max(currentScale - 0.2, 0.1))
+  }, [viewmodel])
 
   const onScaleChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>): void => {
       const value = parseFloat(e.target.value)
-      setScale(value)
+      viewmodel.scale$.next(value)
     },
-    [setScale],
+    [viewmodel],
   )
 
   const onResetZoom = React.useCallback((): void => {
-    setScale(1)
-    setRotation(0)
-    setPosition({ x: 0, y: 0 })
-  }, [setPosition, setRotation, setScale])
+    viewmodel.scale$.next(1)
+    viewmodel.rotation$.next(0)
+    viewmodel.position$.next({ x: 0, y: 0 })
+  }, [viewmodel])
 
   const onRotateLeft = React.useCallback((): void => {
-    setRotation((prevRotation: number) => prevRotation - 90)
-  }, [setRotation])
+    const currentRotation = viewmodel.rotation$.getSnapshot()
+    viewmodel.rotation$.next(currentRotation - 90)
+  }, [viewmodel])
 
   const onRotateRight = React.useCallback((): void => {
-    setRotation((prevRotation: number) => prevRotation + 90)
-  }, [setRotation])
+    const currentRotation = viewmodel.rotation$.getSnapshot()
+    viewmodel.rotation$.next(currentRotation + 90)
+  }, [viewmodel])
 
   return (
     <div className="flex items-center justify-end rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-700 dark:bg-gray-800">

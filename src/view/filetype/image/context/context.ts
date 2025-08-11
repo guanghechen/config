@@ -8,3 +8,8 @@ export interface IImageViewContext {
 export const ImageViewContextType = React.createContext<IImageViewContext>({
   viewmodel: new ImageViewViewModel(),
 })
+
+export const useImageViewViewModel = (): ImageViewViewModel => {
+  const context = React.useContext(ImageViewContextType)
+  return context.viewmodel
+}

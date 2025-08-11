@@ -7,8 +7,7 @@ import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-h
 import { Json } from '@/component/json'
 import { PRESET_CLASSES } from '@/constant/classes'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
-import { useJsonViewViewModel } from '../context/hook'
-import { ModeEnum } from '../context/types'
+import { ModeEnum, useJsonViewViewModel } from '../context'
 
 const DEFAULT_JSON = {
   empty: {

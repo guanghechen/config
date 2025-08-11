@@ -1,6 +1,6 @@
 import React from 'react'
 import { Composer } from './Composer'
-import { SvgViewProvider } from './context/Provider'
+import { SvgViewProvider } from './context'
 
 interface IProps {
   readonly workspace: string | null
@@ -8,7 +8,7 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-export const SVGView: React.FC<IProps> = props => {
+export const SvgView: React.FC<IProps> = props => {
   const { filepath, workspace, mainScrollableContainer } = props
 
   return (
@@ -18,6 +18,4 @@ export const SVGView: React.FC<IProps> = props => {
   )
 }
 
-SVGView.displayName = 'SVGView'
-
-export default SVGView
+SvgView.displayName = 'SvgView'

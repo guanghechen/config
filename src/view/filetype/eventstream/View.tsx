@@ -1,20 +1,25 @@
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
-import type { IMarkdownFileData } from '@/util/fetch'
+import type { IEventStreamFileData } from '@/util/fetch'
 import { Composer } from './Composer'
-import { MarkdownViewProvider } from './context'
+import { EventStreamViewProvider } from './context'
 
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
+  readonly topbarVisible: boolean
 }
 
-const MarkdownView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
+const EventStreamView: React.FC<IProps> = props => {
+  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
 
-  const { data, error } = useFileResult<IMarkdownFileData>(workspace, filepath, filepathDirtyTick)
+  const { data, error } = useFileResult<IEventStreamFileData>(
+    workspace,
+    filepath,
+    filepathDirtyTick,
+  )
 
   return (
     <div className="w-full pt-8">
@@ -25,18 +30,16 @@ const MarkdownView: React.FC<IProps> = props => {
       )}
       {!!data && (
         <div className="relative w-full">
-          <MarkdownViewProvider>
+          <EventStreamViewProvider content={data?.content}>
             <Composer
-              filepath={filepath}
-              frontmatter={data.frontmatter}
-              toc={data.toc}
               mainScrollableContainer={mainScrollableContainer}
+              topbarVisible={topbarVisible}
             />
-          </MarkdownViewProvider>
+          </EventStreamViewProvider>
         </div>
       )}
     </div>
   )
 }
 
-MarkdownView.displayName = 'MarkdownView'
+EventStreamView.displayName = 'EventStreamView'

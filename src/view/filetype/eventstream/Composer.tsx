@@ -5,15 +5,16 @@ import { EventStreamContainer } from './container/Composer'
 
 interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
+  readonly topbarVisible: boolean
 }
 
 export const Composer: React.FC<IProps> = props => {
-  const { mainScrollableContainer } = props
+  const { mainScrollableContainer, topbarVisible } = props
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   return (
     <div className="w-full">
-      <EventStreamContainer />
+      <EventStreamContainer topbarVisible={topbarVisible} />
       <button
         onClick={scrollToTop}
         className={cn(

@@ -11,10 +11,11 @@ interface IProps {
   readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
+  readonly topbarVisible: boolean
 }
 
 export const JsonlView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
+  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
 
   const { data, error } = useFileResult<IJsonlFileData>(workspace, filepath, filepathDirtyTick)
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
@@ -29,7 +30,10 @@ export const JsonlView: React.FC<IProps> = props => {
       {!!data && (
         <div className="relative w-full">
           <JsonlViewProvider workspace={workspace} filepath={filepath}>
-            <Composer mainScrollableContainer={mainScrollableContainer} />
+            <Composer
+              mainScrollableContainer={mainScrollableContainer}
+              topbarVisible={topbarVisible}
+            />
           </JsonlViewProvider>
         </div>
       )}
@@ -57,4 +61,4 @@ export const JsonlView: React.FC<IProps> = props => {
   )
 }
 
-export default JsonlView
+JsonlView.displayName = 'JsonlView'

@@ -11,3 +11,8 @@ export const PdfViewContextType = React.createContext<IPdfViewContext>({
     filepath: '/dev/null',
   }),
 })
+
+export const usePdfViewViewModel = (): PdfViewViewModel => {
+  const context = React.useContext(PdfViewContextType)
+  return context.viewmodel
+}

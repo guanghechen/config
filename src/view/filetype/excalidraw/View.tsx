@@ -2,7 +2,7 @@ import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IJsonFileData } from '@/util/fetch'
 import { Composer } from './Composer'
-import { ExcalidrawProvider } from './context/Provider'
+import { ExcalidrawViewProvider } from './context'
 
 interface IProps {
   readonly workspace: string | null
@@ -25,14 +25,14 @@ const ExcalidrawView: React.FC<IProps> = props => {
       )}
       {!!data && (
         <div className="relative w-full">
-          <ExcalidrawProvider>
+          <ExcalidrawViewProvider>
             <Composer
               workspace={workspace}
               filepath={filepath}
               filepathDirtyTick={filepathDirtyTick}
               mainScrollableContainer={mainScrollableContainer}
             />
-          </ExcalidrawProvider>
+          </ExcalidrawViewProvider>
         </div>
       )}
     </div>
@@ -40,12 +40,3 @@ const ExcalidrawView: React.FC<IProps> = props => {
 }
 
 ExcalidrawView.displayName = 'ExcalidrawView'
-
-export default React.memo(ExcalidrawView, () => true)
-
-// Export components, hooks, types and utils for reuse
-export { ExcalidrawProvider } from './context/Provider'
-export { Composer as ExcalidrawComposer } from './Composer'
-export { ExcalidrawLayout } from './container/layout'
-export { useExcalidrawViewModel } from './context/hook'
-export type { IExcalidrawData } from './context/types'

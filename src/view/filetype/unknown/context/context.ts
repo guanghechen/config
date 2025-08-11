@@ -8,3 +8,8 @@ export interface IUnknownViewContext {
 export const UnknownViewContextType = React.createContext<IUnknownViewContext>({
   viewmodel: new UnknownViewViewModel(),
 })
+
+export const useUnknownViewViewModel = (): UnknownViewViewModel => {
+  const context = React.useContext(UnknownViewContextType)
+  return context.viewmodel
+}

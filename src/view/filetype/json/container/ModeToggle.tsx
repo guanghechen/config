@@ -1,8 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { useJsonViewViewModel } from '../context'
-import { ModeEnum } from '../context/types'
+import { ModeEnum, useJsonViewViewModel } from '../context'
 
 interface IProps {
   readonly topbarVisible: boolean

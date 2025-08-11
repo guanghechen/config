@@ -1,8 +1,9 @@
 import React from 'react'
 import { UnknownViewContextType } from './context'
-import { type IUnknownViewViewModelProps, UnknownViewViewModel } from './viewmodel'
+import { UnknownViewViewModel } from './viewmodel'
 
-interface IProps extends IUnknownViewViewModelProps {
+interface IProps {
+  readonly placeholder?: boolean
   readonly children: React.ReactNode
 }
 

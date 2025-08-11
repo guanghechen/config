@@ -2,7 +2,7 @@ import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IPdfFileData } from '@/util/fetch'
 import { Composer } from './Composer'
-import { PdfViewProvider } from './context/Provider'
+import { PdfViewProvider } from './context'
 
 interface IProps {
   readonly workspace: string | null
@@ -11,7 +11,7 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-const PDFView: React.FC<IProps> = props => {
+const PdfView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
 
   const { data, error } = useFileResult<IPdfFileData>(workspace, filepath, filepathDirtyTick)
@@ -42,4 +42,4 @@ const PDFView: React.FC<IProps> = props => {
   )
 }
 
-PDFView.displayName = 'PDFView'
+PdfView.displayName = 'PdfView'

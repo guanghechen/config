@@ -1,13 +1,18 @@
 import React from 'react'
 import { ImageViewContextType } from './context'
-import type { IImageViewViewModelProps } from './viewmodel'
+import type { IImageViewPosition } from './types'
 import { ImageViewViewModel } from './viewmodel'
 
-interface IProps extends IImageViewViewModelProps {
+interface IProps {
+  readonly workspace?: string | null
+  readonly filepath?: string | null
+  readonly scale?: number
+  readonly rotation?: number
+  readonly position?: IImageViewPosition
   readonly children: React.ReactNode
 }
 
-export const ImageProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
+export const ImageViewProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
   const viewmodel = React.useMemo(() => new ImageViewViewModel(viewModelProps), [viewModelProps])
 
   const value = React.useMemo(
@@ -20,5 +25,4 @@ export const ImageProvider: React.FC<IProps> = ({ children, ...viewModelProps })
   return <ImageViewContextType.Provider value={value}>{children}</ImageViewContextType.Provider>
 }
 
-// Keep the old name for backwards compatibility
-export const ImageViewProvider = ImageProvider
+ImageViewProvider.displayName = 'ImageViewProvider'

@@ -2,9 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/constant/classes'
-import { useTopbarVisible } from '@/context/workspace'
-import { useEventStreamViewViewModel } from '../context/hook'
-import { EventStreamModeEnum } from '../context/Provider'
+import { ModeEnum, useEventStreamViewViewModel } from '../context'
 import { EventCard } from './EventCard'
 import { MultiPathInput } from './MultiPathInput'
 import { EventStreamNavigation } from './navigation'
@@ -18,8 +16,11 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
   </div>
 )
 
-export const EventStreamContainer: React.FC = () => {
-  const topbarVisible = useTopbarVisible()
+interface IProps {
+  readonly topbarVisible: boolean
+}
+
+export const EventStreamContainer: React.FC<IProps> = ({ topbarVisible }) => {
   const viewmodel = useEventStreamViewViewModel()
   const content = useStateValue(viewmodel.content$)
   const mode = useStateValue(viewmodel.mode$)
@@ -47,8 +48,8 @@ export const EventStreamContainer: React.FC = () => {
     }
   }, [content])
 
-  const showView = (mode & EventStreamModeEnum.VIEW) !== 0
-  const showNavigation = (mode & EventStreamModeEnum.NAVIGATION) !== 0
+  const showView = (mode & ModeEnum.VIEW) !== 0
+  const showNavigation = (mode & ModeEnum.NAVIGATION) !== 0
   const columns = (showView ? 1 : 0) + (showNavigation ? 1 : 0)
   const allExpanded = events.length > 0 && expandedEvents.size === events.length
 
@@ -111,7 +112,7 @@ export const EventStreamContainer: React.FC = () => {
               ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
               : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
           )}
-          onClick={() => viewmodel.mode$.setState(m => m ^ EventStreamModeEnum.VIEW)}
+          onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.VIEW)}
         >
           view
         </button>
@@ -122,7 +123,7 @@ export const EventStreamContainer: React.FC = () => {
               ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
               : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
           )}
-          onClick={() => viewmodel.mode$.setState(m => m ^ EventStreamModeEnum.NAVIGATION)}
+          onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.NAVIGATION)}
         >
           nav
         </button>

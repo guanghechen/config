@@ -2,9 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/constant/classes'
-import { useTopbarVisible } from '@/context/workspace'
-import { type DisplayMode, type IChainPath, useJsonlViewViewModel } from '../context'
-import { JsonlModeEnum } from '../context/Provider'
+import { type DisplayMode, type IChainPath, ModeEnum, useJsonlViewViewModel } from '../context'
 import { Card } from './Card'
 import { ModeToggle } from './ModeToggle'
 import { MultiPathInput } from './MultiPathInput'
@@ -19,8 +17,12 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
   </div>
 )
 
-export const JsonlContainer: React.FC = () => {
-  const topbarVisible = useTopbarVisible()
+interface IProps {
+  readonly topbarVisible: boolean
+}
+
+export const JsonlContainer: React.FC<IProps> = props => {
+  const { topbarVisible } = props
   const viewmodel = useJsonlViewViewModel()
 
   const mode = useStateValue(viewmodel.mode$)
@@ -73,8 +75,8 @@ export const JsonlContainer: React.FC = () => {
     [viewmodel],
   )
 
-  const showView = (mode & JsonlModeEnum.VIEW) !== 0
-  const showNavigation = (mode & JsonlModeEnum.NAVIGATION) !== 0
+  const showView = (mode & ModeEnum.VIEW) !== 0
+  const showNavigation = (mode & ModeEnum.NAVIGATION) !== 0
   const columns = (showView ? 1 : 0) + (showNavigation ? 1 : 0)
 
   if (!content) return <EmptyState message="No JSONL data to display" />

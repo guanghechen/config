@@ -5,15 +5,16 @@ import { JsonlContainer } from './container/JsonlContainer'
 
 interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
+  readonly topbarVisible: boolean
 }
 
 export const Composer: React.FC<IProps> = props => {
-  const { mainScrollableContainer } = props
+  const { mainScrollableContainer, topbarVisible } = props
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   return (
     <div className="w-full">
-      <JsonlContainer />
+      <JsonlContainer topbarVisible={topbarVisible} />
       <button
         onClick={scrollToTop}
         className={cn(

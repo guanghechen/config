@@ -1,11 +1,16 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toSearch } from '@/util/url'
-import { useImageActions, useImageState } from '../context/hook'
+import { useImageViewViewModel } from '../context'
 
 export const ImageMain: React.FC = () => {
-  const { filepath, workspace, position, rotation, scale } = useImageState()
-  const { setPosition, setScale } = useImageActions()
+  const viewmodel = useImageViewViewModel()
+  const filepath = useStateValue(viewmodel.filepath$)
+  const workspace = useStateValue(viewmodel.workspace$)
+  const position = useStateValue(viewmodel.position$)
+  const rotation = useStateValue(viewmodel.rotation$)
+  const scale = useStateValue(viewmodel.scale$)
   const [isDragging, setIsDragging] = React.useState<boolean>(false)
   const [startPosition, setStartPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -26,7 +31,7 @@ export const ImageMain: React.FC = () => {
   const onMouseMove = useEventCallback((e: React.MouseEvent<HTMLDivElement>): void => {
     if (!isDragging) return
 
-    setPosition({
+    viewmodel.position$.next({
       x: e.clientX - startPosition.x,
       y: e.clientY - startPosition.y,
     })
@@ -44,7 +49,8 @@ export const ImageMain: React.FC = () => {
     if (e.ctrlKey) {
       e.preventDefault()
       const delta = e.deltaY < 0 ? 0.1 : -0.1
-      setScale((prevScale: number) => Math.max(0.1, Math.min(prevScale + delta, 3)))
+      const currentScale = viewmodel.scale$.getSnapshot()
+      viewmodel.scale$.next(Math.max(0.1, Math.min(currentScale + delta, 3)))
     }
   })
 

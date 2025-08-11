@@ -11,3 +11,7 @@ export const JsonlViewContextType = React.createContext<IJsonlViewContext>({
     filepath: '/dev/null',
   }),
 })
+
+export const useJsonlViewViewModel = (): JsonlViewViewModel => {
+  return React.useContext(JsonlViewContextType).viewmodel
+}

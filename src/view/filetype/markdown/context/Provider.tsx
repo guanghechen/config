@@ -6,7 +6,7 @@ interface IProps extends IMarkdownViewViewModelProps {
   readonly children: React.ReactNode
 }
 
-export const MarkdownProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
+export const MarkdownViewProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
   const viewmodel = React.useMemo(() => new MarkdownViewViewModel(viewModelProps), [viewModelProps])
 
   const value = React.useMemo(
@@ -21,5 +21,4 @@ export const MarkdownProvider: React.FC<IProps> = ({ children, ...viewModelProps
   )
 }
 
-// Keep the old name for backwards compatibility
-export const MarkdownViewProvider = MarkdownProvider
+MarkdownViewProvider.displayName = 'MarkdownViewProvider'

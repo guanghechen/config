@@ -8,3 +8,8 @@ export interface IEventStreamViewContext {
 export const EventStreamViewContextType = React.createContext<IEventStreamViewContext>({
   viewmodel: new EventStreamViewViewModel(),
 })
+
+export const useEventStreamViewViewModel = (): EventStreamViewViewModel => {
+  const context = React.useContext(EventStreamViewContextType)
+  return context.viewmodel
+}

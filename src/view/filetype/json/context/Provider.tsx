@@ -9,7 +9,7 @@ interface IProps {
   readonly content?: string | null
 }
 
-export const JsonProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
+export const JsonViewProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
   const viewmodel = React.useMemo(() => new JsonViewViewModel(viewModelProps), [viewModelProps])
 
   const value = React.useMemo(
@@ -22,5 +22,4 @@ export const JsonProvider: React.FC<IProps> = ({ children, ...viewModelProps }) 
   return <JsonViewContextType.Provider value={value}>{children}</JsonViewContextType.Provider>
 }
 
-// Keep the old name for backwards compatibility
-export const JsonViewProvider = JsonProvider
+JsonViewProvider.displayName = 'JsonViewProvider'

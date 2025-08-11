@@ -17,5 +17,3 @@ export const UnknownView: React.FC<IProps> = props => {
 }
 
 UnknownView.displayName = 'UnknownView'
-
-export default UnknownView
