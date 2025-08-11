@@ -2,6 +2,7 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
+import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useWorkspaces } from '@/hook/useWorkspaces'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
@@ -9,7 +10,6 @@ import type {
   IResponsePayloadFileSwitch,
   Mutable,
 } from '@/shared/types'
-import { SiteTheme, useSiteTheme } from '../site'
 import type { IWorkspaceContext } from './context'
 import { WorkspaceContextType } from './context'
 import type { IWorkspaceData } from './types'

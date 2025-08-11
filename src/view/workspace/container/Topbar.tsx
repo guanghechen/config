@@ -2,15 +2,15 @@ import cn from 'clsx'
 import React from 'react'
 import { CopyButton } from '@/component/CopyButton'
 import { DockToRightIcon, OpenInNewIcon, OpenWithIcon } from '@/component/icon/material'
-import type { WorkspaceViewModel } from '@/context/workspace'
+import { toSearch } from '@/util/url'
+import type { WorkspaceViewModel } from '../context'
 import {
   useCurrentFilepath,
   useSidebarVisible,
   useToggleBothSidebarAndTopbar,
   useWorkspace,
   useWorkspaceViewmodel,
-} from '@/context/workspace'
-import { toSearch } from '@/util/url'
+} from '../context'
 import { Workspace } from './sidebar/Workspace'
 
 interface IProps {

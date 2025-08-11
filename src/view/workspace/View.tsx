@@ -1,6 +1,6 @@
 import React from 'react'
-import { WorkspaceContextProvider } from '@/context/workspace'
 import { Composer } from './Composer'
+import { WorkspaceContextProvider } from './context'
 
 export const WorkspaceView: React.FC = () => {
   return (

@@ -1,14 +1,10 @@
 import React from 'react'
 import { DockToRightIcon } from '@/component/icon/material'
-import {
-  useToggleBothSidebarAndTopbar,
-  useTopbarVisible,
-  useWorkspaceViewmodel,
-} from '@/context/workspace'
 import { Float } from './container/float'
 import { Main } from './container/Main'
 import { Sidebar } from './container/sidebar'
 import { Topbar } from './container/Topbar'
+import { useToggleBothSidebarAndTopbar, useTopbarVisible, useWorkspaceViewmodel } from './context'
 
 export const Composer: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()

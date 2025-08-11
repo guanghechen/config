@@ -3,9 +3,9 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { FileTypeIcon } from '@/component/icon/filetype'
-import type { WorkspaceViewModel } from '@/context/workspace'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
 import { useKeyBinding } from '@/keybindings'
+import type { WorkspaceViewModel } from '../../context'
 
 interface FileItem {
   filepath: string

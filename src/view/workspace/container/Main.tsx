@@ -1,6 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import type { WorkspaceViewModel } from '@/context/workspace'
 import { EventStreamView } from '@/view/filetype/eventstream/View'
 import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
@@ -11,6 +10,7 @@ import { MarkdownView } from '@/view/filetype/markdown/View'
 import { PdfView } from '@/view/filetype/pdf/View'
 import { SvgView } from '@/view/filetype/svg/View'
 import { UnknownView } from '@/view/filetype/unknown/View'
+import type { WorkspaceViewModel } from '../context'
 
 interface IProps {
   readonly viewmodel: WorkspaceViewModel

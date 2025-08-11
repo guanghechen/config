@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
-import type { WorkspaceViewModel } from '@/context/workspace'
-import { useSidebarVisible } from '@/context/workspace'
+import type { WorkspaceViewModel } from '../../context'
+import { useSidebarVisible } from '../../context'
 import { FileTree } from './FileTree'
 
 interface IProps {
