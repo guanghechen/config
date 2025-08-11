@@ -16,3 +16,9 @@ export interface IJsonlViewRecord {
   readonly data: unknown
   readonly error?: string
 }
+
+export interface IJsonlViewData {
+  readonly mode: ModeEnum
+  readonly chainPaths: IChainPath[]
+  readonly displayMode: DisplayMode
+}

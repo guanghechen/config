@@ -25,8 +25,8 @@ export const PdfViewProvider: React.FC<IProps> = props => {
   )
 
   return (
-    <PdfViewContextType.Provider value={context}>
-      {children}
+    <React.Fragment>
+      <PdfViewContextType.Provider value={context}>{children}</PdfViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}
@@ -36,7 +36,7 @@ export const PdfViewProvider: React.FC<IProps> = props => {
         scale={scale}
         multiview={multiview}
       />
-    </PdfViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

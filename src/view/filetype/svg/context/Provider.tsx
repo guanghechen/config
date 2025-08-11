@@ -25,8 +25,8 @@ export const SvgViewProvider: React.FC<IProps> = props => {
   )
 
   return (
-    <SvgViewContextType.Provider value={context}>
-      {children}
+    <React.Fragment>
+      <SvgViewContextType.Provider value={context}>{children}</SvgViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}
@@ -35,7 +35,7 @@ export const SvgViewProvider: React.FC<IProps> = props => {
         rotation={rotation}
         position={position}
       />
-    </SvgViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

@@ -17,15 +17,15 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
-    <HtmlViewContextType.Provider value={value}>
-      {children}
+    <React.Fragment>
+      <HtmlViewContextType.Provider value={value}>{children}</HtmlViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}
         filepath={filepath}
         tailwindEnabled={tailwindEnabled}
       />
-    </HtmlViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

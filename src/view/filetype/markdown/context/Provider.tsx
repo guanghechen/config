@@ -19,15 +19,15 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
-    <MarkdownViewContextType.Provider value={value}>
-      {children}
+    <React.Fragment>
+      <MarkdownViewContextType.Provider value={value}>{children}</MarkdownViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         tocActivatedIdentifier={tocActivatedIdentifier}
         specifiedTocActivatedIdentifier={specifiedTocActivatedIdentifier}
         mode={mode}
       />
-    </MarkdownViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

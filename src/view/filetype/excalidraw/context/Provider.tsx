@@ -22,8 +22,10 @@ export const ExcalidrawViewProvider: React.FC<IProps> = props => {
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
-    <ExcalidrawViewContextType.Provider value={value}>
-      {children}
+    <React.Fragment>
+      <ExcalidrawViewContextType.Provider value={value}>
+        {children}
+      </ExcalidrawViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         elements={elements}
@@ -33,7 +35,7 @@ export const ExcalidrawViewProvider: React.FC<IProps> = props => {
         theme={theme}
         error={error}
       />
-    </ExcalidrawViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

@@ -20,8 +20,8 @@ export const ImageViewProvider: React.FC<IProps> = props => {
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
-    <ImageViewContextType.Provider value={value}>
-      {children}
+    <React.Fragment>
+      <ImageViewContextType.Provider value={value}>{children}</ImageViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}
@@ -30,7 +30,7 @@ export const ImageViewProvider: React.FC<IProps> = props => {
         rotation={rotation}
         position={position}
       />
-    </ImageViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

@@ -15,10 +15,10 @@ export const UnknownViewProvider: React.FC<IProps> = props => {
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
-    <UnknownViewContextType.Provider value={value}>
-      {children}
+    <React.Fragment>
+      <UnknownViewContextType.Provider value={value}>{children}</UnknownViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} placeholder={placeholder} />
-    </UnknownViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

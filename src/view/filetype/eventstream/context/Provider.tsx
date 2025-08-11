@@ -30,8 +30,10 @@ export const EventStreamViewProvider: React.FC<IProps> = props => {
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
-    <EventStreamViewContextType.Provider value={value}>
-      {children}
+    <React.Fragment>
+      <EventStreamViewContextType.Provider value={value}>
+        {children}
+      </EventStreamViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         content={content}
@@ -41,7 +43,7 @@ export const EventStreamViewProvider: React.FC<IProps> = props => {
         chainPaths={chainPaths}
         displayMode={displayMode}
       />
-    </EventStreamViewContextType.Provider>
+    </React.Fragment>
   )
 }
 

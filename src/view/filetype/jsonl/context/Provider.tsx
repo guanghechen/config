@@ -1,7 +1,10 @@
+import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { JsonlViewContextType } from './context'
-import type { DisplayMode, IChainPath, ModeEnum } from './types'
+import type { DisplayMode, IChainPath, IJsonlViewData, ModeEnum } from './types'
 import { JsonlViewViewModel } from './viewmodel'
+
+const storageKey: string = '@guanghechen/yozora/jsonl-view'
 
 interface IProps {
   readonly workspace: string | null
@@ -25,23 +28,21 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
     displayMode,
     children,
   } = props
-  const [viewmodel] = React.useState<JsonlViewViewModel>(
-    () =>
-      new JsonlViewViewModel({
-        workspace,
-        filepath,
-        mode,
-        activeRecordIndex,
-        expandedRecords,
-        chainPaths,
-        displayMode,
-      }),
-  )
+  const [viewmodel] = React.useState<JsonlViewViewModel>(() => {
+    const initialData: Partial<IJsonlViewData> = JSON.parse(
+      window.localStorage.getItem(storageKey) || '{}',
+    )
+    return JsonlViewViewModel.fromData({
+      mode: mode ?? initialData.mode,
+      chainPaths: chainPaths ?? initialData.chainPaths,
+      displayMode: displayMode ?? initialData.displayMode,
+    })
+  })
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
-    <JsonlViewContextType.Provider value={value}>
-      {children}
+    <React.Fragment>
+      <JsonlViewContextType.Provider value={value}>{children}</JsonlViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}
@@ -52,7 +53,7 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
         chainPaths={chainPaths}
         displayMode={displayMode}
       />
-    </JsonlViewContextType.Provider>
+    </React.Fragment>
   )
 }
 
@@ -82,6 +83,19 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     chainPaths,
     displayMode,
   } = props
+
+  React.useEffect(() => {
+    const computed = Computed.fromObservables(
+      [viewmodel.mode$, viewmodel.chainPaths$, viewmodel.displayMode$],
+      () => {
+        const data: IJsonlViewData = viewmodel.dump()
+        window.localStorage.setItem(storageKey, JSON.stringify(data))
+      },
+    )
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
 
   React.useEffect(() => {
     viewmodel.workspace$.next(workspace)
