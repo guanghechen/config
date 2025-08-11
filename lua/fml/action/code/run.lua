@@ -21,9 +21,26 @@ local runners = {
       vim.system({ "curl", "-X", "POST", url }, { detach = true })
     end,
   },
-  lua = {
-    run = function(filepath)
-      vim.cmd("luafile " .. filepath)
+  html = {
+    run = function(filepath, force)
+      local url = string.format(
+        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+        YOZORA_SERVER_PORT,
+        std.string.escape_url_component(filepath),
+        force and "true" or "false"
+      )
+      vim.system({ "curl", "-X", "POST", url }, { detach = true })
+    end,
+  },
+  json = {
+    run = function(filepath, force)
+      local url = string.format(
+        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+        YOZORA_SERVER_PORT,
+        std.string.escape_url_component(filepath),
+        force and "true" or "false"
+      )
+      vim.system({ "curl", "-X", "POST", url }, { detach = true })
     end,
   },
   jsonl = {
@@ -35,6 +52,11 @@ local runners = {
         force and "true" or "false"
       )
       vim.system({ "curl", "-X", "POST", url }, { detach = true })
+    end,
+  },
+  lua = {
+    run = function(filepath)
+      vim.cmd("luafile " .. filepath)
     end,
   },
   md = {
