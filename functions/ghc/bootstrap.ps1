@@ -16,7 +16,9 @@ function ghc-update {
   }
 
   $repo_required_branches = @(
+    "bat",
     "conda",
+    "git-delta",
     "fzf",
     "lazygit",
     "nvim",
