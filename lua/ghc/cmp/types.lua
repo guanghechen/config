@@ -9,21 +9,23 @@
 --- @field kind_name? string
 --- @field kind_icon? string
 --- @field kind_hl? string
+--- @field exact? boolean
+--- @field score? number
 
 --- @class blink.cmp.CompletionResponse
---- @field is_incomplete_forward boolean
---- @field is_incomplete_backward boolean
---- @field items blink.cmp.CompletionItem[]
+--- @field is_incomplete_forward        boolean
+--- @field is_incomplete_backward       boolean
+--- @field items                        blink.cmp.CompletionItem[]
 
 --- @alias blink.cmp.CompletionKeywordRange 'prefix' | 'full'
---- @alias blink.cmp.CompletionTriggerKind 'manual' | 'prefetch' | 'keyword' | 'trigger_character'
---- @alias blink.cmp.Mode 'cmdline' | 'term' | 'default'
+--- @alias blink.cmp.CompletionTriggerKind  'manual' | 'prefetch' | 'keyword' | 'trigger_character'
+--- @alias blink.cmp.Mode                   'cmdline' | 'term' | 'default'
 
 --- @class blink.cmp.ContextTrigger
---- @field initial_kind blink.cmp.CompletionTriggerKind The trigger kind when the context was first created
---- @field initial_character? string The trigger character when initial_kind == 'trigger_character'
---- @field kind blink.cmp.CompletionTriggerKind The current trigger kind
---- @field character? string The trigger character when kind == 'trigger_character'
+--- @field initial_kind                 blink.cmp.CompletionTriggerKind The trigger kind when the context was first created
+--- @field initial_character            ?string The trigger character when initial_kind == 'trigger_character'
+--- @field kind                         blink.cmp.CompletionTriggerKind The current trigger kind
+--- @field character                    ?string The trigger character when kind == 'trigger_character'
 
 --- @class blink.cmp.ContextOpts
 --- @field id number
@@ -35,28 +37,28 @@
 --- @field initial_selected_item_idx? number
 
 --- @class blink.cmp.Context
---- @field mode blink.cmp.Mode
---- @field id number
---- @field bufnr number
---- @field cursor number[]
---- @field line string
---- @field bounds blink.cmp.ContextBounds
---- @field trigger blink.cmp.ContextTrigger
---- @field providers string[]
---- @field initial_selected_item_idx? number
+--- @field mode                         blink.cmp.Mode
+--- @field id                           number
+--- @field bufnr                        number
+--- @field cursor                       number[]
+--- @field line                         string
+--- @field bounds                       blink.cmp.ContextBounds
+--- @field trigger                      blink.cmp.ContextTrigger
+--- @field providers                    string[]
+--- @field initial_selected_item_idx    ?number
 ---
---- @field new fun(opts: blink.cmp.ContextOpts): blink.cmp.Context
---- @field get_keyword fun(): string
---- @field within_query_bounds fun(self: blink.cmp.Context, cursor: number[], include_start_bound?: boolean): boolean
+--- @field new                          fun(opts: blink.cmp.ContextOpts): blink.cmp.Context
+--- @field get_keyword                  fun(): string
+--- @field within_query_bounds          fun(self: blink.cmp.Context, cursor: number[], include_start_bound?: boolean): boolean
 ---
---- @field get_mode fun(): blink.cmp.Mode
---- @field get_cursor fun(): number[]
---- @field set_cursor fun(cursor: number[])
---- @field get_line fun(num?: number): string
---- @field get_bounds fun(range: blink.cmp.CompletionKeywordRange): blink.cmp.ContextBounds
+--- @field get_mode                     fun(): blink.cmp.Mode
+--- @field get_cursor                   fun(): number[]
+--- @field set_cursor                   fun(cursor: number[])
+--- @field get_line                     fun(num?: number): string
+--- @field get_bounds                   fun(range: blink.cmp.CompletionKeywordRange): blink.cmp.ContextBounds
 
 --- @class blink.cmp.ContextBounds
---- @field line string
---- @field line_number number
---- @field start_col number
---- @field length number
+--- @field line                         string
+--- @field line_number                  number
+--- @field start_col                    number
+--- @field length                       number
