@@ -7,6 +7,8 @@
 *.suo
 *.sw*
 *.tsbuildinfo
+.claude/
+docs/task/local/
 
 /.next/
 /.nx/
