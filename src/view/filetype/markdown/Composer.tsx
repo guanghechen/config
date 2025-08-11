@@ -6,7 +6,6 @@ import cn from 'clsx'
 import throttle from 'lodash.throttle'
 import React from 'react'
 import { useMarkdownAst } from '@/component/markdown'
-import { useTopbarVisible } from '@/context/workspace'
 import { useScrollToTop } from '@/hook/useScrollToTop'
 import { AstView } from './container/AstView'
 import { ContentView } from './container/ContentView'
@@ -20,17 +19,17 @@ interface IProps {
   readonly frontmatter: Record<string, unknown> | undefined
   readonly toc: IHeadingToc | undefined
   readonly mainScrollableContainer: HTMLDivElement | null
+  readonly topbarVisible: boolean
 }
 
 export const Composer: React.FC<IProps> = props => {
-  const { toc, frontmatter, filepath, mainScrollableContainer } = props
+  const { toc, frontmatter, filepath, mainScrollableContainer, topbarVisible } = props
   const viewmodel = useMarkdownViewViewModel()
   const mode = useStateValue(viewmodel.mode$)
   const tocActivatedIdentifier = useStateValue(viewmodel.tocActivatedIdentifier$)
   const specifiedTocActivatedIdentifier = useStateValue(viewmodel.specifiedTocActivatedIdentifier$)
 
   const ast: Root = useMarkdownAst()
-  const topbarVisible = useTopbarVisible()
 
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
   const contentContainerRef = React.useRef<HTMLDivElement | null>(null)

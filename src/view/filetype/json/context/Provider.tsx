@@ -4,22 +4,48 @@ import type { ModeEnum } from './types'
 import { JsonViewViewModel } from './viewmodel'
 
 interface IProps {
+  readonly mode?: ModeEnum
+  readonly content?: string | null
   readonly children: React.ReactNode
+}
+
+export const JsonViewProvider: React.FC<IProps> = props => {
+  const { mode, content, children } = props
+  const [viewmodel] = React.useState<JsonViewViewModel>(
+    () => new JsonViewViewModel({ mode, content }),
+  )
+  const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
+
+  return (
+    <JsonViewContextType.Provider value={value}>
+      {children}
+      <SideEffect viewmodel={viewmodel} mode={mode} content={content} />
+    </JsonViewContextType.Provider>
+  )
+}
+
+JsonViewProvider.displayName = 'JsonViewProvider'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+interface ISideEffectProps {
+  readonly viewmodel: JsonViewViewModel
   readonly mode?: ModeEnum
   readonly content?: string | null
 }
 
-export const JsonViewProvider: React.FC<IProps> = ({ children, ...viewModelProps }) => {
-  const viewmodel = React.useMemo(() => new JsonViewViewModel(viewModelProps), [viewModelProps])
+const SideEffect: React.FC<ISideEffectProps> = props => {
+  const { viewmodel, mode, content } = props
 
-  const value = React.useMemo(
-    () => ({
-      viewmodel,
-    }),
-    [viewmodel],
-  )
+  React.useEffect(() => {
+    viewmodel.mode$.next(mode ?? 1)
+  }, [viewmodel.mode$, mode])
 
-  return <JsonViewContextType.Provider value={value}>{children}</JsonViewContextType.Provider>
+  React.useEffect(() => {
+    viewmodel.content$.next(content ?? null)
+  }, [viewmodel.content$, content])
+
+  return <React.Fragment />
 }
 
-JsonViewProvider.displayName = 'JsonViewProvider'
+SideEffect.displayName = 'JsonViewSideEffect'

@@ -15,10 +15,11 @@ interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
+  readonly topbarVisible: boolean
 }
 
 const MarkdownView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
+  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
   const siteVM = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(siteVM.theme$)
 
@@ -43,6 +44,7 @@ const MarkdownView: React.FC<IProps> = props => {
                 frontmatter={frontmatter}
                 toc={toc}
                 mainScrollableContainer={mainScrollableContainer}
+                topbarVisible={topbarVisible}
               />
             </div>
           </MarkdownViewProvider>
