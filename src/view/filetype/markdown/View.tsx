@@ -18,7 +18,7 @@ interface IProps {
   readonly topbarVisible: boolean
 }
 
-const MarkdownView: React.FC<IProps> = props => {
+export const MarkdownView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
   const siteVM = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(siteVM.theme$)

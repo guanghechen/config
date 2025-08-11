@@ -1,15 +1,15 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { WorkspaceViewModel } from '@/context/workspace'
-const EventStreamContainer = React.lazy(() => import('./eventstream'))
-const ExcalidrawContainer = React.lazy(() => import('./excalidraw'))
-const ImageContainer = React.lazy(() => import('./image'))
-const JsonContainer = React.lazy(() => import('./json'))
-const JsonlContainer = React.lazy(() => import('./jsonl'))
-const MarkdownContainer = React.lazy(() => import('./markdown'))
-const PDFContainer = React.lazy(() => import('./pdf'))
-const SvgContainer = React.lazy(() => import('./svg'))
-const UnknownContainer = React.lazy(() => import('./unknown'))
+import { EventStreamView } from '@/view/filetype/eventstream/View'
+import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
+import { ImageView } from '@/view/filetype/image/View'
+import { JsonView } from '@/view/filetype/json/View'
+import { JsonlView } from '@/view/filetype/jsonl/View'
+import { MarkdownView } from '@/view/filetype/markdown/View'
+import { PdfView } from '@/view/filetype/pdf/View'
+import { SvgView } from '@/view/filetype/svg/View'
+import { UnknownView } from '@/view/filetype/unknown/View'
 
 interface IProps {
   readonly viewmodel: WorkspaceViewModel
@@ -19,6 +19,11 @@ export const WorkspaceMain: React.FC<IProps> = props => {
   const { viewmodel } = props
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath = useStateValue(viewmodel.filepath$)
+  const filepathDirtyTick: number = useStateValue(viewmodel.filepathDirtyTick$)
+  const mainScrollableContainer: HTMLDivElement | null = useStateValue(
+    viewmodel.mainScrollableContainer$,
+  )
+  const topbarVisible: boolean = useStateValue(viewmodel.topbarVisible$)
 
   const extname: string = React.useMemo<string>(() => {
     if (!filepath) return ''
@@ -27,29 +32,41 @@ export const WorkspaceMain: React.FC<IProps> = props => {
   }, [filepath])
 
   const container: React.ReactElement = React.useMemo<React.ReactElement>(() => {
+    if (!filepath) {
+      return <UnknownView filepath={filepath} extname={extname} />
+    }
+
+    const commonProps = {
+      workspace,
+      filepath,
+      filepathDirtyTick,
+      mainScrollableContainer,
+      topbarVisible,
+    }
+
     switch (extname.toLowerCase()) {
       case '.eventstream':
-        return <EventStreamContainer />
+        return <EventStreamView {...commonProps} />
       case '.excalidraw':
-        return <ExcalidrawContainer />
+        return <ExcalidrawView {...commonProps} />
       case '.json':
-        return <JsonContainer />
+        return <JsonView {...commonProps} />
       case '.jsonl':
-        return <JsonlContainer />
+        return <JsonlView {...commonProps} />
       case '.md':
-        return <MarkdownContainer />
+        return <MarkdownView {...commonProps} />
       case '.pdf':
-        return <PDFContainer filepath={filepath} workspace={workspace} />
+        return <PdfView {...commonProps} />
       case '.svg':
-        return <SvgContainer filepath={filepath} workspace={workspace} />
+        return <SvgView {...commonProps} />
       case '.png':
       case '.jpg':
       case '.jpeg':
-        return <ImageContainer filepath={filepath} workspace={workspace} />
+        return <ImageView {...commonProps} />
       default:
-        return <UnknownContainer extname={extname} filepath={filepath} />
+        return <UnknownView filepath={filepath} extname={extname} />
     }
-  }, [extname, filepath, workspace])
+  }, [extname, workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible])
 
   return container
 }

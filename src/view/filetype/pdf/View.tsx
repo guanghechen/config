@@ -11,7 +11,7 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-const PdfView: React.FC<IProps> = props => {
+export const PdfView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
 
   const { data, error } = useFileResult<IPdfFileData>(workspace, filepath, filepathDirtyTick)

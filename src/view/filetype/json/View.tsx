@@ -13,7 +13,7 @@ interface IProps {
   readonly topbarVisible: boolean
 }
 
-const JsonView: React.FC<IProps> = props => {
+export const JsonView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
   const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)
 

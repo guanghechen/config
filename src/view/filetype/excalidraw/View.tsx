@@ -11,7 +11,7 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-const ExcalidrawView: React.FC<IProps> = props => {
+export const ExcalidrawView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
 
   const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)

@@ -12,7 +12,7 @@ interface IProps {
   readonly topbarVisible: boolean
 }
 
-const EventStreamView: React.FC<IProps> = props => {
+export const EventStreamView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
 
   const { data, error } = useFileResult<IEventStreamFileData>(

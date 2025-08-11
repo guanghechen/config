@@ -2,13 +2,13 @@ import React from 'react'
 import { Composer } from './Composer'
 import { ImageViewProvider } from './context'
 
-export interface ImageContainerProps {
+interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-const ImageView: React.FC<ImageContainerProps> = props => {
+export const ImageView: React.FC<IProps> = props => {
   const { filepath, workspace, mainScrollableContainer } = props
 
   return (
