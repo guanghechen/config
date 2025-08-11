@@ -26,7 +26,7 @@ local formatters_by_ft = {
   -- lang --
   lua               = { "stylua" },
   python            = { "isort", "black" },
-  rust              = { "rustfmt", lsp_format = "fallback" },
+  rust              = { "rustfmt" },
 
   -- app --
   tmux              = { "shfmt" },
@@ -115,11 +115,6 @@ return {
       },
     },
     format_on_save = function(bufnr)
-      -- Disable with a global or buffer-local variable
-      if vim.g[eve.var.Names.BUF_DISABLE_AUTO_FORMAT] or vim.b[bufnr][eve.var.Names.BUF_DISABLE_AUTO_FORMAT] then
-        return
-      end
-
       local filetype = vim.bo[bufnr].filetype ---@type string
       if ignored.filetypes[filetype] then
         return
