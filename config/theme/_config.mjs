@@ -270,8 +270,22 @@ return config
       settings.profiles = settings.profiles || {};
       settings.profiles.defaults = settings.profiles.defaults || {};
       settings.profiles.defaults.colorScheme = color_scheme.name;
+      settings.profiles.defaults.cursorShape = "bar";
       settings.profiles.defaults.opacity = 100;
       settings.profiles.defaults.useAcrylic = true;
+      settings.profiles.defaults.font = settings.profiles.defaults.font || {};
+      settings.profiles.defaults.font.face = "Maple Mono NF CN";
+      settings.profiles.defaults.font.weight = "normal";
+      settings.profiles.defaults.font.features = {
+        cv61: 1,
+        cv62: 1,
+        cv98: 1,
+        ss03: 1,
+        ss07: 1,
+        ss09: 1,
+        ss10: 1,
+        calt: 1,
+      };
 
       if (scheme.darken) {
         settings.profiles.defaults.backgroundImage = null;
