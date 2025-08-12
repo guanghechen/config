@@ -1,6 +1,10 @@
+import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { HtmlViewContextType } from './context'
+import type { IHtmlViewData } from './viewmodel'
 import { HtmlViewViewModel } from './viewmodel'
+
+const storageKey: string = '@guanghechen/yozora/html-view'
 
 interface IProps {
   readonly workspace?: string | null
@@ -11,9 +15,14 @@ interface IProps {
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, tailwindEnabled, children } = props
-  const [viewmodel] = React.useState<HtmlViewViewModel>(
-    () => new HtmlViewViewModel({ workspace, filepath, tailwindEnabled }),
-  )
+  const [viewmodel] = React.useState<HtmlViewViewModel>(() => {
+    const initialData: Partial<IHtmlViewData> = JSON.parse(
+      window.localStorage.getItem(storageKey) || '{}',
+    )
+    return HtmlViewViewModel.fromData({
+      tailwindEnabled: tailwindEnabled ?? initialData.tailwindEnabled,
+    })
+  })
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
@@ -44,6 +53,16 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace, filepath, tailwindEnabled } = props
 
   React.useEffect(() => {
+    const computed = Computed.fromObservables([viewmodel.tailwindEnabled$], () => {
+      const data: IHtmlViewData = viewmodel.dump()
+      window.localStorage.setItem(storageKey, JSON.stringify(data))
+    })
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+
+  React.useEffect(() => {
     viewmodel.workspace$.next(workspace ?? null)
   }, [viewmodel.workspace$, workspace])
 
@@ -52,7 +71,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
-    viewmodel.tailwindEnabled$.next(tailwindEnabled ?? false)
+    viewmodel.tailwindEnabled$.next(tailwindEnabled ?? viewmodel.tailwindEnabled$.getSnapshot())
   }, [viewmodel.tailwindEnabled$, tailwindEnabled])
 
   return <React.Fragment />
