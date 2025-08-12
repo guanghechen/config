@@ -1,6 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
-import type { IJsonlRecord } from '../utils'
+import type { IJsonlRecord } from '../context'
 
 interface IProps {
   records: IJsonlRecord[]
@@ -56,7 +56,7 @@ export const Navigation: React.FC<IProps> = ({
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                Record #{index + 1}
+                Record #{record.index}
               </span>
               <div className="flex items-center gap-2">
                 <span
@@ -72,7 +72,7 @@ export const Navigation: React.FC<IProps> = ({
               </div>
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-              {record.data.length > 100 ? `${record.data.slice(0, 100)}...` : record.data}
+              {record.content.length > 100 ? `${record.content.slice(0, 100)}...` : record.content}
             </div>
           </button>
         ))}

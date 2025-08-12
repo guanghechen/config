@@ -1,7 +1,9 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { useFileResult } from '@/hook/useFileResult'
+import type { IJsonlFileData } from '@/util/fetch'
 import { JsonlViewContextType } from './context'
-import type { DisplayMode, IChainPath, IJsonlViewData, ModeEnum } from './types'
+import type { DisplayMode, IChainPath, IJsonlViewData, IJsonlViewRecord, ModeEnum } from './types'
 import { JsonlViewViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/jsonl-view'
@@ -9,9 +11,9 @@ const storageKey: string = '@guanghechen/yozora/jsonl-view'
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string
+  readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
   readonly activeRecordIndex?: number | null
-  readonly expandedRecords?: Set<number>
   readonly chainPaths?: IChainPath[]
   readonly displayMode?: DisplayMode
   readonly children: React.ReactNode
@@ -21,9 +23,9 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
   const {
     workspace,
     filepath,
+    filepathDirtyTick,
     mode,
     activeRecordIndex,
-    expandedRecords,
     chainPaths,
     displayMode,
     children,
@@ -47,9 +49,9 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
         viewmodel={viewmodel}
         workspace={workspace}
         filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
         mode={mode}
         activeRecordIndex={activeRecordIndex}
-        expandedRecords={expandedRecords}
         chainPaths={chainPaths}
         displayMode={displayMode}
       />
@@ -65,9 +67,9 @@ interface ISideEffectProps {
   readonly viewmodel: JsonlViewViewModel
   readonly workspace: string | null
   readonly filepath: string
+  readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
   readonly activeRecordIndex?: number | null
-  readonly expandedRecords?: Set<number>
   readonly chainPaths?: IChainPath[]
   readonly displayMode?: DisplayMode
 }
@@ -77,12 +79,53 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     viewmodel,
     workspace,
     filepath,
+    filepathDirtyTick,
     mode,
     activeRecordIndex,
-    expandedRecords,
     chainPaths,
     displayMode,
   } = props
+
+  const { data, error } = useFileResult<IJsonlFileData>(workspace, filepath, filepathDirtyTick)
+
+  React.useEffect(() => {
+    if (data?.content) {
+      viewmodel.content$.next(data.content)
+      viewmodel.error$.next(null)
+
+      // Parse JSONL content into JSON records
+      const lines = data.content.split('\n').filter(line => line.trim())
+      const records: IJsonlViewRecord[] = []
+
+      lines.forEach((line, index) => {
+        try {
+          const parsedData = JSON.parse(line)
+          records.push({
+            index: index + 1,
+            content: line,
+            parsed: parsedData,
+            isValid: true,
+          })
+        } catch (_parseError) {
+          records.push({
+            index: index + 1,
+            content: line,
+            isValid: false,
+          })
+        }
+      })
+
+      viewmodel.jsons$.next(records)
+    } else if (error) {
+      viewmodel.content$.next(null)
+      viewmodel.jsons$.next([])
+      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+    } else {
+      viewmodel.content$.next(null)
+      viewmodel.jsons$.next([])
+      viewmodel.error$.next(null)
+    }
+  }, [data, error, viewmodel])
 
   React.useEffect(() => {
     const computed = Computed.fromObservables(
@@ -106,7 +149,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
-    viewmodel.mode$.next(mode ?? 1)
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
   }, [viewmodel.mode$, mode])
 
   React.useEffect(() => {
@@ -114,15 +157,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel.activeRecordIndex$, activeRecordIndex])
 
   React.useEffect(() => {
-    viewmodel.expandedRecords$.next(expandedRecords ?? new Set())
-  }, [viewmodel.expandedRecords$, expandedRecords])
-
-  React.useEffect(() => {
-    viewmodel.chainPaths$.next(chainPaths ?? [])
+    viewmodel.chainPaths$.next(chainPaths ?? viewmodel.chainPaths$.getSnapshot())
   }, [viewmodel.chainPaths$, chainPaths])
 
   React.useEffect(() => {
-    viewmodel.displayMode$.next(displayMode ?? 'lines')
+    viewmodel.displayMode$.next(displayMode ?? viewmodel.displayMode$.getSnapshot())
   }, [viewmodel.displayMode$, displayMode])
 
   return <React.Fragment />

@@ -1,6 +1,7 @@
 export enum ModeEnum {
   VIEW = 1,
   NAVIGATION = 2,
+  EXPAND_ALL = 4,
 }
 
 export type DisplayMode = 'inline' | 'lines'
@@ -11,11 +12,14 @@ export interface IChainPath {
   readonly visible: boolean
 }
 
-export interface IJsonlViewRecord {
-  readonly lineNumber: number
-  readonly data: unknown
-  readonly error?: string
+export interface IJsonlRecord {
+  readonly index: number
+  readonly content: string
+  readonly parsed?: unknown
+  readonly isValid: boolean
 }
+
+export interface IJsonlViewRecord extends IJsonlRecord {}
 
 export interface IJsonlViewData {
   readonly mode: ModeEnum

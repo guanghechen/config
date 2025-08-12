@@ -1,9 +1,8 @@
 import cn from 'clsx'
 import React from 'react'
-import { useFileResult } from '@/hook/useFileResult'
 import { useScrollToTop } from '@/hook/useScrollToTop'
-import type { IJsonlFileData } from '@/util/fetch'
 import { Composer } from './Composer'
+import { ModeToggle } from './container/ModeToggle'
 import { JsonlViewProvider } from './context'
 
 interface IProps {
@@ -16,31 +15,24 @@ interface IProps {
 
 export const JsonlView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
-
-  const { data, error } = useFileResult<IJsonlFileData>(workspace, filepath, filepathDirtyTick)
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   return (
     <div className="w-full pt-8">
-      {!!error && (
-        <div className="relative mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
-          <code>error: {String(error)}</code>
-        </div>
-      )}
-      {!!data && (
-        <div className="relative w-full">
-          <JsonlViewProvider workspace={workspace} filepath={filepath}>
-            <Composer
-              mainScrollableContainer={mainScrollableContainer}
-              topbarVisible={topbarVisible}
-            />
-          </JsonlViewProvider>
-        </div>
-      )}
+      <div className="relative w-full">
+        <JsonlViewProvider
+          workspace={workspace}
+          filepath={filepath}
+          filepathDirtyTick={filepathDirtyTick}
+        >
+          <ModeToggle topbarVisible={topbarVisible} />
+          <Composer />
+        </JsonlViewProvider>
+      </div>
       <button
         onClick={scrollToTop}
         className={cn(
-          'cursor-pointer fixed bottom-8 right-8 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
+          'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
           visibleScrollToTop
             ? 'translate-y-0 opacity-90'
             : 'pointer-events-none translate-y-16 opacity-0',

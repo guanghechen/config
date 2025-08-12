@@ -10,25 +10,14 @@ interface IProps {
 export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
   const viewmodel = useJsonlViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
-  const expandedRecords: ReadonlySet<number> = useStateValue(viewmodel.expandedRecords$)
-
-  // TODO: Records should come from a data source, not from hooks
-  const records: any[] = React.useMemo(() => [], [])
+  const expandTick: number = useStateValue(viewmodel.expandTick$)
 
   const toggleAllRecords = React.useCallback(() => {
-    // Implementation to toggle all records expand/collapse
-    const currentExpanded = viewmodel.expandedRecords$.getSnapshot()
-    const allExpanded = records.length > 0 && currentExpanded.size === records.length
-
-    if (allExpanded) {
-      viewmodel.expandedRecords$.next(new Set())
-    } else {
-      viewmodel.expandedRecords$.next(new Set(records.map((_, index) => index)))
-    }
-  }, [viewmodel, records])
+    viewmodel.expandTick$.setState(prev => prev + 1)
+  }, [viewmodel])
 
   const showNavigation = (mode & ModeEnum.NAVIGATION) !== 0
-  const allExpanded = records.length > 0 && expandedRecords.size === records.length
+  const allExpanded = expandTick % 2 === 0
 
   return (
     <div
@@ -41,7 +30,7 @@ export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
         className={cn(
           'box-border px-3 py-1 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
           (mode & ModeEnum.VIEW) !== 0
-            ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
+            ? 'bg-emerald-500 font-medium text-white shadow-sm'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
         onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.VIEW)}
@@ -60,12 +49,7 @@ export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
         nav
       </button>
       <button
-        className={cn(
-          'box-border px-3 py-1 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
-          allExpanded
-            ? 'bg-green-500 bg-opacity-90 font-medium text-white shadow-inner'
-            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
-        )}
+        className="box-border px-3 py-1 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0 bg-violet-500 font-medium text-white shadow-sm"
         onClick={toggleAllRecords}
         title={allExpanded ? 'Collapse all records' : 'Expand all records'}
       >

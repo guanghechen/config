@@ -1,14 +1,8 @@
 import type { IMultiInputItem } from '@/component/MultiInput'
+import type { IJsonlRecord } from './context/types'
 
 export interface IChainPath extends IMultiInputItem {
   path: string
-}
-
-export interface IJsonlRecord {
-  index: number
-  data: string
-  parsed?: unknown
-  isValid: boolean
 }
 
 export const parseJsonlContent = (content: string): IJsonlRecord[] => {
@@ -25,14 +19,14 @@ export const parseJsonlContent = (content: string): IJsonlRecord[] => {
       const parsed = JSON.parse(trimmedLine)
       records.push({
         index,
-        data: trimmedLine,
+        content: trimmedLine,
         parsed,
         isValid: true,
       })
     } catch {
       records.push({
         index,
-        data: trimmedLine,
+        content: trimmedLine,
         isValid: false,
       })
     }
