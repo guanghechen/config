@@ -6,8 +6,8 @@ import type { IEventStreamEvent } from '../utils'
 interface IProps {
   readonly events: IEventStreamEvent[]
   readonly singleColumn: boolean
-  readonly onEventClick: (index: number) => void
   readonly activeEventIndex: number | null
+  readonly onEventClick: (index: number) => void
 }
 
 export const EventStreamNavigation: React.FC<IProps> = ({

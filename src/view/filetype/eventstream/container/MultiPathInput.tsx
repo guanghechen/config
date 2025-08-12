@@ -4,11 +4,11 @@ import type { DisplayMode, IChainPath } from '../hook/usePersistedChainPaths'
 import { getPathColorClasses } from '../utils'
 
 interface IProps {
-  chainPaths: IChainPath[]
-  onChange: (chainPaths: IChainPath[]) => void
-  placeholder?: string
-  displayMode: DisplayMode
-  onDisplayModeChange: (mode: DisplayMode) => void
+  readonly chainPaths: IChainPath[]
+  readonly placeholder?: string
+  readonly displayMode: DisplayMode
+  readonly onChange: (chainPaths: IChainPath[]) => void
+  readonly onDisplayModeChange: (mode: DisplayMode) => void
 }
 
 export const MultiPathInput: React.FC<IProps> = ({

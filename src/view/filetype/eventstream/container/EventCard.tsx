@@ -1,25 +1,32 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
+import { useEventStreamViewViewModel } from '../context'
 import type { IChainPath } from '../hook/usePersistedChainPaths'
 import type { IEventStreamEvent } from '../utils'
 import { extractValueFromPath, getPathColorClasses, parseJsonData } from '../utils'
 
 interface IProps {
-  event: IEventStreamEvent
-  index: number
-  isExpanded: boolean
-  onToggle: () => void
-  chainPaths?: IChainPath[]
+  readonly event: IEventStreamEvent
+  readonly index: number
+  readonly chainPaths?: IChainPath[]
 }
 
-export const EventCard: React.FC<IProps> = ({
-  event,
-  index,
-  isExpanded,
-  onToggle,
-  chainPaths = [],
-}) => {
+export const EventCard: React.FC<IProps> = ({ event, index, chainPaths = [] }) => {
+  const viewmodel = useEventStreamViewViewModel()
+  const expandTick = useStateValue(viewmodel.expandTick$)
+  const [expanded, setExpanded] = React.useState(false)
+
+  React.useEffect(() => {
+    const flag: boolean = expandTick % 2 === 0
+    setExpanded(flag)
+  }, [expandTick])
+
+  const handleToggleExpand = React.useCallback(() => {
+    setExpanded(prev => !prev)
+  }, [])
+
   const { parsed, isJson } = event.data ? parseJsonData(event.data) : { parsed: '', isJson: false }
 
   const visibleChainPaths = React.useMemo(() => chainPaths.filter(cp => cp.visible), [chainPaths])
@@ -38,7 +45,7 @@ export const EventCard: React.FC<IProps> = ({
     <div className="mb-3 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
       <div
         className="flex cursor-pointer items-center justify-between p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-750"
-        onClick={onToggle}
+        onClick={handleToggleExpand}
       >
         <div className="flex select-none items-center gap-2">
           <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
@@ -82,7 +89,7 @@ export const EventCard: React.FC<IProps> = ({
           )}
           <svg
             className={cn('h-4 w-4 transition-transform text-gray-400', {
-              'rotate-180': isExpanded,
+              'rotate-180': expanded,
             })}
             fill="none"
             stroke="currentColor"
@@ -92,7 +99,7 @@ export const EventCard: React.FC<IProps> = ({
           </svg>
         </div>
       </div>
-      {isExpanded && event.data && (
+      {expanded && event.data && (
         <div className="border-t border-gray-200 p-3 dark:border-gray-700">
           {isJson ? (
             <Json json={parsed} initialCollapsed="expanded" />
