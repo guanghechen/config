@@ -2,7 +2,7 @@ import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
-import type { ISvgViewData, ISvgViewPosition } from './viewmodel'
+import type { ISvgViewData, ISvgViewPosition } from './types'
 import { SvgViewViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/svg-view'

@@ -1,10 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-
-export interface ISvgViewPosition {
-  readonly x: number
-  readonly y: number
-}
+import type { ISvgViewData, ISvgViewPosition } from './types'
 
 interface IProps {
   readonly workspace: string | null
@@ -12,12 +8,6 @@ interface IProps {
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
-}
-
-export interface ISvgViewData {
-  readonly scale: number
-  readonly rotation: number
-  readonly position: ISvgViewPosition
 }
 
 const DEFAULT_SVG_VIEW_DATA: ISvgViewData = {

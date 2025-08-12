@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IImageViewPosition } from './types'
+import type { IImageViewData, IImageViewPosition } from './types'
 
 interface IProps {
   readonly workspace?: string | null
@@ -8,12 +8,6 @@ interface IProps {
   readonly scale?: number
   readonly rotation?: number
   readonly position?: IImageViewPosition
-}
-
-export interface IImageViewData {
-  readonly scale: number
-  readonly rotation: number
-  readonly position: IImageViewPosition
 }
 
 const DEFAULT_IMAGE_VIEW_DATA: IImageViewData = {

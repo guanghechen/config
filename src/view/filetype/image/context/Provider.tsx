@@ -1,8 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { ImageViewContextType } from './context'
-import type { IImageViewPosition } from './types'
-import type { IImageViewData } from './viewmodel'
+import type { IImageViewData, IImageViewPosition } from './types'
 import { ImageViewViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/image-view'

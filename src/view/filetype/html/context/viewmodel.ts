@@ -1,14 +1,11 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
+import type { IHtmlViewData } from './types'
 
 interface IProps {
   readonly workspace?: string | null
   readonly filepath?: string | null
   readonly tailwindEnabled?: boolean
-}
-
-export interface IHtmlViewData {
-  readonly tailwindEnabled: boolean
 }
 
 const DEFAULT_HTML_VIEW_DATA: IHtmlViewData = {

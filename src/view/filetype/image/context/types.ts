@@ -5,3 +5,9 @@ export interface IImageViewPosition {
 
 // Alias for backwards compatibility
 export type IImagePosition = IImageViewPosition
+
+export interface IImageViewData {
+  readonly scale: number
+  readonly rotation: number
+  readonly position: IImageViewPosition
+}

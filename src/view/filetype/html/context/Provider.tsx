@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { HtmlViewContextType } from './context'
-import type { IHtmlViewData } from './viewmodel'
+import type { IHtmlViewData } from './types'
 import { HtmlViewViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/html-view'

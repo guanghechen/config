@@ -2,7 +2,7 @@ import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
-import type { IPdfViewData } from './viewmodel'
+import type { IPdfViewData } from './types'
 import { PdfViewViewModel } from './viewmodel'
 
 const storageKey: string = '@guanghechen/yozora/pdf-view'

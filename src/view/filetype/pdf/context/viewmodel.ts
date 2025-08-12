@@ -1,5 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
+import type { IPdfViewData } from './types'
 
 interface IProps {
   readonly workspace: string | null
@@ -8,11 +9,6 @@ interface IProps {
   readonly pageno?: number
   readonly scale?: number
   readonly multiview?: boolean
-}
-
-export interface IPdfViewData {
-  readonly scale: number
-  readonly multiview: boolean
 }
 
 const DEFAULT_PDF_VIEW_DATA: IPdfViewData = {
