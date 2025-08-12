@@ -6,6 +6,7 @@ import { ModeEnum } from './types'
 interface IProps {
   readonly mode?: ModeEnum
   readonly content?: string | null
+  readonly json?: unknown
 }
 
 const DEFAULT_JSON_VIEW_DATA: IJsonViewData = {
@@ -15,6 +16,7 @@ const DEFAULT_JSON_VIEW_DATA: IJsonViewData = {
 export class JsonViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
   public readonly content$: IState<string | null>
+  public readonly json$: IState<unknown>
 
   public static fromData(data: Partial<IJsonViewData> | undefined): JsonViewViewModel {
     const { mode }: IJsonViewData = this.normalize(DEFAULT_JSON_VIEW_DATA, data)
@@ -38,6 +40,7 @@ export class JsonViewViewModel extends ViewModel {
     super()
     this.mode$ = new State<ModeEnum>(props.mode ?? 1)
     this.content$ = new State<string | null>(props.content ?? null)
+    this.json$ = new State<unknown>(props.json ?? null)
   }
 
   public dump = (): IJsonViewData => {
