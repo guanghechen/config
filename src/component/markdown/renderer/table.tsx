@@ -43,7 +43,7 @@ export class TableRenderer extends React.Component<Table> {
                 <td
                   key={index}
                   align={aligns[index]}
-                  className="p-3 border-r border-gray-200 dark:border-gray-700 last:border-r-0"
+                  className="p-3 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-white dark:bg-gray-800"
                 >
                   {children}
                 </td>
