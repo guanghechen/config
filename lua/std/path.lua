@@ -17,13 +17,10 @@ local WORKSPACE ---@type string
 local IS_GIT_REPO ---@type boolean
 do
   local cwd = vim.fn.getcwd() ---@type string
-  local ok, p = pcall(vim.fn.system, { "git", "-C", cwd, "rev-parse", "--show-toplevel" }) ---@type boolean, string
-  local is_git_repo = ok and not not p and p:sub(1, 5) ~= "fatal" ---@type boolean
-  local workspace = is_git_repo and vim.trim(p) or cwd ---@type string
-
-  CWD = vim.fn.getcwd() ---@type string
-  WORKSPACE = workspace ---@type string
-  IS_GIT_REPO = is_git_repo ---@type boolean
+  local gitrepo = std.env.locate_gitroot(cwd) ---@type string|nil
+  CWD = cwd ---@type string
+  WORKSPACE = gitrepo or cwd ---@type string
+  IS_GIT_REPO = gitrepo ~= nil ---@type boolean
 end
 
 ---@class std.path.reposcope_map
