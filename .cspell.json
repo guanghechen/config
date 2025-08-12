@@ -350,6 +350,7 @@
     "formatoptions",
     "fout",
     "frecency",
+    "fsearchbuffer",
     "ftermcreate",
     "ftermdestroy",
     "ftermfocus1",
