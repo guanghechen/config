@@ -279,4 +279,20 @@ export class WorkspaceViewModel extends ViewModel {
     this.sidebarWidth$.next(sidebarWidth)
     this.topbarVisible$.next(topbarVisible)
   }
+
+  public toggleBothSidebarAndTopbar = (): void => {
+    const sidebarVisible = this.sidebarVisible$.getSnapshot()
+    const topbarVisible = this.topbarVisible$.getSnapshot()
+    const newVisibility = !(sidebarVisible && topbarVisible)
+    this.sidebarVisible$.next(newVisibility)
+    this.topbarVisible$.next(newVisibility)
+  }
+
+  public revealInSidebar = (): void => {
+    this.sidebarVisible$.next(true)
+    setTimeout(() => {
+      const tick = this.revealTick$.getSnapshot()
+      this.revealTick$.next(tick + 1)
+    }, 50)
+  }
 }

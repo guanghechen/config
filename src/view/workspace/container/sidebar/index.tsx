@@ -1,7 +1,7 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import type { WorkspaceViewModel } from '../../context'
-import { useSidebarVisible } from '../../context'
 import { FileTree } from './FileTree'
 
 interface IProps {
@@ -11,7 +11,7 @@ interface IProps {
 export const Sidebar: React.FC<IProps> = props => {
   const { viewmodel } = props
 
-  const visible: boolean = useSidebarVisible()
+  const visible: boolean = useStateValue(viewmodel.sidebarVisible$)
   const width: number = viewmodel.sidebarWidth$.getSnapshot() // don't subscribe the width change since we adjust it in resizer callback
 
   const containerRef = React.useRef<HTMLDivElement>(null)

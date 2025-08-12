@@ -1,16 +1,11 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { CopyButton } from '@/component/CopyButton'
 import { DockToRightIcon, OpenInNewIcon, OpenWithIcon } from '@/component/icon/material'
 import { toSearch } from '@/util/url'
 import type { WorkspaceViewModel } from '../context'
-import {
-  useCurrentFilepath,
-  useSidebarVisible,
-  useToggleBothSidebarAndTopbar,
-  useWorkspace,
-  useWorkspaceViewmodel,
-} from '../context'
+import { useWorkspaceViewmodel } from '../context'
 import { Workspace } from './sidebar/Workspace'
 
 interface IProps {
@@ -19,10 +14,10 @@ interface IProps {
 
 export const Topbar: React.FC<IProps> = () => {
   const viewmodel = useWorkspaceViewmodel()
-  const workspace: string | null = useWorkspace()
-  const sidebarVisible: boolean = useSidebarVisible()
-  const onToggleBothSidebarAndTopbar: () => void = useToggleBothSidebarAndTopbar()
-  const filepath: string | null = useCurrentFilepath()
+  const workspace: string | null = useStateValue(viewmodel.workspace$)
+  const sidebarVisible: boolean = useStateValue(viewmodel.sidebarVisible$)
+  const onToggleBothSidebarAndTopbar = viewmodel.toggleBothSidebarAndTopbar
+  const filepath: string | null = useStateValue(viewmodel.filepath$)
 
   const url = React.useMemo<string>(() => {
     const search = toSearch({ filepath, workspace })
@@ -30,10 +25,7 @@ export const Topbar: React.FC<IProps> = () => {
   }, [filepath, workspace])
 
   const reveal = React.useCallback(() => {
-    viewmodel.sidebarVisible$.next(true)
-    setTimeout(() => {
-      viewmodel.revealTick$.next(viewmodel.revealTick$.getSnapshot() + 1)
-    }, 50)
+    viewmodel.revealInSidebar()
   }, [viewmodel])
 
   return (

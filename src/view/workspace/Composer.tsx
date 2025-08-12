@@ -1,15 +1,16 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { DockToRightIcon } from '@/component/icon/material'
 import { Float } from './container/float'
 import { Main } from './container/Main'
 import { Sidebar } from './container/sidebar'
 import { Topbar } from './container/Topbar'
-import { useToggleBothSidebarAndTopbar, useTopbarVisible, useWorkspaceViewmodel } from './context'
+import { useWorkspaceViewmodel } from './context'
 
 export const Composer: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
-  const topbarVisible = useTopbarVisible()
-  const onToggleBothSidebarAndTopbar = useToggleBothSidebarAndTopbar()
+  const topbarVisible = useStateValue(viewmodel.topbarVisible$)
+  const onToggleBothSidebarAndTopbar = viewmodel.toggleBothSidebarAndTopbar
   const topbarHeight = topbarVisible ? '3rem' : '0rem'
 
   return (

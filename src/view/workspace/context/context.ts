@@ -9,3 +9,6 @@ export const WorkspaceContextType = React.createContext<IWorkspaceContext>({
   viewmodel: null as unknown as WorkspaceViewModel,
 })
 WorkspaceContextType.displayName = 'WorkspaceContext'
+
+export const useWorkspaceViewmodel = (): WorkspaceViewModel =>
+  React.useContext(WorkspaceContextType).viewmodel
