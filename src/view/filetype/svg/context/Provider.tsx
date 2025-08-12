@@ -1,8 +1,11 @@
+import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
-import type { ISvgViewPosition } from './viewmodel'
+import type { ISvgViewData, ISvgViewPosition } from './viewmodel'
 import { SvgViewViewModel } from './viewmodel'
+
+const storageKey: string = '@guanghechen/yozora/svg-view'
 
 interface IProps {
   readonly workspace: string | null
@@ -15,9 +18,16 @@ interface IProps {
 
 export const SvgViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, scale, rotation, position, children } = props
-  const [viewmodel] = React.useState<SvgViewViewModel>(
-    () => new SvgViewViewModel({ workspace, filepath, scale, rotation, position }),
-  )
+  const [viewmodel] = React.useState<SvgViewViewModel>(() => {
+    const initialData: Partial<ISvgViewData> = JSON.parse(
+      window.localStorage.getItem(storageKey) || '{}',
+    )
+    return SvgViewViewModel.fromData({
+      scale: scale ?? initialData.scale,
+      rotation: rotation ?? initialData.rotation,
+      position: position ?? initialData.position,
+    })
+  })
 
   const context: ISvgViewContext = React.useMemo<ISvgViewContext>(
     () => ({ viewmodel }),
@@ -56,6 +66,19 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace, filepath, scale, rotation, position } = props
 
   React.useEffect(() => {
+    const computed = Computed.fromObservables(
+      [viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
+      () => {
+        const data: ISvgViewData = viewmodel.dump()
+        window.localStorage.setItem(storageKey, JSON.stringify(data))
+      },
+    )
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+
+  React.useEffect(() => {
     viewmodel.workspace$.next(workspace)
   }, [viewmodel.workspace$, workspace])
 
@@ -64,15 +87,15 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
-    viewmodel.scale$.next(scale ?? 1)
+    viewmodel.scale$.next(scale ?? viewmodel.scale$.getSnapshot())
   }, [viewmodel.scale$, scale])
 
   React.useEffect(() => {
-    viewmodel.rotation$.next(rotation ?? 0)
+    viewmodel.rotation$.next(rotation ?? viewmodel.rotation$.getSnapshot())
   }, [viewmodel.rotation$, rotation])
 
   React.useEffect(() => {
-    viewmodel.position$.next(position ?? { x: 0, y: 0 })
+    viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
   }, [viewmodel.position$, position])
 
   return <React.Fragment />
