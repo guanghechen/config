@@ -201,6 +201,7 @@ function M.to_md()
   end
 
   local content = table.concat(lines, "\n")
+  pcall(vim.fn.setreg, "+", content)
   std.reporter.info({
     from = __module_name__,
     subject = "to_md",
