@@ -1,10 +1,11 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#basedpyright
+-- https://github.com/neovim/nvim-lspconfig/blob/0112e1f77983141e1453bd37d124302f1c876c46/lsp/basedpyright.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#basedpyright
 
 local Methods = vim.lsp.protocol.Methods
 
----@param path                          string
+---@param pythonPath                    string
 ---@return nil
-local function set_python_path(path)
+local function set_python_path(pythonPath)
   local clients = vim.lsp.get_clients({
     bufnr = vim.api.nvim_get_current_buf(),
     name = "basedpyright",
@@ -12,7 +13,7 @@ local function set_python_path(path)
   for _, client in ipairs(clients) do
     client.settings = client.settings or {}
     client.settings.python = client.settings.python or {}
-    client.settings.python["pythonPath"] = path
+    client.settings.python["pythonPath"] = pythonPath
     client:notify(Methods.workspace_didChangeConfiguration, { settings = nil })
   end
 end

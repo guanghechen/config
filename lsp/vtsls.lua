@@ -1,4 +1,6 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#vtsls
+-- https://github.com/neovim/nvim-lspconfig/blob/85379d02d3bac8dc68129a4b81d7dbd00c8b0f77/lsp/vtsls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vtsls
+
 local __module_name__ = "lsp.vtsls" ---@type string
 
 local Methods = vim.lsp.protocol.Methods

@@ -1,4 +1,16 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#cssls
+-- https://github.com/neovim/nvim-lspconfig/blob/5b646bf2d04a8e93ecef23d38442546b079577d4/lsp/cssls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#cssls
+
+---@param bufnr                         integer
+---@param on_dir                        fun(rootdir: string|nil)
+local function root_dir(bufnr, on_dir)
+  local workspace = std.path.workspace() ---@type string
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  if #filepath > #workspace and filepath:sub(1, #workspace) == workspace then
+    on_dir(workspace)
+    return
+  end
+end
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
@@ -28,13 +40,15 @@ return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "vscode-css-language-server", "--stdio" },
   filetypes = { "css", "scss", "less" },
-  init_options = { provideFormatter = true },
-  root_markers = { "package.json", ".git" },
+  init_options = {
+    provideFormatter = true,
+  },
   settings = {
     css = { validate = true },
     less = { validate = true },
     scss = { validate = true },
   },
+  root_dir = root_dir,
   before_init = before_init,
   on_attach = on_attach,
   on_detach = on_detach,

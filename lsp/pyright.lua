@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#pyright
+-- https://github.com/neovim/nvim-lspconfig/blob/44ba712bc3015cce9b599d18f947d85a630e512b/lsp/pyright.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#pyright
 
 local Methods = vim.lsp.protocol.Methods
 

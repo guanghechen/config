@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#lua_ls
+-- https://github.com/neovim/nvim-lspconfig/blob/a05bfc8988bb10d5bff32c314642c3243226d8dc/lsp/lua_ls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#lua_ls
 
 local nvim_config = nil ---@type string|nil
 local workspace = std.path.workspace() ---@type string

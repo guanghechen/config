@@ -1,11 +1,23 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#tailwindcss
+-- https://github.com/neovim/nvim-lspconfig/blob/1ddc1a2e692b120cda6d33c890461e49cb85d6bf/lsp/tailwindcss.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#tailwindcss
 
 ---@type string[]
 local CONFIG_FILENAMES = {
-  "tailwind.config.ts",
+  -- Generic
   "tailwind.config.js",
+  "tailwind.config.cjs",
   "tailwind.config.mjs",
-  "vite.config.ts",
+  "tailwind.config.ts",
+  "postcss.config.js",
+  "postcss.config.cjs",
+  "postcss.config.mjs",
+  "postcss.config.ts",
+  -- Django
+  "theme/static_src/tailwind.config.js",
+  "theme/static_src/tailwind.config.cjs",
+  "theme/static_src/tailwind.config.mjs",
+  "theme/static_src/tailwind.config.ts",
+  "theme/static_src/postcss.config.js",
 }
 
 ---@type string[]

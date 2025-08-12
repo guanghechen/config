@@ -1,5 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#html
--- https://github.com/vscode-langservers/vscode-html-languageserver-bin
+-- https://github.com/neovim/nvim-lspconfig/blob/5b646bf2d04a8e93ecef23d38442546b079577d4/lsp/html.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#html
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
@@ -28,7 +28,7 @@ end
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "vscode-html-language-server", "--stdio" },
-  filetypes = { "html" },
+  filetypes = { "html", "templ" },
   flags = { debounce_text_changes = 500 },
   root_markers = { "package.json", ".git" },
   init_options = {

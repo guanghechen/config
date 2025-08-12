@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#jsonls
+-- https://github.com/neovim/nvim-lspconfig/blob/5b646bf2d04a8e93ecef23d38442546b079577d4/lsp/jsonls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#jsonls
 
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)

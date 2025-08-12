@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#eslint
+-- https://github.com/neovim/nvim-lspconfig/blob/7b8a5282683619ddcf40333c6490ada804aeb95d/lsp/eslint.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
 ---@type string[]
 local CONFIG_FILENAMES = {
@@ -59,6 +60,18 @@ end
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
   eve.lsp.on_attach(client, bufnr)
+
+  vim.api.nvim_buf_create_user_command(0, "LspEslintFixAll", function()
+    client:request_sync("workspace/executeCommand", {
+      command = "eslint.applyAllFixes",
+      arguments = {
+        {
+          uri = vim.uri_from_bufnr(bufnr),
+          version = vim.lsp.util.buf_versions[bufnr],
+        },
+      },
+    }, nil, bufnr)
+  end, {})
 end
 
 ---@param client                        vim.lsp.Client
@@ -93,6 +106,8 @@ return {
     "typescript.tsx",
     "vue",
     "svelte",
+    "astro",
+    "htmlangular",
   },
   handlers = {
     ["eslint/openDoc"] = function(_, result)

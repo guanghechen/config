@@ -1,4 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4d3b3bb8815fbe37bcaf3dbdb12a22382bc11ebe/doc/configs.md#yamlls
+-- https://github.com/neovim/nvim-lspconfig/blob/c30a661a1f4c270f542eaf861f3eb726bb9baa69/lsp/yamlls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#yamlls
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
