@@ -273,6 +273,7 @@ export const apps = [
 
       settings.profiles = settings.profiles || {};
       settings.profiles.defaults = settings.profiles.defaults || {};
+      settings.profiles.defaults.bellStyle = ["window"];
       settings.profiles.defaults.colorScheme = color_scheme.name;
       settings.profiles.defaults.cursorShape = "bar";
       settings.profiles.defaults.opacity = 100;
