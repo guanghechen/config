@@ -7,6 +7,7 @@ The following rules are supreme principles that must be followed at all times re
 3. **MUST**: Use `I`-prefixed naming for all types and interfaces (e.g., `IChatMessage`, `IUser`)
 4. **MUST**: Write clean and concise code, avoid unnecessary comments.
 5. **MUST**: Strictly adhere to the single responsibility principle, keep each file doing as few things as possible.
+6. **MUST**: Keep processing until the task is completed or an unsolvable problem is encountered, without stopping in between.
 
 # Recommended Requirements
 
