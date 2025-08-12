@@ -1,7 +1,11 @@
+import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
+import type { IPdfViewData } from './viewmodel'
 import { PdfViewViewModel } from './viewmodel'
+
+const storageKey: string = '@guanghechen/yozora/pdf-view'
 
 interface IProps {
   readonly workspace: string | null
@@ -15,9 +19,15 @@ interface IProps {
 
 export const PdfViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, pages, pageno, scale, multiview, children } = props
-  const [viewmodel] = React.useState<PdfViewViewModel>(
-    () => new PdfViewViewModel({ workspace, filepath, pages, pageno, scale, multiview }),
-  )
+  const [viewmodel] = React.useState<PdfViewViewModel>(() => {
+    const initialData: Partial<IPdfViewData> = JSON.parse(
+      window.localStorage.getItem(storageKey) || '{}',
+    )
+    return PdfViewViewModel.fromData({
+      scale: scale ?? initialData.scale,
+      multiview: multiview ?? initialData.multiview,
+    })
+  })
 
   const context: IPdfViewContext = React.useMemo<IPdfViewContext>(
     () => ({ viewmodel }),
@@ -58,6 +68,16 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace, filepath, pages, pageno, scale, multiview } = props
 
   React.useEffect(() => {
+    const computed = Computed.fromObservables([viewmodel.scale$, viewmodel.multiview$], () => {
+      const data: IPdfViewData = viewmodel.dump()
+      window.localStorage.setItem(storageKey, JSON.stringify(data))
+    })
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+
+  React.useEffect(() => {
     viewmodel.workspace$.next(workspace)
   }, [viewmodel.workspace$, workspace])
 
@@ -74,11 +94,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel.pageno$, pageno])
 
   React.useEffect(() => {
-    viewmodel.scale$.next(scale ?? 1)
+    viewmodel.scale$.next(scale ?? viewmodel.scale$.getSnapshot())
   }, [viewmodel.scale$, scale])
 
   React.useEffect(() => {
-    viewmodel.multiview$.next(multiview ?? false)
+    viewmodel.multiview$.next(multiview ?? viewmodel.multiview$.getSnapshot())
   }, [viewmodel.multiview$, multiview])
 
   return <React.Fragment />
