@@ -1,5 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { useFileResult } from '@/hook/useFileResult'
+import type { IPdfFileData } from '@/util/fetch'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
 import type { IPdfViewData } from './types'
@@ -10,6 +12,7 @@ const storageKey: string = '@guanghechen/yozora/pdf-view'
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string
+  readonly filepathDirtyTick: number
   readonly pages?: number
   readonly pageno?: number
   readonly scale?: number
@@ -18,7 +21,8 @@ interface IProps {
 }
 
 export const PdfViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, pages, pageno, scale, multiview, children } = props
+  const { workspace, filepath, filepathDirtyTick, pages, pageno, scale, multiview, children } =
+    props
   const [viewmodel] = React.useState<PdfViewViewModel>(() => {
     const initialData: Partial<IPdfViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -41,6 +45,7 @@ export const PdfViewProvider: React.FC<IProps> = props => {
         viewmodel={viewmodel}
         workspace={workspace}
         filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
         pages={pages}
         pageno={pageno}
         scale={scale}
@@ -58,6 +63,7 @@ interface ISideEffectProps {
   readonly viewmodel: PdfViewViewModel
   readonly workspace: string | null
   readonly filepath: string
+  readonly filepathDirtyTick: number
   readonly pages?: number
   readonly pageno?: number
   readonly scale?: number
@@ -65,7 +71,23 @@ interface ISideEffectProps {
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, pages, pageno, scale, multiview } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, pages, pageno, scale, multiview } =
+    props
+
+  const { data, error } = useFileResult<IPdfFileData>(workspace, filepath, filepathDirtyTick)
+
+  React.useEffect(() => {
+    if (data) {
+      viewmodel.data$.next(data)
+      viewmodel.error$.next(null)
+    } else if (error) {
+      viewmodel.data$.next(null)
+      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+    } else {
+      viewmodel.data$.next(null)
+      viewmodel.error$.next(null)
+    }
+  }, [data, error, viewmodel])
 
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.scale$, viewmodel.multiview$], () => {

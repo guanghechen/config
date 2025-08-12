@@ -1,8 +1,7 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useFileResult } from '@/hook/useFileResult'
-import type { IPdfFileData } from '@/util/fetch'
 import { Composer } from './Composer'
-import { PdfViewProvider } from './context'
+import { PdfViewProvider, usePdfViewViewModel } from './context'
 
 interface IProps {
   readonly workspace: string | null
@@ -14,8 +13,6 @@ interface IProps {
 export const PdfView: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
 
-  const { data, error } = useFileResult<IPdfFileData>(workspace, filepath, filepathDirtyTick)
-
   if (!filepath) {
     return (
       <div className="w-full pt-8">
@@ -26,6 +23,28 @@ export const PdfView: React.FC<IProps> = props => {
 
   return (
     <div className="w-full pt-8">
+      <PdfViewProvider
+        workspace={workspace}
+        filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
+      >
+        <PdfContent mainScrollableContainer={mainScrollableContainer} />
+      </PdfViewProvider>
+    </div>
+  )
+}
+
+PdfView.displayName = 'PdfView'
+
+const PdfContent: React.FC<{ mainScrollableContainer: HTMLDivElement | null }> = ({
+  mainScrollableContainer,
+}) => {
+  const viewmodel = usePdfViewViewModel()
+  const data = useStateValue(viewmodel.data$)
+  const error = useStateValue(viewmodel.error$)
+
+  return (
+    <React.Fragment>
       {!!error && (
         <div className="relative mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
           <code>error: {String(error)}</code>
@@ -33,13 +52,9 @@ export const PdfView: React.FC<IProps> = props => {
       )}
       {!!data && (
         <div className="relative w-full">
-          <PdfViewProvider workspace={workspace} filepath={filepath}>
-            <Composer mainScrollableContainer={mainScrollableContainer} />
-          </PdfViewProvider>
+          <Composer mainScrollableContainer={mainScrollableContainer} />
         </div>
       )}
-    </div>
+    </React.Fragment>
   )
 }
-
-PdfView.displayName = 'PdfView'

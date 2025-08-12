@@ -1,38 +1,12 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useFileResult } from '@/hook/useFileResult'
-import type { IJsonFileData } from '@/util/fetch'
-import { useExcalidrawViewState, useExcalidrawViewViewModel } from '../context'
+import { useExcalidrawViewViewModel } from '../context'
 import { ExcalidrawComposer } from './ExcalidrawComposer'
 
-interface IProps {
-  readonly filepathDirtyTick: number
-}
-
-export const ExcalidrawLayout: React.FC<IProps> = props => {
-  const { filepathDirtyTick } = props
-  const { workspace, filepath, error: contextError } = useExcalidrawViewState()
+export const ExcalidrawLayout: React.FC = () => {
   const viewmodel = useExcalidrawViewViewModel()
-
-  const { data, error: fileError } = useFileResult<IJsonFileData>(
-    workspace,
-    filepath,
-    filepathDirtyTick,
-  )
-  const error = contextError || fileError
-
-  React.useEffect(() => {
-    if (data?.content) {
-      viewmodel.content$.setState(() => data.content)
-    }
-  }, [data?.content, viewmodel.content$])
-
-  React.useEffect(() => {
-    if (error) {
-      viewmodel.error$.setState(() => String(error))
-    } else {
-      viewmodel.error$.setState(() => null)
-    }
-  }, [error, viewmodel.error$])
+  const data = useStateValue(viewmodel.data$)
+  const error = useStateValue(viewmodel.error$)
 
   return (
     <div className="w-full pt-8">

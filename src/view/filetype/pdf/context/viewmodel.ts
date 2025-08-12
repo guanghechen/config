@@ -1,5 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
+import type { IPdfFileData } from '@/util/fetch'
 import type { IPdfViewData } from './types'
 
 interface IProps {
@@ -23,6 +24,8 @@ export class PdfViewViewModel extends ViewModel {
   public readonly pageno$: IState<number>
   public readonly scale$: IState<number>
   public readonly multiview$: IState<boolean>
+  public readonly data$: IState<IPdfFileData | null>
+  public readonly error$: IState<string | null>
 
   public static fromData(data: Partial<IPdfViewData> | undefined): PdfViewViewModel {
     const { scale, multiview }: IPdfViewData = this.normalize(DEFAULT_PDF_VIEW_DATA, data)
@@ -66,6 +69,8 @@ export class PdfViewViewModel extends ViewModel {
     this.pageno$ = new State<number>(pageno)
     this.scale$ = new State<number>(scale)
     this.multiview$ = new State<boolean>(multiview)
+    this.data$ = new State<IPdfFileData | null>(null)
+    this.error$ = new State<string | null>(null)
   }
 
   public dump = (): IPdfViewData => {

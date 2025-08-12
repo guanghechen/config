@@ -11,12 +11,12 @@ interface IProps {
 }
 
 export const Composer: React.FC<IProps> = props => {
-  const { filepathDirtyTick, mainScrollableContainer } = props
+  const { mainScrollableContainer } = props
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   return (
     <div className="w-full">
-      <ExcalidrawLayout filepathDirtyTick={filepathDirtyTick} />
+      <ExcalidrawLayout />
       <button
         onClick={scrollToTop}
         className={cn(
