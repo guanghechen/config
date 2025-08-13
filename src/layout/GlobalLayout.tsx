@@ -1,5 +1,5 @@
 import React from 'react'
-import { FloatingGate } from './FloatingNavigation'
+import { FloatingGate } from '@/container/FloatingNavigation'
 
 interface GlobalLayoutProps {
   children: React.ReactNode

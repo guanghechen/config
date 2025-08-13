@@ -1,15 +1,8 @@
 import cn from 'clsx'
 import React, { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ThemeToggle } from '@/container/ThemeToggle'
-
-interface RouteItem {
-  path: string
-  label: string
-  icon?: React.ReactNode
-}
-
-const routes: RouteItem[] = [{ path: '/ws/', label: 'Workspace' }]
+import { routes } from '@/route'
+import { ThemeToggle } from './ThemeToggle'
 
 type MenuLevel = 'closed' | 'first' | 'navigation' | 'settings'
 
@@ -104,8 +97,6 @@ export const FloatingGate: React.FC = () => {
             </button>
           </React.Fragment>
         )}
-
-        {/* Second Level Menu - Navigation Routes */}
         {menuLevel === 'navigation' && (
           <React.Fragment>
             {/* Back Button */}
@@ -157,8 +148,6 @@ export const FloatingGate: React.FC = () => {
             })}
           </React.Fragment>
         )}
-
-        {/* Settings Menu */}
         {menuLevel === 'settings' && (
           <React.Fragment>
             {/* Back Button */}
