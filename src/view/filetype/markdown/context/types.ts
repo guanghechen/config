@@ -7,3 +7,7 @@ export enum ModeEnum {
   TOC = bit << 2,
   FM = bit << 3,
 }
+
+export interface IMarkdownViewData {
+  readonly mode: ModeEnum
+}

@@ -1,10 +1,13 @@
+import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
 import type { IMarkdownFileData } from '@/util/fetch'
 import { MarkdownViewContextType } from './context'
-import { ModeEnum } from './types'
+import type { IMarkdownViewData, ModeEnum } from './types'
 import { MarkdownViewViewModel } from './viewmodel'
+
+const storageKey: string = '#/view/filetype/markdown'
 
 interface IProps {
   readonly workspace: string | null
@@ -26,16 +29,14 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
     mode,
     children,
   } = props
-  const [viewmodel] = React.useState<MarkdownViewViewModel>(
-    () =>
-      new MarkdownViewViewModel({
-        workspace,
-        filepath,
-        tocActivatedIdentifier,
-        specifiedTocActivatedIdentifier,
-        mode,
-      }),
-  )
+  const [viewmodel] = React.useState<MarkdownViewViewModel>(() => {
+    const initialData: Partial<IMarkdownViewData> = JSON.parse(
+      window.localStorage.getItem(storageKey) || '{}',
+    )
+    return MarkdownViewViewModel.fromData({
+      mode: mode ?? initialData.mode,
+    })
+  })
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
@@ -96,6 +97,16 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [data, error, viewmodel])
 
   React.useEffect(() => {
+    const computed = Computed.fromObservables([viewmodel.mode$], () => {
+      const data: IMarkdownViewData = viewmodel.dump()
+      window.localStorage.setItem(storageKey, JSON.stringify(data))
+    })
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+
+  React.useEffect(() => {
     viewmodel.workspace$.next(workspace)
   }, [viewmodel.workspace$, workspace])
 
@@ -112,7 +123,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel.specifiedTocActivatedIdentifier$, specifiedTocActivatedIdentifier])
 
   React.useEffect(() => {
-    viewmodel.mode$.next(mode ?? ModeEnum.VIEW)
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
   }, [viewmodel.mode$, mode])
 
   return <React.Fragment />

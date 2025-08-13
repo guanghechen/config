@@ -32,10 +32,16 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
     const usp = new URLSearchParams(window.location.search)
     const workspace: string | null = workspace_name || null
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
-
-    if (workspace) initialData.workspace = workspace
-    if (filepath) initialData.filepath = filepath
-    const viewmodel = WorkspaceViewViewModel.fromData(initialData)
+    const viewmodel = WorkspaceViewViewModel.fromData({
+      workspace: workspace ?? initialData.workspace,
+      filepath: filepath ?? initialData.filepath,
+      workspaces: initialData.workspaces,
+      filetreeKeyword: initialData.filetreeKeyword,
+      filetreeMode: initialData.filetreeMode,
+      sidebarVisible: initialData.sidebarVisible,
+      sidebarWidth: initialData.sidebarWidth,
+      topbarVisible: initialData.topbarVisible,
+    })
     return viewmodel
   })
 
@@ -137,8 +143,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
         viewmodel.workspace$,
         viewmodel.workspaces$,
         viewmodel.filetreeMode$,
-        viewmodel.jsonMode$,
-        viewmodel.markdownMode$,
         viewmodel.sidebarWidth$,
         viewmodel.sidebarVisible$,
         viewmodel.topbarVisible$,
