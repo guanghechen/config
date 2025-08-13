@@ -32,7 +32,7 @@ const DEFAULT_WORKSPACE_DATA: IWorkspaceData = {
   topbarVisible: false,
 }
 
-export class WorkspaceViewModel extends ViewModel {
+export class WorkspaceViewViewModel extends ViewModel {
   public readonly filepath$: State<string | null>
   public readonly workspace$: State<string | null>
   public readonly workspaces$: State<IWorkspaceItem[]>
@@ -57,7 +57,7 @@ export class WorkspaceViewModel extends ViewModel {
 
   public readonly updateSidebarWidthDebounced: (nextWidth: number) => void
 
-  public static fromData(data: Partial<IWorkspaceData> | undefined): WorkspaceViewModel {
+  public static fromData(data: Partial<IWorkspaceData> | undefined): WorkspaceViewViewModel {
     const {
       filepath,
       workspace,
@@ -70,7 +70,7 @@ export class WorkspaceViewModel extends ViewModel {
       sidebarWidth,
       topbarVisible,
     }: IWorkspaceData = this.normalize(DEFAULT_WORKSPACE_DATA, data)
-    return new WorkspaceViewModel({
+    return new WorkspaceViewViewModel({
       filepath,
       workspace,
       workspaces,
@@ -267,7 +267,7 @@ export class WorkspaceViewModel extends ViewModel {
       sidebarVisible,
       sidebarWidth,
       topbarVisible,
-    }: IWorkspaceData = WorkspaceViewModel.normalize(this.dump(), data)
+    }: IWorkspaceData = WorkspaceViewViewModel.normalize(this.dump(), data)
     this.workspaces$.next(workspaces)
     this.workspace$.next(workspace)
     this.filetreeKeyword$.next(filetreeKeyword)

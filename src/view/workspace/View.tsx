@@ -1,12 +1,12 @@
 import React from 'react'
 import { Composer } from './Composer'
-import { WorkspaceContextProvider } from './context'
+import { WorkspaceViewProvider } from './context'
 
 export const WorkspaceView: React.FC = () => {
   return (
-    <WorkspaceContextProvider>
+    <WorkspaceViewProvider>
       <Composer />
-    </WorkspaceContextProvider>
+    </WorkspaceViewProvider>
   )
 }
 

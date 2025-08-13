@@ -44,13 +44,15 @@ const plugin = (): Plugin => {
                 void forceOpen()
 
                 async function forceOpen(): Promise<void> {
-                  try {
-                    const search: string = toSearch({ workspace, filepath: relativePath })
-                    const url: string = workspace
-                      ? `http://${SERVER_HOST}:${SERVER_PORT}/ws/${workspace}/${search}`
-                      : `http://${SERVER_HOST}:${SERVER_PORT}/file${search}`
-                    await openBrowser(url, true)
+                  const search: string = workspace
+                    ? toSearch({ filepath: relativePath })
+                    : toSearch({ filepath })
+                  const url: string = workspace
+                    ? `http://${SERVER_HOST}:${SERVER_PORT}/ws/${workspace}/${search}`
+                    : `http://${SERVER_HOST}:${SERVER_PORT}/file${search}`
 
+                  try {
+                    await openBrowser(url, true)
                     await sleep(500)
                     server.ws.send({
                       type: 'custom',

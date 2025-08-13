@@ -2,6 +2,7 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
+import { useParams } from 'react-router-dom'
 import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useWorkspaces } from '@/hook/useWorkspaces'
 import { ServerCustomEventType } from '@/shared/types'
@@ -11,28 +12,29 @@ import type {
   Mutable,
 } from '@/shared/types'
 import type { IWorkspaceContext } from './context'
-import { WorkspaceContextType } from './context'
+import { WorkspaceViewContextType } from './context'
 import type { IWorkspaceData } from './types'
-import { WorkspaceViewModel } from './viewmodel'
+import { WorkspaceViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/workspace'
 
-interface ISideEffectProps {
-  readonly viewmodel: WorkspaceViewModel
+interface IProps {
+  readonly children: React.ReactNode
 }
 
-export const WorkspaceContextProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const [viewmodel] = React.useState<WorkspaceViewModel>(() => {
+export const WorkspaceViewProvider: React.FC<IProps> = props => {
+  const { workspace_name } = useParams<{ workspace_name?: string }>()
+  const [viewmodel] = React.useState<WorkspaceViewViewModel>(() => {
     const initialData: Mutable<Partial<IWorkspaceData>> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const usp = new URLSearchParams(window.location.search)
-    const workspace: string | null = decodeURIComponent(usp.get('workspace') || '') || null
+    const workspace: string | null = workspace_name || null
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
 
     if (workspace) initialData.workspace = workspace
     if (filepath) initialData.filepath = filepath
-    const viewmodel = WorkspaceViewModel.fromData(initialData)
+    const viewmodel = WorkspaceViewViewModel.fromData(initialData)
     return viewmodel
   })
 
@@ -43,49 +45,25 @@ export const WorkspaceContextProvider: React.FC<{ children: React.ReactNode }> =
 
   return (
     <React.Fragment>
-      <PersistSideEffect viewmodel={viewmodel} />
-      <SideEffect viewmodel={viewmodel} />
-      <MermaidSideEffect viewmodel={viewmodel} />
-      <WorkspaceContextType.Provider value={context}>
+      <WorkspaceViewContextType.Provider value={context}>
         {props.children}
-      </WorkspaceContextType.Provider>
+      </WorkspaceViewContextType.Provider>
+      <SideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
-WorkspaceContextProvider.displayName = 'WorkspaceContextProvider'
+WorkspaceViewProvider.displayName = 'WorkspaceContextProvider'
 
-const PersistSideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel } = props
+// /////////////////////////////////////////////////////////////////////////////////////////////////
 
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [
-        viewmodel.filepath$,
-        viewmodel.workspace$,
-        viewmodel.workspaces$,
-        viewmodel.filetreeMode$,
-        viewmodel.jsonMode$,
-        viewmodel.markdownMode$,
-        viewmodel.sidebarWidth$,
-        viewmodel.sidebarVisible$,
-        viewmodel.topbarVisible$,
-      ],
-      () => {
-        const data: IWorkspaceData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
-
-  return <React.Fragment />
+interface ISideEffectProps {
+  readonly viewmodel: WorkspaceViewViewModel
 }
-PersistSideEffect.displayName = 'WorkspacePersistSideEffect'
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
+  const theme: SiteTheme = useSiteTheme()
+
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath: string | null = useStateValue(viewmodel.filepath$)
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
@@ -118,6 +96,29 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   })
 
   React.useEffect(() => {
+    const computed = Computed.fromObservables(
+      [
+        viewmodel.filepath$,
+        viewmodel.workspace$,
+        viewmodel.workspaces$,
+        viewmodel.filetreeMode$,
+        viewmodel.jsonMode$,
+        viewmodel.markdownMode$,
+        viewmodel.sidebarWidth$,
+        viewmodel.sidebarVisible$,
+        viewmodel.topbarVisible$,
+      ],
+      () => {
+        const data: IWorkspaceData = viewmodel.dump()
+        window.localStorage.setItem(storageKey, JSON.stringify(data))
+      },
+    )
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+
+  React.useEffect(() => {
     viewmodel.workspaces$.next(workspaces)
   }, [viewmodel, workspaces])
 
@@ -136,12 +137,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     window.history.replaceState(null, '', newUrl)
   }, [workspace, filepath])
 
-  return <React.Fragment />
-}
-
-const MermaidSideEffect: React.FC<ISideEffectProps> = () => {
-  const theme: SiteTheme = useSiteTheme()
-
   React.useEffect(() => {
     const darken = theme === SiteTheme.DARKEN
     mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
@@ -149,3 +144,5 @@ const MermaidSideEffect: React.FC<ISideEffectProps> = () => {
 
   return <React.Fragment />
 }
+
+SideEffect.displayName = 'WorkspaceViewSideEffect'

@@ -1,14 +1,14 @@
 import React from 'react'
-import type { WorkspaceViewModel } from './viewmodel'
+import type { WorkspaceViewViewModel } from './viewmodel'
 
 export interface IWorkspaceContext {
-  readonly viewmodel: WorkspaceViewModel
+  readonly viewmodel: WorkspaceViewViewModel
 }
 
-export const WorkspaceContextType = React.createContext<IWorkspaceContext>({
-  viewmodel: null as unknown as WorkspaceViewModel,
+export const WorkspaceViewContextType = React.createContext<IWorkspaceContext>({
+  viewmodel: null as unknown as WorkspaceViewViewModel,
 })
-WorkspaceContextType.displayName = 'WorkspaceContext'
+WorkspaceViewContextType.displayName = 'WorkspaceContext'
 
-export const useWorkspaceViewmodel = (): WorkspaceViewModel =>
-  React.useContext(WorkspaceContextType).viewmodel
+export const useWorkspaceViewmodel = (): WorkspaceViewViewModel =>
+  React.useContext(WorkspaceViewContextType).viewmodel

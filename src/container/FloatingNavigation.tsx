@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import React, { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { routes } from '@/route'
+import { listedRoutes } from '@/route'
 import { ThemeToggle } from './ThemeToggle'
 
 type MenuLevel = 'closed' | 'first' | 'navigation' | 'settings'
@@ -122,7 +122,7 @@ export const FloatingGate: React.FC = () => {
             </button>
 
             {/* Route Navigation Buttons */}
-            {routes.map(route => {
+            {listedRoutes.map(route => {
               const isActive =
                 location.pathname === route.path ||
                 (route.path === '/' && location.pathname === '/workspace/')
