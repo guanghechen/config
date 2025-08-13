@@ -1,7 +1,7 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
@@ -51,18 +51,26 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const filepath: string | null = useStateValue(viewmodel.filepath$)
 
   const navigate = useNavigate()
-  const location = useLocation()
-
   const hmr = useEventCallback((): void => {
     const meta = import.meta as any
     if (meta.hot) {
-      meta.hot.on(ServerCustomEventType.FILE_CHANGED, (data: IResponsePayloadFileChanged): void => {
+      let unsubscribed: boolean = false
+
+      const handleFileChanged = (data: IResponsePayloadFileChanged): void => {
+        if (unsubscribed) return
+
         viewmodel.filepath$.next(data.filepath, { force: true })
         if (data.filepath === filepath) viewmodel.markFilepathDirty()
-      })
-      meta.hot.on(ServerCustomEventType.FILE_SWITCHED, (data: IResponsePayloadFileSwitch): void => {
-        if (data.workspace) {
-          void navigate(`/ws/${data.workspace}${location.search}`)
+      }
+
+      const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
+        if (unsubscribed) return
+
+        if (data.workspace && data.filepath) {
+          unsubscribed = true
+          meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+          meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+          void navigate(`/ws/${data.workspace}?filepath=${encodeURIComponent(data.filepath)}`)
           return
         }
 
@@ -77,7 +85,10 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
             payload: {},
           },
         })
-      })
+      }
+
+      meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+      meta.hot.on(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
     }
   })
 

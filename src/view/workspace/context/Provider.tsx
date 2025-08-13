@@ -2,7 +2,7 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { useWorkspaces } from '@/hook/useWorkspaces'
@@ -63,6 +63,7 @@ interface ISideEffectProps {
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
+  const navigate = useNavigate()
   const theme: SiteTheme = useSiteTheme()
 
   const workspace: string | null = useStateValue(viewmodel.workspace$)
@@ -73,12 +74,27 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const hmr = useEventCallback((): void => {
     const meta = import.meta as any
     if (meta.hot) {
-      meta.hot.on(ServerCustomEventType.FILE_CHANGED, (data: IResponsePayloadFileChanged): void => {
+      let unsubscribed: boolean = false
+
+      const handleFileChanged = (data: IResponsePayloadFileChanged): void => {
+        if (unsubscribed) return
+
         viewmodel.workspace$.next(data.workspace)
         viewmodel.filepath$.next(data.filepath, { force: true })
         if (data.filepath === filepath) viewmodel.markFilepathDirty()
-      })
-      meta.hot.on(ServerCustomEventType.FILE_SWITCHED, (data: IResponsePayloadFileSwitch): void => {
+      }
+
+      const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
+        if (unsubscribed) return
+
+        if (!data.workspace && data.filepath) {
+          unsubscribed = true
+          meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+          meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+          void navigate(`/file?filepath=${encodeURIComponent(data.filepath)}`)
+          return
+        }
+
         const workspace: string | null = viewmodel.workspace$.getSnapshot()
         const filepath: string | null = viewmodel.filepath$.getSnapshot()
         if (data.workspace !== workspace) viewmodel.workspace$.next(data.workspace)
@@ -92,7 +108,10 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
             payload: {},
           },
         })
-      })
+      }
+
+      meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+      meta.hot.on(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
     }
   })
 
