@@ -1,10 +1,10 @@
-import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
+import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate, useParams } from 'react-router-dom'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { SiteTheme, useSiteTheme } from '@/context/site'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { useWorkspaces } from '@/hook/useWorkspaces'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
@@ -19,11 +19,11 @@ import { WorkspaceViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/workspace'
 
-interface IProps {
-  readonly children: React.ReactNode
+interface ISideEffectProps {
+  readonly viewmodel: WorkspaceViewViewModel
 }
 
-export const WorkspaceViewProvider: React.FC<IProps> = props => {
+export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const { workspace_name } = useParams<{ workspace_name?: string }>()
   const [viewmodel] = React.useState<WorkspaceViewViewModel>(() => {
     const initialData: Mutable<Partial<IWorkspaceData>> = JSON.parse(
@@ -50,70 +50,85 @@ export const WorkspaceViewProvider: React.FC<IProps> = props => {
         {props.children}
       </WorkspaceViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
+      <HmrSideEffect viewmodel={viewmodel} />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
-WorkspaceViewProvider.displayName = 'WorkspaceContextProvider'
+WorkspaceViewProvider.displayName = 'WorkspaceViewProvider'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-interface ISideEffectProps {
-  readonly viewmodel: WorkspaceViewViewModel
+const HmrSideEffect: React.FC<ISideEffectProps> = props => {
+  const { viewmodel } = props
+  const navigate = useNavigate()
+  const navigateRef = React.useRef<NavigateFunction>(navigate)
+  navigateRef.current = navigate
+
+  React.useEffect(() => {
+    const meta = import.meta as any
+    if (!meta.hot) return
+
+    let unsubscribed: boolean = false
+
+    const handleFileChanged = (data: IResponsePayloadFileChanged): void => {
+      if (unsubscribed) return
+
+      const filepath: string | null = viewmodel.filepath$.getSnapshot()
+      viewmodel.workspace$.next(data.workspace)
+      viewmodel.filepath$.next(data.filepath, { force: true })
+      if (data.filepath === filepath) viewmodel.markFilepathDirty()
+    }
+
+    const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
+      if (unsubscribed) return
+
+      if (!data.workspace && data.filepath) {
+        unsubscribed = true
+        meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+        meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+        void navigateRef.current(`/file?filepath=${encodeURIComponent(data.filepath)}`)
+        return
+      }
+
+      const workspace: string | null = viewmodel.workspace$.getSnapshot()
+      const filepath: string | null = viewmodel.filepath$.getSnapshot()
+      if (data.workspace !== workspace) viewmodel.workspace$.next(data.workspace)
+      if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
+      else viewmodel.markFilepathDirty()
+
+      window.postMessage({
+        action: '@@tsuki-event@@',
+        tsuki: {
+          event: 'focus_me',
+          payload: {},
+        },
+      })
+    }
+
+    meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+    meta.hot.on(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+    return () => {
+      unsubscribed = true
+      meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+      meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+    }
+  }, [viewmodel])
+
+  return <React.Fragment />
 }
+HmrSideEffect.displayName = 'WorkspaceViewHmrSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
-  const navigate = useNavigate()
   const theme: SiteTheme = useSiteTheme()
 
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath: string | null = useStateValue(viewmodel.filepath$)
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
   const { workspaces } = useWorkspaces(workspacesDirtyTick)
-
-  const hmr = useEventCallback((): void => {
-    const meta = import.meta as any
-    if (meta.hot) {
-      let unsubscribed: boolean = false
-
-      const handleFileChanged = (data: IResponsePayloadFileChanged): void => {
-        if (unsubscribed) return
-
-        viewmodel.workspace$.next(data.workspace)
-        viewmodel.filepath$.next(data.filepath, { force: true })
-        if (data.filepath === filepath) viewmodel.markFilepathDirty()
-      }
-
-      const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
-        if (unsubscribed) return
-
-        if (!data.workspace && data.filepath) {
-          unsubscribed = true
-          meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-          meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
-          void navigate(`/file?filepath=${encodeURIComponent(data.filepath)}`)
-          return
-        }
-
-        const workspace: string | null = viewmodel.workspace$.getSnapshot()
-        const filepath: string | null = viewmodel.filepath$.getSnapshot()
-        if (data.workspace !== workspace) viewmodel.workspace$.next(data.workspace)
-        if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
-        else viewmodel.markFilepathDirty()
-
-        window.postMessage({
-          action: '@@tsuki-event@@',
-          tsuki: {
-            event: 'focus_me',
-            payload: {},
-          },
-        })
-      }
-
-      meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-      meta.hot.on(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
-    }
-  })
 
   React.useEffect(() => {
     const computed = Computed.fromObservables(
@@ -143,10 +158,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel, workspaces])
 
   React.useEffect(() => {
-    hmr()
-  }, [hmr])
-
-  React.useEffect(() => {
     const usp = new URLSearchParams(window.location.search)
     usp.delete('workspace')
     usp.delete('filepath')
@@ -161,8 +172,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     const darken = theme === SiteTheme.DARKEN
     mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
   }, [theme])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

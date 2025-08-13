@@ -1,5 +1,5 @@
 import React from 'react'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { UnknownViewContextType } from './context'
 import { UnknownViewViewModel } from './viewmodel'
 
@@ -19,6 +19,7 @@ export const UnknownViewProvider: React.FC<IProps> = props => {
     <React.Fragment>
       <UnknownViewContextType.Provider value={value}>{children}</UnknownViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} placeholder={placeholder} />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -38,8 +39,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.placeholder$.next(placeholder ?? true)
   }, [viewmodel.placeholder$, placeholder])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

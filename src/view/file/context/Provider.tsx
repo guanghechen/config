@@ -1,8 +1,8 @@
-import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
   IResponsePayloadFileChanged,
@@ -15,6 +15,10 @@ import type { IFileData } from './types'
 import { FileViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/file'
+
+interface ISideEffectProps {
+  readonly viewmodel: FileViewModel
+}
 
 export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const [viewmodel] = React.useState<FileViewModel>(() => {
@@ -35,6 +39,8 @@ export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props =
     <React.Fragment>
       <FileContextType.Provider value={context}>{props.children}</FileContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
+      <HmrSideEffect viewmodel={viewmodel} />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -42,55 +48,77 @@ FileViewProvider.displayName = 'FileViewProvider'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-interface ISideEffectProps {
-  readonly viewmodel: FileViewModel
+const HmrSideEffect: React.FC<ISideEffectProps> = props => {
+  const { viewmodel } = props
+  const navigate = useNavigate()
+  const navigateRef = React.useRef<NavigateFunction>(navigate)
+  navigateRef.current = navigate
+
+  React.useEffect(() => {
+    const meta = import.meta as any
+    if (!meta.hot) return
+
+    let unsubscribed: boolean = false
+
+    const handleFileChanged = (data: IResponsePayloadFileChanged): void => {
+      if (unsubscribed) return
+
+      const filepath: string | null = viewmodel.filepath$.getSnapshot()
+      viewmodel.filepath$.next(data.filepath, { force: true })
+      if (data.filepath === filepath) viewmodel.markFilepathDirty()
+    }
+
+    const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
+      if (unsubscribed) return
+
+      if (data.workspace && data.filepath) {
+        meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+        meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+        void navigateRef.current(
+          `/ws/${data.workspace}?filepath=${encodeURIComponent(data.filepath)}`,
+        )
+        return
+      }
+
+      const filepath: string | null = viewmodel.filepath$.getSnapshot()
+      if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
+      else viewmodel.markFilepathDirty()
+
+      console.log('post:', {
+        action: '@@tsuki-event@@',
+        tsuki: {
+          event: 'focus_me',
+          payload: {},
+        },
+      })
+
+      window.postMessage({
+        action: '@@tsuki-event@@',
+        tsuki: {
+          event: 'focus_me',
+          payload: {},
+        },
+      })
+    }
+
+    meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+    meta.hot.on(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+    return () => {
+      unsubscribed = true
+      meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
+      meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+    }
+  }, [viewmodel])
+
+  return <React.Fragment />
 }
+HmrSideEffect.displayName = 'FileViewHmrSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
   const filepath: string | null = useStateValue(viewmodel.filepath$)
-
-  const navigate = useNavigate()
-  const hmr = useEventCallback((): void => {
-    const meta = import.meta as any
-    if (meta.hot) {
-      let unsubscribed: boolean = false
-
-      const handleFileChanged = (data: IResponsePayloadFileChanged): void => {
-        if (unsubscribed) return
-
-        viewmodel.filepath$.next(data.filepath, { force: true })
-        if (data.filepath === filepath) viewmodel.markFilepathDirty()
-      }
-
-      const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
-        if (unsubscribed) return
-
-        if (data.workspace && data.filepath) {
-          unsubscribed = true
-          meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-          meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
-          void navigate(`/ws/${data.workspace}?filepath=${encodeURIComponent(data.filepath)}`)
-          return
-        }
-
-        const filepath: string | null = viewmodel.filepath$.getSnapshot()
-        if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
-        else viewmodel.markFilepathDirty()
-
-        window.postMessage({
-          action: '@@tsuki-event@@',
-          tsuki: {
-            event: 'focus_me',
-            payload: {},
-          },
-        })
-      }
-
-      meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-      meta.hot.on(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
-    }
-  })
 
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.filepath$], () => {
@@ -103,10 +131,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
-    hmr()
-  }, [hmr])
-
-  React.useEffect(() => {
     const usp = new URLSearchParams(window.location.search)
     usp.delete('workspace')
     usp.delete('filepath')
@@ -116,9 +140,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     window.history.replaceState(null, '', newUrl)
   }, [filepath])
 
-  useViewModelCleanup(viewmodel)
-
   return <React.Fragment />
 }
-
 SideEffect.displayName = 'FileViewSideEffect'

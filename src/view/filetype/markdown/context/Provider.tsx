@@ -1,6 +1,6 @@
 import React from 'react'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IMarkdownFileData } from '@/util/fetch'
 import { MarkdownViewContextType } from './context'
 import { ModeEnum } from './types'
@@ -50,6 +50,7 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
         specifiedTocActivatedIdentifier={specifiedTocActivatedIdentifier}
         mode={mode}
       />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -113,8 +114,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.mode$.next(mode ?? ModeEnum.VIEW)
   }, [viewmodel.mode$, mode])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

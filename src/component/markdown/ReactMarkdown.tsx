@@ -25,8 +25,6 @@ interface IProps {
 }
 
 export class ReactMarkdown extends React.Component<IProps> {
-  public static readonly displayName: string = 'ReactMarkdown'
-
   public override render(): React.ReactElement {
     const { ast, dontShowFirstHeading, className, style } = this.props
     const childNodes: Node[] =

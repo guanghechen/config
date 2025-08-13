@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Computed } from '@guanghechen/viewmodel'
 import React from 'react'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
 import type { ISiteData } from './viewmodel'
@@ -26,16 +26,19 @@ export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = prop
 
   return (
     <React.Fragment>
-      <PersistentSideEffect viewmodel={viewmodel} />
-      <SideEffect viewmodel={viewmodel} />
       <SiteContextType.Provider value={context}>{props.children}</SiteContextType.Provider>
+      <SideEffect viewmodel={viewmodel} />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
 SiteContextProvider.displayName = 'SiteContextProvider'
 
-const PersistentSideEffect: React.FC<ISideEffectProps> = props => {
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
+  const theme: SiteTheme = useStateValue(viewmodel.theme$)
 
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.theme$], () => {
@@ -47,14 +50,6 @@ const PersistentSideEffect: React.FC<ISideEffectProps> = props => {
     }
   }, [viewmodel])
 
-  return <React.Fragment />
-}
-PersistentSideEffect.displayName = 'SitePersistentSideEffect'
-
-const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel } = props
-  const theme: SiteTheme = useStateValue(viewmodel.theme$)
-
   React.useEffect(() => {
     const darken = theme === SiteTheme.DARKEN
     if (darken) {
@@ -63,8 +58,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       document.documentElement.classList.remove('dark')
     }
   }, [theme])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

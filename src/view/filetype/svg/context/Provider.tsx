@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { ISvgFileData } from '@/util/fetch'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
@@ -50,6 +50,7 @@ export const SvgViewProvider: React.FC<IProps> = props => {
         rotation={rotation}
         position={position}
       />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -118,8 +119,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
   }, [viewmodel.position$, position])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

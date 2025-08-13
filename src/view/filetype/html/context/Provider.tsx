@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IHtmlFileData } from '@/util/fetch'
 import { HtmlViewContextType } from './context'
 import type { IHtmlViewData } from './types'
@@ -39,6 +39,7 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
         filepathDirtyTick={filepathDirtyTick}
         tailwindEnabled={tailwindEnabled}
       />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -94,8 +95,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.tailwindEnabled$.next(tailwindEnabled ?? viewmodel.tailwindEnabled$.getSnapshot())
   }, [viewmodel.tailwindEnabled$, tailwindEnabled])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

@@ -1,8 +1,8 @@
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
 import React from 'react'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import type { SiteTheme } from '@/context/site'
 import { useFileResult } from '@/hook/useFileResult'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IJsonFileData } from '@/util/fetch'
 import { ExcalidrawViewContextType } from './context'
 import { ExcalidrawViewViewModel } from './viewmodel'
@@ -41,6 +41,7 @@ export const ExcalidrawViewProvider: React.FC<IProps> = props => {
         theme={theme}
         error={error}
       />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -103,8 +104,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.theme$.next(theme ?? null)
   }, [viewmodel.theme$, theme])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

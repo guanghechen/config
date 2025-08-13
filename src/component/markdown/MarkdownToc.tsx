@@ -9,8 +9,6 @@ interface IProps {
 }
 
 export class MarkdownToc extends React.Component<IProps> {
-  public static readonly displayName: string = 'MarkdownToc'
-
   public override render(): React.ReactElement {
     const { toc, activatedIdentifier, setActivatedIdentifier } = this.props
 

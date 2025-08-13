@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IPdfFileData } from '@/util/fetch'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
@@ -52,6 +52,7 @@ export const PdfViewProvider: React.FC<IProps> = props => {
         scale={scale}
         multiview={multiview}
       />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -123,8 +124,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.multiview$.next(multiview ?? viewmodel.multiview$.getSnapshot())
   }, [viewmodel.multiview$, multiview])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IJsonlFileData } from '@/util/fetch'
 import { JsonlViewContextType } from './context'
 import type { DisplayMode, IChainPath, IJsonlViewData, IJsonlViewRecord, ModeEnum } from './types'
@@ -56,6 +56,7 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
         chainPaths={chainPaths}
         displayMode={displayMode}
       />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -164,8 +165,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.displayMode$.next(displayMode ?? viewmodel.displayMode$.getSnapshot())
   }, [viewmodel.displayMode$, displayMode])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

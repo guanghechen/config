@@ -11,7 +11,7 @@ import {
   FileTreeViewModel,
 } from '@/component/filetree'
 import { PRESET_CLASSES } from '@/constant/classes'
-import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
+import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
 import { useWorkspaceViewmodel } from '../../context'
 
@@ -37,7 +37,6 @@ export const FileTree: React.FC = () => {
 
   return (
     <React.Fragment>
-      <SideEffect viewmodel={viewmodel} />
       <FileTreeContextType.Provider value={context}>
         <div className="flex h-full flex-col">
           <div className="flex-initial">
@@ -57,6 +56,8 @@ export const FileTree: React.FC = () => {
           </div>
         </div>
       </FileTreeContextType.Provider>
+      <SideEffect viewmodel={viewmodel} />
+      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -100,8 +101,6 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
       cancelled = true
     }
   }, [revealTick, sidebarVisible, filepath, viewmodel])
-
-  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }
