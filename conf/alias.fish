@@ -31,6 +31,9 @@ alias sss='source ~/.config/fish/config.fish'
 alias tls='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
+### claude code
+alias ccc='claude --dangerously-skip-permissions'
+
 ### fzf
 alias fzf="$HOMEBREW_PREFIX/bin/fzf"
 alias fvim='$HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim'
