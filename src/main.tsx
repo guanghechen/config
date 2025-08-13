@@ -21,20 +21,25 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <React.StrictMode>
-      <React.Suspense fallback={<div>loading...</div>}>
-        <MathJaxProvider>
-          <SiteContextProvider>
-            <BrowserRouter>
-              <GlobalLayout>
-                <AppRoutes />
-              </GlobalLayout>
-            </BrowserRouter>
-          </SiteContextProvider>
-        </MathJaxProvider>
-      </React.Suspense>
-    </React.StrictMode>
+    <SiteContextProvider>
+      <MathJaxProvider>
+        <BrowserRouter>
+          <GlobalLayout>
+            <AppRoutes />
+          </GlobalLayout>
+        </BrowserRouter>
+      </MathJaxProvider>
+    </SiteContextProvider>
   )
 }
 
-createRoot(document.getElementById('root')!).render(<App />)
+// eslint-disable-next-line no-constant-condition, no-self-compare
+if (1 === 1) {
+  createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  )
+} else {
+  createRoot(document.getElementById('root')!).render(<App />)
+}
