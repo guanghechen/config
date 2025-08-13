@@ -7,10 +7,12 @@ export enum SiteTheme {
 }
 
 export interface ISiteData {
+  readonly name?: string
   readonly theme: SiteTheme
 }
 
 interface IProps {
+  readonly name?: string
   /**
    * Site theme.
    */
@@ -22,11 +24,12 @@ const DEFAULT_SITE_DATA: ISiteData = {
 }
 
 export class SiteViewModel extends ViewModel {
+  public readonly name: string
   public readonly theme$: IState<SiteTheme>
 
   public static fromData(data: Partial<ISiteData> | undefined): SiteViewModel {
     const { theme }: ISiteData = this.normalize(DEFAULT_SITE_DATA, data)
-    return new SiteViewModel({ theme })
+    return new SiteViewModel({ name: data?.name, theme })
   }
 
   public static normalize(base: ISiteData, data: Partial<ISiteData> | undefined): ISiteData {
@@ -37,7 +40,9 @@ export class SiteViewModel extends ViewModel {
   constructor(props: IProps) {
     super()
 
-    const { theme } = props
+    const { name = 'SiteViewModel', theme } = props
+
+    this.name = name
     this.theme$ = new State<SiteTheme>(theme)
   }
 

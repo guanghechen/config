@@ -2,7 +2,7 @@ import type { ViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 
 interface IProps {
-  readonly viewmodel: ViewModel
+  readonly viewmodel: ViewModel & { name?: string }
 }
 
 export const ViewModelCleanupSideEffect: React.FC<IProps> = props => {
@@ -10,7 +10,7 @@ export const ViewModelCleanupSideEffect: React.FC<IProps> = props => {
 
   React.useEffect(() => {
     return () => {
-      const name: string = viewmodel.constructor.name
+      const name: string = viewmodel.name ?? viewmodel.constructor.name
       console.log(`[viewmodel#${name}] disposing`)
       viewmodel.dispose()
     }
