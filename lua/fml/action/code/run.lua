@@ -4,81 +4,60 @@ local __module_name__ = "fml.action.code.run" ---@type string
 ---@field public run                    fun(filepath: string, force: boolean): nil
 
 ---@class fml.action.code.IRunners
+---@field public eventstream            fml.action.code.IRunner
+---@field public excalidraw             fml.action.code.IRunner
+---@field public html                   fml.action.code.IRunner
+---@field public json                   fml.action.code.IRunner
+---@field public jsonl                  fml.action.code.IRunner
+---@field public md                     fml.action.code.IRunner
+---@field public svg                    fml.action.code.IRunner
+---
 ---@field public lua                    fml.action.code.IRunner
+---@field public mjs                    fml.action.code.IRunner
 
 local YOZORA_SERVER_PORT = type(vim.env.YOZORA_SERVER_PORT) == "string" and vim.env.YOZORA_SERVER_PORT or "7071" ---@type string
+
+---@param filepath                      string
+---@param force                         boolean
+local function open_filepath_in_yozora(filepath, force)
+  local url = string.format(
+    "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+    YOZORA_SERVER_PORT,
+    std.string.escape_url_component(filepath),
+    force and "true" or "false"
+  )
+  vim.system({ "curl", "-X", "POST", url }, { detach = true })
+end
 
 ---@type fml.action.code.IRunners
 local runners = {
   eventstream = {
-    run = function(filepath, force)
-      local url = string.format(
-        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
-        YOZORA_SERVER_PORT,
-        std.string.escape_url_component(filepath),
-        force and "true" or "false"
-      )
-      vim.system({ "curl", "-X", "POST", url }, { detach = true })
-    end,
+    run = open_filepath_in_yozora,
+  },
+  excalidraw = {
+    run = open_filepath_in_yozora,
   },
   html = {
-    run = function(filepath, force)
-      local url = string.format(
-        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
-        YOZORA_SERVER_PORT,
-        std.string.escape_url_component(filepath),
-        force and "true" or "false"
-      )
-      vim.system({ "curl", "-X", "POST", url }, { detach = true })
-    end,
+    run = open_filepath_in_yozora,
   },
   json = {
-    run = function(filepath, force)
-      local url = string.format(
-        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
-        YOZORA_SERVER_PORT,
-        std.string.escape_url_component(filepath),
-        force and "true" or "false"
-      )
-      vim.system({ "curl", "-X", "POST", url }, { detach = true })
-    end,
+    run = open_filepath_in_yozora,
   },
   jsonl = {
-    run = function(filepath, force)
-      local url = string.format(
-        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
-        YOZORA_SERVER_PORT,
-        std.string.escape_url_component(filepath),
-        force and "true" or "false"
-      )
-      vim.system({ "curl", "-X", "POST", url }, { detach = true })
-    end,
+    run = open_filepath_in_yozora,
   },
+  md = {
+    run = open_filepath_in_yozora,
+  },
+  svg = {
+    run = open_filepath_in_yozora,
+  },
+
+  --------------------------------------------------------------------------------------------------
+
   lua = {
     run = function(filepath)
       vim.cmd("luafile " .. filepath)
-    end,
-  },
-  md = {
-    run = function(filepath, force)
-      local url = string.format(
-        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
-        YOZORA_SERVER_PORT,
-        std.string.escape_url_component(filepath),
-        force and "true" or "false"
-      )
-      vim.system({ "curl", "-X", "POST", url }, { detach = true })
-    end,
-  },
-  excalidraw = {
-    run = function(filepath, force)
-      local url = string.format(
-        "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
-        YOZORA_SERVER_PORT,
-        std.string.escape_url_component(filepath),
-        force and "true" or "false"
-      )
-      vim.system({ "curl", "-X", "POST", url }, { detach = true })
     end,
   },
   mjs = {
