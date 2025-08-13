@@ -1,6 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { ISvgFileData } from '@/util/fetch'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
@@ -117,6 +118,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
   }, [viewmodel.position$, position])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

@@ -1,6 +1,8 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
   IResponsePayloadFileChanged,
@@ -48,6 +50,9 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
   const filepath: string | null = useStateValue(viewmodel.filepath$)
 
+  const navigate = useNavigate()
+  const location = useLocation()
+
   const hmr = useEventCallback((): void => {
     const meta = import.meta as any
     if (meta.hot) {
@@ -56,6 +61,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
         if (data.filepath === filepath) viewmodel.markFilepathDirty()
       })
       meta.hot.on(ServerCustomEventType.FILE_SWITCHED, (data: IResponsePayloadFileSwitch): void => {
+        if (data.workspace) {
+          void navigate(`/ws/${data.workspace}${location.search}`)
+          return
+        }
+
         const filepath: string | null = viewmodel.filepath$.getSnapshot()
         if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
         else viewmodel.markFilepathDirty()
@@ -94,6 +104,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     const newUrl = `${window.location.pathname}?${usp.toString()}`
     window.history.replaceState(null, '', newUrl)
   }, [filepath])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

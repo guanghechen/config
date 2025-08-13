@@ -1,6 +1,7 @@
 import { useDeepCompareMemo } from '@guanghechen/react-hooks'
 import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
 import React from 'react'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { buildNodeRendererMap } from '../renderer'
 import type { INodeRendererMap } from '../types'
 import type { IMarkdownContext } from './context'
@@ -95,6 +96,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.themeScheme$.next(theme)
   }, [viewmodel, theme])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

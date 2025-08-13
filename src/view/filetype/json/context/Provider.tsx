@@ -2,6 +2,7 @@ import { Computed } from '@guanghechen/react-viewmodel'
 import JSON5 from 'json5'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IJsonFileData } from '@/util/fetch'
 import { JsonViewContextType } from './context'
 import type { IJsonViewData, ModeEnum } from './types'
@@ -105,6 +106,8 @@ const SideEffect: React.FC<ISideEffectPropsWithMode> = props => {
   React.useEffect(() => {
     viewmodel.mode$.next(mode ?? 1)
   }, [viewmodel.mode$, mode])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

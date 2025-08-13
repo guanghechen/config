@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Computed } from '@guanghechen/viewmodel'
 import React from 'react'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
 import type { ISiteData } from './viewmodel'
@@ -62,6 +63,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       document.documentElement.classList.remove('dark')
     }
   }, [theme])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

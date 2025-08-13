@@ -1,5 +1,6 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { ImageViewContextType } from './context'
 import type { IImageViewData, IImageViewPosition } from './types'
 import { ImageViewViewModel } from './viewmodel'
@@ -92,6 +93,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
   }, [viewmodel.position$, position])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

@@ -1,6 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IPdfFileData } from '@/util/fetch'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
@@ -122,6 +123,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.multiview$.next(multiview ?? viewmodel.multiview$.getSnapshot())
   }, [viewmodel.multiview$, multiview])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

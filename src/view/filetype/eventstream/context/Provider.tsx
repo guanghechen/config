@@ -1,6 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IEventStreamFileData } from '@/util/fetch'
 import { parseEventStream } from '../utils'
 import { EventStreamViewContextType } from './context'
@@ -149,6 +150,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.displayMode$.next(displayMode ?? viewmodel.displayMode$.getSnapshot())
   }, [viewmodel.displayMode$, displayMode])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

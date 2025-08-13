@@ -1,5 +1,6 @@
 import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import type { IMarkdownFileData } from '@/util/fetch'
 import { MarkdownViewContextType } from './context'
 import { ModeEnum } from './types'
@@ -112,6 +113,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     viewmodel.mode$.next(mode ?? ModeEnum.VIEW)
   }, [viewmodel.mode$, mode])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

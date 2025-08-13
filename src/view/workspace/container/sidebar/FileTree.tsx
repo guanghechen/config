@@ -11,6 +11,7 @@ import {
   FileTreeViewModel,
 } from '@/component/filetree'
 import { PRESET_CLASSES } from '@/constant/classes'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
 import { useWorkspaceViewmodel } from '../../context'
 
@@ -99,6 +100,8 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
       cancelled = true
     }
   }, [revealTick, sidebarVisible, filepath, viewmodel])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }

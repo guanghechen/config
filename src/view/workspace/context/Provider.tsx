@@ -4,6 +4,7 @@ import mermaid from 'mermaid'
 import React from 'react'
 import { useParams } from 'react-router-dom'
 import { SiteTheme, useSiteTheme } from '@/context/site'
+import { useViewModelCleanup } from '@/hook/useViewModelCleanup'
 import { useWorkspaces } from '@/hook/useWorkspaces'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
@@ -141,6 +142,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     const darken = theme === SiteTheme.DARKEN
     mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
   }, [theme])
+
+  useViewModelCleanup(viewmodel)
 
   return <React.Fragment />
 }
