@@ -1,12 +1,12 @@
 import React from 'react'
+import { useSingleton } from '@/hook/useSingleton'
 import type { IFileTreeContext } from './context'
 import { FileTreeContextType } from './context'
 import { FileTreeViewModel } from './viewmodel'
 
 export const FileTreeContextProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const [viewmodel] = React.useState<FileTreeViewModel>(() => {
-    const viewmodel = new FileTreeViewModel({ currentFilepath: null })
-    return viewmodel
+  const viewmodel: FileTreeViewModel = useSingleton<FileTreeViewModel>(() => {
+    return new FileTreeViewModel({ currentFilepath: null })
   })
 
   const context: IFileTreeContext = React.useMemo<IFileTreeContext>(

@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
+import { useSingleton } from '@/hook/useSingleton'
 import type { IEventStreamFileData } from '@/util/fetch'
 import { parseEventStream } from '../utils'
 import { EventStreamViewContextType } from './context'
@@ -34,7 +34,7 @@ export const EventStreamViewProvider: React.FC<IProps> = props => {
     displayMode,
     children,
   } = props
-  const [viewmodel] = React.useState<EventStreamViewViewModel>(() => {
+  const viewmodel: EventStreamViewViewModel = useSingleton<EventStreamViewViewModel>(() => {
     const initialData: Partial<IEventStreamViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -62,7 +62,6 @@ export const EventStreamViewProvider: React.FC<IProps> = props => {
         chainPaths={chainPaths}
         displayMode={displayMode}
       />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -141,22 +140,22 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
-  }, [viewmodel.mode$, mode])
+  }, [viewmodel, mode])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.activeEventIndex$.next(activeEventIndex ?? null)
-  }, [viewmodel.activeEventIndex$, activeEventIndex])
+  }, [viewmodel, activeEventIndex])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.chainPaths$.next(chainPaths ?? viewmodel.chainPaths$.getSnapshot())
-  }, [viewmodel.chainPaths$, chainPaths])
+  }, [viewmodel, chainPaths])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.displayMode$.next(displayMode ?? viewmodel.displayMode$.getSnapshot())
-  }, [viewmodel.displayMode$, displayMode])
+  }, [viewmodel, displayMode])
 
   return <React.Fragment />
 }

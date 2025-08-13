@@ -1,5 +1,5 @@
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
+import { useSingleton } from '@/hook/useSingleton'
 import { UnknownViewContextType } from './context'
 import { UnknownViewViewModel } from './viewmodel'
 
@@ -10,16 +10,15 @@ interface IProps {
 
 export const UnknownViewProvider: React.FC<IProps> = props => {
   const { placeholder, children } = props
-  const [viewmodel] = React.useState<UnknownViewViewModel>(
-    () => new UnknownViewViewModel({ placeholder }),
-  )
+  const viewmodel: UnknownViewViewModel = useSingleton<UnknownViewViewModel>(() => {
+    return new UnknownViewViewModel({ placeholder })
+  })
   const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
 
   return (
     <React.Fragment>
       <UnknownViewContextType.Provider value={value}>{children}</UnknownViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} placeholder={placeholder} />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -39,7 +38,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.placeholder$.next(placeholder ?? true)
-  }, [viewmodel.placeholder$, placeholder])
+  }, [viewmodel, placeholder])
 
   return <React.Fragment />
 }

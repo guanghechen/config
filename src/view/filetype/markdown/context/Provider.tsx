@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
+import { useSingleton } from '@/hook/useSingleton'
 import type { IMarkdownFileData } from '@/util/fetch'
 import { MarkdownViewContextType } from './context'
 import type { IMarkdownViewData, ModeEnum } from './types'
@@ -29,7 +29,7 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
     mode,
     children,
   } = props
-  const [viewmodel] = React.useState<MarkdownViewViewModel>(() => {
+  const viewmodel: MarkdownViewViewModel = useSingleton<MarkdownViewViewModel>(() => {
     const initialData: Partial<IMarkdownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -51,7 +51,6 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
         specifiedTocActivatedIdentifier={specifiedTocActivatedIdentifier}
         mode={mode}
       />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }

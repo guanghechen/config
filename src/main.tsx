@@ -1,3 +1,5 @@
+'use client'
+
 import { MathJaxProvider } from '@yozora/react-mathjax'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
@@ -33,8 +35,8 @@ const App: React.FC = () => {
   )
 }
 
-// eslint-disable-next-line no-constant-condition, no-self-compare
-if (1 === 1) {
+// eslint-disable-next-line no-constant-condition
+if (true) {
   createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <App />

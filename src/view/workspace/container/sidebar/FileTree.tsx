@@ -11,7 +11,7 @@ import {
   FileTreeViewModel,
 } from '@/component/filetree'
 import { PRESET_CLASSES } from '@/constant/classes'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
+import { useSingleton } from '@/hook/useSingleton'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
 import { useWorkspaceViewmodel } from '../../context'
 
@@ -19,11 +19,10 @@ export const FileTree: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
   const mode: FileTreeModeEnum = useStateValue(workspaceVM.filetreeMode$)
 
-  const [viewmodel] = React.useState<FileTreeViewModel>(() => {
-    const viewmodel = new FileTreeViewModel({
+  const viewmodel: FileTreeViewModel = useSingleton<FileTreeViewModel>(() => {
+    return new FileTreeViewModel({
       currentFilepath: workspaceVM.filepath$.getSnapshot(),
     })
-    return viewmodel
   })
 
   const context: IFileTreeContext = React.useMemo<IFileTreeContext>(
@@ -57,7 +56,6 @@ export const FileTree: React.FC = () => {
         </div>
       </FileTreeContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }

@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
+import { useSingleton } from '@/hook/useSingleton'
 import type { IHtmlFileData } from '@/util/fetch'
 import { HtmlViewContextType } from './context'
 import type { IHtmlViewData } from './types'
@@ -19,7 +19,7 @@ interface IProps {
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, tailwindEnabled, children } = props
-  const [viewmodel] = React.useState<HtmlViewViewModel>(() => {
+  const viewmodel: HtmlViewViewModel = useSingleton<HtmlViewViewModel>(() => {
     const initialData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -39,7 +39,6 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
         filepathDirtyTick={filepathDirtyTick}
         tailwindEnabled={tailwindEnabled}
       />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -89,17 +88,17 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace ?? null)
-  }, [viewmodel.workspace$, workspace])
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath ?? null)
-  }, [viewmodel.filepath$, filepath])
+  }, [viewmodel, filepath])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.tailwindEnabled$.next(tailwindEnabled ?? viewmodel.tailwindEnabled$.getSnapshot())
-  }, [viewmodel.tailwindEnabled$, tailwindEnabled])
+  }, [viewmodel, tailwindEnabled])
 
   return <React.Fragment />
 }

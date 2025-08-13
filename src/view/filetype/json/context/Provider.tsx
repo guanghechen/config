@@ -1,8 +1,8 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import JSON5 from 'json5'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
+import { useSingleton } from '@/hook/useSingleton'
 import type { IJsonFileData } from '@/util/fetch'
 import { JsonViewContextType } from './context'
 import type { IJsonViewData, ModeEnum } from './types'
@@ -21,7 +21,7 @@ interface IProps {
 
 export const JsonViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mode, content, children } = props
-  const [viewmodel] = React.useState<JsonViewViewModel>(() => {
+  const viewmodel: JsonViewViewModel = useSingleton<JsonViewViewModel>(() => {
     const initialData: Partial<IJsonViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -42,7 +42,6 @@ export const JsonViewProvider: React.FC<IProps> = props => {
         mode={mode}
         content={content}
       />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -109,7 +108,7 @@ const SideEffect: React.FC<ISideEffectPropsWithMode> = props => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? 1)
-  }, [viewmodel.mode$, mode])
+  }, [viewmodel, mode])
 
   return <React.Fragment />
 }

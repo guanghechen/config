@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Computed } from '@guanghechen/viewmodel'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
+import { useSingleton } from '@/hook/useSingleton'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
 import type { ISiteData } from './viewmodel'
@@ -14,21 +14,18 @@ interface ISideEffectProps {
 }
 
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const [viewmodel] = React.useState<SiteViewModel>(() => {
+  const viewmodel: SiteViewModel = useSingleton<SiteViewModel>(() => {
     const initialData: Partial<ISiteData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
-    const viewmodel = SiteViewModel.fromData(initialData)
-    return viewmodel
+    return SiteViewModel.fromData(initialData)
   })
-
   const context: ISiteContext = React.useMemo<ISiteContext>(() => ({ viewmodel }), [viewmodel])
 
   return (
     <React.Fragment>
       <SiteContextType.Provider value={context}>{props.children}</SiteContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }

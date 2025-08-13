@@ -3,8 +3,8 @@ import mermaid from 'mermaid'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { SiteTheme, useSiteTheme } from '@/context/site'
+import { useSingleton } from '@/hook/useSingleton'
 import { useWorkspaces } from '@/hook/useWorkspaces'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
@@ -25,14 +25,14 @@ interface ISideEffectProps {
 
 export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const { workspace_name } = useParams<{ workspace_name?: string }>()
-  const [viewmodel] = React.useState<WorkspaceViewViewModel>(() => {
+  const viewmodel: WorkspaceViewViewModel = useSingleton<WorkspaceViewViewModel>(() => {
     const initialData: Mutable<Partial<IWorkspaceData>> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const usp = new URLSearchParams(window.location.search)
     const workspace: string | null = workspace_name || null
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
-    const viewmodel = WorkspaceViewViewModel.fromData({
+    return WorkspaceViewViewModel.fromData({
       workspace: workspace ?? initialData.workspace,
       filepath: filepath ?? initialData.filepath,
       workspaces: initialData.workspaces,
@@ -42,7 +42,6 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
       sidebarWidth: initialData.sidebarWidth,
       topbarVisible: initialData.topbarVisible,
     })
-    return viewmodel
   })
 
   const context: IWorkspaceContext = React.useMemo<IWorkspaceContext>(
@@ -57,7 +56,6 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
       </WorkspaceViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
       <HmrSideEffect viewmodel={viewmodel} />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }

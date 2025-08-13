@@ -2,7 +2,7 @@ import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
+import { useSingleton } from '@/hook/useSingleton'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
   IResponsePayloadFileChanged,
@@ -21,16 +21,15 @@ interface ISideEffectProps {
 }
 
 export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const [viewmodel] = React.useState<FileViewModel>(() => {
+  const viewmodel: FileViewModel = useSingleton<FileViewModel>(() => {
     const initialData: Mutable<Partial<IFileData>> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const usp = new URLSearchParams(window.location.search)
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
-    const viewmodel = FileViewModel.fromData({
+    return FileViewModel.fromData({
       filepath: filepath ?? initialData.filepath,
     })
-    return viewmodel
   })
 
   const context: IFileContext = React.useMemo<IFileContext>(() => ({ viewmodel }), [viewmodel])
@@ -40,7 +39,6 @@ export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props =
       <FileContextType.Provider value={context}>{props.children}</FileContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
       <HmrSideEffect viewmodel={viewmodel} />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }

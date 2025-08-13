@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
+import { useSingleton } from '@/hook/useSingleton'
 import type { IJsonlFileData } from '@/util/fetch'
 import { JsonlViewContextType } from './context'
 import type { DisplayMode, IChainPath, IJsonlViewData, IJsonlViewRecord, ModeEnum } from './types'
@@ -31,7 +31,7 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
     displayMode,
     children,
   } = props
-  const [viewmodel] = React.useState<JsonlViewViewModel>(() => {
+  const viewmodel: JsonlViewViewModel = useSingleton<JsonlViewViewModel>(() => {
     const initialData: Partial<IJsonlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -56,7 +56,6 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
         chainPaths={chainPaths}
         displayMode={displayMode}
       />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -147,32 +146,32 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace)
-  }, [viewmodel.workspace$, workspace])
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
-  }, [viewmodel.filepath$, filepath])
+  }, [viewmodel, filepath])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
-  }, [viewmodel.mode$, mode])
+  }, [viewmodel, mode])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.activeRecordIndex$.next(activeRecordIndex ?? null)
-  }, [viewmodel.activeRecordIndex$, activeRecordIndex])
+  }, [viewmodel, activeRecordIndex])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.chainPaths$.next(chainPaths ?? viewmodel.chainPaths$.getSnapshot())
-  }, [viewmodel.chainPaths$, chainPaths])
+  }, [viewmodel, chainPaths])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.displayMode$.next(displayMode ?? viewmodel.displayMode$.getSnapshot())
-  }, [viewmodel.displayMode$, displayMode])
+  }, [viewmodel, displayMode])
 
   return <React.Fragment />
 }

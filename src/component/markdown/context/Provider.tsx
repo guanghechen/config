@@ -1,7 +1,7 @@
 import { useDeepCompareMemo } from '@guanghechen/react-hooks'
 import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
+import { useSingleton } from '@/hook/useSingleton'
 import { buildNodeRendererMap } from '../renderer'
 import type { INodeRendererMap } from '../types'
 import type { IMarkdownContext } from './context'
@@ -53,7 +53,7 @@ export const MarkdownProvider: React.FC<IProps> = props => {
     () => props.presetFootnoteDefinitionMap ?? {},
     [props.presetFootnoteDefinitionMap],
   )
-  const [viewmodel] = React.useState<MarkdownViewModel>(() => {
+  const viewmodel: MarkdownViewModel = useSingleton<MarkdownViewModel>(() => {
     return new MarkdownViewModel({
       ast,
       rendererMap: buildNodeRendererMap(customizedRendererMap),
@@ -70,7 +70,6 @@ export const MarkdownProvider: React.FC<IProps> = props => {
     <React.Fragment>
       <MarkdownContextType.Provider value={context}>{props.children}</MarkdownContextType.Provider>
       <SideEffect viewmodel={viewmodel} ast={ast} showCodeLineno={showCodeLineno} theme={theme} />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }

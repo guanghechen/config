@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
+import { useSingleton } from '@/hook/useSingleton'
 import type { IPdfFileData } from '@/util/fetch'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
@@ -24,7 +24,7 @@ interface IProps {
 export const PdfViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, pages, pageno, scale, multiview, children } =
     props
-  const [viewmodel] = React.useState<PdfViewViewModel>(() => {
+  const viewmodel: PdfViewViewModel = useSingleton<PdfViewViewModel>(() => {
     const initialData: Partial<IPdfViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -52,7 +52,6 @@ export const PdfViewProvider: React.FC<IProps> = props => {
         scale={scale}
         multiview={multiview}
       />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -106,32 +105,32 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace)
-  }, [viewmodel.workspace$, workspace])
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
-  }, [viewmodel.filepath$, filepath])
+  }, [viewmodel, filepath])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.pages$.next(pages ?? 1)
-  }, [viewmodel.pages$, pages])
+  }, [viewmodel, pages])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.pageno$.next(pageno ?? 1)
-  }, [viewmodel.pageno$, pageno])
+  }, [viewmodel, pageno])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.scale$.next(scale ?? viewmodel.scale$.getSnapshot())
-  }, [viewmodel.scale$, scale])
+  }, [viewmodel, scale])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.multiview$.next(multiview ?? viewmodel.multiview$.getSnapshot())
-  }, [viewmodel.multiview$, multiview])
+  }, [viewmodel, multiview])
 
   return <React.Fragment />
 }

@@ -1,7 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { ViewModelCleanupSideEffect } from '@/container/ViewModelCleanup'
 import { useFileResult } from '@/hook/useFileResult'
+import { useSingleton } from '@/hook/useSingleton'
 import type { ISvgFileData } from '@/util/fetch'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
@@ -22,7 +22,7 @@ interface IProps {
 
 export const SvgViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, scale, rotation, position, children } = props
-  const [viewmodel] = React.useState<SvgViewViewModel>(() => {
+  const viewmodel: SvgViewViewModel = useSingleton<SvgViewViewModel>(() => {
     const initialData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -50,7 +50,6 @@ export const SvgViewProvider: React.FC<IProps> = props => {
         rotation={rotation}
         position={position}
       />
-      <ViewModelCleanupSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -105,27 +104,27 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace)
-  }, [viewmodel.workspace$, workspace])
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
-  }, [viewmodel.filepath$, filepath])
+  }, [viewmodel, filepath])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.scale$.next(scale ?? viewmodel.scale$.getSnapshot())
-  }, [viewmodel.scale$, scale])
+  }, [viewmodel, scale])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.rotation$.next(rotation ?? viewmodel.rotation$.getSnapshot())
-  }, [viewmodel.rotation$, rotation])
+  }, [viewmodel, rotation])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
-  }, [viewmodel.position$, position])
+  }, [viewmodel, position])
 
   return <React.Fragment />
 }
