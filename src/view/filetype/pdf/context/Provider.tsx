@@ -7,7 +7,7 @@ import { PdfViewContextType } from './context'
 import type { IPdfViewData } from './types'
 import { PdfViewViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/pdf-view'
+const storageKey: string = '#/view/filetype/pdf'
 
 interface IProps {
   readonly workspace: string | null

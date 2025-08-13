@@ -6,7 +6,7 @@ import { JsonlViewContextType } from './context'
 import type { DisplayMode, IChainPath, IJsonlViewData, IJsonlViewRecord, ModeEnum } from './types'
 import { JsonlViewViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/jsonl-view'
+const storageKey: string = '#/view/filetype/jsonl'
 
 interface IProps {
   readonly workspace: string | null

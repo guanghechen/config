@@ -6,7 +6,7 @@ import { SiteContextType } from './context'
 import type { ISiteData } from './viewmodel'
 import { SiteTheme, SiteViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/site'
+const storageKey: string = '#/context/site'
 
 interface ISideEffectProps {
   readonly viewmodel: SiteViewModel

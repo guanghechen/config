@@ -15,7 +15,7 @@ import { WorkspaceContextType } from './context'
 import type { IWorkspaceData } from './types'
 import { WorkspaceViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/workspace'
+const storageKey: string = '#/view/workspace'
 
 interface ISideEffectProps {
   readonly viewmodel: WorkspaceViewModel

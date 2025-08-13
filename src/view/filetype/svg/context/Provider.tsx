@@ -7,7 +7,7 @@ import { SvgViewContextType } from './context'
 import type { ISvgViewData, ISvgViewPosition } from './types'
 import { SvgViewViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/svg-view'
+const storageKey: string = '#/view/filetype/svg'
 
 interface IProps {
   readonly workspace: string | null

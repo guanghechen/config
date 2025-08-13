@@ -7,7 +7,7 @@ import { JsonViewContextType } from './context'
 import type { IJsonViewData, ModeEnum } from './types'
 import { JsonViewViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/json-view'
+const storageKey: string = '#/view/filetype/json'
 
 interface IProps {
   readonly workspace: string | null

@@ -4,7 +4,7 @@ import { ImageViewContextType } from './context'
 import type { IImageViewData, IImageViewPosition } from './types'
 import { ImageViewViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/image-view'
+const storageKey: string = '#/view/filetype/image'
 
 interface IProps {
   readonly workspace?: string | null

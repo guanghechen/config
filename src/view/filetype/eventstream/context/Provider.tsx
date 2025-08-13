@@ -7,7 +7,7 @@ import { EventStreamViewContextType } from './context'
 import type { DisplayMode, IChainPath, IEventStreamViewData, ModeEnum } from './types'
 import { EventStreamViewViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/eventstream-view'
+const storageKey: string = '#/view/filetype/eventstream'
 
 interface IProps {
   readonly workspace: string | null

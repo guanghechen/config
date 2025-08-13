@@ -6,7 +6,7 @@ import { HtmlViewContextType } from './context'
 import type { IHtmlViewData } from './types'
 import { HtmlViewViewModel } from './viewmodel'
 
-const storageKey: string = '@guanghechen/yozora/html-view'
+const storageKey: string = '#/view/filetype/html'
 
 interface IProps {
   readonly workspace: string | null
