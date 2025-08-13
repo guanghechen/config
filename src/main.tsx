@@ -3,22 +3,18 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { SiteContextProvider } from './context/site'
+import { routes, views } from './route'
 import { GlobalLayout } from './view/layout'
 import './index.css'
-
-const WorkspaceView = React.lazy(() =>
-  import('@/view/workspace/View').then(md => ({ default: md.WorkspaceView })),
-)
-const NotFoundView = React.lazy(() => import('@/view/not-found'))
-const ExcalidrawPlayground = React.lazy(() => import('@/view/playground/excalidraw'))
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" Component={WorkspaceView} />
-      <Route path="/workspace/" Component={WorkspaceView} />
-      <Route path="/playground/excalidraw" Component={ExcalidrawPlayground} />
-      <Route path="*" Component={NotFoundView} />
+      <Route path="/" Component={views.workspace} />
+      {routes.map(route => (
+        <Route key={route.key} path={route.path} Component={route.Component} />
+      ))}
+      <Route path="*" Component={views.notfound} />
     </Routes>
   )
 }

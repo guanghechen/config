@@ -9,10 +9,7 @@ interface RouteItem {
   icon?: React.ReactNode
 }
 
-const routes: RouteItem[] = [
-  { path: '/', label: 'Workspace' },
-  { path: '/playground/excalidraw', label: 'Excalidraw' },
-]
+const routes: RouteItem[] = [{ path: '/ws/', label: 'Workspace' }]
 
 type MenuLevel = 'closed' | 'first' | 'navigation' | 'settings'
 

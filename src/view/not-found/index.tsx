@@ -62,4 +62,3 @@ export const NotFoundView: React.FC = () => {
 }
 
 NotFoundView.displayName = 'NotFoundView'
-export default NotFoundView
