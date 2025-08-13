@@ -19,20 +19,21 @@ export const FileTree: React.FC = () => {
   const workspaceVM = useWorkspaceViewmodel()
   const mode: FileTreeModeEnum = useStateValue(workspaceVM.filetreeMode$)
 
-  const viewmodel: FileTreeViewModel = useSingleton<FileTreeViewModel>(() => {
+  const onFileNodeClick = useEventCallback((node: IFileTreeFileNode): void => {
+    workspaceVM.filepath$.next(node.filepath || node.uuid)
+  })
+
+  const viewmodel: FileTreeViewModel | null = useSingleton<FileTreeViewModel>(() => {
     return new FileTreeViewModel({
       currentFilepath: workspaceVM.filepath$.getSnapshot(),
     })
   })
-
-  const context: IFileTreeContext = React.useMemo<IFileTreeContext>(
-    () => ({ viewmodel }),
+  const context: IFileTreeContext | null = React.useMemo<IFileTreeContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
   )
 
-  const onFileNodeClick = useEventCallback((node: IFileTreeFileNode): void => {
-    workspaceVM.filepath$.next(node.filepath || node.uuid)
-  })
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>

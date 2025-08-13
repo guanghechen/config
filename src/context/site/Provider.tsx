@@ -14,13 +14,18 @@ interface ISideEffectProps {
 }
 
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const viewmodel: SiteViewModel = useSingleton<SiteViewModel>(() => {
+  const viewmodel: SiteViewModel | null = useSingleton<SiteViewModel>(() => {
     const initialData: Partial<ISiteData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     return SiteViewModel.fromData(initialData)
   })
-  const context: ISiteContext = React.useMemo<ISiteContext>(() => ({ viewmodel }), [viewmodel])
+  const context: ISiteContext | null = React.useMemo<ISiteContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>

@@ -22,7 +22,7 @@ interface IProps {
 
 export const SvgViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, scale, rotation, position, children } = props
-  const viewmodel: SvgViewViewModel = useSingleton<SvgViewViewModel>(() => {
+  const viewmodel: SvgViewViewModel | null = useSingleton<SvgViewViewModel>(() => {
     const initialData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -33,10 +33,12 @@ export const SvgViewProvider: React.FC<IProps> = props => {
     })
   })
 
-  const context: ISvgViewContext = React.useMemo<ISvgViewContext>(
-    () => ({ viewmodel }),
+  const context: ISvgViewContext | null = React.useMemo<ISvgViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
   )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>

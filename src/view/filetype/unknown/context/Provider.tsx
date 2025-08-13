@@ -1,5 +1,6 @@
 import React from 'react'
 import { useSingleton } from '@/hook/useSingleton'
+import type { IUnknownViewContext } from './context'
 import { UnknownViewContextType } from './context'
 import { UnknownViewViewModel } from './viewmodel'
 
@@ -10,14 +11,19 @@ interface IProps {
 
 export const UnknownViewProvider: React.FC<IProps> = props => {
   const { placeholder, children } = props
-  const viewmodel: UnknownViewViewModel = useSingleton<UnknownViewViewModel>(() => {
+  const viewmodel: UnknownViewViewModel | null = useSingleton<UnknownViewViewModel>(() => {
     return new UnknownViewViewModel({ placeholder })
   })
-  const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
+  const context: IUnknownViewContext | null = React.useMemo<IUnknownViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>
-      <UnknownViewContextType.Provider value={value}>{children}</UnknownViewContextType.Provider>
+      <UnknownViewContextType.Provider value={context}>{children}</UnknownViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} placeholder={placeholder} />
     </React.Fragment>
   )

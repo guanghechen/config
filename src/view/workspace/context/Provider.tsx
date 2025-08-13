@@ -25,7 +25,7 @@ interface ISideEffectProps {
 
 export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const { workspace_name } = useParams<{ workspace_name?: string }>()
-  const viewmodel: WorkspaceViewViewModel = useSingleton<WorkspaceViewViewModel>(() => {
+  const viewmodel: WorkspaceViewViewModel | null = useSingleton<WorkspaceViewViewModel>(() => {
     const initialData: Mutable<Partial<IWorkspaceData>> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -43,11 +43,12 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
       topbarVisible: initialData.topbarVisible,
     })
   })
-
-  const context: IWorkspaceContext = React.useMemo<IWorkspaceContext>(
-    () => ({ viewmodel }),
+  const context: IWorkspaceContext | null = React.useMemo<IWorkspaceContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
   )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>

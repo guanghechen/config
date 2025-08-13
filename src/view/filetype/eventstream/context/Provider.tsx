@@ -4,6 +4,7 @@ import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IEventStreamFileData } from '@/util/fetch'
 import { parseEventStream } from '../utils'
+import type { IEventStreamViewContext } from './context'
 import { EventStreamViewContextType } from './context'
 import type { DisplayMode, IChainPath, IEventStreamViewData, ModeEnum } from './types'
 import { EventStreamViewViewModel } from './viewmodel'
@@ -34,7 +35,7 @@ export const EventStreamViewProvider: React.FC<IProps> = props => {
     displayMode,
     children,
   } = props
-  const viewmodel: EventStreamViewViewModel = useSingleton<EventStreamViewViewModel>(() => {
+  const viewmodel: EventStreamViewViewModel | null = useSingleton<EventStreamViewViewModel>(() => {
     const initialData: Partial<IEventStreamViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -44,11 +45,16 @@ export const EventStreamViewProvider: React.FC<IProps> = props => {
       displayMode: displayMode ?? initialData.displayMode,
     })
   })
-  const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
+  const context: IEventStreamViewContext | null = React.useMemo<IEventStreamViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>
-      <EventStreamViewContextType.Provider value={value}>
+      <EventStreamViewContextType.Provider value={context}>
         {children}
       </EventStreamViewContextType.Provider>
       <SideEffect

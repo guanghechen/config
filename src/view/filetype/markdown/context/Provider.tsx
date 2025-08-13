@@ -3,6 +3,7 @@ import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IMarkdownFileData } from '@/util/fetch'
+import type { IMarkdownViewContext } from './context'
 import { MarkdownViewContextType } from './context'
 import type { IMarkdownViewData, ModeEnum } from './types'
 import { MarkdownViewViewModel } from './viewmodel'
@@ -29,7 +30,7 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
     mode,
     children,
   } = props
-  const viewmodel: MarkdownViewViewModel = useSingleton<MarkdownViewViewModel>(() => {
+  const viewmodel: MarkdownViewViewModel | null = useSingleton<MarkdownViewViewModel>(() => {
     const initialData: Partial<IMarkdownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -37,11 +38,18 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
       mode: mode ?? initialData.mode,
     })
   })
-  const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
+  const context: IMarkdownViewContext | null = React.useMemo<IMarkdownViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>
-      <MarkdownViewContextType.Provider value={value}>{children}</MarkdownViewContextType.Provider>
+      <MarkdownViewContextType.Provider value={context}>
+        {children}
+      </MarkdownViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}

@@ -35,13 +35,8 @@ const App: React.FC = () => {
   )
 }
 
-// eslint-disable-next-line no-constant-condition
-if (true) {
-  createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  )
-} else {
-  createRoot(document.getElementById('root')!).render(<App />)
-}
+createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)

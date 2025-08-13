@@ -1,6 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useSingleton } from '@/hook/useSingleton'
+import type { IImageViewContext } from './context'
 import { ImageViewContextType } from './context'
 import type { IImageViewData, IImageViewPosition } from './types'
 import { ImageViewViewModel } from './viewmodel'
@@ -18,7 +19,7 @@ interface IProps {
 
 export const ImageViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, scale, rotation, position, children } = props
-  const viewmodel: ImageViewViewModel = useSingleton<ImageViewViewModel>(() => {
+  const viewmodel: ImageViewViewModel | null = useSingleton<ImageViewViewModel>(() => {
     const initialData: Partial<IImageViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -28,11 +29,16 @@ export const ImageViewProvider: React.FC<IProps> = props => {
       position: position ?? initialData.position,
     })
   })
-  const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
+  const context: IImageViewContext | null = React.useMemo<IImageViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>
-      <ImageViewContextType.Provider value={value}>{children}</ImageViewContextType.Provider>
+      <ImageViewContextType.Provider value={context}>{children}</ImageViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}

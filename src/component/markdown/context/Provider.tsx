@@ -53,7 +53,7 @@ export const MarkdownProvider: React.FC<IProps> = props => {
     () => props.presetFootnoteDefinitionMap ?? {},
     [props.presetFootnoteDefinitionMap],
   )
-  const viewmodel: MarkdownViewModel = useSingleton<MarkdownViewModel>(() => {
+  const viewmodel: MarkdownViewModel | null = useSingleton<MarkdownViewModel>(() => {
     return new MarkdownViewModel({
       ast,
       rendererMap: buildNodeRendererMap(customizedRendererMap),
@@ -64,7 +64,12 @@ export const MarkdownProvider: React.FC<IProps> = props => {
     })
   })
 
-  const context = React.useMemo<IMarkdownContext>(() => ({ viewmodel }), [viewmodel])
+  const context: IMarkdownContext | null = React.useMemo<IMarkdownContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>

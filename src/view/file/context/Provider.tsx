@@ -21,7 +21,7 @@ interface ISideEffectProps {
 }
 
 export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const viewmodel: FileViewModel = useSingleton<FileViewModel>(() => {
+  const viewmodel: FileViewModel | null = useSingleton<FileViewModel>(() => {
     const initialData: Mutable<Partial<IFileData>> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -31,8 +31,12 @@ export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props =
       filepath: filepath ?? initialData.filepath,
     })
   })
+  const context: IFileContext | null = React.useMemo<IFileContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
 
-  const context: IFileContext = React.useMemo<IFileContext>(() => ({ viewmodel }), [viewmodel])
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>

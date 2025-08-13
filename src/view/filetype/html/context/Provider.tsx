@@ -3,6 +3,7 @@ import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IHtmlFileData } from '@/util/fetch'
+import type { IHtmlViewContext } from './context'
 import { HtmlViewContextType } from './context'
 import type { IHtmlViewData } from './types'
 import { HtmlViewViewModel } from './viewmodel'
@@ -19,7 +20,7 @@ interface IProps {
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, tailwindEnabled, children } = props
-  const viewmodel: HtmlViewViewModel = useSingleton<HtmlViewViewModel>(() => {
+  const viewmodel: HtmlViewViewModel | null = useSingleton<HtmlViewViewModel>(() => {
     const initialData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -27,11 +28,16 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
       tailwindEnabled: tailwindEnabled ?? initialData.tailwindEnabled,
     })
   })
-  const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
+  const context: IHtmlViewContext | null = React.useMemo<IHtmlViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>
-      <HtmlViewContextType.Provider value={value}>{children}</HtmlViewContextType.Provider>
+      <HtmlViewContextType.Provider value={context}>{children}</HtmlViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}

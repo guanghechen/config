@@ -3,6 +3,7 @@ import React from 'react'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IJsonlFileData } from '@/util/fetch'
+import type { IJsonlViewContext } from './context'
 import { JsonlViewContextType } from './context'
 import type { DisplayMode, IChainPath, IJsonlViewData, IJsonlViewRecord, ModeEnum } from './types'
 import { JsonlViewViewModel } from './viewmodel'
@@ -31,7 +32,7 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
     displayMode,
     children,
   } = props
-  const viewmodel: JsonlViewViewModel = useSingleton<JsonlViewViewModel>(() => {
+  const viewmodel: JsonlViewViewModel | null = useSingleton<JsonlViewViewModel>(() => {
     const initialData: Partial<IJsonlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -41,11 +42,16 @@ export const JsonlViewProvider: React.FC<IProps> = props => {
       displayMode: displayMode ?? initialData.displayMode,
     })
   })
-  const value = React.useMemo(() => ({ viewmodel }), [viewmodel])
+  const context: IJsonlViewContext | null = React.useMemo<IJsonlViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
+    [viewmodel],
+  )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>
-      <JsonlViewContextType.Provider value={value}>{children}</JsonlViewContextType.Provider>
+      <JsonlViewContextType.Provider value={context}>{children}</JsonlViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
         workspace={workspace}

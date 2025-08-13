@@ -24,7 +24,7 @@ interface IProps {
 export const PdfViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, pages, pageno, scale, multiview, children } =
     props
-  const viewmodel: PdfViewViewModel = useSingleton<PdfViewViewModel>(() => {
+  const viewmodel: PdfViewViewModel | null = useSingleton<PdfViewViewModel>(() => {
     const initialData: Partial<IPdfViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
@@ -34,10 +34,12 @@ export const PdfViewProvider: React.FC<IProps> = props => {
     })
   })
 
-  const context: IPdfViewContext = React.useMemo<IPdfViewContext>(
-    () => ({ viewmodel }),
+  const context: IPdfViewContext | null = React.useMemo<IPdfViewContext | null>(
+    () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
   )
+
+  if (!viewmodel || !context) return <React.Fragment />
 
   return (
     <React.Fragment>
