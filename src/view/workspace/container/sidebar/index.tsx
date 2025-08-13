@@ -1,16 +1,11 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import type { WorkspaceViewModel } from '../../context'
+import { useWorkspaceViewmodel } from '../../context'
 import { FileTree } from './FileTree'
 
-interface IProps {
-  readonly viewmodel: WorkspaceViewModel
-}
-
-export const Sidebar: React.FC<IProps> = props => {
-  const { viewmodel } = props
-
+export const Sidebar: React.FC = () => {
+  const viewmodel = useWorkspaceViewmodel()
   const visible: boolean = useStateValue(viewmodel.sidebarVisible$)
   const width: number = viewmodel.sidebarWidth$.getSnapshot() // don't subscribe the width change since we adjust it in resizer callback
 

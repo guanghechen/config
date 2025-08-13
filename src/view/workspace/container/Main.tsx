@@ -10,14 +10,10 @@ import { MarkdownView } from '@/view/filetype/markdown/View'
 import { PdfView } from '@/view/filetype/pdf/View'
 import { SvgView } from '@/view/filetype/svg/View'
 import { UnknownView } from '@/view/filetype/unknown/View'
-import type { WorkspaceViewModel } from '../context'
+import { useWorkspaceViewmodel } from '../context'
 
-interface IProps {
-  readonly viewmodel: WorkspaceViewModel
-}
-
-export const Main: React.FC<IProps> = props => {
-  const { viewmodel } = props
+export const Main: React.FC = () => {
+  const viewmodel = useWorkspaceViewmodel()
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath = useStateValue(viewmodel.filepath$)
   const filepathDirtyTick: number = useStateValue(viewmodel.filepathDirtyTick$)

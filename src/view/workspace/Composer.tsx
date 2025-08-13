@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { DockToRightIcon } from '@/component/icon/material'
-import { Float } from './container/float'
+import { FileSearch } from './container/FileSearch'
 import { Main } from './container/Main'
 import { Sidebar } from './container/sidebar'
 import { Topbar } from './container/Topbar'
@@ -27,7 +27,7 @@ export const Composer: React.FC = () => {
       {topbarVisible && (
         <div className="sticky top-0 z-30 box-border h-[3rem] w-0 flex-initial">
           <div className="box-border h-full w-screen border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-            <Topbar viewmodel={viewmodel} />
+            <Topbar />
           </div>
         </div>
       )}
@@ -39,15 +39,15 @@ export const Composer: React.FC = () => {
           height: `calc(100vh - ${topbarHeight})`,
         }}
       >
-        <Sidebar viewmodel={viewmodel} />
+        <Sidebar />
       </div>
       <div className="box-border min-h-screen w-0 flex-auto" style={{ paddingTop: topbarHeight }}>
         <div className="box-border flex w-full justify-center p-4">
-          <Main viewmodel={viewmodel} />
+          <Main />
         </div>
       </div>
       <div className="absolute right-0 top-0">
-        <Float viewmodel={viewmodel} />
+        <FileSearch />
       </div>
     </div>
   )

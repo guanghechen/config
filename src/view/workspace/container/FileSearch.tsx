@@ -5,7 +5,7 @@ import React from 'react'
 import { FileTypeIcon } from '@/component/icon/filetype'
 import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
 import { useKeyBinding } from '@/keybindings'
-import type { WorkspaceViewModel } from '../../context'
+import { useWorkspaceViewmodel } from '../context'
 
 interface FileItem {
   filepath: string
@@ -13,12 +13,8 @@ interface FileItem {
   extname: string
 }
 
-interface IProps {
-  readonly viewmodel: WorkspaceViewModel
-}
-
-export const FileSearch: React.FC<IProps> = props => {
-  const { viewmodel } = props
+export const FileSearch: React.FC = () => {
+  const viewmodel = useWorkspaceViewmodel()
   const workspace = useStateValue(viewmodel.workspace$)
   const { files } = useWorkspaceFiles(workspace, 0)
 
@@ -202,6 +198,8 @@ export const FileSearch: React.FC<IProps> = props => {
     </div>
   )
 }
+
+FileSearch.displayName = 'FileSearch'
 
 const highlightMatches = (text: string, textLower: string, keyword: string): React.ReactNode[] => {
   const result: React.ReactNode[] = []

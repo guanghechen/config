@@ -4,15 +4,10 @@ import React from 'react'
 import { CopyButton } from '@/component/CopyButton'
 import { DockToRightIcon, OpenInNewIcon, OpenWithIcon } from '@/component/icon/material'
 import { toSearch } from '@/util/url'
-import type { WorkspaceViewModel } from '../context'
 import { useWorkspaceViewmodel } from '../context'
 import { Workspace } from './sidebar/Workspace'
 
-interface IProps {
-  readonly viewmodel: WorkspaceViewModel
-}
-
-export const Topbar: React.FC<IProps> = () => {
+export const Topbar: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const sidebarVisible: boolean = useStateValue(viewmodel.sidebarVisible$)
