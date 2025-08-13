@@ -84,6 +84,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { data, error } = useFileResult<IMarkdownFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     if (data) {
       viewmodel.data$.next(data)
       viewmodel.error$.next(null)
@@ -107,24 +109,29 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace)
-  }, [viewmodel.workspace$, workspace])
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
-  }, [viewmodel.filepath$, filepath])
+  }, [viewmodel, filepath])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.tocActivatedIdentifier$.next(tocActivatedIdentifier ?? null)
-  }, [viewmodel.tocActivatedIdentifier$, tocActivatedIdentifier])
+  }, [viewmodel, tocActivatedIdentifier])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.specifiedTocActivatedIdentifier$.next(specifiedTocActivatedIdentifier ?? null)
-  }, [viewmodel.specifiedTocActivatedIdentifier$, specifiedTocActivatedIdentifier])
+  }, [viewmodel, specifiedTocActivatedIdentifier])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
-  }, [viewmodel.mode$, mode])
+  }, [viewmodel, mode])
 
   return <React.Fragment />
 }

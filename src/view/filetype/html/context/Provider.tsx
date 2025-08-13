@@ -62,6 +62,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { data, error } = useFileResult<IHtmlFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     if (data) {
       viewmodel.data$.next(data)
       viewmodel.error$.next(null)
@@ -85,14 +87,17 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace ?? null)
   }, [viewmodel.workspace$, workspace])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath ?? null)
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.tailwindEnabled$.next(tailwindEnabled ?? viewmodel.tailwindEnabled$.getSnapshot())
   }, [viewmodel.tailwindEnabled$, tailwindEnabled])
 

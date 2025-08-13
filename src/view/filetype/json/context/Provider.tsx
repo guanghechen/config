@@ -66,6 +66,8 @@ const SideEffect: React.FC<ISideEffectPropsWithMode> = props => {
   const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     if (data?.content) {
       viewmodel.content$.next(data.content)
 
@@ -105,6 +107,7 @@ const SideEffect: React.FC<ISideEffectPropsWithMode> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? 1)
   }, [viewmodel.mode$, mode])
 

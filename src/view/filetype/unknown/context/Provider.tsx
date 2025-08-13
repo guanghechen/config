@@ -37,6 +37,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, placeholder } = props
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.placeholder$.next(placeholder ?? true)
   }, [viewmodel.placeholder$, placeholder])
 

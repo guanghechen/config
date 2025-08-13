@@ -79,6 +79,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { data, error } = useFileResult<IPdfFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     if (data) {
       viewmodel.data$.next(data)
       viewmodel.error$.next(null)
@@ -102,26 +104,32 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace)
   }, [viewmodel.workspace$, workspace])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.pages$.next(pages ?? 1)
   }, [viewmodel.pages$, pages])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.pageno$.next(pageno ?? 1)
   }, [viewmodel.pageno$, pageno])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.scale$.next(scale ?? viewmodel.scale$.getSnapshot())
   }, [viewmodel.scale$, scale])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.multiview$.next(multiview ?? viewmodel.multiview$.getSnapshot())
   }, [viewmodel.multiview$, multiview])
 

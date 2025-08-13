@@ -75,6 +75,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { data, error } = useFileResult<ISvgFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     if (data) {
       viewmodel.data$.next(data)
       viewmodel.error$.next(null)
@@ -101,22 +103,27 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace)
   }, [viewmodel.workspace$, workspace])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.scale$.next(scale ?? viewmodel.scale$.getSnapshot())
   }, [viewmodel.scale$, scale])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.rotation$.next(rotation ?? viewmodel.rotation$.getSnapshot())
   }, [viewmodel.rotation$, rotation])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
   }, [viewmodel.position$, position])
 

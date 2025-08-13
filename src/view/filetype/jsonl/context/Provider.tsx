@@ -91,6 +91,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { data, error } = useFileResult<IJsonlFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     if (data?.content) {
       viewmodel.content$.next(data.content)
       viewmodel.error$.next(null)
@@ -143,26 +145,32 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace)
   }, [viewmodel.workspace$, workspace])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
   }, [viewmodel.mode$, mode])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.activeRecordIndex$.next(activeRecordIndex ?? null)
   }, [viewmodel.activeRecordIndex$, activeRecordIndex])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.chainPaths$.next(chainPaths ?? viewmodel.chainPaths$.getSnapshot())
   }, [viewmodel.chainPaths$, chainPaths])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.displayMode$.next(displayMode ?? viewmodel.displayMode$.getSnapshot())
   }, [viewmodel.displayMode$, displayMode])
 

@@ -76,22 +76,27 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace ?? null)
   }, [viewmodel.workspace$, workspace])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath ?? null)
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.scale$.next(scale ?? viewmodel.scale$.getSnapshot())
   }, [viewmodel.scale$, scale])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.rotation$.next(rotation ?? viewmodel.rotation$.getSnapshot())
   }, [viewmodel.rotation$, rotation])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
   }, [viewmodel.position$, position])
 

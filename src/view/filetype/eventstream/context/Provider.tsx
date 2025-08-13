@@ -103,6 +103,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   )
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     if (data?.content) {
       viewmodel.content$.next(data.content)
 
@@ -137,18 +139,22 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
   }, [viewmodel.mode$, mode])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.activeEventIndex$.next(activeEventIndex ?? null)
   }, [viewmodel.activeEventIndex$, activeEventIndex])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.chainPaths$.next(chainPaths ?? viewmodel.chainPaths$.getSnapshot())
   }, [viewmodel.chainPaths$, chainPaths])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.displayMode$.next(displayMode ?? viewmodel.displayMode$.getSnapshot())
   }, [viewmodel.displayMode$, displayMode])
 

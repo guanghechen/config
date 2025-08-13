@@ -71,6 +71,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   )
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
+
     const combinedError = error || fileError
     if (data) {
       viewmodel.data$.next(data)
@@ -90,18 +92,22 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [data, fileError, error, viewmodel])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.elements$.next(elements ?? [])
   }, [viewmodel.elements$, elements])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.workspace$.next(workspace ?? null)
   }, [viewmodel.workspace$, workspace])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath ?? null)
   }, [viewmodel.filepath$, filepath])
 
   React.useEffect(() => {
+    if (viewmodel.disposed) return
     viewmodel.theme$.next(theme ?? null)
   }, [viewmodel.theme$, theme])
 
