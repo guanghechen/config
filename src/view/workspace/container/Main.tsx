@@ -33,36 +33,95 @@ export const Main: React.FC = () => {
       return <UnknownView filepath={filepath} extname={extname} />
     }
 
-    const commonProps = {
-      workspace,
-      filepath,
-      filepathDirtyTick,
-      mainScrollableContainer,
-      topbarVisible,
-    }
-
     switch (extname.toLowerCase()) {
       case '.eventstream':
-        return <EventStreamView {...commonProps} />
+        return (
+          <EventStreamView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+            topbarVisible={topbarVisible}
+          />
+        )
       case '.excalidraw':
-        return <ExcalidrawView {...commonProps} />
+        return (
+          <ExcalidrawView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+          />
+        )
       case '.html':
       case '.htm':
-        return <HtmlView {...commonProps} />
+        return (
+          <HtmlView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+            topbarVisible={topbarVisible}
+          />
+        )
       case '.json':
-        return <JsonView {...commonProps} />
+        return (
+          <JsonView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+            topbarVisible={topbarVisible}
+          />
+        )
       case '.jsonl':
-        return <JsonlView {...commonProps} />
+        return (
+          <JsonlView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+            topbarVisible={topbarVisible}
+          />
+        )
       case '.md':
-        return <MarkdownView {...commonProps} />
+        return (
+          <MarkdownView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+            topbarVisible={topbarVisible}
+          />
+        )
       case '.pdf':
-        return <PdfView {...commonProps} />
+        return (
+          <PdfView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+          />
+        )
       case '.svg':
-        return <SvgView {...commonProps} />
+        return (
+          <SvgView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+          />
+        )
       case '.png':
       case '.jpg':
       case '.jpeg':
-        return <ImageView {...commonProps} />
+        return (
+          <ImageView
+            workspace={workspace}
+            filepath={filepath}
+            mainScrollableContainer={mainScrollableContainer}
+          />
+        )
       default:
         return <UnknownView filepath={filepath} extname={extname} />
     }

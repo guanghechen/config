@@ -23,12 +23,22 @@ export interface IPdfFileData {
   readonly url: string
 }
 
+export interface ISvgFileData {
+  readonly content: string
+}
+
+export interface IHtmlFileData {
+  readonly content: string
+}
+
 export type IFetchFileData =
   | IMarkdownFileData
   | IJsonFileData
   | IEventStreamFileData
   | IJsonlFileData
   | IPdfFileData
+  | ISvgFileData
+  | IHtmlFileData
 
 export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly loading?: boolean
@@ -57,10 +67,24 @@ export async function fetchFile<T extends IFetchFileData = IFetchFileData>(
       return { error: data.error, data: data.data }
     }
 
+    if (contentType?.includes('image/svg+xml')) {
+      const content: string = await response.text()
+      const data: ISvgFileData = { content }
+      return { data: data as T }
+    }
+
+    if (contentType?.includes('text/html')) {
+      const content: string = await response.text()
+      const data: IHtmlFileData = { content }
+      return { data: data as T }
+    }
+
     if (contentType?.includes('text')) {
       const text = await response.text()
       return { text }
-    } else if (contentType?.includes('image') || contentType?.includes('video')) {
+    }
+
+    if (contentType?.includes('image') || contentType?.includes('video')) {
       const blob = await response.blob()
       const objectUrl = URL.createObjectURL(blob)
       return { url: objectUrl }

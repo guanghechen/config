@@ -122,6 +122,7 @@ export const fetchFile: IApiHandle = async params => {
   }
 
   const stream = createReadStream(filepath)
+  res.setHeader('Content-Type', contentType)
   stream.pipe(res)
   stream.on('error', err => {
     res.statusCode = 500

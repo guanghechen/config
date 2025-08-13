@@ -1,5 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
+import type { ISvgFileData } from '@/util/fetch'
 import type { ISvgViewData, ISvgViewPosition } from './types'
 
 interface IProps {
@@ -22,6 +23,8 @@ export class SvgViewViewModel extends ViewModel {
   public readonly scale$: IState<number>
   public readonly rotation$: IState<number>
   public readonly position$: IState<ISvgViewPosition>
+  public readonly data$: IState<ISvgFileData | null>
+  public readonly error$: IState<string | null>
 
   public static fromData(data: Partial<ISvgViewData> | undefined): SvgViewViewModel {
     const { scale, rotation, position }: ISvgViewData = this.normalize(DEFAULT_SVG_VIEW_DATA, data)
@@ -69,6 +72,8 @@ export class SvgViewViewModel extends ViewModel {
     this.scale$ = new State<number>(scale)
     this.rotation$ = new State<number>(rotation)
     this.position$ = new State<ISvgViewPosition>(position)
+    this.data$ = new State<ISvgFileData | null>(null)
+    this.error$ = new State<string | null>(null)
   }
 
   public dump = (): ISvgViewData => {

@@ -1,5 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { useFileResult } from '@/hook/useFileResult'
+import type { ISvgFileData } from '@/util/fetch'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
 import type { ISvgViewData, ISvgViewPosition } from './types'
@@ -10,6 +12,7 @@ const storageKey: string = '@guanghechen/yozora/svg-view'
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string
+  readonly filepathDirtyTick: number
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
@@ -17,7 +20,7 @@ interface IProps {
 }
 
 export const SvgViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, scale, rotation, position, children } = props
+  const { workspace, filepath, filepathDirtyTick, scale, rotation, position, children } = props
   const [viewmodel] = React.useState<SvgViewViewModel>(() => {
     const initialData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -41,6 +44,7 @@ export const SvgViewProvider: React.FC<IProps> = props => {
         viewmodel={viewmodel}
         workspace={workspace}
         filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
         scale={scale}
         rotation={rotation}
         position={position}
@@ -57,13 +61,29 @@ interface ISideEffectProps {
   readonly viewmodel: SvgViewViewModel
   readonly workspace: string | null
   readonly filepath: string
+  readonly filepathDirtyTick: number
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, scale, rotation, position } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, scale, rotation, position } = props
+
+  const { data, error } = useFileResult<ISvgFileData>(workspace, filepath, filepathDirtyTick)
+
+  React.useEffect(() => {
+    if (data) {
+      viewmodel.data$.next(data)
+      viewmodel.error$.next(null)
+    } else if (error) {
+      viewmodel.data$.next(null)
+      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+    } else {
+      viewmodel.data$.next(null)
+      viewmodel.error$.next(null)
+    }
+  }, [data, error, viewmodel])
 
   React.useEffect(() => {
     const computed = Computed.fromObservables(

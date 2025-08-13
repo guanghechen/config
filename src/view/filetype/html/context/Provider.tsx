@@ -1,5 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { useFileResult } from '@/hook/useFileResult'
+import type { IHtmlFileData } from '@/util/fetch'
 import { HtmlViewContextType } from './context'
 import type { IHtmlViewData } from './types'
 import { HtmlViewViewModel } from './viewmodel'
@@ -7,14 +9,15 @@ import { HtmlViewViewModel } from './viewmodel'
 const storageKey: string = '@guanghechen/yozora/html-view'
 
 interface IProps {
-  readonly workspace?: string | null
-  readonly filepath?: string | null
+  readonly workspace: string | null
+  readonly filepath: string | null
+  readonly filepathDirtyTick: number
   readonly tailwindEnabled?: boolean
   readonly children: React.ReactNode
 }
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, tailwindEnabled, children } = props
+  const { workspace, filepath, filepathDirtyTick, tailwindEnabled, children } = props
   const [viewmodel] = React.useState<HtmlViewViewModel>(() => {
     const initialData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -32,6 +35,7 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
         viewmodel={viewmodel}
         workspace={workspace}
         filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
         tailwindEnabled={tailwindEnabled}
       />
     </React.Fragment>
@@ -44,13 +48,29 @@ HtmlViewProvider.displayName = 'HtmlViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: HtmlViewViewModel
-  readonly workspace?: string | null
-  readonly filepath?: string | null
+  readonly workspace: string | null
+  readonly filepath: string | null
+  readonly filepathDirtyTick: number
   readonly tailwindEnabled?: boolean
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, tailwindEnabled } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, tailwindEnabled } = props
+
+  const { data, error } = useFileResult<IHtmlFileData>(workspace, filepath, filepathDirtyTick)
+
+  React.useEffect(() => {
+    if (data) {
+      viewmodel.data$.next(data)
+      viewmodel.error$.next(null)
+    } else if (error) {
+      viewmodel.data$.next(null)
+      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+    } else {
+      viewmodel.data$.next(null)
+      viewmodel.error$.next(null)
+    }
+  }, [data, error, viewmodel])
 
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.tailwindEnabled$], () => {
