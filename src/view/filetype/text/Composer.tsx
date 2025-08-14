@@ -7,6 +7,7 @@ import { PRESET_CLASSES } from '@/constant/classes'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { useScrollToTop } from '@/hook/useScrollToTop'
 import { ModeEnum, useTextViewViewModel } from './context'
+import { TransformMode } from './container/TransformMode'
 
 interface IProps {
   readonly workspace: string | null
@@ -28,7 +29,8 @@ export const Composer: React.FC<IProps> = props => {
 
   const showView: boolean = (mode & ModeEnum.VIEW) !== 0
   const showRaw: boolean = (mode & ModeEnum.RAW) !== 0
-  const columns: number = (showView ? 1 : 0) + (showRaw ? 1 : 0)
+  const showTransform: boolean = (mode & ModeEnum.TRANSFORM) !== 0
+  const columns: number = (showView ? 1 : 0) + (showRaw ? 1 : 0) + (showTransform ? 1 : 0)
 
   if (error) {
     return (
@@ -73,26 +75,50 @@ export const Composer: React.FC<IProps> = props => {
           </React.Fragment>
         )}
         {showRaw && (
-          <div
-            className={cn(
-              'h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200',
-              PRESET_CLASSES.scrollbar,
-              {
-                'p-2 overflow-auto': columns > 1,
-                'p-8 overflow-auto': columns === 1,
-              },
+          <React.Fragment>
+            {columns > 1 && (
+              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
             )}
-          >
-            <div className="overflow-x-auto whitespace-nowrap">
-              <CodeHighlighter
-                themeScheme={themeScheme}
-                lang="text"
-                code={content}
-                collapsed={false}
-                showLineno={true}
-              />
+            <div
+              className={cn(
+                'h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200',
+                PRESET_CLASSES.scrollbar,
+                {
+                  'p-2 overflow-auto': columns > 1,
+                  'p-8 overflow-auto': columns === 1,
+                },
+              )}
+            >
+              <div className="overflow-x-auto whitespace-nowrap">
+                <CodeHighlighter
+                  themeScheme={themeScheme}
+                  lang="text"
+                  code={content}
+                  collapsed={false}
+                  showLineno={true}
+                />
+              </div>
             </div>
-          </div>
+          </React.Fragment>
+        )}
+        {showTransform && (
+          <React.Fragment>
+            {columns > 1 && (
+              <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+            )}
+            <div
+              className={cn(
+                'h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200',
+                PRESET_CLASSES.scrollbar,
+                {
+                  'p-2 overflow-auto': columns > 1,
+                  'overflow-auto': columns === 1,
+                },
+              )}
+            >
+              <TransformMode />
+            </div>
+          </React.Fragment>
         )}
       </div>
       <button

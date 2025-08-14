@@ -32,7 +32,7 @@ export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
       </button>
       <button
         className={cn(
-          'box-border px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
+          'box-border px-3 transition-all duration-200 focus:outline-none focus:ring-0',
           (mode & ModeEnum.RAW) !== 0
             ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
@@ -40,6 +40,17 @@ export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
         onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.RAW)}
       >
         raw
+      </button>
+      <button
+        className={cn(
+          'box-border px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
+          (mode & ModeEnum.TRANSFORM) !== 0
+            ? 'bg-green-500 bg-opacity-90 font-medium text-white shadow-inner'
+            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+        )}
+        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.TRANSFORM)}
+      >
+        transform
       </button>
     </div>
   )

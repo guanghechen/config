@@ -1,0 +1,202 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
+import React, { useState } from 'react'
+import { useTextViewViewModel } from '../context'
+import type { IFilterMapFunction, ITransformConfig } from '../context/types'
+import { FilterMapItem } from './FilterMapItem'
+
+interface ITooltipProps {
+  readonly content: string
+  readonly children: React.ReactNode
+}
+
+const Tooltip: React.FC<ITooltipProps> = ({ content, children }) => {
+  const [isVisible, setIsVisible] = useState(false)
+
+  return (
+    <div className="relative inline-block">
+      <div onMouseEnter={() => setIsVisible(true)} onMouseLeave={() => setIsVisible(false)}>
+        {children}
+      </div>
+      {isVisible && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg whitespace-nowrap z-10 max-w-xs break-words">
+          <div className="text-center">{content}</div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+export const TransformMode: React.FC = () => {
+  const viewmodel = useTextViewViewModel()
+  const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
+
+  const updateTransformConfig = (updates: Partial<ITransformConfig>): void => {
+    const current = viewmodel.transformConfig$.getSnapshot()
+    viewmodel.transformConfig$.next({ ...current, ...updates })
+  }
+
+  const addFilterMapFunction = (type: 'filter' | 'map'): void => {
+    const current = transformConfig.filterMap
+    const newFunction: IFilterMapFunction = {
+      id: `${type}-${Date.now()}`,
+      type,
+      function: type === 'filter' ? '(item) => item.trim().length > 0' : '(item) => item.trim()',
+    }
+    updateTransformConfig({ filterMap: [...current, newFunction] })
+  }
+
+  const removeFilterMapFunction = (id: string): void => {
+    const current = transformConfig.filterMap
+    updateTransformConfig({ filterMap: current.filter(func => func.id !== id) })
+  }
+
+  const updateFilterMapFunction = (id: string, updates: Partial<IFilterMapFunction>): void => {
+    const current = transformConfig.filterMap
+    const updated = current.map(func => (func.id === id ? { ...func, ...updates } : func))
+    updateTransformConfig({ filterMap: updated })
+  }
+
+  const moveFunction = (id: string, direction: 'up' | 'down'): void => {
+    const current = transformConfig.filterMap
+    const index = current.findIndex(func => func.id === id)
+    if (index === -1) return
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1
+    if (newIndex < 0 || newIndex >= current.length) return
+
+    const updated = [...current]
+    const [moved] = updated.splice(index, 1)
+    updated.splice(newIndex, 0, moved)
+    updateTransformConfig({ filterMap: updated })
+  }
+
+  return (
+    <div className="w-full space-y-0">
+      {/* Split Section */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-6 border-l-4 border-blue-500">
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">Split</h3>
+          <Tooltip content="Regex pattern (e.g., /\n/) or arrow function (e.g., (text) => text.split('\n'))">
+            <span className="w-4 h-4 bg-blue-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+              ?
+            </span>
+          </Tooltip>
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Split Function
+          </label>
+          <input
+            type="text"
+            value={transformConfig.split}
+            onChange={e => updateTransformConfig({ split: e.target.value })}
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+            placeholder="/\\n/"
+          />
+        </div>
+      </div>
+
+      {/* Identifiers Section */}
+      <div className="bg-purple-50 dark:bg-purple-900/20 p-6 border-l-4 border-purple-500">
+        <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-4">
+          Identifiers
+        </h3>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                UUID Function
+              </label>
+              <Tooltip content="Function to generate unique ID for each item">
+                <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
+            <input
+              type="text"
+              value={transformConfig.uuidFunction}
+              onChange={e => updateTransformConfig({ uuidFunction: e.target.value })}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+              placeholder="(item, index) =&gt; 'item-' + index"
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Parent UUID Function
+              </label>
+              <Tooltip content="Function to generate parent ID for each item">
+                <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
+            <input
+              type="text"
+              value={transformConfig.parentUuidFunction}
+              onChange={e => updateTransformConfig({ parentUuidFunction: e.target.value })}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+              placeholder="() =&gt; null"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Filter/Map Section */}
+      <div className="bg-green-50 dark:bg-green-900/20 p-6 border-l-4 border-green-500">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                Filter &amp; Map
+              </h3>
+              <Tooltip content="Chain of functions to process the split results. Order matters - functions execute top to bottom.">
+                <span className="w-4 h-4 bg-green-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => addFilterMapFunction('filter')}
+                className="rounded bg-orange-500 px-3 py-1 text-xs text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 select-none"
+              >
+                Add Filter
+              </button>
+              <button
+                onClick={() => addFilterMapFunction('map')}
+                className="rounded bg-purple-500 px-3 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none"
+              >
+                Add Map
+              </button>
+            </div>
+          </div>
+          {transformConfig.filterMap.length === 0 ? (
+            <div className="rounded border-2 border-dashed border-gray-300 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+              No filter/map functions. Click "Add Filter" or "Add Map" to add functions.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {transformConfig.filterMap.map((func, index) => (
+                <FilterMapItem
+                  key={func.id}
+                  func={func}
+                  index={index}
+                  totalCount={transformConfig.filterMap.length}
+                  onUpdate={updates => updateFilterMapFunction(func.id, updates)}
+                  onRemove={() => removeFilterMapFunction(func.id)}
+                  onMoveUp={() => moveFunction(func.id, 'up')}
+                  onMoveDown={() => moveFunction(func.id, 'down')}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+TransformMode.displayName = 'TransformMode'
