@@ -5,7 +5,7 @@ import { useSingleton } from '@/hook/useSingleton'
 import type { ITextFileData } from '@/util/fetch'
 import type { ITextViewContext } from './context'
 import { TextViewContextType } from './context'
-import type { ITextViewData } from './types'
+import type { ITextViewData, ModeEnum } from './types'
 import { TextViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/filetype/text'
@@ -14,16 +14,19 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
+  readonly mode?: ModeEnum
   readonly children: React.ReactNode
 }
 
 export const TextViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, children } = props
+  const { workspace, filepath, filepathDirtyTick, mode, children } = props
   const viewmodel: TextViewViewModel | null = useSingleton<TextViewViewModel>(() => {
     const initialData: Partial<ITextViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
-    return TextViewViewModel.fromData(initialData)
+    return TextViewViewModel.fromData({
+      mode: mode ?? initialData.mode,
+    })
   })
   const context: ITextViewContext | null = React.useMemo<ITextViewContext | null>(
     () => (viewmodel ? { viewmodel } : null),
@@ -40,6 +43,7 @@ export const TextViewProvider: React.FC<IProps> = props => {
         workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
+        mode={mode}
       />
     </React.Fragment>
   )
@@ -54,10 +58,11 @@ interface ISideEffectProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
+  readonly mode?: ModeEnum
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, mode } = props
 
   const { data, error } = useFileResult<ITextFileData>(workspace, filepath, filepathDirtyTick)
 
@@ -77,7 +82,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [data, error, viewmodel])
 
   React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.content$], () => {
+    const computed = Computed.fromObservables([viewmodel.mode$], () => {
       const data: ITextViewData = viewmodel.dump()
       window.localStorage.setItem(storageKey, JSON.stringify(data))
     })
@@ -95,6 +100,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath ?? null)
   }, [viewmodel, filepath])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
+  }, [viewmodel, mode])
 
   return <React.Fragment />
 }

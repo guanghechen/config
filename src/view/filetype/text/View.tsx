@@ -1,5 +1,6 @@
 import React from 'react'
 import { Composer } from './Composer'
+import { ModeToggle } from './container/ModeToggle'
 import { TextViewProvider } from './context'
 
 interface IProps {
@@ -11,7 +12,7 @@ interface IProps {
 }
 
 export const TextView: React.FC<IProps> = props => {
-  const { filepath, workspace, filepathDirtyTick, mainScrollableContainer } = props
+  const { filepath, workspace, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
 
   return (
     <div className="w-full pt-8">
@@ -21,6 +22,7 @@ export const TextView: React.FC<IProps> = props => {
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
         >
+          <ModeToggle topbarVisible={topbarVisible} />
           <Composer
             workspace={workspace}
             filepath={filepath}
