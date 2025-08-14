@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
 import { useScrollToTop } from '@/hook/useScrollToTop'
-import { HtmlContainer } from './container/HtmlContainer'
+import { HtmlMain } from './container/main'
 
 interface IProps {
   readonly workspace: string | null
@@ -10,12 +10,16 @@ interface IProps {
 }
 
 export const Composer: React.FC<IProps> = props => {
-  const { workspace, filepath, mainScrollableContainer } = props
+  const { workspace: _workspace, filepath: _filepath, mainScrollableContainer } = props
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   return (
     <div className="w-full">
-      <HtmlContainer workspace={workspace} filepath={filepath} />
+      <div className="w-full">
+        <div className="h-[calc(100vh-10rem)] select-none overflow-hidden bg-white dark:bg-gray-900">
+          <HtmlMain />
+        </div>
+      </div>
       <button
         onClick={scrollToTop}
         className={cn(

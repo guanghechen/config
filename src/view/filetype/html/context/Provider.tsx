@@ -5,7 +5,7 @@ import { useSingleton } from '@/hook/useSingleton'
 import type { IHtmlFileData } from '@/util/fetch'
 import type { IHtmlViewContext } from './context'
 import { HtmlViewContextType } from './context'
-import type { IHtmlViewData } from './types'
+import type { IHtmlViewData, ModeEnum } from './types'
 import { HtmlViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/filetype/html'
@@ -14,18 +14,18 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
-  readonly tailwindEnabled?: boolean
+  readonly mode?: ModeEnum
   readonly children: React.ReactNode
 }
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, tailwindEnabled, children } = props
+  const { workspace, filepath, filepathDirtyTick, mode, children } = props
   const viewmodel: HtmlViewViewModel | null = useSingleton<HtmlViewViewModel>(() => {
     const initialData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     return HtmlViewViewModel.fromData({
-      tailwindEnabled: tailwindEnabled ?? initialData.tailwindEnabled,
+      mode: mode ?? initialData.mode,
     })
   })
   const context: IHtmlViewContext | null = React.useMemo<IHtmlViewContext | null>(
@@ -43,7 +43,7 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
         workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
-        tailwindEnabled={tailwindEnabled}
+        mode={mode}
       />
     </React.Fragment>
   )
@@ -58,11 +58,11 @@ interface ISideEffectProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
-  readonly tailwindEnabled?: boolean
+  readonly mode?: ModeEnum
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, tailwindEnabled } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, mode } = props
 
   const { data, error } = useFileResult<IHtmlFileData>(workspace, filepath, filepathDirtyTick)
 
@@ -82,7 +82,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [data, error, viewmodel])
 
   React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.tailwindEnabled$], () => {
+    const computed = Computed.fromObservables([viewmodel.mode$], () => {
       const data: IHtmlViewData = viewmodel.dump()
       window.localStorage.setItem(storageKey, JSON.stringify(data))
     })
@@ -103,8 +103,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.tailwindEnabled$.next(tailwindEnabled ?? viewmodel.tailwindEnabled$.getSnapshot())
-  }, [viewmodel, tailwindEnabled])
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
+  }, [viewmodel, mode])
 
   return <React.Fragment />
 }

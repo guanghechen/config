@@ -1,6 +1,6 @@
 import React from 'react'
 import { Composer } from './Composer'
-import { TailwindToggle } from './container/TailwindToggle'
+import { ModeToggle } from './container/ModeToggle'
 import { HtmlViewProvider } from './context'
 
 interface IProps {
@@ -22,7 +22,7 @@ export const HtmlView: React.FC<IProps> = props => {
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
         >
-          <TailwindToggle topbarVisible={topbarVisible} />
+          <ModeToggle topbarVisible={topbarVisible} />
           <Composer
             workspace={workspace}
             filepath={filepath}

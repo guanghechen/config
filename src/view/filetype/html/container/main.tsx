@@ -1,14 +1,16 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toSearch } from '@/util/url'
-import { useHtmlViewViewModel } from '../context'
+import { ModeEnum, useHtmlViewViewModel } from '../context'
 
 export const HtmlMain: React.FC = () => {
   const viewmodel = useHtmlViewViewModel()
+  const mode: ModeEnum = useStateValue(viewmodel.mode$)
   const filepath = useStateValue(viewmodel.filepath$)
   const workspace = useStateValue(viewmodel.workspace$)
-  const tailwindEnabled = useStateValue(viewmodel.tailwindEnabled$)
   const iframeRef = React.useRef<HTMLIFrameElement>(null)
+
+  const tailwindEnabled = (mode & ModeEnum.TAILWIND) !== 0
 
   const url = React.useMemo<string>(() => {
     const search = toSearch({ filepath, workspace })
