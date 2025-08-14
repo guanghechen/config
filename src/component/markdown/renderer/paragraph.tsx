@@ -25,14 +25,14 @@ export class ParagraphRenderer extends React.Component<Paragraph> {
 
     if (notValidParagraph) {
       return (
-        <div className="yozora-paragraph flex items-center justify-center py-4 m-0 overflow-hidden hyphens-auto break-normal anywhere">
+        <div className="yozora-paragraph flex items-center justify-center py-4 m-0 overflow-hidden hyphens-auto break-words anywhere">
           <NodesRenderer nodes={childNodes} />
         </div>
       )
     }
 
     return (
-      <div className="yozora-paragraph overflow-hidden p-0 mb-5 leading-[1.8] hyphens-auto break-normal anywhere [&>:last-child]:mb-0">
+      <div className="yozora-paragraph overflow-hidden p-0 mb-5 leading-[1.8] hyphens-auto break-words anywhere [&>:last-child]:mb-0">
         <NodesRenderer nodes={childNodes} />
       </div>
     )
