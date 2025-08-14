@@ -46,6 +46,9 @@
   font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
 }
 
+.yozora-list-item.yozora-list-item.yozora-list-item > .yozora-list {
+  padding-left: 0.5rem;
+}
 .yozora-list.yozora-list-bullet .yozora-list-bullet {
   list-style-type: circle;
 }
@@ -76,8 +79,6 @@
 /* Task list item styles */
 .yozora-list-item--task {
   list-style-type: none;
-  display: flex;
-  align-items: flex-start;
 }
 
 .yozora-list-item--task::marker {
