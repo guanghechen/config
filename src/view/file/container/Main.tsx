@@ -8,6 +8,7 @@ import { JsonlView } from '@/view/filetype/jsonl/View'
 import { MarkdownView } from '@/view/filetype/markdown/View'
 import { PdfView } from '@/view/filetype/pdf/View'
 import { SvgView } from '@/view/filetype/svg/View'
+import { TextView } from '@/view/filetype/text/View'
 import { UnknownView } from '@/view/filetype/unknown/View'
 
 const regexes = {
@@ -73,6 +74,17 @@ export class Main extends React.PureComponent<IProps> {
       case '.jsonl':
         return (
           <JsonlView
+            workspace={null}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={null}
+            topbarVisible={false}
+          />
+        )
+      case '.log':
+      case '.txt':
+        return (
+          <TextView
             workspace={null}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}

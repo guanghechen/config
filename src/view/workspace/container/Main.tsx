@@ -9,6 +9,7 @@ import { JsonlView } from '@/view/filetype/jsonl/View'
 import { MarkdownView } from '@/view/filetype/markdown/View'
 import { PdfView } from '@/view/filetype/pdf/View'
 import { SvgView } from '@/view/filetype/svg/View'
+import { TextView } from '@/view/filetype/text/View'
 import { UnknownView } from '@/view/filetype/unknown/View'
 import { useWorkspaceViewmodel } from '../context'
 
@@ -77,6 +78,17 @@ export const Main: React.FC = () => {
       case '.jsonl':
         return (
           <JsonlView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+            topbarVisible={topbarVisible}
+          />
+        )
+      case '.log':
+      case '.txt':
+        return (
+          <TextView
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}

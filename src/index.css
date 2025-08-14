@@ -21,3 +21,7 @@ button {
   font-weight: bold;
   font-style: normal;
 }
+
+.font-mono-maple {
+  font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
+}

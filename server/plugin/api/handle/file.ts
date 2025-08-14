@@ -17,6 +17,7 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.jpg': 'image/jpeg',
   '.json': 'application/json',
   '.jsonl': 'application/json',
+  '.log': 'text/plain',
   '.md': 'application/json',
   '.mkv': 'video/x-matroska',
   '.mov': 'video/quicktime',
@@ -26,6 +27,7 @@ const SERVE_FILE_EXTNAME_TYPE_MAP = {
   '.pdf': 'application/pdf',
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
+  '.txt': 'text/plain',
   '.wav': 'audio/wav',
   '.webm': 'video/webm',
   '.webp': 'image/webp',
@@ -95,6 +97,24 @@ export const fetchFile: IApiHandle = async params => {
         state.reporter.error('Failed to parse json:', { filepath, error })
         data = {
           error: 'Failed to parse json',
+          details: { pathname, workspace, filepath },
+          data: null,
+        }
+      }
+      return { code: 200, data }
+    }
+    case '.log':
+    case '.txt': {
+      let data: IApiHandleData
+      try {
+        const content: string = await fs.readFile(filepath, 'utf8')
+        data = {
+          data: { content },
+        }
+      } catch (error) {
+        state.reporter.error('Failed to read text file:', { filepath, error })
+        data = {
+          error: 'Failed to read text file',
           details: { pathname, workspace, filepath },
           data: null,
         }

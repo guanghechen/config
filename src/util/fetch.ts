@@ -31,6 +31,10 @@ export interface IHtmlFileData {
   readonly content: string
 }
 
+export interface ITextFileData {
+  readonly content: string
+}
+
 export type IFetchFileData =
   | IMarkdownFileData
   | IJsonFileData
@@ -39,6 +43,7 @@ export type IFetchFileData =
   | IPdfFileData
   | ISvgFileData
   | IHtmlFileData
+  | ITextFileData
 
 export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly loading?: boolean
@@ -76,6 +81,12 @@ export async function fetchFile<T extends IFetchFileData = IFetchFileData>(
     if (contentType?.includes('text/html')) {
       const content: string = await response.text()
       const data: IHtmlFileData = { content }
+      return { data: data as T }
+    }
+
+    if (contentType?.includes('text/plain')) {
+      const content: string = await response.text()
+      const data: ITextFileData = { content }
       return { data: data as T }
     }
 
