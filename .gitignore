@@ -10,12 +10,14 @@
 .claude/
 docs/task/local/
 
+
+local/
+lib/
 /.next/
 /.nx/
 /coverage/
 /data/
 /dist/
-lib/
 /node_modules/
 
 # Log files
