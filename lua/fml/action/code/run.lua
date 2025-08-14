@@ -9,8 +9,10 @@ local __module_name__ = "fml.action.code.run" ---@type string
 ---@field public html                   fml.action.code.IRunner
 ---@field public json                   fml.action.code.IRunner
 ---@field public jsonl                  fml.action.code.IRunner
+---@field public log                    fml.action.code.IRunner
 ---@field public md                     fml.action.code.IRunner
 ---@field public svg                    fml.action.code.IRunner
+---@field public txt                    fml.action.code.IRunner
 ---
 ---@field public lua                    fml.action.code.IRunner
 ---@field public mjs                    fml.action.code.IRunner
@@ -46,10 +48,16 @@ local runners = {
   jsonl = {
     run = open_filepath_in_yozora,
   },
+  log = {
+    run = open_filepath_in_yozora,
+  },
   md = {
     run = open_filepath_in_yozora,
   },
   svg = {
+    run = open_filepath_in_yozora,
+  },
+  txt = {
     run = open_filepath_in_yozora,
   },
 
