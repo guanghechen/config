@@ -20,7 +20,7 @@ export class JsonFieldBoolean extends React.Component<IProps> {
     return (
       <div className={classes.container.line} style={indentStyle}>
         <JsonFieldKey name={name} />
-        <span className="font-medium text-purple-700">{text}</span>
+        <span className="font-medium text-purple-700 dark:text-purple-400">{text}</span>
         <JsonFieldCopyButton value={value} contentForCopy={text} />
       </div>
     )

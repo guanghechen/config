@@ -14,8 +14,8 @@ export class JsonFieldKey extends React.Component<IProps> {
 
     return (
       <span>
-        <span className="font-medium">{name}</span>
-        <span className="pr-2">:</span>
+        <span className="font-medium text-gray-900 dark:text-gray-100">{name}</span>
+        <span className="pr-2 text-gray-900 dark:text-gray-100">:</span>
       </span>
     )
   }

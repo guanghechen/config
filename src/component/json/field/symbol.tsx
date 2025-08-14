@@ -20,7 +20,7 @@ export class JsonFieldSymbol extends React.Component<IProps> {
     return (
       <div className={classes.container.line} style={indentStyle}>
         <JsonFieldKey name={name} />
-        <span className="font-medium text-yellow-500">{text}</span>
+        <span className="font-medium text-yellow-500 dark:text-yellow-400">{text}</span>
         <JsonFieldCopyButton value={value} contentForCopy={text} />
       </div>
     )

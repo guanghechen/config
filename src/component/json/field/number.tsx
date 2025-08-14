@@ -20,7 +20,7 @@ export class JsonFieldNumber extends React.Component<IProps> {
     return (
       <div className={classes.container.line} style={indentStyle}>
         <JsonFieldKey name={name} />
-        <span className="text-amber-600">{text}</span>
+        <span className="text-amber-600 dark:text-amber-400">{text}</span>
         <JsonFieldCopyButton value={value} contentForCopy={text} />
       </div>
     )

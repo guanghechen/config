@@ -19,7 +19,7 @@ export class JsonFieldUndefined extends React.Component<IProps> {
     return (
       <div className={classes.container.line} style={indentStyle}>
         <JsonFieldKey name={name} />
-        <span className="italic text-gray-400">{text}</span>
+        <span className="italic text-gray-400 dark:text-gray-500">{text}</span>
         <JsonFieldCopyButton value={undefined} contentForCopy={text} />
       </div>
     )

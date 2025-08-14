@@ -42,14 +42,14 @@ export class JsonFieldString extends React.Component<IProps, IState> {
           {prettier ? (
             <pre
               ref={this.textRef as any}
-              className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 whitespace-pre-wrap`}
+              className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 whitespace-pre-wrap`}
             >
               <code>"{value}"</code>
             </pre>
           ) : (
             <code
               ref={this.textRef}
-              className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600`}
+              className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400`}
             >
               "{value.replace(/\n/g, '\\n')}"
             </code>
@@ -57,7 +57,7 @@ export class JsonFieldString extends React.Component<IProps, IState> {
           {isOverflowing && (
             <button
               onClick={this.toggleExpand}
-              className="mt-1 flex items-center gap-1 self-start rounded-full bg-emerald-50/80 px-2 py-0.5 text-xs text-emerald-600 transition-colors hover:bg-emerald-100 hover:text-emerald-700"
+              className="mt-1 flex items-center gap-1 self-start rounded-full bg-emerald-50/80 dark:bg-emerald-900/30 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-800/40 hover:text-emerald-700 dark:hover:text-emerald-300"
               aria-label={expanded ? 'Show less' : 'Show more'}
             >
               {expanded ? (
@@ -79,8 +79,8 @@ export class JsonFieldString extends React.Component<IProps, IState> {
             onClick={this.togglePrettier}
             className={`invisible rounded p-1 transition-colors group-hover:visible ${
               prettier
-                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60'
+                : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300'
             }`}
             aria-label={prettier ? 'Disable prettier' : 'Enable prettier'}
             title={prettier ? 'Show escaped characters' : 'Show formatted text'}

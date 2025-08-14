@@ -45,8 +45,8 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
         <div>
           <div className={classes.container.line} style={indentStyle}>
             <JsonFieldKey name={name} />
-            <span className="font-medium text-gray-700">&#123;</span>
-            <span className="font-medium text-gray-700">&#125;</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">&#123;</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">&#125;</span>
           </div>
         </div>
       )
@@ -57,14 +57,14 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
         <div>
           <div className={classes.container.line} style={indentStyle} onClick={onExpand}>
             <span className="align-middle">
-              <ChevronRightIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 hover:text-gray-700" />
+              <ChevronRightIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-300" />
             </span>
             <JsonFieldKey name={name} />
-            <span className="font-medium text-gray-700">&#123;</span>
-            <span className="px-1 text-sm italic text-gray-400">
+            <span className="font-medium text-gray-700 dark:text-gray-300">&#123;</span>
+            <span className="px-1 text-sm italic text-gray-400 dark:text-gray-500">
               {entries.length} {entries.length === 1 ? 'property' : 'properties'}
             </span>
-            <span className="font-medium text-gray-700">&#125;</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">&#125;</span>
             <JsonFieldCopyButton value={value} />
           </div>
         </div>
@@ -75,14 +75,14 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
       <div>
         <div className={classes.container.line} style={indentStyle} onClick={onCollapse}>
           <span className="align-middle">
-            <ChevronDownIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 hover:text-gray-700" />
+            <ChevronDownIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-300" />
           </span>
           <JsonFieldKey name={name} />
-          <span className="font-medium text-gray-700">&#123;</span>
-          <span className="px-1 text-sm italic text-gray-400">
+          <span className="font-medium text-gray-700 dark:text-gray-300">&#123;</span>
+          <span className="px-1 text-sm italic text-gray-400 dark:text-gray-500">
             {entries.length} {entries.length === 1 ? 'property' : 'properties'}
           </span>
-          <span className="font-medium text-gray-700">&nbsp;</span>
+          <span className="font-medium text-gray-700 dark:text-gray-300">&nbsp;</span>
           <JsonFieldCopyButton value={value} />
         </div>
         {entries.map(([objKey, objVal]) => (
@@ -99,7 +99,7 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
           style={indentStyle}
           onClick={onCollapse}
         >
-          <span className="font-medium text-gray-700">&#125;</span>
+          <span className="font-medium text-gray-700 dark:text-gray-300">&#125;</span>
         </div>
       </div>
     )

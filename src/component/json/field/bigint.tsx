@@ -20,7 +20,7 @@ export class JsonFieldBigint extends React.Component<IProps> {
     return (
       <div className={classes.container.line} style={indentStyle}>
         <JsonFieldKey name={name} />
-        <span className="font-medium text-indigo-600">{text}n</span>
+        <span className="font-medium text-indigo-600 dark:text-indigo-400">{text}n</span>
         <JsonFieldCopyButton value={value} contentForCopy={text} />
       </div>
     )

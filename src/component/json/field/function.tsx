@@ -24,9 +24,9 @@ export class JsonFieldFunction extends React.Component<IProps> {
     return (
       <div className={classes.container.line} style={indentStyle}>
         <JsonFieldKey name={name} />
-        <span className="pr-1 font-medium text-blue-600">ƒ</span>
-        <span className="text-blue-400">({args})</span>
-        <span className="italic text-gray-500"> =&gt; &#123;...&#125;</span>
+        <span className="pr-1 font-medium text-blue-600 dark:text-blue-400">ƒ</span>
+        <span className="text-blue-400 dark:text-blue-300">({args})</span>
+        <span className="italic text-gray-500 dark:text-gray-400"> =&gt; &#123;...&#125;</span>
         <JsonFieldCopyButton value={value} contentForCopy={text} />
       </div>
     )

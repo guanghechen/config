@@ -19,7 +19,7 @@ export class JsonFieldNull extends React.Component<IProps> {
     return (
       <div className={classes.container.line} style={indentStyle}>
         <JsonFieldKey name={name} />
-        <span className="font-medium text-cyan-600">{text}</span>
+        <span className="font-medium text-cyan-600 dark:text-cyan-400">{text}</span>
         <JsonFieldCopyButton value={null} contentForCopy={text} />
       </div>
     )
