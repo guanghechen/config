@@ -184,7 +184,10 @@ export class JsonFieldString extends React.Component<IProps, IState> {
   }
 
   protected togglePrettier = (): void => {
-    this.setState(prevState => ({ prettier: !prevState.prettier, dropdownOpen: false }))
+    this.setState(prevState => ({ 
+      prettier: !prevState.prettier, 
+      dropdownOpen: !prevState.prettier // Open dropdown when enabling prettier, close when disabling
+    }))
   }
 
   protected toggleDropdown = (): void => {
