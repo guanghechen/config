@@ -16,7 +16,7 @@ export const PdfView: React.FC<IProps> = props => {
   if (!filepath) {
     return (
       <div className="w-full pt-8">
-        <div className="text-center text-gray-500">No file specified</div>
+        <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
       </div>
     )
   }

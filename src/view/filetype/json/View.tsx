@@ -31,7 +31,7 @@ export const JsonView: React.FC<IProps> = props => {
         <button
           onClick={scrollToTop}
           className={cn(
-            'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
+            'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100 dark:bg-blue-600 dark:bg-opacity-70 dark:hover:bg-blue-500 dark:hover:bg-opacity-100',
             visibleScrollToTop
               ? 'translate-y-0 opacity-90'
               : 'pointer-events-none translate-y-16 opacity-0',

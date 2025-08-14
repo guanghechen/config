@@ -20,7 +20,7 @@ export const Composer: React.FC<IProps> = props => {
   if (error) {
     return (
       <div className="w-full p-8">
-        <div className="rounded bg-red-50 p-4 text-red-700">
+        <div className="rounded bg-red-50 p-4 text-red-700 dark:bg-red-900 dark:text-red-300">
           <strong>Error:</strong> {error}
         </div>
       </div>
@@ -30,7 +30,7 @@ export const Composer: React.FC<IProps> = props => {
   if (!content) {
     return (
       <div className="w-full p-8">
-        <div className="text-gray-500">Loading...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
     )
   }
@@ -38,14 +38,14 @@ export const Composer: React.FC<IProps> = props => {
   return (
     <div className="w-full">
       <div className="w-full p-8">
-        <pre className="font-mono-maple whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800">
+        <pre className="font-mono-maple whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800 dark:text-gray-200">
           {content}
         </pre>
       </div>
       <button
         onClick={scrollToTop}
         className={cn(
-          'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
+          'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100 dark:bg-blue-600 dark:bg-opacity-70 dark:hover:bg-blue-500 dark:hover:bg-opacity-100',
           visibleScrollToTop
             ? 'translate-y-0 opacity-90'
             : 'pointer-events-none translate-y-16 opacity-0',
