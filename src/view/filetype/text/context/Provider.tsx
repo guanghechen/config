@@ -100,4 +100,3 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 }
 
 SideEffect.displayName = 'TextViewSideEffect'
-
