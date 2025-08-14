@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
+const bit: number = 1
+
 export enum ModeEnum {
-  VIEW = 1,
-  LITERAL = 2,
+  VIEW = bit << 0,
+  LITERAL = bit << 1,
 }
 
 export interface IJsonViewData {

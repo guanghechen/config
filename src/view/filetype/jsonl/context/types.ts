@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
+const bit: number = 1
+
 export enum ModeEnum {
-  VIEW = 1,
-  NAVIGATION = 2,
-  EXPAND_ALL = 4,
+  VIEW = bit << 0,
+  NAVIGATION = bit << 1,
+  EXPAND_ALL = bit << 2,
 }
 
 export type DisplayMode = 'inline' | 'lines'
