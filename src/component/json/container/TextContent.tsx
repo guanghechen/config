@@ -1,7 +1,7 @@
 import React from 'react'
 import { ReactMarkdownContent } from '../../markdown/ReactMarkdownContent'
 
-type TPrettierMode = 'plain' | 'md'
+export type TPrettierMode = 'plain' | 'md'
 
 interface IProps {
   readonly value: string
@@ -29,7 +29,7 @@ export const TextContent: React.FC<IProps> = props => {
     return (
       <div
         ref={textRef as any}
-        className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400  break-all`}
+        className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 break-all`}
       >
         <ReactMarkdownContent content={value} />
       </div>

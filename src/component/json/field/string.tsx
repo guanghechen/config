@@ -1,6 +1,8 @@
 import React from 'react'
 import { ChevronDownIcon, ChevronUpIcon, SnippetIcon } from '../../icon/material'
 import { classes } from '../constant'
+import { ImageContent } from '../container/ImageContent'
+import type { TPrettierMode } from '../container/TextContent'
 import { TextContent } from '../container/TextContent'
 import { JsonFieldCopyButton } from '../FieldCopyButton'
 import { JsonFieldKey } from '../FieldKey'
@@ -11,13 +13,13 @@ interface IProps {
   readonly depth: number
 }
 
-type TPrettierMode = 'plain' | 'md'
+type IPrettierMode = 'plain' | 'md' | 'base64img'
 
 interface IState {
   readonly expanded: boolean
   readonly isOverflowing: boolean
   readonly prettier: boolean
-  readonly prettierMode: TPrettierMode
+  readonly prettierMode: IPrettierMode
   readonly dropdownOpen: boolean
 }
 
@@ -46,13 +48,17 @@ export class JsonFieldString extends React.Component<IProps, IState> {
       <div className={classes.container.string} style={indentStyle}>
         <JsonFieldKey name={name} />
         <div className="flex flex-col">
-          <TextContent
-            value={value}
-            prettier={prettier}
-            prettierMode={prettierMode}
-            expanded={expanded}
-            textRef={this.textRef}
-          />
+          {prettier && prettierMode === 'base64img' ? (
+            <ImageContent value={value} textRef={this.textRef} />
+          ) : (
+            <TextContent
+              value={value}
+              prettier={prettier}
+              prettierMode={prettierMode as TPrettierMode}
+              expanded={expanded}
+              textRef={this.textRef}
+            />
+          )}
           {isOverflowing && (
             <button
               onClick={this.toggleExpand}
@@ -73,7 +79,7 @@ export class JsonFieldString extends React.Component<IProps, IState> {
             </button>
           )}
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap">
           <div className="relative flex items-center invisible group-hover:visible">
             <button
               onClick={this.togglePrettier}
@@ -118,6 +124,16 @@ export class JsonFieldString extends React.Component<IProps, IState> {
                   }`}
                 >
                   Markdown
+                </button>
+                <button
+                  onClick={() => this.setPrettierMode('base64img')}
+                  className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                    prettierMode === 'base64img'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  Image (base64)
                 </button>
               </div>
             )}
@@ -175,7 +191,7 @@ export class JsonFieldString extends React.Component<IProps, IState> {
     this.setState(prevState => ({ dropdownOpen: !prevState.dropdownOpen }))
   }
 
-  protected setPrettierMode = (mode: TPrettierMode): void => {
+  protected setPrettierMode = (mode: IPrettierMode): void => {
     this.setState({ prettierMode: mode, dropdownOpen: false })
   }
 }
