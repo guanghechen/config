@@ -388,3 +388,19 @@ export const ZoomOutIcon: React.FC<IIconProps> = props => {
     </svg>
   )
 }
+
+export const SnippetIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M360-240 120-480l240-240 56 56-184 184 184 184-56 56Zm240 0-56-56 184-184-184-184 56-56 240 240-240 240Z" />
+    </svg>
+  )
+}

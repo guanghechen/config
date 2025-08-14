@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronDownIcon, ChevronUpIcon } from '../../icon/material'
+import { ChevronDownIcon, ChevronUpIcon, SnippetIcon } from '../../icon/material'
 import { classes } from '../constant'
 import { JsonFieldCopyButton } from '../FieldCopyButton'
 import { JsonFieldKey } from '../FieldKey'
@@ -13,35 +13,47 @@ interface IProps {
 interface IState {
   readonly expanded: boolean
   readonly isOverflowing: boolean
+  readonly prettier: boolean
 }
 
 export class JsonFieldString extends React.Component<IProps, IState> {
   public static displayName = 'JsonFieldString'
-  private textRef = React.createRef<HTMLSpanElement>()
+  private textRef = React.createRef<HTMLElement | null>()
 
   constructor(props: IProps) {
     super(props)
     this.state = {
       expanded: false,
       isOverflowing: false,
+      prettier: false,
     }
   }
 
   public override render(): React.ReactElement {
     const { name, value, depth } = this.props
-    const { expanded, isOverflowing } = this.state
+    const { isOverflowing, prettier } = this.state
+    const expanded: boolean = prettier || this.state.expanded
     const indentStyle: React.CSSProperties = { paddingLeft: `${depth * 1.5}rem` }
 
     return (
       <div className={classes.container.string} style={indentStyle}>
         <JsonFieldKey name={name} />
         <div className="flex flex-col">
-          <span
-            ref={this.textRef}
-            className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600`}
-          >
-            "{value}"
-          </span>
+          {prettier ? (
+            <pre
+              ref={this.textRef as any}
+              className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 whitespace-pre-wrap`}
+            >
+              <code>"{value}"</code>
+            </pre>
+          ) : (
+            <code
+              ref={this.textRef}
+              className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600`}
+            >
+              "{value.replace(/\n/g, '\\n')}"
+            </code>
+          )}
           {isOverflowing && (
             <button
               onClick={this.toggleExpand}
@@ -62,7 +74,21 @@ export class JsonFieldString extends React.Component<IProps, IState> {
             </button>
           )}
         </div>
-        <JsonFieldCopyButton value={value} />
+        <div className="flex gap-1">
+          <button
+            onClick={this.togglePrettier}
+            className={`invisible rounded p-1 transition-colors group-hover:visible ${
+              prettier
+                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+            }`}
+            aria-label={prettier ? 'Disable prettier' : 'Enable prettier'}
+            title={prettier ? 'Show escaped characters' : 'Show formatted text'}
+          >
+            <SnippetIcon className="h-4 w-4" />
+          </button>
+          <JsonFieldCopyButton value={value} />
+        </div>
       </div>
     )
   }
@@ -75,7 +101,8 @@ export class JsonFieldString extends React.Component<IProps, IState> {
       props.value !== nextProps.value ||
       props.depth !== nextProps.depth ||
       state.expanded !== nextState.expanded ||
-      state.isOverflowing !== nextState.isOverflowing
+      state.isOverflowing !== nextState.isOverflowing ||
+      state.prettier !== nextState.prettier
     )
   }
 
@@ -101,5 +128,9 @@ export class JsonFieldString extends React.Component<IProps, IState> {
 
   protected toggleExpand = (): void => {
     this.setState(prevState => ({ expanded: !prevState.expanded }))
+  }
+
+  protected togglePrettier = (): void => {
+    this.setState(prevState => ({ prettier: !prevState.prettier }))
   }
 }
