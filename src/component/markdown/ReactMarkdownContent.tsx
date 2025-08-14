@@ -1,7 +1,8 @@
 import type { Root } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
-import { useMarkdownViewmodel } from './context'
+import { MarkdownContentProvider } from './context/content'
+import { useMarkdownTopViewmodel } from './context/top'
 import { NodesRenderer } from './NodesRenderer'
 
 interface IProps {
@@ -23,16 +24,15 @@ interface IProps {
 export const ReactMarkdownContent: React.FC<IProps> = props => {
   const { Tag = 'div', content, className, style } = props
 
-  const viewmodel = useMarkdownViewmodel()
-  const ast: Root = React.useMemo<Root>(
-    () => viewmodel.parseMarkdown(content),
-    [viewmodel, content],
-  )
+  const top = useMarkdownTopViewmodel()
+  const ast: Root = React.useMemo<Root>(() => top.parseMarkdown(content), [top, content])
 
   return (
-    <Tag className={cn('yozora-root', className)} style={style}>
-      <NodesRenderer nodes={ast.children} />
-    </Tag>
+    <MarkdownContentProvider ast={ast}>
+      <Tag className={cn('yozora-root', className)} style={style}>
+        <NodesRenderer nodes={ast.children} />
+      </Tag>
+    </MarkdownContentProvider>
   )
 }
 ReactMarkdownContent.displayName = 'ReactMarkdownContent'

@@ -1,7 +1,7 @@
 import { useComputed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { ElementViewer } from '@/component/ElementViewer'
-import { useMarkdownViewmodel } from '../../context'
+import { useMarkdownContentViewmodel } from '../../context/content'
 
 interface IProps {
   readonly src: string
@@ -13,7 +13,7 @@ interface IProps {
 export const ImageViewer: React.FC<IProps> = props => {
   const { src, alt, open, onClose } = props
 
-  const viewmodel = useMarkdownViewmodel()
+  const viewmodel = useMarkdownContentViewmodel()
   const imageList = useComputed(viewmodel.images$)
   const [currentIndex, setCurrentIndex] = React.useState<number>(-1)
 

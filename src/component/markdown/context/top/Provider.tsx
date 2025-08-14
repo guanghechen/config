@@ -1,18 +1,14 @@
 import { useDeepCompareMemo } from '@guanghechen/react-hooks'
-import type { Definition, FootnoteDefinition, Root } from '@yozora/ast'
+import type { Definition, FootnoteDefinition } from '@yozora/ast'
 import React from 'react'
 import { useSingleton } from '@/hook/useSingleton'
-import { buildNodeRendererMap } from '../renderer'
-import type { INodeRendererMap } from '../types'
-import type { IMarkdownContext } from './context'
-import { MarkdownContextType } from './context'
-import { MarkdownViewModel } from './viewmodel'
+import { buildNodeRendererMap } from '../../renderer'
+import type { INodeRendererMap } from '../../types'
+import type { IMarkdownTopContext } from './context'
+import { MarkdownTopContextType } from './context'
+import { MarkdownTopViewModel } from './viewmodel'
 
 interface IProps {
-  /**
-   * Text content of markdown.
-   */
-  readonly ast: Root
   /**
    * Customized node renderer mpa.
    */
@@ -39,8 +35,8 @@ interface IProps {
   readonly children?: React.ReactNode
 }
 
-export const MarkdownProvider: React.FC<IProps> = props => {
-  const { customizedRendererMap, showCodeLineno = true, ast, theme } = props
+export const MarkdownTopProvider: React.FC<IProps> = props => {
+  const { customizedRendererMap, showCodeLineno = true, theme } = props
 
   const presetDefinitionMap: Record<string, Readonly<Definition>> = useDeepCompareMemo(
     () => props.presetDefinitionMap ?? {},
@@ -53,9 +49,8 @@ export const MarkdownProvider: React.FC<IProps> = props => {
     () => props.presetFootnoteDefinitionMap ?? {},
     [props.presetFootnoteDefinitionMap],
   )
-  const viewmodel: MarkdownViewModel | null = useSingleton<MarkdownViewModel>(() => {
-    return new MarkdownViewModel({
-      ast,
+  const viewmodel: MarkdownTopViewModel | null = useSingleton<MarkdownTopViewModel>(() => {
+    return new MarkdownTopViewModel({
       rendererMap: buildNodeRendererMap(customizedRendererMap),
       presetDefinitionMap,
       presetFootnoteDefinitionMap,
@@ -64,7 +59,7 @@ export const MarkdownProvider: React.FC<IProps> = props => {
     })
   })
 
-  const context: IMarkdownContext | null = React.useMemo<IMarkdownContext | null>(
+  const context: IMarkdownTopContext | null = React.useMemo<IMarkdownTopContext | null>(
     () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
   )
@@ -73,26 +68,23 @@ export const MarkdownProvider: React.FC<IProps> = props => {
 
   return (
     <React.Fragment>
-      <MarkdownContextType.Provider value={context}>{props.children}</MarkdownContextType.Provider>
-      <SideEffect viewmodel={viewmodel} ast={ast} showCodeLineno={showCodeLineno} theme={theme} />
+      <MarkdownTopContextType.Provider value={context}>
+        {props.children}
+      </MarkdownTopContextType.Provider>
+      <SideEffect viewmodel={viewmodel} showCodeLineno={showCodeLineno} theme={theme} />
     </React.Fragment>
   )
 }
-MarkdownProvider.displayName = 'MarkdownProvider'
+MarkdownTopProvider.displayName = 'MarkdownTopProvider'
 
 interface ISideEffectProps {
-  readonly viewmodel: MarkdownViewModel
-  readonly ast: Root
+  readonly viewmodel: MarkdownTopViewModel
   readonly showCodeLineno: boolean
   readonly theme: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, ast, showCodeLineno, theme } = props
-
-  React.useEffect(() => {
-    viewmodel.setContent(ast)
-  }, [viewmodel, ast])
+  const { viewmodel, showCodeLineno, theme } = props
 
   React.useEffect(() => {
     viewmodel.showCodeLineno$.next(showCodeLineno)

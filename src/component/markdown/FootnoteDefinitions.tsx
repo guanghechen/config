@@ -1,6 +1,6 @@
 import type { FootnoteDefinition } from '@yozora/ast'
 import React from 'react'
-import { useMarkdownFootnoteDefinitionMap } from './context'
+import { useMarkdownFootnoteDefinitionMap } from './context/content'
 import { FootnoteDefinitionRenderer } from './renderer/footnoteDefinition'
 
 interface IProps {

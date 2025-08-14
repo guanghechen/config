@@ -2,6 +2,7 @@ import { isEqual } from '@guanghechen/equal'
 import type { Heading, Node, Root } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
+import { MarkdownContentProvider } from './context/content'
 import { FootnoteDefinitions } from './FootnoteDefinitions'
 import { NodesRenderer } from './NodesRenderer'
 
@@ -35,16 +36,18 @@ export class ReactMarkdown extends React.Component<IProps> {
         : ast.children
 
     return (
-      <div className={cn('yozora-root', className)} style={style}>
-        <section>
-          <main>
-            <NodesRenderer nodes={childNodes} />
-          </main>
-          <footer>
-            <FootnoteDefinitions dontNeedFootnoteDefinitions={false} />
-          </footer>
-        </section>
-      </div>
+      <MarkdownContentProvider ast={ast}>
+        <div className={cn('yozora-root', className)} style={style}>
+          <section>
+            <main>
+              <NodesRenderer nodes={childNodes} />
+            </main>
+            <footer>
+              <FootnoteDefinitions dontNeedFootnoteDefinitions={false} />
+            </footer>
+          </section>
+        </div>
+      </MarkdownContentProvider>
     )
   }
 

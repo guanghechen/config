@@ -1,4 +1,5 @@
-export * from './context'
+export * from './context/content'
+export * from './context/top'
 export * from './parser'
 export * from './renderer'
 export * from './util'

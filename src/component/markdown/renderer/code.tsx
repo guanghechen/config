@@ -1,8 +1,9 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Code } from '@yozora/ast'
 import React from 'react'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
 import { parseCodeMeta } from '@/util/parseCodeMeta'
-import { useMarkdownShowCodeLineNumber } from '../context'
+import { useMarkdownTopViewmodel } from '../context/top'
 import { Embed } from './embed'
 import { CodeResult } from './inner/CodeResult'
 import { CodeSource } from './inner/CodeSource'
@@ -18,7 +19,8 @@ export const CodeRenderer: React.FC<Code> = props => {
   const { lang } = props
   const code: string = props.value.replace(/[\n\r]+$/, '') // Remove trailing line endings.
 
-  const showCodeLineno: boolean = useMarkdownShowCodeLineNumber()
+  const viewmodel = useMarkdownTopViewmodel()
+  const showCodeLineno: boolean = useStateValue(viewmodel.showCodeLineno$)
 
   const meta: ICodeMetaData = React.useMemo<ICodeMetaData>(
     () => parseCodeMeta(props.meta || '', { showCodeLineno }),

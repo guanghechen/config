@@ -1,7 +1,7 @@
 import { isEqual } from '@guanghechen/equal'
 import type { LinkReference } from '@yozora/ast'
 import React from 'react'
-import { useMarkdownDefinitionMap } from '../context'
+import { useMarkdownDefinitionMap } from '../context/content'
 import { NodesRenderer } from '../NodesRenderer'
 
 /**

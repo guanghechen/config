@@ -2,9 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
 import React from 'react'
-import { MarkdownProvider } from '@/component/markdown'
-import type { SiteTheme } from '@/context/site'
-import { useSiteViewmodel } from '@/context/site'
+import { MarkdownContentProvider } from '@/component/markdown'
 import { Composer } from './Composer'
 import { MarkdownViewProvider, useMarkdownViewViewModel } from './context'
 
@@ -54,8 +52,6 @@ interface IMarkdownContentProps {
 
 const MarkdownContent: React.FC<IMarkdownContentProps> = props => {
   const { filepath, mainScrollableContainer, topbarVisible } = props
-  const siteVM = useSiteViewmodel()
-  const theme: SiteTheme = useStateValue(siteVM.theme$)
   const viewmodel = useMarkdownViewViewModel()
   const data = useStateValue(viewmodel.data$)
   const error = useStateValue(viewmodel.error$)
@@ -72,7 +68,7 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = props => {
         </div>
       )}
       {!!ast && (
-        <MarkdownProvider ast={ast} theme={theme}>
+        <MarkdownContentProvider ast={ast}>
           <div className="w-full">
             <Composer
               filepath={filepath}
@@ -82,7 +78,7 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = props => {
               topbarVisible={topbarVisible}
             />
           </div>
-        </MarkdownProvider>
+        </MarkdownContentProvider>
       )}
     </React.Fragment>
   )

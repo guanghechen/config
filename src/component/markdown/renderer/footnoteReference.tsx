@@ -1,7 +1,7 @@
 import type { FootnoteReference } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
-import { useFootnoteHighlighting } from '../context'
+import { useFootnoteHighlighting } from '../hook/useFootnoteHighlighting'
 
 /**
  * Render yozora `footnoteReference`.

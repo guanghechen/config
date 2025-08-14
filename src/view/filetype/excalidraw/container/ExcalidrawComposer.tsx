@@ -60,13 +60,7 @@ export const ExcalidrawComposer: React.FC = () => {
 
       if (textElement.type === 'text') {
         if (textElement.text?.startsWith('md:')) {
-          return (
-            <ExcalidrawElementRenderer
-              element={textElement}
-              theme={theme ?? SiteTheme.LIGHTEN}
-              appState={appState}
-            />
-          )
+          return <ExcalidrawElementRenderer element={textElement} appState={appState} />
         }
       }
 

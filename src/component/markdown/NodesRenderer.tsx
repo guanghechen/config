@@ -1,7 +1,8 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Node } from '@yozora/ast'
 import React from 'react'
-import { useMarkdownRendererMap } from './context'
-import type { INodeRenderer } from './types'
+import { useMarkdownTopViewmodel } from './context/top'
+import type { INodeRenderer, INodeRendererMap } from './types'
 import './style.css'
 
 export interface IProps {
@@ -24,7 +25,8 @@ export const NodesRenderer: React.FC<IProps> = props => {
   const startIndex: number = Math.max(0, props.startIndex ?? 0)
   const endIndex: number = Math.min(nodes.length, props.endIndex ?? nodes.length)
 
-  const rendererMap = useMarkdownRendererMap()
+  const viewmodel = useMarkdownTopViewmodel()
+  const rendererMap: Readonly<INodeRendererMap> = useStateValue(viewmodel.rendererMap$)
   const elements: React.ReactElement[] = []
   for (let index = startIndex; index < endIndex; index++) {
     const node: Node = nodes[index]

@@ -1,6 +1,6 @@
 import type { ImageReference } from '@yozora/ast'
 import React from 'react'
-import { useMarkdownDefinitionMap } from '../context'
+import { useMarkdownDefinitionMap } from '../context/content'
 import type { INodeRenderer } from '../types'
 import { ImageRendererInner } from './inner/ImageRendererInner'
 

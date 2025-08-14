@@ -1,8 +1,7 @@
 import type { AppState } from '@excalidraw/excalidraw/types'
 import type { Root } from '@yozora/ast'
 import React from 'react'
-import { MarkdownProvider, ReactMarkdown, parseMarkdown } from '@/component/markdown'
-import type { SiteTheme } from '@/context/site'
+import { MarkdownContentProvider, ReactMarkdown, parseMarkdown } from '@/component/markdown'
 
 interface ITextElement {
   readonly id: string
@@ -13,11 +12,10 @@ interface ITextElement {
 
 interface IProps {
   readonly element: ITextElement
-  readonly theme: SiteTheme
   readonly appState?: AppState
 }
 
-export const ExcalidrawElementRenderer: React.FC<IProps> = ({ element, theme, appState }) => {
+export const ExcalidrawElementRenderer: React.FC<IProps> = ({ element, appState }) => {
   const ast = React.useMemo((): Root | null => {
     try {
       const text = element.text.slice(3) // Remove 'md:' prefix
@@ -42,9 +40,9 @@ export const ExcalidrawElementRenderer: React.FC<IProps> = ({ element, theme, ap
         maxWidth: '300px',
       }}
     >
-      <MarkdownProvider ast={ast} theme={theme}>
+      <MarkdownContentProvider ast={ast}>
         <ReactMarkdown ast={ast} dontShowFirstHeading={false} className="text-sm" />
-      </MarkdownProvider>
+      </MarkdownContentProvider>
     </div>
   )
 }

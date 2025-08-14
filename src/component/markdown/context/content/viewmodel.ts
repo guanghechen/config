@@ -9,61 +9,31 @@ import {
   calcHeadingToc,
   traverseAst,
 } from '@yozora/ast-util'
-import { parseMarkdown } from '../parser'
-import type { IMarkdownImageItem, INodeRendererMap } from '../types'
+import type { IMarkdownImageItem } from '../../types'
+import type { MarkdownTopViewModel } from '../top'
 
-export interface IMarkdownViewModelProps {
+interface IProps {
   /**
    * Markdown texts.
    */
   readonly ast: Root
   /**
-   * Preset Link / Image reference definitions.
+   * Markdown top viewmodel
    */
-  readonly presetDefinitionMap: Readonly<Record<string, Definition>>
-  /**
-   * Preset footnote reference definitions.
-   */
-  readonly presetFootnoteDefinitionMap: Readonly<Record<string, FootnoteDefinition>>
-  /**
-   * Ast node renderer map.
-   */
-  readonly rendererMap: Readonly<INodeRendererMap>
-  /**
-   * Whether if show code lineno.
-   */
-  readonly showCodeLineno: boolean
-  /**
-   * React markdown theme scheme.
-   */
-  readonly themeScheme: string
+  readonly top: MarkdownTopViewModel
 }
 
-export class MarkdownViewModel extends ViewModel {
+export class MarkdownContentViewModel extends ViewModel {
   public readonly ast$: State<Root>
   public readonly toc$: Computed<IHeadingToc>
   public readonly definitionMap$: Computed<Readonly<Record<string, Definition>>>
   public readonly footnoteDefinitionMap$: Computed<Readonly<Record<string, FootnoteDefinition>>>
   public readonly images$: Computed<ReadonlyArray<IMarkdownImageItem>>
 
-  public readonly rendererMap$: State<Readonly<INodeRendererMap>>
-  public readonly showCodeLineno$: State<boolean>
-  public readonly themeScheme$: State<string>
-
-  protected readonly presetDefinitionMap: Readonly<Record<string, Definition>>
-  protected readonly presetFootnoteDefinitionMap: Readonly<Record<string, FootnoteDefinition>>
-
-  constructor(props: IMarkdownViewModelProps) {
+  constructor(props: IProps) {
     super()
 
-    const {
-      ast: initialAst,
-      presetDefinitionMap,
-      presetFootnoteDefinitionMap,
-      rendererMap,
-      showCodeLineno,
-      themeScheme,
-    } = props
+    const { ast: initialAst, top } = props
 
     const ast$: State<Root> = new State<Root>(initialAst, { equals })
     const toc$ = Computed.fromObservables([ast$], ([ast]): IHeadingToc => {
@@ -73,7 +43,9 @@ export class MarkdownViewModel extends ViewModel {
     const definitionMap$ = Computed.fromObservables(
       [ast$],
       ([ast]): Readonly<Record<string, Definition>> => {
-        const presetDefinitions: Definition[] = Object.values({ ...presetDefinitionMap })
+        const presetDefinitions: Definition[] = Object.values({
+          ...top.presetDefinitionMap,
+        })
         const { root, definitionMap } = calcDefinitionMap(ast, undefined, presetDefinitions)
         ast$.next(root)
         return definitionMap
@@ -83,7 +55,7 @@ export class MarkdownViewModel extends ViewModel {
       [ast$],
       ([ast]): Readonly<Record<string, FootnoteDefinition>> => {
         const presetFootnoteDefinitions: FootnoteDefinition[] = Object.values({
-          ...presetFootnoteDefinitionMap,
+          ...top.presetFootnoteDefinitionMap,
         })
         const { root, footnoteDefinitionMap } = calcFootnoteDefinitionMap(
           ast,
@@ -135,25 +107,5 @@ export class MarkdownViewModel extends ViewModel {
     this.definitionMap$ = definitionMap$
     this.footnoteDefinitionMap$ = footnoteDefinitionMap$
     this.images$ = images$
-
-    this.rendererMap$ = new State(rendererMap)
-    this.showCodeLineno$ = new State<boolean>(showCodeLineno)
-    this.themeScheme$ = new State<string>(themeScheme)
-
-    this.presetDefinitionMap = presetDefinitionMap
-    this.presetFootnoteDefinitionMap = presetFootnoteDefinitionMap
-  }
-
-  public setContent = (ast: Root): void => {
-    this.ast$.next(ast)
-  }
-
-  public parseMarkdown = (content: string): Root => {
-    const ast: Root = parseMarkdown(content, {
-      shouldReservePosition: false,
-      presetDefinitions: Object.values(this.presetDefinitionMap),
-      presetFootnoteDefinitions: Object.values(this.presetFootnoteDefinitionMap),
-    })
-    return ast
   }
 }
