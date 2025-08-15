@@ -26,9 +26,9 @@ const Tooltip: React.FC<ITooltipProps> = ({ content, children }) => {
         {children}
       </div>
       {isVisible && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg whitespace-nowrap z-10 max-w-xs break-words">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 dark:bg-gray-200 dark:text-gray-900 rounded-lg shadow-lg whitespace-nowrap z-10 max-w-xs break-words">
           <div className="text-center">{content}</div>
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-200" />
         </div>
       )}
     </div>
@@ -201,7 +201,7 @@ export const TransformMode: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={executeTransform}
-            className="px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm font-medium cursor-pointer"
+            className="px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 text-sm font-medium cursor-pointer"
           >
             Run
           </button>
@@ -209,7 +209,7 @@ export const TransformMode: React.FC = () => {
             onClick={() => {
               importTransformData().catch(console.error)
             }}
-            className="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium cursor-pointer"
+            className="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 text-sm font-medium cursor-pointer"
           >
             Import
           </button>
@@ -217,7 +217,7 @@ export const TransformMode: React.FC = () => {
             onClick={() => {
               exportTransformData().catch(console.error)
             }}
-            className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium cursor-pointer"
+            className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-sm font-medium cursor-pointer"
           >
             Export
           </button>
@@ -228,8 +228,8 @@ export const TransformMode: React.FC = () => {
       <div className="border-b border-gray-200 dark:border-gray-700" />
 
       {/* Identifiers Section */}
-      <div className="bg-purple-50 dark:bg-purple-900/20 p-6 border-l-4 border-purple-500">
-        <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-4">
+      <div className="bg-purple-50 dark:bg-purple-900/40 p-6 border-l-4 border-purple-500 dark:border-purple-400">
+        <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-4">
           Identifiers
         </h3>
         <div className="flex flex-col gap-4">
@@ -271,9 +271,9 @@ export const TransformMode: React.FC = () => {
       </div>
 
       {/* Split Section */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-6 border-l-4 border-blue-500">
+      <div className="bg-blue-50 dark:bg-blue-900/40 p-6 border-l-4 border-blue-500 dark:border-blue-400">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">Split</h3>
+          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Split</h3>
           <Tooltip content="Regex pattern (e.g., /\n/) or arrow function (e.g., (text) => text.split('\n'))">
             <span className="w-4 h-4 bg-blue-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
               ?
@@ -289,11 +289,11 @@ export const TransformMode: React.FC = () => {
       </div>
 
       {/* Filter/Map Section */}
-      <div className="bg-green-50 dark:bg-green-900/20 p-6 border-l-4 border-green-500">
+      <div className="bg-green-50 dark:bg-green-900/40 p-6 border-l-4 border-green-500 dark:border-green-400">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+              <h3 className="text-lg font-semibold text-green-800 dark:text-green-300">
                 Transformers
               </h3>
               <Tooltip content="Chain of functions to process the split results. Order matters - functions execute top to bottom.">
@@ -355,7 +355,7 @@ export const TransformMode: React.FC = () => {
             </div>
           </div>
           {transformConfig.transformers.length === 0 ? (
-            <div className="rounded border-2 border-dashed border-gray-300 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+            <div className="rounded border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-700/30 p-4 text-center text-sm text-gray-500 dark:text-gray-400">
               No transformer functions. Click "Add Transformer" or use the dropdown to add
               functions.
             </div>

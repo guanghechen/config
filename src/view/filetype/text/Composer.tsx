@@ -113,7 +113,7 @@ export const Composer: React.FC<IProps> = props => {
             )}
             <div
               className={cn(
-                'h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200',
+                'h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200 dark:border-gray-700',
                 PRESET_CLASSES.scrollbar,
                 {
                   'p-2 overflow-auto': columns > 1,
