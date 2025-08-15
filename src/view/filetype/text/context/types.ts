@@ -7,14 +7,14 @@ export enum ModeEnum {
   TRANSFORM = bit << 2,
 }
 
-export interface IFilterMapFunction {
+export interface ITransformerFunction {
   readonly id: string
   readonly type: 'filter' | 'map'
   readonly function: string
   readonly skipped?: boolean
 }
 
-export interface IFilterMapFunctionData {
+export interface ITransformerFunctionData {
   readonly type: 'filter' | 'map'
   readonly code: string
   readonly skip: boolean
@@ -24,12 +24,12 @@ export interface ITransformExportData {
   readonly uuid: string
   readonly parent_uuid: string
   readonly split: string
-  readonly fms: IFilterMapFunctionData[]
+  readonly transformers: ITransformerFunctionData[]
 }
 
 export interface ITransformConfig {
   readonly split: string
-  readonly filterMap: IFilterMapFunction[]
+  readonly transformers: ITransformerFunction[]
   readonly uuidFunction: string
   readonly parentUuidFunction: string
 }

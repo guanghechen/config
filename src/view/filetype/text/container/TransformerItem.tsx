@@ -1,12 +1,12 @@
 import React from 'react'
-import type { IFilterMapFunction } from '../context/types'
+import type { ITransformerFunction } from '../context/types'
 import { CodeBox } from './CodeBox'
 
 interface IProps {
-  readonly func: IFilterMapFunction
+  readonly func: ITransformerFunction
   readonly index: number
   readonly totalCount: number
-  readonly onUpdate: (updates: Partial<IFilterMapFunction>) => void
+  readonly onUpdate: (updates: Partial<ITransformerFunction>) => void
   readonly onRemove: () => void
   readonly onMoveUp: () => void
   readonly onMoveDown: () => void
@@ -15,7 +15,7 @@ interface IProps {
   readonly onDrop?: (fromIndex: number, toIndex: number) => void
 }
 
-export const FilterMapItem: React.FC<IProps> = ({
+export const TransformerItem: React.FC<IProps> = ({
   func,
   index,
   totalCount,
@@ -313,4 +313,4 @@ export const FilterMapItem: React.FC<IProps> = ({
   )
 }
 
-FilterMapItem.displayName = 'FilterMapItem'
+TransformerItem.displayName = 'TransformerItem'

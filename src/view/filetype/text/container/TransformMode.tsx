@@ -3,14 +3,14 @@ import React from 'react'
 import { toast } from 'react-toastify'
 import { useTextViewViewModel } from '../context'
 import type {
-  IFilterMapFunction,
-  IFilterMapFunctionData,
   ITransformConfig,
   ITransformExportData,
+  ITransformerFunction,
+  ITransformerFunctionData,
 } from '../context/types'
 import { transformTextToNodes } from '../util/transform'
 import { CodeBox } from './CodeBox'
-import { FilterMapItem } from './FilterMapItem'
+import { TransformerItem } from './TransformerItem'
 
 interface ITooltipProps {
   readonly content: string
@@ -47,9 +47,9 @@ export const TransformMode: React.FC = () => {
     viewmodel.transformConfig$.next({ ...current, ...updates })
   }
 
-  const addFilterMapFunction = (type: 'filter' | 'map'): void => {
-    const current = transformConfig.filterMap
-    const newFunction: IFilterMapFunction = {
+  const addTransformerFunction = (type: 'filter' | 'map'): void => {
+    const current = transformConfig.transformers
+    const newFunction: ITransformerFunction = {
       id: `${type}-${Date.now()}`,
       type,
       function:
@@ -57,22 +57,22 @@ export const TransformMode: React.FC = () => {
           ? '(element, index, elements) => element.trim().length > 0'
           : '(element, index, elements) => element.trim()',
     }
-    updateTransformConfig({ filterMap: [...current, newFunction] })
+    updateTransformConfig({ transformers: [...current, newFunction] })
   }
 
-  const removeFilterMapFunction = (id: string): void => {
-    const current = transformConfig.filterMap
-    updateTransformConfig({ filterMap: current.filter(func => func.id !== id) })
+  const removeTransformerFunction = (id: string): void => {
+    const current = transformConfig.transformers
+    updateTransformConfig({ transformers: current.filter(func => func.id !== id) })
   }
 
-  const updateFilterMapFunction = (id: string, updates: Partial<IFilterMapFunction>): void => {
-    const current = transformConfig.filterMap
+  const updateTransformerFunction = (id: string, updates: Partial<ITransformerFunction>): void => {
+    const current = transformConfig.transformers
     const updated = current.map(func => (func.id === id ? { ...func, ...updates } : func))
-    updateTransformConfig({ filterMap: updated })
+    updateTransformConfig({ transformers: updated })
   }
 
   const moveFunction = (id: string, direction: 'up' | 'down'): void => {
-    const current = transformConfig.filterMap
+    const current = transformConfig.transformers
     const index = current.findIndex(func => func.id === id)
     if (index === -1) return
 
@@ -82,7 +82,7 @@ export const TransformMode: React.FC = () => {
     const updated = [...current]
     const [moved] = updated.splice(index, 1)
     updated.splice(newIndex, 0, moved)
-    updateTransformConfig({ filterMap: updated })
+    updateTransformConfig({ transformers: updated })
   }
 
   const handleDragStart = (_index: number): void => {
@@ -99,12 +99,12 @@ export const TransformMode: React.FC = () => {
       return
     }
 
-    const current = transformConfig.filterMap
+    const current = transformConfig.transformers
     const updated = [...current]
     const [draggedItem] = updated.splice(fromIndex, 1)
     updated.splice(toIndex, 0, draggedItem)
 
-    updateTransformConfig({ filterMap: updated })
+    updateTransformConfig({ transformers: updated })
     setIsDragging(false)
   }
 
@@ -113,10 +113,10 @@ export const TransformMode: React.FC = () => {
       split: transformConfig.split,
       uuid: transformConfig.uuidFunction,
       parent_uuid: transformConfig.parentUuidFunction,
-      fms: transformConfig.filterMap.map(fm => ({
-        skip: fm.skipped || false,
-        code: fm.function,
-        type: fm.type,
+      transformers: transformConfig.transformers.map(transformer => ({
+        skip: transformer.skipped || false,
+        code: transformer.function,
+        type: transformer.type,
       })),
     }
 
@@ -166,21 +166,24 @@ export const TransformMode: React.FC = () => {
       if (importedData.parent_uuid) {
         updateTransformConfig({ parentUuidFunction: importedData.parent_uuid })
       }
-      if (importedData.fms && Array.isArray(importedData.fms)) {
-        const filterMapFunctions: IFilterMapFunction[] = importedData.fms.map(
-          (fm: IFilterMapFunctionData, index: number) => {
-            const functionCode = fm.code || ''
-            const importedType = fm.type || 'map'
+      if (importedData.transformers && Array.isArray(importedData.transformers)) {
+        const transformerFunctions: ITransformerFunction[] = importedData.transformers.map(
+          (transformer: ITransformerFunctionData, index: number) => {
+            const functionCode = transformer.code || ''
+            const importedType = transformer.type || 'map'
 
             return {
               id: `imported-${Date.now()}-${index}`,
               type: importedType,
               function: functionCode,
-              skipped: fm.skip !== undefined ? fm.skip : (fm as any).skipped || false,
+              skipped:
+                transformer.skip !== undefined
+                  ? transformer.skip
+                  : (transformer as any).skipped || false,
             }
           },
         )
-        updateTransformConfig({ filterMap: filterMapFunctions })
+        updateTransformConfig({ transformers: transformerFunctions })
       }
 
       toast.success('Transform data imported successfully!')
@@ -291,7 +294,7 @@ export const TransformMode: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
-                Filter &amp; Map
+                Transformers
               </h3>
               <Tooltip content="Chain of functions to process the split results. Order matters - functions execute top to bottom.">
                 <span className="w-4 h-4 bg-green-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
@@ -302,10 +305,10 @@ export const TransformMode: React.FC = () => {
             <div className="relative inline-block">
               <div className="flex items-stretch">
                 <button
-                  onClick={() => addFilterMapFunction('map')}
+                  onClick={() => addTransformerFunction('map')}
                   className="rounded-l bg-purple-500 px-3 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none cursor-pointer"
                 >
-                  Add Map
+                  Add Transformer
                 </button>
                 <div className="relative flex">
                   <button
@@ -329,7 +332,7 @@ export const TransformMode: React.FC = () => {
                     <div className="absolute right-0 top-full mt-1 min-w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg z-10">
                       <button
                         onClick={() => {
-                          addFilterMapFunction('map')
+                          addTransformerFunction('map')
                           setDropdownOpen(false)
                         }}
                         className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer"
@@ -338,7 +341,7 @@ export const TransformMode: React.FC = () => {
                       </button>
                       <button
                         onClick={() => {
-                          addFilterMapFunction('filter')
+                          addTransformerFunction('filter')
                           setDropdownOpen(false)
                         }}
                         className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 cursor-pointer"
@@ -351,20 +354,21 @@ export const TransformMode: React.FC = () => {
               </div>
             </div>
           </div>
-          {transformConfig.filterMap.length === 0 ? (
+          {transformConfig.transformers.length === 0 ? (
             <div className="rounded border-2 border-dashed border-gray-300 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
-              No filter/map functions. Click "Add Map" or use the dropdown to add functions.
+              No transformer functions. Click "Add Transformer" or use the dropdown to add
+              functions.
             </div>
           ) : (
             <div className={`space-y-3 ${isDragging ? 'select-none' : ''}`}>
-              {transformConfig.filterMap.map((func, index) => (
-                <FilterMapItem
+              {transformConfig.transformers.map((func, index) => (
+                <TransformerItem
                   key={func.id}
                   func={func}
                   index={index}
-                  totalCount={transformConfig.filterMap.length}
-                  onUpdate={updates => updateFilterMapFunction(func.id, updates)}
-                  onRemove={() => removeFilterMapFunction(func.id)}
+                  totalCount={transformConfig.transformers.length}
+                  onUpdate={updates => updateTransformerFunction(func.id, updates)}
+                  onRemove={() => removeTransformerFunction(func.id)}
                   onMoveUp={() => moveFunction(func.id, 'up')}
                   onMoveDown={() => moveFunction(func.id, 'down')}
                   onDragStart={handleDragStart}

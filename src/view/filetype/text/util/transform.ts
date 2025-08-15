@@ -41,20 +41,20 @@ export const transformTextToNodes = (text: string, config: ITransformConfig): IT
       }
     }
 
-    // Step 2: Apply filter/map functions
+    // Step 2: Apply transformer functions
     let processedResult: any = texts
-    for (const fm of config.filterMap) {
-      if (fm.skipped) continue
+    for (const transformer of config.transformers) {
+      if (transformer.skipped) continue
 
       try {
         const func = new Function(
           'element',
           'index',
           'elements',
-          `return (${fm.function})(element, index, elements)`,
+          `return (${transformer.function})(element, index, elements)`,
         )
 
-        if (fm.type === 'filter') {
+        if (transformer.type === 'filter') {
           processedResult = processedResult.filter(func)
         } else {
           processedResult = processedResult.map(func)
@@ -62,7 +62,7 @@ export const transformTextToNodes = (text: string, config: ITransformConfig): IT
       } catch (error) {
         return {
           nodes: [],
-          error: `Invalid ${fm.type} function: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: `Invalid ${transformer.type} transformer: ${error instanceof Error ? error.message : 'Unknown error'}`,
         }
       }
     }
