@@ -1,7 +1,7 @@
 import mermaid from 'mermaid'
 import React from 'react'
 import { ElementViewer } from '@/component/ElementViewer'
-import { useMarkdownDarken } from '../../context'
+import { useMarkdownDarken } from '../../hook/useMarkdownDarken'
 
 interface IMermaidRendererProps {
   readonly code: string
