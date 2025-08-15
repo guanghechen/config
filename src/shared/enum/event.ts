@@ -1,5 +1,5 @@
 export enum TsukiEventNameEnum {
-  FOCUS_ME = 'focus_me',
+  FOCUS_ME = '@tsuki/focus_me',
 }
 
 export enum TsukiEventResponseCodeEnum {
