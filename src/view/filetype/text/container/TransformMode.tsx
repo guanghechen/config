@@ -30,6 +30,7 @@ const Tooltip: React.FC<ITooltipProps> = ({ content, children }) => {
 export const TransformMode: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const updateTransformConfig = (updates: Partial<ITransformConfig>): void => {
     const current = viewmodel.transformConfig$.getSnapshot()
@@ -158,24 +159,61 @@ export const TransformMode: React.FC = () => {
                 </span>
               </Tooltip>
             </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => addFilterMapFunction('filter')}
-                className="rounded bg-orange-500 px-3 py-1 text-xs text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 select-none"
-              >
-                Add Filter
-              </button>
-              <button
-                onClick={() => addFilterMapFunction('map')}
-                className="rounded bg-purple-500 px-3 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none"
-              >
-                Add Map
-              </button>
+            <div className="relative inline-block">
+              <div className="flex items-stretch">
+                <button
+                  onClick={() => addFilterMapFunction('map')}
+                  className="rounded-l bg-purple-500 px-3 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none"
+                >
+                  Add Map
+                </button>
+                <div className="relative flex">
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="rounded-r bg-purple-500 px-2 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none border-l border-purple-400 dark:border-purple-500 flex items-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  {dropdownOpen && (
+                    <div className="absolute right-0 top-full mt-1 min-w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg z-10">
+                      <button
+                        onClick={() => {
+                          addFilterMapFunction('map')
+                          setDropdownOpen(false)
+                        }}
+                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                      >
+                        Add Map
+                      </button>
+                      <button
+                        onClick={() => {
+                          addFilterMapFunction('filter')
+                          setDropdownOpen(false)
+                        }}
+                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      >
+                        Add Filter
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           {transformConfig.filterMap.length === 0 ? (
             <div className="rounded border-2 border-dashed border-gray-300 p-4 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
-              No filter/map functions. Click "Add Filter" or "Add Map" to add functions.
+              No filter/map functions. Click "Add Map" or use the dropdown to add functions.
             </div>
           ) : (
             <div className="space-y-3">
