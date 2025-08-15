@@ -42,7 +42,7 @@ export const TransformMode: React.FC = () => {
     const newFunction: IFilterMapFunction = {
       id: `${type}-${Date.now()}`,
       type,
-      function: type === 'filter' ? '(item) => item.trim().length > 0' : '(item) => item.trim()',
+      function: type === 'filter' ? '(element, index, elements) => element.trim().length > 0' : '(element, index, elements) => element.trim()',
     }
     updateTransformConfig({ filterMap: [...current, newFunction] })
   }

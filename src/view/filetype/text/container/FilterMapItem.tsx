@@ -188,7 +188,11 @@ export const FilterMapItem: React.FC<IProps> = ({
         value={func.function}
         onChange={e => onUpdate({ function: e.target.value })}
         className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-        placeholder={func.type === 'filter' ? '(item) => condition' : '(item) => transformed'}
+        placeholder={
+          func.type === 'filter'
+            ? '(element, index, elements) => condition'
+            : '(element, index, elements) => transformed'
+        }
       />
     </div>
   )
