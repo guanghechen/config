@@ -34,6 +34,12 @@ export interface ITransformConfig {
   readonly parentUuidFunction: string
 }
 
+export interface INode {
+  readonly uuid: string
+  readonly parent_uuid: string | null
+  readonly data: any
+}
+
 export interface ITextViewData {
   readonly mode: ModeEnum
   readonly transformConfig?: ITransformConfig

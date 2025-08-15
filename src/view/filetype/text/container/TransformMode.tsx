@@ -8,6 +8,7 @@ import type {
   ITransformConfig,
   ITransformExportData,
 } from '../context/types'
+import { transformTextToNodes } from '../util/transform'
 import { CodeBox } from './CodeBox'
 import { FilterMapItem } from './FilterMapItem'
 
@@ -37,6 +38,7 @@ const Tooltip: React.FC<ITooltipProps> = ({ content, children }) => {
 export const TransformMode: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
+  const content: string | null = useStateValue(viewmodel.content$)
   const [dropdownOpen, setDropdownOpen] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
 
@@ -127,6 +129,23 @@ export const TransformMode: React.FC = () => {
     }
   }
 
+  const executeTransform = (): void => {
+    if (!content) {
+      toast.error('No content to transform')
+      return
+    }
+
+    const result = transformTextToNodes(content, transformConfig)
+
+    if (result.error) {
+      toast.error(result.error)
+      viewmodel.transformedNodes$.next([])
+    } else {
+      viewmodel.transformedNodes$.next(result.nodes)
+      toast.success(`Transform completed: ${result.nodes.length} nodes generated`)
+    }
+  }
+
   const importTransformData = async (): Promise<void> => {
     try {
       const clipboardText = await navigator.clipboard.readText()
@@ -177,6 +196,12 @@ export const TransformMode: React.FC = () => {
       <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Transform View</h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={executeTransform}
+            className="px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm font-medium cursor-pointer"
+          >
+            Run
+          </button>
           <button
             onClick={() => {
               importTransformData().catch(console.error)

@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { ITextViewData, ITransformConfig } from './types'
+import type { ITextViewData, ITransformConfig, INode } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
@@ -29,6 +29,7 @@ export class TextViewViewModel extends ViewModel {
   public readonly content$: IState<string | null>
   public readonly error$: IState<string | null>
   public readonly transformConfig$: IState<ITransformConfig>
+  public readonly transformedNodes$: IState<INode[] | null>
 
   public static fromData(data: Partial<ITextViewData> | undefined): TextViewViewModel {
     const { mode, transformConfig }: ITextViewData = this.normalize(DEFAULT_TEXT_VIEW_DATA, data)
@@ -66,6 +67,7 @@ export class TextViewViewModel extends ViewModel {
     this.content$ = new State<string | null>(null)
     this.error$ = new State<string | null>(null)
     this.transformConfig$ = new State<ITransformConfig>(transformConfig)
+    this.transformedNodes$ = new State<INode[] | null>(null)
   }
 
   public dump = (): ITextViewData => {
