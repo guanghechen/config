@@ -3,12 +3,13 @@ import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
 import state from '../../state'
 import { normalizeUrlPath } from '../../util/url'
-import { fetchFile, saveExcalidrawFile, switchFile } from './handle/file'
+import { fetchFile, fetchFileRaw, saveExcalidrawFile, switchFile } from './handle/file'
 import { list_workspace_files, list_workspaces } from './handle/workspace'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
   '/api/file': fetchFile,
+  '/api/file/raw': fetchFileRaw,
   '/api/file-switch': switchFile,
   '/api/excalidraw/save': saveExcalidrawFile,
   '/api/workspaces': list_workspaces,
