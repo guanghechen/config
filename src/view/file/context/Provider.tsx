@@ -86,14 +86,6 @@ const HmrSideEffect: React.FC<ISideEffectProps> = props => {
       if (data.filepath !== filepath) viewmodel.filepath$.next(data.filepath)
       else viewmodel.markFilepathDirty()
 
-      console.log('post:', {
-        action: '@@tsuki-event@@',
-        tsuki: {
-          event: 'focus_me',
-          payload: {},
-        },
-      })
-
       window.postMessage({
         action: '@@tsuki-event@@',
         tsuki: {
