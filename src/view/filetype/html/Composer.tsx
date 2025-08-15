@@ -16,7 +16,7 @@ export const Composer: React.FC<IProps> = props => {
   return (
     <div className="w-full">
       <div className="w-full">
-        <div className="h-[calc(100vh-10rem)] select-none overflow-hidden bg-white dark:bg-gray-900">
+        <div className="h-[calc(100vh-4rem)] select-none bg-white dark:bg-gray-900">
           <HtmlMain />
         </div>
       </div>
