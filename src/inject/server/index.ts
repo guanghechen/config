@@ -8,6 +8,8 @@ import { handleEvent } from './handle'
 
 async function setup(): Promise<void> {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('[server] onMessage:', { message, sender })
+
     const data: ITsukiRequestData = message.data
     const context: ITsukiRequestContext = {
       sender,

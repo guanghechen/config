@@ -5,7 +5,7 @@ window.addEventListener('message', event => {
     const payload = event.data['tsuki']
     const data: ITsukiRequestData = {
       event: payload.event,
-      payload: payload.data,
+      payload: payload.payload,
     }
     void chrome.runtime.sendMessage({ data })
   }
