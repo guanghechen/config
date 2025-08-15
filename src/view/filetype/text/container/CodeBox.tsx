@@ -56,4 +56,3 @@ export const CodeBox: React.FC<ICodeBoxProps> = ({
 }
 
 CodeBox.displayName = 'CodeBox'
-

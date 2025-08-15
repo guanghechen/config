@@ -2,8 +2,8 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useTextViewViewModel } from '../context'
 import type { IFilterMapFunction, ITransformConfig } from '../context/types'
-import { FilterMapItem } from './FilterMapItem'
 import { CodeBox } from './CodeBox'
+import { FilterMapItem } from './FilterMapItem'
 
 interface ITooltipProps {
   readonly content: string
@@ -32,6 +32,7 @@ export const TransformMode: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
   const [dropdownOpen, setDropdownOpen] = React.useState(false)
+  const [isDragging, setIsDragging] = React.useState(false)
 
   const updateTransformConfig = (updates: Partial<ITransformConfig>): void => {
     const current = viewmodel.transformConfig$.getSnapshot()
@@ -43,7 +44,10 @@ export const TransformMode: React.FC = () => {
     const newFunction: IFilterMapFunction = {
       id: `${type}-${Date.now()}`,
       type,
-      function: type === 'filter' ? '(element, index, elements) => element.trim().length > 0' : '(element, index, elements) => element.trim()',
+      function:
+        type === 'filter'
+          ? '(element, index, elements) => element.trim().length > 0'
+          : '(element, index, elements) => element.trim()',
     }
     updateTransformConfig({ filterMap: [...current, newFunction] })
   }
@@ -71,6 +75,29 @@ export const TransformMode: React.FC = () => {
     const [moved] = updated.splice(index, 1)
     updated.splice(newIndex, 0, moved)
     updateTransformConfig({ filterMap: updated })
+  }
+
+  const handleDragStart = (_index: number): void => {
+    setIsDragging(true)
+  }
+
+  const handleDragOver = (_index: number): void => {
+    // Optional: could add visual feedback here
+  }
+
+  const handleDrop = (fromIndex: number, toIndex: number): void => {
+    if (fromIndex === toIndex) {
+      setIsDragging(false)
+      return
+    }
+
+    const current = transformConfig.filterMap
+    const updated = [...current]
+    const [draggedItem] = updated.splice(fromIndex, 1)
+    updated.splice(toIndex, 0, draggedItem)
+
+    updateTransformConfig({ filterMap: updated })
+    setIsDragging(false)
   }
 
   return (
@@ -207,7 +234,7 @@ export const TransformMode: React.FC = () => {
               No filter/map functions. Click "Add Map" or use the dropdown to add functions.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className={`space-y-3 ${isDragging ? 'select-none' : ''}`}>
               {transformConfig.filterMap.map((func, index) => (
                 <FilterMapItem
                   key={func.id}
@@ -218,6 +245,9 @@ export const TransformMode: React.FC = () => {
                   onRemove={() => removeFilterMapFunction(func.id)}
                   onMoveUp={() => moveFunction(func.id, 'up')}
                   onMoveDown={() => moveFunction(func.id, 'down')}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
                 />
               ))}
             </div>

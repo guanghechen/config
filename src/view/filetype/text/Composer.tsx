@@ -6,8 +6,8 @@ import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-h
 import { PRESET_CLASSES } from '@/constant/classes'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { useScrollToTop } from '@/hook/useScrollToTop'
-import { ModeEnum, useTextViewViewModel } from './context'
 import { TransformMode } from './container/TransformMode'
+import { ModeEnum, useTextViewViewModel } from './context'
 
 interface IProps {
   readonly workspace: string | null

@@ -10,6 +10,9 @@ interface IProps {
   readonly onRemove: () => void
   readonly onMoveUp: () => void
   readonly onMoveDown: () => void
+  readonly onDragStart?: (index: number) => void
+  readonly onDragOver?: (index: number) => void
+  readonly onDrop?: (fromIndex: number, toIndex: number) => void
 }
 
 export const FilterMapItem: React.FC<IProps> = ({
@@ -20,13 +23,92 @@ export const FilterMapItem: React.FC<IProps> = ({
   onRemove,
   onMoveUp,
   onMoveDown,
+  onDragStart,
+  onDragOver,
+  onDrop,
 }) => {
   const [showDropdown, setShowDropdown] = React.useState(false)
+  const [isDragging, setIsDragging] = React.useState(false)
+  const [isDropTarget, setIsDropTarget] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const itemRef = React.useRef<HTMLDivElement>(null)
 
   const handleTypeChange = (newType: 'filter' | 'map'): void => {
     onUpdate({ type: newType })
     setShowDropdown(false)
+  }
+
+  const handleDragStart = (e: React.DragEvent): void => {
+    setIsDragging(true)
+    const dataTransfer = e.dataTransfer
+    dataTransfer.effectAllowed = 'move'
+    dataTransfer.setData('text/plain', index.toString())
+
+    // Create custom drag preview
+    if (itemRef.current) {
+      const rect = itemRef.current.getBoundingClientRect()
+      const dragPreview = itemRef.current.cloneNode(true) as HTMLElement
+      dragPreview.style.position = 'absolute'
+      dragPreview.style.top = '-1000px'
+      dragPreview.style.left = '-1000px'
+      dragPreview.style.width = `${rect.width}px`
+      dragPreview.style.transform = 'rotate(5deg)'
+      dragPreview.style.opacity = '0.8'
+      dragPreview.style.pointerEvents = 'none'
+      dragPreview.style.zIndex = '1000'
+      dragPreview.style.backgroundColor = 'white'
+      dragPreview.style.border = '2px solid #3b82f6'
+      dragPreview.style.borderRadius = '8px'
+      dragPreview.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.3)'
+
+      document.body.appendChild(dragPreview)
+      dataTransfer.setDragImage(dragPreview, rect.width / 2, rect.height / 2)
+
+      // Clean up the preview element after drag starts
+      setTimeout(() => {
+        if (document.body.contains(dragPreview)) {
+          document.body.removeChild(dragPreview)
+        }
+      }, 0)
+    }
+
+    onDragStart?.(index)
+  }
+
+  const handleDragEnd = (): void => {
+    setIsDragging(false)
+    setIsDropTarget(false)
+  }
+
+  const handleDragEnter = (e: React.DragEvent): void => {
+    e.preventDefault()
+    setIsDropTarget(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent): void => {
+    e.preventDefault()
+    // Only set to false if we're leaving the item entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDropTarget(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent): void => {
+    e.preventDefault()
+    const dataTransfer = e.dataTransfer
+    dataTransfer.dropEffect = 'move'
+    setIsDropTarget(true)
+    onDragOver?.(index)
+  }
+
+  const handleDrop = (e: React.DragEvent): void => {
+    e.preventDefault()
+    const draggedIdx = parseInt(e.dataTransfer.getData('text/plain'), 10)
+    if (draggedIdx !== index) {
+      onDrop?.(draggedIdx, index)
+    }
+    setIsDragging(false)
+    setIsDropTarget(false)
   }
 
   React.useEffect(() => {
@@ -46,15 +128,49 @@ export const FilterMapItem: React.FC<IProps> = ({
   }, [showDropdown])
   return (
     <div
-      className={`p-3 rounded-lg border transition-opacity ${
+      ref={itemRef}
+      className={`p-3 rounded-lg border transition-all duration-200 ${
         func.skipped === true
           ? 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-50'
           : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+      } ${isDragging ? 'opacity-50 scale-95' : ''} ${
+        isDropTarget && !isDragging
+          ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50 dark:bg-blue-900/20 transform scale-105'
+          : ''
       }`}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-2">
           <div className="flex space-x-1">
+            <button
+              draggable={true}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              className="w-6 h-6 flex items-center justify-center text-xs bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 select-none cursor-grab active:cursor-grabbing"
+              title="Drag to reorder"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="9" cy="12" r="1" />
+                <circle cx="9" cy="5" r="1" />
+                <circle cx="9" cy="19" r="1" />
+                <circle cx="15" cy="12" r="1" />
+                <circle cx="15" cy="5" r="1" />
+                <circle cx="15" cy="19" r="1" />
+              </svg>
+            </button>
             <button
               onClick={onMoveUp}
               disabled={index === 0}

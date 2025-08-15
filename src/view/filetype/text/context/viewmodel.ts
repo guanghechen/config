@@ -53,7 +53,12 @@ export class TextViewViewModel extends ViewModel {
   constructor(props: IProps = {}) {
     super()
 
-    const { mode = ModeEnum.VIEW, workspace = null, filepath = null, transformConfig = DEFAULT_TRANSFORM_CONFIG } = props
+    const {
+      mode = ModeEnum.VIEW,
+      workspace = null,
+      filepath = null,
+      transformConfig = DEFAULT_TRANSFORM_CONFIG,
+    } = props
 
     this.mode$ = new State<ModeEnum>(mode)
     this.workspace$ = new State<string | null>(workspace)
