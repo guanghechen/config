@@ -232,7 +232,7 @@ export const TransformMode: React.FC = () => {
         <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-4">
           Identifiers
         </h3>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
