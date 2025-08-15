@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React from 'react'
 import type { IFilterMapFunction } from '../context/types'
+import { CodeBox } from './CodeBox'
 
 interface IProps {
   readonly func: IFilterMapFunction
@@ -20,15 +21,15 @@ export const FilterMapItem: React.FC<IProps> = ({
   onMoveUp,
   onMoveDown,
 }) => {
-  const [showDropdown, setShowDropdown] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [showDropdown, setShowDropdown] = React.useState(false)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
 
   const handleTypeChange = (newType: 'filter' | 'map'): void => {
     onUpdate({ type: newType })
     setShowDropdown(false)
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false)
@@ -183,11 +184,9 @@ export const FilterMapItem: React.FC<IProps> = ({
         </div>
       </div>
 
-      <input
-        type="text"
+      <CodeBox
         value={func.function}
-        onChange={e => onUpdate({ function: e.target.value })}
-        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+        onChange={value => onUpdate({ function: value })}
         placeholder={
           func.type === 'filter'
             ? '(element, index, elements) => condition'

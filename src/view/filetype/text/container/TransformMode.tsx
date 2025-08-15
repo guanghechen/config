@@ -1,8 +1,9 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import React, { useState } from 'react'
+import React from 'react'
 import { useTextViewViewModel } from '../context'
 import type { IFilterMapFunction, ITransformConfig } from '../context/types'
 import { FilterMapItem } from './FilterMapItem'
+import { CodeBox } from './CodeBox'
 
 interface ITooltipProps {
   readonly content: string
@@ -10,7 +11,7 @@ interface ITooltipProps {
 }
 
 const Tooltip: React.FC<ITooltipProps> = ({ content, children }) => {
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = React.useState(false)
 
   return (
     <div className="relative inline-block">
@@ -30,7 +31,7 @@ const Tooltip: React.FC<ITooltipProps> = ({ content, children }) => {
 export const TransformMode: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = React.useState(false)
 
   const updateTransformConfig = (updates: Partial<ITransformConfig>): void => {
     const current = viewmodel.transformConfig$.getSnapshot()
@@ -84,18 +85,12 @@ export const TransformMode: React.FC = () => {
             </span>
           </Tooltip>
         </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Split Function
-          </label>
-          <input
-            type="text"
-            value={transformConfig.split}
-            onChange={e => updateTransformConfig({ split: e.target.value })}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-            placeholder="/\\n/"
-          />
-        </div>
+        <CodeBox
+          value={transformConfig.split}
+          onChange={value => updateTransformConfig({ split: value })}
+          placeholder="/\\n/"
+          description="Split Function"
+        />
       </div>
 
       {/* Identifiers Section */}
@@ -104,42 +99,38 @@ export const TransformMode: React.FC = () => {
           Identifiers
         </h3>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 UUID Function
-              </label>
+              </span>
               <Tooltip content="Function to generate unique ID for each item">
                 <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
                   ?
                 </span>
               </Tooltip>
             </div>
-            <input
-              type="text"
+            <CodeBox
               value={transformConfig.uuidFunction}
-              onChange={e => updateTransformConfig({ uuidFunction: e.target.value })}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-              placeholder="(item, index) =&gt; 'item-' + index"
+              onChange={value => updateTransformConfig({ uuidFunction: value })}
+              placeholder="(item, index) => 'item-' + index"
             />
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Parent UUID Function
-              </label>
+              </span>
               <Tooltip content="Function to generate parent ID for each item">
                 <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
                   ?
                 </span>
               </Tooltip>
             </div>
-            <input
-              type="text"
+            <CodeBox
               value={transformConfig.parentUuidFunction}
-              onChange={e => updateTransformConfig({ parentUuidFunction: e.target.value })}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-              placeholder="() =&gt; null"
+              onChange={value => updateTransformConfig({ parentUuidFunction: value })}
+              placeholder="() => null"
             />
           </div>
         </div>
