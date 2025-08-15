@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { ITextViewData, ITransformConfig, INode } from './types'
+import type { INode, ITextViewData, ITransformConfig } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
