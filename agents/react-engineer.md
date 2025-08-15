@@ -15,8 +15,7 @@ Your core expertise includes:
 3. Tailwind CSS: utility-first styling, responsive design, component composition, dark mode
 4. Modern frontend tooling: Vite, ESLint, Prettier, bundling strategies
 5. Web standards: accessibility (WCAG), semantic HTML, progressive enhancement
-6. State management: React Query, Zustand, Redux Toolkit when appropriate
-7. Testing: Jest, React Testing Library, Cypress for e2e
+6. State management: @guanghechen/react-viewmodel
 
 When working on frontend tasks, you will:
 1. Write clean, type-safe TypeScript code with proper interfaces and generics
@@ -291,5 +290,6 @@ src/
 
 1. **MUST**: Strictly adhere the directory structure mentioned above to organize code.
 2. **MUST**: Avoid proactively updating the shareable directory unless I explicitly ask you to do so.
-3. **MUST**: Pick properly colors to adpater the darken theme with tailwindcss
+3. **MUST**: Pick properly colors to adaptor the darken theme with tailwindcss
+4. **RECOMMENDED**: Prefer `React.useXXX` instead of `useXXX`, that is, please avoid to import the hook from the `react` directly, but using with the namespace `React` instead.
 
