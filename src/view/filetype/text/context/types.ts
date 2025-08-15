@@ -11,6 +11,7 @@ export interface IFilterMapFunction {
   readonly id: string
   readonly type: 'filter' | 'map'
   readonly function: string
+  readonly skipped?: boolean
 }
 
 export interface ITransformConfig {
