@@ -14,6 +14,19 @@ export interface IFilterMapFunction {
   readonly skipped?: boolean
 }
 
+export interface IFilterMapFunctionData {
+  readonly type: 'filter' | 'map'
+  readonly code: string
+  readonly skip: boolean
+}
+
+export interface ITransformExportData {
+  readonly uuid: string
+  readonly parent_uuid: string
+  readonly split: string
+  readonly fms: IFilterMapFunctionData[]
+}
+
 export interface ITransformConfig {
   readonly split: string
   readonly filterMap: IFilterMapFunction[]

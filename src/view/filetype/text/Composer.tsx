@@ -107,14 +107,10 @@ export const Composer: React.FC<IProps> = props => {
               <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
             )}
             <div
-              className={cn(
-                'h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200',
-                PRESET_CLASSES.scrollbar,
-                {
-                  'p-2 overflow-auto': columns > 1,
-                  'overflow-auto': columns === 1,
-                },
-              )}
+              className={cn('h-full w-[48rem] max-w-[100rem] flex-auto', PRESET_CLASSES.scrollbar, {
+                'p-2 overflow-auto': columns > 1,
+                'overflow-auto': columns === 1,
+              })}
             >
               <TransformMode />
             </div>

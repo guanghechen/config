@@ -174,14 +174,14 @@ export const FilterMapItem: React.FC<IProps> = ({
             <button
               onClick={onMoveUp}
               disabled={index === 0}
-              className="w-6 h-6 flex items-center justify-center text-xs bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 select-none"
+              className="w-6 h-6 flex items-center justify-center text-xs bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 select-none cursor-pointer"
             >
               ↑
             </button>
             <button
               onClick={onMoveDown}
               disabled={index === totalCount - 1}
-              className="w-6 h-6 flex items-center justify-center text-xs bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 select-none"
+              className="w-6 h-6 flex items-center justify-center text-xs bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 select-none cursor-pointer"
             >
               ↓
             </button>
@@ -189,7 +189,7 @@ export const FilterMapItem: React.FC<IProps> = ({
 
           <button
             onClick={() => onUpdate({ skipped: !func.skipped })}
-            className={`w-6 h-6 flex items-center justify-center transition-colors rounded select-none ${
+            className={`w-6 h-6 flex items-center justify-center transition-colors rounded select-none cursor-pointer ${
               func.skipped === true
                 ? 'text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-900/20 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500'
                 : 'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -222,7 +222,7 @@ export const FilterMapItem: React.FC<IProps> = ({
 
           <button
             onClick={onRemove}
-            className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-white dark:text-red-400 dark:hover:text-white bg-red-50 hover:bg-red-500 dark:bg-red-900/20 dark:hover:bg-red-500 border border-red-200 dark:border-red-800 hover:border-red-500 rounded transition-colors select-none"
+            className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-white dark:text-red-400 dark:hover:text-white bg-red-50 hover:bg-red-500 dark:bg-red-900/20 dark:hover:bg-red-500 border border-red-200 dark:border-red-800 hover:border-red-500 rounded transition-colors select-none cursor-pointer"
             title="Remove function"
           >
             <svg
@@ -254,7 +254,7 @@ export const FilterMapItem: React.FC<IProps> = ({
               </div>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className={`px-1.5 rounded-r border-l border-opacity-20 hover:bg-opacity-80 transition-colors flex items-center justify-center select-none ${
+                className={`px-1.5 rounded-r border-l border-opacity-20 hover:bg-opacity-80 transition-colors flex items-center justify-center select-none cursor-pointer ${
                   func.type === 'filter'
                     ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-300 dark:border-orange-600'
                     : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 border-purple-300 dark:border-purple-600'
@@ -280,7 +280,7 @@ export const FilterMapItem: React.FC<IProps> = ({
               <div className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg">
                 <button
                   onClick={() => handleTypeChange('filter')}
-                  className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none ${
+                  className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer ${
                     func.type === 'filter' ? 'bg-orange-50 dark:bg-orange-900/20' : ''
                   }`}
                 >
@@ -288,7 +288,7 @@ export const FilterMapItem: React.FC<IProps> = ({
                 </button>
                 <button
                   onClick={() => handleTypeChange('map')}
-                  className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none ${
+                  className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer ${
                     func.type === 'map' ? 'bg-purple-50 dark:bg-purple-900/20' : ''
                   }`}
                 >

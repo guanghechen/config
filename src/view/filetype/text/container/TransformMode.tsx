@@ -1,7 +1,13 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { toast } from 'react-toastify'
 import { useTextViewViewModel } from '../context'
-import type { IFilterMapFunction, ITransformConfig } from '../context/types'
+import type {
+  IFilterMapFunction,
+  IFilterMapFunctionData,
+  ITransformConfig,
+  ITransformExportData,
+} from '../context/types'
 import { CodeBox } from './CodeBox'
 import { FilterMapItem } from './FilterMapItem'
 
@@ -100,25 +106,98 @@ export const TransformMode: React.FC = () => {
     setIsDragging(false)
   }
 
+  const exportTransformData = async (): Promise<void> => {
+    const exportData: ITransformExportData = {
+      split: transformConfig.split,
+      uuid: transformConfig.uuidFunction,
+      parent_uuid: transformConfig.parentUuidFunction,
+      fms: transformConfig.filterMap.map(fm => ({
+        skip: fm.skipped || false,
+        code: fm.function,
+        type: fm.type,
+      })),
+    }
+
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
+      toast.success('Transform data copied to clipboard successfully!')
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err)
+      toast.error('Failed to copy to clipboard')
+    }
+  }
+
+  const importTransformData = async (): Promise<void> => {
+    try {
+      const clipboardText = await navigator.clipboard.readText()
+
+      if (!clipboardText.trim()) {
+        toast.error('Clipboard is empty')
+        return
+      }
+
+      const importedData: ITransformExportData = JSON.parse(clipboardText)
+
+      if (importedData.split) {
+        updateTransformConfig({ split: importedData.split })
+      }
+      if (importedData.uuid) {
+        updateTransformConfig({ uuidFunction: importedData.uuid })
+      }
+      if (importedData.parent_uuid) {
+        updateTransformConfig({ parentUuidFunction: importedData.parent_uuid })
+      }
+      if (importedData.fms && Array.isArray(importedData.fms)) {
+        const filterMapFunctions: IFilterMapFunction[] = importedData.fms.map(
+          (fm: IFilterMapFunctionData, index: number) => {
+            const functionCode = fm.code || ''
+            const importedType = fm.type || 'map'
+
+            return {
+              id: `imported-${Date.now()}-${index}`,
+              type: importedType,
+              function: functionCode,
+              skipped: fm.skip !== undefined ? fm.skip : (fm as any).skipped || false,
+            }
+          },
+        )
+        updateTransformConfig({ filterMap: filterMapFunctions })
+      }
+
+      toast.success('Transform data imported successfully!')
+    } catch (err) {
+      console.error('Failed to import from clipboard:', err)
+      toast.error('Failed to import: Invalid JSON format')
+    }
+  }
+
   return (
     <div className="w-full space-y-0">
-      {/* Split Section */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-6 border-l-4 border-blue-500">
-        <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">Split</h3>
-          <Tooltip content="Regex pattern (e.g., /\n/) or arrow function (e.g., (text) => text.split('\n'))">
-            <span className="w-4 h-4 bg-blue-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
-              ?
-            </span>
-          </Tooltip>
+      {/* Header Bar */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Transform View</h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              importTransformData().catch(console.error)
+            }}
+            className="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium cursor-pointer"
+          >
+            Import
+          </button>
+          <button
+            onClick={() => {
+              exportTransformData().catch(console.error)
+            }}
+            className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium cursor-pointer"
+          >
+            Export
+          </button>
         </div>
-        <CodeBox
-          value={transformConfig.split}
-          onChange={value => updateTransformConfig({ split: value })}
-          placeholder="/\\n/"
-          description="Split Function"
-        />
       </div>
+
+      {/* Split Line */}
+      <div className="border-b border-gray-200 dark:border-gray-700" />
 
       {/* Identifiers Section */}
       <div className="bg-purple-50 dark:bg-purple-900/20 p-6 border-l-4 border-purple-500">
@@ -163,6 +242,24 @@ export const TransformMode: React.FC = () => {
         </div>
       </div>
 
+      {/* Split Section */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-6 border-l-4 border-blue-500">
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">Split</h3>
+          <Tooltip content="Regex pattern (e.g., /\n/) or arrow function (e.g., (text) => text.split('\n'))">
+            <span className="w-4 h-4 bg-blue-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+              ?
+            </span>
+          </Tooltip>
+        </div>
+        <CodeBox
+          value={transformConfig.split}
+          onChange={value => updateTransformConfig({ split: value })}
+          placeholder="/\\n/"
+          description="Split Function"
+        />
+      </div>
+
       {/* Filter/Map Section */}
       <div className="bg-green-50 dark:bg-green-900/20 p-6 border-l-4 border-green-500">
         <div className="space-y-4">
@@ -181,14 +278,14 @@ export const TransformMode: React.FC = () => {
               <div className="flex items-stretch">
                 <button
                   onClick={() => addFilterMapFunction('map')}
-                  className="rounded-l bg-purple-500 px-3 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none"
+                  className="rounded-l bg-purple-500 px-3 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none cursor-pointer"
                 >
                   Add Map
                 </button>
                 <div className="relative flex">
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="rounded-r bg-purple-500 px-2 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none border-l border-purple-400 dark:border-purple-500 flex items-center"
+                    className="rounded-r bg-purple-500 px-2 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none border-l border-purple-400 dark:border-purple-500 flex items-center cursor-pointer"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -210,7 +307,7 @@ export const TransformMode: React.FC = () => {
                           addFilterMapFunction('map')
                           setDropdownOpen(false)
                         }}
-                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer"
                       >
                         Add Map
                       </button>
@@ -219,7 +316,7 @@ export const TransformMode: React.FC = () => {
                           addFilterMapFunction('filter')
                           setDropdownOpen(false)
                         }}
-                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 cursor-pointer"
                       >
                         Add Filter
                       </button>
