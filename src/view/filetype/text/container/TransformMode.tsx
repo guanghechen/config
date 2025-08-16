@@ -333,7 +333,7 @@ export const TransformMode: React.FC = () => {
           value={transformConfig.split}
           onChange={value => updateTransformConfig({ split: value })}
           placeholder="/\\n/"
-          description="Split Function"
+          description=""
         />
       </div>
 
