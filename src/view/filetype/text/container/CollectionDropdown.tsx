@@ -22,9 +22,13 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   const viewmodel = useTextViewViewModel()
   const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
 
-  const transformerListHook = useGetTransformerList()
-  const transformerSaveHook = usePostTransformer()
-  const transformerLoadHook = useGetTransformer()
+  const {
+    refresh: refreshTransformerList,
+    loading: loadingTransformerList,
+    transformers,
+  } = useGetTransformerList()
+  const { save: saveTransformer, loading: savingTransformer } = usePostTransformer()
+  const { load: loadTransformer } = useGetTransformer()
 
   const [showSaveDialog, setShowSaveDialog] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
@@ -48,16 +52,16 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   // Fetch transformer list when dropdown opens
   React.useEffect(() => {
     if (!isOpen) return
-    void transformerListHook.refresh()
-  }, [isOpen, transformerListHook])
+    void refreshTransformerList()
+  }, [isOpen, refreshTransformerList])
 
   const handleSave = async (name: string): Promise<void> => {
     try {
-      await transformerSaveHook.save(name, transformConfig)
+      await saveTransformer(name, transformConfig)
       toast.success('Transformer saved successfully!')
       setShowSaveDialog(false)
       // Refresh the list
-      void transformerListHook.refresh()
+      void refreshTransformerList()
     } catch (error) {
       toast.error('Failed to save transformer')
       console.error('Error saving transformer:', error)
@@ -71,10 +75,10 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
     }
 
     try {
-      await transformerSaveHook.save(transformConfig.name, transformConfig)
+      await saveTransformer(transformConfig.name, transformConfig)
       toast.success(`Transformer "${transformConfig.name}" saved successfully!`)
       // Refresh the list
-      void transformerListHook.refresh()
+      void refreshTransformerList()
     } catch (error) {
       toast.error('Failed to save transformer')
       console.error('Error saving transformer:', error)
@@ -83,7 +87,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
 
   const handleLoadTransformer = async (name: string): Promise<void> => {
     try {
-      const loadedConfig = await transformerLoadHook.load(name)
+      const loadedConfig = await loadTransformer(name)
       viewmodel.transformConfig$.next(loadedConfig)
       toast.success(`Transformer "${name}" loaded successfully!`)
       onClose()
@@ -252,13 +256,13 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                 handleDirectSave().catch(console.error)
               }}
               disabled={
-                transformerSaveHook.loading ||
+                savingTransformer ||
                 !transformConfig.name ||
                 transformConfig.name.trim() === 'unnamed'
               }
               className={cn(
                 'block w-full px-3 py-2 text-left text-sm cursor-pointer transition-colors duration-200',
-                transformerSaveHook.loading ||
+                savingTransformer ||
                   !transformConfig.name ||
                   transformConfig.name.trim() === 'unnamed'
                   ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
@@ -280,7 +284,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                   <polyline points="17,21 17,13 7,13 7,21" />
                   <polyline points="7,3 7,8 15,8" />
                 </svg>
-                {transformerSaveHook.loading ? 'Saving...' : `Save (${transformConfig.name})`}
+                {savingTransformer ? 'Saving...' : `Save (${transformConfig.name})`}
               </div>
             </button>
             <button
@@ -362,17 +366,17 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
 
         {/* List Section */}
         <div className="p-3">
-          {transformerListHook.loading ? (
+          {loadingTransformerList ? (
             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
               Loading...
             </div>
-          ) : transformerListHook.transformers.length === 0 ? (
+          ) : transformers.length === 0 ? (
             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
               No saved transformers
             </div>
           ) : (
             <div className="max-h-40 overflow-y-auto space-y-1">
-              {transformerListHook.transformers.map(transformer => (
+              {transformers.map(transformer => (
                 <button
                   key={transformer.name}
                   onClick={() => {
@@ -393,7 +397,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
         <SaveTransformerDialog
           onSave={handleSave}
           onClose={() => setShowSaveDialog(false)}
-          isSaving={transformerSaveHook.loading}
+          isSaving={savingTransformer}
           saveButtonRef={saveButtonRef}
         />
       )}

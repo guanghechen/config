@@ -11,7 +11,9 @@ export async function getWorkspaces(): Promise<IWorkspaceItem[]> {
   return data.workspaces
 }
 
-export const useGetWorkspaces = (tick: number): { loading: boolean; workspaces: IWorkspaceItem[] } => {
+export const useGetWorkspaces = (
+  tick: number,
+): { loading: boolean; workspaces: IWorkspaceItem[] } => {
   const [loading, setLoading] = React.useState<boolean>(true)
   const [workspaces, setWorkspaces] = React.useState<IWorkspaceItem[]>([])
   React.useEffect(() => {

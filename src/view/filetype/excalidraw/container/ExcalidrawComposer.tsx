@@ -31,7 +31,7 @@ interface IExcalidrawData {
 
 export const ExcalidrawComposer: React.FC = () => {
   const { content, theme, workspace, filepath } = useExcalidrawViewState()
-  const fileSaveHook = usePostFile()
+  const { save: saveFile } = usePostFile()
   const excalidrawRef = React.useRef<ExcalidrawImperativeAPI>(null)
   const [elements, setElements] = React.useState<ReadonlyArray<ExcalidrawElement>>([])
   const excalidrawTheme = theme === SiteTheme.DARKEN ? 'dark' : 'light'
@@ -86,7 +86,7 @@ export const ExcalidrawComposer: React.FC = () => {
           },
         }
 
-        await fileSaveHook.save({
+        await saveFile({
           workspace,
           filepath,
           content: JSON.stringify(excalidrawData, null, 2),
