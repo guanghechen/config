@@ -10,6 +10,7 @@ interface IProps {
   readonly onRemove: () => void
   readonly onMoveUp: () => void
   readonly onMoveDown: () => void
+  readonly onDuplicate: () => void
   readonly onDragStart?: (index: number) => void
   readonly onDragOver?: (index: number) => void
   readonly onDrop?: (fromIndex: number, toIndex: number) => void
@@ -23,6 +24,7 @@ export const TransformerItem: React.FC<IProps> = ({
   onRemove,
   onMoveUp,
   onMoveDown,
+  onDuplicate,
   onDragStart,
   onDragOver,
   onDrop,
@@ -184,6 +186,25 @@ export const TransformerItem: React.FC<IProps> = ({
               className="w-6 h-6 flex items-center justify-center text-xs bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 select-none cursor-pointer"
             >
               ↓
+            </button>
+            <button
+              onClick={onDuplicate}
+              className="w-6 h-6 flex items-center justify-center text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-900/20 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500 rounded transition-colors select-none cursor-pointer"
+              title="Duplicate function"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
             </button>
           </div>
 

@@ -84,6 +84,22 @@ export const TransformMode: React.FC = () => {
     updateTransformConfig({ transformers: updated })
   }
 
+  const duplicateTransformerFunction = (id: string): void => {
+    const current = transformConfig.transformers
+    const index = current.findIndex(func => func.id === id)
+    if (index === -1) return
+
+    const originalFunc = current[index]
+    const duplicatedFunc: ITransformerFunction = {
+      ...originalFunc,
+      id: `${originalFunc.type}-${Date.now()}`,
+    }
+
+    const updated = [...current]
+    updated.splice(index + 1, 0, duplicatedFunc)
+    updateTransformConfig({ transformers: updated })
+  }
+
   const handleDragStart = (_index: number): void => {
     setIsDragging(true)
   }
@@ -404,6 +420,7 @@ export const TransformMode: React.FC = () => {
                   onRemove={() => removeTransformerFunction(func.id)}
                   onMoveUp={() => moveFunction(func.id, 'up')}
                   onMoveDown={() => moveFunction(func.id, 'down')}
+                  onDuplicate={() => duplicateTransformerFunction(func.id)}
                   onDragStart={handleDragStart}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}

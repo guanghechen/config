@@ -78,7 +78,7 @@ export const transformTextToNodes = (text: string, config: ITransformConfig): IT
 
       const nodes: INode[] = processedResult.map((item: any, index: number) => {
         const parentUuidResult = parentUuidFunc(item, index)
-        
+
         // Ensure parent_uuid is always an array
         let parent_uuid: string[]
         if (parentUuidResult === null || parentUuidResult === undefined) {
