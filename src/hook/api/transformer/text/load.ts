@@ -21,7 +21,7 @@ export async function getTransformer(name: string): Promise<ITransformConfig> {
     name: transformer.name,
     split: transformer.split || '\n',
     uuidFunction: transformer.uuidFunction || '',
-    parentUuidFunction: transformer.parentUuidFunction || '',
+    parentUuidFunction: transformer.parentUuidFunction || '() => []',
     transformers: (transformer.functions || transformer.transformers || []).map(
       (func: any, index: number) => ({
         id: `loaded-${Date.now()}-${index}`,

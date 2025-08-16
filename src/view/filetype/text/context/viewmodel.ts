@@ -17,7 +17,7 @@ const DEFAULT_TRANSFORM_CONFIG: ITransformConfig = {
   split: '/\\n/',
   transformers: [],
   uuidFunction: '(item, index) => `item-${index}`',
-  parentUuidFunction: '() => null',
+  parentUuidFunction: '() => []',
 }
 
 const DEFAULT_TEXT_VIEW_DATA: ITextViewData = {

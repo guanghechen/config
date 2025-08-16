@@ -79,8 +79,10 @@ export const Composer: React.FC<IProps> = props => {
                     >
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         <span className="font-mono">UUID: {node.uuid}</span>
-                        {node.parent_uuid && (
-                          <span className="ml-4 font-mono">Parent: {node.parent_uuid}</span>
+                        {node.parent_uuid.length > 0 && (
+                          <span className="ml-4 font-mono">
+                            Parent{node.parent_uuid.length > 1 ? 's' : ''}: {node.parent_uuid.join(', ')}
+                          </span>
                         )}
                       </div>
                       <div className="font-mono text-sm text-gray-800 dark:text-gray-200">

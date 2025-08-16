@@ -28,6 +28,6 @@ export interface ITransformConfig {
 
 export interface INode {
   readonly uuid: string
-  readonly parent_uuid: string | null
+  readonly parent_uuid: string[]
   readonly data: any
 }

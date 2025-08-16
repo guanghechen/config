@@ -288,7 +288,7 @@ export const TransformMode: React.FC = () => {
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Parent UUID Function
               </span>
-              <Tooltip content="Function to generate parent ID for each item">
+              <Tooltip content="Function to generate parent IDs array for each item">
                 <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
                   ?
                 </span>
@@ -297,7 +297,7 @@ export const TransformMode: React.FC = () => {
             <CodeBox
               value={transformConfig.parentUuidFunction}
               onChange={value => updateTransformConfig({ parentUuidFunction: value })}
-              placeholder="() => null"
+              placeholder="() => [] // Return array of parent UUIDs"
             />
           </div>
         </div>
