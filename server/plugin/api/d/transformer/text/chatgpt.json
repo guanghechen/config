@@ -1,0 +1,28 @@
+{
+  "name": "chatgpt",
+  "split": "/\\n/",
+  "functions": [
+    {
+      "type": "filter",
+      "code": "line => /^data: /.test(line)",
+      "skip": false
+    },
+    {
+      "type": "filter",
+      "code": "line => line !== 'data: [DONE]'",
+      "skip": false
+    },
+    {
+      "type": "map",
+      "code": "line => line.slice(6)",
+      "skip": false
+    },
+    {
+      "type": "map",
+      "code": "line => JSON.parse(line)",
+      "skip": false
+    }
+  ],
+  "uuidFunction": "(_, index) => `${index}`",
+  "parentUuidFunction": "() => []"
+}
