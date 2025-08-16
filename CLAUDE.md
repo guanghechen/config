@@ -8,6 +8,7 @@ The following rules are supreme principles that must be followed at all times re
 4. **MUST**: Write clean and concise code, avoid unnecessary comments.
 5. **MUST**: Strictly adhere to the single responsibility principle, keep each file doing as few things as possible.
 6. **MUST**: Keep processing until the task is completed or an unsolvable problem is encountered, without stopping in between.
+7. **MUST**: You are not allowed to run any npm or yarn script except the `yarn format`, `yarn lintfix` and the `yarn add`.
 
 # Recommended Requirements
 
