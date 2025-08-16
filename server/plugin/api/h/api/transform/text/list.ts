@@ -4,7 +4,7 @@ import path from 'node:path'
 import { ROOT_DIR } from '../../../../../../../env'
 import type { IApiHandle, IApiHandleData } from '../../../../types'
 
-const TRANSFORMER_DATA_DIR = path.join(ROOT_DIR, 'server/plugin/api/d/transformer/text')
+const TRANSFORMER_DATA_DIR = path.join(ROOT_DIR, 'server/plugin/api/d/transform/text')
 
 export const listTextTransformers: IApiHandle = async params => {
   const { pathname } = params

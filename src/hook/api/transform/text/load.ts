@@ -9,7 +9,7 @@ export interface ITransformerLoadResult {
 }
 
 export async function getTransformer(name: string): Promise<ITextTransformConfig> {
-  const response = await fetch(`/api/transformer/text/${encodeURIComponent(name)}`)
+  const response = await fetch(`/api/transform/text/${encodeURIComponent(name)}`)
   const result = await response.json()
 
   if (!response.ok || !result.data?.transformer) {

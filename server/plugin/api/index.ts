@@ -7,8 +7,8 @@ import { saveExcalidrawFile } from './h/api/excalidraw/save'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
 import { switchFile } from './h/api/file-switch'
-import { getTextTransformer } from './h/api/transformer/text/:name'
-import { listTextTransformers } from './h/api/transformer/text/list'
+import { getTextTransformer } from './h/api/transform/text/:name'
+import { listTextTransformers } from './h/api/transform/text/list'
 import { list_workspace_files } from './h/api/workspace/files'
 import { list_workspaces } from './h/api/workspaces'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
@@ -18,7 +18,7 @@ const handle_map: Record<string, IApiHandle> = {
   '/api/file/raw': fetchFileRaw,
   '/api/file-switch': switchFile,
   '/api/excalidraw/save': saveExcalidrawFile,
-  '/api/transformer/text/list': listTextTransformers,
+  '/api/transform/text/list': listTextTransformers,
   '/api/workspaces': list_workspaces,
   '/api/workspace/files': list_workspace_files,
 }
@@ -30,8 +30,8 @@ const getHandleForPath = (pathname: string): IApiHandle | undefined => {
     return handle_map[pathname]
   }
 
-  // Check for transformer path parameter pattern: /api/transformer/text/:name
-  if (pathname.startsWith('/api/transformer/text/') && pathname !== '/api/transformer/text/list') {
+  // Check for transformer path parameter pattern: /api/transform/text/:name
+  if (pathname.startsWith('/api/transform/text/') && pathname !== '/api/transform/text/list') {
     return getTextTransformer
   }
 

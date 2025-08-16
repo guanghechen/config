@@ -32,7 +32,7 @@ export async function postTransformer(name: string, config: ITextTransformConfig
     })),
   }
 
-  const response = await fetch(`/api/transformer/text/${encodeURIComponent(name.trim())}`, {
+  const response = await fetch(`/api/transform/text/${encodeURIComponent(name.trim())}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

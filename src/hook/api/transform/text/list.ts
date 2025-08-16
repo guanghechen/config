@@ -13,7 +13,7 @@ export interface ITransformerListResult {
 }
 
 export async function getTransformerList(): Promise<ITransformerListItem[]> {
-  const response = await fetch('/api/transformer/text/list')
+  const response = await fetch('/api/transform/text/list')
   const result = await response.json()
 
   if (response.ok && result.data?.transformers) {

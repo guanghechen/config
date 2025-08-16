@@ -2,9 +2,9 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { useGetTransformerList } from '@/hook/api/transformer/text/list'
-import { useGetTransformer } from '@/hook/api/transformer/text/load'
-import { usePostTransformer } from '@/hook/api/transformer/text/save'
+import { useGetTransformerList } from '@/hook/api/transform/text/list'
+import { useGetTransformer } from '@/hook/api/transform/text/load'
+import { usePostTransformer } from '@/hook/api/transform/text/save'
 import type {
   ITextTransformConfig,
   ITextTransformExportData,
