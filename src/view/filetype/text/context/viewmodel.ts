@@ -13,7 +13,7 @@ interface IProps {
 }
 
 const DEFAULT_TRANSFORM_CONFIG: ITransformConfig = {
-  name: 'default',
+  name: 'unnamed',
   split: '/\\n/',
   transformers: [],
   uuidFunction: '(item, index) => `item-${index}`',

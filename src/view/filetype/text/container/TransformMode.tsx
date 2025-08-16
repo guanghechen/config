@@ -1,15 +1,11 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import type {
-  ITransformConfig,
-  ITransformExportData,
-  ITransformerFunction,
-  ITransformerFunctionData,
-} from '@/shared/transformer'
+import type { ITransformConfig, ITransformerFunction } from '@/shared/transformer'
 import { useTextViewViewModel } from '../context'
 import { transformTextToNodes } from '../util/transform'
 import { CodeBox } from './CodeBox'
+import { CollectionDropdown } from './CollectionDropdown'
 import { TransformerItem } from './TransformerItem'
 
 interface ITooltipProps {
@@ -41,6 +37,9 @@ export const TransformMode: React.FC = () => {
   const content: string | null = useStateValue(viewmodel.content$)
   const [dropdownOpen, setDropdownOpen] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
+  const [collectionDropdownOpen, setCollectionDropdownOpen] = React.useState(false)
+  const [isEditingName, setIsEditingName] = React.useState(false)
+  const [editingName, setEditingName] = React.useState('')
 
   const updateTransformConfig = (updates: Partial<ITransformConfig>): void => {
     const current = viewmodel.transformConfig$.getSnapshot()
@@ -108,27 +107,6 @@ export const TransformMode: React.FC = () => {
     setIsDragging(false)
   }
 
-  const exportTransformData = async (): Promise<void> => {
-    const exportData: ITransformExportData = {
-      split: transformConfig.split,
-      uuid: transformConfig.uuidFunction,
-      parent_uuid: transformConfig.parentUuidFunction,
-      transformers: transformConfig.transformers.map(transformer => ({
-        skip: transformer.skipped || false,
-        code: transformer.function,
-        type: transformer.type,
-      })),
-    }
-
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
-      toast.success('Transform data copied to clipboard successfully!')
-    } catch (err) {
-      console.error('Failed to copy to clipboard:', err)
-      toast.error('Failed to copy to clipboard')
-    }
-  }
-
   const executeTransform = (): void => {
     if (!content) {
       toast.error('No content to transform')
@@ -146,81 +124,136 @@ export const TransformMode: React.FC = () => {
     }
   }
 
-  const importTransformData = async (): Promise<void> => {
-    try {
-      const clipboardText = await navigator.clipboard.readText()
+  const handleStartEditName = (): void => {
+    setEditingName(transformConfig.name)
+    setIsEditingName(true)
+  }
 
-      if (!clipboardText.trim()) {
-        toast.error('Clipboard is empty')
-        return
-      }
+  const handleSaveName = (): void => {
+    if (editingName.trim()) {
+      updateTransformConfig({ name: editingName.trim() })
+    }
+    setIsEditingName(false)
+    setEditingName('')
+  }
 
-      const importedData: ITransformExportData = JSON.parse(clipboardText)
+  const handleCancelEditName = (): void => {
+    setIsEditingName(false)
+    setEditingName('')
+  }
 
-      if (importedData.split) {
-        updateTransformConfig({ split: importedData.split })
-      }
-      if (importedData.uuid) {
-        updateTransformConfig({ uuidFunction: importedData.uuid })
-      }
-      if (importedData.parent_uuid) {
-        updateTransformConfig({ parentUuidFunction: importedData.parent_uuid })
-      }
-      if (importedData.transformers && Array.isArray(importedData.transformers)) {
-        const transformerFunctions: ITransformerFunction[] = importedData.transformers.map(
-          (transformer: ITransformerFunctionData, index: number) => {
-            const functionCode = transformer.code || ''
-            const importedType = transformer.type || 'map'
-
-            return {
-              id: `imported-${Date.now()}-${index}`,
-              type: importedType,
-              function: functionCode,
-              skipped:
-                transformer.skip !== undefined
-                  ? transformer.skip
-                  : (transformer as any).skipped || false,
-            }
-          },
-        )
-        updateTransformConfig({ transformers: transformerFunctions })
-      }
-
-      toast.success('Transform data imported successfully!')
-    } catch (err) {
-      console.error('Failed to import from clipboard:', err)
-      toast.error('Failed to import: Invalid JSON format')
+  const handleNameKeyDown = (e: React.KeyboardEvent): void => {
+    if (e.key === 'Enter') {
+      handleSaveName()
+    } else if (e.key === 'Escape') {
+      handleCancelEditName()
     }
   }
 
   return (
     <div className="w-full space-y-0">
-      {/* Header Bar */}
       <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Transform View</h2>
+        <div className="flex items-center gap-3">
+          {isEditingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={editingName}
+                onChange={e => setEditingName(e.target.value)}
+                onKeyDown={handleNameKeyDown}
+                onBlur={handleSaveName}
+                className="px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 dark:text-gray-300"
+                placeholder="Transformer name"
+                autoFocus={true}
+              />
+              <button
+                onClick={handleSaveName}
+                className="p-1 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                title="Save name"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </button>
+              <button
+                onClick={handleCancelEditName}
+                className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                title="Cancel"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                {transformConfig.name}
+              </span>
+              <button
+                onClick={handleStartEditName}
+                className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                title="Edit transformer name"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={executeTransform}
-            className="px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 text-sm font-medium cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors duration-200 cursor-pointer"
           >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="5,3 19,12 5,21" />
+            </svg>
             Run
           </button>
-          <button
-            onClick={() => {
-              importTransformData().catch(console.error)
-            }}
-            className="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 text-sm font-medium cursor-pointer"
-          >
-            Import
-          </button>
-          <button
-            onClick={() => {
-              exportTransformData().catch(console.error)
-            }}
-            className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-sm font-medium cursor-pointer"
-          >
-            Export
-          </button>
+          <CollectionDropdown
+            isOpen={collectionDropdownOpen}
+            onClose={() => setCollectionDropdownOpen(false)}
+            onToggle={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
+          />
         </div>
       </div>
 

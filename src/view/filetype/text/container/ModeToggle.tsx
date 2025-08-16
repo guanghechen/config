@@ -13,45 +13,47 @@ export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
 
   return (
     <div
-      className={cn(
-        'fixed right-4 z-50 flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95',
-        topbarVisible ? 'top-16' : 'top-4',
-      )}
-      title={`Current mode: ${mode}`}
+      className="fixed right-4 z-50 flex items-center gap-1 transition-all"
+      style={{ top: topbarVisible ? '4rem' : '1rem' }}
     >
-      <button
-        className={cn(
-          'box-border px-3 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0 cursor-pointer',
-          (mode & ModeEnum.VIEW) !== 0
-            ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner dark:bg-indigo-600 dark:bg-opacity-90'
-            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
-        )}
-        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.VIEW)}
+      <div
+        className="flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95"
+        title={`Current mode: ${mode}`}
       >
-        view
-      </button>
-      <button
-        className={cn(
-          'box-border px-3 transition-all duration-200 focus:outline-none focus:ring-0 cursor-pointer',
-          (mode & ModeEnum.RAW) !== 0
-            ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner dark:bg-blue-600 dark:bg-opacity-90'
-            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
-        )}
-        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.RAW)}
-      >
-        raw
-      </button>
-      <button
-        className={cn(
-          'box-border px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0 cursor-pointer',
-          (mode & ModeEnum.TRANSFORM) !== 0
-            ? 'bg-green-500 bg-opacity-90 font-medium text-white shadow-inner dark:bg-green-600 dark:bg-opacity-90'
-            : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
-        )}
-        onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.TRANSFORM)}
-      >
-        transform
-      </button>
+        <button
+          className={cn(
+            'box-border px-3 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0 cursor-pointer',
+            (mode & ModeEnum.VIEW) !== 0
+              ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner dark:bg-indigo-600 dark:bg-opacity-90'
+              : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+          )}
+          onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.VIEW)}
+        >
+          view
+        </button>
+        <button
+          className={cn(
+            'box-border px-3 transition-all duration-200 focus:outline-none focus:ring-0 cursor-pointer',
+            (mode & ModeEnum.RAW) !== 0
+              ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner dark:bg-blue-600 dark:bg-opacity-90'
+              : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+          )}
+          onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.RAW)}
+        >
+          raw
+        </button>
+        <button
+          className={cn(
+            'box-border px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0 cursor-pointer',
+            (mode & ModeEnum.TRANSFORM) !== 0
+              ? 'bg-green-500 bg-opacity-90 font-medium text-white shadow-inner dark:bg-green-600 dark:bg-opacity-90'
+              : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+          )}
+          onClick={() => viewmodel.mode$.next(viewmodel.mode$.getSnapshot() ^ ModeEnum.TRANSFORM)}
+        >
+          transform
+        </button>
+      </div>
     </div>
   )
 }
