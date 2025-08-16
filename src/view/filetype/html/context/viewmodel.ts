@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IHtmlFileData } from '@/util/fetch'
+import type { IHtmlFileData } from '@/hook/api/file'
 import type { IHtmlViewData } from './types'
 import { ModeEnum } from './types'
 

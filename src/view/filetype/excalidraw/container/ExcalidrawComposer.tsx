@@ -8,6 +8,7 @@ import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/t
 import { useEventCallback } from '@guanghechen/react-hooks'
 import React from 'react'
 import { SiteTheme } from '@/context/site'
+import { usePostFile } from '@/hook/api/file/save'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
 import { useExcalidrawViewState } from '../context'
 import '@excalidraw/excalidraw/index.css'
@@ -30,6 +31,7 @@ interface IExcalidrawData {
 
 export const ExcalidrawComposer: React.FC = () => {
   const { content, theme, workspace, filepath } = useExcalidrawViewState()
+  const fileSaveHook = usePostFile()
   const excalidrawRef = React.useRef<ExcalidrawImperativeAPI>(null)
   const [elements, setElements] = React.useState<ReadonlyArray<ExcalidrawElement>>([])
   const excalidrawTheme = theme === SiteTheme.DARKEN ? 'dark' : 'light'
@@ -84,19 +86,11 @@ export const ExcalidrawComposer: React.FC = () => {
           },
         }
 
-        const response = await fetch('/api/file/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            workspace,
-            filepath,
-            content: JSON.stringify(excalidrawData, null, 2),
-          }),
+        await fileSaveHook.save({
+          workspace,
+          filepath,
+          content: JSON.stringify(excalidrawData, null, 2),
         })
-
-        if (!response.ok) {
-          throw new Error(`Failed to save: ${response.status} ${response.statusText}`)
-        }
       } catch (error) {
         console.error('Failed to save:', error)
       }

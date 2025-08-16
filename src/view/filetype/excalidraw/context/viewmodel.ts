@@ -2,7 +2,7 @@ import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { SiteTheme } from '@/context/site'
-import type { IJsonFileData } from '@/util/fetch'
+import type { IJsonFileData } from '@/hook/api/file'
 
 export interface IExcalidrawViewViewModelProps {
   readonly elements?: ReadonlyArray<ExcalidrawElement>

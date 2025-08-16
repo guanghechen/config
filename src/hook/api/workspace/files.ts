@@ -1,6 +1,6 @@
 import React from 'react'
 
-export async function fetchWorkspaceFiles(workspace: string | null): Promise<string[]> {
+export async function getWorkspaceFiles(workspace: string | null): Promise<string[]> {
   if (!workspace) return []
 
   const ups = new URLSearchParams()
@@ -16,7 +16,7 @@ export async function fetchWorkspaceFiles(workspace: string | null): Promise<str
   return data.files
 }
 
-export const useWorkspaceFiles = (
+export const useGetWorkspaceFiles = (
   workspace: string | null,
   tick: number,
 ): { loading: boolean; files: string[] } => {
@@ -30,7 +30,7 @@ export const useWorkspaceFiles = (
       setLoading(true)
 
       try {
-        const _files: string[] = await fetchWorkspaceFiles(workspace)
+        const _files: string[] = await getWorkspaceFiles(workspace)
         if (!cancelled) setFiles(_files)
       } finally {
         setLoading(false)

@@ -1,6 +1,6 @@
 import React from 'react'
-import type { IFetchFileData, IFetchFileResult } from '@/util/fetch'
-import { fetchFile } from '@/util/fetch'
+import type { IFetchFileData, IFetchFileResult } from '@/hook/api/file'
+import { getFile } from '@/hook/api/file'
 
 export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,
@@ -25,7 +25,7 @@ export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
         ...prevState,
         loading: true,
       }))
-      const { data, text, url, error } = await fetchFile<T>(workspace, filepath)
+      const { data, text, url, error } = await getFile<T>(workspace, filepath)
       setState({ loading: false, data, text, url, error })
     }
     void handle()

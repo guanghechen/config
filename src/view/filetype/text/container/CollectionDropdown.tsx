@@ -2,17 +2,15 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { toast } from 'react-toastify'
+import { useGetTransformerList } from '@/hook/api/transformer/text/list'
+import { useGetTransformer } from '@/hook/api/transformer/text/load'
+import { usePostTransformer } from '@/hook/api/transformer/text/save'
 import type {
   ITransformConfig,
   ITransformExportData,
   ITransformerFunctionData,
 } from '@/shared/transformer'
 import { useTextViewViewModel } from '../context'
-
-interface ITransformerListItem {
-  readonly name: string
-  readonly description: string | null
-}
 
 interface IProps {
   readonly isOpen: boolean
@@ -24,9 +22,10 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   const viewmodel = useTextViewViewModel()
   const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
 
-  const [transformerList, setTransformerList] = React.useState<ITransformerListItem[]>([])
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isSaving, setIsSaving] = React.useState(false)
+  const transformerListHook = useGetTransformerList()
+  const transformerSaveHook = usePostTransformer()
+  const transformerLoadHook = useGetTransformer()
+
   const [showSaveDialog, setShowSaveDialog] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const saveButtonRef = React.useRef<HTMLButtonElement>(null)
@@ -49,78 +48,19 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   // Fetch transformer list when dropdown opens
   React.useEffect(() => {
     if (!isOpen) return
-
-    const fetchTransformers = async (): Promise<void> => {
-      setIsLoading(true)
-      try {
-        const response = await fetch('/api/transformer/text/list')
-        const result = await response.json()
-
-        if (response.ok && result.data?.transformers) {
-          setTransformerList(result.data.transformers)
-        } else {
-          toast.error(result.error || 'Failed to load transformers')
-          setTransformerList([])
-        }
-      } catch (error) {
-        toast.error('Failed to fetch transformer list')
-        setTransformerList([])
-        console.error('Error fetching transformers:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchTransformers().catch(console.error)
-  }, [isOpen])
+    void transformerListHook.refresh()
+  }, [isOpen, transformerListHook])
 
   const handleSave = async (name: string): Promise<void> => {
-    if (!name.trim()) {
-      toast.error('Please enter a name for the transformer')
-      return
-    }
-
-    setIsSaving(true)
     try {
-      const saveData = {
-        name: name.trim(),
-        split: transformConfig.split,
-        functions: transformConfig.transformers.map(transformer => ({
-          type: transformer.type,
-          code: transformer.function,
-          skip: transformer.skipped || false,
-        })),
-        uuidFunction: transformConfig.uuidFunction,
-        parentUuidFunction: transformConfig.parentUuidFunction,
-      }
-
-      const response = await fetch(`/api/transformer/text/${encodeURIComponent(name.trim())}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(saveData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        toast.success('Transformer saved successfully!')
-        setShowSaveDialog(false)
-        // Refresh the list
-        const listResponse = await fetch('/api/transformer/text/list')
-        const listResult = await listResponse.json()
-        if (listResponse.ok && listResult.data?.transformers) {
-          setTransformerList(listResult.data.transformers)
-        }
-      } else {
-        toast.error(result.error || 'Failed to save transformer')
-      }
+      await transformerSaveHook.save(name, transformConfig)
+      toast.success('Transformer saved successfully!')
+      setShowSaveDialog(false)
+      // Refresh the list
+      void transformerListHook.refresh()
     } catch (error) {
       toast.error('Failed to save transformer')
       console.error('Error saving transformer:', error)
-    } finally {
-      setIsSaving(false)
     }
   }
 
@@ -130,82 +70,23 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
       return
     }
 
-    setIsSaving(true)
     try {
-      const saveData = {
-        name: transformConfig.name.trim(),
-        split: transformConfig.split,
-        functions: transformConfig.transformers.map(transformer => ({
-          type: transformer.type,
-          code: transformer.function,
-          skip: transformer.skipped || false,
-        })),
-        uuidFunction: transformConfig.uuidFunction,
-        parentUuidFunction: transformConfig.parentUuidFunction,
-      }
-
-      const response = await fetch(
-        `/api/transformer/text/${encodeURIComponent(transformConfig.name.trim())}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(saveData),
-        },
-      )
-
-      const result = await response.json()
-
-      if (response.ok) {
-        toast.success(`Transformer "${transformConfig.name}" saved successfully!`)
-        // Refresh the list
-        const listResponse = await fetch('/api/transformer/text/list')
-        const listResult = await listResponse.json()
-        if (listResponse.ok && listResult.data?.transformers) {
-          setTransformerList(listResult.data.transformers)
-        }
-      } else {
-        toast.error(result.error || 'Failed to save transformer')
-      }
+      await transformerSaveHook.save(transformConfig.name, transformConfig)
+      toast.success(`Transformer "${transformConfig.name}" saved successfully!`)
+      // Refresh the list
+      void transformerListHook.refresh()
     } catch (error) {
       toast.error('Failed to save transformer')
       console.error('Error saving transformer:', error)
-    } finally {
-      setIsSaving(false)
     }
   }
 
   const handleLoadTransformer = async (name: string): Promise<void> => {
     try {
-      const response = await fetch(`/api/transformer/text/${encodeURIComponent(name)}`)
-      const result = await response.json()
-
-      if (response.ok && result.data?.transformer) {
-        const transformer = result.data.transformer
-
-        // Update the transform config with loaded data
-        const loadedConfig: ITransformConfig = {
-          name: transformer.name,
-          split: transformer.split || transformConfig.split,
-          uuidFunction: transformer.uuidFunction || transformConfig.uuidFunction,
-          parentUuidFunction: transformer.parentUuidFunction || transformConfig.parentUuidFunction,
-          transformers: (transformer.functions || transformer.transformers || []).map(
-            (func: any, index: number) => ({
-              id: `loaded-${Date.now()}-${index}`,
-              type: func.type || 'map',
-              function: func.code || func.function || '',
-              skipped: func.skip !== undefined ? func.skip : func.skipped || false,
-            }),
-          ),
-        }
-
-        viewmodel.transformConfig$.next(loadedConfig)
-        toast.success(`Transformer "${name}" loaded successfully!`)
-        onClose()
-      } else {
-        toast.error(result.error || 'Failed to load transformer')
-      }
+      const loadedConfig = await transformerLoadHook.load(name)
+      viewmodel.transformConfig$.next(loadedConfig)
+      toast.success(`Transformer "${name}" loaded successfully!`)
+      onClose()
     } catch (error) {
       toast.error('Failed to load transformer')
       console.error('Error loading transformer:', error)
@@ -371,11 +252,15 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                 handleDirectSave().catch(console.error)
               }}
               disabled={
-                isSaving || !transformConfig.name || transformConfig.name.trim() === 'unnamed'
+                transformerSaveHook.loading ||
+                !transformConfig.name ||
+                transformConfig.name.trim() === 'unnamed'
               }
               className={cn(
                 'block w-full px-3 py-2 text-left text-sm cursor-pointer transition-colors duration-200',
-                isSaving || !transformConfig.name || transformConfig.name.trim() === 'unnamed'
+                transformerSaveHook.loading ||
+                  !transformConfig.name ||
+                  transformConfig.name.trim() === 'unnamed'
                   ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
               )}
@@ -395,7 +280,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                   <polyline points="17,21 17,13 7,13 7,21" />
                   <polyline points="7,3 7,8 15,8" />
                 </svg>
-                {isSaving ? 'Saving...' : `Save (${transformConfig.name})`}
+                {transformerSaveHook.loading ? 'Saving...' : `Save (${transformConfig.name})`}
               </div>
             </button>
             <button
@@ -477,17 +362,17 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
 
         {/* List Section */}
         <div className="p-3">
-          {isLoading ? (
+          {transformerListHook.loading ? (
             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
               Loading...
             </div>
-          ) : transformerList.length === 0 ? (
+          ) : transformerListHook.transformers.length === 0 ? (
             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
               No saved transformers
             </div>
           ) : (
             <div className="max-h-40 overflow-y-auto space-y-1">
-              {transformerList.map(transformer => (
+              {transformerListHook.transformers.map(transformer => (
                 <button
                   key={transformer.name}
                   onClick={() => {
@@ -496,11 +381,6 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                   className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200"
                 >
                   <div className="font-medium">{transformer.name}</div>
-                  {transformer.description && (
-                    <div className="text-gray-500 dark:text-gray-400 truncate">
-                      {transformer.description}
-                    </div>
-                  )}
                 </button>
               ))}
             </div>
@@ -513,7 +393,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
         <SaveTransformerDialog
           onSave={handleSave}
           onClose={() => setShowSaveDialog(false)}
-          isSaving={isSaving}
+          isSaving={transformerSaveHook.loading}
           saveButtonRef={saveButtonRef}
         />
       )}

@@ -11,8 +11,8 @@ import {
   FileTreeViewModel,
 } from '@/component/filetree'
 import { PRESET_CLASSES } from '@/constant/classes'
+import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { useSingleton } from '@/hook/useSingleton'
-import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
 import { useWorkspaceViewmodel } from '../../context'
 
 export const FileTree: React.FC = () => {
@@ -69,7 +69,7 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
 
   const filepath: string | null = useStateValue(workspaceVM.filepath$)
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
-  const { files } = useWorkspaceFiles(workspace, 0)
+  const { files } = useGetWorkspaceFiles(workspace, 0)
 
   React.useEffect(() => {
     viewmodel.currentFilepath$.next(filepath)

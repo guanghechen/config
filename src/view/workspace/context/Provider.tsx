@@ -4,8 +4,8 @@ import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { SiteTheme, useSiteTheme } from '@/context/site'
+import { useGetWorkspaces } from '@/hook/api/workspaces'
 import { useSingleton } from '@/hook/useSingleton'
-import { useWorkspaces } from '@/hook/useWorkspaces'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
   IResponsePayloadFileChanged,
@@ -133,7 +133,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath: string | null = useStateValue(viewmodel.filepath$)
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
-  const { workspaces } = useWorkspaces(workspacesDirtyTick)
+  const { workspaces } = useGetWorkspaces(workspacesDirtyTick)
 
   React.useEffect(() => {
     const computed = Computed.fromObservables(

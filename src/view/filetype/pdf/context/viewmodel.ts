@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IPdfFileData } from '@/util/fetch'
+import type { IPdfFileData } from '@/hook/api/file'
 import type { IPdfViewData } from './types'
 
 interface IProps {

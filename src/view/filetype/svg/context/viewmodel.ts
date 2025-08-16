@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { ISvgFileData } from '@/util/fetch'
+import type { ISvgFileData } from '@/hook/api/file'
 import type { ISvgViewData, ISvgViewPosition } from './types'
 
 interface IProps {

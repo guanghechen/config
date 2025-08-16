@@ -3,7 +3,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { FileTypeIcon } from '@/component/icon/filetype'
-import { useWorkspaceFiles } from '@/hook/useWorkspaceFiles'
+import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { useKeyBinding } from '@/keybindings'
 import { useWorkspaceViewmodel } from '../context'
 
@@ -16,7 +16,7 @@ interface FileItem {
 export const FileSearch: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
   const workspace = useStateValue(viewmodel.workspace$)
-  const { files } = useWorkspaceFiles(workspace, 0)
+  const { files } = useGetWorkspaceFiles(workspace, 0)
 
   const [isVisible, setIsVisible] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')

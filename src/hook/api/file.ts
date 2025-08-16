@@ -1,9 +1,6 @@
-// @deprecated This file is deprecated. Use the hooks from @/hook/api instead.
-// Types and functions in this file have been moved to @/hook/api/file.ts
-// This file is kept temporarily for backward compatibility.
-
 import type { Root } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
+import React from 'react'
 
 export interface IMarkdownFileData {
   readonly ast: Root
@@ -57,7 +54,7 @@ export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly error?: string | undefined
 }
 
-export async function fetchFile<T extends IFetchFileData = IFetchFileData>(
+export async function getFile<T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,
   filepath: string,
 ): Promise<IFetchFileResult<T>> {
@@ -65,7 +62,7 @@ export async function fetchFile<T extends IFetchFileData = IFetchFileData>(
 
   try {
     const query: Record<string, string> = { filepath }
-    const params = new URLSearchParams(query) // Add your query parameters here
+    const params = new URLSearchParams(query)
     if (workspace) params.set('workspace', workspace)
 
     const response = await fetch(`/api/file?${params}`)
@@ -109,4 +106,44 @@ export async function fetchFile<T extends IFetchFileData = IFetchFileData>(
     console.error('Failed to fetching file:', { workspace, filepath, error })
     return { error: 'Failed to fetching file: ' + JSON.stringify({ workspace, filepath, error }) }
   }
+}
+
+export const useGetFile = <T extends IFetchFileData = IFetchFileData>(
+  workspace: string | null,
+  filepath: string,
+  tick: number,
+): IFetchFileResult<T> => {
+  const [result, setResult] = React.useState<IFetchFileResult<T>>({ loading: true })
+
+  React.useEffect(() => {
+    let cancelled = false
+
+    async function handleFetch(): Promise<void> {
+      if (!filepath) {
+        setResult({})
+        return
+      }
+
+      setResult({ loading: true })
+
+      try {
+        const fetchResult = await getFile<T>(workspace, filepath)
+        if (!cancelled) {
+          setResult(fetchResult)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setResult({ error: `Failed to fetch file: ${error}` })
+        }
+      }
+    }
+
+    void handleFetch()
+
+    return (): void => {
+      cancelled = true
+    }
+  }, [workspace, filepath, tick])
+
+  return result
 }
