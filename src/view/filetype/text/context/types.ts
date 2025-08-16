@@ -11,5 +11,5 @@ export enum ModeEnum {
 
 export interface ITextViewData {
   readonly mode: ModeEnum
-  readonly transformConfig?: ITransformConfig
+  readonly transformConfig: ITransformConfig
 }

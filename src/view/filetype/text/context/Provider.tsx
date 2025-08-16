@@ -26,6 +26,7 @@ export const TextViewProvider: React.FC<IProps> = props => {
     )
     return TextViewViewModel.fromData({
       mode: mode ?? initialData.mode,
+      transformConfig: initialData.transformConfig,
     })
   })
   const context: ITextViewContext | null = React.useMemo<ITextViewContext | null>(
@@ -82,7 +83,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [data, error, viewmodel])
 
   React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.mode$], () => {
+    const computed = Computed.fromObservables([viewmodel.mode$, viewmodel.transformConfig$], () => {
       const data: ITextViewData = viewmodel.dump()
       window.localStorage.setItem(storageKey, JSON.stringify(data))
     })
