@@ -1,13 +1,13 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { useTextViewViewModel } from '../context'
 import type {
   ITransformConfig,
   ITransformExportData,
   ITransformerFunction,
   ITransformerFunctionData,
-} from '../context/types'
+} from '@/shared/transformer'
+import { useTextViewViewModel } from '../context'
 import { transformTextToNodes } from '../util/transform'
 import { CodeBox } from './CodeBox'
 import { TransformerItem } from './TransformerItem'

@@ -1,6 +1,8 @@
+/* eslint-disable no-template-curly-in-string */
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { INode, ITextViewData, ITransformConfig } from './types'
+import type { INode, ITransformConfig } from '@/shared/transformer'
+import type { ITextViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
@@ -11,6 +13,7 @@ interface IProps {
 }
 
 const DEFAULT_TRANSFORM_CONFIG: ITransformConfig = {
+  name: 'default',
   split: '/\\n/',
   transformers: [],
   uuidFunction: '(item, index) => `item-${index}`',

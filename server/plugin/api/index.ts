@@ -7,6 +7,8 @@ import { saveExcalidrawFile } from './h/api/excalidraw/save'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
 import { switchFile } from './h/api/file-switch'
+import { getTextTransformer } from './h/api/transformer/text/:name'
+import { listTextTransformers } from './h/api/transformer/text/list'
 import { list_workspace_files } from './h/api/workspace/files'
 import { list_workspaces } from './h/api/workspaces'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
@@ -16,8 +18,24 @@ const handle_map: Record<string, IApiHandle> = {
   '/api/file/raw': fetchFileRaw,
   '/api/file-switch': switchFile,
   '/api/excalidraw/save': saveExcalidrawFile,
+  '/api/transformer/text/list': listTextTransformers,
   '/api/workspaces': list_workspaces,
   '/api/workspace/files': list_workspace_files,
+}
+
+// Handle routes with path parameters
+const getHandleForPath = (pathname: string): IApiHandle | undefined => {
+  // First try exact match
+  if (handle_map[pathname]) {
+    return handle_map[pathname]
+  }
+
+  // Check for transformer path parameter pattern: /api/transformer/text/:name
+  if (pathname.startsWith('/api/transformer/text/') && pathname !== '/api/transformer/text/list') {
+    return getTextTransformer
+  }
+
+  return undefined
 }
 
 const middleware = async (
@@ -39,7 +57,7 @@ const middleware = async (
 
   state.reporter.verbose('--> request:', req.url)
 
-  const handle: IApiHandle | undefined = handle_map[pathname]
+  const handle: IApiHandle | undefined = getHandleForPath(pathname)
   if (handle) {
     let body: string | undefined
     if (req.method === 'POST' && req.headers['content-type']?.includes('application/json')) {

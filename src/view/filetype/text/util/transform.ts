@@ -1,5 +1,5 @@
 /* eslint-disable no-new-func */
-import type { INode, ITransformConfig } from '../context/types'
+import type { INode, ITransformConfig } from '@/shared/transformer'
 
 export interface ITransformResult {
   readonly nodes: INode[]

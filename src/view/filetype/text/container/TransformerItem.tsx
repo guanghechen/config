@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ITransformerFunction } from '../context/types'
+import type { ITransformerFunction } from '@/shared/transformer'
 import { CodeBox } from './CodeBox'
 
 interface IProps {
