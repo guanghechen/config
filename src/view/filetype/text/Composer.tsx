@@ -6,7 +6,7 @@ import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-h
 import { PRESET_CLASSES } from '@/constant/classes'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { useScrollToTop } from '@/hook/useScrollToTop'
-import type { INode } from '@/shared/transformer'
+import type { ITextTransformedNode } from '@/shared/transform/types'
 import { TransformMode } from './container/TransformMode'
 import { ModeEnum, useTextViewViewModel } from './context'
 
@@ -26,7 +26,7 @@ export const Composer: React.FC<IProps> = props => {
   const mode = useStateValue(viewmodel.mode$)
   const content: string | null = useStateValue(viewmodel.content$)
   const error: string | null = useStateValue(viewmodel.error$)
-  const transformedNodes: INode[] | null = useStateValue(viewmodel.transformedNodes$)
+  const transformedNodes: ITextTransformedNode[] | null = useStateValue(viewmodel.transformedNodes$)
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   const showView: boolean = (mode & ModeEnum.VIEW) !== 0
@@ -79,10 +79,9 @@ export const Composer: React.FC<IProps> = props => {
                     >
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         <span className="font-mono">UUID: {node.uuid}</span>
-                        {node.parent_uuid.length > 0 && (
+                        {node.parents.length > 0 && (
                           <span className="ml-4 font-mono">
-                            Parent{node.parent_uuid.length > 1 ? 's' : ''}:{' '}
-                            {node.parent_uuid.join(', ')}
+                            Parent{node.parents.length > 1 ? 's' : ''}: {node.parents.join(', ')}
                           </span>
                         )}
                       </div>

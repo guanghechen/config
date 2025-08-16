@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { ROOT_DIR } from '../../../../../../../env'
-import type { ITransformConfig } from '../../../../../../../shared/transformer'
+import { validateTransformerData } from '../../../../../../../shared/transform/util'
 import type { IApiHandle, IApiHandleData } from '../../../../types'
 
 const TRANSFORMER_DATA_DIR = path.join(ROOT_DIR, 'server/plugin/api/d/transformer/text')
@@ -16,16 +16,6 @@ const ensureDirectoryExists = async (): Promise<void> => {
   if (!existsSync(TRANSFORMER_DATA_DIR)) {
     await fs.mkdir(TRANSFORMER_DATA_DIR, { recursive: true })
   }
-}
-
-const validateTransformerData = (data: any): data is ITransformConfig => {
-  return (
-    data &&
-    typeof data === 'object' &&
-    typeof data.name === 'string' &&
-    data.name.length > 0 &&
-    Array.isArray(data.functions)
-  )
 }
 
 export const getTextTransformer: IApiHandle = async params => {
@@ -163,7 +153,10 @@ const handlePost = async (
     await fs.writeFile(filepath, JSON.stringify(transformerData, null, 2), 'utf8')
 
     const data: IApiHandleData = {
-      data: { transformer: transformerData, message: 'Transformer saved successfully' },
+      data: {
+        transformer: transformerData,
+        message: 'Transformer saved successfully',
+      },
     }
     return { code: 200, data }
   } catch (parseError) {

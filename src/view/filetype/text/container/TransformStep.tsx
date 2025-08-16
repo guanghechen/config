@@ -1,12 +1,13 @@
 import React from 'react'
-import type { ITransformerFunction } from '@/shared/transformer'
+import type { ITextTransformStep } from '@/shared/transform/types'
+import { TextTransformStepTypeEnum } from '@/shared/transform/types'
 import { CodeBox } from './CodeBox'
 
 interface IProps {
-  readonly func: ITransformerFunction
+  readonly step: ITextTransformStep
   readonly index: number
   readonly totalCount: number
-  readonly onUpdate: (updates: Partial<ITransformerFunction>) => void
+  readonly onUpdate: (updates: Partial<ITextTransformStep>) => void
   readonly onRemove: () => void
   readonly onMoveUp: () => void
   readonly onMoveDown: () => void
@@ -16,8 +17,8 @@ interface IProps {
   readonly onDrop?: (fromIndex: number, toIndex: number) => void
 }
 
-export const TransformerItem: React.FC<IProps> = ({
-  func,
+export const TransformStep: React.FC<IProps> = ({
+  step,
   index,
   totalCount,
   onUpdate,
@@ -35,7 +36,7 @@ export const TransformerItem: React.FC<IProps> = ({
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const itemRef = React.useRef<HTMLDivElement>(null)
 
-  const handleTypeChange = (newType: 'filter' | 'map'): void => {
+  const handleTypeChange = (newType: TextTransformStepTypeEnum): void => {
     onUpdate({ type: newType })
     setShowDropdown(false)
   }
@@ -132,7 +133,7 @@ export const TransformerItem: React.FC<IProps> = ({
     <div
       ref={itemRef}
       className={`p-3 rounded-lg border transition-all duration-200 ${
-        func.skipped === true
+        step.skip === true
           ? 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-50'
           : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
       } ${isDragging ? 'opacity-50 scale-95' : ''} ${
@@ -209,13 +210,13 @@ export const TransformerItem: React.FC<IProps> = ({
           </div>
 
           <button
-            onClick={() => onUpdate({ skipped: !func.skipped })}
+            onClick={() => onUpdate({ skip: !step.skip })}
             className={`w-6 h-6 flex items-center justify-center transition-colors rounded select-none cursor-pointer ${
-              func.skipped === true
+              step.skip === true
                 ? 'text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-900/20 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500'
                 : 'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
-            title={func.skipped === true ? 'Enable function' : 'Skip function'}
+            title={step.skip === true ? 'Enable function' : 'Skip function'}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -227,7 +228,7 @@ export const TransformerItem: React.FC<IProps> = ({
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              {func.skipped === true ? (
+              {step.skip === true ? (
                 <React.Fragment>
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
@@ -266,17 +267,17 @@ export const TransformerItem: React.FC<IProps> = ({
             <div className="flex items-stretch">
               <div
                 className={`px-2 py-1 rounded-l text-xs font-medium flex items-center ${
-                  func.type === 'filter'
+                  step.type === TextTransformStepTypeEnum.FILTER
                     ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'
                     : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
                 }`}
               >
-                {func.type}
+                {step.type}
               </div>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
                 className={`px-1.5 rounded-r border-l border-opacity-20 hover:bg-opacity-80 transition-colors flex items-center justify-center select-none cursor-pointer ${
-                  func.type === 'filter'
+                  step.type === TextTransformStepTypeEnum.FILTER
                     ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-300 dark:border-orange-600'
                     : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 border-purple-300 dark:border-purple-600'
                 }`}
@@ -300,17 +301,21 @@ export const TransformerItem: React.FC<IProps> = ({
             {showDropdown && (
               <div className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg">
                 <button
-                  onClick={() => handleTypeChange('filter')}
+                  onClick={() => handleTypeChange(TextTransformStepTypeEnum.FILTER)}
                   className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer ${
-                    func.type === 'filter' ? 'bg-orange-50 dark:bg-orange-900/20' : ''
+                    step.type === TextTransformStepTypeEnum.FILTER
+                      ? 'bg-orange-50 dark:bg-orange-900/20'
+                      : ''
                   }`}
                 >
                   Filter
                 </button>
                 <button
-                  onClick={() => handleTypeChange('map')}
+                  onClick={() => handleTypeChange(TextTransformStepTypeEnum.MAP)}
                   className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer ${
-                    func.type === 'map' ? 'bg-purple-50 dark:bg-purple-900/20' : ''
+                    step.type === TextTransformStepTypeEnum.MAP
+                      ? 'bg-purple-50 dark:bg-purple-900/20'
+                      : ''
                   }`}
                 >
                   Map
@@ -322,10 +327,10 @@ export const TransformerItem: React.FC<IProps> = ({
       </div>
 
       <CodeBox
-        value={func.function}
-        onChange={value => onUpdate({ function: value })}
+        value={step.code}
+        onChange={value => onUpdate({ code: value })}
         placeholder={
-          func.type === 'filter'
+          step.type === TextTransformStepTypeEnum.FILTER
             ? '(element, index, elements) => condition'
             : '(element, index, elements) => transformed'
         }
@@ -334,4 +339,4 @@ export const TransformerItem: React.FC<IProps> = ({
   )
 }
 
-TransformerItem.displayName = 'TransformerItem'
+TransformStep.displayName = 'TransformStep'

@@ -3,6 +3,7 @@ import React from 'react'
 import type { ITextFileData } from '@/hook/api/file'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
+import { validateTransformerData } from '@/shared/transform/util'
 import type { ITextViewContext } from './context'
 import { TextViewContextType } from './context'
 import type { ITextViewData, ModeEnum } from './types'
@@ -26,7 +27,9 @@ export const TextViewProvider: React.FC<IProps> = props => {
     )
     return TextViewViewModel.fromData({
       mode: mode ?? initialData.mode,
-      transformConfig: initialData.transformConfig,
+      transformConfig: validateTransformerData(initialData.transformConfig)
+        ? initialData.transformConfig
+        : undefined,
     })
   })
   const context: ITextViewContext | null = React.useMemo<ITextViewContext | null>(

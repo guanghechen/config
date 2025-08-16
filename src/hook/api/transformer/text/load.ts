@@ -1,13 +1,14 @@
 import React from 'react'
-import type { ITransformConfig } from '@/shared/transformer'
+import type { ITextTransformConfig } from '@/shared/transform/types'
+import { TextTransformStepTypeEnum } from '@/shared/transform/types'
 
 export interface ITransformerLoadResult {
   loading: boolean
   error?: string
-  load: (name: string) => Promise<ITransformConfig>
+  load: (name: string) => Promise<ITextTransformConfig>
 }
 
-export async function getTransformer(name: string): Promise<ITransformConfig> {
+export async function getTransformer(name: string): Promise<ITextTransformConfig> {
   const response = await fetch(`/api/transformer/text/${encodeURIComponent(name)}`)
   const result = await response.json()
 
@@ -20,16 +21,14 @@ export async function getTransformer(name: string): Promise<ITransformConfig> {
   return {
     name: transformer.name,
     split: transformer.split || '\n',
-    uuidFunction: transformer.uuidFunction || '',
-    parentUuidFunction: transformer.parentUuidFunction || '() => []',
-    transformers: (transformer.functions || transformer.transformers || []).map(
-      (func: any, index: number) => ({
-        id: `loaded-${Date.now()}-${index}`,
-        type: func.type || 'map',
-        function: func.code || func.function || '',
-        skipped: func.skip !== undefined ? func.skip : func.skipped || false,
-      }),
-    ),
+    uuid: transformer.uuid || '',
+    parents: transformer.parents || '() => []',
+    steps: (transformer.steps || []).map((step: any, index: number) => ({
+      id: `loaded-${Date.now()}-${index}`,
+      type: step.type || TextTransformStepTypeEnum.MAP,
+      code: step.code || '',
+      skip: step.skip ?? false,
+    })),
   }
 }
 
@@ -37,7 +36,7 @@ export const useGetTransformer = (): ITransformerLoadResult => {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | undefined>()
 
-  const load = React.useCallback(async (name: string): Promise<ITransformConfig> => {
+  const load = React.useCallback(async (name: string): Promise<ITextTransformConfig> => {
     setLoading(true)
     setError(undefined)
 

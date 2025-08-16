@@ -1,12 +1,16 @@
 /* eslint-disable no-new-func */
-import type { INode, ITransformConfig } from '@/shared/transformer'
+import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/transform/types'
+import { TextTransformStepTypeEnum } from '@/shared/transform/types'
 
 export interface ITransformResult {
-  readonly nodes: INode[]
+  readonly nodes: ITextTransformedNode[]
   readonly error?: string
 }
 
-export const transformTextToNodes = (text: string, config: ITransformConfig): ITransformResult => {
+export const transformTextToNodes = (
+  text: string,
+  config: ITextTransformConfig,
+): ITransformResult => {
   try {
     // Step 1: Split the text
     let texts: string[]
@@ -41,57 +45,57 @@ export const transformTextToNodes = (text: string, config: ITransformConfig): IT
       }
     }
 
-    // Step 2: Apply transformer functions
-    let processedResult: any = texts
-    for (const transformer of config.transformers) {
-      if (transformer.skipped) continue
+    // Step 2: Apply transform steps
+    let iterators: ArrayIterator<unknown> = texts.values()
+    for (const step of config.steps) {
+      if (step.skip) continue
 
       try {
-        const func = new Function(
+        const func: (ele: unknown, index: number) => boolean = new Function(
           'element',
           'index',
-          'elements',
-          `return (${transformer.function})(element, index, elements)`,
-        )
+          `return (${step.code})(element, index)`,
+        ) as any
 
-        if (transformer.type === 'filter') {
-          processedResult = processedResult.filter(func)
+        if (step.type === TextTransformStepTypeEnum.FILTER) {
+          iterators = iterators.filter(func)
         } else {
-          processedResult = processedResult.map(func)
+          iterators = iterators.map(func)
         }
       } catch (error) {
         return {
           nodes: [],
-          error: `Invalid ${transformer.type} transformer: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: `Invalid ${step.type} step: ${error instanceof Error ? error.message : 'Unknown error'}`,
         }
       }
     }
+    const results: unknown[] = Array.from(iterators)
 
     // Step 3: Apply identifier functions
     try {
-      const uuidFunc = new Function('item', 'index', `return (${config.uuidFunction})(item, index)`)
+      const uuidFunc = new Function('item', 'index', `return (${config.uuid})(item, index)`)
       const parentUuidFunc = new Function(
         'item',
         'index',
-        `return (${config.parentUuidFunction})(item, index)`,
+        `return (${config.parents})(item, index)`,
       )
 
-      const nodes: INode[] = processedResult.map((item: any, index: number) => {
+      const nodes: ITextTransformedNode[] = results.map((item: any, index: number) => {
         const parentUuidResult = parentUuidFunc(item, index)
 
         // Ensure parent_uuid is always an array
-        let parent_uuid: string[]
+        let parents: string[]
         if (parentUuidResult === null || parentUuidResult === undefined) {
-          parent_uuid = []
+          parents = []
         } else if (Array.isArray(parentUuidResult)) {
-          parent_uuid = parentUuidResult.filter(uuid => uuid !== null && uuid !== undefined)
+          parents = parentUuidResult.filter(uuid => uuid !== null && uuid !== undefined)
         } else {
-          parent_uuid = [parentUuidResult].filter(uuid => uuid !== null && uuid !== undefined)
+          parents = [parentUuidResult].filter(uuid => uuid !== null && uuid !== undefined)
         }
 
         return {
           uuid: uuidFunc(item, index),
-          parent_uuid,
+          parents: parents,
           data: item,
         }
       })

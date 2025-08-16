@@ -1,12 +1,14 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import type { ITransformConfig, ITransformerFunction } from '@/shared/transformer'
+import { v4 } from 'uuid'
+import type { ITextTransformConfig, ITextTransformStep } from '@/shared/transform/types'
+import { TextTransformStepTypeEnum } from '@/shared/transform/types'
 import { useTextViewViewModel } from '../context'
 import { transformTextToNodes } from '../util/transform'
 import { CodeBox } from './CodeBox'
 import { CollectionDropdown } from './CollectionDropdown'
-import { TransformerItem } from './TransformerItem'
+import { TransformStep } from './TransformStep'
 
 interface ITooltipProps {
   readonly content: string
@@ -33,7 +35,7 @@ const Tooltip: React.FC<ITooltipProps> = ({ content, children }) => {
 
 export const TransformMode: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
+  const config: ITextTransformConfig = useStateValue(viewmodel.transformConfig$)
   const content: string | null = useStateValue(viewmodel.content$)
   const [dropdownOpen, setDropdownOpen] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
@@ -41,38 +43,39 @@ export const TransformMode: React.FC = () => {
   const [isEditingName, setIsEditingName] = React.useState(false)
   const [editingName, setEditingName] = React.useState('')
 
-  const updateTransformConfig = (updates: Partial<ITransformConfig>): void => {
+  const updateTransformConfig = (updates: Partial<ITextTransformConfig>): void => {
     const current = viewmodel.transformConfig$.getSnapshot()
     viewmodel.transformConfig$.next({ ...current, ...updates })
   }
 
-  const addTransformerFunction = (type: 'filter' | 'map'): void => {
-    const current = transformConfig.transformers
-    const newFunction: ITransformerFunction = {
+  const addTransformStep = (type: TextTransformStepTypeEnum): void => {
+    const current = config.steps
+    const nextStep: ITextTransformStep = {
       id: `${type}-${Date.now()}`,
       type,
-      function:
-        type === 'filter'
+      code:
+        type === TextTransformStepTypeEnum.FILTER
           ? '(element, index, elements) => element.trim().length > 0'
           : '(element, index, elements) => element.trim()',
+      skip: false,
     }
-    updateTransformConfig({ transformers: [...current, newFunction] })
+    updateTransformConfig({ steps: [...current, nextStep] })
   }
 
-  const removeTransformerFunction = (id: string): void => {
-    const current = transformConfig.transformers
-    updateTransformConfig({ transformers: current.filter(func => func.id !== id) })
+  const removeTransformStep = (id: string): void => {
+    const current = config.steps
+    updateTransformConfig({ steps: current.filter(step => step.id !== id) })
   }
 
-  const updateTransformerFunction = (id: string, updates: Partial<ITransformerFunction>): void => {
-    const current = transformConfig.transformers
-    const updated = current.map(func => (func.id === id ? { ...func, ...updates } : func))
-    updateTransformConfig({ transformers: updated })
+  const updateTransformStep = (id: string, updates: Partial<ITextTransformStep>): void => {
+    const current = config.steps
+    const updated = current.map(step => (step.id === id ? { ...step, ...updates } : step))
+    updateTransformConfig({ steps: updated })
   }
 
-  const moveFunction = (id: string, direction: 'up' | 'down'): void => {
-    const current = transformConfig.transformers
-    const index = current.findIndex(func => func.id === id)
+  const moveTransformStep = (id: string, direction: 'up' | 'down'): void => {
+    const current = config.steps
+    const index = current.findIndex(step => step.id === id)
     if (index === -1) return
 
     const newIndex = direction === 'up' ? index - 1 : index + 1
@@ -81,23 +84,23 @@ export const TransformMode: React.FC = () => {
     const updated = [...current]
     const [moved] = updated.splice(index, 1)
     updated.splice(newIndex, 0, moved)
-    updateTransformConfig({ transformers: updated })
+    updateTransformConfig({ steps: updated })
   }
 
-  const duplicateTransformerFunction = (id: string): void => {
-    const current = transformConfig.transformers
-    const index = current.findIndex(func => func.id === id)
+  const duplicateTransformStep = (id: string): void => {
+    const current = config.steps
+    const index = current.findIndex(step => step.id === id)
     if (index === -1) return
 
-    const originalFunc = current[index]
-    const duplicatedFunc: ITransformerFunction = {
-      ...originalFunc,
-      id: `${originalFunc.type}-${Date.now()}`,
+    const originalStep = current[index]
+    const duplicatedStep: ITextTransformStep = {
+      ...originalStep,
+      id: v4(),
     }
 
     const updated = [...current]
-    updated.splice(index + 1, 0, duplicatedFunc)
-    updateTransformConfig({ transformers: updated })
+    updated.splice(index + 1, 0, duplicatedStep)
+    updateTransformConfig({ steps: updated })
   }
 
   const handleDragStart = (_index: number): void => {
@@ -114,12 +117,12 @@ export const TransformMode: React.FC = () => {
       return
     }
 
-    const current = transformConfig.transformers
+    const current = config.steps
     const updated = [...current]
     const [draggedItem] = updated.splice(fromIndex, 1)
     updated.splice(toIndex, 0, draggedItem)
 
-    updateTransformConfig({ transformers: updated })
+    updateTransformConfig({ steps: updated })
     setIsDragging(false)
   }
 
@@ -129,7 +132,7 @@ export const TransformMode: React.FC = () => {
       return
     }
 
-    const result = transformTextToNodes(content, transformConfig)
+    const result = transformTextToNodes(content, config)
 
     if (result.error) {
       toast.error(result.error)
@@ -141,7 +144,7 @@ export const TransformMode: React.FC = () => {
   }
 
   const handleStartEditName = (): void => {
-    setEditingName(transformConfig.name)
+    setEditingName(config.name)
     setIsEditingName(true)
   }
 
@@ -222,7 +225,7 @@ export const TransformMode: React.FC = () => {
           ) : (
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {transformConfig.name}
+                {config.name}
               </span>
               <button
                 onClick={handleStartEditName}
@@ -294,8 +297,8 @@ export const TransformMode: React.FC = () => {
               </Tooltip>
             </div>
             <CodeBox
-              value={transformConfig.uuidFunction}
-              onChange={value => updateTransformConfig({ uuidFunction: value })}
+              value={config.uuid}
+              onChange={value => updateTransformConfig({ uuid: value })}
               placeholder="(item, index) => 'item-' + index"
             />
           </div>
@@ -311,8 +314,8 @@ export const TransformMode: React.FC = () => {
               </Tooltip>
             </div>
             <CodeBox
-              value={transformConfig.parentUuidFunction}
-              onChange={value => updateTransformConfig({ parentUuidFunction: value })}
+              value={config.parents}
+              onChange={value => updateTransformConfig({ parents: value })}
               placeholder="() => [] // Return array of parent UUIDs"
             />
           </div>
@@ -330,7 +333,7 @@ export const TransformMode: React.FC = () => {
           </Tooltip>
         </div>
         <CodeBox
-          value={transformConfig.split}
+          value={config.split}
           onChange={value => updateTransformConfig({ split: value })}
           placeholder="/\\n/"
           description=""
@@ -354,7 +357,7 @@ export const TransformMode: React.FC = () => {
             <div className="relative inline-block">
               <div className="flex items-stretch">
                 <button
-                  onClick={() => addTransformerFunction('map')}
+                  onClick={() => addTransformStep(TextTransformStepTypeEnum.MAP)}
                   className="rounded-l bg-purple-500 px-3 py-1 text-xs text-white hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 select-none cursor-pointer"
                 >
                   Add Transformer
@@ -381,7 +384,7 @@ export const TransformMode: React.FC = () => {
                     <div className="absolute right-0 top-full mt-1 min-w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg z-10">
                       <button
                         onClick={() => {
-                          addTransformerFunction('map')
+                          addTransformStep(TextTransformStepTypeEnum.MAP)
                           setDropdownOpen(false)
                         }}
                         className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer"
@@ -390,7 +393,7 @@ export const TransformMode: React.FC = () => {
                       </button>
                       <button
                         onClick={() => {
-                          addTransformerFunction('filter')
+                          addTransformStep(TextTransformStepTypeEnum.FILTER)
                           setDropdownOpen(false)
                         }}
                         className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 cursor-pointer"
@@ -403,24 +406,24 @@ export const TransformMode: React.FC = () => {
               </div>
             </div>
           </div>
-          {transformConfig.transformers.length === 0 ? (
+          {config.steps.length === 0 ? (
             <div className="rounded border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-700/30 p-4 text-center text-sm text-gray-500 dark:text-gray-400">
               No transformer functions. Click "Add Transformer" or use the dropdown to add
               functions.
             </div>
           ) : (
             <div className={`space-y-3 ${isDragging ? 'select-none' : ''}`}>
-              {transformConfig.transformers.map((func, index) => (
-                <TransformerItem
-                  key={func.id}
-                  func={func}
+              {config.steps.map((step, index) => (
+                <TransformStep
+                  key={step.id}
+                  step={step}
                   index={index}
-                  totalCount={transformConfig.transformers.length}
-                  onUpdate={updates => updateTransformerFunction(func.id, updates)}
-                  onRemove={() => removeTransformerFunction(func.id)}
-                  onMoveUp={() => moveFunction(func.id, 'up')}
-                  onMoveDown={() => moveFunction(func.id, 'down')}
-                  onDuplicate={() => duplicateTransformerFunction(func.id)}
+                  totalCount={config.steps.length}
+                  onUpdate={updates => updateTransformStep(step.id, updates)}
+                  onRemove={() => removeTransformStep(step.id)}
+                  onMoveUp={() => moveTransformStep(step.id, 'up')}
+                  onMoveDown={() => moveTransformStep(step.id, 'down')}
+                  onDuplicate={() => duplicateTransformStep(step.id)}
                   onDragStart={handleDragStart}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}

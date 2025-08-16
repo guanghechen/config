@@ -6,10 +6,12 @@ import { useGetTransformerList } from '@/hook/api/transformer/text/list'
 import { useGetTransformer } from '@/hook/api/transformer/text/load'
 import { usePostTransformer } from '@/hook/api/transformer/text/save'
 import type {
-  ITransformConfig,
-  ITransformExportData,
-  ITransformerFunctionData,
-} from '@/shared/transformer'
+  ITextTransformConfig,
+  ITextTransformExportData,
+  ITextTransformStep,
+  ITextTransformStepData,
+} from '@/shared/transform/types'
+import { TextTransformStepTypeEnum } from '@/shared/transform/types'
 import { useTextViewViewModel } from '../context'
 
 interface IProps {
@@ -20,7 +22,7 @@ interface IProps {
 
 export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle }) => {
   const viewmodel = useTextViewViewModel()
-  const transformConfig: ITransformConfig = useStateValue(viewmodel.transformConfig$)
+  const config: ITextTransformConfig = useStateValue(viewmodel.transformConfig$)
 
   const {
     refresh: refreshTransformerList,
@@ -57,7 +59,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
 
   const handleSave = async (name: string): Promise<void> => {
     try {
-      await saveTransformer(name, transformConfig)
+      await saveTransformer(name, config)
       toast.success('Transformer saved successfully!')
       setShowSaveDialog(false)
       // Refresh the list
@@ -69,14 +71,14 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   }
 
   const handleDirectSave = async (): Promise<void> => {
-    if (!transformConfig.name || transformConfig.name.trim() === 'unnamed') {
+    if (!config.name || config.name.trim() === 'unnamed') {
       toast.error('Please set a transformer name first before saving')
       return
     }
 
     try {
-      await saveTransformer(transformConfig.name, transformConfig)
-      toast.success(`Transformer "${transformConfig.name}" saved successfully!`)
+      await saveTransformer(config.name, config)
+      toast.success(`Transformer "${config.name}" saved successfully!`)
       // Refresh the list
       void refreshTransformerList()
     } catch (error) {
@@ -98,14 +100,15 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   }
 
   const exportTransformData = async (): Promise<void> => {
-    const exportData: ITransformExportData = {
-      split: transformConfig.split,
-      uuid: transformConfig.uuidFunction,
-      parent_uuid: transformConfig.parentUuidFunction,
-      transformers: transformConfig.transformers.map(transformer => ({
-        skip: transformer.skipped || false,
-        code: transformer.function,
-        type: transformer.type,
+    const exportData: ITextTransformExportData = {
+      name: config.name,
+      split: config.split,
+      uuid: config.uuid,
+      parents: config.parents,
+      steps: config.steps.map(step => ({
+        skip: step.skip ?? false,
+        code: step.code,
+        type: step.type,
       })),
     }
 
@@ -127,9 +130,9 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
         return
       }
 
-      const importedData: ITransformExportData = JSON.parse(clipboardText)
+      const importedData: ITextTransformExportData = JSON.parse(clipboardText)
 
-      const updateTransformConfig = (updates: Partial<ITransformConfig>): void => {
+      const updateTransformConfig = (updates: Partial<ITextTransformConfig>): void => {
         const current = viewmodel.transformConfig$.getSnapshot()
         viewmodel.transformConfig$.next({ ...current, ...updates })
       }
@@ -138,29 +141,26 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
         updateTransformConfig({ split: importedData.split })
       }
       if (importedData.uuid) {
-        updateTransformConfig({ uuidFunction: importedData.uuid })
+        updateTransformConfig({ uuid: importedData.uuid })
       }
-      if (importedData.parent_uuid) {
-        updateTransformConfig({ parentUuidFunction: importedData.parent_uuid })
+      if (importedData.parents) {
+        updateTransformConfig({ parents: importedData.parents })
       }
-      if (importedData.transformers && Array.isArray(importedData.transformers)) {
-        const transformerFunctions = importedData.transformers.map(
-          (transformer: ITransformerFunctionData, index: number) => {
+      if (importedData.steps && Array.isArray(importedData.steps)) {
+        const steps: ITextTransformStep[] = importedData.steps.map(
+          (transformer: ITextTransformStepData, index: number): ITextTransformStep => {
             const functionCode = transformer.code || ''
-            const importedType = transformer.type || 'map'
+            const importedType = transformer.type || TextTransformStepTypeEnum.MAP
 
             return {
               id: `imported-${Date.now()}-${index}`,
               type: importedType,
-              function: functionCode,
-              skipped:
-                transformer.skip !== undefined
-                  ? transformer.skip
-                  : (transformer as any).skipped || false,
+              code: functionCode,
+              skip: transformer.skip ?? false,
             }
           },
         )
-        updateTransformConfig({ transformers: transformerFunctions })
+        updateTransformConfig({ steps })
       }
 
       toast.success('Transform data imported successfully!')
@@ -255,16 +255,10 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
               onClick={() => {
                 handleDirectSave().catch(console.error)
               }}
-              disabled={
-                savingTransformer ||
-                !transformConfig.name ||
-                transformConfig.name.trim() === 'unnamed'
-              }
+              disabled={savingTransformer || !config.name || config.name.trim() === 'unnamed'}
               className={cn(
                 'block w-full px-3 py-2 text-left text-sm cursor-pointer transition-colors duration-200',
-                savingTransformer ||
-                  !transformConfig.name ||
-                  transformConfig.name.trim() === 'unnamed'
+                savingTransformer || !config.name || config.name.trim() === 'unnamed'
                   ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
               )}
@@ -284,7 +278,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                   <polyline points="17,21 17,13 7,13 7,21" />
                   <polyline points="7,3 7,8 15,8" />
                 </svg>
-                {savingTransformer ? 'Saving...' : `Save (${transformConfig.name})`}
+                {savingTransformer ? 'Saving...' : `Save (${config.name})`}
               </div>
             </button>
             <button

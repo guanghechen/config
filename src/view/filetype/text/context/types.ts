@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-import type { ITransformConfig } from '@/shared/transformer'
+import type { ITextTransformConfig } from '@/shared/transform/types'
 
 const bit: number = 1
 
@@ -11,5 +11,5 @@ export enum ModeEnum {
 
 export interface ITextViewData {
   readonly mode: ModeEnum
-  readonly transformConfig: ITransformConfig
+  readonly transformConfig: ITextTransformConfig
 }

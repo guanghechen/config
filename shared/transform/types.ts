@@ -1,0 +1,39 @@
+export enum TextTransformStepTypeEnum {
+  FILTER = 'filter',
+  MAP = 'map',
+}
+
+export interface ITextTransformStep {
+  readonly id: string
+  readonly type: TextTransformStepTypeEnum
+  readonly code: string
+  readonly skip: boolean
+}
+
+export interface ITextTransformStepData {
+  readonly type: TextTransformStepTypeEnum
+  readonly code: string
+  readonly skip: boolean
+}
+
+export interface ITextTransformExportData {
+  readonly name: string
+  readonly uuid: string
+  readonly parents: string
+  readonly split: string
+  readonly steps: ITextTransformStepData[]
+}
+
+export interface ITextTransformConfig {
+  readonly name: string
+  readonly split: string
+  readonly steps: ITextTransformStep[]
+  readonly uuid: string
+  readonly parents: string
+}
+
+export interface ITextTransformedNode {
+  readonly uuid: string
+  readonly parents: string[]
+  readonly data: unknown
+}

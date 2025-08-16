@@ -42,7 +42,9 @@ export const listTextTransformers: IApiHandle = async params => {
     }
 
     const data: IApiHandleData = {
-      data: { transformers },
+      data: {
+        transformers,
+      },
     }
     return { code: 200, data }
   } catch (error) {

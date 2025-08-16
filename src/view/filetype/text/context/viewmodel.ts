@@ -1,7 +1,7 @@
 /* eslint-disable no-template-curly-in-string */
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { INode, ITransformConfig } from '@/shared/transformer'
+import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/transform/types'
 import type { ITextViewData } from './types'
 import { ModeEnum } from './types'
 
@@ -9,15 +9,15 @@ interface IProps {
   readonly mode?: ModeEnum
   readonly workspace?: string | null
   readonly filepath?: string | null
-  readonly transformConfig?: ITransformConfig
+  readonly transformConfig?: ITextTransformConfig
 }
 
-const DEFAULT_TRANSFORM_CONFIG: ITransformConfig = {
+const DEFAULT_TRANSFORM_CONFIG: ITextTransformConfig = {
   name: 'unnamed',
   split: '/\\n/',
-  transformers: [],
-  uuidFunction: '(item, index) => `item-${index}`',
-  parentUuidFunction: '() => []',
+  steps: [],
+  uuid: '(item, index) => `item-${index}`',
+  parents: '() => []',
 }
 
 const DEFAULT_TEXT_VIEW_DATA: ITextViewData = {
@@ -31,8 +31,8 @@ export class TextViewViewModel extends ViewModel {
   public readonly filepath$: IState<string | null>
   public readonly content$: IState<string | null>
   public readonly error$: IState<string | null>
-  public readonly transformConfig$: IState<ITransformConfig>
-  public readonly transformedNodes$: IState<INode[] | null>
+  public readonly transformConfig$: IState<ITextTransformConfig>
+  public readonly transformedNodes$: IState<ITextTransformedNode[] | null>
 
   public static fromData(data: Partial<ITextViewData> | undefined): TextViewViewModel {
     const { mode, transformConfig }: ITextViewData = this.normalize(DEFAULT_TEXT_VIEW_DATA, data)
@@ -46,7 +46,7 @@ export class TextViewViewModel extends ViewModel {
     const { mode, transformConfig } = data || {}
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
-    const normalizedTransformConfig: ITransformConfig = transformConfig || base.transformConfig!
+    const normalizedTransformConfig: ITextTransformConfig = transformConfig || base.transformConfig!
     const normalizedData: ITextViewData = {
       mode: normalizedMode,
       transformConfig: normalizedTransformConfig,
@@ -69,13 +69,13 @@ export class TextViewViewModel extends ViewModel {
     this.filepath$ = new State<string | null>(filepath)
     this.content$ = new State<string | null>(null)
     this.error$ = new State<string | null>(null)
-    this.transformConfig$ = new State<ITransformConfig>(transformConfig)
-    this.transformedNodes$ = new State<INode[] | null>(null)
+    this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
+    this.transformedNodes$ = new State<ITextTransformedNode[] | null>(null)
   }
 
   public dump = (): ITextViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
-    const transformConfig: ITransformConfig = this.transformConfig$.getSnapshot()
+    const transformConfig: ITextTransformConfig = this.transformConfig$.getSnapshot()
     return {
       mode,
       transformConfig,
