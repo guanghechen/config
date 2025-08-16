@@ -1,7 +1,6 @@
-import type { IResponsePayloadWorkspaces } from '../../../../shared/types'
-import state from '../../../state'
-import { findMarkdownFiles } from '../../../util/workspace'
-import type { IApiHandle, IApiHandleResult } from '../types'
+import state from '../../../../../state'
+import { findMarkdownFiles } from '../../../../../util/workspace'
+import type { IApiHandle, IApiHandleResult } from '../../../types'
 
 export const list_workspace_files: IApiHandle = async params => {
   const { searchParams } = params
@@ -23,7 +22,7 @@ export const list_workspace_files: IApiHandle = async params => {
   }
 
   const force = searchParams.has('force') && searchParams.get('force') !== 'false'
-  if (!item.files.mds || !force) {
+  if (!item.files.mds || force) {
     const files = await findMarkdownFiles(item.path)
     item.files.mds = files
     const result: IApiHandleResult = {
@@ -39,17 +38,4 @@ export const list_workspace_files: IApiHandle = async params => {
     }
     return result
   }
-}
-
-export const list_workspaces: IApiHandle = async () => {
-  const data: IResponsePayloadWorkspaces = {
-    workspaces: Array.from(state.workspaceMap$.getSnapshot().values())
-      .map(item => ({ tag: item.tag }))
-      .sort((x, y) => x.tag.localeCompare(y.tag)),
-  }
-  const result: IApiHandleResult = {
-    code: 200,
-    data: { data },
-  }
-  return result
 }
