@@ -17,6 +17,7 @@ export class JsonViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
   public readonly content$: IState<string | null>
   public readonly json$: IState<unknown>
+  public readonly error$: IState<string | null>
 
   public static fromData(data: Partial<IJsonViewData> | undefined): JsonViewViewModel {
     const { mode }: IJsonViewData = this.normalize(DEFAULT_JSON_VIEW_DATA, data)
@@ -41,6 +42,7 @@ export class JsonViewViewModel extends ViewModel {
     this.mode$ = new State<ModeEnum>(props.mode ?? 1)
     this.content$ = new State<string | null>(props.content ?? null)
     this.json$ = new State<unknown>(props.json ?? null)
+    this.error$ = new State<string | null>(null)
   }
 
   public dump = (): IJsonViewData => {

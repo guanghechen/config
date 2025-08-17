@@ -1,43 +1,31 @@
-import cn from 'clsx'
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useScrollToTop } from '@/hook/useScrollToTop'
-import { ImageContainer } from './container/ImageContainer'
+import { useImageViewViewModel } from './context'
+import { Main } from './layout/main'
+import { Topbar } from './layout/topbar'
 
-interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string | null
-  readonly mainScrollableContainer: HTMLDivElement | null
-}
+export const Composer: React.FC = () => {
+  const viewmodel = useImageViewViewModel()
+  const error = useStateValue(viewmodel.error$)
 
-export const Composer: React.FC<IProps> = props => {
-  const { workspace, filepath, mainScrollableContainer } = props
-  const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
+  if (error) {
+    return (
+      <div className="relative size-full flex items-center bg-gray-100 text-red-500 dark:bg-gray-800 dark:text-red-400">
+        <code>error: {String(error)}</code>
+      </div>
+    )
+  }
 
   return (
-    <div className="w-full">
-      <ImageContainer workspace={workspace} filepath={filepath} />
-      <button
-        onClick={scrollToTop}
-        className={cn(
-          'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100',
-          visibleScrollToTop
-            ? 'translate-y-0 opacity-90'
-            : 'pointer-events-none translate-y-16 opacity-0',
-        )}
-        title="Scroll to top"
-        aria-label="Scroll to top"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
-        </svg>
-      </button>
+    <div className="border-box relative size-full">
+      <div className="border-box fixed right-4 z-50 h-12">
+        <Topbar />
+      </div>
+      <div className="border-box size-full pt-12">
+        <Main />
+      </div>
     </div>
   )
 }
 
-Composer.displayName = 'ImageComposer'
+Composer.displayName = 'ImageViewComposer'

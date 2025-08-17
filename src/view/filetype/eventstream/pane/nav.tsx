@@ -10,7 +10,7 @@ interface IProps {
   readonly onEventClick: (index: number) => void
 }
 
-export const EventStreamNavigation: React.FC<IProps> = ({
+export const Navigation: React.FC<IProps> = ({
   events,
   singleColumn,
   onEventClick,
@@ -76,4 +76,4 @@ export const EventStreamNavigation: React.FC<IProps> = ({
   )
 }
 
-EventStreamNavigation.displayName = 'EventStreamNavigation'
+Navigation.displayName = 'EventStreamViewNavigation'

@@ -9,7 +9,7 @@ interface IProps {
   activeRecordIndex: number | null
 }
 
-export const Navigation: React.FC<IProps> = ({
+export const Nav: React.FC<IProps> = ({
   records,
   singleColumn,
   onRecordClick,
@@ -81,4 +81,4 @@ export const Navigation: React.FC<IProps> = ({
   )
 }
 
-Navigation.displayName = 'JsonlNavigation'
+Nav.displayName = 'JsonlViewNav'

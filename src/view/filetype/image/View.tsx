@@ -1,4 +1,5 @@
 import React from 'react'
+import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
 import { ImageViewProvider } from './context'
 
@@ -8,22 +9,27 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-export const ImageView: React.FC<IProps> = props => {
-  const { filepath, workspace, mainScrollableContainer } = props
+export class ImageView extends React.PureComponent<IProps> {
+  public static readonly displayName = 'ImageView'
 
-  return (
-    <div className="w-full pt-8">
-      <div className="relative w-full">
-        <ImageViewProvider workspace={workspace} filepath={filepath}>
-          <Composer
-            workspace={workspace}
-            filepath={filepath}
-            mainScrollableContainer={mainScrollableContainer}
-          />
-        </ImageViewProvider>
-      </div>
-    </div>
-  )
+  public override render(): React.ReactElement {
+    const { filepath, workspace, mainScrollableContainer } = this.props
+
+    if (!filepath) {
+      return (
+        <div className="relative size-full flex items-center">
+          <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
+        </div>
+      )
+    }
+
+    return (
+      <ImageViewProvider workspace={workspace} filepath={filepath}>
+        <div className="relative size-full">
+          <Composer />
+          <TotopButton scrollableContainer={mainScrollableContainer} />
+        </div>
+      </ImageViewProvider>
+    )
+  }
 }
-
-ImageView.displayName = 'ImageView'

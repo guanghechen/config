@@ -1,4 +1,5 @@
 import React from 'react'
+import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
 import { EventStreamViewProvider } from './context'
 
@@ -9,20 +10,31 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-export const EventStreamView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
+export class EventStreamView extends React.PureComponent<IProps> {
+  public static readonly displayName = 'EventStreamView'
 
-  return (
-    <div className="w-full pt-8">
+  public override render(): React.ReactElement {
+    const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = this.props
+
+    if (!filepath) {
+      return (
+        <div className="relative size-full flex items-center">
+          <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
+        </div>
+      )
+    }
+
+    return (
       <EventStreamViewProvider
         workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <Composer mainScrollableContainer={mainScrollableContainer} />
+        <div className="relative size-full">
+          <Composer />
+          <TotopButton scrollableContainer={mainScrollableContainer} />
+        </div>
       </EventStreamViewProvider>
-    </div>
-  )
+    )
+  }
 }
-
-EventStreamView.displayName = 'EventStreamView'

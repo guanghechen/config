@@ -14,8 +14,8 @@ interface IProps {
   readonly singleColumn: boolean
 }
 
-export class ContentView extends React.Component<IProps> {
-  public static displayName: string = 'MarkdownViewContentView'
+export class MdView extends React.Component<IProps> {
+  public static displayName: string = 'MarkdownViewMdView'
 
   public override render(): React.ReactElement {
     const { containerRef, ast, filepath, frontmatter, singleColumn } = this.props

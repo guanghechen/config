@@ -11,6 +11,7 @@ export interface IEventStreamViewViewModelProps {
   readonly expandTick?: number
   readonly chainPaths?: IChainPath[]
   readonly displayMode?: DisplayMode
+  readonly error?: string | null
 }
 
 const DEFAULT_EVENTSTREAM_VIEW_DATA: IEventStreamViewData = {
@@ -27,6 +28,7 @@ export class EventStreamViewViewModel extends ViewModel {
   public readonly expandTick$: IState<number>
   public readonly chainPaths$: IState<IChainPath[]>
   public readonly displayMode$: IState<DisplayMode>
+  public readonly error$: IState<string | null>
 
   public static fromData(
     data: Partial<IEventStreamViewData> | undefined,
@@ -66,6 +68,7 @@ export class EventStreamViewViewModel extends ViewModel {
     super()
 
     const {
+      error,
       content = '',
       events = [],
       activeEventIndex = null,
@@ -82,6 +85,7 @@ export class EventStreamViewViewModel extends ViewModel {
     this.expandTick$ = new State<number>(expandTick)
     this.chainPaths$ = new State<IChainPath[]>(chainPaths)
     this.displayMode$ = new State<DisplayMode>(displayMode)
+    this.error$ = new State<string | null>(error ?? null)
   }
 
   public dump = (): IEventStreamViewData => {

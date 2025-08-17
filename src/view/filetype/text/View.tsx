@@ -1,6 +1,6 @@
 import React from 'react'
+import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
-import { ModeToggle } from './container/ModeToggle'
 import { TextViewProvider } from './context'
 
 interface IProps {
@@ -10,29 +10,31 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-export const TextView: React.FC<IProps> = props => {
-  const { filepath, workspace, filepathDirtyTick, mainScrollableContainer } = props
+export class TextView extends React.PureComponent<IProps> {
+  public static readonly displayName = 'TextView'
 
-  return (
-    <div className="size-screen">
-      <div className="relative w-full">
-        <TextViewProvider
-          workspace={workspace}
-          filepath={filepath}
-          filepathDirtyTick={filepathDirtyTick}
-        >
-          <ModeToggle />
-          <div className="relative w-full">
-            <Composer
-              workspace={workspace}
-              filepath={filepath}
-              mainScrollableContainer={mainScrollableContainer}
-            />
-          </div>
-        </TextViewProvider>
-      </div>
-    </div>
-  )
+  public override render(): React.ReactElement {
+    const { filepath, workspace, filepathDirtyTick, mainScrollableContainer } = this.props
+
+    if (!filepath) {
+      return (
+        <div className="relative size-full flex items-center">
+          <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
+        </div>
+      )
+    }
+
+    return (
+      <TextViewProvider
+        workspace={workspace}
+        filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
+      >
+        <div className="relative size-full">
+          <Composer />
+          <TotopButton scrollableContainer={mainScrollableContainer} />
+        </div>
+      </TextViewProvider>
+    )
+  }
 }
-
-TextView.displayName = 'TextView'

@@ -1,7 +1,7 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
-import { PdfViewProvider, usePdfViewViewModel } from './context'
+import { PdfViewProvider } from './context'
 
 interface IProps {
   readonly workspace: string | null
@@ -10,51 +10,31 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-export const PdfView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
+export class PdfView extends React.PureComponent<IProps> {
+  public static readonly displayName = 'PdfView'
 
-  if (!filepath) {
+  public override render(): React.ReactElement {
+    const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = this.props
+
+    if (!filepath) {
+      return (
+        <div className="relative size-full flex items-center">
+          <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
+        </div>
+      )
+    }
+
     return (
-      <div className="w-full pt-8">
-        <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="w-full pt-8">
       <PdfViewProvider
         workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <PdfContent mainScrollableContainer={mainScrollableContainer} />
+        <div className="relative size-full">
+          <Composer />
+          <TotopButton scrollableContainer={mainScrollableContainer} />
+        </div>
       </PdfViewProvider>
-    </div>
-  )
-}
-
-PdfView.displayName = 'PdfView'
-
-const PdfContent: React.FC<{ mainScrollableContainer: HTMLDivElement | null }> = ({
-  mainScrollableContainer,
-}) => {
-  const viewmodel = usePdfViewViewModel()
-  const data = useStateValue(viewmodel.data$)
-  const error = useStateValue(viewmodel.error$)
-
-  return (
-    <React.Fragment>
-      {!!error && (
-        <div className="relative mb-12 flex-none bg-gray-100 px-2 py-1.5 text-base text-red-500 dark:bg-gray-800 dark:text-red-400">
-          <code>error: {String(error)}</code>
-        </div>
-      )}
-      {!!data && (
-        <div className="relative w-full">
-          <Composer mainScrollableContainer={mainScrollableContainer} />
-        </div>
-      )}
-    </React.Fragment>
-  )
+    )
+  }
 }

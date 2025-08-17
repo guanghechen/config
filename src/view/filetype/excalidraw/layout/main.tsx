@@ -10,9 +10,9 @@ import React from 'react'
 import { SiteTheme } from '@/context/site'
 import { usePostFile } from '@/hook/api/file/save'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
+import { ExcalidrawElementRenderer } from '../container/ExcalidrawElement'
 import { useExcalidrawViewState } from '../context'
 import '@excalidraw/excalidraw/index.css'
-import { ExcalidrawElementRenderer } from './ExcalidrawElement'
 
 type NonDeleted<TElement extends ExcalidrawElement> = TElement & {
   isDeleted: boolean
@@ -29,7 +29,7 @@ interface IExcalidrawData {
   }
 }
 
-export const ExcalidrawComposer: React.FC = () => {
+export const Main: React.FC = () => {
   const { content, theme, workspace, filepath } = useExcalidrawViewState()
   const { save: saveFile } = usePostFile()
   const excalidrawRef = React.useRef<ExcalidrawImperativeAPI>(null)
@@ -155,4 +155,4 @@ export const ExcalidrawComposer: React.FC = () => {
   )
 }
 
-ExcalidrawComposer.displayName = 'ExcalidrawComposer'
+Main.displayName = 'ExcalidrawViewMain'

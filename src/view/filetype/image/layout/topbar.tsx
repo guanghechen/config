@@ -10,7 +10,7 @@ import {
 } from '@/component/icon/material'
 import { useImageViewViewModel } from '../context'
 
-export const ImageTopbar: React.FC = () => {
+export const Topbar: React.FC = () => {
   const viewmodel = useImageViewViewModel()
   const scale = useStateValue(viewmodel.scale$)
 
@@ -129,4 +129,4 @@ export const ImageTopbar: React.FC = () => {
     </div>
   )
 }
-ImageTopbar.displayName = 'ImageTopbar'
+Topbar.displayName = 'ImageViewTopbar'

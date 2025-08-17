@@ -1,8 +1,6 @@
-import cn from 'clsx'
 import React from 'react'
-import { useScrollToTop } from '@/hook/useScrollToTop'
+import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
-import { ModeToggle } from './container/ModeToggle'
 import { JsonViewProvider } from './context'
 
 interface IProps {
@@ -12,44 +10,31 @@ interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
 }
 
-export const JsonView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
-  const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
+export class JsonView extends React.PureComponent<IProps> {
+  public static readonly displayName = 'JsonView'
 
-  return (
-    <div className="w-full pt-8">
-      <div className="relative w-full">
-        <JsonViewProvider
-          workspace={workspace}
-          filepath={filepath}
-          filepathDirtyTick={filepathDirtyTick}
-        >
-          <ModeToggle />
+  public override render(): React.ReactElement {
+    const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = this.props
+
+    if (!filepath) {
+      return (
+        <div className="relative size-full flex items-center">
+          <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
+        </div>
+      )
+    }
+
+    return (
+      <JsonViewProvider
+        workspace={workspace}
+        filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
+      >
+        <div className="relative size-full">
           <Composer />
-        </JsonViewProvider>
-        <button
-          onClick={scrollToTop}
-          className={cn(
-            'cursor-pointer fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 bg-opacity-60 text-white shadow-lg transition-all duration-300 hover:bg-blue-600 hover:bg-opacity-100 dark:bg-blue-600 dark:bg-opacity-70 dark:hover:bg-blue-500 dark:hover:bg-opacity-100',
-            visibleScrollToTop
-              ? 'translate-y-0 opacity-90'
-              : 'pointer-events-none translate-y-16 opacity-0',
-          )}
-          title="Scroll to top"
-          aria-label="Scroll to top"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  )
+          <TotopButton scrollableContainer={mainScrollableContainer} />
+        </div>
+      </JsonViewProvider>
+    )
+  }
 }
-
-JsonView.displayName = 'JsonView'

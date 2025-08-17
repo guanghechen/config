@@ -4,7 +4,7 @@ import React from 'react'
 import { toSearch } from '@/shared/util'
 import { useImageViewViewModel } from '../context'
 
-export const ImageMain: React.FC = () => {
+export const Main: React.FC = () => {
   const viewmodel = useImageViewViewModel()
   const filepath = useStateValue(viewmodel.filepath$)
   const workspace = useStateValue(viewmodel.workspace$)
@@ -92,4 +92,4 @@ export const ImageMain: React.FC = () => {
     </div>
   )
 }
-ImageMain.displayName = 'ImageMain'
+Main.displayName = 'ImageViewMain'

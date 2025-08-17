@@ -3,7 +3,7 @@ import React from 'react'
 import { toSearch } from '@/shared/util'
 import { ModeEnum, useHtmlViewViewModel } from '../context'
 
-export const HtmlMain: React.FC = () => {
+export const Main: React.FC = () => {
   const viewmodel = useHtmlViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
   const filepath = useStateValue(viewmodel.filepath$)
@@ -48,17 +48,15 @@ export const HtmlMain: React.FC = () => {
   }, [injectTailwindCSS])
 
   return (
-    <div className="relative h-full w-full">
-      <iframe
-        ref={iframeRef}
-        src={url}
-        title={filepath || 'HTML file'}
-        className="h-full w-full border-none"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-        onLoad={handleIframeLoad}
-      />
-    </div>
+    <iframe
+      ref={iframeRef}
+      src={url}
+      title={filepath || 'HTML file'}
+      className="h-full w-full border-none"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+      onLoad={handleIframeLoad}
+    />
   )
 }
 
-HtmlMain.displayName = 'HtmlMain'
+Main.displayName = 'HtmlViewMain'

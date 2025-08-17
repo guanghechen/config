@@ -3,7 +3,7 @@ import cn from 'clsx'
 import React from 'react'
 import { ModeEnum, useMarkdownViewViewModel } from '../context'
 
-export const ModeToggle: React.FC = () => {
+export const Mode: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
@@ -60,4 +60,4 @@ export const ModeToggle: React.FC = () => {
   )
 }
 
-ModeToggle.displayName = 'MarkdownViewModeToggle'
+Mode.displayName = 'MarkdownViewMode'
