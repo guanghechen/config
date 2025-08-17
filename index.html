@@ -1,7 +1,7 @@
 <!doctype html>
 <html
   lang="en"
-  class="[&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-800 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2"
+  class="[&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-500 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-400 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2"
 >
   <head>
     <meta charset="UTF-8" />
@@ -9,7 +9,9 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>NeoVim Markdown Preview</title>
   </head>
-  <body class="dark:bg-gray-800 ">
+  <body
+    class="dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-500 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-400 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2"
+  >
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
