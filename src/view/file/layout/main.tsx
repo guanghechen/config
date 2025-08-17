@@ -1,5 +1,4 @@
 import React from 'react'
-import { EventStreamView } from '@/view/filetype/eventstream/View'
 import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
 import { ImageView } from '@/view/filetype/image/View'
@@ -38,15 +37,6 @@ export class Main extends React.PureComponent<IProps> {
 
     const extname: string = filepath ? regexes.extname.exec(filepath)?.[1] || '' : ''
     switch (extname.toLowerCase()) {
-      case '.eventstream':
-        return (
-          <EventStreamView
-            workspace={null}
-            filepath={filepath}
-            filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
-          />
-        )
       case '.excalidraw':
         return (
           <ExcalidrawView

@@ -1,6 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { EventStreamView } from '@/view/filetype/eventstream/View'
 import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
 import { ImageView } from '@/view/filetype/image/View'
@@ -30,19 +29,17 @@ export const Main: React.FC = () => {
 
   const container: React.ReactElement = React.useMemo<React.ReactElement>(() => {
     if (!filepath) {
-      return <UnknownView filepath={filepath} extname={extname} />
+      return (
+        <UnknownView
+          workspace={workspace}
+          filepath={filepath}
+          filepathDirtyTick={filepathDirtyTick}
+          mainScrollableContainer={mainScrollableContainer}
+        />
+      )
     }
 
     switch (extname.toLowerCase()) {
-      case '.eventstream':
-        return (
-          <EventStreamView
-            workspace={workspace}
-            filepath={filepath}
-            filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
-          />
-        )
       case '.excalidraw':
         return (
           <ExcalidrawView
@@ -128,7 +125,14 @@ export const Main: React.FC = () => {
           />
         )
       default:
-        return <UnknownView filepath={filepath} extname={extname} />
+        return (
+          <UnknownView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+          />
+        )
     }
   }, [extname, workspace, filepath, filepathDirtyTick, mainScrollableContainer])
 

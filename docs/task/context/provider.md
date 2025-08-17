@@ -19,7 +19,6 @@ All filetype providers have been successfully refactored to follow the excalidra
 - ✅ PDF provider: Added SideEffect component and all missing props
 - ✅ SVG provider: Added SideEffect component and all missing props
 - ✅ JSONL provider: Added SideEffect component and all missing props
-- ✅ EventStream provider: Updated to use `React.useState`, explicit props, and SideEffect component
 - ✅ Unknown provider: Updated to use `React.useState`, explicit props, and SideEffect component
 
 All providers now follow the consistent pattern established by the excalidraw provider.
