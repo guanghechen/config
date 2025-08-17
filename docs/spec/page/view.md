@@ -14,7 +14,7 @@ refactor: extract main view renderer for different filetype into src/view/filety
    - View.tsx         # (required) The component connect to higher context or props and pass necessary data to the Composer.
 
 2. DO NOT try to import outer views outer of the `src/view/filetype/` such as import
-   `src/view/filetype/jsonl/*` from the `src/view/filetype/text/*`. Only below codes are
+   `src/view/filetype/jsonl/*` from the `src/view/filetype/eventstream/*`. Only below codes are
    shareable:
    - src/component
    - src/constant

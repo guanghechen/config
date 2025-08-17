@@ -40,6 +40,15 @@ export const Main: React.FC = () => {
     }
 
     switch (extname.toLowerCase()) {
+      case '.eventstream':
+        return (
+          <TextView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={mainScrollableContainer}
+          />
+        )
       case '.excalidraw':
         return (
           <ExcalidrawView

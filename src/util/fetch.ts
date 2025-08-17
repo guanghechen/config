@@ -15,6 +15,10 @@ export interface IJsonFileData {
   readonly content: string
 }
 
+export interface IEventStreamFileData {
+  readonly content: string
+}
+
 export interface IJsonlFileData {
   readonly content: string
 }
@@ -38,6 +42,7 @@ export interface ITextFileData {
 export type IFetchFileData =
   | IMarkdownFileData
   | IJsonFileData
+  | IEventStreamFileData
   | IJsonlFileData
   | IPdfFileData
   | ISvgFileData
