@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { DAGGraph, transformNodesToGraphData } from '@/component/graph/dag'
+import { DagGraph, transformNodesToGraphData } from '@/component/graph/dag'
 import { PRESET_CLASSES } from '@/constant/classes'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import type { ITextTransformedNode } from '@/shared/transform/types'
@@ -61,7 +61,7 @@ export const ViewPane: React.FC<IProps> = props => {
           </div>
         ) : viewMode === ViewModeEnum.GRAPH && transformedNodes ? (
           <div className="w-full h-full min-h-[600px]">
-            <DAGGraph
+            <DagGraph
               data={transformNodesToGraphData(transformedNodes)}
               width={0}
               height={0}

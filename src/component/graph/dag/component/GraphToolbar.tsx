@@ -1,8 +1,18 @@
 import cn from 'clsx'
 import React from 'react'
-import type { IToolbarProps } from '../types'
+import type { ITransform } from '../types'
 
-export const GraphToolbar: React.FC<IToolbarProps> = ({
+interface IProps {
+  readonly transform: ITransform
+  readonly onZoomIn: () => void
+  readonly onZoomOut: () => void
+  readonly onZoomReset: () => void
+  readonly onFitToView: () => void
+  readonly onReLayout: () => void
+  readonly theme?: 'light' | 'dark'
+}
+
+export const GraphToolbar: React.FC<IProps> = ({
   transform,
   onZoomIn,
   onZoomOut,

@@ -35,11 +35,11 @@ export class PerformanceMonitor {
   private fps = 0
   private renderTimes: number[] = []
 
-  startFrame(): number {
+  public startFrame(): number {
     return performance.now()
   }
 
-  endFrame(startTime: number): void {
+  public endFrame(startTime: number): void {
     const endTime = performance.now()
     const renderTime = endTime - startTime
 
@@ -56,16 +56,16 @@ export class PerformanceMonitor {
     }
   }
 
-  getFPS(): number {
+  public getFPS(): number {
     return this.fps
   }
 
-  getAverageRenderTime(): number {
+  public getAverageRenderTime(): number {
     if (this.renderTimes.length === 0) return 0
     return this.renderTimes.reduce((sum, time) => sum + time, 0) / this.renderTimes.length
   }
 
-  shouldSkipFrame(): boolean {
+  public shouldSkipFrame(): boolean {
     return this.getAverageRenderTime() > 16.67
   }
 }

@@ -12,11 +12,28 @@ interface IHitTestResult {
   isHit: boolean
 }
 
+interface IMouseEventsReturn {
+  hoveredNode: IGraphNode | null
+  handleCanvasMouseMove: (event: MouseEvent, canvasRect: DOMRect) => void
+  handleCanvasClick: (
+    event: MouseEvent,
+    canvasRect: DOMRect,
+    dragStart: { x: number; y: number } | null,
+  ) => void
+  handleCanvasMouseDown: (
+    event: MouseEvent,
+    canvasRect: DOMRect,
+    dragStart: { x: number; y: number },
+  ) => void
+  handleKeyDown: (event: KeyboardEvent) => void
+  hitTestNode: (worldX: number, worldY: number) => IHitTestResult
+}
+
 export const useMouseEvents = (
   nodes: IGraphNode[],
   handlers: IMouseEventHandlers,
   screenToWorld: (x: number, y: number) => { x: number; y: number },
-) => {
+): IMouseEventsReturn => {
   const hoveredNode = useRef<IGraphNode | null>(null)
   const clickThreshold = 5
   const dragThreshold = 10

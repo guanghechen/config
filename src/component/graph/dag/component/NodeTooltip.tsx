@@ -1,13 +1,13 @@
 import React from 'react'
 import type { IGraphNode } from '../types'
 
-interface INodeTooltipProps {
+interface IProps {
   node: IGraphNode | null
   position: { x: number; y: number }
   visible: boolean
 }
 
-export const NodeTooltip: React.FC<INodeTooltipProps> = ({ node, position, visible }) => {
+export const NodeTooltip: React.FC<IProps> = ({ node, position, visible }) => {
   if (!visible || !node) return null
 
   return (
@@ -27,3 +27,5 @@ export const NodeTooltip: React.FC<INodeTooltipProps> = ({ node, position, visib
     </div>
   )
 }
+
+NodeTooltip.displayName = 'NodeTooltip'

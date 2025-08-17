@@ -1,6 +1,7 @@
-import type { IGraphNode } from '../types'
+/* eslint-disable no-param-reassign */
+import type { IGraphNode, IGraphNodeBounds } from '../types'
 
-export const getNodeBounds = (node: IGraphNode) => {
+export const getNodeBounds = (node: IGraphNode): IGraphNodeBounds => {
   const { x, y } = node.position || { x: 0, y: 0 }
   const { width, height } = node.size || { width: 120, height: 60 }
 

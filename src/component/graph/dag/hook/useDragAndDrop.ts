@@ -1,7 +1,7 @@
 import React from 'react'
 import type { IDragDropState, IGraphNode } from '../types'
 
-interface IUseDragAndDropProps {
+interface IProps {
   readonly nodes: IGraphNode[]
   readonly onNodeReplace?: (sourceNode: IGraphNode, targetNode: IGraphNode) => void
   readonly onNodePositionChange?: (nodeId: string, newPosition: { x: number; y: number }) => void
@@ -13,7 +13,7 @@ interface IUseDragAndDropProps {
   readonly worldToScreen: (x: number, y: number) => { x: number; y: number }
 }
 
-interface IUseDragAndDropReturn {
+interface IResult {
   readonly dragDropState: IDragDropState
   readonly handleDragStart: (node: IGraphNode, screenX: number, screenY: number) => void
   readonly handleDragMove: (screenX: number, screenY: number) => void
@@ -21,14 +21,8 @@ interface IUseDragAndDropReturn {
   readonly resetDragState: () => void
 }
 
-export const useDragAndDrop = ({
-  nodes,
-  onNodeReplace,
-  onNodePositionChange,
-  hitTestNode,
-  screenToWorld,
-  worldToScreen,
-}: IUseDragAndDropProps): IUseDragAndDropReturn => {
+export const useDragAndDrop = (props: IProps): IResult => {
+  const { hitTestNode, screenToWorld, worldToScreen, onNodeReplace, onNodePositionChange } = props
   const [dragDropState, setDragDropState] = React.useState<IDragDropState>({
     isDragging: false,
     draggedNode: null,

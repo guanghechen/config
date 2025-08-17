@@ -1,10 +1,9 @@
-import type { IGraphEdge, IGraphNode } from '../types'
-import type { ILayoutAlgorithm, ILayoutConfig } from './types'
+import type { IGraphEdge, IGraphNode, IGraphLayoutAlgorithm, IGraphLayoutConfig } from '../types'
 
-export class HierarchicalLayout implements ILayoutAlgorithm {
-  private config: ILayoutConfig
+export class HierarchicalLayout implements IGraphLayoutAlgorithm {
+  private config: IGraphLayoutConfig
 
-  constructor(config?: Partial<ILayoutConfig>) {
+  constructor(config?: Partial<IGraphLayoutConfig>) {
     this.config = {
       nodeSpacing: 150,
       levelSpacing: 200,
@@ -13,7 +12,7 @@ export class HierarchicalLayout implements ILayoutAlgorithm {
     }
   }
 
-  calculateLayout(nodes: IGraphNode[], edges: IGraphEdge[]): IGraphNode[] {
+  public calculateLayout(nodes: IGraphNode[], edges: IGraphEdge[]): IGraphNode[] {
     if (nodes.length === 0) return []
 
     const children = this.buildChildrenMap(edges)
@@ -126,7 +125,7 @@ export class HierarchicalLayout implements ILayoutAlgorithm {
     return nodesByLevel
   }
 
-  updateConfig(newConfig: Partial<ILayoutConfig>): void {
+  public updateConfig(newConfig: Partial<IGraphLayoutConfig>): void {
     this.config = { ...this.config, ...newConfig }
   }
 }

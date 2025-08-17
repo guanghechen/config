@@ -1,27 +1,43 @@
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
-import { GraphToolbar, NodeTooltip } from './component'
+import { GraphToolbar } from './component/GraphToolbar'
+import { NodeTooltip } from './component/NodeTooltip'
 import { useCanvasInteraction } from './hook/useCanvasInteraction'
 import { useDragAndDrop } from './hook/useDragAndDrop'
 import { useGraphLayout } from './hook/useGraphLayout'
 import { useGraphRenderer } from './hook/useGraphRenderer'
 import { useMouseEvents } from './hook/useMouseEvents'
-import type { IDAGGraphProps, IGraphNode } from './types'
+import type { IGraphData, IGraphEdgeRenderer, IGraphNode, IGraphNodeRenderer } from './types'
 
-export const DAGGraph: React.FC<IDAGGraphProps> = ({
-  data,
-  width,
-  height,
-  nodeRenderer,
-  edgeRenderer,
-  onNodeClick,
-  onNodeHover,
-  onNodeReplace,
-  onNodePositionChange,
-  theme = 'light',
-  showToolbar = true,
-}) => {
+interface IProps {
+  readonly data: IGraphData
+  readonly width: number
+  readonly height: number
+  readonly nodeRenderer?: IGraphNodeRenderer
+  readonly edgeRenderer?: IGraphEdgeRenderer
+  readonly theme?: 'light' | 'dark'
+  readonly showToolbar?: boolean
+  readonly onNodeClick?: (node: IGraphNode) => void
+  readonly onNodeHover?: (node: IGraphNode | null) => void
+  readonly onNodeReplace?: (sourceNode: IGraphNode, targetNode: IGraphNode) => void
+  readonly onNodePositionChange?: (nodeId: string, newPosition: { x: number; y: number }) => void
+}
+
+export const DagGraph: React.FC<IProps> = props => {
+  const {
+    data,
+    width,
+    height,
+    nodeRenderer,
+    edgeRenderer,
+    theme = 'light',
+    showToolbar = true,
+    onNodeClick,
+    onNodeHover,
+    onNodeReplace,
+    onNodePositionChange,
+  } = props
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
 
@@ -385,4 +401,4 @@ export const DAGGraph: React.FC<IDAGGraphProps> = ({
   )
 }
 
-DAGGraph.displayName = 'DAGGraph'
+DagGraph.displayName = 'DagGraph'

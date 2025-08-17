@@ -1,7 +1,7 @@
 import React, { type RefObject } from 'react'
 import type { IGraphNode, ITransform } from '../types'
 
-interface IInteractionState {
+interface IState {
   isDragging: boolean
   dragStart: { x: number; y: number } | null
   draggedNode: IGraphNode | null
@@ -13,7 +13,7 @@ export const useCanvasInteraction = (
   canvasRef: RefObject<HTMLCanvasElement | null>,
 ): {
   transform: ITransform
-  interactionState: IInteractionState
+  interactionState: IState
   screenToWorld: (x: number, y: number) => { x: number; y: number }
   worldToScreen: (x: number, y: number) => { x: number; y: number }
   handleWheel: (event: WheelEvent) => void
@@ -28,7 +28,7 @@ export const useCanvasInteraction = (
   setNodeDragging: (isNodeDragging: boolean) => void
 } => {
   const [transform, setTransform] = React.useState<ITransform>({ x: 0, y: 0, scale: 1 })
-  const [interactionState, setInteractionState] = React.useState<IInteractionState>({
+  const [interactionState, setInteractionState] = React.useState<IState>({
     isDragging: false,
     dragStart: null,
     draggedNode: null,

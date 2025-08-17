@@ -1,20 +1,20 @@
 /* eslint-disable no-param-reassign */
 import React, { useCallback } from 'react'
-import { DefaultEdgeRenderer } from '../render/DefaultEdgeRenderer'
-import { DefaultNodeRenderer } from '../render/DefaultNodeRenderer'
+import { DefaultEdgeRenderer } from '../layout/DefaultEdgeRenderer'
+import { DefaultNodeRenderer } from '../layout/DefaultNodeRenderer'
 import type {
-  IEdgeRenderer,
-  IEdgeStyle,
+  IGraphEdgeRenderer,
+  IGraphEdgeStyle,
   IGraphEdge,
   IGraphNode,
-  INodeRenderer,
-  INodeStyle,
+  IGraphNodeRenderer,
+  IGraphNodeStyle,
   ITransform,
 } from '../types'
 
 interface IRenderConfig {
-  nodeStyle: INodeStyle
-  edgeStyle: IEdgeStyle
+  nodeStyle: IGraphNodeStyle
+  edgeStyle: IGraphEdgeStyle
   hoveredNode: IGraphNode | null
   selectedNode: IGraphNode | null
 }
@@ -28,20 +28,20 @@ export const useGraphRenderer = (
     edges: IGraphEdge[],
     transform: ITransform,
     config?: Partial<IRenderConfig>,
-    customNodeRenderer?: INodeRenderer,
-    customEdgeRenderer?: IEdgeRenderer,
+    customNodeRenderer?: IGraphNodeRenderer,
+    customEdgeRenderer?: IGraphEdgeRenderer,
   ) => void
   startRenderLoop: (renderFn: () => void) => void
   stopRenderLoop: () => void
-  getDefaultStyles: () => { nodeStyle: INodeStyle; edgeStyle: IEdgeStyle }
+  getDefaultStyles: () => { nodeStyle: IGraphNodeStyle; edgeStyle: IGraphEdgeStyle }
 } => {
   const animationFrameRef = React.useRef<number | null>(null)
   const defaultNodeRenderer = React.useRef(new DefaultNodeRenderer())
   const defaultEdgeRenderer = React.useRef(new DefaultEdgeRenderer())
 
   const getDefaultStyles = React.useCallback((): {
-    nodeStyle: INodeStyle
-    edgeStyle: IEdgeStyle
+    nodeStyle: IGraphNodeStyle
+    edgeStyle: IGraphEdgeStyle
   } => {
     const isDark = theme === 'dark'
 
@@ -88,8 +88,8 @@ export const useGraphRenderer = (
       edges: IGraphEdge[],
       transform: ITransform,
       config?: Partial<IRenderConfig>,
-      customNodeRenderer?: INodeRenderer,
-      customEdgeRenderer?: IEdgeRenderer,
+      customNodeRenderer?: IGraphNodeRenderer,
+      customEdgeRenderer?: IGraphEdgeRenderer,
     ) => {
       const canvas = canvasRef.current
       if (!canvas) return

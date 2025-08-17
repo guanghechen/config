@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
-import type { IEdgeRenderer, IEdgeStyle, IGraphEdge, IGraphNode } from '../types'
+import type { IGraphEdgeRenderer, IGraphEdgeStyle, IGraphEdge, IGraphNode } from '../types'
 
-export class DefaultEdgeRenderer implements IEdgeRenderer {
+export class DefaultEdgeRenderer implements IGraphEdgeRenderer {
   private animationOffset = 0
 
   public render(
@@ -9,7 +9,7 @@ export class DefaultEdgeRenderer implements IEdgeRenderer {
     _edge: IGraphEdge,
     sourceNode: IGraphNode,
     targetNode: IGraphNode,
-    style: IEdgeStyle,
+    style: IGraphEdgeStyle,
   ): void {
     const sourcePos = sourceNode.position || { x: 0, y: 0 }
     const targetPos = targetNode.position || { x: 0, y: 0 }

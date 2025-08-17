@@ -1,7 +1,6 @@
 import React from 'react'
 import { HierarchicalLayout } from '../layout/HierarchicalLayout'
-import type { ILayoutConfig } from '../layout/types'
-import type { IGraphData, IGraphNode } from '../types'
+import type { IGraphData, IGraphNode, IGraphLayoutConfig } from '../types'
 
 interface ILayoutCache {
   data: IGraphData | null
@@ -10,10 +9,10 @@ interface ILayoutCache {
 
 export const useGraphLayout = (
   data: IGraphData,
-  config?: Partial<ILayoutConfig>,
+  config?: Partial<IGraphLayoutConfig>,
 ): {
   layoutNodes: () => IGraphNode[]
-  updateLayoutConfig: (newConfig: Partial<ILayoutConfig>) => void
+  updateLayoutConfig: (newConfig: Partial<IGraphLayoutConfig>) => void
   clearCache: () => void
 } => {
   const layoutEngine = React.useMemo(() => new HierarchicalLayout(config), [config])
@@ -49,7 +48,7 @@ export const useGraphLayout = (
   }, [data, layoutEngine])
 
   const updateLayoutConfig = React.useCallback(
-    (newConfig: Partial<ILayoutConfig>) => {
+    (newConfig: Partial<IGraphLayoutConfig>) => {
       layoutEngine.updateConfig(newConfig)
       cache.current = { data: null, result: [] }
     },

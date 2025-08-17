@@ -1,24 +1,23 @@
 import React from 'react'
 
-interface IGraphErrorBoundaryState {
+interface IState {
   hasError: boolean
   error?: Error
 }
 
-interface IGraphErrorBoundaryProps {
+interface IProps {
   children: React.ReactNode
 }
 
-export class GraphErrorBoundary extends React.Component<
-  IGraphErrorBoundaryProps,
-  IGraphErrorBoundaryState
-> {
-  constructor(props: IGraphErrorBoundaryProps) {
+export class GraphErrorBoundary extends React.Component<IProps, IState> {
+  public static readonly displayName: string = 'GraphErrorBoundary'
+
+  constructor(props: IProps) {
     super(props)
     this.state = { hasError: false }
   }
 
-  public static getDerivedStateFromError(error: Error): IGraphErrorBoundaryState {
+  public static getDerivedStateFromError(error: Error): IState {
     return { hasError: true, error }
   }
 

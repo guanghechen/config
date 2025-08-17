@@ -1,11 +1,11 @@
 /* eslint-disable no-param-reassign */
-import type { IGraphNode, INodeRenderer, INodeStyle } from '../types'
+import type { IGraphNode, IGraphNodeRenderer, IGraphNodeStyle } from '../types'
 
-export class DefaultNodeRenderer implements INodeRenderer {
+export class DefaultNodeRenderer implements IGraphNodeRenderer {
   public render(
     ctx: CanvasRenderingContext2D,
     node: IGraphNode,
-    style: INodeStyle,
+    style: IGraphNodeStyle,
     isHovered: boolean,
     isSelected: boolean,
   ): void {
