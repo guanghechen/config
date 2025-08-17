@@ -53,7 +53,9 @@ export class TextViewViewModel extends ViewModel {
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
     const normalizedViewMode: ViewModeEnum =
-      viewMode === ViewModeEnum.ORIGINAL || viewMode === ViewModeEnum.LIST
+      viewMode === ViewModeEnum.ORIGINAL ||
+      viewMode === ViewModeEnum.LIST ||
+      viewMode === ViewModeEnum.GRAPH
         ? viewMode
         : base.viewMode
     const normalizedTransformConfig: ITextTransformConfig = transformConfig || base.transformConfig!

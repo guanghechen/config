@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
@@ -39,6 +40,20 @@ const VIEW_MODE_OPTIONS: ReadonlyArray<IViewModeOption> = [
       </svg>
     ),
   },
+  {
+    value: ViewModeEnum.GRAPH,
+    label: 'Graph',
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+        />
+      </svg>
+    ),
+  },
 ] as const
 
 export const ViewModeDropdown: React.FC = () => {
@@ -48,28 +63,28 @@ export const ViewModeDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
+  const isListDisabled: boolean = !transformedNodes || transformedNodes.length === 0
+  const isGraphDisabled: boolean = !transformedNodes || transformedNodes.length === 0
+  const actualViewMode: ViewModeEnum =
+    (viewMode === ViewModeEnum.LIST && isListDisabled) ||
+    (viewMode === ViewModeEnum.GRAPH && isGraphDisabled)
+      ? ViewModeEnum.ORIGINAL
+      : viewMode
+
   const currentOption = VIEW_MODE_OPTIONS.find(option => option.value === viewMode)
 
-  // Check if List view should be disabled (when transformedNodes is empty or null)
-  const isListDisabled = !transformedNodes || transformedNodes.length === 0
-
-  // Auto-switch away from List mode if it becomes disabled while selected
-  React.useEffect(() => {
-    if (viewMode === ViewModeEnum.LIST && isListDisabled) {
-      viewmodel.viewMode$.next(ViewModeEnum.ORIGINAL)
-    }
-  }, [viewMode, isListDisabled, viewmodel])
-
-  const handleSelect = (mode: ViewModeEnum): void => {
-    // Prevent selection of List mode when disabled
+  const handleSelect = useEventCallback((mode: ViewModeEnum): void => {
     if (mode === ViewModeEnum.LIST && isListDisabled) {
+      return
+    }
+    if (mode === ViewModeEnum.GRAPH && isGraphDisabled) {
       return
     }
     viewmodel.viewMode$.next(mode)
     setIsOpen(false)
-  }
+  })
 
-  const handleKeyDown = (event: React.KeyboardEvent): void => {
+  const handleKeyDown = useEventCallback((event: React.KeyboardEvent): void => {
     if (event.key === 'Escape') {
       setIsOpen(false)
     } else if (event.key === 'Enter' || event.key === ' ') {
@@ -80,38 +95,38 @@ export const ViewModeDropdown: React.FC = () => {
       const firstOption = dropdownRef.current?.querySelector('[role="option"]') as HTMLButtonElement
       firstOption?.focus()
     }
-  }
+  })
 
-  const handleOptionKeyDown = (
-    event: React.KeyboardEvent,
-    mode: ViewModeEnum,
-    index: number,
-  ): void => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      // Prevent selection if List mode is disabled
-      if (mode === ViewModeEnum.LIST && isListDisabled) {
-        return
+  const handleOptionKeyDown = useEventCallback(
+    (event: React.KeyboardEvent, mode: ViewModeEnum, index: number): void => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        if (mode === ViewModeEnum.LIST && isListDisabled) {
+          return
+        }
+        if (mode === ViewModeEnum.GRAPH && isGraphDisabled) {
+          return
+        }
+        handleSelect(mode)
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        const nextIndex = (index + 1) % VIEW_MODE_OPTIONS.length
+        const nextOption = dropdownRef.current?.querySelectorAll('[role="option"]')[
+          nextIndex
+        ] as HTMLButtonElement
+        nextOption?.focus()
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        const prevIndex = index === 0 ? VIEW_MODE_OPTIONS.length - 1 : index - 1
+        const prevOption = dropdownRef.current?.querySelectorAll('[role="option"]')[
+          prevIndex
+        ] as HTMLButtonElement
+        prevOption?.focus()
+      } else if (event.key === 'Escape') {
+        setIsOpen(false)
       }
-      handleSelect(mode)
-    } else if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      const nextIndex = (index + 1) % VIEW_MODE_OPTIONS.length
-      const nextOption = dropdownRef.current?.querySelectorAll('[role="option"]')[
-        nextIndex
-      ] as HTMLButtonElement
-      nextOption?.focus()
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      const prevIndex = index === 0 ? VIEW_MODE_OPTIONS.length - 1 : index - 1
-      const prevOption = dropdownRef.current?.querySelectorAll('[role="option"]')[
-        prevIndex
-      ] as HTMLButtonElement
-      prevOption?.focus()
-    } else if (event.key === 'Escape') {
-      setIsOpen(false)
-    }
-  }
+    },
+  )
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
@@ -164,7 +179,9 @@ export const ViewModeDropdown: React.FC = () => {
           >
             <div className="p-1">
               {VIEW_MODE_OPTIONS.map((option, index) => {
-                const isDisabled = option.value === ViewModeEnum.LIST && isListDisabled
+                const isDisabled =
+                  (option.value === ViewModeEnum.LIST && isListDisabled) ||
+                  (option.value === ViewModeEnum.GRAPH && isGraphDisabled)
                 return (
                   <button
                     key={option.value}
@@ -175,12 +192,12 @@ export const ViewModeDropdown: React.FC = () => {
                       'group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150 focus:outline-none',
                       isDisabled
                         ? 'cursor-not-allowed opacity-50'
-                        : viewMode === option.value
+                        : actualViewMode === option.value
                           ? 'bg-indigo-50 text-indigo-700 shadow-sm dark:bg-indigo-900/50 dark:text-indigo-300'
                           : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
                     )}
                     role="option"
-                    aria-selected={viewMode === option.value}
+                    aria-selected={actualViewMode === option.value}
                     aria-disabled={isDisabled}
                     tabIndex={isOpen && !isDisabled ? 0 : -1}
                   >
@@ -189,7 +206,7 @@ export const ViewModeDropdown: React.FC = () => {
                         'flex h-6 w-6 items-center justify-center rounded transition-colors',
                         isDisabled
                           ? 'text-gray-400 dark:text-gray-600'
-                          : viewMode === option.value
+                          : actualViewMode === option.value
                             ? 'text-indigo-600 dark:text-indigo-400'
                             : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300',
                       )}
@@ -204,7 +221,7 @@ export const ViewModeDropdown: React.FC = () => {
                     >
                       {option.label}
                     </span>
-                    {viewMode === option.value && !isDisabled && (
+                    {actualViewMode === option.value && !isDisabled && (
                       <svg
                         className="ml-auto h-4 w-4 text-indigo-600 dark:text-indigo-400"
                         fill="currentColor"

@@ -11,6 +11,8 @@
 .claude/*
 !.claude/settings.json
 
+.kiro/*
+
 docs/task/local/
 
 

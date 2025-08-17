@@ -12,6 +12,7 @@ export enum ModeEnum {
 export enum ViewModeEnum {
   ORIGINAL = 'original',
   LIST = 'list',
+  GRAPH = 'graph',
 }
 
 export interface ITextViewData {

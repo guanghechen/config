@@ -1,6 +1,9 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
+import { DAGGraph, transformNodesToGraphData } from '@/component/graph/dag'
 import { PRESET_CLASSES } from '@/constant/classes'
+import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import type { ITextTransformedNode } from '@/shared/transform/types'
 import { ViewModeDropdown } from '../container/ViewModeDropdown'
 import { ViewModeEnum } from '../context'
@@ -14,14 +17,14 @@ interface IProps {
 
 export const ViewPane: React.FC<IProps> = props => {
   const { content, viewMode, transformedNodes, columns } = props
+  const siteVM = useSiteViewmodel()
+  const theme: SiteTheme = useStateValue(siteVM.theme$)
 
   return (
-    <div>
-      <div className="relative w-full">
-        <ViewModeDropdown />
-      </div>
+    <div className="relative size-full flex-auto w-[80rem]">
+      <ViewModeDropdown />
       <div
-        className={cn('h-full w-[72rem] max-w-[100rem] flex-auto', PRESET_CLASSES.scrollbar, {
+        className={cn('h-full', PRESET_CLASSES.scrollbar, {
           'p-2 overflow-auto': columns > 1,
           'p-8': columns === 1,
         })}
@@ -55,6 +58,15 @@ export const ViewPane: React.FC<IProps> = props => {
                 </div>
               </div>
             ))}
+          </div>
+        ) : viewMode === ViewModeEnum.GRAPH && transformedNodes ? (
+          <div className="w-full h-full min-h-[600px]">
+            <DAGGraph
+              data={transformNodesToGraphData(transformedNodes)}
+              width={0}
+              height={0}
+              theme={theme === SiteTheme.DARKEN ? 'dark' : 'light'}
+            />
           </div>
         ) : (
           <pre className="font-mono-maple whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800 dark:text-gray-200">

@@ -1,9 +1,10 @@
-import { Computed } from '@guanghechen/react-viewmodel'
+import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { ITextFileData } from '@/hook/api/file'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import { validateTransformerData } from '@/shared/transform/util'
+import { transformTextToNodes } from '../util/transform'
 import type { ITextViewContext } from './context'
 import { TextViewContextType } from './context'
 import type { ITextViewData, ModeEnum, ViewModeEnum } from './types'
@@ -71,7 +72,7 @@ interface ISideEffectProps {
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace, filepath, filepathDirtyTick, mode, viewMode } = props
-
+  const content: string | null = useStateValue<string | null>(viewmodel.content$)
   const { data, error } = useFileResult<ITextFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
@@ -121,6 +122,20 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     if (viewmodel.disposed) return
     viewmodel.viewMode$.next(viewMode ?? viewmodel.viewMode$.getSnapshot())
   }, [viewmodel, viewMode])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+
+    const transformConfig = viewmodel.transformConfig$.getSnapshot()
+    if (content && validateTransformerData(transformConfig)) {
+      const result = transformTextToNodes(content as string, transformConfig)
+      if (result.error) {
+        viewmodel.transformedNodes$.next([])
+      } else {
+        viewmodel.transformedNodes$.next(result.nodes)
+      }
+    }
+  }, [viewmodel, content]) // Re-run when content or transform config changes
 
   return <React.Fragment />
 }
