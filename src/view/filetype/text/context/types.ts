@@ -9,7 +9,13 @@ export enum ModeEnum {
   TRANSFORM = bit << 2,
 }
 
+export enum ViewModeEnum {
+  ORIGINAL = 'original',
+  LIST = 'list',
+}
+
 export interface ITextViewData {
   readonly mode: ModeEnum
+  readonly viewMode: ViewModeEnum
   readonly transformConfig: ITextTransformConfig
 }

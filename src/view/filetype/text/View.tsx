@@ -23,11 +23,13 @@ export const TextView: React.FC<IProps> = props => {
           filepathDirtyTick={filepathDirtyTick}
         >
           <ModeToggle topbarVisible={topbarVisible} />
-          <Composer
-            workspace={workspace}
-            filepath={filepath}
-            mainScrollableContainer={mainScrollableContainer}
-          />
+          <div className="relative w-full">
+            <Composer
+              workspace={workspace}
+              filepath={filepath}
+              mainScrollableContainer={mainScrollableContainer}
+            />
+          </div>
         </TextViewProvider>
       </div>
     </div>

@@ -3,10 +3,11 @@ import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/transform/types'
 import type { ITextViewData } from './types'
-import { ModeEnum } from './types'
+import { ModeEnum, ViewModeEnum } from './types'
 
 interface IProps {
   readonly mode?: ModeEnum
+  readonly viewMode?: ViewModeEnum
   readonly workspace?: string | null
   readonly filepath?: string | null
   readonly transformConfig?: ITextTransformConfig
@@ -22,11 +23,13 @@ const DEFAULT_TRANSFORM_CONFIG: ITextTransformConfig = {
 
 const DEFAULT_TEXT_VIEW_DATA: ITextViewData = {
   mode: ModeEnum.VIEW,
+  viewMode: ViewModeEnum.ORIGINAL,
   transformConfig: DEFAULT_TRANSFORM_CONFIG,
 }
 
 export class TextViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
+  public readonly viewMode$: IState<ViewModeEnum>
   public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string | null>
   public readonly content$: IState<string | null>
@@ -35,20 +38,28 @@ export class TextViewViewModel extends ViewModel {
   public readonly transformedNodes$: IState<ITextTransformedNode[] | null>
 
   public static fromData(data: Partial<ITextViewData> | undefined): TextViewViewModel {
-    const { mode, transformConfig }: ITextViewData = this.normalize(DEFAULT_TEXT_VIEW_DATA, data)
-    return new TextViewViewModel({ mode, transformConfig })
+    const { mode, viewMode, transformConfig }: ITextViewData = this.normalize(
+      DEFAULT_TEXT_VIEW_DATA,
+      data,
+    )
+    return new TextViewViewModel({ mode, viewMode, transformConfig })
   }
 
   public static normalize(
     base: ITextViewData,
     data: Partial<ITextViewData> | undefined,
   ): ITextViewData {
-    const { mode, transformConfig } = data || {}
+    const { mode, viewMode, transformConfig } = data || {}
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
+    const normalizedViewMode: ViewModeEnum =
+      viewMode === ViewModeEnum.ORIGINAL || viewMode === ViewModeEnum.LIST
+        ? viewMode
+        : base.viewMode
     const normalizedTransformConfig: ITextTransformConfig = transformConfig || base.transformConfig!
     const normalizedData: ITextViewData = {
       mode: normalizedMode,
+      viewMode: normalizedViewMode,
       transformConfig: normalizedTransformConfig,
     }
     return normalizedData
@@ -59,12 +70,14 @@ export class TextViewViewModel extends ViewModel {
 
     const {
       mode = ModeEnum.VIEW,
+      viewMode = ViewModeEnum.ORIGINAL,
       workspace = null,
       filepath = null,
       transformConfig = DEFAULT_TRANSFORM_CONFIG,
     } = props
 
     this.mode$ = new State<ModeEnum>(mode)
+    this.viewMode$ = new State<ViewModeEnum>(viewMode)
     this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string | null>(filepath)
     this.content$ = new State<string | null>(null)
@@ -75,16 +88,22 @@ export class TextViewViewModel extends ViewModel {
 
   public dump = (): ITextViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
+    const viewMode: ViewModeEnum = this.viewMode$.getSnapshot()
     const transformConfig: ITextTransformConfig = this.transformConfig$.getSnapshot()
     return {
       mode,
+      viewMode,
       transformConfig,
     }
   }
 
   public load = (data: Partial<ITextViewData> | undefined): void => {
-    const { mode, transformConfig }: ITextViewData = TextViewViewModel.normalize(this.dump(), data)
+    const { mode, viewMode, transformConfig }: ITextViewData = TextViewViewModel.normalize(
+      this.dump(),
+      data,
+    )
     this.mode$.next(mode)
+    this.viewMode$.next(viewMode)
     this.transformConfig$.next(transformConfig!)
   }
 }
