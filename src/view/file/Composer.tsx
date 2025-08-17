@@ -1,8 +1,8 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { Main } from './container/Main'
-import { Topbar } from './container/Topbar'
 import { useFileViewmodel } from './context'
+import { Main } from './layout/main'
+import { Topbar } from './layout/topbar'
 
 export const Composer: React.FC = () => {
   const viewmodel = useFileViewmodel()

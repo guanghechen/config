@@ -26,7 +26,14 @@ export class Main extends React.PureComponent<IProps> {
   public override render(): React.ReactElement {
     const { filepath, filepathDirtyTick } = this.props
     if (!filepath) {
-      return <UnknownView filepath={filepath} extname="" />
+      return (
+        <UnknownView
+          workspace={null}
+          filepath={filepath}
+          filepathDirtyTick={filepathDirtyTick}
+          mainScrollableContainer={null}
+        />
+      )
     }
 
     const extname: string = filepath ? regexes.extname.exec(filepath)?.[1] || '' : ''
@@ -119,7 +126,14 @@ export class Main extends React.PureComponent<IProps> {
       case '.jpeg':
         return <ImageView workspace={null} filepath={filepath} mainScrollableContainer={null} />
       default:
-        return <UnknownView filepath={filepath} extname={extname} />
+        return (
+          <UnknownView
+            workspace={null}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+            mainScrollableContainer={null}
+          />
+        )
     }
   }
 }
