@@ -3,7 +3,7 @@ import type { IHeadingToc } from '@yozora/ast-util'
 import cn from 'clsx'
 import React from 'react'
 import { MarkdownToc } from '@/component/markdown'
-import { PRESET_CLASSES } from '@/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant/classes'
 
 interface IProps {
   readonly singleColumn: boolean

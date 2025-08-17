@@ -2,7 +2,7 @@ import cn from 'clsx'
 import React from 'react'
 import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { CodeHighlighter } from '@/component/code-highlighter'
-import { PRESET_CLASSES } from '@/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant/classes'
 
 interface IProps {
   readonly content: string

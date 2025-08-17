@@ -10,9 +10,9 @@ import {
   FileTreeSearch,
   FileTreeViewModel,
 } from '@/component/filetree'
-import { PRESET_CLASSES } from '@/constant/classes'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { useSingleton } from '@/hook/useSingleton'
+import { PRESET_CLASSES } from '@/shared/constant/classes'
 import { useWorkspaceViewmodel } from '../../context'
 
 export const FileTree: React.FC = () => {

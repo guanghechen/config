@@ -59,69 +59,63 @@ export const useCanvasInteraction = (
     [transform],
   )
 
-  const handleWheel = useEventCallback(
-    (event: WheelEvent) => {
-      event.preventDefault()
-      const canvas = canvasRef.current
-      if (!canvas) return
+  const handleWheel = useEventCallback((event: WheelEvent) => {
+    event.preventDefault()
+    const canvas = canvasRef.current
+    if (!canvas) return
 
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = event.clientX - rect.left
-      const mouseY = event.clientY - rect.top
+    const rect = canvas.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
 
-      const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1
-      const newScale = Math.max(0.1, Math.min(5, transform.scale * scaleFactor))
+    const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1
+    const newScale = Math.max(0.1, Math.min(5, transform.scale * scaleFactor))
 
-      const newX = mouseX - (mouseX - transform.x) * (newScale / transform.scale)
-      const newY = mouseY - (mouseY - transform.y) * (newScale / transform.scale)
+    const newX = mouseX - (mouseX - transform.x) * (newScale / transform.scale)
+    const newY = mouseY - (mouseY - transform.y) * (newScale / transform.scale)
 
-      setTransform({ x: newX, y: newY, scale: newScale })
-    }
-  )
+    setTransform({ x: newX, y: newY, scale: newScale })
+  })
 
-  const handleMouseDown = useEventCallback(
-    (event: MouseEvent) => {
-      const canvas = canvasRef.current
-      if (!canvas) return
+  const handleMouseDown = useEventCallback((event: MouseEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
 
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = event.clientX - rect.left
-      const mouseY = event.clientY - rect.top
+    const rect = canvas.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
 
-      lastMousePos.current = { x: mouseX, y: mouseY }
+    lastMousePos.current = { x: mouseX, y: mouseY }
 
-      setInteractionState(prev => ({
+    setInteractionState(prev => ({
+      ...prev,
+      isDragging: true,
+      dragStart: { x: mouseX, y: mouseY },
+      isPanning: !prev.isNodeDragging, // Only enable panning if not dragging a node
+    }))
+  })
+
+  const handleMouseMove = useEventCallback((event: MouseEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas || !lastMousePos.current) return
+
+    const rect = canvas.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    if (interactionState.isDragging && interactionState.isPanning) {
+      const deltaX = mouseX - lastMousePos.current.x
+      const deltaY = mouseY - lastMousePos.current.y
+
+      setTransform(prev => ({
         ...prev,
-        isDragging: true,
-        dragStart: { x: mouseX, y: mouseY },
-        isPanning: !prev.isNodeDragging, // Only enable panning if not dragging a node
+        x: prev.x + deltaX,
+        y: prev.y + deltaY,
       }))
     }
-  )
 
-  const handleMouseMove = useEventCallback(
-    (event: MouseEvent) => {
-      const canvas = canvasRef.current
-      if (!canvas || !lastMousePos.current) return
-
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = event.clientX - rect.left
-      const mouseY = event.clientY - rect.top
-
-      if (interactionState.isDragging && interactionState.isPanning) {
-        const deltaX = mouseX - lastMousePos.current.x
-        const deltaY = mouseY - lastMousePos.current.y
-
-        setTransform(prev => ({
-          ...prev,
-          x: prev.x + deltaX,
-          y: prev.y + deltaY,
-        }))
-      }
-
-      lastMousePos.current = { x: mouseX, y: mouseY }
-    }
-  )
+    lastMousePos.current = { x: mouseX, y: mouseY }
+  })
 
   const handleMouseUp = useEventCallback(() => {
     setInteractionState({
@@ -168,36 +162,34 @@ export const useCanvasInteraction = (
     setTransform({ x: newX, y: newY, scale: newScale })
   })
 
-  const fitToView = useEventCallback(
-    (nodes: IGraphNode[]) => {
-      const canvas = canvasRef.current
-      if (!canvas || nodes.length === 0) return
+  const fitToView = useEventCallback((nodes: IGraphNode[]) => {
+    const canvas = canvasRef.current
+    if (!canvas || nodes.length === 0) return
 
-      const positions = nodes.filter(node => node.position).map(node => node.position!)
+    const positions = nodes.filter(node => node.position).map(node => node.position!)
 
-      if (positions.length === 0) return
+    if (positions.length === 0) return
 
-      const minX = Math.min(...positions.map(p => p.x)) - 60
-      const maxX = Math.max(...positions.map(p => p.x)) + 60
-      const minY = Math.min(...positions.map(p => p.y)) - 40
-      const maxY = Math.max(...positions.map(p => p.y)) + 40
+    const minX = Math.min(...positions.map(p => p.x)) - 60
+    const maxX = Math.max(...positions.map(p => p.x)) + 60
+    const minY = Math.min(...positions.map(p => p.y)) - 40
+    const maxY = Math.max(...positions.map(p => p.y)) + 40
 
-      const graphWidth = maxX - minX
-      const graphHeight = maxY - minY
+    const graphWidth = maxX - minX
+    const graphHeight = maxY - minY
 
-      const scaleX = canvas.width / graphWidth
-      const scaleY = canvas.height / graphHeight
-      const scale = Math.min(scaleX, scaleY, 2) * 0.9
+    const scaleX = canvas.width / graphWidth
+    const scaleY = canvas.height / graphHeight
+    const scale = Math.min(scaleX, scaleY, 2) * 0.9
 
-      const centerX = (minX + maxX) / 2
-      const centerY = (minY + maxY) / 2
+    const centerX = (minX + maxX) / 2
+    const centerY = (minY + maxY) / 2
 
-      const x = canvas.width / 2 - centerX * scale
-      const y = canvas.height / 2 - centerY * scale
+    const x = canvas.width / 2 - centerX * scale
+    const y = canvas.height / 2 - centerY * scale
 
-      setTransform({ x, y, scale })
-    }
-  )
+    setTransform({ x, y, scale })
+  })
 
   const setNodeDragging = useEventCallback((isNodeDragging: boolean) => {
     setInteractionState(prev => ({

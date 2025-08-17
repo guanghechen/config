@@ -24,6 +24,13 @@ export interface IGraphNodeBounds {
   readonly height: number
 }
 
+export interface IGraphNodeRect {
+  readonly startX: number
+  readonly startY: number
+  readonly endX: number
+  readonly endY: number
+}
+
 export interface IGraphNodeRenderer {
   render(
     ctx: CanvasRenderingContext2D,

@@ -1,5 +1,11 @@
 /* eslint-disable no-param-reassign */
-import type { IGraphEdge, IGraphEdgeRenderer, IGraphEdgeStyle, IGraphNode } from '../types'
+import type {
+  IGraphEdge,
+  IGraphEdgeRenderer,
+  IGraphEdgeStyle,
+  IGraphNode,
+  IGraphNodeRect,
+} from '../types'
 
 export class DefaultEdgeRenderer implements IGraphEdgeRenderer {
   private animationOffset = 0
@@ -57,7 +63,7 @@ export class DefaultEdgeRenderer implements IGraphEdgeRenderer {
     sourceSize: { width: number; height: number },
     targetPos: { x: number; y: number },
     targetSize: { width: number; height: number },
-  ): { startX: number; startY: number; endX: number; endY: number } {
+  ): IGraphNodeRect {
     const dx = targetPos.x - sourcePos.x
     const dy = targetPos.y - sourcePos.y
     const distance = Math.sqrt(dx * dx + dy * dy)

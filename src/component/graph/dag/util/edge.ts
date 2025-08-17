@@ -1,6 +1,10 @@
-import type { IGraphNode } from '../types'
+/* eslint-disable no-param-reassign */
+import type { IGraphNode, IGraphNodeRect } from '../types'
 
-export const calculateEdgeEndpoints = (sourceNode: IGraphNode, targetNode: IGraphNode) => {
+export const calculateEdgeEndpoints = (
+  sourceNode: IGraphNode,
+  targetNode: IGraphNode,
+): IGraphNodeRect => {
   const sourcePos = sourceNode.position || { x: 0, y: 0 }
   const targetPos = targetNode.position || { x: 0, y: 0 }
   const sourceSize = sourceNode.size || { width: 120, height: 60 }
@@ -38,7 +42,7 @@ export const drawBezierCurve = (
   endX: number,
   endY: number,
   curvature: number = 0.3,
-) => {
+): void => {
   const controlPointOffset = Math.abs(endY - startY) * curvature
   const midX = (startX + endX) / 2
   const controlY = startY + controlPointOffset
@@ -55,7 +59,7 @@ export const drawArrowHead = (
   y: number,
   angle: number,
   size: number,
-) => {
+): void => {
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(angle)

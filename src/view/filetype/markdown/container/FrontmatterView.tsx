@@ -2,7 +2,7 @@ import { isEqual } from '@guanghechen/equal'
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
-import { PRESET_CLASSES } from '@/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant/classes'
 
 interface IProps {
   readonly frontmatter: Record<string, unknown> | undefined

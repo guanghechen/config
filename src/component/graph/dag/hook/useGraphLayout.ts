@@ -94,7 +94,7 @@ export const useGraphLayout = (
       // Clear cached data to force re-layout
       cache.current.data = null
       cache.current.result = []
-    }
+    },
   )
 
   return {

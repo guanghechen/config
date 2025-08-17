@@ -67,20 +67,18 @@ export const useMouseEvents = (
     [nodes],
   )
 
-  const handleCanvasMouseMove = useEventCallback(
-    (event: MouseEvent, canvasRect: DOMRect) => {
-      const mouseX = event.clientX - canvasRect.left
-      const mouseY = event.clientY - canvasRect.top
-      const worldPos = screenToWorld(mouseX, mouseY)
+  const handleCanvasMouseMove = useEventCallback((event: MouseEvent, canvasRect: DOMRect) => {
+    const mouseX = event.clientX - canvasRect.left
+    const mouseY = event.clientY - canvasRect.top
+    const worldPos = screenToWorld(mouseX, mouseY)
 
-      const hitResult = hitTestNode(worldPos.x, worldPos.y)
+    const hitResult = hitTestNode(worldPos.x, worldPos.y)
 
-      if (hitResult.node !== hoveredNode.current) {
-        hoveredNode.current = hitResult.node
-        handlers.onNodeHover?.(hitResult.node)
-      }
+    if (hitResult.node !== hoveredNode.current) {
+      hoveredNode.current = hitResult.node
+      handlers.onNodeHover?.(hitResult.node)
     }
-  )
+  })
 
   const handleCanvasClick = useEventCallback(
     (event: MouseEvent, canvasRect: DOMRect, dragStart: { x: number; y: number } | null) => {
@@ -101,7 +99,7 @@ export const useMouseEvents = (
           handlers.onNodeClick?.(hitResult.node)
         }
       }
-    }
+    },
   )
 
   const handleCanvasMouseDown = useEventCallback(
@@ -122,17 +120,15 @@ export const useMouseEvents = (
           }
         }, 150)
       }
-    }
+    },
   )
 
-  const handleKeyDown = useEventCallback(
-    (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        hoveredNode.current = null
-        handlers.onNodeHover?.(null)
-      }
+  const handleKeyDown = useEventCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      hoveredNode.current = null
+      handlers.onNodeHover?.(null)
     }
-  )
+  })
 
   return {
     hoveredNode: hoveredNode.current,

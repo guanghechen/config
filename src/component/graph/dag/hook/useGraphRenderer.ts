@@ -75,12 +75,14 @@ export const useGraphRenderer = (
       ctx.fillStyle = backgroundColor
       ctx.fillRect(0, 0, width, height)
       ctx.restore()
-    }
+    },
   )
 
-  const applyTransform = useEventCallback((ctx: CanvasRenderingContext2D, transform: ITransform) => {
-    ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y)
-  })
+  const applyTransform = useEventCallback(
+    (ctx: CanvasRenderingContext2D, transform: ITransform) => {
+      ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y)
+    },
+  )
 
   const renderGraph = useEventCallback(
     (
@@ -132,7 +134,7 @@ export const useGraphRenderer = (
       })
 
       ctx.restore()
-    }
+    },
   )
 
   const startRenderLoop = useEventCallback((renderFn: () => void) => {
