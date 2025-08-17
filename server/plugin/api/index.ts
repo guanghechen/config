@@ -1,8 +1,8 @@
 /* eslint-disable no-param-reassign */
 import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
+import { normalizeUrlPath } from '../../../shared/util'
 import state from '../../state'
-import { normalizeUrlPath } from '../../util/url'
 import { saveExcalidrawFile } from './h/api/excalidraw/save'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'

@@ -3,7 +3,7 @@ import cn from 'clsx'
 import type { TokenStream } from 'prismjs'
 import Prism from 'prismjs'
 import React from 'react'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 import type {
   ILineInputProps,
   ILineOutputProps,

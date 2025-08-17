@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-import type { ITextTransformConfig } from '@/shared/transform/types'
+import type { ITextTransformConfig } from '@/shared/types'
 
 const bit: number = 1
 

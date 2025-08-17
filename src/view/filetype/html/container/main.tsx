@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { toSearch } from '@/util/url'
+import { toSearch } from '@/shared/util'
 import { ModeEnum, useHtmlViewViewModel } from '../context'
 
 export const HtmlMain: React.FC = () => {

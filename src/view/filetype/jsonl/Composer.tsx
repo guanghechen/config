@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 import { Card } from './container/Card'
 import { MultiPathInput } from './container/MultiPathInput'
 import { Navigation } from './container/Navigation'

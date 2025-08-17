@@ -1,6 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 import type { IEventStreamEvent } from '../utils'
 
 interface IProps {

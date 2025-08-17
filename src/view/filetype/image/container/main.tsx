@@ -1,7 +1,7 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { toSearch } from '@/util/url'
+import { toSearch } from '@/shared/util'
 import { useImageViewViewModel } from '../context'
 
 export const ImageMain: React.FC = () => {

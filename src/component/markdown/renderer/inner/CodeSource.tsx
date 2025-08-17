@@ -4,7 +4,7 @@ import { CopyButton } from '@/component/button/copy'
 import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { CodeIcon } from '@/component/icon/material'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
 import { useMarkdownDarken } from '../../hook/useMarkdownDarken'
 

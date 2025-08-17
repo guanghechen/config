@@ -5,7 +5,7 @@ import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { Json } from '@/component/json'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 import { ModeEnum, useJsonViewViewModel } from './context'
 import { DEFAULT_JSON } from './mock-data'
 

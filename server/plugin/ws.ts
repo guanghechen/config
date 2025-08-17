@@ -3,10 +3,10 @@ import type { Plugin } from 'vite'
 import { SERVER_HOST, SERVER_PORT } from '../../env'
 import type { IResponsePayloadFileSwitch } from '../../shared/types'
 import { ServerCustomEventType } from '../../shared/types'
+import { toSearch } from '../../shared/util'
 import state from '../state'
 import { sleep } from '../util/misc'
 import { openBrowser } from '../util/open'
-import { toSearch } from '../util/url'
 
 const plugin = (): Plugin => {
   return {

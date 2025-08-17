@@ -1,6 +1,6 @@
 import React from 'react'
-import type { ITextTransformConfig } from '@/shared/transform/types'
-import { TextTransformStepTypeEnum } from '@/shared/transform/types'
+import type { ITextTransformConfig } from '@/shared/types'
+import { TextTransformStepTypeEnum } from '@/shared/types'
 
 export interface ITransformerLoadResult {
   loading: boolean

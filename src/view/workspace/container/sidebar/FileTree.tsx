@@ -12,7 +12,7 @@ import {
 } from '@/component/filetree'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { useSingleton } from '@/hook/useSingleton'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 import { useWorkspaceViewmodel } from '../../context'
 
 export const FileTree: React.FC = () => {

@@ -1,4 +1,4 @@
-import type { ITextTransformedNode } from '@/shared/transform/types'
+import type { ITextTransformedNode } from '@/shared/types'
 import type { IGraphData, IGraphEdge, IGraphNode } from '../types'
 
 export const transformNodesToGraphData = (nodes: ITextTransformedNode[]): IGraphData => {

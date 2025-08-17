@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ITextTransformConfig, TextTransformStepTypeEnum } from '@/shared/transform/types'
+import type { ITextTransformConfig, TextTransformStepTypeEnum } from '@/shared/types'
 
 export interface ITransformerSaveData {
   name: string

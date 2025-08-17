@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { ROOT_DIR } from '../../../../../../../env'
-import { validateTransformerData } from '../../../../../../../shared/transform/util'
+import { validateTransformerData } from '../../../../../../../shared/util'
 import type { IApiHandle, IApiHandleData } from '../../../../types'
 
 const TRANSFORMER_DATA_DIR = path.join(ROOT_DIR, 'server/plugin/api/d/transform/text')

@@ -1,6 +1,6 @@
 /* eslint-disable no-new-func */
-import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/transform/types'
-import { TextTransformStepTypeEnum } from '@/shared/transform/types'
+import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
+import { TextTransformStepTypeEnum } from '@/shared/types'
 
 export interface ITransformResult {
   readonly nodes: ITextTransformedNode[]

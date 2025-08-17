@@ -1,6 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 import { TransformMode } from '../container/TransformMode'
 
 interface IProps {

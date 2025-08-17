@@ -1,5 +1,5 @@
 import React from 'react'
-import type { IWorkspaceItem } from '@/types/api'
+import type { IWorkspaceItem } from '@/shared/types'
 
 export async function getWorkspaces(): Promise<IWorkspaceItem[]> {
   const response = await fetch('/api/workspaces')

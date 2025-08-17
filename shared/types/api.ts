@@ -1,7 +1,3 @@
-export type Mutable<T> = {
-  -readonly [K in keyof T]: T[K]
-}
-
 export enum ServerCustomEventType {
   FILE_CHANGED = 'guanghechen/file-changed',
   FILE_SWITCHED = 'guanghechen/file-switch',

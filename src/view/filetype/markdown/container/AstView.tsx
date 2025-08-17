@@ -2,7 +2,7 @@ import type { Root } from '@yozora/ast'
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 
 interface IProps {
   readonly ast: Root

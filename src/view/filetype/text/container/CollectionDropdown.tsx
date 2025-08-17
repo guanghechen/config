@@ -10,8 +10,8 @@ import type {
   ITextTransformExportData,
   ITextTransformStep,
   ITextTransformStepData,
-} from '@/shared/transform/types'
-import { TextTransformStepTypeEnum } from '@/shared/transform/types'
+} from '@/shared/types'
+import { TextTransformStepTypeEnum } from '@/shared/types'
 import { useTextViewViewModel } from '../context'
 
 interface IProps {

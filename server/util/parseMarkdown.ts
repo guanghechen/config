@@ -13,8 +13,8 @@ import { existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parse as parseYaml } from 'yaml'
+import { toSearch } from '../../shared/util'
 import state from '../state'
-import { toSearch } from './url'
 
 const regexes = {
   frontmatter: /^\s*[-]{3,}\n\s*([\s\S]*?)[-]{3,}\n/,

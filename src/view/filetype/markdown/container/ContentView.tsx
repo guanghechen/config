@@ -4,7 +4,7 @@ import cn from 'clsx'
 import React from 'react'
 import { NodesRenderer, ReactMarkdown } from '@/component/markdown'
 import { ReactMarkdownContent } from '@/component/markdown/ReactMarkdownContent'
-import { PRESET_CLASSES } from '@/shared/constant/classes'
+import { PRESET_CLASSES } from '@/shared/constant'
 
 interface IProps {
   readonly containerRef: React.RefObject<HTMLDivElement | null>

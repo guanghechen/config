@@ -1,7 +1,7 @@
 /* eslint-disable no-template-curly-in-string */
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/transform/types'
+import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
 import type { ITextViewData } from './types'
 import { ModeEnum, ViewModeEnum } from './types'
 
