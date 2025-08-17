@@ -17,11 +17,11 @@ export const Composer: React.FC = () => {
   }
 
   return (
-    <div className="border-box relative size-full">
-      <div className="border-box fixed right-4 z-50 h-12">
+    <div className="box-border relative size-full">
+      <div className="box-border fixed right-4 z-50 h-12">
         <Topbar />
       </div>
-      <div className="border-box size-full pt-12">
+      <div className="box-border size-full pt-12">
         <Main />
       </div>
     </div>

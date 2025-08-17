@@ -18,7 +18,7 @@ export class TextView extends React.PureComponent<IProps> {
 
     if (!filepath) {
       return (
-        <div className="relative size-full flex items-center">
+        <div className="box-border relative size-full flex items-center">
           <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
         </div>
       )
@@ -30,7 +30,7 @@ export class TextView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <div className="relative size-full">
+        <div className="box-border relative size-full">
           <Composer />
           <TotopButton scrollableContainer={mainScrollableContainer} />
         </div>

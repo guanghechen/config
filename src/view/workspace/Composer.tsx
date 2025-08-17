@@ -14,7 +14,7 @@ export const Composer: React.FC = () => {
   return (
     <div className="relative box-border flex font-mono-maple text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:text-gray-200 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-50 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2">
       <div
-        className="sticky z-30 left-0 w-0 top-0 box-border flex-shrink-0 flex-grow-0"
+        className="sticky z-30 left-0 w-0 h-12 top-0 box-border flex-shrink-0 flex-grow-0"
         style={{ width: visible ? width : 0 }}
       >
         <div className="box-border h-12">
@@ -25,7 +25,7 @@ export const Composer: React.FC = () => {
         </div>
       </div>
       <div className="box-border min-h-screen w-0 flex-auto">
-        <div className="box-border flex w-full min-h-screen justify-center p-4">
+        <div className="box-border flex w-full min-h-screen justify-center">
           <Main />
         </div>
       </div>

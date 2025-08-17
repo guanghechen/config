@@ -35,7 +35,7 @@ export const Main: React.FC = () => {
   }
 
   return (
-    <div className="size-full flex justify-center">
+    <div className="size-full flex justify-center gap-2">
       {showView && (
         <React.Fragment>
           <ViewPane
@@ -45,14 +45,14 @@ export const Main: React.FC = () => {
             columns={columns}
           />
           {columns > 1 && (
-            <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+            <div className="h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
           )}
         </React.Fragment>
       )}
       {showRaw && (
         <React.Fragment>
           {columns > 1 && (
-            <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+            <div className="h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
           )}
           <RawPane content={content} themeScheme={themeScheme} columns={columns} />
         </React.Fragment>
@@ -60,7 +60,7 @@ export const Main: React.FC = () => {
       {showTransform && (
         <React.Fragment>
           {columns > 1 && (
-            <div className="mx-2 h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
+            <div className="h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
           )}
           <TransformPane columns={columns} />
         </React.Fragment>

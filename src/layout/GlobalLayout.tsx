@@ -7,7 +7,7 @@ interface GlobalLayoutProps {
 
 export const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
-    <div className="relative min-h-screen">
+    <div className="box-border relative min-h-screen">
       {children}
       <FloatingGate />
     </div>

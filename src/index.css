@@ -3,12 +3,12 @@
 
 html {
   display: block;
-  box-sizing: border-box;
+  box-sizing: box-border;
 }
 body {
   width: 100%;
   overflow-x: hidden;
-  box-sizing: border-box;
+  box-sizing: box-border;
   margin: 0;
   padding: 0;
   font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;

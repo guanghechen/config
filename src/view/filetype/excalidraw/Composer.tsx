@@ -16,7 +16,7 @@ export const Composer: React.FC = () => {
   }
 
   return (
-    <div className="border-box relative size-full">
+    <div className="box-border relative size-full">
       <Main />
     </div>
   )

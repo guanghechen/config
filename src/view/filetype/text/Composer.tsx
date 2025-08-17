@@ -1,12 +1,19 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
+import cn from 'clsx'
 import React from 'react'
-import { useTextViewViewModel } from './context'
+import { ModeEnum, useTextViewViewModel } from './context'
 import { Main } from './layout/main'
 import { Mode } from './layout/mode'
 
 export const Composer: React.FC = () => {
   const viewmodel = useTextViewViewModel()
+  const mode = useStateValue(viewmodel.mode$)
   const error = useStateValue(viewmodel.error$)
+
+  const showView: boolean = (mode & ModeEnum.VIEW) !== 0
+  const showRaw: boolean = (mode & ModeEnum.RAW) !== 0
+  const showTransform: boolean = (mode & ModeEnum.TRANSFORM) !== 0
+  const columns: number = (showView ? 1 : 0) + (showRaw ? 1 : 0) + (showTransform ? 1 : 0)
 
   if (error) {
     return (
@@ -17,11 +24,13 @@ export const Composer: React.FC = () => {
   }
 
   return (
-    <div className="border-box relative size-full">
-      <div className="border-box fixed right-4 z-50 h-12">
+    <div
+      className={cn('box-border relative pt-12', columns > 1 ? 'w-screen h-screen' : 'size-full')}
+    >
+      <div className="box-border fixed top-4 right-4 z-50">
         <Mode />
       </div>
-      <div className="border-box size-full pt-12">
+      <div className="box-border size-full">
         <Main />
       </div>
     </div>

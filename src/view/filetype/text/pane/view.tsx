@@ -22,10 +22,10 @@ export const ViewPane: React.FC<IProps> = props => {
   const theme: SiteTheme = useStateValue(siteVM.theme$)
 
   return (
-    <div className="relative size-full flex-auto w-[80rem]">
+    <div className="box-border p-2 relative size-full flex-auto w-[80rem]">
       <ViewModeDropdown />
       <div
-        className={cn('h-full', PRESET_CLASSES.scrollbar, {
+        className={cn('box-border h-full', PRESET_CLASSES.scrollbar, {
           'p-2 overflow-auto': columns > 1,
           'p-8': columns === 1,
         })}
@@ -38,7 +38,7 @@ export const ViewPane: React.FC<IProps> = props => {
             {transformedNodes.map(node => (
               <div
                 key={node.uuid}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50"
+                className="box-border border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50"
               >
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   <span className="font-mono">UUID: {node.uuid}</span>
@@ -59,7 +59,7 @@ export const ViewPane: React.FC<IProps> = props => {
             ))}
           </div>
         ) : viewMode === ViewModeEnum.GRAPH && transformedNodes ? (
-          <div className="w-full h-full min-h-[600px]">
+          <div className="box-border w-full h-full min-h-[600px]">
             <DagGraph
               data={transformNodesToGraphData(transformedNodes)}
               theme={theme === SiteTheme.DARKEN ? 'dark' : 'light'}
