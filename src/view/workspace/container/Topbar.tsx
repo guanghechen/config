@@ -14,7 +14,7 @@ export const Topbar: React.FC = () => {
   const filepath: string | null = useStateValue(viewmodel.filepath$)
 
   return (
-    <div className="flex h-full items-center backdrop-blur-md backdrop-saturate-150 text-slate-800 px-4 dark:text-gray-200">
+    <div className="flex h-full items-center text-slate-800 px-4 dark:text-gray-200">
       <div className="box-border flex flex-initial justify-center gap-4">
         <button
           onClick={onToggleBothSidebarAndTopbar}
@@ -27,7 +27,7 @@ export const Topbar: React.FC = () => {
       </div>
       {filepath && (
         <div className="flex flex-initial items-center gap-1">
-          <h2 className="truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
+          <h2 className="pointer-events-none select-none truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
             {filepath}
           </h2>
           <AnchorButton workspace={workspace} filepath={filepath} />

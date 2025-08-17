@@ -13,7 +13,6 @@ export enum CopyStatusEnum {
 interface IProps {
   readonly delay?: number
   readonly className?: string
-  readonly nopadding?: boolean
   readonly calcContentForCopy: () => string
 }
 
@@ -34,7 +33,7 @@ export class CopyButton extends React.Component<IProps, IState> {
   }
 
   public override render(): React.ReactNode {
-    const { className, nopadding = false } = this.props
+    const { className } = this.props
     const { status } = this.state
     const disabled: boolean = status !== CopyStatusEnum.PENDING
 
@@ -43,7 +42,7 @@ export class CopyButton extends React.Component<IProps, IState> {
         <button
           className={cn(
             'flex items-center justify-center rounded-md text-xs font-medium',
-            'bg-transparent border border-transparent transition-all duration-200',
+            'p-1 bg-transparent border border-transparent transition-all duration-200',
             'text-gray-500 dark:text-gray-400 cursor-pointer',
             'hover:bg-gray-100 dark:hover:bg-white/10',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-300/50',
@@ -51,7 +50,6 @@ export class CopyButton extends React.Component<IProps, IState> {
             status === CopyStatusEnum.COPIED &&
               'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/20 border-green-500 dark:border-green-400/50',
             status === CopyStatusEnum.FAILED && 'text-red-600 dark:text-red-400',
-            nopadding ? 'p-1' : 'py-1.5 px-2.5',
             className,
           )}
           disabled={disabled}

@@ -1,3 +1,4 @@
+import cn from 'clsx'
 import React from 'react'
 
 interface IProps {
@@ -20,28 +21,39 @@ export class AnchorButton extends React.PureComponent<IProps> {
       : `/api/file/raw?filepath=${encodeURIComponent(filepath)}`
 
     return (
-      <a
-        title="Open as raw"
-        href={url}
-        target="_blank"
-        className="inline-flex cursor-pointer items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-        rel="noreferrer"
+      <span
+        className={cn(
+          'flex items-center justify-center rounded-md text-xs font-medium',
+          'p-1 ml-2 bg-transparent border border-transparent transition-all duration-200',
+          'text-gray-500 dark:text-gray-400 cursor-pointer',
+          'hover:bg-gray-100 dark:hover:bg-white/10',
+          'focus:outline-hidden focus:ring-2 focus:ring-blue-300/50',
+          'disabled:opacity-50 disabled:cursor-default',
+        )}
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <a
+          title="Open as raw"
+          href={url}
+          target="_blank"
+          className="inline-flex cursor-pointer items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+          rel="noreferrer"
         >
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-          <polyline points="15,3 21,3 21,9" />
-          <line x1="10" y1="14" x2="21" y2="3" />
-        </svg>
-      </a>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15,3 21,3 21,9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </a>
+      </span>
     )
   }
 }

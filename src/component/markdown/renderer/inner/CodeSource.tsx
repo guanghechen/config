@@ -46,7 +46,7 @@ export const CodeSource: React.FC<IProps> = props => {
             {lineCount} {lineCount === 1 ? 'line' : 'lines'}
           </span>
           <div className="h-4 w-px mx-1 bg-gray-300 dark:bg-gray-600" />
-          <CopyButton calcContentForCopy={calcContentForCopy} nopadding={true} />
+          <CopyButton calcContentForCopy={calcContentForCopy} />
         </div>
       </div>
       {expanded && (
