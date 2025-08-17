@@ -2,6 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { DagGraph, transformNodesToGraphData } from '@/component/graph/dag'
+import { Json } from '@/component/json'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { PRESET_CLASSES } from '@/shared/constant'
 import type { ITextTransformedNode } from '@/shared/types'
@@ -51,9 +52,7 @@ export const ViewPane: React.FC<IProps> = props => {
                   {typeof node.data === 'string' ? (
                     <pre className="whitespace-pre-wrap break-words">{node.data}</pre>
                   ) : (
-                    <pre className="whitespace-pre-wrap break-words">
-                      {JSON.stringify(node.data, null, 2)}
-                    </pre>
+                    <Json json={node.data} initialCollapsed="expanded" />
                   )}
                 </div>
               </div>
