@@ -38,7 +38,6 @@ export class Main extends React.PureComponent<IProps> {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={null}
-            topbarVisible={false}
           />
         )
       case '.excalidraw':
@@ -58,7 +57,6 @@ export class Main extends React.PureComponent<IProps> {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={null}
-            topbarVisible={false}
           />
         )
       case '.json':
@@ -68,7 +66,6 @@ export class Main extends React.PureComponent<IProps> {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={null}
-            topbarVisible={false}
           />
         )
       case '.jsonl':
@@ -78,7 +75,6 @@ export class Main extends React.PureComponent<IProps> {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={null}
-            topbarVisible={false}
           />
         )
       case '.log':
@@ -89,7 +85,6 @@ export class Main extends React.PureComponent<IProps> {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={null}
-            topbarVisible={false}
           />
         )
       case '.md':
@@ -99,7 +94,6 @@ export class Main extends React.PureComponent<IProps> {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={null}
-            topbarVisible={false}
           />
         )
       case '.pdf':

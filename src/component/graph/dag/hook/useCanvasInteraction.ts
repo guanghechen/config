@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import React, { type RefObject } from 'react'
 import type { IGraphNode, ITransform } from '../types'
 
@@ -58,7 +59,7 @@ export const useCanvasInteraction = (
     [transform],
   )
 
-  const handleWheel = React.useCallback(
+  const handleWheel = useEventCallback(
     (event: WheelEvent) => {
       event.preventDefault()
       const canvas = canvasRef.current
@@ -75,11 +76,10 @@ export const useCanvasInteraction = (
       const newY = mouseY - (mouseY - transform.y) * (newScale / transform.scale)
 
       setTransform({ x: newX, y: newY, scale: newScale })
-    },
-    [transform, canvasRef],
+    }
   )
 
-  const handleMouseDown = React.useCallback(
+  const handleMouseDown = useEventCallback(
     (event: MouseEvent) => {
       const canvas = canvasRef.current
       if (!canvas) return
@@ -96,11 +96,10 @@ export const useCanvasInteraction = (
         dragStart: { x: mouseX, y: mouseY },
         isPanning: !prev.isNodeDragging, // Only enable panning if not dragging a node
       }))
-    },
-    [canvasRef],
+    }
   )
 
-  const handleMouseMove = React.useCallback(
+  const handleMouseMove = useEventCallback(
     (event: MouseEvent) => {
       const canvas = canvasRef.current
       if (!canvas || !lastMousePos.current) return
@@ -121,11 +120,10 @@ export const useCanvasInteraction = (
       }
 
       lastMousePos.current = { x: mouseX, y: mouseY }
-    },
-    [canvasRef, interactionState.isDragging, interactionState.isPanning],
+    }
   )
 
-  const handleMouseUp = React.useCallback(() => {
+  const handleMouseUp = useEventCallback(() => {
     setInteractionState({
       isDragging: false,
       dragStart: null,
@@ -134,13 +132,13 @@ export const useCanvasInteraction = (
       isNodeDragging: false,
     })
     lastMousePos.current = null
-  }, [])
+  })
 
-  const resetTransform = React.useCallback(() => {
+  const resetTransform = useEventCallback(() => {
     setTransform({ x: 0, y: 0, scale: 1 })
-  }, [])
+  })
 
-  const zoomIn = React.useCallback(() => {
+  const zoomIn = useEventCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -153,9 +151,9 @@ export const useCanvasInteraction = (
     const newY = centerY - (centerY - transform.y) * (newScale / transform.scale)
 
     setTransform({ x: newX, y: newY, scale: newScale })
-  }, [transform, canvasRef])
+  })
 
-  const zoomOut = React.useCallback(() => {
+  const zoomOut = useEventCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -168,9 +166,9 @@ export const useCanvasInteraction = (
     const newY = centerY - (centerY - transform.y) * (newScale / transform.scale)
 
     setTransform({ x: newX, y: newY, scale: newScale })
-  }, [transform, canvasRef])
+  })
 
-  const fitToView = React.useCallback(
+  const fitToView = useEventCallback(
     (nodes: IGraphNode[]) => {
       const canvas = canvasRef.current
       if (!canvas || nodes.length === 0) return
@@ -198,16 +196,15 @@ export const useCanvasInteraction = (
       const y = canvas.height / 2 - centerY * scale
 
       setTransform({ x, y, scale })
-    },
-    [canvasRef],
+    }
   )
 
-  const setNodeDragging = React.useCallback((isNodeDragging: boolean) => {
+  const setNodeDragging = useEventCallback((isNodeDragging: boolean) => {
     setInteractionState(prev => ({
       ...prev,
       isNodeDragging,
     }))
-  }, [])
+  })
 
   return {
     transform,

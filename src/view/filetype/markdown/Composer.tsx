@@ -19,11 +19,10 @@ interface IProps {
   readonly frontmatter: Record<string, unknown> | undefined
   readonly toc: IHeadingToc | undefined
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 export const Composer: React.FC<IProps> = props => {
-  const { toc, frontmatter, filepath, mainScrollableContainer, topbarVisible } = props
+  const { toc, frontmatter, filepath, mainScrollableContainer } = props
   const viewmodel = useMarkdownViewViewModel()
   const mode = useStateValue(viewmodel.mode$)
   const tocActivatedIdentifier = useStateValue(viewmodel.tocActivatedIdentifier$)
@@ -117,7 +116,7 @@ export const Composer: React.FC<IProps> = props => {
           'h-[calc(100vh-7rem)]': columns > 1,
         })}
       >
-        <div className={cn('fixed right-4 z-50', topbarVisible ? 'top-16' : 'top-4')}>
+        <div className="fixed right-4 z-50 top-4">
           <ModeToggle />
         </div>
         {showView && (

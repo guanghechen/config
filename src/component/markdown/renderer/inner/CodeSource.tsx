@@ -1,11 +1,11 @@
 import cn from 'clsx'
 import React from 'react'
+import { CopyButton } from '@/component/button/copy'
 import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { CodeIcon } from '@/component/icon/material'
 import { PRESET_CLASSES } from '@/constant/classes'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
-import { CopyButton } from '../../../CopyButton'
 import { useMarkdownDarken } from '../../hook/useMarkdownDarken'
 
 interface IProps {

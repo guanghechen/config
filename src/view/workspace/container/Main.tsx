@@ -21,7 +21,6 @@ export const Main: React.FC = () => {
   const mainScrollableContainer: HTMLDivElement | null = useStateValue(
     viewmodel.mainScrollableContainer$,
   )
-  const topbarVisible: boolean = useStateValue(viewmodel.topbarVisible$)
 
   const extname: string = React.useMemo<string>(() => {
     if (!filepath) return ''
@@ -42,7 +41,6 @@ export const Main: React.FC = () => {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={mainScrollableContainer}
-            topbarVisible={topbarVisible}
           />
         )
       case '.excalidraw':
@@ -62,7 +60,6 @@ export const Main: React.FC = () => {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={mainScrollableContainer}
-            topbarVisible={topbarVisible}
           />
         )
       case '.json':
@@ -72,7 +69,6 @@ export const Main: React.FC = () => {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={mainScrollableContainer}
-            topbarVisible={topbarVisible}
           />
         )
       case '.jsonl':
@@ -82,7 +78,6 @@ export const Main: React.FC = () => {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={mainScrollableContainer}
-            topbarVisible={topbarVisible}
           />
         )
       case '.log':
@@ -93,7 +88,6 @@ export const Main: React.FC = () => {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={mainScrollableContainer}
-            topbarVisible={topbarVisible}
           />
         )
       case '.md':
@@ -103,7 +97,6 @@ export const Main: React.FC = () => {
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
             mainScrollableContainer={mainScrollableContainer}
-            topbarVisible={topbarVisible}
           />
         )
       case '.pdf':
@@ -137,7 +130,7 @@ export const Main: React.FC = () => {
       default:
         return <UnknownView filepath={filepath} extname={extname} />
     }
-  }, [extname, workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible])
+  }, [extname, workspace, filepath, filepathDirtyTick, mainScrollableContainer])
 
   return container
 }

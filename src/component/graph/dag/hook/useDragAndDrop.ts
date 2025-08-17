@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import React from 'react'
 import type { IDragDropState, IGraphNode } from '../types'
 
@@ -35,7 +36,7 @@ export const useDragAndDrop = (props: IProps): IResult => {
 
   const REPLACEMENT_THRESHOLD = 30 // Distance in screen pixels to trigger replacement mode
 
-  const handleDragStart = React.useCallback(
+  const handleDragStart = useEventCallback(
     (node: IGraphNode, screenX: number, screenY: number) => {
       if (!node.position) return
 
@@ -55,11 +56,10 @@ export const useDragAndDrop = (props: IProps): IResult => {
         dragMode: 'positioning', // Start with positioning mode
         dragOffset,
       })
-    },
-    [worldToScreen],
+    }
   )
 
-  const handleDragMove = React.useCallback(
+  const handleDragMove = useEventCallback(
     (screenX: number, screenY: number) => {
       if (!dragDropState.isDragging || !dragDropState.draggedNode) return
 
@@ -96,18 +96,10 @@ export const useDragAndDrop = (props: IProps): IResult => {
         dropTargetNode,
         dragMode: newDragMode,
       }))
-    },
-    [
-      dragDropState.isDragging,
-      dragDropState.draggedNode,
-      screenToWorld,
-      hitTestNode,
-      worldToScreen,
-      REPLACEMENT_THRESHOLD,
-    ],
+    }
   )
 
-  const handleDragEnd = React.useCallback(
+  const handleDragEnd = useEventCallback(
     (screenX: number, screenY: number) => {
       if (!dragDropState.isDragging || !dragDropState.draggedNode) {
         setDragDropState({
@@ -143,20 +135,10 @@ export const useDragAndDrop = (props: IProps): IResult => {
         dragMode: null,
         dragOffset: null,
       })
-    },
-    [
-      dragDropState.isDragging,
-      dragDropState.draggedNode,
-      dragDropState.dragMode,
-      dragDropState.dropTargetNode,
-      dragDropState.dragOffset,
-      screenToWorld,
-      onNodeReplace,
-      onNodePositionChange,
-    ],
+    }
   )
 
-  const resetDragState = React.useCallback(() => {
+  const resetDragState = useEventCallback(() => {
     setDragDropState({
       isDragging: false,
       draggedNode: null,
@@ -166,7 +148,7 @@ export const useDragAndDrop = (props: IProps): IResult => {
       dragMode: null,
       dragOffset: null,
     })
-  }, [])
+  })
 
   return {
     dragDropState,

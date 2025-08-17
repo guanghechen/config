@@ -24,8 +24,8 @@ export const useGetWorkspaces = (
       setLoading(true)
 
       try {
-        const ws: IWorkspaceItem[] = await getWorkspaces()
-        if (!cancelled) setWorkspaces(ws)
+        const workspaces: IWorkspaceItem[] = await getWorkspaces()
+        if (!cancelled) setWorkspaces(workspaces)
       } finally {
         setLoading(false)
       }

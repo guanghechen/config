@@ -63,8 +63,6 @@ export const ViewPane: React.FC<IProps> = props => {
           <div className="w-full h-full min-h-[600px]">
             <DagGraph
               data={transformNodesToGraphData(transformedNodes)}
-              width={0}
-              height={0}
               theme={theme === SiteTheme.DARKEN ? 'dark' : 'light'}
             />
           </div>

@@ -1,4 +1,4 @@
-import type { IGraphEdge, IGraphNode, IGraphLayoutAlgorithm, IGraphLayoutConfig } from '../types'
+import type { IGraphEdge, IGraphLayoutAlgorithm, IGraphLayoutConfig, IGraphNode } from '../types'
 
 export class HierarchicalLayout implements IGraphLayoutAlgorithm {
   private config: IGraphLayoutConfig
@@ -15,12 +15,24 @@ export class HierarchicalLayout implements IGraphLayoutAlgorithm {
   public calculateLayout(nodes: IGraphNode[], edges: IGraphEdge[]): IGraphNode[] {
     if (nodes.length === 0) return []
 
+    // Separate manually positioned nodes from auto-layout nodes
+    const manuallyPositionedNodes = nodes.filter(node => node.isManuallyPositioned && node.position)
+    const autoLayoutNodes = nodes.filter(node => !node.isManuallyPositioned)
+
+    // If no auto-layout nodes, return the original nodes with preserved positions
+    if (autoLayoutNodes.length === 0) {
+      return nodes
+    }
+
     const children = this.buildChildrenMap(edges)
     const parents = this.buildParentsMap(edges)
-    const rootNodes = this.findRootNodes(nodes, parents)
+    const rootNodes = this.findRootNodes(autoLayoutNodes, parents)
     const levels = this.assignLevels(rootNodes, children)
 
-    return this.positionNodes(nodes, levels)
+    const positionedAutoLayoutNodes = this.positionNodes(autoLayoutNodes, levels)
+
+    // Combine auto-layout nodes with manually positioned nodes
+    return [...positionedAutoLayoutNodes, ...manuallyPositionedNodes]
   }
 
   private buildChildrenMap(edges: IGraphEdge[]): Map<string, string[]> {
@@ -127,5 +139,15 @@ export class HierarchicalLayout implements IGraphLayoutAlgorithm {
 
   public updateConfig(newConfig: Partial<IGraphLayoutConfig>): void {
     this.config = { ...this.config, ...newConfig }
+  }
+
+  public markNodeAsManuallyPositioned(
+    nodes: IGraphNode[],
+    nodeId: string,
+    position: { x: number; y: number },
+  ): IGraphNode[] {
+    return nodes.map(node =>
+      node.id === nodeId ? { ...node, position, isManuallyPositioned: true } : node,
+    )
   }
 }

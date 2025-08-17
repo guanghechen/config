@@ -4,6 +4,7 @@ export interface IGraphNode {
   readonly parents: string[]
   readonly position?: { x: number; y: number }
   readonly size?: { width: number; height: number }
+  readonly isManuallyPositioned?: boolean
 }
 
 export interface IGraphNodeStyle {

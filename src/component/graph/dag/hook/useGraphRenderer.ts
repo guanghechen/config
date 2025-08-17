@@ -1,11 +1,12 @@
 /* eslint-disable no-param-reassign */
-import React, { useCallback } from 'react'
+import { useEventCallback } from '@guanghechen/react-hooks'
+import React from 'react'
 import { DefaultEdgeRenderer } from '../layout/DefaultEdgeRenderer'
 import { DefaultNodeRenderer } from '../layout/DefaultNodeRenderer'
 import type {
+  IGraphEdge,
   IGraphEdgeRenderer,
   IGraphEdgeStyle,
-  IGraphEdge,
   IGraphNode,
   IGraphNodeRenderer,
   IGraphNodeStyle,
@@ -64,7 +65,7 @@ export const useGraphRenderer = (
     }
   }, [theme])
 
-  const clearCanvas = React.useCallback(
+  const clearCanvas = useEventCallback(
     (ctx: CanvasRenderingContext2D, width: number, height: number) => {
       ctx.clearRect(0, 0, width, height)
 
@@ -74,15 +75,14 @@ export const useGraphRenderer = (
       ctx.fillStyle = backgroundColor
       ctx.fillRect(0, 0, width, height)
       ctx.restore()
-    },
-    [theme],
+    }
   )
 
-  const applyTransform = useCallback((ctx: CanvasRenderingContext2D, transform: ITransform) => {
+  const applyTransform = useEventCallback((ctx: CanvasRenderingContext2D, transform: ITransform) => {
     ctx.setTransform(transform.scale, 0, 0, transform.scale, transform.x, transform.y)
-  }, [])
+  })
 
-  const renderGraph = useCallback(
+  const renderGraph = useEventCallback(
     (
       nodes: IGraphNode[],
       edges: IGraphEdge[],
@@ -132,25 +132,24 @@ export const useGraphRenderer = (
       })
 
       ctx.restore()
-    },
-    [canvasRef, getDefaultStyles, clearCanvas, applyTransform],
+    }
   )
 
-  const startRenderLoop = useCallback((renderFn: () => void) => {
+  const startRenderLoop = useEventCallback((renderFn: () => void) => {
     const animate = (): void => {
       renderFn()
       animationFrameRef.current = requestAnimationFrame(animate)
     }
 
     animationFrameRef.current = requestAnimationFrame(animate)
-  }, [])
+  })
 
-  const stopRenderLoop = useCallback(() => {
+  const stopRenderLoop = useEventCallback(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = null
     }
-  }, [])
+  })
 
   return {
     renderGraph,

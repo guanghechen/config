@@ -1,5 +1,5 @@
 import React from 'react'
-import { CopyButton } from '@/component/CopyButton'
+import { CopyButton } from '@/component/button/copy'
 
 interface IProps {
   readonly filepath: string | null

@@ -7,11 +7,10 @@ interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 export const EventStreamView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
+  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
 
   return (
     <div className="w-full pt-8">
@@ -20,7 +19,7 @@ export const EventStreamView: React.FC<IProps> = props => {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <Composer mainScrollableContainer={mainScrollableContainer} topbarVisible={topbarVisible} />
+        <Composer mainScrollableContainer={mainScrollableContainer} />
       </EventStreamViewProvider>
     </div>
   )

@@ -11,11 +11,10 @@ interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 export const MarkdownView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
+  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
 
   if (!filepath) {
     return (
@@ -32,11 +31,7 @@ export const MarkdownView: React.FC<IProps> = props => {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <MarkdownContent
-          filepath={filepath}
-          mainScrollableContainer={mainScrollableContainer}
-          topbarVisible={topbarVisible}
-        />
+        <MarkdownContent filepath={filepath} mainScrollableContainer={mainScrollableContainer} />
       </MarkdownViewProvider>
     </div>
   )
@@ -47,11 +42,10 @@ MarkdownView.displayName = 'MarkdownView'
 interface IMarkdownContentProps {
   readonly filepath: string
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 const MarkdownContent: React.FC<IMarkdownContentProps> = props => {
-  const { filepath, mainScrollableContainer, topbarVisible } = props
+  const { filepath, mainScrollableContainer } = props
   const viewmodel = useMarkdownViewViewModel()
   const data = useStateValue(viewmodel.data$)
   const error = useStateValue(viewmodel.error$)
@@ -75,7 +69,6 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = props => {
               frontmatter={frontmatter}
               toc={toc}
               mainScrollableContainer={mainScrollableContainer}
-              topbarVisible={topbarVisible}
             />
           </div>
         </MarkdownContentProvider>

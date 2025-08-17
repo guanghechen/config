@@ -1,4 +1,5 @@
-import { useCallback, useRef } from 'react'
+import { useEventCallback } from '@guanghechen/react-hooks'
+import React from 'react'
 import type { IGraphNode } from '../types'
 
 interface IMouseEventHandlers {
@@ -34,11 +35,11 @@ export const useMouseEvents = (
   handlers: IMouseEventHandlers,
   screenToWorld: (x: number, y: number) => { x: number; y: number },
 ): IMouseEventsReturn => {
-  const hoveredNode = useRef<IGraphNode | null>(null)
+  const hoveredNode = React.useRef<IGraphNode | null>(null)
   const clickThreshold = 5
   const dragThreshold = 10
 
-  const hitTestNode = useCallback(
+  const hitTestNode = React.useCallback(
     (worldX: number, worldY: number): IHitTestResult => {
       for (const node of nodes) {
         if (!node.position) continue
@@ -66,7 +67,7 @@ export const useMouseEvents = (
     [nodes],
   )
 
-  const handleCanvasMouseMove = useCallback(
+  const handleCanvasMouseMove = useEventCallback(
     (event: MouseEvent, canvasRect: DOMRect) => {
       const mouseX = event.clientX - canvasRect.left
       const mouseY = event.clientY - canvasRect.top
@@ -78,11 +79,10 @@ export const useMouseEvents = (
         hoveredNode.current = hitResult.node
         handlers.onNodeHover?.(hitResult.node)
       }
-    },
-    [hitTestNode, screenToWorld, handlers],
+    }
   )
 
-  const handleCanvasClick = useCallback(
+  const handleCanvasClick = useEventCallback(
     (event: MouseEvent, canvasRect: DOMRect, dragStart: { x: number; y: number } | null) => {
       if (!dragStart) return
 
@@ -101,11 +101,10 @@ export const useMouseEvents = (
           handlers.onNodeClick?.(hitResult.node)
         }
       }
-    },
-    [hitTestNode, screenToWorld, handlers, clickThreshold],
+    }
   )
 
-  const handleCanvasMouseDown = useCallback(
+  const handleCanvasMouseDown = useEventCallback(
     (event: MouseEvent, canvasRect: DOMRect, dragStart: { x: number; y: number }) => {
       const mouseX = event.clientX - canvasRect.left
       const mouseY = event.clientY - canvasRect.top
@@ -123,18 +122,16 @@ export const useMouseEvents = (
           }
         }, 150)
       }
-    },
-    [hitTestNode, screenToWorld, handlers, dragThreshold],
+    }
   )
 
-  const handleKeyDown = useCallback(
+  const handleKeyDown = useEventCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         hoveredNode.current = null
         handlers.onNodeHover?.(null)
       }
-    },
-    [handlers],
+    }
   )
 
   return {

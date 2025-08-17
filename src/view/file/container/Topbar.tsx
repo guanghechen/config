@@ -1,0 +1,37 @@
+import cn from 'clsx'
+import React from 'react'
+import { AnchorButton } from '@/component/button/anchor'
+import { CopyButton } from '@/component/button/copy'
+
+interface IProps {
+  readonly filepath: string | null
+}
+
+export class Topbar extends React.PureComponent<IProps> {
+  public static readonly displayName: string = 'FileComposer'
+
+  public override render(): React.ReactElement {
+    const { filepath } = this.props
+
+    if (!filepath) {
+      return <React.Fragment />
+    }
+
+    return (
+      <div className="absolute left-4 top-4 z-10 flex items-center gap-2">
+        <span className="pointer-none text-sm text-gray-600 dark:text-gray-400 select-none">
+          {filepath}
+        </span>
+        <CopyButton
+          className={cn(
+            'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
+            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
+          )}
+          calcContentForCopy={() => filepath || ''}
+        />
+        <AnchorButton workspace={null} filepath={filepath} />
+      </div>
+    )
+  }
+}

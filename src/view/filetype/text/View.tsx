@@ -8,21 +8,20 @@ interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 export const TextView: React.FC<IProps> = props => {
-  const { filepath, workspace, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
+  const { filepath, workspace, filepathDirtyTick, mainScrollableContainer } = props
 
   return (
-    <div className="w-full pt-8">
+    <div className="size-screen">
       <div className="relative w-full">
         <TextViewProvider
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
         >
-          <ModeToggle topbarVisible={topbarVisible} />
+          <ModeToggle />
           <div className="relative w-full">
             <Composer
               workspace={workspace}

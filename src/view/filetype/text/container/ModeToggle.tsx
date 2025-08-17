@@ -3,19 +3,12 @@ import cn from 'clsx'
 import React from 'react'
 import { ModeEnum, useTextViewViewModel } from '../context'
 
-interface IProps {
-  readonly topbarVisible: boolean
-}
-
-export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
+export const ModeToggle: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
   return (
-    <div
-      className="fixed right-4 z-50 flex items-center gap-1 transition-all"
-      style={{ top: topbarVisible ? '4rem' : '1rem' }}
-    >
+    <div className="fixed right-4 t-4 z-50 flex items-center gap-1 transition-all">
       <div
         className="flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95"
         title={`Current mode: ${mode}`}

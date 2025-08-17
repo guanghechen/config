@@ -40,7 +40,6 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
       filetreeMode: initialData.filetreeMode,
       sidebarVisible: initialData.sidebarVisible,
       sidebarWidth: initialData.sidebarWidth,
-      topbarVisible: initialData.topbarVisible,
     })
   })
   const context: IWorkspaceContext | null = React.useMemo<IWorkspaceContext | null>(
@@ -144,7 +143,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
         viewmodel.filetreeMode$,
         viewmodel.sidebarWidth$,
         viewmodel.sidebarVisible$,
-        viewmodel.topbarVisible$,
       ],
       () => {
         const data: IWorkspaceData = viewmodel.dump()

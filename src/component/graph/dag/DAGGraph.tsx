@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
@@ -12,8 +13,6 @@ import type { IGraphData, IGraphEdgeRenderer, IGraphNode, IGraphNodeRenderer } f
 
 interface IProps {
   readonly data: IGraphData
-  readonly width: number
-  readonly height: number
   readonly nodeRenderer?: IGraphNodeRenderer
   readonly edgeRenderer?: IGraphEdgeRenderer
   readonly theme?: 'light' | 'dark'
@@ -27,8 +26,6 @@ interface IProps {
 export const DagGraph: React.FC<IProps> = props => {
   const {
     data,
-    width,
-    height,
     nodeRenderer,
     edgeRenderer,
     theme = 'light',
@@ -44,7 +41,7 @@ export const DagGraph: React.FC<IProps> = props => {
   const [hoveredNode, setHoveredNode] = React.useState<IGraphNode | null>(null)
   const [selectedNode, setSelectedNode] = React.useState<IGraphNode | null>(null)
   const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 })
-  const [canvasSize, setCanvasSize] = React.useState({ width, height })
+  const [canvasSize, setCanvasSize] = React.useState({ width: 0, height: 0 })
 
   const {
     transform,
@@ -60,7 +57,7 @@ export const DagGraph: React.FC<IProps> = props => {
     fitToView,
     setNodeDragging,
   } = useCanvasInteraction(canvasRef)
-  const { layoutNodes, clearCache } = useGraphLayout(data)
+  const { layoutNodes, clearCache, markNodeAsManuallyPositioned } = useGraphLayout(data)
   const { renderGraph } = useGraphRenderer(canvasRef, theme)
 
   const positionedNodes = layoutNodes()
@@ -68,7 +65,12 @@ export const DagGraph: React.FC<IProps> = props => {
   const { dragDropState, handleDragStart, handleDragMove, handleDragEnd } = useDragAndDrop({
     nodes: positionedNodes,
     onNodeReplace,
-    onNodePositionChange,
+    onNodePositionChange: (nodeId: string, newPosition: { x: number; y: number }) => {
+      // Mark the node as manually positioned
+      markNodeAsManuallyPositioned(nodeId, newPosition)
+      // Also call the original callback if provided
+      onNodePositionChange?.(nodeId, newPosition)
+    },
     hitTestNode: (worldX: number, worldY: number) => {
       for (const node of positionedNodes) {
         if (!node.position) continue
@@ -115,63 +117,54 @@ export const DagGraph: React.FC<IProps> = props => {
     screenToWorld,
   )
 
-  const handleMouseMoveInternal = React.useCallback(
-    (event: MouseEvent) => {
-      const canvas = canvasRef.current
-      if (!canvas) return
+  const handleMouseMoveInternal = useEventCallback((event: MouseEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
 
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = event.clientX - rect.left
-      const mouseY = event.clientY - rect.top
+    const rect = canvas.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
 
-      setTooltipPosition({ x: mouseX, y: mouseY })
+    setTooltipPosition({ x: mouseX, y: mouseY })
 
-      if (dragDropState.isDragging) {
-        handleDragMove(mouseX, mouseY)
-      } else {
-        handleCanvasMouseMove(event, rect)
-      }
+    if (dragDropState.isDragging) {
+      handleDragMove(mouseX, mouseY)
+    } else {
+      handleCanvasMouseMove(event, rect)
+    }
 
-      handleMouseMove(event)
-    },
-    [handleCanvasMouseMove, handleMouseMove, dragDropState.isDragging, handleDragMove],
-  )
+    handleMouseMove(event)
+  })
 
-  const handleMouseDownInternal = React.useCallback(
-    (event: MouseEvent) => {
-      const canvas = canvasRef.current
-      if (!canvas) return
+  const handleMouseDownInternal = useEventCallback((event: MouseEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
 
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = event.clientX - rect.left
-      const mouseY = event.clientY - rect.top
+    const rect = canvas.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
 
-      handleCanvasMouseDown(event, rect, { x: mouseX, y: mouseY })
-      handleMouseDown(event)
-    },
-    [handleCanvasMouseDown, handleMouseDown],
-  )
+    handleCanvasMouseDown(event, rect, { x: mouseX, y: mouseY })
+    handleMouseDown(event)
+  })
 
-  const handleMouseUpInternal = React.useCallback(
-    (event: MouseEvent) => {
-      const canvas = canvasRef.current
-      if (!canvas) return
+  const handleMouseUpInternal = useEventCallback((event: MouseEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
 
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = event.clientX - rect.left
-      const mouseY = event.clientY - rect.top
+    const rect = canvas.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
 
-      if (dragDropState.isDragging) {
-        handleDragEnd(mouseX, mouseY)
-        setNodeDragging(false)
-      } else {
-        handleCanvasClick(event, rect, { x: mouseX, y: mouseY })
-      }
+    if (dragDropState.isDragging) {
+      handleDragEnd(mouseX, mouseY)
+      setNodeDragging(false)
+    } else {
+      handleCanvasClick(event, rect, { x: mouseX, y: mouseY })
+    }
 
-      handleMouseUp()
-    },
-    [handleCanvasClick, handleMouseUp, dragDropState.isDragging, handleDragEnd, setNodeDragging],
-  )
+    handleMouseUp()
+  })
 
   React.useEffect(() => {
     const updateCanvasSize = (): void => {
@@ -186,15 +179,23 @@ export const DagGraph: React.FC<IProps> = props => {
       setCanvasSize({ width: newWidth, height: newHeight })
     }
 
-    updateCanvasSize()
+    // Delay initial sizing to ensure container is fully rendered
+    const timeoutId = setTimeout(updateCanvasSize, 0)
 
+    // Handle resize
     const resizeObserver = new ResizeObserver(updateCanvasSize)
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current)
     }
 
+    // Handle window resize as backup
+    const handleWindowResize = (): void => updateCanvasSize()
+    window.addEventListener('resize', handleWindowResize)
+
     return () => {
+      clearTimeout(timeoutId)
       resizeObserver.disconnect()
+      window.removeEventListener('resize', handleWindowResize)
     }
   }, [selectedNode])
 
@@ -262,13 +263,13 @@ export const DagGraph: React.FC<IProps> = props => {
     }
   }, [handleWheel, handleMouseDownInternal, handleMouseMoveInternal, handleMouseUpInternal])
 
-  const handleReLayout = React.useCallback(() => {
+  const handleReLayout = useEventCallback(() => {
     clearCache()
-  }, [clearCache])
+  })
 
-  const handleFitToView = React.useCallback(() => {
+  const handleFitToView = useEventCallback(() => {
     fitToView(positionedNodes)
-  }, [fitToView, positionedNodes])
+  })
 
   return (
     <div ref={containerRef} className="relative w-full h-full flex">
@@ -277,7 +278,7 @@ export const DagGraph: React.FC<IProps> = props => {
           ref={canvasRef}
           width={canvasSize.width}
           height={canvasSize.height}
-          className="cursor-grab active:cursor-grabbing w-full h-full"
+          className="cursor-grab active:cursor-grabbing"
         />
 
         <NodeTooltip node={hoveredNode} position={tooltipPosition} visible={!!hoveredNode} />

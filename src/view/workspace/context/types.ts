@@ -14,5 +14,4 @@ export interface IWorkspaceData {
 
   readonly sidebarVisible: boolean
   readonly sidebarWidth: number
-  readonly topbarVisible: boolean
 }

@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import type { IGraphEdgeRenderer, IGraphEdgeStyle, IGraphEdge, IGraphNode } from '../types'
+import type { IGraphEdge, IGraphEdgeRenderer, IGraphEdgeStyle, IGraphNode } from '../types'
 
 export class DefaultEdgeRenderer implements IGraphEdgeRenderer {
   private animationOffset = 0

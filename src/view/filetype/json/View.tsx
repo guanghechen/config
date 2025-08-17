@@ -10,11 +10,10 @@ interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 export const JsonView: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
+  const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = props
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   return (
@@ -25,7 +24,7 @@ export const JsonView: React.FC<IProps> = props => {
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
         >
-          <ModeToggle topbarVisible={topbarVisible} />
+          <ModeToggle />
           <Composer />
         </JsonViewProvider>
         <button

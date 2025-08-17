@@ -21,11 +21,10 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
 
 interface IProps {
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 export const Composer: React.FC<IProps> = props => {
-  const { mainScrollableContainer, topbarVisible } = props
+  const { mainScrollableContainer } = props
   const { visible: visibleScrollToTop, scrollToTop } = useScrollToTop(mainScrollableContainer)
 
   const viewmodel = useEventStreamViewViewModel()
@@ -61,8 +60,7 @@ export const Composer: React.FC<IProps> = props => {
           'h-[calc(100vh-7rem)]': columns > 1,
         })}
       >
-        {/* Mode Toggle */}
-        <ModeToggle topbarVisible={topbarVisible} />
+        <ModeToggle />
         {showView && (
           <React.Fragment>
             <div

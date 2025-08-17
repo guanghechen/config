@@ -3,20 +3,13 @@ import cn from 'clsx'
 import React from 'react'
 import { ModeEnum, useJsonViewViewModel } from '../context'
 
-interface IProps {
-  readonly topbarVisible: boolean
-}
-
-export const ModeToggle: React.FC<IProps> = ({ topbarVisible }) => {
+export const ModeToggle: React.FC = () => {
   const viewmodel = useJsonViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
   return (
     <div
-      className={cn(
-        'fixed right-4 z-50 flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95',
-        topbarVisible ? 'top-16' : 'top-4',
-      )}
+      className="fixed right-4 z-50 flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95 top-4"
       title={`Current mode: ${mode}`}
     >
       <button

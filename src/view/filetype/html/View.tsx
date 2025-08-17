@@ -8,11 +8,10 @@ interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
-  readonly topbarVisible: boolean
 }
 
 export const HtmlView: React.FC<IProps> = props => {
-  const { filepath, workspace, filepathDirtyTick, mainScrollableContainer, topbarVisible } = props
+  const { filepath, workspace, filepathDirtyTick, mainScrollableContainer } = props
 
   return (
     <div className="w-full pt-8">
@@ -22,7 +21,7 @@ export const HtmlView: React.FC<IProps> = props => {
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
         >
-          <ModeToggle topbarVisible={topbarVisible} />
+          <ModeToggle />
           <Composer
             workspace={workspace}
             filepath={filepath}
