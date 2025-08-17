@@ -7,7 +7,7 @@ import { FileTree } from './FileTree'
 export const Sidebar: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
   const visible: boolean = useStateValue(viewmodel.sidebarVisible$)
-  const width: number = viewmodel.sidebarWidth$.getSnapshot() // don't subscribe the width change since we adjust it in resizer callback
+  const width: number = useStateValue(viewmodel.sidebarWidth$) // don't subscribe the width change since we adjust it in resizer callback
 
   const containerRef = React.useRef<HTMLDivElement>(null)
   const resizingRef = React.useRef<boolean>(false)
