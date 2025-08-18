@@ -1,0 +1,23 @@
+{
+  "name": "copilot-api",
+  "split": "/\\n/",
+  "uuid": "(_, index) => `${index}`",
+  "parents": "() => []",
+  "steps": [
+    {
+      "type": "filter",
+      "code": "line => /(payload|event): \\{/.test(line)",
+      "skip": false
+    },
+    {
+      "type": "map",
+      "code": "line => line.replace(/^[\\s\\S]*(payload|event): \\{/, '{')",
+      "skip": false
+    },
+    {
+      "type": "map",
+      "code": "line => JSON.parse(line)",
+      "skip": false
+    }
+  ]
+}

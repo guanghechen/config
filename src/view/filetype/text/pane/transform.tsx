@@ -12,7 +12,7 @@ export const TransformPane: React.FC<IProps> = props => {
 
   return (
     <div
-      className={cn('box-border p-8 overflow-auto h-full', PRESET_CLASSES.scrollbar, {
+      className={cn('box-border p-4 pt-0 overflow-auto h-full', PRESET_CLASSES.scrollbar, {
         'p-2': columns > 1,
       })}
     >

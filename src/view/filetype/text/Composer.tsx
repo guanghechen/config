@@ -25,7 +25,10 @@ export const Composer: React.FC = () => {
 
   return (
     <div
-      className={cn('box-border relative pt-12', columns > 1 ? 'w-screen h-screen' : 'size-full')}
+      className={cn(
+        'box-border relative pt-12',
+        columns > 1 ? 'w-screen h-[calc(100vh-3rem)]' : 'size-full',
+      )}
     >
       <div className="box-border fixed top-4 right-4 z-50">
         <Mode />
