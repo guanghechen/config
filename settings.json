@@ -8,6 +8,8 @@
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "DISABLE_TELEMETRY": "1"
   },
-  "includeCoAuthoredBy": false
+  "includeCoAuthoredBy": false,
+  "feedbackSurveyState": {
+    "lastShownTime": 1754640140229
+  }
 }
-
