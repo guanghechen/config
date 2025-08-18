@@ -1,0 +1,49 @@
+/* Text view layout styles */
+
+/* Single column layout */
+.f-view-text__single-column {
+  @apply w-full;
+}
+
+/* View + Raw layout (2 panes side by side) */
+.f-view-text__view-raw {
+  @apply grid grid-cols-[2fr_1fr] h-[calc(100vh-3rem)] w-full;
+  grid-template-areas: "view raw";
+}
+
+/* View + Transform layout (2 panes side by side) */
+.f-view-text__view-transform {
+  @apply grid grid-cols-[2fr_1fr] h-[calc(100vh-3rem)] w-full;
+  grid-template-areas: "view transform";
+}
+
+/* Raw + Transform layout (2 panes side by side) */
+.f-view-text__raw-transform {
+  @apply grid grid-cols-2 h-[calc(100vh-3rem)] w-full;
+  grid-template-areas: "raw transform";
+}
+
+/* All three panes layout (view spans 2 rows on left, raw and transform stack on right) */
+.f-view-text__view-raw-transform {
+  @apply grid grid-cols-[2fr_1fr] grid-rows-[1fr_1fr] h-[calc(100vh-3rem)] w-full;
+  grid-template-areas: 
+    "view raw"
+    "view transform";
+}
+
+/* Grid area assignments for panes */
+.f-view-text__pane {
+  @apply overflow-auto;
+}
+
+.f-view-text__pane--view {
+  grid-area: view;
+}
+
+.f-view-text__pane--raw {
+  grid-area: raw;
+}
+
+.f-view-text__pane--transform {
+  grid-area: transform;
+}

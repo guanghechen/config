@@ -2,6 +2,7 @@ import React from 'react'
 import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
 import { TextViewProvider } from './context'
+import './style.css'
 
 interface IProps {
   readonly workspace: string | null

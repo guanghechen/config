@@ -16,7 +16,7 @@ export const RawPane: React.FC<IProps> = props => {
   return (
     <div
       className={cn(
-        'box-border h-full w-[48rem] max-w-[100rem] flex-auto border border-gray-200 dark:border-gray-700',
+        'box-border h-full border border-gray-200 dark:border-gray-700',
         PRESET_CLASSES.scrollbar,
         {
           'p-2 overflow-auto': columns > 1,

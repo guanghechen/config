@@ -1,4 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
+import cn from 'clsx'
 import React from 'react'
 import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
@@ -35,35 +36,34 @@ export const Main: React.FC = () => {
   }
 
   return (
-    <div className="size-full flex justify-center gap-2">
+    <div
+      className={cn({
+        'f-view-text__single-column': columns === 1,
+        'f-view-text__view-raw': showView && showRaw && !showTransform,
+        'f-view-text__view-transform': showView && !showRaw && showTransform,
+        'f-view-text__raw-transform': !showView && showRaw && showTransform,
+        'f-view-text__view-raw-transform': showView && showRaw && showTransform,
+      })}
+    >
       {showView && (
-        <React.Fragment>
+        <div className="f-view-text__pane f-view-text__pane--view">
           <ViewPane
             content={content}
             viewMode={viewMode}
             transformedNodes={transformedNodes}
             columns={columns}
           />
-          {columns > 1 && (
-            <div className="h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
-          )}
-        </React.Fragment>
+        </div>
       )}
       {showRaw && (
-        <React.Fragment>
-          {columns > 1 && (
-            <div className="h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
-          )}
+        <div className="f-view-text__pane f-view-text__pane--raw">
           <RawPane content={content} themeScheme={themeScheme} columns={columns} />
-        </React.Fragment>
+        </div>
       )}
       {showTransform && (
-        <React.Fragment>
-          {columns > 1 && (
-            <div className="h-full flex-shrink-0 border-r border-gray-300 dark:border-gray-700" />
-          )}
+        <div className="f-view-text__pane f-view-text__pane--transform">
           <TransformPane columns={columns} />
-        </React.Fragment>
+        </div>
       )}
     </div>
   )

@@ -22,7 +22,7 @@ export const ViewPane: React.FC<IProps> = props => {
   const theme: SiteTheme = useStateValue(siteVM.theme$)
 
   return (
-    <div className="box-border p-2 relative size-full flex-auto w-[80rem]">
+    <div className="box-border p-2 relative size-full">
       <ViewModeDropdown />
       <div
         className={cn('box-border h-full', PRESET_CLASSES.scrollbar, {
