@@ -17,6 +17,10 @@
   grid-area: transform;
 }
 
+.f-view-text__pane--nav {
+  grid-area: nav;
+}
+
 /* Single column layout */
 .f-view-text__single-column {
   width: 100%;
@@ -61,6 +65,26 @@
   grid-template-areas:
     'view raw'
     'view transform';
+  gap: 0.5rem;
+  height: calc(100vh - 3rem);
+  width: 100%;
+  overflow: hidden;
+}
+
+.f-view-text__view-nav {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas: 'view nav';
+  gap: 0.5rem;
+  height: calc(100vh - 3rem);
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Multi-pane layout for complex combinations */
+.f-view-text__multiple-panes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.5rem;
   height: calc(100vh - 3rem);
   width: 100%;

@@ -22,6 +22,7 @@ export interface ITextTransformExportData {
   readonly parents: string
   readonly split: string
   readonly steps: ITextTransformStepData[]
+  readonly chainPaths?: string[]
 }
 
 export interface ITextTransformConfig {
@@ -30,6 +31,7 @@ export interface ITextTransformConfig {
   readonly steps: ITextTransformStep[]
   readonly uuid: string
   readonly parents: string
+  readonly chainPaths?: string[]
 }
 
 export interface ITextTransformedNode {

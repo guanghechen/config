@@ -1,11 +1,15 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { ModeEnum, useTextViewViewModel } from '../context'
+import { ModeEnum, ViewModeEnum, useTextViewViewModel } from '../context'
 
 export const Mode: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
+  const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
+
+  const showView: boolean = (mode & ModeEnum.VIEW) !== 0
+  const showNav: boolean = showView && viewMode === ViewModeEnum.LIST
 
   return (
     <div
@@ -23,6 +27,19 @@ export const Mode: React.FC = () => {
       >
         view
       </button>
+      {showNav && (
+        <button
+          className={cn(
+            'box-border px-3 transition-all duration-200 focus:outline-none focus:ring-0',
+            (mode & ModeEnum.NAV) !== 0
+              ? 'bg-purple-500 bg-opacity-90 font-medium text-white shadow-inner'
+              : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
+          )}
+          onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.NAV)}
+        >
+          nav
+        </button>
+      )}
       <button
         className={cn(
           'box-border px-3 transition-all duration-200 focus:outline-none focus:ring-0',

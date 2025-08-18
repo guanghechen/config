@@ -23,6 +23,7 @@ export async function getTransformer(name: string): Promise<ITextTransformConfig
     split: transformer.split || '\n',
     uuid: transformer.uuid || '',
     parents: transformer.parents || '() => []',
+    chainPaths: transformer.chainPaths || [],
     steps: (transformer.steps || []).map((step: any, index: number) => ({
       id: `loaded-${Date.now()}-${index}`,
       type: step.type || TextTransformStepTypeEnum.MAP,
