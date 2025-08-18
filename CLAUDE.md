@@ -14,4 +14,7 @@ The following rules are supreme principles that must be followed at all times re
 
 The following rules are merely recommended for adoption and can be referenced at your discretion based on the circumstances.
 
-1. **RECOMMENDED**: When implementing a new feature, forking existing code is encouraged. Try to avoid considering rewriting existing code to achieve reuse, unless the modification is particularly simple or no other logic depends on that part of the code.
+1. **RECOMMENDED**: use `fd` instead of `find` command to search files.
+2. **RECOMMENDED**: use `rg` instead of `grep` command to search contents from files or piped-contents.
+3. **RECOMMENDED**: When implementing a new feature, forking existing code is encouraged. Try to avoid considering rewriting existing code to achieve reuse, unless the modification is particularly simple or no other logic depends on that part of the code.
+
