@@ -63,7 +63,17 @@ return {
       kind_icons = eve.icon.kind,
     },
     cmdline = {
-      enabled = false,
+      enabled = true,
+      keymap = {
+        ["<Tab>"] = { "show", "accept" },
+      },
+      completion = {
+        menu = {
+          auto_show = function()
+            return vim.fn.getcmdtype() == ":"
+          end,
+        },
+      },
     },
     completion = {
       accept = {
@@ -212,6 +222,8 @@ return {
       per_filetype = sources_per_filetype,
       providers = {
         buffer = {
+          name = "buffer",
+          module = "blink.cmp.sources.buffer",
           score_offset = 100,
           opts = {
             get_bufnrs = function()
@@ -232,6 +244,10 @@ return {
             end,
           },
         },
+        cmdline = {
+          name = "cmdline",
+          module = "blink.cmp.sources.cmdline",
+        },
         copilot = {
           name = "copilot",
           module = "ghc.cmp.copilot",
@@ -239,12 +255,22 @@ return {
           async = true,
         },
         lsp = {
+          name = "lsp",
+          module = "blink.cmp.sources.lsp",
           score_offset = 180,
         },
         path = {
+          name = "path",
+          module = "blink.cmp.sources.path",
           score_offset = 200,
+          opts = {
+            ignore_root_slash = std.path.is_git_repo(),
+            show_hidden_files_by_default = true,
+          },
         },
         snippets = {
+          name = "snippets",
+          module = "blink.cmp.sources.snippets",
           score_offset = 160,
         },
       },
