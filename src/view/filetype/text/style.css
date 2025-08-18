@@ -2,6 +2,9 @@
 
 /* Base pane styles */
 .f-view-text__pane {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
   overflow: auto;
 }
 

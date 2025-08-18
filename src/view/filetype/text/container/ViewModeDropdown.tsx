@@ -142,106 +142,101 @@ export const ViewModeDropdown: React.FC = () => {
   }, [isOpen])
 
   return (
-    <div className="absolute right-4 top-2 z-50">
-      <div className="relative" ref={dropdownRef}>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          onKeyDown={handleKeyDown}
-          className="group flex h-8 select-none items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-sm font-medium shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
-          title={`View mode: ${currentOption?.label}`}
-          aria-expanded={isOpen}
-          aria-haspopup="listbox"
-          aria-label="Select view mode"
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={handleKeyDown}
+        className="group flex h-8 select-none items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-sm font-medium shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
+        title={`View mode: ${currentOption?.label}`}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label="Select view mode"
+      >
+        <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+          {currentOption?.icon}
+          <span className="capitalize">{currentOption?.label}</span>
+        </div>
+        <svg
+          className={cn(
+            'h-3.5 w-3.5 text-gray-500 transition-transform duration-200 dark:text-gray-400',
+            isOpen ? 'rotate-180' : 'group-hover:text-gray-700 dark:group-hover:text-gray-300',
+          )}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
         >
-          <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
-            {currentOption?.icon}
-            <span className="capitalize">{currentOption?.label}</span>
-          </div>
-          <svg
-            className={cn(
-              'h-3.5 w-3.5 text-gray-500 transition-transform duration-200 dark:text-gray-400',
-              isOpen ? 'rotate-180' : 'group-hover:text-gray-700 dark:group-hover:text-gray-300',
-            )}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
 
-        {isOpen && (
-          <div
-            className="absolute right-0 top-full mt-2 min-w-40 overflow-hidden rounded-xl bg-white/95 shadow-2xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
-            role="listbox"
-            aria-label="View mode options"
-          >
-            <div className="p-1">
-              {VIEW_MODE_OPTIONS.map((option, index) => {
-                const isDisabled =
-                  (option.value === ViewModeEnum.LIST && isListDisabled) ||
-                  (option.value === ViewModeEnum.GRAPH && isGraphDisabled)
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => !isDisabled && handleSelect(option.value)}
-                    onKeyDown={event => handleOptionKeyDown(event, option.value, index)}
-                    disabled={isDisabled}
+      {isOpen && (
+        <div
+          className="absolute right-0 top-full mt-2 min-w-40 overflow-hidden rounded-xl bg-white/95 shadow-2xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
+          role="listbox"
+          aria-label="View mode options"
+        >
+          <div className="p-1">
+            {VIEW_MODE_OPTIONS.map((option, index) => {
+              const isDisabled =
+                (option.value === ViewModeEnum.LIST && isListDisabled) ||
+                (option.value === ViewModeEnum.GRAPH && isGraphDisabled)
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => !isDisabled && handleSelect(option.value)}
+                  onKeyDown={event => handleOptionKeyDown(event, option.value, index)}
+                  disabled={isDisabled}
+                  className={cn(
+                    'group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150 focus:outline-none',
+                    isDisabled
+                      ? 'cursor-not-allowed opacity-50'
+                      : actualViewMode === option.value
+                        ? 'bg-indigo-50 text-indigo-700 shadow-sm dark:bg-indigo-900/50 dark:text-indigo-300'
+                        : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
+                  )}
+                  role="option"
+                  aria-selected={actualViewMode === option.value}
+                  aria-disabled={isDisabled}
+                  tabIndex={isOpen && !isDisabled ? 0 : -1}
+                >
+                  <div
                     className={cn(
-                      'group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150 focus:outline-none',
+                      'flex h-6 w-6 items-center justify-center rounded transition-colors',
                       isDisabled
-                        ? 'cursor-not-allowed opacity-50'
+                        ? 'text-gray-400 dark:text-gray-600'
                         : actualViewMode === option.value
-                          ? 'bg-indigo-50 text-indigo-700 shadow-sm dark:bg-indigo-900/50 dark:text-indigo-300'
-                          : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
+                          ? 'text-indigo-600 dark:text-indigo-400'
+                          : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300',
                     )}
-                    role="option"
-                    aria-selected={actualViewMode === option.value}
-                    aria-disabled={isDisabled}
-                    tabIndex={isOpen && !isDisabled ? 0 : -1}
                   >
-                    <div
-                      className={cn(
-                        'flex h-6 w-6 items-center justify-center rounded transition-colors',
-                        isDisabled
-                          ? 'text-gray-400 dark:text-gray-600'
-                          : actualViewMode === option.value
-                            ? 'text-indigo-600 dark:text-indigo-400'
-                            : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300',
-                      )}
+                    {option.icon}
+                  </div>
+                  <span
+                    className={cn('font-medium', isDisabled && 'text-gray-400 dark:text-gray-600')}
+                  >
+                    {option.label}
+                  </span>
+                  {actualViewMode === option.value && !isDisabled && (
+                    <svg
+                      className="ml-auto h-4 w-4 text-indigo-600 dark:text-indigo-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      aria-hidden="true"
                     >
-                      {option.icon}
-                    </div>
-                    <span
-                      className={cn(
-                        'font-medium',
-                        isDisabled && 'text-gray-400 dark:text-gray-600',
-                      )}
-                    >
-                      {option.label}
-                    </span>
-                    {actualViewMode === option.value && !isDisabled && (
-                      <svg
-                        className="ml-auto h-4 w-4 text-indigo-600 dark:text-indigo-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

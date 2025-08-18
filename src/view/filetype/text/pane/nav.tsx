@@ -9,7 +9,7 @@ interface IProps {
   activeRecordIndex: number | null
 }
 
-export const Nav: React.FC<IProps> = ({
+export const NavPane: React.FC<IProps> = ({
   records,
   singleColumn,
   onRecordClick,
@@ -67,14 +67,13 @@ export const Nav: React.FC<IProps> = ({
               </div>
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-              {typeof record.data === 'string' 
-                ? record.data.length > 100 
-                  ? `${record.data.slice(0, 100)}...` 
+              {typeof record.data === 'string'
+                ? record.data.length > 100
+                  ? `${record.data.slice(0, 100)}...`
                   : record.data
                 : JSON.stringify(record.data).length > 100
                   ? `${JSON.stringify(record.data).slice(0, 100)}...`
-                  : JSON.stringify(record.data)
-              }
+                  : JSON.stringify(record.data)}
             </div>
           </button>
         ))}
@@ -83,4 +82,4 @@ export const Nav: React.FC<IProps> = ({
   )
 }
 
-Nav.displayName = 'TextViewNav'
+NavPane.displayName = 'TextViewNavPane'

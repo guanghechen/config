@@ -7,7 +7,7 @@ import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import type { ITextTransformedNode } from '@/shared/types'
 import { ModeEnum, useTextViewViewModel } from '../context'
 import type { ViewModeEnum } from '../context/types'
-import { Nav } from '../pane/nav'
+import { NavPane } from '../pane/nav'
 import { RawPane } from '../pane/raw'
 import { TransformPane } from '../pane/transform'
 import { ViewPane } from '../pane/view'
@@ -28,7 +28,8 @@ export const Main: React.FC = () => {
   const showNav: boolean = (mode & ModeEnum.NAV) !== 0
   const showRaw: boolean = (mode & ModeEnum.RAW) !== 0
   const showTransform: boolean = (mode & ModeEnum.TRANSFORM) !== 0
-  const columns: number = (showView ? 1 : 0) + (showNav ? 1 : 0) + (showRaw ? 1 : 0) + (showTransform ? 1 : 0)
+  const columns: number =
+    (showView ? 1 : 0) + (showNav ? 1 : 0) + (showRaw ? 1 : 0) + (showTransform ? 1 : 0)
 
   const handleRecordClick = React.useCallback(
     (index: number) => {
@@ -47,7 +48,7 @@ export const Main: React.FC = () => {
 
   return (
     <div
-      className={cn({
+      className={cn('box-border p-0 m-0', {
         'f-view-text__single-column': columns === 1,
         'f-view-text__view-raw': showView && showRaw && !showTransform && !showNav,
         'f-view-text__view-transform': showView && !showRaw && showTransform && !showNav,
@@ -69,7 +70,7 @@ export const Main: React.FC = () => {
       )}
       {showNav && transformedNodes && (
         <div className="f-view-text__pane f-view-text__pane--nav">
-          <Nav
+          <NavPane
             records={transformedNodes}
             singleColumn={columns === 1}
             onRecordClick={handleRecordClick}
