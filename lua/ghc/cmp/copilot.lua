@@ -261,6 +261,11 @@ end
 ---@param callback                      fun(self: blink.cmp.CompletionResponse): nil
 function M:get_completions(ctx, callback)
   if not self.client or not eve.context.flight.ai:snapshot() then
+    callback({
+      is_incomplete_forward = config.auto_refresh.forward,
+      is_incomplete_backward = config.auto_refresh.backward,
+      items = {},
+    })
     return
   end
 
