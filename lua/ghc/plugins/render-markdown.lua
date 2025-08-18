@@ -17,8 +17,8 @@ return {
       width = "block",
     },
     completions = {
-      blink = { enabled = true },
-      lsp = { enabled = true },
+      blink = { enabled = false },
+      lsp = { enabled = false },
     },
     file_types = eve.filetype.get_markdown_filetypes(),
     heading = {

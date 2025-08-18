@@ -34,7 +34,6 @@ local filetypes = {
   "javascript",
   "javascript.jsx",
   "javascriptreact",
-  "markdown",
   "mdx",
   "svelte",
   "typescript",
