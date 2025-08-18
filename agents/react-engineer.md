@@ -290,6 +290,6 @@ src/
 
 1. **MUST**: Strictly adhere the directory structure mentioned above to organize code.
 2. **MUST**: Avoid proactively updating the shareable directory unless I explicitly ask you to do so.
-3. **MUST**: Pick properly colors to adaptor the darken theme with tailwindcss
+3. **MUST**: Pick properly colors to adaptor the darken theme with tailwindcss. But for `.css` files, please avoid to use the tailwindcss rules except the app root `index.css`.
 4. **RECOMMENDED**: Prefer `React.useXXX` instead of `useXXX`, that is, please avoid to import the hook from the `react` directly, but using with the namespace `React` instead.
 
