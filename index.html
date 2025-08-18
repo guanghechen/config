@@ -1,18 +1,13 @@
 <!doctype html>
-<html
-  lang="en"
-  class="[&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-500 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-400 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2"
->
+<html lang="en" class="scrollbar">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>NeoVim Markdown Preview</title>
+    <title>Yozora</title>
   </head>
-  <body
-    class="box-border dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-500 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-400 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2"
-  >
-    <div id="root" class="box-border"></div>
+  <body class="scrollbar">
+    <div id="root" class="box-border relative min-h-screen"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

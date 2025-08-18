@@ -2,7 +2,6 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useFileViewmodel } from './context'
 import { Main } from './layout/main'
-import { Topbar } from './layout/topbar'
 
 export const Composer: React.FC = () => {
   const viewmodel = useFileViewmodel()
@@ -10,11 +9,8 @@ export const Composer: React.FC = () => {
   const filepathDirtyTick: number = useStateValue(viewmodel.filepathDirtyTick$)
 
   return (
-    <div className="relative min-h-screen w-full bg-gray-50 font-mono-maple text-gray-800 transition-colors duration-300 ease-in-out dark:bg-gray-900 dark:text-gray-200">
-      <Topbar filepath={filepath} />
-      <div className="min-h-screen">
-        <Main filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
-      </div>
+    <div className="f-vf-root transition-colors duration-300 ease-in-out bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+      <Main filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
     </div>
   )
 }

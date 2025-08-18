@@ -120,8 +120,6 @@ export const FloatingGate: React.FC = () => {
               </svg>
               <span>Back</span>
             </button>
-
-            {/* Route Navigation Buttons */}
             {listedRoutes.map(route => {
               const isActive =
                 location.pathname === route.path ||
@@ -150,7 +148,6 @@ export const FloatingGate: React.FC = () => {
         )}
         {menuLevel === 'settings' && (
           <React.Fragment>
-            {/* Back Button */}
             <button
               onClick={goBackToFirstLevel}
               className={cn(
@@ -171,8 +168,6 @@ export const FloatingGate: React.FC = () => {
               </svg>
               <span>Back</span>
             </button>
-
-            {/* Settings Card */}
             <div
               className={cn(
                 'rounded-lg px-4 py-3 shadow-lg backdrop-blur-md',
@@ -183,8 +178,6 @@ export const FloatingGate: React.FC = () => {
             >
               <div className="space-y-3">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-200">Settings</div>
-
-                {/* Theme Section */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-gray-600 dark:text-gray-300">
                     Theme
@@ -198,8 +191,6 @@ export const FloatingGate: React.FC = () => {
           </React.Fragment>
         )}
       </div>
-
-      {/* Gate Button */}
       <button
         ref={buttonRef}
         onClick={toggleGate}

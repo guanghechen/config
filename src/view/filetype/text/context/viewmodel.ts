@@ -24,7 +24,7 @@ const DEFAULT_TRANSFORM_CONFIG: ITextTransformConfig = {
 }
 
 const DEFAULT_TEXT_VIEW_DATA: ITextViewData = {
-  mode: ModeEnum.VIEW,
+  mode: ModeEnum.CONTENT,
   viewMode: ViewModeEnum.ORIGINAL,
   transformConfig: DEFAULT_TRANSFORM_CONFIG,
   chainPaths: [],
@@ -36,7 +36,7 @@ export class TextViewViewModel extends ViewModel {
   public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string | null>
   public readonly content$: IState<string | null>
-  public readonly error$: IState<string | null>
+  public readonly contentError: IState<string | null>
   public readonly transformConfig$: IState<ITextTransformConfig>
   public readonly transformedNodes$: IState<ITextTransformedNode[] | null>
   public readonly chainPaths$: IState<IChainPath[]>
@@ -65,7 +65,9 @@ export class TextViewViewModel extends ViewModel {
         ? viewMode
         : base.viewMode
     const normalizedTransformConfig: ITextTransformConfig = transformConfig || base.transformConfig!
-    const normalizedChainPaths: IChainPath[] = Array.isArray(chainPaths) ? chainPaths : base.chainPaths
+    const normalizedChainPaths: IChainPath[] = Array.isArray(chainPaths)
+      ? chainPaths
+      : base.chainPaths
     const normalizedData: ITextViewData = {
       mode: normalizedMode,
       viewMode: normalizedViewMode,
@@ -79,7 +81,7 @@ export class TextViewViewModel extends ViewModel {
     super()
 
     const {
-      mode = ModeEnum.VIEW,
+      mode = ModeEnum.CONTENT,
       viewMode = ViewModeEnum.ORIGINAL,
       workspace = null,
       filepath = null,
@@ -93,7 +95,7 @@ export class TextViewViewModel extends ViewModel {
     this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string | null>(filepath)
     this.content$ = new State<string | null>(null)
-    this.error$ = new State<string | null>(null)
+    this.contentError = new State<string | null>(null)
     this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
     this.transformedNodes$ = new State<ITextTransformedNode[] | null>(null)
     this.chainPaths$ = new State<IChainPath[]>(chainPaths)
@@ -115,10 +117,8 @@ export class TextViewViewModel extends ViewModel {
   }
 
   public load = (data: Partial<ITextViewData> | undefined): void => {
-    const { mode, viewMode, transformConfig, chainPaths }: ITextViewData = TextViewViewModel.normalize(
-      this.dump(),
-      data,
-    )
+    const { mode, viewMode, transformConfig, chainPaths }: ITextViewData =
+      TextViewViewModel.normalize(this.dump(), data)
     this.mode$.next(mode)
     this.viewMode$.next(viewMode)
     this.transformConfig$.next(transformConfig!)

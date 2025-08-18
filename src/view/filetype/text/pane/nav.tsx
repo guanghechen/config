@@ -1,20 +1,14 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import type { ITextTransformedNode } from '@/shared/types'
+import { useTextViewViewModel } from '../context'
 
-interface IProps {
-  records: ITextTransformedNode[]
-  singleColumn: boolean
-  onRecordClick: (index: number) => void
-  activeRecordIndex: number | null
-}
+export const NavPane: React.FC = () => {
+  const viewmodel = useTextViewViewModel()
+  const records: ITextTransformedNode[] = useStateValue(viewmodel.transformedNodes$) || []
+  const activeRecordIndex: number | null = useStateValue(viewmodel.activeRecordIndex$)
 
-export const NavPane: React.FC<IProps> = ({
-  records,
-  singleColumn,
-  onRecordClick,
-  activeRecordIndex,
-}) => {
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -29,24 +23,18 @@ export const NavPane: React.FC<IProps> = ({
   }, [activeRecordIndex])
 
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        'bg-white dark:bg-gray-800 rounded-lg shadow-lg',
-        singleColumn ? 'w-full max-w-4xl mx-auto mt-8' : 'w-full h-full overflow-auto',
-      )}
-    >
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+    <React.Fragment>
+      <div className="box-border flex-initial sticky top-0 z-50 p-4 bg-white round rounded-lg dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Transform Nodes ({records.length})
         </h3>
       </div>
-      <div className={cn('p-2', singleColumn ? '' : 'overflow-auto h-[calc(100%-4rem)]')}>
+      <div className="flex-1" ref={containerRef}>
         {records.map((record, index) => (
           <button
             key={record.uuid}
             data-nav-index={index}
-            onClick={() => onRecordClick(index)}
+            onClick={() => viewmodel.activeRecordIndex$.next(index)}
             className={cn(
               'w-full p-3 mb-2 rounded-lg border text-left transition-all hover:shadow-md',
               activeRecordIndex === index
@@ -78,7 +66,7 @@ export const NavPane: React.FC<IProps> = ({
           </button>
         ))}
       </div>
-    </div>
+    </React.Fragment>
   )
 }
 

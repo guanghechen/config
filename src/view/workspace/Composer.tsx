@@ -12,7 +12,7 @@ export const Composer: React.FC = () => {
   const width: number = useStateValue(viewmodel.sidebarWidth$) // don't subscribe the width change since we adjust it in resizer callback
 
   return (
-    <div className="relative box-border flex font-mono-maple text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:text-gray-200 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-50 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2">
+    <div className="relative box-border flex text-gray-800 shadow-md transition-colors duration-300 ease-in-out dark:text-gray-200 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:hover:bg-gray-400 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 dark:[&::-webkit-scrollbar-thumb]:hover:bg-gray-500 [&::-webkit-scrollbar-track]:bg-gray-50 dark:[&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar]:w-2">
       <div
         className="sticky z-30 left-0 w-0 h-12 top-0 box-border flex-shrink-0 flex-grow-0"
         style={{ width: visible ? width : 0 }}

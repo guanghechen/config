@@ -80,13 +80,13 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
     if (data) {
       viewmodel.content$.next(data.content)
-      viewmodel.error$.next(null)
+      viewmodel.contentError.next(null)
     } else if (error) {
       viewmodel.content$.next(null)
-      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+      viewmodel.contentError.next(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.content$.next(null)
-      viewmodel.error$.next(null)
+      viewmodel.contentError.next(null)
     }
   }, [data, error, viewmodel])
 

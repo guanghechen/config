@@ -5,9 +5,10 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
+import { GlobalLayout } from './container/GlobalLayout'
 import { SiteContextProvider } from './context/site'
-import { GlobalLayout } from './layout/GlobalLayout'
 import { routes, views } from './route'
+
 import 'react-toastify/dist/ReactToastify.css'
 import './index.css'
 
@@ -25,14 +26,16 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <SiteContextProvider>
-      <MathJaxProvider>
-        <BrowserRouter>
-          <GlobalLayout>
-            <AppRoutes />
-          </GlobalLayout>
-        </BrowserRouter>
-      </MathJaxProvider>
+    <React.Fragment>
+      <SiteContextProvider>
+        <MathJaxProvider>
+          <BrowserRouter>
+            <GlobalLayout>
+              <AppRoutes />
+            </GlobalLayout>
+          </BrowserRouter>
+        </MathJaxProvider>
+      </SiteContextProvider>
       <ToastContainer
         position="top-center"
         autoClose={3000}
@@ -46,7 +49,7 @@ const App: React.FC = () => {
         theme="light"
         toastClassName="custom-toast"
       />
-    </SiteContextProvider>
+    </React.Fragment>
   )
 }
 

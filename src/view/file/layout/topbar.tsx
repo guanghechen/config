@@ -18,8 +18,8 @@ export class Topbar extends React.PureComponent<IProps> {
     }
 
     return (
-      <div className="absolute left-4 top-4 z-10 flex items-center gap-2">
-        <h2 className="pointer-events-none select-none truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="flex items-center gap-1 h-full p-4">
+        <h2 className="px-2 pointer-events-none select-none truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
           {filepath}
         </h2>
         <CopyButton

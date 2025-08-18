@@ -1,3 +1,4 @@
+import cn from 'clsx'
 import React from 'react'
 import type { ITextTransformStep } from '@/shared/types'
 import { TextTransformStepTypeEnum } from '@/shared/types'
@@ -17,24 +18,25 @@ interface IProps {
   readonly onDrop?: (fromIndex: number, toIndex: number) => void
 }
 
-export const TransformStep: React.FC<IProps> = ({
-  step,
-  index,
-  totalCount,
-  onUpdate,
-  onRemove,
-  onMoveUp,
-  onMoveDown,
-  onDuplicate,
-  onDragStart,
-  onDragOver,
-  onDrop,
-}) => {
-  const [showDropdown, setShowDropdown] = React.useState(false)
-  const [isDragging, setIsDragging] = React.useState(false)
-  const [isDropTarget, setIsDropTarget] = React.useState(false)
-  const dropdownRef = React.useRef<HTMLDivElement>(null)
-  const itemRef = React.useRef<HTMLDivElement>(null)
+export const TransformStep: React.FC<IProps> = props => {
+  const {
+    step,
+    index,
+    totalCount,
+    onUpdate,
+    onRemove,
+    onMoveUp,
+    onMoveDown,
+    onDuplicate,
+    onDragStart,
+    onDragOver,
+    onDrop,
+  } = props
+  const [showDropdown, setShowDropdown] = React.useState<boolean>(false)
+  const [isDragging, setIsDragging] = React.useState<boolean>(false)
+  const [isDropTarget, setIsDropTarget] = React.useState<boolean>(false)
+  const dropdownRef = React.useRef<HTMLDivElement | null>(null)
+  const itemRef = React.useRef<HTMLDivElement | null>(null)
 
   const handleTypeChange = (newType: TextTransformStepTypeEnum): void => {
     onUpdate({ type: newType })
@@ -124,23 +126,22 @@ export const TransformStep: React.FC<IProps> = ({
     if (showDropdown) {
       document.addEventListener('mousedown', handleClickOutside)
     }
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showDropdown])
+
   return (
     <div
       ref={itemRef}
-      className={`p-3 rounded-lg border transition-all duration-200 ${
-        step.skip === true
-          ? 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-50'
-          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-      } ${isDragging ? 'opacity-50 scale-95' : ''} ${
-        isDropTarget && !isDragging
-          ? 'ring-2 ring-blue-500 border-blue-500 bg-blue-50 dark:bg-blue-900/20 transform scale-105'
-          : ''
-      }`}
+      className={cn('p-3 rounded-lg border transition-all duration-200', {
+        'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 opacity-50':
+          step.skip === true,
+        'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700': step.skip !== true,
+        'opacity-50 scale-95': isDragging,
+        'ring-2 ring-blue-500 border-blue-500 bg-blue-50 dark:bg-blue-900/20 transform scale-105':
+          isDropTarget && !isDragging,
+      })}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -211,11 +212,15 @@ export const TransformStep: React.FC<IProps> = ({
 
           <button
             onClick={() => onUpdate({ skip: !step.skip })}
-            className={`w-6 h-6 flex items-center justify-center transition-colors rounded select-none cursor-pointer ${
-              step.skip === true
-                ? 'text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-900/20 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500'
-                : 'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
+            className={cn(
+              'w-6 h-6 flex items-center justify-center transition-colors rounded select-none cursor-pointer',
+              {
+                'text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-900/20 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500':
+                  step.skip === true,
+                'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600':
+                  step.skip !== true,
+              },
+            )}
             title={step.skip === true ? 'Enable function' : 'Skip function'}
           >
             <svg
@@ -266,21 +271,26 @@ export const TransformStep: React.FC<IProps> = ({
           <div className="relative" ref={dropdownRef}>
             <div className="flex items-stretch">
               <div
-                className={`px-2 py-1 rounded-l text-xs font-medium flex items-center ${
-                  step.type === TextTransformStepTypeEnum.FILTER
-                    ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'
-                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
-                }`}
+                className={cn('px-2 py-1 rounded-l text-xs font-medium flex items-center', {
+                  'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300':
+                    step.type === TextTransformStepTypeEnum.FILTER,
+                  'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300':
+                    step.type !== TextTransformStepTypeEnum.FILTER,
+                })}
               >
                 {step.type}
               </div>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className={`px-1.5 rounded-r border-l border-opacity-20 hover:bg-opacity-80 transition-colors flex items-center justify-center select-none cursor-pointer ${
-                  step.type === TextTransformStepTypeEnum.FILTER
-                    ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-300 dark:border-orange-600'
-                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 border-purple-300 dark:border-purple-600'
-                }`}
+                className={cn(
+                  'px-1.5 rounded-r border-l border-opacity-20 hover:bg-opacity-80 transition-colors flex items-center justify-center select-none cursor-pointer',
+                  {
+                    'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-300 dark:border-orange-600':
+                      step.type === TextTransformStepTypeEnum.FILTER,
+                    'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 border-purple-300 dark:border-purple-600':
+                      step.type !== TextTransformStepTypeEnum.FILTER,
+                  },
+                )}
                 title="Change type"
               >
                 <svg
@@ -302,21 +312,25 @@ export const TransformStep: React.FC<IProps> = ({
               <div className="absolute top-full left-0 mt-1 z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg">
                 <button
                   onClick={() => handleTypeChange(TextTransformStepTypeEnum.FILTER)}
-                  className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer ${
-                    step.type === TextTransformStepTypeEnum.FILTER
-                      ? 'bg-orange-50 dark:bg-orange-900/20'
-                      : ''
-                  }`}
+                  className={cn(
+                    'block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer',
+                    {
+                      'bg-orange-50 dark:bg-orange-900/20':
+                        step.type === TextTransformStepTypeEnum.FILTER,
+                    },
+                  )}
                 >
                   Filter
                 </button>
                 <button
                   onClick={() => handleTypeChange(TextTransformStepTypeEnum.MAP)}
-                  className={`block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer ${
-                    step.type === TextTransformStepTypeEnum.MAP
-                      ? 'bg-purple-50 dark:bg-purple-900/20'
-                      : ''
-                  }`}
+                  className={cn(
+                    'block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer',
+                    {
+                      'bg-purple-50 dark:bg-purple-900/20':
+                        step.type === TextTransformStepTypeEnum.MAP,
+                    },
+                  )}
                 >
                   Map
                 </button>
@@ -325,7 +339,6 @@ export const TransformStep: React.FC<IProps> = ({
           </div>
         </div>
       </div>
-
       <CodeBox
         value={step.code}
         onChange={value => onUpdate({ code: value })}

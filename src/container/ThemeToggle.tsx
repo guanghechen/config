@@ -51,3 +51,5 @@ export const ThemeToggle: React.FC = () => {
     </div>
   )
 }
+
+ThemeToggle.displayName = 'ThemeToggle'

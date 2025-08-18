@@ -24,7 +24,7 @@ export class AnchorButton extends React.PureComponent<IProps> {
       <span
         className={cn(
           'flex items-center justify-center rounded-md text-xs font-medium',
-          'p-1 ml-2 bg-transparent border border-transparent transition-all duration-200',
+          'p-1 bg-transparent border border-transparent transition-all duration-200',
           'text-gray-500 dark:text-gray-400 cursor-pointer',
           'hover:bg-gray-100 dark:hover:bg-white/10',
           'focus:outline-hidden focus:ring-2 focus:ring-blue-300/50',

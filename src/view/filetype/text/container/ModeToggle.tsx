@@ -3,12 +3,12 @@ import cn from 'clsx'
 import React from 'react'
 import { ModeEnum, ViewModeEnum, useTextViewViewModel } from '../context'
 
-export const Mode: React.FC = () => {
+export const ModeToggle: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
   const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
 
-  const showView: boolean = (mode & ModeEnum.VIEW) !== 0
+  const showView: boolean = (mode & ModeEnum.CONTENT) !== 0
   const showNav: boolean = showView && viewMode === ViewModeEnum.LIST
 
   return (
@@ -19,11 +19,11 @@ export const Mode: React.FC = () => {
       <button
         className={cn(
           'box-border px-3 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
-          (mode & ModeEnum.VIEW) !== 0
+          (mode & ModeEnum.CONTENT) !== 0
             ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
-        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.VIEW)}
+        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.CONTENT)}
       >
         view
       </button>
@@ -66,4 +66,4 @@ export const Mode: React.FC = () => {
   )
 }
 
-Mode.displayName = 'TextViewMode'
+ModeToggle.displayName = 'TextViewModeToggle'

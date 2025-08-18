@@ -1,0 +1,44 @@
+.f-vf-root {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
+}
+
+.f-vf-topbar {
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  flex: 0 0 auto;
+  height: 3rem;
+  width: 100%;
+}
+
+.f-vf-main {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: calc(100vh - 3rem);
+}
+
+.f-vf-pane {
+  position: relative;
+  box-sizing: border-box;
+}
+
+.f-vf-main:has(.f-vf-pane:nth-of-type(2)) {
+  display: grid;
+  gap: 2rem;
+  height: calc(100vh - 3rem);
+
+  .f-vf-pane {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+  }
+}
