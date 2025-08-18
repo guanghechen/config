@@ -34,6 +34,7 @@ end
 ---@param config                        any
 local function on_init(client, config)
   eve.lsp.on_init(client, config)
+  client.server_capabilities.documentFormattingProvider = true
 end
 
 return {

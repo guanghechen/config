@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/cc6b21ea16cc12df290152f02513a8bd0ed9d932/lsp/clangd.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/4da7247b2b348b4f6cade30a7a7fcb299879d275/lsp/clangd.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#clangd
 
 -- https://clangd.llvm.org/extensions.html#switch-between-sourceheader

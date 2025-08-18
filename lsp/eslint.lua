@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/7b8a5282683619ddcf40333c6490ada804aeb95d/lsp/eslint.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/612d9fcc652725ce2e3a8043daad6cfc6865c4a7/lsp/eslint.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
 ---@type string[]
@@ -39,7 +39,16 @@ local function before_init(params, config)
     }
 
     for _, file in ipairs(FLAT_CONFIG_FILENAMES) do
-      if vim.fn.filereadable(root_dir .. "/" .. file) == 1 then
+      local found_files = vim.fn.globpath(root_dir, file, true, true)
+
+      -- Filter out files inside node_modules
+      local has_inside_node_modules = false
+      for _, found_file in ipairs(found_files) do
+        if string.find(found_file, "[/\\]node_modules[/\\]") == nil then
+          has_inside_node_modules = true
+        end
+      end
+      if has_inside_node_modules then
         config.settings.experimental = config.settings.experimental or {}
         config.settings.experimental.useFlatConfig = true
         break

@@ -393,6 +393,7 @@
     "gitrepo",
     "gitsigns",
     "gitstatus",
+    "globpath",
     "gomod",
     "goodnode",
     "goodroot",
