@@ -6,12 +6,7 @@ import type { IChainPath } from '../context'
 import { useTextViewViewModel } from '../context'
 import { stringArrayToChainPaths } from '../utils'
 
-interface INavPaneProps {
-  readonly tooltipHoverDelay?: number // in milliseconds, defaults to 3000ms (3s)
-}
-
-export const NavPane: React.FC<INavPaneProps> = props => {
-  const { tooltipHoverDelay = 3000 } = props
+export const NavPane: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const records: ITextTransformedNode[] = useStateValue(viewmodel.transformedNodes$) || []
   const activeRecordIndex: number | null = useStateValue(viewmodel.activeRecordIndex$)
@@ -46,7 +41,6 @@ export const NavPane: React.FC<INavPaneProps> = props => {
             index={index}
             isActive={activeRecordIndex === index}
             chainPaths={chainPaths}
-            tooltipHoverDelay={tooltipHoverDelay}
           />
         ))}
       </div>

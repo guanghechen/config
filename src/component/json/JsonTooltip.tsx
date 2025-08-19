@@ -8,9 +8,6 @@ interface IProps {
   readonly visible: boolean
   readonly maxWidth?: number
   readonly maxHeight?: number
-  readonly onFocus?: () => void
-  readonly onBlur?: () => void
-  readonly onKeyDown?: (event: React.KeyboardEvent) => void
   readonly onMouseEnter?: () => void
   readonly onMouseLeave?: () => void
 }
@@ -22,35 +19,43 @@ export const JsonTooltip: React.FC<IProps> = props => {
     visible,
     maxWidth = 400,
     maxHeight = 300,
-    onFocus,
-    onBlur,
-    onKeyDown,
     onMouseEnter,
     onMouseLeave,
   } = props
 
-  const tooltipRef = React.useRef<HTMLDivElement>(null)
-
-  // Handle keyboard navigation
-  const handleKeyDown = React.useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onBlur?.()
-        return
-      }
-      onKeyDown?.(event)
-    },
-    [onBlur, onKeyDown],
-  )
-
-  // Auto-focus when tooltip becomes visible
-  React.useEffect(() => {
-    if (visible && tooltipRef.current) {
-      tooltipRef.current.focus()
-    }
-  }, [visible])
-
   if (!visible) return null
+
+  // Calculate smart positioning based on anchor position
+  const getSmartPosition = (): { left: number; top: number } => {
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const offset = 10
+
+    // Determine if tooltip should appear to the right or left of the anchor
+    const shouldAppearRight = position.x + maxWidth + offset < viewportWidth
+
+    let left: number
+    let top: number
+
+    if (shouldAppearRight) {
+      // Appear to the right of the boundary (no overlap)
+      left = position.x + offset
+    } else {
+      // Appear to the left of the boundary (no overlap)
+      left = position.x - maxWidth - offset
+    }
+
+    // Center tooltip vertically relative to the anchor point
+    top = position.y - maxHeight / 2
+
+    // Ensure tooltip stays within viewport bounds
+    left = Math.max(20, Math.min(left, viewportWidth - maxWidth - 20))
+    top = Math.max(20, Math.min(top, viewportHeight - maxHeight - 20))
+
+    return { left, top }
+  }
+
+  const { left, top } = getSmartPosition()
 
   // Handle different data types
   const renderContent = (): React.ReactNode => {
@@ -80,13 +85,7 @@ export const JsonTooltip: React.FC<IProps> = props => {
 
   return (
     <div
-      ref={tooltipRef}
-      tabIndex={0}
       role="tooltip"
-      aria-live="polite"
-      onFocus={onFocus}
-      onBlur={onBlur}
-      onKeyDown={handleKeyDown}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
@@ -97,15 +96,13 @@ export const JsonTooltip: React.FC<IProps> = props => {
         'p-3',
         'transition-opacity duration-200',
         'overflow-auto',
-        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
         'cursor-default select-text',
       )}
       style={{
-        left: Math.min(position.x + 15, window.innerWidth - maxWidth - 20),
-        top: Math.max(position.y + 15, 20),
+        left,
+        top,
         maxWidth,
         maxHeight,
-        transform: position.y > window.innerHeight / 2 ? 'translateY(-100%)' : undefined,
       }}
     >
       {renderContent()}

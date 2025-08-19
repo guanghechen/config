@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { ModeEnum, useTextViewViewModel } from '../context'
+import { ModeEnum, ViewModeEnum, useTextViewViewModel } from '../context'
 import { ContentPane } from '../pane/content'
 import { NavPane } from '../pane/nav'
 import { RawPane } from '../pane/raw'
@@ -9,7 +9,12 @@ import { TransformPane } from '../pane/transform'
 
 export const Main: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const mode = useStateValue(viewmodel.mode$)
+  const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
+  let mode = useStateValue(viewmodel.mode$)
+
+  if ((mode & ModeEnum.NAV) !== 1 && viewMode !== ViewModeEnum.LIST) {
+    mode = mode ^ ModeEnum.NAV
+  }
 
   return (
     <div className={cn('f-vf-main', `f-vf-main-${mode}`)}>
@@ -18,7 +23,7 @@ export const Main: React.FC = () => {
           <ContentPane />
         </div>
       )}
-      {(mode & ModeEnum.NAV) !== 0 && (
+      {(mode & ModeEnum.NAV) !== 0 && viewMode === ViewModeEnum.LIST && (
         <div className="f-vf-pane f-vfp-nav">
           <NavPane />
         </div>
