@@ -1,4 +1,7 @@
 // Color palette for chainpaths
+// Chain path conversion utilities
+import type { IChainPath } from './context'
+
 const COLOR_PALETTE = [
   {
     bg: 'bg-purple-100',
@@ -66,4 +69,17 @@ export const getPathColor = (path: string, allPaths: string[]): IPathColor => {
 export const getPathColorClasses = (path: string, allPaths: string[]): string => {
   const color = getPathColor(path, allPaths)
   return `${color.bg} ${color.text} ${color.darkBg} ${color.darkText}`
+}
+
+export const stringArrayToChainPaths = (paths: string[] | undefined): IChainPath[] => {
+  if (!Array.isArray(paths)) return []
+  return paths.map(path => ({
+    path,
+    value: path,
+    visible: true,
+  }))
+}
+
+export const chainPathsToStringArray = (chainPaths: IChainPath[]): string[] => {
+  return chainPaths.map(cp => cp.path)
 }

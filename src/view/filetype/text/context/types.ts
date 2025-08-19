@@ -26,5 +26,4 @@ export interface ITextViewData {
   readonly mode: ModeEnum
   readonly viewMode: ViewModeEnum
   readonly transformConfig: ITextTransformConfig
-  readonly chainPaths: IChainPath[]
 }

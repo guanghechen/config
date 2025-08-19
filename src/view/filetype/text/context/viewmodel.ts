@@ -2,7 +2,7 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
-import type { IChainPath, ITextViewData } from './types'
+import type { ITextViewData } from './types'
 import { ModeEnum, ViewModeEnum } from './types'
 
 interface IProps {
@@ -11,7 +11,6 @@ interface IProps {
   readonly workspace?: string | null
   readonly filepath?: string | null
   readonly transformConfig?: ITextTransformConfig
-  readonly chainPaths?: IChainPath[]
   readonly activeRecordIndex?: number | null
 }
 
@@ -27,7 +26,6 @@ const DEFAULT_TEXT_VIEW_DATA: ITextViewData = {
   mode: ModeEnum.CONTENT,
   viewMode: ViewModeEnum.ORIGINAL,
   transformConfig: DEFAULT_TRANSFORM_CONFIG,
-  chainPaths: [],
 }
 
 export class TextViewViewModel extends ViewModel {
@@ -39,23 +37,22 @@ export class TextViewViewModel extends ViewModel {
   public readonly contentError: IState<string | null>
   public readonly transformConfig$: IState<ITextTransformConfig>
   public readonly transformedNodes$: IState<ITextTransformedNode[] | null>
-  public readonly chainPaths$: IState<IChainPath[]>
   public readonly activeRecordIndex$: IState<number | null>
   public readonly expandTick$: IState<number>
 
   public static fromData(data: Partial<ITextViewData> | undefined): TextViewViewModel {
-    const { mode, viewMode, transformConfig, chainPaths }: ITextViewData = this.normalize(
+    const { mode, viewMode, transformConfig }: ITextViewData = this.normalize(
       DEFAULT_TEXT_VIEW_DATA,
       data,
     )
-    return new TextViewViewModel({ mode, viewMode, transformConfig, chainPaths })
+    return new TextViewViewModel({ mode, viewMode, transformConfig })
   }
 
   public static normalize(
     base: ITextViewData,
     data: Partial<ITextViewData> | undefined,
   ): ITextViewData {
-    const { mode, viewMode, transformConfig, chainPaths } = data || {}
+    const { mode, viewMode, transformConfig } = data || {}
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
     const normalizedViewMode: ViewModeEnum =
@@ -65,14 +62,10 @@ export class TextViewViewModel extends ViewModel {
         ? viewMode
         : base.viewMode
     const normalizedTransformConfig: ITextTransformConfig = transformConfig || base.transformConfig!
-    const normalizedChainPaths: IChainPath[] = Array.isArray(chainPaths)
-      ? chainPaths
-      : base.chainPaths
     const normalizedData: ITextViewData = {
       mode: normalizedMode,
       viewMode: normalizedViewMode,
       transformConfig: normalizedTransformConfig,
-      chainPaths: normalizedChainPaths,
     }
     return normalizedData
   }
@@ -86,7 +79,6 @@ export class TextViewViewModel extends ViewModel {
       workspace = null,
       filepath = null,
       transformConfig = DEFAULT_TRANSFORM_CONFIG,
-      chainPaths = [],
       activeRecordIndex = 0,
     } = props
 
@@ -98,7 +90,6 @@ export class TextViewViewModel extends ViewModel {
     this.contentError = new State<string | null>(null)
     this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
     this.transformedNodes$ = new State<ITextTransformedNode[] | null>(null)
-    this.chainPaths$ = new State<IChainPath[]>(chainPaths)
     this.activeRecordIndex$ = new State<number | null>(activeRecordIndex)
     this.expandTick$ = new State<number>(0)
   }
@@ -107,21 +98,20 @@ export class TextViewViewModel extends ViewModel {
     const mode: ModeEnum = this.mode$.getSnapshot()
     const viewMode: ViewModeEnum = this.viewMode$.getSnapshot()
     const transformConfig: ITextTransformConfig = this.transformConfig$.getSnapshot()
-    const chainPaths: IChainPath[] = this.chainPaths$.getSnapshot()
     return {
       mode,
       viewMode,
       transformConfig,
-      chainPaths,
     }
   }
 
   public load = (data: Partial<ITextViewData> | undefined): void => {
-    const { mode, viewMode, transformConfig, chainPaths }: ITextViewData =
-      TextViewViewModel.normalize(this.dump(), data)
+    const { mode, viewMode, transformConfig }: ITextViewData = TextViewViewModel.normalize(
+      this.dump(),
+      data,
+    )
     this.mode$.next(mode)
     this.viewMode$.next(viewMode)
     this.transformConfig$.next(transformConfig!)
-    this.chainPaths$.next(chainPaths)
   }
 }

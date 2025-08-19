@@ -2,22 +2,23 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/shared/constant'
-import type { ITextTransformedNode } from '@/shared/types'
+import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
 import { ListItemCard } from '../container/ListItemCard'
 import { MultiPathInput } from '../container/MultiPathInput'
 import type { IChainPath } from '../context'
 import { useTextViewViewModel } from '../context'
+import { chainPathsToStringArray, stringArrayToChainPaths } from '../utils'
 
 export const ContentList: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const transformedNodes: ITextTransformedNode[] = useStateValue(viewmodel.transformedNodes$) || []
-  const chainPaths: IChainPath[] = useStateValue(viewmodel.chainPaths$)
+  const transformConfig: ITextTransformConfig = useStateValue(viewmodel.transformConfig$)
+  const chainPaths: IChainPath[] = stringArrayToChainPaths(transformConfig.chainPaths)
   const expandTick: number = useStateValue(viewmodel.expandTick$)
   const activeRecordIndex: number | null = useStateValue(viewmodel.activeRecordIndex$)
 
   const containerRef = React.useRef<HTMLDivElement>(null)
-
-  const [displayMode, setDisplayMode] = React.useState<'inline' | 'lines'>('lines')
+  const [displayMode, setDisplayMode] = React.useState<'inline' | 'lines'>('inline')
 
   // Autoscroll to active item when activeRecordIndex changes
   React.useEffect(() => {
@@ -32,9 +33,14 @@ export const ContentList: React.FC = () => {
   }, [activeRecordIndex])
   const handleChainPathsChange = React.useCallback(
     (newChainPaths: IChainPath[]) => {
-      viewmodel.chainPaths$.next(newChainPaths)
+      const newStringPaths = chainPathsToStringArray(newChainPaths)
+      const updatedConfig: ITextTransformConfig = {
+        ...transformConfig,
+        chainPaths: newStringPaths,
+      }
+      viewmodel.transformConfig$.next(updatedConfig)
     },
-    [viewmodel],
+    [viewmodel, transformConfig],
   )
 
   return (
