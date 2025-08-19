@@ -3,7 +3,7 @@ import cn from 'clsx'
 import React from 'react'
 import { ModeEnum, useMarkdownViewViewModel } from '../context'
 
-export const Mode: React.FC = () => {
+export const ModeToggle: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
@@ -15,11 +15,11 @@ export const Mode: React.FC = () => {
       <button
         className={cn(
           'box-border px-3 transition-all duration-200 rounded-l-lg focus:outline-none focus:ring-0',
-          mode === 0 || (mode & ModeEnum.VIEW) !== 0
+          mode === 0 || (mode & ModeEnum.CONTENT) !== 0
             ? 'bg-indigo-500 bg-opacity-90 font-medium text-white shadow-inner'
             : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
         )}
-        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.VIEW)}
+        onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.CONTENT)}
       >
         md
       </button>
@@ -60,4 +60,4 @@ export const Mode: React.FC = () => {
   )
 }
 
-Mode.displayName = 'MarkdownViewMode'
+ModeToggle.displayName = 'MarkdownViewModeToggle'

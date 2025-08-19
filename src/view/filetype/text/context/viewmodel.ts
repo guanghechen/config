@@ -34,7 +34,7 @@ export class TextViewViewModel extends ViewModel {
   public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string | null>
   public readonly content$: IState<string | null>
-  public readonly contentError: IState<string | null>
+  public readonly contentError$: IState<string | null>
   public readonly transformConfig$: IState<ITextTransformConfig>
   public readonly transformedNodes$: IState<ITextTransformedNode[] | null>
   public readonly activeRecordIndex$: IState<number | null>
@@ -87,7 +87,7 @@ export class TextViewViewModel extends ViewModel {
     this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string | null>(filepath)
     this.content$ = new State<string | null>(null)
-    this.contentError = new State<string | null>(null)
+    this.contentError$ = new State<string | null>(null)
     this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
     this.transformedNodes$ = new State<ITextTransformedNode[] | null>(null)
     this.activeRecordIndex$ = new State<number | null>(activeRecordIndex)

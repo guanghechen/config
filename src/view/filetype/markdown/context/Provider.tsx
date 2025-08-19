@@ -12,7 +12,7 @@ const storageKey: string = '#/view/filetype/markdown'
 
 interface IProps {
   readonly workspace: string | null
-  readonly filepath: string
+  readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly tocActivatedIdentifier?: string | null
   readonly specifiedTocActivatedIdentifier?: string | null
@@ -70,7 +70,7 @@ MarkdownViewProvider.displayName = 'MarkdownViewProvider'
 interface ISideEffectProps {
   readonly viewmodel: MarkdownViewViewModel
   readonly workspace: string | null
-  readonly filepath: string
+  readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly tocActivatedIdentifier?: string | null
   readonly specifiedTocActivatedIdentifier?: string | null
@@ -95,13 +95,13 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
     if (data) {
       viewmodel.data$.next(data)
-      viewmodel.error$.next(null)
+      viewmodel.contentError$.next(null)
     } else if (error) {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+      viewmodel.contentError$.next(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(null)
+      viewmodel.contentError$.next(null)
     }
   }, [data, error, viewmodel])
 
@@ -122,7 +122,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
+    viewmodel.filepath$.next(filepath ?? null)
   }, [viewmodel, filepath])
 
   React.useEffect(() => {

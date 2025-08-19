@@ -61,7 +61,7 @@ ContentPaneMain.displayName = 'TextViewContentPaneMain'
 
 export const ContentPane: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const contentError = useStateValue(viewmodel.contentError)
+  const contentError = useStateValue(viewmodel.contentError$)
 
   if (contentError) {
     return (
@@ -76,7 +76,7 @@ export const ContentPane: React.FC = () => {
   return (
     <React.Fragment>
       <ContentPaneHeader />
-      <div className="box-border flex-auto px-4 pb-8">
+      <div className="box-border flex-auto">
         <ContentPaneMain />
       </div>
     </React.Fragment>

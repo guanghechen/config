@@ -2,7 +2,7 @@
 const bit: number = 1
 
 export enum ModeEnum {
-  VIEW = bit << 0,
+  CONTENT = bit << 0,
   LITERAL = bit << 1,
 }
 

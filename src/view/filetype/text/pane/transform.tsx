@@ -171,7 +171,7 @@ export const TransformPane: React.FC = () => {
 
   return (
     <React.Fragment>
-      <div className="box-border flex-initial sticky top-0 z-50 flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50">
+      <div className="box-border flex-initial sticky top-0 z-50 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
         <div className="flex items-center gap-3">
           {isEditingName ? (
             <div className="flex items-center gap-2">

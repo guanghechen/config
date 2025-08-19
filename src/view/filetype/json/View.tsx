@@ -1,20 +1,19 @@
 import React from 'react'
-import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
 import { JsonViewProvider } from './context'
+import './style.css'
 
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
-  readonly mainScrollableContainer: HTMLDivElement | null
 }
 
 export class JsonView extends React.PureComponent<IProps> {
   public static readonly displayName = 'JsonView'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = this.props
+    const { workspace, filepath, filepathDirtyTick } = this.props
 
     if (!filepath) {
       return (
@@ -30,10 +29,7 @@ export class JsonView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <div className="relative size-full">
-          <Composer />
-          <TotopButton scrollableContainer={mainScrollableContainer} />
-        </div>
+        <Composer filepath={filepath} workspace={workspace} />
       </JsonViewProvider>
     )
   }

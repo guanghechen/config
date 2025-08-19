@@ -26,6 +26,17 @@ const configs = [
       'react/jsx-curly-spacing': 'off',
     },
   },
+  {
+    files: ['src/**/*.css'],
+    rules: {
+      'at-rule-no-unknown': [
+        true,
+        {
+          ignoreAtRules: ['tailwind', 'apply', 'variants', 'responsive', 'layer'],
+        },
+      ],
+    },
+  },
 ]
 
 export default configs

@@ -20,17 +20,6 @@ export const ContentList: React.FC = () => {
   const containerRef = React.useRef<HTMLDivElement>(null)
   const [displayMode, setDisplayMode] = React.useState<'inline' | 'lines'>('inline')
 
-  // Autoscroll to active item when activeRecordIndex changes
-  React.useEffect(() => {
-    if (activeRecordIndex !== null && containerRef.current) {
-      const activeItem = containerRef.current.querySelector(
-        `[data-content-index="${activeRecordIndex}"]`,
-      )
-      if (activeItem) {
-        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
-    }
-  }, [activeRecordIndex])
   const handleChainPathsChange = React.useCallback(
     (newChainPaths: IChainPath[]) => {
       const newStringPaths = chainPathsToStringArray(newChainPaths)
@@ -43,6 +32,18 @@ export const ContentList: React.FC = () => {
     [viewmodel, transformConfig],
   )
 
+  // Autoscroll to active item when activeRecordIndex changes
+  React.useEffect(() => {
+    if (activeRecordIndex !== null && containerRef.current) {
+      const activeItem = containerRef.current.querySelector(
+        `[data-content-index="${activeRecordIndex}"]`,
+      )
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }, [activeRecordIndex])
+
   return (
     <div className="box-border size-full flex flex-col gap-4">
       <div className="box-border sticky top-12 z-30 flex flex-col justify-between gap-2 flex-none rounded-lg shadow-sm p-4 bg-gray-50 dark:bg-gray-900">
@@ -54,13 +55,7 @@ export const ContentList: React.FC = () => {
           placeholder="Add JSON paths for transform nodes (e.g., .data.type)"
         />
       </div>
-      <div
-        ref={containerRef}
-        className={cn(
-          'box-border flex-auto overflow-auto flex flex-col gap-4',
-          PRESET_CLASSES.scrollbar,
-        )}
-      >
+      <div ref={containerRef} className="box-border flex-auto overflow-auto flex flex-col gap-4">
         {transformedNodes.map((node, index) => (
           <ContentListItem
             key={node.uuid}

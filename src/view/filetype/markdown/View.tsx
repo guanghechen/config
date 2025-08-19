@@ -1,11 +1,11 @@
 import React from 'react'
-import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
 import { MarkdownViewProvider } from './context'
+import './style.css'
 
 interface IProps {
+  readonly filepath: string
   readonly workspace: string | null
-  readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mainScrollableContainer: HTMLDivElement | null
 }
@@ -14,15 +14,7 @@ export class MarkdownView extends React.PureComponent<IProps> {
   public static readonly displayName = 'MarkdownView'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick, mainScrollableContainer } = this.props
-
-    if (!filepath) {
-      return (
-        <div className="relative size-full flex items-center">
-          <div className="text-center text-gray-500 dark:text-gray-400">No file specified</div>
-        </div>
-      )
-    }
+    const { workspace, filepath, filepathDirtyTick } = this.props
 
     return (
       <MarkdownViewProvider
@@ -30,10 +22,7 @@ export class MarkdownView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <div className="relative size-full">
-          <Composer />
-          <TotopButton scrollableContainer={mainScrollableContainer} />
-        </div>
+        <Composer filepath={filepath} workspace={workspace} />
       </MarkdownViewProvider>
     )
   }

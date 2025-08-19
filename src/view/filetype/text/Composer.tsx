@@ -8,7 +8,7 @@ interface IProps {
 }
 
 export class Composer extends React.PureComponent<IProps> {
-  public static readonly displayName: string = 'JsonViewComposer'
+  public static readonly displayName: string = 'TextViewComposer'
 
   public override render(): React.ReactElement {
     const { filepath, workspace } = this.props

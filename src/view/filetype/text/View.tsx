@@ -1,8 +1,7 @@
 import React from 'react'
+import { Composer } from './Composer'
 import { TextViewProvider } from './context'
 import './style.css'
-import { Main } from './layout/main'
-import { Topbar } from './layout/topbar'
 
 interface IProps {
   readonly workspace: string | null
@@ -22,8 +21,7 @@ export class TextView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <Topbar filepath={filepath} />
-        <Main />
+        <Composer filepath={filepath} workspace={workspace} />
       </TextViewProvider>
     )
   }
