@@ -172,7 +172,7 @@ export const ViewModeDropdown: React.FC = () => {
 
       {isOpen && (
         <div
-          className="absolute right-0 top-full mt-2 min-w-40 overflow-hidden rounded-xl bg-white/95 shadow-2xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
+          className="absolute z-50 left-0 top-full mt-2 min-w-40 overflow-hidden rounded-xl bg-white/95 shadow-2xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
           role="listbox"
           aria-label="View mode options"
         >

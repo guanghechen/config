@@ -44,7 +44,7 @@ export const NavPane: React.FC = () => {
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                Node: {record.uuid}
+                Node: #{index}
               </span>
               <div className="flex items-center gap-2">
                 {record.parents.length > 0 && (

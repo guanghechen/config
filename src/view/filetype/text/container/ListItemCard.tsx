@@ -3,24 +3,33 @@ import React from 'react'
 import { Json } from '@/component/json'
 import type { ITextTransformedNode } from '@/shared/types'
 import type { IChainPath } from '../context'
+import { extractValueFromPath, getPathColorClasses } from '../utils'
 
 interface IProps {
-  readonly transformedNode: ITextTransformedNode
+  readonly index: number
+  readonly node: ITextTransformedNode
   readonly chainPaths: IChainPath[]
   readonly expandTick: number
   readonly isActive?: boolean
-  readonly 'data-content-index'?: number
 }
 
 export const ListItemCard: React.FC<IProps> = props => {
-  const {
-    transformedNode,
-    expandTick,
-    isActive = false,
-    'data-content-index': dataContentIndex,
-  } = props
-  const { uuid, parents, data } = transformedNode
+  const { index, node, chainPaths, expandTick, isActive = false } = props
+  const { uuid, parents, data } = node
   const [expanded, setExpanded] = React.useState(false)
+
+  // Compute extracted values for visible chain paths from this node
+  const visibleChainPaths = React.useMemo(() => chainPaths.filter(cp => cp.visible), [chainPaths])
+  const allPathStrings = React.useMemo(() => chainPaths.map(cp => cp.path), [chainPaths])
+
+  const extractedValues = React.useMemo(() => {
+    if (!visibleChainPaths.length || !data) return []
+
+    return visibleChainPaths.map(chainPath => ({
+      path: chainPath.path,
+      value: extractValueFromPath(data, chainPath.path),
+    }))
+  }, [visibleChainPaths, data])
 
   React.useEffect(() => {
     const flag: boolean = expandTick % 2 === 0
@@ -38,7 +47,7 @@ export const ListItemCard: React.FC<IProps> = props => {
           isActive,
         'border-gray-200 dark:border-gray-700': !isActive,
       })}
-      data-content-index={dataContentIndex}
+      data-content-index={index}
     >
       <div
         className={cn('flex cursor-pointer items-center justify-between p-3 transition-colors', {
@@ -49,8 +58,22 @@ export const ListItemCard: React.FC<IProps> = props => {
       >
         <div className="flex select-none items-center gap-2">
           <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-            {uuid.substring(0, 8)}
+            #{index}
           </span>
+          {extractedValues.map((item, idx) => (
+            <span
+              key={idx}
+              className={cn(
+                'rounded px-2 py-0.5 text-xs font-medium',
+                item.value === 'undefined'
+                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                  : getPathColorClasses(item.path, allPathStrings),
+              )}
+              title={`${item.path}: ${item.value}`}
+            >
+              {item.value}
+            </span>
+          ))}
           {parents.length > 0 && (
             <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
               {parents.length} parent{parents.length > 1 ? 's' : ''}
