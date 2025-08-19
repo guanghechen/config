@@ -3,7 +3,6 @@ import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
 import { ImageView } from '@/view/filetype/image/View'
 import { JsonView } from '@/view/filetype/json/View'
-import { JsonlView } from '@/view/filetype/jsonl/View'
 import { MarkdownView } from '@/view/filetype/markdown/View'
 import { PdfView } from '@/view/filetype/pdf/View'
 import { SvgView } from '@/view/filetype/svg/View'
@@ -37,10 +36,6 @@ export class Main extends React.PureComponent<IProps> {
 
     const extname: string = filepath ? regexes.extname.exec(filepath)?.[1] || '' : ''
     switch (extname.toLowerCase()) {
-      case '.eventstream':
-        return (
-          <TextView workspace={null} filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
-        )
       case '.excalidraw':
         return (
           <ExcalidrawView
@@ -69,24 +64,12 @@ export class Main extends React.PureComponent<IProps> {
             mainScrollableContainer={null}
           />
         )
+      case '.eventstream':
       case '.jsonl':
-        return (
-          <JsonlView
-            workspace={null}
-            filepath={filepath}
-            filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
-          />
-        )
       case '.log':
       case '.txt':
         return (
-          <TextView
-            workspace={null}
-            filepath={filepath}
-            filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
-          />
+          <TextView workspace={null} filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
         )
       case '.md':
         return (

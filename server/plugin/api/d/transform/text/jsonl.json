@@ -1,0 +1,19 @@
+{
+  "name": "jsonl",
+  "split": "text => text.trim().split(/\\n/g)",
+  "uuid": "(_, index) => `${index}`",
+  "parents": "() => []",
+  "chainPaths": [],
+  "steps": [
+    {
+      "type": "filter",
+      "code": "(line, index) => index < 33",
+      "skip": true
+    },
+    {
+      "type": "map",
+      "code": "line => JSON.parse(line)",
+      "skip": false
+    }
+  ]
+}

@@ -4,7 +4,6 @@ import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
 import { ImageView } from '@/view/filetype/image/View'
 import { JsonView } from '@/view/filetype/json/View'
-import { JsonlView } from '@/view/filetype/jsonl/View'
 import { MarkdownView } from '@/view/filetype/markdown/View'
 import { PdfView } from '@/view/filetype/pdf/View'
 import { SvgView } from '@/view/filetype/svg/View'
@@ -40,15 +39,6 @@ export const Main: React.FC = () => {
     }
 
     switch (extname.toLowerCase()) {
-      case '.eventstream':
-        return (
-          <TextView
-            workspace={workspace}
-            filepath={filepath}
-            filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
-          />
-        )
       case '.excalidraw':
         return (
           <ExcalidrawView
@@ -77,15 +67,8 @@ export const Main: React.FC = () => {
             mainScrollableContainer={mainScrollableContainer}
           />
         )
+      case '.eventstream':
       case '.jsonl':
-        return (
-          <JsonlView
-            workspace={workspace}
-            filepath={filepath}
-            filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
-          />
-        )
       case '.log':
       case '.txt':
         return (
