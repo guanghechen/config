@@ -1,0 +1,19 @@
+{
+  "name": "claude",
+  "split": "text => text.trim().split(/\\n/g)",
+  "uuid": "item => item.uuid",
+  "parents": "item => item.parentUuid",
+  "chainPaths": [],
+  "steps": [
+    {
+      "type": "filter",
+      "code": "(line, index) => index < 33",
+      "skip": true
+    },
+    {
+      "type": "map",
+      "code": "line => JSON.parse(line)",
+      "skip": false
+    }
+  ]
+}
