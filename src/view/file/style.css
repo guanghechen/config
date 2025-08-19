@@ -33,7 +33,7 @@
 
 .f-vf-main:has(.f-vf-pane:nth-of-type(2)) {
   display: grid;
-  gap: 2rem;
+  gap: 1rem;
   height: calc(100vh - 3rem);
 
   .f-vf-pane {

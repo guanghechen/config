@@ -26,7 +26,7 @@ export const NavPane: React.FC = () => {
     <React.Fragment>
       <div className="box-border flex-initial sticky top-0 z-50 p-4 bg-white round rounded-lg dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Transform Nodes ({records.length})
+          Navigation ({records.length})
         </h3>
       </div>
       <div className="flex-1" ref={containerRef}>
