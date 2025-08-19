@@ -13,8 +13,23 @@ export const ContentList: React.FC = () => {
   const transformedNodes: ITextTransformedNode[] = useStateValue(viewmodel.transformedNodes$) || []
   const chainPaths: IChainPath[] = useStateValue(viewmodel.chainPaths$)
   const expandTick: number = useStateValue(viewmodel.expandTick$)
+  const activeRecordIndex: number | null = useStateValue(viewmodel.activeRecordIndex$)
+
+  const containerRef = React.useRef<HTMLDivElement>(null)
 
   const [displayMode, setDisplayMode] = React.useState<'inline' | 'lines'>('lines')
+
+  // Autoscroll to active item when activeRecordIndex changes
+  React.useEffect(() => {
+    if (activeRecordIndex !== null && containerRef.current) {
+      const activeItem = containerRef.current.querySelector(
+        `[data-content-index="${activeRecordIndex}"]`,
+      )
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }, [activeRecordIndex])
   const handleChainPathsChange = React.useCallback(
     (newChainPaths: IChainPath[]) => {
       viewmodel.chainPaths$.next(newChainPaths)
@@ -37,17 +52,20 @@ export const ContentList: React.FC = () => {
         />
       </div>
       <div
+        ref={containerRef}
         className={cn(
           'box-border flex-auto overflow-auto flex flex-col gap-4',
           PRESET_CLASSES.scrollbar,
         )}
       >
-        {transformedNodes.map(node => (
+        {transformedNodes.map((node, index) => (
           <ListItemCard
             key={node.uuid}
             transformedNode={node}
             chainPaths={chainPaths}
             expandTick={expandTick}
+            isActive={activeRecordIndex === index}
+            data-content-index={index}
           />
         ))}
       </div>

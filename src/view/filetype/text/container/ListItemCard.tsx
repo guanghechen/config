@@ -8,10 +8,12 @@ interface IProps {
   readonly transformedNode: ITextTransformedNode
   readonly chainPaths: IChainPath[]
   readonly expandTick: number
+  readonly isActive?: boolean
+  readonly 'data-content-index'?: number
 }
 
 export const ListItemCard: React.FC<IProps> = props => {
-  const { transformedNode, expandTick } = props
+  const { transformedNode, expandTick, isActive = false, 'data-content-index': dataContentIndex } = props
   const { uuid, parents, data } = transformedNode
   const [expanded, setExpanded] = React.useState(false)
 
@@ -25,9 +27,24 @@ export const ListItemCard: React.FC<IProps> = props => {
   }, [])
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div
+      className={cn(
+        'rounded-lg border bg-white shadow-sm transition-all dark:bg-gray-800',
+        {
+          'border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-md ring-1 ring-indigo-200/50 dark:border-indigo-500/60 dark:bg-gradient-to-br dark:from-indigo-950/60 dark:to-purple-950/40 dark:ring-1 dark:ring-indigo-400/20': isActive,
+          'border-gray-200 dark:border-gray-700': !isActive,
+        }
+      )}
+      data-content-index={dataContentIndex}
+    >
       <div
-        className="flex cursor-pointer items-center justify-between p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-750"
+        className={cn(
+          'flex cursor-pointer items-center justify-between p-3 transition-colors',
+          {
+            'hover:bg-indigo-100/70 dark:hover:bg-indigo-900/30': isActive,
+            'hover:bg-gray-50 dark:hover:bg-gray-700': !isActive,
+          }
+        )}
         onClick={handleToggleExpand}
       >
         <div className="flex select-none items-center gap-2">
@@ -57,8 +74,20 @@ export const ListItemCard: React.FC<IProps> = props => {
         </div>
       </div>
       {expanded && (
-        <div className="border-t border-gray-200 p-3 dark:border-gray-700">
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+        <div className={cn(
+          'border-t p-3',
+          {
+            'border-indigo-200/60 bg-gradient-to-br from-indigo-50/50 to-purple-50/30 dark:border-indigo-500/30 dark:bg-gradient-to-br dark:from-indigo-950/30 dark:to-purple-950/20': isActive,
+            'border-gray-200 dark:border-gray-700': !isActive,
+          }
+        )}>
+          <div className={cn(
+            'text-sm mb-2',
+            {
+              'text-indigo-700 dark:text-indigo-300': isActive,
+              'text-gray-600 dark:text-gray-400': !isActive,
+            }
+          )}>
             <span className="font-mono">UUID: {uuid}</span>
             {parents.length > 0 && (
               <span className="ml-4 font-mono">
@@ -66,7 +95,13 @@ export const ListItemCard: React.FC<IProps> = props => {
               </span>
             )}
           </div>
-          <div className="font-mono text-sm text-gray-800 dark:text-gray-200">
+          <div className={cn(
+            'font-mono text-sm',
+            {
+              'text-indigo-800 dark:text-indigo-200': isActive,
+              'text-gray-800 dark:text-gray-200': !isActive,
+            }
+          )}>
             {typeof data === 'string' ? (
               <pre className="whitespace-pre-wrap break-words">{data}</pre>
             ) : (

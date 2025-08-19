@@ -39,7 +39,7 @@ export const NavPane: React.FC = () => {
               'w-full p-3 mb-2 rounded-lg border text-left transition-all hover:shadow-md',
               activeRecordIndex === index
                 ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700'
-                : 'bg-gray-50 border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-650',
+                : 'bg-gray-50 border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600',
             )}
           >
             <div className="flex items-center justify-between mb-1">
