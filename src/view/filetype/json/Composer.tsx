@@ -1,23 +1,16 @@
 import React from 'react'
 import { Main } from './layout/main'
-import { Topbar } from './layout/topbar'
+import { ModeToggle } from './layout/mode'
 
-interface IProps {
-  readonly filepath: string
-  readonly workspace: string | null
-}
-
-export class Composer extends React.PureComponent<IProps> {
+export class Composer extends React.PureComponent {
   public static readonly displayName: string = 'JsonViewComposer'
 
   public override render(): React.ReactElement {
-    const { filepath, workspace } = this.props
-
     return (
-      <div className="f-vf-root" data-filetype="text">
-        <Topbar filepath={filepath} workspace={workspace} />
+      <React.Fragment>
         <Main />
-      </div>
+        <ModeToggle />
+      </React.Fragment>
     )
   }
 }

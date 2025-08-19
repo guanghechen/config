@@ -1,4 +1,3 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
@@ -9,35 +8,34 @@ import { PdfView } from '@/view/filetype/pdf/View'
 import { SvgView } from '@/view/filetype/svg/View'
 import { TextView } from '@/view/filetype/text/View'
 import { UnknownView } from '@/view/filetype/unknown/View'
-import { useWorkspaceViewmodel } from '../context'
 
-export const Main: React.FC = () => {
-  const viewmodel = useWorkspaceViewmodel()
-  const workspace: string | null = useStateValue(viewmodel.workspace$)
-  const filepath = useStateValue(viewmodel.filepath$)
-  const filepathDirtyTick: number = useStateValue(viewmodel.filepathDirtyTick$)
-  const mainScrollableContainer: HTMLDivElement | null = useStateValue(
-    viewmodel.mainScrollableContainer$,
-  )
+const regexes = {
+  extname: /(\.[^.]+)$/,
+}
 
-  const extname: string = React.useMemo<string>(() => {
-    if (!filepath) return ''
-    const dotIndex: number = filepath.lastIndexOf('.')
-    return dotIndex < 0 ? '' : filepath.slice(dotIndex)
-  }, [filepath])
+interface IProps {
+  readonly workspace: string | null
+  readonly filepath: string | null
+  readonly filepathDirtyTick: number
+}
 
-  const container: React.ReactElement = React.useMemo<React.ReactElement>(() => {
+export class Main extends React.PureComponent<IProps> {
+  public static displayName: string = 'WorkspaceViewMain'
+
+  public override render(): React.ReactElement {
+    const { workspace, filepath, filepathDirtyTick } = this.props
+
     if (!filepath) {
       return (
         <UnknownView
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
-          mainScrollableContainer={mainScrollableContainer}
         />
       )
     }
 
+    const extname: string = filepath ? regexes.extname.exec(filepath)?.[1] || '' : ''
     switch (extname.toLowerCase()) {
       case '.excalidraw':
         return (
@@ -45,7 +43,6 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
       case '.html':
@@ -55,7 +52,6 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
       case '.json':
@@ -64,7 +60,6 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
       case '.eventstream':
@@ -76,7 +71,6 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
       case '.md':
@@ -85,7 +79,6 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
       case '.pdf':
@@ -94,7 +87,6 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
       case '.svg':
@@ -103,7 +95,6 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
       case '.png':
@@ -113,7 +104,7 @@ export const Main: React.FC = () => {
           <ImageView
             workspace={workspace}
             filepath={filepath}
-            mainScrollableContainer={mainScrollableContainer}
+            filepathDirtyTick={filepathDirtyTick}
           />
         )
       default:
@@ -122,13 +113,8 @@ export const Main: React.FC = () => {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={mainScrollableContainer}
           />
         )
     }
-  }, [extname, workspace, filepath, filepathDirtyTick, mainScrollableContainer])
-
-  return container
+  }
 }
-
-Main.displayName = 'WorkspaceMain'

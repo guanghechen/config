@@ -7,7 +7,6 @@ interface IProps {
   readonly filepath: string
   readonly workspace: string | null
   readonly filepathDirtyTick: number
-  readonly mainScrollableContainer: HTMLDivElement | null
 }
 
 export class MarkdownView extends React.PureComponent<IProps> {
@@ -22,7 +21,7 @@ export class MarkdownView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <Composer filepath={filepath} workspace={workspace} />
+        <Composer />
       </MarkdownViewProvider>
     )
   }

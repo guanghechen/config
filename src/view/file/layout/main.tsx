@@ -25,43 +25,37 @@ export class Main extends React.PureComponent<IProps> {
     const { filepath, filepathDirtyTick } = this.props
     if (!filepath) {
       return (
-        <UnknownView
-          workspace={null}
-          filepath={filepath}
-          filepathDirtyTick={filepathDirtyTick}
-          mainScrollableContainer={null}
-        />
+        <UnknownView workspace={null} filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
       )
     }
 
     const extname: string = filepath ? regexes.extname.exec(filepath)?.[1] || '' : ''
+    const workspace: string | null = null
+
     switch (extname.toLowerCase()) {
       case '.excalidraw':
         return (
           <ExcalidrawView
-            workspace={null}
+            workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
           />
         )
       case '.html':
       case '.htm':
         return (
           <HtmlView
-            workspace={null}
+            workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
           />
         )
       case '.json':
         return (
           <JsonView
-            workspace={null}
+            workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
           />
         )
       case '.eventstream':
@@ -69,46 +63,52 @@ export class Main extends React.PureComponent<IProps> {
       case '.log':
       case '.txt':
         return (
-          <TextView workspace={null} filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
+          <TextView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+          />
         )
       case '.md':
         return (
           <MarkdownView
-            workspace={null}
+            workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
           />
         )
       case '.pdf':
         return (
           <PdfView
-            workspace={null}
+            workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
           />
         )
       case '.svg':
         return (
           <SvgView
-            workspace={null}
+            workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
           />
         )
       case '.png':
       case '.jpg':
       case '.jpeg':
-        return <ImageView workspace={null} filepath={filepath} mainScrollableContainer={null} />
+        return (
+          <ImageView
+            workspace={workspace}
+            filepath={filepath}
+            filepathDirtyTick={filepathDirtyTick}
+          />
+        )
       default:
         return (
           <UnknownView
-            workspace={null}
+            workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
-            mainScrollableContainer={null}
           />
         )
     }

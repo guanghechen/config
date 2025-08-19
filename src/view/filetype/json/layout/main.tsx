@@ -10,7 +10,7 @@ export const Main: React.FC = () => {
   const mode = useStateValue(viewmodel.mode$)
 
   return (
-    <div className={cn('f-vf-main', `f-vf-main-${mode}`)}>
+    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="json">
       {(mode & ModeEnum.CONTENT) !== 0 && (
         <div className="f-vf-pane f-vfp-content">
           <ContentPane />

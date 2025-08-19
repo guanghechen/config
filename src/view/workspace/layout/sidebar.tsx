@@ -1,8 +1,8 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { useWorkspaceViewmodel } from '../../context'
-import { FileTree } from './FileTree'
+import { FileTree } from '../container/FileTree'
+import { useWorkspaceViewmodel } from '../context'
 
 export const Sidebar: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
@@ -75,4 +75,4 @@ export const Sidebar: React.FC = () => {
   )
 }
 
-Sidebar.displayName = 'WorkspaceSidebar'
+Sidebar.displayName = 'WorkspaceViewSidebar'

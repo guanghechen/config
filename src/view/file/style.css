@@ -4,8 +4,12 @@
   .f-vf-root {
     box-sizing: border-box;
     position: relative;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 3rem 1fr;
+    grid-template-areas:
+      'topbar'
+      'main';
     width: 100%;
     min-height: 100vh;
     font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
@@ -18,7 +22,7 @@
     top: 0;
     left: 0;
     z-index: 10;
-    flex: 0 0 auto;
+    grid-area: topbar;
     height: 3rem;
     width: 100%;
     display: flex;
@@ -31,7 +35,7 @@
 
   .f-vf-main {
     box-sizing: border-box;
-    flex: 1 1 auto;
+    grid-area: main;
     width: 100%;
     padding: 1rem;
     padding-top: 0;

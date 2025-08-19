@@ -1,8 +1,8 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import type { IWorkspaceItem } from '../../context'
-import { useWorkspaceViewmodel } from '../../context'
+import type { IWorkspaceItem } from '../context'
+import { useWorkspaceViewmodel } from '../context'
 
 export const Workspace: React.FC = () => {
   const viewmodelVM = useWorkspaceViewmodel()

@@ -1,5 +1,4 @@
 import React from 'react'
-import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
 import { HtmlViewProvider } from './context'
 
@@ -7,14 +6,13 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
-  readonly mainScrollableContainer: HTMLDivElement | null
 }
 
 export class HtmlView extends React.PureComponent<IProps> {
   public static readonly displayName = 'HtmlView'
 
   public override render(): React.ReactElement {
-    const { filepath, workspace, filepathDirtyTick, mainScrollableContainer } = this.props
+    const { filepath, workspace, filepathDirtyTick } = this.props
 
     if (!filepath) {
       return (
@@ -32,7 +30,6 @@ export class HtmlView extends React.PureComponent<IProps> {
       >
         <div className="relative size-full">
           <Composer />
-          <TotopButton scrollableContainer={mainScrollableContainer} />
         </div>
       </HtmlViewProvider>
     )

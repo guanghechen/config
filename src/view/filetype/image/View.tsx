@@ -1,19 +1,18 @@
 import React from 'react'
-import { TotopButton } from '@/component/button/totop'
 import { Composer } from './Composer'
 import { ImageViewProvider } from './context'
 
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
-  readonly mainScrollableContainer: HTMLDivElement | null
+  readonly filepathDirtyTick: number
 }
 
 export class ImageView extends React.PureComponent<IProps> {
   public static readonly displayName = 'ImageView'
 
   public override render(): React.ReactElement {
-    const { filepath, workspace, mainScrollableContainer } = this.props
+    const { filepath, workspace } = this.props
 
     if (!filepath) {
       return (
@@ -27,7 +26,6 @@ export class ImageView extends React.PureComponent<IProps> {
       <ImageViewProvider workspace={workspace} filepath={filepath}>
         <div className="relative size-full">
           <Composer />
-          <TotopButton scrollableContainer={mainScrollableContainer} />
         </div>
       </ImageViewProvider>
     )
