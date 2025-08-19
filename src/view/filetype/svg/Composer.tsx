@@ -1,31 +1,16 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useSvgViewViewModel } from './context'
 import { Main } from './layout/main'
-import { Topbar } from './layout/topbar'
+import { Mode } from './layout/mode'
 
-export const Composer: React.FC = () => {
-  const viewmodel = useSvgViewViewModel()
-  const error = useStateValue(viewmodel.error$)
+export class Composer extends React.PureComponent {
+  public static readonly displayName: string = 'SvgViewComposer'
 
-  if (error) {
+  public override render(): React.ReactElement {
     return (
-      <div className="relative size-full flex items-center bg-gray-100 text-red-500 dark:bg-gray-800 dark:text-red-400">
-        <code>error: {String(error)}</code>
-      </div>
+      <React.Fragment>
+        <Main />
+        <Mode />
+      </React.Fragment>
     )
   }
-
-  return (
-    <div className="box-border relative size-full">
-      <div className="box-border fixed right-4 z-50 h-12">
-        <Topbar />
-      </div>
-      <div className="box-border size-full pt-12">
-        <Main />
-      </div>
-    </div>
-  )
 }
-
-Composer.displayName = 'SvgViewComposer'

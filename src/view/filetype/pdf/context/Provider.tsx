@@ -5,7 +5,7 @@ import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
-import type { IPdfViewData } from './types'
+import type { IPdfViewData, ModeEnum } from './types'
 import { PdfViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/filetype/pdf'
@@ -14,6 +14,7 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
+  readonly mode?: ModeEnum
   readonly pages?: number
   readonly pageno?: number
   readonly scale?: number
@@ -22,13 +23,23 @@ interface IProps {
 }
 
 export const PdfViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, pages, pageno, scale, multiview, children } =
-    props
+  const {
+    workspace,
+    filepath,
+    filepathDirtyTick,
+    mode,
+    pages,
+    pageno,
+    scale,
+    multiview,
+    children,
+  } = props
   const viewmodel: PdfViewViewModel | null = useSingleton<PdfViewViewModel>(() => {
     const initialData: Partial<IPdfViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     return PdfViewViewModel.fromData({
+      mode: mode ?? initialData.mode,
       scale: scale ?? initialData.scale,
       multiview: multiview ?? initialData.multiview,
     })
@@ -67,6 +78,7 @@ interface ISideEffectProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
+  readonly mode?: ModeEnum
   readonly pages?: number
   readonly pageno?: number
   readonly scale?: number
@@ -74,8 +86,17 @@ interface ISideEffectProps {
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, pages, pageno, scale, multiview } =
-    props
+  const {
+    viewmodel,
+    workspace,
+    filepath,
+    filepathDirtyTick,
+    mode,
+    pages,
+    pageno,
+    scale,
+    multiview,
+  } = props
 
   const { data, error } = useFileResult<IPdfFileData>(workspace, filepath, filepathDirtyTick)
 
@@ -95,10 +116,13 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   }, [data, error, viewmodel])
 
   React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.scale$, viewmodel.multiview$], () => {
-      const data: IPdfViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
+    const computed = Computed.fromObservables(
+      [viewmodel.mode$, viewmodel.scale$, viewmodel.multiview$],
+      () => {
+        const data: IPdfViewData = viewmodel.dump()
+        window.localStorage.setItem(storageKey, JSON.stringify(data))
+      },
+    )
     return (): void => {
       computed.dispose()
     }
@@ -123,6 +147,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     if (viewmodel.disposed) return
     viewmodel.pageno$.next(pageno ?? 1)
   }, [viewmodel, pageno])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
+  }, [viewmodel, mode])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return

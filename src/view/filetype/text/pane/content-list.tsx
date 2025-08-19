@@ -1,7 +1,5 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import cn from 'clsx'
 import React from 'react'
-import { PRESET_CLASSES } from '@/shared/constant'
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
 import { ContentListItem } from '../container/ContentListItem'
 import { MultiPathInput } from '../container/MultiPathInput'

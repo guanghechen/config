@@ -1,17 +1,19 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { ISvgFileData } from '@/hook/api/file'
-import type { ISvgViewData, ISvgViewPosition } from './types'
+import { type ISvgViewData, type ISvgViewPosition, ModeEnum } from './types'
 
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string
+  readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
 }
 
-const DEFAULT_SVG_VIEW_DATA: ISvgViewData = {
+const DEFAULT_DATA: ISvgViewData = {
+  mode: ModeEnum.CONTENT | ModeEnum.LITERAL,
   scale: 1,
   rotation: 0,
   position: { x: 0, y: 0 },
@@ -20,17 +22,19 @@ const DEFAULT_SVG_VIEW_DATA: ISvgViewData = {
 export class SvgViewViewModel extends ViewModel {
   public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string>
+  public readonly mode$: IState<ModeEnum>
   public readonly scale$: IState<number>
   public readonly rotation$: IState<number>
   public readonly position$: IState<ISvgViewPosition>
   public readonly data$: IState<ISvgFileData | null>
-  public readonly error$: IState<string | null>
+  public readonly contentError$: IState<string | null>
 
   public static fromData(data: Partial<ISvgViewData> | undefined): SvgViewViewModel {
-    const { scale, rotation, position }: ISvgViewData = this.normalize(DEFAULT_SVG_VIEW_DATA, data)
+    const { mode, scale, rotation, position }: ISvgViewData = this.normalize(DEFAULT_DATA, data)
     return new SvgViewViewModel({
       workspace: null,
       filepath: '',
+      mode,
       scale,
       rotation,
       position,
@@ -41,7 +45,8 @@ export class SvgViewViewModel extends ViewModel {
     base: ISvgViewData,
     data: Partial<ISvgViewData> | undefined,
   ): ISvgViewData {
-    const { scale, rotation, position } = data || {}
+    const { mode, scale, rotation, position } = data || {}
+    const normalizedMode: ModeEnum = typeof mode === 'number' ? mode : base.mode
     const normalizedScale: number = typeof scale === 'number' && scale > 0 ? scale : base.scale
     const normalizedRotation: number = typeof rotation === 'number' ? rotation : base.rotation
     const normalizedPosition: ISvgViewPosition =
@@ -49,6 +54,7 @@ export class SvgViewViewModel extends ViewModel {
         ? position
         : base.position
     const normalizedData: ISvgViewData = {
+      mode: normalizedMode,
       scale: normalizedScale,
       rotation: normalizedRotation,
       position: normalizedPosition,
@@ -62,25 +68,29 @@ export class SvgViewViewModel extends ViewModel {
     const {
       workspace,
       filepath,
-      scale = DEFAULT_SVG_VIEW_DATA.scale,
-      rotation = DEFAULT_SVG_VIEW_DATA.rotation,
-      position = DEFAULT_SVG_VIEW_DATA.position,
+      mode = DEFAULT_DATA.mode,
+      scale = DEFAULT_DATA.scale,
+      rotation = DEFAULT_DATA.rotation,
+      position = DEFAULT_DATA.position,
     } = props
 
     this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string>(filepath)
+    this.mode$ = new State<ModeEnum>(mode)
     this.scale$ = new State<number>(scale)
     this.rotation$ = new State<number>(rotation)
     this.position$ = new State<ISvgViewPosition>(position)
     this.data$ = new State<ISvgFileData | null>(null)
-    this.error$ = new State<string | null>(null)
+    this.contentError$ = new State<string | null>(null)
   }
 
   public dump = (): ISvgViewData => {
+    const mode: ModeEnum = this.mode$.getSnapshot()
     const scale: number = this.scale$.getSnapshot()
     const rotation: number = this.rotation$.getSnapshot()
     const position: ISvgViewPosition = this.position$.getSnapshot()
     return {
+      mode,
       scale,
       rotation,
       position,
@@ -88,10 +98,11 @@ export class SvgViewViewModel extends ViewModel {
   }
 
   public load = (data: Partial<ISvgViewData> | undefined): void => {
-    const { scale, rotation, position }: ISvgViewData = SvgViewViewModel.normalize(
+    const { mode, scale, rotation, position }: ISvgViewData = SvgViewViewModel.normalize(
       this.dump(),
       data,
     )
+    this.mode$.next(mode)
     this.scale$.next(scale)
     this.rotation$.next(rotation)
     this.position$.next(position)

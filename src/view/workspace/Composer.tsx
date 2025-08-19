@@ -1,10 +1,10 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { FileSearch } from './container/FileSearch'
+import { useWorkspaceViewmodel } from './context'
 import { Main } from './layout/main'
 import { Sidebar } from './layout/sidebar'
 import { Topbar } from './layout/topbar'
-import { useWorkspaceViewmodel } from './context'
 
 export const Composer: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()

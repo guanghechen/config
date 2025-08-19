@@ -1,10 +1,10 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { ModeEnum, useHtmlViewViewModel } from '../context'
+import { ModeEnum, useSvgViewViewModel } from '../context'
 
 export const Mode: React.FC = () => {
-  const viewmodel = useHtmlViewViewModel()
+  const viewmodel = useSvgViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
   return (
@@ -40,4 +40,4 @@ export const Mode: React.FC = () => {
   )
 }
 
-Mode.displayName = 'HtmlViewMode'
+Mode.displayName = 'SvgViewMode'

@@ -1,10 +1,10 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { ModeEnum, useHtmlViewViewModel } from '../context'
+import { ModeEnum, usePdfViewViewModel } from '../context'
 
 export const Mode: React.FC = () => {
-  const viewmodel = useHtmlViewViewModel()
+  const viewmodel = usePdfViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
   return (
@@ -24,20 +24,9 @@ export const Mode: React.FC = () => {
         >
           content
         </button>
-        <button
-          className={cn(
-            'box-border px-3 transition-all duration-200 rounded-r-lg focus:outline-none focus:ring-0',
-            (mode & ModeEnum.LITERAL) !== 0
-              ? 'bg-blue-500 bg-opacity-90 font-medium text-white shadow-inner'
-              : 'text-gray-500 hover:bg-gray-200 hover:bg-opacity-50 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:bg-opacity-50',
-          )}
-          onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.LITERAL)}
-        >
-          literal
-        </button>
       </div>
     </div>
   )
 }
 
-Mode.displayName = 'HtmlViewMode'
+Mode.displayName = 'PdfViewMode'

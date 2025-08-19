@@ -1,103 +1,25 @@
-import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
+import cn from 'clsx'
 import React from 'react'
-import { useSvgViewViewModel } from '../context'
+import { ModeEnum, useSvgViewViewModel } from '../context'
+import { ContentPane } from '../pane/content'
+import { LiteralPane } from '../pane/literal'
 
 export const Main: React.FC = () => {
   const viewmodel = useSvgViewViewModel()
-  const scale = useStateValue(viewmodel.scale$)
-  const rotation = useStateValue(viewmodel.rotation$)
-  const position = useStateValue(viewmodel.position$)
-  const data = useStateValue(viewmodel.data$)
-  const error = useStateValue(viewmodel.error$)
-
-  const [isDragging, setIsDragging] = React.useState<boolean>(false)
-  const [startPosition, setStartPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 })
-  const containerRef = React.useRef<HTMLDivElement>(null)
-
-  const isLoading = !data && !error
-
-  const onMouseDown = useEventCallback((e: React.MouseEvent<HTMLDivElement>): void => {
-    setIsDragging(true)
-    setStartPosition({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    })
-  })
-
-  const onMouseMove = useEventCallback((e: React.MouseEvent<HTMLDivElement>): void => {
-    if (!isDragging) return
-
-    viewmodel.position$.next({
-      x: e.clientX - startPosition.x,
-      y: e.clientY - startPosition.y,
-    })
-  })
-
-  const onMouseUp = React.useCallback((): void => {
-    setIsDragging(false)
-  }, [])
-
-  const onMouseLeave = React.useCallback((): void => {
-    setIsDragging(false)
-  }, [])
-
-  const onWheel = useEventCallback((e: React.WheelEvent<HTMLDivElement>): void => {
-    if (e.ctrlKey) {
-      e.preventDefault()
-      const delta = e.deltaY < 0 ? 0.1 : -0.1
-      viewmodel.scale$.setState(prevScale => Math.max(0.1, Math.min(prevScale + delta, 5)))
-    }
-  })
-
-  React.useEffect(() => {
-    const container = containerRef.current
-    if (container) {
-      const preventDefaultWheel = (e: WheelEvent): void => {
-        if (e.ctrlKey) {
-          e.preventDefault()
-        }
-      }
-
-      container.addEventListener('wheel', preventDefaultWheel, { passive: false })
-      return () => container.removeEventListener('wheel', preventDefaultWheel)
-    }
-  }, [])
+  const mode = useStateValue(viewmodel.mode$)
 
   return (
-    <div
-      ref={containerRef}
-      onWheel={onWheel}
-      className="relative flex h-full w-full items-center justify-center"
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseLeave}
-      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-    >
-      {isLoading && (
-        <div className="flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="svg">
+      {(mode & ModeEnum.CONTENT) !== 0 && (
+        <div className="f-vf-pane f-vfp-content">
+          <ContentPane />
         </div>
       )}
-
-      {error && (
-        <div className="text-center text-red-500">
-          <p>Error loading SVG:</p>
-          <p>{error}</p>
+      {(mode & ModeEnum.LITERAL) !== 0 && (
+        <div className="f-vf-pane f-vfp-literal">
+          <LiteralPane />
         </div>
-      )}
-
-      {!isLoading && !error && data && data.content && (
-        <div
-          className="svg-container max-h-full max-w-full"
-          style={{
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-            transformOrigin: 'center center',
-            transition: 'transform 100ms ease-in-out',
-          }}
-          dangerouslySetInnerHTML={{ __html: data.content }}
-        />
       )}
     </div>
   )

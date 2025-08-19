@@ -1,6 +1,6 @@
 import React from 'react'
 import { Main } from './layout/main'
-import { ModeToggle } from './layout/mode'
+import { Mode } from './layout/mode'
 
 export class Composer extends React.PureComponent {
   public static readonly displayName: string = 'JsonViewComposer'
@@ -9,7 +9,7 @@ export class Composer extends React.PureComponent {
     return (
       <React.Fragment>
         <Main />
-        <ModeToggle />
+        <Mode />
       </React.Fragment>
     )
   }

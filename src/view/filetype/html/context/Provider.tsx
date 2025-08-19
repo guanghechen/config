@@ -15,17 +15,19 @@ interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
+  readonly enableTailwindcss?: boolean
   readonly children: React.ReactNode
 }
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, children } = props
+  const { workspace, filepath, filepathDirtyTick, mode, enableTailwindcss, children } = props
   const viewmodel: HtmlViewViewModel | null = useSingleton<HtmlViewViewModel>(() => {
     const initialData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     return HtmlViewViewModel.fromData({
       mode: mode ?? initialData.mode,
+      enableTailwindcss: enableTailwindcss ?? initialData.enableTailwindcss,
     })
   })
   const context: IHtmlViewContext | null = React.useMemo<IHtmlViewContext | null>(
@@ -59,10 +61,11 @@ interface ISideEffectProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
+  readonly enableTailwindcss?: boolean
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, enableTailwindcss } = props
 
   const { data, error } = useFileResult<IHtmlFileData>(workspace, filepath, filepathDirtyTick)
 
@@ -71,21 +74,24 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
     if (data) {
       viewmodel.data$.next(data)
-      viewmodel.error$.next(null)
+      viewmodel.contentError$.next(null)
     } else if (error) {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+      viewmodel.contentError$.next(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(null)
+      viewmodel.contentError$.next(null)
     }
   }, [data, error, viewmodel])
 
   React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.mode$], () => {
-      const data: IHtmlViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
+    const computed = Computed.fromObservables(
+      [viewmodel.mode$, viewmodel.enableTailwindcss$],
+      () => {
+        const data: IHtmlViewData = viewmodel.dump()
+        window.localStorage.setItem(storageKey, JSON.stringify(data))
+      },
+    )
     return (): void => {
       computed.dispose()
     }
@@ -105,6 +111,13 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
   }, [viewmodel, mode])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.enableTailwindcss$.next(
+      enableTailwindcss ?? viewmodel.enableTailwindcss$.getSnapshot(),
+    )
+  })
 
   return <React.Fragment />
 }

@@ -5,7 +5,7 @@ import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
-import type { ISvgViewData, ISvgViewPosition } from './types'
+import type { ISvgViewData, ISvgViewPosition, ModeEnum } from './types'
 import { SvgViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/filetype/svg'
@@ -14,6 +14,7 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
+  readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
@@ -21,12 +22,14 @@ interface IProps {
 }
 
 export const SvgViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, scale, rotation, position, children } = props
+  const { workspace, filepath, filepathDirtyTick, mode, scale, rotation, position, children } =
+    props
   const viewmodel: SvgViewViewModel | null = useSingleton<SvgViewViewModel>(() => {
     const initialData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     return SvgViewViewModel.fromData({
+      mode: mode ?? initialData.mode,
       scale: scale ?? initialData.scale,
       rotation: rotation ?? initialData.rotation,
       position: position ?? initialData.position,
@@ -65,13 +68,15 @@ interface ISideEffectProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
+  readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, scale, rotation, position } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, scale, rotation, position } =
+    props
 
   const { data, error } = useFileResult<ISvgFileData>(workspace, filepath, filepathDirtyTick)
 
@@ -80,19 +85,19 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
     if (data) {
       viewmodel.data$.next(data)
-      viewmodel.error$.next(null)
+      viewmodel.contentError$.next(null)
     } else if (error) {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+      viewmodel.contentError$.next(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(null)
+      viewmodel.contentError$.next(null)
     }
   }, [data, error, viewmodel])
 
   React.useEffect(() => {
     const computed = Computed.fromObservables(
-      [viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
+      [viewmodel.mode$, viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
       () => {
         const data: ISvgViewData = viewmodel.dump()
         window.localStorage.setItem(storageKey, JSON.stringify(data))
@@ -112,6 +117,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath)
   }, [viewmodel, filepath])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
+  }, [viewmodel, mode])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return

@@ -2,8 +2,8 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { ModeEnum, useJsonViewViewModel } from '../context'
-import { ContentPane } from './content'
-import { LiteralPane } from './literal'
+import { ContentPane } from '../pane/content'
+import { LiteralPane } from '../pane/literal'
 
 export const Main: React.FC = () => {
   const viewmodel = useJsonViewViewModel()

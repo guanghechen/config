@@ -8,10 +8,12 @@ interface IProps {
   readonly workspace?: string | null
   readonly filepath?: string | null
   readonly mode?: ModeEnum
+  readonly enableTailwindcss?: boolean
 }
 
-const DEFAULT_HTML_VIEW_DATA: IHtmlViewData = {
-  mode: ModeEnum.VIEW | ModeEnum.TAILWIND,
+const DEFAULT_DATA: IHtmlViewData = {
+  mode: ModeEnum.CONTENT | ModeEnum.LITERAL,
+  enableTailwindcss: false,
 }
 
 export class HtmlViewViewModel extends ViewModel {
@@ -19,14 +21,16 @@ export class HtmlViewViewModel extends ViewModel {
   public readonly filepath$: IState<string | null>
   public readonly mode$: IState<ModeEnum>
   public readonly data$: IState<IHtmlFileData | null>
-  public readonly error$: IState<string | null>
+  public readonly contentError$: IState<string | null>
+  public readonly enableTailwindcss$: IState<boolean>
 
   public static fromData(data: Partial<IHtmlViewData> | undefined): HtmlViewViewModel {
-    const { mode }: IHtmlViewData = this.normalize(DEFAULT_HTML_VIEW_DATA, data)
+    const { mode, enableTailwindcss }: IHtmlViewData = this.normalize(DEFAULT_DATA, data)
     return new HtmlViewViewModel({
       workspace: null,
       filepath: null,
       mode,
+      enableTailwindcss,
     })
   }
 
@@ -34,10 +38,11 @@ export class HtmlViewViewModel extends ViewModel {
     base: IHtmlViewData,
     data: Partial<IHtmlViewData> | undefined,
   ): IHtmlViewData {
-    const { mode } = data || {}
+    const { mode, enableTailwindcss } = data || {}
     const normalizedMode: ModeEnum = typeof mode === 'number' ? mode : base.mode
     const normalizedData: IHtmlViewData = {
       mode: normalizedMode,
+      enableTailwindcss: !!enableTailwindcss,
     }
     return normalizedData
   }
@@ -45,24 +50,36 @@ export class HtmlViewViewModel extends ViewModel {
   constructor(props: IProps = {}) {
     super()
 
-    const { workspace = null, filepath = null, mode = DEFAULT_HTML_VIEW_DATA.mode } = props
+    const {
+      workspace = null,
+      filepath = null,
+      mode = DEFAULT_DATA.mode,
+      enableTailwindcss = DEFAULT_DATA.enableTailwindcss,
+    } = props
 
     this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string | null>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
+    this.enableTailwindcss$ = new State<boolean>(enableTailwindcss)
     this.data$ = new State<IHtmlFileData | null>(null)
-    this.error$ = new State<string | null>(null)
+    this.contentError$ = new State<string | null>(null)
   }
 
   public dump = (): IHtmlViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
+    const enableTailwindcss: boolean = this.enableTailwindcss$.getSnapshot()
     return {
       mode,
+      enableTailwindcss,
     }
   }
 
   public load = (data: Partial<IHtmlViewData> | undefined): void => {
-    const { mode }: IHtmlViewData = HtmlViewViewModel.normalize(this.dump(), data)
+    const { mode, enableTailwindcss }: IHtmlViewData = HtmlViewViewModel.normalize(
+      this.dump(),
+      data,
+    )
     this.mode$.next(mode)
+    this.enableTailwindcss$.next(enableTailwindcss)
   }
 }

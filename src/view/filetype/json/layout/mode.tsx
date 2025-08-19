@@ -3,7 +3,7 @@ import cn from 'clsx'
 import React from 'react'
 import { ModeEnum, useJsonViewViewModel } from '../context'
 
-export const ModeToggle: React.FC = () => {
+export const Mode: React.FC = () => {
   const viewmodel = useJsonViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
@@ -22,7 +22,7 @@ export const ModeToggle: React.FC = () => {
           )}
           onClick={() => viewmodel.mode$.setState(m => m ^ ModeEnum.CONTENT)}
         >
-          view
+          content
         </button>
         <button
           className={cn(
@@ -40,4 +40,4 @@ export const ModeToggle: React.FC = () => {
   )
 }
 
-ModeToggle.displayName = 'JsonViewModeToggle'
+Mode.displayName = 'JsonViewMode'

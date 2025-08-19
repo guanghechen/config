@@ -2,8 +2,8 @@
 const bit: number = 1
 
 export enum ModeEnum {
-  VIEW = bit << 0,
-  TAILWIND = bit << 1,
+  CONTENT = bit << 0,
+  LITERAL = bit << 1,
 }
 
 export interface IHtmlViewScale {
@@ -12,4 +12,5 @@ export interface IHtmlViewScale {
 
 export interface IHtmlViewData {
   readonly mode: ModeEnum
+  readonly enableTailwindcss: boolean
 }

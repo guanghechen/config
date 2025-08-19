@@ -11,7 +11,7 @@ import {
 } from '@/component/icon/material'
 import { useSvgViewViewModel } from '../context'
 
-export const Topbar: React.FC = () => {
+export const Toolbar: React.FC = () => {
   const viewmodel = useSvgViewViewModel()
   const scale = useStateValue(viewmodel.scale$)
 
@@ -124,4 +124,4 @@ export const Topbar: React.FC = () => {
   )
 }
 
-Topbar.displayName = 'SvgViewTopbar'
+Toolbar.displayName = 'SvgViewToolbar'

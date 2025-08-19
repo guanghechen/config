@@ -12,7 +12,7 @@ import {
 } from '@/component/icon/material'
 import { usePdfViewViewModel } from '../context'
 
-export const Topbar: React.FC = () => {
+export const Toolbar: React.FC = () => {
   const viewmodel = usePdfViewViewModel()
   const pages = useStateValue(viewmodel.pages$)
   const pageno = useStateValue(viewmodel.pageno$)
@@ -145,7 +145,4 @@ export const Topbar: React.FC = () => {
   )
 }
 
-Topbar.displayName = 'PdfViewTopbar'
-
-// Export with both names for backwards compatibility
-export { Topbar as PdfTopbar }
+Toolbar.displayName = 'PdfViewToolbar'

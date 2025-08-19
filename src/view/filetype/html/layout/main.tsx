@@ -1,61 +1,27 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
+import cn from 'clsx'
 import React from 'react'
-import { toSearch } from '@/shared/util'
 import { ModeEnum, useHtmlViewViewModel } from '../context'
+import { ContentPane } from '../pane/content'
+import { LiteralPane } from '../pane/literal'
 
 export const Main: React.FC = () => {
   const viewmodel = useHtmlViewViewModel()
-  const mode: ModeEnum = useStateValue(viewmodel.mode$)
-  const filepath = useStateValue(viewmodel.filepath$)
-  const workspace = useStateValue(viewmodel.workspace$)
-  const iframeRef = React.useRef<HTMLIFrameElement>(null)
-
-  const tailwindEnabled = (mode & ModeEnum.TAILWIND) !== 0
-
-  const url = React.useMemo<string>(() => {
-    const search = toSearch({ filepath, workspace })
-    return `/api/file${search}`
-  }, [filepath, workspace])
-
-  const injectTailwindCSS = React.useCallback(() => {
-    const iframe = iframeRef.current
-    if (!iframe || !iframe.contentDocument) return
-
-    const doc = iframe.contentDocument
-    const existingTailwind = doc.getElementById('injected-tailwind-css')
-
-    if (tailwindEnabled && !existingTailwind) {
-      const script = doc.createElement('script')
-      script.id = 'injected-tailwind-css'
-      script.src = 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4'
-      doc.head.appendChild(script)
-    } else if (!tailwindEnabled && existingTailwind) {
-      existingTailwind.remove()
-      const currentSrc = iframe.src
-      iframe.src = 'about:blank'
-      setTimeout(() => {
-        iframe.src = currentSrc
-      }, 50)
-    }
-  }, [tailwindEnabled])
-
-  const handleIframeLoad = React.useCallback(() => {
-    injectTailwindCSS()
-  }, [injectTailwindCSS])
-
-  React.useEffect(() => {
-    injectTailwindCSS()
-  }, [injectTailwindCSS])
+  const mode = useStateValue(viewmodel.mode$)
 
   return (
-    <iframe
-      ref={iframeRef}
-      src={url}
-      title={filepath || 'HTML file'}
-      className="h-full w-full border-none"
-      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-      onLoad={handleIframeLoad}
-    />
+    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="html">
+      {(mode & ModeEnum.CONTENT) !== 0 && (
+        <div className="f-vf-pane f-vfp-content">
+          <ContentPane />
+        </div>
+      )}
+      {(mode & ModeEnum.LITERAL) !== 0 && (
+        <div className="f-vf-pane f-vfp-literal">
+          <LiteralPane />
+        </div>
+      )}
+    </div>
   )
 }
 
