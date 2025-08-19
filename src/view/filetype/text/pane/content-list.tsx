@@ -3,7 +3,7 @@ import cn from 'clsx'
 import React from 'react'
 import { PRESET_CLASSES } from '@/shared/constant'
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
-import { ListItemCard } from '../container/ListItemCard'
+import { ContentListItem } from '../container/ContentListItem'
 import { MultiPathInput } from '../container/MultiPathInput'
 import type { IChainPath } from '../context'
 import { useTextViewViewModel } from '../context'
@@ -62,7 +62,7 @@ export const ContentList: React.FC = () => {
         )}
       >
         {transformedNodes.map((node, index) => (
-          <ListItemCard
+          <ContentListItem
             key={node.uuid}
             index={index}
             node={node}

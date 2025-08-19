@@ -13,7 +13,7 @@ interface IProps {
   readonly isActive?: boolean
 }
 
-export const ListItemCard: React.FC<IProps> = props => {
+export const ContentListItem: React.FC<IProps> = props => {
   const { index, node, chainPaths, expandTick, isActive = false } = props
   const { uuid, parents, data } = node
   const [expanded, setExpanded] = React.useState(false)
@@ -135,4 +135,4 @@ export const ListItemCard: React.FC<IProps> = props => {
   )
 }
 
-ListItemCard.displayName = 'TextViewListItemCard'
+ContentListItem.displayName = 'TextViewContentListItem'
