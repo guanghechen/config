@@ -8,7 +8,6 @@ import { ModeEnum, ViewModeEnum } from './types'
 interface IProps {
   readonly mode?: ModeEnum
   readonly viewMode?: ViewModeEnum
-  readonly workspace?: string | null
   readonly filepath?: string | null
   readonly transformConfig?: ITextTransformConfig
   readonly activeRecordIndex?: number | null
@@ -22,7 +21,7 @@ const DEFAULT_TRANSFORM_CONFIG: ITextTransformConfig = {
   parents: '() => []',
 }
 
-const DEFAULT_TEXT_VIEW_DATA: ITextViewData = {
+const DEFAULT_DATA: ITextViewData = {
   mode: ModeEnum.CONTENT,
   viewMode: ViewModeEnum.ORIGINAL,
   transformConfig: DEFAULT_TRANSFORM_CONFIG,
@@ -31,7 +30,6 @@ const DEFAULT_TEXT_VIEW_DATA: ITextViewData = {
 export class TextViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
   public readonly viewMode$: IState<ViewModeEnum>
-  public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string | null>
   public readonly content$: IState<string | null>
   public readonly contentError$: IState<string | null>
@@ -41,10 +39,7 @@ export class TextViewViewModel extends ViewModel {
   public readonly expandTick$: IState<number>
 
   public static fromData(data: Partial<ITextViewData> | undefined): TextViewViewModel {
-    const { mode, viewMode, transformConfig }: ITextViewData = this.normalize(
-      DEFAULT_TEXT_VIEW_DATA,
-      data,
-    )
+    const { mode, viewMode, transformConfig }: ITextViewData = this.normalize(DEFAULT_DATA, data)
     return new TextViewViewModel({ mode, viewMode, transformConfig })
   }
 
@@ -76,7 +71,6 @@ export class TextViewViewModel extends ViewModel {
     const {
       mode = ModeEnum.CONTENT,
       viewMode = ViewModeEnum.ORIGINAL,
-      workspace = null,
       filepath = null,
       transformConfig = DEFAULT_TRANSFORM_CONFIG,
       activeRecordIndex = 0,
@@ -84,7 +78,6 @@ export class TextViewViewModel extends ViewModel {
 
     this.mode$ = new State<ModeEnum>(mode)
     this.viewMode$ = new State<ViewModeEnum>(viewMode)
-    this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string | null>(filepath)
     this.content$ = new State<string | null>(null)
     this.contentError$ = new State<string | null>(null)

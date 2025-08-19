@@ -7,7 +7,6 @@ export interface IPdfViewContext {
 
 export const PdfViewContextType = React.createContext<IPdfViewContext>({
   viewmodel: new PdfViewViewModel({
-    workspace: null,
     filepath: '/dev/null',
   }),
 })

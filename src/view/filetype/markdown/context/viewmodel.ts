@@ -3,20 +3,18 @@ import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { IMarkdownFileData } from '@/hook/api/file'
 import { type IMarkdownViewData, ModeEnum } from './types'
 
-export interface IMarkdownViewViewModelProps {
-  readonly workspace?: string | null
+interface IProps {
   readonly filepath?: string | null
   readonly tocActivatedIdentifier?: string | null
   readonly specifiedTocActivatedIdentifier?: string | null
   readonly mode?: ModeEnum
 }
 
-const DEFAULT_VIEWMODEL_DATA: IMarkdownViewData = {
+const DEFAULT_DATA: IMarkdownViewData = {
   mode: ModeEnum.CONTENT,
 }
 
 export class MarkdownViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string | null>
   public readonly tocActivatedIdentifier$: IState<string | null>
   public readonly specifiedTocActivatedIdentifier$: IState<string | null>
@@ -25,7 +23,7 @@ export class MarkdownViewViewModel extends ViewModel {
   public readonly contentError$: IState<string | null>
 
   public static fromData(data: Partial<IMarkdownViewData> | undefined): MarkdownViewViewModel {
-    const { mode }: IMarkdownViewData = this.normalize(DEFAULT_VIEWMODEL_DATA, data)
+    const { mode }: IMarkdownViewData = this.normalize(DEFAULT_DATA, data)
     return new MarkdownViewViewModel({ mode })
   }
 
@@ -42,9 +40,8 @@ export class MarkdownViewViewModel extends ViewModel {
     return normalizedData
   }
 
-  constructor(props: IMarkdownViewViewModelProps = {}) {
+  constructor(props: IProps = {}) {
     super()
-    this.workspace$ = new State<string | null>(props.workspace ?? null)
     this.filepath$ = new State<string | null>(props.filepath ?? null)
     this.tocActivatedIdentifier$ = new State<string | null>(props.tocActivatedIdentifier ?? null)
     this.specifiedTocActivatedIdentifier$ = new State<string | null>(

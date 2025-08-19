@@ -1,15 +1,10 @@
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
+/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
+const bit: number = 1
 
-export interface IExcalidrawViewData {
-  readonly type: string
-  readonly version: number
-  readonly source: string
-  readonly elements: ReadonlyArray<ExcalidrawElement>
-  readonly appState: {
-    readonly gridSize: number
-    readonly viewBackgroundColor: string
-  }
+export enum ModeEnum {
+  CONTENT = bit << 0,
 }
 
-// Alias for backwards compatibility
-export type IExcalidrawData = IExcalidrawViewData
+export interface IExcalidrawViewData {
+  readonly mode: ModeEnum
+}

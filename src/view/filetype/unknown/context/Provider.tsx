@@ -7,7 +7,7 @@ import { UnknownViewViewModel } from './viewmodel'
 
 interface IProps {
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly placeholder?: boolean
   readonly mode?: ModeEnum
@@ -15,7 +15,7 @@ interface IProps {
 }
 
 export const UnknownViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, placeholder, mode, children } = props
+  const { filepath, filepathDirtyTick, placeholder, mode, children } = props
   const viewmodel: UnknownViewViewModel | null = useSingleton<UnknownViewViewModel>(() => {
     return new UnknownViewViewModel({ placeholder })
   })
@@ -32,7 +32,6 @@ export const UnknownViewProvider: React.FC<IProps> = props => {
       <SideEffect
         viewmodel={viewmodel}
         placeholder={placeholder}
-        workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
         mode={mode}
@@ -47,15 +46,14 @@ UnknownViewProvider.displayName = 'UnknownViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: UnknownViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly placeholder?: boolean
   readonly mode?: ModeEnum
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, placeholder, mode } = props
+  const { viewmodel, filepath, placeholder, mode } = props
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
@@ -64,12 +62,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace ?? null)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath ?? null)
+    viewmodel.filepath$.next(filepath)
   }, [viewmodel, filepath])
 
   React.useEffect(() => {

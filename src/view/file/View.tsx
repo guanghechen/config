@@ -8,8 +8,8 @@ import { FileViewProvider } from './context'
 import './style.css'
 
 export const FileView: React.FC = () => {
-  const siteVM = useSiteViewmodel()
-  const theme: SiteTheme = useStateValue(siteVM.theme$)
+  const site = useSiteViewmodel()
+  const theme: SiteTheme = useStateValue(site.theme$)
 
   return (
     <FileViewProvider>

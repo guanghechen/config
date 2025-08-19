@@ -6,23 +6,21 @@ import { ModeEnum } from './types'
 interface IProps {
   readonly mode?: ModeEnum
   readonly placeholder?: boolean
-  readonly workspace?: string | null
   readonly filepath?: string | null
 }
 
-const DEFAULT_TEXT_VIEW_DATA: IUnknownViewData = {
+const DEFAULT_DATA: IUnknownViewData = {
   mode: ModeEnum.VIEW,
 }
 
 export class UnknownViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
   public readonly placeholder$: IState<boolean>
-  public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string | null>
   public readonly error$: IState<string | null>
 
   public static fromData(data: Partial<IUnknownViewData> | undefined): UnknownViewViewModel {
-    const { mode }: IUnknownViewData = this.normalize(DEFAULT_TEXT_VIEW_DATA, data)
+    const { mode }: IUnknownViewData = this.normalize(DEFAULT_DATA, data)
     return new UnknownViewViewModel({ mode })
   }
 
@@ -42,11 +40,10 @@ export class UnknownViewViewModel extends ViewModel {
   constructor(props: IProps = {}) {
     super()
 
-    const { mode = ModeEnum.VIEW, workspace = null, filepath = null, placeholder = true } = props
+    const { mode = ModeEnum.VIEW, filepath = null, placeholder = true } = props
 
     this.mode$ = new State<ModeEnum>(mode)
     this.placeholder$ = new State<boolean>(placeholder)
-    this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string | null>(filepath)
     this.error$ = new State<string | null>(null)
   }

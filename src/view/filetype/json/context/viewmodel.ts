@@ -9,7 +9,7 @@ interface IProps {
   readonly json?: unknown
 }
 
-const DEFAULT_JSON_VIEW_DATA: IJsonViewData = {
+const DEFAULT_DATA: IJsonViewData = {
   mode: ModeEnum.CONTENT,
 }
 
@@ -20,7 +20,7 @@ export class JsonViewViewModel extends ViewModel {
   public readonly contentError$: IState<string | null>
 
   public static fromData(data: Partial<IJsonViewData> | undefined): JsonViewViewModel {
-    const { mode }: IJsonViewData = this.normalize(DEFAULT_JSON_VIEW_DATA, data)
+    const { mode }: IJsonViewData = this.normalize(DEFAULT_DATA, data)
     return new JsonViewViewModel({ mode })
   }
 

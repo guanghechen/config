@@ -117,11 +117,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath ?? null)
   }, [viewmodel, filepath])
 

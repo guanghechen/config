@@ -4,10 +4,14 @@ import React from 'react'
 import { toSearch } from '@/shared/util'
 import { useImageViewViewModel } from '../context'
 
-export const Main: React.FC = () => {
+interface IProps {
+  readonly workspace: string | null
+}
+
+export const Main: React.FC<IProps> = props => {
+  const { workspace } = props
   const viewmodel = useImageViewViewModel()
   const filepath = useStateValue(viewmodel.filepath$)
-  const workspace = useStateValue(viewmodel.workspace$)
   const position = useStateValue(viewmodel.position$)
   const rotation = useStateValue(viewmodel.rotation$)
   const scale = useStateValue(viewmodel.scale$)

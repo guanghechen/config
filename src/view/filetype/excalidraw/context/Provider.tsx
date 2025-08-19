@@ -1,11 +1,11 @@
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
 import React from 'react'
-import type { SiteTheme } from '@/context/site'
 import type { IJsonFileData } from '@/hook/api/file'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IExcalidrawViewContext } from './context'
 import { ExcalidrawViewContextType } from './context'
+import type { ModeEnum } from './types'
 import { ExcalidrawViewViewModel } from './viewmodel'
 
 interface IProps {
@@ -14,16 +14,15 @@ interface IProps {
   readonly filepathDirtyTick: number
   readonly elements?: ReadonlyArray<ExcalidrawElement>
   readonly content?: string | null
-  readonly theme?: SiteTheme
+  readonly mode?: ModeEnum
   readonly error?: string | null
   readonly children: React.ReactNode
 }
 
 export const ExcalidrawViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, elements, content, theme, error, children } =
-    props
+  const { workspace, filepath, filepathDirtyTick, elements, content, error, children } = props
   const viewmodel: ExcalidrawViewViewModel | null = useSingleton<ExcalidrawViewViewModel>(
-    () => new ExcalidrawViewViewModel({ elements, content, workspace, filepath, theme, error }),
+    () => new ExcalidrawViewViewModel({ elements, content, filepath, error }),
   )
   const context: IExcalidrawViewContext | null = React.useMemo<IExcalidrawViewContext | null>(
     () => (viewmodel ? { viewmodel } : null),
@@ -44,7 +43,6 @@ export const ExcalidrawViewProvider: React.FC<IProps> = props => {
         filepathDirtyTick={filepathDirtyTick}
         elements={elements}
         content={content}
-        theme={theme}
         error={error}
       />
     </React.Fragment>
@@ -62,12 +60,11 @@ interface ISideEffectProps {
   readonly filepathDirtyTick: number
   readonly elements?: ReadonlyArray<ExcalidrawElement>
   readonly content?: string | null
-  readonly theme?: SiteTheme
   readonly error?: string | null
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, elements, theme, error } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, elements, error } = props
 
   const { data, error: fileError } = useFileResult<IJsonFileData>(
     workspace,
@@ -103,18 +100,8 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace ?? null)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
     viewmodel.filepath$.next(filepath ?? null)
   }, [viewmodel, filepath])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.theme$.next(theme ?? null)
-  }, [viewmodel, theme])
 
   return <React.Fragment />
 }

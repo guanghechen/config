@@ -12,7 +12,7 @@ const storageKey: string = '#/view/filetype/html'
 
 interface IProps {
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
@@ -58,7 +58,7 @@ HtmlViewProvider.displayName = 'HtmlViewProvider'
 interface ISideEffectProps {
   readonly viewmodel: HtmlViewViewModel
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
@@ -96,11 +96,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       computed.dispose()
     }
   }, [viewmodel])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace ?? null)
-  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return

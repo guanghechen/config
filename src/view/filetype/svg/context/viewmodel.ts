@@ -4,7 +4,6 @@ import type { ISvgFileData } from '@/hook/api/file'
 import { type ISvgViewData, type ISvgViewPosition, ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
   readonly filepath: string
   readonly mode?: ModeEnum
   readonly scale?: number
@@ -20,7 +19,6 @@ const DEFAULT_DATA: ISvgViewData = {
 }
 
 export class SvgViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly scale$: IState<number>
@@ -32,7 +30,6 @@ export class SvgViewViewModel extends ViewModel {
   public static fromData(data: Partial<ISvgViewData> | undefined): SvgViewViewModel {
     const { mode, scale, rotation, position }: ISvgViewData = this.normalize(DEFAULT_DATA, data)
     return new SvgViewViewModel({
-      workspace: null,
       filepath: '',
       mode,
       scale,
@@ -66,7 +63,6 @@ export class SvgViewViewModel extends ViewModel {
     super()
 
     const {
-      workspace,
       filepath,
       mode = DEFAULT_DATA.mode,
       scale = DEFAULT_DATA.scale,
@@ -74,7 +70,6 @@ export class SvgViewViewModel extends ViewModel {
       position = DEFAULT_DATA.position,
     } = props
 
-    this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.scale$ = new State<number>(scale)

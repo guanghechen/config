@@ -15,10 +15,14 @@ const options = {
   cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
 }
 
-export const ContentPane: React.FC = () => {
+interface IProps {
+  readonly workspace: string | null
+}
+
+export const ContentPane: React.FC<IProps> = props => {
+  const { workspace } = props
   const viewmodel = usePdfViewViewModel()
   const multiview = useStateValue(viewmodel.multiview$)
-  const workspace = useStateValue(viewmodel.workspace$)
   const filepath = useStateValue(viewmodel.filepath$)
   const pages = useStateValue(viewmodel.pages$)
   const scale = useStateValue(viewmodel.scale$)

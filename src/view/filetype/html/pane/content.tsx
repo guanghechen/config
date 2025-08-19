@@ -3,10 +3,14 @@ import React from 'react'
 import { toSearch } from '@/shared/util'
 import { useHtmlViewViewModel } from '../context'
 
-export const ContentPane: React.FC = () => {
+interface IProps {
+  readonly workspace: string | null
+}
+
+export const ContentPane: React.FC<IProps> = props => {
+  const { workspace } = props
   const viewmodel = useHtmlViewViewModel()
   const filepath = useStateValue(viewmodel.filepath$)
-  const workspace = useStateValue(viewmodel.workspace$)
   const tailwindEnabled: boolean = useStateValue(viewmodel.enableTailwindcss$)
 
   const iframeRef = React.useRef<HTMLIFrameElement>(null)

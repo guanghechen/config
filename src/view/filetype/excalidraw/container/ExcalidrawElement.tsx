@@ -15,7 +15,8 @@ interface IProps {
   readonly appState?: AppState
 }
 
-export const ExcalidrawElementRenderer: React.FC<IProps> = ({ element, appState }) => {
+export const ElementRenderer: React.FC<IProps> = props => {
+  const { element, appState } = props
   const ast = React.useMemo((): Root | null => {
     try {
       const text = element.text.slice(3) // Remove 'md:' prefix
@@ -47,4 +48,4 @@ export const ExcalidrawElementRenderer: React.FC<IProps> = ({ element, appState 
   )
 }
 
-ExcalidrawElementRenderer.displayName = 'ExcalidrawElementRenderer'
+ElementRenderer.displayName = 'ExcalidrawViewElementRenderer'

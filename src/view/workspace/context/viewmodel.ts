@@ -15,7 +15,7 @@ interface IProps {
   readonly sidebarWidth: number
 }
 
-const DEFAULT_VIEWMODEL_DATA: IWorkspaceData = {
+const DEFAULT_DATA: IWorkspaceData = {
   filepath: null,
   workspace: null,
   workspaces: [],
@@ -56,7 +56,7 @@ export class WorkspaceViewViewModel extends ViewModel {
       filetreeMode,
       sidebarVisible,
       sidebarWidth,
-    }: IWorkspaceData = this.normalize(DEFAULT_VIEWMODEL_DATA, data)
+    }: IWorkspaceData = this.normalize(DEFAULT_DATA, data)
     return new WorkspaceViewViewModel({
       filepath,
       workspace,

@@ -5,7 +5,6 @@ import type { IPdfViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
   readonly filepath: string
   readonly mode?: ModeEnum
   readonly pages?: number
@@ -21,7 +20,6 @@ const DEFAULT_DATA: IPdfViewData = {
 }
 
 export class PdfViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly pages$: IState<number>
@@ -34,7 +32,6 @@ export class PdfViewViewModel extends ViewModel {
   public static fromData(data: Partial<IPdfViewData> | undefined): PdfViewViewModel {
     const { mode, scale, multiview }: IPdfViewData = this.normalize(DEFAULT_DATA, data)
     return new PdfViewViewModel({
-      workspace: null,
       filepath: '',
       mode,
       scale,
@@ -62,7 +59,6 @@ export class PdfViewViewModel extends ViewModel {
     super()
 
     const {
-      workspace,
       filepath,
       mode = DEFAULT_DATA.mode,
       pages = 1,
@@ -71,7 +67,6 @@ export class PdfViewViewModel extends ViewModel {
       multiview = DEFAULT_DATA.multiview,
     } = props
 
-    this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.pages$ = new State<number>(pages)

@@ -19,7 +19,7 @@ interface IProps {
   readonly theme: SiteTheme
 }
 
-const DEFAULT_SITE_DATA: ISiteData = {
+const DEFAULT_DATA: ISiteData = {
   theme: SiteTheme.LIGHTEN,
 }
 
@@ -28,7 +28,7 @@ export class SiteViewModel extends ViewModel {
   public readonly theme$: IState<SiteTheme>
 
   public static fromData(data: Partial<ISiteData> | undefined): SiteViewModel {
-    const { theme }: ISiteData = this.normalize(DEFAULT_SITE_DATA, data)
+    const { theme }: ISiteData = this.normalize(DEFAULT_DATA, data)
     return new SiteViewModel({ name: data?.name, theme })
   }
 

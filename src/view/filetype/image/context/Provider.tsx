@@ -18,7 +18,7 @@ interface IProps {
 }
 
 export const ImageViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, scale, rotation, position, children } = props
+  const { filepath, scale, rotation, position, children } = props
   const viewmodel: ImageViewViewModel | null = useSingleton<ImageViewViewModel>(() => {
     const initialData: Partial<IImageViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -41,7 +41,6 @@ export const ImageViewProvider: React.FC<IProps> = props => {
       <ImageViewContextType.Provider value={context}>{children}</ImageViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
-        workspace={workspace}
         filepath={filepath}
         scale={scale}
         rotation={rotation}
@@ -57,7 +56,6 @@ ImageViewProvider.displayName = 'ImageViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: ImageViewViewModel
-  readonly workspace?: string | null
   readonly filepath?: string | null
   readonly scale?: number
   readonly rotation?: number
@@ -65,7 +63,7 @@ interface ISideEffectProps {
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, scale, rotation, position } = props
+  const { viewmodel, filepath, scale, rotation, position } = props
 
   React.useEffect(() => {
     const computed = Computed.fromObservables(
@@ -79,11 +77,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       computed.dispose()
     }
   }, [viewmodel])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace ?? null)
-  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return

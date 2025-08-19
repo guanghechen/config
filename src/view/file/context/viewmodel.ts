@@ -5,7 +5,7 @@ interface IProps {
   readonly filepath: string | null
 }
 
-const DEFAULT_FILE_DATA: IFileData = {
+const DEFAULT_DATA: IFileData = {
   filepath: null,
 }
 
@@ -15,7 +15,7 @@ export class FileViewModel extends ViewModel {
   public readonly mainScrollableContainer$: State<HTMLDivElement | null>
 
   public static fromData(data: Partial<IFileData> | undefined): FileViewModel {
-    const { filepath }: IFileData = this.normalize(DEFAULT_FILE_DATA, data)
+    const { filepath }: IFileData = this.normalize(DEFAULT_DATA, data)
     return new FileViewModel({ filepath })
   }
 

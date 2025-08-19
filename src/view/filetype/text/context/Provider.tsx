@@ -14,7 +14,7 @@ const storageKey: string = '#/view/filetype/text'
 
 interface IProps {
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
   readonly viewMode?: ViewModeEnum
@@ -64,7 +64,7 @@ TextViewProvider.displayName = 'TextViewProvider'
 interface ISideEffectProps {
   readonly viewmodel: TextViewViewModel
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
   readonly viewMode?: ViewModeEnum
@@ -105,12 +105,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace ?? null)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath ?? null)
+    viewmodel.filepath$.next(filepath)
   }, [viewmodel, filepath])
 
   React.useEffect(() => {

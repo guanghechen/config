@@ -21,7 +21,7 @@ export class HtmlView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <Composer />
+        <Composer workspace={workspace} />
       </HtmlViewProvider>
     )
   }

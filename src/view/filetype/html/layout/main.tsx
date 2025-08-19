@@ -5,7 +5,12 @@ import { ModeEnum, useHtmlViewViewModel } from '../context'
 import { ContentPane } from '../pane/content'
 import { LiteralPane } from '../pane/literal'
 
-export const Main: React.FC = () => {
+interface IProps {
+  readonly workspace: string | null
+}
+
+export const Main: React.FC<IProps> = props => {
+  const { workspace } = props
   const viewmodel = useHtmlViewViewModel()
   const mode = useStateValue(viewmodel.mode$)
 
@@ -13,7 +18,7 @@ export const Main: React.FC = () => {
     <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="html">
       {(mode & ModeEnum.CONTENT) !== 0 && (
         <div className="f-vf-pane f-vfp-content">
-          <ContentPane />
+          <ContentPane workspace={workspace} />
         </div>
       )}
       {(mode & ModeEnum.LITERAL) !== 0 && (

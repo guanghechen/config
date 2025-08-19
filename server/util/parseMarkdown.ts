@@ -70,8 +70,10 @@ async function parseMarkdown(filepath: string): Promise<{
         const targetFilepath: string = path.normalize(path.resolve(dirpath, url))
         const { workspace, relativePath } = state.sharpFilepath(targetFilepath)
         const search: string = toSearch({ workspace, filepath: relativePath })
-        if (targetFilepath.endsWith('.md')) return `/workspace${search}`
-        return `/api/file${search}`
+        if (targetFilepath.endsWith('.md')) {
+          return workspace ? `/ws/${workspace}${search}` : `/file${search}`
+        }
+        return `/api/file/raw${search}`
       }
       return url
     },
