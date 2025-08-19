@@ -15,7 +15,7 @@ interface IProps {
 
 export const ContentListItem: React.FC<IProps> = props => {
   const { index, node, chainPaths, expandTick, isActive = false } = props
-  const { uuid, parents, data } = node
+  const { parents, data } = node
   const [expanded, setExpanded] = React.useState(false)
 
   // Compute extracted values for visible chain paths from this node
@@ -60,6 +60,11 @@ export const ContentListItem: React.FC<IProps> = props => {
           <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
             #{index}
           </span>
+          {parents.length > 0 && (
+            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+              {parents.length} parent{parents.length > 1 ? 's' : ''}
+            </span>
+          )}
           {extractedValues.map((item, idx) => (
             <span
               key={idx}
@@ -74,11 +79,6 @@ export const ContentListItem: React.FC<IProps> = props => {
               {item.value}
             </span>
           ))}
-          {parents.length > 0 && (
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-              {parents.length} parent{parents.length > 1 ? 's' : ''}
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="select-none text-xs text-gray-500 dark:text-gray-400">
@@ -104,19 +104,6 @@ export const ContentListItem: React.FC<IProps> = props => {
             'border-gray-200 dark:border-gray-700': !isActive,
           })}
         >
-          <div
-            className={cn('text-sm mb-2', {
-              'text-indigo-700 dark:text-indigo-300': isActive,
-              'text-gray-600 dark:text-gray-400': !isActive,
-            })}
-          >
-            <span className="font-mono">UUID: {uuid}</span>
-            {parents.length > 0 && (
-              <span className="ml-4 font-mono">
-                Parent{parents.length > 1 ? 's' : ''}: {parents.join(', ')}
-              </span>
-            )}
-          </div>
           <div
             className={cn('font-mono text-sm', {
               'text-indigo-800 dark:text-indigo-200': isActive,
