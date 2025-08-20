@@ -17,6 +17,7 @@ export const ContentPane: React.FC = () => {
   const isLoading = !content
 
   const onMouseDown = useEventCallback((e: React.MouseEvent<HTMLDivElement>): void => {
+    e.preventDefault()
     setIsDragging(true)
     setStartPosition({
       x: e.clientX - position.x,
@@ -26,6 +27,7 @@ export const ContentPane: React.FC = () => {
 
   const onMouseMove = useEventCallback((e: React.MouseEvent<HTMLDivElement>): void => {
     if (!isDragging) return
+    e.preventDefault()
 
     viewmodel.position$.next({
       x: e.clientX - startPosition.x,
@@ -63,11 +65,36 @@ export const ContentPane: React.FC = () => {
     }
   }, [])
 
+  // Global mouse events for better drag handling
+  React.useEffect(() => {
+    if (!isDragging) return
+
+    const handleGlobalMouseMove = (e: MouseEvent): void => {
+      e.preventDefault()
+      viewmodel.position$.next({
+        x: e.clientX - startPosition.x,
+        y: e.clientY - startPosition.y,
+      })
+    }
+
+    const handleGlobalMouseUp = (): void => {
+      setIsDragging(false)
+    }
+
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+  }, [isDragging, startPosition.x, startPosition.y, viewmodel])
+
   return (
     <div
       ref={containerRef}
       onWheel={onWheel}
-      className="relative flex h-full w-full items-center justify-center"
+      className="relative flex h-full w-full min-h-0 overflow-hidden items-center justify-center"
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
@@ -82,11 +109,11 @@ export const ContentPane: React.FC = () => {
 
       {!isLoading && content && (
         <div
-          className="svg-container max-h-full max-w-full"
+          className="svg-container pointer-events-none select-none"
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
             transformOrigin: 'center center',
-            transition: 'transform 100ms ease-in-out',
+            transition: isDragging ? 'none' : 'transform 100ms ease-in-out',
           }}
           dangerouslySetInnerHTML={{ __html: content }}
         />

@@ -4,6 +4,8 @@
     display: flex;
     justify-content: center;
     padding-bottom: 2rem;
+    height: 100%;
+    overflow: hidden;
   }
 
   .f-vfp-literal {
