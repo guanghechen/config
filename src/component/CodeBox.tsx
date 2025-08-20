@@ -1,20 +1,15 @@
 import React from 'react'
 
-interface ICodeBoxProps {
+interface IProps {
   readonly value: string
-  readonly onChange: (value: string) => void
   readonly placeholder?: string
   readonly description?: string
   readonly className?: string
+  readonly onChange: (value: string) => void
 }
 
-export const CodeBox: React.FC<ICodeBoxProps> = ({
-  value,
-  onChange,
-  placeholder,
-  description,
-  className,
-}) => {
+export const CodeBox: React.FC<IProps> = props => {
+  const { value, placeholder, description, className, onChange } = props
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
   const adjustHeight = React.useCallback(() => {
