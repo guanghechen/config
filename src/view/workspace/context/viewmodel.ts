@@ -43,6 +43,7 @@ export class WorkspaceViewViewModel extends ViewModel {
   public readonly filepathDirtyTick$: IState<number>
   public readonly revealTick$: IState<number>
   public readonly workspacesDirtyTick$: IState<number>
+  public readonly filetreeDirtyTick$: IState<number>
 
   public readonly mainScrollableContainer$: IState<HTMLDivElement | null>
 
@@ -77,6 +78,7 @@ export class WorkspaceViewViewModel extends ViewModel {
     const filepathDirtyTick$ = new State<number>(0)
     const revealTick$ = new State<number>(0)
     const workspacesDirtyTick$ = new State<number>(0)
+    const filetreeDirtyTick$ = new State<number>(0)
 
     const mainScrollableContainer$ = new State<HTMLDivElement | null>(null)
 
@@ -92,6 +94,7 @@ export class WorkspaceViewViewModel extends ViewModel {
     this.filepathDirtyTick$ = filepathDirtyTick$
     this.revealTick$ = revealTick$
     this.workspacesDirtyTick$ = workspacesDirtyTick$
+    this.filetreeDirtyTick$ = filetreeDirtyTick$
     this.mainScrollableContainer$ = mainScrollableContainer$
     this.updateSidebarWidthDebounced = debounce(function (nextWidth: number): void {
       sidebarWidth$.next(nextWidth)
@@ -99,15 +102,11 @@ export class WorkspaceViewViewModel extends ViewModel {
 
     workspace$.subscribe(
       new Subscriber({
-        onNext: value => {
-          if (value === null) return
-
-          const workspaces = workspaces$.getSnapshot()
-          if (workspaces.length === 0) return
-
-          if (workspaces.some(item => item.tag === value)) return
-          filepath$.next(null)
-          workspace$.next(workspaces[0].tag)
+        onNext: (value, prevValue) => {
+          if (value !== prevValue) {
+            filepath$.next(null)
+            filetreeDirtyTick$.setState(tick => tick + 1)
+          }
         },
       }),
     )
@@ -205,6 +204,11 @@ export class WorkspaceViewViewModel extends ViewModel {
   public markWorkspaceDirty = (): void => {
     const tick: number = this.workspacesDirtyTick$.getSnapshot()
     this.workspacesDirtyTick$.next(tick + 1)
+  }
+
+  public markFiletreeDirty = (): void => {
+    const tick: number = this.filetreeDirtyTick$.getSnapshot()
+    this.filetreeDirtyTick$.next(tick + 1)
   }
 
   public toggleBothSidebarAndTopbar = (): void => {

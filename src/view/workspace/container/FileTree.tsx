@@ -66,10 +66,11 @@ const SideEffect: React.FC<{ viewmodel: FileTreeViewModel }> = props => {
   const workspaceVM = useWorkspaceViewmodel()
   const sidebarVisible: boolean = useStateValue<boolean>(workspaceVM.sidebarVisible$)
   const revealTick: number = useStateValue<number>(workspaceVM.revealTick$)
+  const filetreeDirtyTick: number = useStateValue<number>(workspaceVM.filetreeDirtyTick$)
 
   const filepath: string | null = useStateValue(workspaceVM.filepath$)
   const workspace: string | null = useStateValue(workspaceVM.workspace$)
-  const { files } = useGetWorkspaceFiles(workspace, 0)
+  const { files } = useGetWorkspaceFiles(workspace, filetreeDirtyTick)
 
   React.useEffect(() => {
     viewmodel.currentFilepath$.next(filepath)

@@ -15,10 +15,6 @@ import { WorkspaceViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/workspace'
 
-interface ISideEffectProps {
-  readonly viewmodel: WorkspaceViewViewModel
-}
-
 export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const { workspace_name } = useParams<{ workspace_name?: string }>()
   const viewmodel: WorkspaceViewViewModel | null = useSingleton<WorkspaceViewViewModel>(() => {
@@ -52,7 +48,7 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
       <WorkspaceViewContextType.Provider value={context}>
         {props.children}
       </WorkspaceViewContextType.Provider>
-      <SideEffect viewmodel={viewmodel} />
+      <SideEffect viewmodel={viewmodel} workspace={workspace_name ?? null} />
     </React.Fragment>
   )
 }
@@ -60,12 +56,17 @@ WorkspaceViewProvider.displayName = 'WorkspaceViewProvider'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
+interface ISideEffectProps {
+  readonly viewmodel: WorkspaceViewViewModel
+  readonly workspace: string | null
+}
+
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel } = props
+  const { viewmodel, workspace } = props
 
   usePersistent(viewmodel)
   useHMR(viewmodel)
-  useSyncProps(viewmodel)
+  useSyncProps(viewmodel, workspace)
   useMermaid()
 
   return <React.Fragment />
@@ -153,33 +154,33 @@ const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
   }, [viewmodel])
 }
 
-const useSyncProps = (viewmodel: WorkspaceViewViewModel): void => {
+const useSyncProps = (viewmodel: WorkspaceViewViewModel, workspace: string | null): void => {
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
   const { workspaces } = useGetWorkspaces(workspacesDirtyTick)
   const filepath: string | null = useStateValue(viewmodel.filepath$)
-  const workspace: string | null = useStateValue(viewmodel.workspace$)
-  const previousWorkspaceRef = React.useRef<string | null>(workspace)
 
   React.useEffect(() => {
     viewmodel.workspaces$.next(workspaces)
   }, [viewmodel, workspaces])
 
   React.useEffect(() => {
-    const usp = new URLSearchParams(window.location.search)
-    usp.delete('workspace')
-    usp.delete('filepath')
-
-    if (filepath) usp.set('filepath', encodeURIComponent(filepath))
-    const newUrl = `${window.location.pathname}?${usp.toString()}`
-    window.history.replaceState(null, '', newUrl)
-  }, [filepath])
-
-  React.useEffect(() => {
-    if (previousWorkspaceRef.current !== workspace) {
-      previousWorkspaceRef.current = workspace
+    if (workspace !== viewmodel.workspace$.getSnapshot()) {
+      viewmodel.workspace$.next(workspace)
       viewmodel.filepath$.next(null)
     }
   }, [viewmodel, workspace])
+
+  React.useEffect(() => {
+    const usp = new URLSearchParams(window.location.search)
+    usp.delete('workspace')
+    usp.delete('filepath')
+    if (filepath) usp.set('filepath', encodeURIComponent(filepath))
+
+    const pathname: string = window.location.pathname
+    const search: string = usp.toString()
+    const nextUrl: string = search ? `${pathname}?${usp.toString()}` : pathname
+    window.history.replaceState(null, '', nextUrl)
+  }, [filepath])
 }
 
 const useMermaid = (): void => {

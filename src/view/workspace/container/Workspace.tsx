@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { IWorkspaceItem } from '../context'
 import { useWorkspaceViewmodel } from '../context'
 
@@ -8,6 +9,7 @@ export const Workspace: React.FC = () => {
   const viewmodelVM = useWorkspaceViewmodel()
   const currentWorkspace = useStateValue(viewmodelVM.workspace$)
   const workspaces = useStateValue(viewmodelVM.workspaces$)
+  const navigate = useNavigate()
 
   const [isEditing, setIsEditing] = React.useState(false)
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -28,10 +30,19 @@ export const Workspace: React.FC = () => {
 
   const onWorkspaceChange = React.useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>): void => {
-      viewmodelVM.workspace$.setState(() => event.target.value)
+      const selectedWorkspace = event.target.value
       setIsEditing(false)
+
+      // Navigate to the new workspace route instead of directly setting state
+      if (selectedWorkspace) {
+        viewmodelVM.workspace$.next(selectedWorkspace)
+        void navigate(`/ws/${selectedWorkspace}`)
+      } else {
+        viewmodelVM.workspace$.next(null)
+        void navigate('/ws')
+      }
     },
-    [viewmodelVM],
+    [viewmodelVM.workspace$, navigate],
   )
 
   return (
