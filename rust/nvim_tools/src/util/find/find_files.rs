@@ -34,17 +34,6 @@ pub struct FindFilesOptions {
     pub exclude_patterns: String,
 }
 
-fn normalize_path_separators(pattern: &str) -> String {
-    #[cfg(windows)]
-    {
-        pattern.replace("[/\\\\]", "\\\\")
-    }
-    #[cfg(not(windows))]
-    {
-        pattern.replace("[/\\\\]", "/")
-    }
-}
-
 pub fn find_files(
     options: &FindFilesOptions,
 ) -> Result<FindFilesSucceedResult, FindFilesFailedResult> {
@@ -53,7 +42,7 @@ pub fn find_files(
     let flag_case_sensitive: bool = options.flag_case_sensitive;
     let flag_gitignore: bool = options.flag_gitignore;
     let flag_regex: bool = options.flag_regex;
-    let search_pattern = normalize_path_separators(&options.search_pattern);
+    let search_pattern: &str = &options.search_pattern;
     let search_paths: Vec<String> = string::parse_comma_list(&options.search_paths);
     let exclude_patterns: Vec<String> = string::parse_comma_list(&options.exclude_patterns);
 
@@ -95,9 +84,9 @@ pub fn find_files(
 
         if !options.search_pattern.is_empty() {
             if flag_regex {
-                cmd.args(["--regex", &search_pattern]);
+                cmd.args(["--regex", search_pattern]);
             } else {
-                cmd.args(["--fixed-strings", &search_pattern]);
+                cmd.args(["--fixed-strings", search_pattern]);
             }
         }
 
