@@ -4,9 +4,8 @@ import type { IMarkdownFileData } from '@/hook/api/file'
 import { type IMarkdownViewData, ModeEnum } from './types'
 
 interface IProps {
-  readonly filepath?: string | null
-  readonly tocActivatedIdentifier?: string | null
-  readonly specifiedTocActivatedIdentifier?: string | null
+  readonly workspace: string | null
+  readonly filepath: string
   readonly mode?: ModeEnum
 }
 
@@ -15,20 +14,31 @@ const DEFAULT_DATA: IMarkdownViewData = {
 }
 
 export class MarkdownViewViewModel extends ViewModel {
-  public readonly filepath$: IState<string | null>
+  public readonly workspace$: IState<string | null>
+  public readonly filepath$: IState<string>
+  public readonly mode$: IState<ModeEnum>
+
+  public readonly data$: IState<IMarkdownFileData | null>
   public readonly tocActivatedIdentifier$: IState<string | null>
   public readonly specifiedTocActivatedIdentifier$: IState<string | null>
-  public readonly mode$: IState<ModeEnum>
-  public readonly data$: IState<IMarkdownFileData | null>
 
-  public static fromData(data: Partial<IMarkdownViewData> | undefined): MarkdownViewViewModel {
-    const { mode }: IMarkdownViewData = this.normalize(DEFAULT_DATA, data)
-    return new MarkdownViewViewModel({ mode })
+  constructor(props: IProps) {
+    super()
+
+    const { workspace, filepath, mode = DEFAULT_DATA.mode } = props
+
+    this.workspace$ = new State<string | null>(workspace)
+    this.filepath$ = new State<string>(filepath)
+    this.mode$ = new State<ModeEnum>(mode)
+
+    this.data$ = new State<IMarkdownFileData | null>(null)
+    this.tocActivatedIdentifier$ = new State<string | null>(null)
+    this.specifiedTocActivatedIdentifier$ = new State<string | null>(null)
   }
 
   public static normalize(
-    base: IMarkdownViewData,
     data: Partial<IMarkdownViewData> | undefined,
+    base: IMarkdownViewData = DEFAULT_DATA,
   ): IMarkdownViewData {
     const { mode } = data || {}
     const normalizedMode: ModeEnum =
@@ -39,26 +49,14 @@ export class MarkdownViewViewModel extends ViewModel {
     return normalizedData
   }
 
-  constructor(props: IProps = {}) {
-    super()
-    this.filepath$ = new State<string | null>(props.filepath ?? null)
-    this.tocActivatedIdentifier$ = new State<string | null>(props.tocActivatedIdentifier ?? null)
-    this.specifiedTocActivatedIdentifier$ = new State<string | null>(
-      props.specifiedTocActivatedIdentifier ?? null,
-    )
-    this.mode$ = new State<ModeEnum>(props.mode ?? ModeEnum.CONTENT)
-    this.data$ = new State<IMarkdownFileData | null>(null)
-  }
-
   public dump = (): IMarkdownViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
-    return {
-      mode,
-    }
+    return { mode }
   }
 
   public load = (data: Partial<IMarkdownViewData> | undefined): void => {
-    const { mode }: IMarkdownViewData = MarkdownViewViewModel.normalize(this.dump(), data)
+    const base: IMarkdownViewData = this.dump()
+    const { mode }: IMarkdownViewData = MarkdownViewViewModel.normalize(data, base)
     this.mode$.next(mode)
   }
 }

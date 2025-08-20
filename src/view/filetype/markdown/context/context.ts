@@ -6,7 +6,10 @@ export interface IMarkdownViewContext {
 }
 
 export const MarkdownViewContextType = React.createContext<IMarkdownViewContext>({
-  viewmodel: new MarkdownViewViewModel(),
+  viewmodel: new MarkdownViewViewModel({
+    workspace: null,
+    filepath: '/dev/null',
+  }),
 })
 
 export const useMarkdownViewViewModel = (): MarkdownViewViewModel => {

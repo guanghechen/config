@@ -13,30 +13,23 @@ const storageKey: string = '#/view/filetype/markdown'
 
 interface IProps {
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
-  readonly tocActivatedIdentifier?: string | null
-  readonly specifiedTocActivatedIdentifier?: string | null
   readonly mode?: ModeEnum
   readonly children: React.ReactNode
 }
 
 export const MarkdownViewProvider: React.FC<IProps> = props => {
-  const {
-    workspace,
-    filepath,
-    filepathDirtyTick,
-    tocActivatedIdentifier,
-    specifiedTocActivatedIdentifier,
-    mode,
-    children,
-  } = props
+  const { workspace, filepath, filepathDirtyTick, mode, children } = props
   const viewmodel: MarkdownViewViewModel | null = useSingleton<MarkdownViewViewModel>(() => {
-    const initialData: Partial<IMarkdownViewData> = JSON.parse(
+    const rawViewData: Partial<IMarkdownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
-    return MarkdownViewViewModel.fromData({
-      mode: mode ?? initialData.mode,
+    const viewData: IMarkdownViewData = MarkdownViewViewModel.normalize(rawViewData)
+    return new MarkdownViewViewModel({
+      workspace,
+      filepath,
+      mode: mode ?? viewData.mode,
     })
   })
   const context: IMarkdownViewContext | null = React.useMemo<IMarkdownViewContext | null>(
@@ -56,8 +49,6 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
         workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
-        tocActivatedIdentifier={tocActivatedIdentifier}
-        specifiedTocActivatedIdentifier={specifiedTocActivatedIdentifier}
         mode={mode}
       />
     </React.Fragment>
@@ -71,24 +62,65 @@ MarkdownViewProvider.displayName = 'MarkdownViewProvider'
 interface ISideEffectProps {
   readonly viewmodel: MarkdownViewViewModel
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
-  readonly tocActivatedIdentifier?: string | null
-  readonly specifiedTocActivatedIdentifier?: string | null
   readonly mode?: ModeEnum
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const {
-    viewmodel,
-    workspace,
-    filepath,
-    filepathDirtyTick,
-    tocActivatedIdentifier,
-    specifiedTocActivatedIdentifier,
-    mode,
-  } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, mode } = props
 
+  usePersistent(viewmodel)
+  useSyncProps(viewmodel, workspace, filepath, mode)
+  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+
+  return <React.Fragment />
+}
+
+SideEffect.displayName = 'MarkdownViewSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const usePersistent = (viewmodel: MarkdownViewViewModel): void => {
+  React.useEffect(() => {
+    const computed = Computed.fromObservables([viewmodel.mode$], () => {
+      const data: IMarkdownViewData = viewmodel.dump()
+      window.localStorage.setItem(storageKey, JSON.stringify(data))
+    })
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+}
+
+const useSyncProps = (
+  viewmodel: MarkdownViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  mode: ModeEnum | undefined,
+): void => {
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.workspace$.next(workspace)
+  }, [viewmodel, workspace])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.filepath$.next(filepath)
+  }, [viewmodel, filepath])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
+  }, [viewmodel, mode])
+}
+
+const useData = (
+  viewmodel: MarkdownViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  filepathDirtyTick: number,
+): void => {
   const { data, error } = useFileResult<IMarkdownFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
@@ -103,38 +135,4 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       viewmodel.data$.next(null)
     }
   }, [data, error, viewmodel])
-
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.mode$], () => {
-      const data: IMarkdownViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath ?? null)
-  }, [viewmodel, filepath])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.tocActivatedIdentifier$.next(tocActivatedIdentifier ?? null)
-  }, [viewmodel, tocActivatedIdentifier])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.specifiedTocActivatedIdentifier$.next(specifiedTocActivatedIdentifier ?? null)
-  }, [viewmodel, specifiedTocActivatedIdentifier])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
-  }, [viewmodel, mode])
-
-  return <React.Fragment />
 }
-
-SideEffect.displayName = 'MarkdownViewSideEffect'
