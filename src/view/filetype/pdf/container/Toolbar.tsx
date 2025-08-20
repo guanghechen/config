@@ -3,6 +3,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import {
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ViewPageByPageIcon,
@@ -14,15 +15,18 @@ import { usePdfViewViewModel } from '../context'
 
 export const Toolbar: React.FC = () => {
   const viewmodel = usePdfViewViewModel()
-  const pages = useStateValue(viewmodel.pages$)
-  const pageno = useStateValue(viewmodel.pageno$)
-  const scale = useStateValue(viewmodel.scale$)
-  const multiview = useStateValue(viewmodel.multiview$)
+  const pageTotal: number = useStateValue(viewmodel.pageTotal$)
+  const pageNo: number = useStateValue(viewmodel.pageNo$)
+  const scale: number = useStateValue(viewmodel.scale$)
+  const multiview: boolean = useStateValue(viewmodel.multiview$)
+
+  const [isViewModeOpen, setIsViewModeOpen] = React.useState<boolean>(false)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
 
   const onGotoPage = useEventCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = parseInt(e.target.value)
-    if (!isNaN(value) && value >= 1 && value <= pages) {
-      viewmodel.pageno$.next(value)
+    if (!isNaN(value) && value >= 1 && value <= pageTotal) {
+      viewmodel.pageNo$.next(value)
     }
   })
 
@@ -39,12 +43,95 @@ export const Toolbar: React.FC = () => {
     viewmodel.scale$.setState(prev => Math.max(prev - 0.2, 0.5))
   })
 
-  const onViewModeToggle = useEventCallback((): void => {
-    viewmodel.multiview$.setState(prev => !prev)
-  })
+  const toggleViewModeDropdown = React.useCallback(() => {
+    setIsViewModeOpen(prev => !prev)
+  }, [])
+
+  const handleViewModeChange = React.useCallback(
+    (mode: boolean) => {
+      viewmodel.multiview$.next(mode)
+      setIsViewModeOpen(false)
+    },
+    [viewmodel],
+  )
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsViewModeOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   return (
     <div className="flex items-center justify-end rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-700 dark:bg-gray-800">
+      {/* Multi View Dropdown */}
+      <div className="relative mr-4" ref={dropdownRef}>
+        <button
+          className={cn(
+            'flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm',
+            'text-gray-700 shadow-sm hover:bg-gray-50',
+            'dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700',
+            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50',
+            'transition-colors',
+          )}
+          onClick={toggleViewModeDropdown}
+          aria-label="View mode"
+          aria-expanded={isViewModeOpen}
+        >
+          {multiview ? (
+            <ViewStreamIcon className="h-4 w-4" />
+          ) : (
+            <ViewPageByPageIcon className="h-4 w-4" />
+          )}
+          <span>{multiview ? 'Multi View' : 'Single View'}</span>
+          <ChevronDownIcon
+            className={cn('h-4 w-4 transition-transform', isViewModeOpen && 'rotate-180')}
+          />
+        </button>
+
+        {isViewModeOpen && (
+          <div
+            className={cn(
+              'absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded-lg',
+              'border border-gray-200 bg-white shadow-lg',
+              'dark:border-gray-600 dark:bg-gray-800',
+            )}
+          >
+            <button
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
+                'text-gray-700 hover:bg-gray-50',
+                'dark:text-gray-300 dark:hover:bg-gray-700',
+                !multiview && 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+              )}
+              onClick={() => handleViewModeChange(false)}
+            >
+              <ViewPageByPageIcon className="h-4 w-4" />
+              <span>Single View</span>
+            </button>
+            <button
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
+                'text-gray-700 hover:bg-gray-50',
+                'dark:text-gray-300 dark:hover:bg-gray-700',
+                multiview && 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+              )}
+              onClick={() => handleViewModeChange(true)}
+            >
+              <ViewStreamIcon className="h-4 w-4" />
+              <span>Multi View</span>
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="flex select-none items-center space-x-2 md:mr-2">
         <button
           className={cn(
@@ -53,8 +140,8 @@ export const Toolbar: React.FC = () => {
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
           )}
-          onClick={() => viewmodel.pageno$.setState(prev => Math.max(prev - 1, 1))}
-          disabled={pageno <= 1}
+          onClick={() => viewmodel.pageNo$.setState(prev => Math.max(prev - 1, 1))}
+          disabled={pageNo <= 1}
           aria-label="Previous page"
         >
           <ChevronLeftIcon />
@@ -62,17 +149,17 @@ export const Toolbar: React.FC = () => {
         <div className="flex items-center space-x-2">
           <input
             type="number"
-            value={pageno}
+            value={pageNo}
             onChange={onGotoPage}
             min={1}
-            max={pages}
+            max={pageTotal}
             className={cn(
               'w-12 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600',
               'rounded px-2 py-1 text-sm text-center focus:outline-hidden focus:ring-2 focus:ring-blue-500',
             )}
             aria-label="Current page"
           />
-          <span className="text-sm text-gray-500 dark:text-gray-400">of {pages}</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">of {pageTotal}</span>
         </div>
         <button
           className={cn(
@@ -81,8 +168,8 @@ export const Toolbar: React.FC = () => {
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
           )}
-          onClick={() => viewmodel.pageno$.setState(prev => Math.min(prev + 1, pages))}
-          disabled={pageno >= pages}
+          onClick={() => viewmodel.pageNo$.setState(prev => Math.min(prev + 1, pageTotal))}
+          disabled={pageNo >= pageTotal}
           aria-label="Next page"
         >
           <ChevronRightIcon />
@@ -125,20 +212,6 @@ export const Toolbar: React.FC = () => {
           aria-label="Zoom in"
         >
           <ZoomInIcon />
-        </button>
-        <div className="mx-2 h-10 border-r border-gray-300 dark:border-gray-600" />
-        <button
-          className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
-            'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
-            'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
-            multiview && 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-          )}
-          onClick={onViewModeToggle}
-          aria-label={multiview ? 'Switch to single page view' : 'Switch to all pages view'}
-          title={multiview ? 'Switch to single page view' : 'Switch to all pages view'}
-        >
-          {multiview ? <ViewStreamIcon /> : <ViewPageByPageIcon />}
         </button>
       </div>
     </div>

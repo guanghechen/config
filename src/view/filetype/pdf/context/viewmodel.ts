@@ -1,95 +1,159 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IPdfFileData } from '@/hook/api/file'
 import type { IPdfViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
+  readonly workspace: string | null
   readonly filepath: string
   readonly mode?: ModeEnum
-  readonly pages?: number
-  readonly pageno?: number
   readonly scale?: number
   readonly multiview?: boolean
+  readonly pageNo?: number
+  readonly pageTotal?: number
 }
 
 const DEFAULT_DATA: IPdfViewData = {
   mode: ModeEnum.CONTENT,
   scale: 1,
   multiview: false,
+  pageNo: 1,
+  pageTotal: 1,
 }
 
 export class PdfViewViewModel extends ViewModel {
+  public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
-  public readonly pages$: IState<number>
-  public readonly pageno$: IState<number>
   public readonly scale$: IState<number>
   public readonly multiview$: IState<boolean>
-  public readonly data$: IState<IPdfFileData | null>
 
-  public static fromData(data: Partial<IPdfViewData> | undefined): PdfViewViewModel {
-    const { mode, scale, multiview }: IPdfViewData = this.normalize(DEFAULT_DATA, data)
-    return new PdfViewViewModel({
-      filepath: '',
-      mode,
-      scale,
-      multiview,
-    })
-  }
-
-  public static normalize(
-    base: IPdfViewData,
-    data: Partial<IPdfViewData> | undefined,
-  ): IPdfViewData {
-    const { mode, scale, multiview } = data || {}
-    const normalizedMode: ModeEnum = typeof mode === 'number' ? mode : base.mode
-    const normalizedScale: number = typeof scale === 'number' && scale > 0 ? scale : base.scale
-    const normalizedMultiview: boolean = typeof multiview === 'boolean' ? multiview : base.multiview
-    const normalizedData: IPdfViewData = {
-      mode: normalizedMode,
-      scale: normalizedScale,
-      multiview: normalizedMultiview,
-    }
-    return normalizedData
-  }
+  public readonly pageNo$: IState<number>
+  public readonly pageTotal$: IState<number>
 
   constructor(props: IProps) {
     super()
 
     const {
+      workspace,
       filepath,
       mode = DEFAULT_DATA.mode,
-      pages = 1,
-      pageno = 1,
       scale = DEFAULT_DATA.scale,
       multiview = DEFAULT_DATA.multiview,
+      pageNo = DEFAULT_DATA.pageNo,
+      pageTotal = DEFAULT_DATA.pageTotal,
     } = props
 
+    this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
-    this.pages$ = new State<number>(pages)
-    this.pageno$ = new State<number>(pageno)
     this.scale$ = new State<number>(scale)
     this.multiview$ = new State<boolean>(multiview)
-    this.data$ = new State<IPdfFileData | null>(null)
+
+    this.pageNo$ = new State<number>(pageNo)
+    this.pageTotal$ = new State<number>(pageTotal)
+  }
+
+  public static normalize(
+    data: Partial<IPdfViewData> | undefined,
+    base: IPdfViewData = DEFAULT_DATA,
+  ): IPdfViewData {
+    const { mode, scale, multiview, pageNo, pageTotal } = data || {}
+    const normalizedMode: ModeEnum =
+      typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
+    const normalizedScale: number = typeof scale === 'number' && scale > 0 ? scale : base.scale
+    const normalizedMultiview: boolean = typeof multiview === 'boolean' ? multiview : base.multiview
+    const normalizedPageno: number =
+      typeof pageNo === 'number' && pageNo >= 1 && Number.isInteger(pageNo) ? pageNo : base.pageNo
+    const normalizedPageTotal: number =
+      typeof pageTotal === 'number' && pageTotal >= 1 && Number.isInteger(pageTotal)
+        ? pageTotal
+        : base.pageTotal
+    const normalizedData: IPdfViewData = {
+      mode: normalizedMode,
+      scale: normalizedScale,
+      multiview: normalizedMultiview,
+      pageNo: normalizedPageno,
+      pageTotal: normalizedPageTotal,
+    }
+    return normalizedData
   }
 
   public dump = (): IPdfViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
     const scale: number = this.scale$.getSnapshot()
     const multiview: boolean = this.multiview$.getSnapshot()
-    return {
-      mode,
-      scale,
-      multiview,
-    }
+    const pageNo: number = this.pageNo$.getSnapshot()
+    const pageTotal: number = this.pageTotal$.getSnapshot()
+    return { mode, scale, multiview, pageNo, pageTotal }
   }
 
   public load = (data: Partial<IPdfViewData> | undefined): void => {
-    const { mode, scale, multiview }: IPdfViewData = PdfViewViewModel.normalize(this.dump(), data)
+    const base: IPdfViewData = this.dump()
+    const { mode, scale, multiview, pageNo, pageTotal }: IPdfViewData = PdfViewViewModel.normalize(
+      data,
+      base,
+    )
     this.mode$.next(mode)
     this.scale$.next(scale)
     this.multiview$.next(multiview)
+    this.pageNo$.next(pageNo)
+    this.pageTotal$.next(pageTotal)
+  }
+
+  public setPageTotal = (total: number): void => {
+    if (total >= 1 && Number.isInteger(total)) {
+      this.pageTotal$.next(total)
+      // Ensure current page doesn't exceed total pages
+      const currentPage = this.pageNo$.getSnapshot()
+      if (currentPage > total) {
+        this.pageNo$.next(total)
+      }
+    }
+  }
+
+  public setPageNo = (pageNo: number): void => {
+    const total = this.pageTotal$.getSnapshot()
+    if (pageNo >= 1 && pageNo <= total && Number.isInteger(pageNo)) {
+      this.pageNo$.next(pageNo)
+    }
+  }
+
+  public goToNextPage = (): boolean => {
+    const current = this.pageNo$.getSnapshot()
+    const total = this.pageTotal$.getSnapshot()
+    if (current < total) {
+      this.pageNo$.next(current + 1)
+      return true
+    }
+    return false
+  }
+
+  public goToPreviousPage = (): boolean => {
+    const current = this.pageNo$.getSnapshot()
+    if (current > 1) {
+      this.pageNo$.next(current - 1)
+      return true
+    }
+    return false
+  }
+
+  public goToFirstPage = (): void => {
+    this.pageNo$.next(1)
+  }
+
+  public goToLastPage = (): void => {
+    const total = this.pageTotal$.getSnapshot()
+    this.pageNo$.next(total)
+  }
+
+  public isFirstPage = (): boolean => {
+    return this.pageNo$.getSnapshot() === 1
+  }
+
+  public isLastPage = (): boolean => {
+    const current = this.pageNo$.getSnapshot()
+    const total = this.pageTotal$.getSnapshot()
+    return current === total
   }
 }

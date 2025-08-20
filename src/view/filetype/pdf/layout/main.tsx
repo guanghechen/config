@@ -4,12 +4,7 @@ import React from 'react'
 import { ModeEnum, usePdfViewViewModel } from '../context'
 import { ContentPane } from '../pane/content'
 
-interface IProps {
-  readonly workspace: string | null
-}
-
-export const Main: React.FC<IProps> = props => {
-  const { workspace } = props
+export const Main: React.FC = () => {
   const viewmodel = usePdfViewViewModel()
   const mode = useStateValue(viewmodel.mode$)
 
@@ -17,7 +12,7 @@ export const Main: React.FC<IProps> = props => {
     <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="pdf">
       {(mode & ModeEnum.CONTENT) !== 0 && (
         <div className="f-vf-pane f-vfp-content">
-          <ContentPane workspace={workspace} />
+          <ContentPane />
         </div>
       )}
     </div>

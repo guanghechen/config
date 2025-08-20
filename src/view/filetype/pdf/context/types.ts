@@ -9,4 +9,6 @@ export interface IPdfViewData {
   readonly mode: ModeEnum
   readonly scale: number
   readonly multiview: boolean
+  readonly pageNo: number
+  readonly pageTotal: number
 }

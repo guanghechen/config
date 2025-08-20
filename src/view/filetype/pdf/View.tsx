@@ -21,7 +21,7 @@ export class PdfView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <Composer workspace={workspace} />
+        <Composer />
       </PdfViewProvider>
     )
   }
