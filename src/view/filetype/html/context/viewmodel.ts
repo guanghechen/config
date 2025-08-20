@@ -1,11 +1,11 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IHtmlFileData } from '@/hook/api/file'
 import type { IHtmlViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
-  readonly filepath?: string | null
+  readonly workspace: string | null
+  readonly filepath: string
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
 }
@@ -16,62 +16,54 @@ const DEFAULT_DATA: IHtmlViewData = {
 }
 
 export class HtmlViewViewModel extends ViewModel {
-  public readonly filepath$: IState<string | null>
+  public readonly workspace$: IState<string | null>
+  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
-  public readonly data$: IState<IHtmlFileData | null>
   public readonly enableTailwindcss$: IState<boolean>
 
-  public static fromData(data: Partial<IHtmlViewData> | undefined): HtmlViewViewModel {
-    const { mode, enableTailwindcss }: IHtmlViewData = this.normalize(DEFAULT_DATA, data)
-    return new HtmlViewViewModel({
-      filepath: null,
-      mode,
-      enableTailwindcss,
-    })
-  }
+  public readonly content$: IState<string | null>
 
-  public static normalize(
-    base: IHtmlViewData,
-    data: Partial<IHtmlViewData> | undefined,
-  ): IHtmlViewData {
-    const { mode, enableTailwindcss } = data || {}
-    const normalizedMode: ModeEnum = typeof mode === 'number' ? mode : base.mode
-    const normalizedData: IHtmlViewData = {
-      mode: normalizedMode,
-      enableTailwindcss: !!enableTailwindcss,
-    }
-    return normalizedData
-  }
-
-  constructor(props: IProps = {}) {
+  constructor(props: IProps) {
     super()
 
     const {
-      filepath = null,
+      workspace,
+      filepath,
       mode = DEFAULT_DATA.mode,
       enableTailwindcss = DEFAULT_DATA.enableTailwindcss,
     } = props
 
-    this.filepath$ = new State<string | null>(filepath)
+    this.workspace$ = new State<string | null>(workspace)
+    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.enableTailwindcss$ = new State<boolean>(enableTailwindcss)
-    this.data$ = new State<IHtmlFileData | null>(null)
+
+    this.content$ = new State<string | null>(null)
+  }
+
+  public static normalize(
+    data: Partial<IHtmlViewData> | undefined,
+    base: IHtmlViewData = DEFAULT_DATA,
+  ): IHtmlViewData {
+    const { mode, enableTailwindcss } = data || {}
+    const normalizedMode: ModeEnum =
+      typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
+    const normalizedData: IHtmlViewData = {
+      mode: normalizedMode,
+      enableTailwindcss: enableTailwindcss ?? base.enableTailwindcss,
+    }
+    return normalizedData
   }
 
   public dump = (): IHtmlViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
     const enableTailwindcss: boolean = this.enableTailwindcss$.getSnapshot()
-    return {
-      mode,
-      enableTailwindcss,
-    }
+    return { mode, enableTailwindcss }
   }
 
   public load = (data: Partial<IHtmlViewData> | undefined): void => {
-    const { mode, enableTailwindcss }: IHtmlViewData = HtmlViewViewModel.normalize(
-      this.dump(),
-      data,
-    )
+    const base: IHtmlViewData = this.dump()
+    const { mode, enableTailwindcss }: IHtmlViewData = HtmlViewViewModel.normalize(data, base)
     this.mode$.next(mode)
     this.enableTailwindcss$.next(enableTailwindcss)
   }

@@ -6,7 +6,10 @@ export interface IHtmlViewContext {
 }
 
 export const HtmlViewContextType = React.createContext<IHtmlViewContext>({
-  viewmodel: new HtmlViewViewModel(),
+  viewmodel: new HtmlViewViewModel({
+    workspace: null,
+    filepath: '/dev/null',
+  }),
 })
 
 export const useHtmlViewViewModel = (): HtmlViewViewModel => {

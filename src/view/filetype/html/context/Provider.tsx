@@ -23,12 +23,15 @@ interface IProps {
 export const HtmlViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mode, enableTailwindcss, children } = props
   const viewmodel: HtmlViewViewModel | null = useSingleton<HtmlViewViewModel>(() => {
-    const initialData: Partial<IHtmlViewData> = JSON.parse(
+    const rawViewData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
-    return HtmlViewViewModel.fromData({
-      mode: mode ?? initialData.mode,
-      enableTailwindcss: enableTailwindcss ?? initialData.enableTailwindcss,
+    const viewData: IHtmlViewData = HtmlViewViewModel.normalize(rawViewData)
+    return new HtmlViewViewModel({
+      workspace,
+      filepath,
+      mode: mode ?? viewData.mode,
+      enableTailwindcss: enableTailwindcss ?? viewData.enableTailwindcss,
     })
   })
   const context: IHtmlViewContext | null = React.useMemo<IHtmlViewContext | null>(
@@ -47,6 +50,7 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
         mode={mode}
+        enableTailwindcss={enableTailwindcss}
       />
     </React.Fragment>
   )
@@ -68,21 +72,18 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace, filepath, filepathDirtyTick, mode, enableTailwindcss } = props
 
-  const { data, error } = useFileResult<IHtmlFileData>(workspace, filepath, filepathDirtyTick)
+  usePersistent(viewmodel)
+  useSyncProps(viewmodel, workspace, filepath, mode, enableTailwindcss)
+  useData(viewmodel, workspace, filepath, filepathDirtyTick)
 
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
+  return <React.Fragment />
+}
 
-    if (data) {
-      viewmodel.data$.next(data)
-    } else if (error) {
-      viewmodel.data$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
-    } else {
-      viewmodel.data$.next(null)
-    }
-  }, [data, error, viewmodel])
+SideEffect.displayName = 'HtmlViewSideEffect'
 
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const usePersistent = (viewmodel: HtmlViewViewModel): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [viewmodel.mode$, viewmodel.enableTailwindcss$],
@@ -95,10 +96,23 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       computed.dispose()
     }
   }, [viewmodel])
+}
+
+const useSyncProps = (
+  viewmodel: HtmlViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  mode: ModeEnum | undefined,
+  enableTailwindcss: boolean | undefined,
+): void => {
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.workspace$.next(workspace)
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath ?? null)
+    viewmodel.filepath$.next(filepath)
   }, [viewmodel, filepath])
 
   React.useEffect(() => {
@@ -111,9 +125,27 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     viewmodel.enableTailwindcss$.next(
       enableTailwindcss ?? viewmodel.enableTailwindcss$.getSnapshot(),
     )
-  })
-
-  return <React.Fragment />
+  }, [viewmodel, enableTailwindcss])
 }
 
-SideEffect.displayName = 'HtmlViewSideEffect'
+const useData = (
+  viewmodel: HtmlViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  filepathDirtyTick: number,
+): void => {
+  const { data, error } = useFileResult<IHtmlFileData>(workspace, filepath, filepathDirtyTick)
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+
+    if (data) {
+      viewmodel.content$.next(data.content)
+    } else if (error) {
+      viewmodel.content$.next(null)
+      toast.error(typeof error === 'string' ? error : String(error))
+    } else {
+      viewmodel.content$.next(null)
+    }
+  }, [data, error, viewmodel])
+}
