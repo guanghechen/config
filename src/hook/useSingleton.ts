@@ -9,9 +9,12 @@ export const useSingleton = <T extends IDisposableSingleton>(fn: () => T): T | n
   const ref = React.useRef<T | null>(null)
   const [_, setTick] = React.useState<number>(0)
 
+  const fnRef = React.useRef<() => T>(fn)
+  fnRef.current = fn
+
   React.useEffect(() => {
     if (!ref.current) {
-      ref.current = fn()
+      ref.current = fnRef.current()
 
       const singleton: T = ref.current
       const name: string = singleton.name ?? singleton.constructor.name
@@ -30,7 +33,6 @@ export const useSingleton = <T extends IDisposableSingleton>(fn: () => T): T | n
       ref.current = null
       singleton.dispose()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return ref.current
