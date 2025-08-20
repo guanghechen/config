@@ -1,15 +1,15 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { ModeEnum, ViewModeEnum, useTextViewViewModel } from '../context'
+import { ContentModeEnum, ModeEnum, useTextViewViewModel } from '../context'
 
 export const ModeToggle: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
-  const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
+  const contentMode: ContentModeEnum = useStateValue(viewmodel.contentMode$)
 
   const showView: boolean = (mode & ModeEnum.CONTENT) !== 0
-  const showNav: boolean = showView && viewMode === ViewModeEnum.LIST
+  const showNav: boolean = showView && contentMode === ContentModeEnum.LIST
 
   return (
     <div className="fixed top-3 right-4 z-50">

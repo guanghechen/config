@@ -10,7 +10,7 @@ export enum ModeEnum {
   NAV = bit << 3,
 }
 
-export enum ViewModeEnum {
+export enum ContentModeEnum {
   ORIGINAL = 'original',
   LIST = 'list',
   GRAPH = 'graph',
@@ -24,6 +24,6 @@ export interface IChainPath {
 
 export interface ITextViewData {
   readonly mode: ModeEnum
-  readonly viewMode: ViewModeEnum
+  readonly contentMode: ContentModeEnum
   readonly transformConfig: ITextTransformConfig
 }

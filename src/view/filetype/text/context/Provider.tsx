@@ -8,7 +8,7 @@ import { validateTransformConfig } from '@/shared/util'
 import { transformTextToNodes } from '../util/transform'
 import type { ITextViewContext } from './context'
 import { TextViewContextType } from './context'
-import type { ITextViewData, ModeEnum, ViewModeEnum } from './types'
+import type { ContentModeEnum, ITextViewData, ModeEnum } from './types'
 import { TextViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/filetype/text'
@@ -18,12 +18,12 @@ interface IProps {
   readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
-  readonly viewMode?: ViewModeEnum
+  readonly contentMode?: ContentModeEnum
   readonly children: React.ReactNode
 }
 
 export const TextViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, viewMode, children } = props
+  const { workspace, filepath, filepathDirtyTick, mode, contentMode, children } = props
   const viewmodel: TextViewViewModel | null = useSingleton<TextViewViewModel>(() => {
     const rawViewData: Partial<ITextViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -34,7 +34,7 @@ export const TextViewProvider: React.FC<IProps> = props => {
       workspace,
       filepath,
       mode: mode ?? viewData.mode,
-      viewMode: viewMode ?? viewData.viewMode,
+      contentMode: contentMode ?? viewData.contentMode,
       transformConfig: viewData.transformConfig,
     })
   })
@@ -54,7 +54,7 @@ export const TextViewProvider: React.FC<IProps> = props => {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
         mode={mode}
-        viewMode={viewMode}
+        contentMode={contentMode}
       />
     </React.Fragment>
   )
@@ -70,14 +70,14 @@ interface ISideEffectProps {
   readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
-  readonly viewMode?: ViewModeEnum
+  readonly contentMode?: ContentModeEnum
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, viewMode } = props
+  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, contentMode } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode, viewMode)
+  useSyncProps(viewmodel, workspace, filepath, mode, contentMode)
   useData(viewmodel, workspace, filepath, filepathDirtyTick)
   useAutoTransform(viewmodel)
 
@@ -91,7 +91,7 @@ SideEffect.displayName = 'TextViewSideEffect'
 const usePersistent = (viewmodel: TextViewViewModel): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
-      [viewmodel.mode$, viewmodel.viewMode$, viewmodel.transformConfig$],
+      [viewmodel.mode$, viewmodel.contentMode$, viewmodel.transformConfig$],
       () => {
         const data: ITextViewData = viewmodel.dump()
         window.localStorage.setItem(storageKey, JSON.stringify(data))
@@ -108,7 +108,7 @@ const useSyncProps = (
   workspace: string | null,
   filepath: string,
   mode: ModeEnum | undefined,
-  viewMode: ViewModeEnum | undefined,
+  contentMode: ContentModeEnum | undefined,
 ): void => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
@@ -127,8 +127,8 @@ const useSyncProps = (
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
-    viewmodel.viewMode$.next(viewMode ?? viewmodel.viewMode$.getSnapshot())
-  }, [viewmodel, viewMode])
+    viewmodel.contentMode$.next(contentMode ?? viewmodel.contentMode$.getSnapshot())
+  }, [viewmodel, contentMode])
 }
 
 const useData = (

@@ -3,17 +3,17 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { useTextViewViewModel } from '../context'
-import { ViewModeEnum } from '../context/types'
+import { ContentModeEnum } from '../context/types'
 
-interface IViewModeOption {
-  readonly value: ViewModeEnum
+interface IContentModeOption {
+  readonly value: ContentModeEnum
   readonly label: string
   readonly icon: React.ReactNode
 }
 
-const VIEW_MODE_OPTIONS: ReadonlyArray<IViewModeOption> = [
+const CONTENT_MODE_OPTIONS: ReadonlyArray<IContentModeOption> = [
   {
-    value: ViewModeEnum.ORIGINAL,
+    value: ContentModeEnum.ORIGINAL,
     label: 'Original',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +27,7 @@ const VIEW_MODE_OPTIONS: ReadonlyArray<IViewModeOption> = [
     ),
   },
   {
-    value: ViewModeEnum.LIST,
+    value: ContentModeEnum.LIST,
     label: 'List',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@ const VIEW_MODE_OPTIONS: ReadonlyArray<IViewModeOption> = [
     ),
   },
   {
-    value: ViewModeEnum.GRAPH,
+    value: ContentModeEnum.GRAPH,
     label: 'Graph',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,31 +56,31 @@ const VIEW_MODE_OPTIONS: ReadonlyArray<IViewModeOption> = [
   },
 ] as const
 
-export const ViewModeDropdown: React.FC = () => {
+export const ContentMode: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
+  const contentMode: ContentModeEnum = useStateValue(viewmodel.contentMode$)
   const transformedNodes = useStateValue(viewmodel.records$)
   const [isOpen, setIsOpen] = React.useState<boolean>(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
   const isListDisabled: boolean = !transformedNodes || transformedNodes.length === 0
   const isGraphDisabled: boolean = !transformedNodes || transformedNodes.length === 0
-  const actualViewMode: ViewModeEnum =
-    (viewMode === ViewModeEnum.LIST && isListDisabled) ||
-    (viewMode === ViewModeEnum.GRAPH && isGraphDisabled)
-      ? ViewModeEnum.ORIGINAL
-      : viewMode
+  const actualContentMode: ContentModeEnum =
+    (contentMode === ContentModeEnum.LIST && isListDisabled) ||
+    (contentMode === ContentModeEnum.GRAPH && isGraphDisabled)
+      ? ContentModeEnum.ORIGINAL
+      : contentMode
 
-  const currentOption = VIEW_MODE_OPTIONS.find(option => option.value === viewMode)
+  const currentOption = CONTENT_MODE_OPTIONS.find(option => option.value === contentMode)
 
-  const handleSelect = useEventCallback((mode: ViewModeEnum): void => {
-    if (mode === ViewModeEnum.LIST && isListDisabled) {
+  const handleSelect = useEventCallback((mode: ContentModeEnum): void => {
+    if (mode === ContentModeEnum.LIST && isListDisabled) {
       return
     }
-    if (mode === ViewModeEnum.GRAPH && isGraphDisabled) {
+    if (mode === ContentModeEnum.GRAPH && isGraphDisabled) {
       return
     }
-    viewmodel.viewMode$.next(mode)
+    viewmodel.contentMode$.next(mode)
     setIsOpen(false)
   })
 
@@ -98,26 +98,26 @@ export const ViewModeDropdown: React.FC = () => {
   })
 
   const handleOptionKeyDown = useEventCallback(
-    (event: React.KeyboardEvent, mode: ViewModeEnum, index: number): void => {
+    (event: React.KeyboardEvent, mode: ContentModeEnum, index: number): void => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
-        if (mode === ViewModeEnum.LIST && isListDisabled) {
+        if (mode === ContentModeEnum.LIST && isListDisabled) {
           return
         }
-        if (mode === ViewModeEnum.GRAPH && isGraphDisabled) {
+        if (mode === ContentModeEnum.GRAPH && isGraphDisabled) {
           return
         }
         handleSelect(mode)
       } else if (event.key === 'ArrowDown') {
         event.preventDefault()
-        const nextIndex = (index + 1) % VIEW_MODE_OPTIONS.length
+        const nextIndex = (index + 1) % CONTENT_MODE_OPTIONS.length
         const nextOption = dropdownRef.current?.querySelectorAll('[role="option"]')[
           nextIndex
         ] as HTMLButtonElement
         nextOption?.focus()
       } else if (event.key === 'ArrowUp') {
         event.preventDefault()
-        const prevIndex = index === 0 ? VIEW_MODE_OPTIONS.length - 1 : index - 1
+        const prevIndex = index === 0 ? CONTENT_MODE_OPTIONS.length - 1 : index - 1
         const prevOption = dropdownRef.current?.querySelectorAll('[role="option"]')[
           prevIndex
         ] as HTMLButtonElement
@@ -147,10 +147,10 @@ export const ViewModeDropdown: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         className="group flex h-8 select-none items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-sm font-medium shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
-        title={`View mode: ${currentOption?.label}`}
+        title={`Content mode: ${currentOption?.label}`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-label="Select view mode"
+        aria-label="Select content mode"
       >
         <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
           {currentOption?.icon}
@@ -174,13 +174,13 @@ export const ViewModeDropdown: React.FC = () => {
         <div
           className="absolute z-50 left-0 top-full mt-2 min-w-40 overflow-hidden rounded-xl bg-white/95 shadow-2xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
           role="listbox"
-          aria-label="View mode options"
+          aria-label="Content mode options"
         >
           <div className="p-1">
-            {VIEW_MODE_OPTIONS.map((option, index) => {
+            {CONTENT_MODE_OPTIONS.map((option, index) => {
               const isDisabled =
-                (option.value === ViewModeEnum.LIST && isListDisabled) ||
-                (option.value === ViewModeEnum.GRAPH && isGraphDisabled)
+                (option.value === ContentModeEnum.LIST && isListDisabled) ||
+                (option.value === ContentModeEnum.GRAPH && isGraphDisabled)
               return (
                 <button
                   key={option.value}
@@ -191,12 +191,12 @@ export const ViewModeDropdown: React.FC = () => {
                     'group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150 focus:outline-none',
                     isDisabled
                       ? 'cursor-not-allowed opacity-50'
-                      : actualViewMode === option.value
+                      : actualContentMode === option.value
                         ? 'bg-indigo-50 text-indigo-700 shadow-sm dark:bg-indigo-900/50 dark:text-indigo-300'
                         : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
                   )}
                   role="option"
-                  aria-selected={actualViewMode === option.value}
+                  aria-selected={actualContentMode === option.value}
                   aria-disabled={isDisabled}
                   tabIndex={isOpen && !isDisabled ? 0 : -1}
                 >
@@ -205,7 +205,7 @@ export const ViewModeDropdown: React.FC = () => {
                       'flex h-6 w-6 items-center justify-center rounded transition-colors',
                       isDisabled
                         ? 'text-gray-400 dark:text-gray-600'
-                        : actualViewMode === option.value
+                        : actualContentMode === option.value
                           ? 'text-indigo-600 dark:text-indigo-400'
                           : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300',
                     )}
@@ -217,7 +217,7 @@ export const ViewModeDropdown: React.FC = () => {
                   >
                     {option.label}
                   </span>
-                  {actualViewMode === option.value && !isDisabled && (
+                  {actualContentMode === option.value && !isDisabled && (
                     <svg
                       className="ml-auto h-4 w-4 text-indigo-600 dark:text-indigo-400"
                       fill="currentColor"
@@ -241,4 +241,4 @@ export const ViewModeDropdown: React.FC = () => {
   )
 }
 
-ViewModeDropdown.displayName = 'ViewModeDropdown'
+ContentMode.displayName = 'TextViewContentMode'

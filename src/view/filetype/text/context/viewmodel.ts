@@ -4,19 +4,19 @@ import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
 import { validateTransformConfig } from '@/shared/util'
 import type { ITextViewData } from './types'
-import { ModeEnum, ViewModeEnum } from './types'
+import { ContentModeEnum, ModeEnum } from './types'
 
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly mode?: ModeEnum
-  readonly viewMode?: ViewModeEnum
+  readonly contentMode?: ContentModeEnum
   readonly transformConfig?: ITextTransformConfig
 }
 
 const DEFAULT_DATA: ITextViewData = {
   mode: ModeEnum.CONTENT,
-  viewMode: ViewModeEnum.ORIGINAL,
+  contentMode: ContentModeEnum.ORIGINAL,
   transformConfig: {
     name: 'unnamed',
     split: '/\\n/',
@@ -30,7 +30,7 @@ export class TextViewViewModel extends ViewModel {
   public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
-  public readonly viewMode$: IState<ViewModeEnum>
+  public readonly contentMode$: IState<ContentModeEnum>
   public readonly transformConfig$: IState<ITextTransformConfig>
 
   public readonly content$: IState<string | null>
@@ -45,14 +45,14 @@ export class TextViewViewModel extends ViewModel {
       workspace,
       filepath,
       mode = DEFAULT_DATA.mode,
-      viewMode = DEFAULT_DATA.viewMode,
+      contentMode = DEFAULT_DATA.contentMode,
       transformConfig = DEFAULT_DATA.transformConfig,
     } = props
 
     this.workspace$ = new State<string | null>(workspace)
     this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
-    this.viewMode$ = new State<ViewModeEnum>(viewMode)
+    this.contentMode$ = new State<ContentModeEnum>(contentMode)
     this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
 
     this.content$ = new State<string | null>(null)
@@ -65,21 +65,21 @@ export class TextViewViewModel extends ViewModel {
     data: Partial<ITextViewData> | undefined,
     base: ITextViewData = DEFAULT_DATA,
   ): ITextViewData {
-    const { mode, viewMode, transformConfig } = data || {}
+    const { mode, contentMode, transformConfig } = data || {}
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
-    const normalizedViewMode: ViewModeEnum =
-      viewMode === ViewModeEnum.ORIGINAL ||
-      viewMode === ViewModeEnum.LIST ||
-      viewMode === ViewModeEnum.GRAPH
-        ? viewMode
-        : base.viewMode
+    const normalizedContentMode: ContentModeEnum =
+      contentMode === ContentModeEnum.ORIGINAL ||
+      contentMode === ContentModeEnum.LIST ||
+      contentMode === ContentModeEnum.GRAPH
+        ? contentMode
+        : base.contentMode
     const normalizedTransformConfig: ITextTransformConfig = validateTransformConfig(transformConfig)
       ? transformConfig
       : base.transformConfig!
     const viewData: ITextViewData = {
       mode: normalizedMode,
-      viewMode: normalizedViewMode,
+      contentMode: normalizedContentMode,
       transformConfig: normalizedTransformConfig,
     }
     return viewData
@@ -87,16 +87,16 @@ export class TextViewViewModel extends ViewModel {
 
   public dump = (): ITextViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
-    const viewMode: ViewModeEnum = this.viewMode$.getSnapshot()
+    const contentMode: ContentModeEnum = this.contentMode$.getSnapshot()
     const transformConfig: ITextTransformConfig = this.transformConfig$.getSnapshot()
-    return { mode, viewMode, transformConfig }
+    return { mode, contentMode, transformConfig }
   }
 
   public load = (data: Partial<ITextViewData> | undefined): void => {
     const base: ITextViewData = this.dump()
-    const { mode, viewMode, transformConfig } = TextViewViewModel.normalize(data, base)
+    const { mode, contentMode, transformConfig } = TextViewViewModel.normalize(data, base)
     this.mode$.next(mode)
-    this.viewMode$.next(viewMode)
+    this.contentMode$.next(contentMode)
     this.transformConfig$.next(transformConfig!)
   }
 }

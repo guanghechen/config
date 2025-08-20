@@ -1,23 +1,23 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { ITextTransformedNode } from '@/shared/types'
-import { ViewModeDropdown } from '../container/ViewModeDropdown'
-import { ViewModeEnum, useTextViewViewModel } from '../context'
+import { ContentMode } from '../container/ContentMode'
+import { ContentModeEnum, useTextViewViewModel } from '../context'
 import { ContentGraph } from './content-graph'
 import { ContentList } from './content-list'
 import { ContentPlain } from './content-plain'
 
 const ContentPaneHeader: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
+  const contentMode: ContentModeEnum = useStateValue(viewmodel.contentMode$)
   const expandTick: number = useStateValue(viewmodel.expandTick$)
   const records: ITextTransformedNode[] | null = useStateValue(viewmodel.records$)
   const expanded: boolean = expandTick % 2 === 0
 
   return (
     <div className="box-border sticky top-0 z-50 px-4 flex justify-start items-center gap-2 flex-none h-12 bg-gray-50 dark:bg-gray-900">
-      <ViewModeDropdown />
-      {viewMode === ViewModeEnum.LIST && records && (
+      <ContentMode />
+      {contentMode === ContentModeEnum.LIST && records && (
         <button
           className="group flex h-8 select-none cursor-pointer items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
           onClick={() => viewmodel.expandTick$.setState(tick => tick + 1)}
@@ -40,15 +40,15 @@ ContentPaneHeader.displayName = 'TextViewContentPaneHeader'
 
 const ContentPaneMain: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
+  const contentMode: ContentModeEnum = useStateValue(viewmodel.contentMode$)
   const records: ITextTransformedNode[] | null = useStateValue(viewmodel.records$)
 
   if (records) {
-    switch (viewMode) {
-      case ViewModeEnum.LIST: {
+    switch (contentMode) {
+      case ContentModeEnum.LIST: {
         return <ContentList />
       }
-      case ViewModeEnum.GRAPH:
+      case ContentModeEnum.GRAPH:
         return <ContentGraph />
       default:
         return <ContentPlain />
