@@ -104,7 +104,6 @@ export class WorkspaceViewViewModel extends ViewModel {
       new Subscriber({
         onNext: (value, prevValue) => {
           if (value !== prevValue) {
-            filepath$.next(null)
             filetreeDirtyTick$.setState(tick => tick + 1)
           }
         },
