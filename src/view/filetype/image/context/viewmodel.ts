@@ -27,7 +27,7 @@ export class ImageViewViewModel extends ViewModel {
   public readonly rotation$: IState<number>
   public readonly position$: IState<IImageViewPosition>
 
-  public readonly content$: IState<IImageFileData | null>
+  public readonly data$: IState<IImageFileData | null>
 
   public static normalize(
     data: Partial<IImageViewData> | undefined,
@@ -70,7 +70,7 @@ export class ImageViewViewModel extends ViewModel {
     this.rotation$ = new State<number>(rotation)
     this.position$ = new State<IImageViewPosition>(position)
 
-    this.content$ = new State<IImageFileData | null>(null)
+    this.data$ = new State<IImageFileData | null>(null)
   }
 
   public dump = (): IImageViewData => {

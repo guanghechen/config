@@ -154,18 +154,21 @@ const useData = (
   filepath: string,
   filepathDirtyTick: number,
 ): void => {
-  const { data, error } = useFileResult<IImageFileData>(workspace, filepath, filepathDirtyTick)
+  const { data, url, error } = useFileResult<IImageFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (data) {
-      viewmodel.content$.next(data)
+    if (url) {
+      const imageData: IImageFileData = { url }
+      viewmodel.data$.next(imageData)
+    } else if (data) {
+      viewmodel.data$.next(data)
     } else if (error) {
-      viewmodel.content$.next(null)
+      viewmodel.data$.next(null)
       toast.error(typeof error === 'string' ? error : String(error))
     } else {
-      viewmodel.content$.next(null)
+      viewmodel.data$.next(null)
     }
-  }, [data, error, viewmodel])
+  }, [data, url, error, viewmodel])
 }

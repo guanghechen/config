@@ -6,7 +6,7 @@ import type {
   IJsonFileData,
   IMarkdownFileData,
   ITextFileData,
-} from '../../../../shared/types/api'
+} from '../../../../../shared/types'
 import state from '../../../../state'
 import parseMarkdown from '../../../../util/parseMarkdown'
 import type { IApiHandle, IApiHandleData } from '../../types'
@@ -43,50 +43,50 @@ export const fetchFile: IApiHandle = async params => {
   const { res, pathname, search, searchParams } = params
 
   const workspace: string | null = decodeURIComponent(searchParams.get('workspace') ?? '') || null
-  let filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
-  filepath = state.resolveFilepath(workspace, filepath)
+  const filepath: string = decodeURIComponent(searchParams.get('filepath') ?? '')
+  const absoluteFilepath = state.resolveFilepath(workspace, filepath)
 
-  if (!filepath) {
+  if (!absoluteFilepath) {
     const data: IApiHandleData = {
       error: 'Bad search parameters',
-      details: { pathname, workspace, filepath, search },
+      details: { pathname, workspace, filepath: absoluteFilepath, search },
       data: null,
     }
     return { code: 400, data }
   }
 
-  if (!path.isAbsolute(filepath)) {
+  if (!path.isAbsolute(absoluteFilepath)) {
     const data: IApiHandleData = {
       error: 'Cannot resolve the given filepath.',
-      details: { pathname, workspace, filepath, search },
+      details: { pathname, workspace, filepath: absoluteFilepath, search },
       data: null,
     }
     return { code: 400, data }
   }
 
-  const extname: string = path.extname(filepath).toLowerCase()
+  const extname: string = path.extname(absoluteFilepath).toLowerCase()
   const contentType: string | undefined =
     SERVE_FILE_EXTNAME_TYPE_MAP[extname as keyof typeof SERVE_FILE_EXTNAME_TYPE_MAP]
 
   if (!contentType) {
     const data: IApiHandleData = {
       error: 'Not support for the given file format',
-      details: { pathname, workspace, filepath, extname, contentType },
+      details: { pathname, workspace, filepath: absoluteFilepath, extname, contentType },
       data: null,
     }
     return { code: 400, data }
   }
 
-  if (!existsSync(filepath)) {
+  if (!existsSync(absoluteFilepath)) {
     const data: IApiHandleData = {
       error: 'File not found',
-      details: { pathname, workspace, filepath, extname, contentType },
+      details: { pathname, workspace, filepath: absoluteFilepath, extname, contentType },
       data: null,
     }
     return { code: 404, data }
   }
 
-  state.watch(filepath)
+  state.watch(absoluteFilepath)
 
   switch (extname) {
     case '.eventstream':
@@ -95,16 +95,16 @@ export const fetchFile: IApiHandle = async params => {
     case '.jsonl': {
       let data: IApiHandleData
       try {
-        const content: string = await fs.readFile(filepath, 'utf8')
+        const content: string = await fs.readFile(absoluteFilepath, 'utf8')
         const responseData: IJsonFileData = { content }
         data = {
           data: responseData,
         }
       } catch (error) {
-        state.reporter.error('Failed to parse json:', { filepath, error })
+        state.reporter.error('Failed to parse json:', { filepath: absoluteFilepath, error })
         data = {
           error: 'Failed to parse json',
-          details: { pathname, workspace, filepath },
+          details: { pathname, workspace, filepath: absoluteFilepath },
           data: null,
         }
       }
@@ -114,16 +114,16 @@ export const fetchFile: IApiHandle = async params => {
     case '.txt': {
       let data: IApiHandleData
       try {
-        const content: string = await fs.readFile(filepath, 'utf8')
+        const content: string = await fs.readFile(absoluteFilepath, 'utf8')
         const responseData: ITextFileData = { content }
         data = {
           data: responseData,
         }
       } catch (error) {
-        state.reporter.error('Failed to read text file:', { filepath, error })
+        state.reporter.error('Failed to read text file:', { filepath: absoluteFilepath, error })
         data = {
           error: 'Failed to read text file',
-          details: { pathname, workspace, filepath },
+          details: { pathname, workspace, filepath: absoluteFilepath },
           data: null,
         }
       }
@@ -132,15 +132,15 @@ export const fetchFile: IApiHandle = async params => {
     case '.md': {
       let data: IApiHandleData
       try {
-        const responseData: IMarkdownFileData = await parseMarkdown(filepath)
+        const responseData: IMarkdownFileData = await parseMarkdown(absoluteFilepath)
         data = {
           data: responseData,
         }
       } catch (error) {
-        state.reporter.error('Failed to parse markdown:', { filepath, error })
+        state.reporter.error('Failed to parse markdown:', { filepath: absoluteFilepath, error })
         data = {
           error: 'Failed to parse markdown',
-          details: { pathname, workspace, filepath },
+          details: { pathname, workspace, filepath: absoluteFilepath },
           data: null,
         }
       }
@@ -155,7 +155,7 @@ export const fetchFile: IApiHandle = async params => {
     case '.webp': {
       let data: IApiHandleData
       try {
-        const stats = await fs.stat(filepath)
+        const stats = await fs.stat(absoluteFilepath)
         const url = `/api/file/raw?filepath=${encodeURIComponent(filepath)}&workspace=${encodeURIComponent(workspace || '')}`
         const responseData: IImageFileData = {
           url,
@@ -166,10 +166,10 @@ export const fetchFile: IApiHandle = async params => {
           data: responseData,
         }
       } catch (error) {
-        state.reporter.error('Failed to get image info:', { filepath, error })
+        state.reporter.error('Failed to get image info:', { filepath: absoluteFilepath, error })
         data = {
           error: 'Failed to get image info',
-          details: { pathname, workspace, filepath },
+          details: { pathname, workspace, filepath: absoluteFilepath },
           data: null,
         }
       }
@@ -180,7 +180,7 @@ export const fetchFile: IApiHandle = async params => {
     default:
   }
 
-  const stream = createReadStream(filepath)
+  const stream = createReadStream(absoluteFilepath)
   res.setHeader('Content-Type', contentType)
   stream.pipe(res)
   stream.on('error', err => {
@@ -188,7 +188,7 @@ export const fetchFile: IApiHandle = async params => {
     res.setHeader('Content-Type', 'application/json')
     const data = {
       error: 'Failed to read file',
-      details: { pathname, workspace, filepath, extname, contentType, err },
+      details: { pathname, workspace, filepath: absoluteFilepath, extname, contentType, err },
     }
     res.end(JSON.stringify(data))
   })
