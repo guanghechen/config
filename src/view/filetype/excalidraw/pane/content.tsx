@@ -12,7 +12,7 @@ import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { usePostFile } from '@/hook/api/file/save'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
 import { ElementRenderer } from '../container/ExcalidrawElement'
-import type { IExcalidrawViewData } from '../context'
+import type { IExcalidrawData } from '../context'
 import { useExcalidrawViewViewModel } from '../context'
 import '@excalidraw/excalidraw/index.css'
 
@@ -20,18 +20,13 @@ type NonDeleted<TElement extends ExcalidrawElement> = TElement & {
   isDeleted: boolean
 }
 
-interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-}
-
-export const ContentPane: React.FC<IProps> = props => {
-  const { workspace, filepath } = props
-
+export const ContentPane: React.FC = () => {
   const site = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(site.theme$)
 
   const viewmodel = useExcalidrawViewViewModel()
+  const workspace: string | null = useStateValue(viewmodel.workspace$)
+  const filepath: string = useStateValue(viewmodel.filepath$)
   const content = useStateValue(viewmodel.content$)
 
   const { save: saveFile } = usePostFile()
@@ -39,10 +34,10 @@ export const ContentPane: React.FC<IProps> = props => {
   const [elements, setElements] = React.useState<ReadonlyArray<ExcalidrawElement>>([])
   const excalidrawTheme = theme === SiteTheme.DARKEN ? 'dark' : 'light'
 
-  const excalidrawData = React.useMemo((): IExcalidrawViewData | null => {
+  const excalidrawData = React.useMemo((): IExcalidrawData | null => {
     if (!content) return null
     try {
-      return JSON.parse(content) as IExcalidrawViewData
+      return JSON.parse(content) as IExcalidrawData
     } catch {
       return null
     }
@@ -138,22 +133,20 @@ export const ContentPane: React.FC<IProps> = props => {
   }
 
   return (
-    <div className="relative">
-      <div className="fixed inset-0 top-16">
-        <$Excalidraw
-          excalidrawAPI={api => {
-            excalidrawRef.current = api
-          }}
-          initialData={excalidrawData}
-          viewModeEnabled={false}
-          zenModeEnabled={false}
-          gridModeEnabled={true}
-          theme={excalidrawTheme}
-          onChange={setElements}
-          validateEmbeddable={validateMarkdownEmbeddable}
-          renderEmbeddable={renderEmbeddable}
-        />
-      </div>
+    <div className="relative box-border size-full">
+      <$Excalidraw
+        excalidrawAPI={api => {
+          excalidrawRef.current = api
+        }}
+        initialData={excalidrawData}
+        viewModeEnabled={false}
+        zenModeEnabled={false}
+        gridModeEnabled={true}
+        theme={excalidrawTheme}
+        onChange={setElements}
+        validateEmbeddable={validateMarkdownEmbeddable}
+        renderEmbeddable={renderEmbeddable}
+      />
     </div>
   )
 }

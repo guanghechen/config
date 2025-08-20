@@ -4,21 +4,15 @@ import React from 'react'
 import { ModeEnum, useExcalidrawViewViewModel } from '../context'
 import { ContentPane } from '../pane/content'
 
-interface IProps {
-  readonly filepath: string
-  readonly workspace: string | null
-}
-
-export const Main: React.FC<IProps> = props => {
-  const { filepath, workspace } = props
+export const Main: React.FC = () => {
   const viewmodel = useExcalidrawViewViewModel()
-  const mode = useStateValue(viewmodel.mode$)
+  const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
   return (
     <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="markdown">
       {(mode & ModeEnum.CONTENT) !== 0 && (
         <div className="f-vf-pane f-vfp-content">
-          <ContentPane filepath={filepath} workspace={workspace} />
+          <ContentPane />
         </div>
       )}
     </div>

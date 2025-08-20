@@ -21,7 +21,7 @@ export class ExcalidrawView extends React.PureComponent<IProps> {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
       >
-        <Composer filepath={filepath} workspace={workspace} />
+        <Composer />
       </ExcalidrawViewProvider>
     )
   }

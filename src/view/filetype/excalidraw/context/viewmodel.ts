@@ -6,6 +6,7 @@ import type { IExcalidrawViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
+  readonly workspace: string | null
   readonly filepath: string
   readonly mode?: ModeEnum
   readonly elements?: ReadonlyArray<ExcalidrawElement>
@@ -17,23 +18,29 @@ const DEFAULT_DATA: IExcalidrawViewData = {
 }
 
 export class ExcalidrawViewViewModel extends ViewModel {
+  public readonly workspace$: IState<string | null>
   public readonly filepath$: IState<string>
+  public readonly mode$: IState<ModeEnum>
   public readonly elements$: IState<ReadonlyArray<ExcalidrawElement>>
   public readonly content$: IState<string | null>
-  public readonly mode$: IState<ModeEnum>
   public readonly data$: IState<IJsonFileData | null>
 
-  public static fromData(data: Partial<IExcalidrawViewData> | undefined): ExcalidrawViewViewModel {
-    const { mode }: IExcalidrawViewData = this.normalize(DEFAULT_DATA, data)
-    return new ExcalidrawViewViewModel({
-      filepath: '',
-      mode,
-    })
+  constructor(props: IProps) {
+    super()
+
+    const { workspace, filepath, mode = DEFAULT_DATA.mode, elements = [], content = null } = props
+
+    this.workspace$ = new State<string | null>(workspace)
+    this.filepath$ = new State<string>(filepath)
+    this.mode$ = new State<ModeEnum>(mode)
+    this.elements$ = new State<ReadonlyArray<ExcalidrawElement>>(elements)
+    this.content$ = new State<string | null>(content)
+    this.data$ = new State<IJsonFileData | null>(null)
   }
 
   public static normalize(
-    base: IExcalidrawViewData,
     data: Partial<IExcalidrawViewData> | undefined,
+    base: IExcalidrawViewData = DEFAULT_DATA,
   ): IExcalidrawViewData {
     const { mode } = data || {}
     const normalizedMode: ModeEnum =
@@ -44,18 +51,6 @@ export class ExcalidrawViewViewModel extends ViewModel {
     return normalizedData
   }
 
-  constructor(props: IProps) {
-    super()
-
-    const { filepath, mode = DEFAULT_DATA.mode } = props
-
-    this.filepath$ = new State<string>(filepath)
-    this.mode$ = new State<ModeEnum>(mode)
-    this.elements$ = new State<ReadonlyArray<ExcalidrawElement>>(props.elements ?? [])
-    this.content$ = new State<string | null>(props.content ?? null)
-    this.data$ = new State<IJsonFileData | null>(null)
-  }
-
   public dump = (): IExcalidrawViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
     return {
@@ -64,7 +59,8 @@ export class ExcalidrawViewViewModel extends ViewModel {
   }
 
   public load = (data: Partial<IExcalidrawViewData> | undefined): void => {
-    const { mode }: IExcalidrawViewData = ExcalidrawViewViewModel.normalize(this.dump(), data)
+    const base: IExcalidrawViewData = this.dump()
+    const { mode }: IExcalidrawViewData = ExcalidrawViewViewModel.normalize(data, base)
     this.mode$.next(mode)
   }
 }

@@ -6,7 +6,10 @@ export interface IExcalidrawViewContext {
 }
 
 export const ExcalidrawViewContextType = React.createContext<IExcalidrawViewContext>({
-  viewmodel: new ExcalidrawViewViewModel(),
+  viewmodel: new ExcalidrawViewViewModel({
+    workspace: null,
+    filepath: '/dev/null',
+  }),
 })
 
 export const useExcalidrawViewViewModel = (): ExcalidrawViewViewModel => {
