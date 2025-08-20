@@ -157,6 +157,8 @@ const useSyncProps = (viewmodel: WorkspaceViewViewModel): void => {
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
   const { workspaces } = useGetWorkspaces(workspacesDirtyTick)
   const filepath: string | null = useStateValue(viewmodel.filepath$)
+  const workspace: string | null = useStateValue(viewmodel.workspace$)
+  const previousWorkspaceRef = React.useRef<string | null>(workspace)
 
   React.useEffect(() => {
     viewmodel.workspaces$.next(workspaces)
@@ -171,6 +173,13 @@ const useSyncProps = (viewmodel: WorkspaceViewViewModel): void => {
     const newUrl = `${window.location.pathname}?${usp.toString()}`
     window.history.replaceState(null, '', newUrl)
   }, [filepath])
+
+  React.useEffect(() => {
+    if (previousWorkspaceRef.current !== workspace) {
+      previousWorkspaceRef.current = workspace
+      viewmodel.filepath$.next(null)
+    }
+  }, [viewmodel, workspace])
 }
 
 const useMermaid = (): void => {

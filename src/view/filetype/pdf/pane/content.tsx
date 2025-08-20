@@ -13,7 +13,6 @@ const options = {
   cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
 }
 
-
 export const ContentPane: React.FC = () => {
   const viewmodel = usePdfViewViewModel()
   const workspace: string | null = useStateValue(viewmodel.workspace$)
