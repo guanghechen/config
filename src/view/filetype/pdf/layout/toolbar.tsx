@@ -70,12 +70,11 @@ export const Toolbar: React.FC = () => {
   }, [])
 
   return (
-    <div className="flex items-center justify-end rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-700 dark:bg-gray-800">
-      {/* Multi View Dropdown */}
-      <div className="relative mr-4" ref={dropdownRef}>
+    <div className="fixed left-1/2 top-0 z-50 flex flex-row items-center gap-3 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 px-4 py-1 transform -translate-x-1/2">
+      <div className="relative" ref={dropdownRef}>
         <button
           className={cn(
-            'flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm',
+            'flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1 text-xs',
             'text-gray-700 shadow-sm hover:bg-gray-50',
             'dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700',
             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50',
@@ -90,23 +89,23 @@ export const Toolbar: React.FC = () => {
           ) : (
             <ViewPageByPageIcon className="h-4 w-4" />
           )}
-          <span>{multiview ? 'Multi View' : 'Single View'}</span>
+          <span className="text-center leading-tight">{multiview ? 'Multi' : 'Single'}</span>
           <ChevronDownIcon
-            className={cn('h-4 w-4 transition-transform', isViewModeOpen && 'rotate-180')}
+            className={cn('h-3 w-3 transition-transform', isViewModeOpen && 'rotate-180')}
           />
         </button>
 
         {isViewModeOpen && (
           <div
             className={cn(
-              'absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded-lg',
+              'absolute top-full left-0 z-50 mt-2 min-w-[120px] overflow-hidden rounded-lg',
               'border border-gray-200 bg-white shadow-lg',
               'dark:border-gray-600 dark:bg-gray-800',
             )}
           >
             <button
               className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
+                'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm',
                 'text-gray-700 hover:bg-gray-50',
                 'dark:text-gray-300 dark:hover:bg-gray-700',
                 !multiview && 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -118,7 +117,7 @@ export const Toolbar: React.FC = () => {
             </button>
             <button
               className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
+                'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm',
                 'text-gray-700 hover:bg-gray-50',
                 'dark:text-gray-300 dark:hover:bg-gray-700',
                 multiview && 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -131,11 +130,10 @@ export const Toolbar: React.FC = () => {
           </div>
         )}
       </div>
-
-      <div className="flex select-none items-center space-x-2 md:mr-2">
+      <div className="flex items-center space-x-2">
         <button
           className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
@@ -146,7 +144,7 @@ export const Toolbar: React.FC = () => {
         >
           <ChevronLeftIcon />
         </button>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           <input
             type="number"
             value={pageNo}
@@ -155,15 +153,15 @@ export const Toolbar: React.FC = () => {
             max={pageTotal}
             className={cn(
               'w-12 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600',
-              'rounded px-2 py-1 text-sm text-center focus:outline-hidden focus:ring-2 focus:ring-blue-500',
+              'rounded px-2 py-1 text-xs text-center focus:outline-hidden focus:ring-2 focus:ring-blue-500',
             )}
             aria-label="Current page"
           />
-          <span className="text-sm text-gray-500 dark:text-gray-400">of {pageTotal}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">of {pageTotal}</span>
         </div>
         <button
           className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent',
@@ -175,10 +173,10 @@ export const Toolbar: React.FC = () => {
           <ChevronRightIcon />
         </button>
       </div>
-      <div className="flex select-none items-center gap-2">
+      <div className="flex items-center gap-2">
         <button
           className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
@@ -195,16 +193,16 @@ export const Toolbar: React.FC = () => {
             step="0.1"
             value={scale}
             onChange={onScaleChange}
-            className="h-2 w-24 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
+            className="h-2 w-20 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
             aria-label="Zoom level"
           />
-          <span className="w-10 text-sm font-medium text-gray-600 dark:text-gray-300">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300 min-w-[3rem]">
             {Math.round(scale * 100)}%
           </span>
         </div>
         <button
           className={cn(
-            'rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}

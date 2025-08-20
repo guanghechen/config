@@ -5,7 +5,6 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import { toSearch } from '@/shared/util'
-import { Toolbar } from '../container/Toolbar'
 import { usePdfViewViewModel } from '../context'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
@@ -14,18 +13,6 @@ const options = {
   cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
 }
 
-const Topbar: React.FC = () => {
-  return (
-    <div
-      className={cn(
-        'flex h-14 w-full items-center justify-center border-b px-4',
-        'border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800',
-      )}
-    >
-      <Toolbar />
-    </div>
-  )
-}
 
 export const ContentPane: React.FC = () => {
   const viewmodel = usePdfViewViewModel()
@@ -97,8 +84,7 @@ export const ContentPane: React.FC = () => {
   }, [multiview, pageTotal, pageno, scale])
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <Topbar />
+    <div className="flex h-full w-full flex-col pl-20">
       <div
         className={cn('flex-1', multiview ? 'overflow-auto' : 'flex items-center justify-center')}
       >
