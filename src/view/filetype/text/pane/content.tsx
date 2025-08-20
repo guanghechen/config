@@ -11,7 +11,7 @@ const ContentPaneHeader: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
   const expandTick: number = useStateValue(viewmodel.expandTick$)
-  const records: ITextTransformedNode[] | null = useStateValue(viewmodel.transformedNodes$)
+  const records: ITextTransformedNode[] | null = useStateValue(viewmodel.records$)
   const expanded: boolean = expandTick % 2 === 0
 
   return (
@@ -41,7 +41,7 @@ ContentPaneHeader.displayName = 'TextViewContentPaneHeader'
 const ContentPaneMain: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
-  const records: ITextTransformedNode[] | null = useStateValue(viewmodel.transformedNodes$)
+  const records: ITextTransformedNode[] | null = useStateValue(viewmodel.records$)
 
   if (records) {
     switch (viewMode) {
@@ -60,19 +60,6 @@ const ContentPaneMain: React.FC = () => {
 ContentPaneMain.displayName = 'TextViewContentPaneMain'
 
 export const ContentPane: React.FC = () => {
-  const viewmodel = useTextViewViewModel()
-  const contentError = useStateValue(viewmodel.contentError$)
-
-  if (contentError) {
-    return (
-      <div className="box-border size-full flex justify-center">
-        <div className="flex items-center bg-gray-100 text-red-500 dark:bg-gray-800 dark:text-red-400">
-          <code>error: {String(contentError)}</code>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <React.Fragment>
       <ContentPaneHeader />

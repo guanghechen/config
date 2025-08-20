@@ -2,7 +2,7 @@
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
 import { TextTransformStepTypeEnum } from '@/shared/types'
 
-export interface ITransformResult {
+interface ITransformResult {
   readonly nodes: ITextTransformedNode[]
   readonly error?: string
 }

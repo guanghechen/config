@@ -1,6 +1,6 @@
 import type { ITextTransformConfig } from '../types/transform'
 
-export const validateTransformerData = (data: any): data is ITextTransformConfig => {
+export const validateTransformConfig = (data: any): data is ITextTransformConfig => {
   return (
     data &&
     typeof data === 'object' &&

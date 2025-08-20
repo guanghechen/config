@@ -1,9 +1,10 @@
 import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { toast } from 'react-toastify'
 import type { ITextFileData } from '@/hook/api/file'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
-import { validateTransformerData } from '@/shared/util'
+import { validateTransformConfig } from '@/shared/util'
 import { transformTextToNodes } from '../util/transform'
 import type { ITextViewContext } from './context'
 import { TextViewContextType } from './context'
@@ -24,15 +25,17 @@ interface IProps {
 export const TextViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mode, viewMode, children } = props
   const viewmodel: TextViewViewModel | null = useSingleton<TextViewViewModel>(() => {
-    const initialData: Partial<ITextViewData> = JSON.parse(
+    const rawViewData: Partial<ITextViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
-    return TextViewViewModel.fromData({
-      mode: mode ?? initialData.mode,
-      viewMode: viewMode ?? initialData.viewMode,
-      transformConfig: validateTransformerData(initialData.transformConfig)
-        ? initialData.transformConfig
-        : undefined,
+    const viewData: ITextViewData = TextViewViewModel.normalize(rawViewData)
+
+    return new TextViewViewModel({
+      workspace,
+      filepath,
+      mode: mode ?? viewData.mode,
+      viewMode: viewMode ?? viewData.viewMode,
+      transformConfig: viewData.transformConfig,
     })
   })
   const context: ITextViewContext | null = React.useMemo<ITextViewContext | null>(
@@ -72,24 +75,20 @@ interface ISideEffectProps {
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace, filepath, filepathDirtyTick, mode, viewMode } = props
-  const content: string | null = useStateValue<string | null>(viewmodel.content$)
-  const { data, error } = useFileResult<ITextFileData>(workspace, filepath, filepathDirtyTick)
 
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
+  usePersistent(viewmodel)
+  useSyncProps(viewmodel, workspace, filepath, mode, viewMode)
+  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+  useAutoTransform(viewmodel)
 
-    if (data) {
-      viewmodel.content$.next(data.content)
-      viewmodel.contentError$.next(null)
-    } else if (error) {
-      viewmodel.content$.next(null)
-      viewmodel.contentError$.next(typeof error === 'string' ? error : String(error))
-    } else {
-      viewmodel.content$.next(null)
-      viewmodel.contentError$.next(null)
-    }
-  }, [data, error, viewmodel])
+  return <React.Fragment />
+}
 
+SideEffect.displayName = 'TextViewSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const usePersistent = (viewmodel: TextViewViewModel): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [viewmodel.mode$, viewmodel.viewMode$, viewmodel.transformConfig$],
@@ -102,6 +101,19 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       computed.dispose()
     }
   }, [viewmodel])
+}
+
+const useSyncProps = (
+  viewmodel: TextViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  mode: ModeEnum | undefined,
+  viewMode: ViewModeEnum | undefined,
+): void => {
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.workspace$.next(workspace)
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
@@ -117,22 +129,44 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     if (viewmodel.disposed) return
     viewmodel.viewMode$.next(viewMode ?? viewmodel.viewMode$.getSnapshot())
   }, [viewmodel, viewMode])
+}
+
+const useData = (
+  viewmodel: TextViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  filepathDirtyTick: number,
+): void => {
+  const { data, error } = useFileResult<ITextFileData>(workspace, filepath, filepathDirtyTick)
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+
+    if (data) {
+      viewmodel.content$.next(data.content)
+    } else if (error) {
+      viewmodel.content$.next(null)
+      toast.error(typeof error === 'string' ? error : String(error))
+    } else {
+      viewmodel.content$.next(null)
+    }
+  }, [data, error, viewmodel])
+}
+
+const useAutoTransform = (viewmodel: TextViewViewModel): void => {
+  const content: string | null = useStateValue<string | null>(viewmodel.content$)
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
     const transformConfig = viewmodel.transformConfig$.getSnapshot()
-    if (content && validateTransformerData(transformConfig)) {
+    if (content && validateTransformConfig(transformConfig)) {
       const result = transformTextToNodes(content as string, transformConfig)
       if (result.error) {
-        viewmodel.transformedNodes$.next([])
+        viewmodel.records$.next([])
       } else {
-        viewmodel.transformedNodes$.next(result.nodes)
+        viewmodel.records$.next(result.nodes)
       }
     }
-  }, [viewmodel, content]) // Re-run when content or transform config changes
-
-  return <React.Fragment />
+  }, [viewmodel, content])
 }
-
-SideEffect.displayName = 'TextViewSideEffect'

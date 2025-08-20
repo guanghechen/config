@@ -6,7 +6,10 @@ export interface ITextViewContext {
 }
 
 export const TextViewContextType = React.createContext<ITextViewContext>({
-  viewmodel: new TextViewViewModel(),
+  viewmodel: new TextViewViewModel({
+    workspace: null,
+    filepath: '/dev/null',
+  }),
 })
 
 export const useTextViewViewModel = (): TextViewViewModel => {

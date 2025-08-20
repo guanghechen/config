@@ -2,50 +2,68 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
+import { validateTransformConfig } from '@/shared/util'
 import type { ITextViewData } from './types'
 import { ModeEnum, ViewModeEnum } from './types'
 
 interface IProps {
+  readonly workspace: string | null
+  readonly filepath: string
   readonly mode?: ModeEnum
   readonly viewMode?: ViewModeEnum
-  readonly filepath?: string | null
   readonly transformConfig?: ITextTransformConfig
-  readonly activeRecordIndex?: number | null
-}
-
-const DEFAULT_TRANSFORM_CONFIG: ITextTransformConfig = {
-  name: 'unnamed',
-  split: '/\\n/',
-  steps: [],
-  uuid: '(item, index) => `item-${index}`',
-  parents: '() => []',
 }
 
 const DEFAULT_DATA: ITextViewData = {
   mode: ModeEnum.CONTENT,
   viewMode: ViewModeEnum.ORIGINAL,
-  transformConfig: DEFAULT_TRANSFORM_CONFIG,
+  transformConfig: {
+    name: 'unnamed',
+    split: '/\\n/',
+    steps: [],
+    uuid: '(item, index) => `item-${index}`',
+    parents: '() => []',
+  },
 }
 
 export class TextViewViewModel extends ViewModel {
+  public readonly workspace$: IState<string | null>
+  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly viewMode$: IState<ViewModeEnum>
-  public readonly filepath$: IState<string | null>
-  public readonly content$: IState<string | null>
-  public readonly contentError$: IState<string | null>
   public readonly transformConfig$: IState<ITextTransformConfig>
-  public readonly transformedNodes$: IState<ITextTransformedNode[] | null>
-  public readonly activeRecordIndex$: IState<number | null>
+
+  public readonly content$: IState<string | null>
+  public readonly records$: IState<ITextTransformedNode[]>
+  public readonly activeRecordIndex$: IState<number>
   public readonly expandTick$: IState<number>
 
-  public static fromData(data: Partial<ITextViewData> | undefined): TextViewViewModel {
-    const { mode, viewMode, transformConfig }: ITextViewData = this.normalize(DEFAULT_DATA, data)
-    return new TextViewViewModel({ mode, viewMode, transformConfig })
+  constructor(props: IProps) {
+    super()
+
+    const {
+      workspace,
+      filepath,
+      mode = DEFAULT_DATA.mode,
+      viewMode = DEFAULT_DATA.viewMode,
+      transformConfig = DEFAULT_DATA.transformConfig,
+    } = props
+
+    this.workspace$ = new State<string | null>(workspace)
+    this.filepath$ = new State<string>(filepath)
+    this.mode$ = new State<ModeEnum>(mode)
+    this.viewMode$ = new State<ViewModeEnum>(viewMode)
+    this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
+
+    this.content$ = new State<string | null>(null)
+    this.records$ = new State<ITextTransformedNode[]>([])
+    this.activeRecordIndex$ = new State<number>(0)
+    this.expandTick$ = new State<number>(0)
   }
 
   public static normalize(
-    base: ITextViewData,
     data: Partial<ITextViewData> | undefined,
+    base: ITextViewData = DEFAULT_DATA,
   ): ITextViewData {
     const { mode, viewMode, transformConfig } = data || {}
     const normalizedMode: ModeEnum =
@@ -56,53 +74,27 @@ export class TextViewViewModel extends ViewModel {
       viewMode === ViewModeEnum.GRAPH
         ? viewMode
         : base.viewMode
-    const normalizedTransformConfig: ITextTransformConfig = transformConfig || base.transformConfig!
-    const normalizedData: ITextViewData = {
+    const normalizedTransformConfig: ITextTransformConfig = validateTransformConfig(transformConfig)
+      ? transformConfig
+      : base.transformConfig!
+    const viewData: ITextViewData = {
       mode: normalizedMode,
       viewMode: normalizedViewMode,
       transformConfig: normalizedTransformConfig,
     }
-    return normalizedData
-  }
-
-  constructor(props: IProps = {}) {
-    super()
-
-    const {
-      mode = ModeEnum.CONTENT,
-      viewMode = ViewModeEnum.ORIGINAL,
-      filepath = null,
-      transformConfig = DEFAULT_TRANSFORM_CONFIG,
-      activeRecordIndex = 0,
-    } = props
-
-    this.mode$ = new State<ModeEnum>(mode)
-    this.viewMode$ = new State<ViewModeEnum>(viewMode)
-    this.filepath$ = new State<string | null>(filepath)
-    this.content$ = new State<string | null>(null)
-    this.contentError$ = new State<string | null>(null)
-    this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
-    this.transformedNodes$ = new State<ITextTransformedNode[] | null>(null)
-    this.activeRecordIndex$ = new State<number | null>(activeRecordIndex)
-    this.expandTick$ = new State<number>(0)
+    return viewData
   }
 
   public dump = (): ITextViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
     const viewMode: ViewModeEnum = this.viewMode$.getSnapshot()
     const transformConfig: ITextTransformConfig = this.transformConfig$.getSnapshot()
-    return {
-      mode,
-      viewMode,
-      transformConfig,
-    }
+    return { mode, viewMode, transformConfig }
   }
 
   public load = (data: Partial<ITextViewData> | undefined): void => {
-    const { mode, viewMode, transformConfig }: ITextViewData = TextViewViewModel.normalize(
-      this.dump(),
-      data,
-    )
+    const base: ITextViewData = this.dump()
+    const { mode, viewMode, transformConfig } = TextViewViewModel.normalize(data, base)
     this.mode$.next(mode)
     this.viewMode$.next(viewMode)
     this.transformConfig$.next(transformConfig!)

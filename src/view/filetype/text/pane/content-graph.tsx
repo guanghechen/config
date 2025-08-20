@@ -7,7 +7,7 @@ import { useTextViewViewModel } from '../context'
 
 export const ContentGraph: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const transformedNodes: ITextTransformedNode[] = useStateValue(viewmodel.transformedNodes$) || []
+  const transformedNodes: ITextTransformedNode[] = useStateValue(viewmodel.records$) || []
 
   const site = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(site.theme$)

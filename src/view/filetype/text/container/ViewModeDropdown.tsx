@@ -59,7 +59,7 @@ const VIEW_MODE_OPTIONS: ReadonlyArray<IViewModeOption> = [
 export const ViewModeDropdown: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const viewMode: ViewModeEnum = useStateValue(viewmodel.viewMode$)
-  const transformedNodes = useStateValue(viewmodel.transformedNodes$)
+  const transformedNodes = useStateValue(viewmodel.records$)
   const [isOpen, setIsOpen] = React.useState<boolean>(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 

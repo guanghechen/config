@@ -136,9 +136,9 @@ export const TransformPane: React.FC = () => {
 
     if (result.error) {
       toast.error(result.error)
-      viewmodel.transformedNodes$.next([])
+      viewmodel.records$.next([])
     } else {
-      viewmodel.transformedNodes$.next(result.nodes)
+      viewmodel.records$.next(result.nodes)
       toast.success(`Transform completed: ${result.nodes.length} nodes generated`)
     }
   }

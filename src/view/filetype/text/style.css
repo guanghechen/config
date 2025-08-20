@@ -34,7 +34,7 @@
     grid-template-areas: 'content raw';
   }
 
-  j.f-vf-main-5 {
+  &.f-vf-main-5 {
     grid-template-columns: 2fr 1fr;
     grid-template-areas: 'content transform';
   }
