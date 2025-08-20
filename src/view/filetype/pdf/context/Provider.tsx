@@ -1,5 +1,6 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { toast } from 'react-toastify'
 import type { IPdfFileData } from '@/hook/api/file'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
@@ -105,13 +106,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
     if (data) {
       viewmodel.data$.next(data)
-      viewmodel.error$.next(null)
     } else if (error) {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(typeof error === 'string' ? error : String(error))
+      toast.error(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.data$.next(null)
-      viewmodel.error$.next(null)
     }
   }, [data, error, viewmodel])
 

@@ -19,7 +19,6 @@ export class HtmlViewViewModel extends ViewModel {
   public readonly filepath$: IState<string | null>
   public readonly mode$: IState<ModeEnum>
   public readonly data$: IState<IHtmlFileData | null>
-  public readonly contentError$: IState<string | null>
   public readonly enableTailwindcss$: IState<boolean>
 
   public static fromData(data: Partial<IHtmlViewData> | undefined): HtmlViewViewModel {
@@ -57,7 +56,6 @@ export class HtmlViewViewModel extends ViewModel {
     this.mode$ = new State<ModeEnum>(mode)
     this.enableTailwindcss$ = new State<boolean>(enableTailwindcss)
     this.data$ = new State<IHtmlFileData | null>(null)
-    this.contentError$ = new State<string | null>(null)
   }
 
   public dump = (): IHtmlViewData => {

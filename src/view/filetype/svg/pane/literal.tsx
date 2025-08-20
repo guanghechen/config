@@ -14,17 +14,6 @@ export const LiteralPane: React.FC = () => {
   const viewmodel = useSvgViewViewModel()
   const data: IHtmlFileData | null = useStateValue(viewmodel.data$)
   const content: string = data?.content || ''
-  const contentError = useStateValue(viewmodel.contentError$)
-
-  if (contentError) {
-    return (
-      <div className="box-border size-full flex justify-center">
-        <div className="flex items-center bg-gray-100 text-red-500 dark:bg-gray-800 dark:text-red-400">
-          <code>error: {String(contentError)}</code>
-        </div>
-      </div>
-    )
-  }
 
   if (!content) {
     return (

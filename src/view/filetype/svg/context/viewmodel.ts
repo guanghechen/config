@@ -25,7 +25,6 @@ export class SvgViewViewModel extends ViewModel {
   public readonly rotation$: IState<number>
   public readonly position$: IState<ISvgViewPosition>
   public readonly data$: IState<ISvgFileData | null>
-  public readonly contentError$: IState<string | null>
 
   public static fromData(data: Partial<ISvgViewData> | undefined): SvgViewViewModel {
     const { mode, scale, rotation, position }: ISvgViewData = this.normalize(DEFAULT_DATA, data)
@@ -76,7 +75,6 @@ export class SvgViewViewModel extends ViewModel {
     this.rotation$ = new State<number>(rotation)
     this.position$ = new State<ISvgViewPosition>(position)
     this.data$ = new State<ISvgFileData | null>(null)
-    this.contentError$ = new State<string | null>(null)
   }
 
   public dump = (): ISvgViewData => {

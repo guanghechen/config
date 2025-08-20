@@ -10,7 +10,6 @@ interface IProps {
   readonly mode?: ModeEnum
   readonly elements?: ReadonlyArray<ExcalidrawElement>
   readonly content?: string | null
-  readonly error?: string | null
 }
 
 const DEFAULT_DATA: IExcalidrawViewData = {
@@ -22,7 +21,6 @@ export class ExcalidrawViewViewModel extends ViewModel {
   public readonly elements$: IState<ReadonlyArray<ExcalidrawElement>>
   public readonly content$: IState<string | null>
   public readonly mode$: IState<ModeEnum>
-  public readonly error$: IState<string | null>
   public readonly data$: IState<IJsonFileData | null>
 
   public static fromData(data: Partial<IExcalidrawViewData> | undefined): ExcalidrawViewViewModel {
@@ -55,7 +53,6 @@ export class ExcalidrawViewViewModel extends ViewModel {
     this.mode$ = new State<ModeEnum>(mode)
     this.elements$ = new State<ReadonlyArray<ExcalidrawElement>>(props.elements ?? [])
     this.content$ = new State<string | null>(props.content ?? null)
-    this.error$ = new State<string | null>(props.error ?? null)
     this.data$ = new State<IJsonFileData | null>(null)
   }
 

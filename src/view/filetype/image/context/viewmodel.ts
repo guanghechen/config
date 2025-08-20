@@ -20,7 +20,6 @@ export class ImageViewViewModel extends ViewModel {
   public readonly scale$: IState<number>
   public readonly rotation$: IState<number>
   public readonly position$: IState<IImageViewPosition>
-  public readonly error$: IState<string | null>
 
   public static fromData(data: Partial<IImageViewData> | undefined): ImageViewViewModel {
     const { scale, rotation, position }: IImageViewData = this.normalize(DEFAULT_DATA, data)
@@ -65,7 +64,6 @@ export class ImageViewViewModel extends ViewModel {
     this.scale$ = new State<number>(scale)
     this.rotation$ = new State<number>(rotation)
     this.position$ = new State<IImageViewPosition>(position)
-    this.error$ = new State<string | null>(null)
   }
 
   public dump = (): IImageViewData => {

@@ -11,7 +11,6 @@ export const ContentPane: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
   const filepath: string | null = useStateValue(viewmodel.filepath$)
   const data = useStateValue(viewmodel.data$)
-  const contentError = useStateValue(viewmodel.contentError$)
 
   const ast: Root = useMarkdownAst()
   const toc: IHeadingToc | undefined = data?.toc
@@ -84,14 +83,6 @@ export const ContentPane: React.FC = () => {
     contentContainer.addEventListener('scroll', onScroll)
     return () => contentContainer.removeEventListener('scroll', onScroll)
   }, [toc, viewmodel])
-
-  if (contentError) {
-    return (
-      <div className="relative size-full flex items-center bg-gray-100 text-red-500 dark:bg-gray-800 dark:text-red-400">
-        <code>error: {String(contentError)}</code>
-      </div>
-    )
-  }
 
   return (
     <div ref={containerRef} className="flex-initial w-[72rem]">

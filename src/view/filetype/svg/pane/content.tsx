@@ -10,13 +10,12 @@ export const ContentPane: React.FC = () => {
   const rotation = useStateValue(viewmodel.rotation$)
   const position = useStateValue(viewmodel.position$)
   const data = useStateValue(viewmodel.data$)
-  const error = useStateValue(viewmodel.contentError$)
 
   const [isDragging, setIsDragging] = React.useState<boolean>(false)
   const [startPosition, setStartPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const containerRef = React.useRef<HTMLDivElement>(null)
 
-  const isLoading = !data && !error
+  const isLoading = !data
 
   const onMouseDown = useEventCallback((e: React.MouseEvent<HTMLDivElement>): void => {
     setIsDragging(true)
@@ -86,14 +85,7 @@ export const ContentPane: React.FC = () => {
           </div>
         )}
 
-        {error && (
-          <div className="text-center text-red-500">
-            <p>Error loading SVG:</p>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {!isLoading && !error && data && data.content && (
+        {!isLoading && data && data.content && (
           <div
             className="svg-container max-h-full max-w-full"
             style={{

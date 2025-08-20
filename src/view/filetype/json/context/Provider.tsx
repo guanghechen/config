@@ -1,6 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import JSON5 from 'json5'
 import React from 'react'
+import { toast } from 'react-toastify'
 import type { IJsonFileData } from '@/hook/api/file'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
@@ -86,6 +87,7 @@ const SideEffect: React.FC<ISideEffectPropsWithMode> = props => {
     } else if (error) {
       viewmodel.content$.next(null)
       viewmodel.json$.next(null)
+      toast.error(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.content$.next(content ?? null)
       if (content) {

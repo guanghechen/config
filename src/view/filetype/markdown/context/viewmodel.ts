@@ -20,7 +20,6 @@ export class MarkdownViewViewModel extends ViewModel {
   public readonly specifiedTocActivatedIdentifier$: IState<string | null>
   public readonly mode$: IState<ModeEnum>
   public readonly data$: IState<IMarkdownFileData | null>
-  public readonly contentError$: IState<string | null>
 
   public static fromData(data: Partial<IMarkdownViewData> | undefined): MarkdownViewViewModel {
     const { mode }: IMarkdownViewData = this.normalize(DEFAULT_DATA, data)
@@ -49,7 +48,6 @@ export class MarkdownViewViewModel extends ViewModel {
     )
     this.mode$ = new State<ModeEnum>(props.mode ?? ModeEnum.CONTENT)
     this.data$ = new State<IMarkdownFileData | null>(null)
-    this.contentError$ = new State<string | null>(null)
   }
 
   public dump = (): IMarkdownViewData => {

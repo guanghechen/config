@@ -27,7 +27,6 @@ export class PdfViewViewModel extends ViewModel {
   public readonly scale$: IState<number>
   public readonly multiview$: IState<boolean>
   public readonly data$: IState<IPdfFileData | null>
-  public readonly error$: IState<string | null>
 
   public static fromData(data: Partial<IPdfViewData> | undefined): PdfViewViewModel {
     const { mode, scale, multiview }: IPdfViewData = this.normalize(DEFAULT_DATA, data)
@@ -74,7 +73,6 @@ export class PdfViewViewModel extends ViewModel {
     this.scale$ = new State<number>(scale)
     this.multiview$ = new State<boolean>(multiview)
     this.data$ = new State<IPdfFileData | null>(null)
-    this.error$ = new State<string | null>(null)
   }
 
   public dump = (): IPdfViewData => {

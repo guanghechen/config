@@ -1,5 +1,6 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { toast } from 'react-toastify'
 import type { IMarkdownFileData } from '@/hook/api/file'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
@@ -95,13 +96,11 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
     if (data) {
       viewmodel.data$.next(data)
-      viewmodel.contentError$.next(null)
     } else if (error) {
       viewmodel.data$.next(null)
-      viewmodel.contentError$.next(typeof error === 'string' ? error : String(error))
+      toast.error(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.data$.next(null)
-      viewmodel.contentError$.next(null)
     }
   }, [data, error, viewmodel])
 
