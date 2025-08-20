@@ -2,6 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
+import { LiteralBox } from '@/component/LiteralBox'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { useTextViewViewModel } from '../context'
 
@@ -24,7 +25,7 @@ export const RawPane: React.FC = () => {
   }
 
   return (
-    <div className="box-border size-full whitespace-nowrap">
+    <LiteralBox content={content}>
       <CodeHighlighter
         themeScheme={themeScheme}
         lang="text"
@@ -32,7 +33,7 @@ export const RawPane: React.FC = () => {
         collapsed={false}
         showLineno={true}
       />
-    </div>
+    </LiteralBox>
   )
 }
 
