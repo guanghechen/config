@@ -4,17 +4,13 @@ import React from 'react'
 import { toSearch } from '@/shared/util'
 import { useImageViewViewModel } from '../context'
 
-interface IProps {
-  readonly workspace: string | null
-}
-
-export const Main: React.FC<IProps> = props => {
-  const { workspace } = props
+export const Main: React.FC = () => {
   const viewmodel = useImageViewViewModel()
-  const filepath = useStateValue(viewmodel.filepath$)
+  const workspace: string | null = useStateValue(viewmodel.workspace$)
+  const filepath: string = useStateValue(viewmodel.filepath$)
   const position = useStateValue(viewmodel.position$)
-  const rotation = useStateValue(viewmodel.rotation$)
-  const scale = useStateValue(viewmodel.scale$)
+  const rotation: number = useStateValue(viewmodel.rotation$)
+  const scale: number = useStateValue(viewmodel.scale$)
   const [isDragging, setIsDragging] = React.useState<boolean>(false)
   const [startPosition, setStartPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const containerRef = React.useRef<HTMLDivElement>(null)

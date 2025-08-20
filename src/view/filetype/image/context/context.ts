@@ -6,7 +6,10 @@ export interface IImageViewContext {
 }
 
 export const ImageViewContextType = React.createContext<IImageViewContext>({
-  viewmodel: new ImageViewViewModel(),
+  viewmodel: new ImageViewViewModel({
+    workspace: null,
+    filepath: '/dev/null',
+  }),
 })
 
 export const useImageViewViewModel = (): ImageViewViewModel => {

@@ -36,6 +36,14 @@ export interface ITextFileData {
   readonly content: string
 }
 
+export interface IImageFileData {
+  readonly url: string
+  readonly width?: number
+  readonly height?: number
+  readonly size?: number
+  readonly format?: string
+}
+
 export type IFetchFileData =
   | IMarkdownFileData
   | IJsonFileData
@@ -45,6 +53,7 @@ export type IFetchFileData =
   | ISvgFileData
   | IHtmlFileData
   | ITextFileData
+  | IImageFileData
 
 export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly loading?: boolean

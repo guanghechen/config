@@ -138,6 +138,36 @@ export const fetchFile: IApiHandle = async params => {
       }
       return { code: 200, data }
     }
+    case '.bmp':
+    case '.gif':
+    case '.ico':
+    case '.jpeg':
+    case '.jpg':
+    case '.png':
+    case '.webp': {
+      let data: IApiHandleData
+      try {
+        const stats = await fs.stat(filepath)
+        const url = `/api/file/raw?filepath=${encodeURIComponent(filepath)}&workspace=${encodeURIComponent(workspace || '')}`
+        data = {
+          data: {
+            url,
+            size: stats.size,
+            format: extname.slice(1), // Remove the dot
+          },
+        }
+      } catch (error) {
+        state.reporter.error('Failed to get image info:', { filepath, error })
+        data = {
+          error: 'Failed to get image info',
+          details: { pathname, workspace, filepath },
+          data: null,
+        }
+      }
+      // Set content type to JSON for structured image data
+      res.setHeader('Content-Type', 'application/json')
+      return { code: 200, data }
+    }
     default:
   }
 

@@ -1,41 +1,41 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IImageViewData, IImageViewPosition } from './types'
+import type { IImageFileData } from '@/hook/api/file'
+import { type IImageViewData, type IImageViewPosition, ModeEnum } from './types'
 
 interface IProps {
-  readonly filepath?: string | null
+  readonly workspace: string | null
+  readonly filepath: string
+  readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
   readonly position?: IImageViewPosition
 }
 
 const DEFAULT_DATA: IImageViewData = {
+  mode: ModeEnum.CONTENT | ModeEnum.LITERAL,
   scale: 1,
   rotation: 0,
   position: { x: 0, y: 0 },
 }
 
 export class ImageViewViewModel extends ViewModel {
-  public readonly filepath$: IState<string | null>
+  public readonly workspace$: IState<string | null>
+  public readonly filepath$: IState<string>
+  public readonly mode$: IState<ModeEnum>
   public readonly scale$: IState<number>
   public readonly rotation$: IState<number>
   public readonly position$: IState<IImageViewPosition>
 
-  public static fromData(data: Partial<IImageViewData> | undefined): ImageViewViewModel {
-    const { scale, rotation, position }: IImageViewData = this.normalize(DEFAULT_DATA, data)
-    return new ImageViewViewModel({
-      filepath: null,
-      scale,
-      rotation,
-      position,
-    })
-  }
+  public readonly content$: IState<IImageFileData | null>
 
   public static normalize(
-    base: IImageViewData,
     data: Partial<IImageViewData> | undefined,
+    base: IImageViewData = DEFAULT_DATA,
   ): IImageViewData {
-    const { scale, rotation, position } = data || {}
+    const { mode, scale, rotation, position } = data || {}
+    const normalizedMode: ModeEnum =
+      typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
     const normalizedScale: number = typeof scale === 'number' && scale > 0 ? scale : base.scale
     const normalizedRotation: number = typeof rotation === 'number' ? rotation : base.rotation
     const normalizedPosition: IImageViewPosition =
@@ -43,6 +43,7 @@ export class ImageViewViewModel extends ViewModel {
         ? position
         : base.position
     const normalizedData: IImageViewData = {
+      mode: normalizedMode,
       scale: normalizedScale,
       rotation: normalizedRotation,
       position: normalizedPosition,
@@ -50,38 +51,43 @@ export class ImageViewViewModel extends ViewModel {
     return normalizedData
   }
 
-  constructor(props: IProps = {}) {
+  constructor(props: IProps) {
     super()
 
     const {
-      filepath = null,
+      workspace,
+      filepath,
+      mode = DEFAULT_DATA.mode,
       scale = DEFAULT_DATA.scale,
       rotation = DEFAULT_DATA.rotation,
       position = DEFAULT_DATA.position,
     } = props
 
-    this.filepath$ = new State<string | null>(filepath)
+    this.workspace$ = new State<string | null>(workspace)
+    this.filepath$ = new State<string>(filepath)
+    this.mode$ = new State<ModeEnum>(mode)
     this.scale$ = new State<number>(scale)
     this.rotation$ = new State<number>(rotation)
     this.position$ = new State<IImageViewPosition>(position)
+
+    this.content$ = new State<IImageFileData | null>(null)
   }
 
   public dump = (): IImageViewData => {
+    const mode: ModeEnum = this.mode$.getSnapshot()
     const scale: number = this.scale$.getSnapshot()
     const rotation: number = this.rotation$.getSnapshot()
     const position: IImageViewPosition = this.position$.getSnapshot()
-    return {
-      scale,
-      rotation,
-      position,
-    }
+    return { mode, scale, rotation, position }
   }
 
   public load = (data: Partial<IImageViewData> | undefined): void => {
-    const { scale, rotation, position }: IImageViewData = ImageViewViewModel.normalize(
-      this.dump(),
+    const base: IImageViewData = this.dump()
+    const { mode, scale, rotation, position }: IImageViewData = ImageViewViewModel.normalize(
       data,
+      base,
     )
+    this.mode$.next(mode)
     this.scale$.next(scale)
     this.rotation$.next(rotation)
     this.position$.next(position)
