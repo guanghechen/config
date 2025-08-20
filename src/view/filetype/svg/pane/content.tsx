@@ -1,7 +1,6 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { Toolbar } from '../container/Toolbar'
 import { useSvgViewViewModel } from '../context'
 
 export const ContentPane: React.FC = () => {
@@ -65,38 +64,33 @@ export const ContentPane: React.FC = () => {
   }, [])
 
   return (
-    <div>
-      <div>
-        <Toolbar />
-      </div>
-      <div
-        ref={containerRef}
-        onWheel={onWheel}
-        className="relative flex h-full w-full items-center justify-center"
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseLeave}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-      >
-        {isLoading && (
-          <div className="flex items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-          </div>
-        )}
+    <div
+      ref={containerRef}
+      onWheel={onWheel}
+      className="relative flex h-full w-full items-center justify-center"
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseLeave}
+      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+    >
+      {isLoading && (
+        <div className="flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+        </div>
+      )}
 
-        {!isLoading && content && (
-          <div
-            className="svg-container max-h-full max-w-full"
-            style={{
-              transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-              transformOrigin: 'center center',
-              transition: 'transform 100ms ease-in-out',
-            }}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
-        )}
-      </div>
+      {!isLoading && content && (
+        <div
+          className="svg-container max-h-full max-w-full"
+          style={{
+            transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
+            transformOrigin: 'center center',
+            transition: 'transform 100ms ease-in-out',
+          }}
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      )}
     </div>
   )
 }
