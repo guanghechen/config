@@ -1,0 +1,89 @@
+import type { Node } from '@xyflow/react'
+import React from 'react'
+import { Json } from '@/component/json'
+import type { IReactFlowNodeData } from '../util/adaptor'
+
+interface IProps {
+  readonly node: Node<IReactFlowNodeData> | null
+  readonly theme?: 'light' | 'dark'
+  readonly onClose: () => void
+}
+
+export const NodeDetailsPanel: React.FC<IProps> = props => {
+  const { node, onClose } = props
+
+  if (!node) return null
+
+  return (
+    <div className="w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-600 flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Node Details</h3>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          aria-label="Close details panel"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            UUID
+          </label>
+          <div className="font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded border dark:border-gray-700">
+            {node.data.uuid}
+          </div>
+        </div>
+
+        {node.data.parents.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Parent Nodes
+            </label>
+            <div className="space-y-1">
+              {node.data.parents.map(parentId => (
+                <div
+                  key={parentId}
+                  className="font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded border dark:border-gray-700"
+                >
+                  {parentId}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            Position
+          </label>
+          <div className="font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded border dark:border-gray-700">
+            x: {node.position.x.toFixed(2)}, y: {node.position.y.toFixed(2)}
+          </div>
+        </div>
+
+        {!!node.data.data && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Data Content
+            </label>
+            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded border dark:border-gray-700 overflow-x-auto">
+              <Json json={node.data.data} initialCollapsed="expanded" />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+NodeDetailsPanel.displayName = 'ReactFlowNodeDetailsPanel'

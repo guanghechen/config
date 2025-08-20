@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { DagGraph, transformNodesToGraphData } from '@/component/graph/dag'
+import { ReactFlowGraph } from '@/component/graph/reactflow'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import type { ITextTransformedNode } from '@/shared/types'
 import { useTextViewViewModel } from '../context'
@@ -13,9 +13,9 @@ export const ContentGraph: React.FC = () => {
   const theme: SiteTheme = useStateValue(site.theme$)
 
   return (
-    <div className="box-border size-full">
-      <DagGraph
-        data={transformNodesToGraphData(transformedNodes)}
+    <div className="box-border size-full overflow-hidden">
+      <ReactFlowGraph
+        data={transformedNodes}
         theme={theme === SiteTheme.DARKEN ? 'dark' : 'light'}
       />
     </div>
