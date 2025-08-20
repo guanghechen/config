@@ -3,7 +3,6 @@ import React from 'react'
 import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
-import type { IHtmlFileData } from '@/hook/api/file'
 import { useSvgViewViewModel } from '../context'
 
 export const LiteralPane: React.FC = () => {
@@ -12,8 +11,7 @@ export const LiteralPane: React.FC = () => {
   const themeScheme: IPrismThemeScheme = theme === SiteTheme.DARKEN ? vscDarkTheme : vscLightTheme
 
   const viewmodel = useSvgViewViewModel()
-  const data: IHtmlFileData | null = useStateValue(viewmodel.data$)
-  const content: string = data?.content || ''
+  const content: string | null = useStateValue(viewmodel.content$)
 
   if (!content) {
     return (

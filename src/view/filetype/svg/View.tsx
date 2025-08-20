@@ -4,7 +4,7 @@ import { SvgViewProvider } from './context'
 import './style.css'
 
 interface IProps {
-  readonly workspace: string
+  readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
 }

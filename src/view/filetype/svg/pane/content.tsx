@@ -9,13 +9,13 @@ export const ContentPane: React.FC = () => {
   const scale = useStateValue(viewmodel.scale$)
   const rotation = useStateValue(viewmodel.rotation$)
   const position = useStateValue(viewmodel.position$)
-  const data = useStateValue(viewmodel.data$)
+  const content = useStateValue(viewmodel.content$)
 
   const [isDragging, setIsDragging] = React.useState<boolean>(false)
   const [startPosition, setStartPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const containerRef = React.useRef<HTMLDivElement>(null)
 
-  const isLoading = !data
+  const isLoading = !content
 
   const onMouseDown = useEventCallback((e: React.MouseEvent<HTMLDivElement>): void => {
     setIsDragging(true)
@@ -85,7 +85,7 @@ export const ContentPane: React.FC = () => {
           </div>
         )}
 
-        {!isLoading && data && data.content && (
+        {!isLoading && content && (
           <div
             className="svg-container max-h-full max-w-full"
             style={{
@@ -93,7 +93,7 @@ export const ContentPane: React.FC = () => {
               transformOrigin: 'center center',
               transition: 'transform 100ms ease-in-out',
             }}
-            dangerouslySetInnerHTML={{ __html: data.content }}
+            dangerouslySetInnerHTML={{ __html: content }}
           />
         )}
       </div>

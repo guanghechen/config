@@ -26,14 +26,17 @@ export const SvgViewProvider: React.FC<IProps> = props => {
   const { workspace, filepath, filepathDirtyTick, mode, scale, rotation, position, children } =
     props
   const viewmodel: SvgViewViewModel | null = useSingleton<SvgViewViewModel>(() => {
-    const initialData: Partial<ISvgViewData> = JSON.parse(
+    const rawViewData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
-    return SvgViewViewModel.fromData({
-      mode: mode ?? initialData.mode,
-      scale: scale ?? initialData.scale,
-      rotation: rotation ?? initialData.rotation,
-      position: position ?? initialData.position,
+    const viewData: ISvgViewData = SvgViewViewModel.normalize(rawViewData)
+    return new SvgViewViewModel({
+      workspace,
+      filepath,
+      mode: mode ?? viewData.mode,
+      scale: scale ?? viewData.scale,
+      rotation: rotation ?? viewData.rotation,
+      position: position ?? viewData.position,
     })
   })
 
@@ -52,6 +55,7 @@ export const SvgViewProvider: React.FC<IProps> = props => {
         workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
+        mode={mode}
         scale={scale}
         rotation={rotation}
         position={position}
@@ -79,21 +83,18 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace, filepath, filepathDirtyTick, mode, scale, rotation, position } =
     props
 
-  const { data, error } = useFileResult<ISvgFileData>(workspace, filepath, filepathDirtyTick)
+  usePersistent(viewmodel)
+  useSyncProps(viewmodel, workspace, filepath, mode, scale, rotation, position)
+  useData(viewmodel, workspace, filepath, filepathDirtyTick)
 
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
+  return <React.Fragment />
+}
 
-    if (data) {
-      viewmodel.data$.next(data)
-    } else if (error) {
-      viewmodel.data$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
-    } else {
-      viewmodel.data$.next(null)
-    }
-  }, [data, error, viewmodel])
+SideEffect.displayName = 'SvgViewSideEffect'
 
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const usePersistent = (viewmodel: SvgViewViewModel): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [viewmodel.mode$, viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
@@ -106,6 +107,21 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
       computed.dispose()
     }
   }, [viewmodel])
+}
+
+const useSyncProps = (
+  viewmodel: SvgViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  mode: ModeEnum | undefined,
+  scale: number | undefined,
+  rotation: number | undefined,
+  position: ISvgViewPosition | undefined,
+): void => {
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.workspace$.next(workspace)
+  }, [viewmodel, workspace])
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
@@ -131,8 +147,26 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     if (viewmodel.disposed) return
     viewmodel.position$.next(position ?? viewmodel.position$.getSnapshot())
   }, [viewmodel, position])
-
-  return <React.Fragment />
 }
 
-SideEffect.displayName = 'SvgViewSideEffect'
+const useData = (
+  viewmodel: SvgViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  filepathDirtyTick: number,
+): void => {
+  const { data, error } = useFileResult<ISvgFileData>(workspace, filepath, filepathDirtyTick)
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+
+    if (data) {
+      viewmodel.content$.next(data.content)
+    } else if (error) {
+      viewmodel.content$.next(null)
+      toast.error(typeof error === 'string' ? error : String(error))
+    } else {
+      viewmodel.content$.next(null)
+    }
+  }, [data, error, viewmodel])
+}
