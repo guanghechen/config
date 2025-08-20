@@ -1,37 +1,24 @@
+import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IFileData } from './types'
+import type { IFileViewData } from './types'
 
 interface IProps {
-  readonly filepath: string | null
+  readonly filepath?: string | null
 }
 
-const DEFAULT_DATA: IFileData = {
+const DEFAULT_DATA: IFileViewData = {
   filepath: null,
 }
 
-export class FileViewModel extends ViewModel {
+export class FileViewViewModel extends ViewModel {
   public readonly filepath$: State<string | null>
-  public readonly filepathDirtyTick$: State<number>
-  public readonly mainScrollableContainer$: State<HTMLDivElement | null>
-
-  public static fromData(data: Partial<IFileData> | undefined): FileViewModel {
-    const { filepath }: IFileData = this.normalize(DEFAULT_DATA, data)
-    return new FileViewModel({ filepath })
-  }
-
-  public static normalize(base: IFileData, data: Partial<IFileData> | undefined): IFileData {
-    const { filepath } = data || {}
-    const normalizedFilepath = typeof filepath === 'string' ? filepath : base.filepath
-    const normalizedData: IFileData = {
-      filepath: normalizedFilepath,
-    }
-    return normalizedData
-  }
+  public readonly filepathDirtyTick$: IState<number>
+  public readonly mainScrollableContainer$: IState<HTMLDivElement | null>
 
   constructor(props: IProps) {
     super()
 
-    const { filepath } = props
+    const { filepath = DEFAULT_DATA.filepath } = props
 
     const filepath$ = new State<string | null>(filepath)
     const filepathDirtyTick$ = new State<number>(0)
@@ -42,18 +29,30 @@ export class FileViewModel extends ViewModel {
     this.mainScrollableContainer$ = mainScrollableContainer$
   }
 
+  public static normalize(
+    data: Partial<IFileViewData> | undefined,
+    base: IFileViewData = DEFAULT_DATA,
+  ): IFileViewData {
+    const { filepath } = data || {}
+    const normalizedFilepath = typeof filepath === 'string' ? filepath : base.filepath
+    const normalizedData: IFileViewData = {
+      filepath: normalizedFilepath,
+    }
+    return normalizedData
+  }
+
   public markFilepathDirty = (): void => {
     const tick: number = this.filepathDirtyTick$.getSnapshot()
     this.filepathDirtyTick$.next(tick + 1)
   }
 
-  public dump = (): IFileData => {
+  public dump = (): IFileViewData => {
     const filepath: string | null = this.filepath$.getSnapshot()
     return { filepath }
   }
 
-  public load = (data: Partial<IFileData> | undefined): void => {
-    const { filepath }: IFileData = FileViewModel.normalize(this.dump(), data)
+  public load = (data: Partial<IFileViewData> | undefined): void => {
+    const { filepath }: IFileViewData = FileViewViewModel.normalize(data, this.dump())
     this.filepath$.next(filepath)
   }
 }

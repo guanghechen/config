@@ -1,13 +1,14 @@
 import React from 'react'
-import type { FileViewModel } from './viewmodel'
+import type { FileViewViewModel } from './viewmodel'
 
 export interface IFileContext {
-  readonly viewmodel: FileViewModel
+  readonly viewmodel: FileViewViewModel
 }
 
-export const FileContextType = React.createContext<IFileContext>({
-  viewmodel: null as unknown as FileViewModel,
+export const FileViewContextType = React.createContext<IFileContext>({
+  viewmodel: null as unknown as FileViewViewModel,
 })
-FileContextType.displayName = 'FileContext'
+FileViewContextType.displayName = 'FileContext'
 
-export const useFileViewmodel = (): FileViewModel => React.useContext(FileContextType).viewmodel
+export const useFileViewmodel = (): FileViewViewModel =>
+  React.useContext(FileViewContextType).viewmodel

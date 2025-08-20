@@ -10,25 +10,26 @@ import type {
   Mutable,
 } from '@/shared/types'
 import type { IFileContext } from './context'
-import { FileContextType } from './context'
-import type { IFileData } from './types'
-import { FileViewModel } from './viewmodel'
+import { FileViewContextType } from './context'
+import type { IFileViewData } from './types'
+import { FileViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/file'
 
 interface ISideEffectProps {
-  readonly viewmodel: FileViewModel
+  readonly viewmodel: FileViewViewModel
 }
 
 export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const viewmodel: FileViewModel | null = useSingleton<FileViewModel>(() => {
-    const initialData: Mutable<Partial<IFileData>> = JSON.parse(
+  const viewmodel: FileViewViewModel | null = useSingleton<FileViewViewModel>(() => {
+    const rawViewData: Mutable<Partial<IFileViewData>> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
+    const viewData: IFileViewData = FileViewViewModel.normalize(rawViewData)
     const usp = new URLSearchParams(window.location.search)
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
-    return FileViewModel.fromData({
-      filepath: filepath ?? initialData.filepath,
+    return new FileViewViewModel({
+      filepath: filepath ?? viewData.filepath,
     })
   })
   const context: IFileContext | null = React.useMemo<IFileContext | null>(
@@ -40,7 +41,7 @@ export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props =
 
   return (
     <React.Fragment>
-      <FileContextType.Provider value={context}>{props.children}</FileContextType.Provider>
+      <FileViewContextType.Provider value={context}>{props.children}</FileViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
       <HmrSideEffect viewmodel={viewmodel} />
     </React.Fragment>
@@ -112,17 +113,30 @@ HmrSideEffect.displayName = 'FileViewHmrSideEffect'
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
-  const filepath: string | null = useStateValue(viewmodel.filepath$)
 
+  usePersistent(viewmodel)
+  useUrlParams(viewmodel)
+
+  return <React.Fragment />
+}
+SideEffect.displayName = 'FileViewSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const usePersistent = (viewmodel: FileViewViewModel): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.filepath$], () => {
-      const data: IFileData = viewmodel.dump()
+      const data: IFileViewData = viewmodel.dump()
       window.localStorage.setItem(storageKey, JSON.stringify(data))
     })
     return (): void => {
       computed.dispose()
     }
   }, [viewmodel])
+}
+
+const useUrlParams = (viewmodel: FileViewViewModel): void => {
+  const filepath: string | null = useStateValue(viewmodel.filepath$)
 
   React.useEffect(() => {
     const usp = new URLSearchParams(window.location.search)
@@ -133,7 +147,4 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     const newUrl = `${window.location.pathname}?${usp.toString()}`
     window.history.replaceState(null, '', newUrl)
   }, [filepath])
-
-  return <React.Fragment />
 }
-SideEffect.displayName = 'FileViewSideEffect'

@@ -1,3 +1,3 @@
-export interface IFileData {
+export interface IFileViewData {
   readonly filepath: string | null
 }
