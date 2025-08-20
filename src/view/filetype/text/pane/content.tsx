@@ -63,7 +63,7 @@ export const ContentPane: React.FC = () => {
   return (
     <React.Fragment>
       <ContentPaneHeader />
-      <div className="box-border flex-auto">
+      <div className="box-border w-full flex-auto">
         <ContentPaneMain />
       </div>
     </React.Fragment>
