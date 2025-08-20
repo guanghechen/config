@@ -7,14 +7,10 @@ import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useGetWorkspaces } from '@/hook/api/workspaces'
 import { useSingleton } from '@/hook/useSingleton'
 import { ServerCustomEventType } from '@/shared/types'
-import type {
-  IResponsePayloadFileChanged,
-  IResponsePayloadFileSwitch,
-  Mutable,
-} from '@/shared/types'
+import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '@/shared/types'
 import type { IWorkspaceContext } from './context'
 import { WorkspaceViewContextType } from './context'
-import type { IWorkspaceData } from './types'
+import type { IWorkspaceViewData } from './types'
 import { WorkspaceViewViewModel } from './viewmodel'
 
 const storageKey: string = '#/view/workspace'
@@ -26,20 +22,22 @@ interface ISideEffectProps {
 export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const { workspace_name } = useParams<{ workspace_name?: string }>()
   const viewmodel: WorkspaceViewViewModel | null = useSingleton<WorkspaceViewViewModel>(() => {
-    const initialData: Mutable<Partial<IWorkspaceData>> = JSON.parse(
+    const rawViewData: Partial<IWorkspaceViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const usp = new URLSearchParams(window.location.search)
     const workspace: string | null = workspace_name || null
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
-    return WorkspaceViewViewModel.fromData({
-      workspace: workspace ?? initialData.workspace,
-      filepath: filepath ?? initialData.filepath,
-      workspaces: initialData.workspaces,
-      filetreeKeyword: initialData.filetreeKeyword,
-      filetreeMode: initialData.filetreeMode,
-      sidebarVisible: initialData.sidebarVisible,
-      sidebarWidth: initialData.sidebarWidth,
+
+    const viewData: IWorkspaceViewData = WorkspaceViewViewModel.normalize(rawViewData)
+    return new WorkspaceViewViewModel({
+      workspace: workspace ?? viewData.workspace,
+      filepath: filepath ?? viewData.filepath,
+      workspaces: viewData.workspaces,
+      filetreeKeyword: viewData.filetreeKeyword,
+      filetreeMode: viewData.filetreeMode,
+      sidebarVisible: viewData.sidebarVisible,
+      sidebarWidth: viewData.sidebarWidth,
     })
   })
   const context: IWorkspaceContext | null = React.useMemo<IWorkspaceContext | null>(
@@ -55,7 +53,6 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
         {props.children}
       </WorkspaceViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
-      <HmrSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -63,8 +60,44 @@ WorkspaceViewProvider.displayName = 'WorkspaceViewProvider'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const HmrSideEffect: React.FC<ISideEffectProps> = props => {
+const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
+
+  usePersistent(viewmodel)
+  useHMR(viewmodel)
+  useSyncProps(viewmodel)
+  useMermaid()
+
+  return <React.Fragment />
+}
+
+SideEffect.displayName = 'WorkspaceViewSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const usePersistent = (viewmodel: WorkspaceViewViewModel): void => {
+  React.useEffect(() => {
+    const computed = Computed.fromObservables(
+      [
+        viewmodel.filepath$,
+        viewmodel.workspace$,
+        viewmodel.workspaces$,
+        viewmodel.filetreeMode$,
+        viewmodel.sidebarWidth$,
+        viewmodel.sidebarVisible$,
+      ],
+      () => {
+        const data: IWorkspaceViewData = viewmodel.dump()
+        window.localStorage.setItem(storageKey, JSON.stringify(data))
+      },
+    )
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+}
+
+const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
   const navigate = useNavigate()
   const navigateRef = React.useRef<NavigateFunction>(navigate)
   navigateRef.current = navigate
@@ -118,41 +151,12 @@ const HmrSideEffect: React.FC<ISideEffectProps> = props => {
       meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
     }
   }, [viewmodel])
-
-  return <React.Fragment />
 }
-HmrSideEffect.displayName = 'WorkspaceViewHmrSideEffect'
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel } = props
-  const theme: SiteTheme = useSiteTheme()
-
-  const workspace: string | null = useStateValue(viewmodel.workspace$)
-  const filepath: string | null = useStateValue(viewmodel.filepath$)
+const useSyncProps = (viewmodel: WorkspaceViewViewModel): void => {
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
   const { workspaces } = useGetWorkspaces(workspacesDirtyTick)
-
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [
-        viewmodel.filepath$,
-        viewmodel.workspace$,
-        viewmodel.workspaces$,
-        viewmodel.filetreeMode$,
-        viewmodel.sidebarWidth$,
-        viewmodel.sidebarVisible$,
-      ],
-      () => {
-        const data: IWorkspaceData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
+  const filepath: string | null = useStateValue(viewmodel.filepath$)
 
   React.useEffect(() => {
     viewmodel.workspaces$.next(workspaces)
@@ -163,18 +167,17 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     usp.delete('workspace')
     usp.delete('filepath')
 
-    if (workspace) usp.set('workspace', encodeURIComponent(workspace))
     if (filepath) usp.set('filepath', encodeURIComponent(filepath))
     const newUrl = `${window.location.pathname}?${usp.toString()}`
     window.history.replaceState(null, '', newUrl)
-  }, [workspace, filepath])
+  }, [filepath])
+}
+
+const useMermaid = (): void => {
+  const theme: SiteTheme = useSiteTheme()
 
   React.useEffect(() => {
     const darken = theme === SiteTheme.DARKEN
     mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
   }, [theme])
-
-  return <React.Fragment />
 }
-
-SideEffect.displayName = 'WorkspaceViewSideEffect'

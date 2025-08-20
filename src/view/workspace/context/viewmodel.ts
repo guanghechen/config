@@ -1,21 +1,22 @@
+import type { IState } from '@guanghechen/react-viewmodel'
 import { State, Subscriber, ViewModel } from '@guanghechen/react-viewmodel'
 import debounce from 'lodash.debounce'
 import { FileTreeModeEnum } from '@/component/filetree/context/types'
-import type { IWorkspaceData, IWorkspaceItem } from './types'
+import type { IWorkspaceItem, IWorkspaceViewData } from './types'
 
 interface IProps {
-  readonly filepath: string | null
-  readonly workspace: string | null
-  readonly workspaces: IWorkspaceItem[]
+  readonly filepath?: string | null
+  readonly workspace?: string | null
+  readonly workspaces?: IWorkspaceItem[]
 
-  readonly filetreeKeyword: string
-  readonly filetreeMode: FileTreeModeEnum
+  readonly filetreeKeyword?: string
+  readonly filetreeMode?: FileTreeModeEnum
 
-  readonly sidebarVisible: boolean
-  readonly sidebarWidth: number
+  readonly sidebarVisible?: boolean
+  readonly sidebarWidth?: number
 }
 
-const DEFAULT_DATA: IWorkspaceData = {
+const DEFAULT_DATA: IWorkspaceViewData = {
   filepath: null,
   workspace: null,
   workspaces: [],
@@ -27,104 +28,37 @@ const DEFAULT_DATA: IWorkspaceData = {
 
 export class WorkspaceViewViewModel extends ViewModel {
   public readonly filepath$: State<string | null>
-  public readonly workspace$: State<string | null>
-  public readonly workspaces$: State<IWorkspaceItem[]>
+  public readonly workspace$: IState<string | null>
+  public readonly workspaces$: IState<IWorkspaceItem[]>
 
-  public readonly filetreeKeyword$: State<string>
-  public readonly filetreeMode$: State<FileTreeModeEnum>
+  public readonly filetreeKeyword$: IState<string>
+  public readonly filetreeMode$: IState<FileTreeModeEnum>
 
-  public readonly sidebarVisible$: State<boolean>
-  public readonly sidebarWidth$: State<number>
+  public readonly sidebarVisible$: IState<boolean>
+  public readonly sidebarWidth$: IState<number>
 
-  public readonly tocActivatedIdentifier$: State<string | null>
-  public readonly specifiedTocActivatedIdentifier$: State<string | null>
+  public readonly tocActivatedIdentifier$: IState<string | null>
+  public readonly specifiedTocActivatedIdentifier$: IState<string | null>
 
-  public readonly filepathDirtyTick$: State<number>
-  public readonly revealTick$: State<number>
-  public readonly workspacesDirtyTick$: State<number>
+  public readonly filepathDirtyTick$: IState<number>
+  public readonly revealTick$: IState<number>
+  public readonly workspacesDirtyTick$: IState<number>
 
-  public readonly mainScrollableContainer$: State<HTMLDivElement | null>
+  public readonly mainScrollableContainer$: IState<HTMLDivElement | null>
 
   public readonly updateSidebarWidthDebounced: (nextWidth: number) => void
-
-  public static fromData(data: Partial<IWorkspaceData> | undefined): WorkspaceViewViewModel {
-    const {
-      filepath,
-      workspace,
-      workspaces,
-      filetreeKeyword,
-      filetreeMode,
-      sidebarVisible,
-      sidebarWidth,
-    }: IWorkspaceData = this.normalize(DEFAULT_DATA, data)
-    return new WorkspaceViewViewModel({
-      filepath,
-      workspace,
-      workspaces,
-      filetreeKeyword,
-      filetreeMode,
-      sidebarVisible,
-      sidebarWidth,
-    })
-  }
-
-  public static normalize(
-    base: IWorkspaceData,
-    data: Partial<IWorkspaceData> | undefined,
-  ): IWorkspaceData {
-    const {
-      filepath,
-      workspace,
-      workspaces,
-      filetreeKeyword,
-      filetreeMode,
-      sidebarVisible,
-      sidebarWidth,
-    } = data || {}
-    const normalizedFilepath = typeof filepath === 'string' ? filepath : base.filepath
-    const normalizedWorkspace = typeof workspace === 'string' ? workspace : base.workspace
-    let normalizedWorkspaces: IWorkspaceItem[] = []
-    if (Array.isArray(workspaces)) {
-      for (const item of workspaces) {
-        if (!!item && typeof item.tag === 'string') {
-          normalizedWorkspaces.push({ tag: item.tag })
-        }
-      }
-    } else {
-      normalizedWorkspaces = base.workspaces
-    }
-
-    const normalizedFiletreeKeyword = typeof filetreeKeyword === 'string' ? filetreeKeyword : ''
-    const normalizedFiletreeMode: FileTreeModeEnum =
-      filetreeMode === FileTreeModeEnum.TREE || filetreeMode === FileTreeModeEnum.LIST
-        ? filetreeMode
-        : base.filetreeMode
-
-    const normalizedVisible: boolean = typeof sidebarVisible === 'boolean' ? sidebarVisible : true
-    const normalizedWidth: number = typeof sidebarWidth === 'number' ? sidebarWidth : 300
-    const normalizedData: IWorkspaceData = {
-      filepath: normalizedFilepath,
-      workspace: normalizedWorkspace,
-      workspaces: normalizedWorkspaces,
-      filetreeKeyword: normalizedFiletreeKeyword,
-      filetreeMode: normalizedFiletreeMode,
-      sidebarVisible: normalizedVisible,
-      sidebarWidth: normalizedWidth,
-    }
-    return normalizedData
-  }
 
   constructor(props: IProps) {
     super()
 
     const {
-      filepath,
-      workspace,
-      workspaces,
-      filetreeKeyword,
-      filetreeMode,
-      sidebarWidth,
-      sidebarVisible,
+      filepath = DEFAULT_DATA.filepath,
+      workspace = DEFAULT_DATA.workspace,
+      workspaces = DEFAULT_DATA.workspaces,
+      filetreeKeyword = DEFAULT_DATA.filetreeKeyword,
+      filetreeMode = DEFAULT_DATA.filetreeMode,
+      sidebarWidth = DEFAULT_DATA.sidebarWidth,
+      sidebarVisible = DEFAULT_DATA.sidebarVisible,
     } = props
 
     const filepath$ = new State<string | null>(filepath)
@@ -179,17 +113,53 @@ export class WorkspaceViewViewModel extends ViewModel {
     )
   }
 
-  public markFilepathDirty = (): void => {
-    const tick: number = this.filepathDirtyTick$.getSnapshot()
-    this.filepathDirtyTick$.next(tick + 1)
+  public static normalize(
+    data: Partial<IWorkspaceViewData> | undefined,
+    base: IWorkspaceViewData = DEFAULT_DATA,
+  ): IWorkspaceViewData {
+    const {
+      filepath,
+      workspace,
+      workspaces,
+      filetreeKeyword,
+      filetreeMode,
+      sidebarVisible,
+      sidebarWidth,
+    } = data || {}
+    const normalizedFilepath = typeof filepath === 'string' ? filepath : base.filepath
+    const normalizedWorkspace = typeof workspace === 'string' ? workspace : base.workspace
+    let normalizedWorkspaces: IWorkspaceItem[] = []
+    if (Array.isArray(workspaces)) {
+      for (const item of workspaces) {
+        if (!!item && typeof item.tag === 'string') {
+          normalizedWorkspaces.push({ tag: item.tag })
+        }
+      }
+    } else {
+      normalizedWorkspaces = base.workspaces
+    }
+
+    const normalizedFiletreeKeyword = typeof filetreeKeyword === 'string' ? filetreeKeyword : ''
+    const normalizedFiletreeMode: FileTreeModeEnum =
+      filetreeMode === FileTreeModeEnum.TREE || filetreeMode === FileTreeModeEnum.LIST
+        ? filetreeMode
+        : base.filetreeMode
+
+    const normalizedVisible: boolean = typeof sidebarVisible === 'boolean' ? sidebarVisible : true
+    const normalizedWidth: number = typeof sidebarWidth === 'number' ? sidebarWidth : 300
+    const normalizedData: IWorkspaceViewData = {
+      filepath: normalizedFilepath,
+      workspace: normalizedWorkspace,
+      workspaces: normalizedWorkspaces,
+      filetreeKeyword: normalizedFiletreeKeyword,
+      filetreeMode: normalizedFiletreeMode,
+      sidebarVisible: normalizedVisible,
+      sidebarWidth: normalizedWidth,
+    }
+    return normalizedData
   }
 
-  public markWorkspaceDirty = (): void => {
-    const tick: number = this.workspacesDirtyTick$.getSnapshot()
-    this.workspacesDirtyTick$.next(tick + 1)
-  }
-
-  public dump = (): IWorkspaceData => {
+  public dump = (): IWorkspaceViewData => {
     const filepath: string | null = this.filepath$.getSnapshot()
     const workspace: string | null = this.workspace$.getSnapshot()
     const workspaces: IWorkspaceItem[] = this.workspaces$.getSnapshot()
@@ -208,7 +178,7 @@ export class WorkspaceViewViewModel extends ViewModel {
     }
   }
 
-  public load = (data: Partial<IWorkspaceData> | undefined): void => {
+  public load = (data: Partial<IWorkspaceViewData> | undefined): void => {
     const {
       filepath,
       workspace,
@@ -217,7 +187,7 @@ export class WorkspaceViewViewModel extends ViewModel {
       filetreeMode,
       sidebarVisible,
       sidebarWidth,
-    }: IWorkspaceData = WorkspaceViewViewModel.normalize(this.dump(), data)
+    }: IWorkspaceViewData = WorkspaceViewViewModel.normalize(data, this.dump())
     this.workspaces$.next(workspaces)
     this.workspace$.next(workspace)
     this.filetreeKeyword$.next(filetreeKeyword)
@@ -225,6 +195,16 @@ export class WorkspaceViewViewModel extends ViewModel {
     this.filepath$.next(filepath)
     this.sidebarVisible$.next(sidebarVisible)
     this.sidebarWidth$.next(sidebarWidth)
+  }
+
+  public markFilepathDirty = (): void => {
+    const tick: number = this.filepathDirtyTick$.getSnapshot()
+    this.filepathDirtyTick$.next(tick + 1)
+  }
+
+  public markWorkspaceDirty = (): void => {
+    const tick: number = this.workspacesDirtyTick$.getSnapshot()
+    this.workspacesDirtyTick$.next(tick + 1)
   }
 
   public toggleBothSidebarAndTopbar = (): void => {

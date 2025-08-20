@@ -4,7 +4,7 @@ export interface IWorkspaceItem {
   readonly tag: string
 }
 
-export interface IWorkspaceData {
+export interface IWorkspaceViewData {
   readonly filepath: string | null
   readonly workspace: string | null
   readonly workspaces: IWorkspaceItem[]
