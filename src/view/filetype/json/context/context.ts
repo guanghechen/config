@@ -6,10 +6,13 @@ export interface IJsonViewContext {
 }
 
 export const JsonViewContextType = React.createContext<IJsonViewContext>({
-  viewmodel: new JsonViewViewModel(),
+  viewmodel: new JsonViewViewModel({
+    workspace: null,
+    filepath: '/dev/null',
+  }),
 })
+JsonViewContextType.displayName = 'JsonViewContextType'
 
 export const useJsonViewViewModel = (): JsonViewViewModel => {
-  const context = React.useContext(JsonViewContextType)
-  return context.viewmodel
+  return React.useContext(JsonViewContextType).viewmodel
 }

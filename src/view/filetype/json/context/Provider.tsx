@@ -14,21 +14,23 @@ const storageKey: string = '#/view/filetype/json'
 
 interface IProps {
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
-  readonly content?: string | null
   readonly children: React.ReactNode
 }
 
 export const JsonViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, content, children } = props
+  const { workspace, filepath, filepathDirtyTick, mode, children } = props
   const viewmodel: JsonViewViewModel | null = useSingleton<JsonViewViewModel>(() => {
-    const initialData: Partial<IJsonViewData> = JSON.parse(
+    const rawViewData: Partial<IJsonViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
-    return JsonViewViewModel.fromData({
-      mode: mode ?? initialData.mode,
+    const viewData: IJsonViewData = JsonViewViewModel.normalize(rawViewData)
+    return new JsonViewViewModel({
+      workspace,
+      filepath,
+      mode: mode ?? viewData.mode,
     })
   })
   const context: IJsonViewContext | null = React.useMemo<IJsonViewContext | null>(
@@ -47,7 +49,6 @@ export const JsonViewProvider: React.FC<IProps> = props => {
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
         mode={mode}
-        content={content}
       />
     </React.Fragment>
   )
@@ -57,24 +58,74 @@ JsonViewProvider.displayName = 'JsonViewProvider'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-interface ISideEffectPropsWithMode {
+interface ISideEffectProps {
   readonly viewmodel: JsonViewViewModel
   readonly workspace: string | null
-  readonly filepath: string | null
+  readonly filepath: string
   readonly filepathDirtyTick: number
   readonly mode?: ModeEnum
-  readonly content?: string | null
 }
 
-const SideEffect: React.FC<ISideEffectPropsWithMode> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, content } = props
+const SideEffect: React.FC<ISideEffectProps> = props => {
+  const { viewmodel, workspace, filepath, filepathDirtyTick, mode } = props
 
+  usePersistent(viewmodel)
+  useSyncProps(viewmodel, workspace, filepath, mode)
+  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+
+  return <React.Fragment />
+}
+
+SideEffect.displayName = 'JsonViewSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const usePersistent = (viewmodel: JsonViewViewModel): void => {
+  React.useEffect(() => {
+    const computed = Computed.fromObservables([viewmodel.mode$], () => {
+      const data: IJsonViewData = viewmodel.dump()
+      window.localStorage.setItem(storageKey, JSON.stringify(data))
+    })
+    return (): void => {
+      computed.dispose()
+    }
+  }, [viewmodel])
+}
+
+const useSyncProps = (
+  viewmodel: JsonViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  mode: ModeEnum | undefined,
+): void => {
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.workspace$.next(workspace)
+  }, [viewmodel, workspace])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.filepath$.next(filepath)
+  }, [viewmodel, filepath])
+
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
+  }, [viewmodel, mode])
+}
+
+const useData = (
+  viewmodel: JsonViewViewModel,
+  workspace: string | null,
+  filepath: string,
+  filepathDirtyTick: number,
+): void => {
   const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)
 
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (data?.content) {
+    if (data) {
       viewmodel.content$.next(data.content)
 
       // Parse JSON content
@@ -89,36 +140,8 @@ const SideEffect: React.FC<ISideEffectPropsWithMode> = props => {
       viewmodel.json$.next(null)
       toast.error(typeof error === 'string' ? error : String(error))
     } else {
-      viewmodel.content$.next(content ?? null)
-      if (content) {
-        try {
-          const parsedJson = JSON5.parse(content)
-          viewmodel.json$.next(parsedJson)
-        } catch (_parseError) {
-          viewmodel.json$.next(null)
-        }
-      } else {
-        viewmodel.json$.next(null)
-      }
+      viewmodel.content$.next(null)
+      viewmodel.json$.next(null)
     }
-  }, [data, error, content, viewmodel])
-
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.mode$], () => {
-      const data: IJsonViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.mode$.next(mode ?? 1)
-  }, [viewmodel, mode])
-
-  return <React.Fragment />
+  }, [data, error, viewmodel])
 }
-
-SideEffect.displayName = 'JsonViewSideEffect'

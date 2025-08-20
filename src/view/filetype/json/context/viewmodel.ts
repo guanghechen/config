@@ -4,9 +4,9 @@ import type { IJsonViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
+  readonly workspace: string | null
+  readonly filepath: string
   readonly mode?: ModeEnum
-  readonly content?: string | null
-  readonly json?: unknown
 }
 
 const DEFAULT_DATA: IJsonViewData = {
@@ -14,44 +14,47 @@ const DEFAULT_DATA: IJsonViewData = {
 }
 
 export class JsonViewViewModel extends ViewModel {
+  public readonly workspace$: IState<string | null>
+  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
+
   public readonly content$: IState<string | null>
   public readonly json$: IState<unknown>
 
-  public static fromData(data: Partial<IJsonViewData> | undefined): JsonViewViewModel {
-    const { mode }: IJsonViewData = this.normalize(DEFAULT_DATA, data)
-    return new JsonViewViewModel({ mode })
+  constructor(props: IProps) {
+    super()
+
+    const { workspace, filepath, mode = DEFAULT_DATA.mode } = props
+
+    this.workspace$ = new State<string | null>(workspace)
+    this.filepath$ = new State<string>(filepath)
+    this.mode$ = new State<ModeEnum>(mode)
+
+    this.content$ = new State<string | null>(null)
+    this.json$ = new State<unknown>(null)
   }
 
   public static normalize(
-    base: IJsonViewData,
     data: Partial<IJsonViewData> | undefined,
+    base: IJsonViewData = DEFAULT_DATA,
   ): IJsonViewData {
     const { mode } = data || {}
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
-    const normalizedData: IJsonViewData = {
+    const viewData: IJsonViewData = {
       mode: normalizedMode,
     }
-    return normalizedData
-  }
-
-  constructor(props: IProps = {}) {
-    super()
-    this.mode$ = new State<ModeEnum>(props.mode ?? 1)
-    this.content$ = new State<string | null>(props.content ?? null)
-    this.json$ = new State<unknown>(props.json ?? null)
+    return viewData
   }
 
   public dump = (): IJsonViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
-    return {
-      mode,
-    }
+    return { mode }
   }
 
   public load = (data: Partial<IJsonViewData> | undefined): void => {
-    const { mode }: IJsonViewData = JsonViewViewModel.normalize(this.dump(), data)
+    const base: IJsonViewData = this.dump()
+    const { mode } = JsonViewViewModel.normalize(data, base)
     this.mode$.next(mode)
   }
 }
