@@ -1850,10 +1850,12 @@ function M:__match__(input)
     return
   end
 
+  local pattern = input:gsub("[/\\]", std.env.PATH_SEP) ---@type string
+
   ---@type string[]
   local uuids_order = treeview:match({
     rootuuid = self._uuid_root,
-    pattern = input,
+    pattern = pattern,
     case_sensitive = self.flag_sensitive:snapshot(),
     fuzzy = self.flag_fuzzy:snapshot(),
     regex = self.flag_regex:snapshot(),
