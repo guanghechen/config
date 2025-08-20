@@ -13,6 +13,7 @@ import { existsSync, statSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parse as parseYaml } from 'yaml'
+import type { IMarkdownFileData } from '../../shared/types/api'
 import { toSearch } from '../../shared/util'
 import state from '../state'
 
@@ -42,11 +43,7 @@ async function resolveRefPath(curDir: string, refPath: string): Promise<string |
   return null
 }
 
-async function parseMarkdown(filepath: string): Promise<{
-  readonly ast: Root
-  readonly toc: IHeadingToc
-  readonly frontmatter: Record<string, unknown>
-}> {
+async function parseMarkdown(filepath: string): Promise<IMarkdownFileData> {
   if (!existsSync(filepath)) throw new Error(`File not found: ${filepath}.`)
 
   const stat = statSync(filepath)

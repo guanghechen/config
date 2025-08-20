@@ -2,59 +2,31 @@
 // Types and functions in this file have been moved to @/hook/api/file.ts
 // This file is kept temporarily for backward compatibility.
 
-import type { Root } from '@yozora/ast'
-import type { IHeadingToc } from '@yozora/ast-util'
+import type {
+  IEventStreamFileData,
+  IFetchFileData,
+  IFetchFileResult,
+  IHtmlFileData,
+  IJsonFileData,
+  IJsonlFileData,
+  IMarkdownFileData,
+  IPdfFileData,
+  ISvgFileData,
+  ITextFileData,
+} from '@/shared/types/api'
 
-export interface IMarkdownFileData {
-  readonly ast: Root
-  readonly toc: IHeadingToc
-  readonly frontmatter: Record<string, unknown>
-}
-
-export interface IJsonFileData {
-  readonly content: string
-}
-
-export interface IEventStreamFileData {
-  readonly content: string
-}
-
-export interface IJsonlFileData {
-  readonly content: string
-}
-
-export interface IPdfFileData {
-  readonly url: string
-}
-
-export interface ISvgFileData {
-  readonly content: string
-}
-
-export interface IHtmlFileData {
-  readonly content: string
-}
-
-export interface ITextFileData {
-  readonly content: string
-}
-
-export type IFetchFileData =
-  | IMarkdownFileData
-  | IJsonFileData
-  | IEventStreamFileData
-  | IJsonlFileData
-  | IPdfFileData
-  | ISvgFileData
-  | IHtmlFileData
-  | ITextFileData
-
-export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
-  readonly loading?: boolean
-  readonly data?: T | undefined
-  readonly text?: string | undefined
-  readonly url?: string | undefined
-  readonly error?: string | undefined
+// Re-export types for backward compatibility
+export type {
+  IMarkdownFileData,
+  IJsonFileData,
+  IEventStreamFileData,
+  IJsonlFileData,
+  IPdfFileData,
+  ISvgFileData,
+  IHtmlFileData,
+  ITextFileData,
+  IFetchFileData,
+  IFetchFileResult,
 }
 
 export async function fetchFile<T extends IFetchFileData = IFetchFileData>(

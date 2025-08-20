@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IMarkdownFileData } from '@/hook/api/file'
+import type { IMarkdownFileData } from '@/shared/types/api'
 import { type IMarkdownViewData, ModeEnum } from './types'
 
 interface IProps {

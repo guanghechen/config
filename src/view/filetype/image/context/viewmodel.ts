@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IImageFileData } from '@/hook/api/file'
+import type { IImageFileData } from '@/shared/types/api'
 import { type IImageViewData, type IImageViewPosition, ModeEnum } from './types'
 
 interface IProps {

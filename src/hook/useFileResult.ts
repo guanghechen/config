@@ -1,6 +1,6 @@
 import React from 'react'
-import type { IFetchFileData, IFetchFileResult } from '@/hook/api/file'
 import { getFile } from '@/hook/api/file'
+import type { IFetchFileData, IFetchFileResult } from '@/shared/types/api'
 
 export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,

@@ -1,6 +1,12 @@
 import { createReadStream, existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import type {
+  IImageFileData,
+  IJsonFileData,
+  IMarkdownFileData,
+  ITextFileData,
+} from '../../../../shared/types/api'
 import state from '../../../../state'
 import parseMarkdown from '../../../../util/parseMarkdown'
 import type { IApiHandle, IApiHandleData } from '../../types'
@@ -90,8 +96,9 @@ export const fetchFile: IApiHandle = async params => {
       let data: IApiHandleData
       try {
         const content: string = await fs.readFile(filepath, 'utf8')
+        const responseData: IJsonFileData = { content }
         data = {
-          data: { content },
+          data: responseData,
         }
       } catch (error) {
         state.reporter.error('Failed to parse json:', { filepath, error })
@@ -108,8 +115,9 @@ export const fetchFile: IApiHandle = async params => {
       let data: IApiHandleData
       try {
         const content: string = await fs.readFile(filepath, 'utf8')
+        const responseData: ITextFileData = { content }
         data = {
-          data: { content },
+          data: responseData,
         }
       } catch (error) {
         state.reporter.error('Failed to read text file:', { filepath, error })
@@ -124,9 +132,9 @@ export const fetchFile: IApiHandle = async params => {
     case '.md': {
       let data: IApiHandleData
       try {
-        const { ast, toc, frontmatter } = await parseMarkdown(filepath)
+        const responseData: IMarkdownFileData = await parseMarkdown(filepath)
         data = {
-          data: { ast, toc, frontmatter },
+          data: responseData,
         }
       } catch (error) {
         state.reporter.error('Failed to parse markdown:', { filepath, error })
@@ -149,12 +157,13 @@ export const fetchFile: IApiHandle = async params => {
       try {
         const stats = await fs.stat(filepath)
         const url = `/api/file/raw?filepath=${encodeURIComponent(filepath)}&workspace=${encodeURIComponent(workspace || '')}`
+        const responseData: IImageFileData = {
+          url,
+          size: stats.size,
+          format: extname.slice(1), // Remove the dot
+        }
         data = {
-          data: {
-            url,
-            size: stats.size,
-            format: extname.slice(1), // Remove the dot
-          },
+          data: responseData,
         }
       } catch (error) {
         state.reporter.error('Failed to get image info:', { filepath, error })
