@@ -49,7 +49,7 @@ export const Toolbar: React.FC = () => {
   }, [viewmodel])
 
   return (
-    <div className="fixed left-1/2 top-0 z-50 ">
+    <div className="fixed left-1/2 top-0 z-50 -translate-x-1/2">
       <div className="flex items-center justify-end rounded-lg border border-gray-200 bg-white shadow-xs dark:border-gray-700 dark:bg-gray-800">
         <div className="flex select-none items-center space-x-2 md:mr-2">
           <div className="flex items-center gap-2">
