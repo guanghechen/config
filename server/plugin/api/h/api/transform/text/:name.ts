@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { ROOT_DIR } from '../../../../../../../env'
-import { validateTransformerData } from '../../../../../../../shared/util'
+import { validateTransformConfig } from '../../../../../../../shared/util'
 import type { IApiHandle, IApiHandleData } from '../../../../types'
 
 const TRANSFORMER_DATA_DIR = path.join(ROOT_DIR, 'server/plugin/api/d/transform/text')
@@ -129,9 +129,8 @@ const handlePost = async (
   try {
     await ensureDirectoryExists()
 
-    const transformerData = JSON.parse(body)
-
-    if (!validateTransformerData(transformerData)) {
+    const transformConfig = JSON.parse(body)
+    if (!validateTransformConfig(transformConfig)) {
       const data: IApiHandleData = {
         error: 'Invalid transformer data format',
         details: { pathname, name, requiredFields: ['name', 'functions'] },
@@ -141,20 +140,20 @@ const handlePost = async (
     }
 
     // Ensure the name in the data matches the URL parameter
-    if (transformerData.name !== name) {
+    if (transformConfig.name !== name) {
       const data: IApiHandleData = {
         error: 'Transformer name mismatch',
-        details: { pathname, urlName: name, dataName: transformerData.name },
+        details: { pathname, urlName: name, dataName: transformConfig.name },
         data: null,
       }
       return { code: 400, data }
     }
 
-    await fs.writeFile(filepath, JSON.stringify(transformerData, null, 2), 'utf8')
+    await fs.writeFile(filepath, JSON.stringify(transformConfig, null, 2), 'utf8')
 
     const data: IApiHandleData = {
       data: {
-        transformer: transformerData,
+        transformer: transformConfig,
         message: 'Transformer saved successfully',
       },
     }
