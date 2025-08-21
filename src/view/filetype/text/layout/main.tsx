@@ -18,7 +18,11 @@ export const Main: React.FC = () => {
   }
 
   return (
-    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="text">
+    <div
+      className={cn('f-vf-main', `f-vf-main-${mode}`)}
+      data-filetype="text"
+      data-content-mode={contentMode}
+    >
       {(mode & ModeEnum.CONTENT) !== 0 && (
         <div className="f-vf-pane f-vfp-content">
           <ContentPane />
