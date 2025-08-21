@@ -81,7 +81,7 @@ export class ImageContent extends React.Component<IProps, IImageState> {
     }
 
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 border-2 border-emerald-500 dark:border-emerald-400 p-3 m-1 rounded">
         <div className="overflow-hidden rounded border border-gray-200 dark:border-gray-600">
           <img
             src={this.getImageSrc()}

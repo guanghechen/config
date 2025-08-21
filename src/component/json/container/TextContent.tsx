@@ -31,7 +31,7 @@ export const TextContent: React.FC<IProps> = props => {
     return (
       <div
         ref={textRef as any}
-        className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 break-all`}
+        className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 break-all border-2 border-emerald-500 dark:border-emerald-400 p-3 m-1 rounded`}
       >
         <ReactMarkdownContent content={value} />
       </div>
@@ -44,7 +44,7 @@ export const TextContent: React.FC<IProps> = props => {
       return (
         <div
           ref={textRef as any}
-          className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 break-all`}
+          className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 break-all border-2 border-emerald-500 dark:border-emerald-400 p-3 m-1 rounded`}
         >
           <Json json={jsonValue} />
         </div>
