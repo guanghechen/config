@@ -113,9 +113,8 @@ const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
       if (unsubscribed) return
 
       const filepath: string | null = viewmodel.filepath$.getSnapshot()
-      viewmodel.workspace$.next(data.workspace)
-      viewmodel.filepath$.next(data.filepath, { force: true })
-      if (data.filepath === filepath) viewmodel.markFilepathDirty()
+      const workspace: string | null = viewmodel.workspace$.getSnapshot()
+      if (data.workspace === workspace && data.filepath === filepath) viewmodel.markFilepathDirty()
     }
 
     const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {

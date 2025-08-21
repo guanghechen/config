@@ -67,8 +67,9 @@ const HmrSideEffect: React.FC<ISideEffectProps> = props => {
       if (unsubscribed) return
 
       const filepath: string | null = viewmodel.filepath$.getSnapshot()
-      viewmodel.filepath$.next(data.filepath, { force: true })
-      if (data.filepath === filepath) viewmodel.markFilepathDirty()
+      if (filepath === data.filepath) {
+        viewmodel.markFilepathDirty()
+      }
     }
 
     const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
