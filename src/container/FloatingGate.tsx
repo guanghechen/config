@@ -1,51 +1,79 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import cn from 'clsx'
 import React, { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { listedRoutes } from '@/route'
 import { ThemeToggle } from './ThemeToggle'
 
-type MenuLevel = 'closed' | 'first' | 'navigation' | 'settings'
+enum MenuLevel {
+  CLOSED = 'closed',
+  FIRST = 'first',
+  NAVIGATION = 'navigation',
+  SETTINGS = 'settings',
+}
 
 export const FloatingGate: React.FC = () => {
-  const [menuLevel, setMenuLevel] = useState<MenuLevel>('closed')
+  const [menuLevel, setMenuLevel] = useState<MenuLevel>(MenuLevel.CLOSED)
 
   const location = useLocation()
   const navigate = useNavigate()
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const handleNavigation = (path: string): void => {
+  const handleNavigation = useEventCallback((path: string): void => {
     void navigate(path)
-    setMenuLevel('closed') // Close menu after navigation
-  }
+    setMenuLevel(MenuLevel.CLOSED) // Close menu after navigation
+  })
 
-  const toggleGate = (): void => {
-    setMenuLevel(menuLevel === 'closed' ? 'first' : 'closed')
-  }
+  const goBackToFirstLevel = useEventCallback((): void => {
+    setMenuLevel(MenuLevel.FIRST)
+  })
 
-  const showNavigationMenu = (): void => {
-    setMenuLevel('navigation')
-  }
+  const showNavigationMenu = useEventCallback((): void => {
+    setMenuLevel(MenuLevel.NAVIGATION)
+  })
 
-  const showSettingsMenu = (): void => {
-    setMenuLevel('settings')
-  }
+  const showSettingsMenu = useEventCallback((): void => {
+    setMenuLevel(MenuLevel.SETTINGS)
+  })
 
-  const goBackToFirstLevel = (): void => {
-    setMenuLevel('first')
-  }
+  const toggleGate = useEventCallback((): void => {
+    setMenuLevel(menuLevel === MenuLevel.CLOSED ? MenuLevel.FIRST : MenuLevel.CLOSED)
+  })
+
+  React.useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent): void => {
+      if (menuLevel === MenuLevel.CLOSED) return
+
+      const target = event.target as Node
+      const container = containerRef.current
+      const button = buttonRef.current
+      if (container && button && !container.contains(target) && !button.contains(target)) {
+        setMenuLevel(MenuLevel.CLOSED)
+      }
+    }
+
+    if (menuLevel !== MenuLevel.CLOSED) {
+      document.addEventListener('click', handleDocumentClick)
+    }
+
+    return () => {
+      document.removeEventListener('click', handleDocumentClick)
+    }
+  }, [menuLevel])
 
   return (
-    <div className="fixed z-50 group bottom-12 right-12">
+    <div ref={containerRef} className="fixed z-50 group bottom-12 right-12">
       <div
         className={cn(
           'absolute right-14 bottom-0 flex flex-col gap-2 transition-all duration-300 ease-in-out',
           'opacity-30 group-hover:opacity-100',
-          menuLevel !== 'closed'
+          menuLevel !== MenuLevel.CLOSED
             ? 'max-h-96 pointer-events-auto'
             : 'max-h-0 overflow-hidden pointer-events-none',
         )}
       >
-        {menuLevel === 'first' && (
+        {menuLevel === MenuLevel.FIRST && (
           <React.Fragment>
             <button
               onClick={showNavigationMenu}
@@ -97,7 +125,7 @@ export const FloatingGate: React.FC = () => {
             </button>
           </React.Fragment>
         )}
-        {menuLevel === 'navigation' && (
+        {menuLevel === MenuLevel.NAVIGATION && (
           <React.Fragment>
             {/* Back Button */}
             <button
@@ -146,7 +174,7 @@ export const FloatingGate: React.FC = () => {
             })}
           </React.Fragment>
         )}
-        {menuLevel === 'settings' && (
+        {menuLevel === MenuLevel.SETTINGS && (
           <React.Fragment>
             <button
               onClick={goBackToFirstLevel}
@@ -201,18 +229,18 @@ export const FloatingGate: React.FC = () => {
           'bg-blue-500/90 text-white hover:bg-blue-600/90',
           'opacity-30 group-hover:opacity-100',
         )}
-        title={menuLevel !== 'closed' ? 'Close gate' : 'Open gate'}
+        title={menuLevel !== MenuLevel.CLOSED ? 'Close gate' : 'Open gate'}
       >
         <svg
           className={cn(
             'h-6 w-6 transition-transform duration-300',
-            menuLevel !== 'closed' ? 'rotate-45' : 'rotate-0',
+            menuLevel !== MenuLevel.CLOSED ? 'rotate-45' : 'rotate-0',
           )}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          {menuLevel !== 'closed' ? (
+          {menuLevel !== MenuLevel.CLOSED ? (
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
