@@ -10,14 +10,15 @@ import {
   useEdgesState,
   useNodesState,
 } from '@xyflow/react'
+import cn from 'clsx'
 import React from 'react'
 import '@xyflow/react/dist/style.css'
 import type { ITextTransformedNode } from '@/shared/types'
+import { type IReactFlowNodeData, transformNodesToReactFlow } from '../../util/graph/adaptor'
+import { getLayoutedElements } from '../../util/graph/layout'
 import { CustomNode } from './CustomNode'
 import { NodeDetailsPanel } from './NodeDetailsPanel'
 import { ReactFlowToolbar } from './ReactFlowToolbar'
-import { type IReactFlowNodeData, transformNodesToReactFlow } from '../../util/graph/adaptor'
-import { getLayoutedElements } from '../../util/graph/layout'
 
 interface IProps {
   readonly data: ITextTransformedNode[]
@@ -121,7 +122,14 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
           <MiniMap
             nodeColor={theme === 'dark' ? '#374151' : '#f9fafb'}
             nodeStrokeColor={theme === 'dark' ? '#6b7280' : '#d1d5db'}
-            className={theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
+            className={cn(
+              theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100',
+              '!left-20', // Offset to the right to avoid toolbar overlap
+            )}
+            position="bottom-left"
+            pannable={true}
+            zoomable={true}
+            maskColor={theme === 'dark' ? 'rgba(55, 65, 81, 0.6)' : 'rgba(240, 240, 240, 0.6)'}
           />
           <Background
             variant={BackgroundVariant.Dots}
