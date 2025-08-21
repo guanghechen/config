@@ -146,7 +146,7 @@ export const ContentMode: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
-        className="group flex h-8 select-none items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
+        className="group flex h-7 select-none items-center gap-2 rounded-lg bg-white/80 px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
         title={`Content mode: ${currentOption?.label}`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -172,11 +172,11 @@ export const ContentMode: React.FC = () => {
 
       {isOpen && (
         <div
-          className="absolute z-50 left-0 top-full mt-2 min-w-40 overflow-hidden rounded-xl bg-white/95 shadow-2xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
+          className="absolute z-50 left-0 top-full mt-1 min-w-40 overflow-hidden rounded-lg bg-white/95 shadow-xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
           role="listbox"
           aria-label="Content mode options"
         >
-          <div className="p-1">
+          <div className="py-1">
             {CONTENT_MODE_OPTIONS.map((option, index) => {
               const isDisabled =
                 (option.value === ContentModeEnum.LIST && isListDisabled) ||
@@ -188,7 +188,7 @@ export const ContentMode: React.FC = () => {
                   onKeyDown={event => handleOptionKeyDown(event, option.value, index)}
                   disabled={isDisabled}
                   className={cn(
-                    'group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all duration-150 focus:outline-none',
+                    'group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-all duration-150 focus:outline-none',
                     isDisabled
                       ? 'cursor-not-allowed opacity-50'
                       : actualContentMode === option.value
@@ -202,7 +202,7 @@ export const ContentMode: React.FC = () => {
                 >
                   <div
                     className={cn(
-                      'flex h-6 w-6 items-center justify-center rounded transition-colors',
+                      'flex h-5 w-5 items-center justify-center rounded transition-colors',
                       isDisabled
                         ? 'text-gray-400 dark:text-gray-600'
                         : actualContentMode === option.value
@@ -219,7 +219,7 @@ export const ContentMode: React.FC = () => {
                   </span>
                   {actualContentMode === option.value && !isDisabled && (
                     <svg
-                      className="ml-auto h-4 w-4 text-indigo-600 dark:text-indigo-400"
+                      className="ml-auto h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                       aria-hidden="true"

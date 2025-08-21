@@ -13,20 +13,15 @@ export const Toolbar: React.FC = () => {
   const mode = useStateValue(viewmodel.mode$)
   const expanded: boolean = expandTick % 2 === 0
 
-  // Only show toolbar when content view is visible
   const isContentVisible = (mode & ModeEnum.CONTENT) !== 0
-  // Check if transform view is NOT visible
   const isTransformInvisible = (mode & ModeEnum.TRANSFORM) === 0
-
-  // State for collection dropdown when transform is invisible
   const [collectionDropdownOpen, setCollectionDropdownOpen] = React.useState(false)
-
   if (!isContentVisible) {
     return null
   }
 
   return (
-    <div className="fixed left-2/3 top-0 z-50 -translate-x-1/2">
+    <div className="fixed left-2/3 top-0 z-50 -translate-x-1/2 w-max">
       <div className="flex items-center justify-center select-none gap-2 px-4 py-2">
         {isTransformInvisible && (
           <CollectionDropdown
@@ -37,7 +32,7 @@ export const Toolbar: React.FC = () => {
         )}
         <ContentMode />
         <div className="flex items-center">
-          <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
             Records ({records.length ?? 0})
           </span>
         </div>
