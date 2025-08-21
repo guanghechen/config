@@ -344,8 +344,8 @@ export const TransformStep: React.FC<IProps> = props => {
         onChange={value => onUpdate({ code: value })}
         placeholder={
           step.type === TextTransformStepTypeEnum.FILTER
-            ? '(element, index, elements) => condition'
-            : '(element, index, elements) => transformed'
+            ? '(element, index) => condition'
+            : '(element, index) => transformed'
         }
       />
     </div>

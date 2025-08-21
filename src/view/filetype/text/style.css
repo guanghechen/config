@@ -76,8 +76,8 @@
   }
 
   &.f-vf-main-13 {
-    grid-template-columns: 2fr 1fr;
-    grid-template-areas: 'content transform';
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-areas: 'content nav transform';
   }
 
   &.f-vf-main-14 {
