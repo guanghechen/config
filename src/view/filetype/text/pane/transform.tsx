@@ -43,6 +43,7 @@ export const TransformPane: React.FC = () => {
   const [collectionDropdownOpen, setCollectionDropdownOpen] = React.useState(false)
   const [isEditingName, setIsEditingName] = React.useState(false)
   const [editingName, setEditingName] = React.useState('')
+  const [originalName, setOriginalName] = React.useState('')
 
   const updateTransformConfig = useEventCallback((updates: Partial<ITextTransformConfig>): void => {
     const current = viewmodel.transformConfig$.getSnapshot()
@@ -147,6 +148,7 @@ export const TransformPane: React.FC = () => {
   })
 
   const handleStartEditName = useEventCallback((): void => {
+    setOriginalName(config.name)
     setEditingName(config.name)
     setIsEditingName(true)
   })
@@ -160,8 +162,13 @@ export const TransformPane: React.FC = () => {
   })
 
   const handleCancelEditName = useEventCallback((): void => {
+    // Restore the original name if it was changed
+    if (editingName !== originalName) {
+      updateTransformConfig({ name: originalName })
+    }
     setIsEditingName(false)
     setEditingName('')
+    setOriginalName('')
   })
 
   const handleNameKeyDown = useEventCallback((e: React.KeyboardEvent): void => {
@@ -185,7 +192,6 @@ export const TransformPane: React.FC = () => {
                     value={editingName}
                     onChange={e => setEditingName(e.target.value)}
                     onKeyDown={handleNameKeyDown}
-                    onBlur={handleSaveName}
                     className="px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 dark:text-gray-300"
                     placeholder="Transformer name"
                     autoFocus={true}
