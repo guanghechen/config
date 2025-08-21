@@ -146,7 +146,7 @@ export const ContentMode: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
-        className="group flex h-8 select-none items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-sm font-medium shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
+        className="group flex h-8 select-none items-center gap-2 rounded-lg bg-white/80 px-3 py-1.5 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
         title={`Content mode: ${currentOption?.label}`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"

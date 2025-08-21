@@ -44,7 +44,7 @@ export const ContentList: React.FC = () => {
 
   return (
     <div className="box-border size-full flex flex-col gap-4">
-      <div className="box-border sticky top-12 z-30 flex flex-col justify-between gap-2 flex-none rounded-lg shadow-sm p-4 bg-gray-50 dark:bg-gray-900">
+      <div className="box-border sticky top-0 z-30 flex flex-col justify-between gap-2 flex-none rounded-lg shadow-sm p-4 bg-gray-50 dark:bg-gray-900">
         <MultiPathInput
           chainPaths={chainPaths}
           onChange={handleChainPathsChange}
