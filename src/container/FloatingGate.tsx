@@ -25,19 +25,23 @@ export const FloatingGate: React.FC = () => {
     setMenuLevel(MenuLevel.CLOSED) // Close menu after navigation
   })
 
-  const goBackToFirstLevel = useEventCallback((): void => {
+  const goBackToFirstLevel = useEventCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
     setMenuLevel(MenuLevel.FIRST)
   })
 
-  const showNavigationMenu = useEventCallback((): void => {
+  const showNavigationMenu = useEventCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
     setMenuLevel(MenuLevel.NAVIGATION)
   })
 
-  const showSettingsMenu = useEventCallback((): void => {
+  const showSettingsMenu = useEventCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
     setMenuLevel(MenuLevel.SETTINGS)
   })
 
-  const toggleGate = useEventCallback((): void => {
+  const toggleGate = useEventCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
     setMenuLevel(menuLevel === MenuLevel.CLOSED ? MenuLevel.FIRST : MenuLevel.CLOSED)
   })
 
@@ -206,13 +210,11 @@ export const FloatingGate: React.FC = () => {
             >
               <div className="space-y-3">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-200">Settings</div>
-                <div className="space-y-2">
+                <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-gray-600 dark:text-gray-300">
                     Theme
                   </label>
-                  <div className="flex items-center justify-center">
-                    <ThemeToggle />
-                  </div>
+                  <ThemeToggle />
                 </div>
               </div>
             </div>
