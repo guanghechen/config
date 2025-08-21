@@ -34,8 +34,18 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
   const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
   const initialData = React.useMemo(() => {
     const { nodes, edges } = transformNodesToReactFlow(data)
-    return getLayoutedElements(nodes, edges)
-  }, [data])
+
+    // Apply theme styling to edges
+    const themedEdges = edges.map(edge => ({
+      ...edge,
+      style: {
+        stroke: theme === 'dark' ? '#6b7280' : '#d1d5db',
+        strokeWidth: 2,
+      },
+    }))
+
+    return getLayoutedElements(nodes, themedEdges)
+  }, [data, theme])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes as Node[])
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData.edges)
@@ -75,10 +85,20 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
   // Update nodes and edges when data prop changes
   React.useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = transformNodesToReactFlow(data)
-    const layoutedData = getLayoutedElements(newNodes, newEdges)
+
+    // Apply theme styling to edges
+    const themedEdges = newEdges.map(edge => ({
+      ...edge,
+      style: {
+        stroke: theme === 'dark' ? '#6b7280' : '#d1d5db',
+        strokeWidth: 2,
+      },
+    }))
+
+    const layoutedData = getLayoutedElements(newNodes, themedEdges)
     setNodes(layoutedData.nodes as Node[])
     setEdges(layoutedData.edges)
-  }, [data, setNodes, setEdges])
+  }, [data, theme, setNodes, setEdges])
 
   return (
     <div className="relative w-full h-full flex">
@@ -93,7 +113,7 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
           nodeTypes={nodeTypes}
           fitView={true}
           proOptions={{ hideAttribution: true }}
-          className={theme === 'dark' ? 'dark' : ''}
+          className={theme === 'dark' ? 'react-flow dark' : 'react-flow'}
           style={{ width: '100%', height: '100%' }}
         >
           <Controls />

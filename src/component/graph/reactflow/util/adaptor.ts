@@ -5,6 +5,7 @@ export interface IReactFlowNodeData extends Record<string, unknown> {
   readonly uuid: string
   readonly data: unknown
   readonly parents: string[]
+  readonly title: string
 }
 
 export const transformNodesToReactFlow = (
@@ -18,6 +19,7 @@ export const transformNodesToReactFlow = (
       uuid: node.uuid,
       data: node.data,
       parents: node.parents,
+      title: node.title,
     },
   }))
 
