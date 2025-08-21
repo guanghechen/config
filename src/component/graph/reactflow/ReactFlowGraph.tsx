@@ -1,8 +1,10 @@
 import {
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
   type Node,
+  type NodeMouseHandler,
   type NodeTypes,
   ReactFlow,
   useEdgesState,
@@ -29,14 +31,13 @@ const nodeTypes: NodeTypes = {
 export const ReactFlowGraph: React.FC<IProps> = props => {
   const { data, theme = 'light' } = props
 
-  const [selectedNode, setSelectedNode] = React.useState<Node<IReactFlowNodeData> | null>(null)
-
+  const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
   const initialData = React.useMemo(() => {
     const { nodes, edges } = transformNodesToReactFlow(data)
     return getLayoutedElements(nodes, edges)
   }, [data])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes)
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes as Node[])
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData.edges)
 
   // Update nodes with theme
@@ -50,26 +51,34 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
     }))
   }, [nodes, theme])
 
-  const handleNodeClick = React.useCallback(
-    (_event: React.MouseEvent, node: Node<IReactFlowNodeData>) => {
-      setSelectedNode(node)
-    },
-    [],
-  )
+  const handleNodeClick = React.useCallback<NodeMouseHandler>((_event, node) => {
+    setSelectedNode(node)
+  }, [])
 
   const handlePaneClick = React.useCallback(() => {
     setSelectedNode(null)
   }, [])
 
   const handleReLayout = React.useCallback(() => {
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges)
-    setNodes(layoutedNodes)
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes as Array<Node<IReactFlowNodeData>>,
+      edges,
+    )
+    setNodes(layoutedNodes as Node[])
     setEdges(layoutedEdges)
   }, [nodes, edges, setNodes, setEdges])
 
   const handleCloseDetails = React.useCallback(() => {
     setSelectedNode(null)
   }, [])
+
+  // Update nodes and edges when data prop changes
+  React.useEffect(() => {
+    const { nodes: newNodes, edges: newEdges } = transformNodesToReactFlow(data)
+    const layoutedData = getLayoutedElements(newNodes, newEdges)
+    setNodes(layoutedData.nodes as Node[])
+    setEdges(layoutedData.edges)
+  }, [data, setNodes, setEdges])
 
   return (
     <div className="relative w-full h-full flex">
@@ -94,7 +103,7 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
             className={theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}
           />
           <Background
-            variant="dots"
+            variant={BackgroundVariant.Dots}
             gap={20}
             size={1}
             color={theme === 'dark' ? '#374151' : '#e5e7eb'}

@@ -8,7 +8,7 @@ export const Toolbar: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const contentMode: ContentModeEnum = useStateValue(viewmodel.contentMode$)
   const expandTick: number = useStateValue(viewmodel.expandTick$)
-  const records: ITextTransformedNode[] | null = useStateValue(viewmodel.records$)
+  const records: ITextTransformedNode[] = useStateValue(viewmodel.records$)
   const mode = useStateValue(viewmodel.mode$)
   const expanded: boolean = expandTick % 2 === 0
 
@@ -25,7 +25,7 @@ export const Toolbar: React.FC = () => {
         <ContentMode />
         <div className="flex items-center">
           <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Records ({records?.length ?? 0})
+            Records ({records.length ?? 0})
           </span>
         </div>
         {contentMode === ContentModeEnum.LIST && records && (

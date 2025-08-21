@@ -1,7 +1,7 @@
 import type { Edge, Node } from '@xyflow/react'
 import type { ITextTransformedNode } from '@/shared/types'
 
-export interface IReactFlowNodeData {
+export interface IReactFlowNodeData extends Record<string, unknown> {
   readonly uuid: string
   readonly data: unknown
   readonly parents: string[]

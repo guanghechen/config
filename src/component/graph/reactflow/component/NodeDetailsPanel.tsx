@@ -5,7 +5,7 @@ import { Json } from '@/component/json'
 import type { IReactFlowNodeData } from '../util/adaptor'
 
 interface IProps {
-  readonly node: Node<IReactFlowNodeData> | null
+  readonly node: Node | null
   readonly theme?: 'light' | 'dark'
   readonly onClose: () => void
 }
@@ -92,17 +92,17 @@ export const NodeDetailsPanel: React.FC<IProps> = props => {
             UUID
           </label>
           <div className="font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded border dark:border-gray-700">
-            {node.data.uuid}
+            {(node.data as IReactFlowNodeData).uuid}
           </div>
         </div>
 
-        {node.data.parents.length > 0 && (
+        {(node.data as IReactFlowNodeData).parents.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Parent Nodes
             </label>
             <div className="space-y-1">
-              {node.data.parents.map(parentId => (
+              {(node.data as IReactFlowNodeData).parents.map(parentId => (
                 <div
                   key={parentId}
                   className="font-mono text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded border dark:border-gray-700"
@@ -123,13 +123,13 @@ export const NodeDetailsPanel: React.FC<IProps> = props => {
           </div>
         </div>
 
-        {!!node.data.data && (
+        {!!(node.data as IReactFlowNodeData).data && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Data Content
             </label>
             <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded border dark:border-gray-700 overflow-x-auto">
-              <Json json={node.data.data} initialCollapsed="expanded" />
+              <Json json={(node.data as IReactFlowNodeData).data} initialCollapsed="expanded" />
             </div>
           </div>
         )}

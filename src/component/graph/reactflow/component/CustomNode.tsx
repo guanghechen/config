@@ -3,7 +3,8 @@ import cn from 'clsx'
 import React from 'react'
 import type { IReactFlowNodeData } from '../util/adaptor'
 
-interface IProps extends NodeProps<IReactFlowNodeData> {
+interface IProps extends NodeProps {
+  readonly data: IReactFlowNodeData
   readonly theme?: 'light' | 'dark'
 }
 

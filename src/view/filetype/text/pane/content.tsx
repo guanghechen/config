@@ -9,9 +9,9 @@ import { ContentPlain } from './content-plain'
 const ContentPaneMain: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const contentMode: ContentModeEnum = useStateValue(viewmodel.contentMode$)
-  const records: ITextTransformedNode[] | null = useStateValue(viewmodel.records$)
+  const records: ITextTransformedNode[] = useStateValue(viewmodel.records$)
 
-  if (records) {
+  if (records.length > 0) {
     switch (contentMode) {
       case ContentModeEnum.LIST: {
         return <ContentList />

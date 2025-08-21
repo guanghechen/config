@@ -8,7 +8,7 @@ import { stringArrayToChainPaths } from '../utils'
 
 export const NavPane: React.FC = () => {
   const viewmodel = useTextViewViewModel()
-  const records: ITextTransformedNode[] = useStateValue(viewmodel.records$) || []
+  const records: ITextTransformedNode[] = useStateValue(viewmodel.records$)
   const activeRecordIndex: number | null = useStateValue(viewmodel.activeRecordIndex$)
   const transformConfig: ITextTransformConfig = useStateValue(viewmodel.transformConfig$)
   const chainPaths: IChainPath[] = stringArrayToChainPaths(transformConfig.chainPaths)
