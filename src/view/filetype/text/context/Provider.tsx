@@ -36,6 +36,7 @@ export const TextViewProvider: React.FC<IProps> = props => {
       filepath,
       mode: mode ?? viewData.mode,
       contentMode: contentMode ?? viewData.contentMode,
+      nodeDetailsPaneWidth: viewData.nodeDetailsPaneWidth,
       transformConfig: viewData.transformConfig,
     })
   })
@@ -92,7 +93,12 @@ SideEffect.displayName = 'TextViewSideEffect'
 const usePersistent = (viewmodel: TextViewViewModel): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
-      [viewmodel.mode$, viewmodel.contentMode$, viewmodel.transformConfig$],
+      [
+        viewmodel.mode$,
+        viewmodel.contentMode$,
+        viewmodel.nodeDetailsPaneWidth$,
+        viewmodel.transformConfig$,
+      ],
       () => {
         const data: ITextViewData = viewmodel.dump()
         window.localStorage.setItem(storageKey, JSON.stringify(data))

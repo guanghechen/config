@@ -27,4 +27,5 @@ export interface ITextViewData {
   readonly mode: ModeEnum
   readonly contentMode: ContentModeEnum
   readonly transformConfig: ITextTransformConfig
+  readonly nodeDetailsPaneWidth?: number
 }

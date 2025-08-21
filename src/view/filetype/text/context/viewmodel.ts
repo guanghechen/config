@@ -11,12 +11,14 @@ interface IProps {
   readonly filepath: string
   readonly mode?: ModeEnum
   readonly contentMode?: ContentModeEnum
+  readonly nodeDetailsPaneWidth?: number
   readonly transformConfig?: ITextTransformConfig
 }
 
 const DEFAULT_DATA: ITextViewData = {
   mode: ModeEnum.CONTENT,
   contentMode: ContentModeEnum.ORIGINAL,
+  nodeDetailsPaneWidth: 480,
   transformConfig: {
     name: 'unnamed',
     desc: "(element, index) => ''",
@@ -34,6 +36,7 @@ export class TextViewViewModel extends ViewModel {
   public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly contentMode$: IState<ContentModeEnum>
+  public readonly nodeDetailsPaneWidth$: IState<number>
   public readonly transformConfig$: IState<ITextTransformConfig>
 
   public readonly content$: IState<string | null>
@@ -49,6 +52,7 @@ export class TextViewViewModel extends ViewModel {
       filepath,
       mode = DEFAULT_DATA.mode,
       contentMode = DEFAULT_DATA.contentMode,
+      nodeDetailsPaneWidth = DEFAULT_DATA.nodeDetailsPaneWidth!,
       transformConfig = DEFAULT_DATA.transformConfig,
     } = props
 
@@ -56,6 +60,7 @@ export class TextViewViewModel extends ViewModel {
     this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.contentMode$ = new State<ContentModeEnum>(contentMode)
+    this.nodeDetailsPaneWidth$ = new State<number>(nodeDetailsPaneWidth)
     this.transformConfig$ = new State<ITextTransformConfig>(transformConfig)
 
     this.content$ = new State<string | null>(null)
@@ -68,7 +73,7 @@ export class TextViewViewModel extends ViewModel {
     data: Partial<ITextViewData> | undefined,
     base: ITextViewData = DEFAULT_DATA,
   ): ITextViewData {
-    const { mode, contentMode, transformConfig } = data || {}
+    const { mode, contentMode, nodeDetailsPaneWidth, transformConfig } = data || {}
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
     const normalizedContentMode: ContentModeEnum =
@@ -77,12 +82,17 @@ export class TextViewViewModel extends ViewModel {
       contentMode === ContentModeEnum.GRAPH
         ? contentMode
         : base.contentMode
+    const normalizedNodeDetailsPaneWidth: number =
+      typeof nodeDetailsPaneWidth === 'number' && nodeDetailsPaneWidth >= 320
+        ? nodeDetailsPaneWidth
+        : base.nodeDetailsPaneWidth!
     const normalizedTransformConfig: ITextTransformConfig = validateTransformConfig(transformConfig)
       ? transformConfig
       : base.transformConfig!
     const viewData: ITextViewData = {
       mode: normalizedMode,
       contentMode: normalizedContentMode,
+      nodeDetailsPaneWidth: normalizedNodeDetailsPaneWidth,
       transformConfig: normalizedTransformConfig,
     }
     return viewData
@@ -91,15 +101,18 @@ export class TextViewViewModel extends ViewModel {
   public dump = (): ITextViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
     const contentMode: ContentModeEnum = this.contentMode$.getSnapshot()
+    const nodeDetailsPaneWidth: number = this.nodeDetailsPaneWidth$.getSnapshot()
     const transformConfig: ITextTransformConfig = this.transformConfig$.getSnapshot()
-    return { mode, contentMode, transformConfig }
+    return { mode, contentMode, nodeDetailsPaneWidth, transformConfig }
   }
 
   public load = (data: Partial<ITextViewData> | undefined): void => {
     const base: ITextViewData = this.dump()
-    const { mode, contentMode, transformConfig } = TextViewViewModel.normalize(data, base)
+    const { mode, contentMode, nodeDetailsPaneWidth, transformConfig } =
+      TextViewViewModel.normalize(data, base)
     this.mode$.next(mode)
     this.contentMode$.next(contentMode)
+    this.nodeDetailsPaneWidth$.next(nodeDetailsPaneWidth!)
     this.transformConfig$.next(transformConfig!)
   }
 }

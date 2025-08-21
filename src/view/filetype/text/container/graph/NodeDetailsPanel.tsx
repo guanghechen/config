@@ -1,7 +1,9 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Node } from '@xyflow/react'
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
+import { useTextViewViewModel } from '../../context'
 import type { IReactFlowNodeData } from '../../util/graph/adaptor'
 
 interface IProps {
@@ -12,10 +14,11 @@ interface IProps {
 
 export const NodeDetailsPanel: React.FC<IProps> = props => {
   const { node, onClose } = props
-  const [width, setWidth] = React.useState(480)
+  const viewmodel = useTextViewViewModel()
+  const width = useStateValue(viewmodel.nodeDetailsPaneWidth$)
   const [isDragging, setIsDragging] = React.useState(false)
-  const startX = React.useRef(0)
-  const startWidth = React.useRef(0)
+  const startX = React.useRef<number>(0)
+  const startWidth = React.useRef<number>(0)
 
   const handleMouseDown = React.useCallback(
     (e: React.MouseEvent) => {
@@ -33,9 +36,9 @@ export const NodeDetailsPanel: React.FC<IProps> = props => {
       const deltaX = startX.current - e.clientX
       const maxWidth = window.innerWidth * 0.6
       const newWidth = Math.max(320, Math.min(maxWidth, startWidth.current + deltaX))
-      setWidth(newWidth)
+      viewmodel.nodeDetailsPaneWidth$.next(newWidth)
     },
-    [isDragging],
+    [isDragging, viewmodel],
   )
 
   const handleMouseUp = React.useCallback(() => {
@@ -103,7 +106,7 @@ export const NodeDetailsPanel: React.FC<IProps> = props => {
               Parent Nodes
             </label>
             <div className="space-y-1">
-              {(node.data as IReactFlowNodeData).parents.map(parentId => (
+              {(node.data as IReactFlowNodeData).parents.map((parentId: string) => (
                 <div
                   key={parentId}
                   className="font-mono text-sm p-2 rounded border bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-solid dark:border-gray-700"
@@ -121,7 +124,7 @@ export const NodeDetailsPanel: React.FC<IProps> = props => {
               Virtual Parent Nodes
             </label>
             <div className="space-y-1">
-              {(node.data as IReactFlowNodeData).parents_virtual.map(parentId => (
+              {(node.data as IReactFlowNodeData).parents_virtual.map((parentId: string) => (
                 <div
                   key={`virtual-${parentId}`}
                   className="font-mono text-sm p-2 rounded border bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-dashed flex items-center gap-2"
