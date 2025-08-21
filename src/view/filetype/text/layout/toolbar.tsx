@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { ITextTransformedNode } from '@/shared/types'
+import { CollectionDropdown } from '../container/CollectionDropdown'
 import { ContentMode } from '../container/ContentMode'
 import { ContentModeEnum, ModeEnum, useTextViewViewModel } from '../context'
 
@@ -14,6 +15,11 @@ export const Toolbar: React.FC = () => {
 
   // Only show toolbar when content view is visible
   const isContentVisible = (mode & ModeEnum.CONTENT) !== 0
+  // Check if transform view is NOT visible
+  const isTransformInvisible = (mode & ModeEnum.TRANSFORM) === 0
+
+  // State for collection dropdown when transform is invisible
+  const [collectionDropdownOpen, setCollectionDropdownOpen] = React.useState(false)
 
   if (!isContentVisible) {
     return null
@@ -22,6 +28,13 @@ export const Toolbar: React.FC = () => {
   return (
     <div className="fixed left-2/3 top-0 z-50 -translate-x-1/2">
       <div className="flex items-center justify-center select-none gap-2 px-4 py-2">
+        {isTransformInvisible && (
+          <CollectionDropdown
+            isOpen={collectionDropdownOpen}
+            onClose={() => setCollectionDropdownOpen(false)}
+            onToggle={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
+          />
+        )}
         <ContentMode />
         <div className="flex items-center">
           <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">

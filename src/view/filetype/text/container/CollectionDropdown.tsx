@@ -224,7 +224,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
           <line x1="12" y1="8" x2="12" y2="16" />
           <line x1="8" y1="12" x2="16" y2="12" />
         </svg>
-        Collection
+        {config.name ? `collection (${config.name})` : 'Collection'}
         <svg
           width="14"
           height="14"
@@ -262,7 +262,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
           <line x1="12" y1="8" x2="12" y2="16" />
           <line x1="8" y1="12" x2="16" y2="12" />
         </svg>
-        Collection
+        {config.name ? `collection (${config.name})` : 'Collection'}
         <svg
           width="14"
           height="14"
@@ -407,7 +407,24 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                   }}
                   className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200"
                 >
-                  <div className="font-medium">{transformer.name}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium">{transformer.name}</div>
+                    {transformer.name === config.name && (
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-green-600 dark:text-green-400 flex-shrink-0"
+                      >
+                        <polyline points="20,6 9,17 4,12" />
+                      </svg>
+                    )}
+                  </div>
                 </button>
               ))}
               {sortedTransformers.priority.length > 0 &&
@@ -422,7 +439,24 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                   }}
                   className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200"
                 >
-                  <div className="font-medium">{transformer.name}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium">{transformer.name}</div>
+                    {transformer.name === config.name && (
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-green-600 dark:text-green-400 flex-shrink-0"
+                      >
+                        <polyline points="20,6 9,17 4,12" />
+                      </svg>
+                    )}
+                  </div>
                 </button>
               ))}
               {sortedTransformers.regular.length > 0 && sortedTransformers.local.length > 0 && (
@@ -436,7 +470,24 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
                   }}
                   className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200"
                 >
-                  <div className="font-medium">{transformer.name}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium">{transformer.name}</div>
+                    {transformer.name === config.name && (
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-green-600 dark:text-green-400 flex-shrink-0"
+                      >
+                        <polyline points="20,6 9,17 4,12" />
+                      </svg>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
