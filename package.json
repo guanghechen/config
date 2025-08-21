@@ -32,7 +32,6 @@
     "clsx": "2.1.1",
     "copy-to-clipboard": "3.3.3",
     "dagre": "^0.8.5",
-    "dayjs": "1.11.13",
     "json5": "2.2.3",
     "lodash.debounce": "4.0.8",
     "lodash.throttle": "4.1.1",

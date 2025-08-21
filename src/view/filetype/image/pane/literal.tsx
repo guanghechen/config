@@ -1,16 +1,9 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import type { IPrismThemeScheme } from '@/component/code-highlighter'
-import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { LiteralBox } from '@/component/LiteralBox'
-import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { useImageViewViewModel } from '../context'
 
 export const LiteralPane: React.FC = () => {
-  const site = useSiteViewmodel()
-  const theme: SiteTheme = useStateValue(site.theme$)
-  const themeScheme: IPrismThemeScheme = theme === SiteTheme.DARKEN ? vscDarkTheme : vscLightTheme
-
   const viewmodel = useImageViewViewModel()
   const content = useStateValue(viewmodel.data$)
   const [base64Content, setBase64Content] = React.useState<string | null>(null)
