@@ -3,7 +3,7 @@ import React from 'react'
 import { Json } from '@/component/json'
 import type { ITextTransformedNode } from '@/shared/types'
 import type { IChainPath } from '../context'
-import { extractValueFromPath, getPathColorClasses } from '../utils'
+import { extractValueFromPath, getPathColorClasses, sortChainPaths } from '../utils'
 
 interface IProps {
   readonly index: number
@@ -19,8 +19,15 @@ export const ContentListItem: React.FC<IProps> = props => {
   const [expanded, setExpanded] = React.useState(false)
 
   // Compute extracted values for visible chain paths from this node
-  const visibleChainPaths = React.useMemo(() => chainPaths.filter(cp => cp.visible), [chainPaths])
-  const allPathStrings = React.useMemo(() => chainPaths.map(cp => cp.path), [chainPaths])
+  const sortedChainPaths = React.useMemo(() => sortChainPaths(chainPaths), [chainPaths])
+  const visibleChainPaths = React.useMemo(
+    () => sortedChainPaths.filter(cp => cp.visible),
+    [sortedChainPaths],
+  )
+  const allPathStrings = React.useMemo(
+    () => sortedChainPaths.map(cp => cp.path),
+    [sortedChainPaths],
+  )
 
   const extractedValues = React.useMemo(() => {
     if (!visibleChainPaths.length || !data) return []
@@ -58,7 +65,7 @@ export const ContentListItem: React.FC<IProps> = props => {
       >
         <div className="flex flex-col gap-2 flex-1 min-w-0">
           <div className="flex select-none items-center gap-2 flex-wrap">
-            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+            <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-600 dark:text-gray-200">
               #{index}
             </span>
             {title && (
@@ -82,9 +89,7 @@ export const ContentListItem: React.FC<IProps> = props => {
                 key={idx}
                 className={cn(
                   'rounded px-2 py-0.5 text-xs font-medium',
-                  item.value === 'undefined'
-                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                    : getPathColorClasses(item.path, allPathStrings),
+                  getPathColorClasses(item.path, allPathStrings),
                 )}
                 title={`${item.path}: ${item.value}`}
               >
