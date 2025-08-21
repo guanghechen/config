@@ -1,5 +1,6 @@
 {
   "name": "chatgpt",
+  "desc": "item => `${item.choices?.[0]?.delta?.content || ''}`",
   "split": "text => text.split(/\\n/g)",
   "uuid": "(_, index) => `${index}`",
   "parents": "() => []",

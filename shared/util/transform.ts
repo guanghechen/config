@@ -5,6 +5,7 @@ export const validateTransformConfig = (data: any): data is ITextTransformConfig
     data &&
     typeof data === 'object' &&
     typeof data.name === 'string' &&
+    typeof data.desc === 'string' &&
     typeof data.split === 'string' &&
     typeof data.uuid === 'string' &&
     typeof data.parents === 'string' &&

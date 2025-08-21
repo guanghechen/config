@@ -1,5 +1,6 @@
 {
   "name": "claude",
+  "desc": "item => `${item.role || 'assistant'}: ${(item.content || '').slice(0, 50)}...`",
   "split": "text => text.trim().split(/\\n/g)",
   "uuid": "(item, index) => item.uuid || String(index)",
   "parents": "item => item.parentUuid",

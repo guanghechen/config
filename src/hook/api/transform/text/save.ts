@@ -3,6 +3,7 @@ import type { ITextTransformConfig, TextTransformStepTypeEnum } from '@/shared/t
 
 export interface ITransformerSaveData {
   name: string
+  desc: string
   split: string
   steps: Array<{
     type: TextTransformStepTypeEnum
@@ -24,6 +25,7 @@ export interface ITransformerSaveResult {
 export async function postTransformer(name: string, config: ITextTransformConfig): Promise<void> {
   const saveData: ITransformerSaveData = {
     name: name.trim(),
+    desc: config.desc,
     split: config.split,
     uuid: config.uuid,
     parents: config.parents,

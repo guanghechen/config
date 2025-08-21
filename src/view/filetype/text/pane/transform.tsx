@@ -175,108 +175,110 @@ export const TransformPane: React.FC = () => {
   return (
     <React.Fragment>
       <div className="box-border flex-initial sticky top-0 pb-4">
-        <div className="flex items-center justify-between w-full px-4 py-2 bg-gray-100 dark:bg-gray-800/50">
-          <div className="flex items-center gap-3">
-            {isEditingName ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={editingName}
-                  onChange={e => setEditingName(e.target.value)}
-                  onKeyDown={handleNameKeyDown}
-                  onBlur={handleSaveName}
-                  className="px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 dark:text-gray-300"
-                  placeholder="Transformer name"
-                  autoFocus={true}
-                />
-                <button
-                  onClick={handleSaveName}
-                  className="p-1 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                  title="Save name"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+        <div className="bg-gray-100 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between w-full px-4 py-2">
+            <div className="flex items-center gap-3">
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={e => setEditingName(e.target.value)}
+                    onKeyDown={handleNameKeyDown}
+                    onBlur={handleSaveName}
+                    className="px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 dark:text-gray-300"
+                    placeholder="Transformer name"
+                    autoFocus={true}
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    className="p-1 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                    title="Save name"
                   >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleCancelEditName}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                  title="Cancel"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleCancelEditName}
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                    title="Cancel"
                   >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {config.name}
-                </span>
-                <button
-                  onClick={handleStartEditName}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                  title="Edit transformer name"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    {config.name}
+                  </span>
+                  <button
+                    onClick={handleStartEditName}
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                    title="Edit transformer name"
                   >
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={executeTransform}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors duration-200 cursor-pointer"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={executeTransform}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors duration-200 cursor-pointer"
               >
-                <polygon points="5,3 19,12 5,21" />
-              </svg>
-              Run
-            </button>
-            <CollectionDropdown
-              isOpen={collectionDropdownOpen}
-              onClose={() => setCollectionDropdownOpen(false)}
-              onToggle={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
-            />
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+                Run
+              </button>
+              <CollectionDropdown
+                isOpen={collectionDropdownOpen}
+                onClose={() => setCollectionDropdownOpen(false)}
+                onToggle={() => setCollectionDropdownOpen(!collectionDropdownOpen)}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -334,6 +336,23 @@ export const TransformPane: React.FC = () => {
             <CodeBox
               value={config.title}
               onChange={value => updateTransformConfig({ title: value })}
+              placeholder="(element, index) => ''"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Description Function
+              </span>
+              <Tooltip content="Function to generate description for each item">
+                <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
+            <CodeBox
+              value={config.desc}
+              onChange={value => updateTransformConfig({ desc: value })}
               placeholder="(element, index) => ''"
             />
           </div>

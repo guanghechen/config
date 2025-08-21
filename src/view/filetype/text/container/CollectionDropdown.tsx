@@ -103,6 +103,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   const exportTransformData = async (): Promise<void> => {
     const exportData: ITextTransformExportData = {
       name: config.name,
+      desc: config.desc,
       split: config.split,
       uuid: config.uuid,
       parents: config.parents,
@@ -139,6 +140,12 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
         viewmodel.transformConfig$.next({ ...current, ...updates })
       }
 
+      if (importedData.name) {
+        updateTransformConfig({ name: importedData.name })
+      }
+      if (importedData.desc) {
+        updateTransformConfig({ desc: importedData.desc })
+      }
       if (importedData.split) {
         updateTransformConfig({ split: importedData.split })
       }

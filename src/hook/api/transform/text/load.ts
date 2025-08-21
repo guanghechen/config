@@ -20,6 +20,7 @@ export async function getTransformer(name: string): Promise<ITextTransformConfig
 
   return {
     name: transformer.name,
+    desc: transformer.desc || "(element, index) => ''",
     split: transformer.split || '\n',
     uuid: transformer.uuid || '',
     parents: transformer.parents || '() => []',

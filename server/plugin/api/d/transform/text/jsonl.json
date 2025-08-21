@@ -1,5 +1,6 @@
 {
   "name": "jsonl",
+  "desc": "item => `Line ${Object.keys(item).join(', ')}`",
   "split": "text => text.trim().split(/\\n/g)",
   "uuid": "(_, index) => `${index}`",
   "parents": "() => []",

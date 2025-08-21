@@ -67,6 +67,7 @@ export const transformTextToNodes = (
         `return (${config.parents})(item, index)`,
       )
       const titleFunc = new Function('element', 'index', `return (${config.title})(element, index)`)
+      const descFunc = new Function('element', 'index', `return (${config.desc})(element, index)`)
 
       const nodes: ITextTransformedNode[] = results.map((item: any, index: number) => {
         const parentUuidResult = parentUuidFunc(item, index)
@@ -85,6 +86,7 @@ export const transformTextToNodes = (
           uuid: uuidFunc(item, index),
           parents: parents,
           title: titleFunc(item, index),
+          desc: descFunc(item, index),
           data: item,
         }
       })
