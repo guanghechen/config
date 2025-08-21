@@ -1,6 +1,6 @@
 {
   "name": "eventstream",
-  "split": "/\\n/",
+  "split": "text => text.split(/\\n/g)",
   "uuid": "(_, index) => `${index}`",
   "parents": "() => []",
   "steps": [

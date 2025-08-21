@@ -19,7 +19,7 @@ const DEFAULT_DATA: ITextViewData = {
   contentMode: ContentModeEnum.ORIGINAL,
   transformConfig: {
     name: 'unnamed',
-    split: '/\\n/',
+    split: 'line => line.split(/\\n/g)',
     steps: [],
     uuid: '(item, index) => `item-${index}`',
     parents: '() => []',

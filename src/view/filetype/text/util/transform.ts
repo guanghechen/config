@@ -12,36 +12,23 @@ export const transformTextToNodes = (
   config: ITextTransformConfig,
 ): ITransformResult => {
   try {
-    // Step 1: Split the text
+    // Step 1: Split the text using function string
     let texts: string[]
     const splitConfig = config.split.trim()
-    if (splitConfig.startsWith('/') && splitConfig.endsWith('/')) {
-      try {
-        const regexPattern = splitConfig.slice(1, -1)
-        const regex = new RegExp(regexPattern)
-        texts = text.split(regex)
-      } catch (error) {
+    try {
+      const splitFunction = new Function('text', `return (${splitConfig})(text)`)
+      texts = splitFunction(text)
+
+      if (!Array.isArray(texts)) {
         return {
           nodes: [],
-          error: `Invalid regex pattern: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: 'Split function must return an array of strings',
         }
       }
-    } else {
-      try {
-        const splitFunction = new Function('text', `return (${splitConfig})(text)`)
-        texts = splitFunction(text)
-
-        if (!Array.isArray(texts)) {
-          return {
-            nodes: [],
-            error: 'Split function must return an array of strings',
-          }
-        }
-      } catch (error) {
-        return {
-          nodes: [],
-          error: `Invalid split function: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        }
+    } catch (error) {
+      return {
+        nodes: [],
+        error: `Invalid split function: ${error instanceof Error ? error.message : 'Unknown error'}`,
       }
     }
 

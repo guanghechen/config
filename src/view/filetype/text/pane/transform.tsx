@@ -322,7 +322,7 @@ export const TransformPane: React.FC = () => {
       <div className="bg-blue-50 dark:bg-blue-900/40 p-6 border-l-4 border-blue-500 dark:border-blue-400">
         <div className="flex items-center gap-2 mb-4">
           <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Split</h3>
-          <Tooltip content="Regex pattern (e.g., /\n/) or arrow function (e.g., (text) => text.split('\n'))">
+          <Tooltip content="Function that takes text and returns an array of strings (e.g., text => text.split('\\n'))">
             <span className="w-4 h-4 bg-blue-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
               ?
             </span>
@@ -331,7 +331,7 @@ export const TransformPane: React.FC = () => {
         <CodeBox
           value={config.split}
           onChange={value => updateTransformConfig({ split: value })}
-          placeholder="/\\n/"
+          placeholder="line => line.split(/\\n/g)"
           description=""
         />
       </div>
