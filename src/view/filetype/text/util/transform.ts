@@ -46,8 +46,13 @@ export const transformTextToNodes = (
 
         if (step.type === TextTransformStepTypeEnum.FILTER) {
           iterators = iterators.filter(func)
-        } else {
+        } else if (step.type === TextTransformStepTypeEnum.MAP) {
           iterators = iterators.map(func)
+        } else {
+          return {
+            nodes: [],
+            error: `Invalid step type: ${step.type}`,
+          }
         }
       } catch (error) {
         return {
@@ -60,30 +65,33 @@ export const transformTextToNodes = (
 
     // Step 3: Apply identifier functions
     try {
-      const uuidFunc = new Function('item', 'index', `return (${config.uuid})(item, index)`)
+      const uuidFunc = new Function(
+        'item',
+        'index',
+        'items',
+        `return (${config.uuid})(item, index, items)`,
+      )
       const parentUuidFunc = new Function(
         'item',
         'index',
-        `return (${config.parents})(item, index)`,
+        'items',
+        `return (${config.parents})(item, index, items)`,
       )
       const titleFunc = new Function('element', 'index', `return (${config.title})(element, index)`)
       const descFunc = new Function('element', 'index', `return (${config.desc})(element, index)`)
 
       const nodes: ITextTransformedNode[] = results.map((item: any, index: number) => {
-        const parentUuidResult = parentUuidFunc(item, index)
+        const parentUuidResult = parentUuidFunc(item, index, results)
 
         // Ensure parent_uuid is always an array
-        let parents: string[]
-        if (parentUuidResult === null || parentUuidResult === undefined) {
-          parents = []
-        } else if (Array.isArray(parentUuidResult)) {
-          parents = parentUuidResult.filter(uuid => uuid !== null && uuid !== undefined)
-        } else {
-          parents = [parentUuidResult].filter(uuid => uuid !== null && uuid !== undefined)
-        }
+        const parents: string[] = Array.isArray(parentUuidResult)
+          ? parentUuidResult.filter(uuid => !!uuid && typeof uuid === 'string')
+          : !!parentUuidResult && typeof parentUuidResult === 'string'
+            ? [parentUuidResult]
+            : []
 
         return {
-          uuid: uuidFunc(item, index),
+          uuid: uuidFunc(item, index, results),
           parents: parents,
           title: titleFunc(item, index),
           desc: descFunc(item, index),

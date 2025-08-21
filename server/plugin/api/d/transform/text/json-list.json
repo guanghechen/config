@@ -2,8 +2,8 @@
   "name": "json-list",
   "desc": "(element, index) => `JSON list item ${index + 1}: ${element.type || 'unknown'}`",
   "split": "text => JSON.parse(text)",
-  "uuid": "(item, index) => item.uuid || String(index)",
-  "parents": "item => item.parentUuid",
+  "uuid": "(item, index, items) => item.uuid || String(index)",
+  "parents": "(item, index, items) => item.parentUuid",
   "title": "item => `${item.type || 'unknown'}`",
   "chainPaths": [],
   "steps": []

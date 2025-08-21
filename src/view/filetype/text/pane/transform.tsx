@@ -308,7 +308,7 @@ export const TransformPane: React.FC = () => {
             <CodeBox
               value={config.uuid}
               onChange={value => updateTransformConfig({ uuid: value })}
-              placeholder="(item, index) => 'item-' + index"
+              placeholder="(item, index, items) => 'item-' + index"
             />
           </div>
           <div>
@@ -325,7 +325,7 @@ export const TransformPane: React.FC = () => {
             <CodeBox
               value={config.parents}
               onChange={value => updateTransformConfig({ parents: value })}
-              placeholder="() => [] // Return array of parent UUIDs"
+              placeholder="(item, index, items) => [] // Return array of parent UUIDs"
             />
           </div>
           <div>

@@ -18,8 +18,8 @@ Text transform mode implementation with three-section pipeline: Split → Transf
    - Filter: `(element, index, elements) => boolean`
    - Map: `(element, index, elements) => any`
 3. **Identifiers**: UUID and Parent UUID functions for final node structure
-   - UUID: `(item, index) => string`
-   - Parent UUID: `(item, index) => string|null`
+   - UUID: `(item, index, items) => string`
+   - Parent UUID: `(item, index, items) => string|null`
 
 ## Data Structure
 
@@ -36,8 +36,8 @@ interface INode {
 ```json
 {
   "split": "/\\n/",
-  "uuid": "(item, index) => `item-${index}`",
-  "parent_uuid": "() => null",
+  "uuid": "(item, index, items) => `item-${index}`",
+  "parent_uuid": "(item, index, items) => null",
   "transformers": [
     { "type": "filter", "code": "(element) => element.trim().length > 0", "skip": false },
     { "type": "map", "code": "(element) => element.trim()", "skip": false }

@@ -1,9 +1,9 @@
 {
   "name": "claude",
-  "desc": "item => `${item.role || 'assistant'}: ${(item.content || '').slice(0, 50)}...`",
-  "split": "text => text.trim().split(/\\n/g)",
+  "desc": "(element, index) => `JSON list item ${index + 1}: ${element.type || 'unknown'}`",
+  "split": "text => JSON.parse(text)",
   "uuid": "(item, index) => item.uuid || String(index)",
-  "parents": "item => item.parentUuid",
+  "parents": "(item, index, items) => [item.parentUuid, items[index-1]?.uuid && items[index-1].uuid !== item.parentUuid ? '@v:' + items[index-1].uuid : null]",
   "title": "item => `${item.type || 'unknown'}`",
   "chainPaths": [
     ".message.content.0.name",

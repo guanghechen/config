@@ -22,8 +22,8 @@ const DEFAULT_DATA: ITextViewData = {
     desc: "(element, index) => ''",
     split: 'line => line.split(/\\n/g)',
     steps: [],
-    uuid: '(item, index) => `item-${index}`',
-    parents: '() => []',
+    uuid: '(item, index, items) => `item-${index}`',
+    parents: '(item, index, items) => []',
     title: "(element, index) => ''",
   },
 }
