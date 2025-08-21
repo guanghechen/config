@@ -1,15 +1,17 @@
-.f-vf-main[data-filetype='pdf'] {
-  .f-vfp-content {
-    grid-area: content;
-    display: flex;
-    justify-content: center;
-    padding-bottom: 2rem;
-  }
+@layer components {
+  .f-vf-main[data-filetype='pdf'] {
+    .f-vfp-content {
+      grid-area: content;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 2rem;
+    }
 
-  .f-vfp-literal {
-    grid-area: literal;
-    display: flex;
-    justify-content: center;
-    padding-bottom: 2rem;
+    .f-vfp-literal {
+      grid-area: literal;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 2rem;
+    }
   }
 }

@@ -1,10 +1,23 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark &));
 
+@import './view/file/style.css';
+@import './view/filetype/excalidraw/style.css';
+@import './view/filetype/html/style.css';
+@import './view/filetype/image/style.css';
+@import './view/filetype/json/style.css';
+@import './view/filetype/markdown/style.css';
+@import './view/filetype/pdf/style.css';
+@import './view/filetype/svg/style.css';
+@import './view/filetype/text/style.css';
+@import './view/workspace/style.css';
+
 @layer components {
   :root,
   html,
   body {
+    @apply bg-gray-50 text-gray-800 dark:bg-gray-800 dark:text-gray-200;
+
     ::-webkit-scrollbar,
     &::-webkit-scrollbar {
       width: 0.5rem;
@@ -13,29 +26,34 @@
 
     ::-webkit-scrollbar-thumb,
     &::-webkit-scrollbar-thumb {
-      @apply rounded bg-gray-400 border border-gray-300;
+      @apply rounded bg-gray-400 border border-gray-300 dark:bg-gray-400 dark:border-gray-500;
     }
 
     ::-webkit-scrollbar-thumb:hover,
     &::-webkit-scrollbar-thumb:hover {
-      @apply bg-gray-500 border-gray-400;
+      @apply bg-gray-500 border-gray-400 dark:bg-gray-300 dark:border-gray-400;
     }
 
     ::-webkit-scrollbar-track,
     &::-webkit-scrollbar-track {
-      @apply rounded bg-gray-50 border border-gray-200;
+      @apply rounded bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600;
+    }
+
+    ::-webkit-scrollbar-corner,
+    &::-webkit-scrollbar-corner {
+      @apply bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600;
     }
 
     .custom-toast.custom-toast.custom-toast {
-      @apply bg-white text-gray-700 border border-gray-200 shadow-lg;
+      @apply bg-white text-gray-700 border border-gray-200 shadow-lg dark:bg-gray-800 dark:text-gray-50 dark:border-gray-600;
       font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
 
       &.Toastify__toast--success {
-        @apply bg-green-50 text-green-800 border-green-500;
+        @apply bg-green-50 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-200 dark:border-green-500;
       }
 
       &.Toastify__toast--error {
-        @apply bg-red-50 text-red-800 border-red-500;
+        @apply bg-red-50 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-200 dark:border-red-500;
       }
 
       .Toastify__progress-bar--success {
@@ -47,40 +65,38 @@
       }
     }
   }
-}
 
-@layer components {
-  :root.dark,
-  html.dark,
-  body.dark {
-    @apply bg-gray-800;
+  /* ReactFlow dark theme styles */
+  .react-flow.dark {
+    background-color: theme('colors.gray.900');
+  }
 
-    ::-webkit-scrollbar-thumb,
-    &::-webkit-scrollbar-thumb {
-      @apply rounded bg-gray-600 border border-gray-700;
-    }
+  .react-flow.dark .react-flow__controls {
+    @apply bg-gray-800/90 border-gray-600;
+  }
 
-    ::-webkit-scrollbar-thumb:hover,
-    &::-webkit-scrollbar-thumb:hover {
-      @apply bg-gray-500 border-gray-600;
-    }
+  .react-flow.dark .react-flow__controls button {
+    @apply bg-gray-700 border-gray-600 text-gray-200;
+  }
 
-    ::-webkit-scrollbar-track,
-    &::-webkit-scrollbar-track {
-      @apply rounded bg-gray-900 border border-gray-800;
-    }
+  .react-flow.dark .react-flow__controls button:hover {
+    @apply bg-gray-600 border-gray-500;
+  }
 
-    .custom-toast.custom-toast.custom-toast {
-      @apply bg-gray-800 text-gray-50 border border-gray-600;
+  .react-flow.dark .react-flow__edge-path {
+    stroke: theme('colors.gray.400');
+  }
 
-      &.Toastify__toast--success {
-        @apply bg-green-900 text-green-200 border-green-500;
-      }
+  .react-flow.dark .react-flow__edge.selected .react-flow__edge-path {
+    stroke: theme('colors.blue.400');
+  }
 
-      &.Toastify__toast--error {
-        @apply bg-red-900 text-red-200 border-red-500;
-      }
-    }
+  .react-flow.dark .react-flow__connection-line {
+    stroke: theme('colors.gray.400');
+  }
+
+  .react-flow.dark .react-flow__minimap {
+    @apply bg-gray-800 border-gray-600;
   }
 }
 

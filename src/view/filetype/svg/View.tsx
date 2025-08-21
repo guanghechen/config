@@ -1,7 +1,6 @@
 import React from 'react'
 import { Composer } from './Composer'
 import { SvgViewProvider } from './context'
-import './style.css'
 
 interface IProps {
   readonly workspace: string | null

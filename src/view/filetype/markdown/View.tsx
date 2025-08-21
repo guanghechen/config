@@ -1,7 +1,6 @@
 import React from 'react'
 import { Composer } from './Composer'
 import { MarkdownViewProvider } from './context'
-import './style.css'
 
 interface IProps {
   readonly filepath: string

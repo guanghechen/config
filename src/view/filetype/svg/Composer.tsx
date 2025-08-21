@@ -2,7 +2,6 @@ import React from 'react'
 import { Main } from './layout/main'
 import { Mode } from './layout/mode'
 import { Toolbar } from './layout/toolbar'
-import './style.css'
 
 export const Composer: React.FC = () => {
   return (

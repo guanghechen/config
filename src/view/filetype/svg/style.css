@@ -1,27 +1,29 @@
-.f-vf-main[data-filetype='svg'] {
-  .f-vfp-content {
-    grid-area: content;
-    display: flex;
-    justify-content: center;
-    padding-bottom: 2rem;
-    height: 100%;
-    overflow: hidden;
-  }
+@layer components {
+  .f-vf-main[data-filetype='svg'] {
+    .f-vfp-content {
+      grid-area: content;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 2rem;
+      height: 100%;
+      overflow: hidden;
+    }
 
-  .f-vfp-literal {
-    grid-area: literal;
-    display: flex;
-    justify-content: center;
-    padding-bottom: 2rem;
-  }
+    .f-vfp-literal {
+      grid-area: literal;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 2rem;
+    }
 
-  &.f-vf-main-1,
-  &.f-vf-main-2 {
-    height: auto;
-  }
+    &.f-vf-main-1,
+    &.f-vf-main-2 {
+      height: auto;
+    }
 
-  &.f-vf-main-3 {
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas: 'content literal';
+    &.f-vf-main-3 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas: 'content literal';
+    }
   }
 }

@@ -5,7 +5,6 @@ import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
 import { Composer } from './Composer'
 import { FileViewProvider } from './context'
-import './style.css'
 
 export const FileView: React.FC = () => {
   const site = useSiteViewmodel()

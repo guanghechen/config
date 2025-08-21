@@ -12,7 +12,7 @@ export default defineConfig({
   build: {
     outDir: TARGET_DIR,
   },
-  plugins: [react(), tailwindcss(), api(), ws()],
+  plugins: [tailwindcss(), react(), api(), ws()],
   resolve: {
     alias: {
       '@/shared': path.resolve(ROOT_DIR, 'shared'),
