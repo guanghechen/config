@@ -55,8 +55,8 @@ export const TransformPane: React.FC = () => {
       type,
       code:
         type === TextTransformStepTypeEnum.FILTER
-          ? '(element, index) => element.trim().length > 0'
-          : '(element, index) => element.trim()',
+          ? '(line, index) => !!line'
+          : '(line, index) => line',
       skip: false,
     }
     updateTransformConfig({ steps: [...current, nextStep] })
