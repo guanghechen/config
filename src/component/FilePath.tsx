@@ -15,10 +15,19 @@ export class FilePath extends React.PureComponent<IProps> {
     const { filepath } = this.props
     const { calcContentForCopy } = this
 
+    const displayPath = filepath.length > 48 ? `...${filepath.slice(-48)}` : filepath
+    const shouldShowTooltip = filepath.length > 48
+
     return (
       <div className="flex items-center gap-2">
-        <h2 className="px-2 pointer-events-none select-none truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
-          {filepath}
+        <h2
+          className={cn(
+            'px-2 select-none truncate font-mono text-sm font-medium text-gray-700 dark:text-gray-300',
+            shouldShowTooltip ? 'cursor-help' : 'pointer-events-none',
+          )}
+          title={shouldShowTooltip ? filepath : undefined}
+        >
+          {displayPath}
         </h2>
         <CopyButton
           className={cn(
