@@ -92,7 +92,7 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
           onPaneClick={handlePaneClick}
           nodeTypes={nodeTypes}
           fitView={true}
-          attributionPosition="bottom-left"
+          proOptions={{ hideAttribution: true }}
           className={theme === 'dark' ? 'dark' : ''}
           style={{ width: '100%', height: '100%' }}
         >
