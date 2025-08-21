@@ -102,25 +102,34 @@ export const NodeDetailsPanel: React.FC<IProps> = props => {
               Parent Nodes
             </label>
             <div className="space-y-1">
-              {(node.data as IReactFlowNodeData).parents.map(parentId => {
-                const isVirtualEdge = parentId.startsWith('@v:')
-                const actualParentId = isVirtualEdge ? parentId.slice(3) : parentId
+              {(node.data as IReactFlowNodeData).parents.map(parentId => (
+                <div
+                  key={parentId}
+                  className="font-mono text-sm p-2 rounded border bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-solid dark:border-gray-700"
+                >
+                  {parentId}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                return (
-                  <div
-                    key={parentId}
-                    className={`font-mono text-sm p-2 rounded border flex items-center gap-2 ${
-                      isVirtualEdge
-                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-dashed'
-                        : 'bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-solid dark:border-gray-700'
-                    }`}
-                  >
-                    {isVirtualEdge && <span className="text-xs opacity-60">⋯</span>}
-                    {actualParentId}
-                    {isVirtualEdge && <span className="text-xs opacity-60 ml-auto">(virtual)</span>}
-                  </div>
-                )
-              })}
+        {(node.data as IReactFlowNodeData).parents_virtual.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Virtual Parent Nodes
+            </label>
+            <div className="space-y-1">
+              {(node.data as IReactFlowNodeData).parents_virtual.map(parentId => (
+                <div
+                  key={`virtual-${parentId}`}
+                  className="font-mono text-sm p-2 rounded border bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-dashed flex items-center gap-2"
+                >
+                  <span className="text-xs opacity-60">⋯</span>
+                  {parentId}
+                  <span className="text-xs opacity-60 ml-auto">(virtual)</span>
+                </div>
+              ))}
             </div>
           </div>
         )}

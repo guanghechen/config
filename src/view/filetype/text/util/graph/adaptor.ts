@@ -5,6 +5,7 @@ export interface IReactFlowNodeData extends Record<string, unknown> {
   readonly uuid: string
   readonly data: unknown
   readonly parents: string[]
+  readonly parents_virtual: string[]
   readonly title: string
   readonly index: number
   readonly chainPaths?: string[]
@@ -22,6 +23,7 @@ export const transformNodesToReactFlow = (
       uuid: node.uuid,
       data: node.data,
       parents: node.parents,
+      parents_virtual: node.parents_virtual,
       title: node.title,
       index: node.index,
       chainPaths,
@@ -30,16 +32,23 @@ export const transformNodesToReactFlow = (
 
   const reactFlowEdges: Edge[] = []
   nodes.forEach(node => {
+    // Add regular parent edges
     node.parents.forEach(parentId => {
-      // Check if parentId has @v: prefix
-      const isVirtualEdge = parentId.startsWith('@v:')
-      const actualParentId = isVirtualEdge ? parentId.slice(3) : parentId
-
       reactFlowEdges.push({
-        id: `${actualParentId}-${node.uuid}`,
-        source: actualParentId,
+        id: `${parentId}-${node.uuid}`,
+        source: parentId,
         target: node.uuid,
-        type: isVirtualEdge ? 'virtual' : 'smoothstep',
+        type: 'smoothstep',
+      })
+    })
+
+    // Add virtual parent edges
+    node.parents_virtual.forEach(parentId => {
+      reactFlowEdges.push({
+        id: `virtual-${parentId}-${node.uuid}`,
+        source: parentId,
+        target: node.uuid,
+        type: 'virtual',
       })
     })
   })

@@ -331,6 +331,23 @@ export const TransformPane: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Virtual Parent UUID Function
+              </span>
+              <Tooltip content="Function to generate virtual parent IDs array for each item (shown as dashed lines in graph)">
+                <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
+            <CodeBox
+              value={config.parents_virtual}
+              onChange={value => updateTransformConfig({ parents_virtual: value })}
+              placeholder="(item, index, items) => [] // Return array of virtual parent UUIDs"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Title Function
               </span>
               <Tooltip content="Function to generate title for each item">

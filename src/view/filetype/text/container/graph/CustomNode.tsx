@@ -95,23 +95,29 @@ export const CustomNode: React.FC<IProps> = props => {
         {/* Second line and below: Parents, each on a single line */}
         {data.parents && data.parents.length > 0 && (
           <div className="space-y-1">
-            {data.parents.map((parent, index) => {
-              const isVirtualEdge = parent.startsWith('@v:')
-              const actualParentId = isVirtualEdge ? parent.slice(3) : parent
+            {data.parents.map((parent, index) => (
+              <div
+                key={index}
+                className="text-xs break-words leading-relaxed text-gray-700 dark:text-gray-300"
+              >
+                {parent}
+              </div>
+            ))}
+          </div>
+        )}
 
-              return (
-                <div
-                  key={index}
-                  className={cn('text-xs break-words leading-relaxed flex items-center gap-1', {
-                    'text-gray-700 dark:text-gray-300': !isVirtualEdge,
-                    'text-gray-500 dark:text-gray-400 italic': isVirtualEdge,
-                  })}
-                >
-                  {isVirtualEdge && <span className="text-xs opacity-60">⋯</span>}
-                  {actualParentId}
-                </div>
-              )
-            })}
+        {/* Virtual parents */}
+        {data.parents_virtual && data.parents_virtual.length > 0 && (
+          <div className="space-y-1">
+            {data.parents_virtual.map((parent, index) => (
+              <div
+                key={`virtual-${index}`}
+                className="text-xs break-words leading-relaxed text-gray-500 dark:text-gray-400 italic flex items-center gap-1"
+              >
+                <span className="text-xs opacity-60">⋯</span>
+                {parent}
+              </div>
+            ))}
           </div>
         )}
       </div>

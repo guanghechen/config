@@ -77,11 +77,18 @@ export const transformTextToNodes = (
         'items',
         `return (${config.parents})(item, index, items)`,
       )
+      const parentVirtualFunc = new Function(
+        'item',
+        'index',
+        'items',
+        `return (${config.parents_virtual})(item, index, items)`,
+      )
       const titleFunc = new Function('element', 'index', `return (${config.title})(element, index)`)
       const descFunc = new Function('element', 'index', `return (${config.desc})(element, index)`)
 
       const nodes: ITextTransformedNode[] = results.map((item: any, index: number) => {
         const parentUuidResult = parentUuidFunc(item, index, results)
+        const parentVirtualResult = parentVirtualFunc(item, index, results)
 
         // Ensure parent_uuid is always an array
         const parents: string[] = Array.isArray(parentUuidResult)
@@ -90,9 +97,19 @@ export const transformTextToNodes = (
             ? [parentUuidResult]
             : []
 
+        // Ensure parents_virtual is always an array
+        const parents_virtual: string[] = (
+          Array.isArray(parentVirtualResult)
+            ? parentVirtualResult.filter(uuid => !!uuid && typeof uuid === 'string')
+            : !!parentVirtualResult && typeof parentVirtualResult === 'string'
+              ? [parentVirtualResult]
+              : []
+        ).filter(uuid => !parents.includes(uuid))
+
         return {
           uuid: uuidFunc(item, index, results),
           parents: parents,
+          parents_virtual: parents_virtual,
           title: titleFunc(item, index),
           desc: descFunc(item, index),
           data: item,

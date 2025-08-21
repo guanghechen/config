@@ -24,6 +24,7 @@ const DEFAULT_DATA: ITextViewData = {
     steps: [],
     uuid: '(item, index, items) => `item-${index}`',
     parents: '(item, index, items) => []',
+    parents_virtual: '(item, index, items) => []',
     title: "(element, index) => ''",
   },
 }

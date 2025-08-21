@@ -3,7 +3,8 @@
   "desc": "(element, index) => `JSON list item ${index + 1}: ${element.type || 'unknown'}`",
   "split": "text => JSON.parse(text)",
   "uuid": "(item, index) => item.uuid || String(index)",
-  "parents": "(item, index, items) => [item.parentUuid, items[index-1]?.uuid && items[index-1].uuid !== item.parentUuid ? '@v:' + items[index-1].uuid : null]",
+  "parents": "(item, index, items) => item.parentUuid",
+  "parents_virtual": "(item, index, items) => items[index-1]?.uuid && items[index-1].uuid !== item.parentUuid ? items[index-1].uuid : null",
   "title": "item => `${item.type || 'unknown'}`",
   "chainPaths": [
     ".message.content.0.name",

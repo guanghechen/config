@@ -24,6 +24,7 @@ export async function getTransformer(name: string): Promise<ITextTransformConfig
     split: transformer.split || '\n',
     uuid: transformer.uuid || '',
     parents: transformer.parents || '() => []',
+    parents_virtual: transformer.parents_virtual || '() => []',
     title: transformer.title || "(element, index) => ''",
     chainPaths: transformer.chainPaths || [],
     steps: (transformer.steps || []).map((step: any, index: number) => ({
