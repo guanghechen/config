@@ -26,6 +26,7 @@ interface IState {
 export class JsonFieldString extends React.Component<IProps, IState> {
   public static displayName = 'JsonFieldString'
   private textRef = React.createRef<HTMLElement | null>()
+  private dropdownRef = React.createRef<HTMLDivElement>()
 
   constructor(props: IProps) {
     super(props)
@@ -40,7 +41,7 @@ export class JsonFieldString extends React.Component<IProps, IState> {
 
   public override render(): React.ReactElement {
     const { name, value, depth } = this.props
-    const { isOverflowing, prettier, prettierMode, dropdownOpen } = this.state
+    const { isOverflowing, prettier, prettierMode } = this.state
     const expanded: boolean = prettier || this.state.expanded
     const indentStyle: React.CSSProperties = { paddingLeft: `${depth * 1.5}rem` }
 
@@ -81,34 +82,51 @@ export class JsonFieldString extends React.Component<IProps, IState> {
         </div>
         <div className="flex gap">
           <div className="relative flex items-center invisible group-hover:visible">
-            <button
-              onClick={this.togglePrettier}
-              className={`rounded p-1 transition-colors ${
-                prettier
-                  ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60'
-                  : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300'
-              }`}
-              aria-label={prettier ? 'Disable prettier' : 'Enable prettier'}
-              title={prettier ? 'Show escaped characters' : 'Show formatted text'}
-            >
-              <SnippetIcon className="h-4 w-4" />
-            </button>
-            {prettier && (
+            {/* Connected button group */}
+            <div className="flex">
+              {/* Snippet icon - directly applies 'plain' mode */}
+              <button
+                onClick={this.applyPlainMode}
+                className={`rounded-l p-1 transition-colors ${
+                  prettier && prettierMode === 'plain'
+                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60'
+                    : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
+                aria-label="Apply plain formatting"
+                title="Show plain formatted text"
+              >
+                <SnippetIcon className="h-4 w-4" />
+              </button>
+
+              {/* Dropdown arrow button */}
               <button
                 onClick={this.toggleDropdown}
-                className="rounded p-1 transition-colors text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300"
-                aria-label="Select prettier mode"
-                title="Select prettier mode"
+                className={`rounded-r p-1 transition-colors ${
+                  this.state.dropdownOpen
+                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                    : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
+                aria-label="Toggle view options"
+                title="Select view mode"
               >
-                <ChevronDownIcon className="h-3 w-3" />
+                {this.state.dropdownOpen ? (
+                  <ChevronUpIcon className="h-4 w-4" />
+                ) : (
+                  <ChevronDownIcon className="h-4 w-4" />
+                )}
               </button>
-            )}
-            {prettier && dropdownOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10">
+            </div>
+
+            {/* Dropdown menu */}
+            {this.state.dropdownOpen && (
+              <div
+                ref={this.dropdownRef}
+                className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 min-w-32"
+              >
                 <button
-                  onClick={() => this.setPrettierMode('plain')}
-                  className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    prettierMode === 'plain'
+                  onClick={() => this.selectMode('plain')}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                    prettier && prettierMode === 'plain'
                       ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                       : 'text-gray-700 dark:text-gray-300'
                   }`}
@@ -116,9 +134,9 @@ export class JsonFieldString extends React.Component<IProps, IState> {
                   Plain
                 </button>
                 <button
-                  onClick={() => this.setPrettierMode('md')}
-                  className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    prettierMode === 'md'
+                  onClick={() => this.selectMode('md')}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                    prettier && prettierMode === 'md'
                       ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                       : 'text-gray-700 dark:text-gray-300'
                   }`}
@@ -126,14 +144,14 @@ export class JsonFieldString extends React.Component<IProps, IState> {
                   Markdown
                 </button>
                 <button
-                  onClick={() => this.setPrettierMode('base64img')}
-                  className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    prettierMode === 'base64img'
+                  onClick={() => this.selectMode('base64img')}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                    prettier && prettierMode === 'base64img'
                       ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                       : 'text-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  Image (base64)
+                  Image base64
                 </button>
               </div>
             )}
@@ -161,6 +179,11 @@ export class JsonFieldString extends React.Component<IProps, IState> {
 
   public override componentDidMount(): void {
     this.checkIfOverflowing()
+    document.addEventListener('mousedown', this.handleClickOutside)
+  }
+
+  public override componentWillUnmount(): void {
+    document.removeEventListener('mousedown', this.handleClickOutside)
   }
 
   public override componentDidUpdate(prevProps: IProps): void {
@@ -183,18 +206,31 @@ export class JsonFieldString extends React.Component<IProps, IState> {
     this.setState(prevState => ({ expanded: !prevState.expanded }))
   }
 
-  protected togglePrettier = (): void => {
-    this.setState(prevState => ({
-      prettier: !prevState.prettier,
-      dropdownOpen: !prevState.prettier, // Open dropdown when enabling prettier, close when disabling
-    }))
+  protected applyPlainMode = (): void => {
+    this.setState({
+      prettier: true,
+      prettierMode: 'plain',
+      dropdownOpen: false,
+    })
   }
 
   protected toggleDropdown = (): void => {
-    this.setState(prevState => ({ dropdownOpen: !prevState.dropdownOpen }))
+    this.setState(prevState => ({
+      dropdownOpen: !prevState.dropdownOpen,
+    }))
   }
 
-  protected setPrettierMode = (mode: IPrettierMode): void => {
-    this.setState({ prettierMode: mode, dropdownOpen: false })
+  protected selectMode = (mode: IPrettierMode): void => {
+    this.setState({
+      prettier: true,
+      prettierMode: mode,
+      dropdownOpen: false,
+    })
+  }
+
+  protected handleClickOutside = (event: MouseEvent): void => {
+    if (this.dropdownRef.current && !this.dropdownRef.current.contains(event.target as Node)) {
+      this.setState({ dropdownOpen: false })
+    }
   }
 }
