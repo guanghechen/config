@@ -172,7 +172,8 @@ export const MultiInput = <T extends IMultiInputItem>({
       <div
         onClick={handleContainerClick}
         className={cn(
-          'flex items-center gap-1 px-3 py-2 min-h-[2.25rem] border rounded-md transition-all cursor-text',
+          'flex gap-1 px-3 py-2 min-h-[2.25rem] border rounded-md transition-all cursor-text',
+          displayMode === 'inline' ? 'flex-wrap items-start' : 'items-center',
           isInputFocused
             ? 'border-blue-500 ring-2 ring-blue-500/20'
             : 'border-gray-300 dark:border-gray-600',
@@ -190,7 +191,7 @@ export const MultiInput = <T extends IMultiInputItem>({
               onDrop={e => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md cursor-move transition-all',
+                'inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md cursor-move transition-all my-1',
                 getItemColorClasses ? getItemColorClasses(item, items) : getDefaultColorClasses(),
                 !item.visible && 'opacity-50',
                 draggedIndex === index && 'opacity-50 scale-95',
@@ -292,14 +293,20 @@ export const MultiInput = <T extends IMultiInputItem>({
           onFocus={() => setIsInputFocused(true)}
           onBlur={() => setIsInputFocused(false)}
           placeholder={displayMode === 'inline' && items.length > 0 ? '' : placeholder}
-          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
+          className={cn(
+            'flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500',
+            displayMode === 'inline' && 'my-1',
+          )}
         />
         <button
           onClick={e => {
             e.stopPropagation()
             onDisplayModeChange(displayMode === 'inline' ? 'lines' : 'inline')
           }}
-          className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          className={cn(
+            'flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors',
+            displayMode === 'inline' && 'self-start my-1',
+          )}
           title={displayMode === 'inline' ? 'Switch to lines mode' : 'Switch to inline mode'}
           aria-label={displayMode === 'inline' ? 'Switch to lines mode' : 'Switch to inline mode'}
         >
