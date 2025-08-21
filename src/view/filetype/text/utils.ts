@@ -113,7 +113,7 @@ export const sortChainPaths = (chainPaths: IChainPath[]): IChainPath[] => {
 }
 
 export const extractValueFromPath = (obj: unknown, path: string): string => {
-  if (!path || !path.trim()) return 'undefined'
+  if (!path || !path.trim()) return 'nil'
 
   try {
     const cleanPath = path.startsWith('.') ? path.slice(1) : path
@@ -122,17 +122,17 @@ export const extractValueFromPath = (obj: unknown, path: string): string => {
     let current = obj
     for (const part of pathParts) {
       if (current == null || typeof current !== 'object') {
-        return 'undefined'
+        return 'nil'
       }
       current = (current as Record<string, unknown>)[part]
     }
 
     if (current === undefined || current === null) {
-      return 'undefined'
+      return 'nil'
     }
 
     return String(current)
   } catch {
-    return 'undefined'
+    return 'nil'
   }
 }
