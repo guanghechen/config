@@ -5,8 +5,9 @@ import React from 'react'
 export type DisplayMode = 'inline' | 'lines'
 
 export interface IMultiInputItem {
-  value: string
-  visible: boolean
+  readonly value: string
+  readonly visible: boolean
+  readonly editing?: boolean
 }
 
 interface IProps<T extends IMultiInputItem> {
@@ -36,7 +37,10 @@ export const MultiInput = <T extends IMultiInputItem>({
   const [isInputFocused, setIsInputFocused] = React.useState(false)
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null)
+  const [editingIndex, setEditingIndex] = React.useState<number | null>(null)
+  const [editingValue, setEditingValue] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const editInputRef = React.useRef<HTMLInputElement>(null)
 
   const itemValues = React.useMemo(() => items.map(item => item.value), [items])
 
@@ -71,6 +75,49 @@ export const MultiInput = <T extends IMultiInputItem>({
       return item
     })
     onChange(newItems)
+  }
+
+  const startEditing = (index: number): void => {
+    setEditingIndex(index)
+    setEditingValue(items[index].value)
+    setTimeout(() => {
+      editInputRef.current?.focus()
+      editInputRef.current?.select()
+    }, 0)
+  }
+
+  const cancelEditing = (): void => {
+    setEditingIndex(null)
+    setEditingValue('')
+  }
+
+  const saveEdit = (index: number): void => {
+    const trimmedValue = editingValue.trim()
+    if (
+      trimmedValue &&
+      (allowDuplicates || !itemValues.includes(trimmedValue) || trimmedValue === items[index].value)
+    ) {
+      const newItems = items.map((item, i) => {
+        if (i === index) {
+          const baseUpdate = { ...item, value: trimmedValue }
+          const updatedItem = 'path' in item ? { ...baseUpdate, path: trimmedValue } : baseUpdate
+          return updatedItem as T
+        }
+        return item
+      })
+      onChange(newItems)
+    }
+    cancelEditing()
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number): void => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveEdit(index)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelEditing()
+    }
   }
 
   const handleContainerClick = (): void => {
@@ -155,7 +202,39 @@ export const MultiInput = <T extends IMultiInputItem>({
               <svg className="w-3 h-3 opacity-60" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
               </svg>
-              {renderItemContent ? renderItemContent(item) : item.value}
+              {editingIndex === index ? (
+                <input
+                  ref={editInputRef}
+                  type="text"
+                  value={editingValue}
+                  onChange={e => setEditingValue(e.target.value)}
+                  onKeyDown={e => handleEditKeyDown(e, index)}
+                  onBlur={() => saveEdit(index)}
+                  className="flex-1 min-w-[60px] bg-transparent border-none outline-none text-xs font-medium"
+                  onClick={e => e.stopPropagation()}
+                />
+              ) : renderItemContent ? (
+                renderItemContent(item)
+              ) : (
+                item.value
+              )}
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  startEditing(index)
+                }}
+                className="inline-flex items-center justify-center w-3 h-3 hover:opacity-70 transition-opacity"
+                aria-label={`Edit ${item.value}`}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
               <button
                 onClick={e => {
                   e.stopPropagation()
@@ -285,8 +364,40 @@ export const MultiInput = <T extends IMultiInputItem>({
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
               </svg>
               <span className="flex-1 text-sm font-medium">
-                {renderItemContent ? renderItemContent(item) : item.value}
+                {editingIndex === index ? (
+                  <input
+                    ref={editInputRef}
+                    type="text"
+                    value={editingValue}
+                    onChange={e => setEditingValue(e.target.value)}
+                    onKeyDown={e => handleEditKeyDown(e, index)}
+                    onBlur={() => saveEdit(index)}
+                    className="w-full bg-transparent border-none outline-none text-sm font-medium"
+                    onClick={e => e.stopPropagation()}
+                  />
+                ) : renderItemContent ? (
+                  renderItemContent(item)
+                ) : (
+                  item.value
+                )}
               </span>
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  startEditing(index)
+                }}
+                className="flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10 transition-colors"
+                aria-label={`Edit ${item.value}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
               <button
                 onClick={e => {
                   e.stopPropagation()

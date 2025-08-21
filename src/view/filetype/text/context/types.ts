@@ -20,6 +20,7 @@ export interface IChainPath {
   readonly path: string
   readonly value: string
   readonly visible: boolean
+  readonly editing?: boolean
 }
 
 export interface ITextViewData {

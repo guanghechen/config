@@ -21,7 +21,7 @@ export const MultiPathInput: React.FC<IProps> = ({
   onDisplayModeChange,
 }) => {
   const createChainPath = React.useCallback((value: string): IChainPath => {
-    return { path: value, value, visible: true }
+    return { path: value, value, visible: true, editing: false }
   }, [])
 
   const getChainPathColorClasses = React.useCallback(
