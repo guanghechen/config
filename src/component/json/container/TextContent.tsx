@@ -1,7 +1,9 @@
 import React from 'react'
+import { toast } from 'react-toastify'
+import { Json } from '../'
 import { ReactMarkdownContent } from '../../markdown/ReactMarkdownContent'
 
-export type TPrettierMode = 'plain' | 'md'
+export type TPrettierMode = 'plain' | 'md' | 'json'
 
 interface IProps {
   readonly value: string
@@ -34,6 +36,34 @@ export const TextContent: React.FC<IProps> = props => {
         <ReactMarkdownContent content={value} />
       </div>
     )
+  }
+
+  if (prettierMode === 'json') {
+    try {
+      const jsonValue = JSON.parse(value)
+      return (
+        <div
+          ref={textRef as any}
+          className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 break-all`}
+        >
+          <Json json={jsonValue} />
+        </div>
+      )
+    } catch (error) {
+      // Notify about JSON parsing error
+      toast.error(`Invalid JSON: ${(error as Error).message}`)
+      console.error('JSON parsing failed:', error)
+
+      // Fall back to plain text renderer
+      return (
+        <pre
+          ref={textRef as any}
+          className={`${expanded ? '' : 'line-clamp-6'} overflow-hidden text-emerald-600 dark:text-emerald-400 whitespace-pre-wrap break-all`}
+        >
+          <code>"{value}"</code>
+        </pre>
+      )
+    }
   }
 
   return (

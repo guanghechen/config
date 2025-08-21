@@ -13,7 +13,7 @@ interface IProps {
   readonly depth: number
 }
 
-type IPrettierMode = 'plain' | 'md' | 'base64img'
+type IPrettierMode = 'plain' | 'md' | 'json' | 'base64img'
 
 interface IState {
   readonly expanded: boolean
@@ -142,6 +142,16 @@ export class JsonFieldString extends React.Component<IProps, IState> {
                   }`}
                 >
                   Markdown
+                </button>
+                <button
+                  onClick={() => this.selectMode('json')}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                    prettier && prettierMode === 'json'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  JSON
                 </button>
                 <button
                   onClick={() => this.selectMode('base64img')}
