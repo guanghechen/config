@@ -9,7 +9,7 @@ export const Main: React.FC = () => {
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
   return (
-    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="markdown">
+    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="excalidraw">
       {(mode & ModeEnum.CONTENT) !== 0 && (
         <div className="f-vf-pane f-vfp-content">
           <ContentPane />
