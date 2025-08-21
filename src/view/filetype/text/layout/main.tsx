@@ -13,7 +13,7 @@ export const Main: React.FC = () => {
   const m = useStateValue(viewmodel.mode$)
   let mode = m < 1 ? 1 : m
 
-  if ((mode & ModeEnum.NAV) !== 1 && contentMode !== ContentModeEnum.LIST) {
+  if ((mode & ModeEnum.NAV) === ModeEnum.NAV && contentMode !== ContentModeEnum.LIST) {
     mode = mode ^ ModeEnum.NAV
   }
 
