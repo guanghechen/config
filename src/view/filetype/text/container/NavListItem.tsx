@@ -55,7 +55,7 @@ export const NavListItem: React.FC<IProps> = props => {
         )}
       >
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-600 dark:text-gray-200">
               #{index}
             </span>
@@ -70,6 +70,15 @@ export const NavListItem: React.FC<IProps> = props => {
                 {title.length > 10 ? `${title.slice(0, 10)}...` : title}
               </span>
             )}
+          </div>
+          {record.parents.length > 0 && (
+            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+              {record.parents.length} parent{record.parents.length > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+        {extractedValues.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap mb-1">
             {extractedValues.map((item, idx) => (
               <span
                 key={idx}
@@ -83,14 +92,7 @@ export const NavListItem: React.FC<IProps> = props => {
               </span>
             ))}
           </div>
-          <div className="flex items-center gap-2">
-            {record.parents.length > 0 && (
-              <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300">
-                {record.parents.length} parent{record.parents.length > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-        </div>
+        )}
         <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
           {typeof record.data === 'string'
             ? record.data.length > 100
