@@ -5,13 +5,14 @@
   "uuid": "(item, index) => item.uuid || String(index)",
   "parents": "item => item.parentUuid",
   "title": "item => `${item.type || 'unknown'}`",
-  "chainPaths": [],
+  "chainPaths": [
+    ".message.content.0.name",
+    ".message.content.0.type",
+    ".message.content.0.id",
+    ".message.content.0.tool_use_id",
+    ".isSidechain"
+  ],
   "steps": [
-    {
-      "type": "filter",
-      "code": "(line, index) => index < 33",
-      "skip": true
-    },
     {
       "type": "map",
       "code": "line => JSON.parse(line)",
