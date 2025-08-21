@@ -10,7 +10,8 @@ import { TransformPane } from '../pane/transform'
 export const Main: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const contentMode: ContentModeEnum = useStateValue(viewmodel.contentMode$)
-  let mode = useStateValue(viewmodel.mode$)
+  const m = useStateValue(viewmodel.mode$)
+  let mode = m < 1 ? 1 : m
 
   if ((mode & ModeEnum.NAV) !== 1 && contentMode !== ContentModeEnum.LIST) {
     mode = mode ^ ModeEnum.NAV

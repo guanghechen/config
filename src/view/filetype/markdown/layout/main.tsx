@@ -9,7 +9,8 @@ import { TocPane } from '../pane/toc'
 
 export const Main: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
-  const mode = useStateValue(viewmodel.mode$)
+  const m = useStateValue(viewmodel.mode$)
+  const mode = m < 1 ? 1 : m
 
   return (
     <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="markdown">
