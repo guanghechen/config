@@ -31,11 +31,15 @@ export const transformNodesToReactFlow = (
   const reactFlowEdges: Edge[] = []
   nodes.forEach(node => {
     node.parents.forEach(parentId => {
+      // Check if parentId has @v: prefix
+      const isVirtualEdge = parentId.startsWith('@v:')
+      const actualParentId = isVirtualEdge ? parentId.slice(3) : parentId
+
       reactFlowEdges.push({
-        id: `${parentId}-${node.uuid}`,
-        source: parentId,
+        id: `${actualParentId}-${node.uuid}`,
+        source: actualParentId,
         target: node.uuid,
-        type: 'smoothstep',
+        type: isVirtualEdge ? 'virtual' : 'smoothstep',
       })
     })
   })

@@ -2,6 +2,7 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  type EdgeTypes,
   MiniMap,
   type Node,
   type NodeMouseHandler,
@@ -19,6 +20,7 @@ import { getLayoutedElements } from '../../util/graph/layout'
 import { CustomNode } from './CustomNode'
 import { NodeDetailsPanel } from './NodeDetailsPanel'
 import { ReactFlowToolbar } from './ReactFlowToolbar'
+import { VirtualEdge } from './VirtualEdge'
 
 interface IProps {
   readonly data: ITextTransformedNode[]
@@ -28,6 +30,10 @@ interface IProps {
 
 const nodeTypes: NodeTypes = {
   custom: CustomNode,
+}
+
+const edgeTypes: EdgeTypes = {
+  virtual: VirtualEdge,
 }
 
 export const ReactFlowGraph: React.FC<IProps> = props => {
@@ -113,6 +119,7 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
           onNodeClick={handleNodeClick}
           onPaneClick={handlePaneClick}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView={true}
           proOptions={{ hideAttribution: true }}
           className={theme === 'dark' ? 'react-flow dark' : 'react-flow'}
