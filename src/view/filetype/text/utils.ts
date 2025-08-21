@@ -2,6 +2,10 @@
 // Chain path conversion utilities
 import type { IChainPath } from './context'
 
+// NIL symbol to represent null/undefined values, distinct from strings that contain "nil"
+export const NIL_SYMBOL = Symbol('NIL')
+export type NILSymbol = typeof NIL_SYMBOL
+
 const COLOR_PALETTE = [
   {
     bg: 'bg-purple-100',
@@ -112,8 +116,8 @@ export const sortChainPaths = (chainPaths: IChainPath[]): IChainPath[] => {
   return [...chainPaths].sort((a, b) => a.path.localeCompare(b.path))
 }
 
-export const extractValueFromPath = (obj: unknown, path: string): string => {
-  if (!path || !path.trim()) return 'nil'
+export const extractValueFromPath = (obj: unknown, path: string): string | NILSymbol => {
+  if (!path || !path.trim()) return NIL_SYMBOL
 
   try {
     const cleanPath = path.startsWith('.') ? path.slice(1) : path
@@ -122,17 +126,35 @@ export const extractValueFromPath = (obj: unknown, path: string): string => {
     let current = obj
     for (const part of pathParts) {
       if (current == null || typeof current !== 'object') {
-        return 'nil'
+        return NIL_SYMBOL
       }
       current = (current as Record<string, unknown>)[part]
     }
 
     if (current === undefined || current === null) {
-      return 'nil'
+      return NIL_SYMBOL
     }
 
     return String(current)
   } catch {
-    return 'nil'
+    return NIL_SYMBOL
   }
+}
+
+export const isNilValue = (value: string | NILSymbol): boolean => {
+  return value === NIL_SYMBOL
+}
+
+export const displayValue = (value: string | NILSymbol): string => {
+  return value === NIL_SYMBOL ? 'nil' : value
+}
+
+export const getDarkerPathColorClasses = (path: string, allPaths: string[]): string => {
+  const color = getPathColor(path, allPaths)
+  // Extract the color name from the background class (e.g., 'bg-purple-100' -> 'purple')
+  const colorMatch = color.bg.match(/bg-(\w+)-\d+/)
+  const colorName = colorMatch ? colorMatch[1] : 'gray'
+
+  // Return darker variants with reduced opacity and border
+  return `bg-${colorName}-200/40 text-${colorName}-900 dark:bg-${colorName}-700/40 dark:text-${colorName}-300 border border-${colorName}-300/60 dark:border-${colorName}-500/60 opacity-75`
 }

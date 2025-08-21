@@ -3,7 +3,14 @@ import React from 'react'
 import type { ITextTransformedNode } from '@/shared/types'
 import type { IChainPath } from '../context'
 import { useTextViewViewModel } from '../context'
-import { extractValueFromPath, getPathColorClasses, sortChainPaths } from '../utils'
+import {
+  displayValue,
+  extractValueFromPath,
+  getDarkerPathColorClasses,
+  getPathColorClasses,
+  isNilValue,
+  sortChainPaths,
+} from '../utils'
 
 interface IProps {
   readonly record: ITextTransformedNode
@@ -84,11 +91,13 @@ export const NavListItem: React.FC<IProps> = props => {
                 key={idx}
                 className={cn(
                   'rounded px-2 py-0.5 text-xs font-medium',
-                  getPathColorClasses(item.path, allPathStrings),
+                  isNilValue(item.value)
+                    ? getDarkerPathColorClasses(item.path, allPathStrings)
+                    : getPathColorClasses(item.path, allPathStrings),
                 )}
-                title={`${item.path}: ${item.value}`}
+                title={`${item.path}: ${displayValue(item.value)}`}
               >
-                {item.value}
+                {displayValue(item.value)}
               </span>
             ))}
           </div>

@@ -3,7 +3,14 @@ import React from 'react'
 import { Json } from '@/component/json'
 import type { ITextTransformedNode } from '@/shared/types'
 import type { IChainPath } from '../context'
-import { extractValueFromPath, getPathColorClasses, sortChainPaths } from '../utils'
+import {
+  displayValue,
+  extractValueFromPath,
+  getDarkerPathColorClasses,
+  getPathColorClasses,
+  isNilValue,
+  sortChainPaths,
+} from '../utils'
 
 interface IProps {
   readonly index: number
@@ -89,11 +96,13 @@ export const ContentListItem: React.FC<IProps> = props => {
                 key={idx}
                 className={cn(
                   'rounded px-2 py-0.5 text-xs font-medium',
-                  getPathColorClasses(item.path, allPathStrings),
+                  isNilValue(item.value)
+                    ? getDarkerPathColorClasses(item.path, allPathStrings)
+                    : getPathColorClasses(item.path, allPathStrings),
                 )}
-                title={`${item.path}: ${item.value}`}
+                title={`${item.path}: ${displayValue(item.value)}`}
               >
-                {item.value}
+                {displayValue(item.value)}
               </span>
             ))}
           </div>
