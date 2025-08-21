@@ -31,7 +31,8 @@ export const NodeDetailsPanel: React.FC<IProps> = props => {
     (e: MouseEvent) => {
       if (!isDragging) return
       const deltaX = startX.current - e.clientX
-      const newWidth = Math.max(320, Math.min(800, startWidth.current + deltaX))
+      const maxWidth = window.innerWidth * 0.6
+      const newWidth = Math.max(320, Math.min(maxWidth, startWidth.current + deltaX))
       setWidth(newWidth)
     },
     [isDragging],
