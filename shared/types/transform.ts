@@ -44,4 +44,5 @@ export interface ITextTransformedNode {
   readonly title: string
   readonly desc: string
   readonly data: unknown
+  readonly index: number
 }

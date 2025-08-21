@@ -22,6 +22,7 @@ import { getLayoutedElements } from './util/layout'
 interface IProps {
   readonly data: ITextTransformedNode[]
   readonly theme?: 'light' | 'dark'
+  readonly chainPaths?: string[]
 }
 
 const nodeTypes: NodeTypes = {
@@ -29,11 +30,11 @@ const nodeTypes: NodeTypes = {
 }
 
 export const ReactFlowGraph: React.FC<IProps> = props => {
-  const { data, theme = 'light' } = props
+  const { data, theme = 'light', chainPaths } = props
 
   const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
   const initialData = React.useMemo(() => {
-    const { nodes, edges } = transformNodesToReactFlow(data)
+    const { nodes, edges } = transformNodesToReactFlow(data, chainPaths)
 
     // Apply theme styling to edges
     const themedEdges = edges.map(edge => ({
@@ -45,7 +46,7 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
     }))
 
     return getLayoutedElements(nodes, themedEdges)
-  }, [data, theme])
+  }, [data, theme, chainPaths])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes as Node[])
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialData.edges)
@@ -84,7 +85,7 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
 
   // Update nodes and edges when data prop changes
   React.useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = transformNodesToReactFlow(data)
+    const { nodes: newNodes, edges: newEdges } = transformNodesToReactFlow(data, chainPaths)
 
     // Apply theme styling to edges
     const themedEdges = newEdges.map(edge => ({
@@ -98,7 +99,7 @@ export const ReactFlowGraph: React.FC<IProps> = props => {
     const layoutedData = getLayoutedElements(newNodes, themedEdges)
     setNodes(layoutedData.nodes as Node[])
     setEdges(layoutedData.edges)
-  }, [data, theme, setNodes, setEdges])
+  }, [data, theme, chainPaths, setNodes, setEdges])
 
   return (
     <div className="relative w-full h-full flex">

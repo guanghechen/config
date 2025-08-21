@@ -1,6 +1,7 @@
 import { Handle, type NodeProps, Position } from '@xyflow/react'
 import cn from 'clsx'
 import React from 'react'
+import { displayValue, extractValueFromPath, getPathColorClasses } from '@/view/filetype/text/utils'
 import type { IReactFlowNodeData } from '../util/adaptor'
 
 interface IProps extends NodeProps {
@@ -15,6 +16,16 @@ export const CustomNode: React.FC<IProps> = props => {
     const title = data.title || ''
     return title.length > 12 ? `${title.slice(0, 12)}...` : title
   }, [data.title])
+
+  // Extract values from chainPaths
+  const extractedValues = React.useMemo(() => {
+    if (!data.chainPaths || !data.chainPaths.length || !data.data) return []
+
+    return data.chainPaths.map(path => ({
+      path,
+      value: extractValueFromPath(data.data, path),
+    }))
+  }, [data.chainPaths, data.data])
 
   return (
     <div
@@ -41,10 +52,15 @@ export const CustomNode: React.FC<IProps> = props => {
       />
 
       <div className="w-full space-y-2">
-        {/* First line: UUID on left, title with rounded border on right */}
+        {/* First line: Index, UUID on left, title with rounded border on right */}
         <div className="flex items-center justify-between gap-2">
-          <div className="font-semibold text-xs text-blue-600 dark:text-blue-400 break-all flex-1 min-w-0">
-            {data.uuid}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="rounded bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-600 dark:text-gray-200 flex-shrink-0">
+              #{data.index}
+            </span>
+            <div className="font-semibold text-xs text-blue-600 dark:text-blue-400 break-all flex-1 min-w-0">
+              {data.uuid}
+            </div>
           </div>
           {truncatedTitle && (
             <div
@@ -57,6 +73,24 @@ export const CustomNode: React.FC<IProps> = props => {
             </div>
           )}
         </div>
+
+        {/* Chain paths extracted values */}
+        {extractedValues.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {extractedValues.map((item, idx) => (
+              <span
+                key={idx}
+                className={cn(
+                  'rounded px-2 py-0.5 text-xs font-medium',
+                  getPathColorClasses(item.path, data.chainPaths || []),
+                )}
+                title={`${item.path}: ${displayValue(item.value)}`}
+              >
+                {displayValue(item.value)}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Second line and below: Parents, each on a single line */}
         {data.parents && data.parents.length > 0 && (

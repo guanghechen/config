@@ -88,6 +88,7 @@ export const transformTextToNodes = (
           title: titleFunc(item, index),
           desc: descFunc(item, index),
           data: item,
+          index: index,
         }
       })
 

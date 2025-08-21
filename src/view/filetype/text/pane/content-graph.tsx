@@ -2,12 +2,14 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { ReactFlowGraph } from '@/component/graph/reactflow'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
-import type { ITextTransformedNode } from '@/shared/types'
+import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
 import { useTextViewViewModel } from '../context'
 
 export const ContentGraph: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const transformedNodes: ITextTransformedNode[] = useStateValue(viewmodel.records$)
+  const transformConfig: ITextTransformConfig = useStateValue(viewmodel.transformConfig$)
+  const chainPaths: string[] = transformConfig.chainPaths || []
 
   const site = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(site.theme$)
@@ -17,6 +19,7 @@ export const ContentGraph: React.FC = () => {
       <ReactFlowGraph
         data={transformedNodes}
         theme={theme === SiteTheme.DARKEN ? 'dark' : 'light'}
+        chainPaths={chainPaths}
       />
     </div>
   )

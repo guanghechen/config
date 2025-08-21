@@ -6,10 +6,13 @@ export interface IReactFlowNodeData extends Record<string, unknown> {
   readonly data: unknown
   readonly parents: string[]
   readonly title: string
+  readonly index: number
+  readonly chainPaths?: string[]
 }
 
 export const transformNodesToReactFlow = (
   nodes: ITextTransformedNode[],
+  chainPaths?: string[],
 ): { nodes: Array<Node<IReactFlowNodeData>>; edges: Edge[] } => {
   const reactFlowNodes: Array<Node<IReactFlowNodeData>> = nodes.map((node, index) => ({
     id: node.uuid,
@@ -20,6 +23,8 @@ export const transformNodesToReactFlow = (
       data: node.data,
       parents: node.parents,
       title: node.title,
+      index: node.index,
+      chainPaths,
     },
   }))
 
