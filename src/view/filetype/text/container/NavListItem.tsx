@@ -15,7 +15,7 @@ interface IProps {
 export const NavListItem: React.FC<IProps> = props => {
   const viewmodel = useTextViewViewModel()
   const { record, index, isActive, chainPaths } = props
-  const { data } = record
+  const { data, title } = record
 
   // Compute extracted values for visible chain paths from this node
   const visibleChainPaths = React.useMemo(() => chainPaths.filter(cp => cp.visible), [chainPaths])
@@ -48,10 +48,21 @@ export const NavListItem: React.FC<IProps> = props => {
         )}
       >
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
               #{index}
             </span>
+            {title && (
+              <span
+                className={cn('text-xs font-medium', {
+                  'text-blue-700 dark:text-blue-300': isActive,
+                  'text-gray-700 dark:text-gray-300': !isActive,
+                })}
+                title={title}
+              >
+                {title.length > 10 ? `${title.slice(0, 10)}...` : title}
+              </span>
+            )}
             {extractedValues.map((item, idx) => (
               <span
                 key={idx}

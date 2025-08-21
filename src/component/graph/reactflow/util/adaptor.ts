@@ -13,7 +13,7 @@ export const transformNodesToReactFlow = (
   const reactFlowNodes: Array<Node<IReactFlowNodeData>> = nodes.map((node, index) => ({
     id: node.uuid,
     type: 'custom',
-    position: { x: index * 200, y: 0 }, // Initial positioning, layout will be calculated later
+    position: { x: index * 350, y: 0 }, // Initial positioning, layout will be calculated later
     data: {
       uuid: node.uuid,
       data: node.data,

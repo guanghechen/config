@@ -1,8 +1,9 @@
 {
   "name": "claude",
   "split": "text => text.trim().split(/\\n/g)",
-  "uuid": "item => item.uuid",
+  "uuid": "(item, index) => item.uuid || String(index)",
   "parents": "item => item.parentUuid",
+  "title": "item => `${item.type || 'unknown'}`",
   "chainPaths": [],
   "steps": [
     {

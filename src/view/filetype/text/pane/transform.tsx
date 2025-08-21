@@ -317,6 +317,23 @@ export const TransformPane: React.FC = () => {
               placeholder="() => [] // Return array of parent UUIDs"
             />
           </div>
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Title Function
+              </span>
+              <Tooltip content="Function to generate title for each item">
+                <span className="w-4 h-4 bg-purple-500 text-white rounded-full text-xs flex items-center justify-center cursor-help select-none">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
+            <CodeBox
+              value={config.title}
+              onChange={value => updateTransformConfig({ title: value })}
+              placeholder="(element, index) => ''"
+            />
+          </div>
         </div>
       </div>
       <div className="bg-blue-50 dark:bg-blue-900/40 p-6 border-l-4 border-blue-500 dark:border-blue-400">

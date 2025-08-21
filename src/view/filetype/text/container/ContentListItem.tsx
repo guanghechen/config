@@ -15,7 +15,7 @@ interface IProps {
 
 export const ContentListItem: React.FC<IProps> = props => {
   const { index, node, chainPaths, expandTick, isActive = false } = props
-  const { parents, data } = node
+  const { parents, data, title } = node
   const [expanded, setExpanded] = React.useState(false)
 
   // Compute extracted values for visible chain paths from this node
@@ -56,29 +56,42 @@ export const ContentListItem: React.FC<IProps> = props => {
         })}
         onClick={handleToggleExpand}
       >
-        <div className="flex select-none items-center gap-2">
-          <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-            #{index}
-          </span>
-          {parents.length > 0 && (
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-              {parents.length} parent{parents.length > 1 ? 's' : ''}
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
+          <div className="flex select-none items-center gap-2 flex-wrap">
+            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+              #{index}
             </span>
-          )}
-          {extractedValues.map((item, idx) => (
-            <span
-              key={idx}
-              className={cn(
-                'rounded px-2 py-0.5 text-xs font-medium',
-                item.value === 'undefined'
-                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                  : getPathColorClasses(item.path, allPathStrings),
-              )}
-              title={`${item.path}: ${item.value}`}
-            >
-              {item.value}
-            </span>
-          ))}
+            {title && (
+              <span
+                className={cn('text-xs font-medium', {
+                  'text-indigo-700 dark:text-indigo-300': isActive,
+                  'text-gray-700 dark:text-gray-300': !isActive,
+                })}
+                title={title}
+              >
+                {title.length > 10 ? `${title.slice(0, 10)}...` : title}
+              </span>
+            )}
+            {parents.length > 0 && (
+              <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                {parents.length} parent{parents.length > 1 ? 's' : ''}
+              </span>
+            )}
+            {extractedValues.map((item, idx) => (
+              <span
+                key={idx}
+                className={cn(
+                  'rounded px-2 py-0.5 text-xs font-medium',
+                  item.value === 'undefined'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                    : getPathColorClasses(item.path, allPathStrings),
+                )}
+                title={`${item.path}: ${item.value}`}
+              >
+                {item.value}
+              </span>
+            ))}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="select-none text-xs text-gray-500 dark:text-gray-400">

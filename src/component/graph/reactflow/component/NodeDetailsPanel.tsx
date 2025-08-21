@@ -1,4 +1,5 @@
 import type { Node } from '@xyflow/react'
+import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
 import type { IReactFlowNodeData } from '../util/adaptor'
@@ -11,11 +12,62 @@ interface IProps {
 
 export const NodeDetailsPanel: React.FC<IProps> = props => {
   const { node, onClose } = props
+  const [width, setWidth] = React.useState(480)
+  const [isDragging, setIsDragging] = React.useState(false)
+  const startX = React.useRef(0)
+  const startWidth = React.useRef(0)
+
+  const handleMouseDown = React.useCallback(
+    (e: React.MouseEvent) => {
+      setIsDragging(true)
+      startX.current = e.clientX
+      startWidth.current = width
+      e.preventDefault()
+    },
+    [width],
+  )
+
+  const handleMouseMove = React.useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return
+      const deltaX = startX.current - e.clientX
+      const newWidth = Math.max(320, Math.min(800, startWidth.current + deltaX))
+      setWidth(newWidth)
+    },
+    [isDragging],
+  )
+
+  const handleMouseUp = React.useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  React.useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
   if (!node) return null
 
   return (
-    <div className="w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-600 flex flex-col">
+    <div
+      className="bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-600 flex flex-col relative"
+      style={{ width: `${width}px` }}
+    >
+      <div
+        className={cn(
+          'absolute left-0 top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-blue-500 transition-colors z-10',
+          {
+            'bg-blue-500': isDragging,
+          },
+        )}
+        onMouseDown={handleMouseDown}
+      />
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Node Details</h3>
         <button

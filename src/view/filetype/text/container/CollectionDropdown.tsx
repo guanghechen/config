@@ -106,6 +106,7 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
       split: config.split,
       uuid: config.uuid,
       parents: config.parents,
+      title: config.title,
       steps: config.steps.map(step => ({
         skip: step.skip ?? false,
         code: step.code,
@@ -146,6 +147,9 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
       }
       if (importedData.parents) {
         updateTransformConfig({ parents: importedData.parents })
+      }
+      if (importedData.title) {
+        updateTransformConfig({ title: importedData.title })
       }
       if (importedData.steps && Array.isArray(importedData.steps)) {
         const steps: ITextTransformStep[] = importedData.steps.map(

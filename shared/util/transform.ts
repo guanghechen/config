@@ -8,6 +8,7 @@ export const validateTransformConfig = (data: any): data is ITextTransformConfig
     typeof data.split === 'string' &&
     typeof data.uuid === 'string' &&
     typeof data.parents === 'string' &&
+    typeof data.title === 'string' &&
     Array.isArray(data.steps)
   )
 }

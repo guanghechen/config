@@ -3,6 +3,7 @@
   "split": "text => text.split(/\\n/g)",
   "uuid": "(_, index) => `${index}`",
   "parents": "() => []",
+  "title": "item => ''",
   "chainPaths": [],
   "steps": [
     {

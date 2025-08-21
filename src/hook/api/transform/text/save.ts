@@ -11,6 +11,7 @@ export interface ITransformerSaveData {
   }>
   uuid: string
   parents: string
+  title: string
   chainPaths?: string[]
 }
 
@@ -26,6 +27,7 @@ export async function postTransformer(name: string, config: ITextTransformConfig
     split: config.split,
     uuid: config.uuid,
     parents: config.parents,
+    title: config.title,
     chainPaths: config.chainPaths,
     steps: config.steps.map(step => ({
       type: step.type,

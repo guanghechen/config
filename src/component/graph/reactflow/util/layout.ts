@@ -2,8 +2,8 @@ import type { Edge, Node, Position } from '@xyflow/react'
 import dagre from 'dagre'
 import type { IReactFlowNodeData } from './adaptor'
 
-const nodeWidth = 150
-const nodeHeight = 60
+const nodeWidth = 320
+const nodeHeight = 140
 
 export const getLayoutedElements = (
   nodes: Array<Node<IReactFlowNodeData>>,
@@ -14,7 +14,7 @@ export const getLayoutedElements = (
   dagreGraph.setDefaultEdgeLabel(() => ({}))
 
   const isHorizontal = direction === 'LR'
-  dagreGraph.setGraph({ rankdir: direction, nodesep: 50, ranksep: 100 })
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 80, ranksep: 150 })
 
   nodes.forEach(node => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight })
