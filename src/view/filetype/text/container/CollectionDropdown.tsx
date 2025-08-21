@@ -100,6 +100,27 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
     }
   }
 
+  // Sort transformers: 1. eventstream/jsonl first, 2. others without 'local.' prefix, 3. items with 'local.' prefix
+  const sortedTransformers = React.useMemo(() => {
+    const priority = transformers.filter(
+      t => t.name === 'eventstream' || t.name === 'jsonl' || t.name === 'json-list',
+    )
+    const regular = transformers
+      .filter(
+        t =>
+          t.name !== 'eventstream' &&
+          t.name !== 'jsonl' &&
+          t.name !== 'json-list' &&
+          !t.name.startsWith('local.'),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name))
+    const local = transformers
+      .filter(t => t.name.startsWith('local.'))
+      .sort((a, b) => a.name.localeCompare(b.name))
+
+    return { priority, regular, local }
+  }, [transformers])
+
   const exportTransformData = async (): Promise<void> => {
     const exportData: ITextTransformExportData = {
       name: config.name,
@@ -377,8 +398,37 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
               No saved transformers
             </div>
           ) : (
-            <div className="max-h-40 overflow-y-auto space-y-1">
-              {transformers.map(transformer => (
+            <div className="max-h-80 overflow-y-auto space-y-1">
+              {sortedTransformers.priority.map(transformer => (
+                <button
+                  key={transformer.name}
+                  onClick={() => {
+                    handleLoadTransformer(transformer.name).catch(console.error)
+                  }}
+                  className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200"
+                >
+                  <div className="font-medium">{transformer.name}</div>
+                </button>
+              ))}
+              {sortedTransformers.priority.length > 0 &&
+                (sortedTransformers.regular.length > 0 || sortedTransformers.local.length > 0) && (
+                  <div className="border-t border-gray-200 dark:border-gray-600 my-2" />
+                )}
+              {sortedTransformers.regular.map(transformer => (
+                <button
+                  key={transformer.name}
+                  onClick={() => {
+                    handleLoadTransformer(transformer.name).catch(console.error)
+                  }}
+                  className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200"
+                >
+                  <div className="font-medium">{transformer.name}</div>
+                </button>
+              ))}
+              {sortedTransformers.regular.length > 0 && sortedTransformers.local.length > 0 && (
+                <div className="border-t border-gray-200 dark:border-gray-600 my-2" />
+              )}
+              {sortedTransformers.local.map(transformer => (
                 <button
                   key={transformer.name}
                   onClick={() => {
