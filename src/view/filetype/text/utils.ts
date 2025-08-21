@@ -3,7 +3,7 @@
 import type { IChainPath } from './context'
 
 // NIL symbol to represent null/undefined values, distinct from strings that contain "nil"
-export const NIL_SYMBOL = Symbol('NIL')
+export const NIL_SYMBOL: symbol = Symbol('NIL')
 export type NILSymbol = typeof NIL_SYMBOL
 
 const COLOR_PALETTE = [
@@ -112,10 +112,6 @@ export const chainPathsToStringArray = (chainPaths: IChainPath[]): string[] => {
   return chainPaths.map(cp => cp.path)
 }
 
-export const sortChainPaths = (chainPaths: IChainPath[]): IChainPath[] => {
-  return [...chainPaths].sort((a, b) => a.path.localeCompare(b.path))
-}
-
 export const extractValueFromPath = (obj: unknown, path: string): string | NILSymbol => {
   if (!path || !path.trim()) return NIL_SYMBOL
 
@@ -141,12 +137,12 @@ export const extractValueFromPath = (obj: unknown, path: string): string | NILSy
   }
 }
 
-export const isNilValue = (value: string | NILSymbol): boolean => {
+export const isNilValue = (value: string | symbol): boolean => {
   return value === NIL_SYMBOL
 }
 
-export const displayValue = (value: string | NILSymbol): string => {
-  return value === NIL_SYMBOL ? 'nil' : value
+export const displayValue = (value: string | symbol): string => {
+  return value === NIL_SYMBOL ? 'nil' : (value as string)
 }
 
 export const getDarkerPathColorClasses = (path: string, allPaths: string[]): string => {

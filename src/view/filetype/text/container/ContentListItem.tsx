@@ -9,7 +9,6 @@ import {
   getDarkerPathColorClasses,
   getPathColorClasses,
   isNilValue,
-  sortChainPaths,
 } from '../utils'
 
 interface IProps {
@@ -26,15 +25,8 @@ export const ContentListItem: React.FC<IProps> = props => {
   const [expanded, setExpanded] = React.useState(false)
 
   // Compute extracted values for visible chain paths from this node
-  const sortedChainPaths = React.useMemo(() => sortChainPaths(chainPaths), [chainPaths])
-  const visibleChainPaths = React.useMemo(
-    () => sortedChainPaths.filter(cp => cp.visible),
-    [sortedChainPaths],
-  )
-  const allPathStrings = React.useMemo(
-    () => sortedChainPaths.map(cp => cp.path),
-    [sortedChainPaths],
-  )
+  const visibleChainPaths = React.useMemo(() => chainPaths.filter(cp => cp.visible), [chainPaths])
+  const allPathStrings = React.useMemo(() => chainPaths.map(cp => cp.path), [chainPaths])
 
   const extractedValues = React.useMemo(() => {
     if (!visibleChainPaths.length || !data) return []
@@ -97,10 +89,10 @@ export const ContentListItem: React.FC<IProps> = props => {
                 className={cn(
                   'rounded px-2 py-0.5 text-xs font-medium',
                   isNilValue(item.value)
-                    ? getDarkerPathColorClasses(item.path, allPathStrings)
-                    : getPathColorClasses(item.path, allPathStrings),
+                    ? getDarkerPathColorClasses(item.path as string, allPathStrings)
+                    : getPathColorClasses(item.path as string, allPathStrings),
                 )}
-                title={`${item.path}: ${displayValue(item.value)}`}
+                title={`${String(item.path)}: ${displayValue(item.value)}`}
               >
                 {displayValue(item.value)}
               </span>

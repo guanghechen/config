@@ -9,7 +9,6 @@ import {
   getDarkerPathColorClasses,
   getPathColorClasses,
   isNilValue,
-  sortChainPaths,
 } from '../utils'
 
 interface IProps {
@@ -25,15 +24,8 @@ export const NavListItem: React.FC<IProps> = props => {
   const { data, title } = record
 
   // Compute extracted values for visible chain paths from this node
-  const sortedChainPaths = React.useMemo(() => sortChainPaths(chainPaths), [chainPaths])
-  const visibleChainPaths = React.useMemo(
-    () => sortedChainPaths.filter(cp => cp.visible),
-    [sortedChainPaths],
-  )
-  const allPathStrings = React.useMemo(
-    () => sortedChainPaths.map(cp => cp.path),
-    [sortedChainPaths],
-  )
+  const visibleChainPaths = React.useMemo(() => chainPaths.filter(cp => cp.visible), [chainPaths])
+  const allPathStrings = React.useMemo(() => chainPaths.map(cp => cp.path), [chainPaths])
 
   const extractedValues = React.useMemo(() => {
     if (!visibleChainPaths.length || !data) return []
