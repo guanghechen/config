@@ -13,7 +13,7 @@ export class JsonFieldKey extends React.Component<IProps> {
     if (name === null || typeof name === 'number') return <React.Fragment />
 
     return (
-      <span>
+      <span className="whitespace-nowrap">
         <span className="font-medium text-gray-900 dark:text-gray-100">{name}</span>
         <span className="pr-2 text-gray-900 dark:text-gray-100">:</span>
       </span>
