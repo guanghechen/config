@@ -13,11 +13,11 @@ import {
 import React from 'react'
 import '@xyflow/react/dist/style.css'
 import type { ITextTransformedNode } from '@/shared/types'
-import { CustomNode } from './component/CustomNode'
-import { NodeDetailsPanel } from './component/NodeDetailsPanel'
-import { ReactFlowToolbar } from './component/ReactFlowToolbar'
-import { type IReactFlowNodeData, transformNodesToReactFlow } from './util/adaptor'
-import { getLayoutedElements } from './util/layout'
+import { CustomNode } from './CustomNode'
+import { NodeDetailsPanel } from './NodeDetailsPanel'
+import { ReactFlowToolbar } from './ReactFlowToolbar'
+import { type IReactFlowNodeData, transformNodesToReactFlow } from '../../util/graph/adaptor'
+import { getLayoutedElements } from '../../util/graph/layout'
 
 interface IProps {
   readonly data: ITextTransformedNode[]

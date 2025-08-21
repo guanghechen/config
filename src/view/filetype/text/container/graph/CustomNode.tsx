@@ -2,7 +2,7 @@ import { Handle, type NodeProps, Position } from '@xyflow/react'
 import cn from 'clsx'
 import React from 'react'
 import { displayValue, extractValueFromPath, getPathColorClasses } from '@/view/filetype/text/utils'
-import type { IReactFlowNodeData } from '../util/adaptor'
+import type { IReactFlowNodeData } from '../../util/graph/adaptor'
 
 interface IProps extends NodeProps {
   readonly data: IReactFlowNodeData & { theme?: 'light' | 'dark' }

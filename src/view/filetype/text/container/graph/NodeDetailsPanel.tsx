@@ -2,7 +2,7 @@ import type { Node } from '@xyflow/react'
 import cn from 'clsx'
 import React from 'react'
 import { Json } from '@/component/json'
-import type { IReactFlowNodeData } from '../util/adaptor'
+import type { IReactFlowNodeData } from '../../util/graph/adaptor'
 
 interface IProps {
   readonly node: Node | null

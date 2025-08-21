@@ -1,8 +1,8 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { ReactFlowGraph } from '@/component/graph/reactflow'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import type { ITextTransformConfig, ITextTransformedNode } from '@/shared/types'
+import { ReactFlowGraph } from '../container/graph/ReactFlowGraph'
 import { useTextViewViewModel } from '../context'
 
 export const ContentGraph: React.FC = () => {
