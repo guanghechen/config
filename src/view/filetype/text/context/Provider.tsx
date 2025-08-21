@@ -3,6 +3,7 @@ import React from 'react'
 import { toast } from 'react-toastify'
 import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
+import type { ITextTransformConfig } from '@/shared/types'
 import type { ITextFileData } from '@/shared/types/api'
 import { validateTransformConfig } from '@/shared/util'
 import { transformTextToNodes } from '../util/transform'
@@ -157,10 +158,10 @@ const useAutoTransform = (viewmodel: TextViewViewModel): void => {
   const content: string | null = useStateValue<string | null>(viewmodel.content$)
 
   React.useEffect(() => {
-    if (viewmodel.disposed) return
+    if (viewmodel.disposed || !content) return
 
-    const transformConfig = viewmodel.transformConfig$.getSnapshot()
-    if (content && validateTransformConfig(transformConfig)) {
+    const transformConfig: ITextTransformConfig = viewmodel.transformConfig$.getSnapshot()
+    if (validateTransformConfig(transformConfig)) {
       const result = transformTextToNodes(content as string, transformConfig)
       if (result.error) {
         viewmodel.records$.next([])

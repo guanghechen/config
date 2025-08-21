@@ -1,3 +1,4 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
@@ -43,12 +44,12 @@ export const TransformPane: React.FC = () => {
   const [isEditingName, setIsEditingName] = React.useState(false)
   const [editingName, setEditingName] = React.useState('')
 
-  const updateTransformConfig = (updates: Partial<ITextTransformConfig>): void => {
+  const updateTransformConfig = useEventCallback((updates: Partial<ITextTransformConfig>): void => {
     const current = viewmodel.transformConfig$.getSnapshot()
     viewmodel.transformConfig$.next({ ...current, ...updates })
-  }
+  })
 
-  const addTransformStep = (type: TextTransformStepTypeEnum): void => {
+  const addTransformStep = useEventCallback((type: TextTransformStepTypeEnum): void => {
     const current = config.steps
     const nextStep: ITextTransformStep = {
       id: `${type}-${Date.now()}`,
@@ -60,20 +61,22 @@ export const TransformPane: React.FC = () => {
       skip: false,
     }
     updateTransformConfig({ steps: [...current, nextStep] })
-  }
+  })
 
-  const removeTransformStep = (id: string): void => {
+  const removeTransformStep = useEventCallback((id: string): void => {
     const current = config.steps
     updateTransformConfig({ steps: current.filter(step => step.id !== id) })
-  }
+  })
 
-  const updateTransformStep = (id: string, updates: Partial<ITextTransformStep>): void => {
-    const current = config.steps
-    const updated = current.map(step => (step.id === id ? { ...step, ...updates } : step))
-    updateTransformConfig({ steps: updated })
-  }
+  const updateTransformStep = useEventCallback(
+    (id: string, updates: Partial<ITextTransformStep>): void => {
+      const current = config.steps
+      const updated = current.map(step => (step.id === id ? { ...step, ...updates } : step))
+      updateTransformConfig({ steps: updated })
+    },
+  )
 
-  const moveTransformStep = (id: string, direction: 'up' | 'down'): void => {
+  const moveTransformStep = useEventCallback((id: string, direction: 'up' | 'down'): void => {
     const current = config.steps
     const index = current.findIndex(step => step.id === id)
     if (index === -1) return
@@ -85,9 +88,9 @@ export const TransformPane: React.FC = () => {
     const [moved] = updated.splice(index, 1)
     updated.splice(newIndex, 0, moved)
     updateTransformConfig({ steps: updated })
-  }
+  })
 
-  const duplicateTransformStep = (id: string): void => {
+  const duplicateTransformStep = useEventCallback((id: string): void => {
     const current = config.steps
     const index = current.findIndex(step => step.id === id)
     if (index === -1) return
@@ -101,17 +104,17 @@ export const TransformPane: React.FC = () => {
     const updated = [...current]
     updated.splice(index + 1, 0, duplicatedStep)
     updateTransformConfig({ steps: updated })
-  }
+  })
 
-  const handleDragStart = (_index: number): void => {
+  const handleDragStart = useEventCallback((_index: number): void => {
     setIsDragging(true)
-  }
+  })
 
-  const handleDragOver = (_index: number): void => {
+  const handleDragOver = useEventCallback((_index: number): void => {
     // Optional: could add visual feedback here
-  }
+  })
 
-  const handleDrop = (fromIndex: number, toIndex: number): void => {
+  const handleDrop = useEventCallback((fromIndex: number, toIndex: number): void => {
     if (fromIndex === toIndex) {
       setIsDragging(false)
       return
@@ -124,9 +127,9 @@ export const TransformPane: React.FC = () => {
 
     updateTransformConfig({ steps: updated })
     setIsDragging(false)
-  }
+  })
 
-  const executeTransform = (): void => {
+  const executeTransform = useEventCallback((): void => {
     if (!content) {
       toast.error('No content to transform')
       return
@@ -141,33 +144,33 @@ export const TransformPane: React.FC = () => {
       viewmodel.records$.next(result.nodes)
       toast.success(`Transform completed: ${result.nodes.length} nodes generated`)
     }
-  }
+  })
 
-  const handleStartEditName = (): void => {
+  const handleStartEditName = useEventCallback((): void => {
     setEditingName(config.name)
     setIsEditingName(true)
-  }
+  })
 
-  const handleSaveName = (): void => {
+  const handleSaveName = useEventCallback((): void => {
     if (editingName.trim()) {
       updateTransformConfig({ name: editingName.trim() })
     }
     setIsEditingName(false)
     setEditingName('')
-  }
+  })
 
-  const handleCancelEditName = (): void => {
+  const handleCancelEditName = useEventCallback((): void => {
     setIsEditingName(false)
     setEditingName('')
-  }
+  })
 
-  const handleNameKeyDown = (e: React.KeyboardEvent): void => {
+  const handleNameKeyDown = useEventCallback((e: React.KeyboardEvent): void => {
     if (e.key === 'Enter') {
       handleSaveName()
     } else if (e.key === 'Escape') {
       handleCancelEditName()
     }
-  }
+  })
 
   return (
     <React.Fragment>
