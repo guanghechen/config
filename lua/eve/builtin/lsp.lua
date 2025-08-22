@@ -197,11 +197,34 @@ end
 ---@param bin                           string
 ---@param silent                        ?boolean
 ---@return string|nil
----@diagnostic disable-next-line: unused-local
 function M.locate_mason_bin_path(bin, silent)
   local root = vim.env.MASON or (std.env.HOME_NVIM_DATA .. std.env.PATH_SEP .. "mason")
-  local filepath = std.path.normalize(root .. "/bin/" .. bin)
-  return std.path.is_exist_filepath(filepath) and filepath or nil
+  local resolved_binname = std.env.IS_WIN and not bin:match("%.cmd$") and (bin .. ".cmd") or bin ---@type string
+  local filepath = std.path.normalize(root .. "/bin/" .. resolved_binname) ---@type string
+
+  if std.path.is_exist_filepath(filepath) then
+    return filepath
+  end
+
+  if not silent then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "locate_mason_bin_path",
+      message = string.format(
+        "Mason binary not found for **%s**:\\n- You may need to install the package via Mason.",
+        resolved_binname,
+        filepath
+      ),
+      details = {
+        root = root,
+        original_binname = bin,
+        resolved_binname = resolved_binname,
+        filepath = filepath,
+      },
+    })
+  end
+
+  return nil
 end
 
 ---@param pkg                           string
