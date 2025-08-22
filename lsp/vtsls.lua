@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/85379d02d3bac8dc68129a4b81d7dbd00c8b0f77/lsp/vtsls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/8373a1b7a7ab7a9972b55182073be5ac2f3bec0a/lsp/vtsls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vtsls
 
 local __module_name__ = "lsp.vtsls" ---@type string
@@ -7,9 +7,11 @@ local Methods = vim.lsp.protocol.Methods
 
 ---@type string[]
 local CONFIG_FILENAMES = {
-  "package.json",
-  "tsconfig.json",
-  "jsconfig.json",
+  "package-lock.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  "bun.lockb",
+  "bun.lock",
 }
 
 ---@param bufnr                         integer

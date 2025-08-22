@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/c30a661a1f4c270f542eaf861f3eb726bb9baa69/lsp/yamlls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/592de750bf5b8c45fc48cebfde585721626ffd6d/lsp/yamlls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#yamlls
 
 ---@param params                        lsp.InitializeParams
@@ -23,6 +23,11 @@ end
 ---@param config                        any
 local function on_init(client, config)
   eve.lsp.on_init(client, config)
+
+  --- https://github.com/neovim/nvim-lspconfig/pull/4016
+  --- Since formatting is disabled by default if you check `client:supports_method('textDocument/formatting')`
+  --- during `LspAttach` it will return `false`. This hack sets the capability to `true` to facilitate
+  --- autocmd's which check this capability
   client.server_capabilities.documentFormattingProvider = true
 end
 
