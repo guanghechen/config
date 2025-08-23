@@ -12,7 +12,6 @@ import {
 } from '@/component/filetree'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { useSingleton } from '@/hook/useSingleton'
-import { PRESET_CLASSES } from '@/shared/constant'
 import { useWorkspaceViewmodel } from '../context'
 
 export const FileTree: React.FC = () => {
@@ -49,9 +48,7 @@ export const FileTree: React.FC = () => {
               onModeChange={mode => workspaceVM.filetreeMode$.next(mode)}
             />
           </div>
-          <div
-            className={cn('w-full h-full flex-auto overflow-auto pr-2', PRESET_CLASSES.scrollbar)}
-          >
+          <div className="w-full h-full flex-auto overflow-auto pr-2">
             <FileTreeComposer viewmodel={viewmodel} mode={mode} onFileNodeClick={onFileNodeClick} />
           </div>
         </div>

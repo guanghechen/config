@@ -3,7 +3,6 @@ import cn from 'clsx'
 import type { TokenStream } from 'prismjs'
 import Prism from 'prismjs'
 import React from 'react'
-import { PRESET_CLASSES } from '@/shared/constant'
 import type {
   ILineInputProps,
   ILineOutputProps,
@@ -85,7 +84,7 @@ export class CodeHighlighter extends React.Component<IProps, IState> {
         )}
         style={style}
       >
-        <div className={cn('min-w-full w-fit p-0 m-0', PRESET_CLASSES.scrollbar)}>
+        <div className="min-w-full w-fit p-0 m-0">
           {tokens.map((line, index) => {
             const lineno: number = index + 1
             const isHighlight = highlightLinenos.includes(lineno)

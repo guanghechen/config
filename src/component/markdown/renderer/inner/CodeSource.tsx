@@ -4,7 +4,6 @@ import { CopyButton } from '@/component/button/copy'
 import type { IPrismThemeScheme } from '@/component/code-highlighter'
 import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
 import { CodeIcon } from '@/component/icon/material'
-import { PRESET_CLASSES } from '@/shared/constant'
 import type { ICodeMetaData } from '@/util/parseCodeMeta'
 import { useMarkdownDarken } from '../../hook/useMarkdownDarken'
 
@@ -51,13 +50,9 @@ export const CodeSource: React.FC<IProps> = props => {
       </div>
       {expanded && (
         <div
-          className={cn(
-            'group relative box-border block pb-2 font-[var(--fontFamilyCode)]',
-            {
-              'max-h-[40rem] overflow-auto rounded-[4px]': meta.overflow,
-            },
-            PRESET_CLASSES.scrollbar,
-          )}
+          className={cn('group relative box-border block pb-2 font-[var(--fontFamilyCode)]', {
+            'max-h-[40rem] overflow-auto rounded-[4px]': meta.overflow,
+          })}
         >
           <div className="sticky right-0 top-0 float-right h-2 w-full opacity-0 transition-opacity group-hover:opacity-100">
             <div className="relative">
