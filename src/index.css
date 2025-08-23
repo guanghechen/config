@@ -26,43 +26,66 @@
 
     ::-webkit-scrollbar-thumb,
     &::-webkit-scrollbar-thumb {
-      @apply rounded bg-gray-400 border border-gray-300 dark:bg-gray-400 dark:border-gray-500;
+      @apply rounded bg-gray-400 border border-gray-300;
     }
 
     ::-webkit-scrollbar-thumb:hover,
     &::-webkit-scrollbar-thumb:hover {
-      @apply bg-gray-500 border-gray-400 dark:bg-gray-300 dark:border-gray-400;
+      @apply bg-gray-500 border-gray-400;
     }
 
     ::-webkit-scrollbar-track,
     &::-webkit-scrollbar-track {
-      @apply rounded bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600;
+      @apply rounded bg-gray-50 border border-gray-200;
     }
 
     ::-webkit-scrollbar-corner,
     &::-webkit-scrollbar-corner {
-      @apply bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600;
+      @apply bg-gray-50 border border-gray-200;
+    }
+  }
+
+  /* Dark mode scrollbar styles */
+  .dark {
+    ::-webkit-scrollbar-thumb,
+    &::-webkit-scrollbar-thumb {
+      @apply bg-gray-400 border-gray-500;
     }
 
-    .custom-toast.custom-toast.custom-toast {
-      @apply bg-white text-gray-700 border border-gray-200 shadow-lg dark:bg-gray-800 dark:text-gray-50 dark:border-gray-600;
-      font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
+    ::-webkit-scrollbar-thumb:hover,
+    &::-webkit-scrollbar-thumb:hover {
+      @apply bg-gray-300 border-gray-400;
+    }
 
-      &.Toastify__toast--success {
-        @apply bg-green-50 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-200 dark:border-green-500;
-      }
+    ::-webkit-scrollbar-track,
+    &::-webkit-scrollbar-track {
+      @apply bg-gray-700 border-gray-600;
+    }
 
-      &.Toastify__toast--error {
-        @apply bg-red-50 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-200 dark:border-red-500;
-      }
+    ::-webkit-scrollbar-corner,
+    &::-webkit-scrollbar-corner {
+      @apply bg-gray-700 border-gray-600;
+    }
+  }
 
-      .Toastify__progress-bar--success {
-        @apply bg-green-500;
-      }
+  .custom-toast.custom-toast.custom-toast {
+    @apply bg-white text-gray-700 border border-gray-200 shadow-lg dark:bg-gray-800 dark:text-gray-50 dark:border-gray-600;
+    font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
 
-      .Toastify__progress-bar--error {
-        @apply bg-red-500;
-      }
+    &.Toastify__toast--success {
+      @apply bg-green-50 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-200 dark:border-green-500;
+    }
+
+    &.Toastify__toast--error {
+      @apply bg-red-50 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-200 dark:border-red-500;
+    }
+
+    .Toastify__progress-bar--success {
+      @apply bg-green-500;
+    }
+
+    .Toastify__progress-bar--error {
+      @apply bg-red-500;
     }
   }
 
