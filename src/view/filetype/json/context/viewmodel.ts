@@ -4,8 +4,6 @@ import type { IJsonViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
   readonly mode?: ModeEnum
 }
 
@@ -14,8 +12,6 @@ const DEFAULT_DATA: IJsonViewData = {
 }
 
 export class JsonViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
-  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
 
   public readonly content$: IState<string | null>
@@ -24,10 +20,8 @@ export class JsonViewViewModel extends ViewModel {
   constructor(props: IProps) {
     super()
 
-    const { workspace, filepath, mode = DEFAULT_DATA.mode } = props
+    const { mode = DEFAULT_DATA.mode } = props
 
-    this.workspace$ = new State<string | null>(workspace)
-    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
 
     this.content$ = new State<string | null>(null)

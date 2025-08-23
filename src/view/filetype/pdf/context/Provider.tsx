@@ -9,9 +9,7 @@ import { PdfViewViewModel } from './viewmodel'
 const storageKey: string = '#/view/filetype/pdf'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly url: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly multiview?: boolean
@@ -19,15 +17,14 @@ interface IProps {
 }
 
 export const PdfViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, mode, scale, multiview, children } = props
+  const { url, mode, scale, multiview, children } = props
   const viewmodel: PdfViewViewModel | null = useSingleton<PdfViewViewModel>(() => {
     const rawViewData: Partial<IPdfViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const viewData: IPdfViewData = PdfViewViewModel.normalize(rawViewData)
     return new PdfViewViewModel({
-      workspace,
-      filepath,
+      url,
       mode: mode ?? viewData.mode,
       scale: scale ?? viewData.scale,
       multiview: multiview ?? viewData.multiview,
@@ -43,14 +40,7 @@ export const PdfViewProvider: React.FC<IProps> = props => {
   return (
     <React.Fragment>
       <PdfViewContextType.Provider value={context}>{children}</PdfViewContextType.Provider>
-      <SideEffect
-        viewmodel={viewmodel}
-        workspace={workspace}
-        filepath={filepath}
-        mode={mode}
-        scale={scale}
-        multiview={multiview}
-      />
+      <SideEffect viewmodel={viewmodel} url={url} mode={mode} scale={scale} multiview={multiview} />
     </React.Fragment>
   )
 }
@@ -61,18 +51,18 @@ PdfViewProvider.displayName = 'PdfViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: PdfViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string
+  readonly url: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly multiview?: boolean
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, mode, scale, multiview } = props
+  const { viewmodel, url, mode, scale, multiview } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode, scale, multiview)
+  useSyncProps(viewmodel, mode, scale, multiview)
+  useData(viewmodel, url)
 
   return <React.Fragment />
 }
@@ -84,7 +74,13 @@ SideEffect.displayName = 'PdfViewSideEffect'
 const usePersistent = (viewmodel: PdfViewViewModel): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
-      [viewmodel.mode$, viewmodel.scale$, viewmodel.multiview$],
+      [
+        viewmodel.mode$,
+        viewmodel.scale$,
+        viewmodel.multiview$,
+        viewmodel.pageNo$,
+        viewmodel.pageTotal$,
+      ],
       () => {
         const data: IPdfViewData = viewmodel.dump()
         window.localStorage.setItem(storageKey, JSON.stringify(data))
@@ -98,22 +94,10 @@ const usePersistent = (viewmodel: PdfViewViewModel): void => {
 
 const useSyncProps = (
   viewmodel: PdfViewViewModel,
-  workspace: string | null,
-  filepath: string,
   mode: ModeEnum | undefined,
   scale: number | undefined,
   multiview: boolean | undefined,
 ): void => {
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
-  }, [viewmodel, filepath])
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
@@ -128,4 +112,11 @@ const useSyncProps = (
     if (viewmodel.disposed) return
     viewmodel.multiview$.next(multiview ?? viewmodel.multiview$.getSnapshot())
   }, [viewmodel, multiview])
+}
+
+const useData = (viewmodel: PdfViewViewModel, url: string | null): void => {
+  React.useEffect(() => {
+    if (viewmodel.disposed) return
+    viewmodel.url$.next(url)
+  }, [viewmodel, url])
 }

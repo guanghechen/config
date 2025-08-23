@@ -1,7 +1,6 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IMarkdownFileData } from '@/shared/types/api'
 import type { IMarkdownViewContext } from './context'
@@ -12,23 +11,20 @@ import { MarkdownViewViewModel } from './viewmodel'
 const storageKey: string = '#/view/filetype/markdown'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly data: IMarkdownFileData | null
+  readonly dataError: string | null
   readonly mode?: ModeEnum
   readonly children: React.ReactNode
 }
 
 export const MarkdownViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, children } = props
+  const { data, dataError, mode, children } = props
   const viewmodel: MarkdownViewViewModel | null = useSingleton<MarkdownViewViewModel>(() => {
     const rawViewData: Partial<IMarkdownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const viewData: IMarkdownViewData = MarkdownViewViewModel.normalize(rawViewData)
     return new MarkdownViewViewModel({
-      workspace,
-      filepath,
       mode: mode ?? viewData.mode,
     })
   })
@@ -44,13 +40,7 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
       <MarkdownViewContextType.Provider value={context}>
         {children}
       </MarkdownViewContextType.Provider>
-      <SideEffect
-        viewmodel={viewmodel}
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-        mode={mode}
-      />
+      <SideEffect viewmodel={viewmodel} data={data} dataError={dataError} mode={mode} />
     </React.Fragment>
   )
 }
@@ -61,18 +51,17 @@ MarkdownViewProvider.displayName = 'MarkdownViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: MarkdownViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly data: IMarkdownFileData | null
+  readonly dataError: string | null
   readonly mode?: ModeEnum
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode } = props
+  const { viewmodel, data, dataError, mode } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode)
-  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+  useSyncProps(viewmodel, mode)
+  useData(viewmodel, data, dataError)
 
   return <React.Fragment />
 }
@@ -93,22 +82,7 @@ const usePersistent = (viewmodel: MarkdownViewViewModel): void => {
   }, [viewmodel])
 }
 
-const useSyncProps = (
-  viewmodel: MarkdownViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  mode: ModeEnum | undefined,
-): void => {
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
-  }, [viewmodel, filepath])
-
+const useSyncProps = (viewmodel: MarkdownViewViewModel, mode: ModeEnum | undefined): void => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
@@ -117,22 +91,17 @@ const useSyncProps = (
 
 const useData = (
   viewmodel: MarkdownViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  filepathDirtyTick: number,
+  data: IMarkdownFileData | null,
+  dataError: string | null,
 ): void => {
-  const { data, error } = useFileResult<IMarkdownFileData>(workspace, filepath, filepathDirtyTick)
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (data) {
-      viewmodel.data$.next(data)
-    } else if (error) {
+    if (dataError) {
       viewmodel.data$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
+      toast.error(typeof dataError === 'string' ? dataError : String(dataError))
     } else {
-      viewmodel.data$.next(null)
+      viewmodel.data$.next(data)
     }
-  }, [data, error, viewmodel])
+  }, [data, dataError, viewmodel])
 }

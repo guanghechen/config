@@ -1,25 +1,21 @@
 import React from 'react'
+import type { IMarkdownFileData } from '@/shared/types/api'
 import { Composer } from './Composer'
 import { MarkdownViewProvider } from './context'
 
 interface IProps {
-  readonly filepath: string
-  readonly workspace: string | null
-  readonly filepathDirtyTick: number
+  readonly data: IMarkdownFileData | null
+  readonly dataError: string | null
 }
 
 export class MarkdownView extends React.PureComponent<IProps> {
   public static readonly displayName = 'MarkdownView'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick } = this.props
+    const { data, dataError } = this.props
 
     return (
-      <MarkdownViewProvider
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-      >
+      <MarkdownViewProvider data={data} dataError={dataError}>
         <Composer />
       </MarkdownViewProvider>
     )

@@ -4,8 +4,6 @@ import type { IImageFileData } from '@/shared/types/api'
 import { type IImageViewData, type IImageViewPosition, ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
@@ -20,14 +18,13 @@ const DEFAULT_DATA: IImageViewData = {
 }
 
 export class ImageViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
-  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly scale$: IState<number>
   public readonly rotation$: IState<number>
   public readonly position$: IState<IImageViewPosition>
 
   public readonly data$: IState<IImageFileData | null>
+  public readonly literalContent$: IState<string | null>
 
   public static normalize(
     data: Partial<IImageViewData> | undefined,
@@ -55,22 +52,19 @@ export class ImageViewViewModel extends ViewModel {
     super()
 
     const {
-      workspace,
-      filepath,
       mode = DEFAULT_DATA.mode,
       scale = DEFAULT_DATA.scale,
       rotation = DEFAULT_DATA.rotation,
       position = DEFAULT_DATA.position,
     } = props
 
-    this.workspace$ = new State<string | null>(workspace)
-    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.scale$ = new State<number>(scale)
     this.rotation$ = new State<number>(rotation)
     this.position$ = new State<IImageViewPosition>(position)
 
     this.data$ = new State<IImageFileData | null>(null)
+    this.literalContent$ = new State<string | null>(null)
   }
 
   public dump = (): IImageViewData => {

@@ -1,17 +1,14 @@
 import React from 'react'
-import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
-import { HtmlView } from '@/view/filetype/html/View'
-import { ImageView } from '@/view/filetype/image/View'
-import { JsonView } from '@/view/filetype/json/View'
-import { MarkdownView } from '@/view/filetype/markdown/View'
-import { PdfView } from '@/view/filetype/pdf/View'
-import { SvgView } from '@/view/filetype/svg/View'
-import { TextView } from '@/view/filetype/text/View'
-import { UnknownView } from '@/view/filetype/unknown/View'
-
-const regexes = {
-  extname: /(\.[^.]+)$/,
-}
+import { calcExtname } from '@/util/path'
+import { ExcalidrawAdaptor } from '@/view/file/container/ExcalidrawAdaptor'
+import { HtmlAdaptor } from '@/view/file/container/HtmlAdaptor'
+import { ImageAdaptor } from '@/view/file/container/ImageAdaptor'
+import { JsonAdaptor } from '@/view/file/container/JsonAdaptor'
+import { MarkdownAdaptor } from '@/view/file/container/MarkdownAdaptor'
+import { PdfAdaptor } from '@/view/file/container/PdfAdaptor'
+import { SvgAdaptor } from '@/view/file/container/SvgAdaptor'
+import { TextAdaptor } from '@/view/file/container/TextAdaptor'
+import { UnknownAdaptor } from '@/view/file/container/UnknownAdaptor'
 
 interface IProps {
   readonly workspace: string | null
@@ -27,7 +24,7 @@ export class Main extends React.PureComponent<IProps> {
 
     if (!filepath) {
       return (
-        <UnknownView
+        <UnknownAdaptor
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
@@ -35,11 +32,11 @@ export class Main extends React.PureComponent<IProps> {
       )
     }
 
-    const extname: string = filepath ? regexes.extname.exec(filepath)?.[1] || '' : ''
+    const extname: string = calcExtname(filepath)
     switch (extname.toLowerCase()) {
       case '.excalidraw':
         return (
-          <ExcalidrawView
+          <ExcalidrawAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -48,7 +45,7 @@ export class Main extends React.PureComponent<IProps> {
       case '.html':
       case '.htm':
         return (
-          <HtmlView
+          <HtmlAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -56,7 +53,7 @@ export class Main extends React.PureComponent<IProps> {
         )
       case '.json':
         return (
-          <JsonView
+          <JsonAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -67,7 +64,7 @@ export class Main extends React.PureComponent<IProps> {
       case '.log':
       case '.txt':
         return (
-          <TextView
+          <TextAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -75,7 +72,7 @@ export class Main extends React.PureComponent<IProps> {
         )
       case '.md':
         return (
-          <MarkdownView
+          <MarkdownAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -83,7 +80,7 @@ export class Main extends React.PureComponent<IProps> {
         )
       case '.pdf':
         return (
-          <PdfView
+          <PdfAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -91,7 +88,7 @@ export class Main extends React.PureComponent<IProps> {
         )
       case '.svg':
         return (
-          <SvgView
+          <SvgAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -101,7 +98,7 @@ export class Main extends React.PureComponent<IProps> {
       case '.jpg':
       case '.jpeg':
         return (
-          <ImageView
+          <ImageAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
@@ -109,7 +106,7 @@ export class Main extends React.PureComponent<IProps> {
         )
       default:
         return (
-          <UnknownView
+          <UnknownAdaptor
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}

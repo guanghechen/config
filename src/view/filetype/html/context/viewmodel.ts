@@ -4,8 +4,6 @@ import type { IHtmlViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
 }
@@ -16,8 +14,6 @@ const DEFAULT_DATA: IHtmlViewData = {
 }
 
 export class HtmlViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
-  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly enableTailwindcss$: IState<boolean>
 
@@ -26,15 +22,8 @@ export class HtmlViewViewModel extends ViewModel {
   constructor(props: IProps) {
     super()
 
-    const {
-      workspace,
-      filepath,
-      mode = DEFAULT_DATA.mode,
-      enableTailwindcss = DEFAULT_DATA.enableTailwindcss,
-    } = props
+    const { mode = DEFAULT_DATA.mode, enableTailwindcss = DEFAULT_DATA.enableTailwindcss } = props
 
-    this.workspace$ = new State<string | null>(workspace)
-    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.enableTailwindcss$ = new State<boolean>(enableTailwindcss)
 

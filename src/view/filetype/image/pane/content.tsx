@@ -5,7 +5,6 @@ import { useImageViewViewModel } from '../context'
 
 export const ContentPane: React.FC = () => {
   const viewmodel = useImageViewViewModel()
-  const filepath: string = useStateValue(viewmodel.filepath$)
   const position = useStateValue(viewmodel.position$)
   const rotation: number = useStateValue(viewmodel.rotation$)
   const scale: number = useStateValue(viewmodel.scale$)
@@ -76,7 +75,7 @@ export const ContentPane: React.FC = () => {
       {content?.url ? (
         <img
           src={content.url}
-          alt={filepath || 'unknown'}
+          alt=""
           className="max-h-full max-w-full object-contain transition-transform duration-100 ease-in-out"
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
@@ -86,7 +85,7 @@ export const ContentPane: React.FC = () => {
         />
       ) : (
         <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
-          {content === null ? 'Failed to load image' : 'Loading...'}
+          No image to display
         </div>
       )}
     </div>

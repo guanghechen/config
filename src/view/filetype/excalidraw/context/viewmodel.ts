@@ -1,16 +1,12 @@
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IJsonFileData } from '@/shared/types/api'
 import type { IExcalidrawViewData } from './types'
 import { ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
   readonly mode?: ModeEnum
-  readonly elements?: ReadonlyArray<ExcalidrawElement>
-  readonly content?: string | null
+  readonly saveFile?: (content: string) => void
 }
 
 const DEFAULT_DATA: IExcalidrawViewData = {
@@ -18,24 +14,20 @@ const DEFAULT_DATA: IExcalidrawViewData = {
 }
 
 export class ExcalidrawViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
-  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly elements$: IState<ReadonlyArray<ExcalidrawElement>>
   public readonly content$: IState<string | null>
-  public readonly data$: IState<IJsonFileData | null>
+  public readonly saveFile?: (content: string) => void
 
   constructor(props: IProps) {
     super()
 
-    const { workspace, filepath, mode = DEFAULT_DATA.mode, elements = [], content = null } = props
+    const { mode = DEFAULT_DATA.mode, saveFile: onSaveFile } = props
 
-    this.workspace$ = new State<string | null>(workspace)
-    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
-    this.elements$ = new State<ReadonlyArray<ExcalidrawElement>>(elements)
-    this.content$ = new State<string | null>(content)
-    this.data$ = new State<IJsonFileData | null>(null)
+    this.elements$ = new State<ReadonlyArray<ExcalidrawElement>>([])
+    this.content$ = new State<string | null>(null)
+    this.saveFile = onSaveFile
   }
 
   public static normalize(

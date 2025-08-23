@@ -1,6 +1,7 @@
 import React from 'react'
 import { getFile } from '@/hook/api/file'
 import type { IFetchFileData, IFetchFileResult } from '@/shared/types/api'
+import { useAutoCleanBlobUrl } from './useAutoCleanBlobUrl'
 
 export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,
@@ -31,12 +32,6 @@ export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
     void handle()
   }, [workspace, filepath, tick])
 
-  React.useEffect(() => {
-    return () => {
-      if (state.url) {
-        URL.revokeObjectURL(state.url)
-      }
-    }
-  }, [state.url])
+  useAutoCleanBlobUrl(state.url ?? null)
   return state
 }

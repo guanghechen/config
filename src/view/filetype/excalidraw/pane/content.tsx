@@ -9,7 +9,6 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
-import { usePostFile } from '@/hook/api/file/save'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
 import { ElementRenderer } from '../container/ExcalidrawElement'
 import type { IExcalidrawData } from '../context'
@@ -25,11 +24,8 @@ export const ContentPane: React.FC = () => {
   const theme: SiteTheme = useStateValue(site.theme$)
 
   const viewmodel = useExcalidrawViewViewModel()
-  const workspace: string | null = useStateValue(viewmodel.workspace$)
-  const filepath: string = useStateValue(viewmodel.filepath$)
   const content = useStateValue(viewmodel.content$)
 
-  const { save: saveFile } = usePostFile()
   const excalidrawRef = React.useRef<ExcalidrawImperativeAPI>(null)
   const [elements, setElements] = React.useState<ReadonlyArray<ExcalidrawElement>>([])
   const excalidrawTheme = theme === SiteTheme.DARKEN ? 'dark' : 'light'
@@ -70,9 +66,7 @@ export const ContentPane: React.FC = () => {
 
   const onSave = useEventCallback(
     async (elements: ReadonlyArray<ExcalidrawElement>, appState: AppState): Promise<void> => {
-      if (!workspace || !filepath) return
-
-      try {
+      if (viewmodel.saveFile) {
         const excalidrawData = {
           type: 'excalidraw',
           version: 2,
@@ -83,14 +77,8 @@ export const ContentPane: React.FC = () => {
             viewBackgroundColor: appState.viewBackgroundColor || '#ffffff',
           },
         }
-
-        await saveFile({
-          workspace,
-          filepath,
-          content: JSON.stringify(excalidrawData, null, 2),
-        })
-      } catch (error) {
-        console.error('Failed to save:', error)
+        const content: string = JSON.stringify(excalidrawData, null, 2)
+        viewmodel.saveFile(content)
       }
     },
   )

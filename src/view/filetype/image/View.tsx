@@ -3,23 +3,17 @@ import { Composer } from './Composer'
 import { ImageViewProvider } from './context'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly url: string | null
 }
 
 export class ImageView extends React.PureComponent<IProps> {
   public static readonly displayName = 'ImageView'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick } = this.props
+    const { url } = this.props
 
     return (
-      <ImageViewProvider
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-      >
+      <ImageViewProvider url={url}>
         <Composer />
       </ImageViewProvider>
     )

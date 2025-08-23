@@ -1,15 +1,12 @@
 import React from 'react'
-import { HtmlViewViewModel } from './viewmodel'
+import type { HtmlViewViewModel } from './viewmodel'
 
 export interface IHtmlViewContext {
   readonly viewmodel: HtmlViewViewModel
 }
 
 export const HtmlViewContextType = React.createContext<IHtmlViewContext>({
-  viewmodel: new HtmlViewViewModel({
-    workspace: null,
-    filepath: '/dev/null',
-  }),
+  viewmodel: null as unknown as HtmlViewViewModel,
 })
 
 export const useHtmlViewViewModel = (): HtmlViewViewModel => {

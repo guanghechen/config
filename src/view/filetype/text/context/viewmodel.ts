@@ -7,8 +7,6 @@ import type { ITextViewData } from './types'
 import { ContentModeEnum, ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
   readonly mode?: ModeEnum
   readonly contentMode?: ContentModeEnum
   readonly nodeDetailsPaneWidth?: number
@@ -32,8 +30,6 @@ const DEFAULT_DATA: ITextViewData = {
 }
 
 export class TextViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
-  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly contentMode$: IState<ContentModeEnum>
   public readonly nodeDetailsPaneWidth$: IState<number>
@@ -48,16 +44,12 @@ export class TextViewViewModel extends ViewModel {
     super()
 
     const {
-      workspace,
-      filepath,
       mode = DEFAULT_DATA.mode,
       contentMode = DEFAULT_DATA.contentMode,
       nodeDetailsPaneWidth = DEFAULT_DATA.nodeDetailsPaneWidth!,
       transformConfig = DEFAULT_DATA.transformConfig,
     } = props
 
-    this.workspace$ = new State<string | null>(workspace)
-    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.contentMode$ = new State<ContentModeEnum>(contentMode)
     this.nodeDetailsPaneWidth$ = new State<number>(nodeDetailsPaneWidth)

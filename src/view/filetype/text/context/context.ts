@@ -1,15 +1,12 @@
 import React from 'react'
-import { TextViewViewModel } from './viewmodel'
+import type { TextViewViewModel } from './viewmodel'
 
 export interface ITextViewContext {
   readonly viewmodel: TextViewViewModel
 }
 
 export const TextViewContextType = React.createContext<ITextViewContext>({
-  viewmodel: new TextViewViewModel({
-    workspace: null,
-    filepath: '/dev/null',
-  }),
+  viewmodel: null as unknown as TextViewViewModel,
 })
 
 export const useTextViewViewModel = (): TextViewViewModel => {

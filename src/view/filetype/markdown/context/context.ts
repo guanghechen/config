@@ -1,15 +1,12 @@
 import React from 'react'
-import { MarkdownViewViewModel } from './viewmodel'
+import type { MarkdownViewViewModel } from './viewmodel'
 
 export interface IMarkdownViewContext {
   readonly viewmodel: MarkdownViewViewModel
 }
 
 export const MarkdownViewContextType = React.createContext<IMarkdownViewContext>({
-  viewmodel: new MarkdownViewViewModel({
-    workspace: null,
-    filepath: '/dev/null',
-  }),
+  viewmodel: null as unknown as MarkdownViewViewModel,
 })
 
 export const useMarkdownViewViewModel = (): MarkdownViewViewModel => {

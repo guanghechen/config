@@ -4,7 +4,6 @@ import React from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
-import { toSearch } from '@/shared/util'
 import { usePdfViewViewModel } from '../context'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
@@ -15,19 +14,13 @@ const options = {
 
 export const ContentPane: React.FC = () => {
   const viewmodel = usePdfViewViewModel()
-  const workspace: string | null = useStateValue(viewmodel.workspace$)
-  const filepath: string = useStateValue(viewmodel.filepath$)
+  const url: string | null = useStateValue(viewmodel.url$)
   const multiview: boolean = useStateValue(viewmodel.multiview$)
   const pageTotal: number = useStateValue(viewmodel.pageTotal$)
   const scale: number = useStateValue(viewmodel.scale$)
   const pageno: number = useStateValue(viewmodel.pageNo$)
 
   const pageRefs = React.useRef<Array<HTMLDivElement | null>>([])
-
-  const url = React.useMemo<string>(() => {
-    const search = toSearch({ filepath, workspace })
-    return `/api/file/raw${search}`
-  }, [filepath, workspace])
 
   React.useEffect(() => {
     pageRefs.current = Array(pageTotal)
@@ -81,6 +74,10 @@ export const ContentPane: React.FC = () => {
       />
     )
   }, [multiview, pageTotal, pageno, scale])
+
+  if (!url) {
+    return <div className="p-4 text-gray-500">No URL provided.</div>
+  }
 
   return (
     <div className="flex h-full w-full flex-col pl-20">

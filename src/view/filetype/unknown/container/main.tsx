@@ -1,17 +1,15 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { CopyButton } from '@/component/button/copy'
-import { useUnknownViewViewModel } from '../context'
+import { calcExtname } from '@/util/path'
 
-export const Main: React.FC = () => {
-  const viewmodel = useUnknownViewViewModel()
-  const filepath = useStateValue(viewmodel.filepath$)
+interface IProps {
+  readonly filepath: string
+}
 
-  const extname: string = React.useMemo<string>(() => {
-    if (!filepath) return ''
-    const dotIndex: number = filepath.lastIndexOf('.')
-    return dotIndex < 0 ? '' : filepath.slice(dotIndex)
-  }, [filepath])
+export const Main: React.FC<IProps> = props => {
+  const { filepath } = props
+
+  const extname: string = React.useMemo<string>(() => calcExtname(filepath), [filepath])
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center">

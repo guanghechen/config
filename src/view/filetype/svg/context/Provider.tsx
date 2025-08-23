@@ -1,9 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
-import type { ISvgFileData } from '@/shared/types/api'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
 import type { ISvgViewData, ISvgViewPosition, ModeEnum } from './types'
@@ -12,9 +10,8 @@ import { SvgViewViewModel } from './viewmodel'
 const storageKey: string = '#/view/filetype/svg'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
@@ -23,16 +20,13 @@ interface IProps {
 }
 
 export const SvgViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, scale, rotation, position, children } =
-    props
+  const { content, contentError, mode, scale, rotation, position, children } = props
   const viewmodel: SvgViewViewModel | null = useSingleton<SvgViewViewModel>(() => {
     const rawViewData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const viewData: ISvgViewData = SvgViewViewModel.normalize(rawViewData)
     return new SvgViewViewModel({
-      workspace,
-      filepath,
       mode: mode ?? viewData.mode,
       scale: scale ?? viewData.scale,
       rotation: rotation ?? viewData.rotation,
@@ -52,9 +46,8 @@ export const SvgViewProvider: React.FC<IProps> = props => {
       <SvgViewContextType.Provider value={context}>{children}</SvgViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
+        content={content}
+        contentError={contentError}
         mode={mode}
         scale={scale}
         rotation={rotation}
@@ -70,9 +63,8 @@ SvgViewProvider.displayName = 'SvgViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: SvgViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
@@ -80,12 +72,11 @@ interface ISideEffectProps {
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, scale, rotation, position } =
-    props
+  const { viewmodel, content, contentError, mode, scale, rotation, position } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode, scale, rotation, position)
-  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+  useSyncProps(viewmodel, mode, scale, rotation, position)
+  useData(viewmodel, content, contentError)
 
   return <React.Fragment />
 }
@@ -111,23 +102,11 @@ const usePersistent = (viewmodel: SvgViewViewModel): void => {
 
 const useSyncProps = (
   viewmodel: SvgViewViewModel,
-  workspace: string | null,
-  filepath: string,
   mode: ModeEnum | undefined,
   scale: number | undefined,
   rotation: number | undefined,
   position: ISvgViewPosition | undefined,
 ): void => {
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
-  }, [viewmodel, filepath])
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
@@ -151,22 +130,17 @@ const useSyncProps = (
 
 const useData = (
   viewmodel: SvgViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  filepathDirtyTick: number,
+  content: string | null,
+  contentError: string | null,
 ): void => {
-  const { data, error } = useFileResult<ISvgFileData>(workspace, filepath, filepathDirtyTick)
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (data) {
-      viewmodel.content$.next(data.content)
-    } else if (error) {
+    if (contentError) {
       viewmodel.content$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
+      toast.error(typeof contentError === 'string' ? contentError : String(contentError))
     } else {
-      viewmodel.content$.next(null)
+      viewmodel.content$.next(content)
     }
-  }, [data, error, viewmodel])
+  }, [content, contentError, viewmodel])
 }

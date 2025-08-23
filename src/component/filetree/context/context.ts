@@ -1,13 +1,11 @@
 import React from 'react'
-import { FileTreeViewModel } from './viewmodel'
+import type { FileTreeViewModel } from './viewmodel'
 
 export interface IFileTreeContext {
   readonly viewmodel: FileTreeViewModel
 }
 
 export const FileTreeContextType = React.createContext<IFileTreeContext>({
-  viewmodel: new FileTreeViewModel({
-    currentFilepath: null,
-  }),
+  viewmodel: null as unknown as FileTreeViewModel,
 })
 FileTreeContextType.displayName = 'FileTreeContextType'

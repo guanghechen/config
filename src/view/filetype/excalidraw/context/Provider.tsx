@@ -1,10 +1,7 @@
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
-import type { IJsonFileData } from '@/shared/types/api'
 import type { IExcalidrawViewContext } from './context'
 import { ExcalidrawViewContextType } from './context'
 import type { IExcalidrawViewData, ModeEnum } from './types'
@@ -13,28 +10,23 @@ import { ExcalidrawViewViewModel } from './viewmodel'
 const storageKey: string = '#/view/filetype/excalidraw'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
+  readonly onSaveFile?: (content: string) => void
   readonly mode?: ModeEnum
-  readonly elements?: ReadonlyArray<ExcalidrawElement>
-  readonly content?: string | null
   readonly children: React.ReactNode
 }
 
 export const ExcalidrawViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, elements, content, children } = props
+  const { content, contentError, onSaveFile, mode, children } = props
   const viewmodel: ExcalidrawViewViewModel | null = useSingleton<ExcalidrawViewViewModel>(() => {
     const rawViewData: Partial<IExcalidrawViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const viewData: IExcalidrawViewData = ExcalidrawViewViewModel.normalize(rawViewData)
     return new ExcalidrawViewViewModel({
-      workspace,
-      filepath,
       mode: mode ?? viewData.mode,
-      elements,
-      content,
+      saveFile: onSaveFile,
     })
   })
   const context: IExcalidrawViewContext | null = React.useMemo<IExcalidrawViewContext | null>(
@@ -49,15 +41,7 @@ export const ExcalidrawViewProvider: React.FC<IProps> = props => {
       <ExcalidrawViewContextType.Provider value={context}>
         {children}
       </ExcalidrawViewContextType.Provider>
-      <SideEffect
-        viewmodel={viewmodel}
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-        mode={mode}
-        elements={elements}
-        content={content}
-      />
+      <SideEffect viewmodel={viewmodel} content={content} contentError={contentError} mode={mode} />
     </React.Fragment>
   )
 }
@@ -68,20 +52,17 @@ ExcalidrawViewProvider.displayName = 'ExcalidrawViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: ExcalidrawViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
   readonly mode?: ModeEnum
-  readonly elements?: ReadonlyArray<ExcalidrawElement>
-  readonly content?: string | null
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, elements, content } = props
+  const { viewmodel, content, contentError, mode } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode, elements, content)
-  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+  useSyncProps(viewmodel, mode)
+  useData(viewmodel, content, contentError)
 
   return <React.Fragment />
 }
@@ -102,61 +83,26 @@ const usePersistent = (viewmodel: ExcalidrawViewViewModel): void => {
   }, [viewmodel])
 }
 
-const useSyncProps = (
-  viewmodel: ExcalidrawViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  mode: ModeEnum | undefined,
-  elements: ReadonlyArray<ExcalidrawElement> | undefined,
-  content: string | null | undefined,
-): void => {
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
-  }, [viewmodel, filepath])
-
+const useSyncProps = (viewmodel: ExcalidrawViewViewModel, mode: ModeEnum | undefined): void => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
   }, [viewmodel, mode])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.elements$.next(elements ?? [])
-  }, [viewmodel, elements])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.content$.next(content ?? null)
-  }, [viewmodel, content])
 }
 
 const useData = (
   viewmodel: ExcalidrawViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  filepathDirtyTick: number,
+  content: string | null,
+  contentError: string | null,
 ): void => {
-  const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (data) {
-      viewmodel.data$.next(data)
-      viewmodel.content$.next(data.content)
-    } else if (error) {
-      viewmodel.data$.next(null)
+    if (contentError) {
       viewmodel.content$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
+      toast.error(typeof contentError === 'string' ? contentError : String(contentError))
     } else {
-      viewmodel.data$.next(null)
-      viewmodel.content$.next(null)
+      viewmodel.content$.next(content)
     }
-  }, [data, error, viewmodel])
+  }, [content, contentError, viewmodel])
 }

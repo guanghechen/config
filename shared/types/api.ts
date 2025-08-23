@@ -57,6 +57,7 @@ export interface ITextFileData {
 
 export interface IImageFileData {
   readonly url: string
+  readonly alt?: string
   readonly width?: number
   readonly height?: number
   readonly size?: number

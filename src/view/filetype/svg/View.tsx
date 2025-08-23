@@ -3,23 +3,18 @@ import { Composer } from './Composer'
 import { SvgViewProvider } from './context'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
 }
 
 export class SvgView extends React.PureComponent<IProps> {
   public static readonly displayName = 'SvgView'
 
   public override render(): React.ReactElement {
-    const { filepath, workspace, filepathDirtyTick } = this.props
+    const { content, contentError } = this.props
 
     return (
-      <SvgViewProvider
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-      >
+      <SvgViewProvider content={content} contentError={contentError}>
         <Composer />
       </SvgViewProvider>
     )

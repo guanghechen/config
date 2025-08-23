@@ -3,23 +3,18 @@ import { Composer } from './Composer'
 import { JsonViewProvider } from './context'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
 }
 
 export class JsonView extends React.PureComponent<IProps> {
   public static readonly displayName = 'JsonView'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick } = this.props
+    const { content, contentError } = this.props
 
     return (
-      <JsonViewProvider
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-      >
+      <JsonViewProvider content={content} contentError={contentError}>
         <Composer />
       </JsonViewProvider>
     )

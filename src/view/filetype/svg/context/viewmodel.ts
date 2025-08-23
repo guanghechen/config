@@ -3,8 +3,6 @@ import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import { type ISvgViewData, type ISvgViewPosition, ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
@@ -19,8 +17,6 @@ const DEFAULT_DATA: ISvgViewData = {
 }
 
 export class SvgViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
-  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
   public readonly scale$: IState<number>
   public readonly rotation$: IState<number>
@@ -32,16 +28,12 @@ export class SvgViewViewModel extends ViewModel {
     super()
 
     const {
-      workspace,
-      filepath,
       mode = DEFAULT_DATA.mode,
       scale = DEFAULT_DATA.scale,
       rotation = DEFAULT_DATA.rotation,
       position = DEFAULT_DATA.position,
     } = props
 
-    this.workspace$ = new State<string | null>(workspace)
-    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
     this.scale$ = new State<number>(scale)
     this.rotation$ = new State<number>(rotation)

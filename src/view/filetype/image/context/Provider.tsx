@@ -1,7 +1,5 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { toast } from 'react-toastify'
-import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IImageFileData } from '@/shared/types/api'
 import type { IImageViewContext } from './context'
@@ -12,9 +10,7 @@ import { ImageViewViewModel } from './viewmodel'
 const storageKey: string = '#/view/filetype/image'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly url: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
@@ -23,16 +19,13 @@ interface IProps {
 }
 
 export const ImageViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, scale, rotation, position, children } =
-    props
+  const { url, mode, scale, rotation, position, children } = props
   const viewmodel: ImageViewViewModel | null = useSingleton<ImageViewViewModel>(() => {
     const rawViewData: Partial<IImageViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const viewData: IImageViewData = ImageViewViewModel.normalize(rawViewData)
     return new ImageViewViewModel({
-      workspace,
-      filepath,
       mode: mode ?? viewData.mode,
       scale: scale ?? viewData.scale,
       rotation: rotation ?? viewData.rotation,
@@ -51,9 +44,7 @@ export const ImageViewProvider: React.FC<IProps> = props => {
       <ImageViewContextType.Provider value={context}>{children}</ImageViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
+        url={url}
         mode={mode}
         scale={scale}
         rotation={rotation}
@@ -69,9 +60,7 @@ ImageViewProvider.displayName = 'ImageViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: ImageViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly url: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
@@ -79,12 +68,11 @@ interface ISideEffectProps {
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, scale, rotation, position } =
-    props
+  const { viewmodel, url, mode, scale, rotation, position } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode, scale, rotation, position)
-  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+  useSyncProps(viewmodel, mode, scale, rotation, position)
+  useImageLoader(viewmodel, url)
 
   return <React.Fragment />
 }
@@ -110,23 +98,11 @@ const usePersistent = (viewmodel: ImageViewViewModel): void => {
 
 const useSyncProps = (
   viewmodel: ImageViewViewModel,
-  workspace: string | null,
-  filepath: string,
   mode: ModeEnum | undefined,
   scale: number | undefined,
   rotation: number | undefined,
   position: IImageViewPosition | undefined,
 ): void => {
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
-  }, [viewmodel, filepath])
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
@@ -148,27 +124,21 @@ const useSyncProps = (
   }, [viewmodel, position])
 }
 
-const useData = (
-  viewmodel: ImageViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  filepathDirtyTick: number,
-): void => {
-  const { data, url, error } = useFileResult<IImageFileData>(workspace, filepath, filepathDirtyTick)
-
+const useImageLoader = (viewmodel: ImageViewViewModel, url: string | null): void => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (url) {
-      const imageData: IImageFileData = { url }
-      viewmodel.data$.next(imageData)
-    } else if (data) {
-      viewmodel.data$.next(data)
-    } else if (error) {
+    if (!url) {
       viewmodel.data$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
-    } else {
-      viewmodel.data$.next(null)
+      viewmodel.literalContent$.next(null)
+      return
     }
-  }, [data, url, error, viewmodel])
+
+    // Just store the URL - no actual content loading
+    const imageData: IImageFileData = { url }
+    viewmodel.data$.next(imageData)
+
+    // Clear literal cache when URL changes
+    viewmodel.literalContent$.next(null)
+  }, [viewmodel, url])
 }

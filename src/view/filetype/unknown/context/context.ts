@@ -1,12 +1,12 @@
 import React from 'react'
-import { UnknownViewViewModel } from './viewmodel'
+import type { UnknownViewViewModel } from './viewmodel'
 
 export interface IUnknownViewContext {
   readonly viewmodel: UnknownViewViewModel
 }
 
 export const UnknownViewContextType = React.createContext<IUnknownViewContext>({
-  viewmodel: new UnknownViewViewModel(),
+  viewmodel: null as unknown as UnknownViewViewModel,
 })
 
 export const useUnknownViewViewModel = (): UnknownViewViewModel => {

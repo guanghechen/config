@@ -1,6 +1,5 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import cn from 'clsx'
 import React from 'react'
 import type { FileTreeModeEnum, IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
 import {

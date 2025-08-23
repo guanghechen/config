@@ -4,8 +4,6 @@ import type { IMarkdownFileData } from '@/shared/types/api'
 import { type IMarkdownViewData, ModeEnum } from './types'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
   readonly mode?: ModeEnum
 }
 
@@ -14,8 +12,6 @@ const DEFAULT_DATA: IMarkdownViewData = {
 }
 
 export class MarkdownViewViewModel extends ViewModel {
-  public readonly workspace$: IState<string | null>
-  public readonly filepath$: IState<string>
   public readonly mode$: IState<ModeEnum>
 
   public readonly data$: IState<IMarkdownFileData | null>
@@ -25,10 +21,8 @@ export class MarkdownViewViewModel extends ViewModel {
   constructor(props: IProps) {
     super()
 
-    const { workspace, filepath, mode = DEFAULT_DATA.mode } = props
+    const { mode = DEFAULT_DATA.mode } = props
 
-    this.workspace$ = new State<string | null>(workspace)
-    this.filepath$ = new State<string>(filepath)
     this.mode$ = new State<ModeEnum>(mode)
 
     this.data$ = new State<IMarkdownFileData | null>(null)

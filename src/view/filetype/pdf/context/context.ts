@@ -1,15 +1,12 @@
 import React from 'react'
-import { PdfViewViewModel } from './viewmodel'
+import type { PdfViewViewModel } from './viewmodel'
 
 export interface IPdfViewContext {
   readonly viewmodel: PdfViewViewModel
 }
 
 export const PdfViewContextType = React.createContext<IPdfViewContext>({
-  viewmodel: new PdfViewViewModel({
-    workspace: null,
-    filepath: '/dev/null',
-  }),
+  viewmodel: null as unknown as PdfViewViewModel,
 })
 
 export const usePdfViewViewModel = (): PdfViewViewModel => {

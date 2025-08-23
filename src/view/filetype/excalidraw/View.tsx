@@ -3,23 +3,19 @@ import { Composer } from './Composer'
 import { ExcalidrawViewProvider } from './context'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
+  readonly onSaveFile?: (content: string) => void
 }
 
 export class ExcalidrawView extends React.PureComponent<IProps> {
   public static readonly displayName = 'ExcalidrawView'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick } = this.props
+    const { content, contentError, onSaveFile } = this.props
 
     return (
-      <ExcalidrawViewProvider
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-      >
+      <ExcalidrawViewProvider content={content} contentError={contentError} onSaveFile={onSaveFile}>
         <Composer />
       </ExcalidrawViewProvider>
     )

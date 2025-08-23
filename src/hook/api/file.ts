@@ -49,10 +49,16 @@ export async function getFile<T extends IFetchFileData = IFetchFileData>(
       return { text }
     }
 
+    if (contentType?.includes('application/pdf')) {
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      return { url }
+    }
+
     if (contentType?.includes('image') || contentType?.includes('video')) {
       const blob = await response.blob()
-      const objectUrl = URL.createObjectURL(blob)
-      return { url: objectUrl }
+      const url = URL.createObjectURL(blob)
+      return { url }
     }
     return { error: `Unknown content type: ${contentType}` }
   } catch (error) {

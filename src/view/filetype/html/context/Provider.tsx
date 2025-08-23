@@ -1,9 +1,7 @@
 import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
-import type { IHtmlFileData } from '@/shared/types/api'
 import type { IHtmlViewContext } from './context'
 import { HtmlViewContextType } from './context'
 import type { IHtmlViewData, ModeEnum } from './types'
@@ -12,24 +10,21 @@ import { HtmlViewViewModel } from './viewmodel'
 const storageKey: string = '#/view/filetype/html'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
   readonly children: React.ReactNode
 }
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, enableTailwindcss, children } = props
+  const { content, contentError, mode, enableTailwindcss, children } = props
   const viewmodel: HtmlViewViewModel | null = useSingleton<HtmlViewViewModel>(() => {
     const rawViewData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const viewData: IHtmlViewData = HtmlViewViewModel.normalize(rawViewData)
     return new HtmlViewViewModel({
-      workspace,
-      filepath,
       mode: mode ?? viewData.mode,
       enableTailwindcss: enableTailwindcss ?? viewData.enableTailwindcss,
     })
@@ -46,9 +41,8 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
       <HtmlViewContextType.Provider value={context}>{children}</HtmlViewContextType.Provider>
       <SideEffect
         viewmodel={viewmodel}
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
+        content={content}
+        contentError={contentError}
         mode={mode}
         enableTailwindcss={enableTailwindcss}
       />
@@ -62,19 +56,18 @@ HtmlViewProvider.displayName = 'HtmlViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: HtmlViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode, enableTailwindcss } = props
+  const { viewmodel, content, contentError, mode, enableTailwindcss } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode, enableTailwindcss)
-  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+  useSyncProps(viewmodel, mode, enableTailwindcss)
+  useData(viewmodel, content, contentError)
 
   return <React.Fragment />
 }
@@ -100,21 +93,9 @@ const usePersistent = (viewmodel: HtmlViewViewModel): void => {
 
 const useSyncProps = (
   viewmodel: HtmlViewViewModel,
-  workspace: string | null,
-  filepath: string,
   mode: ModeEnum | undefined,
   enableTailwindcss: boolean | undefined,
 ): void => {
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
-  }, [viewmodel, filepath])
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
@@ -130,22 +111,17 @@ const useSyncProps = (
 
 const useData = (
   viewmodel: HtmlViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  filepathDirtyTick: number,
+  content: string | null,
+  contentError: string | null,
 ): void => {
-  const { data, error } = useFileResult<IHtmlFileData>(workspace, filepath, filepathDirtyTick)
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (data) {
-      viewmodel.content$.next(data.content)
-    } else if (error) {
+    if (contentError) {
       viewmodel.content$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
+      toast.error(typeof contentError === 'string' ? contentError : String(contentError))
     } else {
-      viewmodel.content$.next(null)
+      viewmodel.content$.next(content)
     }
-  }, [data, error, viewmodel])
+  }, [content, contentError, viewmodel])
 }

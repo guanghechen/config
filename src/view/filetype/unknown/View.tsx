@@ -3,16 +3,14 @@ import { Composer } from './Composer'
 import { UnknownViewProvider } from './context'
 
 interface IProps {
-  readonly workspace: string | null
   readonly filepath: string | null
-  readonly filepathDirtyTick: number
 }
 
 export class UnknownView extends React.PureComponent<IProps> {
   public static readonly displayName = 'UnknownView'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick } = this.props
+    const { filepath } = this.props
 
     if (!filepath) {
       return (
@@ -23,13 +21,9 @@ export class UnknownView extends React.PureComponent<IProps> {
     }
 
     return (
-      <UnknownViewProvider
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-      >
+      <UnknownViewProvider>
         <div className="relative size-full">
-          <Composer />
+          <Composer filepath={filepath} />
         </div>
       </UnknownViewProvider>
     )

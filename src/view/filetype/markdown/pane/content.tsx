@@ -9,7 +9,6 @@ import { useMarkdownViewViewModel } from '../context'
 
 export const ContentPane: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
-  const filepath: string | null = useStateValue(viewmodel.filepath$)
   const data = useStateValue(viewmodel.data$)
 
   const ast: Root = useMarkdownAst()
@@ -32,12 +31,7 @@ export const ContentPane: React.FC = () => {
       </h1>
     )
   } else {
-    title = (
-      <ReactMarkdownContent
-        Tag="h1"
-        content={(frontmatter?.title as string) || filepath || 'Untitled'}
-      />
-    )
+    title = <ReactMarkdownContent Tag="h1" content={(frontmatter?.title as string) || 'Untitled'} />
   }
 
   React.useEffect(() => {

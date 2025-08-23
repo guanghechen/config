@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IFileViewData } from './types'
+import type { IFileContentData, IFileViewData } from './types'
 
 interface IProps {
   readonly filepath?: string | null
@@ -10,10 +10,18 @@ const DEFAULT_DATA: IFileViewData = {
   filepath: null,
 }
 
+const DEFAULT_CONTENT_DATA: IFileContentData = {
+  content: null,
+  contentError: null,
+  url: undefined,
+  loading: false,
+}
+
 export class FileViewViewModel extends ViewModel {
   public readonly filepath$: State<string | null>
   public readonly filepathDirtyTick$: IState<number>
   public readonly mainScrollableContainer$: IState<HTMLDivElement | null>
+  public readonly fileContent$: State<IFileContentData>
 
   constructor(props: IProps) {
     super()
@@ -23,10 +31,12 @@ export class FileViewViewModel extends ViewModel {
     const filepath$ = new State<string | null>(filepath)
     const filepathDirtyTick$ = new State<number>(0)
     const mainScrollableContainer$ = new State<HTMLDivElement | null>(null)
+    const fileContent$ = new State<IFileContentData>(DEFAULT_CONTENT_DATA)
 
     this.filepath$ = filepath$
     this.filepathDirtyTick$ = filepathDirtyTick$
     this.mainScrollableContainer$ = mainScrollableContainer$
+    this.fileContent$ = fileContent$
   }
 
   public static normalize(
@@ -44,6 +54,10 @@ export class FileViewViewModel extends ViewModel {
   public markFilepathDirty = (): void => {
     const tick: number = this.filepathDirtyTick$.getSnapshot()
     this.filepathDirtyTick$.next(tick + 1)
+  }
+
+  public updateFileContent = (contentData: IFileContentData): void => {
+    this.fileContent$.next(contentData)
   }
 
   public dump = (): IFileViewData => {

@@ -1,15 +1,12 @@
 import React from 'react'
-import { JsonViewViewModel } from './viewmodel'
+import type { JsonViewViewModel } from './viewmodel'
 
 export interface IJsonViewContext {
   readonly viewmodel: JsonViewViewModel
 }
 
 export const JsonViewContextType = React.createContext<IJsonViewContext>({
-  viewmodel: new JsonViewViewModel({
-    workspace: null,
-    filepath: '/dev/null',
-  }),
+  viewmodel: null as unknown as JsonViewViewModel,
 })
 JsonViewContextType.displayName = 'JsonViewContextType'
 

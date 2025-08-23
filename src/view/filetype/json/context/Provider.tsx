@@ -2,9 +2,7 @@ import { Computed } from '@guanghechen/react-viewmodel'
 import JSON5 from 'json5'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { useFileResult } from '@/hook/useFileResult'
 import { useSingleton } from '@/hook/useSingleton'
-import type { IJsonFileData } from '@/shared/types/api'
 import type { IJsonViewContext } from './context'
 import { JsonViewContextType } from './context'
 import type { IJsonViewData, ModeEnum } from './types'
@@ -13,23 +11,20 @@ import { JsonViewViewModel } from './viewmodel'
 const storageKey: string = '#/view/filetype/json'
 
 interface IProps {
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly children: React.ReactNode
 }
 
 export const JsonViewProvider: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, mode, children } = props
+  const { content, contentError, mode, children } = props
   const viewmodel: JsonViewViewModel | null = useSingleton<JsonViewViewModel>(() => {
     const rawViewData: Partial<IJsonViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
     const viewData: IJsonViewData = JsonViewViewModel.normalize(rawViewData)
     return new JsonViewViewModel({
-      workspace,
-      filepath,
       mode: mode ?? viewData.mode,
     })
   })
@@ -43,13 +38,7 @@ export const JsonViewProvider: React.FC<IProps> = props => {
   return (
     <React.Fragment>
       <JsonViewContextType.Provider value={context}>{children}</JsonViewContextType.Provider>
-      <SideEffect
-        viewmodel={viewmodel}
-        workspace={workspace}
-        filepath={filepath}
-        filepathDirtyTick={filepathDirtyTick}
-        mode={mode}
-      />
+      <SideEffect viewmodel={viewmodel} content={content} contentError={contentError} mode={mode} />
     </React.Fragment>
   )
 }
@@ -60,18 +49,17 @@ JsonViewProvider.displayName = 'JsonViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: JsonViewViewModel
-  readonly workspace: string | null
-  readonly filepath: string
-  readonly filepathDirtyTick: number
+  readonly content: string | null
+  readonly contentError: string | null
   readonly mode?: ModeEnum
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, workspace, filepath, filepathDirtyTick, mode } = props
+  const { viewmodel, content, contentError, mode } = props
 
   usePersistent(viewmodel)
-  useSyncProps(viewmodel, workspace, filepath, mode)
-  useData(viewmodel, workspace, filepath, filepathDirtyTick)
+  useSyncProps(viewmodel, mode)
+  useData(viewmodel, content, contentError)
 
   return <React.Fragment />
 }
@@ -92,22 +80,7 @@ const usePersistent = (viewmodel: JsonViewViewModel): void => {
   }, [viewmodel])
 }
 
-const useSyncProps = (
-  viewmodel: JsonViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  mode: ModeEnum | undefined,
-): void => {
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.workspace$.next(workspace)
-  }, [viewmodel, workspace])
-
-  React.useEffect(() => {
-    if (viewmodel.disposed) return
-    viewmodel.filepath$.next(filepath)
-  }, [viewmodel, filepath])
-
+const useSyncProps = (viewmodel: JsonViewViewModel, mode: ModeEnum | undefined): void => {
   React.useEffect(() => {
     if (viewmodel.disposed) return
     viewmodel.mode$.next(mode ?? viewmodel.mode$.getSnapshot())
@@ -116,32 +89,29 @@ const useSyncProps = (
 
 const useData = (
   viewmodel: JsonViewViewModel,
-  workspace: string | null,
-  filepath: string,
-  filepathDirtyTick: number,
+  content: string | null,
+  contentError: string | null,
 ): void => {
-  const { data, error } = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)
-
   React.useEffect(() => {
     if (viewmodel.disposed) return
 
-    if (data) {
-      viewmodel.content$.next(data.content)
+    if (contentError) {
+      viewmodel.content$.next(null)
+      viewmodel.json$.next(null)
+      toast.error(typeof contentError === 'string' ? contentError : String(contentError))
+    } else if (content) {
+      viewmodel.content$.next(content)
 
       // Parse JSON content
       try {
-        const parsedJson = JSON5.parse(data.content)
+        const parsedJson = JSON5.parse(content)
         viewmodel.json$.next(parsedJson)
       } catch (_parseError) {
         viewmodel.json$.next(null)
       }
-    } else if (error) {
-      viewmodel.content$.next(null)
-      viewmodel.json$.next(null)
-      toast.error(typeof error === 'string' ? error : String(error))
     } else {
       viewmodel.content$.next(null)
       viewmodel.json$.next(null)
     }
-  }, [data, error, viewmodel])
+  }, [content, contentError, viewmodel])
 }
