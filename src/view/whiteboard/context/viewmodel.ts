@@ -67,6 +67,12 @@ export class WhiteboardViewViewModel extends ViewModel {
   }
 
   public updateContent = (content: string | null): void => {
+    // Clean up previous blob URL if exists
+    const currentRichContent = this.richContent$.getSnapshot()
+    if (currentRichContent?.type === 'image' && currentRichContent.data.startsWith('blob:')) {
+      URL.revokeObjectURL(currentRichContent.data)
+    }
+
     this.content$.next(content)
     this.richContent$.next(null) // Clear rich content when updating text content
     this.contentData$.next({
@@ -78,6 +84,12 @@ export class WhiteboardViewViewModel extends ViewModel {
   }
 
   public updateRichContent = (richContent: IWhiteboardRichContent | null): void => {
+    // Clean up previous blob URL if exists
+    const currentRichContent = this.richContent$.getSnapshot()
+    if (currentRichContent?.type === 'image' && currentRichContent.data.startsWith('blob:')) {
+      URL.revokeObjectURL(currentRichContent.data)
+    }
+
     this.richContent$.next(richContent)
     this.content$.next(null) // Clear text content when updating rich content
     this.contentData$.next({
@@ -205,10 +217,24 @@ export class WhiteboardViewViewModel extends ViewModel {
   }
 
   public load = (data: Partial<IWhiteboardViewData> | undefined): void => {
+    // Clean up previous blob URL if exists before loading new data
+    const currentRichContent = this.richContent$.getSnapshot()
+    if (currentRichContent?.type === 'image' && currentRichContent.data.startsWith('blob:')) {
+      URL.revokeObjectURL(currentRichContent.data)
+    }
+
     const { content, richContent, filetype }: IWhiteboardViewData =
       WhiteboardViewViewModel.normalize(data, this.dump())
     this.content$.next(content)
     this.richContent$.next(richContent)
     this.filetype$.next(filetype)
+  }
+
+  public cleanup = (): void => {
+    // Clean up any blob URLs when the viewmodel is destroyed
+    const currentRichContent = this.richContent$.getSnapshot()
+    if (currentRichContent?.type === 'image' && currentRichContent.data.startsWith('blob:')) {
+      URL.revokeObjectURL(currentRichContent.data)
+    }
   }
 }

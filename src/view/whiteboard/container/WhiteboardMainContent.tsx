@@ -1,10 +1,10 @@
 import React from 'react'
 import { HtmlView } from '@/view/filetype/html/View'
+import { ImageView } from '@/view/filetype/image/View'
 import { JsonView } from '@/view/filetype/json/View'
 import { SvgView } from '@/view/filetype/svg/View'
 import { TextView } from '@/view/filetype/text/View'
 import type { IWhiteboardContentData } from '../context/types'
-import { WhiteboardImageContent } from './WhiteboardImageContent'
 import { WhiteboardMarkdownAdaptor } from './WhiteboardMarkdownAdaptor'
 
 interface IWhiteboardMainContentProps {
@@ -20,7 +20,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
 }) => {
   // If we have rich content (e.g., image), prioritize that over text content
   if (contentData.richContent?.type === 'image') {
-    return <WhiteboardImageContent richContent={contentData.richContent} />
+    return <ImageView url={contentData.richContent.data} />
   }
 
   // If no content is available, show placeholder

@@ -61,7 +61,7 @@
     border-bottom-width: 1rem;
     min-height: calc(100vh - 4rem);
     @apply shadow-lg rounded-lg border-transparent
-      backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-800/60
+      backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80
       text-slate-800  dark:text-gray-200;
   }
 
