@@ -2,12 +2,37 @@ function yoz --description "Preview file with yozora"
     set -l filepath ""
     set -l force false
 
+    # Parse force options first
     for arg in $argv
         switch $arg
             case --force --force=true
                 set force true
             case --force=false
                 set force false
+        end
+    end
+
+    # Filter out force options to get remaining args
+    set -l remaining_args
+    for arg in $argv
+        switch $arg
+            case --force --force=true --force=false
+                # Skip force options
+            case '*'
+                set remaining_args $remaining_args $arg
+        end
+    end
+
+    # Read piped input if no filepath provided and stdin is available
+    if test (count $remaining_args) -eq 0 && not isatty stdin
+        while read line
+            test -z "$filepath" && set filepath $line && break
+        end
+    end
+
+    # Parse remaining arguments for filepath
+    for arg in $remaining_args
+        switch $arg
             case '--*'
                 echo "Unknown option: $arg" && return 1
             case '*'
