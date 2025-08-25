@@ -711,7 +711,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_inpu
     {
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-i>",
+      key = "<C-,>",
       desc = "searcher: history backward",
       callback = function()
         local present = self._finder_input_history:present() ---@type string|nil
@@ -724,7 +724,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_inpu
     {
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-o>",
+      key = "<C-.>",
       desc = "searcher: history forward",
       callback = function()
         local present = self._finder_input_history:present() ---@type string|nil
@@ -803,7 +803,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-i>",
+      key = "<C-,>",
       desc = "searcher#finder: history backward",
       callback = function()
         local last_input = self._finder_input_history:backward() ---@type string|nil
@@ -815,7 +815,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-o>",
+      key = "<C-.>",
       desc = "searcher#finder: history forward",
       callback = function()
         local next_input = self._finder_input_history:forward() ---@type string|nil

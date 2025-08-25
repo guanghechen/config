@@ -705,26 +705,26 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
     {
       disabled = self._finder_input_history == nil,
       modes = { "i", "n", "v" },
-      key = "<C-i>",
+      key = "<C-,>",
       desc = "picker: history backward",
       callback = function()
         local present = self._finder_input_history:present() ---@type string|nil
-        local finder_input = self._finder_input_history:backward() ---@type string|nil
-        if present ~= finder_input and finder_input ~= nil then
-          self.finder:set_content(finder_input)
+        local backward = self._finder_input_history:backward() ---@type string|nil
+        if present ~= backward and backward ~= nil then
+          self.finder:set_content(backward)
         end
       end,
     },
     {
       disabled = self._finder_input_history == nil,
       modes = { "i", "n", "v" },
-      key = "<C-o>",
+      key = "<C-.>",
       desc = "picker: history forward",
       callback = function()
         local present = self._finder_input_history:present() ---@type string|nil
-        local finder_input = self._finder_input_history:forward() ---@type string|nil
-        if present ~= finder_input and finder_input ~= nil then
-          self.finder:set_content(finder_input)
+        local forward = self._finder_input_history:forward() ---@type string|nil
+        if present ~= forward and forward ~= nil then
+          self.finder:set_content(forward)
         end
       end,
     },
@@ -846,7 +846,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-i>",
+      key = "<C-,>",
       desc = "picker#finder: history backward",
       callback = function()
         local last_input = self._finder_input_history:backward() ---@type string|nil
@@ -858,7 +858,7 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
     {
       disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-o>",
+      key = "<C-.>",
       desc = "picker#finder: history forward",
       callback = function()
         local next_input = self._finder_input_history:forward() ---@type string|nil
