@@ -1,11 +1,10 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { WhiteboardHtmlAdaptor } from '../container/WhiteboardHtmlAdaptor'
-import { WhiteboardJsonAdaptor } from '../container/WhiteboardJsonAdaptor'
+import { HtmlView } from '@/view/filetype/html/View'
+import { JsonView } from '@/view/filetype/json/View'
+import { SvgView } from '@/view/filetype/svg/View'
+import { TextView } from '@/view/filetype/text/View'
 import { WhiteboardMarkdownAdaptor } from '../container/WhiteboardMarkdownAdaptor'
-import { WhiteboardPlaceholderAdaptor } from '../container/WhiteboardPlaceholderAdaptor'
-import { WhiteboardSvgAdaptor } from '../container/WhiteboardSvgAdaptor'
-import { WhiteboardTextAdaptor } from '../container/WhiteboardTextAdaptor'
 import { useWhiteboardViewmodel } from '../context'
 
 export const Main: React.FC = () => {
@@ -37,30 +36,52 @@ export const Main: React.FC = () => {
       )
     }
 
-    // Render appropriate adaptor based on filetype
+    // For JSON, add validation error if content exists but isn't valid JSON
+    let finalContentError = contentData.contentError
+    if (filetype === 'json' && content && !contentData.contentError) {
+      try {
+        JSON.parse(content)
+      } catch (error) {
+        console.error('Failed to parse JSON:', error)
+        finalContentError = 'Failed to parse JSON content'
+      }
+    }
+
+    // Render appropriate filetype view based on filetype
     switch (filetype) {
       case 'html':
-        return <WhiteboardHtmlAdaptor content={content} contentError={contentData.contentError} />
+        return <HtmlView content={content} contentError={finalContentError} />
       case 'json':
-        return <WhiteboardJsonAdaptor content={content} contentError={contentData.contentError} />
+        return <JsonView content={content} contentError={finalContentError} />
       case 'markdown':
-        return (
-          <WhiteboardMarkdownAdaptor content={content} contentError={contentData.contentError} />
-        )
+        return <WhiteboardMarkdownAdaptor content={content} contentError={finalContentError} />
       case 'svg':
-        return <WhiteboardSvgAdaptor content={content} contentError={contentData.contentError} />
+        return <SvgView content={content} contentError={finalContentError} />
       case 'text':
-        return <WhiteboardTextAdaptor content={content} contentError={contentData.contentError} />
+        return <TextView content={content} contentError={finalContentError} />
       case 'excalidraw':
       case 'pdf':
       case 'image':
       default:
         return (
-          <WhiteboardPlaceholderAdaptor
-            content={content}
-            contentError={contentData.contentError}
-            filetype={filetype}
-          />
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <div className="text-xl mb-2">📄</div>
+            <div className="text-lg font-medium mb-1">
+              {filetype.charAt(0).toUpperCase() + filetype.slice(1)} Preview
+            </div>
+            <div className="text-sm">
+              Filetype "{filetype}" is not yet fully supported in whiteboard mode
+            </div>
+            {content && (
+              <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg max-w-md text-xs">
+                <div className="font-medium mb-2">Content Preview:</div>
+                <div className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                  {content.substring(0, 200)}
+                  {content.length > 200 && '...'}
+                </div>
+              </div>
+            )}
+          </div>
         )
     }
   }
