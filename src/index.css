@@ -10,6 +10,7 @@
 @import './view/filetype/pdf/style.css';
 @import './view/filetype/svg/style.css';
 @import './view/filetype/text/style.css';
+@import './view/whiteboard/style.css';
 @import './view/workspace/style.css';
 
 @layer components {

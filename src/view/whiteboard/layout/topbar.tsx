@@ -160,7 +160,7 @@ export const Topbar: React.FC = () => {
   const currentFiletype = supportedFiletypes.find(type => type.value === filetype)
 
   return (
-    <div className="flex items-center justify-between px-2 h-12 bg-white dark:bg-gray-900">
+    <div className="f-vf-topbar">
       <div className="flex items-center space-x-2">
         {/* Whiteboard Icon */}
         <div className="text-gray-700 dark:text-gray-300" title="Whiteboard">

@@ -4,7 +4,7 @@ import { Topbar } from './layout/topbar'
 
 export const Composer: React.FC = () => {
   return (
-    <div className="h-screen flex flex-col">
+    <div className="f-vf-root">
       <Topbar />
       <Main />
     </div>
