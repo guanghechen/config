@@ -14,6 +14,9 @@ export const views = {
     import('@/view/workspace/View').then(md => ({ default: md.WorkspaceView })),
   ),
   file: React.lazy(() => import('@/view/file/View').then(md => ({ default: md.FileView }))),
+  whiteboard: React.lazy(() =>
+    import('@/view/whiteboard/View').then(md => ({ default: md.WhiteboardView })),
+  ),
   notfound: React.lazy(() => import('@/view/not-found').then(md => ({ default: md.NotFoundView }))),
 }
 
@@ -31,6 +34,13 @@ export const routes: IRouteItem[] = [
     label: 'Workspace',
     listed: false,
     Component: views.workspace,
+  },
+  {
+    key: 'whiteboard',
+    path: '/whiteboard',
+    label: 'Whiteboard',
+    listed: true,
+    Component: views.whiteboard,
   },
   {
     key: 'file',
