@@ -141,7 +141,6 @@ export const Topbar: React.FC = () => {
     { value: 'json', label: 'JSON' },
     { value: 'html', label: 'HTML' },
     { value: 'svg', label: 'SVG' },
-    { value: 'image', label: 'Image' },
     { value: 'excalidraw', label: 'Excalidraw' },
   ]
 

@@ -1,6 +1,5 @@
 import React from 'react'
 import { HtmlView } from '@/view/filetype/html/View'
-import { ImageView } from '@/view/filetype/image/View'
 import { JsonView } from '@/view/filetype/json/View'
 import { SvgView } from '@/view/filetype/svg/View'
 import { TextView } from '@/view/filetype/text/View'
@@ -18,11 +17,6 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
   content,
   contentData,
 }) => {
-  // If we have rich content (e.g., image), prioritize that over text content
-  if (contentData.richContent?.type === 'image') {
-    return <ImageView url={contentData.richContent.data} />
-  }
-
   // If no content is available, show placeholder
   if (!content && !contentData.contentError) {
     return (

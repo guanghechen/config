@@ -9,3 +9,7 @@ export const WhiteboardViewContextType = React.createContext<IWhiteboardViewCont
   null as unknown as IWhiteboardViewContext,
 )
 WhiteboardViewContextType.displayName = 'WhiteboardViewContextType'
+
+export const useWhiteboardViewmodel = (): WhiteboardViewViewModel => {
+  return React.useContext(WhiteboardViewContextType).viewmodel
+}
