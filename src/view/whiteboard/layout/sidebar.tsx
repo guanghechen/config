@@ -1,13 +1,13 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { FileTree } from '../container/FileTree'
-import { useWorkspaceViewmodel } from '../context'
+import { WhiteboardCodeEditor } from '../container/CodeEditor'
+import { useWhiteboardViewmodel } from '../context'
 
 export const Sidebar: React.FC = () => {
-  const viewmodel = useWorkspaceViewmodel()
-  const visible: boolean = useStateValue(viewmodel.sidebarVisible$)
-  const width: number = useStateValue(viewmodel.sidebarWidth$) // don't subscribe the width change since we adjust it in resizer callback
+  const viewmodel = useWhiteboardViewmodel()
+  const visible: boolean = useStateValue(viewmodel.editorVisible$)
+  const width: number = useStateValue(viewmodel.editorWidth$)
 
   const containerRef = React.useRef<HTMLDivElement>(null)
   const resizingRef = React.useRef<boolean>(false)
@@ -15,23 +15,32 @@ export const Sidebar: React.FC = () => {
   const startWidthRef = React.useRef<number>(0)
 
   const onResizeStart = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     if (containerRef.current) {
       resizingRef.current = true
       startXRef.current = e.clientX
       startWidthRef.current = containerRef.current.offsetWidth
       document.body.classList.add('select-none')
+      document.body.style.cursor = 'col-resize'
     }
   }, [])
 
   const onResizeMove = React.useCallback(
     (e: MouseEvent) => {
-      if (resizingRef.current) {
-        const halfScreenWidth: number = document.documentElement.clientWidth / 2
-        const nextWidth: number = startWidthRef.current + (e.clientX - startXRef.current)
-        if (nextWidth >= 240 && nextWidth <= halfScreenWidth) {
-          if (containerRef.current) containerRef.current.style.width = `${nextWidth}px`
-          viewmodel.updateSidebarWidthDebounced(nextWidth)
-        }
+      if (resizingRef.current && containerRef.current) {
+        e.preventDefault()
+        const screenWidth: number = document.documentElement.clientWidth
+        const deltaX: number = e.clientX - startXRef.current
+        const nextWidth: number = startWidthRef.current + deltaX
+
+        // Ensure width stays within bounds - allow up to 80% of screen width
+        const minWidth = 300
+        const maxWidth = screenWidth * 0.8
+        const clampedWidth = Math.max(minWidth, Math.min(maxWidth, nextWidth))
+
+        containerRef.current.style.width = `${clampedWidth}px`
+        viewmodel.updateEditorWidthDebounced(clampedWidth)
       }
     },
     [viewmodel],
@@ -41,6 +50,7 @@ export const Sidebar: React.FC = () => {
     if (resizingRef.current) {
       resizingRef.current = false
       document.body.classList.remove('select-none')
+      document.body.style.cursor = ''
     }
   }, [])
 
@@ -52,6 +62,7 @@ export const Sidebar: React.FC = () => {
       document.removeEventListener('mousemove', onResizeMove)
       document.removeEventListener('mouseup', onResizeEnd)
       document.body.classList.remove('select-none')
+      document.body.style.cursor = ''
     }
   }, [onResizeMove, onResizeEnd])
 
@@ -65,14 +76,14 @@ export const Sidebar: React.FC = () => {
       style={{ width: visible ? width : 0 }}
     >
       <div className="select-none box-border flex h-full w-full flex-col">
-        <FileTree />
+        <WhiteboardCodeEditor />
       </div>
       <div
-        className="border-1 absolute right-0 top-0 box-content h-full w-[1px] cursor-col-resize border-b-0 border-t-0 border-solid border-transparent bg-clip-content hover:bg-blue-500 hover:opacity-50"
+        className="absolute right-[-0.5rem] top-0 z-10 h-full w-1 cursor-col-resize bg-transparent hover:bg-blue-500 hover:opacity-50 active:bg-blue-600"
         onMouseDown={onResizeStart}
       />
     </div>
   )
 }
 
-Sidebar.displayName = 'WorkspaceViewSidebar'
+Sidebar.displayName = 'WhiteboardViewSidebar'

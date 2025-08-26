@@ -1,56 +1,74 @@
 @layer components {
-  .f-vf-root {
+  .f-vf-root[data-view='whiteboard'] {
     box-sizing: border-box;
     position: relative;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
     grid-template-rows: 3rem 1fr;
     grid-template-areas:
-      'topbar'
-      'main';
+      'topbar topbar'
+      'editor main';
     width: 100%;
     min-height: 100vh;
     font-family: 'Maple Mono NF CN', 'Roboto Mono', monospace, sans-serif;
     @apply transition-colors duration-300 ease-in-out bg-gray-50 text-gray-800 dark:bg-gray-800 dark:text-gray-200;
-  }
 
-  .f-vf-topbar {
-    box-sizing: border-box;
-    position: sticky;
-    top: 0;
-    left: 0;
-    z-index: 10;
-    grid-area: topbar;
-    height: 3rem;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem;
-    @apply bg-gray-50 dark:bg-gray-800;
-  }
+    &:not(:has(.f-vf-editor)) {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        'topbar'
+        'main';
+    }
 
-  .f-vf-main {
-    box-sizing: border-box;
-    grid-area: main;
-    width: 100%;
-    padding: 1rem;
-    padding-top: 0;
-  }
+    .f-vf-topbar {
+      box-sizing: border-box;
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      grid-area: topbar;
+      height: 3rem;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem;
+      @apply bg-gray-50 dark:bg-gray-800;
+    }
 
-  .f-vf-pane {
-    position: relative;
-    box-sizing: border-box;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    border-left-width: 0.5rem;
-    border-right-width: 0.5rem;
-    border-top-width: 1rem;
-    border-bottom-width: 1rem;
-    min-height: calc(100vh - 4rem);
-    @apply shadow-lg rounded-lg border-transparent
-      backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80
-      text-slate-800  dark:text-gray-200;
+    .f-vf-main {
+      box-sizing: border-box;
+      grid-area: main;
+      width: 100%;
+      padding: 1rem;
+      padding-top: 0;
+    }
+
+    .f-vf-editor {
+      position: sticky;
+      grid-area: editor;
+      box-sizing: border-box;
+      top: 3rem;
+      height: calc(100vh - 4rem);
+      border-left-width: 0.5rem;
+      border-right-width: 0.5rem;
+      border-top-width: 0.5rem;
+      border-bottom-width: 0.5rem;
+      @apply shadow-lg rounded-lg border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80 text-slate-800  dark:text-gray-200;
+    }
+
+    .f-vf-pane {
+      position: relative;
+      box-sizing: border-box;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      border-left-width: 0.5rem;
+      border-right-width: 0.5rem;
+      border-top-width: 1rem;
+      border-bottom-width: 1rem;
+      min-height: calc(100vh - 4rem);
+      @apply shadow-lg rounded-lg border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80 text-slate-800  dark:text-gray-200;
+    }
   }
 }

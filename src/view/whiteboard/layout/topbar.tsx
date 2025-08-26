@@ -7,6 +7,7 @@ export const Topbar: React.FC = () => {
   const viewmodel = useWhiteboardViewmodel()
   const filetype = useStateValue(viewmodel.filetype$)
   const contentData = useStateValue(viewmodel.contentData$)
+  const editorVisible = useStateValue(viewmodel.editorVisible$)
 
   const [isEditDropdownOpen, setIsEditDropdownOpen] = React.useState(false)
   const [isFiletypeDropdownOpen, setIsFiletypeDropdownOpen] = React.useState(false)
@@ -39,6 +40,17 @@ export const Topbar: React.FC = () => {
 
   const handleSelectFile = (): void => {
     viewmodel.selectFile()
+    setIsEditDropdownOpen(false)
+  }
+
+  const handleToggleEditor = (): void => {
+    viewmodel.toggleEditor()
+  }
+
+  const handleOpenEditor = (): void => {
+    if (!editorVisible) {
+      viewmodel.toggleEditor()
+    }
     setIsEditDropdownOpen(false)
   }
 
@@ -259,46 +271,75 @@ export const Topbar: React.FC = () => {
           )}
         </div>
 
-        {/* Edit Dropdown */}
+        {/* Edit Button with Dropdown */}
         <div className="relative" ref={editDropdownRef}>
-          <button
-            onClick={() => setIsEditDropdownOpen(!isEditDropdownOpen)}
-            className="group flex h-7 select-none items-center gap-2 rounded-lg bg-white/80 px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
-            aria-expanded={isEditDropdownOpen}
-            aria-haspopup="menu"
-            aria-label="Edit content"
-            title="Edit content"
-          >
-            <div className="text-gray-700 dark:text-gray-300">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex">
+            {/* Edit Toggle Button */}
+            <button
+              onClick={handleToggleEditor}
+              className={cn(
+                'group flex h-7 select-none items-center gap-2 rounded-l-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
+                editorVisible
+                  ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80 dark:focus:ring-indigo-400/50'
+                  : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50',
+              )}
+              aria-label="Toggle code editor"
+              title={editorVisible ? 'Hide code editor' : 'Show code editor'}
+            >
+              <div
+                className={cn(
+                  editorVisible
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-gray-700 dark:text-gray-300',
+                )}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                  />
+                </svg>
+              </div>
+            </button>
+
+            {/* Dropdown Arrow Button */}
+            <button
+              onClick={() => setIsEditDropdownOpen(!isEditDropdownOpen)}
+              className={cn(
+                'group flex h-7 select-none items-center px-1.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 border-l border-gray-200/50 dark:border-gray-700/50',
+                editorVisible
+                  ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80 dark:focus:ring-indigo-400/50 rounded-r-lg'
+                  : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50 rounded-r-lg',
+              )}
+              aria-expanded={isEditDropdownOpen}
+              aria-haspopup="menu"
+              aria-label="Edit options"
+              title="Edit options"
+            >
+              <svg
+                className={cn(
+                  'h-3.5 w-3.5 transition-transform duration-200',
+                  isEditDropdownOpen ? 'rotate-180' : '',
+                  editorVisible
+                    ? 'text-indigo-500 dark:text-indigo-400'
+                    : 'text-gray-500 dark:text-gray-400',
+                )}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </div>
-            <svg
-              className={cn(
-                'h-3.5 w-3.5 text-gray-500 transition-transform duration-200 dark:text-gray-400',
-                isEditDropdownOpen
-                  ? 'rotate-180'
-                  : 'group-hover:text-gray-700 dark:group-hover:text-gray-300',
-              )}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
+            </button>
+          </div>
 
           {isEditDropdownOpen && (
             <div
@@ -307,6 +348,50 @@ export const Topbar: React.FC = () => {
               aria-label="Edit options"
             >
               <div className="py-1">
+                <button
+                  onClick={handleOpenEditor}
+                  className={cn(
+                    'group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-all duration-150 focus:outline-none',
+                    editorVisible
+                      ? 'bg-indigo-50 text-indigo-700 shadow-sm dark:bg-indigo-900/50 dark:text-indigo-300'
+                      : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
+                  )}
+                  role="menuitem"
+                  tabIndex={isEditDropdownOpen ? 0 : -1}
+                >
+                  <div
+                    className={cn(
+                      'flex h-5 w-5 items-center justify-center rounded transition-colors',
+                      editorVisible
+                        ? 'text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300',
+                    )}
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                      />
+                    </svg>
+                  </div>
+                  <span className="font-medium">Editor</span>
+                  {editorVisible && (
+                    <svg
+                      className="ml-auto h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </button>
                 <button
                   onClick={handlePasteFromClipboard}
                   disabled={contentData.loading}

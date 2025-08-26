@@ -12,7 +12,7 @@ export const Composer: React.FC = () => {
   const filepathDirtyTick: number = useStateValue(viewmodel.filepathDirtyTick$)
 
   return (
-    <div className="f-vf-root">
+    <div className="f-vf-root" data-view="file">
       <Topbar filepath={filepath} />
       <Main
         filepath={filepath}

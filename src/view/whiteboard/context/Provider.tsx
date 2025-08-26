@@ -11,10 +11,18 @@ const storageKey: string = '#/view/whiteboard'
 interface IProps {
   readonly content?: string | null
   readonly filetype?: string
+  readonly editorVisible?: boolean
+  readonly editorWidth?: number
   readonly children: React.ReactNode
 }
 
-export const WhiteboardViewProvider: React.FC<IProps> = ({ content, filetype, children }) => {
+export const WhiteboardViewProvider: React.FC<IProps> = ({
+  content,
+  filetype,
+  editorVisible,
+  editorWidth,
+  children,
+}) => {
   const viewmodel: WhiteboardViewViewModel | null = useSingleton<WhiteboardViewViewModel>(() => {
     const rawViewData: Partial<IWhiteboardViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -24,6 +32,8 @@ export const WhiteboardViewProvider: React.FC<IProps> = ({ content, filetype, ch
     return new WhiteboardViewViewModel({
       content: content ?? viewData.content,
       filetype: filetype ?? viewData.filetype,
+      editorVisible: editorVisible ?? viewData.editorVisible,
+      editorWidth: editorWidth ?? viewData.editorWidth,
     })
   })
 
@@ -55,7 +65,12 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
-  usePersist(viewmodel, storageKey, [viewmodel.content$, viewmodel.filetype$])
+  usePersist(viewmodel, storageKey, [
+    viewmodel.content$,
+    viewmodel.filetype$,
+    viewmodel.editorVisible$,
+    viewmodel.editorWidth$,
+  ])
 
   return <React.Fragment />
 }
