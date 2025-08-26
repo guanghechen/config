@@ -7,8 +7,6 @@ import { SvgViewContextType } from './context'
 import type { ISvgViewData, ISvgViewPosition, ModeEnum } from './types'
 import { SvgViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/svg'
-
 interface IProps {
   readonly content: string | null
   readonly contentError: string | null
@@ -16,11 +14,14 @@ interface IProps {
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const SvgViewProvider: React.FC<IProps> = props => {
-  const { content, contentError, mode, scale, rotation, position, children } = props
+  const { content, contentError, mode, scale, rotation, position, storageKeyScope, children } =
+    props
+  const storageKey = `${storageKeyScope}/filetype/svg`
   const viewmodel: SvgViewViewModel | null = useSingleton<SvgViewViewModel>(() => {
     const rawViewData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -52,6 +53,7 @@ export const SvgViewProvider: React.FC<IProps> = props => {
         scale={scale}
         rotation={rotation}
         position={position}
+        storageKey={storageKey}
       />
     </React.Fragment>
   )
@@ -69,12 +71,13 @@ interface ISideEffectProps {
   readonly scale?: number
   readonly rotation?: number
   readonly position?: ISvgViewPosition
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, content, contentError, mode, scale, rotation, position } = props
+  const { viewmodel, content, contentError, mode, scale, rotation, position, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode, scale, rotation, position)
   useData(viewmodel, content, contentError)
 
@@ -85,7 +88,7 @@ SideEffect.displayName = 'SvgViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: SvgViewViewModel): void => {
+const usePersistent = (viewmodel: SvgViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [viewmodel.mode$, viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
@@ -97,7 +100,7 @@ const usePersistent = (viewmodel: SvgViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (

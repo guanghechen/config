@@ -10,18 +10,18 @@ import { TextViewContextType } from './context'
 import type { ContentModeEnum, ITextViewData, ModeEnum } from './types'
 import { TextViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/text'
-
 interface IProps {
   readonly content: string | null
   readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly contentMode?: ContentModeEnum
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const TextViewProvider: React.FC<IProps> = props => {
-  const { content, contentError, mode, contentMode, children } = props
+  const { content, contentError, mode, contentMode, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/text`
   const viewmodel: TextViewViewModel | null = useSingleton<TextViewViewModel>(() => {
     const rawViewData: Partial<ITextViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -51,6 +51,7 @@ export const TextViewProvider: React.FC<IProps> = props => {
         contentError={contentError}
         mode={mode}
         contentMode={contentMode}
+        storageKey={storageKey}
       />
     </React.Fragment>
   )
@@ -66,12 +67,13 @@ interface ISideEffectProps {
   readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly contentMode?: ContentModeEnum
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, content, contentError, mode, contentMode } = props
+  const { viewmodel, content, contentError, mode, contentMode, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode, contentMode)
   useData(viewmodel, content, contentError)
   useAutoTransform(viewmodel)
@@ -83,7 +85,7 @@ SideEffect.displayName = 'TextViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: TextViewViewModel): void => {
+const usePersistent = (viewmodel: TextViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [
@@ -100,7 +102,7 @@ const usePersistent = (viewmodel: TextViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (

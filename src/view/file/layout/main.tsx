@@ -13,9 +13,10 @@ import { UnknownAdaptor } from '../container/UnknownAdaptor'
 interface IProps {
   readonly filepath: string | null
   readonly filepathDirtyTick: number
+  readonly storageKeyScope: string
 }
 
-export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
+export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick, storageKeyScope }) => {
   const workspace: string | null = null
 
   if (!filepath) {
@@ -24,6 +25,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
         workspace={workspace}
         filepath={filepath}
         filepathDirtyTick={filepathDirtyTick}
+        storageKeyScope={storageKeyScope}
       />
     )
   }
@@ -36,6 +38,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     case '.html':
@@ -45,6 +48,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     case '.json':
@@ -53,6 +57,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     case '.eventstream':
@@ -64,6 +69,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     case '.md':
@@ -72,6 +78,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     case '.pdf':
@@ -80,6 +87,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     case '.svg':
@@ -88,6 +96,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     case '.png':
@@ -98,6 +107,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     default:
@@ -106,6 +116,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick }) => {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
   }

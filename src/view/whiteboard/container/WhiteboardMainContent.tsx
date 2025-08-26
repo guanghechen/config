@@ -10,12 +10,14 @@ interface IWhiteboardMainContentProps {
   readonly filetype: string
   readonly content: string | null
   readonly contentData: IWhiteboardContentData
+  readonly storageKeyScope: string
 }
 
 export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
   filetype,
   content,
   contentData,
+  storageKeyScope,
 }) => {
   // If no content is available, show placeholder
   if (!content && !contentData.contentError) {
@@ -59,15 +61,45 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
   // Render appropriate filetype view based on filetype
   switch (filetype) {
     case 'html':
-      return <HtmlView content={content} contentError={finalContentError} />
+      return (
+        <HtmlView
+          content={content}
+          contentError={finalContentError}
+          storageKeyScope={storageKeyScope}
+        />
+      )
     case 'json':
-      return <JsonView content={content} contentError={finalContentError} />
+      return (
+        <JsonView
+          content={content}
+          contentError={finalContentError}
+          storageKeyScope={storageKeyScope}
+        />
+      )
     case 'markdown':
-      return <WhiteboardMarkdownAdaptor content={content} contentError={finalContentError} />
+      return (
+        <WhiteboardMarkdownAdaptor
+          content={content}
+          contentError={finalContentError}
+          storageKeyScope={storageKeyScope}
+        />
+      )
     case 'svg':
-      return <SvgView content={content} contentError={finalContentError} />
+      return (
+        <SvgView
+          content={content}
+          contentError={finalContentError}
+          storageKeyScope={storageKeyScope}
+        />
+      )
     case 'text':
-      return <TextView content={content} contentError={finalContentError} />
+      return (
+        <TextView
+          content={content}
+          contentError={finalContentError}
+          storageKeyScope={storageKeyScope}
+        />
+      )
     case 'excalidraw':
     case 'image':
     default:

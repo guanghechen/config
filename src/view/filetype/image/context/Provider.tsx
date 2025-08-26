@@ -7,19 +7,19 @@ import { ImageViewContextType } from './context'
 import type { IImageViewData, IImageViewPosition, ModeEnum } from './types'
 import { ImageViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/image'
-
 interface IProps {
   readonly url: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly rotation?: number
   readonly position?: IImageViewPosition
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const ImageViewProvider: React.FC<IProps> = props => {
-  const { url, mode, scale, rotation, position, children } = props
+  const { url, mode, scale, rotation, position, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/image`
   const viewmodel: ImageViewViewModel | null = useSingleton<ImageViewViewModel>(() => {
     const rawViewData: Partial<IImageViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -49,6 +49,7 @@ export const ImageViewProvider: React.FC<IProps> = props => {
         scale={scale}
         rotation={rotation}
         position={position}
+        storageKey={storageKey}
       />
     </React.Fragment>
   )
@@ -65,12 +66,13 @@ interface ISideEffectProps {
   readonly scale?: number
   readonly rotation?: number
   readonly position?: IImageViewPosition
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, url, mode, scale, rotation, position } = props
+  const { viewmodel, url, mode, scale, rotation, position, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode, scale, rotation, position)
   useImageLoader(viewmodel, url)
 
@@ -81,7 +83,7 @@ SideEffect.displayName = 'ImageViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: ImageViewViewModel): void => {
+const usePersistent = (viewmodel: ImageViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [viewmodel.mode$, viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
@@ -93,7 +95,7 @@ const usePersistent = (viewmodel: ImageViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (

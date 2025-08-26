@@ -14,13 +14,14 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string | null
   readonly filepathDirtyTick: number
+  readonly storageKeyScope: string
 }
 
 export class Main extends React.PureComponent<IProps> {
   public static displayName: string = 'WorkspaceViewMain'
 
   public override render(): React.ReactElement {
-    const { workspace, filepath, filepathDirtyTick } = this.props
+    const { workspace, filepath, filepathDirtyTick, storageKeyScope } = this.props
 
     if (!filepath) {
       return (
@@ -28,6 +29,7 @@ export class Main extends React.PureComponent<IProps> {
           workspace={workspace}
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
         />
       )
     }
@@ -40,6 +42,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       case '.html':
@@ -49,6 +52,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       case '.json':
@@ -57,6 +61,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       case '.eventstream':
@@ -68,6 +73,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       case '.md':
@@ -76,6 +82,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       case '.pdf':
@@ -84,6 +91,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       case '.svg':
@@ -92,6 +100,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       case '.png':
@@ -102,6 +111,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
       default:
@@ -110,6 +120,7 @@ export class Main extends React.PureComponent<IProps> {
             workspace={workspace}
             filepath={filepath}
             filepathDirtyTick={filepathDirtyTick}
+            storageKeyScope={storageKeyScope}
           />
         )
     }

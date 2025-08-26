@@ -7,18 +7,18 @@ import { HtmlViewContextType } from './context'
 import type { IHtmlViewData, ModeEnum } from './types'
 import { HtmlViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/html'
-
 interface IProps {
   readonly content: string | null
   readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const HtmlViewProvider: React.FC<IProps> = props => {
-  const { content, contentError, mode, enableTailwindcss, children } = props
+  const { content, contentError, mode, enableTailwindcss, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/html`
   const viewmodel: HtmlViewViewModel | null = useSingleton<HtmlViewViewModel>(() => {
     const rawViewData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -45,6 +45,7 @@ export const HtmlViewProvider: React.FC<IProps> = props => {
         contentError={contentError}
         mode={mode}
         enableTailwindcss={enableTailwindcss}
+        storageKey={storageKey}
       />
     </React.Fragment>
   )
@@ -60,12 +61,13 @@ interface ISideEffectProps {
   readonly contentError: string | null
   readonly mode?: ModeEnum
   readonly enableTailwindcss?: boolean
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, content, contentError, mode, enableTailwindcss } = props
+  const { viewmodel, content, contentError, mode, enableTailwindcss, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode, enableTailwindcss)
   useData(viewmodel, content, contentError)
 
@@ -76,7 +78,7 @@ SideEffect.displayName = 'HtmlViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: HtmlViewViewModel): void => {
+const usePersistent = (viewmodel: HtmlViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [viewmodel.mode$, viewmodel.enableTailwindcss$],
@@ -88,7 +90,7 @@ const usePersistent = (viewmodel: HtmlViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (

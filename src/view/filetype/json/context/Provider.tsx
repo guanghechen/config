@@ -8,17 +8,17 @@ import { JsonViewContextType } from './context'
 import type { IJsonViewData, ModeEnum } from './types'
 import { JsonViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/json'
-
 interface IProps {
   readonly content: string | null
   readonly contentError: string | null
   readonly mode?: ModeEnum
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const JsonViewProvider: React.FC<IProps> = props => {
-  const { content, contentError, mode, children } = props
+  const { content, contentError, mode, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/json`
   const viewmodel: JsonViewViewModel | null = useSingleton<JsonViewViewModel>(() => {
     const rawViewData: Partial<IJsonViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -38,7 +38,13 @@ export const JsonViewProvider: React.FC<IProps> = props => {
   return (
     <React.Fragment>
       <JsonViewContextType.Provider value={context}>{children}</JsonViewContextType.Provider>
-      <SideEffect viewmodel={viewmodel} content={content} contentError={contentError} mode={mode} />
+      <SideEffect
+        viewmodel={viewmodel}
+        content={content}
+        contentError={contentError}
+        mode={mode}
+        storageKey={storageKey}
+      />
     </React.Fragment>
   )
 }
@@ -52,12 +58,13 @@ interface ISideEffectProps {
   readonly content: string | null
   readonly contentError: string | null
   readonly mode?: ModeEnum
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, content, contentError, mode } = props
+  const { viewmodel, content, contentError, mode, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode)
   useData(viewmodel, content, contentError)
 
@@ -68,7 +75,7 @@ SideEffect.displayName = 'JsonViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: JsonViewViewModel): void => {
+const usePersistent = (viewmodel: JsonViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.mode$], () => {
       const data: IJsonViewData = viewmodel.dump()
@@ -77,7 +84,7 @@ const usePersistent = (viewmodel: JsonViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (viewmodel: JsonViewViewModel, mode: ModeEnum | undefined): void => {

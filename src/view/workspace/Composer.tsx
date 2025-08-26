@@ -6,6 +6,8 @@ import { Main } from './layout/main'
 import { Sidebar } from './layout/sidebar'
 import { Topbar } from './layout/topbar'
 
+const storageKeyScope = '#/view/workspace'
+
 export const Composer: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
   const workspace: string | null = useStateValue(viewmodel.workspace$)
@@ -19,7 +21,12 @@ export const Composer: React.FC = () => {
       <div className="f-vf-sidebar">
         <Sidebar />
       </div>
-      <Main workspace={workspace} filepath={filepath} filepathDirtyTick={filepathDirtyTick} />
+      <Main
+        workspace={workspace}
+        filepath={filepath}
+        filepathDirtyTick={filepathDirtyTick}
+        storageKeyScope={storageKeyScope}
+      />
     </div>
   )
 }

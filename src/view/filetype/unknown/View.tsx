@@ -4,13 +4,14 @@ import { UnknownViewProvider } from './context'
 
 interface IProps {
   readonly filepath: string | null
+  readonly storageKeyScope: string
 }
 
 export class UnknownView extends React.PureComponent<IProps> {
   public static readonly displayName = 'UnknownView'
 
   public override render(): React.ReactElement {
-    const { filepath } = this.props
+    const { filepath, storageKeyScope } = this.props
 
     if (!filepath) {
       return (
@@ -21,7 +22,7 @@ export class UnknownView extends React.PureComponent<IProps> {
     }
 
     return (
-      <UnknownViewProvider>
+      <UnknownViewProvider storageKeyScope={storageKeyScope}>
         <div className="relative size-full">
           <Composer filepath={filepath} />
         </div>

@@ -7,14 +7,20 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
+  readonly storageKeyScope: string
 }
 
-export const MarkdownAdaptor: React.FC<IProps> = ({ workspace, filepath, filepathDirtyTick }) => {
+export const MarkdownAdaptor: React.FC<IProps> = ({
+  workspace,
+  filepath,
+  filepathDirtyTick,
+  storageKeyScope,
+}) => {
   const fileResult = useFileResult<IMarkdownFileData>(workspace, filepath, filepathDirtyTick)
 
   // Pass the structured markdown data directly to the view
   const data = fileResult.data || null
   const dataError = fileResult.error ? String(fileResult.error) : null
 
-  return <MarkdownView data={data} dataError={dataError} />
+  return <MarkdownView data={data} dataError={dataError} storageKeyScope={storageKeyScope} />
 }

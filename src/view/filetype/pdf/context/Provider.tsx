@@ -6,18 +6,18 @@ import { PdfViewContextType } from './context'
 import type { IPdfViewData, ModeEnum } from './types'
 import { PdfViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/pdf'
-
 interface IProps {
   readonly url: string | null
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly multiview?: boolean
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const PdfViewProvider: React.FC<IProps> = props => {
-  const { url, mode, scale, multiview, children } = props
+  const { url, mode, scale, multiview, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/pdf`
   const viewmodel: PdfViewViewModel | null = useSingleton<PdfViewViewModel>(() => {
     const rawViewData: Partial<IPdfViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -40,7 +40,14 @@ export const PdfViewProvider: React.FC<IProps> = props => {
   return (
     <React.Fragment>
       <PdfViewContextType.Provider value={context}>{children}</PdfViewContextType.Provider>
-      <SideEffect viewmodel={viewmodel} url={url} mode={mode} scale={scale} multiview={multiview} />
+      <SideEffect
+        viewmodel={viewmodel}
+        url={url}
+        mode={mode}
+        scale={scale}
+        multiview={multiview}
+        storageKey={storageKey}
+      />
     </React.Fragment>
   )
 }
@@ -55,12 +62,13 @@ interface ISideEffectProps {
   readonly mode?: ModeEnum
   readonly scale?: number
   readonly multiview?: boolean
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, url, mode, scale, multiview } = props
+  const { viewmodel, url, mode, scale, multiview, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode, scale, multiview)
   useData(viewmodel, url)
 
@@ -71,7 +79,7 @@ SideEffect.displayName = 'PdfViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: PdfViewViewModel): void => {
+const usePersistent = (viewmodel: PdfViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables(
       [
@@ -89,7 +97,7 @@ const usePersistent = (viewmodel: PdfViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (

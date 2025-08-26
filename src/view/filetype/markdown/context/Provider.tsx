@@ -8,17 +8,17 @@ import { MarkdownViewContextType } from './context'
 import type { IMarkdownViewData, ModeEnum } from './types'
 import { MarkdownViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/markdown'
-
 interface IProps {
   readonly data: IMarkdownFileData | null
   readonly dataError: string | null
   readonly mode?: ModeEnum
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const MarkdownViewProvider: React.FC<IProps> = props => {
-  const { data, dataError, mode, children } = props
+  const { data, dataError, mode, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/markdown`
   const viewmodel: MarkdownViewViewModel | null = useSingleton<MarkdownViewViewModel>(() => {
     const rawViewData: Partial<IMarkdownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -40,7 +40,13 @@ export const MarkdownViewProvider: React.FC<IProps> = props => {
       <MarkdownViewContextType.Provider value={context}>
         {children}
       </MarkdownViewContextType.Provider>
-      <SideEffect viewmodel={viewmodel} data={data} dataError={dataError} mode={mode} />
+      <SideEffect
+        viewmodel={viewmodel}
+        data={data}
+        dataError={dataError}
+        mode={mode}
+        storageKey={storageKey}
+      />
     </React.Fragment>
   )
 }
@@ -54,12 +60,13 @@ interface ISideEffectProps {
   readonly data: IMarkdownFileData | null
   readonly dataError: string | null
   readonly mode?: ModeEnum
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, data, dataError, mode } = props
+  const { viewmodel, data, dataError, mode, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode)
   useData(viewmodel, data, dataError)
 
@@ -70,7 +77,7 @@ SideEffect.displayName = 'MarkdownViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: MarkdownViewViewModel): void => {
+const usePersistent = (viewmodel: MarkdownViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.mode$], () => {
       const data: IMarkdownViewData = viewmodel.dump()
@@ -79,7 +86,7 @@ const usePersistent = (viewmodel: MarkdownViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (viewmodel: MarkdownViewViewModel, mode: ModeEnum | undefined): void => {

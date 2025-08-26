@@ -9,6 +9,7 @@ import { MarkdownView } from '@/view/filetype/markdown/View'
 interface IProps {
   readonly content: string | null
   readonly contentError: string | null
+  readonly storageKeyScope: string
 }
 
 const parser = new Parser({
@@ -17,7 +18,11 @@ const parser = new Parser({
   },
 })
 
-export const WhiteboardMarkdownAdaptor: React.FC<IProps> = ({ content, contentError }) => {
+export const WhiteboardMarkdownAdaptor: React.FC<IProps> = ({
+  content,
+  contentError,
+  storageKeyScope,
+}) => {
   const data = React.useMemo<IMarkdownFileData | null>(() => {
     if (!content) return null
 
@@ -37,5 +42,5 @@ export const WhiteboardMarkdownAdaptor: React.FC<IProps> = ({ content, contentEr
 
   const dataError = contentError || (content && !data ? 'Failed to parse markdown content' : null)
 
-  return <MarkdownView data={data} dataError={dataError} />
+  return <MarkdownView data={data} dataError={dataError} storageKeyScope={storageKeyScope} />
 }

@@ -6,16 +6,16 @@ import { UnknownViewContextType } from './context'
 import type { IUnknownViewData, ModeEnum } from './types'
 import { UnknownViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/unknown'
-
 interface IProps {
   readonly placeholder?: boolean
   readonly mode?: ModeEnum
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const UnknownViewProvider: React.FC<IProps> = props => {
-  const { placeholder, mode, children } = props
+  const { placeholder, mode, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/unknown`
   const viewmodel: UnknownViewViewModel | null = useSingleton<UnknownViewViewModel>(() => {
     const rawViewData: Partial<IUnknownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -39,7 +39,12 @@ export const UnknownViewProvider: React.FC<IProps> = props => {
   return (
     <React.Fragment>
       <UnknownViewContextType.Provider value={context}>{children}</UnknownViewContextType.Provider>
-      <SideEffect viewmodel={viewmodel} placeholder={placeholder} mode={mode} />
+      <SideEffect
+        viewmodel={viewmodel}
+        placeholder={placeholder}
+        mode={mode}
+        storageKey={storageKey}
+      />
     </React.Fragment>
   )
 }
@@ -52,12 +57,13 @@ interface ISideEffectProps {
   readonly viewmodel: UnknownViewViewModel
   readonly placeholder?: boolean
   readonly mode?: ModeEnum
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, placeholder, mode } = props
+  const { viewmodel, placeholder, mode, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, placeholder, mode)
 
   return <React.Fragment />
@@ -67,7 +73,7 @@ SideEffect.displayName = 'UnknownViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: UnknownViewViewModel): void => {
+const usePersistent = (viewmodel: UnknownViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.mode$], () => {
       const data: IUnknownViewData = viewmodel.dump()
@@ -76,7 +82,7 @@ const usePersistent = (viewmodel: UnknownViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (

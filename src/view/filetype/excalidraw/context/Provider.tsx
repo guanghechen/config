@@ -7,18 +7,18 @@ import { ExcalidrawViewContextType } from './context'
 import type { IExcalidrawViewData, ModeEnum } from './types'
 import { ExcalidrawViewViewModel } from './viewmodel'
 
-const storageKey: string = '#/view/filetype/excalidraw'
-
 interface IProps {
   readonly content: string | null
   readonly contentError: string | null
   readonly onSaveFile?: (content: string) => void
   readonly mode?: ModeEnum
+  readonly storageKeyScope: string
   readonly children: React.ReactNode
 }
 
 export const ExcalidrawViewProvider: React.FC<IProps> = props => {
-  const { content, contentError, onSaveFile, mode, children } = props
+  const { content, contentError, onSaveFile, mode, storageKeyScope, children } = props
+  const storageKey = `${storageKeyScope}/filetype/excalidraw`
   const viewmodel: ExcalidrawViewViewModel | null = useSingleton<ExcalidrawViewViewModel>(() => {
     const rawViewData: Partial<IExcalidrawViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
@@ -41,7 +41,13 @@ export const ExcalidrawViewProvider: React.FC<IProps> = props => {
       <ExcalidrawViewContextType.Provider value={context}>
         {children}
       </ExcalidrawViewContextType.Provider>
-      <SideEffect viewmodel={viewmodel} content={content} contentError={contentError} mode={mode} />
+      <SideEffect
+        viewmodel={viewmodel}
+        content={content}
+        contentError={contentError}
+        mode={mode}
+        storageKey={storageKey}
+      />
     </React.Fragment>
   )
 }
@@ -55,12 +61,13 @@ interface ISideEffectProps {
   readonly content: string | null
   readonly contentError: string | null
   readonly mode?: ModeEnum
+  readonly storageKey: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel, content, contentError, mode } = props
+  const { viewmodel, content, contentError, mode, storageKey } = props
 
-  usePersistent(viewmodel)
+  usePersistent(viewmodel, storageKey)
   useSyncProps(viewmodel, mode)
   useData(viewmodel, content, contentError)
 
@@ -71,7 +78,7 @@ SideEffect.displayName = 'ExcalidrawViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const usePersistent = (viewmodel: ExcalidrawViewViewModel): void => {
+const usePersistent = (viewmodel: ExcalidrawViewViewModel, storageKey: string): void => {
   React.useEffect(() => {
     const computed = Computed.fromObservables([viewmodel.mode$], () => {
       const data: IExcalidrawViewData = viewmodel.dump()
@@ -80,7 +87,7 @@ const usePersistent = (viewmodel: ExcalidrawViewViewModel): void => {
     return (): void => {
       computed.dispose()
     }
-  }, [viewmodel])
+  }, [viewmodel, storageKey])
 }
 
 const useSyncProps = (viewmodel: ExcalidrawViewViewModel, mode: ModeEnum | undefined): void => {

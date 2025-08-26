@@ -10,10 +10,11 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
+  readonly storageKeyScope: string
 }
 
 export const ExcalidrawAdaptor: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick } = props
+  const { workspace, filepath, filepathDirtyTick, storageKeyScope } = props
   const { save: saveFile } = usePostFile()
   const viewmodel = useFileViewmodel()
   const fileResult = useFileResult<ITextFileData>(workspace, filepath, filepathDirtyTick)
@@ -35,6 +36,11 @@ export const ExcalidrawAdaptor: React.FC<IProps> = props => {
   })
 
   return (
-    <ExcalidrawView content={content} contentError={contentError} onSaveFile={handleSaveFile} />
+    <ExcalidrawView
+      content={content}
+      contentError={contentError}
+      onSaveFile={handleSaveFile}
+      storageKeyScope={storageKeyScope}
+    />
   )
 }

@@ -4,6 +4,7 @@ import { PdfViewProvider } from './context'
 
 interface IProps {
   readonly url: string | null
+  readonly storageKeyScope: string
 }
 
 export class PdfView extends React.PureComponent<IProps> {
@@ -48,7 +49,7 @@ export class PdfView extends React.PureComponent<IProps> {
   }
 
   public override render(): React.ReactElement {
-    const { url } = this.props
+    const { url, storageKeyScope } = this.props
     const validatedUrl = this.validateUrl(url)
 
     if (!validatedUrl) {
@@ -56,7 +57,7 @@ export class PdfView extends React.PureComponent<IProps> {
     }
 
     return (
-      <PdfViewProvider url={validatedUrl}>
+      <PdfViewProvider url={validatedUrl} storageKeyScope={storageKeyScope}>
         <Composer />
       </PdfViewProvider>
     )

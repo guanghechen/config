@@ -7,14 +7,22 @@ interface IProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
+  readonly storageKeyScope: string
 }
 
-export const JsonAdaptor: React.FC<IProps> = ({ workspace, filepath, filepathDirtyTick }) => {
+export const JsonAdaptor: React.FC<IProps> = ({
+  workspace,
+  filepath,
+  filepathDirtyTick,
+  storageKeyScope,
+}) => {
   const fileResult = useFileResult<IJsonFileData>(workspace, filepath, filepathDirtyTick)
 
   // Transform data to new props format
   const content = fileResult.data?.content || fileResult.text || null
   const contentError = fileResult.error ? String(fileResult.error) : null
 
-  return <JsonView content={content} contentError={contentError} />
+  return (
+    <JsonView content={content} contentError={contentError} storageKeyScope={storageKeyScope} />
+  )
 }
