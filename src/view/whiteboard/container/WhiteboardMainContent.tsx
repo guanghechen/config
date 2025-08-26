@@ -75,7 +75,6 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
     case 'text':
       return <TextView content={content} contentError={finalContentError} />
     case 'excalidraw':
-    case 'pdf':
     case 'image':
     default:
       return (
