@@ -88,6 +88,11 @@ os:
   editPreset: "nvim-remote"
   openDirInEditor: "nvim {{dir}}"
 keybinding:
+  universal:
+    nextBlock-alt2: <disabled>
+    prevBlock-alt2: <disabled>
+    nextScreenMode: <tab>
+    prevScreenMode: <backtab>
   main:
     toggleSelectHunk: '`'
 promptToReturnFromSubprocess: false
