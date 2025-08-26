@@ -3,7 +3,7 @@
 import { MathJaxProvider } from '@yozora/react-mathjax'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import { GlobalLayout } from './container/GlobalLayout'
 import { SiteContextProvider } from './context/site'
@@ -15,7 +15,7 @@ import './index.css'
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" Component={views.workspace} />
+      <Route path="/" element={<Navigate to="/whiteboard" replace={true} />} />
       {routes.map(route => (
         <Route key={route.key} path={route.path} Component={route.Component} />
       ))}

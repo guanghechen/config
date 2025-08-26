@@ -10,14 +10,14 @@ export interface IRouteItem {
 }
 
 export const views = {
+  file: React.lazy(() => import('@/view/file/View').then(md => ({ default: md.FileView }))),
+  notfound: React.lazy(() => import('@/view/not-found').then(md => ({ default: md.NotFoundView }))),
   workspace: React.lazy(() =>
     import('@/view/workspace/View').then(md => ({ default: md.WorkspaceView })),
   ),
-  file: React.lazy(() => import('@/view/file/View').then(md => ({ default: md.FileView }))),
   whiteboard: React.lazy(() =>
     import('@/view/whiteboard/View').then(md => ({ default: md.WhiteboardView })),
   ),
-  notfound: React.lazy(() => import('@/view/not-found').then(md => ({ default: md.NotFoundView }))),
 }
 
 export const routes: IRouteItem[] = [
