@@ -31,8 +31,9 @@ export const FootnoteDefinitionRenderer: React.FC<FootnoteDefinition> = props =>
         <a
           href={'#' + refid}
           className={cn(
-            'inline-block px-1 text-[10px] tracking-[1px] text-fuchsia-500 no-underline hover:text-fuchsia-600 active:text-fuchsia-700',
-            highlighting && 'bg-fuchsia-300 rounded-md animate-pulse px-1 font-bold text-black',
+            'inline-block px-1 text-[10px] tracking-[1px] text-fuchsia-500 no-underline hover:text-fuchsia-600 active:text-fuchsia-700 dark:text-fuchsia-400 dark:hover:text-fuchsia-300 dark:active:text-fuchsia-200',
+            highlighting &&
+              'bg-fuchsia-300 rounded-md animate-pulse px-1 font-bold text-black dark:bg-fuchsia-600 dark:text-white',
           )}
         >
           <span>&uarr;&nbsp;[{label}]</span>

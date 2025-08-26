@@ -157,4 +157,18 @@ html.dark {
   .yozora-admonition .yozora-admonition-note__title {
     --color-inline-math: var(--color-gray-300);
   }
+
+  .yozora-list-item__checkbox input[type='checkbox'] {
+    border-color: var(--color-gray-500);
+  }
+
+  .yozora-list-item__checkbox input[type='checkbox']:checked {
+    background-color: var(--color-blue-400);
+    border-color: var(--color-blue-400);
+  }
+
+  .yozora-list-item__checkbox input[type='checkbox'].checkbox-doing {
+    background-color: var(--color-sky-400);
+    border-color: var(--color-sky-400);
+  }
 }

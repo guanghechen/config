@@ -10,7 +10,7 @@ export const Mode: React.FC = () => {
   return (
     <div className="fixed top-3 right-4 z-50">
       <div
-        className="flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-800 dark:bg-opacity-80 dark:hover:bg-opacity-95"
+        className="flex h-5 select-none rounded-lg bg-gray-100 bg-opacity-80 text-sm shadow-md transition-all hover:bg-opacity-95 dark:bg-gray-700 dark:bg-opacity-90 dark:hover:bg-opacity-95"
         title={`Current mode: ${mode}`}
       >
         <button

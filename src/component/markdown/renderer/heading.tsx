@@ -6,8 +6,8 @@ import { NodesRenderer } from '../NodesRenderer'
 type IHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
 
 const levelClasses: Record<IHeading, string> = {
-  h1: 'py-3 mt-2 border-b border-b-gray-200 dark:border-b-gray-700 text-3xl font-bold bg-gradient-to-br from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent',
-  h2: 'py-2 mt-6 mb-4 border-b border-b-gray-200 dark:border-b-gray-700 text-2xl font-semibold text-gray-800 dark:text-gray-200',
+  h1: 'py-3 mt-2 border-b border-b-gray-200 dark:border-b-gray-600 text-3xl font-bold bg-gradient-to-br from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent',
+  h2: 'py-2 mt-6 mb-4 border-b border-b-gray-200 dark:border-b-gray-600 text-2xl font-semibold text-gray-800 dark:text-gray-200',
   h3: 'mt-5 mb-3 text-xl font-medium text-gray-700 dark:text-gray-300',
   h4: 'mt-4 mb-2 text-lg font-medium text-gray-700 dark:text-gray-300',
   h5: 'mt-3 mb-1 text-base font-medium text-gray-600 dark:text-gray-400',
