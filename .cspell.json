@@ -3,6 +3,7 @@
   "version": "0.2",
   "words": [
     "applescript",
+    "autohide",
     "chainpaths",
     "consolas",
     "defid",
@@ -10,7 +11,6 @@
     "eventstream",
     "excalidraw",
     "filetree",
-    "layouted",
     "guanghechen",
     "highlightlinenos",
     "idaggraphprops",
@@ -18,6 +18,7 @@
     "inputbox",
     "inputboxes",
     "jsons",
+    "layouted",
     "lintfix",
     "mathjax",
     "multiview",
