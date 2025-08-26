@@ -1,6 +1,7 @@
-import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { ITextTransformConfig } from '@/shared/types'
 import { validateTransformConfig } from '@/shared/util'
@@ -73,7 +74,12 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, contentMode, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [
+    viewmodel.mode$,
+    viewmodel.contentMode$,
+    viewmodel.nodeDetailsPaneWidth$,
+    viewmodel.transformConfig$,
+  ])
   useSyncProps(viewmodel, mode, contentMode)
   useData(viewmodel, content, contentError)
   useAutoTransform(viewmodel)
@@ -84,26 +90,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'TextViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: TextViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [
-        viewmodel.mode$,
-        viewmodel.contentMode$,
-        viewmodel.nodeDetailsPaneWidth$,
-        viewmodel.transformConfig$,
-      ],
-      () => {
-        const data: ITextViewData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (
   viewmodel: TextViewViewModel,

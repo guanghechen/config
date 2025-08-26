@@ -1,7 +1,8 @@
-import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
@@ -115,7 +116,7 @@ HmrSideEffect.displayName = 'FileViewHmrSideEffect'
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
-  usePersistent(viewmodel)
+  usePersist(viewmodel, storageKey, [viewmodel.filepath$])
   useUrlParams(viewmodel)
 
   return <React.Fragment />
@@ -123,18 +124,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'FileViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: FileViewViewModel): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.filepath$], () => {
-      const data: IFileViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
-}
 
 const useUrlParams = (viewmodel: FileViewViewModel): void => {
   const filepath: string | null = useStateValue(viewmodel.filepath$)

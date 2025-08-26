@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import { Computed } from '@guanghechen/viewmodel'
 import React from 'react'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
@@ -42,15 +42,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
   const theme: SiteTheme = useStateValue(viewmodel.theme$)
 
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.theme$], () => {
-      const data: ISiteData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
+  usePersist(viewmodel, storageKey, [viewmodel.theme$])
 
   React.useEffect(() => {
     const darken = theme === SiteTheme.DARKEN

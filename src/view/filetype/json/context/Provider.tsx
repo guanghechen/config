@@ -1,7 +1,7 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import JSON5 from 'json5'
 import React from 'react'
 import { toast } from 'react-toastify'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IJsonViewContext } from './context'
 import { JsonViewContextType } from './context'
@@ -64,7 +64,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [viewmodel.mode$])
   useSyncProps(viewmodel, mode)
   useData(viewmodel, content, contentError)
 
@@ -74,18 +74,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'JsonViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: JsonViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.mode$], () => {
-      const data: IJsonViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (viewmodel: JsonViewViewModel, mode: ModeEnum | undefined): void => {
   React.useEffect(() => {

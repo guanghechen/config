@@ -1,6 +1,6 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IHtmlViewContext } from './context'
 import { HtmlViewContextType } from './context'
@@ -67,7 +67,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, enableTailwindcss, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [viewmodel.mode$, viewmodel.enableTailwindcss$])
   useSyncProps(viewmodel, mode, enableTailwindcss)
   useData(viewmodel, content, contentError)
 
@@ -77,21 +77,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'HtmlViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: HtmlViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [viewmodel.mode$, viewmodel.enableTailwindcss$],
-      () => {
-        const data: IHtmlViewData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (
   viewmodel: HtmlViewViewModel,

@@ -1,10 +1,11 @@
-import { Computed, useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useGetWorkspaces } from '@/hook/api/workspaces'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import { ServerCustomEventType } from '@/shared/types'
 import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '@/shared/types'
@@ -64,7 +65,14 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace } = props
 
-  usePersistent(viewmodel)
+  usePersist(viewmodel, storageKey, [
+    viewmodel.filepath$,
+    viewmodel.workspace$,
+    viewmodel.workspaces$,
+    viewmodel.filetreeMode$,
+    viewmodel.sidebarWidth$,
+    viewmodel.sidebarVisible$,
+  ])
   useHMR(viewmodel)
   useSyncProps(viewmodel, workspace)
   useMermaid()
@@ -75,28 +83,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'WorkspaceViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: WorkspaceViewViewModel): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [
-        viewmodel.filepath$,
-        viewmodel.workspace$,
-        viewmodel.workspaces$,
-        viewmodel.filetreeMode$,
-        viewmodel.sidebarWidth$,
-        viewmodel.sidebarVisible$,
-      ],
-      () => {
-        const data: IWorkspaceViewData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
-}
 
 const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
   const navigate = useNavigate()

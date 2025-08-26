@@ -1,5 +1,5 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
@@ -68,7 +68,13 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, url, mode, scale, multiview, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [
+    viewmodel.mode$,
+    viewmodel.scale$,
+    viewmodel.multiview$,
+    viewmodel.pageNo$,
+    viewmodel.pageTotal$,
+  ])
   useSyncProps(viewmodel, mode, scale, multiview)
   useData(viewmodel, url)
 
@@ -78,27 +84,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'PdfViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: PdfViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [
-        viewmodel.mode$,
-        viewmodel.scale$,
-        viewmodel.multiview$,
-        viewmodel.pageNo$,
-        viewmodel.pageTotal$,
-      ],
-      () => {
-        const data: IPdfViewData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (
   viewmodel: PdfViewViewModel,

@@ -1,5 +1,5 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IUnknownViewContext } from './context'
 import { UnknownViewContextType } from './context'
@@ -63,7 +63,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, placeholder, mode, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [viewmodel.mode$])
   useSyncProps(viewmodel, placeholder, mode)
 
   return <React.Fragment />
@@ -72,18 +72,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'UnknownViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: UnknownViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.mode$], () => {
-      const data: IUnknownViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (
   viewmodel: UnknownViewViewModel,

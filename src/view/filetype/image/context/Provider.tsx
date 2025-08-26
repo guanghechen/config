@@ -1,5 +1,5 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IImageFileData } from '@/shared/types/api'
 import type { IImageViewContext } from './context'
@@ -72,7 +72,12 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, url, mode, scale, rotation, position, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [
+    viewmodel.mode$,
+    viewmodel.scale$,
+    viewmodel.rotation$,
+    viewmodel.position$,
+  ])
   useSyncProps(viewmodel, mode, scale, rotation, position)
   useImageLoader(viewmodel, url)
 
@@ -82,21 +87,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'ImageViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: ImageViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [viewmodel.mode$, viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
-      () => {
-        const data: IImageViewData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (
   viewmodel: ImageViewViewModel,

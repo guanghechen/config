@@ -1,6 +1,6 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IMarkdownFileData } from '@/shared/types/api'
 import type { IMarkdownViewContext } from './context'
@@ -66,7 +66,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, data, dataError, mode, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [viewmodel.mode$])
   useSyncProps(viewmodel, mode)
   useData(viewmodel, data, dataError)
 
@@ -76,18 +76,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'MarkdownViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: MarkdownViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.mode$], () => {
-      const data: IMarkdownViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (viewmodel: MarkdownViewViewModel, mode: ModeEnum | undefined): void => {
   React.useEffect(() => {

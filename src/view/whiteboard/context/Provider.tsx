@@ -1,5 +1,5 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { IWhiteboardViewContext } from './context'
 import { WhiteboardViewContextType } from './context'
@@ -55,7 +55,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
-  usePersistent(viewmodel)
+  usePersist(viewmodel, storageKey, [viewmodel.content$, viewmodel.filetype$])
 
   return <React.Fragment />
 }
@@ -63,15 +63,3 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'WhiteboardViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: WhiteboardViewViewModel): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables([viewmodel.content$, viewmodel.filetype$], () => {
-      const data: IWhiteboardViewData = viewmodel.dump()
-      window.localStorage.setItem(storageKey, JSON.stringify(data))
-    })
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel])
-}

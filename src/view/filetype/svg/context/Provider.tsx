@@ -1,6 +1,6 @@
-import { Computed } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
+import { usePersist } from '@/hook/usePersist'
 import { useSingleton } from '@/hook/useSingleton'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
@@ -77,7 +77,12 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, scale, rotation, position, storageKey } = props
 
-  usePersistent(viewmodel, storageKey)
+  usePersist(viewmodel, storageKey, [
+    viewmodel.mode$,
+    viewmodel.scale$,
+    viewmodel.rotation$,
+    viewmodel.position$,
+  ])
   useSyncProps(viewmodel, mode, scale, rotation, position)
   useData(viewmodel, content, contentError)
 
@@ -87,21 +92,6 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 SideEffect.displayName = 'SvgViewSideEffect'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const usePersistent = (viewmodel: SvgViewViewModel, storageKey: string): void => {
-  React.useEffect(() => {
-    const computed = Computed.fromObservables(
-      [viewmodel.mode$, viewmodel.scale$, viewmodel.rotation$, viewmodel.position$],
-      () => {
-        const data: ISvgViewData = viewmodel.dump()
-        window.localStorage.setItem(storageKey, JSON.stringify(data))
-      },
-    )
-    return (): void => {
-      computed.dispose()
-    }
-  }, [viewmodel, storageKey])
-}
 
 const useSyncProps = (
   viewmodel: SvgViewViewModel,
