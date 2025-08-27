@@ -33,16 +33,18 @@ const TRANSPARENT_LIGHT_THEME = {
   inherit: true,
   rules: [],
   colors: {
-    'editor.background': '#00000000', // Transparent
+    'editor.background': '#f8fafc90', // Semi-transparent light background
     'editor.foreground': '#1f2937',
     'editorLineNumber.foreground': '#6b7280',
     'editorLineNumber.activeForeground': '#374151',
     'editor.selectionBackground': '#3b82f640',
     'editor.inactiveSelectionBackground': '#3b82f620',
-    'minimap.background': '#00000000', // Transparent minimap
-    'minimapSlider.background': '#3b82f620',
-    'minimapSlider.hoverBackground': '#3b82f640',
-    'minimapSlider.activeBackground': '#3b82f660',
+    // Minimap colors
+    'minimap.background': '#f8fafc80', // Semi-transparent light background
+    'minimap.foregroundOpacity': '#000000dd',
+    'minimapSlider.background': '#94a3b840',
+    'minimapSlider.hoverBackground': '#64748b60',
+    'minimapSlider.activeBackground': '#475569',
   },
 }
 
@@ -51,16 +53,18 @@ const TRANSPARENT_DARK_THEME = {
   inherit: true,
   rules: [],
   colors: {
-    'editor.background': '#00000000', // Transparent
+    'editor.background': '#1e293b90', // Semi-transparent dark background
     'editor.foreground': '#e5e7eb',
     'editorLineNumber.foreground': '#6b7280',
     'editorLineNumber.activeForeground': '#9ca3af',
     'editor.selectionBackground': '#3b82f640',
     'editor.inactiveSelectionBackground': '#3b82f620',
-    'minimap.background': '#00000000', // Transparent minimap
-    'minimapSlider.background': '#3b82f620',
-    'minimapSlider.hoverBackground': '#3b82f640',
-    'minimapSlider.activeBackground': '#3b82f660',
+    // Minimap colors
+    'minimap.background': '#1e293b80', // Semi-transparent dark background
+    'minimap.foregroundOpacity': '#e2e8f0dd',
+    'minimapSlider.background': '#64748b40',
+    'minimapSlider.hoverBackground': '#94a3b860',
+    'minimapSlider.activeBackground': '#cbd5e1',
   },
 }
 
