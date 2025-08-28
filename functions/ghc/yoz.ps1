@@ -1,13 +1,13 @@
 function yoz {
     <#
     .SYNOPSIS
-    Preview file with yozora
+    Preview file with yoz
     .PARAMETER InputObject
     The file path from pipeline
     .PARAMETER filepath
     The file path to preview
     .PARAMETER force
-    Force flag for yozora
+    Force flag for yoz
     #>
     [CmdletBinding()]
     param(
@@ -29,8 +29,8 @@ function yoz {
             return 1
         }
 
-        if (-not $env:YOZORA_SERVER_PORT) {
-            Write-Host "Error: YOZORA_SERVER_PORT not set"
+        if (-not $env:YOZ_SERVER_PORT) {
+            Write-Host "Error: YOZ_SERVER_PORT not set"
             return 1
         }
 
@@ -42,7 +42,7 @@ function yoz {
 
         $encodedPath = [System.Web.HttpUtility]::UrlEncode($resolvedPath.Path)
         $forceValue = if ($force) { "true" } else { "false" }
-        $url = "http://localhost:$env:YOZORA_SERVER_PORT/api/file-switch?filepath=$encodedPath&force=$forceValue"
+        $url = "http://localhost:$env:YOZ_SERVER_PORT/api/file-switch?filepath=$encodedPath&force=$forceValue"
 
         Start-Job -ScriptBlock {
             param($url)
