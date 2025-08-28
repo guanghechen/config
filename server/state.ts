@@ -28,11 +28,11 @@ export interface IWorkspaceItem {
 
 export type IWorkspaceMap = ReadonlyMap<string, IWorkspaceItem>
 
-const YOZORA_WORKSPACE_PREFIX = 'YOZORA_WORKSPACE_'
-const YOZORA_WORKSPACE_ITEMS: IWorkspaceItem[] = Object.entries(process.env)
-  .filter(([key, val]) => !!val && key.startsWith(YOZORA_WORKSPACE_PREFIX))
+const YOZ_WORKSPACE_PREFIX = 'YOZ_WORKSPACE_'
+const YOZ_WORKSPACE_ITEMS: IWorkspaceItem[] = Object.entries(process.env)
+  .filter(([key, val]) => !!val && key.startsWith(YOZ_WORKSPACE_PREFIX))
   .map(([key, val]) => ({
-    tag: key.slice(YOZORA_WORKSPACE_PREFIX.length).toLowerCase(),
+    tag: key.slice(YOZ_WORKSPACE_PREFIX.length).toLowerCase(),
     path: resolveRealFilepath(val!),
     files: { mds: null },
   }))
@@ -48,7 +48,7 @@ class ServerViewModel {
 
   constructor() {
     const workspaceMap = new Map<string, IWorkspaceItem>()
-    for (const item of YOZORA_WORKSPACE_ITEMS) workspaceMap.set(item.tag, item)
+    for (const item of YOZ_WORKSPACE_ITEMS) workspaceMap.set(item.tag, item)
 
     this.reporter = reporter
     this.fileChanged$ = new State<string | null>(null, { equals: () => false, delay: 20 })

@@ -13,7 +13,7 @@ dotenv.config({
 })
 
 export const SERVER_HOST: string = 'localhost'
-export const SERVER_PORT: number = Number(process.env.YOZORA_SERVER_PORT) || 7071
+export const SERVER_PORT: number = Number(process.env.YOZ_SERVER_PORT) || 7071
 export const TARGET_DIR: string = path.resolve(ROOT_DIR, process.env.OUT_DIR || 'dist')
 
 export const isProduction: boolean = process.env.NODE_ENV === 'production'

@@ -9,7 +9,7 @@
     </filter>
   </defs>
 
-  <!-- Background with Yozora blue -->
+  <!-- Background with Yoz blue -->
   <rect width="32" height="32" rx="8" fill="url(#bg)"/>
 
   <!-- Preview Icon - Two overlapping sheets -->
@@ -39,7 +39,7 @@
     Z
   " fill="white" filter="url(#shadow)"/>
 
-  <!-- Stylized Y from Yozora -->
+  <!-- Stylized Y from Yoz -->
   <path d="
     M 15 15
     L 17 18
