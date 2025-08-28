@@ -11,7 +11,7 @@ function ghc-update
 
     #----------------------------------------------------------------------------------------------#
 
-    set required_configs bat btop conda git-delta fish fzf lazygit lsd nvim pm2 ripgrep tmux yazi yozora
+    set required_configs bat btop conda git-delta fish fzf lazygit lsd nvim pm2 ripgrep tmux yazi yoz
     set optional_configs alacritty alacritty-windows claude ghostty helix kitty komorebi neovide nvim-lazy nvim-nvchad plan pwsh skhd tsuki wezterm yabai yasb
 
     for branch in $required_configs

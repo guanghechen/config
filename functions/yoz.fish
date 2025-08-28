@@ -1,4 +1,4 @@
-function yoz --description "Preview file with yozora"
+function yoz --description "Preview file with yoz"
     set -l filepath ""
     set -l force false
 
@@ -47,11 +47,11 @@ function yoz --description "Preview file with yozora"
         return 1
     end
 
-    test -z "$YOZORA_SERVER_PORT" && begin
-        echo "Error: YOZORA_SERVER_PORT not set"
+    test -z "$YOZ_SERVER_PORT" && begin
+        echo "Error: YOZ_SERVER_PORT not set"
         return 1
     end
 
-    set -l url "http://localhost:$YOZORA_SERVER_PORT/api/file-switch?filepath="(string escape --style=url (realpath $filepath))"&force=$force"
+    set -l url "http://localhost:$YOZ_SERVER_PORT/api/file-switch?filepath="(string escape --style=url (realpath $filepath))"&force=$force"
     curl -X POST $url >/dev/null 2>&1 &
 end

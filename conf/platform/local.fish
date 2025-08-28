@@ -16,8 +16,8 @@
 # set -gx AZURE_API_BASE            (echo $AZURE_OPENAI_O4_MINI_ENDPOINT)
 # set -gx AZURE_API_VERSION         (echo $AZURE_OPENAI_O4_MINI_API_VERSION)
 #
-# set -gx YOZORA_WORKSPACE_BLOCK
-# set -gx YOZORA_WORKSPACE_NOTE
+# set -gx YOZ_WORKSPACE_BLOCK
+# set -gx YOZ_WORKSPACE_NOTE
 #
 if test -f "$HOME/.config/fish/local/config.fish"
     source "$HOME/.config/fish/local/config.fish"
