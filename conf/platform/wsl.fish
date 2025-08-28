@@ -8,6 +8,7 @@ alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in
 alias code='env -u TMUX -u TERM /mnt/c/app/vscode/bin/code'
 alias cursor='env -u TMUX -u TERM /mnt/c/app/cursor/resources/app/bin/cursor'
 alias open="explorer.exe"
+alias start="cmd.exe /start"
 alias pbpaste="powershell.exe Get-Clipboard >"
 
 ## Setup vpn
