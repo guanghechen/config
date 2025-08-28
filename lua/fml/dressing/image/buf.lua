@@ -23,7 +23,7 @@ function M.attach(bufnr, opts)
       lines[#lines + 1] = "- terminal does not support the kitty graphics protocol."
     end
     vim.bo[bufnr].modifiable = true
-    vim.bo[bufnr].filetype = eve.filetype.YOZORA_VIEWER
+    vim.bo[bufnr].filetype = eve.filetype.IMAGE_VIEWER
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(table.concat(lines, "\n"), "\n"))
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].modified = false

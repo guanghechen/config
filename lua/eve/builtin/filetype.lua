@@ -16,6 +16,7 @@ M.DIFFVIEW_FILE_HISTORY = "DiffviewFileHistory"
 M.FLASH_PROMPT = "flash_prompt"
 M.GITCOMMIT = "gitcommit"
 M.HELP = "help"
+M.IMAGE_VIEWER = "image-viewer"
 M.LAZY = "lazy"
 M.MAN = "man"
 M.MASON = "mason"
@@ -42,7 +43,6 @@ M.UX_SEARCHER_PREVIEW = "ux-searcher-preview"
 M.UX_SEARCHER_RESULT = "ux-searcher-result"
 M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
-M.YOZORA_VIEWER = "yozora-viewer"
 
 ---@class eve.builtin.filetype.filetypes
 local filetypes = {
@@ -166,8 +166,8 @@ local filetypes = {
     -- stylua: ignore end
   },
   markdown = {
+    [M.IMAGE_VIEWER] = true,
     ["markdown"] = true,
-    [M.YOZORA_VIEWER] = true,
   },
   not_sourcefile = {
     [M.CHECKHEALTH] = true,
@@ -183,6 +183,7 @@ local filetypes = {
     [M.DIFFVIEW_FILES] = true,
     [M.GITCOMMIT] = true,
     [M.HELP] = true,
+    [M.IMAGE_VIEWER] = true,
     [M.LAZY] = true,
     [M.MAN] = true,
     [M.MASON] = true,
@@ -209,16 +210,15 @@ local filetypes = {
     [M.UX_POPUPMENU] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
-    [M.YOZORA_VIEWER] = true,
   },
   no_flash = {
     [M.FLASH_PROMPT] = true,
+    [M.IMAGE_VIEWER] = true,
     [M.NOTIFY] = true,
     [M.LSPINFO] = true,
     [M.PLENARY_TEST_POPUP] = true,
     [M.WINSEP] = true,
     [M.WINPICKER_MASK] = true,
-    [M.YOZORA_VIEWER] = true,
     [M.UX_CMDLINE] = true,
     [M.UX_POPUPMENU] = true,
   },
@@ -228,6 +228,7 @@ local filetypes = {
     [M.DAP_UI_HOVER] = true,
     [M.GITCOMMIT] = true,
     [M.HELP] = true,
+    [M.IMAGE_VIEWER] = true,
     [M.LAZY] = true,
     [M.MAN] = true,
     [M.MASON] = true,
@@ -242,7 +243,6 @@ local filetypes = {
     [M.UX_INPUT] = true,
     [M.UX_MESSAGE_HISTORY] = true,
     [M.WINPICKER_MASK] = true,
-    [M.YOZORA_VIEWER] = true,
   },
 }
 
