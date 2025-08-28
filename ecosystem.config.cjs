@@ -21,7 +21,7 @@ if (fs.existsSync(LOCAL_CONFIG_FILEPATH)) {
 const repos = {
   skhd: path.normalize(path.resolve(ROOT_CONFIG, "skhd")),
   yabai: path.normalize(path.resolve(ROOT_CONFIG, "yabai")),
-  yozora: path.normalize(path.resolve(ROOT_CONFIG, "yozora")),
+  yoz: path.normalize(path.resolve(ROOT_CONFIG, "yoz")),
   copilot_api: path.normalize(
     path.resolve(ROOT_SOURCECODES, "github/ericc-ch/copilot-api"),
   ),
@@ -30,9 +30,9 @@ const repos = {
 const config = {
   apps: [
     {
-      enabled: fs.existsSync(repos.yozora),
-      name: "yozora",
-      cwd: repos.yozora,
+      enabled: fs.existsSync(repos.yoz),
+      name: "yoz",
+      cwd: repos.yoz,
       script: "npm",
       args: "run start",
       watch: true,
