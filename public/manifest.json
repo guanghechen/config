@@ -27,7 +27,7 @@
   "content_scripts": [
     {
       "matches": ["http://localhost/*"],
-      "js": ["inject/localhost-yozora.js"],
+      "js": ["inject/localhost-yoz.js"],
       "run_at": "document_start"
     },
     {
@@ -40,10 +40,7 @@
       "run_at": "document_start"
     },
     {
-      "matches": [
-        "https://www.reddit.com/*",
-        "https://old.reddit.com/*"
-      ],
+      "matches": ["https://www.reddit.com/*", "https://old.reddit.com/*"],
       "js": ["inject/reddit.js"],
       "run_at": "document_start"
     }
