@@ -36,7 +36,7 @@ clone_or_update_config_repo() {
     "wezterm"
     "yabai"
     "yasb"
-    "yozora"
+    "yoz"
   )
 
   for branch in "${repo_required_branches[@]}"; do

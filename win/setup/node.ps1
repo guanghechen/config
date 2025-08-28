@@ -6,9 +6,9 @@ if (fnm list | Select-String -Quiet "v20") {
   npm install -g @anthropic-ai/claude-code @google/gemini-cli
 }
 
-# Setup yozora
-$yozora_repopath = Join-Path "$env:XDG_CONFIG_HOME" "yozora"
-if (Test-Path $yozora_repopath) {
-    Write-Host "  [setup node] setup yozora..." -ForegroundColor Cyan
-    pwsh -Command "cd '$yozora_repopath'; yarn install"
+# Setup yoz
+$yoz_repopath = Join-Path "$env:XDG_CONFIG_HOME" "yoz"
+if (Test-Path $yoz_repopath) {
+    Write-Host "  [setup node] setup yoz..." -ForegroundColor Cyan
+    pwsh -Command "cd '$yoz_repopath'; yarn install"
 }

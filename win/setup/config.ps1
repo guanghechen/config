@@ -34,7 +34,7 @@ $repo_optional_branches = @(
   "wezterm",
   "yabai",
   "yasb",
-  "yozora"
+  "yoz"
 )
 
 foreach ($branch in $repo_required_branches) {

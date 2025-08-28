@@ -7,9 +7,9 @@ clone_or_update_config_repo() {
     "bat"
     "btop"
     "conda"
-    "git-delta"
     "fish"
     "fzf"
+    "git-delta"
     "lazygit"
     "lsd"
     "nvim"
@@ -17,7 +17,7 @@ clone_or_update_config_repo() {
     "ripgrep"
     "tmux"
     "yazi"
-    "yozora"
+    "yoz"
   )
   local repo_optional_branches=(
     "alacritty"

@@ -10,8 +10,7 @@ else
   fish -c "npm install -g @anthropic-ai/claude-code @google/gemini-cli"
 fi
 
-if [ -d "$HOME/.config/yozora" ]; then
-  printf "\n\e[94m  [setup node] setup yozora...\e[0m\n"
-  fish -c "cd $HOME/.config/yozora && yarn install"
+if [ -d "$HOME/.config/yoz" ]; then
+  printf "\n\e[94m  [setup node] setup yoz...\e[0m\n"
+  fish -c "cd $HOME/.config/yoz && yarn install"
 fi
-
