@@ -1,8 +1,8 @@
 {
   "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "4e9edba1b1cef1585cc65e54287229e5d34e4df8" },
   "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "3cf0b660caf266992d6c62eb1f6049c483b35409" },
-  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "a0ab60ed666c56b37fd7ed1847d2ac52f2482ce0" },
-  "copilot.lua": { "branch": "nvim@copilot.lua", "commit": "f0c0d981de2737abc50bd7b5bb034ae440826827" },
+  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "b4aab989db276993ea5dcb78872be494ce546521" },
+  "copilot.lua": { "branch": "nvim@copilot.lua", "commit": "2fe9ab1678da4f40be4948a2f30cc8b58da7818a" },
   "diffview.nvim": { "branch": "nvim@diffview.nvim", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
   "flash.nvim": { "branch": "nvim@flash.nvim", "commit": "3c942666f115e2811e959eabbdd361a025db8b63" },
   "friendly-snippets": { "branch": "nvim@friendly-snippets", "commit": "572f5660cf05f8cd8834e096d7b4c921ba18e175" },
