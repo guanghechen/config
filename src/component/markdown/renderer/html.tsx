@@ -44,7 +44,18 @@ export class HtmlRenderer extends React.Component<Html> {
 
   public override render(): React.ReactElement {
     const { value } = this.props
-    const sanitizedValue = sanitizeHtml(value)
+    const sanitizedValue = sanitizeHtml(value, {
+      allowedTags: [...sanitizeHtml.defaults.allowedTags, 'img'],
+      allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        '*': [...(sanitizeHtml.defaults.allowedAttributes['*'] || []), 'align'],
+        img: ['alt', 'src'],
+      },
+      allowedSchemes: ['https'],
+      allowedSchemesByTag: {
+        img: ['https'],
+      },
+    })
 
     // Check if the original value is valid HTML
     if (!isValidHtml(value)) {

@@ -1,0 +1,13 @@
+@layer components {
+  .yozora-html {
+    header > h1 {
+      @apply py-2 mt-6 mb-4 border-b border-b-gray-200 dark:border-b-gray-600 text-2xl font-semibold text-gray-800 dark:text-gray-200;
+      a {
+        @apply py-0.5 px-0 text-blue-700 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 active:text-blue-900 dark:active:text-blue-200 visited:text-violet-700 dark:visited:text-violet-400;
+      }
+    }
+    div[align='center'] a > img {
+      display: inline-block;
+    }
+  }
+}

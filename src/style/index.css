@@ -2,6 +2,7 @@
 @custom-variant dark (&:where(.dark &));
 
 @import './basic.css';
+@import './component/markdown.css';
 @import './view/file.css';
 @import './view/filetype/excalidraw.css';
 @import './view/filetype/html.css';
