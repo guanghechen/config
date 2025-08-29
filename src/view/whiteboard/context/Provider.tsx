@@ -14,6 +14,7 @@ interface IProps {
   readonly editorVisible?: boolean
   readonly editorWidth?: number
   readonly editorLanguage?: string
+  readonly filepath?: string | null
   readonly children: React.ReactNode
 }
 
@@ -23,6 +24,7 @@ export const WhiteboardViewProvider: React.FC<IProps> = ({
   editorVisible,
   editorWidth,
   editorLanguage,
+  filepath,
   children,
 }) => {
   const viewmodel: WhiteboardViewViewModel | null = useViewModel<WhiteboardViewViewModel>(() => {
@@ -37,6 +39,7 @@ export const WhiteboardViewProvider: React.FC<IProps> = ({
       editorVisible: editorVisible ?? viewData.editorVisible,
       editorWidth: editorWidth ?? viewData.editorWidth,
       editorLanguage: editorLanguage ?? viewData.editorLanguage,
+      filepath: filepath ?? viewData.filepath,
     })
   })
 
@@ -74,6 +77,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     viewmodel.editorVisible$,
     viewmodel.editorWidth$,
     viewmodel.editorLanguage$,
+    viewmodel.filepath$,
   ])
 
   return <React.Fragment />

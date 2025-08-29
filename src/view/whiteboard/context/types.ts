@@ -4,6 +4,7 @@ export interface IWhiteboardViewData {
   readonly editorVisible: boolean
   readonly editorWidth: number
   readonly editorLanguage: string
+  readonly filepath: string | null
 }
 
 export interface IWhiteboardContentData {

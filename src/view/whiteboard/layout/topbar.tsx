@@ -8,16 +8,17 @@ export const Topbar: React.FC = () => {
   const filetype = useStateValue(viewmodel.filetype$)
   const contentData = useStateValue(viewmodel.contentData$)
   const editorVisible = useStateValue(viewmodel.editorVisible$)
+  const filepath = useStateValue(viewmodel.filepath$)
 
-  const [isEditDropdownOpen, setIsEditDropdownOpen] = React.useState(false)
+  const [isSaveDropdownOpen, setIsSaveDropdownOpen] = React.useState(false)
   const [isFiletypeDropdownOpen, setIsFiletypeDropdownOpen] = React.useState(false)
-  const editDropdownRef = React.useRef<HTMLDivElement>(null)
+  const saveDropdownRef = React.useRef<HTMLDivElement>(null)
   const filetypeDropdownRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
-      if (editDropdownRef.current && !editDropdownRef.current.contains(event.target as Node)) {
-        setIsEditDropdownOpen(false)
+      if (saveDropdownRef.current && !saveDropdownRef.current.contains(event.target as Node)) {
+        setIsSaveDropdownOpen(false)
       }
       if (
         filetypeDropdownRef.current &&
@@ -35,23 +36,21 @@ export const Topbar: React.FC = () => {
 
   const handlePasteFromClipboard = (): void => {
     void viewmodel.pasteFromClipboard()
-    setIsEditDropdownOpen(false)
+    setIsSaveDropdownOpen(false)
   }
 
   const handleSelectFile = (): void => {
     viewmodel.selectFile()
-    setIsEditDropdownOpen(false)
+    setIsSaveDropdownOpen(false)
+  }
+
+  const handleSaveFile = (): void => {
+    void viewmodel.saveToFile()
+    setIsSaveDropdownOpen(false)
   }
 
   const handleToggleEditor = (): void => {
     viewmodel.toggleEditor()
-  }
-
-  const handleOpenEditor = (): void => {
-    if (!editorVisible) {
-      viewmodel.toggleEditor()
-    }
-    setIsEditDropdownOpen(false)
   }
 
   const getFiletypeIcon = (type: string): React.ReactNode => {
@@ -271,60 +270,73 @@ export const Topbar: React.FC = () => {
           )}
         </div>
 
-        {/* Edit Button with Dropdown */}
-        <div className="relative" ref={editDropdownRef}>
+        {/* Editor Toggle Button */}
+        <button
+          onClick={handleToggleEditor}
+          className={cn(
+            'group flex h-7 select-none items-center gap-2 rounded-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
+            editorVisible
+              ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80 dark:focus:ring-indigo-400/50'
+              : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50',
+          )}
+          aria-label="Toggle code editor"
+          title={editorVisible ? 'Hide code editor' : 'Show code editor'}
+        >
+          <div
+            className={cn(
+              editorVisible
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-700 dark:text-gray-300',
+            )}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+              />
+            </svg>
+          </div>
+          <span className="font-medium">Editor</span>
+        </button>
+
+        {/* Save Button with Dropdown */}
+        <div className="relative" ref={saveDropdownRef}>
           <div className="flex">
-            {/* Edit Toggle Button */}
+            {/* Save Toggle Button */}
             <button
-              onClick={handleToggleEditor}
-              className={cn(
-                'group flex h-7 select-none items-center gap-2 rounded-l-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
-                editorVisible
-                  ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80 dark:focus:ring-indigo-400/50'
-                  : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50',
-              )}
-              aria-label="Toggle code editor"
-              title={editorVisible ? 'Hide code editor' : 'Show code editor'}
+              onClick={handleSaveFile}
+              className="group flex h-7 select-none items-center gap-2 rounded-l-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-green-400/50"
+              aria-label="Save file"
+              title="Save file"
             >
-              <div
-                className={cn(
-                  editorVisible
-                    ? 'text-indigo-600 dark:text-indigo-400'
-                    : 'text-gray-700 dark:text-gray-300',
-                )}
-              >
+              <div className="text-gray-700 dark:text-gray-300">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
                   />
                 </svg>
               </div>
+              <span className="font-medium">Save</span>
             </button>
 
             {/* Dropdown Arrow Button */}
             <button
-              onClick={() => setIsEditDropdownOpen(!isEditDropdownOpen)}
-              className={cn(
-                'group flex h-7 select-none items-center px-1.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 border-l border-gray-200/50 dark:border-gray-700/50',
-                editorVisible
-                  ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80 dark:focus:ring-indigo-400/50 rounded-r-lg'
-                  : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50 rounded-r-lg',
-              )}
-              aria-expanded={isEditDropdownOpen}
+              onClick={() => setIsSaveDropdownOpen(!isSaveDropdownOpen)}
+              className="group flex h-7 select-none items-center px-1.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 border-l border-gray-200/50 dark:border-gray-700/50 bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-green-400/50 rounded-r-lg"
+              aria-expanded={isSaveDropdownOpen}
               aria-haspopup="menu"
-              aria-label="Edit options"
-              title="Edit options"
+              aria-label="Save options"
+              title="Save options"
             >
               <svg
                 className={cn(
-                  'h-3.5 w-3.5 transition-transform duration-200',
-                  isEditDropdownOpen ? 'rotate-180' : '',
-                  editorVisible
-                    ? 'text-indigo-500 dark:text-indigo-400'
-                    : 'text-gray-500 dark:text-gray-400',
+                  'h-3.5 w-3.5 transition-transform duration-200 text-gray-500 dark:text-gray-400',
+                  isSaveDropdownOpen ? 'rotate-180' : '',
                 )}
                 fill="none"
                 stroke="currentColor"
@@ -341,56 +353,30 @@ export const Topbar: React.FC = () => {
             </button>
           </div>
 
-          {isEditDropdownOpen && (
+          {isSaveDropdownOpen && (
             <div
-              className="absolute z-50 left-0 top-full mt-1 min-w-40 overflow-hidden rounded-lg bg-white/95 shadow-xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
+              className="absolute z-50 right-0 top-full mt-1 min-w-40 overflow-hidden rounded-lg bg-white/95 shadow-xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
               role="menu"
-              aria-label="Edit options"
+              aria-label="Save options"
             >
               <div className="py-1">
                 <button
-                  onClick={handleOpenEditor}
-                  className={cn(
-                    'group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-all duration-150 focus:outline-none',
-                    editorVisible
-                      ? 'bg-indigo-50 text-indigo-700 shadow-sm dark:bg-indigo-900/50 dark:text-indigo-300'
-                      : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
-                  )}
+                  onClick={handleSaveFile}
+                  className="group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-all duration-150 focus:outline-none text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50"
                   role="menuitem"
-                  tabIndex={isEditDropdownOpen ? 0 : -1}
+                  tabIndex={isSaveDropdownOpen ? 0 : -1}
                 >
-                  <div
-                    className={cn(
-                      'flex h-5 w-5 items-center justify-center rounded transition-colors',
-                      editorVisible
-                        ? 'text-indigo-600 dark:text-indigo-400'
-                        : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300',
-                    )}
-                  >
+                  <div className="flex h-5 w-5 items-center justify-center rounded transition-colors text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
                       />
                     </svg>
                   </div>
-                  <span className="font-medium">Editor</span>
-                  {editorVisible && (
-                    <svg
-                      className="ml-auto h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
+                  <span className="font-medium">Save</span>
                 </button>
                 <button
                   onClick={handlePasteFromClipboard}
@@ -402,7 +388,7 @@ export const Topbar: React.FC = () => {
                       : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
                   )}
                   role="menuitem"
-                  tabIndex={isEditDropdownOpen && !contentData.loading ? 0 : -1}
+                  tabIndex={isSaveDropdownOpen && !contentData.loading ? 0 : -1}
                 >
                   <div className="flex h-5 w-5 items-center justify-center rounded transition-colors text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,7 +412,7 @@ export const Topbar: React.FC = () => {
                       : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
                   )}
                   role="menuitem"
-                  tabIndex={isEditDropdownOpen && !contentData.loading ? 0 : -1}
+                  tabIndex={isSaveDropdownOpen && !contentData.loading ? 0 : -1}
                 >
                   <div className="flex h-5 w-5 items-center justify-center rounded transition-colors text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -444,12 +430,17 @@ export const Topbar: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Filepath Display */}
+        {filepath && (
+          <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100/80 dark:bg-gray-800/80 px-2 py-1 rounded-md backdrop-blur-sm">
+            {filepath}
+          </div>
+        )}
       </div>
 
-      {/* Right side kept empty for filetype-specific widgets */}
-      <div className="flex items-center space-x-2">
-        {/* Empty - reserved for filetype-specific widgets */}
-      </div>
+      {/* Right side - Empty for future use */}
+      <div className="flex items-center" />
     </div>
   )
 }
