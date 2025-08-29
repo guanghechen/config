@@ -9,6 +9,7 @@ import {
   SITE_THEME_TO_CUSTOMIZED_THEME_MAP,
   SITE_THEME_TO_MONACO_THEME_MAP,
 } from './constant'
+import { DefaultCodeDropdown } from './DefaultCodeDropdown'
 import { LanguageDropdown } from './LanguageDropdown'
 
 const MONACO_EDITOR_OPTIONS: EditorProps['options'] = {
@@ -107,6 +108,10 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
     setMounted(true)
   })
 
+  const handleLoadTemplate = useEventCallback((templateContent: string) => {
+    onContentChange(templateContent)
+  })
+
   if (!visible) {
     return <React.Fragment />
   }
@@ -131,6 +136,7 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Code Editor</span>
         </div>
         <div className="flex items-center gap-2">
+          <DefaultCodeDropdown onLoadTemplate={handleLoadTemplate} />
           <LanguageDropdown value={editorLanguage} onChange={onLanguageChange} />
         </div>
       </div>

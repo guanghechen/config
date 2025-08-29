@@ -51,3 +51,12 @@ export const LANGUAGE_OPTIONS = [
   { value: 'markdown', label: 'Markdown' },
   { value: 'plaintext', label: 'Plain Text' },
 ]
+
+export const DEFAULT_CODE_TEMPLATE_OPTIONS = [
+  { value: 'text', label: 'Text' },
+  { value: 'markdown', label: 'Markdown' },
+  { value: 'json', label: 'JSON' },
+  { value: 'html', label: 'HTML' },
+  { value: 'svg', label: 'SVG' },
+  { value: 'excalidraw', label: 'Excalidraw' },
+]

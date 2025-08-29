@@ -1,4 +1,5 @@
 import React from 'react'
+import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
 import { JsonView } from '@/view/filetype/json/View'
 import { SvgView } from '@/view/filetype/svg/View'
@@ -60,6 +61,14 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
 
   // Render appropriate filetype view based on filetype
   switch (filetype) {
+    case 'excalidraw':
+      return (
+        <ExcalidrawView
+          content={content}
+          contentError={finalContentError}
+          storageKeyScope={storageKeyScope}
+        />
+      )
     case 'html':
       return (
         <HtmlView
@@ -100,7 +109,6 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
           storageKeyScope={storageKeyScope}
         />
       )
-    case 'excalidraw':
     case 'image':
     default:
       return (
