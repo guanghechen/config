@@ -1,4 +1,4 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import mermaid from 'mermaid'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
@@ -6,7 +6,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useGetWorkspaces } from '@/hook/api/workspaces'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import { ServerCustomEventType } from '@/shared/types'
 import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '@/shared/types'
 import type { IWorkspaceContext } from './context'
@@ -18,7 +17,7 @@ const storageKey: string = '#/view/workspace'
 
 export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const { workspace_name } = useParams<{ workspace_name?: string }>()
-  const viewmodel: WorkspaceViewViewModel | null = useSingleton<WorkspaceViewViewModel>(() => {
+  const viewmodel: WorkspaceViewViewModel | null = useViewModel<WorkspaceViewViewModel>(() => {
     const rawViewData: Partial<IWorkspaceViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

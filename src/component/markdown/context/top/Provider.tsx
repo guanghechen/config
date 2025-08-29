@@ -1,7 +1,7 @@
 import { useDeepCompareMemo } from '@guanghechen/react-hooks'
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import type { Definition, FootnoteDefinition } from '@yozora/ast'
 import React from 'react'
-import { useSingleton } from '@/hook/useSingleton'
 import { buildNodeRendererMap } from '../../renderer'
 import type { INodeRendererMap } from '../../types'
 import type { IMarkdownTopContext } from './context'
@@ -49,7 +49,7 @@ export const MarkdownTopProvider: React.FC<IProps> = props => {
     () => props.presetFootnoteDefinitionMap ?? {},
     [props.presetFootnoteDefinitionMap],
   )
-  const viewmodel: MarkdownTopViewModel | null = useSingleton<MarkdownTopViewModel>(() => {
+  const viewmodel: MarkdownTopViewModel | null = useViewModel<MarkdownTopViewModel>(() => {
     return new MarkdownTopViewModel({
       rendererMap: buildNodeRendererMap(customizedRendererMap),
       presetDefinitionMap,

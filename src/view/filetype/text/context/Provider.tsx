@@ -1,8 +1,7 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { ITextTransformConfig } from '@/shared/types'
 import { validateTransformConfig } from '@/shared/util'
 import { transformTextToNodes } from '../util/transform'
@@ -23,7 +22,7 @@ interface IProps {
 export const TextViewProvider: React.FC<IProps> = props => {
   const { content, contentError, mode, contentMode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/text`
-  const viewmodel: TextViewViewModel | null = useSingleton<TextViewViewModel>(() => {
+  const viewmodel: TextViewViewModel | null = useViewModel<TextViewViewModel>(() => {
     const rawViewData: Partial<ITextViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

@@ -1,6 +1,6 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IUnknownViewContext } from './context'
 import { UnknownViewContextType } from './context'
 import type { IUnknownViewData, ModeEnum } from './types'
@@ -16,7 +16,7 @@ interface IProps {
 export const UnknownViewProvider: React.FC<IProps> = props => {
   const { placeholder, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/unknown`
-  const viewmodel: UnknownViewViewModel | null = useSingleton<UnknownViewViewModel>(() => {
+  const viewmodel: UnknownViewViewModel | null = useViewModel<UnknownViewViewModel>(() => {
     const rawViewData: Partial<IUnknownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

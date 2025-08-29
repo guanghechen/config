@@ -1,6 +1,6 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IImageFileData } from '@/shared/types/api'
 import type { IImageViewContext } from './context'
 import { ImageViewContextType } from './context'
@@ -20,7 +20,7 @@ interface IProps {
 export const ImageViewProvider: React.FC<IProps> = props => {
   const { url, mode, scale, rotation, position, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/image`
-  const viewmodel: ImageViewViewModel | null = useSingleton<ImageViewViewModel>(() => {
+  const viewmodel: ImageViewViewModel | null = useViewModel<ImageViewViewModel>(() => {
     const rawViewData: Partial<IImageViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

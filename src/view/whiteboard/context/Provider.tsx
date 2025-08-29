@@ -1,6 +1,6 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IWhiteboardViewContext } from './context'
 import { WhiteboardViewContextType } from './context'
 import type { IWhiteboardViewData } from './types'
@@ -23,7 +23,7 @@ export const WhiteboardViewProvider: React.FC<IProps> = ({
   editorWidth,
   children,
 }) => {
-  const viewmodel: WhiteboardViewViewModel | null = useSingleton<WhiteboardViewViewModel>(() => {
+  const viewmodel: WhiteboardViewViewModel | null = useViewModel<WhiteboardViewViewModel>(() => {
     const rawViewData: Partial<IWhiteboardViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

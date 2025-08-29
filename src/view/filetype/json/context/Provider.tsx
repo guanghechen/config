@@ -1,8 +1,8 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import JSON5 from 'json5'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IJsonViewContext } from './context'
 import { JsonViewContextType } from './context'
 import type { IJsonViewData, ModeEnum } from './types'
@@ -19,7 +19,7 @@ interface IProps {
 export const JsonViewProvider: React.FC<IProps> = props => {
   const { content, contentError, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/json`
-  const viewmodel: JsonViewViewModel | null = useSingleton<JsonViewViewModel>(() => {
+  const viewmodel: JsonViewViewModel | null = useViewModel<JsonViewViewModel>(() => {
     const rawViewData: Partial<IJsonViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

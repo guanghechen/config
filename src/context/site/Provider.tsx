@@ -1,7 +1,6 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
 import type { ISiteData } from './viewmodel'
@@ -14,7 +13,7 @@ interface ISideEffectProps {
 }
 
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const viewmodel: SiteViewModel | null = useSingleton<SiteViewModel>(() => {
+  const viewmodel: SiteViewModel | null = useViewModel<SiteViewModel>(() => {
     const initialData: Partial<ISiteData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

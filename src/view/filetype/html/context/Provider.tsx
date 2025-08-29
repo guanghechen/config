@@ -1,7 +1,7 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IHtmlViewContext } from './context'
 import { HtmlViewContextType } from './context'
 import type { IHtmlViewData, ModeEnum } from './types'
@@ -19,7 +19,7 @@ interface IProps {
 export const HtmlViewProvider: React.FC<IProps> = props => {
   const { content, contentError, mode, enableTailwindcss, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/html`
-  const viewmodel: HtmlViewViewModel | null = useSingleton<HtmlViewViewModel>(() => {
+  const viewmodel: HtmlViewViewModel | null = useViewModel<HtmlViewViewModel>(() => {
     const rawViewData: Partial<IHtmlViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

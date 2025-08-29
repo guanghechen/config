@@ -1,6 +1,6 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
 import type { IPdfViewData, ModeEnum } from './types'
@@ -18,7 +18,7 @@ interface IProps {
 export const PdfViewProvider: React.FC<IProps> = props => {
   const { url, mode, scale, multiview, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/pdf`
-  const viewmodel: PdfViewViewModel | null = useSingleton<PdfViewViewModel>(() => {
+  const viewmodel: PdfViewViewModel | null = useViewModel<PdfViewViewModel>(() => {
     const rawViewData: Partial<IPdfViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

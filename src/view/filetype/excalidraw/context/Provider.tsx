@@ -1,7 +1,7 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IExcalidrawViewContext } from './context'
 import { ExcalidrawViewContextType } from './context'
 import type { IExcalidrawViewData, ModeEnum } from './types'
@@ -19,7 +19,7 @@ interface IProps {
 export const ExcalidrawViewProvider: React.FC<IProps> = props => {
   const { content, contentError, onSaveFile, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/excalidraw`
-  const viewmodel: ExcalidrawViewViewModel | null = useSingleton<ExcalidrawViewViewModel>(() => {
+  const viewmodel: ExcalidrawViewViewModel | null = useViewModel<ExcalidrawViewViewModel>(() => {
     const rawViewData: Partial<IExcalidrawViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

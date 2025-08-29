@@ -1,6 +1,6 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
 import React from 'react'
-import { useSingleton } from '@/hook/useSingleton'
 import { useMarkdownTopViewmodel } from '../top'
 import type { IMarkdownContentContext } from './context'
 import { MarkdownContentContextType } from './context'
@@ -21,7 +21,7 @@ export const MarkdownContentProvider: React.FC<IProps> = props => {
   const { ast } = props
   const top = useMarkdownTopViewmodel()
 
-  const viewmodel: MarkdownContentViewModel | null = useSingleton<MarkdownContentViewModel>(() => {
+  const viewmodel: MarkdownContentViewModel | null = useViewModel<MarkdownContentViewModel>(() => {
     return new MarkdownContentViewModel({ ast, top })
   })
 

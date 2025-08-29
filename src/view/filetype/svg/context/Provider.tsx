@@ -1,7 +1,7 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
 import type { ISvgViewData, ISvgViewPosition, ModeEnum } from './types'
@@ -22,7 +22,7 @@ export const SvgViewProvider: React.FC<IProps> = props => {
   const { content, contentError, mode, scale, rotation, position, storageKeyScope, children } =
     props
   const storageKey = `${storageKeyScope}/filetype/svg`
-  const viewmodel: SvgViewViewModel | null = useSingleton<SvgViewViewModel>(() => {
+  const viewmodel: SvgViewViewModel | null = useViewModel<SvgViewViewModel>(() => {
     const rawViewData: Partial<ISvgViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

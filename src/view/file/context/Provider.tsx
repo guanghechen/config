@@ -1,9 +1,8 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
   IResponsePayloadFileChanged,
@@ -22,7 +21,7 @@ interface ISideEffectProps {
 }
 
 export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const viewmodel: FileViewViewModel | null = useSingleton<FileViewViewModel>(() => {
+  const viewmodel: FileViewViewModel | null = useViewModel<FileViewViewModel>(() => {
     const rawViewData: Mutable<Partial<IFileViewData>> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )

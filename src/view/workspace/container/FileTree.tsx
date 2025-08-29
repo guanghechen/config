@@ -1,5 +1,5 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
-import { useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { FileTreeModeEnum, IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
 import {
@@ -10,7 +10,6 @@ import {
   FileTreeViewModel,
 } from '@/component/filetree'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
-import { useSingleton } from '@/hook/useSingleton'
 import { useWorkspaceViewmodel } from '../context'
 
 export const FileTree: React.FC = () => {
@@ -21,7 +20,7 @@ export const FileTree: React.FC = () => {
     workspaceVM.filepath$.next(node.filepath || node.uuid)
   })
 
-  const viewmodel: FileTreeViewModel | null = useSingleton<FileTreeViewModel>(() => {
+  const viewmodel: FileTreeViewModel | null = useViewModel<FileTreeViewModel>(() => {
     return new FileTreeViewModel({
       currentFilepath: workspaceVM.filepath$.getSnapshot(),
     })

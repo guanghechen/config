@@ -1,7 +1,7 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
-import { useSingleton } from '@/hook/useSingleton'
 import type { IMarkdownFileData } from '@/shared/types/api'
 import type { IMarkdownViewContext } from './context'
 import { MarkdownViewContextType } from './context'
@@ -19,7 +19,7 @@ interface IProps {
 export const MarkdownViewProvider: React.FC<IProps> = props => {
   const { data, dataError, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/markdown`
-  const viewmodel: MarkdownViewViewModel | null = useSingleton<MarkdownViewViewModel>(() => {
+  const viewmodel: MarkdownViewViewModel | null = useViewModel<MarkdownViewViewModel>(() => {
     const rawViewData: Partial<IMarkdownViewData> = JSON.parse(
       window.localStorage.getItem(storageKey) || '{}',
     )
