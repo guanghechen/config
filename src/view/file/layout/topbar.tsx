@@ -1,20 +1,15 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { FilePath } from '@/component/FilePath'
+import { useFileViewmodel } from '../context'
 
-interface IProps {
-  readonly filepath: string | null
-}
+export const Topbar: React.FC = () => {
+  const viewmodel = useFileViewmodel()
+  const filepath = useStateValue(viewmodel.filepath$)
 
-export class Topbar extends React.PureComponent<IProps> {
-  public static readonly displayName: string = 'FileViewTopbar'
-
-  public override render(): React.ReactElement {
-    const { filepath } = this.props
-
-    return (
-      <div className="f-vf-topbar">
-        {filepath && <FilePath filepath={filepath} workspace={null} />}
-      </div>
-    )
-  }
+  return (
+    <div className="f-vf-topbar">
+      {filepath && <FilePath filepath={filepath} workspace={null} />}
+    </div>
+  )
 }

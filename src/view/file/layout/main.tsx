@@ -1,3 +1,4 @@
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { calcExtname } from '@/util/path'
 import { ExcalidrawAdaptor } from '../container/ExcalidrawAdaptor'
@@ -9,15 +10,18 @@ import { PdfAdaptor } from '../container/PdfAdaptor'
 import { SvgAdaptor } from '../container/SvgAdaptor'
 import { TextAdaptor } from '../container/TextAdaptor'
 import { UnknownAdaptor } from '../container/UnknownAdaptor'
+import { useFileViewmodel } from '../context'
 
 interface IProps {
-  readonly filepath: string | null
-  readonly filepathDirtyTick: number
   readonly storageKeyScope: string
 }
 
-export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick, storageKeyScope }) => {
+export const Main: React.FC<IProps> = props => {
+  const { storageKeyScope } = props
+  const viewmodel = useFileViewmodel()
   const workspace: string | null = null
+  const filepath = useStateValue(viewmodel.filepath$)
+  const filepathDirtyTick: number = useStateValue(viewmodel.filepathDirtyTick$)
 
   if (!filepath) {
     return (
@@ -39,6 +43,7 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick, storageKey
           filepath={filepath}
           filepathDirtyTick={filepathDirtyTick}
           storageKeyScope={storageKeyScope}
+          onSaved={() => viewmodel.markFilepathDirty()}
         />
       )
     case '.html':
@@ -121,3 +126,4 @@ export const Main: React.FC<IProps> = ({ filepath, filepathDirtyTick, storageKey
       )
   }
 }
+Main.displayName = 'FileViewMain'

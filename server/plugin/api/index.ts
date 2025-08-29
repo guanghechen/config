@@ -4,9 +4,9 @@ import type { Connect, Plugin } from 'vite'
 import { normalizeUrlPath } from '../../../shared/util'
 import state from '../../state'
 import { fetchCodeDefault } from './h/api/config/code-default'
-import { saveExcalidrawFile } from './h/api/excalidraw/save'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
+import { saveFile } from './h/api/file/save'
 import { switchFile } from './h/api/file-switch'
 import { getTextTransformer } from './h/api/transform/text/:name'
 import { listTextTransformers } from './h/api/transform/text/list'
@@ -17,8 +17,8 @@ import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 const handle_map: Record<string, IApiHandle> = {
   '/api/file': fetchFile,
   '/api/file/raw': fetchFileRaw,
+  '/api/file/save': saveFile,
   '/api/file-switch': switchFile,
-  '/api/excalidraw/save': saveExcalidrawFile,
   '/api/transform/text/list': listTextTransformers,
   '/api/workspaces': list_workspaces,
   '/api/workspace/files': list_workspace_files,

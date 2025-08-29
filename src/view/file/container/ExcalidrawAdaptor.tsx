@@ -4,19 +4,18 @@ import { usePostFile } from '@/hook/api/file/save'
 import { useFileResult } from '@/hook/useFileResult'
 import type { ITextFileData } from '@/shared/types/api'
 import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
-import { useFileViewmodel } from '../context'
 
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string
   readonly filepathDirtyTick: number
   readonly storageKeyScope: string
+  readonly onSaved: () => void
 }
 
 export const ExcalidrawAdaptor: React.FC<IProps> = props => {
-  const { workspace, filepath, filepathDirtyTick, storageKeyScope } = props
-  const { save: saveFile } = usePostFile()
-  const viewmodel = useFileViewmodel()
+  const { workspace, filepath, filepathDirtyTick, storageKeyScope, onSaved } = props
+  const { save } = usePostFile()
   const fileResult = useFileResult<ITextFileData>(workspace, filepath, filepathDirtyTick)
 
   // Transform data to new props format
@@ -27,8 +26,8 @@ export const ExcalidrawAdaptor: React.FC<IProps> = props => {
   const handleSaveFile = useEventCallback(async (content: string) => {
     if (filepath) {
       try {
-        await saveFile({ workspace, filepath, content })
-        viewmodel.markFilepathDirty()
+        await save({ workspace, filepath, content })
+        onSaved()
       } catch (error) {
         console.error('Failed to save file:', error)
       }
