@@ -51,6 +51,8 @@ export class KeyBindingManagerImpl implements IKeyBindingManager {
   public handleKeyDown(event: KeyboardEvent): void {
     for (const binding of this.bindings) {
       if (this.matchesBinding(event, binding)) {
+        event.preventDefault()
+        event.stopPropagation()
         binding.callback(event)
         return
       }
