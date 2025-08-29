@@ -184,7 +184,7 @@ export const Topbar: React.FC = () => {
         <div className="relative" ref={filetypeDropdownRef}>
           <button
             onClick={() => setIsFiletypeDropdownOpen(!isFiletypeDropdownOpen)}
-            className="group flex h-7 select-none items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-gray-900/80 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50"
+            className="group flex h-7 select-none items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none dark:bg-gray-900/80 dark:hover:bg-gray-900/90"
             aria-expanded={isFiletypeDropdownOpen}
             aria-haspopup="listbox"
             aria-label={`Current filetype: ${currentFiletype?.label}`}
@@ -274,10 +274,10 @@ export const Topbar: React.FC = () => {
         <button
           onClick={handleToggleEditor}
           className={cn(
-            'group flex h-7 select-none items-center gap-2 rounded-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
+            'group flex h-7 select-none items-center gap-2 rounded-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none',
             editorVisible
-              ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80 dark:focus:ring-indigo-400/50'
-              : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-indigo-400/50',
+              ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80'
+              : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90',
           )}
           aria-label="Toggle code editor"
           title={editorVisible ? 'Hide code editor' : 'Show code editor'}
@@ -307,7 +307,7 @@ export const Topbar: React.FC = () => {
             {/* Save Toggle Button */}
             <button
               onClick={handleSaveFile}
-              className="group flex h-7 select-none items-center gap-2 rounded-l-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-green-400/50"
+              className="group flex h-7 select-none items-center gap-2 rounded-l-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90"
               aria-label="Save file"
               title="Save file"
             >
@@ -327,7 +327,7 @@ export const Topbar: React.FC = () => {
             {/* Dropdown Arrow Button */}
             <button
               onClick={() => setIsSaveDropdownOpen(!isSaveDropdownOpen)}
-              className="group flex h-7 select-none items-center px-1.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 border-l border-gray-200/50 dark:border-gray-700/50 bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 dark:focus:ring-green-400/50 rounded-r-lg"
+              className="group flex h-7 select-none items-center px-1.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none border-l border-gray-200/50 dark:border-gray-700/50 bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90 rounded-r-lg"
               aria-expanded={isSaveDropdownOpen}
               aria-haspopup="menu"
               aria-label="Save options"
