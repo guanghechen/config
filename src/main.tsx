@@ -10,7 +10,7 @@ import { SiteContextProvider } from './context/site'
 import { routes, views } from './route'
 
 import 'react-toastify/dist/ReactToastify.css'
-import './index.css'
+import './style/index.css'
 
 const AppRoutes: React.FC = () => {
   return (

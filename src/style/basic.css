@@ -1,18 +1,3 @@
-@import 'tailwindcss';
-@custom-variant dark (&:where(.dark &));
-
-@import './view/file/style.css';
-@import './view/filetype/excalidraw/style.css';
-@import './view/filetype/html/style.css';
-@import './view/filetype/image/style.css';
-@import './view/filetype/json/style.css';
-@import './view/filetype/markdown/style.css';
-@import './view/filetype/pdf/style.css';
-@import './view/filetype/svg/style.css';
-@import './view/filetype/text/style.css';
-@import './view/whiteboard/style.css';
-@import './view/workspace/style.css';
-
 @layer components {
   :root,
   html,

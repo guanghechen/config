@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark &));
+
+@import './basic.css';
+@import './view/file.css';
+@import './view/filetype/excalidraw.css';
+@import './view/filetype/html.css';
+@import './view/filetype/image.css';
+@import './view/filetype/json.css';
+@import './view/filetype/markdown.css';
+@import './view/filetype/pdf.css';
+@import './view/filetype/svg.css';
+@import './view/filetype/text.css';
+@import './view/whiteboard.css';
+@import './view/workspace.css';
