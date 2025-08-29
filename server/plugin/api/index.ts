@@ -3,6 +3,7 @@ import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
 import { normalizeUrlPath } from '../../../shared/util'
 import state from '../../state'
+import { fetchCodeDefault } from './h/api/config/code-default'
 import { saveExcalidrawFile } from './h/api/excalidraw/save'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
@@ -33,6 +34,11 @@ const getHandleForPath = (pathname: string): IApiHandle | undefined => {
   // Check for transformer path parameter pattern: /api/transform/text/:name
   if (pathname.startsWith('/api/transform/text/') && pathname !== '/api/transform/text/list') {
     return getTextTransformer
+  }
+
+  // Check for code-default path parameter pattern: /api/config/code-default/:filetype
+  if (pathname.startsWith('/api/config/code-default/')) {
+    return fetchCodeDefault
   }
 
   return undefined
