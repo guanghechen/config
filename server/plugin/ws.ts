@@ -48,8 +48,8 @@ const plugin = (): Plugin => {
                     ? toSearch({ filepath: relativePath })
                     : toSearch({ filepath })
                   const url: string = workspace
-                    ? `http://${SERVER_HOST}:${SERVER_PORT}/ws/${workspace}/${search}`
-                    : `http://${SERVER_HOST}:${SERVER_PORT}/file${search}`
+                    ? `https://${SERVER_HOST}:${SERVER_PORT}/ws/${workspace}/${search}`
+                    : `https://${SERVER_HOST}:${SERVER_PORT}/file${search}`
 
                   try {
                     await openBrowser(url, true)

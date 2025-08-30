@@ -816,6 +816,7 @@ __metadata:
     "@types/react": 19.1.12
     "@types/react-dom": 19.1.9
     "@types/sanitize-html": 2.16.0
+    "@vitejs/plugin-basic-ssl": ^2.1.0
     "@vitejs/plugin-react": 5.0.2
     "@xyflow/react": ^12.8.4
     "@yozora/ast": 2.3.12
@@ -2830,6 +2831,15 @@ __metadata:
     "@typescript-eslint/types": 8.41.0
     eslint-visitor-keys: ^4.2.1
   checksum: 002bc638a1fd20293c4d69076c6e2925d712e47899dd35aa0ca4428815a08e59f6c16581dfd421abf5a65a29a5ad3a1c6fcc791b7f42b0e5f8c306e35aee0e50
+  languageName: node
+  linkType: hard
+
+"@vitejs/plugin-basic-ssl@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@vitejs/plugin-basic-ssl@npm:2.1.0"
+  peerDependencies:
+    vite: ^6.0.0 || ^7.0.0
+  checksum: 3435dd1f80214c61fdaa2e8af7a378583130b79288ab0fc142a5a110c44f9107640e2cea555eaf37d2c780b788493c678a5d63aa3a53399dffa360ea9d899f04
   languageName: node
   linkType: hard
 

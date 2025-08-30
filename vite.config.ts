@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { defineConfig } from 'vite'
@@ -12,7 +13,7 @@ export default defineConfig({
   build: {
     outDir: TARGET_DIR,
   },
-  plugins: [tailwindcss(), react(), api(), ws()],
+  plugins: [tailwindcss(), react(), basicSsl(), api(), ws()],
   resolve: {
     alias: {
       '@/shared': path.resolve(ROOT_DIR, 'shared'),
@@ -22,6 +23,7 @@ export default defineConfig({
   server: {
     port: SERVER_PORT,
     host: SERVER_HOST,
+    https: true,
     cors: false,
     open: false,
     strictPort: true,
