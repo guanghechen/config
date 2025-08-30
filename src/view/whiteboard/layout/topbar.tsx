@@ -3,11 +3,116 @@ import cn from 'clsx'
 import React from 'react'
 import { useWhiteboardViewmodel } from '../context'
 
+const getFiletypeIcon = (type: string): React.ReactNode => {
+  switch (type) {
+    case 'text':
+      return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      )
+    case 'markdown':
+      return (
+        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <rect
+            x="2"
+            y="3"
+            width="20"
+            height="18"
+            rx="2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <text x="12" y="9" textAnchor="middle" fontSize="4" fontWeight="bold" fill="currentColor">
+            MD
+          </text>
+          <path
+            d="M5 14h2l1.5-2 1.5 2h2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M15 12h4m-2-1v2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )
+    case 'json':
+      return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      )
+    case 'html':
+      return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+          />
+        </svg>
+      )
+    case 'svg':
+      return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      )
+    case 'excalidraw':
+      return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+          />
+        </svg>
+      )
+    default:
+      return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      )
+  }
+}
+
 export const Topbar: React.FC = () => {
   const viewmodel = useWhiteboardViewmodel()
-  const filetype = useStateValue(viewmodel.filetype$)
   const contentData = useStateValue(viewmodel.contentData$)
   const editorVisible = useStateValue(viewmodel.editorVisible$)
+  const filetype = useStateValue(viewmodel.filetype$)
   const filepath = useStateValue(viewmodel.filepath$)
 
   const [isSaveDropdownOpen, setIsSaveDropdownOpen] = React.useState(false)
@@ -53,100 +158,13 @@ export const Topbar: React.FC = () => {
     viewmodel.toggleEditor()
   }
 
-  const getFiletypeIcon = (type: string): React.ReactNode => {
-    switch (type) {
-      case 'text':
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        )
-      case 'markdown':
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-            />
-          </svg>
-        )
-      case 'json':
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        )
-      case 'html':
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-            />
-          </svg>
-        )
-      case 'svg':
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        )
-      case 'image':
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        )
-      case 'excalidraw':
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-            />
-          </svg>
-        )
-      default:
-        return (
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        )
-    }
+  const handleFiletypeChange = (newFiletype: string): void => {
+    viewmodel.updateFiletype(newFiletype)
+    setIsFiletypeDropdownOpen(false)
   }
 
-  const supportedFiletypes = [
+  // Define supported filetypes
+  const SUPPORTED_FILETYPES = [
     { value: 'text', label: 'Text' },
     { value: 'markdown', label: 'Markdown' },
     { value: 'json', label: 'JSON' },
@@ -155,23 +173,13 @@ export const Topbar: React.FC = () => {
     { value: 'excalidraw', label: 'Excalidraw' },
   ]
 
-  const currentFiletype = supportedFiletypes.find(type => type.value === filetype)
+  // Get the display name for the current filetype
+  const currentFiletypeLabel =
+    SUPPORTED_FILETYPES.find(type => type.value === filetype)?.label || 'Editor'
 
   return (
     <div className="f-vf-topbar">
       <div className="flex items-center space-x-2">
-        {/* Whiteboard Icon */}
-        <div className="text-gray-700 dark:text-gray-300" title="Whiteboard">
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM16 3v4M8 3v4m5 4h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01"
-            />
-          </svg>
-        </div>
-
         {contentData.loading && (
           <div className="text-sm text-gray-500 dark:text-gray-400">Loading...</div>
         )}
@@ -180,67 +188,93 @@ export const Topbar: React.FC = () => {
           <div className="text-sm text-red-500 dark:text-red-400">{contentData.contentError}</div>
         )}
 
-        {/* Filetype Selector */}
+        {/* Editor Button with Filetype Dropdown */}
         <div className="relative" ref={filetypeDropdownRef}>
-          <button
-            onClick={() => setIsFiletypeDropdownOpen(!isFiletypeDropdownOpen)}
-            className="group flex h-7 select-none items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-white/90 hover:shadow-lg focus:outline-none dark:bg-gray-900/80 dark:hover:bg-gray-900/90"
-            aria-expanded={isFiletypeDropdownOpen}
-            aria-haspopup="listbox"
-            aria-label={`Current filetype: ${currentFiletype?.label}`}
-            title={`Filetype: ${currentFiletype?.label}`}
-          >
-            <div className="text-gray-700 dark:text-gray-300">{getFiletypeIcon(filetype)}</div>
-            <span className="capitalize text-gray-700 dark:text-gray-300">
-              {currentFiletype?.label}
-            </span>
-            <svg
+          <div className="flex">
+            {/* Editor Toggle Button */}
+            <button
+              onClick={handleToggleEditor}
               className={cn(
-                'h-3.5 w-3.5 text-gray-500 transition-transform duration-200 dark:text-gray-400',
-                isFiletypeDropdownOpen
-                  ? 'rotate-180'
-                  : 'group-hover:text-gray-700 dark:group-hover:text-gray-300',
+                'group flex h-7 select-none items-center gap-2 rounded-l-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none',
+                editorVisible
+                  ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80'
+                  : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90',
               )}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+              aria-label="Toggle code editor"
+              title={editorVisible ? 'Hide code editor' : 'Show code editor'}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
+              <div
+                className={cn(
+                  editorVisible
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-gray-700 dark:text-gray-300',
+                )}
+              >
+                {getFiletypeIcon(filetype)}
+              </div>
+              <span className="font-medium">{currentFiletypeLabel}</span>
+            </button>
+
+            {/* Filetype Dropdown Arrow Button */}
+            <button
+              onClick={() => setIsFiletypeDropdownOpen(!isFiletypeDropdownOpen)}
+              className={cn(
+                'group flex h-7 select-none items-center px-1.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none border-l border-gray-200/50 dark:border-gray-700/50 rounded-r-lg',
+                editorVisible
+                  ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80'
+                  : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90',
+              )}
+              aria-expanded={isFiletypeDropdownOpen}
+              aria-haspopup="menu"
+              aria-label="Filetype options"
+              title="Select filetype"
+            >
+              <svg
+                className={cn(
+                  'h-3.5 w-3.5 transition-transform duration-200',
+                  editorVisible
+                    ? 'text-indigo-500 dark:text-indigo-400'
+                    : 'text-gray-500 dark:text-gray-400',
+                  isFiletypeDropdownOpen ? 'rotate-180' : '',
+                )}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+          </div>
 
           {isFiletypeDropdownOpen && (
             <div
-              className="absolute z-50 left-0 top-full mt-1 min-w-40 overflow-hidden rounded-lg bg-white/95 shadow-xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
-              role="listbox"
+              className="absolute z-50 right-0 top-full mt-1 min-w-40 overflow-hidden rounded-lg bg-white/95 shadow-xl backdrop-blur-md ring-1 ring-gray-200/50 dark:bg-gray-900/95 dark:ring-gray-700/50"
+              role="menu"
               aria-label="Filetype options"
             >
               <div className="py-1">
-                {supportedFiletypes.map(option => (
+                {SUPPORTED_FILETYPES.map(option => (
                   <button
                     key={option.value}
-                    onClick={() => {
-                      viewmodel.updateFiletype(option.value)
-                      setIsFiletypeDropdownOpen(false)
-                    }}
+                    onClick={() => handleFiletypeChange(option.value)}
                     className={cn(
                       'group flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm transition-all duration-150 focus:outline-none',
                       filetype === option.value
                         ? 'bg-indigo-50 text-indigo-700 shadow-sm dark:bg-indigo-900/50 dark:text-indigo-300'
                         : 'text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/50 dark:focus:bg-gray-800/50',
                     )}
-                    role="option"
-                    aria-selected={filetype === option.value}
+                    role="menuitem"
+                    tabIndex={isFiletypeDropdownOpen ? 0 : -1}
                   >
                     <div
                       className={cn(
-                        'flex h-5 w-5 items-center justify-center rounded transition-colors',
+                        'flex h-4 w-4 items-center justify-center rounded transition-colors',
                         filetype === option.value
                           ? 'text-indigo-600 dark:text-indigo-400'
                           : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300',
@@ -251,7 +285,7 @@ export const Topbar: React.FC = () => {
                     <span className="font-medium">{option.label}</span>
                     {filetype === option.value && (
                       <svg
-                        className="ml-auto h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400"
+                        className="ml-auto h-3 w-3 text-indigo-600 dark:text-indigo-400"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                         aria-hidden="true"
@@ -269,37 +303,6 @@ export const Topbar: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Editor Toggle Button */}
-        <button
-          onClick={handleToggleEditor}
-          className={cn(
-            'group flex h-7 select-none items-center gap-2 rounded-lg px-2.5 py-1 text-sm font-medium shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-lg focus:outline-none',
-            editorVisible
-              ? 'bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/80 dark:text-indigo-300 dark:hover:bg-indigo-800/80'
-              : 'bg-white/80 text-gray-700 hover:bg-white/90 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-900/90',
-          )}
-          aria-label="Toggle code editor"
-          title={editorVisible ? 'Hide code editor' : 'Show code editor'}
-        >
-          <div
-            className={cn(
-              editorVisible
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : 'text-gray-700 dark:text-gray-300',
-            )}
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-              />
-            </svg>
-          </div>
-          <span className="font-medium">Editor</span>
-        </button>
 
         {/* Save Button with Dropdown */}
         <div className="relative" ref={saveDropdownRef}>
@@ -430,16 +433,12 @@ export const Topbar: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Filepath Display */}
         {filepath && (
           <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100/80 dark:bg-gray-800/80 px-2 py-1 rounded-md backdrop-blur-sm">
             {filepath}
           </div>
         )}
       </div>
-
-      {/* Right side - Empty for future use */}
       <div className="flex items-center" />
     </div>
   )

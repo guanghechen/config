@@ -12,7 +12,7 @@ export const ThemeToggle: React.FC = () => {
   }, [setTheme])
 
   return (
-    <div className="ml-5 select-none">
+    <div className="select-none">
       <input
         type="checkbox"
         id="theme-toggle"
@@ -22,20 +22,20 @@ export const ThemeToggle: React.FC = () => {
       />
       <label
         htmlFor="theme-toggle"
-        className="relative flex h-[28px] w-[56px] cursor-pointer items-center justify-between rounded-full bg-gradient-to-r from-sky-300 to-blue-400 p-1 shadow-inner transition-all duration-500 ease-in-out hover:shadow-md active:scale-95 dark:bg-gradient-to-r dark:from-indigo-900 dark:to-purple-900 dark:shadow-gray-700"
+        className="relative flex h-6 w-12 cursor-pointer items-center justify-between rounded-full bg-gradient-to-r from-sky-300 to-blue-400 p-0.5 shadow-inner transition-all duration-500 ease-in-out hover:shadow-md active:scale-95 dark:bg-gradient-to-r dark:from-indigo-900 dark:to-purple-900 dark:shadow-gray-700"
       >
-        <div className="absolute left-1 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-500 ease-in-out dark:left-[29px] dark:bg-gray-100" />
+        <div className="absolute left-0.5 h-4 w-4 rounded-full bg-white shadow-md transition-all duration-500 ease-in-out dark:left-[1.75rem] dark:bg-gray-100" />
         <svg
-          className="absolute left-[6px] h-4 w-4 text-yellow-400 opacity-100 transition-all duration-300 ease-in-out dark:translate-x-6 dark:opacity-0"
+          className="absolute left-[4px] h-3 w-3 text-yellow-400 opacity-100 transition-all duration-300 ease-in-out dark:translate-x-5 dark:opacity-0"
           viewBox="0 0 24 24"
           fill="currentColor"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path d="M12 3a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zM19 12a1 1 0 0 1-1 1h-1a1 1 0 1 1 0-2h1a1 1 0 0 1 1 1zM7 12a1 1 0 0 1-1 1H5a1 1 0 1 1 0-2h1a1 1 0 0 1 1 1zM12 19a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1zM17.7 16.3a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4-1.4l.7-.7a1 1 0 0 1 1.4 0zM7 17.7a1 1 0 0 1 1.4 0l.7.7a1 1 0 1 1-1.4 1.4l-.7-.7a1 1 0 0 1 0-1.4zM17.7 7a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4-1.4l.7-.7A1 1 0 0 1 17.7 7zM8.4 6.3a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4-1.4l.7-.7a1 1 0 0 1 1.4 0zM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" />
         </svg>
-        <div className="absolute right-[6px] h-4 w-4 rounded-full bg-gray-800/0 transition-all duration-300 ease-in-out dark:bg-gray-800/40">
+        <div className="absolute right-[4px] h-3 w-3 rounded-full bg-gray-800/0 transition-all duration-300 ease-in-out dark:bg-gray-800/40">
           <svg
-            className="h-4 w-4 text-blue-400 opacity-0 transition-all duration-300 ease-in-out dark:opacity-100"
+            className="h-3 w-3 text-blue-400 opacity-0 transition-all duration-300 ease-in-out dark:opacity-100"
             viewBox="0 0 24 24"
             fill="currentColor"
             xmlns="http://www.w3.org/2000/svg"

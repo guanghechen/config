@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { LoginModal } from '@/component/LoginModal'
-import { FloatingGate } from '@/container/FloatingGate'
+import { Settings } from '@/container/Settings'
 import { useAuthViewModel } from '@/context/auth'
 import { setAuthenticationRequiredHandler } from '@/util/auth'
 
@@ -27,7 +27,7 @@ export const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
     <React.Fragment>
       {children}
-      <FloatingGate />
+      <Settings />
       <LoginModal isOpen={signed} onClose={handleCloseLoginModal} />
     </React.Fragment>
   )

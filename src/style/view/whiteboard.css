@@ -34,6 +34,7 @@
       justify-content: space-between;
       gap: 1rem;
       padding: 1rem;
+      padding-left: 3.5rem; /* Add extra left padding to avoid overlap with settings button */
       @apply bg-gray-50 dark:bg-gray-800;
     }
 
