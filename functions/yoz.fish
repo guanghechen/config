@@ -52,6 +52,7 @@ function yoz --description "Preview file with yoz"
         return 1
     end
 
-    set -l url "http://localhost:$YOZ_SERVER_PORT/api/file-switch?filepath="(string escape --style=url (realpath $filepath))"&force=$force"
-    curl -X POST $url >/dev/null 2>&1 &
+    set -l url "https://localhost:$YOZ_SERVER_PORT/api/file/switch?filepath="(string escape --style=url (realpath $filepath))"&force=$force"
+    # echo "curl -k -X POST $url"
+    curl -k -X POST $url >/dev/null 2>&1 &
 end
