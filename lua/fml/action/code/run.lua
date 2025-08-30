@@ -23,12 +23,12 @@ local YOZ_SERVER_PORT = type(vim.env.YOZ_SERVER_PORT) == "string" and vim.env.YO
 ---@param force                         boolean
 local function open_filepath_within_yoz(filepath, force)
   local url = string.format(
-    "http://localhost:%s/api/file-switch?filepath=%s&force=%s",
+    "https://localhost:%s/api/file/switch?filepath=%s&force=%s",
     YOZ_SERVER_PORT,
     std.string.escape_url_component(filepath),
     force and "true" or "false"
   )
-  vim.system({ "curl", "-X", "POST", url }, { detach = true })
+  vim.system({ "curl", "-k", "-X", "POST", url }, { detach = true })
 end
 
 ---@type fml.action.code.IRunners
