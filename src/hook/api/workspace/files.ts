@@ -1,4 +1,5 @@
 import React from 'react'
+import { authenticatedFetch, isProtectedApiEndpoint } from '@/util/auth'
 
 export async function getWorkspaceFiles(workspace: string | null): Promise<string[]> {
   if (!workspace) return []
@@ -7,7 +8,8 @@ export async function getWorkspaceFiles(workspace: string | null): Promise<strin
   ups.set('workspace', workspace)
   const search = '?' + ups.toString()
 
-  const response = await fetch(`/api/workspace/files/${search}`)
+  const url = `/api/workspace/files/${search}`
+  const response = isProtectedApiEndpoint(url) ? await authenticatedFetch(url) : await fetch(url)
   const { error, details, data } = await response.json()
   if (error || details || !data) {
     console.error('Failed to fetch workspaces:', { error, details, data })

@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import { GlobalLayout } from './container/GlobalLayout'
+import { AuthContextProvider } from './context/auth'
 import { SiteContextProvider } from './context/site'
 import { routes, views } from './route'
 
@@ -27,15 +28,17 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <React.Fragment>
-      <SiteContextProvider>
-        <MathJaxProvider>
-          <BrowserRouter>
-            <GlobalLayout>
-              <AppRoutes />
-            </GlobalLayout>
-          </BrowserRouter>
-        </MathJaxProvider>
-      </SiteContextProvider>
+      <AuthContextProvider>
+        <SiteContextProvider>
+          <MathJaxProvider>
+            <BrowserRouter>
+              <GlobalLayout>
+                <AppRoutes />
+              </GlobalLayout>
+            </BrowserRouter>
+          </MathJaxProvider>
+        </SiteContextProvider>
+      </AuthContextProvider>
       <ToastContainer
         position="top-center"
         autoClose={3000}

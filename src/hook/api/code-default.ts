@@ -1,4 +1,5 @@
 import React from 'react'
+import { authenticatedFetch, isProtectedApiEndpoint } from '@/util/auth'
 
 export interface IDefaultCodeResult {
   readonly loading?: boolean
@@ -10,7 +11,8 @@ export async function getDefaultCode(filetype: string): Promise<IDefaultCodeResu
   if (!filetype) return { error: 'Filetype is required' }
 
   try {
-    const response = await fetch(`/api/config/code-default/${filetype}`)
+    const url = `/api/config/code-default/${filetype}`
+    const response = isProtectedApiEndpoint(url) ? await authenticatedFetch(url) : await fetch(url)
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -28,6 +30,12 @@ export async function getDefaultCode(filetype: string): Promise<IDefaultCodeResu
     return { content }
   } catch (error) {
     console.error('Failed to fetch default code:', { filetype, error })
+
+    // Handle authentication errors gracefully
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return { error: 'Authentication required' }
+    }
+
     return { error: `Failed to fetch default code: ${error}` }
   }
 }

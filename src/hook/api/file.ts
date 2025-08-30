@@ -6,6 +6,7 @@ import type {
   ISvgFileData,
   ITextFileData,
 } from '@/shared/types/api'
+import { authenticatedFetch, isProtectedApiEndpoint } from '@/util/auth'
 
 export async function getFile<T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,
@@ -18,7 +19,9 @@ export async function getFile<T extends IFetchFileData = IFetchFileData>(
     const params = new URLSearchParams(query)
     if (workspace) params.set('workspace', workspace)
 
-    const response = await fetch(`/api/file?${params}`)
+    const url = `/api/file?${params}`
+    const response = isProtectedApiEndpoint(url) ? await authenticatedFetch(url) : await fetch(url)
+
     const contentType = response.headers.get('content-type')
 
     if (contentType?.includes('application/json')) {
@@ -63,6 +66,12 @@ export async function getFile<T extends IFetchFileData = IFetchFileData>(
     return { error: `Unknown content type: ${contentType}` }
   } catch (error) {
     console.error('Failed to fetching file:', { workspace, filepath, error })
+
+    // Handle authentication errors gracefully
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return { error: 'Authentication required' }
+    }
+
     return { error: 'Failed to fetching file: ' + JSON.stringify({ workspace, filepath, error }) }
   }
 }
@@ -92,7 +101,12 @@ export const useGetFile = <T extends IFetchFileData = IFetchFileData>(
         }
       } catch (error) {
         if (!cancelled) {
-          setResult({ error: `Failed to fetch file: ${error}` })
+          // Handle authentication errors gracefully
+          if (error instanceof Error && error.message === 'Authentication required') {
+            setResult({ error: 'Authentication required' })
+          } else {
+            setResult({ error: `Failed to fetch file: ${error}` })
+          }
         }
       }
     }

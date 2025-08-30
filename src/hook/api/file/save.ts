@@ -1,4 +1,5 @@
 import React from 'react'
+import { authenticatedFetch } from '@/util/auth'
 
 export interface IFileSaveParams {
   workspace: string | null
@@ -15,7 +16,7 @@ export interface IFileSaveResult {
 export async function postFile(params: IFileSaveParams): Promise<void> {
   const { workspace, filepath, content } = params
 
-  const response = await fetch('/api/file/save', {
+  const response = await authenticatedFetch('/api/file/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
