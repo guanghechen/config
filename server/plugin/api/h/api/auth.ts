@@ -15,6 +15,7 @@ interface IAuthRequest {
 
 interface IAuthResponse {
   readonly success: boolean
+  readonly token: string
   readonly expiresIn: string
 }
 
@@ -80,6 +81,7 @@ export const authenticateUser: IApiHandle = async params => {
 
     const responseData: IAuthResponse = {
       success: true,
+      token,
       expiresIn: JWT_EXPIRES_IN,
     }
 

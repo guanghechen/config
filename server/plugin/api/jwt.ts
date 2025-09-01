@@ -14,14 +14,23 @@ interface IJwtPayload {
 export function verifyJwtMiddleware(params: IApiHandleParams): IApiHandleResult | null {
   const { req } = params
 
-  const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie) : {}
-  const token = cookies[COOKIE_NAME]
+  // Check for Bearer token in Authorization header first
+  const authHeader = req.headers.authorization
+  let token: string | undefined
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7) // Remove 'Bearer ' prefix
+  } else {
+    // Fallback to cookie-based authentication
+    const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie) : {}
+    token = cookies[COOKIE_NAME]
+  }
 
   if (!token) {
     return {
       code: 403,
       data: {
-        error: 'Missing authentication cookie',
+        error: 'Missing or invalid authorization header',
         data: null,
       },
     }

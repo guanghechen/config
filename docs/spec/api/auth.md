@@ -2,7 +2,7 @@
 
 ## API
 
-### POST /api/auth
+### POST /api/user/login
 
 **Request:**
 ```json
@@ -16,6 +16,7 @@
 ```json
 {
   "data": {
+    "success": true,
     "token": "jwt_token_string",
     "expiresIn": "7d"
   }
@@ -35,8 +36,9 @@
 - Environment: `YOZ_USERNAME`, `YOZ_PASSWORD` (SHA1 hashed), `JWT_SECRET`
 - Password verification: hash user input with SHA1, compare with `YOZ_PASSWORD`
 - JWT expires in 7 days, contains username
-- All `/api/*` endpoints except `/api/auth` require Bearer token
+- All `/api/*` endpoints except `/api/user/login` require Bearer token or authentication cookie
 - Return 403 for missing/invalid tokens
+- Login endpoint sets HTTP-only cookie and returns token in response body
 
 ### Client
 - Store token in `localStorage` as `auth_token`
