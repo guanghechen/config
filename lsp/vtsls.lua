@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/8373a1b7a7ab7a9972b55182073be5ac2f3bec0a/lsp/vtsls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/eeae0957130a02860b2d154a74d50f180a2d0910/lsp/vtsls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vtsls
 
 local __module_name__ = "lsp.vtsls" ---@type string
@@ -212,6 +212,9 @@ return {
     "typescriptreact",
     "typescript.tsx",
     "vue",
+  },
+  init_options = {
+    hostInfo = "neovim",
   },
   root_markers = { "tsconfig.json", "package.json", "jsconfig.json", ".git" },
   settings = {
