@@ -24,7 +24,7 @@ export const usePersistAsync = <T extends IViewModel>(
   observables: Array<IState<any>>,
   options: IUsePersistAsyncOptions = {},
 ): void => {
-  const { throttleMs } = { ...DEFAULT_OPTIONS, ...options, }
+  const { throttleMs } = { ...DEFAULT_OPTIONS, ...options }
   const isMountedRef = React.useRef<boolean>(true)
 
   const persist = useEventCallback(async () => {

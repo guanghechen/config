@@ -2,6 +2,7 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import cn from 'clsx'
 import React, { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { MenuIcon } from '@/component/icon/material'
 import { listedRoutes } from '@/route'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -61,29 +62,14 @@ export const Settings: React.FC = () => {
             'transition-all duration-300 ease-in-out',
             'hover:scale-105 focus:outline-none',
             'text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-gray-100',
-            'bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800',
-            'backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50',
+            'bg-white/80 hover:bg-white dark:bg-gray-600/90 dark:hover:bg-gray-600',
+            'backdrop-blur-sm border border-gray-200/50 dark:border-gray-500/60',
             'shadow-sm hover:shadow-md',
-            menuState === MenuState.OPEN && 'rotate-45',
+            menuState === MenuState.OPEN && '-rotate-90',
           )}
           title="Settings"
         >
-          <svg
-            className={cn(
-              'h-4 w-4 transition-transform duration-300 ease-in-out',
-              menuState === MenuState.OPEN && 'scale-[1.2]',
-            )}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
-          </svg>
+          <MenuIcon className="h-4 w-4" />
         </button>
 
         {/* Settings Content */}
