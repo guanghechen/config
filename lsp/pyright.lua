@@ -1,10 +1,11 @@
--- https://github.com/neovim/nvim-lspconfig/blob/44ba712bc3015cce9b599d18f947d85a630e512b/lsp/pyright.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/f4dee350521da3b95fffdfdb94f7a1b5cdb88d79/lsp/pyright.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#pyright
 
 local Methods = vim.lsp.protocol.Methods
 
----@param pythonPath                    string
-local function set_python_path(pythonPath)
+---@param command                       {args: string}
+local function set_python_path(command)
+  local pythonPath = command.args ---@type string
   local clients = vim.lsp.get_clients({
     bufnr = vim.api.nvim_get_current_buf(),
     name = "pyright",
@@ -29,11 +30,16 @@ local function on_attach(client, bufnr)
   eve.lsp.on_attach(client, bufnr)
 
   vim.api.nvim_buf_create_user_command(bufnr, "LspPyrightOrganizeImports", function()
-    client:exec_cmd({
+    local params = {
       title = "pyright.organizeimports",
       command = "pyright.organizeimports",
       arguments = { vim.uri_from_bufnr(bufnr) },
-    })
+    }
+
+    -- Using client.request() directly because "basedpyright.organizeimports" is private
+    -- (not advertised via capabilities), which client:exec_cmd() refuses to call.
+    -- https://github.com/neovim/neovim/blob/c333d64663d3b6e0dd9aa440e433d346af4a3d81/runtime/lua/vim/lsp/client.lua#L1024-L1030
+    client:request("workspace/executeCommand", params, nil, bufnr)
   end, {
     desc = "Organize Imports",
   })
