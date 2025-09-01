@@ -1,9 +1,12 @@
+import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 import crypto from 'node:crypto'
 import type { IApiHandle, IApiHandleData } from '../../types'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key'
 const JWT_EXPIRES_IN = '7d'
+const COOKIE_NAME = 'yoz-auth'
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
 
 interface IAuthRequest {
   readonly username: string
@@ -11,7 +14,7 @@ interface IAuthRequest {
 }
 
 interface IAuthResponse {
-  readonly token: string
+  readonly success: boolean
   readonly expiresIn: string
 }
 
@@ -76,12 +79,23 @@ export const authenticateUser: IApiHandle = async params => {
     const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
 
     const responseData: IAuthResponse = {
-      token,
+      success: true,
       expiresIn: JWT_EXPIRES_IN,
     }
 
+    const cookieValue = cookie.serialize(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: COOKIE_MAX_AGE,
+      path: '/',
+    })
+
     const data: IApiHandleData = {
       data: responseData,
+      headers: {
+        'Set-Cookie': cookieValue,
+      },
     }
 
     return { code: 200, data }

@@ -1,7 +1,9 @@
+import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 import type { IApiHandleParams, IApiHandleResult } from './types'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key'
+const COOKIE_NAME = 'yoz-auth'
 
 interface IJwtPayload {
   readonly username: string
@@ -12,18 +14,18 @@ interface IJwtPayload {
 export function verifyJwtMiddleware(params: IApiHandleParams): IApiHandleResult | null {
   const { req } = params
 
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie) : {}
+  const token = cookies[COOKIE_NAME]
+
+  if (!token) {
     return {
       code: 403,
       data: {
-        error: 'Missing or invalid authorization header',
+        error: 'Missing authentication cookie',
         data: null,
       },
     }
   }
-
-  const token = authHeader.slice(7) // Remove 'Bearer ' prefix
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as IJwtPayload

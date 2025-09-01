@@ -1,4 +1,5 @@
 import React from 'react'
+import { ApiRoutePathEnum } from '@/shared/constant/api'
 
 export interface ITransformerListItem {
   name: string
@@ -13,7 +14,7 @@ export interface ITransformerListResult {
 }
 
 export async function getTransformerList(): Promise<ITransformerListItem[]> {
-  const response = await fetch('/api/transform/text/list')
+  const response = await fetch(ApiRoutePathEnum.TRANSFORM_TEXT_LIST)
   const result = await response.json()
 
   if (response.ok && result.data?.transformers) {

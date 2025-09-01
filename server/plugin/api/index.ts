@@ -1,5 +1,6 @@
 import type { ServerResponse } from 'node:http'
 import type { Connect, Plugin } from 'vite'
+import { ApiRoutePathEnum } from '../../../shared/constant/api'
 import { normalizeUrlPath } from '../../../shared/util'
 import state from '../../state'
 import { authenticateUser } from './h/api/auth'
@@ -8,6 +9,8 @@ import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
 import { saveFile } from './h/api/file/save'
 import { switchFile } from './h/api/file-switch'
+import { logoutUser } from './h/api/logout'
+import { getCurrentUser } from './h/api/me'
 import { getTextTransformer } from './h/api/transform/text/:name'
 import { listTextTransformers } from './h/api/transform/text/list'
 import { list_workspace_files } from './h/api/workspace/files'
@@ -16,18 +19,24 @@ import { verifyJwtMiddleware } from './jwt'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
-  '/api/auth': authenticateUser,
-  '/api/file': fetchFile,
-  '/api/file/raw': fetchFileRaw,
-  '/api/file/save': saveFile,
-  '/api/file-switch': switchFile,
-  '/api/transform/text/list': listTextTransformers,
-  '/api/workspaces': list_workspaces,
-  '/api/workspace/files': list_workspace_files,
+  [ApiRoutePathEnum.AUTH]: authenticateUser,
+  [ApiRoutePathEnum.LOGOUT]: logoutUser,
+  [ApiRoutePathEnum.ME]: getCurrentUser,
+  [ApiRoutePathEnum.FILE]: fetchFile,
+  [ApiRoutePathEnum.FILE_RAW]: fetchFileRaw,
+  [ApiRoutePathEnum.FILE_SAVE]: saveFile,
+  [ApiRoutePathEnum.FILE_SWITCH]: switchFile,
+  [ApiRoutePathEnum.TRANSFORM_TEXT_LIST]: listTextTransformers,
+  [ApiRoutePathEnum.WORKSPACES]: list_workspaces,
+  [ApiRoutePathEnum.WORKSPACE_FILES]: list_workspace_files,
 }
 
 // Endpoints that don't require authentication
-const publicEndpoints = new Set(['/api/auth', '/api/file-switch'])
+const publicEndpoints = new Set([
+  ApiRoutePathEnum.AUTH,
+  ApiRoutePathEnum.LOGOUT,
+  ApiRoutePathEnum.FILE_SWITCH,
+])
 
 // Check if an endpoint requires authentication
 function requiresAuth(pathname: string): boolean {
@@ -37,11 +46,14 @@ function requiresAuth(pathname: string): boolean {
   }
 
   // Check patterns for dynamic routes
-  if (pathname.startsWith('/api/transform/text/') && pathname !== '/api/transform/text/list') {
+  if (
+    pathname.startsWith(`${ApiRoutePathEnum.TRANSFORM_TEXT}/`) &&
+    pathname !== ApiRoutePathEnum.TRANSFORM_TEXT_LIST
+  ) {
     return true // Transform endpoints require auth
   }
 
-  if (pathname.startsWith('/api/config/code-default/')) {
+  if (pathname.startsWith(`${ApiRoutePathEnum.CODE_DEFAULT}/`)) {
     return true // Code default endpoints require auth
   }
 
@@ -57,12 +69,15 @@ const getHandleForPath = (pathname: string): IApiHandle | undefined => {
   }
 
   // Check for transformer path parameter pattern: /api/transform/text/:name
-  if (pathname.startsWith('/api/transform/text/') && pathname !== '/api/transform/text/list') {
+  if (
+    pathname.startsWith(`${ApiRoutePathEnum.TRANSFORM_TEXT}/`) &&
+    pathname !== ApiRoutePathEnum.TRANSFORM_TEXT_LIST
+  ) {
     return getTextTransformer
   }
 
   // Check for code-default path parameter pattern: /api/config/code-default/:filetype
-  if (pathname.startsWith('/api/config/code-default/')) {
+  if (pathname.startsWith(`${ApiRoutePathEnum.CODE_DEFAULT}/`)) {
     return fetchCodeDefault
   }
 
@@ -127,6 +142,14 @@ const middleware = async (
     // eslint-disable-next-line no-param-reassign
     res.statusCode = result.code
     res.setHeader('Content-Type', 'application/json')
+
+    // Set any additional headers from the response
+    if (result.data.headers) {
+      Object.entries(result.data.headers).forEach(([key, value]) => {
+        res.setHeader(key, value)
+      })
+    }
+
     res.end(JSON.stringify(result.data))
     return
   }

@@ -16,6 +16,7 @@ export interface IApiHandleData {
   readonly error?: string
   readonly details?: unknown
   readonly data: unknown
+  readonly headers?: Record<string, string>
 }
 
 export interface IApiHandleResult {

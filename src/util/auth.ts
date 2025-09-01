@@ -1,4 +1,4 @@
-import { universalStorage } from './storage'
+import { ApiRoutePathEnum } from '../../shared/constant/api'
 
 // Global authentication interceptor for fetch requests
 let onAuthenticationRequired: (() => void) | null = null
@@ -7,58 +7,18 @@ export function setAuthenticationRequiredHandler(handler: () => void): void {
   onAuthenticationRequired = handler
 }
 
-async function getAuthToken(): Promise<string | null> {
-  try {
-    // Try to get token from auth storage first
-    const authToken = await universalStorage.getAuthToken()
-    if (authToken) {
-      return authToken
-    }
-
-    // Fallback to context storage for backward compatibility
-    const contextData = await universalStorage.getContext<{ token?: string }>('#/context/auth')
-    return contextData?.token || null
-  } catch (error) {
-    console.warn('Failed to get auth token from storage:', error)
-    return null
-  }
-}
-
 export async function authenticatedFetch(
   url: string,
   options: RequestInit = {},
 ): Promise<Response> {
-  const token = await getAuthToken()
-
-  const headers = new Headers(options.headers)
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`)
-  }
-
+  // No need to manually add Authorization header - cookies are sent automatically
   const response = await fetch(url, {
     ...options,
-    headers,
+    credentials: 'include', // Ensure cookies are sent
   })
 
   // Handle 403 responses by triggering authentication
   if (response.status === 403) {
-    try {
-      // Clear invalid token from both auth and context storage
-      await universalStorage.removeAuthToken()
-
-      const contextData = await universalStorage.getContext<{
-        token: string | null
-        isAuthenticated?: boolean
-      }>('#/context/auth')
-      if (contextData) {
-        contextData.token = null
-        contextData.isAuthenticated = false
-        await universalStorage.setContext('#/context/auth', contextData)
-      }
-    } catch (error) {
-      console.warn('Failed to clear invalid auth token:', error)
-    }
-
     // Trigger authentication modal
     if (onAuthenticationRequired) {
       onAuthenticationRequired()
@@ -73,5 +33,9 @@ export async function authenticatedFetch(
 
 // Helper function to check if a URL is an API endpoint that needs authentication
 export function isProtectedApiEndpoint(url: string): boolean {
-  return url.startsWith('/api/') && !url.startsWith('/api/auth')
+  return (
+    url.startsWith('/api/') &&
+    !url.startsWith(ApiRoutePathEnum.AUTH) &&
+    !url.startsWith(ApiRoutePathEnum.LOGOUT)
+  )
 }

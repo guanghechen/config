@@ -3,7 +3,6 @@ const STORAGE_CONFIG = {
   VERSION: 1,
   STORES: {
     CONTEXT: 'context',
-    AUTH_TOKEN: 'auth_token',
     CACHE: 'cache',
   },
 } as const
@@ -50,10 +49,6 @@ class IndexedDBStorage {
             keyPath: 'key',
           })
           contextStore.createIndex('timestamp', 'timestamp', { unique: false })
-        }
-
-        if (!db.objectStoreNames.contains(STORAGE_CONFIG.STORES.AUTH_TOKEN)) {
-          db.createObjectStore(STORAGE_CONFIG.STORES.AUTH_TOKEN, { keyPath: 'key' })
         }
 
         if (!db.objectStoreNames.contains(STORAGE_CONFIG.STORES.CACHE)) {
@@ -179,18 +174,6 @@ export class UniversalStorage {
 
   public async removeContext(key: string): Promise<void> {
     return this.storage.removeItem(STORAGE_CONFIG.STORES.CONTEXT, key)
-  }
-
-  public async getAuthToken(): Promise<string | null> {
-    return this.storage.getItem<string>(STORAGE_CONFIG.STORES.AUTH_TOKEN, 'auth_token')
-  }
-
-  public async setAuthToken(token: string): Promise<void> {
-    return this.storage.setItem<string>(STORAGE_CONFIG.STORES.AUTH_TOKEN, 'auth_token', token)
-  }
-
-  public async removeAuthToken(): Promise<void> {
-    return this.storage.removeItem(STORAGE_CONFIG.STORES.AUTH_TOKEN, 'auth_token')
   }
 
   public async getCache<T = any>(key: string, fallback?: T): Promise<T | null> {

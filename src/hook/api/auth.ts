@@ -1,4 +1,5 @@
 import React from 'react'
+import { ApiRoutePathEnum } from '@/shared/constant/api'
 import type { IAuthResponse, ILoginCredentials } from '@/shared/types/auth'
 
 export interface IAuthResult {
@@ -17,7 +18,7 @@ export const useAuth = (): {
     setResult({ loading: true })
 
     try {
-      const response = await fetch('/api/auth', {
+      const response = await fetch(ApiRoutePathEnum.AUTH, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

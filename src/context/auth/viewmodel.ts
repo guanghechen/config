@@ -1,63 +1,28 @@
 import { State, ViewModel } from '@guanghechen/viewmodel'
+import { ApiRoutePathEnum } from '../../../shared/constant/api'
 import type { ILoginCredentials } from './types'
 
-export interface IAuthData {
-  readonly token: string | null
-  readonly isAuthenticated: boolean
-}
-
 interface IProps {
-  readonly token?: string | null
   readonly isAuthenticated?: boolean
-}
-
-const DEFAULT_DATA: IAuthData = {
-  token: null,
-  isAuthenticated: false,
 }
 
 export class AuthViewModel extends ViewModel {
   public readonly isAuthenticated$: State<boolean>
-  public readonly token$: State<string | null>
   public readonly loading$: State<boolean>
   public readonly error$: State<string | null>
   public readonly signed$: State<boolean>
 
   private authenticationDebounceTimer: NodeJS.Timeout | null = null
 
-  public static fromData(data: Partial<IAuthData> | undefined): AuthViewModel {
-    const normalizedData: IAuthData = this.normalize(DEFAULT_DATA, data)
-    return new AuthViewModel(normalizedData)
-  }
-
-  public static normalize(base: IAuthData, data: Partial<IAuthData> | undefined): IAuthData {
-    const { token = base.token, isAuthenticated = base.isAuthenticated } =
-      data && typeof data === 'object' ? data : {}
-    return { token: token ?? null, isAuthenticated: Boolean(token) || Boolean(isAuthenticated) }
-  }
-
   constructor(props: IProps = {}) {
     super()
 
-    const { token = null, isAuthenticated = false } = props
+    const { isAuthenticated = false } = props
 
-    this.isAuthenticated$ = new State<boolean>(Boolean(token) || isAuthenticated)
-    this.token$ = new State<string | null>(token)
+    this.isAuthenticated$ = new State<boolean>(isAuthenticated)
     this.loading$ = new State<boolean>(false)
     this.error$ = new State<string | null>(null)
     this.signed$ = new State<boolean>(false)
-  }
-
-  public dump = (): IAuthData => {
-    const token: string | null = this.token$.getSnapshot()
-    const isAuthenticated: boolean = this.isAuthenticated$.getSnapshot()
-    return { token, isAuthenticated }
-  }
-
-  public load = (data: Partial<IAuthData> | undefined): void => {
-    const { token, isAuthenticated }: IAuthData = AuthViewModel.normalize(this.dump(), data)
-    this.token$.next(token)
-    this.isAuthenticated$.next(isAuthenticated)
   }
 
   public async login(credentials: ILoginCredentials): Promise<void> {
@@ -65,23 +30,22 @@ export class AuthViewModel extends ViewModel {
     this.error$.next(null)
 
     try {
-      const response = await fetch('/api/auth', {
+      const response = await fetch(ApiRoutePathEnum.AUTH, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(credentials),
+        credentials: 'include', // Include cookies
       })
 
       const result = await response.json()
 
       if (response.ok && result.data) {
-        const { token } = result.data
-        this.token$.next(token)
         this.isAuthenticated$.next(true)
         this.signed$.next(false) // Hide login popup
 
-        // Refresh page to retrigger API calls with new token
+        // Refresh page to retrigger API calls with new authentication
         window.location.reload()
       } else {
         this.error$.next(result.error || 'Authentication failed')
@@ -93,11 +57,41 @@ export class AuthViewModel extends ViewModel {
     }
   }
 
-  public logout(): void {
+  public async logout(): Promise<void> {
+    try {
+      await fetch(ApiRoutePathEnum.LOGOUT, {
+        method: 'POST',
+        credentials: 'include', // Include cookies for logout
+      })
+    } catch (error) {
+      console.warn('Failed to logout on server:', error)
+    }
+
     this.isAuthenticated$.next(false)
-    this.token$.next(null)
     this.error$.next(null)
     this.signed$.next(false)
+
+    // Refresh page to clear any cached authenticated state
+    window.location.reload()
+  }
+
+  public async checkAuthenticationStatus(): Promise<void> {
+    try {
+      const response = await fetch(ApiRoutePathEnum.ME, {
+        method: 'GET',
+        credentials: 'include', // Include cookies
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        this.isAuthenticated$.next(result.data?.isAuthenticated || false)
+      } else {
+        this.isAuthenticated$.next(false)
+      }
+    } catch (error) {
+      console.warn('Failed to check authentication status:', error)
+      this.isAuthenticated$.next(false)
+    }
   }
 
   public clearError(): void {
