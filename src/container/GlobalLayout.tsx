@@ -3,7 +3,7 @@ import React from 'react'
 import { LoginModal } from '@/component/LoginModal'
 import { Settings } from '@/container/Settings'
 import { useAuthViewModel } from '@/context/auth'
-import { setAuthenticationRequiredHandler } from '@/util/auth'
+import { setAuthenticationRequiredHandler } from '@/shared/api/requester'
 
 interface GlobalLayoutProps {
   children: React.ReactNode

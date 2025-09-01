@@ -4,37 +4,37 @@ import { ApiRoutePathEnum } from '../../../shared/constant/api'
 import { normalizeUrlPath } from '../../../shared/util'
 import state from '../../state'
 import { authenticateUser } from './h/api/auth'
-import { fetchCodeDefault } from './h/api/config/code-default'
+import { fetchCodeDefaults } from './h/api/code/defaults'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
 import { saveFile } from './h/api/file/save'
 import { switchFile } from './h/api/file-switch'
 import { logoutUser } from './h/api/logout'
 import { getCurrentUser } from './h/api/me'
-import { getTextTransformer } from './h/api/transform/text/:name'
-import { listTextTransformers } from './h/api/transform/text/list'
+import { getTextTransformer } from './h/api/text-transform/:name'
+import { listTextTransformers } from './h/api/text-transform/list'
 import { list_workspace_files } from './h/api/workspace/files'
 import { list_workspaces } from './h/api/workspaces'
 import { verifyJwtMiddleware } from './jwt'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
-  [ApiRoutePathEnum.AUTH]: authenticateUser,
-  [ApiRoutePathEnum.LOGOUT]: logoutUser,
-  [ApiRoutePathEnum.ME]: getCurrentUser,
+  [ApiRoutePathEnum.USER_LOGIN]: authenticateUser,
+  [ApiRoutePathEnum.USER_LOGOUT]: logoutUser,
+  [ApiRoutePathEnum.USER_PROFILE]: getCurrentUser,
   [ApiRoutePathEnum.FILE]: fetchFile,
   [ApiRoutePathEnum.FILE_RAW]: fetchFileRaw,
   [ApiRoutePathEnum.FILE_SAVE]: saveFile,
   [ApiRoutePathEnum.FILE_SWITCH]: switchFile,
-  [ApiRoutePathEnum.TRANSFORM_TEXT_LIST]: listTextTransformers,
+  [ApiRoutePathEnum.TEXT_TRANSFORM_LIST]: listTextTransformers,
   [ApiRoutePathEnum.WORKSPACES]: list_workspaces,
   [ApiRoutePathEnum.WORKSPACE_FILES]: list_workspace_files,
 }
 
 // Endpoints that don't require authentication
-const publicEndpoints = new Set([
-  ApiRoutePathEnum.AUTH,
-  ApiRoutePathEnum.LOGOUT,
+const publicEndpoints: Set<string> = new Set([
+  ApiRoutePathEnum.USER_LOGIN,
+  ApiRoutePathEnum.USER_LOGOUT,
   ApiRoutePathEnum.FILE_SWITCH,
 ])
 
@@ -47,13 +47,13 @@ function requiresAuth(pathname: string): boolean {
 
   // Check patterns for dynamic routes
   if (
-    pathname.startsWith(`${ApiRoutePathEnum.TRANSFORM_TEXT}/`) &&
-    pathname !== ApiRoutePathEnum.TRANSFORM_TEXT_LIST
+    pathname.startsWith(`${ApiRoutePathEnum.TEXT_TRANSFORM}/`) &&
+    pathname !== ApiRoutePathEnum.TEXT_TRANSFORM_LIST
   ) {
     return true // Transform endpoints require auth
   }
 
-  if (pathname.startsWith(`${ApiRoutePathEnum.CODE_DEFAULT}/`)) {
+  if (pathname.startsWith(`${ApiRoutePathEnum.CODE_DEFAULTS}/`)) {
     return true // Code default endpoints require auth
   }
 
@@ -70,15 +70,15 @@ const getHandleForPath = (pathname: string): IApiHandle | undefined => {
 
   // Check for transformer path parameter pattern: /api/transform/text/:name
   if (
-    pathname.startsWith(`${ApiRoutePathEnum.TRANSFORM_TEXT}/`) &&
-    pathname !== ApiRoutePathEnum.TRANSFORM_TEXT_LIST
+    pathname.startsWith(`${ApiRoutePathEnum.TEXT_TRANSFORM}/`) &&
+    pathname !== ApiRoutePathEnum.TEXT_TRANSFORM_LIST
   ) {
     return getTextTransformer
   }
 
-  // Check for code-default path parameter pattern: /api/config/code-default/:filetype
-  if (pathname.startsWith(`${ApiRoutePathEnum.CODE_DEFAULT}/`)) {
-    return fetchCodeDefault
+  // Check for code defaults path parameter pattern: /api/code/defaults/:filetype
+  if (pathname.startsWith(`${ApiRoutePathEnum.CODE_DEFAULTS}/`)) {
+    return fetchCodeDefaults
   }
 
   return undefined

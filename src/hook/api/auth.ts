@@ -1,5 +1,5 @@
 import React from 'react'
-import { ApiRoutePathEnum } from '@/shared/constant/api'
+import { userController } from '@/shared/api'
 import type { IAuthResponse, ILoginCredentials } from '@/shared/types/auth'
 
 export interface IAuthResult {
@@ -18,28 +18,10 @@ export const useAuth = (): {
     setResult({ loading: true })
 
     try {
-      const response = await fetch(ApiRoutePathEnum.AUTH, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.data) {
-        const authResult: IAuthResult = { loading: false, data: data.data }
-        setResult(authResult)
-        return authResult
-      } else {
-        const authResult: IAuthResult = {
-          loading: false,
-          error: data.error || 'Authentication failed',
-        }
-        setResult(authResult)
-        return authResult
-      }
+      const data = await userController.login(credentials)
+      const authResult: IAuthResult = { loading: false, data }
+      setResult(authResult)
+      return authResult
     } catch (error) {
       const authResult: IAuthResult = {
         loading: false,

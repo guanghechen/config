@@ -1,5 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
+import { ApiRoutePathEnum } from '@/shared/constant/api'
 
 interface IProps {
   readonly workspace: string | null
@@ -17,8 +18,8 @@ export class AnchorButton extends React.PureComponent<IProps> {
     }
 
     const url = workspace
-      ? `/api/file/raw?filepath=${encodeURIComponent(filepath)}&workspace=${encodeURIComponent(workspace)}`
-      : `/api/file/raw?filepath=${encodeURIComponent(filepath)}`
+      ? `${ApiRoutePathEnum.FILE_RAW}?filepath=${encodeURIComponent(filepath)}&workspace=${encodeURIComponent(workspace)}`
+      : `${ApiRoutePathEnum.FILE_RAW}?filepath=${encodeURIComponent(filepath)}`
 
     return (
       <span

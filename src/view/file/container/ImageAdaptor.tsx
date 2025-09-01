@@ -1,4 +1,5 @@
 import React from 'react'
+import { ApiRoutePathEnum } from '@/shared/constant/api'
 import { ImageView } from '@/view/filetype/image/View'
 
 interface IProps {
@@ -14,7 +15,7 @@ export const ImageAdaptor: React.FC<IProps> = ({ workspace, filepath, storageKey
     if (workspace) {
       params.set('workspace', workspace)
     }
-    return `/api/file/raw?${params}`
+    return `${ApiRoutePathEnum.FILE_RAW}?${params}`
   }, [workspace, filepath])
 
   return <ImageView url={url} storageKeyScope={storageKeyScope} />

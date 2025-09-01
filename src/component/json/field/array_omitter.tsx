@@ -41,7 +41,7 @@ export class FieldArrayOmitter extends React.Component<IProps, IState> {
       return (
         <div className={classes.container.line} style={indentStyle} onClick={onExpand}>
           <span className="align-middle">
-            <ChevronRightIcon className="mr-1 inline-block h-6 w-4 cursor-pointer text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
+            <ChevronRightIcon className="mr-1 inline-block h-6 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
           </span>
           <span className="italic text-gray-500 dark:text-gray-400">
             [{startIndex}..{endIndex - 1}] ({count} {count === 1 ? 'item' : 'items'})
@@ -54,7 +54,7 @@ export class FieldArrayOmitter extends React.Component<IProps, IState> {
       <div>
         <div className={classes.container.line} style={indentStyle} onClick={onCollapse}>
           <span className="align-middle">
-            <ChevronDownIcon className="mr-1 inline-block h-6 w-4 cursor-pointer text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
+            <ChevronDownIcon className="mr-1 inline-block h-6 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
           </span>
           <span className="italic text-gray-500 dark:text-gray-400">
             [{startIndex}..{endIndex - 1}] ({count} {count === 1 ? 'item' : 'items'})

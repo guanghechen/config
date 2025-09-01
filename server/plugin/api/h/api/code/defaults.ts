@@ -21,10 +21,10 @@ const EXTENSION_TO_CONTENT_TYPE_MAP: Record<string, string> = {
   excalidraw: 'application/json',
 }
 
-export const fetchCodeDefault: IApiHandle = async params => {
+export const fetchCodeDefaults: IApiHandle = async params => {
   const { res, pathname } = params
 
-  // Extract filetype from pathname: /api/config/code-default/:filetype
+  // Extract filetype from pathname: /api/code/defaults/:filetype
   const pathParts = pathname.split('/')
   const filetype = pathParts[pathParts.length - 1]
 

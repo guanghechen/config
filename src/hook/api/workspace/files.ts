@@ -1,22 +1,5 @@
 import React from 'react'
-import { authenticatedFetch, isProtectedApiEndpoint } from '@/util/auth'
-
-export async function getWorkspaceFiles(workspace: string | null): Promise<string[]> {
-  if (!workspace) return []
-
-  const ups = new URLSearchParams()
-  ups.set('workspace', workspace)
-  const search = '?' + ups.toString()
-
-  const url = `/api/workspace/files/${search}`
-  const response = isProtectedApiEndpoint(url) ? await authenticatedFetch(url) : await fetch(url)
-  const { error, details, data } = await response.json()
-  if (error || details || !data) {
-    console.error('Failed to fetch workspaces:', { error, details, data })
-    return []
-  }
-  return data.files
-}
+import { workspaceController } from '@/shared/api'
 
 export const useGetWorkspaceFiles = (
   workspace: string | null,
@@ -32,7 +15,7 @@ export const useGetWorkspaceFiles = (
       setLoading(true)
 
       try {
-        const _files: string[] = await getWorkspaceFiles(workspace)
+        const _files: string[] = await workspaceController.files(workspace)
         if (!cancelled) setFiles(_files)
       } finally {
         setLoading(false)

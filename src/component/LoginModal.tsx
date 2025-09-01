@@ -12,7 +12,6 @@ export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
   const authViewModel = useAuthViewModel()
   const loading = useStateValue(authViewModel.loading$)
   const error = useStateValue(authViewModel.error$)
-  const isAuthenticated = useStateValue(authViewModel.isAuthenticated$)
 
   const [username, setUsername] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -55,14 +54,6 @@ export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
       clearTimeout(stopPolling)
     }
   }, [isOpen, checkAutofill])
-
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      onClose()
-      setUsername('')
-      setPassword('')
-    }
-  }, [isAuthenticated, onClose])
 
   React.useEffect(() => {
     if (error) {

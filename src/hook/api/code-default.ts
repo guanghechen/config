@@ -1,5 +1,5 @@
 import React from 'react'
-import { authenticatedFetch, isProtectedApiEndpoint } from '@/util/auth'
+import { codeController } from '@/shared/api'
 
 export interface IDefaultCodeResult {
   readonly loading?: boolean
@@ -11,22 +11,7 @@ export async function getDefaultCode(filetype: string): Promise<IDefaultCodeResu
   if (!filetype) return { error: 'Filetype is required' }
 
   try {
-    const url = `/api/config/code-default/${filetype}`
-    const response = isProtectedApiEndpoint(url) ? await authenticatedFetch(url) : await fetch(url)
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return { error: 'Default template not found for this file type' }
-      }
-      const errorData = await response.json().catch(() => null)
-      return {
-        error:
-          errorData?.error ||
-          `Failed to fetch default code: ${response.status} ${response.statusText}`,
-      }
-    }
-
-    const content = await response.text()
+    const content = await codeController.listDefaults(filetype)
     return { content }
   } catch (error) {
     console.error('Failed to fetch default code:', { filetype, error })

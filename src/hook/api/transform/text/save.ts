@@ -1,21 +1,6 @@
 import React from 'react'
-import type { ITextTransformConfig, TextTransformStepTypeEnum } from '@/shared/types'
-
-export interface ITransformerSaveData {
-  name: string
-  desc: string
-  split: string
-  steps: Array<{
-    type: TextTransformStepTypeEnum
-    code: string
-    skip: boolean
-  }>
-  uuid: string
-  parents: string
-  parents_virtual: string
-  title: string
-  chainPaths?: string[]
-}
+import { textTransformController } from '@/shared/api'
+import type { ITextTransformConfig } from '@/shared/types'
 
 export interface ITransformerSaveResult {
   loading: boolean
@@ -24,35 +9,7 @@ export interface ITransformerSaveResult {
 }
 
 export async function postTransformer(name: string, config: ITextTransformConfig): Promise<void> {
-  const saveData: ITransformerSaveData = {
-    name: name.trim(),
-    desc: config.desc,
-    split: config.split,
-    uuid: config.uuid,
-    parents: config.parents,
-    parents_virtual: config.parents_virtual,
-    title: config.title,
-    chainPaths: config.chainPaths,
-    steps: config.steps.map(step => ({
-      type: step.type,
-      code: step.code,
-      skip: step.skip ?? false,
-    })),
-  }
-
-  const response = await fetch(`/api/transform/text/${encodeURIComponent(name.trim())}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(saveData),
-  })
-
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.error || 'Failed to save transformer')
-  }
+  await textTransformController.save(name, config)
 }
 
 export const usePostTransformer = (): ITransformerSaveResult => {

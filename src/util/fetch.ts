@@ -2,6 +2,7 @@
 // Types and functions in this file have been moved to @/hook/api/file.ts
 // This file is kept temporarily for backward compatibility.
 
+import { ApiRoutePathEnum } from '@/shared/constant/api'
 import type {
   IEventStreamFileData,
   IFetchFileData,
@@ -40,7 +41,7 @@ export async function fetchFile<T extends IFetchFileData = IFetchFileData>(
     const params = new URLSearchParams(query) // Add your query parameters here
     if (workspace) params.set('workspace', workspace)
 
-    const response = await fetch(`/api/file?${params}`)
+    const response = await fetch(`${ApiRoutePathEnum.FILE}?${params}`)
     const contentType = response.headers.get('content-type')
 
     if (contentType?.includes('application/json')) {

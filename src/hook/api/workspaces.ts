@@ -1,18 +1,6 @@
 import React from 'react'
-import { ApiRoutePathEnum } from '@/shared/constant/api'
-import type { IWorkspaceItem } from '@/shared/types'
-import { authenticatedFetch, isProtectedApiEndpoint } from '@/util/auth'
-
-export async function getWorkspaces(): Promise<IWorkspaceItem[]> {
-  const url = ApiRoutePathEnum.WORKSPACES
-  const response = isProtectedApiEndpoint(url) ? await authenticatedFetch(url) : await fetch(url)
-  const { error, details, data } = await response.json()
-  if (error || details || !data) {
-    console.error('Failed to fetch workspaces:', { error, details, data })
-    return []
-  }
-  return data.workspaces
-}
+import { workspaceController } from '@/shared/api'
+import type { IWorkspaceItem } from '@/shared/api'
 
 export const useGetWorkspaces = (
   tick: number,
@@ -27,7 +15,7 @@ export const useGetWorkspaces = (
       setLoading(true)
 
       try {
-        const workspaces: IWorkspaceItem[] = await getWorkspaces()
+        const workspaces: IWorkspaceItem[] = await workspaceController.list()
         if (!cancelled) setWorkspaces(workspaces)
       } finally {
         setLoading(false)

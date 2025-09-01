@@ -59,7 +59,7 @@ class IndexedDBStorage {
     })
   }
 
-  public async getItem<T = any>(storeName: string, key: string, fallback?: T): Promise<T | null> {
+  public async getItem<T = any>(storeName: string, key: string): Promise<T | null> {
     try {
       const db = await this.getDatabase()
       const transaction = db.transaction([storeName], 'readonly')
@@ -71,17 +71,17 @@ class IndexedDBStorage {
         request.onerror = () => reject(request.error)
       })
 
-      if (!result) return fallback ?? null
+      if (!result) return null
 
       if (result.expiry && Date.now() > result.expiry) {
         await this.removeItem(storeName, key)
-        return fallback ?? null
+        return null
       }
 
       return result.value
     } catch (error) {
       console.warn(`Failed to get item from ${storeName}:`, error)
-      return fallback ?? null
+      return null
     }
   }
 
@@ -164,8 +164,8 @@ class IndexedDBStorage {
 export class UniversalStorage {
   private storage = IndexedDBStorage.getInstance()
 
-  public async getContext<T = any>(key: string, fallback?: T): Promise<T | null> {
-    return this.storage.getItem<T>(STORAGE_CONFIG.STORES.CONTEXT, key, fallback)
+  public async getContext<T = any>(key: string): Promise<T | null> {
+    return this.storage.getItem<T>(STORAGE_CONFIG.STORES.CONTEXT, key)
   }
 
   public async setContext<T = any>(key: string, value: T): Promise<void> {
@@ -176,8 +176,8 @@ export class UniversalStorage {
     return this.storage.removeItem(STORAGE_CONFIG.STORES.CONTEXT, key)
   }
 
-  public async getCache<T = any>(key: string, fallback?: T): Promise<T | null> {
-    return this.storage.getItem<T>(STORAGE_CONFIG.STORES.CACHE, key, fallback)
+  public async getCache<T = any>(key: string): Promise<T | null> {
+    return this.storage.getItem<T>(STORAGE_CONFIG.STORES.CACHE, key)
   }
 
   public async setCache<T = any>(key: string, value: T, expiry?: number): Promise<void> {

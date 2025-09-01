@@ -57,7 +57,7 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
         <div>
           <div className={classes.container.line} style={indentStyle} onClick={onExpand}>
             <span className="align-middle">
-              <ChevronRightIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-300" />
+              <ChevronRightIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
             </span>
             <JsonFieldKey name={name} />
             <span className="font-medium text-gray-700 dark:text-gray-300">&#123;</span>
@@ -75,7 +75,7 @@ export class JsonFieldObject extends React.Component<IProps, IState> {
       <div>
         <div className={classes.container.line} style={indentStyle} onClick={onCollapse}>
           <span className="align-middle">
-            <ChevronDownIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-300" />
+            <ChevronDownIcon className="mr-1 inline-block h-4 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
           </span>
           <JsonFieldKey name={name} />
           <span className="font-medium text-gray-700 dark:text-gray-300">&#123;</span>

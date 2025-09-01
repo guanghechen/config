@@ -16,7 +16,7 @@ interface ISideEffectProps {
 
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
   const viewmodel: SiteViewModel | null = useViewModel<SiteViewModel>(async () => {
-    const initialData = await universalStorage.getContext<Partial<ISiteData>>(storageKey, {})
+    const initialData = await universalStorage.getContext<Partial<ISiteData>>(storageKey)
     return SiteViewModel.fromData(initialData || {})
   })
 

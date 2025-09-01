@@ -1,78 +1,20 @@
 import React from 'react'
-import type {
-  IFetchFileData,
-  IFetchFileResult,
-  IHtmlFileData,
-  ISvgFileData,
-  ITextFileData,
-} from '@/shared/types/api'
-import { authenticatedFetch, isProtectedApiEndpoint } from '@/util/auth'
+import { fileController } from '@/shared/api'
+import type { IFetchFileData, IFetchFileResult } from '@/shared/types/api'
 
 export async function getFile<T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,
   filepath: string,
 ): Promise<IFetchFileResult<T>> {
-  if (!filepath) return {}
-
   try {
-    const query: Record<string, string> = { filepath }
-    const params = new URLSearchParams(query)
-    if (workspace) params.set('workspace', workspace)
-
-    const url = `/api/file?${params}`
-    const response = isProtectedApiEndpoint(url) ? await authenticatedFetch(url) : await fetch(url)
-
-    const contentType = response.headers.get('content-type')
-
-    if (contentType?.includes('application/json')) {
-      const data = await response.json()
-      return { error: data.error, data: data.data }
-    }
-
-    if (contentType?.includes('image/svg+xml')) {
-      const content: string = await response.text()
-      const data: ISvgFileData = { content }
-      return { data: data as T }
-    }
-
-    if (contentType?.includes('text/html')) {
-      const content: string = await response.text()
-      const data: IHtmlFileData = { content }
-      return { data: data as T }
-    }
-
-    if (contentType?.includes('text/plain')) {
-      const content: string = await response.text()
-      const data: ITextFileData = { content }
-      return { data: data as T }
-    }
-
-    if (contentType?.includes('text')) {
-      const text = await response.text()
-      return { text }
-    }
-
-    if (contentType?.includes('application/pdf')) {
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      return { url }
-    }
-
-    if (contentType?.includes('image') || contentType?.includes('video')) {
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      return { url }
-    }
-    return { error: `Unknown content type: ${contentType}` }
+    return await fileController.resolve<T>(workspace, filepath)
   } catch (error) {
-    console.error('Failed to fetching file:', { workspace, filepath, error })
-
     // Handle authentication errors gracefully
     if (error instanceof Error && error.message === 'Authentication required') {
       return { error: 'Authentication required' }
+    } else {
+      return { error: `Failed to fetch file: ${error}` }
     }
-
-    return { error: 'Failed to fetching file: ' + JSON.stringify({ workspace, filepath, error }) }
   }
 }
 
@@ -95,7 +37,7 @@ export const useGetFile = <T extends IFetchFileData = IFetchFileData>(
       setResult({ loading: true })
 
       try {
-        const fetchResult = await getFile<T>(workspace, filepath)
+        const fetchResult = await fileController.resolve<T>(workspace, filepath)
         if (!cancelled) {
           setResult(fetchResult)
         }

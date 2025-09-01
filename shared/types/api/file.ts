@@ -1,25 +1,6 @@
 import type { Root } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
 
-export enum ServerCustomEventType {
-  FILE_CHANGED = 'guanghechen/file-changed',
-  FILE_SWITCHED = 'guanghechen/file-switch',
-}
-
-export interface IResponsePayloadFileChanged {
-  readonly workspace: string | null
-  readonly filepath: string
-}
-
-export interface IResponsePayloadFileSwitch {
-  readonly workspace: string | null
-  readonly filepath: string
-}
-
-export interface IResponsePayloadWorkspaces {
-  readonly workspaces: Array<{ readonly tag: string }>
-}
-
 // File data interfaces
 export interface IMarkdownFileData {
   readonly ast: Root
@@ -82,3 +63,14 @@ export interface IFetchFileResult<T extends IFetchFileData = IFetchFileData> {
   readonly url?: string | undefined
   readonly error?: string | undefined
 }
+
+// File save API types
+export type IFileSaveRequestParams = Record<string, never>
+
+export interface IFileSaveRequestPayload {
+  readonly workspace: string | null
+  readonly filepath: string
+  readonly content: string
+}
+
+export type IFileSaveResponseResult = Record<string, never>

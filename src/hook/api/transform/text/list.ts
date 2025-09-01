@@ -1,27 +1,12 @@
 import React from 'react'
-import { ApiRoutePathEnum } from '@/shared/constant/api'
-
-export interface ITransformerListItem {
-  name: string
-  lastModified?: string
-}
+import { textTransformController } from '@/shared/api'
+import type { ITransformerListItem } from '@/shared/types/api'
 
 export interface ITransformerListResult {
   loading: boolean
   transformers: ITransformerListItem[]
   error?: string
   refresh: () => Promise<void>
-}
-
-export async function getTransformerList(): Promise<ITransformerListItem[]> {
-  const response = await fetch(ApiRoutePathEnum.TRANSFORM_TEXT_LIST)
-  const result = await response.json()
-
-  if (response.ok && result.data?.transformers) {
-    return result.data.transformers
-  } else {
-    throw new Error(result.error || 'Failed to load transformers')
-  }
 }
 
 export const useGetTransformerList = (): ITransformerListResult => {
@@ -34,7 +19,7 @@ export const useGetTransformerList = (): ITransformerListResult => {
     setError(undefined)
 
     try {
-      const list = await getTransformerList()
+      const list = await textTransformController.list()
       setTransformers(list)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch transformer list'
