@@ -1,6 +1,6 @@
-import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
+import { useViewModel } from '@/hook/useViewModel'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
 import type { IPdfViewData, ModeEnum } from './types'

@@ -1,6 +1,6 @@
-import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
+import { useViewModel } from '@/hook/useViewModel'
 import type { IWhiteboardViewContext } from './context'
 import { WhiteboardViewContextType } from './context'
 import type { IWhiteboardViewData } from './types'

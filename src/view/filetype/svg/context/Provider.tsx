@@ -1,7 +1,7 @@
-import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
+import { useViewModel } from '@/hook/useViewModel'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
 import type { ISvgViewData, ISvgViewPosition, ModeEnum } from './types'

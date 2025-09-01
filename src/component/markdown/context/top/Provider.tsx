@@ -1,7 +1,7 @@
 import { useDeepCompareMemo } from '@guanghechen/react-hooks'
-import { useViewModel } from '@guanghechen/react-viewmodel'
 import type { Definition, FootnoteDefinition } from '@yozora/ast'
 import React from 'react'
+import { useViewModel } from '@/hook/useViewModel'
 import { buildNodeRendererMap } from '../../renderer'
 import type { INodeRendererMap } from '../../types'
 import type { IMarkdownTopContext } from './context'

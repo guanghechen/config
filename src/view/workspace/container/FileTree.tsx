@@ -1,5 +1,5 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
-import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { FileTreeModeEnum, IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
 import {
@@ -10,6 +10,7 @@ import {
   FileTreeViewModel,
 } from '@/component/filetree'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
+import { useViewModel } from '@/hook/useViewModel'
 import { useWorkspaceViewmodel } from '../context'
 
 export const FileTree: React.FC = () => {

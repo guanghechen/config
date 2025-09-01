@@ -1,6 +1,6 @@
-import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
+import { useViewModel } from '@/hook/useViewModel'
 import type { IUnknownViewContext } from './context'
 import { UnknownViewContextType } from './context'
 import type { IUnknownViewData, ModeEnum } from './types'

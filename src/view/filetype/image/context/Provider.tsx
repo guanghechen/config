@@ -1,6 +1,6 @@
-import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersist } from '@/hook/usePersist'
+import { useViewModel } from '@/hook/useViewModel'
 import type { IImageFileData } from '@/shared/types/api'
 import type { IImageViewContext } from './context'
 import { ImageViewContextType } from './context'

@@ -1,7 +1,7 @@
-import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersist } from '@/hook/usePersist'
+import { useViewModel } from '@/hook/useViewModel'
 import type { IMarkdownFileData } from '@/shared/types/api'
 import type { IMarkdownViewContext } from './context'
 import { MarkdownViewContextType } from './context'

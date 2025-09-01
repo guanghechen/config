@@ -1,8 +1,9 @@
-import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
+import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { usePersist } from '@/hook/usePersist'
+import { useViewModel } from '@/hook/useViewModel'
 import { ServerCustomEventType } from '@/shared/types'
 import type {
   IResponsePayloadFileChanged,
