@@ -42,12 +42,12 @@ function yoz {
 
         $encodedPath = [System.Web.HttpUtility]::UrlEncode($resolvedPath.Path)
         $forceValue = if ($force) { "true" } else { "false" }
-        $url = "http://localhost:$env:YOZ_SERVER_PORT/api/file-switch?filepath=$encodedPath&force=$forceValue"
+        $url = "https://localhost:$env:YOZ_SERVER_PORT/api/file/switch?filepath=$encodedPath&force=$forceValue"
 
         Start-Job -ScriptBlock {
             param($url)
             try {
-                Invoke-RestMethod -Uri $url -Method POST -ErrorAction SilentlyContinue | Out-Null
+                Invoke-RestMethod -Uri $url -Method POST -SkipCertificateCheck -ErrorAction SilentlyContinue | Out-Null
             } catch {
                 # Silently ignore errors
             }
