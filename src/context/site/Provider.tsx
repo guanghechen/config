@@ -1,7 +1,8 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
+import { universalStorage } from '@/util/storage'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'
 import type { ISiteData } from './viewmodel'
@@ -14,12 +15,11 @@ interface ISideEffectProps {
 }
 
 export const SiteContextProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const viewmodel: SiteViewModel | null = useViewModel<SiteViewModel>(() => {
-    const initialData: Partial<ISiteData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
-    return SiteViewModel.fromData(initialData)
+  const viewmodel: SiteViewModel | null = useViewModel<SiteViewModel>(async () => {
+    const initialData = await universalStorage.getContext<Partial<ISiteData>>(storageKey, {})
+    return SiteViewModel.fromData(initialData || {})
   })
+
   const context: ISiteContext | null = React.useMemo<ISiteContext | null>(
     () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
@@ -42,7 +42,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
   const theme: SiteTheme = useStateValue(viewmodel.theme$)
 
-  usePersist(viewmodel, storageKey, [viewmodel.theme$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.theme$])
 
   React.useEffect(() => {
     const darken = theme === SiteTheme.DARKEN

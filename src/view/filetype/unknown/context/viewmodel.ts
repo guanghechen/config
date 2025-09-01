@@ -16,14 +16,18 @@ export class UnknownViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
   public readonly placeholder$: IState<boolean>
 
-  public static fromData(data: Partial<IUnknownViewData> | undefined): UnknownViewViewModel {
-    const { mode }: IUnknownViewData = this.normalize(DEFAULT_DATA, data)
-    return new UnknownViewViewModel({ mode })
+  constructor(props: IProps = {}) {
+    super()
+
+    const { mode = DEFAULT_DATA.mode, placeholder = true } = props
+
+    this.mode$ = new State<ModeEnum>(mode)
+    this.placeholder$ = new State<boolean>(placeholder)
   }
 
   public static normalize(
-    base: IUnknownViewData,
-    data: Partial<IUnknownViewData> | undefined,
+    data: Partial<IUnknownViewData> | null | undefined,
+    base: IUnknownViewData = DEFAULT_DATA,
   ): IUnknownViewData {
     const { mode } = data || {}
     const normalizedMode: ModeEnum =
@@ -34,22 +38,14 @@ export class UnknownViewViewModel extends ViewModel {
     return normalizedData
   }
 
-  constructor(props: IProps = {}) {
-    super()
-
-    const { mode = DEFAULT_DATA.mode, placeholder = true } = props
-
-    this.mode$ = new State<ModeEnum>(mode)
-    this.placeholder$ = new State<boolean>(placeholder)
-  }
-
   public dump = (): IUnknownViewData => {
     const mode: ModeEnum = this.mode$.getSnapshot()
     return { mode }
   }
 
   public load = (data: Partial<IUnknownViewData> | undefined): void => {
-    const { mode }: IUnknownViewData = UnknownViewViewModel.normalize(this.dump(), data)
+    const base: IUnknownViewData = this.dump()
+    const { mode }: IUnknownViewData = UnknownViewViewModel.normalize(data, base)
     this.mode$.next(mode)
   }
 }

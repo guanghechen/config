@@ -1,6 +1,7 @@
 import React from 'react'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
+import { universalStorage } from '@/util/storage'
 import type { IWhiteboardViewContext } from './context'
 import { WhiteboardViewContextType } from './context'
 import type { IWhiteboardViewData } from './types'
@@ -27,21 +28,22 @@ export const WhiteboardViewProvider: React.FC<IProps> = ({
   filepath,
   children,
 }) => {
-  const viewmodel: WhiteboardViewViewModel | null = useViewModel<WhiteboardViewViewModel>(() => {
-    const rawViewData: Partial<IWhiteboardViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: WhiteboardViewViewModel | null = useViewModel<WhiteboardViewViewModel>(
+    async () => {
+      const rawViewData =
+        await universalStorage.getContext<Partial<IWhiteboardViewData>>(storageKey)
 
-    const viewData: IWhiteboardViewData = WhiteboardViewViewModel.normalize(rawViewData)
-    return new WhiteboardViewViewModel({
-      content: content ?? viewData.content,
-      filetype: filetype ?? viewData.filetype,
-      editorVisible: editorVisible ?? viewData.editorVisible,
-      editorWidth: editorWidth ?? viewData.editorWidth,
-      editorLanguage: editorLanguage ?? viewData.editorLanguage,
-      filepath: filepath ?? viewData.filepath,
-    })
-  })
+      const viewData: IWhiteboardViewData = WhiteboardViewViewModel.normalize(rawViewData)
+      return new WhiteboardViewViewModel({
+        content: content ?? viewData.content,
+        filetype: filetype ?? viewData.filetype,
+        editorVisible: editorVisible ?? viewData.editorVisible,
+        editorWidth: editorWidth ?? viewData.editorWidth,
+        editorLanguage: editorLanguage ?? viewData.editorLanguage,
+        filepath: filepath ?? viewData.filepath,
+      })
+    },
+  )
 
   const context: IWhiteboardViewContext | null = React.useMemo<IWhiteboardViewContext | null>(
     () => (viewmodel ? { viewmodel } : null),
@@ -71,7 +73,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
-  usePersist(viewmodel, storageKey, [
+  usePersistAsync(viewmodel, storageKey, [
     viewmodel.content$,
     viewmodel.filetype$,
     viewmodel.editorVisible$,

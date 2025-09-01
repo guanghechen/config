@@ -5,10 +5,11 @@ import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useGetWorkspaces } from '@/hook/api/workspaces'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import { ServerCustomEventType } from '@/shared/types'
 import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '@/shared/types'
+import { universalStorage } from '@/util/storage'
 import type { IWorkspaceContext } from './context'
 import { WorkspaceViewContextType } from './context'
 import type { IWorkspaceViewData } from './types'
@@ -18,25 +19,26 @@ const storageKey: string = '#/view/workspace'
 
 export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = props => {
   const { workspace_name } = useParams<{ workspace_name?: string }>()
-  const viewmodel: WorkspaceViewViewModel | null = useViewModel<WorkspaceViewViewModel>(() => {
-    const rawViewData: Partial<IWorkspaceViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
-    const usp = new URLSearchParams(window.location.search)
-    const workspace: string | null = workspace_name || null
-    const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
+  const viewmodel: WorkspaceViewViewModel | null = useViewModel<WorkspaceViewViewModel>(
+    async () => {
+      const rawViewData = await universalStorage.getContext<Partial<IWorkspaceViewData>>(storageKey)
+      const usp = new URLSearchParams(window.location.search)
+      const workspace: string | null = workspace_name || null
+      const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
 
-    const viewData: IWorkspaceViewData = WorkspaceViewViewModel.normalize(rawViewData)
-    return new WorkspaceViewViewModel({
-      workspace: workspace ?? viewData.workspace,
-      filepath: filepath ?? viewData.filepath,
-      workspaces: viewData.workspaces,
-      filetreeKeyword: viewData.filetreeKeyword,
-      filetreeMode: viewData.filetreeMode,
-      sidebarVisible: viewData.sidebarVisible,
-      sidebarWidth: viewData.sidebarWidth,
-    })
-  })
+      const viewData: IWorkspaceViewData = WorkspaceViewViewModel.normalize(rawViewData)
+      return new WorkspaceViewViewModel({
+        workspace: workspace ?? viewData.workspace,
+        filepath: filepath ?? viewData.filepath,
+        workspaces: viewData.workspaces,
+        filetreeKeyword: viewData.filetreeKeyword,
+        filetreeMode: viewData.filetreeMode,
+        sidebarVisible: viewData.sidebarVisible,
+        sidebarWidth: viewData.sidebarWidth,
+      })
+    },
+  )
+
   const context: IWorkspaceContext | null = React.useMemo<IWorkspaceContext | null>(
     () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
@@ -65,7 +67,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, workspace } = props
 
-  usePersist(viewmodel, storageKey, [
+  usePersistAsync(viewmodel, storageKey, [
     viewmodel.filepath$,
     viewmodel.workspace$,
     viewmodel.workspaces$,

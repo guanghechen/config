@@ -1,10 +1,11 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import type { ITextTransformConfig } from '@/shared/types'
 import { validateTransformConfig } from '@/shared/util'
+import { universalStorage } from '@/util/storage'
 import { transformTextToNodes } from '../util/transform'
 import type { ITextViewContext } from './context'
 import { TextViewContextType } from './context'
@@ -23,10 +24,8 @@ interface IProps {
 export const TextViewProvider: React.FC<IProps> = props => {
   const { content, contentError, mode, contentMode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/text`
-  const viewmodel: TextViewViewModel | null = useViewModel<TextViewViewModel>(() => {
-    const rawViewData: Partial<ITextViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: TextViewViewModel | null = useViewModel<TextViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext<Partial<ITextViewData>>(storageKey)
     const viewData: ITextViewData = TextViewViewModel.normalize(rawViewData)
 
     return new TextViewViewModel({
@@ -74,7 +73,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, contentMode, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [
+  usePersistAsync(viewmodel, storageKey, [
     viewmodel.mode$,
     viewmodel.contentMode$,
     viewmodel.nodeDetailsPaneWidth$,

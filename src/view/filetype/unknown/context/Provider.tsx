@@ -1,6 +1,7 @@
 import React from 'react'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
+import { universalStorage } from '@/util/storage'
 import type { IUnknownViewContext } from './context'
 import { UnknownViewContextType } from './context'
 import type { IUnknownViewData, ModeEnum } from './types'
@@ -16,14 +17,9 @@ interface IProps {
 export const UnknownViewProvider: React.FC<IProps> = props => {
   const { placeholder, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/unknown`
-  const viewmodel: UnknownViewViewModel | null = useViewModel<UnknownViewViewModel>(() => {
-    const rawViewData: Partial<IUnknownViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
-    const viewData: IUnknownViewData = UnknownViewViewModel.normalize(
-      { mode: mode ?? 1 }, // DEFAULT_DATA equivalent
-      rawViewData,
-    )
+  const viewmodel: UnknownViewViewModel | null = useViewModel<UnknownViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext(storageKey)
+    const viewData: IUnknownViewData = UnknownViewViewModel.normalize(rawViewData)
     return new UnknownViewViewModel({
       mode: mode ?? viewData.mode,
       placeholder,
@@ -63,7 +59,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, placeholder, mode, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [viewmodel.mode$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.mode$])
   useSyncProps(viewmodel, placeholder, mode)
 
   return <React.Fragment />

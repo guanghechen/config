@@ -1,6 +1,7 @@
 import React from 'react'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
+import { universalStorage } from '@/util/storage'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'
 import type { IPdfViewData, ModeEnum } from './types'
@@ -18,10 +19,8 @@ interface IProps {
 export const PdfViewProvider: React.FC<IProps> = props => {
   const { url, mode, scale, multiview, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/pdf`
-  const viewmodel: PdfViewViewModel | null = useViewModel<PdfViewViewModel>(() => {
-    const rawViewData: Partial<IPdfViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: PdfViewViewModel | null = useViewModel<PdfViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext(storageKey)
     const viewData: IPdfViewData = PdfViewViewModel.normalize(rawViewData)
     return new PdfViewViewModel({
       url,
@@ -68,7 +67,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, url, mode, scale, multiview, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [
+  usePersistAsync(viewmodel, storageKey, [
     viewmodel.mode$,
     viewmodel.scale$,
     viewmodel.multiview$,

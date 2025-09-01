@@ -1,8 +1,9 @@
 import React from 'react'
 import { toast } from 'react-toastify'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import type { IMarkdownFileData } from '@/shared/types/api'
+import { universalStorage } from '@/util/storage'
 import type { IMarkdownViewContext } from './context'
 import { MarkdownViewContextType } from './context'
 import type { IMarkdownViewData, ModeEnum } from './types'
@@ -19,10 +20,8 @@ interface IProps {
 export const MarkdownViewProvider: React.FC<IProps> = props => {
   const { data, dataError, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/markdown`
-  const viewmodel: MarkdownViewViewModel | null = useViewModel<MarkdownViewViewModel>(() => {
-    const rawViewData: Partial<IMarkdownViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: MarkdownViewViewModel | null = useViewModel<MarkdownViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext<Partial<IMarkdownViewData>>(storageKey)
     const viewData: IMarkdownViewData = MarkdownViewViewModel.normalize(rawViewData)
     return new MarkdownViewViewModel({
       mode: mode ?? viewData.mode,
@@ -66,7 +65,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, data, dataError, mode, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [viewmodel.mode$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.mode$])
   useSyncProps(viewmodel, mode)
   useData(viewmodel, data, dataError)
 

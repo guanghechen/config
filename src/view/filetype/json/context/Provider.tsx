@@ -1,8 +1,9 @@
 import JSON5 from 'json5'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
+import { universalStorage } from '@/util/storage'
 import type { IJsonViewContext } from './context'
 import { JsonViewContextType } from './context'
 import type { IJsonViewData, ModeEnum } from './types'
@@ -19,10 +20,8 @@ interface IProps {
 export const JsonViewProvider: React.FC<IProps> = props => {
   const { content, contentError, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/json`
-  const viewmodel: JsonViewViewModel | null = useViewModel<JsonViewViewModel>(() => {
-    const rawViewData: Partial<IJsonViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: JsonViewViewModel | null = useViewModel<JsonViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext(storageKey)
     const viewData: IJsonViewData = JsonViewViewModel.normalize(rawViewData)
     return new JsonViewViewModel({
       mode: mode ?? viewData.mode,
@@ -64,7 +63,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [viewmodel.mode$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.mode$])
   useSyncProps(viewmodel, mode)
   useData(viewmodel, content, contentError)
 

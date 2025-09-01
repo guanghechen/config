@@ -1,7 +1,8 @@
 import React from 'react'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import type { IImageFileData } from '@/shared/types/api'
+import { universalStorage } from '@/util/storage'
 import type { IImageViewContext } from './context'
 import { ImageViewContextType } from './context'
 import type { IImageViewData, IImageViewPosition, ModeEnum } from './types'
@@ -20,10 +21,8 @@ interface IProps {
 export const ImageViewProvider: React.FC<IProps> = props => {
   const { url, mode, scale, rotation, position, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/image`
-  const viewmodel: ImageViewViewModel | null = useViewModel<ImageViewViewModel>(() => {
-    const rawViewData: Partial<IImageViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: ImageViewViewModel | null = useViewModel<ImageViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext(storageKey)
     const viewData: IImageViewData = ImageViewViewModel.normalize(rawViewData)
     return new ImageViewViewModel({
       mode: mode ?? viewData.mode,
@@ -72,7 +71,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, url, mode, scale, rotation, position, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [
+  usePersistAsync(viewmodel, storageKey, [
     viewmodel.mode$,
     viewmodel.scale$,
     viewmodel.rotation$,

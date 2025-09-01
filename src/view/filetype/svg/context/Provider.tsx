@@ -1,7 +1,8 @@
 import React from 'react'
 import { toast } from 'react-toastify'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
+import { universalStorage } from '@/util/storage'
 import type { ISvgViewContext } from './context'
 import { SvgViewContextType } from './context'
 import type { ISvgViewData, ISvgViewPosition, ModeEnum } from './types'
@@ -22,10 +23,8 @@ export const SvgViewProvider: React.FC<IProps> = props => {
   const { content, contentError, mode, scale, rotation, position, storageKeyScope, children } =
     props
   const storageKey = `${storageKeyScope}/filetype/svg`
-  const viewmodel: SvgViewViewModel | null = useViewModel<SvgViewViewModel>(() => {
-    const rawViewData: Partial<ISvgViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: SvgViewViewModel | null = useViewModel<SvgViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext(storageKey)
     const viewData: ISvgViewData = SvgViewViewModel.normalize(rawViewData)
     return new SvgViewViewModel({
       mode: mode ?? viewData.mode,
@@ -77,7 +76,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, scale, rotation, position, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [
+  usePersistAsync(viewmodel, storageKey, [
     viewmodel.mode$,
     viewmodel.scale$,
     viewmodel.rotation$,

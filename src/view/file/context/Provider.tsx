@@ -2,14 +2,11 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import { ServerCustomEventType } from '@/shared/types'
-import type {
-  IResponsePayloadFileChanged,
-  IResponsePayloadFileSwitch,
-  Mutable,
-} from '@/shared/types'
+import type { IResponsePayloadFileChanged, IResponsePayloadFileSwitch } from '@/shared/types'
+import { universalStorage } from '@/util/storage'
 import type { IFileContext } from './context'
 import { FileViewContextType } from './context'
 import type { IFileViewData } from './types'
@@ -22,10 +19,8 @@ interface ISideEffectProps {
 }
 
 export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props => {
-  const viewmodel: FileViewViewModel | null = useViewModel<FileViewViewModel>(() => {
-    const rawViewData: Mutable<Partial<IFileViewData>> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
+  const viewmodel: FileViewViewModel | null = useViewModel<FileViewViewModel>(async () => {
+    const rawViewData = await universalStorage.getContext<Partial<IFileViewData>>(storageKey)
     const viewData: IFileViewData = FileViewViewModel.normalize(rawViewData)
     const usp = new URLSearchParams(window.location.search)
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
@@ -116,7 +111,7 @@ HmrSideEffect.displayName = 'FileViewHmrSideEffect'
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
-  usePersist(viewmodel, storageKey, [viewmodel.filepath$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.filepath$])
   useUrlParams(viewmodel)
 
   return <React.Fragment />

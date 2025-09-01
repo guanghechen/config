@@ -1,7 +1,8 @@
 import React from 'react'
 import { toast } from 'react-toastify'
-import { usePersist } from '@/hook/usePersist'
+import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
+import { universalStorage } from '@/util/storage'
 import type { IExcalidrawViewContext } from './context'
 import { ExcalidrawViewContextType } from './context'
 import type { IExcalidrawViewData, ModeEnum } from './types'
@@ -19,16 +20,16 @@ interface IProps {
 export const ExcalidrawViewProvider: React.FC<IProps> = props => {
   const { content, contentError, onSaveFile, mode, storageKeyScope, children } = props
   const storageKey = `${storageKeyScope}/filetype/excalidraw`
-  const viewmodel: ExcalidrawViewViewModel | null = useViewModel<ExcalidrawViewViewModel>(() => {
-    const rawViewData: Partial<IExcalidrawViewData> = JSON.parse(
-      window.localStorage.getItem(storageKey) || '{}',
-    )
-    const viewData: IExcalidrawViewData = ExcalidrawViewViewModel.normalize(rawViewData)
-    return new ExcalidrawViewViewModel({
-      mode: mode ?? viewData.mode,
-      saveFile: onSaveFile,
-    })
-  })
+  const viewmodel: ExcalidrawViewViewModel | null = useViewModel<ExcalidrawViewViewModel>(
+    async () => {
+      const rawViewData = await universalStorage.getContext(storageKey)
+      const viewData: IExcalidrawViewData = ExcalidrawViewViewModel.normalize(rawViewData)
+      return new ExcalidrawViewViewModel({
+        mode: mode ?? viewData.mode,
+        saveFile: onSaveFile,
+      })
+    },
+  )
   const context: IExcalidrawViewContext | null = React.useMemo<IExcalidrawViewContext | null>(
     () => (viewmodel ? { viewmodel } : null),
     [viewmodel],
@@ -67,7 +68,7 @@ interface ISideEffectProps {
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel, content, contentError, mode, storageKey } = props
 
-  usePersist(viewmodel, storageKey, [viewmodel.mode$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.mode$])
   useSyncProps(viewmodel, mode)
   useData(viewmodel, content, contentError)
 
