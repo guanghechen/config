@@ -79,7 +79,7 @@ export const ContentPane: React.FC = () => {
   }, [toc, viewmodel])
 
   return (
-    <div ref={containerRef} className="flex-initial w-[72rem]">
+    <div ref={containerRef} className="flex-auto max-w-[72rem]">
       <div className="px-8 py-4">
         <div className="mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white">
           {title}
