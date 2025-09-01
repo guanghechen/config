@@ -82,7 +82,7 @@ export class WhiteboardViewViewModel extends ViewModel {
   }
 
   public static normalize(
-    data: Partial<IWhiteboardViewData> | undefined,
+    data: Partial<IWhiteboardViewData> | null | undefined,
     base: IWhiteboardViewData = DEFAULT_DATA,
   ): IWhiteboardViewData {
     const { content, filetype, editorVisible, editorWidth, editorLanguage, filepath } = data || {}

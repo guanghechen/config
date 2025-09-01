@@ -112,7 +112,7 @@ export class WorkspaceViewViewModel extends ViewModel {
   }
 
   public static normalize(
-    data: Partial<IWorkspaceViewData> | undefined,
+    data: Partial<IWorkspaceViewData> | null | undefined,
     base: IWorkspaceViewData = DEFAULT_DATA,
   ): IWorkspaceViewData {
     const {

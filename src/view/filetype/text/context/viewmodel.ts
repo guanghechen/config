@@ -62,7 +62,7 @@ export class TextViewViewModel extends ViewModel {
   }
 
   public static normalize(
-    data: Partial<ITextViewData> | undefined,
+    data: Partial<ITextViewData> | null | undefined,
     base: ITextViewData = DEFAULT_DATA,
   ): ITextViewData {
     const { mode, contentMode, nodeDetailsPaneWidth, transformConfig } = data || {}

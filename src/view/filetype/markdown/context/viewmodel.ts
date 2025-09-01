@@ -31,7 +31,7 @@ export class MarkdownViewViewModel extends ViewModel {
   }
 
   public static normalize(
-    data: Partial<IMarkdownViewData> | undefined,
+    data: Partial<IMarkdownViewData> | null | undefined,
     base: IMarkdownViewData = DEFAULT_DATA,
   ): IMarkdownViewData {
     const { mode } = data || {}

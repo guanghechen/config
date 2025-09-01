@@ -40,7 +40,7 @@ export class FileViewViewModel extends ViewModel {
   }
 
   public static normalize(
-    data: Partial<IFileViewData> | undefined,
+    data: Partial<IFileViewData> | null | undefined,
     base: IFileViewData = DEFAULT_DATA,
   ): IFileViewData {
     const { filepath } = data || {}
