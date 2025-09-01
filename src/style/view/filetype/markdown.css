@@ -57,7 +57,7 @@
 
     &.f-vf-main-9 {
       grid-template-columns: 2fr 1fr;
-      grid-template-areas: 'ast fm';
+      grid-template-areas: 'content fm';
     }
 
     &.f-vf-main-10 {
