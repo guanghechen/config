@@ -1,10 +1,12 @@
 @layer components {
   .vl-root[data-scenario='file'] {
+    --v-vl-topbar-height: 3rem;
+
     box-sizing: border-box;
     position: relative;
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 3rem 1fr;
+    grid-template-rows: var(--v-vl-topbar-height) 1fr;
     grid-template-areas:
       'topbar'
       'main';
@@ -21,7 +23,7 @@
     left: 0;
     z-index: 10;
     grid-area: topbar;
-    height: 3rem;
+    height: var(--v-vl-topbar-height);
     width: 100%;
     display: flex;
     align-items: center;
@@ -68,7 +70,7 @@
       &:has(.vlm-pane:nth-of-type(2)) {
         display: grid;
         gap: 1rem;
-        height: calc(100vh - 3rem);
+        height: calc(100vh - var(--v-vl-topbar-height));
 
         .vlm-pane {
           min-height: 0;
