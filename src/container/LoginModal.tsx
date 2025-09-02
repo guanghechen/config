@@ -1,24 +1,22 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { useAuthViewModel } from '@/context/auth'
+import { setAuthenticationRequiredHandler } from '@/shared/api/requester'
 
-interface IProps {
-  readonly isOpen: boolean
-  readonly onClose: () => void
-}
-
-export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
+export const LoginModal: React.FC = () => {
   const authViewModel = useAuthViewModel()
   const loading = useStateValue(authViewModel.loading$)
   const error = useStateValue(authViewModel.error$)
 
+  const signed = useStateValue(authViewModel.signed$)
   const [username, setUsername] = React.useState('')
   const [password, setPassword] = React.useState('')
   const usernameRef = React.useRef<HTMLInputElement>(null)
   const passwordRef = React.useRef<HTMLInputElement>(null)
 
-  // Check for autofilled values
+  // Check for auto-filled values
   const checkAutofill = React.useCallback(() => {
     if (usernameRef.current && passwordRef.current) {
       const usernameValue = usernameRef.current.value
@@ -33,9 +31,32 @@ export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
     }
   }, [username, password])
 
+  const handleClose = React.useCallback(() => {
+    authViewModel.closeAuthenticationDialog()
+  }, [authViewModel])
+
+  const handleSubmit = useEventCallback((e: React.FormEvent) => {
+    e.preventDefault()
+    if (!username.trim() || !password.trim()) return
+    void authViewModel.login({ username: username.trim(), password })
+  })
+
+  const handleKeyDown = useEventCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      handleClose()
+    }
+  })
+
+  React.useEffect(() => {
+    // Set up global authentication handler to use the viewmodel
+    setAuthenticationRequiredHandler(() => {
+      authViewModel.requestAuthentication()
+    })
+  }, [authViewModel])
+
   // Detect autofill using multiple strategies
   React.useEffect(() => {
-    if (!isOpen) return
+    if (!signed) return
 
     // Strategy 1: Check immediately and after short delays
     const timeouts = [0, 100, 500, 1000].map(delay => setTimeout(checkAutofill, delay))
@@ -53,7 +74,7 @@ export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
       clearInterval(pollInterval)
       clearTimeout(stopPolling)
     }
-  }, [isOpen, checkAutofill])
+  }, [signed, checkAutofill])
 
   React.useEffect(() => {
     if (error) {
@@ -65,26 +86,7 @@ export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
     }
   }, [error, authViewModel])
 
-  const handleSubmit = React.useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault()
-      if (!username.trim() || !password.trim()) return
-
-      void authViewModel.login({ username: username.trim(), password })
-    },
-    [username, password, authViewModel],
-  )
-
-  const handleKeyDown = React.useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    },
-    [onClose],
-  )
-
-  if (!isOpen) return null
+  if (!signed) return <React.Fragment />
 
   return (
     <div
@@ -97,7 +99,7 @@ export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Sign In</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Close modal"
           >
@@ -179,7 +181,7 @@ export const LoginModal: React.FC<IProps> = ({ isOpen, onClose }) => {
           <div className="flex justify-end space-x-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={loading}
               className={cn(
                 'rounded-md border border-gray-300 px-4 py-2 text-sm font-medium',

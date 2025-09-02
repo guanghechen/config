@@ -1,4 +1,5 @@
 import React from 'react'
+import { ViewLayout } from '@/container/ViewLayout'
 import { FileSearch } from './container/FileSearch'
 import { Main } from './layout/main'
 import { Sidebar } from './layout/sidebar'
@@ -11,14 +12,14 @@ export class Composer extends React.PureComponent {
 
   public override render(): React.ReactElement {
     return (
-      <div className="f-vf-root" data-view="workspace">
-        <Topbar />
-        <FileSearch />
-        <div className="f-vf-sidebar">
-          <Sidebar />
-        </div>
+      <ViewLayout
+        scenario="workspace"
+        floating={<FileSearch />}
+        menu={<Topbar />}
+        sidebar={<Sidebar />}
+      >
         <Main storageKeyScope={storageKeyScope} />
-      </div>
+      </ViewLayout>
     )
   }
 }

@@ -1,40 +1,40 @@
 @layer components {
-  .f-vf-main[data-filetype='text'] {
-    .f-vfp-content {
+  .vlm-canvas[data-filetype='text'] {
+    .vlm-p-content {
       grid-area: content;
       display: flex;
       flex-direction: column;
     }
 
-    .f-vfp-raw {
+    .vlm-p-raw {
       grid-area: raw;
     }
 
-    .f-vfp-transform {
+    .vlm-p-transform {
       grid-area: transform;
       display: flex;
       flex-direction: column;
     }
 
-    .f-vfp-nav {
+    .vlm-p-nav {
       grid-area: nav;
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
 
-    &.f-vf-main-1,
-    &.f-vf-main-2,
-    &.f-vf-main-4,
-    &.f-vf-main-8 {
+    &.vlm-canvas-1,
+    &.vlm-canvas-2,
+    &.vlm-canvas-4,
+    &.vlm-canvas-8 {
       height: auto;
     }
 
-    &.f-vf-main-1[data-content-mode='graph'] {
+    &.vlm-canvas-1[data-content-mode='graph'] {
       display: block;
       height: calc(100vh - 3rem);
 
-      .f-vfp-content {
+      .vlm-p-content {
         height: 100%;
         width: 100%;
         padding: 0;
@@ -42,22 +42,22 @@
       }
     }
 
-    &.f-vf-main-3 {
+    &.vlm-canvas-3 {
       grid-template-columns: 1fr 1fr;
       grid-template-areas: 'content raw';
     }
 
-    &.f-vf-main-5 {
+    &.vlm-canvas-5 {
       grid-template-columns: 2fr 1fr;
       grid-template-areas: 'content transform';
     }
 
-    &.f-vf-main-6 {
+    &.vlm-canvas-6 {
       grid-template-columns: 2fr 1fr;
       grid-template-areas: 'raw transform';
     }
 
-    &.f-vf-main-7 {
+    &.vlm-canvas-7 {
       grid-template-columns: 2fr 1fr;
       grid-template-rows: 1fr 1fr;
       grid-template-areas:
@@ -65,17 +65,17 @@
         'raw     transform';
     }
 
-    &.f-vf-main-9 {
+    &.vlm-canvas-9 {
       grid-template-columns: 2fr 1fr;
       grid-template-areas: 'content nav';
     }
 
-    &.f-vf-main-10 {
+    &.vlm-canvas-10 {
       grid-template-columns: 2fr 1fr;
       grid-template-areas: 'raw nav';
     }
 
-    &.f-vf-main-11 {
+    &.vlm-canvas-11 {
       grid-template-columns: 2fr 1fr;
       grid-template-rows: 1fr 1fr;
       grid-template-areas:
@@ -83,22 +83,22 @@
         'raw     nav';
     }
 
-    &.f-vf-main-12 {
+    &.vlm-canvas-12 {
       grid-template-columns: 1fr 1fr;
       grid-template-areas: 'nav  transform';
     }
 
-    &.f-vf-main-13 {
+    &.vlm-canvas-13 {
       grid-template-columns: 2fr 1fr 1fr;
       grid-template-areas: 'content nav transform';
     }
 
-    &.f-vf-main-14 {
+    &.vlm-canvas-14 {
       grid-template-columns: 2fr 1fr 1fr;
       grid-template-areas: 'raw nav transform';
     }
 
-    &.f-vf-main-15 {
+    &.vlm-canvas-15 {
       grid-template-columns: 2fr 1fr 1fr;
       grid-template-rows: 1fr 1fr;
       grid-template-areas:

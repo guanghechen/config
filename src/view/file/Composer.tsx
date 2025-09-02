@@ -1,4 +1,5 @@
 import React from 'react'
+import { ViewLayout } from '@/container/ViewLayout'
 import { Main } from './layout/main'
 import { Topbar } from './layout/topbar'
 
@@ -9,10 +10,9 @@ export class Composer extends React.PureComponent {
 
   public override render(): React.ReactElement {
     return (
-      <div className="f-vf-root" data-view="file">
-        <Topbar />
+      <ViewLayout scenario="file" toolbar={<Topbar />}>
         <Main storageKeyScope={storageKeyScope} />
-      </div>
+      </ViewLayout>
     )
   }
 }

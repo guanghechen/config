@@ -24,7 +24,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
   if (!content && !contentData.contentError) {
     return (
       <div
-        className="f-vf-main flex flex-col items-center justify-center text-gray-500 dark:text-gray-400"
+        className="vl-main flex flex-col items-center justify-center text-gray-500 dark:text-gray-400"
         style={{ height: 'calc(100vh - 3rem)' }}
       >
         <div className="text-xl mb-2">🎨</div>
@@ -38,7 +38,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
   if (contentData.contentError) {
     return (
       <div
-        className="f-vf-main flex flex-col items-center justify-center text-red-500 dark:text-red-400"
+        className="vl-main flex flex-col items-center justify-center text-red-500 dark:text-red-400"
         style={{ height: 'calc(100vh - 3rem)' }}
       >
         <div className="text-xl mb-2">⚠️</div>

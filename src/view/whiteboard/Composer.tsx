@@ -1,5 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
+import { ViewLayout } from '@/container/ViewLayout'
 import { useWhiteboardViewmodel } from './context'
 import { Main } from './layout/main'
 import { Sidebar } from './layout/sidebar'
@@ -10,13 +11,13 @@ export const Composer: React.FC = () => {
   const editorVisible: boolean = useStateValue(viewmodel.editorVisible$)
 
   return (
-    <div className="f-vf-root" data-view="whiteboard">
-      <Topbar />
+    <ViewLayout
+      scenario="whiteboard"
+      toolbar={<Topbar />}
+      sidebar={editorVisible ? <Sidebar /> : undefined}
+    >
       <Main />
-      <div className={editorVisible ? 'f-vf-editor' : 'hidden'}>
-        <Sidebar />
-      </div>
-    </div>
+    </ViewLayout>
   )
 }
 

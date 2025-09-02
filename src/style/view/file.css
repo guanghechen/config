@@ -1,5 +1,5 @@
 @layer components {
-  .f-vf-root[data-view='file'] {
+  .vl-root[data-scenario='file'] {
     box-sizing: border-box;
     position: relative;
     display: grid;
@@ -14,7 +14,7 @@
     @apply transition-colors duration-300 ease-in-out bg-gray-50 text-gray-800 dark:bg-gray-800 dark:text-gray-200;
   }
 
-  .f-vf-topbar {
+  .vl-topbar {
     box-sizing: border-box;
     position: sticky;
     top: 0;
@@ -26,45 +26,67 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem;
-    padding-left: 3.5rem; /* Add extra left padding to avoid overlap with settings button */
+    gap: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
     @apply bg-gray-50 dark:bg-gray-800;
+
+    .vl-topbar-leftest,
+    .vl-topbar-rightest {
+      flex: 0 0 auto;
+    }
+
+    .vl-topbar-left,
+    .vl-topbar-right {
+      flex: 0 1 auto;
+    }
+
+    .vl-topbar-middle {
+      flex: 1 1 auto;
+    }
   }
 
-  .f-vf-main {
+  .vl-main {
     box-sizing: border-box;
     grid-area: main;
     width: 100%;
-    padding: 1rem;
-    padding-top: 0;
-  }
+    height: 100%;
+    padding: 0;
 
-  .f-vf-pane {
-    position: relative;
-    box-sizing: border-box;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    border-left-width: 0.5rem;
-    border-right-width: 0.5rem;
-    border-top-width: 1rem;
-    border-bottom-width: 1rem;
-    min-height: calc(100vh - 4rem);
-    @apply shadow-lg rounded-lg border-transparent
-      backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80
-      text-slate-800  dark:text-gray-200;
-  }
-
-  .f-vf-main:has(.f-vf-pane:nth-of-type(2)) {
-    display: grid;
-    gap: 1rem;
-    height: calc(100vh - 3rem);
-
-    .f-vf-pane {
-      min-height: 0;
-      height: 100%;
+    .vlm-canvas {
+      box-sizing: border-box;
+      grid-area: main;
       width: 100%;
-      overflow: auto;
+      padding: 1rem;
+      padding-top: 0;
+
+      &:has(.vlm-pane:nth-of-type(2)) {
+        display: grid;
+        gap: 1rem;
+        height: calc(100vh - 3rem);
+
+        .vlm-pane {
+          min-height: 0;
+          height: 100%;
+          width: 100%;
+          overflow: auto;
+        }
+      }
+
+      .vlm-pane {
+        position: relative;
+        box-sizing: border-box;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        border-left-width: 0.5rem;
+        border-right-width: 0.5rem;
+        border-top-width: 1rem;
+        border-bottom-width: 1rem;
+        min-height: calc(100vh - 4rem);
+        @apply shadow-lg rounded-lg border-transparent
+        backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80
+        text-slate-800  dark:text-gray-200;
+      }
     }
   }
 }

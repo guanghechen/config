@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { ContentModeEnum, ModeEnum, useTextViewViewModel } from '../context'
 
 export const ModeToggle: React.FC = () => {
@@ -11,8 +12,12 @@ export const ModeToggle: React.FC = () => {
   const showView: boolean = (mode & ModeEnum.CONTENT) !== 0
   const showNav: boolean = showView && contentMode === ContentModeEnum.LIST
 
-  return (
-    <div className="fixed top-3 right-4 z-50">
+  const portalTarget = React.useMemo(() => {
+    return document.querySelector('.vl-topbar-rightest')
+  }, [])
+
+  const toggleContent = (
+    <div className="flex items-center justify-end">
       <div
         className="flex h-5 select-none rounded-lg bg-gray-200 bg-opacity-70 text-sm shadow-md transition-all hover:bg-opacity-90 dark:bg-gray-700 dark:bg-opacity-70 dark:hover:bg-opacity-90"
         title={`Current mode: ${mode}`}
@@ -66,6 +71,12 @@ export const ModeToggle: React.FC = () => {
       </div>
     </div>
   )
+
+  if (!portalTarget) {
+    return null
+  }
+
+  return createPortal(toggleContent, portalTarget)
 }
 
 ModeToggle.displayName = 'TextViewModeToggle'

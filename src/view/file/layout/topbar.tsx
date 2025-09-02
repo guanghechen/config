@@ -8,8 +8,6 @@ export const Topbar: React.FC = () => {
   const filepath = useStateValue(viewmodel.filepath$)
 
   return (
-    <div className="f-vf-topbar">
-      {filepath && <FilePath filepath={filepath} workspace={null} />}
-    </div>
+    <React.Fragment>{filepath && <FilePath filepath={filepath} workspace={null} />}</React.Fragment>
   )
 }

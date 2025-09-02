@@ -1,13 +1,13 @@
 @layer components {
-  .f-vf-main[data-filetype='pdf'] {
-    .f-vfp-content {
+  .vlm-canvas[data-filetype='pdf'] {
+    .vlm-p-content {
       grid-area: content;
       display: flex;
       justify-content: center;
       padding-bottom: 2rem;
     }
 
-    .f-vfp-literal {
+    .vlm-p-literal {
       grid-area: literal;
       display: flex;
       justify-content: center;

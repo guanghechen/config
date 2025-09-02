@@ -5,7 +5,6 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
-import { GlobalLayout } from './container/GlobalLayout'
 import { AuthContextProvider } from './context/auth'
 import { SiteContextProvider } from './context/site'
 import { routes, views } from './route'
@@ -32,9 +31,7 @@ const App: React.FC = () => {
         <SiteContextProvider>
           <MathJaxProvider>
             <BrowserRouter>
-              <GlobalLayout>
-                <AppRoutes />
-              </GlobalLayout>
+              <AppRoutes />
             </BrowserRouter>
           </MathJaxProvider>
         </SiteContextProvider>

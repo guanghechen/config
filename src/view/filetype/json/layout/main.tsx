@@ -11,14 +11,14 @@ export const Main: React.FC = () => {
   const mode = m < 1 ? 1 : m
 
   return (
-    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="json">
+    <div className={cn('vlm-canvas', `vlm-canvas-${mode}`)} data-filetype="json">
       {(mode & ModeEnum.CONTENT) !== 0 && (
-        <div className="f-vf-pane f-vfp-content">
+        <div className="vlm-pane vlm-p-content">
           <ContentPane />
         </div>
       )}
       {(mode & ModeEnum.LITERAL) !== 0 && (
-        <div className="f-vf-pane f-vfp-literal">
+        <div className="vlm-pane vlm-p-literal">
           <LiteralPane />
         </div>
       )}

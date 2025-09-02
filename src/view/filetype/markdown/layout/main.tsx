@@ -13,24 +13,24 @@ export const Main: React.FC = () => {
   const mode = m < 1 ? 1 : m
 
   return (
-    <div className={cn('f-vf-main', `f-vf-main-${mode}`)} data-filetype="markdown">
+    <div className={cn('vlm-canvas', `vlm-canvas-${mode}`)} data-filetype="markdown">
       {(mode & ModeEnum.CONTENT) !== 0 && (
-        <div className="f-vf-pane f-vfp-content">
+        <div className="vlm-pane vlm-p-content">
           <ContentPane />
         </div>
       )}
       {(mode & ModeEnum.AST) !== 0 && (
-        <div className="f-vf-pane f-vfp-ast">
+        <div className="vlm-pane vlm-p-ast">
           <AstPane />
         </div>
       )}
       {(mode & ModeEnum.TOC) !== 0 && (
-        <div className="f-vf-pane f-vfp-toc">
+        <div className="vlm-pane vlm-p-toc">
           <TocPane />
         </div>
       )}
       {(mode & ModeEnum.FM) !== 0 && (
-        <div className="f-vf-pane f-vfp-fm">
+        <div className="vlm-pane vlm-p-fm">
           <FrontmatterPane />
         </div>
       )}

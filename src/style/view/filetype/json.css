@@ -1,24 +1,24 @@
 @layer components {
-  .f-vf-main[data-filetype='json'] {
-    .f-vfp-content {
+  .vlm-canvas[data-filetype='json'] {
+    .vlm-p-content {
       grid-area: content;
       display: flex;
       justify-content: center;
       padding-bottom: 2rem;
     }
 
-    .f-vfp-literal {
+    .vlm-p-literal {
       grid-area: literal;
       display: flex;
       justify-content: center;
     }
 
-    &.f-vf-main-1,
-    &.f-vf-main-2 {
+    &.vlm-canvas-1,
+    &.vlm-canvas-2 {
       height: auto;
     }
 
-    &.f-vf-main-3 {
+    &.vlm-canvas-3 {
       grid-template-columns: 1fr 1fr;
       grid-template-areas: 'content literal';
     }

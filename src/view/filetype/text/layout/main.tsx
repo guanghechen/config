@@ -19,27 +19,27 @@ export const Main: React.FC = () => {
 
   return (
     <div
-      className={cn('f-vf-main', `f-vf-main-${mode}`)}
+      className={cn('vlm-canvas', `vlm-canvas-${mode}`)}
       data-filetype="text"
       data-content-mode={contentMode}
     >
       {(mode & ModeEnum.CONTENT) !== 0 && (
-        <div className="f-vf-pane f-vfp-content">
+        <div className="vlm-pane vlm-p-content">
           <ContentPane />
         </div>
       )}
       {(mode & ModeEnum.NAV) !== 0 && contentMode === ContentModeEnum.LIST && (
-        <div className="f-vf-pane f-vfp-nav">
+        <div className="vlm-pane vlm-p-nav">
           <NavPane />
         </div>
       )}
       {(mode & ModeEnum.RAW) !== 0 && (
-        <div className="f-vf-pane f-vfp-raw">
+        <div className="vlm-pane vlm-p-raw">
           <RawPane />
         </div>
       )}
       {(mode & ModeEnum.TRANSFORM) !== 0 && (
-        <div className="f-vf-pane f-vfp-transform">
+        <div className="vlm-pane vlm-p-transform">
           <TransformPane />
         </div>
       )}

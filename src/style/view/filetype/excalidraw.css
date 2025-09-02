@@ -1,24 +1,24 @@
 @layer components {
-  .f-vf-main[data-filetype='excalidraw'] {
-    .f-vfp-content {
+  .vlm-canvas[data-filetype='excalidraw'] {
+    .vlm-p-content {
       grid-area: content;
       display: flex;
       justify-content: center;
       padding-bottom: 2rem;
     }
 
-    .f-vfp-literal {
+    .vlm-p-literal {
       grid-area: literal;
       display: flex;
       justify-content: center;
       padding-bottom: 2rem;
     }
 
-    &.f-vf-main-1 {
+    &.vlm-canvas-1 {
       display: block;
       height: calc(100vh - 3rem);
 
-      .f-vfp-content {
+      .vlm-p-content {
         position: relative;
         height: 100%;
         width: 100%;
@@ -29,7 +29,7 @@
   }
 }
 
-.f-vf-main[data-filetype='excalidraw'] {
+.vlm-canvas[data-filetype='excalidraw'] {
   .excalidraw {
     &.excalidraw-container {
       width: 100%;
