@@ -229,6 +229,22 @@ export const FolderOpenIcon: React.FC<IIconProps> = props => {
   )
 }
 
+export const MenuIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M120-240v-80h520v80H120Zm664-40L584-480l200-200 56 56-144 144 144 144-56 56ZM120-440v-80h400v80H120Zm0-200v-80h520v80H120Z" />
+    </svg>
+  )
+}
+
 export const OpenInNewIcon: React.FC<IIconProps> = props => {
   const { fill = 'currentColor', className } = props
   return (
@@ -309,6 +325,39 @@ export const RotateRightIcon: React.FC<IIconProps> = props => {
   )
 }
 
+export const SettingsIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M840-720v80h-520v-80H840Zm-664 40L376-480l-200 200-56-56 144-144-144-144 56-56ZM840-520v80h-400v-80H840Zm0 200v80h-520v-80H840Z" />
+    </svg>
+  )
+}
+
+export const SnippetIcon: React.FC<IIconProps> = props => {
+  const { fill = 'currentColor', className } = props
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="24px"
+      viewBox="0 -960 960 960"
+      width="24px"
+      fill={fill}
+      className={className}
+    >
+      <path d="M360-240 120-480l240-240 56 56-184 184 184 184-56 56Zm240 0-56-56 184-184-184-184 56-56 240 240-240 240Z" />
+    </svg>
+  )
+}
+
 export const TerminalIcon: React.FC<IIconProps> = props => {
   const { fill = 'currentColor', className } = props
   return (
@@ -385,38 +434,6 @@ export const ZoomOutIcon: React.FC<IIconProps> = props => {
       className={className}
     >
       <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400ZM280-540v-80h200v80H280Z" />
-    </svg>
-  )
-}
-
-export const SnippetIcon: React.FC<IIconProps> = props => {
-  const { fill = 'currentColor', className } = props
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      height="24px"
-      viewBox="0 -960 960 960"
-      width="24px"
-      fill={fill}
-      className={className}
-    >
-      <path d="M360-240 120-480l240-240 56 56-184 184 184 184-56 56Zm240 0-56-56 184-184-184-184 56-56 240 240-240 240Z" />
-    </svg>
-  )
-}
-
-export const MenuIcon: React.FC<IIconProps> = props => {
-  const { fill = 'currentColor', className } = props
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      height="24px"
-      viewBox="0 -960 960 960"
-      width="24px"
-      fill={fill}
-      className={className}
-    >
-      <path d="M120-240v-80h520v80H120Zm664-40L584-480l200-200 56 56-144 144 144 144-56 56ZM120-440v-80h400v80H120Zm0-200v-80h520v80H120Z" />
     </svg>
   )
 }

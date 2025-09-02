@@ -1,8 +1,8 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import cn from 'clsx'
-import React, { useRef, useState } from 'react'
+import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { MenuIcon } from '@/component/icon/material'
+import { SettingsIcon } from '@/component/icon/material'
 import { listedRoutes } from '@/route'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -12,12 +12,12 @@ enum MenuState {
 }
 
 export const Settings: React.FC = () => {
-  const [menuState, setMenuState] = useState<MenuState>(MenuState.CLOSED)
+  const [menuState, setMenuState] = React.useState<MenuState>(MenuState.CLOSED)
 
   const location = useLocation()
   const navigate = useNavigate()
-  const menuRef = useRef<HTMLDivElement>(null)
-  const settingsButtonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = React.useRef<HTMLDivElement>(null)
+  const settingsButtonRef = React.useRef<HTMLButtonElement>(null)
 
   const handleNavigation = useEventCallback((path: string): void => {
     void navigate(path)
@@ -52,7 +52,6 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="fixed top-2 left-4 z-50">
-      {/* Settings Button with Rotation */}
       <div className="relative">
         <button
           ref={settingsButtonRef}
@@ -65,11 +64,17 @@ export const Settings: React.FC = () => {
             'bg-white/80 hover:bg-white dark:bg-gray-600/90 dark:hover:bg-gray-600',
             'backdrop-blur-sm border border-gray-200/50 dark:border-gray-500/60',
             'shadow-sm hover:shadow-md',
-            menuState === MenuState.OPEN && '-rotate-90',
           )}
           title="Settings"
         >
-          <MenuIcon className="h-4 w-4" />
+          <div
+            className={cn(
+              'transition-transform duration-300 ease-in-out',
+              menuState === MenuState.OPEN && 'rotate-90',
+            )}
+          >
+            <SettingsIcon className="h-4 w-4" />
+          </div>
         </button>
 
         {/* Settings Content */}
