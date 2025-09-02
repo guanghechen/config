@@ -1,8 +1,7 @@
 import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
+import { getJwtSecret } from '../../util/jwt-secret'
 import type { IApiHandleParams, IApiHandleResult } from './types'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key'
 const COOKIE_NAME = 'yoz-auth'
 
 interface IJwtPayload {
@@ -37,7 +36,8 @@ export function verifyJwtMiddleware(params: IApiHandleParams): IApiHandleResult 
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as IJwtPayload
+    const jwtSecret = getJwtSecret()
+    const decoded = jwt.verify(token, jwtSecret) as IJwtPayload
     // Add user info to request for potential use in handlers
     ;(req as any).user = decoded
     return null // Continue to handler

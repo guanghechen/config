@@ -1,5 +1,5 @@
 import * as cookie from 'cookie'
-import type { IApiHandle, IApiHandleData } from '../../types'
+import type { IApiHandle, IApiHandleData } from '../../../types'
 
 const COOKIE_NAME = 'yoz-auth'
 
@@ -7,7 +7,7 @@ interface ILogoutResponse {
   readonly success: boolean
 }
 
-export const logoutUser: IApiHandle = async () => {
+export const postUserLogout: IApiHandle = async () => {
   const responseData: ILogoutResponse = {
     success: true,
   }

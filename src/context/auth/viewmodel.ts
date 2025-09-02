@@ -49,13 +49,8 @@ export class AuthViewModel extends ViewModel {
   }
 
   public async checkAuthenticationStatus(): Promise<void> {
-    try {
-      await userController.profile()
-      // Authentication check passed - no need to update state as signed$ manages dialog visibility
-    } catch (error) {
-      console.warn('Failed to check authentication status:', error)
-      // Authentication failed - no need to update state as signed$ manages dialog visibility
-    }
+    // Don't catch errors here - let 403 errors propagate to trigger authentication modal
+    await userController.profile()
   }
 
   public clearError(): void {

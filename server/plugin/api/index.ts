@@ -3,14 +3,14 @@ import type { Connect, Plugin } from 'vite'
 import { ApiRoutePathEnum } from '../../../shared/constant/api'
 import { normalizeUrlPath } from '../../../shared/util'
 import state from '../../state'
-import { authenticateUser } from './h/api/auth'
+import { postUserLogin } from './h/api/user/login'
 import { fetchCodeDefaults } from './h/api/code/defaults'
 import { fetchFile } from './h/api/file'
 import { fetchFileRaw } from './h/api/file/raw'
 import { saveFile } from './h/api/file/save'
 import { switchFile } from './h/api/file-switch'
-import { logoutUser } from './h/api/logout'
-import { getCurrentUser } from './h/api/me'
+import { postUserLogout } from './h/api/user/logout'
+import { getUserProfile } from './h/api/user/profile'
 import { getTextTransformer } from './h/api/text-transform/:name'
 import { listTextTransformers } from './h/api/text-transform/list'
 import { list_workspace_files } from './h/api/workspace/files'
@@ -19,9 +19,9 @@ import { verifyJwtMiddleware } from './jwt'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
-  [ApiRoutePathEnum.USER_LOGIN]: authenticateUser,
-  [ApiRoutePathEnum.USER_LOGOUT]: logoutUser,
-  [ApiRoutePathEnum.USER_PROFILE]: getCurrentUser,
+  [ApiRoutePathEnum.USER_LOGIN]: postUserLogin,
+  [ApiRoutePathEnum.USER_LOGOUT]: postUserLogout,
+  [ApiRoutePathEnum.USER_PROFILE]: getUserProfile,
   [ApiRoutePathEnum.FILE]: fetchFile,
   [ApiRoutePathEnum.FILE_RAW]: fetchFileRaw,
   [ApiRoutePathEnum.FILE_SAVE]: saveFile,

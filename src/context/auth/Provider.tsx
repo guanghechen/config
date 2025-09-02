@@ -37,7 +37,18 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
 
   // Check authentication status on mount
   React.useEffect(() => {
-    void viewmodel.checkAuthenticationStatus()
+    const checkAuth = async (): Promise<void> => {
+      try {
+        await viewmodel.checkAuthenticationStatus()
+      } catch (error) {
+        // If authentication check fails, trigger authentication modal
+        // This handles cases where the 403 error might not have triggered the modal
+        if (error instanceof Error && error.message.includes('Authentication required')) {
+          viewmodel.requestAuthentication()
+        }
+      }
+    }
+    void checkAuth()
   }, [viewmodel])
 
   return <React.Fragment />

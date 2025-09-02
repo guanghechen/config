@@ -1,9 +1,9 @@
 import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 import crypto from 'node:crypto'
-import type { IApiHandle, IApiHandleData } from '../../types'
+import { getJwtSecret } from '../../../../../util/jwt-secret'
+import type { IApiHandle, IApiHandleData } from '../../../types'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key'
 const JWT_EXPIRES_IN = '7d'
 const COOKIE_NAME = 'yoz-auth'
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
@@ -19,11 +19,14 @@ interface IAuthResponse {
   readonly expiresIn: string
 }
 
-function hashPassword(password: string): string {
-  return crypto.createHash('sha1').update(password).digest('hex')
+function hashPassword(password: string, salt: string): string {
+  return crypto
+    .createHash('sha256')
+    .update(password + salt)
+    .digest('hex')
 }
 
-export const authenticateUser: IApiHandle = async params => {
+export const postUserLogin: IApiHandle = async params => {
   const { body } = params
 
   if (!body) {
@@ -57,6 +60,7 @@ export const authenticateUser: IApiHandle = async params => {
 
   const expectedUsername = process.env.YOZ_USERNAME
   const expectedPassword = process.env.YOZ_PASSWORD
+  const salt = process.env.YOZ_SALT
 
   if (!expectedUsername || !expectedPassword) {
     const data: IApiHandleData = {
@@ -66,18 +70,28 @@ export const authenticateUser: IApiHandle = async params => {
     return { code: 500, data }
   }
 
-  const hashedPassword = hashPassword(password)
+  if (!salt) {
+    const data: IApiHandleData = {
+      error: 'Salt not configured - YOZ_SALT environment variable is required',
+      data: null,
+    }
+    return { code: 500, data }
+  }
+
+  const hashedPassword = hashPassword(password, salt)
 
   if (username !== expectedUsername || hashedPassword !== expectedPassword) {
     const data: IApiHandleData = {
       error: 'Invalid credentials',
       data: null,
     }
+    console.log('--> /api/user/login :', { username, hashedPassword })
     return { code: 403, data }
   }
 
   try {
-    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+    const jwtSecret = getJwtSecret()
+    const token = jwt.sign({ username }, jwtSecret, { expiresIn: JWT_EXPIRES_IN })
 
     const responseData: IAuthResponse = {
       success: true,
