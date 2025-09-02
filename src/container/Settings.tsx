@@ -85,9 +85,6 @@ export const Settings: React.FC = () => {
           )}
         >
           <div className="p-3">
-            <div className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
-              Settings
-            </div>
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-700 dark:text-gray-200">Theme</span>
@@ -95,9 +92,6 @@ export const Settings: React.FC = () => {
               </div>
             </div>
             <div className="my-3 border-t border-gray-200 dark:border-gray-600" />
-            <div className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
-              Navigation
-            </div>
             <div className="space-y-0.5">
               {listedRoutes.map(route => {
                 const isActive =
