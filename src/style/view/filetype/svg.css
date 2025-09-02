@@ -16,7 +16,10 @@
       padding-bottom: 2rem;
     }
 
-    &.vlm-canvas-1,
+    &.vlm-canvas-1 {
+      height: calc(100vh - 3rem);
+    }
+
     &.vlm-canvas-2 {
       height: auto;
     }

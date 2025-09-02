@@ -95,12 +95,17 @@ export const ContentPane: React.FC = () => {
       ref={containerRef}
       onWheel={onWheel}
       className="relative flex h-full w-full min-h-0 overflow-hidden items-center justify-center"
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseLeave}
       style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
     >
+      {/* Invisible drag overlay that covers the entire container */}
+      <div
+        className="absolute inset-0 z-10"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseLeave}
+      />
+
       {isLoading && (
         <div className="flex items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
@@ -115,8 +120,13 @@ export const ContentPane: React.FC = () => {
             transformOrigin: 'center center',
             transition: isDragging ? 'none' : 'transform 100ms ease-in-out',
           }}
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
+        >
+          <img
+            src={`data:image/svg+xml;base64,${btoa(content)}`}
+            alt="SVG content"
+            style={{ maxWidth: '100%', maxHeight: '100%' }}
+          />
+        </div>
       )}
     </div>
   )
