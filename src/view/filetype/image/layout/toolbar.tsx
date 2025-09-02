@@ -63,14 +63,14 @@ export const Toolbar: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             className={cn(
-              'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+              'h-7 w-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
               'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
               'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             )}
             onClick={onZoomOut}
             aria-label="Zoom out"
           >
-            <ZoomOutIcon />
+            <ZoomOutIcon className="h-4 w-4" />
           </button>
           <div className="flex items-center">
             <input
@@ -89,50 +89,50 @@ export const Toolbar: React.FC = () => {
           </div>
           <button
             className={cn(
-              'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+              'h-7 w-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
               'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
               'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
             )}
             onClick={onZoomIn}
             aria-label="Zoom in"
           >
-            <ZoomInIcon />
+            <ZoomInIcon className="h-4 w-4" />
           </button>
         </div>
-        <div className="mx-2 h-10 border-r border-gray-300 dark:border-gray-600" />
+        <div className="mx-2 h-6 border-r border-gray-300 dark:border-gray-600" />
         <button
           className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'h-7 w-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onRotateLeft}
           aria-label="Rotate left"
         >
-          <RotateLeftIcon />
+          <RotateLeftIcon className="h-4 w-4" />
         </button>
         <button
           className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'h-7 w-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onRotateRight}
           aria-label="Rotate right"
         >
-          <RotateRightIcon />
+          <RotateRightIcon className="h-4 w-4" />
         </button>
-        <div className="mx-2 h-10 border-r border-gray-300 dark:border-gray-600" />
+        <div className="mx-2 h-6 border-r border-gray-300 dark:border-gray-600" />
         <button
           className={cn(
-            'p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            'h-7 w-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100',
             'dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700',
             'focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors',
           )}
           onClick={onResetZoom}
           aria-label="Reset view"
         >
-          <ResetZoomIcon />
+          <ResetZoomIcon className="h-4 w-4" />
         </button>
       </div>
     </div>
