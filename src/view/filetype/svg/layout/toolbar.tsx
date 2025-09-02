@@ -17,7 +17,7 @@ export const Toolbar: React.FC = () => {
   const scale = useStateValue(viewmodel.scale$)
 
   const portalTarget = React.useMemo(() => {
-    return document.querySelector('.vl-topbar-middle')
+    return document.querySelector('.vlt-middle')
   }, [])
 
   const handleZoomIn = useEventCallback((): void => {

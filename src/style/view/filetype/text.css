@@ -32,7 +32,7 @@
 
     &.vlm-canvas-1[data-content-mode='graph'] {
       display: block;
-      height: calc(100vh - var(--v-vl-topbar-height));
+      height: calc(100vh - var(--v-vlt-height));
 
       .vlm-p-content {
         height: 100%;

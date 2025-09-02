@@ -13,7 +13,7 @@ export const ModeToggle: React.FC = () => {
   const showNav: boolean = showView && contentMode === ContentModeEnum.LIST
 
   const portalTarget = React.useMemo(() => {
-    return document.querySelector('.vl-topbar-rightest')
+    return document.querySelector('.vlt-rightest')
   }, [])
 
   const toggleContent = (

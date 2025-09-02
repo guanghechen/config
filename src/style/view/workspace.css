@@ -1,12 +1,12 @@
 @layer components {
   .vl-root[data-scenario='workspace'] {
-    --v-vl-topbar-height: 3rem;
+    --v-vlt-height: 3rem;
 
     box-sizing: border-box;
     position: relative;
     display: grid;
     grid-template-columns: auto 1fr;
-    grid-template-rows: var(--v-vl-topbar-height) 1fr;
+    grid-template-rows: var(--v-vlt-height) 1fr;
     grid-template-areas:
       'topbar topbar'
       'sidebar main';
@@ -23,7 +23,7 @@
     left: 0;
     z-index: 50;
     grid-area: topbar;
-    height: var(--v-vl-topbar-height);
+    height: var(--v-vlt-height);
     width: 100%;
     display: flex;
     align-items: center;
@@ -32,17 +32,17 @@
     padding-right: 1rem;
     @apply bg-gray-50 dark:bg-gray-800;
 
-    .vl-topbar-leftest,
-    .vl-topbar-rightest {
+    .vlt-leftest,
+    .vlt-rightest {
       flex: 0 0 auto;
     }
 
-    .vl-topbar-left,
-    .vl-topbar-right {
+    .vlt-left,
+    .vlt-right {
       flex: 0 1 auto;
     }
 
-    .vl-topbar-middle {
+    .vlt-middle {
       flex: 1 1 auto;
       display: flex;
       align-items: center;
@@ -57,7 +57,7 @@
     position: sticky;
     grid-area: sidebar;
     overflow: auto;
-    top: var(--v-vl-topbar-height);
+    top: var(--v-vlt-height);
     left: 0;
     z-index: 20;
     height: calc(100vh - 4rem);
@@ -80,7 +80,7 @@
       &:has(.vlm-pane:nth-of-type(2)) {
         display: grid;
         gap: 1rem;
-        height: calc(100vh - var(--v-vl-topbar-height));
+        height: calc(100vh - var(--v-vlt-height));
 
         .vlm-pane {
           min-height: 0;

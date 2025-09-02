@@ -9,7 +9,7 @@ export const ModeToggle: React.FC = () => {
   const mode: ModeEnum = useStateValue(viewmodel.mode$)
 
   const portalTarget = React.useMemo(() => {
-    return document.querySelector('.vl-topbar-rightest')
+    return document.querySelector('.vlt-rightest')
   }, [])
 
   const toggleContent = (

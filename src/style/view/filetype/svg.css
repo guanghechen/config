@@ -17,7 +17,7 @@
     }
 
     &.vlm-canvas-1 {
-      height: calc(100vh - var(--v-vl-topbar-height));
+      height: calc(100vh - var(--v-vlt-height));
     }
 
     &.vlm-canvas-2 {

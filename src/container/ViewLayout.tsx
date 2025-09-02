@@ -20,13 +20,13 @@ export class ViewLayout extends React.PureComponent<IProps> {
     return (
       <div className="vl-root" data-scenario={scenario}>
         <div className="vl-topbar">
-          <div className="vl-topbar-leftest">
+          <div className="vlt-leftest">
             <Settings />
           </div>
-          {menu && <div className="vl-topbar-left">{menu}</div>}
-          <div className="vl-topbar-middle">{toolbar}</div>
-          <div className="vl-topbar-right" />
-          <div className="vl-topbar-rightest" />
+          {menu && <div className="vlt-left">{menu}</div>}
+          <div className="vlt-middle">{toolbar}</div>
+          <div className="vlt-right" />
+          <div className="vlt-rightest" />
         </div>
         {sidebar && <div className="vl-sidebar">{sidebar}</div>}
         <div className="vl-main">{children}</div>

@@ -16,7 +16,7 @@
 
     &.vlm-canvas-1 {
       display: block;
-      height: calc(100vh - var(--v-vl-topbar-height));
+      height: calc(100vh - var(--v-vlt-height));
 
       .vlm-p-content {
         position: relative;

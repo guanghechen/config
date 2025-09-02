@@ -25,7 +25,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
     return (
       <div
         className="vl-main flex flex-col items-center justify-center text-gray-500 dark:text-gray-400"
-        style={{ height: 'calc(100vh - var(--v-vl-topbar-height))' }}
+        style={{ height: 'calc(100vh - var(--v-vlt-height))' }}
       >
         <div className="text-xl mb-2">🎨</div>
         <div className="text-lg font-medium mb-1">Welcome to Whiteboard</div>
@@ -39,7 +39,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
     return (
       <div
         className="vl-main flex flex-col items-center justify-center text-red-500 dark:text-red-400"
-        style={{ height: 'calc(100vh - var(--v-vl-topbar-height))' }}
+        style={{ height: 'calc(100vh - var(--v-vlt-height))' }}
       >
         <div className="text-xl mb-2">⚠️</div>
         <div className="text-lg font-medium mb-1">Error</div>
@@ -114,7 +114,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
       return (
         <div
           className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400"
-          style={{ height: 'calc(100vh - var(--v-vl-topbar-height))' }}
+          style={{ height: 'calc(100vh - var(--v-vlt-height))' }}
         >
           <div className="text-xl mb-2">📄</div>
           <div className="text-lg font-medium mb-1">

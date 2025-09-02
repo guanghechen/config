@@ -25,7 +25,7 @@ export const Toolbar: React.FC = () => {
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
   const portalTarget = React.useMemo(() => {
-    return document.querySelector('.vl-topbar-middle')
+    return document.querySelector('.vlt-middle')
   }, [])
 
   const onGotoPage = useEventCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
