@@ -2,6 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
+import { useMermaidSyncThemeEffect } from '@/hook/useMermaidSyncThemeEffect'
 import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import { ServerCustomEventType } from '@/shared/types'
@@ -39,7 +40,6 @@ export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props =
     <React.Fragment>
       <FileViewContextType.Provider value={context}>{props.children}</FileViewContextType.Provider>
       <SideEffect viewmodel={viewmodel} />
-      <HmrSideEffect viewmodel={viewmodel} />
     </React.Fragment>
   )
 }
@@ -47,8 +47,21 @@ FileViewProvider.displayName = 'FileViewProvider'
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
-const HmrSideEffect: React.FC<ISideEffectProps> = props => {
+const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
+
+  usePersistAsync(viewmodel, storageKey, [viewmodel.filepath$])
+  useHMR(viewmodel)
+  useUrlParams(viewmodel)
+  useMermaidSyncThemeEffect()
+
+  return <React.Fragment />
+}
+SideEffect.displayName = 'FileViewSideEffect'
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
+const useHMR = (viewmodel: FileViewViewModel): void => {
   const navigate = useNavigate()
   const navigateRef = React.useRef<NavigateFunction>(navigate)
   navigateRef.current = navigate
@@ -101,24 +114,7 @@ const HmrSideEffect: React.FC<ISideEffectProps> = props => {
       meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
     }
   }, [viewmodel])
-
-  return <React.Fragment />
 }
-HmrSideEffect.displayName = 'FileViewHmrSideEffect'
-
-// /////////////////////////////////////////////////////////////////////////////////////////////////
-
-const SideEffect: React.FC<ISideEffectProps> = props => {
-  const { viewmodel } = props
-
-  usePersistAsync(viewmodel, storageKey, [viewmodel.filepath$])
-  useUrlParams(viewmodel)
-
-  return <React.Fragment />
-}
-SideEffect.displayName = 'FileViewSideEffect'
-
-// /////////////////////////////////////////////////////////////////////////////////////////////////
 
 const useUrlParams = (viewmodel: FileViewViewModel): void => {
   const filepath: string | null = useStateValue(viewmodel.filepath$)

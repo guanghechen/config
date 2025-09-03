@@ -3,7 +3,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import { Editor, type EditorProps } from '@monaco-editor/react'
 import React from 'react'
 import type { SiteTheme } from '@/context/site'
-import { useSiteViewmodel } from '@/context/site/hook'
+import { useSiteViewmodel } from '@/context/site'
 import {
   FILETYPE_TO_LANGUAGE_MAP,
   SITE_THEME_TO_CUSTOMIZED_THEME_MAP,

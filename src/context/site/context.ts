@@ -9,3 +9,5 @@ export const SiteContextType = React.createContext<ISiteContext>({
   viewmodel: SiteViewModel.fromData({ name: 'DefaultSiteViewModel' }),
 })
 SiteContextType.displayName = 'SiteContextType'
+
+export const useSiteViewmodel = (): SiteViewModel => React.useContext(SiteContextType).viewmodel

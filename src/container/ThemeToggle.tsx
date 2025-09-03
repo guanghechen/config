@@ -1,53 +1,89 @@
-import type { ISetState } from '@guanghechen/react-viewmodel'
+import { useStateValue } from '@guanghechen/react-viewmodel'
+import cn from 'clsx'
 import React from 'react'
-import { SiteTheme, useSetSiteTheme, useSiteTheme } from '@/context/site'
+import { ChevronRightIcon, DarkModeIcon, LightModeIcon } from '@/component/icon/material'
+import { SiteTheme, useSiteViewmodel } from '@/context/site'
+
+const themeOptions = [
+  { value: SiteTheme.LIGHTEN, label: 'Light', icon: LightModeIcon },
+  { value: SiteTheme.DARKEN, label: 'Dark', icon: DarkModeIcon },
+]
 
 export const ThemeToggle: React.FC = () => {
-  const theme: SiteTheme = useSiteTheme()
-  const setTheme: ISetState<SiteTheme> = useSetSiteTheme()
-  const isDark: boolean = theme === SiteTheme.DARKEN
+  const viewmodel = useSiteViewmodel()
+  const theme: SiteTheme = useStateValue(viewmodel.theme$)
+  const [isOpen, setIsOpen] = React.useState(false)
 
-  const onToggleTheme = React.useCallback(() => {
-    setTheme(t => (t === SiteTheme.DARKEN ? SiteTheme.LIGHTEN : SiteTheme.DARKEN))
-  }, [setTheme])
+  const handleThemeSelect = React.useCallback(
+    (newTheme: SiteTheme): void => {
+      setIsOpen(false)
+      viewmodel.theme$.next(newTheme)
+    },
+    [viewmodel],
+  )
+
+  const handleToggle = React.useCallback((e: React.MouseEvent): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsOpen(prev => !prev)
+  }, [])
+
+  const currentThemeOption = React.useMemo(
+    () => themeOptions.find(option => option.value === theme),
+    [theme],
+  )
 
   return (
-    <div className="select-none">
-      <input
-        type="checkbox"
-        id="theme-toggle"
-        className="hidden"
-        checked={isDark}
-        onChange={onToggleTheme}
-      />
-      <label
-        htmlFor="theme-toggle"
-        className="relative flex h-6 w-12 cursor-pointer items-center justify-between rounded-full bg-gradient-to-r from-sky-300 to-blue-400 p-0.5 shadow-inner transition-all duration-500 ease-in-out hover:shadow-md active:scale-95 dark:bg-gradient-to-r dark:from-indigo-900 dark:to-purple-900 dark:shadow-gray-700"
+    <div className="relative">
+      <button
+        onClick={handleToggle}
+        className={cn(
+          'flex items-center px-4 py-3 rounded-md w-full leading-relaxed',
+          'transition-colors duration-150 ease-in-out',
+          'focus:outline-none',
+          'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100',
+          'hover:bg-gray-100 dark:hover:bg-gray-700',
+        )}
+        title="Select theme"
       >
-        <div className="absolute left-0.5 h-4 w-4 rounded-full bg-white shadow-md transition-all duration-500 ease-in-out dark:left-[1.75rem] dark:bg-gray-100" />
-        <svg
-          className="absolute left-[4px] h-3 w-3 text-yellow-400 opacity-100 transition-all duration-300 ease-in-out dark:translate-x-5 dark:opacity-0"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M12 3a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zM19 12a1 1 0 0 1-1 1h-1a1 1 0 1 1 0-2h1a1 1 0 0 1 1 1zM7 12a1 1 0 0 1-1 1H5a1 1 0 1 1 0-2h1a1 1 0 0 1 1 1zM12 19a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1zM17.7 16.3a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4-1.4l.7-.7a1 1 0 0 1 1.4 0zM7 17.7a1 1 0 0 1 1.4 0l.7.7a1 1 0 1 1-1.4 1.4l-.7-.7a1 1 0 0 1 0-1.4zM17.7 7a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4-1.4l.7-.7A1 1 0 0 1 17.7 7zM8.4 6.3a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4-1.4l.7-.7a1 1 0 0 1 1.4 0zM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" />
-        </svg>
-        <div className="absolute right-[4px] h-3 w-3 rounded-full bg-gray-800/0 transition-all duration-300 ease-in-out dark:bg-gray-800/40">
-          <svg
-            className="h-3 w-3 text-blue-400 opacity-0 transition-all duration-300 ease-in-out dark:opacity-100"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M12.979 3.5a.75.75 0 0 0-.958.713c.077 3.267-2.21 6.165-5.397 6.83a.75.75 0 0 0-.565.842C6.575 17.182 10.59 20.5 15 20.5c4.244 0 7.5-3.838 7.5-8.253 0-4.823-4.675-9.092-9.521-8.747zM14.5 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zm-1.5-5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"
-            />
-          </svg>
+        <div className="flex items-center gap-3 flex-1">
+          {currentThemeOption?.icon && (
+            <currentThemeOption.icon className="h-4 w-4 flex-shrink-0" />
+          )}
+          <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
+            {currentThemeOption?.label}
+          </span>
         </div>
-      </label>
+        <ChevronRightIcon
+          className={cn('h-4 w-4 flex-shrink-0 transition-transform duration-150')}
+        />
+      </button>
+
+      {isOpen && (
+        <React.Fragment>
+          <div className="absolute top-0 left-full ml-1 w-32 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+            {themeOptions.map(option => {
+              const IconComponent = option.icon
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => handleThemeSelect(option.value)}
+                  className={cn(
+                    'w-full text-left px-4 py-3 text-sm leading-relaxed hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors duration-150',
+                    option.value === theme
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300',
+                  )}
+                >
+                  <IconComponent className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{option.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+        </React.Fragment>
+      )}
     </div>
   )
 }

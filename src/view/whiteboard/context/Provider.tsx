@@ -1,4 +1,5 @@
 import React from 'react'
+import { useMermaidSyncThemeEffect } from '@/hook/useMermaidSyncThemeEffect'
 import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import { universalStorage } from '@/util/storage'
@@ -81,6 +82,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     viewmodel.editorLanguage$,
     viewmodel.filepath$,
   ])
+  useMermaidSyncThemeEffect()
 
   return <React.Fragment />
 }

@@ -1,4 +1,4 @@
-import { SiteTheme } from '@/context/site/viewmodel'
+import { SiteTheme } from '@/context/site'
 
 export const FILETYPE_TO_LANGUAGE_MAP: Record<string, string> = {
   javascript: 'javascript',

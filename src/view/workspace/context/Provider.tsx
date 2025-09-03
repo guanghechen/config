@@ -1,10 +1,9 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import mermaid from 'mermaid'
 import React from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useNavigate, useParams } from 'react-router-dom'
-import { SiteTheme, useSiteTheme } from '@/context/site'
 import { useGetWorkspaces } from '@/hook/api/workspaces'
+import { useMermaidSyncThemeEffect } from '@/hook/useMermaidSyncThemeEffect'
 import { usePersistAsync } from '@/hook/usePersistAsync'
 import { useViewModel } from '@/hook/useViewModel'
 import { ServerCustomEventType } from '@/shared/types'
@@ -77,7 +76,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
   ])
   useHMR(viewmodel)
   useSyncProps(viewmodel, workspace)
-  useMermaid()
+  useMermaidSyncThemeEffect()
 
   return <React.Fragment />
 }
@@ -168,13 +167,4 @@ const useSyncProps = (viewmodel: WorkspaceViewViewModel, workspace: string): voi
     const nextUrl: string = search ? `${pathname}?${usp.toString()}` : pathname
     window.history.replaceState(null, '', nextUrl)
   }, [filepath])
-}
-
-const useMermaid = (): void => {
-  const theme: SiteTheme = useSiteTheme()
-
-  React.useEffect(() => {
-    const darken = theme === SiteTheme.DARKEN
-    mermaid.initialize({ startOnLoad: false, theme: darken ? 'dark' : 'default' })
-  }, [theme])
 }
