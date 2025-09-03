@@ -1,6 +1,7 @@
 import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
 import crypto from 'node:crypto'
+import state from '../../../../../state'
 import { getJwtSecret } from '../../../../../util/jwt-secret'
 import type { IApiHandle, IApiHandleData } from '../../../types'
 
@@ -85,7 +86,7 @@ export const postUserLogin: IApiHandle = async params => {
       error: 'Invalid credentials',
       data: null,
     }
-    console.log('--> /api/user/login :', { username, hashedPassword })
+    state.reporter.warn('Failed login attempt:', { username, hashedPassword })
     return { code: 403, data }
   }
 

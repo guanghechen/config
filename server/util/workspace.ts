@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import state from '../state'
 
 export async function findMarkdownFiles(cwd: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
@@ -22,7 +23,7 @@ export async function findMarkdownFiles(cwd: string): Promise<string[]> {
     })
 
     fd.stderr.on('data', data => {
-      console.error('Error:', data.toString())
+      state.reporter.error('Error:', data.toString())
     })
 
     fd.on('close', code => {

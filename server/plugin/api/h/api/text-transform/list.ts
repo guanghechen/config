@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { ROOT_DIR } from '../../../../../../env'
+import state from '../../../../../../state'
 import type { IApiHandle, IApiHandleData } from '../../../types'
 
 const TRANSFORMER_DATA_DIR = path.join(ROOT_DIR, 'server/plugin/api/d/transform/text')
@@ -37,7 +38,7 @@ export const listTextTransformers: IApiHandle = async params => {
         })
       } catch (error) {
         // Skip invalid JSON files
-        console.warn(`Skipping invalid transformer file: ${file}`, error)
+        state.reporter.warn(`Skipping invalid transformer file: ${file}`, error)
       }
     }
 
