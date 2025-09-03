@@ -16,6 +16,7 @@ export const WorkspaceSelector: React.FC = () => {
   const handleWorkspaceSelect = React.useCallback(
     (workspaceTag: string): void => {
       setIsOpen(false)
+      viewmodel.filepath$.next(null)
       viewmodel.workspace$.next(workspaceTag)
       void navigate(`/ws/${workspaceTag}`)
     },
