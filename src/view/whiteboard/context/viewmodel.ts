@@ -5,6 +5,21 @@ import { toast } from 'react-toastify'
 import { FileSystemAccessStorage, generateDefaultFilename } from '../../../util/file-system-access'
 import type { IFileHandle, IWhiteboardContentData, IWhiteboardViewData } from './types'
 
+// Optimized constant map for whiteboard filetype to editor language mapping
+const WHITEBOARD_FILETYPE_TO_EDITOR_LANGUAGE: Record<string, string> = {
+  markdown: 'markdown',
+  json: 'json',
+  html: 'html',
+  svg: 'xml',
+  excalidraw: 'json',
+  text: 'plaintext',
+} as const
+
+// Optimized function for suggesting editor language based on whiteboard filetype
+const suggestEditorLanguageForFiletype = (whiteboardFiletype: string): string => {
+  return WHITEBOARD_FILETYPE_TO_EDITOR_LANGUAGE[whiteboardFiletype] ?? 'plaintext'
+}
+
 interface IProps {
   readonly content?: string | null
   readonly filetype?: string
@@ -128,6 +143,11 @@ export class WhiteboardViewViewModel extends ViewModel {
 
   public updateFiletype = (filetype: string): void => {
     this.filetype$.next(filetype)
+    // Auto-suggest editor language when whiteboard filetype changes
+    const suggestedEditorLanguage = suggestEditorLanguageForFiletype(filetype)
+    if (suggestedEditorLanguage !== this.editorLanguage$.getSnapshot()) {
+      this.editorLanguage$.next(suggestedEditorLanguage)
+    }
   }
 
   public toggleEditor = (): void => {
@@ -334,7 +354,7 @@ export class WhiteboardViewViewModel extends ViewModel {
           const extension = fileHandle.name.split('.').pop()?.toLowerCase()
           if (extension) {
             const detectedFiletype = this.detectFiletypeFromExtension(extension)
-            this.updateFiletype(detectedFiletype)
+            this.updateFiletype(detectedFiletype) // This will also auto-suggest editor filetype
           }
         }
       } else {
@@ -356,7 +376,7 @@ export class WhiteboardViewViewModel extends ViewModel {
               const extension = file.name.split('.').pop()?.toLowerCase()
               if (extension) {
                 const detectedFiletype = this.detectFiletypeFromExtension(extension)
-                this.updateFiletype(detectedFiletype)
+                this.updateFiletype(detectedFiletype) // This will also auto-suggest editor filetype
               }
             }
             reader.onerror = () => {

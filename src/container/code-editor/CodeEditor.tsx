@@ -26,6 +26,14 @@ const MONACO_EDITOR_OPTIONS: EditorProps['options'] = {
   padding: { top: 10, bottom: 10 },
   lineHeight: 1.6,
   fontFamily: 'Maple Mono NF CN, Roboto Mono, monospace, sans-serif',
+  // Remove any focus outlines or borders
+  hover: {
+    enabled: true,
+    delay: 300,
+  },
+  // Remove the default Monaco border/outline
+  renderLineHighlight: 'gutter',
+  hideCursorInOverviewRuler: true,
 } as const
 
 // Custom transparent themes
@@ -40,6 +48,10 @@ const TRANSPARENT_LIGHT_THEME = {
     'editorLineNumber.activeForeground': '#374151',
     'editor.selectionBackground': '#3b82f640',
     'editor.inactiveSelectionBackground': '#3b82f620',
+    // Remove blue outlines/borders
+    focusBorder: '#00000000', // Transparent focus border
+    'editor.focusedStackFrameHighlightBackground': '#00000000',
+    'editor.stackFrameHighlightBackground': '#00000000',
     // Minimap colors
     'minimap.background': '#f8fafc80', // Semi-transparent light background
     'minimap.foregroundOpacity': '#000000dd',
@@ -60,6 +72,10 @@ const TRANSPARENT_DARK_THEME = {
     'editorLineNumber.activeForeground': '#9ca3af',
     'editor.selectionBackground': '#3b82f640',
     'editor.inactiveSelectionBackground': '#3b82f620',
+    // Remove blue outlines/borders
+    focusBorder: '#00000000', // Transparent focus border
+    'editor.focusedStackFrameHighlightBackground': '#00000000',
+    'editor.stackFrameHighlightBackground': '#00000000',
     // Minimap colors
     'minimap.background': '#1e293b80', // Semi-transparent dark background
     'minimap.foregroundOpacity': '#e2e8f0dd',
@@ -71,7 +87,6 @@ const TRANSPARENT_DARK_THEME = {
 
 interface IProps {
   readonly content: string | null
-  readonly filetype: string
   readonly editorLanguage: string
   readonly visible: boolean
   readonly onContentChange: (content: string | null) => void
@@ -79,7 +94,7 @@ interface IProps {
 }
 
 export const CodeEditor: React.FC<IProps> = (props: IProps) => {
-  const { content, filetype, editorLanguage, visible, onContentChange, onLanguageChange } = props
+  const { content, editorLanguage, visible, onContentChange, onLanguageChange } = props
   const language: string = FILETYPE_TO_LANGUAGE_MAP[editorLanguage] || editorLanguage
 
   const siteViewmodel = useSiteViewmodel()
@@ -91,13 +106,6 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
   const theme: string = mounted
     ? SITE_THEME_TO_CUSTOMIZED_THEME_MAP[siteTheme]
     : SITE_THEME_TO_MONACO_THEME_MAP[siteTheme]
-
-  React.useEffect(() => {
-    const detectedLanguage = FILETYPE_TO_LANGUAGE_MAP[filetype]
-    if (detectedLanguage && detectedLanguage !== editorLanguage) {
-      onLanguageChange(detectedLanguage)
-    }
-  }, [filetype, editorLanguage, onLanguageChange])
 
   const handleEditorDidMount = useEventCallback((_editor: any, monacoInstance: any) => {
     setMonaco(monacoInstance)
@@ -117,7 +125,7 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
   }
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full focus:outline-none">
       <div className="h-8 flex items-center justify-between px-3 border-b border-gray-200/50 dark:border-gray-700/30 bg-gray-50/50 dark:bg-gray-900/50">
         <div className="flex items-center gap-2">
           <svg
@@ -140,7 +148,7 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
           <LanguageDropdown value={editorLanguage} onChange={onLanguageChange} />
         </div>
       </div>
-      <div className="h-[calc(100%-2rem)]">
+      <div className="h-[calc(100%-2rem)] focus:outline-none">
         <Editor
           height="100%"
           language={language}
