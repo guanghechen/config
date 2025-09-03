@@ -59,8 +59,8 @@ export const Sidebar: React.FC = () => {
     <div
       ref={containerRef}
       className={cn(
-        'h-full box-border transition-all duration-300 ease-in-out backdrop-blur-md backdrop-saturate-150 bg-white/70 border-r border-gray-200 text-slate-800 dark:bg-gray-800/70 dark:border-r dark:border-gray-700/30 dark:text-gray-200',
-        { 'overflow-hidden': !visible },
+        'h-full box-border transition-all duration-300 ease-in-out shadow-lg rounded-lg backdrop-blur-md backdrop-saturate-150 bg-white/70 border-r border-gray-200 text-slate-800 dark:bg-gray-700/80 dark:border-r dark:border-gray-700/30 dark:text-gray-200',
+        { 'overflow-hidden border-none p-0': !visible },
       )}
       style={{ width: visible ? width : 0 }}
     >
