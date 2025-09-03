@@ -3,7 +3,7 @@ import React from 'react'
 import { FilePath } from '@/component/FilePath'
 import { useWorkspaceViewmodel } from '../context'
 
-export const Topbar: React.FC = () => {
+export const Menu: React.FC = () => {
   const viewmodel = useWorkspaceViewmodel()
   const workspace: string | null = useStateValue(viewmodel.workspace$)
   const filepath: string | null = useStateValue(viewmodel.filepath$)
@@ -15,4 +15,4 @@ export const Topbar: React.FC = () => {
   )
 }
 
-Topbar.displayName = 'WorkspaceViewTopbar'
+Menu.displayName = 'WorkspaceViewMenu'

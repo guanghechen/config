@@ -108,7 +108,7 @@ const getFiletypeIcon = (type: string): React.ReactNode => {
   }
 }
 
-export const Topbar: React.FC = () => {
+export const Menu: React.FC = () => {
   const viewmodel = useWhiteboardViewmodel()
   const contentData = useStateValue(viewmodel.contentData$)
   const editorVisible = useStateValue(viewmodel.editorVisible$)
@@ -438,3 +438,4 @@ export const Topbar: React.FC = () => {
     </div>
   )
 }
+Menu.displayName = 'WhiteboardViewMenu'

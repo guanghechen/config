@@ -3,8 +3,8 @@ import React from 'react'
 import { ViewLayout } from '@/container/ViewLayout'
 import { useWhiteboardViewmodel } from './context'
 import { Main } from './layout/main'
+import { Menu } from './layout/menu'
 import { Sidebar } from './layout/sidebar'
-import { Topbar } from './layout/topbar'
 
 export const Composer: React.FC = () => {
   const viewmodel = useWhiteboardViewmodel()
@@ -13,7 +13,7 @@ export const Composer: React.FC = () => {
   return (
     <ViewLayout
       scenario="whiteboard"
-      toolbar={<Topbar />}
+      menu={<Menu />}
       sidebar={editorVisible ? <Sidebar /> : undefined}
     >
       <Main />
