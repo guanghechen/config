@@ -25,7 +25,7 @@ export const FiletreeToggler: React.FC = () => {
         'transition-colors duration-150 ease-in-out',
         'focus:outline-none',
         'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100',
-        'hover:bg-gray-100 dark:hover:bg-gray-700',
+        'hover:bg-gray-100 dark:hover:bg-gray-700/50',
       )}
       title={sidebarVisible ? 'Hide file tree' : 'Show file tree'}
     >

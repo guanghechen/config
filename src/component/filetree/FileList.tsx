@@ -51,8 +51,8 @@ export const FileList: React.FC<IProps> = props => {
       const element: React.ReactElement = (
         <div
           key={node.uuid}
-          className={cn('select-none px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700', {
-            'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300': activate,
+          className={cn('select-none px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-600', {
+            'bg-gray-300 text-gray-800 dark:bg-gray-500 dark:text-gray-100': activate,
             hidden: !visible,
           })}
           onClick={() => onNodeClick(node)}

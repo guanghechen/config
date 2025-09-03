@@ -159,7 +159,7 @@ export const FileSearch: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed left-1/2 top-1/4 z-50 w-[48rem] max-w-[60vw] -translate-x-1/2 transform rounded-lg backdrop-blur-md backdrop-saturate-150 bg-white/30 border border-white/20 shadow-xl text-slate-800 dark:bg-gray-800/30 dark:border-gray-700/20 dark:text-gray-200"
+      className="fixed left-1/2 top-1/4 z-50 w-[48rem] max-w-[60vw] -translate-x-1/2 transform rounded-lg backdrop-blur-md backdrop-saturate-150 bg-white/30 border border-white/20 shadow-xl text-slate-800 dark:bg-gray-800/30 dark:border-gray-700/20 dark:text-gray-200 dark:shadow-2xl dark:shadow-gray-900/30"
     >
       <div className="p-2">
         <input
@@ -176,8 +176,8 @@ export const FileSearch: React.FC = () => {
         {filteredFileList.map(file => (
           <div
             key={file.filepath}
-            className={cn('select-none px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-700', {
-              'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300':
+            className={cn('select-none px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-600', {
+              'bg-gray-300 text-gray-800 dark:bg-gray-500 dark:text-gray-100':
                 file.filepath === currentFilepath,
             })}
             onClick={() => onSelect(file.filepath)}
