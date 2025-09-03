@@ -113,7 +113,7 @@ export const Menu: React.FC = () => {
   const contentData = useStateValue(viewmodel.contentData$)
   const editorVisible = useStateValue(viewmodel.editorVisible$)
   const filetype = useStateValue(viewmodel.filetype$)
-  const filepath = useStateValue(viewmodel.filepath$)
+  const filename = useStateValue(viewmodel.filename$)
 
   const [isSaveDropdownOpen, setIsSaveDropdownOpen] = React.useState(false)
   const [isFiletypeDropdownOpen, setIsFiletypeDropdownOpen] = React.useState(false)
@@ -145,7 +145,7 @@ export const Menu: React.FC = () => {
   }
 
   const handleSelectFile = (): void => {
-    viewmodel.selectFile()
+    void viewmodel.selectFile()
     setIsSaveDropdownOpen(false)
   }
 
@@ -430,9 +430,9 @@ export const Menu: React.FC = () => {
           </div>
         )}
       </div>
-      {filepath && (
+      {filename && (
         <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100/80 dark:bg-gray-800/80 px-2 py-1 rounded-md backdrop-blur-sm">
-          {filepath}
+          {filename}
         </div>
       )}
     </div>

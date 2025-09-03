@@ -1,7 +1,9 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import debounce from 'lodash.debounce'
-import type { IWhiteboardContentData, IWhiteboardViewData } from './types'
+import { toast } from 'react-toastify'
+import { FileSystemAccessStorage, generateDefaultFilename } from '../../../util/file-system-access'
+import type { IFileHandle, IWhiteboardContentData, IWhiteboardViewData } from './types'
 
 interface IProps {
   readonly content?: string | null
@@ -9,7 +11,8 @@ interface IProps {
   readonly editorVisible?: boolean
   readonly editorWidth?: number
   readonly editorLanguage?: string
-  readonly filepath?: string | null
+  readonly filename?: string | null
+  readonly fsHandle?: IFileHandle | null
 }
 
 const getDefaultEditorWidth = (): number => {
@@ -25,7 +28,8 @@ const DEFAULT_DATA: IWhiteboardViewData = {
   editorVisible: false,
   editorWidth: getDefaultEditorWidth(),
   editorLanguage: 'javascript',
-  filepath: null,
+  filename: null,
+  fsHandle: null,
 }
 
 const DEFAULT_CONTENT_DATA: IWhiteboardContentData = {
@@ -42,9 +46,11 @@ export class WhiteboardViewViewModel extends ViewModel {
   public readonly editorVisible$: State<boolean>
   public readonly editorWidth$: State<number>
   public readonly editorLanguage$: State<string>
-  public readonly filepath$: State<string | null>
+  public readonly filename$: State<string | null>
+  public readonly fsHandle$: State<IFileHandle | null>
 
   public readonly updateEditorWidthDebounced: (nextWidth: number) => void
+  private static readonly STORAGE_KEY = 'whiteboard-file-handle'
 
   constructor(props: IProps) {
     super()
@@ -55,7 +61,8 @@ export class WhiteboardViewViewModel extends ViewModel {
       editorVisible = DEFAULT_DATA.editorVisible,
       editorWidth = DEFAULT_DATA.editorWidth,
       editorLanguage = DEFAULT_DATA.editorLanguage,
-      filepath = DEFAULT_DATA.filepath,
+      filename = DEFAULT_DATA.filename,
+      fsHandle = DEFAULT_DATA.fsHandle,
     } = props
 
     const content$ = new State<string | null>(content)
@@ -65,7 +72,8 @@ export class WhiteboardViewViewModel extends ViewModel {
     const editorVisible$ = new State<boolean>(editorVisible)
     const editorWidth$ = new State<number>(editorWidth)
     const editorLanguage$ = new State<string>(editorLanguage)
-    const filepath$ = new State<string | null>(filepath)
+    const filename$ = new State<string | null>(filename)
+    const fsHandle$ = new State<IFileHandle | null>(fsHandle)
 
     this.content$ = content$
     this.filetype$ = filetype$
@@ -74,7 +82,8 @@ export class WhiteboardViewViewModel extends ViewModel {
     this.editorVisible$ = editorVisible$
     this.editorWidth$ = editorWidth$
     this.editorLanguage$ = editorLanguage$
-    this.filepath$ = filepath$
+    this.filename$ = filename$
+    this.fsHandle$ = fsHandle$
 
     this.updateEditorWidthDebounced = debounce(function (nextWidth: number): void {
       editorWidth$.next(nextWidth)
@@ -85,7 +94,8 @@ export class WhiteboardViewViewModel extends ViewModel {
     data: Partial<IWhiteboardViewData> | null | undefined,
     base: IWhiteboardViewData = DEFAULT_DATA,
   ): IWhiteboardViewData {
-    const { content, filetype, editorVisible, editorWidth, editorLanguage, filepath } = data || {}
+    const { content, filetype, editorVisible, editorWidth, editorLanguage, filename, fsHandle } =
+      data || {}
     const normalizedContent = typeof content === 'string' ? content : base.content
     const normalizedFiletype = typeof filetype === 'string' ? filetype : base.filetype
     const normalizedEditorVisible =
@@ -93,14 +103,16 @@ export class WhiteboardViewViewModel extends ViewModel {
     const normalizedEditorWidth = typeof editorWidth === 'number' ? editorWidth : base.editorWidth
     const normalizedEditorLanguage =
       typeof editorLanguage === 'string' ? editorLanguage : base.editorLanguage
-    const normalizedFilepath = typeof filepath === 'string' ? filepath : base.filepath
+    const normalizedFilename = typeof filename === 'string' ? filename : base.filename
+    const normalizedFsHandle = fsHandle || base.fsHandle
     const normalizedData: IWhiteboardViewData = {
       content: normalizedContent,
       filetype: normalizedFiletype,
       editorVisible: normalizedEditorVisible,
       editorWidth: normalizedEditorWidth,
       editorLanguage: normalizedEditorLanguage,
-      filepath: normalizedFilepath,
+      filename: normalizedFilename,
+      fsHandle: normalizedFsHandle,
     }
     return normalizedData
   }
@@ -130,8 +142,21 @@ export class WhiteboardViewViewModel extends ViewModel {
     this.editorLanguage$.next(language)
   }
 
-  public updateFilepath = (filepath: string | null): void => {
-    this.filepath$.next(filepath)
+  public updateFilename = (filename: string | null): void => {
+    this.filename$.next(filename)
+  }
+
+  public updateFsHandle = (fsHandle: IFileHandle | null): void => {
+    this.fsHandle$.next(fsHandle)
+    if (fsHandle?.handle && fsHandle?.filename) {
+      void FileSystemAccessStorage.storeFileHandle(
+        WhiteboardViewViewModel.STORAGE_KEY,
+        fsHandle.handle,
+        fsHandle.filename,
+      )
+    } else {
+      void FileSystemAccessStorage.removeFileHandle(WhiteboardViewViewModel.STORAGE_KEY)
+    }
   }
 
   public saveToFile = async (): Promise<void> => {
@@ -141,21 +166,21 @@ export class WhiteboardViewViewModel extends ViewModel {
         ...this.contentData$.getSnapshot(),
         contentError: 'No content to save',
       })
+      toast.error('No content to save')
       return
     }
 
     try {
-      // Generate default filename and MIME type based on filetype
       const filetype = this.filetype$.getSnapshot()
       const extension = this.getFileExtension(filetype)
-      const defaultFilename = `whiteboard.${extension}`
       const mimeType = this.getMimeType(filetype)
+      const currentFsHandle = this.fsHandle$.getSnapshot()
 
-      // Check if File System Access API is supported
-      if ('showSaveFilePicker' in window) {
-        // Use the File System Access API for modern browsers
-        const fileHandle = await (window as any).showSaveFilePicker({
-          suggestedName: defaultFilename,
+      if (FileSystemAccessStorage.isSupported()) {
+        // Use the File System Access API
+        const fileHandle = await FileSystemAccessStorage.saveFile(content, {
+          suggestedName: currentFsHandle?.filename || generateDefaultFilename(extension),
+          existingHandle: currentFsHandle?.handle || undefined,
           types: [
             {
               description: `${filetype} files`,
@@ -166,14 +191,13 @@ export class WhiteboardViewViewModel extends ViewModel {
           ],
         })
 
-        const writable = await fileHandle.createWritable()
-        await writable.write(content)
-        await writable.close()
-
-        // Update filepath to show the saved filename
-        this.updateFilepath(fileHandle.name)
+        // Update filename and file handle
+        this.updateFilename(fileHandle.name)
+        this.updateFsHandle({ handle: fileHandle, filename: fileHandle.name })
+        toast.success('File saved successfully!')
       } else {
         // Fallback to download for browsers that don't support File System Access API
+        const defaultFilename = currentFsHandle?.filename || generateDefaultFilename(extension)
         const element = document.createElement('a')
         const file = new Blob([content], { type: mimeType })
         element.href = URL.createObjectURL(file)
@@ -183,16 +207,19 @@ export class WhiteboardViewViewModel extends ViewModel {
         document.body.removeChild(element)
         URL.revokeObjectURL(element.href)
 
-        // Update filepath to show the saved filename
-        this.updateFilepath(defaultFilename)
+        // Update filename only for fallback download
+        this.updateFilename(defaultFilename)
+        toast.success('File downloaded successfully!')
       }
     } catch (error) {
       // User cancelled the save dialog or other error occurred
       if ((error as any).name !== 'AbortError') {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
         this.contentData$.next({
           ...this.contentData$.getSnapshot(),
-          contentError: `Failed to save file: ${error}`,
+          contentError: `Failed to save file: ${errorMessage}`,
         })
+        toast.error(`Failed to save file: ${errorMessage}`)
       }
     }
   }
@@ -231,6 +258,26 @@ export class WhiteboardViewViewModel extends ViewModel {
     }
   }
 
+  private detectFiletypeFromExtension = (extension: string): string => {
+    switch (extension.toLowerCase()) {
+      case 'md':
+      case 'markdown':
+        return 'markdown'
+      case 'json':
+        return 'json'
+      case 'html':
+      case 'htm':
+        return 'html'
+      case 'svg':
+        return 'svg'
+      case 'excalidraw':
+        return 'excalidraw'
+      case 'txt':
+      default:
+        return 'text'
+    }
+  }
+
   public updateContentData = (contentData: IWhiteboardContentData): void => {
     this.contentData$.next(contentData)
   }
@@ -256,32 +303,89 @@ export class WhiteboardViewViewModel extends ViewModel {
     }
   }
 
-  public selectFile = (): void => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'text/*'
-    input.onchange = event => {
-      const file = (event.target as HTMLInputElement).files?.[0]
-      if (file) {
-        this.contentData$.next({ ...this.contentData$.getSnapshot(), loading: true })
+  public selectFile = async (): Promise<void> => {
+    try {
+      this.contentData$.next({ ...this.contentData$.getSnapshot(), loading: true })
 
-        // Only handle text files
-        const reader = new FileReader()
-        reader.onload = e => {
-          const content = e.target?.result as string
+      if (FileSystemAccessStorage.isSupported()) {
+        // Use File System Access API
+        const fileHandles = await FileSystemAccessStorage.selectFile({
+          multiple: false,
+          types: [
+            {
+              description: 'Text files',
+              accept: {
+                'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw'],
+              },
+            },
+          ],
+        })
+
+        if (fileHandles.length > 0) {
+          const fileHandle = fileHandles[0]
+          const content = await FileSystemAccessStorage.readFile(fileHandle)
+
+          // Update content and file handle
           this.updateContent(content)
+          this.updateFilename(fileHandle.name)
+          this.updateFsHandle({ handle: fileHandle, filename: fileHandle.name })
+
+          // Auto-detect filetype based on file extension
+          const extension = fileHandle.name.split('.').pop()?.toLowerCase()
+          if (extension) {
+            const detectedFiletype = this.detectFiletypeFromExtension(extension)
+            this.updateFiletype(detectedFiletype)
+          }
         }
-        reader.onerror = () => {
-          this.contentData$.next({
-            content: null,
-            contentError: 'Failed to read file',
-            loading: false,
-          })
+      } else {
+        // Fallback to traditional file input
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'text/*'
+        input.onchange = event => {
+          const file = (event.target as HTMLInputElement).files?.[0]
+          if (file) {
+            const reader = new FileReader()
+            reader.onload = e => {
+              const content = e.target?.result as string
+              this.updateContent(content)
+              this.updateFilename(file.name)
+              this.updateFsHandle(null) // No handle for traditional file input
+
+              // Auto-detect filetype
+              const extension = file.name.split('.').pop()?.toLowerCase()
+              if (extension) {
+                const detectedFiletype = this.detectFiletypeFromExtension(extension)
+                this.updateFiletype(detectedFiletype)
+              }
+            }
+            reader.onerror = () => {
+              this.contentData$.next({
+                content: null,
+                contentError: 'Failed to read file',
+                loading: false,
+              })
+            }
+            reader.readAsText(file)
+          }
         }
-        reader.readAsText(file)
+        input.click()
+      }
+    } catch (error) {
+      if ((error as any).name !== 'AbortError') {
+        this.contentData$.next({
+          content: null,
+          contentError: `Failed to select file: ${error}`,
+          loading: false,
+        })
+      } else {
+        // User cancelled, just reset loading state
+        this.contentData$.next({
+          ...this.contentData$.getSnapshot(),
+          loading: false,
+        })
       }
     }
-    input.click()
   }
 
   public dump = (): IWhiteboardViewData => {
@@ -290,8 +394,17 @@ export class WhiteboardViewViewModel extends ViewModel {
     const editorVisible: boolean = this.editorVisible$.getSnapshot()
     const editorWidth: number = this.editorWidth$.getSnapshot()
     const editorLanguage: string = this.editorLanguage$.getSnapshot()
-    const filepath: string | null = this.filepath$.getSnapshot()
-    return { content, filetype, editorVisible, editorWidth, editorLanguage, filepath }
+    const filename: string | null = this.filename$.getSnapshot()
+    const fsHandle: IFileHandle | null = this.fsHandle$.getSnapshot()
+    return {
+      content,
+      filetype,
+      editorVisible,
+      editorWidth,
+      editorLanguage,
+      filename,
+      fsHandle,
+    }
   }
 
   public load = (data: Partial<IWhiteboardViewData> | undefined): void => {
@@ -301,13 +414,27 @@ export class WhiteboardViewViewModel extends ViewModel {
       editorVisible,
       editorWidth,
       editorLanguage,
-      filepath,
+      filename,
+      fsHandle,
     }: IWhiteboardViewData = WhiteboardViewViewModel.normalize(data, this.dump())
     this.content$.next(content)
     this.filetype$.next(filetype)
     this.editorVisible$.next(editorVisible)
     this.editorWidth$.next(editorWidth)
     this.editorLanguage$.next(editorLanguage)
-    this.filepath$.next(filepath)
+    this.filename$.next(filename)
+    this.fsHandle$.next(fsHandle)
+  }
+
+  public loadStoredFileHandle = async (): Promise<void> => {
+    try {
+      const storedHandle = await FileSystemAccessStorage.getFileHandle(
+        WhiteboardViewViewModel.STORAGE_KEY,
+      )
+      this.fsHandle$.next(storedHandle)
+      this.filename$.next(storedHandle?.filename ?? null)
+    } catch (error) {
+      console.warn('Failed to load stored file handle:', error)
+    }
   }
 }

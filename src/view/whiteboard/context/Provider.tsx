@@ -16,7 +16,7 @@ interface IProps {
   readonly editorVisible?: boolean
   readonly editorWidth?: number
   readonly editorLanguage?: string
-  readonly filepath?: string | null
+  readonly filename?: string | null
   readonly children: React.ReactNode
 }
 
@@ -26,7 +26,7 @@ export const WhiteboardViewProvider: React.FC<IProps> = ({
   editorVisible,
   editorWidth,
   editorLanguage,
-  filepath,
+  filename,
   children,
 }) => {
   const viewmodel: WhiteboardViewViewModel | null = useViewModel<WhiteboardViewViewModel>(
@@ -35,14 +35,20 @@ export const WhiteboardViewProvider: React.FC<IProps> = ({
         await universalStorage.getContext<Partial<IWhiteboardViewData>>(storageKey)
 
       const viewData: IWhiteboardViewData = WhiteboardViewViewModel.normalize(rawViewData)
-      return new WhiteboardViewViewModel({
+      const vm = new WhiteboardViewViewModel({
         content: content ?? viewData.content,
         filetype: filetype ?? viewData.filetype,
         editorVisible: editorVisible ?? viewData.editorVisible,
         editorWidth: editorWidth ?? viewData.editorWidth,
         editorLanguage: editorLanguage ?? viewData.editorLanguage,
-        filepath: filepath ?? viewData.filepath,
+        filename: filename ?? viewData.filename,
+        fsHandle: viewData.fsHandle,
       })
+
+      // Load stored file handle asynchronously
+      void vm.loadStoredFileHandle()
+
+      return vm
     },
   )
 
@@ -80,7 +86,7 @@ const SideEffect: React.FC<ISideEffectProps> = props => {
     viewmodel.editorVisible$,
     viewmodel.editorWidth$,
     viewmodel.editorLanguage$,
-    viewmodel.filepath$,
+    viewmodel.filename$,
   ])
   useMermaidSyncThemeEffect()
 
