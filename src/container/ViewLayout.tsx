@@ -8,6 +8,7 @@ interface IProps {
   readonly menu?: React.ReactElement
   readonly toolbar?: React.ReactElement
   readonly sidebar?: React.ReactElement
+  readonly settings?: React.ReactElement
   readonly children?: React.ReactNode
 }
 
@@ -15,13 +16,13 @@ export class ViewLayout extends React.PureComponent<IProps> {
   public static readonly displayName: string = 'ViewLayout'
 
   public override render(): React.ReactElement {
-    const { scenario, floating, menu, toolbar, sidebar, children } = this.props
+    const { scenario, floating, menu, toolbar, sidebar, settings, children } = this.props
 
     return (
       <div className="vl-root" data-scenario={scenario}>
         <div className="vl-topbar">
           <div className="vlt-leftest">
-            <Settings />
+            <Settings additionalItems={settings} />
           </div>
           {menu && <div className="vlt-left">{menu}</div>}
           <div className="vlt-middle">{toolbar}</div>

@@ -11,7 +11,12 @@ enum MenuState {
   OPEN = 'open',
 }
 
-export const Settings: React.FC = () => {
+interface IProps {
+  readonly additionalItems?: React.ReactElement
+}
+
+export const Settings: React.FC<IProps> = props => {
+  const { additionalItems } = props
   const [menuState, setMenuState] = React.useState<MenuState>(MenuState.CLOSED)
 
   const location = useLocation()
@@ -85,13 +90,19 @@ export const Settings: React.FC = () => {
           )}
         >
           <div className="p-3">
+            {additionalItems && (
+              <React.Fragment>
+                <div className="mb-4">{additionalItems}</div>
+                <div className="my-3 border-b border-gray-200 dark:border-gray-600" />
+              </React.Fragment>
+            )}
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-700 dark:text-gray-200">Theme</span>
                 <ThemeToggle />
               </div>
             </div>
-            <div className="my-3 border-t border-gray-200 dark:border-gray-600" />
+            <div className="my-3 border-b border-gray-200 dark:border-gray-600" />
             <div className="space-y-0.5">
               {listedRoutes.map(route => {
                 const isActive =
