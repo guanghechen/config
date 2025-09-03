@@ -16,9 +16,9 @@ import type {
   ITransformerSaveResponseResult,
 } from './transform'
 import type {
-  IUserLoginRequestParams,
-  IUserLoginRequestPayload,
-  IUserLoginResponseResult,
+  IUserAuthRequestParams,
+  IUserAuthRequestPayload,
+  IUserAuthResponseResult,
   IUserLogoutRequestParams,
   IUserLogoutRequestPayload,
   IUserLogoutResponseResult,
@@ -34,7 +34,7 @@ export * from './user'
 
 export type IRequestParams =
   | IFileSaveRequestParams
-  | IUserLoginRequestParams
+  | IUserAuthRequestParams
   | IUserLogoutRequestParams
   | IUserProfileRequestParams
   | ITransformerListRequestParams
@@ -43,7 +43,7 @@ export type IRequestParams =
 
 export type IRequestPayload =
   | IFileSaveRequestPayload
-  | IUserLoginRequestPayload
+  | IUserAuthRequestPayload
   | IUserLogoutRequestPayload
   | IUserProfileRequestPayload
   | ITransformerListRequestPayload
@@ -52,7 +52,7 @@ export type IRequestPayload =
 
 export type IResponseResult =
   | IFileSaveResponseResult
-  | IUserLoginResponseResult
+  | IUserAuthResponseResult
   | IUserLogoutResponseResult
   | IUserProfileResponseResult
   | ITransformerListResponseResult

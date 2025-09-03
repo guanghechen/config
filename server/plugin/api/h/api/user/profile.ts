@@ -2,17 +2,11 @@ import type { IApiHandle, IApiHandleData } from '../../../types'
 
 interface IMeResponse {
   readonly isAuthenticated: boolean
-  readonly username?: string
 }
 
-export const getUserProfile: IApiHandle = async params => {
-  const { req } = params
-
-  const user = (req as any).user
-
+export const getUserProfile: IApiHandle = async _params => {
   const responseData: IMeResponse = {
     isAuthenticated: true,
-    username: user?.username,
   }
 
   const data: IApiHandleData = {

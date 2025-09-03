@@ -16,7 +16,7 @@ export class Requester {
   private isProtectedApiEndpoint(url: string): boolean {
     return (
       url.startsWith('/api/') &&
-      !url.startsWith(ApiRoutePathEnum.USER_LOGIN) &&
+      !url.startsWith(ApiRoutePathEnum.USER_AUTH) &&
       !url.startsWith(ApiRoutePathEnum.USER_LOGOUT)
     )
   }

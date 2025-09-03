@@ -1,8 +1,6 @@
 import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
-import crypto from 'node:crypto'
 import state from '../../../../../state'
-import { getJwtSecret } from '../../../../../util/jwt-secret'
 import type { IApiHandle, IApiHandleData } from '../../../types'
 
 const JWT_EXPIRES_IN = '7d'
@@ -10,8 +8,7 @@ const COOKIE_NAME = 'yoz-auth'
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
 
 interface IAuthRequest {
-  readonly username: string
-  readonly password: string
+  readonly authToken: string
 }
 
 interface IAuthResponse {
@@ -20,19 +17,12 @@ interface IAuthResponse {
   readonly expiresIn: string
 }
 
-function hashPassword(password: string, salt: string): string {
-  return crypto
-    .createHash('sha256')
-    .update(password + salt)
-    .digest('hex')
-}
-
-export const postUserLogin: IApiHandle = async params => {
+export const postUserAuth: IApiHandle = async params => {
   const { body } = params
 
   if (!body) {
     const data: IApiHandleData = {
-      error: 'Request body is required',
+      error: 'Auth token is required',
       data: null,
     }
     return { code: 400, data }
@@ -49,21 +39,19 @@ export const postUserLogin: IApiHandle = async params => {
     return { code: 400, data }
   }
 
-  const { username, password } = authRequest
+  const { authToken } = authRequest
 
-  if (!username || !password) {
+  if (!authToken) {
     const data: IApiHandleData = {
-      error: 'Username and password are required',
+      error: 'Auth token is required',
       data: null,
     }
     return { code: 400, data }
   }
 
-  const expectedUsername = process.env.YOZ_USERNAME
-  const expectedPassword = process.env.YOZ_PASSWORD
-  const salt = process.env.YOZ_SALT
+  const expectedToken = process.env.YOZ_AUTH_TOKEN
 
-  if (!expectedUsername || !expectedPassword) {
+  if (!expectedToken) {
     const data: IApiHandleData = {
       error: 'Authentication not configured',
       data: null,
@@ -71,36 +59,34 @@ export const postUserLogin: IApiHandle = async params => {
     return { code: 500, data }
   }
 
-  if (!salt) {
+  if (authToken !== expectedToken) {
     const data: IApiHandleData = {
-      error: 'Salt not configured - YOZ_SALT environment variable is required',
+      error: 'Invalid authentication token',
       data: null,
     }
-    return { code: 500, data }
-  }
-
-  const hashedPassword = hashPassword(password, salt)
-
-  if (username !== expectedUsername || hashedPassword !== expectedPassword) {
-    const data: IApiHandleData = {
-      error: 'Invalid credentials',
-      data: null,
-    }
-    state.reporter.warn('Failed login attempt:', { username, hashedPassword })
+    state.reporter.warn('Failed authentication attempt with invalid token')
     return { code: 403, data }
   }
 
   try {
-    const jwtSecret = getJwtSecret()
-    const token = jwt.sign({ username }, jwtSecret, { expiresIn: JWT_EXPIRES_IN })
+    const jwtSecret = process.env.YOZ_JWT_SECRET
+    if (!jwtSecret) {
+      const data: IApiHandleData = {
+        error: 'JWT secret not configured',
+        data: null,
+      }
+      return { code: 500, data }
+    }
+
+    const jwtToken = jwt.sign({ authenticated: true }, jwtSecret, { expiresIn: JWT_EXPIRES_IN })
 
     const responseData: IAuthResponse = {
       success: true,
-      token,
+      token: jwtToken,
       expiresIn: JWT_EXPIRES_IN,
     }
 
-    const cookieValue = cookie.serialize(COOKIE_NAME, token, {
+    const cookieValue = cookie.serialize(COOKIE_NAME, jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -118,7 +104,7 @@ export const postUserLogin: IApiHandle = async params => {
     return { code: 200, data }
   } catch (_error) {
     const data: IApiHandleData = {
-      error: 'Failed to generate token',
+      error: 'Failed to generate JWT token',
       details: _error,
       data: null,
     }

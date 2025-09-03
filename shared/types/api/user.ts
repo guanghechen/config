@@ -1,15 +1,14 @@
-export type IUserLoginRequestParams = Record<string, never>
+export type IUserAuthRequestParams = Record<string, never>
 
-export interface IUserLoginRequestPayload {
-  readonly username: string
-  readonly password: string
+export interface IUserAuthRequestPayload {
+  readonly authToken?: string
 }
 
-export interface IUserLoginResponseResult {
-  readonly isAuthenticated: boolean
-  readonly username?: string
+export interface IUserAuthResponseResult {
+  readonly success: boolean
   readonly token: string
-  readonly expiresIn: string
+  readonly expiresIn?: string
+  readonly message?: string
 }
 
 export type IUserLogoutRequestParams = Record<string, never>
@@ -24,5 +23,4 @@ export type IUserProfileRequestPayload = Record<string, never>
 
 export interface IUserProfileResponseResult {
   readonly isAuthenticated: boolean
-  readonly username?: string
 }

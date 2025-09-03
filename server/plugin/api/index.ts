@@ -10,7 +10,7 @@ import { saveFile } from './h/api/file/save'
 import { switchFile } from './h/api/file-switch'
 import { getTextTransformer } from './h/api/text-transform/:name'
 import { listTextTransformers } from './h/api/text-transform/list'
-import { postUserLogin } from './h/api/user/login'
+import { postUserAuth } from './h/api/user/auth'
 import { postUserLogout } from './h/api/user/logout'
 import { getUserProfile } from './h/api/user/profile'
 import { list_workspace_files } from './h/api/workspace/files'
@@ -19,7 +19,7 @@ import { verifyJwtMiddleware } from './jwt'
 import type { IApiHandle, IApiHandleParams, IApiHandleResult } from './types'
 
 const handle_map: Record<string, IApiHandle> = {
-  [ApiRoutePathEnum.USER_LOGIN]: postUserLogin,
+  [ApiRoutePathEnum.USER_AUTH]: postUserAuth,
   [ApiRoutePathEnum.USER_LOGOUT]: postUserLogout,
   [ApiRoutePathEnum.USER_PROFILE]: getUserProfile,
   [ApiRoutePathEnum.FILE]: fetchFile,
@@ -33,7 +33,7 @@ const handle_map: Record<string, IApiHandle> = {
 
 // Endpoints that don't require authentication
 const publicEndpoints: Set<string> = new Set([
-  ApiRoutePathEnum.USER_LOGIN,
+  ApiRoutePathEnum.USER_AUTH,
   ApiRoutePathEnum.USER_LOGOUT,
   ApiRoutePathEnum.FILE_SWITCH,
 ])

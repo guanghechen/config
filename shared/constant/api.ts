@@ -1,5 +1,5 @@
 export enum ApiRoutePathEnum {
-  USER_LOGIN = '/api/user/login',
+  USER_AUTH = '/api/user/auth',
   USER_LOGOUT = '/api/user/logout',
   USER_PROFILE = '/api/user/profile',
 

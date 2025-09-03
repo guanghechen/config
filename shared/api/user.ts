@@ -1,14 +1,14 @@
 import { ApiRoutePathEnum } from '../constant/api'
 import type {
-  IUserLoginRequestPayload,
-  IUserLoginResponseResult,
+  IUserAuthRequestPayload,
+  IUserAuthResponseResult,
   IUserProfileResponseResult,
 } from '../types/api/user'
 import { requester } from './requester'
 
 export class UserController {
-  public async login(payload: IUserLoginRequestPayload): Promise<IUserLoginResponseResult> {
-    const response = await requester.post(ApiRoutePathEnum.USER_LOGIN, payload)
+  public async auth(payload: IUserAuthRequestPayload = {}): Promise<IUserAuthResponseResult> {
+    const response = await requester.post(ApiRoutePathEnum.USER_AUTH, payload)
 
     const result = await response.json()
 
@@ -17,6 +17,16 @@ export class UserController {
     } else {
       throw new Error(result.error || 'Authentication failed')
     }
+  }
+
+  // Legacy method for backwards compatibility - delegates to auth()
+  public async login(payload: { authToken: string }): Promise<IUserAuthResponseResult> {
+    return this.auth({ authToken: payload.authToken })
+  }
+
+  // Legacy method for backwards compatibility - delegates to auth()
+  public async generateToken(): Promise<IUserAuthResponseResult> {
+    return this.auth({})
   }
 
   public async logout(): Promise<void> {

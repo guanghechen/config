@@ -1,11 +1,10 @@
 import * as cookie from 'cookie'
 import jwt from 'jsonwebtoken'
-import { getJwtSecret } from '../../util/jwt-secret'
 import type { IApiHandleParams, IApiHandleResult } from './types'
 const COOKIE_NAME = 'yoz-auth'
 
 interface IJwtPayload {
-  readonly username: string
+  readonly authenticated: boolean
   readonly iat: number
   readonly exp: number
 }
@@ -36,7 +35,17 @@ export function verifyJwtMiddleware(params: IApiHandleParams): IApiHandleResult 
   }
 
   try {
-    const jwtSecret = getJwtSecret()
+    const jwtSecret = process.env.YOZ_JWT_SECRET
+    if (!jwtSecret) {
+      return {
+        code: 500,
+        data: {
+          error: 'JWT secret not configured',
+          data: null,
+        },
+      }
+    }
+
     const decoded = jwt.verify(token, jwtSecret) as IJwtPayload
     // Add user info to request for potential use in handlers
     ;(req as any).user = decoded

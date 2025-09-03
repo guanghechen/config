@@ -11,25 +11,19 @@ export const LoginModal: React.FC = () => {
   const error = useStateValue(authViewModel.error$)
 
   const signed = useStateValue(authViewModel.signed$)
-  const [username, setUsername] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const usernameRef = React.useRef<HTMLInputElement>(null)
-  const passwordRef = React.useRef<HTMLInputElement>(null)
+  const [authToken, setAuthToken] = React.useState('')
+  const authTokenRef = React.useRef<HTMLInputElement>(null)
 
   // Check for auto-filled values
   const checkAutofill = React.useCallback(() => {
-    if (usernameRef.current && passwordRef.current) {
-      const usernameValue = usernameRef.current.value
-      const passwordValue = passwordRef.current.value
+    if (authTokenRef.current) {
+      const authTokenValue = authTokenRef.current.value
 
-      if (usernameValue && usernameValue !== username) {
-        setUsername(usernameValue)
-      }
-      if (passwordValue && passwordValue !== password) {
-        setPassword(passwordValue)
+      if (authTokenValue && authTokenValue !== authToken) {
+        setAuthToken(authTokenValue)
       }
     }
-  }, [username, password])
+  }, [authToken])
 
   const handleClose = React.useCallback(() => {
     authViewModel.closeAuthenticationDialog()
@@ -37,8 +31,8 @@ export const LoginModal: React.FC = () => {
 
   const handleSubmit = useEventCallback((e: React.FormEvent) => {
     e.preventDefault()
-    if (!username.trim() || !password.trim()) return
-    void authViewModel.login({ username: username.trim(), password })
+    if (!authToken.trim()) return
+    void authViewModel.login({ authToken: authToken.trim() })
   })
 
   const handleKeyDown = useEventCallback((e: React.KeyboardEvent) => {
@@ -117,17 +111,17 @@ export const LoginModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="username"
+              htmlFor="authToken"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Username
+              Authentication Token
             </label>
             <input
-              ref={usernameRef}
-              id="username"
+              ref={authTokenRef}
+              id="authToken"
               type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
+              value={authToken}
+              onChange={e => setAuthToken(e.target.value)}
               onAnimationStart={checkAutofill}
               onInput={checkAutofill}
               disabled={loading}
@@ -138,37 +132,9 @@ export const LoginModal: React.FC = () => {
                 'dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               )}
-              placeholder="Enter your username"
-              autoComplete="username"
+              placeholder="Enter your authentication token"
+              autoComplete="off"
               autoFocus={true}
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Password
-            </label>
-            <input
-              ref={passwordRef}
-              id="password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onAnimationStart={checkAutofill}
-              onInput={checkAutofill}
-              disabled={loading}
-              className={cn(
-                'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2',
-                'text-gray-900 placeholder-gray-500',
-                'focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
-                'dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400',
-                'disabled:cursor-not-allowed disabled:opacity-50',
-              )}
-              placeholder="Enter your password"
-              autoComplete="current-password"
             />
           </div>
 
@@ -194,7 +160,7 @@ export const LoginModal: React.FC = () => {
             </button>
             <button
               type="submit"
-              disabled={loading || !username.trim() || !password.trim()}
+              disabled={loading || !authToken.trim()}
               className={cn(
                 'rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white',
                 'hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
