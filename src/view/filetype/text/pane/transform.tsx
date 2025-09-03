@@ -289,7 +289,7 @@ export const TransformPane: React.FC = () => {
         </div>
       </div>
       <div className="border-b border-gray-200 dark:border-gray-700" />
-      <div className="bg-purple-50 dark:bg-purple-900/40 p-6 border-l-4 border-purple-500 dark:border-purple-400">
+      <div className="bg-purple-50 dark:bg-gray-800 p-6 border-l-4 border-purple-500 dark:border-purple-400">
         <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-4">
           Identifiers
         </h3>
@@ -381,7 +381,7 @@ export const TransformPane: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-blue-50 dark:bg-blue-900/40 p-6 border-l-4 border-blue-500 dark:border-blue-400">
+      <div className="bg-blue-50 dark:bg-gray-800 p-6 border-l-4 border-blue-500 dark:border-blue-400">
         <div className="flex items-center gap-2 mb-4">
           <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Split</h3>
           <Tooltip content="Function that takes text and returns an array of strings (e.g., text => text.split('\\n'))">
@@ -443,7 +443,7 @@ export const TransformPane: React.FC = () => {
                           addTransformStep(TextTransformStepTypeEnum.MAP)
                           setDropdownOpen(false)
                         }}
-                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer"
+                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                       >
                         Add Map
                       </button>

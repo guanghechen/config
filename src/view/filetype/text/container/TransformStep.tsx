@@ -139,7 +139,7 @@ export const TransformStep: React.FC<IProps> = props => {
           step.skip === true,
         'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700': step.skip !== true,
         'opacity-50 scale-95': isDragging,
-        'ring-2 ring-blue-500 border-blue-500 bg-blue-50 dark:bg-blue-900/20 transform scale-105':
+        'ring-2 ring-blue-500 border-blue-500 bg-blue-50 dark:bg-gray-700 transform scale-105':
           isDropTarget && !isDragging,
       })}
       onDragOver={handleDragOver}
@@ -191,7 +191,7 @@ export const TransformStep: React.FC<IProps> = props => {
             </button>
             <button
               onClick={onDuplicate}
-              className="w-6 h-6 flex items-center justify-center text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-900/20 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500 rounded transition-colors select-none cursor-pointer"
+              className="w-6 h-6 flex items-center justify-center text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-gray-700 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500 rounded transition-colors select-none cursor-pointer"
               title="Duplicate function"
             >
               <svg
@@ -215,7 +215,7 @@ export const TransformStep: React.FC<IProps> = props => {
             className={cn(
               'w-6 h-6 flex items-center justify-center transition-colors rounded select-none cursor-pointer',
               {
-                'text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-900/20 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500':
+                'text-blue-500 hover:text-white dark:text-blue-400 dark:hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-gray-700 dark:hover:bg-blue-500 border border-blue-200 dark:border-blue-800 hover:border-blue-500':
                   step.skip === true,
                 'text-gray-400 bg-gray-100 dark:text-gray-500 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600':
                   step.skip !== true,
@@ -274,7 +274,7 @@ export const TransformStep: React.FC<IProps> = props => {
                 className={cn('px-2 py-1 rounded-l text-xs font-medium flex items-center', {
                   'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300':
                     step.type === TextTransformStepTypeEnum.FILTER,
-                  'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300':
+                  'bg-purple-100 text-purple-800 dark:bg-gray-700 dark:text-purple-300':
                     step.type !== TextTransformStepTypeEnum.FILTER,
                 })}
               >
@@ -287,7 +287,7 @@ export const TransformStep: React.FC<IProps> = props => {
                   {
                     'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-300 dark:border-orange-600':
                       step.type === TextTransformStepTypeEnum.FILTER,
-                    'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 border-purple-300 dark:border-purple-600':
+                    'bg-purple-100 text-purple-800 dark:bg-gray-700 dark:text-purple-300 border-purple-300 dark:border-purple-600':
                       step.type !== TextTransformStepTypeEnum.FILTER,
                   },
                 )}
@@ -327,8 +327,7 @@ export const TransformStep: React.FC<IProps> = props => {
                   className={cn(
                     'block w-full px-3 py-2 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 select-none cursor-pointer',
                     {
-                      'bg-purple-50 dark:bg-purple-900/20':
-                        step.type === TextTransformStepTypeEnum.MAP,
+                      'bg-purple-50 dark:bg-gray-700': step.type === TextTransformStepTypeEnum.MAP,
                     },
                   )}
                 >
