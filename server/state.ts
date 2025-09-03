@@ -6,6 +6,7 @@ import { State } from '@guanghechen/viewmodel'
 import type { FSWatcher } from 'chokidar'
 import chokidar from 'chokidar'
 import path from 'node:path'
+import { ROOT_DIR } from '../env'
 import { normalizeFilepath, resolveRealFilepath } from './util/path'
 
 const reporter = new Reporter(chalk, {
@@ -29,13 +30,18 @@ export interface IWorkspaceItem {
 export type IWorkspaceMap = ReadonlyMap<string, IWorkspaceItem>
 
 const YOZ_WORKSPACE_PREFIX = 'YOZ_WORKSPACE_'
-const YOZ_WORKSPACE_ITEMS: IWorkspaceItem[] = Object.entries(process.env)
-  .filter(([key, val]) => !!val && key.startsWith(YOZ_WORKSPACE_PREFIX))
-  .map(([key, val]) => ({
-    tag: key.slice(YOZ_WORKSPACE_PREFIX.length).toLowerCase(),
-    path: resolveRealFilepath(val!),
-    files: { mds: null },
-  }))
+const YOZ_WORKSPACE_ITEMS: IWorkspaceItem[] = [
+  { tag: 'default', path: path.resolve(ROOT_DIR, 'demo'), files: { mds: null } },
+].concat(
+  Object.entries(process.env)
+    .filter(([key, val]) => !!val && key.startsWith(YOZ_WORKSPACE_PREFIX))
+    .map(([key, val]) => ({
+      tag: key.slice(YOZ_WORKSPACE_PREFIX.length).toLowerCase(),
+      path: resolveRealFilepath(val!),
+      files: { mds: null },
+    }))
+    .filter(item => item.tag !== 'default'),
+)
 
 class ServerViewModel {
   public readonly reporter: IReporter

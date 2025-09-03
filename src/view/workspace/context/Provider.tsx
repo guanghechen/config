@@ -23,7 +23,7 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
     async () => {
       const rawViewData = await universalStorage.getContext<Partial<IWorkspaceViewData>>(storageKey)
       const usp = new URLSearchParams(window.location.search)
-      const workspace: string | null = workspace_name || null
+      const workspace: string | null = workspace_name || 'default'
       const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
 
       const viewData: IWorkspaceViewData = WorkspaceViewViewModel.normalize(rawViewData)
@@ -51,7 +51,7 @@ export const WorkspaceViewProvider: React.FC<{ children: React.ReactNode }> = pr
       <WorkspaceViewContextType.Provider value={context}>
         {props.children}
       </WorkspaceViewContextType.Provider>
-      <SideEffect viewmodel={viewmodel} workspace={workspace_name ?? null} />
+      <SideEffect viewmodel={viewmodel} workspace={workspace_name || 'default'} />
     </React.Fragment>
   )
 }
@@ -61,7 +61,7 @@ WorkspaceViewProvider.displayName = 'WorkspaceViewProvider'
 
 interface ISideEffectProps {
   readonly viewmodel: WorkspaceViewViewModel
-  readonly workspace: string | null
+  readonly workspace: string
 }
 
 const SideEffect: React.FC<ISideEffectProps> = props => {
@@ -141,7 +141,7 @@ const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
   }, [viewmodel])
 }
 
-const useSyncProps = (viewmodel: WorkspaceViewViewModel, workspace: string | null): void => {
+const useSyncProps = (viewmodel: WorkspaceViewViewModel, workspace: string): void => {
   const workspacesDirtyTick: number = useStateValue(viewmodel.workspacesDirtyTick$)
   const { workspaces } = useGetWorkspaces(workspacesDirtyTick)
   const filepath: string | null = useStateValue(viewmodel.filepath$)

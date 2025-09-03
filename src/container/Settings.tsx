@@ -34,27 +34,6 @@ export const Settings: React.FC<IProps> = props => {
     setMenuState(menuState === MenuState.CLOSED ? MenuState.OPEN : MenuState.CLOSED)
   })
 
-  React.useEffect(() => {
-    const handleDocumentClick = (event: MouseEvent): void => {
-      if (menuState === MenuState.CLOSED) return
-
-      const target = event.target as Node
-      const menu = menuRef.current
-      const button = settingsButtonRef.current
-      if (menu && button && !menu.contains(target) && !button.contains(target)) {
-        setMenuState(MenuState.CLOSED)
-      }
-    }
-
-    if (menuState === MenuState.OPEN) {
-      document.addEventListener('click', handleDocumentClick)
-    }
-
-    return () => {
-      document.removeEventListener('click', handleDocumentClick)
-    }
-  }, [menuState])
-
   return (
     <div className="relative">
       <button
