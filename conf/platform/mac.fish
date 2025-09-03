@@ -16,3 +16,6 @@ set -gx f_cline_settings "$HOME/Library/Application Support/Code/User/globalStor
 ## Aliases
 alias code='env -u TMUX -u TERM /usr/local/bin/code'
 alias ghc-reset-git-credential='echo -e "host=github.com\nprotocol=https\n" | git credential-osxkeychain erase'
+
+## Abbr
+abbr -a ghc-gen-secret "node -e \"console.log(crypto.randomBytes(32).toString('base64'))\" | pbcopy"

@@ -11,6 +11,9 @@ alias open="explorer.exe"
 alias start="cmd.exe /start"
 alias pbpaste="powershell.exe Get-Clipboard >"
 
+## Abbr
+abbr -a ghc-gen-secret "node -e \"console.log(crypto.randomBytes(32).toString('base64'))\" | clip.exe"
+
 ## Setup vpn
 if command -v ipconfig.exe >/dev/null
     set -gx ghc_vpn_host_ip (ipconfig.exe | grep 'IPv4 Address' | awk '{print $NF}' | grep 192 | head -1 | sed 's/[^0-9.]//g')

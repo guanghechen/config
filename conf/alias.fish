@@ -45,9 +45,6 @@ else
     alias lg="lazygit -ucf '$HOME/.config/lazygit/config.yml'"
 end
 
-### node
-abbr -a ghc-gen-secret "node -e \"console.log(crypto.randomBytes(32).toString('base64'))\" | clip.exe"
-
 ### nvim
 if set -q NEOVIM_HOME; and test -n "$NEOVIM_HOME"
     alias vim="$NEOVIM_HOME/bin/nvim"
