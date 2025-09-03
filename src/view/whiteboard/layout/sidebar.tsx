@@ -79,7 +79,7 @@ export const Sidebar: React.FC = () => {
         <WhiteboardCodeEditor />
       </div>
       <div
-        className="absolute right-[-0.5rem] top-0 z-10 h-full w-1 cursor-col-resize bg-transparent hover:bg-blue-500 hover:opacity-50 active:bg-blue-600"
+        className="absolute right-[-2px] top-0 z-50 h-full w-2 cursor-col-resize bg-transparent hover:bg-blue-500 hover:opacity-50 active:bg-blue-600 transition-colors duration-150"
         onMouseDown={onResizeStart}
       />
     </div>
