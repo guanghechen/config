@@ -44,9 +44,24 @@ return {
     provideFormatter = true,
   },
   settings = {
-    css = { validate = true },
-    less = { validate = true },
-    scss = { validate = true },
+    css = {
+      validate = true,
+      lint = {
+        unknownAtRules = "ignore",
+      },
+    },
+    less = {
+      validate = true,
+      lint = {
+        unknownAtRules = "ignore",
+      },
+    },
+    scss = {
+      validate = true,
+      lint = {
+        unknownAtRules = "ignore",
+      },
+    },
   },
   root_dir = root_dir,
   before_init = before_init,
