@@ -1,6 +1,4 @@
 @import 'tailwindcss';
-@custom-variant dark (&:where(.dark &));
-
 @import './basic.css';
 @import './deps/react-flow.css';
 @import './deps/react-toastify.css';
@@ -16,3 +14,5 @@
 @import './view/filetype/text.css';
 @import './view/whiteboard.css';
 @import './view/workspace.css';
+
+@custom-variant dark (&:where(.dark &));
