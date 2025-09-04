@@ -1,0 +1,40 @@
+@layer components {
+  .custom-toast.custom-toast.custom-toast {
+    @apply bg-white text-gray-700 border border-gray-200 shadow-lg;
+    font-family:
+      Maple Mono NF CN,
+      Roboto Mono,
+      monospace,
+      sans-serif;
+
+    &.Toastify__toast--success {
+      @apply bg-green-50 text-green-800 border-green-500;
+    }
+
+    &.Toastify__toast--error {
+      @apply bg-red-50 text-red-800 border-red-500;
+    }
+
+    .Toastify__progress-bar--success {
+      @apply bg-green-500;
+    }
+
+    .Toastify__progress-bar--error {
+      @apply bg-red-500;
+    }
+  }
+
+  .dark {
+    .custom-toast.custom-toast.custom-toast {
+      @apply bg-gray-800 text-gray-50 border-gray-600;
+
+      &.Toastify__toast--success {
+        @apply bg-green-900 text-green-200 border-green-500;
+      }
+
+      &.Toastify__toast--error {
+        @apply bg-red-900 text-red-200 border-red-500;
+      }
+    }
+  }
+}

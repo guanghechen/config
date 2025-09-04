@@ -1,0 +1,34 @@
+@layer components {
+  /* ReactFlow dark theme styles */
+  .react-flow.dark {
+    background-color: theme('colors.gray.900');
+  }
+
+  .react-flow.dark .react-flow__controls {
+    @apply bg-gray-800/90 border-gray-600;
+  }
+
+  .react-flow.dark .react-flow__controls button {
+    @apply bg-gray-700 border-gray-600 text-gray-200;
+  }
+
+  .react-flow.dark .react-flow__controls button:hover {
+    @apply bg-gray-600 border-gray-500;
+  }
+
+  .react-flow.dark .react-flow__edge-path {
+    stroke: theme('colors.gray.400');
+  }
+
+  .react-flow.dark .react-flow__edge.selected .react-flow__edge-path {
+    stroke: theme('colors.blue.400');
+  }
+
+  .react-flow.dark .react-flow__connection-line {
+    stroke: theme('colors.gray.400');
+  }
+
+  .react-flow.dark .react-flow__minimap {
+    @apply bg-gray-800 border-gray-600;
+  }
+}

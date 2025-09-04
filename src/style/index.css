@@ -2,6 +2,8 @@
 @custom-variant dark (&:where(.dark &));
 
 @import './basic.css';
+@import './deps/react-flow.css';
+@import './deps/react-toastify.css';
 @import './component/markdown.css';
 @import './view/file.css';
 @import './view/filetype/excalidraw.css';
