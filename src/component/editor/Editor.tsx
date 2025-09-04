@@ -6,6 +6,7 @@ import React from 'react'
 import { baseEditorOptions } from './options/base'
 import { htmlLanguageOptions } from './options/html'
 import { jsonLanguageOptions } from './options/json'
+import { jsonlLanguageOptions } from './options/jsonl'
 import { markdownLanguageOptions } from './options/markdown'
 import { textLanguageOptions } from './options/text'
 
@@ -13,13 +14,14 @@ type MonacoEditorInstance = Parameters<
   NonNullable<Parameters<typeof MonacoEditor>[0]['onMount']>
 >[1]
 
-type SupportedLanguage = 'markdown' | 'json' | 'text' | 'html'
+type SupportedLanguage = 'markdown' | 'json' | 'jsonl' | 'text' | 'html'
 type MonacoLanguage = 'markdown' | 'json' | 'plaintext' | 'html'
 type EditorTheme = 'lighten' | 'darken'
 
 const LANGUAGE_MAP: Record<SupportedLanguage, MonacoLanguage> = {
   markdown: 'markdown',
   json: 'json',
+  jsonl: 'json',
   text: 'plaintext',
   html: 'html',
 }
@@ -62,6 +64,9 @@ export const Editor: React.FC<IEditorProps> = props => {
         case 'json':
           jsonLanguageOptions.setupLanguage(monacoInstance)
           break
+        case 'jsonl':
+          jsonlLanguageOptions.setupLanguage(monacoInstance)
+          break
         case 'markdown':
           markdownLanguageOptions.setupLanguage(monacoInstance)
           break
@@ -87,6 +92,11 @@ export const Editor: React.FC<IEditorProps> = props => {
         return {
           ...baseEditorOptions,
           ...jsonLanguageOptions.editorOptions,
+        }
+      case 'jsonl':
+        return {
+          ...baseEditorOptions,
+          ...jsonlLanguageOptions.editorOptions,
         }
       case 'markdown':
         return {
