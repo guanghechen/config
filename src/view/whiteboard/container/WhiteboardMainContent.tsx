@@ -12,6 +12,7 @@ interface IWhiteboardMainContentProps {
   readonly content: string | null
   readonly contentData: IWhiteboardContentData
   readonly storageKeyScope: string
+  readonly onSaveFile?: (content: string) => void
 }
 
 export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
@@ -19,6 +20,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
   content,
   contentData,
   storageKeyScope,
+  onSaveFile,
 }) => {
   // If no content is available, show placeholder
   if (!content && !contentData.contentError) {
@@ -67,6 +69,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
           content={content}
           contentError={finalContentError}
           storageKeyScope={storageKeyScope}
+          onSaveFile={onSaveFile}
         />
       )
     case 'html':
