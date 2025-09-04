@@ -76,10 +76,8 @@
         .vlm-pane {
           position: relative;
           box-sizing: border-box;
-          padding-left: 0.5rem;
-          padding-right: 0.5rem;
+          min-height: calc(100vh - 1rem - var(--v-vlt-height));
           border-width: 1rem 0.5rem;
-          min-height: calc(100vh - 4rem);
 
           @apply shadow-lg rounded-lg border-transparent
           backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80
@@ -92,9 +90,10 @@
           height: calc(100vh - var(--v-vlt-height));
 
           .vlm-pane {
-            min-height: 0;
             height: 100%;
             width: 100%;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
             overflow: auto;
           }
         }

@@ -11,7 +11,7 @@ export enum ModeEnum {
 }
 
 export enum ContentModeEnum {
-  ORIGINAL = 'original',
+  PLAIN = 'plain',
   LIST = 'list',
   GRAPH = 'graph',
 }

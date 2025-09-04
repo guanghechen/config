@@ -29,7 +29,7 @@ ContentPaneMain.displayName = 'TextViewContentPaneMain'
 
 export const ContentPane: React.FC = () => {
   return (
-    <div className="box-border w-full h-full">
+    <div className="box-border size-full">
       <ContentPaneMain />
     </div>
   )

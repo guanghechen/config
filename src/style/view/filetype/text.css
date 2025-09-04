@@ -33,6 +33,16 @@
     &.vlm-canvas-1 {
       display: block;
 
+      &[data-content-mode='plain'] {
+        height: calc(100vh - var(--v-vlt-height));
+
+        .vlm-p-content {
+          height: 100%;
+          width: 100%;
+          padding: 0;
+        }
+      }
+
       &[data-content-mode='graph'] {
         height: calc(100vh - var(--v-vlt-height));
 

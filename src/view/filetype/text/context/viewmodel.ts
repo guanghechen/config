@@ -15,7 +15,7 @@ interface IProps {
 
 const DEFAULT_DATA: ITextViewData = {
   mode: ModeEnum.CONTENT,
-  contentMode: ContentModeEnum.ORIGINAL,
+  contentMode: ContentModeEnum.PLAIN,
   nodeDetailsPaneWidth: 480,
   transformConfig: {
     name: 'unnamed',
@@ -69,7 +69,7 @@ export class TextViewViewModel extends ViewModel {
     const normalizedMode: ModeEnum =
       typeof mode === 'number' && mode > 0 && Number.isInteger(mode) ? mode : base.mode
     const normalizedContentMode: ContentModeEnum =
-      contentMode === ContentModeEnum.ORIGINAL ||
+      contentMode === ContentModeEnum.PLAIN ||
       contentMode === ContentModeEnum.LIST ||
       contentMode === ContentModeEnum.GRAPH
         ? contentMode

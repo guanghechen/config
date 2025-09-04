@@ -13,8 +13,8 @@ interface IContentModeOption {
 
 const CONTENT_MODE_OPTIONS: ReadonlyArray<IContentModeOption> = [
   {
-    value: ContentModeEnum.ORIGINAL,
-    label: 'Original',
+    value: ContentModeEnum.PLAIN,
+    label: 'Plain',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -68,7 +68,7 @@ export const ContentMode: React.FC = () => {
   const actualContentMode: ContentModeEnum =
     (contentMode === ContentModeEnum.LIST && isListDisabled) ||
     (contentMode === ContentModeEnum.GRAPH && isGraphDisabled)
-      ? ContentModeEnum.ORIGINAL
+      ? ContentModeEnum.PLAIN
       : contentMode
 
   const currentOption = CONTENT_MODE_OPTIONS.find(option => option.value === contentMode)
