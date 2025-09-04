@@ -103,7 +103,11 @@ export const CollectionDropdown: React.FC<IProps> = ({ isOpen, onClose, onToggle
   // Sort transformers: 1. eventstream/jsonl first, 2. others without 'local.' prefix, 3. items with 'local.' prefix
   const sortedTransformers = React.useMemo(() => {
     const priority = transformers.filter(
-      t => t.name === 'eventstream' || t.name === 'jsonl' || t.name === 'json-list',
+      t =>
+        t.name === 'eventstream' ||
+        t.name === 'jsonl' ||
+        t.name === 'json-list' ||
+        t.name === 'text',
     )
     const regular = transformers
       .filter(

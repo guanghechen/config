@@ -1,0 +1,16 @@
+{
+  "name": "text",
+  "desc": "() => 'text'",
+  "split": "text => [text]",
+  "uuid": "() => 'text'",
+  "parents": "() => null",
+  "title": "() => 'text'",
+  "chainPaths": [],
+  "steps": [
+    {
+      "type": "map",
+      "code": "text => { content: text }",
+      "skip": false
+    }
+  ]
+}

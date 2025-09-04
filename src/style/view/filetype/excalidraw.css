@@ -23,25 +23,24 @@
         height: 100%;
         width: 100%;
         padding: 0;
+
         @apply border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm;
       }
     }
-  }
-}
 
-.vlm-canvas[data-filetype='excalidraw'] {
-  .excalidraw {
-    &.excalidraw-container {
-      width: 100%;
-      height: 100%;
-    }
+    .excalidraw {
+      &.excalidraw-container {
+        width: 100%;
+        height: 100%;
+      }
 
-    .SVGLayer {
-      position: absolute;
-      height: 100%;
-      width: 100%;
-      top: 0rem;
-      left: 0rem;
+      .svg-layer {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 0;
+        left: 0;
+      }
     }
   }
 }

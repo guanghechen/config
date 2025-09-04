@@ -16,7 +16,7 @@ export const ContentPlain: React.FC = () => {
 
   return (
     <div className="size-full flex justify-center">
-      <pre className="font-mono-maple whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+      <pre className="size-full overflow-auto font-mono-maple whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800 dark:text-gray-200">
         {content}
       </pre>
     </div>

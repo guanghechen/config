@@ -36,15 +36,18 @@
 
       .vlt-leftest,
       .vlt-rightest {
+        box-sizing: border-box;
         flex: 0 0 auto;
       }
 
       .vlt-left,
       .vlt-right {
+        box-sizing: border-box;
         flex: 0 1 auto;
       }
 
       .vlt-middle {
+        box-sizing: border-box;
         flex: 1 1 auto;
         display: flex;
         align-items: center;
@@ -58,8 +61,10 @@
       box-sizing: border-box;
       grid-area: main;
       width: 100%;
+      min-width: 0;
       height: 100%;
       padding: 0;
+      overflow: auto;
 
       .vlm-canvas {
         box-sizing: border-box;

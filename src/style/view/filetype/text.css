@@ -30,15 +30,19 @@
       height: auto;
     }
 
-    &.vlm-canvas-1[data-content-mode='graph'] {
+    &.vlm-canvas-1 {
       display: block;
-      height: calc(100vh - var(--v-vlt-height));
 
-      .vlm-p-content {
-        height: 100%;
-        width: 100%;
-        padding: 0;
-        @apply border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm;
+      &[data-content-mode='graph'] {
+        height: calc(100vh - var(--v-vlt-height));
+
+        .vlm-p-content {
+          height: 100%;
+          width: 100%;
+          padding: 0;
+
+          @apply border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm;
+        }
       }
     }
 
