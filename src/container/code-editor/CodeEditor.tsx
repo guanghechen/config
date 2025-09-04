@@ -4,6 +4,7 @@ import { Editor, type EditorProps } from '@monaco-editor/react'
 import React from 'react'
 import type { SiteTheme } from '@/context/site'
 import { useSiteViewmodel } from '@/context/site'
+import { usePrettier } from '@/hook/usePrettier'
 import {
   FILETYPE_TO_LANGUAGE_MAP,
   SITE_THEME_TO_CUSTOMIZED_THEME_MAP,
@@ -11,6 +12,7 @@ import {
 } from './constant'
 import { DefaultCodeDropdown } from './DefaultCodeDropdown'
 import { LanguageDropdown } from './LanguageDropdown'
+import { PrettierFormatButton } from './PrettierFormatButton'
 
 const MONACO_EDITOR_OPTIONS: EditorProps['options'] = {
   minimap: {
@@ -99,6 +101,7 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
 
   const siteViewmodel = useSiteViewmodel()
   const siteTheme: SiteTheme = useStateValue(siteViewmodel.theme$)
+  const { formatWithNotifications } = usePrettier()
 
   const [_monaco, setMonaco] = React.useState<any>(null)
   const [mounted, setMounted] = React.useState<boolean>(false)
@@ -107,12 +110,63 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
     ? SITE_THEME_TO_CUSTOMIZED_THEME_MAP[siteTheme]
     : SITE_THEME_TO_MONACO_THEME_MAP[siteTheme]
 
-  const handleEditorDidMount = useEventCallback((_editor: any, monacoInstance: any) => {
+  const handleEditorDidMount = useEventCallback((editor: any, monacoInstance: any) => {
     setMonaco(monacoInstance)
 
     // Define custom transparent themes
     monacoInstance.editor.defineTheme('transparent-light', TRANSPARENT_LIGHT_THEME)
     monacoInstance.editor.defineTheme('transparent-dark', TRANSPARENT_DARK_THEME)
+
+    // Add Prettier format command
+    editor.addCommand(
+      monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyF,
+      async () => {
+        const model = editor.getModel()
+        if (!model) return
+
+        const code = model.getValue()
+        const currentLanguage = editorLanguage
+
+        const result = await formatWithNotifications(code, currentLanguage)
+        if (result.success && result.formatted && result.formatted !== code) {
+          const selection = editor.getSelection()
+          model.setValue(result.formatted)
+          if (selection) {
+            editor.setSelection(selection)
+          }
+          onContentChange(result.formatted)
+        }
+      },
+    )
+
+    // Add action to command palette
+    editor.addAction({
+      id: 'prettier-format',
+      label: 'Format with Prettier',
+      keybindings: [
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyF,
+      ],
+      contextMenuGroupId: 'modification',
+      contextMenuOrder: 1.5,
+      run: async () => {
+        const model = editor.getModel()
+        if (!model) return
+
+        const code = model.getValue()
+        const currentLanguage = editorLanguage
+
+        const result = await formatWithNotifications(code, currentLanguage)
+        if (result.success && result.formatted && result.formatted !== code) {
+          const selection = editor.getSelection()
+          model.setValue(result.formatted)
+          if (selection) {
+            editor.setSelection(selection)
+          }
+          onContentChange(result.formatted)
+        }
+      },
+    })
+
     setMounted(true)
   })
 
@@ -144,6 +198,12 @@ export const CodeEditor: React.FC<IProps> = (props: IProps) => {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Code Editor</span>
         </div>
         <div className="flex items-center gap-2">
+          <PrettierFormatButton
+            code={content || ''}
+            language={editorLanguage}
+            onFormatted={onContentChange}
+          />
+          <div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
           <DefaultCodeDropdown onLoadTemplate={handleLoadTemplate} />
           <LanguageDropdown value={editorLanguage} onChange={onLanguageChange} />
         </div>

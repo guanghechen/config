@@ -63,3 +63,26 @@ export const DEFAULT_CODE_TEMPLATE_OPTIONS = [
   { value: 'svg', label: 'SVG' },
   { value: 'excalidraw', label: 'Excalidraw' },
 ]
+
+export const PRETTIER_SUPPORTED_LANGUAGES = new Set([
+  'javascript',
+  'js',
+  'jsx',
+  'typescript',
+  'ts',
+  'tsx',
+  'json',
+  'jsonl',
+  'css',
+  'scss',
+  'sass',
+  'less',
+  'html',
+  'htm',
+  'xml',
+  'svg',
+  'markdown',
+  'md',
+  'yaml',
+  'yml',
+])
