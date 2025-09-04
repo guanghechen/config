@@ -36,6 +36,7 @@ function M.get_mason_ensure_installed()
     "isort",
     "prettier",
     "shfmt",
+    "stylelint",
     "stylua",
   }
 end

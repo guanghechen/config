@@ -26,7 +26,7 @@ local config = {
 -- stylua: ignore start
 local linters_by_ft = {
   -- web --
-  css               = { "cspell" },
+  css               = { "stylelint", "cspell" },
   graphql           = { "cspell" },
   handlebars        = { "cspell" },
   html              = { "cspell" },
@@ -34,7 +34,7 @@ local linters_by_ft = {
   jsonc             = { "cspell" },
   javascript        = { "cspell" },
   javascriptreact   = { "cspell" },
-  less              = { "cspell" },
+  less              = { "stylelint", "cspell" },
   markdown          = { "cspell" },
   ["markdown.mdx"]  = { "cspell" },
   svelte            = { "cspell" },
