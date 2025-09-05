@@ -27,6 +27,7 @@
     "pageno",
     "preorder",
     "refid",
+    "roughjs",
     "sourceline",
     "strikethrough",
     "toastify",
