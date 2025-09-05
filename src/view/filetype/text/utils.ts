@@ -99,17 +99,38 @@ export const getPathColorClasses = (path: string, allPaths: string[]): string =>
   return `${color.bg} ${color.text} ${color.darkBg} ${color.darkText}`
 }
 
+export const createChainPath = (value: string): IChainPath => {
+  const isInvisible = value.startsWith('!')
+  return {
+    path: isInvisible ? value.slice(1) : value,
+    value,
+    visible: !isInvisible,
+  }
+}
+
 export const stringArrayToChainPaths = (paths: string[] | undefined): IChainPath[] => {
-  if (!Array.isArray(paths)) return []
-  return paths.map(path => ({
-    path,
-    value: path,
-    visible: true,
-  }))
+  return Array.isArray(paths) ? paths.map(createChainPath) : []
 }
 
 export const chainPathsToStringArray = (chainPaths: IChainPath[]): string[] => {
-  return chainPaths.map(cp => cp.path)
+  return chainPaths.map(cp => (cp.visible ? cp.path : `!${cp.path}`))
+}
+
+export const toggleChainPathVisibility = (chainPath: IChainPath): IChainPath => {
+  const newVisible = !chainPath.visible
+  const newValue =
+    newVisible && chainPath.value.startsWith('!')
+      ? chainPath.value.slice(1)
+      : !newVisible && !chainPath.value.startsWith('!')
+        ? `!${chainPath.value}`
+        : chainPath.value
+
+  return {
+    ...chainPath,
+    visible: newVisible,
+    value: newValue,
+    path: newValue.startsWith('!') ? newValue.slice(1) : newValue,
+  }
 }
 
 export const extractValueFromPath = (obj: unknown, path: string): string | NILSymbol => {

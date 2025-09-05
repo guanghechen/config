@@ -67,13 +67,32 @@ export const MultiInput = <T extends IMultiInputItem>({
   }
 
   const toggleVisibility = (index: number): void => {
-    const newItems = items.map((item, i) => {
+    // Import the utility if available, otherwise fallback to inline logic
+    const item = items[index]
+    const newVisible = !item.visible
+    const newValue =
+      newVisible && item.value.startsWith('!')
+        ? item.value.slice(1)
+        : !newVisible && !item.value.startsWith('!')
+          ? `!${item.value}`
+          : item.value
+
+    const newItems = items.map((currentItem, i) => {
       if (i === index) {
-        const updatedItem: T = { ...item, visible: !item.visible }
-        return updatedItem
+        const baseUpdate = {
+          ...currentItem,
+          visible: newVisible,
+          value: newValue,
+        }
+
+        // Update path property if it exists (for IChainPath objects)
+        return 'path' in currentItem
+          ? { ...baseUpdate, path: newValue.startsWith('!') ? newValue.slice(1) : newValue }
+          : baseUpdate
       }
-      return item
-    })
+      return currentItem
+    }) as T[]
+
     onChange(newItems)
   }
 
@@ -97,14 +116,23 @@ export const MultiInput = <T extends IMultiInputItem>({
       trimmedValue &&
       (allowDuplicates || !itemValues.includes(trimmedValue) || trimmedValue === items[index].value)
     ) {
+      const isInvisible = trimmedValue.startsWith('!')
+      const actualPath = isInvisible ? trimmedValue.slice(1) : trimmedValue
+
       const newItems = items.map((item, i) => {
         if (i === index) {
-          const baseUpdate = { ...item, value: trimmedValue }
-          const updatedItem = 'path' in item ? { ...baseUpdate, path: trimmedValue } : baseUpdate
-          return updatedItem as T
+          const baseUpdate = {
+            ...item,
+            value: trimmedValue,
+            visible: !isInvisible,
+          }
+
+          // Update path property if it exists (for IChainPath objects)
+          return 'path' in item ? { ...baseUpdate, path: actualPath } : baseUpdate
         }
         return item
-      })
+      }) as T[]
+
       onChange(newItems)
     }
     cancelEditing()

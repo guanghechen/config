@@ -1,7 +1,7 @@
 import React from 'react'
 import { MultiInput } from '@/component/MultiInput'
 import type { IChainPath } from '../context'
-import { getPathColorClasses } from '../utils'
+import { createChainPath, getPathColorClasses } from '../utils'
 
 export type DisplayMode = 'inline' | 'lines'
 
@@ -20,10 +20,6 @@ export const MultiPathInput: React.FC<IProps> = ({
   displayMode,
   onDisplayModeChange,
 }) => {
-  const createChainPath = React.useCallback((value: string): IChainPath => {
-    return { path: value, value, visible: true, editing: false }
-  }, [])
-
   const getChainPathColorClasses = React.useCallback(
     (chainPath: IChainPath, allChainPaths: IChainPath[]): string => {
       const allPaths = allChainPaths.map(cp => cp.path)
