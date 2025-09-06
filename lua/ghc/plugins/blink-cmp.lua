@@ -236,10 +236,29 @@ return {
                 end
 
                 local bufnrs = {} ---@type integer[]
+                local max_buffers = 10 -- Limit to prevent resource exhaustion
+                local count = 0
+
                 for _, buf in ipairs(meta.bufs) do
+                  if count >= max_buffers then
+                    break
+                  end
+
                   local bufnr = buf.bufnr ---@type integer
                   if vim.bo[bufnr].buftype == "" then
-                    bufnrs[#bufnrs + 1] = bufnr
+                    -- Only include buffers that are reasonably sized (< 1MB)
+                    local bufname = vim.api.nvim_buf_get_name(bufnr)
+                    if bufname ~= "" then
+                      local size = vim.fn.getfsize(bufname)
+                      if size >= 0 and size < 131072 then -- 128KB limit, -1 means file doesn't exist
+                        bufnrs[#bufnrs + 1] = bufnr
+                        count = count + 1
+                      end
+                    else
+                      -- For unnamed buffers, include them (they're usually small)
+                      bufnrs[#bufnrs + 1] = bufnr
+                      count = count + 1
+                    end
                   end
                 end
                 return bufnrs

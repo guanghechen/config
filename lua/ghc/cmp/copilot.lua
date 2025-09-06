@@ -12,17 +12,23 @@ local augroup = eve.nvim.augroup(string.format("%s__%s", __module_name__, "LspAt
 ---@field public kind_hl                string   The icon of the kind
 ---@field public debounce               integer|false Debounce time in milliseconds
 ---@field public auto_refresh           ?{ backward?: boolean, forward ?: boolean } Whether to auto-refresh completions
+---@field public request_timeout        integer  Request timeout in milliseconds
+---@field public max_concurrent_requests integer  Maximum concurrent requests
+---@field public backoff_base           integer  Base backoff time in milliseconds
 local config = {
   max_completions = 3,
-  max_attempts = 2,
+  max_attempts = 1, -- Reduced from 2 to prevent resource exhaustion
   kind_name = "Copilot",
   kind_icon = eve.icon.kind.Copilot,
   kind_hl = "BlinkCmpKindCopilot",
-  debounce = 800,
+  debounce = 1000, -- Increased from 800ms to reduce request frequency
   auto_refresh = {
     backward = true,
     forward = true,
   },
+  request_timeout = 5000, -- 5 second timeout for requests
+  max_concurrent_requests = 2, -- Limit concurrent requests
+  backoff_base = 1000, -- Base backoff time
 }
 
 ---@enum trigger_kind
@@ -84,10 +90,29 @@ end
 ---@param client                        vim.lsp.Client
 ---@param params                        table
 ---@param callback                      lsp.Handler
+---@param timeout_ms                    integer
 ---@return boolean                      status indicates whether the request was successful.
 ---@return integer?                     request_id Can be used with |Client:cancel_request()|.
-function util.get_completions_from_lsp(client, params, callback)
-  local succeed, req_id = client:request(Methods.textDocument_inlineCompletion, params, callback)
+function util.get_completions_from_lsp(client, params, callback, timeout_ms)
+  local timeout_timer ---@type uv.uv_timer_t?
+  local wrapped_callback = function(err, response, ctx)
+    if timeout_timer then
+      timeout_timer:stop()
+      timeout_timer = nil
+    end
+    callback(err, response, ctx)
+  end
+
+  local succeed, req_id = client:request(Methods.textDocument_inlineCompletion, params, wrapped_callback)
+
+  -- Add timeout handling
+  if succeed and timeout_ms and timeout_ms > 0 then
+    timeout_timer = vim.defer_fn(function()
+      util.cancel_request(client, req_id)
+      wrapped_callback({ code = -32700, message = "Request timeout" }, nil, nil)
+    end, timeout_ms)
+  end
+
   return succeed, req_id
 end
 
@@ -185,6 +210,9 @@ end
 
 ---@class ghc.cmp.copilot
 ---@field public client                 vim.lsp.Client|nil
+---@field public active_requests        integer
+---@field public last_failure_ts        integer
+---@field public failure_count          integer
 local M = {}
 M.__index = M
 
@@ -192,6 +220,9 @@ function M.new()
   local self = setmetatable({}, M)
   self:detect_lsp_client()
   self:reset(0)
+  self.active_requests = 0
+  self.last_failure_ts = 0
+  self.failure_count = 0
 
   vim.api.nvim_create_autocmd({ "LspAttach" }, {
     group = augroup,
@@ -217,11 +248,51 @@ function M:detect_lsp_client()
   end
 end
 
+---Check if we should apply backoff due to recent failures
+---@return boolean should_backoff
+---@return integer backoff_time_ms
+function M:should_apply_backoff()
+  local now = util.timestamp()
+  if self.failure_count > 0 and now - self.last_failure_ts < (config.backoff_base * math.pow(2, self.failure_count - 1)) then
+    local backoff_time = config.backoff_base * math.pow(2, self.failure_count - 1)
+    return true, backoff_time
+  end
+  return false, 0
+end
+
+---Record a failure and update backoff state
+function M:record_failure()
+  self.failure_count = math.min(self.failure_count + 1, 5) -- Cap at 5 failures
+  self.last_failure_ts = util.timestamp()
+end
+
+---Record a success and reset backoff state
+function M:record_success()
+  self.failure_count = 0
+  self.last_failure_ts = 0
+end
+
+---Check if we can make a new request (rate limiting)
+---@return boolean can_request
+function M:can_make_request()
+  if self.active_requests >= config.max_concurrent_requests then
+    return false
+  end
+
+  local should_backoff, _ = self:should_apply_backoff()
+  return not should_backoff
+end
+
 ---Reset the context
 ---@param ts                            integer
 function M:reset(ts)
   util.cancel_request(self.client, self.context and self.context.first_req_id)
   util.cancel_request(self.client, self.context and self.context.cycling_req_id)
+
+  -- Decrease active request count when resetting
+  if self.context and (self.context.first_req_id or self.context.cycling_req_id) then
+    self.active_requests = math.max(0, self.active_requests - 1)
+  end
 
   ---@class ghc.cmp.copilot.context
   self.context = {
@@ -269,6 +340,24 @@ function M:get_completions(ctx, callback)
     return
   end
 
+  -- Check rate limiting and backoff
+  if not self:can_make_request() then
+    local should_backoff, backoff_time = self:should_apply_backoff()
+    if should_backoff then
+      std.reporter.warn({
+        from = __module_name__,
+        subject = "rate_limit",
+        message = string.format("Copilot requests rate limited, backing off for %dms", backoff_time),
+      })
+    end
+    callback({
+      is_incomplete_forward = config.auto_refresh.forward,
+      is_incomplete_backward = config.auto_refresh.backward,
+      items = {},
+    })
+    return
+  end
+
   local current_state = { bufnr = ctx.bufnr, id = ctx.id, cursor = ctx.cursor }
   if vim.deep_equal(current_state, self.context.state) then
     callback({
@@ -302,13 +391,35 @@ function M:get_completions(ctx, callback)
 
     ---@type lsp.Handler
     local function handle_lsp_response(err, response)
+      self.active_requests = math.max(0, self.active_requests - 1)
+      if err then
+        self:record_failure()
+        std.reporter.warn({
+          from = __module_name__,
+          subject = "lsp_request_error",
+          message = "Copilot LSP request failed",
+          details = { error = err },
+        })
+      else
+        self:record_success()
+      end
       coroutine.resume(co, not err and response and response.items)
     end
 
     ---@param is_initial_request        boolean
     ---@return boolean
     local function send_completion_request(is_initial_request)
-      local request_success, request_id = util.get_completions_from_lsp(self.client, lsp_params, handle_lsp_response)
+      if not self:can_make_request() then
+        return false
+      end
+
+      self.active_requests = self.active_requests + 1
+      local request_success, request_id = util.get_completions_from_lsp(
+        self.client,
+        lsp_params,
+        handle_lsp_response,
+        config.request_timeout
+      )
 
       if request_success then
         if is_initial_request then
@@ -316,6 +427,9 @@ function M:get_completions(ctx, callback)
         else
           self.context.cycling_req_id = request_id
         end
+      else
+        self.active_requests = math.max(0, self.active_requests - 1)
+        self:record_failure()
       end
       return request_success
     end
@@ -367,9 +481,17 @@ function M:get_completions(ctx, callback)
       process_and_resolve_items()
       self.context.first_req_id = nil
       self.context.state = current_state
+    else
+      -- Failed to send initial request, return empty results
+      callback({
+        is_incomplete_forward = config.auto_refresh.forward,
+        is_incomplete_backward = config.auto_refresh.backward,
+        items = {},
+      })
+      return
     end
 
-    -- Attempt to get more completions
+    -- Attempt to get more completions (reduced attempts)
     lsp_params = util.to_cycling_lsp_params(lsp_params)
     for _ = 1, config.max_attempts, 1 do
       -- If new blink request comes in, stop further attempts
@@ -377,9 +499,17 @@ function M:get_completions(ctx, callback)
         break
       end
 
+      -- Skip cycling requests if we're hitting rate limits
+      if not self:can_make_request() then
+        break
+      end
+
       if send_completion_request(false) then
         process_and_resolve_items()
         self.context.cycling_req_id = nil
+      else
+        -- Failed to send cycling request, stop trying
+        break
       end
     end
   end)()
