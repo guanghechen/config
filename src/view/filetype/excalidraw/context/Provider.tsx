@@ -1,7 +1,7 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
 import { usePersistAsync } from '@/hook/usePersistAsync'
-import { useViewModel } from '@/hook/useViewModel'
 import { universalStorage } from '@/util/storage'
 import type { IExcalidrawViewContext } from './context'
 import { ExcalidrawViewContextType } from './context'

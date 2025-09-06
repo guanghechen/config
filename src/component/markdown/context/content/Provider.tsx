@@ -1,6 +1,6 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
 import React from 'react'
-import { useViewModel } from '@/hook/useViewModel'
 import { useMarkdownTopViewmodel } from '../top'
 import type { IMarkdownContentContext } from './context'
 import { MarkdownContentContextType } from './context'

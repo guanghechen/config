@@ -1,5 +1,5 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useViewModel } from '@/hook/useViewModel'
 import type { IAuthContext } from './context'
 import { AuthContextType } from './context'
 import { AuthViewModel } from './viewmodel'

@@ -1,7 +1,6 @@
-import { useStateValue } from '@guanghechen/react-viewmodel'
+import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersistAsync } from '@/hook/usePersistAsync'
-import { useViewModel } from '@/hook/useViewModel'
 import { universalStorage } from '@/util/storage'
 import type { ISiteContext } from './context'
 import { SiteContextType } from './context'

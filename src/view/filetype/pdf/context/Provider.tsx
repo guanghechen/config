@@ -1,6 +1,6 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { usePersistAsync } from '@/hook/usePersistAsync'
-import { useViewModel } from '@/hook/useViewModel'
 import { universalStorage } from '@/util/storage'
 import type { IPdfViewContext } from './context'
 import { PdfViewContextType } from './context'

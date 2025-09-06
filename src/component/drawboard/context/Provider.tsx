@@ -1,5 +1,5 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React, { useMemo } from 'react'
-import { useViewModel } from '@/hook/useViewModel'
 import type { DrawboardElement } from '../types/elements'
 import type { IDrawboardContext } from './context'
 import { DrawboardContextType } from './context'

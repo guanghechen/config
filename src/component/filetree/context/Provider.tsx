@@ -1,5 +1,5 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { useViewModel } from '@/hook/useViewModel'
 import type { IFileTreeContext } from './context'
 import { FileTreeContextType } from './context'
 import { FileTreeViewModel } from './viewmodel'

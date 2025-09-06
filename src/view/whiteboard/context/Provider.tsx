@@ -1,7 +1,7 @@
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useMermaidSyncThemeEffect } from '@/hook/useMermaidSyncThemeEffect'
 import { usePersistAsync } from '@/hook/usePersistAsync'
-import { useViewModel } from '@/hook/useViewModel'
 import { universalStorage } from '@/util/storage'
 import type { IWhiteboardViewContext } from './context'
 import { WhiteboardViewContextType } from './context'

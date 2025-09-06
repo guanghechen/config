@@ -274,8 +274,8 @@ export class DrawboardViewModel extends ViewModel {
 **File: `context/Provider.tsx`**
 
 ```typescript
-import React, { useMemo } from "react";
-import { useViewModel } from "@/hook/useViewModel";
+import { useViewModel } from "@guanghechen/react-viewmodel";
+import React from "react";
 import type { IDrawboardContext } from "./context";
 import { DrawboardContextType } from "./context";
 import type { ToolMode } from "./types";
@@ -292,7 +292,7 @@ export const DrawboardProvider: React.FC<IProps> = ({ mode, onSave, children }) 
     return new DrawboardViewModel({ mode, onSave });
   });
 
-  const context = useMemo<IDrawboardContext | null>(
+  const context = React.useMemo<IDrawboardContext | null>(
     () => (viewmodel ? { viewmodel } : null),
     [viewmodel]
   );
