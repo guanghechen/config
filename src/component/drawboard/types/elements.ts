@@ -1,7 +1,7 @@
 // Base element properties
 export interface IDrawboardElementBase {
   id: string
-  type: ElementType
+  type: HElementType
   x: number
   y: number
   width: number
@@ -22,7 +22,7 @@ export interface IDrawboardElementBase {
   updated: number
 }
 
-export type ElementType = 'line' | 'rectangle' | 'circle' | 'arrow'
+export type HElementType = 'line' | 'rectangle' | 'circle' | 'arrow'
 export type FillStyle = 'solid' | 'hachure' | 'cross-hatch'
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted'
 export type StrokeSharpness = 'sharp' | 'round'

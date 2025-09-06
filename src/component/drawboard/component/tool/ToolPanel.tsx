@@ -43,7 +43,7 @@ export const ToolPanel: React.FC = () => {
   const handleExport = async (): Promise<void> => {
     try {
       const elements = viewmodel.elements$.getSnapshot()
-      const { exportToPNG, exportToJSON: _exportToJSON } = await import('../../utils/export')
+      const { exportToPNG, exportToJSON: _exportToJSON } = await import('../../util/export')
 
       // Export as PNG
       const blob = await exportToPNG(elements, { backgroundColor: appState.viewBackgroundColor })

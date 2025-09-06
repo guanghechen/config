@@ -2,7 +2,9 @@
 
 ## Executive Summary
 
-This document outlines a comprehensive plan to build Drawboard, a personal canvas drawing tool inspired by Excalidraw's hand-drawn aesthetic. The implementation uses React, TypeScript, and Tailwind CSS, with a context-based state management pattern similar to your existing Excalidraw context structure.
+This document outlines a comprehensive plan to build Drawboard, a personal canvas drawing tool inspired by Excalidraw's hand-drawn aesthetic and sophisticated UI design. The implementation uses React, TypeScript, and Tailwind CSS, with a context-based state management pattern similar to your existing Excalidraw context structure.
+
+**2024 Update**: This spec has been enhanced to include Excalidraw-inspired toolbar improvements for a more professional and polished user experience.
 
 ## Project Architecture Overview
 
@@ -15,9 +17,26 @@ Drawboard/
 │   ├── GridCanvas.tsx           # Grid/ruler background layer
 │   ├── icons/
 │   │   └── MaterialIcons.tsx    # Custom Material Design SVG icons
-│   └── tools/
-│       ├── ToolPanel.tsx        # Tool selection panel
-│       └── PropertiesPanel.tsx  # Element properties panel
+│   ├── ui/                       # Enhanced UI components (Excalidraw-inspired)
+│   │   ├── Island.tsx           # Professional container with shadows/blur
+│   │   ├── ToolButton.tsx       # Sophisticated button with animations
+│   │   ├── ToolSeparator.tsx    # Enhanced visual separators
+│   │   ├── Dropdown.tsx         # Advanced tool dropdown component
+│   │   ├── HintViewer.tsx       # Contextual help display
+│   │   └── ButtonGroup.tsx      # Tool grouping component
+│   ├── tools/                    # Enhanced toolbar system
+│   │   ├── MainToolbar.tsx      # Redesigned Excalidraw-style toolbar
+│   │   ├── ActionToolbar.tsx    # Enhanced action controls
+│   │   ├── MobileToolbar.tsx    # Mobile-optimized toolbar
+│   │   ├── ToolGroup.tsx        # Tool grouping logic
+│   │   ├── ExtraToolsDropdown.tsx # Advanced tools dropdown
+│   │   └── PropertiesPanel.tsx  # Element properties panel
+│   ├── sidebar/                  # Advanced sidebar system
+│   │   ├── PropertiesSidebar.tsx # Advanced properties controls
+│   │   └── index.ts             # Sidebar exports
+│   └── context-menu/            # Context menu system
+│       ├── DrawboardContextMenu.tsx
+│       └── index.ts
 ├── context/
 │   ├── Provider.tsx             # Context provider with side effects
 │   ├── context.ts               # Context definition
@@ -35,11 +54,14 @@ Drawboard/
 ├── utils/
 │   ├── geometry.ts              # Geometric calculations
 │   ├── roughjs.ts               # RoughJS wrapper utilities
-│   └── canvas.ts                # Canvas helper functions
+│   ├── canvas.ts                # Canvas helper functions
+│   └── export.ts                # Export utilities (PNG, SVG, JSON)
 ├── hooks/
 │   ├── useCanvas.ts             # Canvas ref and context management
 │   ├── usePointerEvents.ts      # Mouse/touch event handling
-│   └── useKeyboardShortcuts.ts  # Keyboard shortcuts
+│   ├── useKeyboardShortcuts.ts  # Keyboard shortcuts
+│   ├── useContextMenu.ts        # Context menu handling
+│   └── useIsMobile.ts           # Mobile detection
 └── types/
     └── elements.ts              # Element type definitions
 ```
@@ -1128,6 +1150,480 @@ function App() {
 7. **Export Capabilities**: PNG and JSON export
 8. **Responsive Design**: Tailwind CSS for styling
 9. **TypeScript**: Full type safety throughout
+10. **Professional Toolbar**: Excalidraw-inspired UI with sophisticated interactions
+11. **Smart Tool Organization**: Grouped tools with dropdown for advanced features
+12. **Enhanced Mobile Experience**: Optimized toolbar layout for touch devices
+
+## Phase 6: Enhanced Toolbar System (Excalidraw-Inspired)
+
+### 6.1 Enhanced UI Components
+
+**File: `components/ui/Island.tsx`**
+
+```typescript
+import cn from 'clsx'
+import React from 'react'
+
+interface IIslandProps {
+  children: React.ReactNode
+  className?: string
+  padding?: 'none' | 'sm' | 'md' | 'lg'
+}
+
+export const Island: React.FC<IIslandProps> = ({
+  children,
+  className,
+  padding = 'md',
+}) => {
+  const paddingClasses = {
+    none: '',
+    sm: 'p-2',
+    md: 'p-3',
+    lg: 'p-4',
+  }
+
+  return (
+    <div
+      className={cn(
+        'rounded-lg bg-white/90 backdrop-blur-sm',
+        'border border-gray-200/50',
+        'shadow-lg shadow-gray-900/10',
+        'ring-1 ring-black/5',
+        paddingClasses[padding],
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+```
+
+**File: `components/ui/ToolButton.tsx`** (Enhanced version)
+
+```typescript
+import cn from 'clsx'
+import React from 'react'
+
+interface IToolButtonProps {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  isActive?: boolean
+  onClick: () => void
+  shortcut?: string
+  disabled?: boolean
+  variant?: 'primary' | 'secondary' | 'danger'
+  size?: 'small' | 'medium' | 'large'
+  isLoading?: boolean
+  showKeyBinding?: boolean
+  'aria-label'?: string
+  'aria-keyshortcuts'?: string
+}
+
+export const ToolButton: React.FC<IToolButtonProps> = ({
+  icon: Icon,
+  label,
+  isActive = false,
+  onClick,
+  shortcut,
+  disabled = false,
+  variant = 'primary',
+  size = 'medium',
+  isLoading = false,
+  showKeyBinding = true,
+  'aria-label': ariaLabel,
+  'aria-keyshortcuts': ariaKeyshortcuts,
+}) => {
+  const sizeClasses = {
+    small: 'h-8 w-8',
+    medium: 'h-10 w-10',
+    large: 'h-12 w-12',
+  }
+
+  const iconSizes = {
+    small: 'h-4 w-4',
+    medium: 'h-5 w-5',
+    large: 'h-6 w-6',
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      aria-label={ariaLabel || label}
+      aria-keyshortcuts={ariaKeyshortcuts || shortcut}
+      aria-pressed={isActive}
+      className={cn(
+        'group relative flex items-center justify-center rounded-lg',
+        'transition-all duration-200 ease-out',
+        'focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2',
+        'active:scale-95',
+        sizeClasses[size],
+        {
+          // Active states with enhanced styling
+          'bg-blue-500 text-white shadow-md shadow-blue-500/25 ring-1 ring-blue-500/50': 
+            isActive && variant === 'primary',
+          'bg-gray-800 text-white shadow-md shadow-gray-800/25 ring-1 ring-gray-800/50': 
+            isActive && variant === 'secondary',
+          'bg-red-500 text-white shadow-md shadow-red-500/25 ring-1 ring-red-500/50': 
+            isActive && variant === 'danger',
+
+          // Inactive states with better hover effects
+          'text-gray-700 hover:bg-gray-100 hover:shadow-sm hover:ring-1 hover:ring-gray-200': 
+            !isActive && !disabled && variant === 'primary',
+          'text-gray-600 hover:bg-gray-50 hover:shadow-sm': 
+            !isActive && !disabled && variant === 'secondary',
+          'text-red-600 hover:bg-red-50 hover:shadow-sm hover:ring-1 hover:ring-red-200': 
+            !isActive && !disabled && variant === 'danger',
+
+          // Disabled state
+          'text-gray-400 cursor-not-allowed opacity-50': disabled,
+          'opacity-75': isLoading,
+        },
+      )}
+      title={shortcut ? `${label} (${shortcut})` : label}
+    >
+      {isLoading ? (
+        <div
+          className={cn(
+            'animate-spin rounded-full border-2 border-gray-300 border-t-blue-500',
+            iconSizes[size],
+          )}
+        />
+      ) : (
+        <Icon className={iconSizes[size]} />
+      )}
+
+      {/* Enhanced Tooltip with keyboard shortcut */}
+      <div className="absolute left-12 z-50 hidden group-hover:block">
+        <div className="rounded-md bg-gray-900/95 backdrop-blur-sm px-3 py-2 text-sm text-white whitespace-nowrap shadow-xl border border-gray-700/50">
+          <div className="font-medium">{label}</div>
+          {shortcut && showKeyBinding && (
+            <div className="text-xs text-gray-300 mt-1 font-mono">
+              {shortcut}
+            </div>
+          )}
+        </div>
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-900/95" />
+      </div>
+
+      {/* Keyboard shortcut badge */}
+      {shortcut && showKeyBinding && isActive && (
+        <span className="absolute -bottom-1 -right-1 bg-white text-gray-700 text-xs px-1 rounded border border-gray-200 shadow-sm font-mono">
+          {shortcut.split('+').pop()}
+        </span>
+      )}
+    </button>
+  )
+}
+```
+
+**File: `components/ui/Dropdown.tsx`** (New component)
+
+```typescript
+import cn from 'clsx'
+import React, { useState, useRef, useEffect } from 'react'
+
+interface IDropdownItem {
+  id: string
+  label: string
+  icon?: React.ComponentType<{ className?: string }>
+  shortcut?: string
+  onClick: () => void
+  disabled?: boolean
+}
+
+interface IDropdownProps {
+  trigger: React.ReactNode
+  items: IDropdownItem[]
+  placement?: 'bottom' | 'top' | 'left' | 'right'
+  align?: 'start' | 'center' | 'end'
+}
+
+export const Dropdown: React.FC<IDropdownProps> = ({
+  trigger,
+  items,
+  placement = 'bottom',
+  align = 'center',
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  const placementClasses = {
+    bottom: 'top-full mt-2',
+    top: 'bottom-full mb-2',
+    left: 'right-full mr-2',
+    right: 'left-full ml-2',
+  }
+
+  const alignClasses = {
+    start: placement === 'bottom' || placement === 'top' ? 'left-0' : 'top-0',
+    center: placement === 'bottom' || placement === 'top' ? 'left-1/2 -translate-x-1/2' : 'top-1/2 -translate-y-1/2',
+    end: placement === 'bottom' || placement === 'top' ? 'right-0' : 'bottom-0',
+  }
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <div onClick={() => setIsOpen(!isOpen)}>
+        {trigger}
+      </div>
+
+      {isOpen && (
+        <div
+          className={cn(
+            'absolute z-50 min-w-48',
+            'rounded-lg bg-white/95 backdrop-blur-sm',
+            'border border-gray-200/50 shadow-xl',
+            'ring-1 ring-black/5',
+            'py-1',
+            placementClasses[placement],
+            alignClasses[align],
+          )}
+        >
+          {items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                item.onClick()
+                setIsOpen(false)
+              }}
+              disabled={item.disabled}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 text-left',
+                'text-sm text-gray-700',
+                'hover:bg-gray-100 hover:text-gray-900',
+                'disabled:text-gray-400 disabled:cursor-not-allowed',
+                'transition-colors duration-150',
+              )}
+            >
+              {item.icon && <item.icon className="h-4 w-4" />}
+              <span className="flex-1">{item.label}</span>
+              {item.shortcut && (
+                <span className="text-xs text-gray-500 font-mono">
+                  {item.shortcut}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+### 6.2 Enhanced MainToolbar
+
+**File: `components/tools/MainToolbar.tsx`** (Enhanced version)
+
+```typescript
+import { useStateValue } from '@guanghechen/react-viewmodel'
+import React from 'react'
+import { useDrawboardContext } from '../../context'
+import { ToolMode } from '../../context/types'
+import { getToolNumericShortcut, getToolShortcut } from '../../hooks/useKeyboardShortcuts'
+import {
+  ArrowIcon,
+  CircleIcon,
+  DiamondIcon,
+  EraserIcon,
+  FrameIcon,
+  FreedrawIcon,
+  ImageIcon,
+  LaserIcon,
+  LassoIcon,
+  LineIcon,
+  LockIcon,
+  PanIcon,
+  RectangleIcon,
+  SelectIcon,
+  TextIcon,
+  UnlockIcon,
+  MoreHorizontalIcon,
+} from '../icons/MaterialIcons'
+import { HintViewer, Island, ToolButton, ToolSeparator } from '../ui'
+import { Dropdown } from '../ui/Dropdown'
+
+interface IToolDefinition {
+  mode: ToolMode
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  shortcut?: string
+  numericKey?: string
+}
+
+interface IToolGroup {
+  id: string
+  label: string
+  tools: IToolDefinition[]
+  priority: 'primary' | 'secondary'
+}
+
+const createToolDefinition = (
+  mode: ToolMode,
+  icon: React.ComponentType<{ className?: string }>,
+  label: string,
+): IToolDefinition => ({
+  mode,
+  icon,
+  label,
+  shortcut: getToolShortcut(mode),
+  numericKey: getToolNumericShortcut(mode),
+})
+
+// Primary tools - always visible
+const PRIMARY_TOOL_GROUPS: IToolGroup[] = [
+  {
+    id: 'selection',
+    label: 'Selection',
+    priority: 'primary',
+    tools: [
+      createToolDefinition(ToolMode.SELECT, SelectIcon, 'Select'),
+      createToolDefinition(ToolMode.PAN, PanIcon, 'Hand'),
+    ],
+  },
+  {
+    id: 'shapes',
+    label: 'Shapes',
+    priority: 'primary',
+    tools: [
+      createToolDefinition(ToolMode.RECTANGLE, RectangleIcon, 'Rectangle'),
+      createToolDefinition(ToolMode.DIAMOND, DiamondIcon, 'Diamond'),
+      createToolDefinition(ToolMode.CIRCLE, CircleIcon, 'Ellipse'),
+    ],
+  },
+  {
+    id: 'drawing',
+    label: 'Drawing',
+    priority: 'primary',
+    tools: [
+      createToolDefinition(ToolMode.ARROW, ArrowIcon, 'Arrow'),
+      createToolDefinition(ToolMode.LINE, LineIcon, 'Line'),
+      createToolDefinition(ToolMode.FREEDRAW, FreedrawIcon, 'Draw'),
+    ],
+  },
+  {
+    id: 'content',
+    label: 'Content',
+    priority: 'primary',
+    tools: [
+      createToolDefinition(ToolMode.TEXT, TextIcon, 'Text'),
+    ],
+  },
+]
+
+// Secondary tools - in dropdown
+const SECONDARY_TOOLS: IToolDefinition[] = [
+  createToolDefinition(ToolMode.ERASER, EraserIcon, 'Eraser'),
+  createToolDefinition(ToolMode.FRAME, FrameIcon, 'Frame'),
+  createToolDefinition(ToolMode.LASER, LaserIcon, 'Laser Pointer'),
+  createToolDefinition(ToolMode.LASSO, LassoIcon, 'Lasso Select'),
+  createToolDefinition(ToolMode.IMAGE, ImageIcon, 'Image'),
+]
+
+const formatShortcut = (tool: IToolDefinition): string => {
+  if (tool.numericKey && tool.shortcut) {
+    return `${tool.shortcut.toUpperCase()} or ${tool.numericKey}`
+  }
+  return tool.shortcut?.toUpperCase() || ''
+}
+
+export const MainToolbar: React.FC = () => {
+  const { viewmodel } = useDrawboardContext()
+  const appState = useStateValue(viewmodel.appState$)
+
+  const secondaryToolItems = SECONDARY_TOOLS.map(tool => ({
+    id: tool.mode.toString(),
+    label: tool.label,
+    icon: tool.icon,
+    shortcut: formatShortcut(tool),
+    onClick: () => viewmodel.setTool(tool.mode),
+  }))
+
+  const hasActiveSecondaryTool = SECONDARY_TOOLS.some(
+    tool => appState.selectedTool === tool.mode
+  )
+
+  return (
+    <Island className="flex flex-row items-center gap-1" padding="sm">
+      {/* Hint Viewer */}
+      <HintViewer variant="compact" className="mr-2" />
+
+      {/* Tool Lock Button */}
+      <ToolButton
+        icon={appState.toolLocked ? LockIcon : UnlockIcon}
+        label={appState.toolLocked ? 'Unlock Tools' : 'Lock Tools'}
+        shortcut="Shift+L"
+        isActive={appState.toolLocked}
+        onClick={() => viewmodel.toggleToolLock()}
+        variant="secondary"
+        size="small"
+        aria-label={appState.toolLocked ? 'Unlock tool selection' : 'Lock tool selection'}
+      />
+
+      <ToolSeparator orientation="vertical" />
+
+      {/* Primary Tool Groups */}
+      {PRIMARY_TOOL_GROUPS.map((group, groupIndex) => (
+        <React.Fragment key={group.id}>
+          {groupIndex > 0 && <ToolSeparator orientation="vertical" />}
+
+          <div className="flex gap-1" role="group" aria-label={group.label}>
+            {group.tools.map(tool => (
+              <ToolButton
+                key={tool.mode}
+                icon={tool.icon}
+                label={tool.label}
+                shortcut={formatShortcut(tool)}
+                isActive={appState.selectedTool === tool.mode}
+                onClick={() => viewmodel.setTool(tool.mode)}
+                aria-label={`${tool.label} tool`}
+                aria-keyshortcuts={formatShortcut(tool)}
+              />
+            ))}
+          </div>
+        </React.Fragment>
+      ))}
+
+      {/* Secondary Tools Dropdown */}
+      <ToolSeparator orientation="vertical" />
+      
+      <Dropdown
+        trigger={
+          <ToolButton
+            icon={MoreHorizontalIcon}
+            label="More Tools"
+            isActive={hasActiveSecondaryTool}
+            onClick={() => {}} // Dropdown handles the click
+            variant="secondary"
+            aria-label="Open more tools menu"
+          />
+        }
+        items={secondaryToolItems}
+        placement="bottom"
+        align="center"
+      />
+    </Island>
+  )
+}
+```
 
 ## Dependencies
 

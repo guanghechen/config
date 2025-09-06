@@ -1,4 +1,5 @@
 import rough from 'roughjs'
+import type { RoughCanvas } from 'roughjs/bin/canvas'
 import type {
   DrawboardElement,
   IDrawboardArrowElement,
@@ -8,7 +9,7 @@ import type {
 } from '../types/elements'
 
 export class RoughRenderer {
-  private rc: any
+  private rc: RoughCanvas
   private context: CanvasRenderingContext2D
 
   constructor(canvas: HTMLCanvasElement) {
