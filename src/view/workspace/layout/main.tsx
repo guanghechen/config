@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { calcExtname } from '@/util/path'
+import { DrawboardAdaptor } from '@/view/file/container/DrawboardAdaptor'
 import { ExcalidrawAdaptor } from '@/view/file/container/ExcalidrawAdaptor'
 import { HtmlAdaptor } from '@/view/file/container/HtmlAdaptor'
 import { ImageAdaptor } from '@/view/file/container/ImageAdaptor'
@@ -36,6 +37,16 @@ export const Main: React.FC<IProps> = props => {
 
   const extname: string = calcExtname(filepath)
   switch (extname.toLowerCase()) {
+    case '.drawboard':
+      return (
+        <DrawboardAdaptor
+          workspace={workspace}
+          filepath={filepath}
+          filepathDirtyTick={filepathDirtyTick}
+          storageKeyScope={storageKeyScope}
+          onSaved={() => viewmodel.markFilepathDirty()}
+        />
+      )
     case '.excalidraw':
       return (
         <ExcalidrawAdaptor

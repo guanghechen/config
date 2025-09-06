@@ -4,6 +4,7 @@
 @import './deps/react-toastify.css';
 @import './component/markdown.css';
 @import './view/file.css';
+@import './view/filetype/drawboard.css';
 @import './view/filetype/excalidraw.css';
 @import './view/filetype/html.css';
 @import './view/filetype/image.css';

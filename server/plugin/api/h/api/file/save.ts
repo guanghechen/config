@@ -64,8 +64,8 @@ export const saveFile: IApiHandle = async params => {
   try {
     const extname: string = path.extname(filepath).toLowerCase()
 
-    // For .excalidraw files, ensure content is valid JSON and format it
-    if (extname === '.excalidraw') {
+    // For .excalidraw and .drawboard files, ensure content is valid JSON and format it
+    if (extname === '.excalidraw' || extname === '.drawboard') {
       const parsedData = JSON.parse(content)
       const formattedJson = JSON.stringify(parsedData, null, 2)
       await fs.writeFile(filepath, formattedJson, 'utf8')

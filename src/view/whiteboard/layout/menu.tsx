@@ -94,6 +94,17 @@ const getFiletypeIcon = (type: string): React.ReactNode => {
           />
         </svg>
       )
+    case 'drawboard':
+      return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"
+          />
+        </svg>
+      )
     default:
       return (
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,6 +182,7 @@ export const Menu: React.FC = () => {
     { value: 'html', label: 'HTML' },
     { value: 'svg', label: 'SVG' },
     { value: 'excalidraw', label: 'Excalidraw' },
+    { value: 'drawboard', label: 'Drawboard' },
   ]
 
   // Get the display name for the current filetype

@@ -12,6 +12,7 @@ const WHITEBOARD_FILETYPE_TO_EDITOR_LANGUAGE: Record<string, string> = {
   html: 'html',
   svg: 'xml',
   excalidraw: 'json',
+  drawboard: 'json',
   text: 'plaintext',
 } as const
 
@@ -256,6 +257,8 @@ export class WhiteboardViewViewModel extends ViewModel {
         return 'svg'
       case 'excalidraw':
         return 'excalidraw'
+      case 'drawboard':
+        return 'drawboard'
       default:
         return 'txt'
     }
@@ -272,6 +275,8 @@ export class WhiteboardViewViewModel extends ViewModel {
       case 'svg':
         return 'image/svg+xml'
       case 'excalidraw':
+        return 'application/json'
+      case 'drawboard':
         return 'application/json'
       default:
         return 'text/plain'
@@ -292,6 +297,8 @@ export class WhiteboardViewViewModel extends ViewModel {
         return 'svg'
       case 'excalidraw':
         return 'excalidraw'
+      case 'drawboard':
+        return 'drawboard'
       case 'txt':
       default:
         return 'text'
@@ -335,7 +342,7 @@ export class WhiteboardViewViewModel extends ViewModel {
             {
               description: 'Text files',
               accept: {
-                'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw'],
+                'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw', '.drawboard'],
               },
             },
           ],

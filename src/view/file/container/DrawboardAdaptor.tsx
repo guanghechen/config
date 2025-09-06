@@ -1,0 +1,45 @@
+import { useEventCallback } from '@guanghechen/react-hooks'
+import React from 'react'
+import { usePostFile } from '@/hook/api/file/save'
+import { useFileResult } from '@/hook/useFileResult'
+import type { ITextFileData } from '@/shared/types/api'
+import { DrawboardView } from '@/view/filetype/drawboard/View'
+
+interface IProps {
+  readonly workspace: string | null
+  readonly filepath: string
+  readonly filepathDirtyTick: number
+  readonly storageKeyScope: string
+  readonly onSaved: () => void
+}
+
+export const DrawboardAdaptor: React.FC<IProps> = props => {
+  const { workspace, filepath, filepathDirtyTick, storageKeyScope, onSaved } = props
+  const { save } = usePostFile()
+  const fileResult = useFileResult<ITextFileData>(workspace, filepath, filepathDirtyTick)
+
+  // Transform data to new props format
+  const content = fileResult.data?.content || fileResult.text || null
+  const contentError = fileResult.error ? String(fileResult.error) : null
+
+  // Create save callback for drawboard
+  const handleSaveFile = useEventCallback(async (content: string) => {
+    if (filepath) {
+      try {
+        await save({ workspace, filepath, content })
+        onSaved()
+      } catch (error) {
+        console.error('Failed to save file:', error)
+      }
+    }
+  })
+
+  return (
+    <DrawboardView
+      content={content}
+      contentError={contentError}
+      onSaveFile={handleSaveFile}
+      storageKeyScope={storageKeyScope}
+    />
+  )
+}

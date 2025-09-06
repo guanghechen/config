@@ -1,4 +1,5 @@
 import React from 'react'
+import { DrawboardView } from '@/view/filetype/drawboard/View'
 import { ExcalidrawView } from '@/view/filetype/excalidraw/View'
 import { HtmlView } from '@/view/filetype/html/View'
 import { JsonView } from '@/view/filetype/json/View'
@@ -63,6 +64,15 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
 
   // Render appropriate filetype view based on filetype
   switch (filetype) {
+    case 'drawboard':
+      return (
+        <DrawboardView
+          content={content}
+          contentError={finalContentError}
+          storageKeyScope={storageKeyScope}
+          onSaveFile={onSaveFile}
+        />
+      )
     case 'excalidraw':
       return (
         <ExcalidrawView
@@ -124,7 +134,7 @@ export const WhiteboardMainContent: React.FC<IWhiteboardMainContentProps> = ({
             {filetype.charAt(0).toUpperCase() + filetype.slice(1)} Preview
           </div>
           <div className="text-sm">
-            Filetype "{filetype}" is not yet fully supported in whiteboard mode
+            Filetype "{filetype}" is not yet fully supported in whiteboard
           </div>
           {content && (
             <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg max-w-md text-xs">

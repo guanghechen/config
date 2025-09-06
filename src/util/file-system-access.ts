@@ -141,7 +141,9 @@ export class FileSystemAccessStorage {
     const defaultTypes = [
       {
         description: 'Text files',
-        accept: { 'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw'] },
+        accept: {
+          'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw', '.drawboard'],
+        },
       },
     ]
 
@@ -171,7 +173,9 @@ export class FileSystemAccessStorage {
       const defaultTypes = [
         {
           description: 'Text files',
-          accept: { 'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw'] },
+          accept: {
+            'text/*': ['.txt', '.md', '.json', '.html', '.svg', '.excalidraw', '.drawboard'],
+          },
         },
       ]
 

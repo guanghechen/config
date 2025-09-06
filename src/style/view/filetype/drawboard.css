@@ -1,0 +1,45 @@
+@layer components {
+  .vlm-canvas[data-filetype='drawboard'] {
+    .vlm-p-canvas {
+      grid-area: canvas;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 2rem;
+    }
+
+    .vlm-p-source {
+      grid-area: source;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 2rem;
+    }
+
+    &.vlm-canvas-1 {
+      display: block;
+      height: calc(100vh - var(--v-vlt-height));
+
+      .vlm-p-canvas {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        padding: 0;
+
+        @apply bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm;
+      }
+    }
+
+    &.vlm-canvas-2 {
+      display: block;
+      height: calc(100vh - var(--v-vlt-height));
+
+      .vlm-p-source {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        padding: 0;
+
+        @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm;
+      }
+    }
+  }
+}
