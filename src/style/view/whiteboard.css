@@ -1,5 +1,5 @@
 @layer components {
-  .vl-root[data-scenario='whiteboard'] {
+  .vl-root:where([data-scenario='whiteboard']) {
     --v-vlt-height: 3rem;
 
     box-sizing: border-box;
@@ -92,38 +92,38 @@
       height: 100%;
       padding: 0;
       overflow: auto;
+    }
 
-      .vlm-canvas {
+    .vlm-canvas {
+      box-sizing: border-box;
+      grid-area: main;
+      width: 100%;
+      min-width: 0;
+      padding: 1rem;
+      padding-top: 0;
+
+      .vlm-pane {
+        position: relative;
         box-sizing: border-box;
-        grid-area: main;
-        width: 100%;
-        min-width: 0;
-        padding: 1rem;
-        padding-top: 0;
+        min-height: calc(100vh - 1rem - var(--v-vlt-height));
+        border-width: 1rem 0.5rem;
+
+        @apply shadow-lg rounded-lg border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80 text-slate-800 dark:text-gray-200;
+      }
+
+      &:has(.vlm-pane:nth-of-type(2)) {
+        display: grid;
+        gap: 1rem;
+        height: calc(100vh - var(--v-vlt-height));
 
         .vlm-pane {
-          position: relative;
-          box-sizing: border-box;
-          min-height: calc(100vh - 1rem - var(--v-vlt-height));
-          border-width: 1rem 0.5rem;
-
-          @apply shadow-lg rounded-lg border-transparent backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80 text-slate-800 dark:text-gray-200;
-        }
-
-        &:has(.vlm-pane:nth-of-type(2)) {
-          display: grid;
-          gap: 1rem;
-          height: calc(100vh - var(--v-vlt-height));
-
-          .vlm-pane {
-            min-height: 0;
-            height: 100%;
-            width: 100%;
-            min-width: 0;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-            overflow: auto;
-          }
+          min-height: 0;
+          height: 100%;
+          width: 100%;
+          min-width: 0;
+          padding-left: 0.5rem;
+          padding-right: 0.5rem;
+          overflow: auto;
         }
       }
     }
