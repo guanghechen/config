@@ -1,4 +1,4 @@
-import type { DrawboardElement } from '../types/elements'
+import type { IDrawboardElement } from '../types/elements'
 
 export interface IPoint {
   x: number
@@ -96,7 +96,7 @@ export function isPointNearLine(
 /**
  * Get the bounding box of an element
  */
-export function getElementBounds(element: DrawboardElement): IBounds {
+export function getElementBounds(element: IDrawboardElement): IBounds {
   return {
     x: Math.min(element.x, element.x + element.width),
     y: Math.min(element.y, element.y + element.height),
@@ -108,7 +108,7 @@ export function getElementBounds(element: DrawboardElement): IBounds {
 /**
  * Check if a point hits an element
  */
-export function hitTestElement(element: DrawboardElement, point: IPoint): boolean {
+export function hitTestElement(element: IDrawboardElement, point: IPoint): boolean {
   const bounds = getElementBounds(element)
 
   switch (element.type) {

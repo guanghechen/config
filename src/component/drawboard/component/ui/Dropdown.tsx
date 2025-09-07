@@ -66,9 +66,9 @@ export const Dropdown: React.FC<IDropdownProps> = ({
         <div
           className={cn(
             'absolute z-50 min-w-48',
-            'rounded-lg bg-white/95 backdrop-blur-sm',
-            'border border-gray-200/50 shadow-xl',
-            'ring-1 ring-black/5',
+            'rounded-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm',
+            'border border-gray-200/50 dark:border-gray-600/50 shadow-xl dark:shadow-black/20',
+            'ring-1 ring-black/5 dark:ring-white/10',
             'py-1',
             placementClasses[placement],
             alignClasses[align],
@@ -84,16 +84,18 @@ export const Dropdown: React.FC<IDropdownProps> = ({
               disabled={item.disabled}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 text-left',
-                'text-sm text-gray-700',
-                'hover:bg-gray-100 hover:text-gray-900',
-                'disabled:text-gray-400 disabled:cursor-not-allowed',
+                'text-sm text-gray-700 dark:text-gray-200',
+                'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100',
+                'disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed',
                 'transition-colors duration-150',
               )}
             >
               {item.icon && <item.icon className="h-4 w-4" />}
               <span className="flex-1">{item.label}</span>
               {item.shortcut && (
-                <span className="text-xs text-gray-500 font-mono">{item.shortcut}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                  {item.shortcut}
+                </span>
               )}
             </button>
           ))}

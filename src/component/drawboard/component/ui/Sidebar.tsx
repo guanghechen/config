@@ -23,7 +23,7 @@ export const Sidebar: React.FC<ISidebarProps> = ({
       {/* Sidebar */}
       <div
         className={cn(
-          'fixed top-0 z-30 h-full bg-white shadow-xl border transition-transform duration-300 ease-in-out',
+          'fixed top-0 z-30 h-full bg-white dark:bg-gray-800 shadow-xl dark:shadow-black/25 border dark:border-gray-600 transition-transform duration-300 ease-in-out',
           {
             'left-0 border-r': side === 'left',
             'right-0 border-l': side === 'right',
@@ -36,11 +36,11 @@ export const Sidebar: React.FC<ISidebarProps> = ({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+          <div className="flex items-center justify-between border-b dark:border-gray-600 px-4 py-3">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded p-1 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -62,7 +62,7 @@ export const Sidebar: React.FC<ISidebarProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'fixed top-4 z-40 rounded-lg bg-white p-2 shadow-lg border transition-transform duration-300',
+          'fixed top-4 z-40 rounded-lg bg-white dark:bg-gray-800 p-2 shadow-lg dark:shadow-black/25 border dark:border-gray-600 transition-transform duration-300',
           {
             'left-4': side === 'left' && !isOpen,
             'right-4': side === 'right' && !isOpen,
@@ -80,7 +80,7 @@ export const Sidebar: React.FC<ISidebarProps> = ({
         }}
       >
         <svg
-          className={cn('h-5 w-5 text-gray-600 transition-transform', {
+          className={cn('h-5 w-5 text-gray-600 dark:text-gray-400 transition-transform', {
             'rotate-180': isOpen && side === 'right',
             'rotate-0': isOpen && side === 'left',
           })}

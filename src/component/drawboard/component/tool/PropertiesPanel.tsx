@@ -36,8 +36,12 @@ const backgroundColors = [
 const strokeWidths = [1, 2, 4, 8, 12]
 
 export const PropertiesPanel: React.FC = () => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
+  const { ui } = useDrawboardContext()
+  const strokeColor = useStateValue(ui.strokeColor$)
+  const fillColor = useStateValue(ui.fillColor$)
+  const strokeWidth = useStateValue(ui.strokeWidth$)
+  const roughness = useStateValue(ui.roughness$)
+  const opacity = useStateValue(ui.opacity$)
 
   return (
     <div
@@ -53,10 +57,10 @@ export const PropertiesPanel: React.FC = () => {
           {strokeColors.map(color => (
             <button
               key={color}
-              onClick={() => viewmodel.setStrokeColor(color)}
+              onClick={() => ui.strokeColor$.next(color)}
               className={cn('h-8 w-8 rounded border-2 transition-all', {
-                'border-blue-500 ring-2 ring-blue-200': appState.currentItemStrokeColor === color,
-                'border-gray-300': appState.currentItemStrokeColor !== color,
+                'border-blue-500 ring-2 ring-blue-200': strokeColor === color,
+                'border-gray-300': strokeColor !== color,
               })}
               style={{ backgroundColor: color }}
               title={color}
@@ -72,11 +76,10 @@ export const PropertiesPanel: React.FC = () => {
           {backgroundColors.map(color => (
             <button
               key={color}
-              onClick={() => viewmodel.setBackgroundColor(color)}
+              onClick={() => ui.fillColor$.next(color)}
               className={cn('h-8 w-8 rounded border-2 transition-all', {
-                'border-blue-500 ring-2 ring-blue-200':
-                  appState.currentItemBackgroundColor === color,
-                'border-gray-300': appState.currentItemBackgroundColor !== color,
+                'border-blue-500 ring-2 ring-blue-200': fillColor === color,
+                'border-gray-300': fillColor !== color,
               })}
               style={{
                 backgroundColor: color === 'transparent' ? '#ffffff' : color,
@@ -99,13 +102,12 @@ export const PropertiesPanel: React.FC = () => {
           {strokeWidths.map(width => (
             <button
               key={width}
-              onClick={() => viewmodel.setStrokeWidth(width)}
+              onClick={() => ui.strokeWidth$.next(width)}
               className={cn(
                 'flex h-8 flex-1 items-center justify-center rounded border transition-all',
                 {
-                  'border-blue-500 bg-blue-50 text-blue-600':
-                    appState.currentItemStrokeWidth === width,
-                  'border-gray-300 text-gray-600': appState.currentItemStrokeWidth !== width,
+                  'border-blue-500 bg-blue-50 text-blue-600': strokeWidth === width,
+                  'border-gray-300 text-gray-600': strokeWidth !== width,
                 },
               )}
             >
@@ -124,15 +126,15 @@ export const PropertiesPanel: React.FC = () => {
       {/* Roughness */}
       <div>
         <label className="mb-2 block text-xs font-medium text-gray-600">
-          Roughness: {appState.currentItemRoughness}
+          Roughness: {roughness}
         </label>
         <input
           type="range"
           min="0"
           max="2"
           step="0.1"
-          value={appState.currentItemRoughness}
-          onChange={e => viewmodel.setRoughness(parseFloat(e.target.value))}
+          value={roughness}
+          onChange={e => ui.roughness$.next(parseFloat(e.target.value))}
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-500">
@@ -144,15 +146,15 @@ export const PropertiesPanel: React.FC = () => {
       {/* Opacity */}
       <div>
         <label className="mb-2 block text-xs font-medium text-gray-600">
-          Opacity: {appState.currentItemOpacity}%
+          Opacity: {Math.round(opacity * 100)}%
         </label>
         <input
           type="range"
           min="10"
           max="100"
           step="5"
-          value={appState.currentItemOpacity}
-          onChange={e => viewmodel.setOpacity(parseInt(e.target.value))}
+          value={Math.round(opacity * 100)}
+          onChange={e => ui.opacity$.next(parseInt(e.target.value) / 100)}
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-500">

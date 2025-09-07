@@ -20,24 +20,28 @@ const COLOR_PRESETS = [
 ]
 
 export const PropertiesSidebar: React.FC = () => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
-  const viewData = useStateValue(viewmodel.viewData$)
+  const { ui, grid } = useDrawboardContext()
+  const strokeColor = useStateValue(ui.strokeColor$)
+  const fillColor = useStateValue(ui.fillColor$)
+  const strokeWidth = useStateValue(ui.strokeWidth$)
+  const opacity = useStateValue(ui.opacity$)
+  const backgroundColor = useStateValue(ui.backgroundColor$)
+  const gridSize = useStateValue(grid.size$)
 
   const handleStrokeColorChange = (color: string): void => {
-    viewmodel.setStrokeColor(color)
+    ui.strokeColor$.next(color)
   }
 
   const handleFillColorChange = (color: string): void => {
-    viewmodel.setFillColor(color)
+    ui.fillColor$.next(color)
   }
 
   const handleStrokeWidthChange = (width: number): void => {
-    viewmodel.setStrokeWidth(width)
+    ui.strokeWidth$.next(width)
   }
 
   const handleOpacityChange = (opacity: number): void => {
-    viewmodel.setOpacity(opacity)
+    ui.opacity$.next(opacity)
   }
 
   return (
@@ -48,7 +52,7 @@ export const PropertiesSidebar: React.FC = () => {
           <div className="space-y-2">
             <input
               type="color"
-              value={appState.currentItemStrokeColor}
+              value={strokeColor}
               onChange={e => handleStrokeColorChange(e.target.value)}
               className="h-8 w-full rounded border border-gray-300"
             />
@@ -58,9 +62,7 @@ export const PropertiesSidebar: React.FC = () => {
                   key={color}
                   onClick={() => handleStrokeColorChange(color)}
                   className={`h-6 w-6 rounded border-2 ${
-                    appState.currentItemStrokeColor === color
-                      ? 'border-blue-500'
-                      : 'border-gray-300'
+                    strokeColor === color ? 'border-blue-500' : 'border-gray-300'
                   }`}
                   style={{ backgroundColor: color }}
                 />
@@ -75,13 +77,11 @@ export const PropertiesSidebar: React.FC = () => {
               type="range"
               min="1"
               max="20"
-              value={appState.currentItemStrokeWidth}
+              value={strokeWidth}
               onChange={e => handleStrokeWidthChange(parseInt(e.target.value))}
               className="w-full"
             />
-            <div className="text-xs text-gray-500 text-center">
-              {appState.currentItemStrokeWidth}px
-            </div>
+            <div className="text-xs text-gray-500 text-center">{strokeWidth}px</div>
           </div>
         </Field>
       </Section>
@@ -92,7 +92,7 @@ export const PropertiesSidebar: React.FC = () => {
           <div className="space-y-2">
             <input
               type="color"
-              value={appState.currentItemBackgroundColor}
+              value={fillColor}
               onChange={e => handleFillColorChange(e.target.value)}
               className="h-8 w-full rounded border border-gray-300"
             />
@@ -102,9 +102,7 @@ export const PropertiesSidebar: React.FC = () => {
                   key={color}
                   onClick={() => handleFillColorChange(color)}
                   className={`h-6 w-6 rounded border-2 ${
-                    appState.currentItemBackgroundColor === color
-                      ? 'border-blue-500'
-                      : 'border-gray-300'
+                    fillColor === color ? 'border-blue-500' : 'border-gray-300'
                   }`}
                   style={{ backgroundColor: color }}
                 />
@@ -113,9 +111,7 @@ export const PropertiesSidebar: React.FC = () => {
             <button
               onClick={() => handleFillColorChange('transparent')}
               className={`w-full h-6 rounded border-2 bg-gradient-to-br from-red-500 to-transparent ${
-                appState.currentItemBackgroundColor === 'transparent'
-                  ? 'border-blue-500'
-                  : 'border-gray-300'
+                fillColor === 'transparent' ? 'border-blue-500' : 'border-gray-300'
               }`}
             >
               <span className="text-xs text-red-600 font-medium">None</span>
@@ -132,13 +128,11 @@ export const PropertiesSidebar: React.FC = () => {
               type="range"
               min="0"
               max="100"
-              value={appState.currentItemOpacity}
+              value={Math.round(opacity * 100)}
               onChange={e => handleOpacityChange(parseInt(e.target.value) / 100)}
               className="w-full"
             />
-            <div className="text-xs text-gray-500 text-center">
-              {Math.round(appState.currentItemOpacity)}%
-            </div>
+            <div className="text-xs text-gray-500 text-center">{Math.round(opacity * 100)}%</div>
           </div>
         </Field>
       </Section>
@@ -151,18 +145,18 @@ export const PropertiesSidebar: React.FC = () => {
               type="range"
               min="10"
               max="100"
-              value={viewData.gridSize}
-              onChange={e => viewmodel.setGridSize(parseInt(e.target.value))}
+              value={gridSize}
+              onChange={e => grid.setGridSize(parseInt(e.target.value))}
               className="w-full"
             />
-            <div className="text-xs text-gray-500 text-center">{viewData.gridSize}px</div>
+            <div className="text-xs text-gray-500 text-center">{gridSize}px</div>
           </div>
         </Field>
 
         <Field label="Background">
           <select
-            value={appState.viewBackgroundColor}
-            onChange={e => viewmodel.setBackgroundColor(e.target.value)}
+            value={backgroundColor}
+            onChange={e => ui.backgroundColor$.next(e.target.value)}
             className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
           >
             <option value="#ffffff">White</option>

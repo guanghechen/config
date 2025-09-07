@@ -88,23 +88,27 @@ interface IHintViewerProps {
 }
 
 export const HintViewer: React.FC<IHintViewerProps> = ({ variant = 'full', className = '' }) => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
+  const { ui } = useDrawboardContext()
+  const selectedTool = useStateValue(ui.selectedTool$)
 
-  const currentHint = TOOL_HINTS.find(hint => hint.mode === appState.selectedTool)
+  const currentHint = TOOL_HINTS.find(hint => hint.mode === selectedTool)
 
   if (!currentHint) return null
 
   if (variant === 'compact') {
-    return <div className={`text-xs text-gray-500 ${className}`}>{currentHint.shortTip}</div>
+    return (
+      <div className={`text-xs text-gray-500 dark:text-gray-400 ${className}`}>
+        {currentHint.shortTip}
+      </div>
+    )
   }
 
   return (
     <div
-      className={`bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-gray-600 shadow-sm border border-gray-200/50 ${className}`}
+      className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-gray-600 dark:text-gray-300 shadow-sm dark:shadow-black/20 border border-gray-200/50 dark:border-gray-600/50 ${className}`}
     >
       <div className="flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full bg-blue-500" />
+        <div className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400" />
         <span>{currentHint.hint}</span>
       </div>
     </div>

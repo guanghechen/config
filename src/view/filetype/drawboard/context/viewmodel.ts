@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { DrawboardElement } from '@/component/drawboard'
+import type { IDrawboardElement } from '@/component/drawboard'
 import type { IDrawboardViewData } from './types'
 import { ModeEnum } from './types'
 
@@ -15,7 +15,7 @@ const DEFAULT_DATA: IDrawboardViewData = {
 
 export class DrawboardViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
-  public readonly elements$: IState<ReadonlyArray<DrawboardElement>>
+  public readonly elements$: IState<ReadonlyArray<IDrawboardElement>>
   public readonly content$: IState<string | null>
   public readonly saveFile?: (content: string) => void
 
@@ -25,7 +25,7 @@ export class DrawboardViewViewModel extends ViewModel {
     const { mode = DEFAULT_DATA.mode, saveFile: onSaveFile } = props
 
     this.mode$ = new State<ModeEnum>(mode)
-    this.elements$ = new State<ReadonlyArray<DrawboardElement>>([])
+    this.elements$ = new State<ReadonlyArray<IDrawboardElement>>([])
     this.content$ = new State<string | null>(null)
     this.saveFile = onSaveFile
   }

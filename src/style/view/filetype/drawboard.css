@@ -48,4 +48,72 @@
       grid-template-areas: 'canvas source';
     }
   }
+
+  /* Drawboard-specific layer ordering */
+  .drawboard-layer {
+    &--grid {
+      z-index: 0;
+    }
+
+    /* Dynamic layer support - base z-index 10, increment by 1 */
+    &--layer {
+      z-index: 10; /* Default for layer canvases */
+    }
+
+    &--interactive {
+      z-index: 20;
+    }
+
+    &--ui {
+      z-index: 30;
+    }
+  }
+
+  /* Enhanced canvas styling with CSS variables */
+  .drawboard-canvas {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    cursor: crosshair;
+
+    &--grid {
+      cursor: default;
+      background: rgb(from var(--color-background) r g b);
+    }
+
+    &--layer {
+      pointer-events: auto;
+    }
+
+    &--interactive {
+      pointer-events: none;
+    }
+
+    &--ui {
+      pointer-events: auto;
+    }
+  }
+
+  /* Layer visibility and blend modes */
+  .drawboard-layer-visible {
+    display: block;
+  }
+
+  .drawboard-layer-hidden {
+    display: none;
+  }
+
+  /* Theme-aware grid patterns */
+  .drawboard-grid-pattern {
+    background-color: rgb(from var(--color-background) r g b);
+    background-image:
+      linear-gradient(rgb(from var(--color-border) r g b / 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(from var(--color-border) r g b / 0.3) 1px, transparent 1px);
+  }
+
+  .drawboard-grid-pattern--major {
+    background-image:
+      linear-gradient(rgb(from var(--color-border) r g b / 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(from var(--color-border) r g b / 0.6) 1px, transparent 1px);
+  }
 }

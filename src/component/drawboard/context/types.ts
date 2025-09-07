@@ -1,3 +1,10 @@
+import type {
+  ILayer,
+  ILayerConfig,
+  ILayerManagerOptions,
+  ILayerUpdateOptions,
+} from './viewmodel/layers'
+
 export enum ToolMode {
   SELECT = 1,
   LASSO = 2,
@@ -15,41 +22,5 @@ export enum ToolMode {
   PAN = 8192,
 }
 
-export interface IHistoryState {
-  elements: any[]
-  appState?: Partial<IDrawboardAppState>
-}
-
-export interface IDrawboardViewData {
-  mode: ToolMode
-  zoom: number
-  offsetX: number
-  offsetY: number
-  gridSize: number
-  showGrid: boolean
-  showRulers: boolean
-  snapToGrid: boolean
-}
-
-export interface IDrawboardAppState {
-  selectedElementIds: Record<string, boolean>
-  selectedTool: ToolMode
-  lastActiveTool: ToolMode | null
-  toolLocked: boolean
-  viewBackgroundColor: string
-  currentItemStrokeColor: string
-  currentItemBackgroundColor: string
-  currentItemFillStyle: string
-  currentItemStrokeWidth: number
-  currentItemStrokeStyle: string
-  currentItemRoughness: number
-  currentItemOpacity: number
-  currentItemFont: string
-  cursorButton: 'up' | 'down'
-  scrolledOutside: boolean
-  zoom: {
-    value: number
-  }
-  openMenu: string | null
-  lastPointerDownWith: 'mouse' | 'touch' | 'pen'
-}
+// Re-export layer types for convenience
+export type { ILayer, ILayerConfig, ILayerManagerOptions, ILayerUpdateOptions }

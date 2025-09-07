@@ -14,13 +14,17 @@ import {
 import { ContextMenu, type IContextMenuItem } from '../ui/ContextMenu'
 
 export const DrawboardContextMenu: React.FC = () => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
-  const viewData = useStateValue(viewmodel.viewData$)
+  const { ui, grid, layers, history } = useDrawboardContext()
+  const backgroundColor = useStateValue(ui.backgroundColor$)
+  const gridVisible = useStateValue(grid.visible$)
   const { contextMenu, showContextMenu, hideContextMenu } = useContextMenu()
 
   const getContextMenuItems = React.useCallback((): IContextMenuItem[] => {
-    const selectedElements = viewmodel.getSelectedElements()
+    const layerData = history.layerData$.getSnapshot()
+    if (!layerData) return []
+
+    const allElements = layers.allElements$.getSnapshot()
+    const selectedElements = ui.getSelectedElements(allElements)
 
     const items: Array<IContextMenuItem | null> = []
 
@@ -30,7 +34,7 @@ export const DrawboardContextMenu: React.FC = () => {
       label: 'Rectangle',
       icon: RectangleIcon,
       shortcut: 'R',
-      action: () => viewmodel.setTool(ToolMode.RECTANGLE),
+      action: () => ui.setTool(ToolMode.RECTANGLE),
     })
 
     items.push({
@@ -38,7 +42,7 @@ export const DrawboardContextMenu: React.FC = () => {
       label: 'Ellipse',
       icon: CircleIcon,
       shortcut: 'O',
-      action: () => viewmodel.setTool(ToolMode.CIRCLE),
+      action: () => ui.setTool(ToolMode.CIRCLE),
     })
 
     items.push({
@@ -46,7 +50,7 @@ export const DrawboardContextMenu: React.FC = () => {
       label: 'Arrow',
       icon: ArrowIcon,
       shortcut: 'A',
-      action: () => viewmodel.setTool(ToolMode.ARROW),
+      action: () => ui.setTool(ToolMode.ARROW),
     })
 
     items.push({
@@ -54,7 +58,7 @@ export const DrawboardContextMenu: React.FC = () => {
       label: 'Line',
       icon: LineIcon,
       shortcut: 'L',
-      action: () => viewmodel.setTool(ToolMode.LINE),
+      action: () => ui.setTool(ToolMode.LINE),
     })
 
     // Separator
@@ -67,7 +71,14 @@ export const DrawboardContextMenu: React.FC = () => {
         label: `Duplicate ${selectedElements.length} element${selectedElements.length > 1 ? 's' : ''}`,
         shortcut: 'Ctrl+D',
         action: () => {
-          viewmodel.duplicateSelectedElements()
+          ui.duplicateSelectedElements(allElements, duplicatedElements => {
+            if (duplicatedElements.length > 0) {
+              layers.addElementsToActiveLayer(duplicatedElements)
+              const newLayerData = layers.dump()
+              history.updateLayerData(newLayerData)
+              history.saveToHistory()
+            }
+          })
         },
       })
 
@@ -75,7 +86,15 @@ export const DrawboardContextMenu: React.FC = () => {
         id: 'delete',
         label: `Delete ${selectedElements.length} element${selectedElements.length > 1 ? 's' : ''}`,
         shortcut: 'Delete',
-        action: () => viewmodel.deleteSelectedElements(),
+        action: () => {
+          ui.deleteSelectedElements(allElements, () => {
+            const elementIds = selectedElements.map(el => el.id)
+            layers.removeElementsFromActiveLayer(elementIds)
+            const newLayerData = layers.dump()
+            history.updateLayerData(newLayerData)
+            history.saveToHistory()
+          })
+        },
       })
 
       items.push({ id: 'sep2', label: '', separator: true, action: () => {} })
@@ -84,17 +103,17 @@ export const DrawboardContextMenu: React.FC = () => {
     // View actions
     items.push({
       id: 'toggle-grid',
-      label: viewData.showGrid ? 'Hide Grid' : 'Show Grid',
+      label: gridVisible ? 'Hide Grid' : 'Show Grid',
       icon: GridIcon,
       shortcut: "Ctrl+'",
-      action: () => viewmodel.toggleGrid(),
+      action: () => grid.toggleGridVisibility(),
     })
 
     items.push({
       id: 'zoom-to-fit',
       label: 'Zoom to Fit',
       shortcut: 'Ctrl+0',
-      action: () => viewmodel.zoomToFit(),
+      action: () => ui.zoomToFit(allElements),
     })
 
     items.push({ id: 'sep3', label: '', separator: true, action: () => {} })
@@ -108,10 +127,13 @@ export const DrawboardContextMenu: React.FC = () => {
       action: () => {
         void (async (): Promise<void> => {
           try {
-            const elements = viewmodel.elements$.getSnapshot()
+            const layerData = history.layerData$.getSnapshot()
+            if (!layerData) return
+
+            const allElements = layers.allElements$.getSnapshot()
             const { exportToPNG } = await import('../../util/export')
-            const blob = await exportToPNG(elements, {
-              backgroundColor: appState.viewBackgroundColor,
+            const blob = await exportToPNG(allElements, {
+              backgroundColor,
             })
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
@@ -127,17 +149,17 @@ export const DrawboardContextMenu: React.FC = () => {
     })
 
     return items.filter(Boolean) as IContextMenuItem[]
-  }, [viewmodel, viewData.showGrid, appState.viewBackgroundColor])
+  }, [ui, grid, layers, history, gridVisible, backgroundColor])
 
   // Expose the context menu trigger for use in canvas components
   React.useEffect(() => {
     const updateContextMenu = (): void => {
-      ;(viewmodel as any).showContextMenu = (event: React.MouseEvent) => {
+      ;(ui as any).showContextMenu = (event: React.MouseEvent) => {
         showContextMenu(event, getContextMenuItems())
       }
     }
     updateContextMenu()
-  }, [showContextMenu, viewmodel, getContextMenuItems])
+  }, [showContextMenu, ui, getContextMenuItems])
 
   return (
     <ContextMenu

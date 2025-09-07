@@ -1,4 +1,4 @@
-import type { DrawboardElement } from '../types/elements'
+import type { IDrawboardElement } from '../types/elements'
 
 export interface IExportOptions {
   backgroundColor?: string
@@ -7,7 +7,7 @@ export interface IExportOptions {
 }
 
 export async function exportToPNG(
-  elements: DrawboardElement[],
+  elements: IDrawboardElement[],
   options: IExportOptions = {},
 ): Promise<Blob> {
   const { backgroundColor = '#ffffff', padding = 20, scale = 2 } = options
@@ -56,7 +56,7 @@ export async function exportToPNG(
   })
 }
 
-export function exportToJSON(elements: DrawboardElement[]): string {
+export function exportToJSON(elements: IDrawboardElement[]): string {
   return JSON.stringify(
     {
       type: 'drawboard',
@@ -69,7 +69,7 @@ export function exportToJSON(elements: DrawboardElement[]): string {
   )
 }
 
-export function importFromJSON(jsonString: string): DrawboardElement[] {
+export function importFromJSON(jsonString: string): IDrawboardElement[] {
   try {
     const data = JSON.parse(jsonString)
     if (data.type !== 'drawboard' || !Array.isArray(data.elements)) {
@@ -82,7 +82,7 @@ export function importFromJSON(jsonString: string): DrawboardElement[] {
   }
 }
 
-function calculateBounds(elements: DrawboardElement[]): {
+function calculateBounds(elements: IDrawboardElement[]): {
   minX: number
   minY: number
   maxX: number

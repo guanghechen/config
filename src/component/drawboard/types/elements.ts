@@ -1,7 +1,7 @@
 // Base element properties
 export interface IDrawboardElementBase {
   id: string
-  type: HElementType
+  type: IElementType
   x: number
   y: number
   width: number
@@ -9,12 +9,12 @@ export interface IDrawboardElementBase {
   angle: number
   strokeColor: string
   backgroundColor: string
-  fillStyle: FillStyle
+  fillStyle: IFillStyle
   strokeWidth: number
-  strokeStyle: StrokeStyle
+  strokeStyle: IStrokeStyle
   roughness: number
   opacity: number
-  strokeSharpness?: StrokeSharpness
+  strokeSharpness?: IStrokeSharpness
   seed: number
   versionNonce: number
   isDeleted: boolean
@@ -22,10 +22,10 @@ export interface IDrawboardElementBase {
   updated: number
 }
 
-export type HElementType = 'line' | 'rectangle' | 'circle' | 'arrow'
-export type FillStyle = 'solid' | 'hachure' | 'cross-hatch'
-export type StrokeStyle = 'solid' | 'dashed' | 'dotted'
-export type StrokeSharpness = 'sharp' | 'round'
+export type IElementType = 'line' | 'rectangle' | 'circle' | 'arrow'
+export type IFillStyle = 'solid' | 'hachure' | 'cross-hatch'
+export type IStrokeStyle = 'solid' | 'dashed' | 'dotted'
+export type IStrokeSharpness = 'sharp' | 'round'
 
 export interface IBoundElement {
   id: string
@@ -55,7 +55,7 @@ export interface IDrawboardArrowElement extends Omit<IDrawboardElementBase, 'typ
   endArrowhead?: 'arrow' | 'dot' | 'bar'
 }
 
-export type DrawboardElement =
+export type IDrawboardElement =
   | IDrawboardLineElement
   | IDrawboardRectangleElement
   | IDrawboardCircleElement

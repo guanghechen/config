@@ -2,7 +2,6 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React, { useState } from 'react'
 import { useDrawboardContext } from '../../context'
 import { ToolMode } from '../../context/types'
-import { getToolNumericShortcut, getToolShortcut } from '../../hook/useKeyboardShortcuts'
 import {
   ArrowIcon,
   CircleIcon,
@@ -25,8 +24,6 @@ interface IToolDefinition {
   mode: ToolMode
   icon: React.ComponentType<{ className?: string }>
   label: string
-  shortcut?: string
-  numericKey?: string
 }
 
 const createToolDefinition = (
@@ -37,8 +34,6 @@ const createToolDefinition = (
   mode,
   icon,
   label,
-  shortcut: getToolShortcut(mode),
-  numericKey: getToolNumericShortcut(mode),
 })
 
 // Essential tools for mobile
@@ -63,16 +58,9 @@ const ADDITIONAL_TOOLS: IToolDefinition[] = [
   createToolDefinition(ToolMode.LASER, LaserIcon, 'Laser'),
 ]
 
-const formatShortcut = (tool: IToolDefinition): string => {
-  if (tool.numericKey && tool.shortcut) {
-    return `${tool.shortcut.toUpperCase()} or ${tool.numericKey}`
-  }
-  return tool.shortcut?.toUpperCase() || ''
-}
-
 export const MobileToolbar: React.FC = () => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
+  const { ui } = useDrawboardContext()
+  const selectedTool = useStateValue(ui.selectedTool$)
   const [showAdditionalTools, setShowAdditionalTools] = useState(false)
 
   return (
@@ -86,10 +74,9 @@ export const MobileToolbar: React.FC = () => {
                 key={tool.mode}
                 icon={tool.icon}
                 label={tool.label}
-                shortcut={formatShortcut(tool)}
-                isActive={appState.selectedTool === tool.mode}
+                isActive={selectedTool === tool.mode}
                 onClick={() => {
-                  viewmodel.setTool(tool.mode)
+                  ui.setTool(tool.mode)
                   setShowAdditionalTools(false)
                 }}
                 size="large"
@@ -107,9 +94,8 @@ export const MobileToolbar: React.FC = () => {
               key={tool.mode}
               icon={tool.icon}
               label={tool.label}
-              shortcut={formatShortcut(tool)}
-              isActive={appState.selectedTool === tool.mode}
-              onClick={() => viewmodel.setTool(tool.mode)}
+              isActive={selectedTool === tool.mode}
+              onClick={() => ui.setTool(tool.mode)}
               size="large"
               aria-label={`${tool.label} tool`}
             />

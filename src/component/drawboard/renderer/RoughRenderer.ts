@@ -1,9 +1,9 @@
 import rough from 'roughjs'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import type {
-  DrawboardElement,
   IDrawboardArrowElement,
   IDrawboardCircleElement,
+  IDrawboardElement,
   IDrawboardLineElement,
   IDrawboardRectangleElement,
 } from '../types/elements'
@@ -17,7 +17,7 @@ export class RoughRenderer {
     this.rc = rough.canvas(canvas)
   }
 
-  public renderElement(element: DrawboardElement): void {
+  public renderElement(element: IDrawboardElement): void {
     const options = this.getRoughOptions(element)
 
     switch (element.type) {
@@ -36,7 +36,7 @@ export class RoughRenderer {
     }
   }
 
-  private getRoughOptions(element: DrawboardElement): any {
+  private getRoughOptions(element: IDrawboardElement): any {
     return {
       stroke: element.strokeColor,
       strokeWidth: element.strokeWidth,
@@ -121,7 +121,7 @@ export class RoughRenderer {
     y1: number,
     x2: number,
     y2: number,
-    element: DrawboardElement,
+    element: IDrawboardElement,
   ): void {
     const angle = Math.atan2(y2 - y1, x2 - x1)
     const arrowLength = 20

@@ -26,27 +26,29 @@ const tools = [
 ]
 
 export const ToolPanel: React.FC = () => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
-  const viewData = useStateValue(viewmodel.viewData$)
+  const { ui, layers, grid } = useDrawboardContext()
+  const selectedTool = useStateValue(ui.selectedTool$)
+  const backgroundColor = useStateValue(ui.backgroundColor$)
+  const interactionState = useStateValue(ui.interactionState$)
+  const gridVisible = useStateValue(grid.visible$)
 
   const handleZoomIn = (): void => {
-    const newZoom = Math.min(viewData.zoom * 1.2, 5)
-    viewmodel.setZoom(newZoom)
+    const newZoom = Math.min(interactionState.zoom.value * 1.2, 5)
+    ui.setZoom(newZoom)
   }
 
   const handleZoomOut = (): void => {
-    const newZoom = Math.max(viewData.zoom / 1.2, 0.1)
-    viewmodel.setZoom(newZoom)
+    const newZoom = Math.max(interactionState.zoom.value / 1.2, 0.1)
+    ui.setZoom(newZoom)
   }
 
   const handleExport = async (): Promise<void> => {
     try {
-      const elements = viewmodel.elements$.getSnapshot()
+      const allElements = layers.allElements$.getSnapshot()
       const { exportToPNG, exportToJSON: _exportToJSON } = await import('../../util/export')
 
       // Export as PNG
-      const blob = await exportToPNG(elements, { backgroundColor: appState.viewBackgroundColor })
+      const blob = await exportToPNG(allElements, { backgroundColor })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -63,13 +65,13 @@ export const ToolPanel: React.FC = () => {
       {tools.map(({ mode, icon: Icon, label }) => (
         <button
           key={mode}
-          onClick={() => viewmodel.setTool(mode)}
+          onClick={() => ui.setTool(mode)}
           className={cn(
             'group relative flex h-10 w-10 items-center justify-center rounded-lg',
             'transition-colors hover:bg-gray-100',
             {
-              'bg-blue-100 text-blue-600': appState.selectedTool === mode,
-              'text-gray-700': appState.selectedTool !== mode,
+              'bg-blue-100 text-blue-600': selectedTool === mode,
+              'text-gray-700': selectedTool !== mode,
             },
           )}
           title={label}
@@ -85,12 +87,12 @@ export const ToolPanel: React.FC = () => {
 
       {/* Grid toggle */}
       <button
-        onClick={() => viewmodel.toggleGrid()}
+        onClick={() => grid.toggleGridVisibility()}
         className={cn(
           'flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-gray-100',
           {
-            'bg-green-100 text-green-600': viewData.showGrid,
-            'text-gray-700': !viewData.showGrid,
+            'bg-green-100 text-green-600': gridVisible,
+            'text-gray-700': !gridVisible,
           },
         )}
         title="Toggle Grid"

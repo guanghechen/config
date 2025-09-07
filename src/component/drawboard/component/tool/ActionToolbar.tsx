@@ -13,26 +13,27 @@ import {
 import { Island, ToolButton, ToolSeparator } from '../ui'
 
 export const ActionToolbar: React.FC = () => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
-  const viewData = useStateValue(viewmodel.viewData$)
+  const { ui, grid, layers, history } = useDrawboardContext()
+  const backgroundColor = useStateValue(ui.backgroundColor$)
+  const interactionState = useStateValue(ui.interactionState$)
+  const gridVisible = useStateValue(grid.visible$)
 
   const handleZoomIn = (): void => {
-    const newZoom = Math.min(viewData.zoom * 1.2, 5)
-    viewmodel.setZoom(newZoom)
+    const newZoom = Math.min(interactionState.zoom.value * 1.2, 5)
+    ui.setZoom(newZoom)
   }
 
   const handleZoomOut = (): void => {
-    const newZoom = Math.max(viewData.zoom / 1.2, 0.1)
-    viewmodel.setZoom(newZoom)
+    const newZoom = Math.max(interactionState.zoom.value / 1.2, 0.1)
+    ui.setZoom(newZoom)
   }
 
   const handleExport = async (): Promise<void> => {
     try {
-      const elements = viewmodel.elements$.getSnapshot()
+      const allElements = layers.allElements$.getSnapshot()
       const { exportToPNG } = await import('../../util/export')
 
-      const blob = await exportToPNG(elements, { backgroundColor: appState.viewBackgroundColor })
+      const blob = await exportToPNG(allElements, { backgroundColor })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -48,7 +49,10 @@ export const ActionToolbar: React.FC = () => {
     if (
       window.confirm('Are you sure you want to clear the canvas? This action cannot be undone.')
     ) {
-      viewmodel.clearCanvas()
+      layers.setActiveLayerElements([])
+      const layerData = layers.dump()
+      history.updateLayerData(layerData)
+      history.saveToHistory()
     }
   }
 
@@ -59,8 +63,8 @@ export const ActionToolbar: React.FC = () => {
         icon={UndoIcon}
         label="Undo"
         shortcut="Ctrl+Z"
-        onClick={() => viewmodel.undo()}
-        disabled={!viewmodel.canUndo()}
+        onClick={() => history.undo()}
+        disabled={!history.canUndo()}
         variant="secondary"
         size="small"
         aria-label="Undo last action"
@@ -70,8 +74,8 @@ export const ActionToolbar: React.FC = () => {
         icon={RedoIcon}
         label="Redo"
         shortcut="Ctrl+Y"
-        onClick={() => viewmodel.redo()}
-        disabled={!viewmodel.canRedo()}
+        onClick={() => history.redo()}
+        disabled={!history.canRedo()}
         variant="secondary"
         size="small"
         aria-label="Redo last undone action"
@@ -84,11 +88,11 @@ export const ActionToolbar: React.FC = () => {
         icon={GridIcon}
         label="Toggle Grid"
         shortcut="Ctrl+'"
-        isActive={viewData.showGrid}
-        onClick={() => viewmodel.toggleGrid()}
+        isActive={gridVisible}
+        onClick={() => grid.toggleGridVisibility()}
         variant="secondary"
         size="small"
-        aria-label={viewData.showGrid ? 'Hide grid' : 'Show grid'}
+        aria-label={gridVisible ? 'Hide grid' : 'Show grid'}
       />
 
       <ToolSeparator />
@@ -99,7 +103,7 @@ export const ActionToolbar: React.FC = () => {
         label="Zoom In"
         shortcut="Ctrl++"
         onClick={handleZoomIn}
-        disabled={viewData.zoom >= 5}
+        disabled={interactionState.zoom.value >= 5}
         size="small"
         aria-label="Zoom in"
       />
@@ -109,7 +113,7 @@ export const ActionToolbar: React.FC = () => {
         label="Zoom Out"
         shortcut="Ctrl+-"
         onClick={handleZoomOut}
-        disabled={viewData.zoom <= 0.1}
+        disabled={interactionState.zoom.value <= 0.1}
         size="small"
         aria-label="Zoom out"
       />

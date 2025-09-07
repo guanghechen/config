@@ -2,7 +2,7 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { Drawboard } from '@/component/drawboard'
-import type { DrawboardElement } from '@/component/drawboard'
+import type { IDrawboardElement } from '@/component/drawboard'
 import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
 import type { IDrawboardData } from '../context'
 import { useDrawboardViewViewModel } from '../context'
@@ -20,7 +20,7 @@ export const CanvasPane: React.FC = () => {
     }
   }, [content])
 
-  const onSave = useEventCallback(async (elements: DrawboardElement[]): Promise<void> => {
+  const onSave = useEventCallback(async (elements: IDrawboardElement[]): Promise<void> => {
     if (viewmodel.saveFile) {
       const drawboardData: IDrawboardData = {
         nodes: elements,

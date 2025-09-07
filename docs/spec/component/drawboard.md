@@ -70,9 +70,16 @@ The drawboard implements a sophisticated multi-canvas architecture where differe
 
 **Layer Hierarchy (bottom to top):**
 1. **Grid Canvas** - Background grid pattern (static, rarely redrawn)
-2. **Static Canvas** - User-created drawing elements (selective updates)
+2. **Layer Canvases** - User-created drawing elements (dynamic count, selective updates)
 3. **Interactive Canvas** - UI overlays, selection feedback, and interaction hints
 4. **HTML Overlay** - DOM-based UI elements (toolbars, menus, text inputs)
+
+**Dynamic Layer System**:
+- **Multiple Layer Canvases**: Support for unlimited drawing layers with dynamic creation/deletion
+- **Layer Properties**: Each layer has independent visibility, opacity, blend mode, and z-index
+- **Automatic Z-Index Management**: Layers are automatically assigned z-indices based on their order
+- **Element Assignment**: Drawing elements are automatically assigned to the active layer
+- **Layer Operations**: Add, delete, duplicate, reorder, and modify layer properties
 
 ### State Management Architecture
 
@@ -121,7 +128,7 @@ Drawing elements are represented as immutable data structures with the following
 
 **Technical Approach**:
 - Use `createPattern()` for efficient grid tiling
-- CSS custom properties for theme-aware colors
+- CSS custom properties for theme-aware colors using Tailwind v4 CSS variables (e.g., `rgb(from var(--color-gray-400) r g b)`)
 - Viewport-based culling for large canvases
 
 ### Phase 3: Advanced Tool System

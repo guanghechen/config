@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-import type { DrawboardElement } from '@/component/drawboard'
+import type { IDrawboardElement } from '@/component/drawboard'
 
 const bit: number = 1
 
@@ -13,7 +13,7 @@ export interface IDrawboardViewData {
 }
 
 export interface IDrawboardData {
-  readonly nodes: ReadonlyArray<DrawboardElement>
+  readonly nodes: ReadonlyArray<IDrawboardElement>
   readonly edges: ReadonlyArray<any>
   readonly meta: {
     readonly version: number

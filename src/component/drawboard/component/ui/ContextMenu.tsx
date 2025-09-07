@@ -28,20 +28,12 @@ export const ContextMenu: React.FC<IContextMenuProps> = ({ items, position, onCl
       }
     }
 
-    const handleEscape = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
     if (visible) {
       document.addEventListener('mousedown', handleClickOutside)
-      document.addEventListener('keydown', handleEscape)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleEscape)
     }
   }, [visible, onClose])
 
@@ -55,7 +47,7 @@ export const ContextMenu: React.FC<IContextMenuProps> = ({ items, position, onCl
       {/* Menu */}
       <div
         ref={menuRef}
-        className="fixed z-50 min-w-48 rounded-lg bg-white shadow-lg border border-gray-200/50 py-1"
+        className="fixed z-50 min-w-48 rounded-lg bg-white dark:bg-gray-800 shadow-lg dark:shadow-black/25 border border-gray-200/50 dark:border-gray-600/50 py-1"
         style={{
           left: position.x,
           top: position.y,
@@ -63,7 +55,9 @@ export const ContextMenu: React.FC<IContextMenuProps> = ({ items, position, onCl
       >
         {items.map((item, index) => {
           if (item.separator) {
-            return <div key={index} className="my-1 border-t border-gray-200" />
+            return (
+              <div key={index} className="my-1 border-t border-gray-200 dark:border-gray-600" />
+            )
           }
 
           const Icon = item.icon
@@ -80,10 +74,10 @@ export const ContextMenu: React.FC<IContextMenuProps> = ({ items, position, onCl
               disabled={item.disabled}
               className={cn(
                 'flex w-full items-center justify-between px-3 py-2 text-left text-sm',
-                'transition-colors hover:bg-gray-100',
+                'transition-colors hover:bg-gray-100 dark:hover:bg-gray-700',
                 {
-                  'text-gray-400 cursor-not-allowed': item.disabled,
-                  'text-gray-900': !item.disabled,
+                  'text-gray-400 dark:text-gray-500 cursor-not-allowed': item.disabled,
+                  'text-gray-900 dark:text-gray-100': !item.disabled,
                 },
               )}
             >
@@ -92,7 +86,9 @@ export const ContextMenu: React.FC<IContextMenuProps> = ({ items, position, onCl
                 <span>{item.label}</span>
               </div>
 
-              {item.shortcut && <span className="text-xs text-gray-500">{item.shortcut}</span>}
+              {item.shortcut && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">{item.shortcut}</span>
+              )}
             </button>
           )
         })}

@@ -22,10 +22,12 @@ export const Section: React.FC<ISectionProps> = ({
         className={cn('mb-3 flex items-center justify-between', collapsible && 'cursor-pointer')}
         onClick={collapsible ? () => setIsOpen(!isOpen) : undefined}
       >
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          {title}
+        </h4>
         {collapsible && (
           <svg
-            className={cn('h-4 w-4 text-gray-400 transition-transform', {
+            className={cn('h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform', {
               'rotate-180': !isOpen,
             })}
             fill="none"
@@ -49,7 +51,7 @@ interface IFieldProps {
 export const Field: React.FC<IFieldProps> = ({ label, children }) => {
   return (
     <div className="space-y-1">
-      <label className="block text-xs font-medium text-gray-700">{label}</label>
+      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">{label}</label>
       {children}
     </div>
   )

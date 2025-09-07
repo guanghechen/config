@@ -2,7 +2,6 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { useDrawboardContext } from '../../context'
 import { ToolMode } from '../../context/types'
-import { getToolNumericShortcut, getToolShortcut } from '../../hook/useKeyboardShortcuts'
 import {
   ArrowIcon,
   CircleIcon,
@@ -28,8 +27,6 @@ interface IToolDefinition {
   mode: ToolMode
   icon: React.ComponentType<{ className?: string }>
   label: string
-  shortcut?: string
-  numericKey?: string
 }
 
 const createToolDefinition = (
@@ -40,8 +37,6 @@ const createToolDefinition = (
   mode,
   icon,
   label,
-  shortcut: getToolShortcut(mode),
-  numericKey: getToolNumericShortcut(mode),
 })
 
 // Main drawing tools following Excalidraw's ShapesSwitcher exact order
@@ -66,37 +61,30 @@ const EXTRA_TOOLS: IToolDefinition[] = [
   createToolDefinition(ToolMode.LASSO, LassoIcon, 'Lasso Select'),
 ]
 
-const formatShortcut = (tool: IToolDefinition): string => {
-  if (tool.numericKey && tool.shortcut) {
-    return `${tool.numericKey}`
-  }
-  return tool.shortcut?.toUpperCase() || ''
-}
-
 export const MainToolbar: React.FC = () => {
-  const { viewmodel } = useDrawboardContext()
-  const appState = useStateValue(viewmodel.appState$)
+  const { ui } = useDrawboardContext()
+  const selectedTool = useStateValue(ui.selectedTool$)
+  const toolLocked = useStateValue(ui.toolLocked$)
 
   const extraToolItems = EXTRA_TOOLS.map(tool => ({
     id: tool.mode.toString(),
     label: tool.label,
     icon: tool.icon,
-    shortcut: formatShortcut(tool),
-    onClick: () => viewmodel.setTool(tool.mode),
+    onClick: () => ui.setTool(tool.mode),
   }))
 
-  const hasActiveExtraTool = EXTRA_TOOLS.some(tool => appState.selectedTool === tool.mode)
+  const hasActiveExtraTool = EXTRA_TOOLS.some(tool => selectedTool === tool.mode)
 
   return (
     <Island className="flex flex-row items-center gap-1" padding="sm">
       <ToolButton
-        icon={appState.toolLocked ? LockIcon : UnlockIcon}
-        label={appState.toolLocked ? 'Unlock' : 'Lock'}
-        isActive={appState.toolLocked}
-        onClick={() => viewmodel.toggleToolLock()}
+        icon={toolLocked ? LockIcon : UnlockIcon}
+        label={toolLocked ? 'Unlock' : 'Lock'}
+        isActive={toolLocked}
+        onClick={() => ui.toggleToolLock()}
         variant="secondary"
         size="medium"
-        aria-label={`${appState.toolLocked ? 'Unlock' : 'Lock'} tool selection`}
+        aria-label={`${toolLocked ? 'Unlock' : 'Lock'} tool selection`}
       />
 
       {/* Divider - matches Excalidraw */}
@@ -106,10 +94,8 @@ export const MainToolbar: React.FC = () => {
       <ToolButton
         icon={PanIcon}
         label="Hand"
-        shortcut={formatShortcut(createToolDefinition(ToolMode.PAN, PanIcon, 'Hand'))}
-        numericKey={getToolNumericShortcut(ToolMode.PAN)}
-        isActive={appState.selectedTool === ToolMode.PAN}
-        onClick={() => viewmodel.setTool(ToolMode.PAN)}
+        isActive={selectedTool === ToolMode.PAN}
+        onClick={() => ui.setTool(ToolMode.PAN)}
         size="medium"
         aria-label="Hand tool"
       />
@@ -120,13 +106,10 @@ export const MainToolbar: React.FC = () => {
           key={tool.mode}
           icon={tool.icon}
           label={tool.label}
-          shortcut={formatShortcut(tool)}
-          numericKey={tool.numericKey}
-          isActive={appState.selectedTool === tool.mode}
-          onClick={() => viewmodel.setTool(tool.mode)}
+          isActive={selectedTool === tool.mode}
+          onClick={() => ui.setTool(tool.mode)}
           size="medium"
           aria-label={`${tool.label} tool`}
-          aria-keyshortcuts={formatShortcut(tool)}
         />
       ))}
 
