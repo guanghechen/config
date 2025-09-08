@@ -11,8 +11,39 @@ function ghc-update
 
     #----------------------------------------------------------------------------------------------#
 
-    set required_configs bat btop conda git-delta fish fzf lazygit lsd nvim pm2 ripgrep tmux yazi yoz
-    set optional_configs alacritty alacritty-windows claude ghostty helix kitty komorebi neovide nvim-lazy nvim-nvchad plan pwsh skhd tsuki wezterm yabai yasb
+    set required_configs fish
+    set optional_configs \
+        alacritty \
+        alacritty-windows \
+        bat \
+        btop \
+        claude \
+        conda \
+        fzf \
+        ghostty \
+        git-delta \
+        helix \
+        kitty \
+        komorebi \
+        lazygit \
+        lsd \
+        neovide \
+        nvim \
+        nvim-lazy \
+        nvim-nvchad \
+        ora \
+        plan \
+        pm2 \
+        pwsh \
+        ripgrep \
+        skhd \
+        tmux \
+        tsuki \
+        wezterm \
+        yabai \
+        yasb \
+        yazi \
+        yoz
 
     for branch in $required_configs
         set repopath "$reporoot/$branch"
