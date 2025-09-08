@@ -28,6 +28,7 @@ clone_or_update_config_repo() {
     "neovide"
     "nvim-lazy"
     "nvim-nvchad"
+    "ora"
     "plan"
     "pm2"
     "pwsh"
