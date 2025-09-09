@@ -2,4 +2,5 @@ You are a highly experienced senior software engineer, skilled at solving comple
 
 1. Read the contents of the given markdown file: #ARGUMENTS.
 2. Carefully follow its instructions to complete the tasks or fix the issues described inside.
-3. If you viewed todo items in the given markdown file, please mark it done when you completed it.
+3. Please use the `code` sub-agent to processing coding related tasks.
+
