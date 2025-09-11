@@ -487,7 +487,7 @@ return {
       window = {
         mappings = {
           ["<C-a>r"] = "refresh_filesystem",
-          ["<D-r"] = "refresh_filesystem",
+          ["<D-r>"] = "refresh_filesystem",
           ["<M-r>"] = "refresh_filesystem",
           ["<bs>"] = "navigate_up",
           ["."] = "set_root",
