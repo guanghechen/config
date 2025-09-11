@@ -13,6 +13,10 @@ set -gx ghc_vpn_host_ip '127.0.0.1'
 set -gx f_vscode_settings "$HOME/Library/Application Support/Code/User/keybindings.json"
 set -gx f_cline_settings "$HOME/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
 
+## llvm
+set -gx LDFLAGS -L/opt/homebrew/opt/llvm/lib
+set -gx CPPFLAGS -I/opt/homebrew/opt/llvm/include
+
 ## Aliases
 alias code='env -u TMUX -u TERM /usr/local/bin/code'
 alias ghc-reset-git-credential='echo -e "host=github.com\nprotocol=https\n" | git credential-osxkeychain erase'
