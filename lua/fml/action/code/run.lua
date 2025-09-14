@@ -63,6 +63,74 @@ local runners = {
 
   --------------------------------------------------------------------------------------------------
 
+  http = {
+    run = function(filepath)
+      local script_path = std.path.locate_app_config_home("ora/cli/http.mjs") ---@type string
+      local cmd = { "node", script_path, filepath } ---@type string[]
+
+      local group = oxi.fn.uuid() ---@type string
+      local terminated = false ---@type boolean
+      local spinner_step = 200 ---@type integer
+      local spinner_timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil
+      local output = "Starting HTTP request...\n" ---@type string
+
+      ---@param level                   ?std.e.LogLevelEnum
+      ---@return nil
+      local function update_notification(level)
+        local message = terminated and output or (output .. " " .. std.fn.spinner(spinner_step)) ---@type string
+        std.reporter.log(level or "INFO", {
+          from = __module_name__,
+          subject = filepath,
+          message = message,
+          group = group,
+        })
+      end
+
+      ---@return nil
+      local function clear_spinner()
+        terminated = true
+        if spinner_timer then
+          spinner_timer:stop()
+          spinner_timer:close()
+          spinner_timer = nil
+        end
+      end
+
+      -- Start spinner timer
+      if spinner_timer then
+        spinner_timer:start(0, 200, vim.schedule_wrap(update_notification))
+      end
+
+      update_notification()
+      vim.system(cmd, {
+        text = true,
+        stdout = function(err, data)
+          if err then
+            output = output .. "\n" .. tostring(err)
+          end
+          if data then
+            output = output .. data
+          end
+          update_notification()
+        end,
+        stderr = function(err, data)
+          if err then
+            output = output .. "\n" .. tostring(err)
+          end
+          if data then
+            output = output .. data
+          end
+          update_notification("ERROR")
+        end,
+      }, function()
+        clear_spinner()
+        update_notification()
+      end)
+      update_notification()
+    end,
+  },
+
+  --------------------------------------------------------------------------------------------------
   lua = {
     run = function(filepath)
       vim.cmd("luafile " .. filepath)

@@ -18,10 +18,10 @@ local Levels = {
 ---@class std.reporter
 local M = {}
 
----@param options                       std.reporter.IOptions
 ---@param level                         std.e.LogLevelEnum
+---@param options                       std.reporter.IOptions
 ---@return nil
-local function log(options, level)
+function M.log(level, options)
   local title = options.from ---@type string
   local group = options.group ---@type string|nil
   local text = options.message or "" ---@type string
@@ -53,22 +53,22 @@ end
 
 ---@param options                       std.reporter.IOptions
 function M.debug(options)
-  log(options, "DEBUG")
+  M.log("DEBUG", options)
 end
 
 ---@param options                       std.reporter.IOptions
 function M.info(options)
-  log(options, "INFO")
+  M.log("INFO", options)
 end
 
 ---@param options                       std.reporter.IOptions
 function M.warn(options)
-  log(options, "WARN")
+  M.log("WARN", options)
 end
 
 ---@param options                       std.reporter.IOptions
 function M.error(options)
-  log(options, "ERROR")
+  M.log("ERROR", options)
 end
 
 return M

@@ -1,5 +1,6 @@
 local SEP = std.env.PATH_SEP ---@type string
 local IS_WIN = std.env.IS_WIN ---@type boolean
+local HOME_CONFIG = std.env.HOME_CONFIG ---@type string
 local HOME_NVIM_CACHE = std.env.HOME_NVIM_CACHE ---@type string
 local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
 local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
@@ -377,7 +378,7 @@ end
 ---@param app                           string
 ---@return string
 function M.locate_app_config_home(app)
-  return M.join(HOME_NVIM_CONFIG, "../" .. app)
+  return M.join(HOME_CONFIG, app)
 end
 
 ---@param filename                      string

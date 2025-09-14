@@ -120,6 +120,7 @@ M.PATH_SEP = PATH_SEP ---@type string
 M.USERNAME = USERNAME ---@type string
 
 M.HOME_USER = vim.env.HOME --[[@as string]]
+M.HOME_CONFIG = vim.env.XDG_CONFIG_HOME or (M.HOME_USER .. PATH_SEP .. ".config") --[[@as string]]
 M.HOME_NVIM_CACHE = vim.fn.stdpath("cache") --[[@as string]]
 M.HOME_NVIM_CONFIG = vim.fn.stdpath("config") --[[@as string]]
 M.HOME_NVIM_DATA = vim.fn.stdpath("data") --[[@as string]]

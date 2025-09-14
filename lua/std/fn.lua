@@ -229,9 +229,11 @@ local spinners = M.spinner_chars() ---@type string[]
 -- local spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" } ---@type string[]
 -- local spinners = { "", "", "", "󰪞", "󰪟", "󰪠", "󰪢", "󰪣", "󰪤", "󰪥" } ---@type string[]
 
+---@param step                          ?integer
 ---@return string
-function M.spinner()
-  local index = math.floor(vim.uv.hrtime() / (1e6 * 80)) % #spinners + 1 ---@type integer
+function M.spinner(step)
+  step = step and 1e6 or (1e6 * 80) ---@type integer
+  local index = math.floor(vim.uv.hrtime() / step) % #spinners + 1 ---@type integer
   return spinners[index]
 end
 
