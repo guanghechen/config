@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { httpParser, envParser } from "#shared";
+import { httpParser, envParser, formatResponseBody, formatRequestBody, formatHeaders } from "#shared";
 
 const regexes = {
   splitter: /\n[-]{100}\n/,
@@ -88,23 +88,10 @@ async function run(filepath) {
       body: responseText,
     };
 
-    const headersText = Object.entries(output.headers)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
-
-    const requestHeaders = Object.entries(parsedRequest.headers || {})
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
-
-    const requestBody = parsedRequest.body
-      ? (parsedRequest.body.type === 'json'
-          ? JSON.stringify(parsedRequest.body.data, null, 2)
-          : parsedRequest.body.type === 'form'
-            ? Object.entries(parsedRequest.body.fields)
-                .map(([key, value]) => `${key}=${value}`)
-                .join('&')
-            : parsedRequest.body.data || '')
-      : '';
+    const formattedResponseBody = formatResponseBody(response, responseText);
+    const responseHeaders = formatHeaders(output.headers);
+    const requestHeaders = formatHeaders(parsedRequest.headers);
+    const requestBody = formatRequestBody(parsedRequest.body);
 
     const outputContent = `### Request ###
 ${parsedRequest.method.toUpperCase()} ${parsedRequest.url}
@@ -119,10 +106,10 @@ ${requestBody || 'None'}
 HTTP/${response.status} ${response.statusText}
 
 Response Headers:
-${headersText}
+${responseHeaders}
 
 Response Body:
-${responseText}`;
+${formattedResponseBody}`;
 
     const outputPath = filepath + ".out";
     await fs.writeFile(outputPath, outputContent, "utf8");
