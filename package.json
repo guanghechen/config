@@ -1,0 +1,12 @@
+{
+  "name": "ora",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#shared": "./shared/index.mjs"
+  },
+  "scripts": {
+    "http:weather": "node cli/http.mjs fixtures/weather.http"
+  }
+}

@@ -1,0 +1,9 @@
+
+METHOD=GET
+PROTOCOL=https
+HOST=api.openweathermap.org
+
+----------------------------------------------------------------------------------------------------
+
+
+{{METHOD}} {{PROTOCOL}}://{{HOST}}/data/2.5/weather?q=London&appid=YOUR_API_KEY&units=metric
