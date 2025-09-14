@@ -32,7 +32,7 @@ local function calculate_chatbox_position(lnum_start, col_start, lnum_end, col_e
   local cursor_col = cursor_pos[2]
 
   -- Get window's top line to convert absolute positions to window-relative
-  local win_top_line = vim.fn.line('w0') -- First visible line in window (1-indexed)
+  local win_top_line = vim.fn.line("w0") -- First visible line in window (1-indexed)
 
   -- Convert absolute line numbers to window-relative positions (0-indexed)
   local cursor_row = cursor_line - win_top_line -- Window-relative cursor row
@@ -195,7 +195,6 @@ function M.edit()
         location = location,
         content = table.concat(lines, "\n"),
         tools = { "Edit", "Read", "Write" },
-        system_prompt = "Edit the given filepath directly.",
       }
 
       output = "Starting AI edit...\n" ---@type string
