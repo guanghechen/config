@@ -1,6 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { httpParser, envParser, formatResponseBody, formatRequestBody, formatHeaders } from "#shared";
+import {
+  envParser,
+  formatResponseBody,
+  formatRequestBody,
+  formatHeaders,
+  git,
+  httpParser,
+} from "#shared";
 
 const regexes = {
   splitter: /\n[-]{100}\n/,
@@ -48,14 +55,30 @@ async function makeHttpRequest(parsedRequest) {
 
 /**
  * @param {string} filepath
+ * @returns {Promise<Record<string, unknown>>}
+ */
+async function loadEnv(filepath) {
+  let env = { ...process.env };
+
+  const to = path.dirname(filepath);
+  const gitRepoRootDir = git.resolveGitRepoRootDir(to);
+  const from = gitRepoRootDir || to;
+
+  await envParser.loads(from, to, env);
+  return env;
+}
+
+/**
+ * @param {string} filepath
  * @returns {Promise<void>}
  */
 async function run(filepath) {
+  const outputPath = filepath + ".out";
   const httpContent = await fs.readFile(filepath, "utf8");
   const parts = httpContent.split(regexes.splitter);
 
-  let vars = { ...process.env };
   let httpText = httpContent;
+  let env = await loadEnv(filepath);
 
   if (parts.length === 1) {
     httpText = parts[0];
@@ -65,13 +88,13 @@ async function run(filepath) {
 
     if (envText.trim()) {
       const parsed = envParser.parse(envText);
-      vars = { ...vars, ...parsed };
+      env = { ...env, ...parsed };
     }
   }
 
   const processedHttpText = httpText
     .trim()
-    .replace(regexes.template, (match, key) => vars[key] || match);
+    .replace(regexes.template, (match, key) => env[key] || match);
   const parsedRequest = httpParser.parse(processedHttpText);
 
   console.log("Making request to:", parsedRequest.url);
@@ -97,10 +120,10 @@ async function run(filepath) {
 ${parsedRequest.method.toUpperCase()} ${parsedRequest.url}
 
 Request Headers:
-${requestHeaders || 'None'}
+${requestHeaders || "None"}
 
 Request Body:
-${requestBody || 'None'}
+${requestBody || "None"}
 
 ### Response ###
 HTTP/${response.status} ${response.statusText}
@@ -111,7 +134,6 @@ ${responseHeaders}
 Response Body:
 ${formattedResponseBody}`;
 
-    const outputPath = filepath + ".out";
     await fs.writeFile(outputPath, outputContent, "utf8");
 
     console.log(`Response saved to: ${outputPath}`);
@@ -119,10 +141,7 @@ ${formattedResponseBody}`;
   } catch (error) {
     console.error("Request failed:", error.message);
 
-    const outputDir = path.dirname(filepath);
-    const outputPath = path.join(outputDir, "output.txt");
     const errorContent = `ERROR: ${error.message}\nTimestamp: ${new Date().toISOString()}`;
-
     await fs.writeFile(outputPath, errorContent, "utf8");
     console.log(`Error saved to: ${outputPath}`);
   }
