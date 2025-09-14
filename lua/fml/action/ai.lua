@@ -3,7 +3,6 @@ local __module_name__ = "fml.action.ai" ---@type string
 ---@class fml.action.ai
 local M = {}
 
-local GROUP_EDIT = "ghc:claude-edit"
 local TIMEOUT_EDIT = 300 ---@type integer
 local NSNR_EDIT = vim.api.nvim_create_namespace("claude_edit_selection")
 
@@ -27,26 +26,67 @@ local function calculate_chatbox_position(lnum_start, col_start, lnum_end, col_e
   local win_row = wininfo.winrow - 1 -- Convert to 0-indexed
   local win_col = wininfo.wincol - 1 -- Convert to 0-indexed
 
-  -- Calculate the visual selection center
-  local selection_center_row = math.floor((lnum_start + lnum_end) / 2)
-  local selection_center_col = math.floor((col_start + col_end) / 2)
+  -- Get cursor position (1-indexed from vim)
+  local cursor_pos = vim.api.nvim_win_get_cursor(winnr)
+  local cursor_line = cursor_pos[1] -- Absolute line number (1-indexed)
+  local cursor_col = cursor_pos[2]
 
-  -- Try to place chatbox to the right of the selection
-  local preferred_row = selection_center_row - math.floor(chatbox_height / 2)
-  local preferred_col = math.max(col_end + 2, selection_center_col + 10)
+  -- Get window's top line to convert absolute positions to window-relative
+  local win_top_line = vim.fn.line('w0') -- First visible line in window (1-indexed)
 
-  -- If chatbox would go off the right edge, try left side
-  if preferred_col + chatbox_width > win_width then
-    preferred_col = math.max(0, col_start - chatbox_width - 2)
+  -- Convert absolute line numbers to window-relative positions (0-indexed)
+  local cursor_row = cursor_line - win_top_line -- Window-relative cursor row
+  local selection_start_row = lnum_start - win_top_line -- Window-relative selection start
+  local selection_end_row = lnum_end - win_top_line -- Window-relative selection end
+  local selection_start_col = col_start - 1 -- Convert to 0-indexed
+  local selection_end_col = col_end - 1 -- Convert to 0-indexed
+
+  -- Determine cursor position relative to selection
+  local cursor_above_selection = cursor_row < selection_start_row
+  local cursor_below_selection = cursor_row > selection_end_row
+  local cursor_left_of_selection = cursor_col < selection_start_col
+  local cursor_right_of_selection = cursor_col > selection_end_col
+
+  local preferred_row, preferred_col
+
+  -- Start with cursor position as base (in window coordinates)
+  preferred_col = cursor_col - math.floor(chatbox_width / 2)
+  preferred_row = cursor_row - math.floor(chatbox_height / 2)
+
+  -- Adjust position based on cursor location relative to selection to avoid overlap
+  if cursor_above_selection then
+    -- Cursor is above selection, place chatbox above cursor
+    preferred_row = cursor_row - chatbox_height - 1
+  elseif cursor_below_selection then
+    -- Cursor is below selection, place chatbox below cursor
+    preferred_row = cursor_row + 2
+  else
+    -- Cursor is within selection vertically, try above first, then below
+    local above_row = cursor_row - chatbox_height - 1
+    local below_row = cursor_row + 2
+
+    if above_row >= 0 then
+      preferred_row = above_row
+    elseif below_row + chatbox_height <= win_height then
+      preferred_row = below_row
+    else
+      -- Keep cursor-centered if neither works
+      preferred_row = cursor_row - math.floor(chatbox_height / 2)
+    end
   end
 
-  -- If still doesn't fit or goes off left edge, center horizontally
-  if preferred_col < 0 or preferred_col + chatbox_width > win_width then
-    preferred_col = math.max(0, math.floor((win_width - chatbox_width) / 2))
+  -- Adjust horizontal position if cursor is at selection edges
+  if cursor_left_of_selection then
+    -- Cursor is left of selection, place chatbox to the left
+    preferred_col = cursor_col - chatbox_width - 2
+  elseif cursor_right_of_selection then
+    -- Cursor is right of selection, place chatbox to the right
+    preferred_col = cursor_col + 2
   end
 
-  -- Ensure chatbox stays within window bounds vertically
+  -- Ensure bounds are valid within window
   preferred_row = math.max(0, math.min(preferred_row, win_height - chatbox_height))
+  preferred_col = math.max(0, math.min(preferred_col, win_width - chatbox_width))
 
   -- Convert to screen coordinates by adding window offset
   local screen_row = win_row + preferred_row
@@ -61,10 +101,8 @@ function M.edit()
   if vim.bo[bufnr].buftype ~= "" then
     std.reporter.warn({
       from = __module_name__,
-      group = GROUP_EDIT,
       subject = "edit",
       message = "Cannot edit non-file buffer",
-      details = { bufnr = bufnr },
     })
     return
   end
@@ -73,10 +111,8 @@ function M.edit()
   if filepath == "" then
     std.reporter.warn({
       from = __module_name__,
-      group = GROUP_EDIT,
       subject = "edit",
       message = "Cannot edit unnamed buffer",
-      details = { bufnr = bufnr, filepath = filepath },
     })
     return
   end
@@ -96,6 +132,21 @@ function M.edit()
 
   local chatbox ---@type eve.ux.Chatbox
   local process_cur = nil ---@type vim.SystemObj|nil
+  local ai_group = oxi.fn.uuid() ---@type string
+  local terminated = false ---@type boolean
+  local spinner_step = 200 ---@type integer
+  local spinner_timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil
+  local output ---@type string
+
+  -- Declare cleanup function that will be used in chatbox on_close
+  local function clear_spinner()
+    terminated = true
+    if spinner_timer then
+      spinner_timer:stop()
+      spinner_timer:close()
+      spinner_timer = nil
+    end
+  end
 
   -- Calculate chatbox dimensions
   local chatbox_width = 60
@@ -111,6 +162,9 @@ function M.edit()
     title = string.format("Edit selected block (L%dC%d-L%dC%d)", lnum_start, col_start, lnum_end, col_end),
     filetype = "markdown",
     on_close = function()
+      -- Clean up spinner timer
+      clear_spinner()
+
       -- Clean up visual selection highlight
       if extmarkid then
         vim.api.nvim_buf_del_extmark(bufnr, NSNR_EDIT, extmarkid)
@@ -128,19 +182,63 @@ function M.edit()
         return true -- Close if empty
       end
 
+      ---@type eve.builtin.ai.IEditInlineConfig
       local config = {
         prompt = prompt,
+        filepath = filepath,
+        range = {
+          lnum_start = lnum_start,
+          col_start = col_start,
+          lnum_end = lnum_end,
+          col_end = col_end,
+        },
         location = location,
         content = table.concat(lines, "\n"),
         tools = { "Edit", "Read", "Write" },
         system_prompt = "Edit the given filepath directly.",
       }
 
+      output = "Starting AI edit...\n" ---@type string
+
+      local function update_notification(level)
+        local message = terminated and output or (output .. " " .. std.fn.spinner(spinner_step)) ---@type string
+        std.reporter.log(level or "INFO", {
+          from = __module_name__,
+          subject = location,
+          message = message,
+          group = ai_group,
+        })
+      end
+
       local callbacks = {
         on_start = function()
           chatbox:start_spinner("Processing...")
+          -- Start spinner timer
+          if spinner_timer then
+            spinner_timer:start(0, 200, vim.schedule_wrap(update_notification))
+          end
+          update_notification()
         end,
-        on_success = function(output)
+        on_stdout = function(err, data)
+          if err then
+            output = output .. "\n" .. tostring(err)
+          end
+          if data then
+            output = output .. data
+          end
+          update_notification()
+        end,
+        on_stderr = function(err, data)
+          if err then
+            output = output .. "\n" .. tostring(err)
+          end
+          if data then
+            output = output .. data
+          end
+          update_notification("ERROR")
+        end,
+        on_success = function(callback_output)
+          clear_spinner()
           chatbox:stop_spinner()
 
           -- Clean up visual selection highlight when process completes
@@ -152,23 +250,25 @@ function M.edit()
           -- Trigger checktime to reload buffers after AI edit completion
           vim.cmd("checktime")
 
-          if #output > 0 then
+          local final_message = output ~= "Starting AI edit...\n" and output or callback_output
+          if #final_message > 0 then
             chatbox:set_footer("✓ AI completed")
-            std.reporter.info({
+            std.reporter.log("INFO", {
               from = __module_name__,
-              group = GROUP_EDIT,
-              subject = "edit (✓ completed)",
-              message = output,
+              subject = location,
+              message = string.format("%s\n\n✓ AI edit completed", final_message),
+              group = ai_group,
             })
             vim.defer_fn(function()
               chatbox:close()
             end, 1500)
           else
             chatbox:set_footer("⚠ No output returned")
-            std.reporter.warn({
+            std.reporter.log("WARN", {
               from = __module_name__,
-              group = GROUP_EDIT,
-              subject = "edit (✓ completed)",
+              subject = location,
+              message = "⚠ AI edit completed but no output returned",
+              group = ai_group,
             })
             vim.defer_fn(function()
               chatbox:close()
@@ -176,6 +276,7 @@ function M.edit()
           end
         end,
         on_error = function(code, error_msg)
+          clear_spinner()
           chatbox:stop_spinner()
 
           -- Clean up visual selection highlight when process completes
@@ -185,20 +286,22 @@ function M.edit()
           end
 
           chatbox:set_footer("✗ Error: " .. error_msg)
-          std.reporter.error({
+          std.reporter.log("ERROR", {
             from = __module_name__,
-            group = GROUP_EDIT,
-            subject = "edit (✗ failed)",
-            details = { code = code, error = error_msg },
+            subject = location,
+            message = string.format("✗ AI edit failed: %s\nExit code: %d", error_msg, code),
+            group = ai_group,
           })
         end,
         on_timeout = function()
+          clear_spinner()
           chatbox:stop_spinner()
           chatbox:set_footer("⏱ Command timed out")
-          std.reporter.warn({
+          std.reporter.log("WARN", {
             from = __module_name__,
-            group = GROUP_EDIT,
-            subject = "edit (⏱ timed out)",
+            subject = location,
+            message = "⏱ AI edit timed out",
+            group = ai_group,
           })
         end,
         on_complete = function()
@@ -209,12 +312,13 @@ function M.edit()
       process_cur = eve.ai.edit_inline(config, callbacks, TIMEOUT_EDIT)
 
       if not process_cur then
+        clear_spinner()
         chatbox:set_footer("✗ Failed to start AI")
-        std.reporter.error({
+        std.reporter.log("ERROR", {
           from = __module_name__,
-          group = GROUP_EDIT,
-          subject = "edit (✗ failed)",
-          message = "Failed to start AI command",
+          subject = location,
+          message = "✗ Failed to start AI edit command",
+          group = ai_group,
         })
         vim.defer_fn(function()
           chatbox:close()
