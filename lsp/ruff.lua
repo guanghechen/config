@@ -13,6 +13,7 @@ local function on_attach(client, bufnr)
   eve.lsp.on_attach(client, bufnr)
 
   client.server_capabilities.hoverProvider = false
+  client.server_capabilities.completionProvider = nil
 
   ---@type std.t.IKeymap[]
   local keymaps = {

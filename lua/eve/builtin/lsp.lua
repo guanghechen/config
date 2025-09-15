@@ -428,7 +428,7 @@ function M.on_attach(client, bufnr)
   if support_documentHighlight == 1 then
     local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
     if enabled then
-      vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+      vim.api.nvim_create_autocmd({ "CursorHold" }, {
         group = augroup_illuminate,
         buffer = bufnr,
         callback = vim.lsp.buf.document_highlight,
