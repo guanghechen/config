@@ -8,5 +8,8 @@
   },
   "scripts": {
     "http:weather": "node cli/http.mjs fixtures/weather.http"
+  },
+  "dependencies": {
+    "uuid": "13.0.0"
   }
 }

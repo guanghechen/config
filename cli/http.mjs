@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { v4 } from "uuid";
 import {
   envParser,
   formatResponseBody,
@@ -11,7 +12,7 @@ import {
 
 const regexes = {
   splitter: /\n[-]{100}\n/,
-  template: /\{\{\s*(\w+)\s*\}\}/g,
+  template: /\{\{\s*(\w+(?:\(\))?)\s*\}\}/g,
 };
 
 /**
@@ -94,7 +95,10 @@ async function run(filepath) {
 
   const processedHttpText = httpText
     .trim()
-    .replace(regexes.template, (match, key) => env[key] || match);
+    .replace(regexes.template, (match, key) => {
+      if (key === "uuid()" || key === "uuidv4()") return v4();
+      return env[key] || match;
+    });
   const parsedRequest = httpParser.parse(processedHttpText);
 
   console.log("Making request to:", parsedRequest.url);
