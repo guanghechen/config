@@ -3,56 +3,19 @@ import path from "node:path";
 import { v4 } from "uuid";
 import {
   envParser,
-  formatResponseBody,
-  formatRequestBody,
-  formatHeaders,
   git,
   httpParser,
+  makeHttpRequest,
+  isServerSentEvent,
+  handleSseResponse,
+  writeHttpOutput,
+  writeErrorOutput,
 } from "#shared";
 
 const regexes = {
   splitter: /\n[-]{100}\n/,
   template: /\{\{\s*(\w+(?:\(\))?)\s*\}\}/g,
 };
-
-/**
- * @param {Object} parsedRequest
- * @returns {Promise<Response>}
- */
-async function makeHttpRequest(parsedRequest) {
-  const { method, url, headers, body } = parsedRequest;
-
-  const fetchOptions = {
-    method: method.toUpperCase(),
-    headers: { ...headers },
-  };
-
-  if (
-    body &&
-    method.toUpperCase() !== "GET" &&
-    method.toUpperCase() !== "HEAD"
-  ) {
-    if (body.type === "json") {
-      fetchOptions.body = JSON.stringify(body.data);
-      if (!fetchOptions.headers["Content-Type"]) {
-        fetchOptions.headers["Content-Type"] = "application/json";
-      }
-    } else if (body.type === "form") {
-      const formData = new URLSearchParams();
-      for (const [key, value] of Object.entries(body.fields)) {
-        formData.append(key, value);
-      }
-      fetchOptions.body = formData;
-    } else if (body.type === "text") {
-      fetchOptions.body = body.data;
-    } else if (body.type === "file") {
-      const fileContent = await fs.readFile(body.filepath);
-      fetchOptions.body = fileContent;
-    }
-  }
-
-  return fetch(url, fetchOptions);
-}
 
 /**
  * @param {string} filepath
@@ -106,47 +69,23 @@ async function run(filepath) {
 
   try {
     const response = await makeHttpRequest(parsedRequest);
+
+    // Check if this is an SSE response
+    if (isServerSentEvent(response)) {
+      await handleSseResponse(response, outputPath, parsedRequest);
+      console.log(`Status: ${response.status} ${response.statusText}`);
+      return;
+    }
+
+    // Handle regular (non-SSE) responses
     const responseText = await response.text();
-
-    const output = {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
-      body: responseText,
-    };
-
-    const formattedResponseBody = formatResponseBody(response, responseText);
-    const responseHeaders = formatHeaders(output.headers);
-    const requestHeaders = formatHeaders(parsedRequest.headers);
-    const requestBody = formatRequestBody(parsedRequest.body);
-
-    const outputContent = `### Request ###
-${parsedRequest.method.toUpperCase()} ${parsedRequest.url}
-
-Request Headers:
-${requestHeaders || "None"}
-
-Request Body:
-${requestBody || "None"}
-
-### Response ###
-HTTP/${response.status} ${response.statusText}
-
-Response Headers:
-${responseHeaders}
-
-Response Body:
-${formattedResponseBody}`;
-
-    await fs.writeFile(outputPath, outputContent, "utf8");
+    await writeHttpOutput(response, responseText, parsedRequest, outputPath);
 
     console.log(`Response saved to: ${outputPath}`);
     console.log(`Status: ${response.status} ${response.statusText}`);
   } catch (error) {
     console.error("Request failed:", error.message);
-
-    const errorContent = `ERROR: ${error.message}\nTimestamp: ${new Date().toISOString()}`;
-    await fs.writeFile(outputPath, errorContent, "utf8");
+    await writeErrorOutput(error, outputPath);
     console.log(`Error saved to: ${outputPath}`);
   }
 }
