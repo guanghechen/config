@@ -54,6 +54,13 @@ return {
           return false
         end
 
+        -- Disable on .env* files
+        local bufname = vim.api.nvim_buf_get_name(0)
+        local filename = vim.fn.fnamemodify(bufname, ":t")
+        if filename:match("^%.env") or filename:match("%.http%.out$") then
+          return false
+        end
+
         local filetype = vim.bo.filetype ---@type string
         if not eve.filetype.is_cmp_enabled(filetype) then
           return false
