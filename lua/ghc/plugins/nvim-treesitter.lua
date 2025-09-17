@@ -53,6 +53,7 @@ local opts = {
 return {
   name = "nvim-treesitter",
   lazy = false,
+  build = ":TSUpdate",
   opts = opts,
   config = function()
     require("nvim-treesitter").setup(opts)
