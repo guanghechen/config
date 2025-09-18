@@ -37,10 +37,10 @@ if (Test-Path $repomain) {
 }
 
 Set-Location -Path $repomain
-. .\win\setup\config.ps1
+. .\win\setup\winget.ps1
 
 Set-Location -Path $repomain
-. .\win\setup\winget.ps1
+. .\win\setup\config.ps1
 
 Set-Location -Path $repomain
 . .\win\setup\node.ps1
