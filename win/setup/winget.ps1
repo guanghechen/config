@@ -1,6 +1,6 @@
 Write-Host "  [setup winget] preparing..." -ForegroundColor Green
 
-winget install -e --source winget --id Git.Git
+# winget install -e --source winget --id Git.Git
 winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
 winget install -e --source winget --id Microsoft.PowerShell
 winget install -e --source winget --id Microsoft.PowerToys
