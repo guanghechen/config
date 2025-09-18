@@ -33,6 +33,7 @@ if (Test-Path $repomain) {
   git -C "$repomain" fetch origin
   git -C "$repomain" merge origin/guanghechen --ff-only
 } else {
+  New-Item -ItemType Directory -Path "$reporoot" -Force | Out-Null
   git -C "$reporoot" clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
 }
 
