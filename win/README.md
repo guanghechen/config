@@ -62,6 +62,21 @@
   - Edit the profile by `nvim $PROFILE` or `notepad $PROFILE`
   - Copy the preset config from ./config/pwsh/profile.ps1
 
+* Setup wsl
+  - Install wsl
+
+     ```pwsh
+      wsl --install
+     ```
+
+  - Disable the Windows path on wsl.
+
+    ```wsl
+    # edit /etc/wsl.conf
+
+    # see the win/config/wsl.conf
+    ```
+
 * Setup neovim
 
   - No c compiler found! "cc", "gcc", "clang", "cl", "zig" are not executable.
