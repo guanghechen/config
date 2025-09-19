@@ -32,6 +32,7 @@ fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
 . "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\bootstrap.ps1"
 . "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\claude.ps1"
 . "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\proxy.ps1"
+. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\swap-alt-win.ps1"
 . "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\theme.ps1"
 . "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\yoz.ps1"
 . "$env:XDG_CONFIG_HOME\pwsh\functions\prompt.ps1"
