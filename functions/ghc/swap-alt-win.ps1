@@ -9,17 +9,19 @@ function swap-alt-win {
     $regName = "Scancode Map"
 
     if ($Mode -eq "on") {
-        # Swap only left Alt(0x38) and left Win(0x5B)
+        # Swap both left and right Alt and Win keys
         $scancode = [byte[]](
             0x00,0x00,0x00,0x00,
             0x00,0x00,0x00,0x00,
-            0x03,0x00,0x00,0x00,
+            0x05,0x00,0x00,0x00,
             0x5B,0x00,0x38,0x00,
             0x38,0x00,0x5B,0x00,
+            0x5C,0x00,0xE0,0x38,
+            0xE0,0x38,0x00,0x5C,
             0x00,0x00,0x00,0x00
         )
         Set-ItemProperty -Path $regPath -Name $regName -Value $scancode
-        Write-Host "✅ Alt/Win key swap enabled (left side only). Please restart system to take effect." -ForegroundColor Green
+        Write-Host "✅ Alt/Win key swap enabled (both left and right). Please restart system to take effect." -ForegroundColor Green
     }
     elseif ($Mode -eq "off") {
         Remove-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue
