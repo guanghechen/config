@@ -101,6 +101,22 @@ function M.toggle()
   local cwd = std.path.cwd()
   local terminal = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
 
+  if terminal:isvisible() then
+    local termindex = eve.term.current() ---@type integer
+    local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
+    if termmeta ~= nil and (termmeta.type == "runner" or termmeta.type == "shell") then
+      terminal:toggle()
+      return
+    end
+  else
+    terminal:focus()
+    local termindex = eve.term.current() ---@type integer
+    local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
+    if termmeta ~= nil and (termmeta.type == "runner" or termmeta.type == "shell") then
+      return
+    end
+  end
+
   local _, termmeta = eve.term.find_index_by_type("shell") ---@type integer, eve.builtin.term.IMeta|nil
   if termmeta == nil then
     terminal:toggle_and_focus({
