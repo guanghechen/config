@@ -8,7 +8,8 @@ import {
   makeHttpRequest,
   isServerSentEvent,
   handleSseResponse,
-  writeHttpOutput,
+  writeHttpRequest,
+  writeHttpResponse,
   writeErrorOutput,
 } from "#shared";
 
@@ -37,7 +38,8 @@ async function loadEnv(filepath) {
  * @returns {Promise<void>}
  */
 async function run(filepath) {
-  const outputPath = filepath + ".out";
+  const requestPath = filepath + "_request";
+  const responsePath = filepath + "_response";
   const httpContent = await fs.readFile(filepath, "utf8");
   const parts = httpContent.split(regexes.splitter);
 
@@ -64,6 +66,9 @@ async function run(filepath) {
     });
   const parsedRequest = httpParser.parse(processedHttpText);
 
+  await writeHttpRequest(parsedRequest, requestPath);
+  console.log(`Request saved to: ${requestPath}`);
+
   console.log("Making request to:", parsedRequest.url);
   console.log("Method:", parsedRequest.method);
 
@@ -72,21 +77,26 @@ async function run(filepath) {
 
     // Check if this is an SSE response
     if (isServerSentEvent(response)) {
-      await handleSseResponse(response, outputPath, parsedRequest);
+      await handleSseResponse(response, responsePath, parsedRequest);
       console.log(`Status: ${response.status} ${response.statusText}`);
       return;
     }
 
     // Handle regular (non-SSE) responses
     const responseText = await response.text();
-    await writeHttpOutput(response, responseText, parsedRequest, outputPath);
+    await writeHttpResponse(
+      response,
+      responseText,
+      parsedRequest,
+      responsePath,
+    );
 
-    console.log(`Response saved to: ${outputPath}`);
+    console.log(`Response saved to: ${responsePath}`);
     console.log(`Status: ${response.status} ${response.statusText}`);
   } catch (error) {
     console.error("Request failed:", error.message);
-    await writeErrorOutput(error, outputPath);
-    console.log(`Error saved to: ${outputPath}`);
+    await writeErrorOutput(error, responsePath);
+    console.log(`Error saved to: ${responsePath}`);
   }
 }
 
