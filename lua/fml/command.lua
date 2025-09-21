@@ -775,6 +775,12 @@ command
       require("fml.action.toggle.list").list("username_ux")
     end,
   })
+  .implement({
+    uuid = K.toggle.wrap.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("wrap_local")
+    end,
+  })
 
 --[ux] widgets -------------------------------------------------------------------------------------
 command

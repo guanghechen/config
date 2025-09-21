@@ -260,6 +260,7 @@ ms({ "n", "v" }, "<leader>tS", K.toggle.theme)
 ms({ "n", "v" }, "<leader>tT", K.toggle.transparency)
 ms({ "n", "v" }, "<leader>tt", K.toggle.list)
 ms({ "n", "v" }, "<leader>tU", K.toggle.username)
+ms({ "n", "v" }, "<leader>tW", K.toggle.wrap)
 ms({ "n", "v" }, { "<leader>z" }, K.toggle.maximize)
 -----------------------------------------------------------------------------------------#[t]oggle--
 
