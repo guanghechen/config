@@ -138,3 +138,6 @@ vim.o.wildmode = "longest:full,full" -- Command-line completion mode
 
 vim.o.ruler = false -- Disable the default ruler
 vim.g.markdown_recommended_style = 0 -- fix markdown indentation settings
+
+-- Exclude 'v' register from shada persistence
+vim.o.shada = "!,'100,<50,s10,h,rv"
