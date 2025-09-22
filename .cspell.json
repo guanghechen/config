@@ -17,6 +17,7 @@
     "Fbufswapleft",
     "Fbufswapright",
     "Fclipboardpaste",
+    "Fcodeformat",
     "Fcoderun",
     "Fcoderunforce",
     "Fcodeswapconditionalbranches",

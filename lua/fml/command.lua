@@ -170,6 +170,17 @@ command
       require("fml.action.code.run").run(true)
     end,
   })
+  .implement({
+    uuid = K.code.format.uuid,
+    action = function()
+      local bufnr = vim.api.nvim_get_current_buf()
+      require("conform").format({
+        bufnr = bufnr,
+        write = false,
+        async = true,
+      })
+    end,
+  })
 
 --[copy] filepath-----------------------------------------------------------------------------------
 command
