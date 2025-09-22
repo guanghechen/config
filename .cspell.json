@@ -1,8 +1,5 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua",
-    "lsp/yamlls.lua"
-  ],
+  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -72,6 +69,8 @@
     "Fgitdiffview",
     "Fgithistory",
     "Fgithistoryfile",
+    "Fjsonviewnormal",
+    "Fjsonviewvisual",
     "Flintspellcheckregister",
     "Floatwin",
     "Flspgotodefinitions",
@@ -127,6 +126,7 @@
     "Ftogglethemevariant",
     "Ftoggletransparency",
     "Ftoggleusername",
+    "Ftogglewrap",
     "Fuxdismissnotifications",
     "Fuxreloadtheme",
     "Fuxresume",

@@ -163,6 +163,38 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   end,
 })
 
+---log
+vim.api.nvim_create_autocmd("FileType", {
+  group = eve.nvim.augroup("filetype_log"),
+  pattern = { "jsonl", "log", "text" },
+  callback = function(event)
+    local bufnr = event.buf
+    if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+
+    local K = eve.command.definitions
+
+    vim.keymap.set("n", "K", function()
+      eve.command.execute(K.log.preview_json_normal.uuid, nil, true)
+    end, {
+      buffer = bufnr,
+      desc = "log: Preview JSON from current line",
+      noremap = true,
+      silent = true,
+    })
+
+    vim.keymap.set("v", "K", function()
+      eve.command.execute(K.log.preview_json_visual.uuid, nil, true)
+    end, {
+      buffer = bufnr,
+      desc = "log: Preview JSON from selection",
+      noremap = true,
+      silent = true,
+    })
+  end,
+})
+
 ---markdown
 vim.api.nvim_create_autocmd("FileType", {
   group = eve.nvim.augroup("filetype_markdown"),

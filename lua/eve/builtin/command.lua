@@ -311,17 +311,6 @@ M.definitions.copy = {
   filepath_relative = def("Fcopyfilepathrelative", "copy: current filepath (relative)"),
 }
 
----@class eve.builtin.command.definitions.inspect
-M.definitions.inspect = {
-  inspect_buf = def("Fdebuginspectbuf", "debug: inspect buf"),
-  inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
-  inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
-  inspect_state_full = def("Fdebuginspectstatefull", "debug: inspect state (full)"),
-  inspect_tab = def("Fdebuginspecttab", "debug: inspect tab"),
-  inspect_tree = def("Fdebuginspecttree", "debug: inspect tree"),
-  inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
-}
-
 ---@class eve.builtin.command.definitions.diagnostic
 M.definitions.diagnostic = {
   goto_next = def("Fdiagnosticgotonext", "diagnostic: goto next"),
@@ -385,9 +374,26 @@ M.definitions.git = {
   history_file = def("Fgithistoryfile", "git: history (file)"),
 }
 
+---@class eve.builtin.command.definitions.inspect
+M.definitions.inspect = {
+  inspect_buf = def("Fdebuginspectbuf", "debug: inspect buf"),
+  inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
+  inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
+  inspect_state_full = def("Fdebuginspectstatefull", "debug: inspect state (full)"),
+  inspect_tab = def("Fdebuginspecttab", "debug: inspect tab"),
+  inspect_tree = def("Fdebuginspecttree", "debug: inspect tree"),
+  inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
+}
+
 ---@class eve.builtin.command.definitions.lint
 M.definitions.lint = {
   spellcheck_register = def("Flintspellcheckregisterss", "lint: spellcheck register"),
+}
+
+---@class eve.builtin.command.definitions.log
+M.definitions.log = {
+  preview_json_normal = def("Fjsonviewnormal", "json: preview current line"),
+  preview_json_visual = def("Fjsonviewvisual", "json: preview selection"),
 }
 
 ---@class eve.builtin.command.definitions.lsp

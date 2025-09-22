@@ -249,23 +249,23 @@ end
 ---@return integer
 ---@return integer
 function M.retrieve_visual_range()
-  local start_pos = vim.fn.getpos("v") -- visual selection start
-  local end_pos = vim.fn.getpos(".") -- visual selection end (cursor)
+  local s_pos = vim.fn.getpos("v") -- visual selection start
+  local e_pos = vim.fn.getpos(".") -- visual selection end (cursor)
 
-  local lnum_start = start_pos[2] ---@type integer
-  local col_start = start_pos[3] ---@type integer
-  local lnum_end = end_pos[2] ---@type integer
-  local col_end = end_pos[3] ---@type integer
+  local s_lnum = s_pos[2] ---@type integer
+  local s_col = s_pos[3] ---@type integer
+  local e_lnum = e_pos[2] ---@type integer
+  local e_col = e_pos[3] ---@type integer
 
-  if lnum_start < lnum_end then
-    return lnum_start, col_start, lnum_end, col_end
+  if s_lnum < e_lnum then
+    return s_lnum, s_col, e_lnum, e_col
   end
 
-  if lnum_start == lnum_end and col_start < col_end then
-    return lnum_start, col_start, lnum_end, col_end
+  if s_lnum == e_lnum and s_col < e_col then
+    return s_lnum, s_col, e_lnum, e_col
   end
 
-  return lnum_end, col_end, lnum_start, col_start
+  return e_lnum, e_col, s_lnum, s_col
 end
 
 ---@param bufnr                         integer
