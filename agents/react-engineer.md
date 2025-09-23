@@ -1,6 +1,6 @@
 ---
 name: react-engineer
-description: Use this agent only when I ask you explicitly like "Please use the subagent react-engineer to xxx
+description: Use this agent only when I ask you explicitly like "Please use the subagent react-engineer to xxx"
 model: sonnet
 color: purple
 ---
