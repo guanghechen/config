@@ -96,6 +96,7 @@ vim.o.encoding = "utf-8"
 vim.o.fileencoding = "utf-8"
 vim.o.fileencodings = "utf-8,gbk,latin1"
 vim.o.fileformat = "unix"
+vim.o.fileformats = "unix,dos"
 
 ---! format
 vim.o.foldmethod = "expr"
