@@ -71,6 +71,22 @@ local ignored = {
 local config = {
   prettier_bin_path = std.env.IS_WIN and std.path.normalize("node_modules/.bin/prettier.cmd")
     or std.path.normalize("node_modules/.bin/prettier"),
+  prettier_fallback_config = {
+    arrowParens = "avoid",
+    bracketSameLine = false,
+    bracketSpacing = true,
+    embeddedLanguageFormatting = "off",
+    endOfLine = "lf",
+    htmlWhitespaceSensitivity = "strict",
+    jsxSingleQuote = false,
+    printWidth = 100,
+    proseWrap = "always",
+    quoteProps = "as-needed",
+    semi = false,
+    singleQuote = true,
+    trailingComma = "all",
+    useTabs = false,
+  },
 }
 
 local fns = {
@@ -79,6 +95,43 @@ local fns = {
   find_prettier_binpath = function(dirname)
     local binpath = std.path.locate_nearest_filepath(dirname, { config.prettier_bin_path }) ---@type string|nil
     return binpath or eve.lsp.locate_mason_bin_path("prettier") ---@type string
+  end,
+
+  ---@param dirname                     string
+  ---@return string|nil
+  find_prettier_config = function(dirname)
+    local config_files = {
+      ".prettierrc",
+      ".prettierrc.json",
+      ".prettierrc.yml",
+      ".prettierrc.yaml",
+      ".prettierrc.js",
+      ".prettierrc.mjs",
+      ".prettierrc.cjs",
+      "prettier.config.js",
+      "prettier.config.mjs",
+      "prettier.config.cjs",
+    }
+    return std.path.locate_nearest_filepath(dirname, config_files)
+  end,
+
+  ---@param config_table table
+  ---@return string[]
+  config_to_args = function(config_table)
+    local args = {}
+    for key, value in pairs(config_table) do
+      local kebab_key = key:gsub("([a-z])([A-Z])", "%1-%2"):lower()
+      if type(value) == "boolean" then
+        if value then
+          table.insert(args, "--" .. kebab_key)
+        else
+          table.insert(args, "--no-" .. kebab_key)
+        end
+      else
+        table.insert(args, "--" .. kebab_key .. "=" .. tostring(value))
+      end
+    end
+    return args
   end,
 }
 
@@ -104,7 +157,33 @@ return {
         },
       },
       prettier = {
-        prepend_args = { "--prose-wrap", "always" },
+        prepend_args = function(_, ctx)
+          local args = {
+            "--ignore-path=",
+            "--stdin-filepath",
+            vim.api.nvim_buf_get_name(ctx.buf),
+          }
+
+          -- Check for existing prettier config
+          local prettier_config_path = fns.find_prettier_config(ctx.dirname)
+          if prettier_config_path then
+            -- Use existing config file
+            table.insert(args, "--config=" .. prettier_config_path)
+          else
+            -- Use fallback config
+            local fallback_config = vim.deepcopy(config.prettier_fallback_config)
+
+            -- Override prose-wrap for non-markdown files
+            if vim.bo[ctx.buf].filetype ~= "markdown" then
+              fallback_config.proseWrap = "preserve"
+            end
+
+            local config_args = fns.config_to_args(fallback_config)
+            vim.list_extend(args, config_args)
+          end
+
+          return args
+        end,
         command = function(_, ctx)
           return fns.find_prettier_binpath(ctx.dirname)
         end,
