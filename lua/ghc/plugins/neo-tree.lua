@@ -149,7 +149,7 @@ return {
         end
 
         local filepath = node:get_id() ---@type string
-        vim.cmd(eve.command.definitions.search.files.uuid .. " " .. filepath)
+        vim.cmd(eve.command.definitions.search.in_files.uuid .. " " .. filepath)
       end,
       recursively_toggle_all = function(neotree_state)
         local node = neotree_state.tree:get_node()

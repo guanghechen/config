@@ -421,11 +421,11 @@ M.definitions.refresh = {
 
 ---@class eve.builtin.command.definitions.search
 M.definitions.search = {
-  files = def("Fsearchfiles", "search: files", "?"),
-  files_in_buffer = def("Fsearchfilesinbuffer", "search: files (buffer)", "?"),
-  files_in_cwd = def("Fsearchfilesincwd", "search: files (cwd)"),
-  files_in_directory = def("Fsearchfilesindirectory", "search: files (directory)"),
-  files_in_workspace = def("Fsearchfilesinworkspace", "search: files (workspace)"),
+  in_files = def("Fsearchinfiles", "search: in files", "?"),
+  in_file = def("Fsearchinfile", "search: in file", "?"),
+  in_cwd = def("Fsearchincwd", "search: in cwd"),
+  in_directory = def("Fsearchindirectory", "search: in directory"),
+  in_workspace = def("Fsearchinworkspace", "search: in workspace"),
 }
 
 ---@class eve.builtin.command.definitions.session

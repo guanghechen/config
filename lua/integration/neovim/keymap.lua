@@ -11,7 +11,7 @@ ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 ms({ "i", "n", "t", "v" }, { "<C-`>" }, K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>`", K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
-ms({ "n", "v" }, "<leader>2", K.search.files_in_cwd)
+ms({ "n", "v" }, "<leader>2", K.search.in_cwd)
 ms({ "n", "v" }, "<leader>3", K.find.git_not_committed)
 ms({ "n", "v" }, "<leader>4", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
@@ -210,12 +210,12 @@ ms({ "i", "n", "v" }, { "<C-a>r", "<D-r>", "<M-r>" }, K.refresh.all)
 ---------------------------------------------------------------------------------------#[r]efresh---
 
 --#[s]earch-----------------------------------------------------------------------------------------
-ms({ "i", "n", "v" }, { "<C-a>f", "<D-f>", "<M-f>" }, K.search.files_in_buffer)
-ms({ "n", "v" }, "<leader>ss", K.search.files)
-ms({ "n", "v" }, "<leader>sb", K.search.files_in_buffer)
-ms({ "n", "v" }, "<leader>sc", K.search.files_in_cwd)
-ms({ "n", "v" }, "<leader>sd", K.search.files_in_directory)
-ms({ "n", "v" }, "<leader>sw", K.search.files_in_workspace)
+ms({ "i", "n", "v" }, { "<C-a>f", "<D-f>", "<M-f>" }, K.search.in_file)
+ms({ "n", "v" }, "<leader>sf", K.search.in_file)
+ms({ "n", "v" }, "<leader>ss", K.search.in_files)
+ms({ "n", "v" }, "<leader>sc", K.search.in_cwd)
+ms({ "n", "v" }, "<leader>sd", K.search.in_directory)
+ms({ "n", "v" }, "<leader>sw", K.search.in_workspace)
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[t]ab--------------------------------------------------------------------------------------------

@@ -273,21 +273,21 @@ end
 
 ---@param rootpath                      string|nil
 ---@return nil
-function M.search_files(rootpath)
+function M.search_in_files(rootpath)
   rootpath = (rootpath ~= nil and rootpath ~= "") and rootpath or o_rootpath:snapshot() ---@type string
   attach(searcher, rootpath)
   focus()
 end
 
 ---@return nil
-function M.search_files_in_cwd()
+function M.search_in_cwd()
   local cwd = std.path.cwd() ---@type string
   attach(searcher, cwd)
   focus()
 end
 
 ---@return nil
-function M.search_files_in_directory()
+function M.search_in_directory()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_source = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_source ~= nil then
@@ -300,7 +300,7 @@ function M.search_files_in_directory()
 end
 
 ---@return nil
-function M.search_files_in_workspace()
+function M.search_in_workspace()
   local workspace = std.path.workspace() ---@type string
   attach(searcher, workspace)
   focus()
@@ -308,7 +308,7 @@ end
 
 ---@param filepath                      string|nil
 ---@return nil
-function M.search_files_in_buffer(filepath)
+function M.search_in_file(filepath)
   if not filepath or not std.path.is_exist_filepath(filepath) then
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_source = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil

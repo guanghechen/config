@@ -518,33 +518,33 @@ command.implement({
 --[search] files------------------------------------------------------------------------------------
 command
   .implement({
-    uuid = K.search.files.uuid,
+    uuid = K.search.in_files.uuid,
     action = function(args)
-      require("fml.action.search.files").search_files(args)
+      require("fml.action.search.files").search_in_files(args)
     end,
   })
   .implement({
-    uuid = K.search.files_in_buffer.uuid,
+    uuid = K.search.in_file.uuid,
     action = function(args)
-      require("fml.action.search.files").search_files_in_buffer(args)
+      require("fml.action.search.files").search_in_file(args)
     end,
   })
   .implement({
-    uuid = K.search.files_in_cwd.uuid,
+    uuid = K.search.in_cwd.uuid,
     action = function()
-      require("fml.action.search.files").search_files_in_cwd()
+      require("fml.action.search.files").search_in_cwd()
     end,
   })
   .implement({
-    uuid = K.search.files_in_directory.uuid,
+    uuid = K.search.in_directory.uuid,
     action = function()
-      require("fml.action.search.files").search_files_in_directory()
+      require("fml.action.search.files").search_in_directory()
     end,
   })
   .implement({
-    uuid = K.search.files_in_workspace.uuid,
+    uuid = K.search.in_workspace.uuid,
     action = function()
-      require("fml.action.search.files").search_files_in_workspace()
+      require("fml.action.search.files").search_in_workspace()
     end,
   })
 
