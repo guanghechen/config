@@ -1,8 +1,10 @@
 ---! https://github.com/nvim-treesitter/nvim-treesitter-textobjects
 return {
   name = "nvim-treesitter-textobjects",
+  event = "VeryLazy",
   opts = {
     move = {
+      enable = true,
       set_jumps = true,
     },
     select = {

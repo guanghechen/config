@@ -54,14 +54,27 @@ local opts = {
 -- syntax highlighting.
 return {
   name = "nvim-treesitter",
-  lazy = false,
-  build = ":TSUpdate",
+  lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
+  event = "VeryLazy",
+  build = function()
+    if vim.fn.executable("tree-sitter") == 0 then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "build",
+        message = "**treesitter-main** requires the `tree-sitter` executable to be installed",
+      })
+      return
+    end
+
+    local treesitter = require("nvim-treesitter")
+    treesitter.update(nil, { summary = true })
+  end,
   opts = opts,
   config = function()
     if vim.fn.executable("tree-sitter") == 0 then
       std.reporter.error({
         from = __module_name__,
-        subject = "pre-check",
+        subject = "config",
         message = "**treesitter-main** requires the `tree-sitter` executable to be installed",
       })
       return
