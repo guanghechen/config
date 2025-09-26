@@ -469,8 +469,7 @@ function M.new(props)
     end,
     goto_lnum_parent = function()
       local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
-      local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
-      local lnum_parent = node ~= nil and retriever:retrieve_lnum(node.parent) or nil ---@type integer|nil
+      local lnum_parent = self:__retrieve_lnum_parent__(nodeuuid) ---@type integer|nil
       if lnum_parent ~= nil then
         if lnum == lnum_parent then
           lnum_parent = lnum_parent > 1 and lnum_parent - 1 or lnum_parent ---@type integer
@@ -2120,6 +2119,37 @@ function M:__retrieve_lnum_range__()
     return lnum, lnum_childline
   end
   return lnum, lnum
+end
+
+---@param nodeuuid                      string|nil
+---@return integer|nil
+---@return string|nil
+function M:__retrieve_lnum_parent__(nodeuuid)
+  if nodeuuid == nil then
+    return nil
+  end
+
+  ---@type eve.ux.searcher.view.filetree.INodeState|nil
+  local nodestate = self._treeview:retrieve(nodeuuid)
+  if nodestate == nil then
+    return nil
+  end
+
+  if nodestate.nodetype == "location" then
+    local parentuuid = nodestate.leafuuid ---@type string
+    local lnum_parent = self._retriever:retrieve_lnum(parentuuid) ---@type integer|nil
+    return lnum_parent, parentuuid
+  end
+
+  ---@type std.collection.filetree.INode|nil
+  local node = self._filetree:retrieve(nodeuuid)
+  if node == nil then
+    return nil, nil
+  end
+
+  local parentuuid = node.parent ---@type string
+  local lnum_parent = self._retriever:retrieve_lnum(parentuuid) ---@type integer|nil
+  return lnum_parent, parentuuid
 end
 
 ---@param nodeuuid                      string
