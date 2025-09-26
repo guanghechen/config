@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.plugin.nvim-treesitter" ---@type string
+
 ---@type string[]
 local ensure_installed = {
   "bash",
@@ -56,6 +58,15 @@ return {
   build = ":TSUpdate",
   opts = opts,
   config = function()
+    if vim.fn.executable("tree-sitter") == 0 then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "pre-check",
+        message = "**treesitter-main** requires the `tree-sitter` executable to be installed",
+      })
+      return
+    end
+
     require("nvim-treesitter").setup(opts)
 
     vim.api.nvim_create_user_command("TreesitterInstallAll", function()
