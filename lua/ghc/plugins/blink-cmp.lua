@@ -1,7 +1,7 @@
 return {
   name = "blink.cmp",
   build = "cargo build --release",
-  event = { "InsertEnter" },
+  event = { "InsertEnter", "CmdlineEnter" },
   dependencies = {
     "friendly-snippets",
   },
@@ -76,9 +76,12 @@ return {
       cmdline = {
         enabled = true,
         keymap = {
+          preset = "cmdline",
           ["<Tab>"] = { "show", "accept" },
         },
         completion = {
+          ghost_text = { enabled = true },
+          list = { selection = { preselect = true } },
           menu = {
             auto_show = function()
               return vim.fn.getcmdtype() == ":"
