@@ -84,4 +84,14 @@ function M.search_in_text(pattern, text, flag_fuzzy, flag_regex)
   return result
 end
 
+---@param pattern                       string
+---@param bufnr                         integer
+---@param flag_fuzzy                    boolean
+---@param flag_regex                    boolean
+---@return oxi.string.ILineMatch[]|nil
+function M.search_in_buffer(pattern, bufnr, flag_fuzzy, flag_regex)
+  local result = oxi.fn.safe_run("search_in_buffer", pattern, bufnr, flag_fuzzy, flag_regex)
+  return result
+end
+
 return M

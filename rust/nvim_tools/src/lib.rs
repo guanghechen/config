@@ -57,6 +57,13 @@ fn nvim_tools() -> Dictionary {
                 Result<Vec<LineMatch>, String>,
             >::from_fn(oxi::search::search_in_text)),
         ),
+        (
+            "search_in_buffer",
+            Object::from(Function::<
+                (String, i32, bool, bool),
+                Result<Vec<LineMatch>, String>,
+            >::from_fn(oxi::search::search_in_buffer)),
+        ),
         ////
         (
             "replace_file",

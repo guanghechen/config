@@ -3,6 +3,7 @@ use crate::types::dto::LineMatch;
 use crate::types::dto::SearchInFilesParams;
 use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
 use crate::util;
+use nvim_oxi::api::Buffer;
 
 pub fn search_in_lines(
     (pattern, lines, flag_fuzzy, flag_regex): (String, Vec<String>, bool, bool),
@@ -49,4 +50,26 @@ pub fn search_in_files(
         }
     };
     cmd_result
+}
+
+pub fn search_in_buffer(
+    (pattern, bufnr, flag_fuzzy, flag_regex): (String, i32, bool, bool),
+) -> Result<Vec<LineMatch>, String> {
+    let buffer = Buffer::from(bufnr);
+
+    if !buffer.is_valid() {
+        return Err(format!("Invalid buffer number: {}", bufnr));
+    }
+
+    let lines_result = buffer.get_lines(.., false);
+
+    match lines_result {
+        Ok(lines_iter) => {
+            let lines: Vec<String> = lines_iter
+                .map(|s| s.to_string())
+                .collect();
+            util::search::search_in_lines(&pattern, &lines, flag_fuzzy, flag_regex)
+        },
+        Err(err) => Err(format!("Failed to read buffer {}: {}", bufnr, err)),
+    }
 }
