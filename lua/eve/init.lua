@@ -199,9 +199,20 @@ function M.setup_lsp()
     },
   })
 
-  if vim.fn.expand("%") ~= "" then
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
+  local filepath_cur = vim.api.nvim_buf_get_name(bufnr_cur) ---@type string
+  if filepath_cur ~= "" then
     vim.schedule(function()
-      vim.cmd("edit")
+      if vim.api.nvim_win_is_valid(winnr_cur) then
+        local bufnr = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
+        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        if filepath == filepath_cur then
+          vim.api.nvim_win_call(winnr_cur, function()
+            vim.cmd("edit " .. filepath)
+          end)
+        end
+      end
     end)
   end
 end
