@@ -1513,10 +1513,11 @@ function M:mark_result_flags_dirty()
   return self
 end
 
+---@param rootpath                      string
 ---@param cwd                           string
 ---@param filepaths                     string[]
 ---@return eve.ux.searcher.FiletreeComposer
-function M:reset_filepaths(cwd, filepaths)
+function M:reset_filepaths(rootpath, cwd, filepaths)
   self:__health__()
 
   local frecency = self._frecency ---@type std.collection.IFrecency|nil
@@ -1525,6 +1526,7 @@ function M:reset_filepaths(cwd, filepaths)
   cwd = std.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths)
 
+  local uuid_root = std.Filetree.uuid(rootpath) ---@type string
   local uuid_cwd = std.Filetree.uuid(cwd) ---@type string
   local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
   local uuids_order = vim.list_slice(uuids_file) ---@type string[]
@@ -1538,10 +1540,10 @@ function M:reset_filepaths(cwd, filepaths)
   end
 
   self._last_preview_filepath = nil
-  self._uuid_root = uuid_cwd
+  self._uuid_root = uuid_root
   self._uuids_file = uuids_file
   self._uuids_order = uuids_order
-  self._on_attached(self, cwd)
+  self._on_attached(self, rootpath)
   return self
 end
 
@@ -1730,7 +1732,7 @@ function M:__search__()
     end
   end
 
-  self:reset_filepaths(cwd, filepaths)
+  self:reset_filepaths(rootpath, cwd, filepaths)
   treeview:mark_cache_match_dirty()
 
   local tick_matched = treeview._tick_matched ---@type integer

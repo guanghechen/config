@@ -526,7 +526,7 @@ command
   .implement({
     uuid = K.search.files_in_buffer.uuid,
     action = function(args)
-      require("fml.action.search.files").search_files(args)
+      require("fml.action.search.files").search_files_in_buffer(args)
     end,
   })
   .implement({
