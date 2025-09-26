@@ -211,6 +211,7 @@ ms({ "i", "n", "v" }, { "<C-a>r", "<D-r>", "<M-r>" }, K.refresh.all)
 
 --#[s]earch-----------------------------------------------------------------------------------------
 ms({ "i", "n", "v" }, { "<C-a>f", "<D-f>", "<M-f>" }, K.search.in_file)
+ms({ "n", "v" }, "<leader>sb", K.search.in_buffer)
 ms({ "n", "v" }, "<leader>sf", K.search.in_file)
 ms({ "n", "v" }, "<leader>ss", K.search.in_files)
 ms({ "n", "v" }, "<leader>sc", K.search.in_cwd)

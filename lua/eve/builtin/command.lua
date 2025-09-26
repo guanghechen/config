@@ -423,6 +423,7 @@ M.definitions.refresh = {
 M.definitions.search = {
   in_files = def("Fsearchinfiles", "search: in files", "?"),
   in_file = def("Fsearchinfile", "search: in file", "?"),
+  in_buffer = def("Fsearchinbuffer", "search: in buffer"),
   in_cwd = def("Fsearchincwd", "search: in cwd"),
   in_directory = def("Fsearchindirectory", "search: in directory"),
   in_workspace = def("Fsearchinworkspace", "search: in workspace"),
