@@ -46,10 +46,10 @@ M.nsnr = {
 M.sign = {
   -- stylua: ignore start
   ---! picker
-  GROUP_PICKER_FINDER_PROMPT            = oxi.fn.uuid(),
-  GROUP_PICKER_RESULT_CURRENT           = oxi.fn.uuid(),
-  GROUP_PICKER_RESULT_PRESENT           = oxi.fn.uuid(),
-  GROUP_PICKER_RESULT_SELECTED          = oxi.fn.uuid(),
+  GROUP_PICKER_FINDER_PROMPT            = "ba16e20e-993c-43f5-8916-b254f009816e",
+  GROUP_PICKER_RESULT_CURRENT           = "904b8648-d599-4b9f-a02d-e015c99505a5",
+  GROUP_PICKER_RESULT_PRESENT           = "4bca395f-09c9-4e37-be28-19e2568cdb73",
+  GROUP_PICKER_RESULT_SELECTED          = "8f3ed243-bcaf-4dba-ac46-f7fc9d20c772",
   NR_PICKER_RESULT_CURRENT              = 3010,
   NR_PICKER_RESULT_PRESENT              = 3011,
   PICKER_FINDER_PROMPT                  = "PickerFinderPrompt",
@@ -59,12 +59,12 @@ M.sign = {
   PICKER_RESULT_SELECTED                = "PickerResultSelected",
   PICKER_RESULT_SELECTED_CURRENT        = "PickerResultSelectedCurrent",
 
-  GROUP_SEARCHER_FINDER_PROMPT          = oxi.fn.uuid(),
-  GROUP_SEARCHER_RESULT_CURRENT         = oxi.fn.uuid(),
-  GROUP_SEARCHER_RESULT_PRESENT         = oxi.fn.uuid(),
-  GROUP_SEARCHER_RESULT_SELECTED        = oxi.fn.uuid(),
-  NR_SEARCHER_RESULT_CURRENT            = 3010,
-  NR_SEARCHER_RESULT_PRESENT            = 3011,
+  GROUP_SEARCHER_FINDER_PROMPT          = "8efb0a6e-1bd8-4902-8898-b19bf83d856d",
+  GROUP_SEARCHER_RESULT_CURRENT         = "e1235112-26c1-42c5-8b96-f7f43fedd804",
+  GROUP_SEARCHER_RESULT_PRESENT         = "8b8e311a-1c6f-42f7-bf6a-d67e033011d9",
+  GROUP_SEARCHER_RESULT_SELECTED        = "729f2114-03b6-46b7-9cd6-bccc5d1756e6",
+  NR_SEARCHER_RESULT_CURRENT            = 3030,
+  NR_SEARCHER_RESULT_PRESENT            = 3031,
   SEARCHER_FINDER_PROMPT                = "SearcherFinderPrompt",
   SEARCHER_RESULT_CURRENT               = "SearcherResultCurrent",
   SEARCHER_RESULT_PRESENT               = "SearcherResultPresent",
