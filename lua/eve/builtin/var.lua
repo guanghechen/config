@@ -59,12 +59,14 @@ M.sign = {
   PICKER_RESULT_SELECTED                = "PickerResultSelected",
   PICKER_RESULT_SELECTED_CURRENT        = "PickerResultSelectedCurrent",
 
+  GROUP_SEARCHER_BUFFER_PROMPT          = "3e46a5aa-0872-4671-8e92-2e7ebc91e715",
   GROUP_SEARCHER_FINDER_PROMPT          = "8efb0a6e-1bd8-4902-8898-b19bf83d856d",
   GROUP_SEARCHER_RESULT_CURRENT         = "e1235112-26c1-42c5-8b96-f7f43fedd804",
   GROUP_SEARCHER_RESULT_PRESENT         = "8b8e311a-1c6f-42f7-bf6a-d67e033011d9",
   GROUP_SEARCHER_RESULT_SELECTED        = "729f2114-03b6-46b7-9cd6-bccc5d1756e6",
   NR_SEARCHER_RESULT_CURRENT            = 3030,
   NR_SEARCHER_RESULT_PRESENT            = 3031,
+  SEARCHER_BUFFER_PROMPT                = "SearcherBufferPrompt",
   SEARCHER_FINDER_PROMPT                = "SearcherFinderPrompt",
   SEARCHER_RESULT_CURRENT               = "SearcherResultCurrent",
   SEARCHER_RESULT_PRESENT               = "SearcherResultPresent",
@@ -97,6 +99,7 @@ sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = eve.icon.ui.SelectedCurrent
 
 sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
 sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
+sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
 sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
 sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
 sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = eve.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
