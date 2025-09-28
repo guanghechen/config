@@ -44,6 +44,12 @@ function M.hide(task)
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end
+
+  -- Clear cmdline position when hiding (similar to noice.nvim behavior)
+  -- Only clear if this is the top-level cmdline (level 0)
+  if level == 0 then
+    vim.g.ui_cmdline_pos = nil
+  end
 end
 
 ---@param task                          fml.dressing.ui_attach.ITask
@@ -54,6 +60,10 @@ function M.pos(task)
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
     M._show(state)
+    -- Update position for blink.cmp after position change
+    if state.winnr and vim.api.nvim_win_is_valid(state.winnr) then
+      M._update_cmdline_position(state, state.winnr)
+    end
   end
 end
 
@@ -240,6 +250,44 @@ function M._show(state)
   local pos = concealed and (state.pos + #state.icon - #state.first) or (state.pos + #state.icon)
   vim.api.nvim_win_set_cursor(winnr, { 1, pos })
   vim.api.nvim__redraw({ cursor = true, win = winnr, flush = true })
+
+  -- Refresh the cmdline position for blink.cmp compatibility
+  M._update_cmdline_position(state, winnr)
+end
+
+---@param state                         fml.dressing.ui_attach.cmdline.IState
+---@param winnr                         integer
+---@return nil
+function M._update_cmdline_position(state, winnr)
+  if not winnr or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  -- Get the window configuration to determine the screen position
+  local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+
+  -- Calculate the screen position of the cmdline content
+  -- The content starts after the icon and any concealed portions
+  local content_start_col = #state.icon ---@type integer
+  if state.concealable and state.pos >= #state.first then
+    -- When concealed, the content starts at the icon position
+    content_start_col = #state.icon
+  else
+    -- When not concealed, content starts after icon + first part
+    content_start_col = #state.icon + #state.first
+  end
+
+  -- Set vim.g.ui_cmdline_pos for blink.cmp to use
+  -- blink.cmp expects 0-indexed coordinates
+  -- Position the popup below the cmdline window with proper spacing:
+  -- - Add window height (1 for regular cmdline, variable for confirm)
+  -- - Add 2 for rounded border (top + bottom)
+  -- - No additional spacing for closer positioning
+  local popup_row = wincfg.row + wincfg.height + 2 ---@type integer
+  vim.g.ui_cmdline_pos = {
+    popup_row, -- position popup below the cmdline UI with spacing
+    wincfg.col + content_start_col, -- col + offset to the content start
+  }
 end
 
 ---@param state                         fml.dressing.ui_attach.cmdline.IState
@@ -406,6 +454,9 @@ function M._show_confirm(state, msg_show_task)
     vim.bo[bufnr].syntax = "markdown"
   end
   vim.api.nvim__redraw({ cursor = false, win = winnr, flush = true })
+
+  -- Set the cmdline position for blink.cmp compatibility (confirm dialog)
+  M._update_cmdline_position(state, winnr)
 end
 
 return M
