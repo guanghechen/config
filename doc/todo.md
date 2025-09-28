@@ -1,5 +1,5 @@
 * Color Scheme
-  - [ ] catppuccin
+  - [x] catppuccin
 
 * Git
   - [x] Better blame line preview, for those committed changes, show the diff of the last change commit.
