@@ -1,5 +1,8 @@
 {
-  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
+  "ignorePaths": [
+    "lua/std/fileicon.lua",
+    "lsp/yamlls.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -91,10 +94,10 @@
     "Freplacefilesincwd",
     "Freplacefilesindirectory",
     "Freplacefilesinworkspace",
-    "Fsearchinfile",
-    "Fsearchinfiles",
     "Fsearchincwd",
     "Fsearchindirectory",
+    "Fsearchinfile",
+    "Fsearchinfiles",
     "Fsearchinworkspace",
     "Fsessionrestore",
     "Fsessionrestoreautosaved",
@@ -279,6 +282,7 @@
     "dont",
     "dotenv",
     "drawed",
+    "eagain",
     "earch",
     "ebug",
     "efresh",
@@ -822,4 +826,3 @@
     "zindex"
   ]
 }
-
