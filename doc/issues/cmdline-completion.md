@@ -7,6 +7,10 @@ The position of the popup of the cmdline completion provided by the blink.cmp is
 
 I wish the popup can showing under the cmdline exactly instead of the bottom-left.
 
+## Hints & Tips
+
+1. You can read the **blink.cmp sourcecodes** on ~/.local/share/nvim/lazy/blink.cmp/
+
 ### System Info
 
 - **OS**: wsl + ubuntu 24.04.3 LTS
