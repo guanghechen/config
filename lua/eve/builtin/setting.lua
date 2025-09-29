@@ -5,14 +5,6 @@ M.feedkeys = {
   UNDO = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true),
 }
 
----@class eve.builtin.setting.ai_providers
-M.ai_providers = {
-  "aoai",
-  "azuredatabricks",
-  "copilot",
-  "deepseek",
-}
-
 ---@class eve.builtin.setting.themes
 M.themes = {
   "catppuccin-frappe",
@@ -49,7 +41,6 @@ M.togglers = {
   "username_ux",
 
   "ai_flight",
-  "ai_provider_flight",
   "autoformat_flight",
   "autoload_flight",
   "autosave_flight",

@@ -68,18 +68,7 @@ local group_flags = {
 
 ---@type table<string, table<string, fml.action.toggle.IItem>>
 local group_items = {
-  flight = {
-    ai_provider = {
-      title = "ai_provider",
-      snapshot = function()
-        local provider = eve.context.flight.ai_provider:snapshot() ---@type string
-        return provider, "String"
-      end,
-      action = function()
-        eve.command.execute(eve.command.definitions.toggle.ai_provider.uuid)
-      end,
-    },
-  },
+  flight = {},
   ["local"] = {
     fileencoding = {
       title = "fileencoding",

@@ -1,6 +1,5 @@
 ---@class eve.context.flight.data
 ---@field public ai                     boolean
----@field public ai_provider            std.e.AiProvider
 ---@field public autoformat             boolean
 ---@field public autoload               boolean
 ---@field public autosave               boolean
@@ -17,7 +16,6 @@
 
 ---@class eve.context.flight.state
 ---@field public ai                     std.collection.IObservable
----@field public ai_provider            std.collection.IObservable
 ---@field public autoformat             std.collection.IObservable
 ---@field public autoload               std.collection.IObservable
 ---@field public autosave               std.collection.IObservable
@@ -51,7 +49,6 @@ function M.defaults()
   ---@type eve.context.flight.data
   return {
     ai = is_thirdparty or is_playground or is_personal_public,
-    ai_provider = "copilot",
     autoformat = is_git_repo,
     autoload = false,
     autosave = is_git_repo,
@@ -75,9 +72,6 @@ function M.normalize(data)
   if type(data) == "table" then
     if type(data.ai) == "boolean" then
       resolved.ai = data.ai
-    end
-    if type(data.ai_provider) == "string" and vim.list_contains(eve.setting.ai_providers, data.ai_provider) then
-      resolved.ai_provider = data.ai_provider
     end
     if type(data.autoformat) == "boolean" then
       resolved.autoformat = data.autoformat
@@ -123,7 +117,6 @@ function M.dump()
   ---@type eve.context.flight.data
   return {
     ai = M.ai:snapshot(),
-    ai_provider = M.ai_provider:snapshot(),
     autoformat = M.autoformat:snapshot(),
     autoload = M.autoload:snapshot(),
     autosave = M.autosave:snapshot(),
@@ -146,7 +139,6 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.context.flight.data
 
   M.ai:next(data.ai)
-  M.ai_provider:next(data.ai_provider)
   M.autoformat:next(data.autoformat)
   M.autoload:next(data.autoload)
   M.autosave:next(data.autosave)
@@ -166,7 +158,6 @@ end
 
 local _defaults = M.defaults() ---@type eve.context.flight.data
 M.ai = std.Observable.from_value(_defaults.ai)
-M.ai_provider = std.Observable.from_value(_defaults.ai_provider)
 M.autoformat = std.Observable.from_value(_defaults.autoformat)
 M.autoload = std.Observable.from_value(_defaults.autoload)
 M.autosave = std.Observable.from_value(_defaults.autosave)

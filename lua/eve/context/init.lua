@@ -253,7 +253,6 @@ function M.watch_changes()
   local select_states = {
     M.bookmark.pinned,
     M.flight.ai,
-    M.flight.ai_provider,
     M.flight.autoformat,
     M.flight.autoload,
     M.flight.autosave,

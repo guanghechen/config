@@ -1,8 +1,5 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua",
-    "lsp/yamlls.lua"
-  ],
+  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -163,7 +160,6 @@
     "agentic",
     "airules",
     "alacritty",
-    "aoai",
     "appname",
     "augroup",
     "autocmd",
@@ -176,7 +172,6 @@
     "autoselect",
     "autosort",
     "autowrite",
-    "azuredatabricks",
     "backupcopy",
     "badnode",
     "badroot",
@@ -264,7 +259,6 @@
     "dbclick",
     "debugpy",
     "deepcopy",
-    "deepseek",
     "defc",
     "dels",
     "devicons",
@@ -826,3 +820,4 @@
     "zindex"
   ]
 }
+

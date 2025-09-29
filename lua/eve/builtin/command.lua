@@ -494,7 +494,6 @@ M.definitions.term = {
 ---@class eve.builtin.command.definitions.toggle
 M.definitions.toggle = {
   list = defc("Ftoggle", "toggle: select", "?", eve.setting.togglers),
-  ai_provider = defc("Ftoggleaiprovider", "toggle: ai provider", "?", eve.setting.ai_providers),
   markdown = def("Ftogglemarkdown", "toggle: markdown"),
   maximize = def("Ftogglemaximize", "toggle: maximize"),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),

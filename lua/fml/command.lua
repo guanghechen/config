@@ -760,12 +760,6 @@ command
     end,
   })
   .implement({
-    uuid = K.toggle.ai_provider.uuid,
-    action = function(arg)
-      require("fml.action.toggle.ai").ai_provider(arg)
-    end,
-  })
-  .implement({
     uuid = K.toggle.markdown.uuid,
     action = function()
       require("fml.action.toggle.list").list("markdown_local")

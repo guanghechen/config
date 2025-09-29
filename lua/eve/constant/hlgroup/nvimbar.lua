@@ -24,11 +24,11 @@ function M.gen_hlgroup_map(context)
     ------------------------------------------------------------------------------------------------
 
     ---! ai
-    ai_provider_status_InProgress = { fg = c.aqua, bg = "bg_bar" },
-    ai_provider_status_Inactive = { fg = c.red, bg = "bg_bar" },
-    ai_provider_status_Normal = { fg = c.fg1, bg = "bg_bar" },
-    ai_provider_status_Warning = { fg = c.yellow, bg = "bg_bar" },
-    ai_provider_text = { fg = c.fg2, bg = "bg_bar" },
+    ai_copilot_status_InProgress = { fg = c.aqua, bg = "bg_bar" },
+    ai_copilot_status_Inactive = { fg = c.red, bg = "bg_bar" },
+    ai_copilot_status_Normal = { fg = c.fg1, bg = "bg_bar" },
+    ai_copilot_status_Warning = { fg = c.yellow, bg = "bg_bar" },
+    ai_copilot_text = { fg = c.fg2, bg = "bg_bar" },
 
     ---! buf
     buf = { fg = c.bg4, bg = "bg_bar" },
