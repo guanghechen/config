@@ -140,7 +140,7 @@ end
 
 ---@return nil
 function M.setup_lsp()
-  vim.lsp.enable({
+  local lsp_servers = {
     -- "basedpyright",
     "bashls",
     "clangd",
@@ -158,7 +158,14 @@ function M.setup_lsp()
     "taplo",
     "vtsls",
     "yamlls",
-  })
+  }
+
+  -- Add Copilot LSP if AI is enabled
+  if eve.context.flight.ai:snapshot() then
+    table.insert(lsp_servers, "copilot")
+  end
+
+  vim.lsp.enable(lsp_servers)
 
   local severity2prefixicon = eve.constant.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string> {
   local severity2texticon = eve.constant.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>

@@ -28,6 +28,7 @@
 ---@field public msg_lsp                std.collection.IObservable
 ---@field public msg_mode               std.collection.IObservable
 ---
+---@field public copilots               table<integer, string>
 ---@field public notification_paused    std.collection.IObservable
 ---@field public notification_level     std.collection.IObservable
 ---@field public searching              std.collection.IObservable
@@ -50,6 +51,7 @@ local M = {
   msg_lsp = std.Observable.from_value(""),
   msg_mode = std.Observable.from_value(""),
 
+  copilots = {}, -- Plain object for copilot status per client
   notification_paused = std.Observable.from_value(false),
   notification_level = std.Observable.from_value("TRACE"),
   searching = std.Observable.from_value(false),
@@ -117,6 +119,11 @@ function M.reset()
   M.msg_command:next("")
   M.msg_lsp:next("")
   M.msg_mode:next("")
+
+  -- Reset copilot status (plain object)
+  for k in pairs(M.copilots) do
+    M.copilots[k] = nil
+  end
 
   M.notification_paused:next(false)
   M.notification_level:next("TRACE")

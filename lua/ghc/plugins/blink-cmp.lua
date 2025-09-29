@@ -6,20 +6,9 @@ return {
     "friendly-snippets",
   },
   opts = function()
-    local enabled_ai = eve.context.flight.ai:snapshot() ---@type boolean
 
     ---@class ghc.plugins.blink_cmp.actions
     local actions = {
-      ---@return boolean|nil
-      ai_accept = function()
-        if enabled_ai then
-          if require("copilot.suggestion").is_visible() then
-            eve.nvim.create_undo()
-            require("copilot.suggestion").accept()
-            return true
-          end
-        end
-      end,
       ---@return boolean|nil
       tab_fallback = function()
         local mode = vim.api.nvim_get_mode().mode ---@type string
@@ -36,9 +25,6 @@ return {
     }
     do
       local code_sources = { "lsp", "path", "snippets", "buffer" }
-      if enabled_ai then
-        table.insert(code_sources, 1, "copilot") -- Insert at beginning for higher priority
-      end
       -- Add our custom '@' path source
       table.insert(code_sources, "path_at")
       for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do
@@ -192,8 +178,8 @@ return {
       keymap = {
         preset = "none",
         ["<CR>"] = { "accept", "fallback" },
-        ["<Tab>"] = { "select_next", "snippet_forward", actions.ai_accept, actions.tab_fallback, "fallback" },
-        ["<S-Tab>"] = { "select_prev", "snippet_backward", actions.ai_accept, actions.tab_fallback, "fallback" },
+        ["<Tab>"] = { "select_next", "snippet_forward", actions.tab_fallback, "fallback" },
+        ["<S-Tab>"] = { "select_prev", "snippet_backward", actions.tab_fallback, "fallback" },
 
         ["<Up>"] = { "select_prev", "fallback" },
         ["<Down>"] = { "select_next", "fallback" },
@@ -281,12 +267,6 @@ return {
             name = "cmdline",
             module = "blink.cmp.sources.cmdline",
           },
-          copilot = enabled_ai and {
-            name = "copilot",
-            module = "ghc.cmp.copilot",
-            score_offset = 300,
-            async = true,
-          } or nil,
           lsp = {
             name = "lsp",
             module = "blink.cmp.sources.lsp",

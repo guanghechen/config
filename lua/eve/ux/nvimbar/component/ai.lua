@@ -7,9 +7,28 @@ local txt = eve.nvim.txt
 ---@return string
 local function get_status(provider)
   if provider == "copilot" then
-    if package.loaded["copilot"] then
-      local status = require("copilot.status").data.status or ""
-      return status == "Normal" and "" or status
+    -- Check native Copilot LSP status
+    local clients = vim.lsp.get_clients({ name = "copilot" })
+    if #clients > 0 then
+      local client = clients[1]
+      if client:is_stopped() then
+        return "Stopped"
+      end
+
+      -- Check tracked status from centralized status system
+      local client_status = eve.status.copilots[client.id]
+      if client_status == "error" then
+        return "Error"
+      elseif client_status == "pending" then
+        return "Busy"
+      elseif client_status == "ok" then
+        return ""
+      end
+
+      -- Return empty for normal operation (connected)
+      return ""
+    else
+      return "Disconnected"
     end
   end
   return ""
@@ -22,8 +41,13 @@ local fn_show_message = eve.G.register_anonymous_fn(function()
   local status = "NIL" ---@type unknown
 
   if provider == "copilot" then
-    if package.loaded["copilot"] then
-      status = require("copilot.status").data.status or "NIL"
+    -- Check native Copilot LSP status
+    local clients = vim.lsp.get_clients({ name = "copilot" })
+    if #clients > 0 then
+      local client = clients[1]
+      status = client:is_stopped() and "Stopped" or "Connected"
+    else
+      status = "Disconnected"
     end
   end
 

@@ -125,7 +125,7 @@ Plugins are managed using a custom plugin system:
 - **Plugin Configs**: Individual configurations in `ghc/plugins/`
 - **Completion**: CMP configurations in `ghc/cmp/`
 - **Custom Forks**: Most plugins use forked versions with custom branches (prefixed with `nvim@`)
-- **Key Plugins**: blink.cmp, conform.nvim, diffview.nvim, flash.nvim, copilot.lua, nvim-treesitter, nvim-dap, etc.
+- **Key Plugins**: blink.cmp, conform.nvim, diffview.nvim, flash.nvim, nvim-treesitter, nvim-dap, etc.
 
 **Plugin Loading**: Handled through integration-specific initialization sequences
 
