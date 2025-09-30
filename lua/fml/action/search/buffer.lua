@@ -17,11 +17,12 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("fml.action.search.buffer") --
 ---@field protected _match_index        integer|nil
 ---@field protected _scheduler_search    std.collection.Scheduler
 ---@field protected _nvimbar             eve.ux.nvimbar.Nvimbar
-local M = {}
-M.__index = M
+---@field protected _keymaps             std.t.IKeymap[]
+local Searcher = {}
+Searcher.__index = Searcher
 
 ---@return fml.action.search.buffer.Searcher
-function M.new()
+function Searcher.new()
   local o_flag_fuzzy = std.Observable.from_value(false)
   local o_flag_regex = std.Observable.from_value(false)
   local o_flag_replace = std.Observable.from_value(false)
@@ -29,7 +30,7 @@ function M.new()
   local o_search_pattern = std.Observable.from_value("")
   local o_replace_pattern = std.Observable.from_value("")
 
-  local self = setmetatable({}, M)
+  local self = setmetatable({}, Searcher)
 
   ---@type eve.ux.searcher.result.IFlagItemRaw[]
   local raw_flags = {
@@ -91,6 +92,50 @@ function M.new()
     flags[#flags + 1] = item
   end
 
+  ---@type std.t.IKeymap[]
+  local keymaps = {
+    {
+      modes = { "n" },
+      key = "q",
+      desc = "search_buffer: close",
+      callback = function()
+        self:close_popup()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-k>",
+      desc = "search_buffer: goto previous match",
+      callback = function()
+        self:goto_prev_match()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-j>",
+      desc = "search_buffer: goto next match",
+      callback = function()
+        self:goto_next_match()
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<CR>",
+      desc = "search_buffer: goto next match",
+      callback = function()
+        self:goto_next_match()
+      end,
+    },
+  }
+  for index, flag in ipairs(raw_flags) do
+    keymaps[#keymaps + 1] = {
+      modes = { "n", "v" },
+      key = string.format("t%d", index),
+      desc = flag.desc,
+      callback = flag.callback,
+    }
+  end
+
   -- Create winbar once at module level
   local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
   local c = eve.ux.nvimbar.component
@@ -107,7 +152,8 @@ function M.new()
       get_max_width = function()
         local winnr = self._winnr_popup ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return vim.api.nvim_win_get_width(winnr)
+          local width = vim.api.nvim_win_get_width(winnr) ---@type integer
+          return width - 2
         end
         return 0
       end,
@@ -135,7 +181,7 @@ function M.new()
         end
       end,
     })
-    :place("left", c.picker.result_flags(position, flags, 1), 100)
+    :place("right", c.picker.result_flags(position, flags, 1), 100)
 
   ---@type std.collection.Scheduler
   local scheduler_search = std.Scheduler.new({
@@ -146,7 +192,7 @@ function M.new()
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
-      self:_search_task()
+      self:__search__()
     end,
   })
 
@@ -164,6 +210,7 @@ function M.new()
   self._match_index = nil
   self._nvimbar = nvimbar
   self._scheduler_search = scheduler_search
+  self._keymaps = keymaps
 
   -- Add observers to re-render winbar when flags change
   std.fn.observe({
@@ -189,7 +236,7 @@ function M.new()
 end
 
 ---@return nil
-function M:goto_prev_match()
+function Searcher:goto_prev_match()
   local bufnr = self._bufnr_source ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return
@@ -219,7 +266,7 @@ function M:goto_prev_match()
 end
 
 ---@return nil
-function M:goto_next_match()
+function Searcher:goto_next_match()
   local bufnr = self._bufnr_source ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return
@@ -249,7 +296,7 @@ function M:goto_next_match()
 end
 
 ---@return nil
-function M:clear_highlight()
+function Searcher:clear_highlight()
   local bufnr = self._bufnr_source ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH, 0, -1)
@@ -257,7 +304,7 @@ function M:clear_highlight()
 end
 
 ---@return nil
-function M:refresh_highlight()
+function Searcher:refresh_highlight()
   local bufnr = self._bufnr_source ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return
@@ -278,7 +325,7 @@ function M:refresh_highlight()
 end
 
 ---@return nil
-function M:close_popup()
+function Searcher:close_popup()
   local winnr_popup = self._winnr_popup ---@type integer|nil
   local bufnr_popup = self._bufnr_popup ---@type integer|nil
   local bufnr_source = self._bufnr_source ---@type integer|nil
@@ -302,7 +349,7 @@ function M:close_popup()
 end
 
 ---@return integer, boolean
-function M:create_popup_buffer_as_needed()
+function Searcher:create_popup_buffer_as_needed()
   local bufnr = self._bufnr_popup ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     return bufnr, false
@@ -318,42 +365,8 @@ function M:create_popup_buffer_as_needed()
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].swapfile = false
 
-  ---@type std.t.IKeymap[]
-  local keymaps = {
-    {
-      modes = { "n" },
-      key = "q",
-      desc = "search_buffer: close",
-      callback = function()
-        self:close_popup()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-k>",
-      desc = "search_buffer: goto previous match",
-      callback = function()
-        self:goto_prev_match()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-j>",
-      desc = "search_buffer: goto next match",
-      callback = function()
-        self:goto_next_match()
-      end,
-    },
-    {
-      modes = { "n", "i" },
-      key = "<CR>",
-      desc = "search_buffer: close search and clear highlights",
-      callback = function()
-        self:close_popup()
-      end,
-    },
-  }
-  eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  -- Use keymaps created in constructor
+  eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local pattern = self.o_search_pattern:snapshot() ---@type string
   local lines = vim.split(pattern, "\n", { plain = true })
@@ -379,7 +392,7 @@ function M:create_popup_buffer_as_needed()
 end
 
 ---@return integer, boolean
-function M:create_popup_window_as_needed()
+function Searcher:create_popup_window_as_needed()
   local winnr = self._winnr_popup ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     return winnr, false
@@ -387,8 +400,8 @@ function M:create_popup_window_as_needed()
 
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
 
-  local height = 1 ---@type integer
-  local width = math.min(120, math.floor(vim.o.columns * 0.9)) ---@type integer
+  local height = 2 ---@type integer
+  local width = math.min(60, math.floor(vim.o.columns * 0.9)) ---@type integer
   local row = 3 ---@type integer
   local col = math.max(0, math.floor((vim.o.columns - width) / 2)) ---@type integer
 
@@ -422,15 +435,16 @@ function M:create_popup_window_as_needed()
 end
 
 ---@return nil
-function M:set_prompt()
+function Searcher:set_prompt()
   local bufnr = self:create_popup_buffer_as_needed() ---@type integer
   local group = eve.var.sign.GROUP_SEARCHER_BUFFER_PROMPT ---@type string
   local sign = eve.var.sign.SEARCHER_BUFFER_PROMPT ---@type string
   pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
 end
 
+---@protected
 ---@return nil
-function M:_search_task()
+function Searcher:__search__()
   local bufnr_popup = self._bufnr_popup ---@type integer|nil
   if bufnr_popup == nil or not vim.api.nvim_buf_is_valid(bufnr_popup) then
     return
@@ -481,10 +495,10 @@ end
 local searcher ---@type fml.action.search.buffer.Searcher|nil
 
 ---@class fml.action.search.buffer
-local Module = {}
+local M = {}
 
 ---@return nil
-function Module.search_in_buffer()
+function M.search_in_buffer()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -506,7 +520,7 @@ function Module.search_in_buffer()
 
   -- Create or reuse searcher instance
   if searcher == nil then
-    searcher = M.new()
+    searcher = Searcher.new()
   end
 
   if searcher._bufnr_source ~= bufnr_sourcefile then
@@ -528,4 +542,4 @@ function Module.search_in_buffer()
   vim.cmd("startinsert!")
 end
 
-return Module
+return M

@@ -301,6 +301,9 @@ function M:__render__(force)
   local sep = self._isactive(context) and self._sep_active or self._sep ---@type string
   local width_sep = self._sep_width ---@type integer
   local width_full = self._get_max_width() ---@type integer
+  if width_full <= 1 then
+    return nil
+  end
 
   local wl = width_sep ---@type integer
   local wc = width_sep + width_sep ---@type integer
