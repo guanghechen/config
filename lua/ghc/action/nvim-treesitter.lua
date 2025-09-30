@@ -32,8 +32,7 @@ function M.swap_conditional_branches()
     return
   end
 
-  local ts_utils = require("nvim-treesitter.ts_utils")
-  local node = ts_utils.get_node_at_cursor(0)
+  local node = vim.treesitter.get_node({ bufnr = bufnr_sourcefile })
   local conditional_node = node and find_conditional_node(node)
   if not conditional_node then
     return
