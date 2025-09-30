@@ -83,7 +83,7 @@
     - Start MSYS2 UCRT64 from Windows start menu, then run the following command on the prompt opened.
 
       1. update the package manager inside MSYS2.
-      
+
           ```shell
           pacman -Syu
           ```

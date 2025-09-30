@@ -6,14 +6,14 @@
 
 ### FAQ
 
-* Install neovim manually
-  
+* Build from Source (nightly): see https://github.com/neovim/neovim/blob/master/BUILD.md
+
   ```bash
-  git clone https://github.com/neovim/neovim.git
-  git checkout v0.11.0
-  make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="$HOME/.app/neovim/"
-  # make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="/opt/me/app/neovim/"
-  make install 
+  # git clone https://github.com/neovim/neovim && cd neovim
+  git fetch origin --tags --force && git checkout nightly
+  CMAKE_INSTALL_PREFIX="$HOME/.app/neovim/" make CMAKE_BUILD_TYPE=RelWithDebInfo
+  # CMAKE_INSTALL_PREFIX="/opt/me/app/neovim/" make CMAKE_BUILD_TYPE=RelWithDebInfo
+  make install
   ```
 
 * Test in podman
