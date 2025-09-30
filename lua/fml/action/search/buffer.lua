@@ -29,6 +29,7 @@ function M.search_in_buffer()
   end
 
   -- Create or reuse searcher instance
+  local popup_not_opened_yet = searcher == nil ---@type boolean
   if searcher == nil then
     searcher = eve.ux.searcher.BufferSearcher.new()
   end
@@ -42,7 +43,17 @@ function M.search_in_buffer()
   searcher._winnr_source = winnr_sourcefile
   searcher._bufnr_source = bufnr_sourcefile
   searcher._matches = {}
-  searcher._match_index = nil
+
+  -- If popup not opened yet and in visual mode, use selected text
+  if popup_not_opened_yet then
+    local mode = vim.fn.mode() ---@type string
+    if mode == "v" or mode == "V" or mode == "\22" then -- visual, visual-line, visual-block
+      local selected_text = eve.buf.retrieve_selected_text() ---@type string|nil
+      if selected_text ~= nil and selected_text ~= "" then
+        searcher.o_search_pattern:next(selected_text)
+      end
+    end
+  end
 
   -- Create popup buffer and window
   local popup_winnr = searcher:create_popup_window_as_needed()
