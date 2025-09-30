@@ -1,12 +1,6 @@
-* Bootstrap
+## FAQ
 
-  ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix-remote/setup.sh)"
-  ```
-
-### FAQ
-
-* Test in docker
+* **Test in docker**:
 
   - Build the docker image.
 

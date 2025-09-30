@@ -1,12 +1,6 @@
-* Bootstrap
+## Setup
 
-  ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)"
-  ```
-
-### FAQ
-
-* Build from Source (nightly): see https://github.com/neovim/neovim/blob/master/BUILD.md
+* **Neovim**: Build from Source (nightly): see https://github.com/neovim/neovim/blob/master/BUILD.md
 
   ```bash
   # git clone https://github.com/neovim/neovim && cd neovim
@@ -16,7 +10,9 @@
   make install
   ```
 
-* Test in podman
+## FAQ
+
+* **Test in podman**:
 
   - Build and start the docker image.
 
@@ -59,7 +55,7 @@
     podman rm dotfiles
     ```
 
-* Test in docker
+* **Test in docker**:
 
   - Build the docker image.
 
