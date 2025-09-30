@@ -93,7 +93,7 @@ function M.new()
   local o_flag_fuzzy = std.Observable.from_value(false)
   local o_flag_regex = std.Observable.from_value(false)
   local o_flag_replace = std.Observable.from_value(false)
-  local o_flag_case_sensitive = std.Observable.from_value(false)
+  local o_flag_case_sensitive = std.Observable.from_value(true)
   local o_search_pattern = std.Observable.from_value("")
   local o_search_pattern_linecount = std.Observable.from_value(1)
   local o_replace_pattern = std.Observable.from_value("")
@@ -194,6 +194,14 @@ function M.new()
       desc = "search_buffer: goto next match",
       callback = function()
         self:goto_next_match()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>`",
+      desc = "search_buffer: focus source window",
+      callback = function()
+        self:focus_source_window()
       end,
     },
   }
@@ -321,6 +329,14 @@ function M.new()
   self._scheduler_search = scheduler_search
   self._keymaps = keymaps
   return self
+end
+
+---@return nil
+function M:focus_source_window()
+  local winnr = self._winnr_source ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_set_current_win(winnr)
+  end
 end
 
 ---@return nil
