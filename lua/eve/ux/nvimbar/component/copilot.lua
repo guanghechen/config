@@ -1,4 +1,4 @@
-local __module_name__ = "eve.ux.nvimbar.component.ai" ---@type string
+local __module_name__ = "eve.ux.nvimbar.component.copilot" ---@type string
 
 local btn = eve.nvim.btn
 local txt = eve.nvim.txt
@@ -49,15 +49,15 @@ local fn_show_message = eve.G.register_anonymous_fn(function()
   })
 end)
 
----@class eve.ux.nvimbar.component.ai
+---@class eve.ux.nvimbar.component.copilot
 local M = {}
 
 ---@param position                      eve.ux.nvimbar.PositionEnum
 ---@return eve.ux.nvimbar.IRawComponent
-function M.copilot(position)
+function M.status(position)
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
-    name = "ai:copilot",
+    name = "copilot:status",
     atomic = true,
     condition = function()
       return eve.context.flight.ai:snapshot()
@@ -80,9 +80,9 @@ function M.copilot(position)
         icon = eve.icon.app.CopilotWarn
       end
 
-      local text = icon .. " Copilot" ---@type string
+      local text = icon .. " " ---@type string
       local hln_text = position .. "_ai_copilot_text" ---@type string
-      if #status > 0 then
+      if #status > 0 and status ~= "Disconnected" then
         text = text .. "(" .. status .. ") " ---@type string
         hln_text = position .. "_ai_copilot_status_" .. status ---@type string
       end
