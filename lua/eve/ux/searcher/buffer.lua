@@ -15,6 +15,7 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@
 ---@field public o_match_total          std.collection.IObservable
 ---@field protected _winnr_popup        integer|nil
 ---@field protected _bufnr_popup        integer|nil
+---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            oxi.string.ILineMatch[]|nil
 ---@field protected _scheduler_search   std.collection.Scheduler
@@ -312,6 +313,7 @@ function M.new()
   self.o_match_total = o_match_total
   self._winnr_popup = nil
   self._bufnr_popup = nil
+  self._winnr_source = nil
   self._bufnr_source = nil
   self._matches = nil
   self._nvimbar = nvimbar
@@ -322,11 +324,6 @@ end
 
 ---@return nil
 function M:goto_prev_match()
-  local bufnr = self._bufnr_source ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-
   local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
   if matches == nil then
     return
@@ -337,26 +334,27 @@ function M:goto_prev_match()
     return
   end
 
-  local index = math.min(N, self.o_match_index:snapshot() or 2) ---@type integer
-  index = index <= 1 and N or (index - 1) ---@type integer
+  local winnr = self._winnr_source ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
 
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if bufnr ~= self._bufnr_source then
+    return
+  end
+
+  local index_current = self.o_match_index:snapshot() ---@type integer
+  local index = std.fn.navigate_circular(index_current, -1, N) ---@type integer
   local match_prev = matches[index] ---@type oxi.string.ILineMatch
   if match_prev and match_prev.matches and #match_prev.matches > 0 then
-    local target_win = vim.api.nvim_get_current_win() ---@type integer
-    if vim.api.nvim_win_is_valid(target_win) then
-      self.o_match_index:next(index)
-      vim.api.nvim_win_set_cursor(target_win, { match_prev.lnum, match_prev.matches[1].l })
-    end
+    self.o_match_index:next(index)
+    pcall(vim.api.nvim_win_set_cursor, winnr, { match_prev.lnum, match_prev.matches[1].l })
   end
 end
 
 ---@return nil
 function M:goto_next_match()
-  local bufnr = self._bufnr_source ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-
   local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
   if matches == nil then
     return
@@ -367,16 +365,22 @@ function M:goto_next_match()
     return
   end
 
-  local index = math.max(0, self.o_match_index:snapshot() or 0) ---@type integer
-  index = index >= N and 1 or (index + 1) ---@type integer
+  local winnr = self._winnr_source ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
 
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  if bufnr ~= self._bufnr_source then
+    return
+  end
+
+  local index_current = self.o_match_index:snapshot() ---@type integer
+  local index = std.fn.navigate_circular(index_current, 1, N) ---@type integer
   local match_next = matches[index] ---@type oxi.string.ILineMatch
   if match_next and match_next.matches and #match_next.matches > 0 then
-    local target_win = vim.api.nvim_get_current_win() ---@type integer
-    if vim.api.nvim_win_is_valid(target_win) then
-      self.o_match_index:next(index)
-      vim.api.nvim_win_set_cursor(target_win, { match_next.lnum, match_next.matches[1].l })
-    end
+    self.o_match_index:next(index)
+    pcall(vim.api.nvim_win_set_cursor, winnr, { match_next.lnum, match_next.matches[1].l })
   end
 end
 
@@ -424,6 +428,7 @@ function M:close_popup()
     vim.api.nvim_buf_delete(bufnr_popup, { force = true })
   end
 
+  self._winnr_source = nil
   self._bufnr_source = nil
   if bufnr_source ~= nil and vim.api.nvim_buf_is_valid(bufnr_source) then
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
@@ -597,10 +602,23 @@ function M:__search__()
 
   self._matches = matches
   self.o_match_total:next(#matches)
+  self.o_match_index:next(1)
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
   for _, match in ipairs(matches) do
     for _, point in ipairs(match.matches) do
       highlight_match_point(bufnr_source, NSNR_SEARCH, "Search", match.lnum, point)
+    end
+  end
+
+  -- Move cursor to first match
+  local first_match = matches[1]
+  if first_match and first_match.matches and #first_match.matches > 0 then
+    local target_win = self._winnr_source ---@type integer|nil
+    if target_win ~= nil and vim.api.nvim_win_is_valid(target_win) then
+      local line_count = vim.api.nvim_buf_line_count(bufnr_source)
+      if first_match.lnum > 0 and first_match.lnum <= line_count then
+        vim.api.nvim_win_set_cursor(target_win, { first_match.lnum, first_match.matches[1].l })
+      end
     end
   end
 end

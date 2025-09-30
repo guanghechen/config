@@ -39,6 +39,7 @@ function M.search_in_buffer()
   end
 
   -- Initialize state for the search operation
+  searcher._winnr_source = winnr_sourcefile
   searcher._bufnr_source = bufnr_sourcefile
   searcher._matches = {}
   searcher._match_index = nil
