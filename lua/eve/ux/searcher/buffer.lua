@@ -9,6 +9,7 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@
 ---@field public o_flag_replace         std.collection.IObservable
 ---@field public o_flag_case_sensitive  std.collection.IObservable
 ---@field public o_search_pattern       std.collection.IObservable
+---@field public o_search_pattern_linecount std.collection.IObservable
 ---@field public o_replace_pattern      std.collection.IObservable
 ---@field public o_match_index          std.collection.IObservable
 ---@field public o_match_total          std.collection.IObservable
@@ -21,17 +22,6 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@
 ---@field protected _keymaps            std.t.IKeymap[]
 local M = {}
 M.__index = M
-
----@param pattern                       string
----@return boolean, integer
-local function detect_multiline_pattern(pattern)
-  if pattern == nil or pattern == "" then
-    return false, 1
-  end
-  local lines = vim.split(pattern, "\n", { plain = true })
-  local line_count = #lines
-  return line_count > 1, line_count
-end
 
 ---@param pattern_line_count            integer
 ---@return integer
@@ -103,6 +93,7 @@ function M.new()
   local o_flag_replace = std.Observable.from_value(false)
   local o_flag_case_sensitive = std.Observable.from_value(false)
   local o_search_pattern = std.Observable.from_value("")
+  local o_search_pattern_linecount = std.Observable.from_value(1)
   local o_replace_pattern = std.Observable.from_value("")
   local o_match_index = std.Observable.from_value(0)
   local o_match_total = std.Observable.from_value(0)
@@ -274,12 +265,48 @@ function M.new()
     end,
   })
 
+  -- Add observer to update line count when search pattern changes
+  std.fn.observe({
+    o_search_pattern,
+  }, function()
+    local pattern = self.o_search_pattern:snapshot() ---@type string
+    if pattern == nil or pattern == "" then
+      o_search_pattern_linecount:next(1)
+      return
+    end
+    local lines = vim.split(pattern, "\n", { plain = true })
+    o_search_pattern_linecount:next(#lines)
+  end, true)
+
+  -- Add observers to re-render winbar when flags or match info change
+  std.fn.observe({
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_flag_replace,
+    o_match_index,
+    o_match_total,
+  }, function()
+    nvimbar:render()
+  end, true)
+
+  -- Add observers to trigger search when search-affecting flags change
+  std.fn.observe({
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_search_pattern,
+  }, function()
+    scheduler_search:schedule()
+  end, true)
+
   self.title = "Search in Buffer"
   self.o_flag_fuzzy = o_flag_fuzzy
   self.o_flag_regex = o_flag_regex
   self.o_flag_replace = o_flag_replace
   self.o_flag_case_sensitive = o_flag_case_sensitive
   self.o_search_pattern = o_search_pattern
+  self.o_search_pattern_linecount = o_search_pattern_linecount
   self.o_replace_pattern = o_replace_pattern
   self.o_match_index = o_match_index
   self.o_match_total = o_match_total
@@ -290,29 +317,6 @@ function M.new()
   self._nvimbar = nvimbar
   self._scheduler_search = scheduler_search
   self._keymaps = keymaps
-
-  -- Add observers to re-render winbar when flags or match info change
-  std.fn.observe({
-    self.o_flag_fuzzy,
-    self.o_flag_regex,
-    self.o_flag_case_sensitive,
-    self.o_flag_replace,
-    self.o_match_index,
-    self.o_match_total,
-  }, function()
-    self._nvimbar:render()
-  end, true)
-
-  -- Add observers to trigger search when search-affecting flags change
-  std.fn.observe({
-    self.o_flag_fuzzy,
-    self.o_flag_regex,
-    self.o_flag_case_sensitive,
-    self.o_search_pattern,
-  }, function()
-    scheduler_search:schedule()
-  end, true)
-
   return self
 end
 
@@ -482,8 +486,7 @@ function M:create_popup_window_as_needed()
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
 
   -- Calculate dynamic height based on search pattern
-  local pattern = self.o_search_pattern:snapshot() ---@type string
-  local is_multiline, pattern_line_count = detect_multiline_pattern(pattern)
+  local pattern_line_count = self.o_search_pattern_linecount:snapshot() ---@type integer
   local height = calculate_dynamic_height(pattern_line_count) ---@type integer
 
   local width = math.min(60, math.floor(vim.o.columns * 0.9)) ---@type integer
@@ -535,8 +538,7 @@ function M:resize_popup_window()
   end
 
   -- Calculate new dynamic height based on current search pattern
-  local pattern = self.o_search_pattern:snapshot() ---@type string
-  local is_multiline, pattern_line_count = detect_multiline_pattern(pattern)
+  local pattern_line_count = self.o_search_pattern_linecount:snapshot() ---@type integer
   local new_height = calculate_dynamic_height(pattern_line_count) ---@type integer
 
   -- Get current window config
