@@ -255,7 +255,13 @@ function M:match(params)
     end
   end)
 
-  local oxi_matches = oxi.searcher.search_in_lines(pattern, lines, fuzzy, regex) ---@type oxi.string.ILineMatch[]|nil
+  local oxi_matches = oxi.searcher.search_in_lines({
+    pattern = pattern,
+    lines = lines,
+    flag_fuzzy = fuzzy,
+    flag_regex = regex,
+    flag_case_sensitive = case_sensitive,
+  }) ---@type oxi.string.ILineMatch[]|nil
   if oxi_matches ~= nil then
     for _, oxi_match in ipairs(oxi_matches) do
       local lnum = oxi_match.lnum ---@type integer

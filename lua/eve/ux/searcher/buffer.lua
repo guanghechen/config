@@ -474,6 +474,8 @@ function M:__search__()
   -- Construct search parameters following the filetree pattern
   ---@type oxi.searcher.ISearchInBufferParams
   local search_params = {
+    bufnr = bufnr_source,
+    search_pattern = pattern,
     flag_fuzzy = self.o_flag_fuzzy:snapshot(),
     flag_regex = self.o_flag_regex:snapshot(),
     flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
@@ -483,7 +485,8 @@ function M:__search__()
   }
 
   -- Perform the search
-  local matches = oxi.searcher.search_in_buffer(search_params, bufnr_source)
+  local matches = oxi.searcher.search_in_buffer(search_params)
+
   if not matches or #matches < 1 then
     self._matches = {}
     self.o_match_index:next(0)

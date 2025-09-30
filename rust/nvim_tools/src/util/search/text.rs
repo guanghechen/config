@@ -9,6 +9,7 @@ pub fn search_in_lines<I, S>(
     lines: I,
     flag_fuzzy: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
 ) -> Result<Vec<LineMatch>, String>
 where
     I: IntoIterator<Item = S>,
@@ -25,7 +26,12 @@ where
     let mut matches: Vec<LineMatch> = vec![];
 
     if flag_regex {
-        let regex = Regex::new(pattern);
+        let regex_pattern = if flag_case_sensitive {
+            format!("(?-i){}", pattern)
+        } else {
+            format!("(?i){}", pattern)
+        };
+        let regex = Regex::new(&regex_pattern);
         match regex {
             Ok(regex) => {
                 for (i, s) in lines.into_iter().enumerate() {
@@ -56,8 +62,13 @@ where
             Err(e) => return Err(format!("Bad regex, error: {}", e)),
         };
     } else {
-        let pattern_bytes = pattern.as_bytes();
-        let pattern_chars = pattern.chars().collect::<Vec<char>>();
+        let pattern_str = if flag_case_sensitive {
+            pattern.to_string()
+        } else {
+            pattern.to_lowercase()
+        };
+        let pattern_bytes = pattern_str.as_bytes();
+        let pattern_chars = pattern_str.chars().collect::<Vec<char>>();
         let n_pattern_bytes: usize = pattern_bytes.len();
         let n_pattern_chars: usize = pattern_chars.len();
         let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
@@ -69,7 +80,12 @@ where
                 continue;
             }
 
-            let line_bytes = line.as_bytes();
+            let line_str = if flag_case_sensitive {
+                line.to_string()
+            } else {
+                line.to_lowercase()
+            };
+            let line_bytes = line_str.as_bytes();
             let base: f64 = line.len() as f64;
             let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
             if !points.is_empty() {
@@ -94,7 +110,7 @@ where
                 continue;
             }
 
-            let line_chars = line.chars().collect::<Vec<char>>();
+            let line_chars = line_str.chars().collect::<Vec<char>>();
             let n_line_chars: usize = line_chars.len();
             let mut score = 0;
             let mut all_pattern_matches: Vec<MatchPoint> = vec![];
@@ -185,6 +201,7 @@ pub fn search_in_text(
     text: &str,
     flag_fuzzy: bool,
     flag_regex: bool,
+    flag_case_sensitive: bool,
 ) -> Result<Vec<LineMatch>, String> {
-    search_in_lines(pattern, text.lines(), flag_fuzzy, flag_regex)
+    search_in_lines(pattern, text.lines(), flag_fuzzy, flag_regex, flag_case_sensitive)
 }

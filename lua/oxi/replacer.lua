@@ -230,11 +230,7 @@ local M = {}
 ---@param params                        oxi.replacer.replace_file.IParams
 ---@return boolean
 function M.replace_file(params)
-  local search_pattern = params.search_pattern ---@type string
   local filepath = std.path.resolve(params.cwd, params.filepath) ---@type string
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
 
   ---@type oxi.replacer.replace_file.IPayload
   local payload = {
@@ -242,7 +238,7 @@ function M.replace_file(params)
     flag_case_sensitive = params.flag_case_sensitive,
     flag_regex = params.flag_regex,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
   }
 
   local _, data = oxi.fn.safe_call("replace_file", payload)
@@ -253,12 +249,8 @@ end
 ---@return boolean
 ---@return boolean
 function M.replace_file_by_matches(params)
-  local search_pattern = params.search_pattern ---@type string
   local filepath = std.path.resolve(params.cwd, params.filepath) ---@type string
   local match_offsets = params.match_offsets ---@type integer[]
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
 
   ---@type oxi.replacer.replace_file_by_matches.IPayload
   local payload = {
@@ -267,7 +259,7 @@ function M.replace_file_by_matches(params)
     flag_regex = params.flag_regex,
     match_offsets = match_offsets,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
   }
 
   local ok, data = oxi.fn.safe_call("replace_file_by_matches", payload)
@@ -278,13 +270,9 @@ end
 ---@return boolean
 ---@return std.t.IMatchLocation[]
 function M.replace_file_by_matches_advance(params)
-  local search_pattern = params.search_pattern ---@type string
   local filepath = std.path.resolve(params.cwd, params.filepath) ---@type string
   local match_offsets = params.match_offsets ---@type integer[]
   local remain_offsets = params.remain_offsets ---@type integer[]
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
 
   ---@type oxi.replacer.replace_file_by_matches_advance.IPayload
   local payload = {
@@ -294,7 +282,7 @@ function M.replace_file_by_matches_advance(params)
     match_offsets = match_offsets,
     remain_offsets = remain_offsets,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
   }
 
   local ok, data = oxi.fn.safe_call("replace_file_by_matches_advance", payload)
@@ -306,18 +294,13 @@ end
 ---@param params                        oxi.replacer.replace_file_preview.IParams
 ---@return oxi.replacer.replace_file_preview.IResult
 function M.replace_file_preview(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
   ---@type oxi.replacer.replace_file_preview.IPayload
   local payload = {
     filepath = params.filepath,
     flag_regex = params.flag_regex,
     flag_case_sensitive = params.flag_case_sensitive,
     keep_search_pieces = params.keep_search_pieces,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
     replace_pattern = params.replace_pattern,
   }
 
@@ -340,11 +323,6 @@ end
 ---@param params                        oxi.replacer.replace_file_preview_advance.IParams
 ---@return oxi.replacer.replace_file_preview_advance.IResult
 function M.replace_file_preview_advance(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
   ---@type oxi.replacer.replace_file_preview_advance.IPayload
   local payload = {
     filepath = params.filepath,
@@ -352,7 +330,7 @@ function M.replace_file_preview_advance(params)
     flag_regex = params.flag_regex,
     keep_search_pieces = params.keep_search_pieces,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
   }
 
   local ok, data = oxi.fn.safe_call("replace_file_preview_advance", payload)
@@ -374,11 +352,6 @@ end
 ---@param params                        oxi.replacer.replace_file_preview_by_matches_advance.IParams
 ---@return oxi.replacer.replace_file_preview_by_matches_advance.IResult
 function M.replace_file_preview_by_matches_advance(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
   ---@type oxi.replacer.replace_file_preview_by_matches_advance.IPayload
   local payload = {
     filepath = params.filepath,
@@ -387,7 +360,7 @@ function M.replace_file_preview_by_matches_advance(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
   }
 
   local ok, data = oxi.fn.safe_call("replace_file_preview_by_matches_advance", payload)
@@ -409,18 +382,13 @@ end
 ---@param params                        oxi.replacer.replace_text_preview.IParams
 ---@return oxi.replacer.replace_text_preview.IResult
 function M.replace_text_preview(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
   ---@type oxi.replacer.replace_text_preview.IPayload
   local payload = {
     flag_case_sensitive = params.flag_case_sensitive,
     flag_regex = params.flag_regex,
     keep_search_pieces = params.keep_search_pieces,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
     text = params.text,
   }
 
@@ -443,11 +411,6 @@ end
 ---@param params                        oxi.replacer.replace_text_preview_by_matches.IParams
 ---@return oxi.replacer.replace_text_preview_by_matches.IResult
 function M.replace_text_preview_by_matches(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
   ---@type oxi.replacer.replace_text_preview_by_matches.IPayload
   local payload = {
     flag_case_sensitive = params.flag_case_sensitive,
@@ -455,7 +418,7 @@ function M.replace_text_preview_by_matches(params)
     keep_search_pieces = params.keep_search_pieces,
     match_offsets = params.match_offsets,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
     text = params.text,
   }
 
@@ -478,18 +441,13 @@ end
 ---@param params                        oxi.replacer.replace_text_preview_advance.IParams
 ---@return oxi.replacer.replace_text_preview_advance.IResult
 function M.replace_text_preview_advance(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
   ---@type oxi.replacer.replace_text_preview_advance.IPayload
   local payload = {
     flag_case_sensitive = params.flag_case_sensitive,
     flag_regex = params.flag_regex,
     keep_search_pieces = params.keep_search_pieces,
     replace_pattern = params.replace_pattern,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
     text = params.text,
   }
 
@@ -512,15 +470,10 @@ end
 ---@param params                        oxi.replacer.replace_text_preview_by_matches_advance.IParams
 ---@return oxi.replacer.replace_text_preview_by_matches_advance.IResult
 function M.replace_text_preview_by_matches_advance(params)
-  local search_pattern = params.search_pattern
-  if params.flag_regex and not params.flag_case_sensitive then
-    search_pattern = "(?i)" .. search_pattern:lower()
-  end
-
   ---@type oxi.replacer.replace_text_preview_by_matches_advance.IPayload
   local payload = {
     text = params.text,
-    search_pattern = search_pattern,
+    search_pattern = params.search_pattern,
     replace_pattern = params.replace_pattern,
     flag_regex = params.flag_regex,
     flag_case_sensitive = params.flag_case_sensitive,

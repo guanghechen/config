@@ -10,6 +10,9 @@ use crate::types::dto::LineMatch;
 use crate::types::dto::MoveParams;
 use crate::types::dto::ReadAllFilesSucceedResult;
 use crate::types::dto::ReaddirSucceedResult;
+use crate::types::dto::SearchInBufferParams;
+use crate::types::dto::SearchInLinesParams;
+use crate::types::dto::SearchInTextParams;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
@@ -46,21 +49,21 @@ fn nvim_tools() -> Dictionary {
         (
             "search_in_lines",
             Object::from(Function::<
-                (String, Vec<String>, bool, bool),
+                SearchInLinesParams,
                 Result<Vec<LineMatch>, String>,
             >::from_fn(oxi::search::search_in_lines)),
         ),
         (
             "search_in_text",
             Object::from(Function::<
-                (String, String, bool, bool),
+                SearchInTextParams,
                 Result<Vec<LineMatch>, String>,
             >::from_fn(oxi::search::search_in_text)),
         ),
         (
             "search_in_buffer",
             Object::from(Function::<
-                (String, i32, bool, bool),
+                SearchInBufferParams,
                 Result<Vec<LineMatch>, String>,
             >::from_fn(oxi::search::search_in_buffer)),
         ),

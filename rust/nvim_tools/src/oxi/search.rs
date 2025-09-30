@@ -1,25 +1,34 @@
+use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
 use crate::types::dto::CmdResult;
 use crate::types::dto::LineMatch;
+use crate::types::dto::SearchInBufferParams;
 use crate::types::dto::SearchInFilesParams;
-use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
+use crate::types::dto::SearchInLinesParams;
+use crate::types::dto::SearchInTextParams;
 use crate::util;
 use nvim_oxi::api::Buffer;
 
-pub fn search_in_lines(
-    (pattern, lines, flag_fuzzy, flag_regex): (String, Vec<String>, bool, bool),
-) -> Result<Vec<LineMatch>, String> {
-    util::search::search_in_lines(&pattern, &lines, flag_fuzzy, flag_regex)
+pub fn search_in_lines(params: SearchInLinesParams) -> Result<Vec<LineMatch>, String> {
+    util::search::search_in_lines(
+        &params.pattern,
+        &params.lines,
+        params.flag_fuzzy,
+        params.flag_regex,
+        params.flag_case_sensitive,
+    )
 }
 
-pub fn search_in_text(
-    (pattern, text, flag_fuzzy, flag_regex): (String, String, bool, bool),
-) -> Result<Vec<LineMatch>, String> {
-    util::search::search_in_text(&pattern, &text, flag_fuzzy, flag_regex)
+pub fn search_in_text(params: SearchInTextParams) -> Result<Vec<LineMatch>, String> {
+    util::search::search_in_text(
+        &params.pattern,
+        &params.text,
+        params.flag_fuzzy,
+        params.flag_regex,
+        params.flag_case_sensitive,
+    )
 }
 
-pub fn search_in_files(
-    params: SearchInFilesParams,
-) -> CmdResult<SearchInFilesSucceedResult> {
+pub fn search_in_files(params: SearchInFilesParams) -> CmdResult<SearchInFilesSucceedResult> {
     let options = SearchInFilesParams {
         cwd: params.cwd,
         max_matches: params.max_matches,
@@ -52,24 +61,26 @@ pub fn search_in_files(
     cmd_result
 }
 
-pub fn search_in_buffer(
-    (pattern, bufnr, flag_fuzzy, flag_regex): (String, i32, bool, bool),
-) -> Result<Vec<LineMatch>, String> {
-    let buffer = Buffer::from(bufnr);
+pub fn search_in_buffer(params: SearchInBufferParams) -> Result<Vec<LineMatch>, String> {
+    let buffer = Buffer::from(params.bufnr);
 
     if !buffer.is_valid() {
-        return Err(format!("Invalid buffer number: {}", bufnr));
+        return Err(format!("Invalid buffer number: {}", params.bufnr));
     }
 
     let lines_result = buffer.get_lines(.., false);
 
     match lines_result {
         Ok(lines_iter) => {
-            let lines: Vec<String> = lines_iter
-                .map(|s| s.to_string())
-                .collect();
-            util::search::search_in_lines(&pattern, &lines, flag_fuzzy, flag_regex)
-        },
-        Err(err) => Err(format!("Failed to read buffer {}: {}", bufnr, err)),
+            let lines: Vec<String> = lines_iter.map(|s| s.to_string()).collect();
+            util::search::search_in_lines(
+                &params.search_pattern,
+                &lines,
+                params.flag_fuzzy,
+                params.flag_regex,
+                params.flag_case_sensitive,
+            )
+        }
+        Err(err) => Err(format!("Failed to read buffer {}: {}", params.bufnr, err)),
     }
 }
