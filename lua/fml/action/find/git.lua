@@ -6,7 +6,7 @@ local o_finder_input = eve.context.select.find_git.input
 local o_flag_foldempty = eve.context.select.find_git.flag_foldempty
 local o_flag_fuzzy = eve.context.select.find_git.flag_fuzzy
 local o_flag_regex = eve.context.select.find_git.flag_regex
-local o_flag_sensitive = eve.context.select.find_git.flag_case_sensitive
+local o_flag_case_sensitive = eve.context.select.find_git.flag_case_sensitive
 local o_flag_selected = eve.context.select.find_git.flag_selected
 local o_flag_viewtype = eve.context.select.find_git.flag_viewtype
 
@@ -45,7 +45,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
   flag_foldempty = o_flag_foldempty,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
   flag_selected = o_flag_selected,
   flag_viewtype = o_flag_viewtype,
   flags_start_index = 1,

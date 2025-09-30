@@ -19,7 +19,7 @@ local o_scope = eve.context.select.find_buffer_scope ---@type std.collection.IOb
 local o_finder_input = eve.context.select.find_buffer.input ---@type std.collection.IObservable
 local o_flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy ---@type std.collection.IObservable
 local o_flag_regex = eve.context.select.find_buffer.flag_regex ---@type std.collection.IObservable
-local o_flag_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type std.collection.IObservable
+local o_flag_case_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type std.collection.IObservable
 
 local IGNORED_FILETYPES = {
   eve.filetype.UX_PICKER_FINDER,
@@ -143,7 +143,7 @@ picker = eve.ux.picker.ListComposer.new({
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
   flag_start_index = 0,
 
   flags_prepend = {

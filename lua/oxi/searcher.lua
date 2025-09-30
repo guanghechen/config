@@ -87,7 +87,7 @@ end
 ---@class oxi.searcher.ISearchInBufferParams
 ---@field public flag_fuzzy             boolean
 ---@field public flag_regex             boolean
----@field public flag_sensitive         boolean
+---@field public flag_case_sensitive    boolean
 ---@field public flag_replace           boolean
 ---@field public search_pattern         string
 ---@field public replace_pattern        string

@@ -60,7 +60,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---
 ---@field public flag_fuzzy             std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
----@field public flag_sensitive         std.collection.IObservable
+---@field public flag_case_sensitive    std.collection.IObservable
 ---@field public flags_append           eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
@@ -90,7 +90,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---
 ---@field public flag_fuzzy             std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
----@field public flag_sensitive         std.collection.IObservable
+---@field public flag_case_sensitive    std.collection.IObservable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _composer           eve.ux.picker.BasicComposer
@@ -131,7 +131,7 @@ function M.new(props)
 
   local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
   local flag_regex = props.flag_regex ---@type std.collection.IObservable
-  local flag_sensitive = props.flag_sensitive ---@type std.collection.IObservable
+  local flag_case_sensitive = props.flag_case_sensitive ---@type std.collection.IObservable
   local flags_append = props.flags_append ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type eve.ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
@@ -252,11 +252,11 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: sensitive", name),
       callback = function()
-        flag_sensitive:next(not flag_sensitive:snapshot())
+        flag_case_sensitive:next(not flag_case_sensitive:snapshot())
       end,
       snapshot = function()
         return eve.icon.symbols.flag_case_sensitive,
-          flag_sensitive:snapshot() and "picker_flag_blue" or "picker_flag_grey"
+          flag_case_sensitive:snapshot() and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -367,7 +367,7 @@ function M.new(props)
 
   self.flag_fuzzy = flag_fuzzy
   self.flag_regex = flag_regex
-  self.flag_sensitive = flag_sensitive
+  self.flag_case_sensitive = flag_case_sensitive
 
   self._disposed = false
   self._composer = composer
@@ -384,10 +384,10 @@ function M.new(props)
   self._on_confirm = on_confirm
   self._on_disposed = on_disposed
 
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
+  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     composer:mark_result_flags_dirty()
   end, true)
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_sensitive }, function()
+  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     scheduler_match:schedule()
   end)
   std.fn.observe({ composer.result.lnum_current }, function()
@@ -443,7 +443,7 @@ function M:dispose()
 
   self.flag_fuzzy = nil
   self.flag_regex = nil
-  self.flag_sensitive = nil
+  self.flag_case_sensitive = nil
 
   self._composer = nil
   self._retriever = nil
@@ -582,7 +582,7 @@ function M:__match__(input)
       matches[#matches + 1] = { order = order, uuid = item.uuid, score = 0, matches = {} }
     end
   else
-    local case_sensitive = self.flag_sensitive:snapshot()
+    local case_sensitive = self.flag_case_sensitive:snapshot()
     local use_fuzzy = self.flag_fuzzy:snapshot()
     local use_regex = self.flag_regex:snapshot()
 

@@ -55,7 +55,7 @@ end
 local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
 local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
 ---@type eve.ux.picker.ListComposer
 local picker = eve.ux.picker.ListComposer.new({
@@ -68,7 +68,7 @@ local picker = eve.ux.picker.ListComposer.new({
   finder_input = finder_input,
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
-  flag_sensitive = flag_sensitive,
+  flag_case_sensitive = flag_case_sensitive,
 
   render_result = function(composer, bufnr, itemmap, matches)
     ---@cast itemmap                         table<string, fml.action.find.highlights.IItem>

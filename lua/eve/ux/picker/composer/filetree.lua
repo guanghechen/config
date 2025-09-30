@@ -74,7 +74,7 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public flag_foldempty         std.collection.IObservable
 ---@field public flag_fuzzy             std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
----@field public flag_sensitive         std.collection.IObservable
+---@field public flag_case_sensitive    std.collection.IObservable
 ---@field public flag_selected          std.collection.IObservable
 ---@field public flag_viewtype          std.collection.IObservable
 ---@field public flags_append           eve.ux.picker.result.IFlagItemRaw[]|nil
@@ -108,7 +108,7 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public flag_foldempty         std.collection.IObservable
 ---@field public flag_fuzzy             std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
----@field public flag_sensitive         std.collection.IObservable
+---@field public flag_case_sensitive    std.collection.IObservable
 ---@field public flag_selected          std.collection.IObservable
 ---@field public flag_viewtype          std.collection.IObservable
 ---
@@ -157,7 +157,7 @@ function M.new(props)
   local o_flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
   local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
   local o_flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
-  local o_flag_sensitive = props.flag_sensitive ---@type std.collection.IObservable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type std.collection.IObservable
   local o_flag_selected = props.flag_selected ---@type std.collection.IObservable
   local o_flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
 
@@ -294,11 +294,11 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: sensitive", name),
       callback = function()
-        local enabled = o_flag_sensitive:snapshot() ---@type boolean
-        o_flag_sensitive:next(not enabled)
+        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
+        o_flag_case_sensitive:next(not enabled)
       end,
       snapshot = function()
-        local enabled = o_flag_sensitive:snapshot() ---@type boolean
+        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
         return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
@@ -1430,7 +1430,7 @@ function M.new(props)
   self.flag_foldempty = o_flag_foldempty
   self.flag_fuzzy = o_flag_fuzzy
   self.flag_regex = o_flag_regex
-  self.flag_sensitive = o_flag_sensitive
+  self.flag_case_sensitive = o_flag_case_sensitive
   self.flag_selected = o_flag_selected
   self.flag_viewtype = o_flag_viewtype
 
@@ -1453,7 +1453,7 @@ function M.new(props)
   self._on_disposed = on_disposed
 
   std.fn.observe(
-    { o_finder_input, o_flag_foldempty, o_flag_fuzzy, o_flag_regex, o_flag_sensitive, o_flag_selected, o_flag_viewtype },
+    { o_finder_input, o_flag_foldempty, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_selected, o_flag_viewtype },
     function()
       composer:mark_result_flags_dirty()
     end,
@@ -1462,7 +1462,7 @@ function M.new(props)
   std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  std.fn.observe({ o_finder_input, o_flag_fuzzy, o_flag_regex, o_flag_sensitive }, function()
+  std.fn.observe({ o_finder_input, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive }, function()
     scheduler_match:schedule()
   end)
   std.fn.observe({ composer.result.lnum_current }, function()
@@ -1523,7 +1523,7 @@ function M:dispose()
   self.flag_foldempty = nil
   self.flag_fuzzy = nil
   self.flag_regex = nil
-  self.flag_sensitive = nil
+  self.flag_case_sensitive = nil
   self.flag_selected = nil
 
   self._frecency = nil
@@ -1855,7 +1855,7 @@ function M:__match__(input)
   local uuids_order = treeview:match({
     rootuuid = self._uuid_root,
     pattern = pattern,
-    case_sensitive = self.flag_sensitive:snapshot(),
+    case_sensitive = self.flag_case_sensitive:snapshot(),
     fuzzy = self.flag_fuzzy:snapshot(),
     regex = self.flag_regex:snapshot(),
   })

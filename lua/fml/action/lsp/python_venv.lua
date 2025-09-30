@@ -6,7 +6,7 @@ local dirty_data = true ---@type boolean
 local o_finder_input = std.Observable.from_value("")
 local o_flag_fuzzy = std.Observable.from_value(true)
 local o_flag_regex = std.Observable.from_value(false)
-local o_flag_sensitive = std.Observable.from_value(false)
+local o_flag_case_sensitive = std.Observable.from_value(false)
 local o_python_venv_path = eve.context.lsp.python_venv_path
 
 ---@param folder                               string
@@ -295,7 +295,7 @@ picker = eve.ux.picker.ListComposer.new({
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
 
   on_confirm = function(composer, item)
     ---@cast item fml.action.lsp.python_venv.IItem
@@ -309,7 +309,7 @@ picker = eve.ux.picker.ListComposer.new({
     o_finder_input:dispose()
     o_flag_fuzzy:dispose()
     o_flag_regex:dispose()
-    o_flag_sensitive:dispose()
+    o_flag_case_sensitive:dispose()
   end,
   on_refresh = function(composer)
     local result = fetch_data()

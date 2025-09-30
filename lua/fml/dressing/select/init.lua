@@ -86,7 +86,7 @@ function M.select(items, opts, on_choice)
   local finder_input = std.Observable.from_value(context and context.input:snapshot() or "") ---@type std.collection.IObservable
   local flag_fuzzy = std.Observable.from_value(context and context.flag_fuzzy:snapshot() or true) ---@type std.collection.IObservable
   local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-  local flag_sensitive = std.Observable.from_value(context and context.flag_case_sensitive:snapshot() or false) ---@type std.collection.IObservable
+  local flag_case_sensitive = std.Observable.from_value(context and context.flag_case_sensitive:snapshot() or false) ---@type std.collection.IObservable
 
   -- Handle dimension options
   local picker_height = math.min(#items + 3, math.floor(vim.o.lines * 0.8))
@@ -114,7 +114,7 @@ function M.select(items, opts, on_choice)
     finder_input = finder_input,
     flag_fuzzy = flag_fuzzy,
     flag_regex = flag_regex,
-    flag_sensitive = flag_sensitive,
+    flag_case_sensitive = flag_case_sensitive,
 
     render_result = render_result,
     render_preview = render_preview,
@@ -143,7 +143,7 @@ function M.select(items, opts, on_choice)
       finder_input:dispose()
       flag_fuzzy:dispose()
       flag_regex:dispose()
-      flag_sensitive:dispose()
+      flag_case_sensitive:dispose()
     end,
   })
 

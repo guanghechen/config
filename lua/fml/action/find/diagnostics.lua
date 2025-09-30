@@ -22,7 +22,7 @@ local o_finder_input = eve.context.select.find_diagnostics.input ---@type std.co
 local o_flag_foldempty = eve.context.select.find_diagnostics.flag_foldempty ---@type std.collection.IObservable
 local o_flag_fuzzy = eve.context.select.find_diagnostics.flag_fuzzy ---@type std.collection.IObservable
 local o_flag_regex = eve.context.select.find_diagnostics.flag_regex ---@type std.collection.IObservable
-local o_flag_sensitive = eve.context.select.find_diagnostics.flag_case_sensitive ---@type std.collection.IObservable
+local o_flag_case_sensitive = eve.context.select.find_diagnostics.flag_case_sensitive ---@type std.collection.IObservable
 local o_flag_selected = eve.context.select.find_diagnostics.flag_selected ---@type std.collection.IObservable
 local o_flag_viewtype = eve.context.select.find_diagnostics.flag_viewtype ---@type std.collection.IObservable
 
@@ -237,7 +237,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
   flag_viewtype = o_flag_viewtype,
   flag_foldempty = o_flag_foldempty,
   flag_selected = o_flag_selected,

@@ -23,7 +23,7 @@ local dirty_data = true ---@type boolean
 local o_finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
 local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local o_flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+local o_flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
 ---@return eve.ux.picker.composer.list.IResetData
 local function fetch_data()
@@ -90,7 +90,7 @@ local picker = eve.ux.picker.ListComposer.new({
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
 
   render_result = function(_, bufnr, itemmap, matches)
     ---@cast itemmap                    table<string, fml.action.find.vim_options.IItem>

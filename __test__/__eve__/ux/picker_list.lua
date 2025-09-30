@@ -17,7 +17,7 @@ local finder_input_history = std.InputHistory.new({
 })
 local o_flag_fuzzy = std.Observable.from_value(true)
 local o_flag_regex = std.Observable.from_value(false)
-local o_flag_sensitive = std.Observable.from_value(false)
+local o_flag_case_sensitive = std.Observable.from_value(false)
 local o_flag_test_mode = std.Observable.from_value(1)
 
 local test_items = {
@@ -85,7 +85,7 @@ picker = eve.ux.picker.ListComposer.new({
   finder_input_history = finder_input_history,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
   flags_start_index = 0,
   flags_prepend = {
     {
@@ -313,7 +313,7 @@ picker = eve.ux.picker.ListComposer.new({
 
     local fuzzy_icon = self.flag_fuzzy:snapshot() and "🟢" or "🔴"
     local regex_icon = self.flag_regex:snapshot() and "🟢" or "🔴"
-    local case_icon = self.flag_sensitive:snapshot() and "🟢" or "🔴"
+    local case_icon = self.flag_case_sensitive:snapshot() and "🟢" or "🔴"
 
     lines[#lines + 1] =
       string.format("    │  %s Fuzzy    %s Regex    %s Case   │", fuzzy_icon, regex_icon, case_icon)
@@ -431,7 +431,7 @@ picker = eve.ux.picker.ListComposer.new({
           vim.hl.range(
             bufnr,
             nsnr,
-            self.flag_sensitive:snapshot() and "@string.special" or "Comment",
+            self.flag_case_sensitive:snapshot() and "@string.special" or "Comment",
             { i - 1, case_pos - 1 },
             { i - 1, case_pos + 3 }
           )

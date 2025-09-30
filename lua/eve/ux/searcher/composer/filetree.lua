@@ -60,7 +60,7 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field public flag_gitignore         std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
 ---@field public flag_replace           std.collection.IObservable
----@field public flag_sensitive         std.collection.IObservable
+---@field public flag_case_sensitive    std.collection.IObservable
 ---@field public flag_selected          std.collection.IObservable
 ---@field public flag_viewtype          std.collection.IObservable
 ---@field public includes               std.collection.IObservable
@@ -101,7 +101,7 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field public flag_gitignore         std.collection.IObservable
 ---@field public flag_regex             std.collection.IObservable
 ---@field public flag_replace           std.collection.IObservable
----@field public flag_sensitive         std.collection.IObservable
+---@field public flag_case_sensitive    std.collection.IObservable
 ---@field public flag_selected          std.collection.IObservable
 ---@field public includes               std.collection.IObservable
 ---@field public max_filesize           std.collection.IObservable
@@ -149,7 +149,7 @@ function M.new(props)
   local o_flag_gitignore = props.flag_gitignore ---@type std.collection.IObservable
   local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
   local o_flag_replace = props.flag_replace ---@type std.collection.IObservable
-  local o_flag_case_sensitive = props.flag_sensitive ---@type std.collection.IObservable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type std.collection.IObservable
   local o_flag_selected = props.flag_selected ---@type std.collection.IObservable
   local o_flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
   local o_includes = props.includes ---@type std.collection.IObservable
@@ -1292,7 +1292,7 @@ function M.new(props)
   self.flag_gitignore = o_flag_gitignore
   self.flag_regex = o_flag_regex
   self.flag_replace = o_flag_replace
-  self.flag_sensitive = o_flag_case_sensitive
+  self.flag_case_sensitive = o_flag_case_sensitive
   self.flag_selected = o_flag_selected
   self.includes = o_includes
   self.max_filesize = o_max_filesize
@@ -1397,7 +1397,7 @@ function M:dispose()
   self.flag_gitignore = nil
   self.flag_regex = nil
   self.flag_replace = nil
-  self.flag_sensitive = nil
+  self.flag_case_sensitive = nil
   self.flag_selected = nil
   self.includes = nil
   self.max_filesize = nil
@@ -1691,7 +1691,7 @@ function M:__search__()
     excludes = self.excludes:snapshot(),
     includes = self.includes:snapshot(),
 
-    flag_case_sensitive = self.flag_sensitive:snapshot(),
+    flag_case_sensitive = self.flag_case_sensitive:snapshot(),
     flag_exclude = self.flag_exclude:snapshot(),
     flag_gitignore = self.flag_gitignore:snapshot(),
     flag_regex = self.flag_regex:snapshot(),
@@ -1936,7 +1936,7 @@ function M:__replace_file__(cwd, node, nodestate)
     return false
   end
 
-  local flag_case_sensitive = self.flag_sensitive:snapshot() ---@type boolean
+  local flag_case_sensitive = self.flag_case_sensitive:snapshot() ---@type boolean
   local flag_regex = self.flag_regex:snapshot() ---@type boolean
   local search_pattern = self.search_pattern:snapshot() ---@type string
   local replace_pattern = self.replace_pattern:snapshot() ---@type string

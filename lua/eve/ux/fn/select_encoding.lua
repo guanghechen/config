@@ -105,7 +105,7 @@ local function select_encoding(params)
   local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
   local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
   local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-  local flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+  local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
   if picker and not picker:isdisposed() then
     picker:dispose()
@@ -122,7 +122,7 @@ local function select_encoding(params)
     finder_input = finder_input,
     flag_fuzzy = flag_fuzzy,
     flag_regex = flag_regex,
-    flag_sensitive = flag_sensitive,
+    flag_case_sensitive = flag_case_sensitive,
 
     on_cancel = function()
       on_select(nil)
@@ -140,7 +140,7 @@ local function select_encoding(params)
       finder_input:dispose()
       flag_fuzzy:dispose()
       flag_regex:dispose()
-      flag_sensitive:dispose()
+      flag_case_sensitive:dispose()
     end,
   })
 

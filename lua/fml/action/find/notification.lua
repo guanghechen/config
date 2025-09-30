@@ -11,7 +11,7 @@ local dirty_data = true ---@type boolean
 local o_finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
 local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local o_flag_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+local o_flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
 ---@return eve.ux.picker.composer.list.IResetData
 local function fetch_data()
@@ -59,7 +59,7 @@ picker = eve.ux.picker.ListComposer.new({
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
 
   render_preview = function(composer, bufnr)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
@@ -182,7 +182,7 @@ picker = eve.ux.picker.ListComposer.new({
     o_finder_input:dispose()
     o_flag_fuzzy:dispose()
     o_flag_regex:dispose()
-    o_flag_sensitive:dispose()
+    o_flag_case_sensitive:dispose()
   end,
   on_refresh = function(composer)
     local data = fetch_data()

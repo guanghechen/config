@@ -35,7 +35,7 @@ local WANT_SYMBOLS = {
 local o_finder_input = eve.context.select.lsp_symbols.input ---@type std.collection.IObservable
 local o_flag_fuzzy = eve.context.select.lsp_symbols.flag_fuzzy ---@type std.collection.IObservable
 local o_flag_regex = eve.context.select.lsp_symbols.flag_regex ---@type std.collection.IObservable
-local o_flag_sensitive = eve.context.select.lsp_symbols.flag_case_sensitive ---@type std.collection.IObservable
+local o_flag_case_sensitive = eve.context.select.lsp_symbols.flag_case_sensitive ---@type std.collection.IObservable
 local o_flag_viewtype = eve.context.select.lsp_symbols.flag_viewtype ---@type std.collection.IObservable
 local o_flag_foldempty = eve.context.select.lsp_symbols.flag_foldempty ---@type std.collection.IObservable
 local picker ---@type eve.ux.picker.TreeComposer
@@ -316,7 +316,7 @@ picker = eve.ux.picker.TreeComposer.new({
   finder_input = o_finder_input,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
-  flag_sensitive = o_flag_sensitive,
+  flag_case_sensitive = o_flag_case_sensitive,
   flag_viewtype = o_flag_viewtype,
   flag_foldempty = o_flag_foldempty,
   flag_selected = std.Observable.from_value(false),

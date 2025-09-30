@@ -13,7 +13,7 @@ local finder_input = std.Observable.from_value("")
 local flag_foldempty = eve.context.select.lsp_reference.flag_foldempty
 local flag_fuzzy = eve.context.select.lsp_reference.flag_fuzzy
 local flag_regex = eve.context.select.lsp_reference.flag_regex
-local flag_sensitive = eve.context.select.lsp_reference.flag_case_sensitive
+local flag_case_sensitive = eve.context.select.lsp_reference.flag_case_sensitive
 local flag_selected = eve.context.select.lsp_reference.flag_selected
 local flag_viewtype = eve.context.select.lsp_reference.flag_viewtype
 
@@ -30,7 +30,7 @@ local picker = eve.ux.picker.FiletreeComposer.new({
   flag_foldempty = flag_foldempty,
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
-  flag_sensitive = flag_sensitive,
+  flag_case_sensitive = flag_case_sensitive,
   flag_selected = flag_selected,
   flag_viewtype = flag_viewtype,
   flags_start_index = 1,

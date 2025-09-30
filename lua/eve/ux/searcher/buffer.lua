@@ -7,7 +7,7 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@
 ---@field public o_flag_fuzzy           std.collection.IObservable
 ---@field public o_flag_regex           std.collection.IObservable
 ---@field public o_flag_replace         std.collection.IObservable
----@field public o_flag_sensitive       std.collection.IObservable
+---@field public o_flag_case_sensitive  std.collection.IObservable
 ---@field public o_search_pattern       std.collection.IObservable
 ---@field public o_replace_pattern      std.collection.IObservable
 ---@field public o_match_index          std.collection.IObservable
@@ -16,9 +16,9 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@
 ---@field protected _bufnr_popup        integer|nil
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            oxi.string.ILineMatch[]|nil
----@field protected _scheduler_search    std.collection.Scheduler
----@field protected _nvimbar             eve.ux.nvimbar.Nvimbar
----@field protected _keymaps             std.t.IKeymap[]
+---@field protected _scheduler_search   std.collection.Scheduler
+---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
+---@field protected _keymaps            std.t.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -27,7 +27,7 @@ function M.new()
   local o_flag_fuzzy = std.Observable.from_value(false)
   local o_flag_regex = std.Observable.from_value(false)
   local o_flag_replace = std.Observable.from_value(false)
-  local o_flag_sensitive = std.Observable.from_value(false)
+  local o_flag_case_sensitive = std.Observable.from_value(false)
   local o_search_pattern = std.Observable.from_value("")
   local o_replace_pattern = std.Observable.from_value("")
   local o_match_index = std.Observable.from_value(0)
@@ -62,11 +62,11 @@ function M.new()
     {
       desc = string.format("%s: toggle case sensitive", self.title),
       callback = function()
-        local enabled = o_flag_sensitive:snapshot() ---@type boolean
-        o_flag_sensitive:next(not enabled)
+        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
+        o_flag_case_sensitive:next(not enabled)
       end,
       snapshot = function()
-        local enabled = o_flag_sensitive:snapshot() ---@type boolean
+        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
         return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
@@ -204,7 +204,7 @@ function M.new()
   self.o_flag_fuzzy = o_flag_fuzzy
   self.o_flag_regex = o_flag_regex
   self.o_flag_replace = o_flag_replace
-  self.o_flag_sensitive = o_flag_sensitive
+  self.o_flag_case_sensitive = o_flag_case_sensitive
   self.o_search_pattern = o_search_pattern
   self.o_replace_pattern = o_replace_pattern
   self.o_match_index = o_match_index
@@ -221,7 +221,7 @@ function M.new()
   std.fn.observe({
     self.o_flag_fuzzy,
     self.o_flag_regex,
-    self.o_flag_sensitive,
+    self.o_flag_case_sensitive,
     self.o_flag_replace,
     self.o_match_index,
     self.o_match_total,
@@ -233,7 +233,7 @@ function M.new()
   std.fn.observe({
     self.o_flag_fuzzy,
     self.o_flag_regex,
-    self.o_flag_sensitive,
+    self.o_flag_case_sensitive,
     self.o_search_pattern,
   }, function()
     scheduler_search:schedule()
@@ -476,7 +476,7 @@ function M:__search__()
   local search_params = {
     flag_fuzzy = self.o_flag_fuzzy:snapshot(),
     flag_regex = self.o_flag_regex:snapshot(),
-    flag_sensitive = self.o_flag_sensitive:snapshot(),
+    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
     flag_replace = self.o_flag_replace:snapshot(),
     search_pattern = pattern,
     replace_pattern = self.o_replace_pattern:snapshot(),
