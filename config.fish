@@ -29,7 +29,7 @@ else if test -f /home/linuxbrew/.linuxbrew/bin/brew
     set -gx HOMEBREW_SHELLENV_PREFIX "/home/linuxbrew/.linuxbrew"
     set -gx NEOVIM_HOME "/home/linuxbrew/.linuxbrew"
 end
-if not set -q PREFER_STABLE_NEOVIM; or test "$PREFER_STABLE_NEOVIM" != true
+if not set -q PREFER_STABLE_NEOVIM; or test "$PREFER_STABLE_NEOVIM" != stable
     if test -f "$HOME/.app/neovim/bin/nvim"
         set -gx NEOVIM_HOME "$HOME/.app/neovim"
     else if test -f /opt/me/app/neovim/bin/nvim
