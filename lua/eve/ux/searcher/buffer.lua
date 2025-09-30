@@ -10,11 +10,12 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@
 ---@field public o_flag_sensitive       std.collection.IObservable
 ---@field public o_search_pattern       std.collection.IObservable
 ---@field public o_replace_pattern      std.collection.IObservable
+---@field public o_match_index          std.collection.IObservable
+---@field public o_match_total          std.collection.IObservable
 ---@field protected _winnr_popup        integer|nil
 ---@field protected _bufnr_popup        integer|nil
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            oxi.string.ILineMatch[]|nil
----@field protected _match_index        integer|nil
 ---@field protected _scheduler_search    std.collection.Scheduler
 ---@field protected _nvimbar             eve.ux.nvimbar.Nvimbar
 ---@field protected _keymaps             std.t.IKeymap[]
@@ -29,6 +30,8 @@ function M.new()
   local o_flag_sensitive = std.Observable.from_value(false)
   local o_search_pattern = std.Observable.from_value("")
   local o_replace_pattern = std.Observable.from_value("")
+  local o_match_index = std.Observable.from_value(0)
+  local o_match_total = std.Observable.from_value(0)
 
   local self = setmetatable({}, M)
 
@@ -181,6 +184,7 @@ function M.new()
         end
       end,
     })
+    :place("left", c.picker.result_pos(position, o_match_index, o_match_total), 100)
     :place("right", c.picker.result_flags(position, flags, 1), 100)
 
   ---@type std.collection.Scheduler
@@ -203,21 +207,24 @@ function M.new()
   self.o_flag_sensitive = o_flag_sensitive
   self.o_search_pattern = o_search_pattern
   self.o_replace_pattern = o_replace_pattern
+  self.o_match_index = o_match_index
+  self.o_match_total = o_match_total
   self._winnr_popup = nil
   self._bufnr_popup = nil
   self._bufnr_source = nil
   self._matches = nil
-  self._match_index = nil
   self._nvimbar = nvimbar
   self._scheduler_search = scheduler_search
   self._keymaps = keymaps
 
-  -- Add observers to re-render winbar when flags change
+  -- Add observers to re-render winbar when flags or match info change
   std.fn.observe({
     self.o_flag_fuzzy,
     self.o_flag_regex,
     self.o_flag_sensitive,
     self.o_flag_replace,
+    self.o_match_index,
+    self.o_match_total,
   }, function()
     self._nvimbar:render()
   end, true)
@@ -252,14 +259,14 @@ function M:goto_prev_match()
     return
   end
 
-  local index = math.min(N, self._match_index or 2) ---@type integer
+  local index = math.min(N, self.o_match_index:snapshot() or 2) ---@type integer
   index = index <= 1 and N or (index - 1) ---@type integer
 
   local match_prev = matches[index] ---@type oxi.string.ILineMatch
   if match_prev and match_prev.matches and #match_prev.matches > 0 then
     local target_win = vim.api.nvim_get_current_win() ---@type integer
     if vim.api.nvim_win_is_valid(target_win) then
-      self._match_index = index
+      self.o_match_index:next(index)
       vim.api.nvim_win_set_cursor(target_win, { match_prev.lnum, match_prev.matches[1].l })
     end
   end
@@ -282,14 +289,14 @@ function M:goto_next_match()
     return
   end
 
-  local index = math.max(0, self._match_index or 0) ---@type integer
+  local index = math.max(0, self.o_match_index:snapshot() or 0) ---@type integer
   index = index >= N and 1 or (index + 1) ---@type integer
 
   local match_next = matches[index] ---@type oxi.string.ILineMatch
   if match_next and match_next.matches and #match_next.matches > 0 then
     local target_win = vim.api.nvim_get_current_win() ---@type integer
     if vim.api.nvim_win_is_valid(target_win) then
-      self._match_index = index
+      self.o_match_index:next(index)
       vim.api.nvim_win_set_cursor(target_win, { match_next.lnum, match_next.matches[1].l })
     end
   end
@@ -458,7 +465,9 @@ function M:__search__()
   local pattern = self.o_search_pattern:snapshot() ---@type string
   if pattern == "" then
     self._matches = {}
-    vim.api.nvim_buf_clear_namespace(bufnr_popup, NSNR_SEARCH, 0, -1)
+    self.o_match_index:next(0)
+    self.o_match_total:next(0)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     return
   end
 
@@ -477,11 +486,14 @@ function M:__search__()
   local matches = oxi.searcher.search_in_buffer(search_params, bufnr_source)
   if not matches or #matches < 1 then
     self._matches = {}
+    self.o_match_index:next(0)
+    self.o_match_total:next(0)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     return
   end
 
   self._matches = matches
+  self.o_match_total:next(#matches)
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
   for _, match in ipairs(matches) do
     local row = match.lnum - 1 ---@type integer
