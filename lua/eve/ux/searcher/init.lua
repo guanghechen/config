@@ -1,5 +1,7 @@
 ---@class eve.ux.searcher.__mods
 local __mods = {
+  BufferSearcher = "eve.ux.searcher.buffer",
+
   Finder = "eve.ux.searcher.finder",
   Preview = "eve.ux.searcher.preview",
   Result = "eve.ux.searcher.result",
@@ -13,6 +15,8 @@ local __mods = {
 
 ---@class eve.ux.searcher
 ---@field public __mods                 eve.ux.searcher.__mods
+---
+---@field public BufferSearcher         eve.ux.searcher.buffer.Searcher
 ---
 ---@field public Finder                 eve.ux.searcher.Finder
 ---@field public Preview                eve.ux.searcher.Preview
