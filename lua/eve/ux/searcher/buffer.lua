@@ -1,6 +1,7 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "eve.ux.searcher.buffer" ---@type string
 local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@type integer
+local NSNR_SEARCH_CURRENT = vim.api.nvim_create_namespace("eve.ux.searcher.buffer.current") ---@type integer
 
 ---@class eve.ux.searcher.buffer.Searcher
 ---@field public title                  string
@@ -350,6 +351,12 @@ function M:goto_prev_match()
   if match_prev and match_prev.matches and #match_prev.matches > 0 then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_prev.lnum, match_prev.matches[1].l })
+
+    -- Update current match highlight
+    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
+    for _, point in ipairs(match_prev.matches) do
+      highlight_match_point(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_prev.lnum, point)
+    end
   end
 end
 
@@ -381,6 +388,12 @@ function M:goto_next_match()
   if match_next and match_next.matches and #match_next.matches > 0 then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_next.lnum, match_next.matches[1].l })
+
+    -- Update current match highlight
+    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
+    for _, point in ipairs(match_next.matches) do
+      highlight_match_point(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_next.lnum, point)
+    end
   end
 end
 
@@ -389,6 +402,7 @@ function M:clear_highlight()
   local bufnr = self._bufnr_source ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
   end
 end
 
@@ -432,6 +446,7 @@ function M:close_popup()
   self._bufnr_source = nil
   if bufnr_source ~= nil and vim.api.nvim_buf_is_valid(bufnr_source) then
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
   end
 
   self._scheduler_search:cancel()
@@ -604,13 +619,14 @@ function M:__search__()
   self.o_match_total:next(#matches)
   self.o_match_index:next(1)
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
   for _, match in ipairs(matches) do
     for _, point in ipairs(match.matches) do
       highlight_match_point(bufnr_source, NSNR_SEARCH, "Search", match.lnum, point)
     end
   end
 
-  -- Move cursor to first match
+  -- Move cursor to first match and highlight it
   local first_match = matches[1]
   if first_match and first_match.matches and #first_match.matches > 0 then
     local target_win = self._winnr_source ---@type integer|nil
@@ -618,6 +634,10 @@ function M:__search__()
       local line_count = vim.api.nvim_buf_line_count(bufnr_source)
       if first_match.lnum > 0 and first_match.lnum <= line_count then
         vim.api.nvim_win_set_cursor(target_win, { first_match.lnum, first_match.matches[1].l })
+        -- Highlight current match
+        for _, point in ipairs(first_match.matches) do
+          highlight_match_point(bufnr_source, NSNR_SEARCH_CURRENT, "IncSearch", first_match.lnum, point)
+        end
       end
     end
   end
