@@ -4,86 +4,132 @@ use crate::types::dto::LineMatch;
 use crate::types::dto::MatchPoint;
 use regex::Regex;
 
-pub fn search_in_lines<I, S>(
-    pattern: &str,
-    lines: I,
-    flag_fuzzy: bool,
-    flag_regex: bool,
-    flag_case_sensitive: bool,
-) -> Result<Vec<LineMatch>, String>
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
-    if pattern.is_empty() {
-        return Ok(vec![]);
+/// Find the line number for a given byte position using binary search
+/// Returns (line_number, line_start_position)
+fn find_line_for_position(line_offsets: &[usize], position: usize) -> (usize, usize) {
+    match line_offsets.binary_search(&position) {
+        Ok(idx) => (idx + 1, line_offsets[idx]),
+        Err(idx) => {
+            if idx == 0 {
+                (1, 0)
+            } else {
+                (idx, line_offsets[idx - 1])
+            }
+        }
+    }
+}
+
+/// Build line offset table for efficient line number lookups
+fn build_line_offsets(lines: &[impl AsRef<str>]) -> Vec<usize> {
+    let mut offsets = Vec::with_capacity(lines.len() + 1);
+    offsets.push(0); // First line always starts at position 0
+
+    let mut current_pos = 0;
+    for line in lines {
+        current_pos += line.as_ref().len() + 1; // +1 for newline
+        offsets.push(current_pos);
     }
 
+    offsets
+}
+
+/// Search for literal text matches (non-regex) using KMP algorithm
+pub fn search_in_lines_literal(
+    pattern: &str,
+    lines_vec: &[String],
+    flag_fuzzy: bool,
+    flag_case_sensitive: bool,
+) -> Vec<LineMatch> {
     let score_exact: u32 = 100;
     let score_scalar: u32 = 30;
     let score_exact_bonus: f64 = 30.0;
     let score_scalar_bonus: f64 = 30.0;
     let mut matches: Vec<LineMatch> = vec![];
 
-    if flag_regex {
-        let regex_pattern = if flag_case_sensitive {
-            format!("(?-i){}", pattern)
-        } else {
-            format!("(?i){}", pattern)
-        };
-        let regex = Regex::new(&regex_pattern);
-        match regex {
-            Ok(regex) => {
-                for (i, s) in lines.into_iter().enumerate() {
-                    let line = s.as_ref();
-                    if line.is_empty() {
-                        continue;
-                    }
-
-                    let mut score: u32 = 0;
-                    let mut pieces: Vec<MatchPoint> = vec![];
-                    for mat in regex.find_iter(line) {
-                        score += score_exact;
-                        pieces.push(MatchPoint {
-                            start: mat.start(),
-                            end: mat.end(),
-                        })
-                    }
-
-                    if score > 0 {
-                        matches.push(LineMatch {
-                            lnum: i + 1,
-                            score,
-                            matches: pieces,
-                        });
-                    }
-                }
-            }
-            Err(e) => return Err(format!("Bad regex, error: {}", e)),
-        };
+    let pattern_str = if flag_case_sensitive {
+        pattern.to_string()
     } else {
-        let pattern_str = if flag_case_sensitive {
-            pattern.to_string()
-        } else {
-            pattern.to_lowercase()
-        };
-        let pattern_bytes = pattern_str.as_bytes();
-        let pattern_chars = pattern_str.chars().collect::<Vec<char>>();
-        let n_pattern_bytes: usize = pattern_bytes.len();
-        let n_pattern_chars: usize = pattern_chars.len();
-        let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
-        calc_fails(pattern_bytes, &mut fails);
+        pattern.to_lowercase()
+    };
+    let pattern_bytes = pattern_str.as_bytes();
+    let pattern_chars = pattern_str.chars().collect::<Vec<char>>();
+    let n_pattern_bytes: usize = pattern_bytes.len();
+    let n_pattern_chars: usize = pattern_chars.len();
+    let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
+    calc_fails(pattern_bytes, &mut fails);
 
-        for (i, s) in lines.into_iter().enumerate() {
-            let line = s.as_ref();
+    // Smart pattern detection: check if pattern contains newlines
+    let is_multiline_pattern = pattern.contains('\n');
+
+    if is_multiline_pattern {
+        // For multiline patterns, use full text approach with optimized line lookup
+        let full_text = lines_vec.join("\n");
+        let full_text_str = if flag_case_sensitive {
+            full_text
+        } else {
+            full_text.to_lowercase()
+        };
+        let full_text_bytes = full_text_str.as_bytes();
+        let line_offsets = build_line_offsets(lines_vec);
+
+        let points = find_all_matched_points(full_text_bytes, pattern_bytes, Some(&fails));
+        for start_pos in points {
+            let end_pos = start_pos + n_pattern_bytes;
+
+            // Use binary search to find line number - O(log n) instead of O(n)
+            let (line_num, line_start_pos) = find_line_for_position(&line_offsets, start_pos);
+
+            let relative_start = start_pos - line_start_pos;
+            let relative_end = end_pos - line_start_pos;
+
+            matches.push(LineMatch {
+                lnum: line_num,
+                score: score_exact,
+                matches: vec![MatchPoint {
+                    start: relative_start,
+                    end: relative_end,
+                }],
+            });
+        }
+    } else {
+        // For single-line patterns, search line by line for better efficiency and memory usage
+        for (line_idx, line) in lines_vec.iter().enumerate() {
+            let line_str = if flag_case_sensitive {
+                line.as_str()  // Use string slice instead of allocation
+            } else {
+                // Only allocate when we need case conversion
+                &line.to_lowercase()
+            };
+            let line_bytes = line_str.as_bytes();
+
+            let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
+            for start_pos in points {
+                let end_pos = start_pos + n_pattern_bytes;
+
+                matches.push(LineMatch {
+                    lnum: line_idx + 1,
+                    score: score_exact,
+                    matches: vec![MatchPoint {
+                        start: start_pos,
+                        end: end_pos,
+                    }],
+                });
+            }
+        }
+    }
+
+    // Add fallback fuzzy search if no exact matches found and fuzzy is enabled
+    if flag_fuzzy && matches.is_empty() {
+        for (i, line) in lines_vec.iter().enumerate() {
             if line.is_empty() {
                 continue;
             }
 
             let line_str = if flag_case_sensitive {
-                line.to_string()
+                line.as_str()  // Use string slice instead of allocation
             } else {
-                line.to_lowercase()
+                // Only allocate when we need case conversion
+                &line.to_lowercase()
             };
             let line_bytes = line_str.as_bytes();
             let base: f64 = line.len() as f64;
@@ -110,6 +156,7 @@ where
                 continue;
             }
 
+            // Use string slices and avoid unnecessary allocations in fuzzy matching
             let line_chars = line_str.chars().collect::<Vec<char>>();
             let n_line_chars: usize = line_chars.len();
             let mut score = 0;
@@ -193,7 +240,99 @@ where
             }
         }
     }
+
+    matches
+}
+
+/// Search for regex pattern matches
+pub fn search_in_lines_regex(
+    pattern: &str,
+    lines_vec: &[String],
+    flag_case_sensitive: bool,
+) -> Result<Vec<LineMatch>, String> {
+    let score_exact: u32 = 100;
+    let mut matches: Vec<LineMatch> = vec![];
+
+    let regex_pattern = if flag_case_sensitive {
+        format!("(?-i)(?s){}", pattern)
+    } else {
+        format!("(?i)(?s){}", pattern)
+    };
+    let regex = Regex::new(&regex_pattern);
+    match regex {
+        Ok(regex) => {
+            // Smart pattern detection: check if pattern contains newlines
+            let is_multiline_pattern = pattern.contains('\n');
+
+            if is_multiline_pattern {
+                // For multiline patterns, use full text approach with optimized line lookup
+                let full_text = lines_vec.join("\n");
+                let line_offsets = build_line_offsets(lines_vec);
+
+                for mat in regex.find_iter(&full_text) {
+                    let start_pos = mat.start();
+                    let end_pos = mat.end();
+
+                    // Use binary search to find line number - O(log n) instead of O(n)
+                    let (line_num, line_start_pos) = find_line_for_position(&line_offsets, start_pos);
+
+                    let relative_start = start_pos - line_start_pos;
+                    let relative_end = end_pos - line_start_pos;
+
+                    matches.push(LineMatch {
+                        lnum: line_num,
+                        score: score_exact,
+                        matches: vec![MatchPoint {
+                            start: relative_start,
+                            end: relative_end,
+                        }],
+                    });
+                }
+            } else {
+                // For single-line patterns, search line by line for better efficiency
+                for (line_idx, line) in lines_vec.iter().enumerate() {
+                    for mat in regex.find_iter(line) {
+                        matches.push(LineMatch {
+                            lnum: line_idx + 1,
+                            score: score_exact,
+                            matches: vec![MatchPoint {
+                                start: mat.start(),
+                                end: mat.end(),
+                            }],
+                        });
+                    }
+                }
+            }
+        }
+        Err(e) => return Err(format!("Bad regex, error: {}", e)),
+    };
+
     Ok(matches)
+}
+
+pub fn search_in_lines<I, S>(
+    pattern: &str,
+    lines: I,
+    flag_fuzzy: bool,
+    flag_regex: bool,
+    flag_case_sensitive: bool,
+) -> Result<Vec<LineMatch>, String>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    if pattern.is_empty() {
+        return Ok(vec![]);
+    }
+
+    // Convert lines to vector to enable reuse and efficient indexing
+    let lines_vec: Vec<String> = lines.into_iter().map(|s| s.as_ref().to_string()).collect();
+
+    if flag_regex {
+        search_in_lines_regex(pattern, &lines_vec, flag_case_sensitive)
+    } else {
+        Ok(search_in_lines_literal(pattern, &lines_vec, flag_fuzzy, flag_case_sensitive))
+    }
 }
 
 pub fn search_in_text(

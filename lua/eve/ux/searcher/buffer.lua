@@ -22,6 +22,80 @@ local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@
 local M = {}
 M.__index = M
 
+---@param pattern                       string
+---@return boolean, integer
+local function detect_multiline_pattern(pattern)
+  if pattern == nil or pattern == "" then
+    return false, 1
+  end
+  local lines = vim.split(pattern, "\n", { plain = true })
+  local line_count = #lines
+  return line_count > 1, line_count
+end
+
+---@param pattern_line_count            integer
+---@return integer
+local function calculate_dynamic_height(pattern_line_count)
+  local base_height = 2 -- 1 line for input + 1 line for winbar reservation
+  local extra_lines = math.min(pattern_line_count - 1, 4) -- Max 4 extra lines
+  return base_height + extra_lines
+end
+
+---@param bufnr                         integer
+---@param namespace                     integer
+---@param hlgroup                       string
+---@param lnum                          integer
+---@param point                         std.t.IMatchPoint
+---@return nil
+local function highlight_match_point(bufnr, namespace, hlgroup, lnum, point)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  -- Get the current line content to check if match extends beyond it
+  local current_line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1] or ""
+  local line_length = #current_line
+  local row = lnum - 1 -- Convert to 0-based indexing
+
+  -- Single line match - point.r is within current line bounds
+  if point.r <= line_length then
+    vim.hl.range(bufnr, namespace, hlgroup, { row, point.l }, { row, point.r })
+    return
+  end
+
+  -- Multiline match - need to handle across multiple lines
+  local remaining_chars = point.r - point.l -- Total characters to highlight
+  local current_pos = point.l -- Current position within the match
+  local current_row = row -- Current line being processed
+
+  while remaining_chars > 0 and current_row < vim.api.nvim_buf_line_count(bufnr) do
+    -- Get current line content
+    local line = vim.api.nvim_buf_get_lines(bufnr, current_row, current_row + 1, false)[1] or ""
+    local line_len = #line
+
+    -- Calculate start position on current line
+    local line_start = current_pos
+    if current_row > row then
+      line_start = 0 -- Start from beginning of subsequent lines
+    end
+
+    -- Calculate end position on current line
+    local chars_available = line_len - line_start
+    local chars_to_highlight = math.min(remaining_chars, chars_available)
+    local line_end = line_start + chars_to_highlight
+
+    -- Apply highlighting to current line segment
+    if chars_to_highlight > 0 then
+      vim.hl.range(bufnr, namespace, hlgroup, { current_row, line_start }, { current_row, line_end })
+    end
+
+    -- Update for next iteration
+    remaining_chars = remaining_chars - chars_to_highlight - 1 -- -1 for newline character
+    current_pos = 0 -- Reset position for next line
+    current_row = current_row + 1
+  end
+end
+
 ---@return eve.ux.searcher.buffer.Searcher
 function M.new()
   local o_flag_fuzzy = std.Observable.from_value(false)
@@ -324,9 +398,8 @@ function M:refresh_highlight()
   end
 
   for _, match in ipairs(matches) do
-    local row = match.lnum - 1 ---@type integer
     for _, point in ipairs(match.matches) do
-      vim.hl.range(bufnr, NSNR_SEARCH, "Search", { row, point.l }, { row, point.r })
+      highlight_match_point(bufnr, NSNR_SEARCH, "Search", match.lnum, point)
     end
   end
 end
@@ -392,6 +465,7 @@ function M:create_popup_buffer_as_needed()
       local content = table.concat(raw_lines, "\n") ---@type string
       self.o_search_pattern:next(content)
       self:set_prompt()
+      self:resize_popup_window()
     end,
   })
 
@@ -407,7 +481,11 @@ function M:create_popup_window_as_needed()
 
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
 
-  local height = 2 ---@type integer
+  -- Calculate dynamic height based on search pattern
+  local pattern = self.o_search_pattern:snapshot() ---@type string
+  local is_multiline, pattern_line_count = detect_multiline_pattern(pattern)
+  local height = calculate_dynamic_height(pattern_line_count) ---@type integer
+
   local width = math.min(60, math.floor(vim.o.columns * 0.9)) ---@type integer
   local row = 3 ---@type integer
   local col = math.max(0, math.floor((vim.o.columns - width) / 2)) ---@type integer
@@ -449,6 +527,28 @@ function M:set_prompt()
   pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
 end
 
+---@return nil
+function M:resize_popup_window()
+  local winnr = self._winnr_popup ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  -- Calculate new dynamic height based on current search pattern
+  local pattern = self.o_search_pattern:snapshot() ---@type string
+  local is_multiline, pattern_line_count = detect_multiline_pattern(pattern)
+  local new_height = calculate_dynamic_height(pattern_line_count) ---@type integer
+
+  -- Get current window config
+  local current_config = vim.api.nvim_win_get_config(winnr)
+
+  -- Only resize if height actually changed
+  if current_config.height ~= new_height then
+    current_config.height = new_height
+    vim.api.nvim_win_set_config(winnr, current_config)
+  end
+end
+
 ---@protected
 ---@return nil
 function M:__search__()
@@ -471,7 +571,7 @@ function M:__search__()
     return
   end
 
-  -- Construct search parameters following the filetree pattern
+  -- Construct search parameters
   ---@type oxi.searcher.ISearchInBufferParams
   local search_params = {
     bufnr = bufnr_source,
@@ -480,8 +580,6 @@ function M:__search__()
     flag_regex = self.o_flag_regex:snapshot(),
     flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
     flag_replace = self.o_flag_replace:snapshot(),
-    search_pattern = pattern,
-    replace_pattern = self.o_replace_pattern:snapshot(),
   }
 
   -- Perform the search
@@ -499,9 +597,8 @@ function M:__search__()
   self.o_match_total:next(#matches)
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
   for _, match in ipairs(matches) do
-    local row = match.lnum - 1 ---@type integer
     for _, point in ipairs(match.matches) do
-      vim.hl.range(bufnr_source, NSNR_SEARCH, "Search", { row, point.l }, { row, point.r })
+      highlight_match_point(bufnr_source, NSNR_SEARCH, "Search", match.lnum, point)
     end
   end
 end
