@@ -53,6 +53,10 @@ function M.default_gen_hlgroup_map(context)
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
+    ---Completion
+    ComplHint = { fg = c.bg4, italic = true },
+    ComplHintMore = { fg = c.bg3, italic = true },
+
     ---cursor
     Cursor = { fg = c.bg1, bg = c.pink },
     CursorColumn = { bg = c.bg1 },

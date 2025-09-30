@@ -30,6 +30,10 @@ function M.gen_hlgroup_map(context)
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
+    ---Completion
+    ComplHint = { fg = c.overlay1, italic = true },
+    ComplHintMore = { fg = c.peach, italic = true },
+
     Added = { fg = c.green },
     Bold = { bold = true },
     Boolean = { fg = c.peach },

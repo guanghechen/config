@@ -6,9 +6,13 @@ return {
     "friendly-snippets",
   },
   opts = function()
-
     ---@class ghc.plugins.blink_cmp.actions
     local actions = {
+      ---@return boolean|nil
+      has_native_completion = function()
+        return vim.lsp.inline_completion.get()
+      end,
+
       ---@return boolean|nil
       tab_fallback = function()
         local mode = vim.api.nvim_get_mode().mode ---@type string
@@ -89,7 +93,7 @@ return {
           },
         },
         ghost_text = {
-          enabled = true,
+          enabled = false,
         },
         list = {
           selection = {
@@ -178,15 +182,28 @@ return {
       keymap = {
         preset = "none",
         ["<CR>"] = { "accept", "fallback" },
-        ["<Tab>"] = { "select_next", "snippet_forward", actions.tab_fallback, "fallback" },
-        ["<S-Tab>"] = { "select_prev", "snippet_backward", actions.tab_fallback, "fallback" },
+        ["<Tab>"] = {
+          "select_next",
+          "snippet_forward",
+          actions.has_native_completion,
+          actions.tab_fallback,
+          "fallback",
+        },
+        ["<S-Tab>"] = {
+          "select_prev",
+          "snippet_backward",
+          actions.has_native_completion,
+          actions.tab_fallback,
+          "fallback",
+        },
+        ["<C-y>"] = { actions.has_native_completion, "select_and_accept", "fallback" },
 
         ["<Up>"] = { "select_prev", "fallback" },
         ["<Down>"] = { "select_next", "fallback" },
         ["<C-k>"] = { "select_prev", "fallback_to_mappings" },
         ["<C-j>"] = { "select_next", "fallback_to_mappings" },
-        ["<C-h>"] = { "hide" },
-        ["<C-l>"] = { "select_and_accept" },
+        ["<C-h>"] = { actions.has_native_completion, "hide" },
+        ["<C-l>"] = { actions.has_native_completion, "select_and_accept" },
 
         ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
         ["<C-p>"] = { "show_signature", "hide_signature", "fallback" },

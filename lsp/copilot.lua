@@ -88,11 +88,14 @@ end
 local function on_attach(client, bufnr)
   eve.lsp.on_attach(client, bufnr)
 
+  -- Enable inline completion for this buffer with the copilot client
+  vim.lsp.inline_completion.enable(true, { bufnr = bufnr })
+
   ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n" },
-      key = "<c-k>",
+      key = "<C-h>",
       callback = function()
         vim.lsp.inline_completion.select({ count = -1 })
       end,
@@ -100,11 +103,32 @@ local function on_attach(client, bufnr)
     },
     {
       modes = { "i", "n" },
-      key = "<c-j>",
+      key = "<C-l>",
       callback = function()
         vim.lsp.inline_completion.select({ count = 1 })
       end,
       desc = "Next Copilot Suggestion",
+    },
+    {
+      modes = { "i" },
+      key = "<Tab>",
+      callback = function()
+        -- Try to accept inline completion first, fallback to normal behavior
+        if vim.lsp.inline_completion.accept() then
+          return
+        end
+
+        -- Check if blink.cmp is available and has active completion
+        local ok, blink = pcall(require, "blink.cmp")
+        if ok and blink.is_visible() then
+          blink.select_next()
+          return
+        end
+
+        -- Fallback to normal tab behavior or other tab handlers
+        vim.fn.feedkeys("\t", "n")
+      end,
+      desc = "Accept Copilot Suggestion or Tab",
     },
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
