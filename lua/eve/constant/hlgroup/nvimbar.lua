@@ -172,6 +172,9 @@ function M.gen_hlgroup_map(context)
     ---! python
     python_env_text = { fg = c.fg2, bg = "bg_bar" },
 
+    ---! searcher
+    searcher = { fg = c.pink, sp = c.pink, underline = true },
+
     ---! sidebar
     sidebar_blank = { fg = c.fg1, bg = "bg_bar" },
     sidebar_split = { fg = c.bg4, bg = "bg_bar" },

@@ -484,9 +484,16 @@ end
 ---@return nil
 function M:set_prompt()
   local bufnr = self:__create_buffer_as_needed__() ---@type integer
+  local winnr = self._winnr_finder ---@type integer|nil
+  local lnum = 1 ---@type integer
+
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    lnum = vim.fn.line("w0", winnr)
+  end
+
   local group = eve.var.sign.GROUP_SEARCHER_BUFFER_PROMPT ---@type string
   local sign = eve.var.sign.SEARCHER_BUFFER_PROMPT ---@type string
-  pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
+  pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 10 })
 end
 
 ----------------------------------------------------------------------------------------------------
