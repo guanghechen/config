@@ -24,10 +24,13 @@ function M.gen_hlgroup_map(context)
     ------------------------------------------------------------------------------------------------
 
     ---! ai
-    ai_copilot_status_InProgress = { fg = c.aqua, bg = "bg_bar" },
-    ai_copilot_status_Inactive = { fg = c.red, bg = "bg_bar" },
-    ai_copilot_status_Normal = { fg = c.fg1, bg = "bg_bar" },
-    ai_copilot_status_Warning = { fg = c.yellow, bg = "bg_bar" },
+    ai_copilot_icon_connected = { fg = c.brightGreen, bg = "bg_bar" },
+    ai_copilot_icon_busy = { fg = c.brightYellow, bg = "bg_bar" },
+    ai_copilot_icon_error = { fg = c.brightRed, bg = "bg_bar" },
+    ai_copilot_status_Error = { fg = c.brightRed, bg = "bg_bar" },
+    ai_copilot_status_Stopped = { fg = c.red, bg = "bg_bar" },
+    ai_copilot_status_Busy = { fg = c.brightYellow, bg = "bg_bar" },
+    ai_copilot_status_Disconnected = { fg = c.red, bg = "bg_bar" },
     ai_copilot_text = { fg = c.fg2, bg = "bg_bar" },
 
     ---! buf

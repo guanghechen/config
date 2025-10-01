@@ -72,22 +72,27 @@ function M.status(position)
 
       local status = get_status()
       local icon = eve.icon.app.Copilot ---@type string
+      local hln_icon = position .. "_ai_copilot_icon_connected" ---@type string
 
-      -- Use different icons based on status
+      -- Use different icons and colors based on status
       if status == "Error" or status == "Stopped" or status == "Disconnected" then
         icon = eve.icon.app.CopilotError
+        hln_icon = position .. "_ai_copilot_icon_error"
       elseif status == "Busy" then
         icon = eve.icon.app.CopilotWarn
+        hln_icon = position .. "_ai_copilot_icon_busy"
       end
 
       local text = icon .. " " ---@type string
-      local hln_text = position .. "_ai_copilot_text" ---@type string
+      local hl_text ---@type string
       if #status > 0 and status ~= "Disconnected" then
-        text = text .. "(" .. status .. ") " ---@type string
-        hln_text = position .. "_ai_copilot_status_" .. status ---@type string
+        local status_text = "(" .. status .. ") " ---@type string
+        local hln_status = position .. "_ai_copilot_status_" .. status ---@type string
+        hl_text = btn(txt(icon, hln_icon) .. " " .. txt(status_text, hln_status), fn_show_message)
+        text = text .. status_text
+      else
+        hl_text = btn(txt(text, hln_icon), fn_show_message)
       end
-
-      local hl_text = btn(txt(text, hln_text), fn_show_message)
       return text, hl_text, true
     end,
   }
