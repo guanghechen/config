@@ -310,6 +310,13 @@ function M.new()
     scheduler_search:schedule()
   end, true)
 
+  -- Add observer to resize window when line count changes
+  std.fn.observe({
+    o_search_pattern_linecount,
+  }, function()
+    self:__resize__()
+  end, true)
+
   self.title = "Search in Buffer"
   self.o_flag_fuzzy = o_flag_fuzzy
   self.o_flag_regex = o_flag_regex
@@ -522,8 +529,8 @@ function M:__create_buffer_as_needed__()
       local raw_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
       local content = table.concat(raw_lines, "\n") ---@type string
       self.o_search_pattern:next(content)
+      self.o_search_pattern_linecount:next(#raw_lines)
       self:set_prompt()
-      self:__resize__()
     end,
   })
 
@@ -540,16 +547,12 @@ function M:__create_window_as_needed__()
   end
 
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
-
-  -- Calculate dynamic height based on search pattern
   local pattern_line_count = self.o_search_pattern_linecount:snapshot() ---@type integer
   local height = calculate_dynamic_height(pattern_line_count) ---@type integer
-
   local width = math.min(60, math.floor(vim.o.columns * 0.9)) ---@type integer
   local row = 3 ---@type integer
   local col = math.max(0, math.floor((vim.o.columns - width) / 2)) ---@type integer
 
-  -- Create popup window with error handling
   local bufnr = self:__create_buffer_as_needed__() ---@type integer
   local popup_winnr = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
@@ -564,7 +567,6 @@ function M:__create_window_as_needed__()
   })
   self._winnr_finder = popup_winnr
 
-  -- Set window options
   vim.wo[popup_winnr].cursorline = false
   vim.wo[popup_winnr].number = false
   vim.wo[popup_winnr].relativenumber = false
