@@ -1,5 +1,5 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::util::regex::get_static_regex;
+use crate::util::regex::compile_regex;
 use regex::Captures;
 use std::fs::File;
 use std::io::Read;
@@ -17,23 +17,21 @@ pub fn replace_file(
     let mut text = String::new();
     file.read_to_string(&mut text).map_err(|e| e.to_string())?;
 
-    let mut next_text: String = text.to_string();
+    let next_text: String;
     if flag_regex {
-        if let Ok(r) = get_static_regex(search_pattern) {
-            let regex = r.lock().unwrap();
-            next_text = regex
-                .replace_all(&text, |caps: &Captures| {
-                    let mut replacement = replace_pattern.to_string();
-                    for i in 1..caps.len() {
-                        if let Some(cap) = caps.get(i) {
-                            let placeholder = format!("${}", i);
-                            replacement = replacement.replace(&placeholder, cap.as_str());
-                        }
+        let regex = compile_regex(search_pattern)?;
+        next_text = regex
+            .replace_all(&text, |caps: &Captures| {
+                let mut replacement = replace_pattern.to_string();
+                for i in 1..caps.len() {
+                    if let Some(cap) = caps.get(i) {
+                        let placeholder = format!("${}", i);
+                        replacement = replacement.replace(&placeholder, cap.as_str());
                     }
-                    replacement
-                })
-                .to_string();
-        }
+                }
+                replacement
+            })
+            .to_string();
     } else {
         let match_points: Vec<usize> = if flag_case_sensitive {
             find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)

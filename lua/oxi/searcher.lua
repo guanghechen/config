@@ -112,10 +112,16 @@ end
 ---@field public flag_replace           boolean
 ---@field public search_pattern         string
 
+---@class oxi.searcher.ISearchInBufferResult
+---@field public bufnr                  integer
+---@field public error                  string|nil
+---@field public matches                std.t.IMatchPoint[]
+
 ---@param params                        oxi.searcher.ISearchInBufferParams
----@return oxi.string.ILineMatch[]|nil
+---@return oxi.searcher.ISearchInBufferResult
 function M.search_in_buffer(params)
-  local result = oxi.fn.safe_run("search_in_buffer", {
+  local nvim_tools = require("nvim_tools")
+  local result = nvim_tools.search_in_buffer({
     bufnr = params.bufnr,
     search_pattern = params.search_pattern,
     flag_fuzzy = params.flag_fuzzy,

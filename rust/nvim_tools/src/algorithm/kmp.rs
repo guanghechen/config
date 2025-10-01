@@ -19,6 +19,11 @@ pub fn find_all_matched_points<T: PartialEq>(
     let n_text: usize = text.len();
     let n_pattern: usize = pattern.len();
 
+    // Return empty result for empty pattern
+    if n_pattern == 0 {
+        return vec![];
+    }
+
     let mut local_fails;
     let fails: &Vec<usize> = match fails {
         Some(f) => f,
@@ -109,4 +114,89 @@ mod tests {
         let result = find_all_matched_points(&text, &pattern, None);
         assert_eq!(result, [3, 20, 37, 54]);
     }
+
+    #[test]
+    fn test_find_all_empty_pattern() {
+        let text: Vec<u8> = b"hello".to_vec();
+        let pattern: Vec<u8> = vec![];
+        let result = find_all_matched_points(&text, &pattern, None);
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_find_all_empty_text() {
+        let text: Vec<u8> = vec![];
+        let pattern: Vec<u8> = b"test".to_vec();
+        let result = find_all_matched_points(&text, &pattern, None);
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_find_all_pattern_longer_than_text() {
+        let text: Vec<u8> = b"hi".to_vec();
+        let pattern: Vec<u8> = b"hello world".to_vec();
+        let result = find_all_matched_points(&text, &pattern, None);
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_find_all_single_char() {
+        let text: Vec<u8> = b"aabaabaab".to_vec();
+        let pattern: Vec<u8> = b"a".to_vec();
+        let result = find_all_matched_points(&text, &pattern, None);
+        assert_eq!(result, [0, 1, 3, 4, 6, 7]);
+    }
+
+    #[test]
+    fn test_find_all_overlapping() {
+        let text: Vec<u8> = b"aaaa".to_vec();
+        let pattern: Vec<u8> = b"aa".to_vec();
+        let result = find_all_matched_points(&text, &pattern, None);
+        // KMP finds non-overlapping matches by default
+        assert_eq!(result, [0, 2]);
+    }
+
+    #[test]
+    fn test_find_first_matched() {
+        let text: Vec<u8> = b"hello world hello".to_vec();
+        let pattern: Vec<u8> = b"hello".to_vec();
+        let result = find_first_matched_point(&text, &pattern, None);
+        assert_eq!(result, Some(0));
+    }
+
+    #[test]
+    fn test_find_first_no_match() {
+        let text: Vec<u8> = b"hello world".to_vec();
+        let pattern: Vec<u8> = b"rust".to_vec();
+        let result = find_first_matched_point(&text, &pattern, None);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_calc_fails() {
+        let pattern: Vec<u8> = b"abcabc".to_vec();
+        let mut fails = vec![0; pattern.len() + 1];
+        calc_fails(&pattern, &mut fails);
+        assert_eq!(fails, [0, 0, 0, 0, 1, 2, 3]);
+    }
+
+    #[test]
+    fn test_find_all_with_precomputed_fails() {
+        let text: Vec<u8> = b"hello hello hello".to_vec();
+        let pattern: Vec<u8> = b"hello".to_vec();
+        let mut fails = vec![0; pattern.len() + 1];
+        calc_fails(&pattern, &mut fails);
+
+        let result = find_all_matched_points(&text, &pattern, Some(&fails));
+        assert_eq!(result, [0, 6, 12]);
+    }
+
+    #[test]
+    fn test_find_all_bytes() {
+        let text = "Hello, 世界!";
+        let pattern = "世界";
+        let result = find_all_matched_points(text.as_bytes(), pattern.as_bytes(), None);
+        assert_eq!(result.len(), 1);
+    }
 }
+

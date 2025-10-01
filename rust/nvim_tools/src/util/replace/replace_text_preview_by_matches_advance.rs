@@ -1,6 +1,6 @@
 use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::dto::MatchPoint;
-use crate::util::regex::get_static_regex;
+use crate::util::regex::compile_regex;
 use crate::types::dto::ReplacePreviewResult;
 use regex::Captures;
 use std::collections::HashSet;
@@ -17,9 +17,9 @@ pub fn replace_text_preview_by_matches_advance(
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let mut matches: Vec<MatchPoint> = vec![];
     if flag_regex {
-        let result: Result<ReplacePreviewResult, String> = match get_static_regex(search_pattern) {
+        let result: Result<ReplacePreviewResult, String> = match compile_regex(search_pattern) {
             Ok(r) => {
-                let regex = r.lock().unwrap();
+                let regex = r;
                 let mut total_search_len: usize = 0;
                 let mut total_replace_len: usize = 0;
                 let next_text: String = regex

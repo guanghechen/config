@@ -1,5 +1,5 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::util::regex::get_static_regex;
+use crate::util::regex::compile_regex;
 use regex::Captures;
 use std::collections::HashSet;
 
@@ -14,37 +14,31 @@ pub fn replace_text_preview_by_matches(
 ) -> Result<String, String> {
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     if flag_regex {
-        let result: Result<String, String> = match get_static_regex(search_pattern) {
-            Ok(r) => {
-                let regex = r.lock().unwrap();
-                let next_text: String = regex
-                    .replace_all(text, |caps: &Captures| {
-                        let mut replacement = replace_pattern.to_string();
-                        for i in 1..caps.len() {
-                            if let Some(cap) = caps.get(i) {
-                                let placeholder = format!("${}", i);
-                                replacement = replacement.replace(&placeholder, cap.as_str());
-                            }
-                        }
+        let regex = compile_regex(search_pattern)?;
+        let next_text: String = regex
+            .replace_all(text, |caps: &Captures| {
+                let mut replacement = replace_pattern.to_string();
+                for i in 1..caps.len() {
+                    if let Some(cap) = caps.get(i) {
+                        let placeholder = format!("${}", i);
+                        replacement = replacement.replace(&placeholder, cap.as_str());
+                    }
+                }
 
-                        let m = caps.get(0).unwrap();
-                        let should_replace: bool = match_offsets.contains(&m.start());
-                        if should_replace {
-                            if keep_search_pieces {
-                                format!("{}{}", m.as_str(), replacement)
-                            } else {
-                                replacement
-                            }
-                        } else {
-                            m.as_str().to_string()
-                        }
-                    })
-                    .to_string();
-                return Ok(next_text);
-            }
-            Err(error) => Err(error),
-        };
-        return result;
+                let m = caps.get(0).unwrap();
+                let should_replace: bool = match_offsets.contains(&m.start());
+                if should_replace {
+                    if keep_search_pieces {
+                        format!("{}{}", m.as_str(), replacement)
+                    } else {
+                        replacement
+                    }
+                } else {
+                    m.as_str().to_string()
+                }
+            })
+            .to_string();
+        return Ok(next_text);
     }
 
     let match_points: Vec<usize> = if flag_case_sensitive {

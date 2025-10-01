@@ -11,7 +11,7 @@ use serde::Serialize;
 
 use crate::types::dto::MatchPoint;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LineMatch {
     pub lnum: usize,
     pub score: u32,

@@ -104,13 +104,21 @@ pub fn search_in_files(
 
         let start_time = SystemTime::now();
 
-        // return the output of the cmd
-        let output = cmd.output().expect("failed to execute ripgrep");
+        let output = match cmd.output() {
+            Ok(output) => output,
+            Err(e) => {
+                return Err(SearchInFilesFailedResult {
+                    cmd: format!("{:?}", cmd),
+                    elapsed_time: "0s".to_string(),
+                    error: format!("Failed to execute ripgrep: {}", e),
+                });
+            }
+        };
 
         let end_time = SystemTime::now();
         elapsed_time = end_time
             .duration_since(start_time)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs_f32()
             .to_string();
 

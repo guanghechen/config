@@ -663,8 +663,18 @@ function M:__search__()
   }
 
   -- Perform the search
-  local matches = oxi.searcher.search_in_buffer(search_params)
+  local result = oxi.searcher.search_in_buffer(search_params)
 
+  -- Check for errors or no matches
+  if result.error ~= nil then
+    self._matches = {}
+    self.o_match_index:next(0)
+    self.o_match_total:next(0)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
+    return
+  end
+
+  local matches = result.matches
   if not matches or #matches < 1 then
     self._matches = {}
     self.o_match_index:next(0)

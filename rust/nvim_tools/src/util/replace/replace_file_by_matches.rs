@@ -1,5 +1,5 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::util::regex::get_static_regex;
+use crate::util::regex::compile_regex;
 use regex::Captures;
 use std::collections::HashSet;
 use std::fs::File;
@@ -20,29 +20,32 @@ pub fn replace_file_by_matches(
 
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let len_of_search: usize = search_pattern.len();
-    let mut next_text: String = text.to_string();
+    let next_text: String;
     if flag_regex {
-        if let Ok(r) = get_static_regex(search_pattern) {
-            let regex = r.lock().unwrap();
-            next_text = regex
-                .replace_all(&text, |caps: &Captures| {
-                    let m = caps.get(0).unwrap();
-                    let offset: usize = m.start();
-                    if match_offsets.contains(&offset) {
-                        let mut replacement: String = replace_pattern.to_string();
-                        for i in 1..caps.len() {
-                            if let Some(cap) = caps.get(i) {
-                                let placeholder = format!("${}", i);
-                                replacement = replacement.replace(&placeholder, cap.as_str());
+        match compile_regex(search_pattern) {
+            Ok(r) => {
+                let regex = r;
+                next_text = regex
+                    .replace_all(&text, |caps: &Captures| {
+                        let m = caps.get(0).unwrap();
+                        let offset: usize = m.start();
+                        if match_offsets.contains(&offset) {
+                            let mut replacement: String = replace_pattern.to_string();
+                            for i in 1..caps.len() {
+                                if let Some(cap) = caps.get(i) {
+                                    let placeholder = format!("${}", i);
+                                    replacement = replacement.replace(&placeholder, cap.as_str());
+                                }
                             }
-                        }
 
-                        replacement
-                    } else {
-                        m.as_str().to_string()
-                    }
-                })
-                .to_string();
+                            replacement
+                        } else {
+                            m.as_str().to_string()
+                        }
+                    })
+                    .to_string();
+            }
+            Err(e) => return Err(e),
         }
     } else {
         let match_points: Vec<usize> = if flag_case_sensitive {

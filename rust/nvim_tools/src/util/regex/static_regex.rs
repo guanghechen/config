@@ -1,26 +1,35 @@
 use regex::Regex;
-use std::sync::Mutex;
 
-// https://docs.rs/regex/latest/regex/index.html
-// I follow the example of the docs to reuse regex when running it multiple times
-lazy_static! {
-    static ref CACHE_PATTERN: Mutex<String> = Mutex::new(String::new());
-    static ref CACHE_REGEX: Mutex<Regex> = Mutex::new(Regex::new(r"").unwrap());
+pub fn compile_regex(pattern: &str) -> Result<Regex, String> {
+    Regex::new(pattern).map_err(|e| format!("Invalid regex pattern: {}", e))
 }
 
-pub fn get_static_regex(pattern: &str) -> Result<&'static Mutex<Regex>, String> {
-    if *pattern != *CACHE_PATTERN.lock().unwrap() {
-        CACHE_PATTERN
-            .lock()
-            .unwrap()
-            .clone_from(&pattern.to_string());
-        let regex = Regex::new(pattern);
-        return if let Ok(r) = regex {
-            *CACHE_REGEX.lock().unwrap() = r;
-            Ok(&CACHE_REGEX)
-        } else {
-            Err("Invalid regex".to_string())
-        };
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_regex() {
+        let result = compile_regex(r"hello\s+world");
+        assert!(result.is_ok());
+
+        let regex = result.unwrap();
+        assert!(regex.is_match("hello  world"));
+        assert!(regex.is_match("hello\tworld"));
+        assert!(!regex.is_match("helloworld"));
     }
-    Ok(&CACHE_REGEX)
+
+    #[test]
+    fn test_invalid_regex_unclosed_bracket() {
+        let result = compile_regex(r"hello[world");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid regex pattern"));
+    }
+
+    #[test]
+    fn test_invalid_regex_unclosed_paren() {
+        let result = compile_regex(r"hello(world");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid regex pattern"));
+    }
 }

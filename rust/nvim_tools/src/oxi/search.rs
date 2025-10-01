@@ -2,6 +2,7 @@ use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
 use crate::types::dto::CmdResult;
 use crate::types::dto::LineMatch;
 use crate::types::dto::SearchInBufferParams;
+use crate::types::dto::SearchInBufferResult;
 use crate::types::dto::SearchInFilesParams;
 use crate::types::dto::SearchInLinesParams;
 use crate::types::dto::SearchInTextParams;
@@ -61,11 +62,15 @@ pub fn search_in_files(params: SearchInFilesParams) -> CmdResult<SearchInFilesSu
     cmd_result
 }
 
-pub fn search_in_buffer(params: SearchInBufferParams) -> Result<Vec<LineMatch>, String> {
+pub fn search_in_buffer(params: SearchInBufferParams) -> SearchInBufferResult {
     let buffer = Buffer::from(params.bufnr);
 
     if !buffer.is_valid() {
-        return Err(format!("Invalid buffer number: {}", params.bufnr));
+        return SearchInBufferResult {
+            bufnr: params.bufnr,
+            error: Some(format!("Invalid buffer number: {}", params.bufnr)),
+            matches: vec![],
+        };
     }
 
     let lines_result = buffer.get_lines(.., false);
@@ -73,14 +78,29 @@ pub fn search_in_buffer(params: SearchInBufferParams) -> Result<Vec<LineMatch>, 
     match lines_result {
         Ok(lines_iter) => {
             let lines: Vec<String> = lines_iter.map(|s| s.to_string()).collect();
-            util::search::search_in_lines(
+            match util::search::search_in_lines(
                 &params.search_pattern,
                 &lines,
                 params.flag_fuzzy,
                 params.flag_regex,
                 params.flag_case_sensitive,
-            )
+            ) {
+                Ok(matches) => SearchInBufferResult {
+                    bufnr: params.bufnr,
+                    error: None,
+                    matches,
+                },
+                Err(error) => SearchInBufferResult {
+                    bufnr: params.bufnr,
+                    error: Some(error),
+                    matches: vec![],
+                },
+            }
         }
-        Err(err) => Err(format!("Failed to read buffer {}: {}", params.bufnr, err)),
+        Err(err) => SearchInBufferResult {
+            bufnr: params.bufnr,
+            error: Some(format!("Failed to read buffer {}: {}", params.bufnr, err)),
+            matches: vec![],
+        },
     }
 }

@@ -1,7 +1,7 @@
 use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::dto::MatchLocation;
 use crate::types::dto::ReplaceFileResult;
-use crate::util::regex::get_static_regex;
+use crate::util::regex::compile_regex;
 use crate::util::string::get_locations;
 use regex::Captures;
 use std::collections::HashSet;
@@ -24,45 +24,48 @@ pub fn replace_file_by_matches_advance(
 
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let len_of_search: usize = search_pattern.len();
-    let mut next_text: String = text.to_string();
+    let next_text: String;
     let mut offset_delta: i64 = 0;
     let mut next_offsets: Vec<usize> = vec![];
     if flag_regex {
-        if let Ok(r) = get_static_regex(search_pattern) {
-            let regex = r.lock().unwrap();
-            next_text = regex
-                .replace_all(&text, |caps: &Captures| {
-                    let m = caps.get(0).unwrap();
-                    let offset: usize = m.start();
-                    let should_replace: bool = match_offsets.contains(&offset);
-                    if should_replace {
-                        let mut replacement: String = replace_pattern.to_string();
-                        for i in 1..caps.len() {
-                            if let Some(cap) = caps.get(i) {
-                                let placeholder = format!("${}", i);
-                                replacement = replacement.replace(&placeholder, cap.as_str());
-                            }
-                        }
-
-                        let mut i = next_offsets.len();
-                        while i < remain_offsets.len() {
-                            let remain_offset: usize = remain_offsets[i];
-                            if remain_offset > offset {
-                                break;
+        match compile_regex(search_pattern) {
+            Ok(r) => {
+                let regex = r;
+                next_text = regex
+                    .replace_all(&text, |caps: &Captures| {
+                        let m = caps.get(0).unwrap();
+                        let offset: usize = m.start();
+                        let should_replace: bool = match_offsets.contains(&offset);
+                        if should_replace {
+                            let mut replacement: String = replace_pattern.to_string();
+                            for i in 1..caps.len() {
+                                if let Some(cap) = caps.get(i) {
+                                    let placeholder = format!("${}", i);
+                                    replacement = replacement.replace(&placeholder, cap.as_str());
+                                }
                             }
 
-                            next_offsets.push((remain_offset as i64 + offset_delta) as usize);
-                            i += 1;
-                        }
-                        offset_delta +=
-                            (replacement.len() as i64) - (m.end() as i64 - m.start() as i64);
+                            let mut i = next_offsets.len();
+                            while i < remain_offsets.len() {
+                                let remain_offset: usize = remain_offsets[i];
+                                if remain_offset > offset {
+                                    break;
+                                }
 
-                        replacement
-                    } else {
-                        m.as_str().to_string()
-                    }
-                })
-                .to_string();
+                                next_offsets.push((remain_offset as i64 + offset_delta) as usize);
+                                i += 1;
+                            }
+                            offset_delta +=
+                                (replacement.len() as i64) - (m.end() as i64 - m.start() as i64);
+
+                            replacement
+                        } else {
+                            m.as_str().to_string()
+                        }
+                    })
+                    .to_string();
+            }
+            Err(e) => return Err(e),
         }
     } else {
         let match_points: Vec<usize> = if flag_case_sensitive {
@@ -91,7 +94,11 @@ pub fn replace_file_by_matches_advance(
                         break;
                     }
 
-                    next_offsets.push((remain_offset as i64 + offset_delta) as usize);
+                    let new_offset = (remain_offset as i64)
+                        .checked_add(offset_delta)
+                        .and_then(|v| if v >= 0 { Some(v as usize) } else { None })
+                        .unwrap_or(0);
+                    next_offsets.push(new_offset);
                     i += 1;
                 }
                 offset_delta += delta
