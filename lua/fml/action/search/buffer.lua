@@ -23,7 +23,8 @@ function M.search_in_buffer()
   end
 
   local winnr_finder = searcher:get_winnr_finder() ---@type integer|nil
-  if winnr_finder ~= nil and vim.api.nvim_win_is_valid(winnr_finder) then
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  if winnr_finder == winnr_current then
     searcher:close()
   else
     searcher:attach(winnr_sourcefile)
