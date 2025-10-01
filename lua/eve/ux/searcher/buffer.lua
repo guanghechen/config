@@ -648,6 +648,7 @@ function M:__search__()
     self.o_match_index:next(0)
     self.o_match_total:next(0)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
     return
   end
 
@@ -671,6 +672,7 @@ function M:__search__()
     self.o_match_index:next(0)
     self.o_match_total:next(0)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
     return
   end
 
