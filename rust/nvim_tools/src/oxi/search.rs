@@ -1,8 +1,8 @@
 use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
 use crate::types::dto::CmdResult;
+use crate::types::dto::FunResult;
 use crate::types::dto::LineMatch;
 use crate::types::dto::SearchInBufferParams;
-use crate::types::dto::SearchInBufferResult;
 use crate::types::dto::SearchInFilesParams;
 use crate::types::dto::SearchInLinesParams;
 use crate::types::dto::SearchInTextParams;
@@ -62,14 +62,13 @@ pub fn search_in_files(params: SearchInFilesParams) -> CmdResult<SearchInFilesSu
     cmd_result
 }
 
-pub fn search_in_buffer(params: SearchInBufferParams) -> SearchInBufferResult {
+pub fn search_in_buffer(params: SearchInBufferParams) -> FunResult<Vec<LineMatch>> {
     let buffer = Buffer::from(params.bufnr);
 
     if !buffer.is_valid() {
-        return SearchInBufferResult {
-            bufnr: params.bufnr,
+        return FunResult {
             error: Some(format!("Invalid buffer number: {}", params.bufnr)),
-            matches: vec![],
+            data: None,
         };
     }
 
@@ -85,22 +84,19 @@ pub fn search_in_buffer(params: SearchInBufferParams) -> SearchInBufferResult {
                 params.flag_regex,
                 params.flag_case_sensitive,
             ) {
-                Ok(matches) => SearchInBufferResult {
-                    bufnr: params.bufnr,
+                Ok(matches) => FunResult {
                     error: None,
-                    matches,
+                    data: Some(matches),
                 },
-                Err(error) => SearchInBufferResult {
-                    bufnr: params.bufnr,
+                Err(error) => FunResult {
                     error: Some(error),
-                    matches: vec![],
+                    data: None,
                 },
             }
         }
-        Err(err) => SearchInBufferResult {
-            bufnr: params.bufnr,
+        Err(err) => FunResult {
             error: Some(format!("Failed to read buffer {}: {}", params.bufnr, err)),
-            matches: vec![],
+            data: None,
         },
     }
 }
