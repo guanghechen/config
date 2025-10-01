@@ -3,28 +3,6 @@ local __module_name__ = "eve.ux.searcher.buffer" ---@type string
 local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@type integer
 local NSNR_SEARCH_CURRENT = vim.api.nvim_create_namespace("eve.ux.searcher.buffer.current") ---@type integer
 
----@class eve.ux.searcher.buffer.Searcher
----@field public title                  string
----@field public o_flag_fuzzy           std.collection.IObservable
----@field public o_flag_regex           std.collection.IObservable
----@field public o_flag_replace         std.collection.IObservable
----@field public o_flag_case_sensitive  std.collection.IObservable
----@field public o_search_pattern       std.collection.IObservable
----@field public o_search_pattern_linecount std.collection.IObservable
----@field public o_replace_pattern      std.collection.IObservable
----@field public o_match_index          std.collection.IObservable
----@field public o_match_total          std.collection.IObservable
----@field protected _winnr_popup        integer|nil
----@field protected _bufnr_popup        integer|nil
----@field protected _winnr_source       integer|nil
----@field protected _bufnr_source       integer|nil
----@field protected _matches            oxi.string.ILineMatch[]|nil
----@field protected _scheduler_search   std.collection.Scheduler
----@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
----@field protected _keymaps            std.t.IKeymap[]
-local M = {}
-M.__index = M
-
 ---@param pattern_line_count            integer
 ---@return integer
 local function calculate_dynamic_height(pattern_line_count)
@@ -87,6 +65,28 @@ local function highlight_match_point(bufnr, namespace, hlgroup, lnum, point)
     current_row = current_row + 1
   end
 end
+
+---@class eve.ux.searcher.buffer.Searcher
+---@field public title                  string
+---@field public o_flag_fuzzy           std.collection.IObservable
+---@field public o_flag_regex           std.collection.IObservable
+---@field public o_flag_replace         std.collection.IObservable
+---@field public o_flag_case_sensitive  std.collection.IObservable
+---@field public o_search_pattern       std.collection.IObservable
+---@field public o_search_pattern_linecount std.collection.IObservable
+---@field public o_replace_pattern      std.collection.IObservable
+---@field public o_match_index          std.collection.IObservable
+---@field public o_match_total          std.collection.IObservable
+---@field protected _winnr_finder        integer|nil
+---@field protected _bufnr_finder        integer|nil
+---@field protected _winnr_source       integer|nil
+---@field protected _bufnr_source       integer|nil
+---@field protected _matches            oxi.string.ILineMatch[]|nil
+---@field protected _scheduler_search   std.collection.Scheduler
+---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
+---@field protected _keymaps            std.t.IKeymap[]
+local M = {}
+M.__index = M
 
 ---@return eve.ux.searcher.buffer.Searcher
 function M.new()
@@ -169,7 +169,7 @@ function M.new()
       key = "q",
       desc = "search_buffer: close",
       callback = function()
-        self:close_popup()
+        self:close()
       end,
     },
     {
@@ -201,7 +201,7 @@ function M.new()
       key = "<leader>`",
       desc = "search_buffer: focus source window",
       callback = function()
-        self:focus_source_window()
+        self:focus_source()
       end,
     },
   }
@@ -228,7 +228,7 @@ function M.new()
       delay = 64,
       silent = std.fn.falsy,
       get_max_width = function()
-        local winnr = self._winnr_popup ---@type integer|nil
+        local winnr = self._winnr_finder ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
           local width = vim.api.nvim_win_get_width(winnr) ---@type integer
           return width - 2
@@ -236,24 +236,24 @@ function M.new()
         return 0
       end,
       get_preset_context = function()
-        local winnr = self._winnr_popup ---@type integer|nil
+        local winnr = self._winnr_finder ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
           return { winnr = winnr }
         end
         return {}
       end,
       is_active = function()
-        local winnr = self._winnr_popup ---@type integer|nil
+        local winnr = self._winnr_finder ---@type integer|nil
         return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
       end,
       on_fulfilled = function(result)
-        local winnr = self._winnr_popup ---@type integer|nil
+        local winnr = self._winnr_finder ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
           vim.wo[winnr].winbar = result
         end
       end,
       validate = function()
-        local winnr = self._winnr_popup ---@type integer|nil
+        local winnr = self._winnr_finder ---@type integer|nil
         if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
           return "The window is not valid, winnr=" .. winnr .. "."
         end
@@ -320,8 +320,8 @@ function M.new()
   self.o_replace_pattern = o_replace_pattern
   self.o_match_index = o_match_index
   self.o_match_total = o_match_total
-  self._winnr_popup = nil
-  self._bufnr_popup = nil
+  self._winnr_finder = nil
+  self._bufnr_finder = nil
   self._winnr_source = nil
   self._bufnr_source = nil
   self._matches = nil
@@ -331,12 +331,73 @@ function M.new()
   return self
 end
 
+---@param winnr_source                  integer
+function M:attach(winnr_source)
+  if not vim.api.nvim_win_is_valid(winnr_source) then
+    return
+  end
+
+  self:__clear__()
+
+  local bufnr_source = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
+  self._winnr_source = winnr_source
+  self._bufnr_source = bufnr_source
+  self._matches = {}
+
+  if winnr_source == vim.api.nvim_get_current_win() then
+    local mode = vim.fn.mode() ---@type string
+    if mode == "v" or mode == "V" or mode == "\22" then -- visual, visual-line, visual-block
+      local selected_text = eve.buf.retrieve_selected_text() ---@type string|nil
+      if selected_text ~= nil and selected_text ~= "" then
+        self.o_search_pattern:next(selected_text)
+      end
+    end
+  end
+
+  local winnr_finder = self:__create_window_as_needed__() ---@type integer
+  vim.api.nvim_set_current_win(winnr_finder)
+
+  self._scheduler_search:schedule()
+  self._nvimbar:render()
+end
+
 ---@return nil
-function M:focus_source_window()
+function M:close()
+  local winnr_finder = self._winnr_finder ---@type integer|nil
+  local bufnr_finder = self._bufnr_finder ---@type integer|nil
+  local bufnr_source = self._bufnr_source ---@type integer|nil
+
+  self._winnr_finder = nil
+  if winnr_finder ~= nil and vim.api.nvim_win_is_valid(winnr_finder) then
+    vim.api.nvim_win_close(winnr_finder, true)
+  end
+
+  self._bufnr_finder = nil
+  if bufnr_finder ~= nil and vim.api.nvim_buf_is_valid(bufnr_finder) then
+    vim.api.nvim_buf_delete(bufnr_finder, { force = true })
+  end
+
+  self._winnr_source = nil
+  self._bufnr_source = nil
+  self._matches = {}
+  if bufnr_source ~= nil and vim.api.nvim_buf_is_valid(bufnr_source) then
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
+  end
+  self._scheduler_search:cancel()
+end
+
+---@return nil
+function M:focus_source()
   local winnr = self._winnr_source ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_set_current_win(winnr)
   end
+end
+
+---@return integer|nil
+function M:get_winnr_finder()
+  return self._winnr_finder
 end
 
 ---@return nil
@@ -414,69 +475,26 @@ function M:goto_next_match()
 end
 
 ---@return nil
-function M:clear_highlight()
-  local bufnr = self._bufnr_source ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH, 0, -1)
-    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
-  end
+function M:set_prompt()
+  local bufnr = self:__create_buffer_as_needed__() ---@type integer
+  local group = eve.var.sign.GROUP_SEARCHER_BUFFER_PROMPT ---@type string
+  local sign = eve.var.sign.SEARCHER_BUFFER_PROMPT ---@type string
+  pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
 end
 
----@return nil
-function M:refresh_highlight()
-  local bufnr = self._bufnr_source ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-  vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH, 0, -1)
+----------------------------------------------------------------------------------------------------
 
-  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
-  if matches == nil or #matches < 1 then
-    return
-  end
-
-  for _, match in ipairs(matches) do
-    for _, point in ipairs(match.matches) do
-      highlight_match_point(bufnr, NSNR_SEARCH, "Search", match.lnum, point)
-    end
-  end
-end
-
----@return nil
-function M:close_popup()
-  local winnr_popup = self._winnr_popup ---@type integer|nil
-  local bufnr_popup = self._bufnr_popup ---@type integer|nil
-  local bufnr_source = self._bufnr_source ---@type integer|nil
-
-  self._winnr_popup = nil
-  if winnr_popup ~= nil and vim.api.nvim_win_is_valid(winnr_popup) then
-    vim.api.nvim_win_close(winnr_popup, true)
-  end
-
-  self._bufnr_popup = nil
-  if bufnr_popup ~= nil and vim.api.nvim_buf_is_valid(bufnr_popup) then
-    vim.api.nvim_buf_delete(bufnr_popup, { force = true })
-  end
-
-  self._winnr_source = nil
-  self._bufnr_source = nil
-  if bufnr_source ~= nil and vim.api.nvim_buf_is_valid(bufnr_source) then
-    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
-    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
-  end
-
-  self._scheduler_search:cancel()
-end
-
----@return integer, boolean
-function M:create_popup_buffer_as_needed()
-  local bufnr = self._bufnr_popup ---@type integer|nil
+---@protected
+---@return integer
+---@return boolean
+function M:__create_buffer_as_needed__()
+  local bufnr = self._bufnr_finder ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     return bufnr, false
   end
 
   bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  self._bufnr_popup = bufnr
+  self._bufnr_finder = bufnr
 
   vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
@@ -505,16 +523,18 @@ function M:create_popup_buffer_as_needed()
       local content = table.concat(raw_lines, "\n") ---@type string
       self.o_search_pattern:next(content)
       self:set_prompt()
-      self:resize_popup_window()
+      self:__resize__()
     end,
   })
 
   return bufnr, true
 end
 
----@return integer, boolean
-function M:create_popup_window_as_needed()
-  local winnr = self._winnr_popup ---@type integer|nil
+---@protected
+---@return integer
+---@return boolean
+function M:__create_window_as_needed__()
+  local winnr = self._winnr_finder ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     return winnr, false
   end
@@ -530,7 +550,7 @@ function M:create_popup_window_as_needed()
   local col = math.max(0, math.floor((vim.o.columns - width) / 2)) ---@type integer
 
   -- Create popup window with error handling
-  local bufnr = self:create_popup_buffer_as_needed() ---@type integer
+  local bufnr = self:__create_buffer_as_needed__() ---@type integer
   local popup_winnr = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
     width = width,
@@ -542,7 +562,7 @@ function M:create_popup_window_as_needed()
     title = string.format(" %s ", self.title),
     title_pos = "center",
   })
-  self._winnr_popup = popup_winnr
+  self._winnr_finder = popup_winnr
 
   -- Set window options
   vim.wo[popup_winnr].cursorline = false
@@ -558,17 +578,20 @@ function M:create_popup_window_as_needed()
   return popup_winnr, true
 end
 
+---@protected
 ---@return nil
-function M:set_prompt()
-  local bufnr = self:create_popup_buffer_as_needed() ---@type integer
-  local group = eve.var.sign.GROUP_SEARCHER_BUFFER_PROMPT ---@type string
-  local sign = eve.var.sign.SEARCHER_BUFFER_PROMPT ---@type string
-  pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
+function M:__clear__()
+  local bufnr = self._bufnr_source
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
+  end
 end
 
+---@protected
 ---@return nil
-function M:resize_popup_window()
-  local winnr = self._winnr_popup ---@type integer|nil
+function M:__resize__()
+  local winnr = self._winnr_finder ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return
   end
@@ -590,8 +613,8 @@ end
 ---@protected
 ---@return nil
 function M:__search__()
-  local bufnr_popup = self._bufnr_popup ---@type integer|nil
-  if bufnr_popup == nil or not vim.api.nvim_buf_is_valid(bufnr_popup) then
+  local bufnr_finder = self._bufnr_finder ---@type integer|nil
+  if bufnr_finder == nil or not vim.api.nvim_buf_is_valid(bufnr_finder) then
     return
   end
 
