@@ -17,6 +17,7 @@ local __mods = {
   lsp = "eve.context.workspace.lsp",
   option = "eve.context.workspace.option",
   plugin = "eve.context.workspace.plugin",
+  search_buffer = "eve.context.workspace.search_buffer",
   search_file = "eve.context.workspace.search_file",
   select = "eve.context.workspace.select",
 }
@@ -43,6 +44,7 @@ local __mods = {
 ---@field public lsp                    eve.context.lsp.data
 ---@field public option                 eve.context.option.data
 ---@field public plugin                 eve.context.plugin.data
+---@field public search_buffer          eve.context.search_buffer.data
 ---@field public search_file            eve.context.search_file.data
 ---@field public select                 eve.context.select.data
 
@@ -71,6 +73,7 @@ local __mods = {
 ---@field public lsp                    eve.context.lsp
 ---@field public option                 eve.context.option
 ---@field public plugin                 eve.context.plugin
+---@field public search_buffer          eve.context.search_buffer
 ---@field public search_file            eve.context.search_file
 ---@field public select                 eve.context.select
 ---@field private _storage              eve.context.storage
@@ -101,6 +104,7 @@ function M.dump()
     lsp = M.lsp.dump(),
     option = M.option.dump(),
     plugin = M.plugin.dump(),
+    search_buffer = M.search_buffer.dump(),
     search_file = M.search_file.dump(),
     select = M.select.dump(),
   }
@@ -133,6 +137,7 @@ function M.load(storage, initialize)
     M.lsp.load(data_workspace.lsp)
     M.option.load(data_workspace.option)
     M.plugin.load(data_workspace.plugin)
+    M.search_buffer.load(data_workspace.search_buffer)
     M.search_file.load(data_workspace.search_file)
     M.select.load(data_workspace.select)
   end
@@ -179,8 +184,9 @@ function M.save(storage)
       option = M.option.dump(),
       plugin = M.plugin.dump(),
       search = M.search_file.dump(),
-      select = M.select.dump(),
+      search_buffer = M.search_buffer.dump(),
       search_file = M.search_file.dump(),
+      select = M.select.dump(),
     }
     std.fs.write_json(storage.workspace, data, true)
   end

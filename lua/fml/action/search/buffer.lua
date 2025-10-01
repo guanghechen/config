@@ -19,7 +19,15 @@ function M.search_in_buffer()
   end
 
   if searcher == nil then
-    searcher = eve.ux.searcher.BufferSearcher.new()
+    local context = eve.context.search_buffer ---@type eve.context.search_buffer
+    searcher = eve.ux.searcher.BufferSearcher.new({
+      o_flag_fuzzy = context.flag_fuzzy,
+      o_flag_regex = context.flag_regex,
+      o_flag_replace = context.flag_replace,
+      o_flag_case_sensitive = context.flag_case_sensitive,
+      o_search_pattern = context.search_pattern,
+      o_replace_pattern = context.replace_pattern,
+    })
   end
 
   local winnr_finder = searcher:get_winnr_finder() ---@type integer|nil

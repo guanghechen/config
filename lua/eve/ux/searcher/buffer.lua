@@ -66,6 +66,14 @@ local function highlight_match_point(bufnr, namespace, hlgroup, lnum, point)
   end
 end
 
+---@class eve.ux.searcher.buffer.ISearcherProps
+---@field public o_flag_fuzzy?           std.collection.IObservable
+---@field public o_flag_regex?           std.collection.IObservable
+---@field public o_flag_replace?         std.collection.IObservable
+---@field public o_flag_case_sensitive?  std.collection.IObservable
+---@field public o_search_pattern?       std.collection.IObservable
+---@field public o_replace_pattern?      std.collection.IObservable
+
 ---@class eve.ux.searcher.buffer.Searcher
 ---@field public title                  string
 ---@field public o_flag_fuzzy           std.collection.IObservable
@@ -88,15 +96,17 @@ end
 local M = {}
 M.__index = M
 
+---@param props                         eve.ux.searcher.buffer.ISearcherProps|nil
 ---@return eve.ux.searcher.buffer.Searcher
-function M.new()
-  local o_flag_fuzzy = std.Observable.from_value(false)
-  local o_flag_regex = std.Observable.from_value(false)
-  local o_flag_replace = std.Observable.from_value(false)
-  local o_flag_case_sensitive = std.Observable.from_value(true)
-  local o_search_pattern = std.Observable.from_value("")
+function M.new(props)
+  props = props or {}
+  local o_flag_fuzzy = props.o_flag_fuzzy or std.Observable.from_value(false)
+  local o_flag_regex = props.o_flag_regex or std.Observable.from_value(false)
+  local o_flag_replace = props.o_flag_replace or std.Observable.from_value(false)
+  local o_flag_case_sensitive = props.o_flag_case_sensitive or std.Observable.from_value(true)
+  local o_search_pattern = props.o_search_pattern or std.Observable.from_value("")
+  local o_replace_pattern = props.o_replace_pattern or std.Observable.from_value("")
   local o_search_pattern_linecount = std.Observable.from_value(1)
-  local o_replace_pattern = std.Observable.from_value("")
   local o_match_index = std.Observable.from_value(0)
   local o_match_total = std.Observable.from_value(0)
 
