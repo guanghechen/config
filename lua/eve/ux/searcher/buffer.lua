@@ -85,14 +85,17 @@ end
 ---@field public o_replace_pattern      std.collection.IObservable
 ---@field public o_match_index          std.collection.IObservable
 ---@field public o_match_total          std.collection.IObservable
----@field protected _winnr_finder        integer|nil
----@field protected _bufnr_finder        integer|nil
+---@field protected _winnr_finder       integer|nil
+---@field protected _bufnr_finder       integer|nil
+---@field protected _winnr_replacer     integer|nil
+---@field protected _bufnr_replacer     integer|nil
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            oxi.string.ILineMatch[]|nil
 ---@field protected _scheduler_search   std.collection.Scheduler
 ---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
----@field protected _keymaps            std.t.IKeymap[]
+---@field protected _finder_keymaps     std.t.IKeymap[]
+---@field protected _replacer_keymaps   std.t.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -173,7 +176,7 @@ function M.new(props)
   end
 
   ---@type std.t.IKeymap[]
-  local keymaps = {
+  local finder_keymaps = {
     {
       modes = { "n" },
       key = "q",
@@ -214,9 +217,97 @@ function M.new(props)
         self:focus_source()
       end,
     },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      desc = "search_buffer: focus replacer window",
+      callback = function()
+        self:focus_replacer()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      desc = "search_buffer: focus finder window",
+      callback = function()
+        self:focus_replacer()
+      end,
+    },
   }
   for index, flag in ipairs(raw_flags) do
-    keymaps[#keymaps + 1] = {
+    finder_keymaps[#finder_keymaps + 1] = {
+      modes = { "n", "v" },
+      key = string.format("t%d", index),
+      desc = flag.desc,
+      callback = flag.callback,
+    }
+  end
+
+  ---@type std.t.IKeymap[]
+  local replacer_keymaps = {
+    {
+      modes = { "n" },
+      key = "q",
+      desc = "search_buffer: close",
+      callback = function()
+        self:close()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-k>",
+      desc = "search_buffer: goto previous match",
+      callback = function()
+        self:goto_prev_match()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-j>",
+      desc = "search_buffer: goto next match",
+      callback = function()
+        self:goto_next_match()
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<CR>",
+      desc = "search_buffer: goto next match",
+      callback = function()
+        self:goto_next_match()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>`",
+      desc = "search_buffer: focus source window",
+      callback = function()
+        self:focus_source()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      desc = "search_buffer: focus replacer window",
+      callback = function()
+        self:focus_finder()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      desc = "search_buffer: focus finder window",
+      callback = function()
+        self:focus_finder()
+      end,
+    },
+  }
+  for index, flag in ipairs(raw_flags) do
+    replacer_keymaps[#replacer_keymaps + 1] = {
       modes = { "n", "v" },
       key = string.format("t%d", index),
       desc = flag.desc,
@@ -327,6 +418,40 @@ function M.new(props)
     self:__resize__()
   end, true)
 
+  -- Add observer to show/hide replacer window when replace flag changes
+  std.fn.observe({
+    o_flag_replace,
+  }, function()
+    local flag_replace = o_flag_replace:snapshot() ---@type boolean
+
+    -- Update finder window border to match new state
+    local winnr_finder = self._winnr_finder ---@type integer|nil
+    if winnr_finder ~= nil and vim.api.nvim_win_is_valid(winnr_finder) then
+      local finder_config = vim.api.nvim_win_get_config(winnr_finder)
+      local new_border = flag_replace and { "╭", "─", "╮", "│", "┤", "─", "├", "│" } or "rounded"
+      finder_config.border = new_border
+      vim.api.nvim_win_set_config(winnr_finder, finder_config)
+    end
+
+    if flag_replace then
+      self:__create_replacer_window_as_needed__()
+    else
+      -- Close replacer window if it exists
+      local winnr_replacer = self._winnr_replacer ---@type integer|nil
+      local bufnr_replacer = self._bufnr_replacer ---@type integer|nil
+
+      self._winnr_replacer = nil
+      if winnr_replacer ~= nil and vim.api.nvim_win_is_valid(winnr_replacer) then
+        vim.api.nvim_win_close(winnr_replacer, true)
+      end
+
+      self._bufnr_replacer = nil
+      if bufnr_replacer ~= nil and vim.api.nvim_buf_is_valid(bufnr_replacer) then
+        vim.api.nvim_buf_delete(bufnr_replacer, { force = true })
+      end
+    end
+  end, true)
+
   self.title = "Search in Buffer"
   self.o_flag_fuzzy = o_flag_fuzzy
   self.o_flag_regex = o_flag_regex
@@ -339,12 +464,15 @@ function M.new(props)
   self.o_match_total = o_match_total
   self._winnr_finder = nil
   self._bufnr_finder = nil
+  self._winnr_replacer = nil
+  self._bufnr_replacer = nil
   self._winnr_source = nil
   self._bufnr_source = nil
   self._matches = nil
   self._nvimbar = nvimbar
   self._scheduler_search = scheduler_search
-  self._keymaps = keymaps
+  self._finder_keymaps = finder_keymaps
+  self._replacer_keymaps = replacer_keymaps
   return self
 end
 
@@ -371,7 +499,14 @@ function M:attach(winnr_source)
     end
   end
 
-  local winnr_finder = self:__create_window_as_needed__() ---@type integer
+  local winnr_finder = self:__create_finder_window_as_needed__() ---@type integer
+
+  -- Create replacer window if replace mode is enabled
+  local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
+  if flag_replace then
+    self:__create_replacer_window_as_needed__()
+  end
+
   vim.api.nvim_set_current_win(winnr_finder)
 
   self._scheduler_search:schedule()
@@ -382,6 +517,8 @@ end
 function M:close()
   local winnr_finder = self._winnr_finder ---@type integer|nil
   local bufnr_finder = self._bufnr_finder ---@type integer|nil
+  local winnr_replacer = self._winnr_replacer ---@type integer|nil
+  local bufnr_replacer = self._bufnr_replacer ---@type integer|nil
   local bufnr_source = self._bufnr_source ---@type integer|nil
 
   self._winnr_finder = nil
@@ -394,6 +531,16 @@ function M:close()
     vim.api.nvim_buf_delete(bufnr_finder, { force = true })
   end
 
+  self._winnr_replacer = nil
+  if winnr_replacer ~= nil and vim.api.nvim_win_is_valid(winnr_replacer) then
+    vim.api.nvim_win_close(winnr_replacer, true)
+  end
+
+  self._bufnr_replacer = nil
+  if bufnr_replacer ~= nil and vim.api.nvim_buf_is_valid(bufnr_replacer) then
+    vim.api.nvim_buf_delete(bufnr_replacer, { force = true })
+  end
+
   self._winnr_source = nil
   self._bufnr_source = nil
   self._matches = {}
@@ -402,6 +549,22 @@ function M:close()
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
   end
   self._scheduler_search:cancel()
+end
+
+---@return nil
+function M:focus_finder()
+  local winnr = self._winnr_finder ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_set_current_win(winnr)
+  end
+end
+
+---@return nil
+function M:focus_replacer()
+  local winnr = self._winnr_replacer ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_set_current_win(winnr)
+  end
 end
 
 ---@return nil
@@ -493,7 +656,7 @@ end
 
 ---@return nil
 function M:set_prompt()
-  local bufnr = self:__create_buffer_as_needed__() ---@type integer
+  local bufnr = self:__create_finder_buffer_as_needed__() ---@type integer
   local winnr = self._winnr_finder ---@type integer|nil
   local lnum = 1 ---@type integer
 
@@ -511,7 +674,7 @@ end
 ---@protected
 ---@return integer
 ---@return boolean
-function M:__create_buffer_as_needed__()
+function M:__create_finder_buffer_as_needed__()
   local bufnr = self._bufnr_finder ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     return bufnr, false
@@ -527,8 +690,8 @@ function M:__create_buffer_as_needed__()
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].swapfile = false
 
-  -- Use keymaps created in constructor
-  eve.nvim.bindkeys(self._keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  -- Use finder keymaps
+  eve.nvim.bindkeys(self._finder_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local pattern = self.o_search_pattern:snapshot() ---@type string
   local lines = vim.split(pattern, "\n", { plain = true })
@@ -557,7 +720,51 @@ end
 ---@protected
 ---@return integer
 ---@return boolean
-function M:__create_window_as_needed__()
+function M:__create_replacer_buffer_as_needed__()
+  local bufnr = self._bufnr_replacer ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    return bufnr, false
+  end
+
+  bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  self._bufnr_replacer = bufnr
+
+  vim.b[bufnr].miniindentscope_disable = true
+  vim.b[bufnr].miniai_disable = true
+  vim.b[bufnr].minihipatterns_disable = true
+  vim.bo[bufnr].buftype = "nofile"
+  vim.bo[bufnr].bufhidden = "wipe"
+  vim.bo[bufnr].swapfile = false
+
+  -- Use replacer keymaps
+  eve.nvim.bindkeys(self._replacer_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
+  local pattern = self.o_replace_pattern:snapshot() ---@type string
+  local lines = vim.split(pattern, "\n", { plain = true })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+  -- Set up replace icon sign
+  local sign_group = "fml_replace_buffer_prompt"
+  local sign_name = "ReplaceBufferPrompt"
+  vim.fn.sign_define(sign_name, { text = eve.icon.symbols.flag_replace, texthl = "f_pk_finder_prompt" })
+  vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
+
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+    buffer = bufnr,
+    callback = function()
+      local raw_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+      local content = table.concat(raw_lines, "\n") ---@type string
+      self.o_replace_pattern:next(content)
+    end,
+  })
+
+  return bufnr, true
+end
+
+---@protected
+---@return integer
+---@return boolean
+function M:__create_finder_window_as_needed__()
   local winnr = self._winnr_finder ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     return winnr, false
@@ -570,7 +777,11 @@ function M:__create_window_as_needed__()
   local row = 3 ---@type integer
   local col = math.max(0, math.floor((vim.o.columns - width) / 2)) ---@type integer
 
-  local bufnr = self:__create_buffer_as_needed__() ---@type integer
+  -- Determine border style based on whether replacer is shown
+  local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
+  local border = flag_replace and { "╭", "─", "╮", "│", "┤", "─", "├", "│" } or "rounded"
+
+  local bufnr = self:__create_finder_buffer_as_needed__() ---@type integer
   local popup_winnr = vim.api.nvim_open_win(bufnr, true, {
     relative = "editor",
     width = width,
@@ -578,11 +789,60 @@ function M:__create_window_as_needed__()
     row = row,
     col = col,
     style = "minimal",
-    border = "rounded",
+    border = border,
     title = string.format(" %s ", self.title),
     title_pos = "center",
   })
   self._winnr_finder = popup_winnr
+
+  vim.wo[popup_winnr].cursorline = false
+  vim.wo[popup_winnr].number = false
+  vim.wo[popup_winnr].relativenumber = false
+  vim.wo[popup_winnr].signcolumn = "yes"
+  vim.wo[popup_winnr].spell = false
+  vim.wo[popup_winnr].winblend = winblend
+  vim.wo[popup_winnr].winfixbuf = true
+  vim.wo[popup_winnr].winhighlight = "Normal:Normal,FloatBorder:FloatBorder"
+  vim.wo[popup_winnr].wrap = false
+
+  return popup_winnr, true
+end
+
+---@protected
+---@return integer
+---@return boolean
+function M:__create_replacer_window_as_needed__()
+  local winnr = self._winnr_replacer ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    return winnr, false
+  end
+
+  -- Get finder window config to position replacer below it
+  local finder_winnr = self._winnr_finder ---@type integer|nil
+  if finder_winnr == nil or not vim.api.nvim_win_is_valid(finder_winnr) then
+    return -1, false
+  end
+
+  local finder_config = vim.api.nvim_win_get_config(finder_winnr)
+  local winblend = eve.context.theme.get_float_winblend() ---@type integer
+  local width = finder_config.width ---@type integer
+  local height = 3 ---@type integer -- Fixed height for replacer
+  local row = finder_config.row + finder_config.height + 1 ---@type integer
+  local col = finder_config.col ---@type integer
+
+  local bufnr = self:__create_replacer_buffer_as_needed__() ---@type integer
+  local popup_winnr = vim.api.nvim_open_win(bufnr, false, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    style = "minimal",
+    border = { "├", "─", "┤", "│", "╯", "─", "╰", "│" }, -- Connect to finder above
+    title = " Replace ",
+    title_pos = "center",
+  })
+  self._winnr_replacer = popup_winnr
 
   vim.wo[popup_winnr].cursorline = false
   vim.wo[popup_winnr].number = false
