@@ -17,6 +17,18 @@ function M.resume_last_widget()
     return
   end
 
+  -- Check if searcher buffer widget exists and is visible
+  local search_buffer_action = require("fml.action.search.buffer")
+  local searcher = search_buffer_action.get_searcher() ---@type eve.ux.searcher.buffer.Searcher|nil
+  if searcher ~= nil then
+    local winnr_finder = searcher:get_winnr_finder() ---@type integer|nil
+    if winnr_finder ~= nil and vim.api.nvim_win_is_valid(winnr_finder) then
+      -- Searcher buffer widget exists, focus back to the last focused window
+      searcher:focus_last()
+      return
+    end
+  end
+
   if eve.widget.resume() then
     local widget, widget_index = eve.widget.get_widget_visible() ---@type std.t.ux.IWidget|nil
     if widget ~= nil and widget_index ~= nil then

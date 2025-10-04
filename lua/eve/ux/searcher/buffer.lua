@@ -19,7 +19,7 @@ end
 ---@param o_flag_case_sensitive         std.collection.IObservable
 ---@param o_flag_replace                std.collection.IObservable
 ---@param title                          string
----@return eve.ux.searcher.result.IFlagItem[]
+---@return eve.ux.searcher.result.IFlagItem[], eve.ux.searcher.result.IFlagItemRaw[]
 local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, title)
   ---@type eve.ux.searcher.result.IFlagItemRaw[]
   local raw_flags = {
@@ -163,6 +163,7 @@ end
 ---@field protected _finder_keymaps     std.t.IKeymap[]
 ---@field protected _replacer_keymaps   std.t.IKeymap[]
 ---@field protected _preserve_match_index integer|nil
+---@field protected _last_focused_window "finder"|"replacer"
 local M = {}
 M.__index = M
 
@@ -183,7 +184,8 @@ function M.new(props)
   local self = setmetatable({}, M)
   self.title = "Search in Buffer"
 
-  local flags, raw_flags = create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, self.title)
+  local flags, raw_flags =
+    create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, self.title)
 
   local finder_keymaps = self:__create_keymaps__(raw_flags, "finder")
   local replacer_keymaps = self:__create_keymaps__(raw_flags, "replacer")
@@ -202,7 +204,19 @@ function M.new(props)
     end,
   })
 
-  self:__setup_observers__(o_search_pattern, o_search_pattern_linecount, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, o_match_index, o_match_total, o_replace_pattern, nvimbar, scheduler_search)
+  self:__setup_observers__(
+    o_search_pattern,
+    o_search_pattern_linecount,
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_flag_replace,
+    o_match_index,
+    o_match_total,
+    o_replace_pattern,
+    nvimbar,
+    scheduler_search
+  )
   self.o_flag_fuzzy = o_flag_fuzzy
   self.o_flag_regex = o_flag_regex
   self.o_flag_replace = o_flag_replace
@@ -224,6 +238,7 @@ function M.new(props)
   self._finder_keymaps = finder_keymaps
   self._replacer_keymaps = replacer_keymaps
   self._preserve_match_index = nil
+  self._last_focused_window = "finder"
   return self
 end
 
@@ -312,6 +327,7 @@ function M:focus_finder()
   local winnr = self._winnr_finder ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_set_current_win(winnr)
+    self._last_focused_window = "finder"
   end
 end
 
@@ -320,6 +336,7 @@ function M:focus_replacer()
   local winnr = self._winnr_replacer ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_set_current_win(winnr)
+    self._last_focused_window = "replacer"
   end
 end
 
@@ -328,6 +345,15 @@ function M:focus_source()
   local winnr = self._winnr_source ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_set_current_win(winnr)
+  end
+end
+
+---@return nil
+function M:focus_last()
+  if self._last_focused_window == "replacer" then
+    self:focus_replacer()
+  else
+    self:focus_finder()
   end
 end
 
@@ -837,21 +863,28 @@ function M:__create_keymaps__(raw_flags, window_type)
     {
       modes = { "i", "n", "v" },
       key = "<leader>`",
-      desc = "search_buffer: focus source window",
+      desc = "search_buffer: toggle between searcher and source window",
       callback = function()
-        self:focus_source()
+        local current_winnr = vim.api.nvim_get_current_win() ---@type integer
+        local winnr_source = self._winnr_source ---@type integer|nil
+
+        -- If we're in the source window, focus back to the searcher
+        if current_winnr == winnr_source then
+          self:focus_last()
+        else
+          -- Otherwise, focus the source window
+          self:focus_source()
+        end
       end,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
-      desc = "search_buffer: focus replacer window",
+      desc = "search_buffer: focus replacer window (move down)",
       callback = function()
         if window_type == "finder" then
           self:focus_replacer()
-        else
-          self:focus_finder()
         end
       end,
     },
@@ -859,11 +892,9 @@ function M:__create_keymaps__(raw_flags, window_type)
       modes = { "i", "n", "v" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
-      desc = "search_buffer: focus finder window",
+      desc = "search_buffer: focus finder window (move up)",
       callback = function()
-        if window_type == "finder" then
-          self:focus_replacer()
-        else
+        if window_type == "replacer" then
           self:focus_finder()
         end
       end,
@@ -878,7 +909,8 @@ function M:__create_keymaps__(raw_flags, window_type)
     },
     {
       modes = { "i", "n", "v" },
-      key = "<M-CR>",
+      key = "<C-a><cr>",
+      aliases = { "<D-cr>", "<M-cr>" },
       desc = "search_buffer: replace all matches",
       callback = function()
         self:replace_all_matches()
@@ -952,7 +984,19 @@ end
 
 ---@protected
 ---@return nil
-function M:__setup_observers__(o_search_pattern, o_search_pattern_linecount, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, o_match_index, o_match_total, o_replace_pattern, nvimbar, scheduler_search)
+function M:__setup_observers__(
+  o_search_pattern,
+  o_search_pattern_linecount,
+  o_flag_fuzzy,
+  o_flag_regex,
+  o_flag_case_sensitive,
+  o_flag_replace,
+  o_match_index,
+  o_match_total,
+  o_replace_pattern,
+  nvimbar,
+  scheduler_search
+)
   std.fn.observe({ o_search_pattern }, function()
     local pattern = o_search_pattern:snapshot() ---@type string
     if pattern == nil or pattern == "" then
@@ -1121,7 +1165,8 @@ function M:__search__()
   -- Use preserved match index if available, otherwise default to 1
   local match_index = 1
   if self._preserve_match_index ~= nil then
-    match_index = math.min(self._preserve_match_index, #matches)
+    local preserved_index = self._preserve_match_index ---@type integer
+    match_index = math.min(preserved_index, #matches)
     match_index = math.max(1, match_index)
     self._preserve_match_index = nil -- Clear after use
   end
@@ -1255,7 +1300,7 @@ function M:__render_replacement_matches__(bufnr, replacement_matches)
       local replacement_text = replacement_match.text or ""
       if replacement_text ~= "" then
         pcall(vim.api.nvim_buf_set_extmark, bufnr, NSNR_REPLACE_PREVIEW, lnum - 1, col_end, {
-          virt_text = {{ replacement_text, replace_hlgroup }},
+          virt_text = { { replacement_text, replace_hlgroup } },
           virt_text_pos = "inline",
           priority = vim.hl.priorities.user + 1,
         })

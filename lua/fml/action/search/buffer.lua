@@ -39,4 +39,9 @@ function M.search_in_buffer()
   end
 end
 
+---@return eve.ux.searcher.buffer.Searcher|nil
+function M.get_searcher()
+  return searcher
+end
+
 return M
