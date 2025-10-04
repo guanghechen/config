@@ -2,6 +2,9 @@
 local __module_name__ = "eve.ux.searcher.buffer" ---@type string
 local NSNR_SEARCH = vim.api.nvim_create_namespace("eve.ux.searcher.buffer") ---@type integer
 local NSNR_SEARCH_CURRENT = vim.api.nvim_create_namespace("eve.ux.searcher.buffer.current") ---@type integer
+local NSNR_REPLACE_PREVIEW = vim.api.nvim_create_namespace("eve.ux.searcher.buffer.replace_preview") ---@type integer
+
+----------------------------------------------------------------------------------------------------
 
 ---@param pattern_line_count            integer
 ---@return integer
@@ -9,6 +12,69 @@ local function calculate_dynamic_height(pattern_line_count)
   local base_height = 2 -- 1 line for input + 1 line for winbar reservation
   local extra_lines = math.min(pattern_line_count - 1, 4) -- Max 4 extra lines
   return base_height + extra_lines
+end
+
+---@param o_flag_fuzzy                  std.collection.IObservable
+---@param o_flag_regex                  std.collection.IObservable
+---@param o_flag_case_sensitive         std.collection.IObservable
+---@param o_flag_replace                std.collection.IObservable
+---@param title                          string
+---@return eve.ux.searcher.result.IFlagItem[]
+local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, title)
+  ---@type eve.ux.searcher.result.IFlagItemRaw[]
+  local raw_flags = {
+    {
+      desc = string.format("%s: toggle fuzzy search", title),
+      callback = function()
+        o_flag_fuzzy:next(not o_flag_fuzzy:snapshot())
+      end,
+      snapshot = function()
+        local enabled = o_flag_fuzzy:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+    {
+      desc = string.format("%s: toggle regex search", title),
+      callback = function()
+        o_flag_regex:next(not o_flag_regex:snapshot())
+      end,
+      snapshot = function()
+        local enabled = o_flag_regex:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+    {
+      desc = string.format("%s: toggle case sensitive", title),
+      callback = function()
+        o_flag_case_sensitive:next(not o_flag_case_sensitive:snapshot())
+      end,
+      snapshot = function()
+        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+    {
+      desc = string.format("%s: toggle replace mode", title),
+      callback = function()
+        o_flag_replace:next(not o_flag_replace:snapshot())
+      end,
+      snapshot = function()
+        local enabled = o_flag_replace:snapshot() ---@type boolean
+        return eve.icon.symbols.flag_replace, enabled and "picker_flag_blue" or "picker_flag_grey"
+      end,
+    },
+  }
+
+  local flags = {} ---@type eve.ux.searcher.result.IFlagItem[]
+  for _, flag in ipairs(raw_flags) do
+    flags[#flags + 1] = {
+      desc = flag.desc,
+      callback = eve.G.register_anonymous_fn(flag.callback) or "eve.G.noop",
+      disabled = std.fn.falsy,
+      snapshot = flag.snapshot,
+    }
+  end
+  return flags, raw_flags
 end
 
 ---@param bufnr                         integer
@@ -114,256 +180,15 @@ function M.new(props)
   local o_match_total = std.Observable.from_value(0)
 
   local self = setmetatable({}, M)
+  self.title = "Search in Buffer"
 
-  ---@type eve.ux.searcher.result.IFlagItemRaw[]
-  local raw_flags = {
-    {
-      desc = string.format("%s: toggle fuzzy search", self.title),
-      callback = function()
-        local enabled = o_flag_fuzzy:snapshot() ---@type boolean
-        o_flag_fuzzy:next(not enabled)
-      end,
-      snapshot = function()
-        local enabled = o_flag_fuzzy:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    },
-    {
-      desc = string.format("%s: toggle regex search", self.title),
-      callback = function()
-        local enabled = o_flag_regex:snapshot() ---@type boolean
-        o_flag_regex:next(not enabled)
-      end,
-      snapshot = function()
-        local enabled = o_flag_regex:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    },
-    {
-      desc = string.format("%s: toggle case sensitive", self.title),
-      callback = function()
-        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
-        o_flag_case_sensitive:next(not enabled)
-      end,
-      snapshot = function()
-        local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    },
-    {
-      desc = string.format("%s: toggle replace mode", self.title),
-      callback = function()
-        local enabled = o_flag_replace:snapshot() ---@type boolean
-        o_flag_replace:next(not enabled)
-      end,
-      snapshot = function()
-        local enabled = o_flag_replace:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_replace, enabled and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    },
-  }
+  local flags, raw_flags = create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, self.title)
 
-  local flags = {} ---@type eve.ux.searcher.result.IFlagItem[]
-  for _, flag in ipairs(raw_flags) do
-    ---@type eve.ux.searcher.result.IFlagItem
-    local item = {
-      desc = flag.desc,
-      callback = eve.G.register_anonymous_fn(flag.callback) or "eve.G.noop",
-      disabled = std.fn.falsy,
-      snapshot = flag.snapshot,
-    }
-    flags[#flags + 1] = item
-  end
+  local finder_keymaps = self:__create_keymaps__(raw_flags, "finder")
+  local replacer_keymaps = self:__create_keymaps__(raw_flags, "replacer")
 
-  ---@type std.t.IKeymap[]
-  local finder_keymaps = {
-    {
-      modes = { "n" },
-      key = "q",
-      desc = "search_buffer: close",
-      callback = function()
-        self:close()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-k>",
-      desc = "search_buffer: goto previous match",
-      callback = function()
-        self:goto_prev_match()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-j>",
-      desc = "search_buffer: goto next match",
-      callback = function()
-        self:goto_next_match()
-      end,
-    },
-    {
-      modes = { "n", "v" },
-      key = "<CR>",
-      desc = "search_buffer: goto next match",
-      callback = function()
-        self:goto_next_match()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<leader>`",
-      desc = "search_buffer: focus source window",
-      callback = function()
-        self:focus_source()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-a>j",
-      aliases = { "<D-j>", "<M-j>" },
-      desc = "search_buffer: focus replacer window",
-      callback = function()
-        self:focus_replacer()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-a>k",
-      aliases = { "<D-k>", "<M-k>" },
-      desc = "search_buffer: focus finder window",
-      callback = function()
-        self:focus_replacer()
-      end,
-    },
-  }
-  for index, flag in ipairs(raw_flags) do
-    finder_keymaps[#finder_keymaps + 1] = {
-      modes = { "n", "v" },
-      key = string.format("t%d", index),
-      desc = flag.desc,
-      callback = flag.callback,
-    }
-  end
+  local nvimbar = self:__create_nvimbar__(o_match_index, o_match_total, flags)
 
-  ---@type std.t.IKeymap[]
-  local replacer_keymaps = {
-    {
-      modes = { "n" },
-      key = "q",
-      desc = "search_buffer: close",
-      callback = function()
-        self:close()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-k>",
-      desc = "search_buffer: goto previous match",
-      callback = function()
-        self:goto_prev_match()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-j>",
-      desc = "search_buffer: goto next match",
-      callback = function()
-        self:goto_next_match()
-      end,
-    },
-    {
-      modes = { "n", "v" },
-      key = "<CR>",
-      desc = "search_buffer: goto next match",
-      callback = function()
-        self:goto_next_match()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<leader>`",
-      desc = "search_buffer: focus source window",
-      callback = function()
-        self:focus_source()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-a>j",
-      aliases = { "<D-j>", "<M-j>" },
-      desc = "search_buffer: focus replacer window",
-      callback = function()
-        self:focus_finder()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-a>k",
-      aliases = { "<D-k>", "<M-k>" },
-      desc = "search_buffer: focus finder window",
-      callback = function()
-        self:focus_finder()
-      end,
-    },
-  }
-  for index, flag in ipairs(raw_flags) do
-    replacer_keymaps[#replacer_keymaps + 1] = {
-      modes = { "n", "v" },
-      key = string.format("t%d", index),
-      desc = flag.desc,
-      callback = flag.callback,
-    }
-  end
-
-  -- Create winbar once at module level
-  local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
-  local c = eve.ux.nvimbar.component
-
-  ---@type eve.ux.nvimbar.Nvimbar
-  local nvimbar = eve.ux.nvimbar.Nvimbar
-    .new({
-      name = string.format("%s#winbar", __module_name__),
-      comp_sep = "",
-      comp_sep_hlname = "f_wl_searcher",
-      comp_sep_hlname_active = "f_wl_searcher",
-      delay = 64,
-      silent = std.fn.falsy,
-      get_max_width = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          local width = vim.api.nvim_win_get_width(winnr) ---@type integer
-          return width - 2
-        end
-        return 0
-      end,
-      get_preset_context = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return { winnr = winnr }
-        end
-        return {}
-      end,
-      is_active = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
-      end,
-      on_fulfilled = function(result)
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          vim.wo[winnr].winbar = result
-        end
-      end,
-      validate = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-          return "The window is not valid, winnr=" .. winnr .. "."
-        end
-      end,
-    })
-    :place("left", c.picker.result_pos(position, o_match_index, o_match_total), 100)
-    :place("right", c.picker.result_flags(position, flags, 1), 100)
-
-  ---@type std.collection.Scheduler
   local scheduler_search = std.Scheduler.new({
     name = string.format("%s#search", __module_name__),
     mode = "debounce",
@@ -376,83 +201,7 @@ function M.new(props)
     end,
   })
 
-  -- Add observer to update line count when search pattern changes
-  std.fn.observe({
-    o_search_pattern,
-  }, function()
-    local pattern = self.o_search_pattern:snapshot() ---@type string
-    if pattern == nil or pattern == "" then
-      o_search_pattern_linecount:next(1)
-      return
-    end
-    local lines = vim.split(pattern, "\n", { plain = true })
-    o_search_pattern_linecount:next(#lines)
-  end, true)
-
-  -- Add observers to re-render winbar when flags or match info change
-  std.fn.observe({
-    o_flag_fuzzy,
-    o_flag_regex,
-    o_flag_case_sensitive,
-    o_flag_replace,
-    o_match_index,
-    o_match_total,
-  }, function()
-    nvimbar:render()
-  end, true)
-
-  -- Add observers to trigger search when search-affecting flags change
-  std.fn.observe({
-    o_flag_fuzzy,
-    o_flag_regex,
-    o_flag_case_sensitive,
-    o_search_pattern,
-  }, function()
-    scheduler_search:schedule()
-  end, true)
-
-  -- Add observer to resize window when line count changes
-  std.fn.observe({
-    o_search_pattern_linecount,
-  }, function()
-    self:__resize__()
-  end, true)
-
-  -- Add observer to show/hide replacer window when replace flag changes
-  std.fn.observe({
-    o_flag_replace,
-  }, function()
-    local flag_replace = o_flag_replace:snapshot() ---@type boolean
-
-    -- Update finder window border to match new state
-    local winnr_finder = self._winnr_finder ---@type integer|nil
-    if winnr_finder ~= nil and vim.api.nvim_win_is_valid(winnr_finder) then
-      local finder_config = vim.api.nvim_win_get_config(winnr_finder)
-      local new_border = flag_replace and { "╭", "─", "╮", "│", "┤", "─", "├", "│" } or "rounded"
-      finder_config.border = new_border
-      vim.api.nvim_win_set_config(winnr_finder, finder_config)
-    end
-
-    if flag_replace then
-      self:__create_replacer_window_as_needed__()
-    else
-      -- Close replacer window if it exists
-      local winnr_replacer = self._winnr_replacer ---@type integer|nil
-      local bufnr_replacer = self._bufnr_replacer ---@type integer|nil
-
-      self._winnr_replacer = nil
-      if winnr_replacer ~= nil and vim.api.nvim_win_is_valid(winnr_replacer) then
-        vim.api.nvim_win_close(winnr_replacer, true)
-      end
-
-      self._bufnr_replacer = nil
-      if bufnr_replacer ~= nil and vim.api.nvim_buf_is_valid(bufnr_replacer) then
-        vim.api.nvim_buf_delete(bufnr_replacer, { force = true })
-      end
-    end
-  end, true)
-
-  self.title = "Search in Buffer"
+  self:__setup_observers__(o_search_pattern, o_search_pattern_linecount, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, o_match_index, o_match_total, o_replace_pattern, nvimbar, scheduler_search)
   self.o_flag_fuzzy = o_flag_fuzzy
   self.o_flag_regex = o_flag_regex
   self.o_flag_replace = o_flag_replace
@@ -511,6 +260,9 @@ function M:attach(winnr_source)
 
   self._scheduler_search:schedule()
   self._nvimbar:render()
+
+  -- Ensure replace preview is shown after windows are fully set up
+  self:__update_replace_preview__()
 end
 
 ---@return nil
@@ -547,6 +299,7 @@ function M:close()
   if bufnr_source ~= nil and vim.api.nvim_buf_is_valid(bufnr_source) then
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_REPLACE_PREVIEW, 0, -1)
   end
   self._scheduler_search:cancel()
 end
@@ -805,6 +558,10 @@ function M:__create_finder_window_as_needed__()
   vim.wo[popup_winnr].winhighlight = "Normal:Normal,FloatBorder:FloatBorder"
   vim.wo[popup_winnr].wrap = false
 
+  -- Set nvimbar immediately when finder window is created
+  vim.wo[popup_winnr].winbar = self._nvimbar:snapshot()
+  self._nvimbar:render()
+
   return popup_winnr, true
 end
 
@@ -854,7 +611,234 @@ function M:__create_replacer_window_as_needed__()
   vim.wo[popup_winnr].winhighlight = "Normal:Normal,FloatBorder:FloatBorder"
   vim.wo[popup_winnr].wrap = false
 
+  -- Set nvimbar immediately when replacer window is created
+  vim.wo[popup_winnr].winbar = self._nvimbar:snapshot()
+  self._nvimbar:render()
+
   return popup_winnr, true
+end
+
+---@protected
+---@param raw_flags                     eve.ux.searcher.result.IFlagItemRaw[]
+---@param window_type                   "finder"|"replacer"
+---@return std.t.IKeymap[]
+function M:__create_keymaps__(raw_flags, window_type)
+  ---@type std.t.IKeymap[]
+  local base_keymaps = {
+    {
+      modes = { "n" },
+      key = "q",
+      desc = "search_buffer: close",
+      callback = function()
+        self:close()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-k>",
+      desc = "search_buffer: goto previous match",
+      callback = function()
+        self:goto_prev_match()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-j>",
+      desc = "search_buffer: goto next match",
+      callback = function()
+        self:goto_next_match()
+      end,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<CR>",
+      desc = "search_buffer: goto next match",
+      callback = function()
+        self:goto_next_match()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader>`",
+      desc = "search_buffer: focus source window",
+      callback = function()
+        self:focus_source()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      desc = "search_buffer: focus replacer window",
+      callback = function()
+        if window_type == "finder" then
+          self:focus_replacer()
+        else
+          self:focus_finder()
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      desc = "search_buffer: focus finder window",
+      callback = function()
+        if window_type == "finder" then
+          self:focus_replacer()
+        else
+          self:focus_finder()
+        end
+      end,
+    },
+  }
+
+  for index, flag in ipairs(raw_flags) do
+    base_keymaps[#base_keymaps + 1] = {
+      modes = { "n", "v" },
+      key = string.format("t%d", index),
+      desc = flag.desc,
+      callback = flag.callback,
+    }
+  end
+
+  return base_keymaps
+end
+
+---@protected
+---@param o_match_index                 std.collection.IObservable
+---@param o_match_total                 std.collection.IObservable
+---@param flags                          eve.ux.searcher.result.IFlagItem[]
+---@return eve.ux.nvimbar.Nvimbar
+function M:__create_nvimbar__(o_match_index, o_match_total, flags)
+  local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
+  local c = eve.ux.nvimbar.component
+
+  return eve.ux.nvimbar.Nvimbar
+    .new({
+      name = string.format("%s#winbar", __module_name__),
+      comp_sep = "",
+      comp_sep_hlname = "f_wl_searcher",
+      comp_sep_hlname_active = "f_wl_searcher",
+      delay = 64,
+      silent = std.fn.falsy,
+      get_max_width = function()
+        local winnr = self._winnr_finder ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          return vim.api.nvim_win_get_width(winnr) - 2
+        end
+        return 0
+      end,
+      get_preset_context = function()
+        local winnr = self._winnr_finder ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          return { winnr = winnr }
+        end
+        return {}
+      end,
+      is_active = function()
+        local winnr = self._winnr_finder ---@type integer|nil
+        return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+      end,
+      on_fulfilled = function(result)
+        local winnr = self._winnr_finder ---@type integer|nil
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          vim.wo[winnr].winbar = result
+        end
+      end,
+      validate = function()
+        local winnr = self._winnr_finder ---@type integer|nil
+        if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+          return "The window is not valid, winnr=" .. winnr .. "."
+        end
+      end,
+    })
+    :place("left", c.picker.result_pos(position, o_match_index, o_match_total), 100)
+    :place("right", c.picker.result_flags(position, flags, 1), 100)
+end
+
+---@protected
+---@return nil
+function M:__setup_observers__(o_search_pattern, o_search_pattern_linecount, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, o_match_index, o_match_total, o_replace_pattern, nvimbar, scheduler_search)
+  std.fn.observe({ o_search_pattern }, function()
+    local pattern = o_search_pattern:snapshot() ---@type string
+    if pattern == nil or pattern == "" then
+      o_search_pattern_linecount:next(1)
+      return
+    end
+    local lines = vim.split(pattern, "\n", { plain = true })
+    o_search_pattern_linecount:next(#lines)
+  end, true)
+
+  std.fn.observe({
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_flag_replace,
+    o_match_index,
+    o_match_total,
+  }, function()
+    nvimbar:render()
+  end, true)
+
+  std.fn.observe({
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_search_pattern,
+  }, function()
+    scheduler_search:schedule()
+  end, true)
+
+  std.fn.observe({ o_search_pattern_linecount }, function()
+    self:__resize__()
+  end, true)
+
+  std.fn.observe({ o_flag_replace }, function()
+    self:__toggle_replacer__(o_flag_replace:snapshot())
+  end, true)
+
+  std.fn.observe({
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_flag_replace,
+    o_search_pattern,
+    o_replace_pattern,
+    o_match_index,
+  }, function()
+    self:__update_replace_preview__()
+  end, true)
+end
+
+---@protected
+---@param flag_replace                   boolean
+---@return nil
+function M:__toggle_replacer__(flag_replace)
+  local winnr_finder = self._winnr_finder ---@type integer|nil
+  if winnr_finder ~= nil and vim.api.nvim_win_is_valid(winnr_finder) then
+    local finder_config = vim.api.nvim_win_get_config(winnr_finder)
+    finder_config.border = flag_replace and { "╭", "─", "╮", "│", "┤", "─", "├", "│" } or "rounded"
+    vim.api.nvim_win_set_config(winnr_finder, finder_config)
+  end
+
+  if flag_replace then
+    self:__create_replacer_window_as_needed__()
+    return
+  end
+
+  local winnr_replacer = self._winnr_replacer ---@type integer|nil
+  local bufnr_replacer = self._bufnr_replacer ---@type integer|nil
+
+  self._winnr_replacer = nil
+  if winnr_replacer ~= nil and vim.api.nvim_win_is_valid(winnr_replacer) then
+    vim.api.nvim_win_close(winnr_replacer, true)
+  end
+
+  self._bufnr_replacer = nil
+  if bufnr_replacer ~= nil and vim.api.nvim_buf_is_valid(bufnr_replacer) then
+    vim.api.nvim_buf_delete(bufnr_replacer, { force = true })
+  end
 end
 
 ---@protected
@@ -864,6 +848,7 @@ function M:__clear__()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_REPLACE_PREVIEW, 0, -1)
   end
 end
 
@@ -962,6 +947,169 @@ function M:__search__()
       end
     end
   end
+end
+
+---@protected
+---@return nil
+function M:__update_replace_preview__()
+  local bufnr_source = self._bufnr_source ---@type integer|nil
+  if bufnr_source == nil or not vim.api.nvim_buf_is_valid(bufnr_source) then
+    return
+  end
+
+  -- Clear existing replace preview highlights
+  vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_REPLACE_PREVIEW, 0, -1)
+
+  local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
+
+  -- Only show replace preview if replace mode is enabled
+  if not flag_replace then
+    return
+  end
+
+  -- Ensure replacer window exists if replace mode is enabled
+  local winnr_replacer = self._winnr_replacer ---@type integer|nil
+  if winnr_replacer == nil or not vim.api.nvim_win_is_valid(winnr_replacer) then
+    -- Create replacer window if it doesn't exist and finder window is available
+    local winnr_finder = self._winnr_finder ---@type integer|nil
+    if winnr_finder ~= nil and vim.api.nvim_win_is_valid(winnr_finder) then
+      self:__create_replacer_window_as_needed__()
+      winnr_replacer = self._winnr_replacer
+    end
+  end
+
+  -- Still need a valid replacer window to show preview
+  if winnr_replacer == nil or not vim.api.nvim_win_is_valid(winnr_replacer) then
+    return
+  end
+
+  local search_pattern = self.o_search_pattern:snapshot() ---@type string
+  local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
+
+  -- Don't show preview if search pattern is empty
+  if search_pattern == "" then
+    return
+  end
+
+  -- Call the oxi replacer function to get replacement data
+  ---@type oxi.replacer.show_replace_preview_in_buffer.IParams
+  local params = {
+    bufnr = bufnr_source,
+    search_pattern = search_pattern,
+    replace_pattern = replace_pattern,
+    flag_fuzzy = self.o_flag_fuzzy:snapshot(),
+    flag_regex = self.o_flag_regex:snapshot(),
+    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
+    namespace_id = NSNR_REPLACE_PREVIEW,
+    highlight_group_search = "Search",
+    highlight_group_replace = "DiffAdd",
+  }
+
+  local result = oxi.replacer.show_replace_preview_in_buffer(params)
+  if not result then
+    return
+  end
+
+  if result.error then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Preview",
+      message = result.error,
+    })
+    return
+  end
+
+  if result.replacement_matches then
+    self:__render_replacement_matches__(bufnr_source, result.replacement_matches)
+  end
+end
+
+---@protected
+---@param bufnr                          integer
+---@param replacement_matches            table[]
+---@return nil
+function M:__render_replacement_matches__(bufnr, replacement_matches)
+  local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
+  local lines = vim.split(text, "\n", { plain = true })
+  local current_match_offset = self:__get_current_match_offset__(lines)
+
+  for _, replacement_match in ipairs(replacement_matches) do
+    local lnum = self:__calculate_line_number__(lines, replacement_match.l)
+    local line_start_pos = self:__calculate_line_start_pos__(lines, lnum)
+    local col_start = replacement_match.l - line_start_pos
+    local col_end = replacement_match.r - line_start_pos
+
+    local is_current_match = current_match_offset and replacement_match.l == current_match_offset
+    local search_hlgroup = is_current_match and "f_sr_search_cur" or "f_sr_search"
+    local replace_hlgroup = is_current_match and "f_sr_replace_cur" or "f_sr_replace"
+
+    if col_start >= 0 and col_end > col_start then
+      pcall(vim.hl.range, bufnr, NSNR_REPLACE_PREVIEW, search_hlgroup, { lnum - 1, col_start }, { lnum - 1, col_end })
+
+      local replacement_text = replacement_match.text or ""
+      if replacement_text ~= "" then
+        pcall(vim.api.nvim_buf_set_extmark, bufnr, NSNR_REPLACE_PREVIEW, lnum - 1, col_end, {
+          virt_text = {{ replacement_text, replace_hlgroup }},
+          virt_text_pos = "inline",
+          priority = vim.hl.priorities.user + 1,
+        })
+      end
+    end
+  end
+end
+
+---@protected
+---@param lines                          string[]
+---@return integer|nil
+function M:__get_current_match_offset__(lines)
+  local current_match_index = self.o_match_index:snapshot() ---@type integer
+  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+
+  if not matches or current_match_index <= 0 or current_match_index > #matches then
+    return nil
+  end
+
+  local current_line_match = matches[current_match_index] ---@type oxi.string.ILineMatch
+  if not current_line_match or not current_line_match.matches or #current_line_match.matches == 0 then
+    return nil
+  end
+
+  local line_index = current_line_match.lnum - 1
+  local line_start_offset = 0
+  for i = 0, line_index - 1 do
+    if i < #lines then
+      line_start_offset = line_start_offset + #lines[i + 1] + 1
+    end
+  end
+  return line_start_offset + current_line_match.matches[1].l
+end
+
+---@protected
+---@param lines                          string[]
+---@param char_offset                    integer
+---@return integer
+function M:__calculate_line_number__(lines, char_offset)
+  local char_pos = 0
+  for i, line in ipairs(lines) do
+    local line_end = char_pos + #line
+    if char_offset >= char_pos and char_offset < line_end + 1 then
+      return i
+    end
+    char_pos = line_end + 1
+  end
+  return 1
+end
+
+---@protected
+---@param lines                          string[]
+---@param lnum                           integer
+---@return integer
+function M:__calculate_line_start_pos__(lines, lnum)
+  local line_start_pos = 0
+  for i = 1, lnum - 1 do
+    line_start_pos = line_start_pos + #lines[i] + 1
+  end
+  return line_start_pos
 end
 
 return M

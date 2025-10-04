@@ -11,6 +11,8 @@ use crate::types::dto::ReaddirSucceedResult;
 use crate::types::dto::SearchInBufferParams;
 use crate::types::dto::SearchInLinesParams;
 use crate::types::dto::SearchInTextParams;
+use crate::types::dto::ShowReplacePreviewInBufferParams;
+use crate::types::dto::ShowReplacePreviewInBufferResult;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
@@ -64,6 +66,14 @@ fn nvim_tools() -> Dictionary {
             Object::from(
                 Function::<SearchInBufferParams, FunResult<Vec<LineMatch>>>::from_fn(
                     oxi::search::search_in_buffer,
+                ),
+            ),
+        ),
+        (
+            "show_replace_preview_in_buffer",
+            Object::from(
+                Function::<ShowReplacePreviewInBufferParams, FunResult<ShowReplacePreviewInBufferResult>>::from_fn(
+                    oxi::search::show_replace_preview_in_buffer,
                 ),
             ),
         ),
