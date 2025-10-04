@@ -162,6 +162,7 @@ end
 ---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     std.t.IKeymap[]
 ---@field protected _replacer_keymaps   std.t.IKeymap[]
+---@field protected _preserve_match_index integer|nil
 local M = {}
 M.__index = M
 
@@ -222,6 +223,7 @@ function M.new(props)
   self._scheduler_search = scheduler_search
   self._finder_keymaps = finder_keymaps
   self._replacer_keymaps = replacer_keymaps
+  self._preserve_match_index = nil
   return self
 end
 
@@ -296,6 +298,7 @@ function M:close()
   self._winnr_source = nil
   self._bufnr_source = nil
   self._matches = {}
+  self._preserve_match_index = nil
   if bufnr_source ~= nil and vim.api.nvim_buf_is_valid(bufnr_source) then
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
@@ -367,6 +370,9 @@ function M:goto_prev_match()
     for _, point in ipairs(match_prev.matches) do
       highlight_match_point(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_prev.lnum, point)
     end
+
+    -- Update replace preview for the new current match
+    self:__update_replace_preview__()
   end
 end
 
@@ -420,6 +426,177 @@ function M:set_prompt()
   local group = eve.var.sign.GROUP_SEARCHER_BUFFER_PROMPT ---@type string
   local sign = eve.var.sign.SEARCHER_BUFFER_PROMPT ---@type string
   pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 10 })
+end
+
+---@return nil
+function M:replace_current_match()
+  local bufnr_source = self._bufnr_source ---@type integer|nil
+  if bufnr_source == nil or not vim.api.nvim_buf_is_valid(bufnr_source) then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "Source buffer is not valid",
+    })
+    return
+  end
+
+  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+  if matches == nil or #matches == 0 then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "No matches found",
+    })
+    return
+  end
+
+  local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
+  if not flag_replace then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "Replace mode is not enabled",
+    })
+    return
+  end
+
+  local search_pattern = self.o_search_pattern:snapshot() ---@type string
+  local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
+  if search_pattern == "" then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "Search pattern is empty",
+    })
+    return
+  end
+
+  local current_match_index = self.o_match_index:snapshot() ---@type integer
+  if current_match_index <= 0 or current_match_index > #matches then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "No current match selected",
+    })
+    return
+  end
+
+  -- Use oxi.replacer to replace current match in buffer
+  local result = oxi.replacer.replace_current_match_in_buffer({
+    bufnr = bufnr_source,
+    current_match_index = current_match_index,
+    matches = matches,
+    search_pattern = search_pattern,
+    replace_pattern = replace_pattern,
+    flag_regex = self.o_flag_regex:snapshot(),
+    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
+  })
+
+  if result and result.success then
+    -- Store the desired match index to preserve after search refresh
+    local next_index = current_match_index
+    if current_match_index < #matches then
+      next_index = current_match_index
+    else
+      next_index = math.max(1, current_match_index - 1)
+    end
+
+    -- Set the preserve index before scheduling search
+    self._preserve_match_index = next_index
+
+    -- Schedule search to refresh matches
+    self._scheduler_search:schedule()
+
+    std.reporter.info({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "Match replaced successfully",
+    })
+  else
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "Failed to replace match",
+    })
+  end
+end
+
+---@return nil
+function M:replace_all_matches()
+  local bufnr_source = self._bufnr_source ---@type integer|nil
+  if bufnr_source == nil or not vim.api.nvim_buf_is_valid(bufnr_source) then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace All Matches",
+      message = "Source buffer is not valid",
+    })
+    return
+  end
+
+  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+  if matches == nil or #matches == 0 then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace All Matches",
+      message = "No matches found",
+    })
+    return
+  end
+
+  local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
+  if not flag_replace then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace All Matches",
+      message = "Replace mode is not enabled",
+    })
+    return
+  end
+
+  local search_pattern = self.o_search_pattern:snapshot() ---@type string
+  local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
+  if search_pattern == "" then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace All Matches",
+      message = "Search pattern is empty",
+    })
+    return
+  end
+
+  -- Use oxi.replacer to replace all matches in buffer
+  local result = oxi.replacer.replace_all_matches_in_buffer({
+    bufnr = bufnr_source,
+    matches = matches,
+    search_pattern = search_pattern,
+    replace_pattern = replace_pattern,
+    flag_regex = self.o_flag_regex:snapshot(),
+    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
+  })
+
+  if result and result.success then
+    -- Clear all highlights since all matches are replaced
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_REPLACE_PREVIEW, 0, -1)
+
+    -- Clear matches and update counters
+    self._matches = {}
+    self.o_match_index:next(0)
+    self.o_match_total:next(0)
+
+    std.reporter.info({
+      from = __module_name__,
+      subject = "Replace All Matches",
+      message = string.format("Replaced %d matches successfully", result.replaced_count),
+    })
+  else
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace All Matches",
+      message = "Failed to replace matches",
+    })
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -691,6 +868,22 @@ function M:__create_keymaps__(raw_flags, window_type)
         end
       end,
     },
+    {
+      modes = { "i", "n", "v" },
+      key = "<leader><CR>",
+      desc = "search_buffer: replace current match",
+      callback = function()
+        self:replace_current_match()
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<M-CR>",
+      desc = "search_buffer: replace all matches",
+      callback = function()
+        self:replace_all_matches()
+      end,
+    },
   }
 
   for index, flag in ipairs(raw_flags) do
@@ -850,6 +1043,7 @@ function M:__clear__()
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_REPLACE_PREVIEW, 0, -1)
   end
+  self._preserve_match_index = nil
 end
 
 ---@protected
@@ -923,7 +1117,16 @@ function M:__search__()
 
   self._matches = matches
   self.o_match_total:next(#matches)
-  self.o_match_index:next(1)
+
+  -- Use preserved match index if available, otherwise default to 1
+  local match_index = 1
+  if self._preserve_match_index ~= nil then
+    match_index = math.min(self._preserve_match_index, #matches)
+    match_index = math.max(1, match_index)
+    self._preserve_match_index = nil -- Clear after use
+  end
+  self.o_match_index:next(match_index)
+
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
   for _, match in ipairs(matches) do
@@ -932,21 +1135,24 @@ function M:__search__()
     end
   end
 
-  -- Move cursor to first match and highlight it
-  local first_match = matches[1]
-  if first_match and first_match.matches and #first_match.matches > 0 then
+  -- Move cursor to the selected match (either preserved or first) and highlight it
+  local target_match = matches[match_index]
+  if target_match and target_match.matches and #target_match.matches > 0 then
     local target_win = self._winnr_source ---@type integer|nil
     if target_win ~= nil and vim.api.nvim_win_is_valid(target_win) then
       local line_count = vim.api.nvim_buf_line_count(bufnr_source)
-      if first_match.lnum > 0 and first_match.lnum <= line_count then
-        vim.api.nvim_win_set_cursor(target_win, { first_match.lnum, first_match.matches[1].l })
+      if target_match.lnum > 0 and target_match.lnum <= line_count then
+        vim.api.nvim_win_set_cursor(target_win, { target_match.lnum, target_match.matches[1].l })
         -- Highlight current match
-        for _, point in ipairs(first_match.matches) do
-          highlight_match_point(bufnr_source, NSNR_SEARCH_CURRENT, "IncSearch", first_match.lnum, point)
+        for _, point in ipairs(target_match.matches) do
+          highlight_match_point(bufnr_source, NSNR_SEARCH_CURRENT, "IncSearch", target_match.lnum, point)
         end
       end
     end
   end
+
+  -- Update replace preview after search is complete to ensure it shows for the current match
+  self:__update_replace_preview__()
 end
 
 ---@protected

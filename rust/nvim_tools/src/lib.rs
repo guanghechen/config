@@ -13,6 +13,10 @@ use crate::types::dto::SearchInLinesParams;
 use crate::types::dto::SearchInTextParams;
 use crate::types::dto::ShowReplacePreviewInBufferParams;
 use crate::types::dto::ShowReplacePreviewInBufferResult;
+use crate::types::dto::ReplaceCurrentMatchInBufferParams;
+use crate::types::dto::ReplaceCurrentMatchInBufferResult;
+use crate::types::dto::ReplaceAllMatchesInBufferParams;
+use crate::types::dto::ReplaceAllMatchesInBufferResult;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
@@ -129,6 +133,23 @@ fn nvim_tools() -> Dictionary {
             Object::from(Function::from_fn(
                 oxi::replace::replace_text_preview_by_matches_advance,
             )),
+        ),
+        ////
+        (
+            "replace_current_match_in_buffer",
+            Object::from(
+                Function::<ReplaceCurrentMatchInBufferParams, FunResult<ReplaceCurrentMatchInBufferResult>>::from_fn(
+                    oxi::replace::replace_current_match_in_buffer,
+                ),
+            ),
+        ),
+        (
+            "replace_all_matches_in_buffer",
+            Object::from(
+                Function::<ReplaceAllMatchesInBufferParams, FunResult<ReplaceAllMatchesInBufferResult>>::from_fn(
+                    oxi::replace::replace_all_matches_in_buffer,
+                ),
+            ),
         ),
         ////
         (
