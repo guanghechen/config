@@ -85,7 +85,7 @@ function M:calc_preview_data(context)
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
     ---@type eve.ux.searcher.IPlainfileViewHighlight[]
-    local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_ss_preview_error" } }
+    local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_sr_error" } }
 
     ---@type eve.ux.searcher.IPlainfileViewData
     local result = {
@@ -141,7 +141,7 @@ function M:calc_preview_data(context)
         offset_delta = offset_delta + (match.r - match.l)
       end
 
-      local hlname = is_search_match and "f_ss_preview_search" or "f_ss_preview_replace"
+      local hlname = is_search_match and "f_sr_search" or "f_sr_replace"
 
       local l = match.l ---@type integer
       local r = match.r ---@type integer
@@ -176,7 +176,7 @@ function M:calc_preview_data(context)
         for _, search_match in ipairs(block_match.matches) do
           local match_offset = block_match.offset + search_match.l ---@type integer
           if vim.list_contains(match_offsets, match_offset) then
-            local hlname = "f_ss_preview_match" ---@type string
+            local hlname = "f_sr_match" ---@type string
 
             local l = search_match.l ---@type integer
             local r = search_match.r ---@type integer
@@ -233,8 +233,8 @@ function M:patch_preview_data(context, data)
     for _, hl in ipairs(data.highlights) do
       if offset_current == hl.offset then
         resolved = true
-        local is_search_match = hl.hlname == "f_ss_preview_search" ---@type boolean
-        local hlname = is_search_match and "f_ss_preview_search_cur" or "f_ss_preview_replace_cur" ---@type string
+        local is_search_match = hl.hlname == "f_sr_search" ---@type boolean
+        local hlname = is_search_match and "f_sr_search_cur" or "f_sr_replace_cur" ---@type string
         local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type std.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then
@@ -246,7 +246,7 @@ function M:patch_preview_data(context, data)
     for _, hl in ipairs(data.highlights) do
       if offset_current == hl.offset then
         resolved = true
-        local hlname = "f_ss_preview_match_cur" ---@type string
+        local hlname = "f_sr_match_cur" ---@type string
         local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type std.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then

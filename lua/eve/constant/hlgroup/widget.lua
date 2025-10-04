@@ -210,13 +210,15 @@ function M.gen_hlgroup_map(context)
     f_ss_matches = { fg = c.pink, bold = true, italic = true },
     f_ss_search = { fg = c.red, bold = true, italic = true, strikethrough = true },
     f_ss_replace = { fg = c.green, bold = true, italic = true },
-    f_ss_preview_error = { fg = c.red, bold = true },
-    f_ss_preview_match = { fg = c.bg1, bg = c.yellow },
-    f_ss_preview_match_cur = { fg = c.bg1, bg = c.red, bold = true, underline = true },
-    f_ss_preview_search = { fg = c.fg1, bg = c.diffDel, strikethrough = true },
-    f_ss_preview_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
-    f_ss_preview_replace = { fg = c.bg1, bg = c.diffAdd },
-    f_ss_preview_replace_cur = { fg = c.bg1, bg = c.green, bold = true },
+
+    ---search & replace
+    f_sr_error = { fg = c.red, bold = true },
+    f_sr_match = { fg = c.bg1, bg = c.yellow },
+    f_sr_match_cur = { fg = c.bg1, bg = c.red, bold = true, underline = true },
+    f_sr_search = { fg = c.fg1, bg = c.diffDel, strikethrough = true },
+    f_sr_search_cur = { fg = c.bg1, bg = c.red, bold = true, strikethrough = true },
+    f_sr_replace = { fg = c.fg1, bg = c.diffAdd },
+    f_sr_replace_cur = { fg = c.bg1, bg = c.brightGreen, bold = true },
 
     ---popupmenu
     f_up_normal = { fg = c.fg2, bg = bg_pane },
