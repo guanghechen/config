@@ -113,6 +113,36 @@ The build script automatically:
 - Type annotations must start at column 41: `---@param name                          string`
 - Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
 
+### Error Reporting
+Always use `std.reporter` for notifications and error messages instead of `eve.notifier.notify` or `vim.notify`:
+
+```lua
+-- Basic usage
+std.reporter.error({
+  from = __module_name__,
+  subject = "Operation Name",
+  message = "Error message here",
+})
+
+-- With additional details (will be formatted as JSON)
+std.reporter.error({
+  from = __module_name__,
+  subject = "API Error",
+  message = "Request failed",
+  details = { status = 404, url = "/api/data" },
+})
+
+-- !!Strict same interfaces default level report for std.reporter.{error|warn|info|debug}
+-- Options available:
+-- - from: (required) Module name, usually __module_name__
+-- - subject: (optional) Specific operation or context
+-- - message: (optional) Main message text
+-- - details: (optional) Additional data to be displayed as JSON
+-- - group: (optional) Notification group
+-- - anonymous: (optional) Hide sender info
+-- - silent: (optional) Suppress notification display
+```
+
 ### OXI Integration Rules
 When modifying `lua/oxi/` or `rust/nvim_tools/src/`:
 - Reference nvim-oxi examples for proper Deserialization/Serialization patterns
