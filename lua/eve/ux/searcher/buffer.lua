@@ -814,10 +814,6 @@ function M:__create_replacer_window_as_needed__()
   vim.wo[popup_winnr].winhighlight = "Normal:Normal,FloatBorder:FloatBorder"
   vim.wo[popup_winnr].wrap = false
 
-  -- Set nvimbar immediately when replacer window is created
-  vim.wo[popup_winnr].winbar = self._nvimbar:snapshot()
-  self._nvimbar:render()
-
   return popup_winnr, true
 end
 
