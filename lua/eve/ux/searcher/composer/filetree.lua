@@ -1090,6 +1090,10 @@ function M.new(props)
     finder_input_history = finder_input_history,
     finder_title = title,
 
+    replacer_input = o_replace_pattern,
+    replacer_title = "Replace",
+    flag_replace = o_flag_replace,
+
     result_number = true,
 
     ---@type eve.ux.searcher.result.IIsSelected
@@ -1333,7 +1337,7 @@ function M.new(props)
   std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  std.fn.observe({ o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive }, function()
+  std.fn.observe({ o_replace_pattern, o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive }, function()
     scheduler_search:schedule()
   end)
   std.fn.observe({ composer.result.lnum_current }, function()

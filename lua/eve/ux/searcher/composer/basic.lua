@@ -3,6 +3,7 @@ local __module_name__ = "eve.ux.searcher.composer.basic" ---@type string
 
 ---@alias eve.ux.searcher.composer.basic.PaneEnum
 ---| "finder"
+---| "replacer"
 ---| "preview"
 ---| "result"
 
@@ -36,6 +37,10 @@ local __module_name__ = "eve.ux.searcher.composer.basic" ---@type string
 ---@field public finder                 string[]
 ---@field public finder_with_preview    string[]
 ---@field public finder_without_result  string[]
+---@field public finder_with_replacer   string[]
+---@field public finder_with_replacer_and_preview string[]
+---@field public replacer               string[]
+---@field public replacer_with_preview  string[]
 ---@field public result                 string[]
 ---@field public result_with_preview    string[]
 ---@field public preview                string[]
@@ -44,6 +49,10 @@ local __borders__ = {
   finder                = { "╭", "─", "╮", "│", "┤", "─", "├", "│" },
   finder_with_preview   = { "╭", "─", "┬", "│", "┤", "─", "├", "│" },
   finder_without_result = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+  finder_with_replacer  = { "╭", "─", "╮", "│", "┤", "─", "├", "│" },
+  finder_with_replacer_and_preview = { "╭", "─", "┬", "│", "┤", "─", "├", "│" },
+  replacer              = { "├", "─", "┤", "│", "┤", "─", "├", "│" },
+  replacer_with_preview = { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
   result                = { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
   result_with_preview   = { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
   preview               = { "┬", "─", "╮", "│", "╯", "─", "┴", "│" },
@@ -52,10 +61,16 @@ local __borders__ = {
 
 ---@class eve.ux.searcher.composer.basic.highlights
 ---@field public finder                 string
+---@field public replacer               string
 ---@field public result                 string
 ---@field public preview                string
 local __highlights__ = {
   finder = table.concat({
+    "FloatBorder:FloatBorder",
+    "FloatTitle:f_pk_finder_title",
+    "Normal:f_pk_finder_normal",
+  }, ","),
+  replacer = table.concat({
     "FloatBorder:FloatBorder",
     "FloatTitle:f_pk_finder_title",
     "Normal:f_pk_finder_normal",
@@ -93,12 +108,17 @@ local __highlights__ = {
 ---
 ---@field public keymaps_common         ?std.t.IKeymap[]
 ---@field public keymaps_finder         ?std.t.IKeymap[]
+---@field public keymaps_replacer       ?std.t.IKeymap[]
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
 ---@field public finder_input           std.collection.IObservable
 ---@field public finder_input_history   ?std.collection.IHistory
 ---@field public finder_title           string
+---
+---@field public replacer_input          ?std.collection.IObservable
+---@field public replacer_title          ?string
+---@field public flag_replace            ?std.collection.IObservable
 ---
 ---@field public result_number          boolean
 ---@field public result_isselected      ?eve.ux.searcher.result.IIsSelected
@@ -121,6 +141,7 @@ local __highlights__ = {
 ---@field public permanent              boolean
 ---
 ---@field public finder                 eve.ux.searcher.Finder
+---@field public replacer               eve.ux.searcher.Finder|nil
 ---@field public result                 eve.ux.searcher.Result
 ---@field public preview                eve.ux.searcher.Preview|nil
 ---
@@ -131,6 +152,8 @@ local __highlights__ = {
 ---@field protected _pane_last_focused  eve.ux.searcher.composer.basic.PaneEnum
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
+---
+---@field protected _flag_replace       std.collection.IObservable|nil
 ---
 ---@field protected _finder_input_history ?std.collection.IHistory
 ---
@@ -160,12 +183,17 @@ function M.new(props)
 
   local keymaps_common = props.keymaps_common or {} ---@type std.t.IKeymap[]
   local keymaps_finder = props.keymaps_finder or {} ---@type std.t.IKeymap[]
+  local keymaps_replacer = props.keymaps_replacer or {} ---@type std.t.IKeymap[]
   local keymaps_preview = props.keymaps_preview or {} ---@type std.t.IKeymap[]
   local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
 
   local finder_input = props.finder_input ---@type std.collection.IObservable
   local finder_input_history = props.finder_input_history ---@type std.collection.IHistory
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
+
+  local replacer_input = props.replacer_input ---@type std.collection.IObservable|nil
+  local replacer_title = props.replacer_title and string.format(" %s ", vim.trim(props.replacer_title)) or " Replace " ---@type string
+  local flag_replace = props.flag_replace ---@type std.collection.IObservable|nil
 
   local result_number = not not props.result_number ---@type boolean
   local result_isselected = props.result_isselected ---@type eve.ux.searcher.result.IIsSelected|nil
@@ -212,6 +240,22 @@ function M.new(props)
     input = finder_input,
     title = finder_title,
   })
+
+  ---@type eve.ux.searcher.Finder|nil
+  local replacer = nil
+  if replacer_input ~= nil then
+    replacer = eve.ux.searcher.Finder.new({
+      name = name .. " (replacer)",
+      keymaps = self:__resolve_keymaps_replacer__(
+        flags,
+        flags_start_index,
+        has_finder_input_history,
+        vim.list_extend(vim.list_slice(keymaps_common), keymaps_replacer)
+      ),
+      input = replacer_input,
+      title = replacer_title,
+    })
+  end
 
   ---@type eve.ux.searcher.Result
   local result = eve.ux.searcher.Result.new({
@@ -263,16 +307,43 @@ function M.new(props)
   end
 
   self.finder = finder
+  self.replacer = replacer
   self.result = result
   self.preview = preview
 
   self._result_number = result_number ---@type boolean
+  self._flag_replace = flag_replace
 
   if preview ~= nil then
     std.fn.observe({ result.lnum_current, result.lnum_total }, function()
       self:mark_preview_dirty()
     end, true)
   end
+
+  -- Set up auto-resize observers for finder and replacer
+  std.fn.observe({ finder.linecount }, function()
+    if self:isvisible() then
+      self:resize()
+    end
+  end, true)
+
+  if replacer ~= nil then
+    std.fn.observe({ replacer.linecount }, function()
+      if self:isvisible() then
+        self:resize()
+      end
+    end, true)
+  end
+
+  -- Observer for flag_replace to toggle replacer window visibility
+  if flag_replace ~= nil then
+    std.fn.observe({ flag_replace }, function()
+      if self:isvisible() then
+        self:__toggle_replacer_visibility__(flag_replace:snapshot())
+      end
+    end, true)
+  end
+
   return self
 end
 
@@ -285,6 +356,7 @@ function M:dispose()
 
   local fullname = self.fullname ---@type string
   local finder = self.finder ---@type eve.ux.searcher.Finder
+  local replacer = self.replacer ---@type eve.ux.searcher.Finder|nil
   local result = self.result ---@type eve.ux.searcher.Result
   local preview = self.preview ---@type eve.ux.searcher.Preview|nil
   local on_disposed = self._on_disposed ---@type eve.ux.searcher.composer.basic.IOnDisposed
@@ -292,13 +364,18 @@ function M:dispose()
     local ok1, error1 = pcall(finder.dispose, finder)
     local ok2, error2 = pcall(result.dispose, result)
     local ok3, error3 = true, nil
-    local ok4, error4 = pcall(on_disposed)
+    local ok4, error4 = true, nil
+    local ok5, error5 = pcall(on_disposed)
 
-    if preview ~= nil then
-      ok3, error3 = pcall(preview.dispose, preview)
+    if replacer ~= nil then
+      ok3, error3 = pcall(replacer.dispose, replacer)
     end
 
-    if not (ok1 and ok2 and ok3 and ok4) then
+    if preview ~= nil then
+      ok4, error4 = pcall(preview.dispose, preview)
+    end
+
+    if not (ok1 and ok2 and ok3 and ok4 and ok5) then
       std.reporter.error({
         from = fullname,
         subject = "dispose",
@@ -308,12 +385,14 @@ function M:dispose()
           error2 = not ok2 and error2 or nil,
           error3 = not ok3 and error3 or nil,
           error4 = not ok4 and error4 or nil,
+          error5 = not ok5 and error5 or nil,
         },
       })
     end
   end)
 
   self.finder = nil
+  self.replacer = nil
   self.result = nil
   self.preview = nil
 
@@ -322,6 +401,7 @@ function M:dispose()
   self._recommended_height = nil
   self._recommended_width = nil
 
+  self._flag_replace = nil
   self._finder_input_history = nil
 
   self._on_cancel = nil
@@ -409,6 +489,7 @@ end
 function M:isfocused()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   return self.finder:get_winnr() == winnr
+    or (self.replacer ~= nil and self.replacer:get_winnr() == winnr)
     or self.result:get_winnr() == winnr
     or (self.preview ~= nil and self.preview:get_winnr() == winnr)
 end
@@ -418,7 +499,10 @@ function M:isvisible()
   if self._disposed then
     return false
   end
-  return self.finder:isvisible() or self.result:isvisible() or (self.preview ~= nil and self.preview:isvisible())
+  return self.finder:isvisible()
+    or (self.replacer ~= nil and self.replacer:isvisible())
+    or self.result:isvisible()
+    or (self.preview ~= nil and self.preview:isvisible())
 end
 
 ---@return integer
@@ -428,6 +512,7 @@ function M:get_result_lnum()
 end
 
 ---@return std.t.IWinDimension
+---@return std.t.IWinDimension|nil
 ---@return std.t.IWinDimension
 ---@return std.t.IWinDimension|nil
 function M:get_layout()
@@ -474,8 +559,11 @@ function M:resize()
     return
   end
 
-  local finder_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension, std.t.IWinDimension|nil
+  local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension|nil, std.t.IWinDimension, std.t.IWinDimension|nil
   self.finder:resize(finder_dimension)
+  if self.replacer ~= nil and replacer_dimension ~= nil then
+    self.replacer:resize(replacer_dimension)
+  end
   self.result:resize(result_dimension)
   if self.preview ~= nil and preview_dimension ~= nil then
     self.preview:resize(preview_dimension)
@@ -495,21 +583,28 @@ end
 ---@protected
 ---@return boolean
 ---@return integer
+---@return integer|nil
 ---@return integer
 ---@return integer|nil
 function M:__create_wins__()
   local finder = self.finder ---@type eve.ux.searcher.Finder
+  local replacer = self.replacer ---@type eve.ux.searcher.Finder|nil
   local result = self.result ---@type eve.ux.searcher.Result
   local preview = self.preview ---@type eve.ux.searcher.Preview|nil
 
   local result_number = self._result_number ---@type boolean
 
   local finder_winnr = finder:get_winnr() ---@type integer|nil
+  local replacer_winnr = replacer and replacer:get_winnr() or nil ---@type integer|nil
   local result_winnr = result:get_winnr() ---@type integer|nil
   local preview_winnr = preview and preview:get_winnr() or nil ---@type integer|nil
 
   if finder_winnr ~= nil and not vim.api.nvim_win_is_valid(finder_winnr) then
     finder_winnr = nil
+  end
+
+  if replacer_winnr ~= nil and not vim.api.nvim_win_is_valid(replacer_winnr) then
+    replacer_winnr = nil
   end
 
   if result_winnr ~= nil and not vim.api.nvim_win_is_valid(result_winnr) then
@@ -526,18 +621,36 @@ function M:__create_wins__()
     preview_winnr = nil
   end
 
-  if finder_winnr ~= nil and result_winnr ~= nil and (preview_winnr ~= nil or not should_show_preview) then
-    return false, finder_winnr, result_winnr, preview_winnr
+  local should_show_replacer = self:__should_show_replacer__() ---@type boolean
+  if replacer_winnr ~= nil and not should_show_replacer then
+    eve.win.close(replacer_winnr)
+    replacer_winnr = nil
   end
 
-  local finder_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension, std.t.IWinDimension|nil
+  if finder_winnr ~= nil
+    and result_winnr ~= nil
+    and (replacer_winnr ~= nil or not should_show_replacer)
+    and (preview_winnr ~= nil or not should_show_preview) then
+    return false, finder_winnr, replacer_winnr, result_winnr, preview_winnr
+  end
+
+  local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension|nil, std.t.IWinDimension, std.t.IWinDimension|nil
 
   ---@type eve.ux.searcher.finder.IWinOpts
   local finder_winopts = {
-    border = should_show_preview and __borders__.finder_with_preview or __borders__.finder,
+    border = self:__get_finder_border__(should_show_replacer, should_show_preview),
     winhighlight = __highlights__.finder,
   }
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
+
+  if replacer ~= nil and replacer_dimension ~= nil and should_show_replacer then
+    ---@type eve.ux.searcher.finder.IWinOpts
+    local replacer_winopts = {
+      border = should_show_preview and __borders__.replacer_with_preview or __borders__.replacer,
+      winhighlight = __highlights__.replacer,
+    }
+    replacer_winnr = replacer:create_win(replacer_winopts, replacer_dimension)
+  end
 
   ---@type eve.ux.searcher.result.IWinOpts
   local result_winopts = {
@@ -556,7 +669,7 @@ function M:__create_wins__()
     preview_winnr = preview:create_win(preview_winopts, preview_dimension) ---@type integer|nil
   end
 
-  return true, finder_winnr, result_winnr, preview_winnr
+  return true, finder_winnr, replacer_winnr, result_winnr, preview_winnr
 end
 
 ---@protected
@@ -565,6 +678,10 @@ end
 function M:__focus_pane__(pane_focused)
   if pane_focused == "finder" then
     self.finder:focus()
+  elseif pane_focused == "replacer" then
+    if self.replacer ~= nil then
+      self.replacer:focus()
+    end
   elseif pane_focused == "result" then
     self.result:focus()
   elseif pane_focused == "preview" then
@@ -594,10 +711,14 @@ end
 ---@return nil
 function M:__hide__()
   local finder = self.finder ---@type eve.ux.searcher.Finder
+  local replacer = self.replacer ---@type eve.ux.searcher.Finder|nil
   local result = self.result ---@type eve.ux.searcher.Result
   local preview = self.preview ---@type eve.ux.searcher.Preview|nil
 
   finder:hide()
+  if replacer ~= nil then
+    replacer:hide()
+  end
   result:hide()
   if preview ~= nil then
     preview:hide()
@@ -605,10 +726,12 @@ function M:__hide__()
 end
 
 ---@return std.t.IWinDimension
+---@return std.t.IWinDimension|nil
 ---@return std.t.IWinDimension
 ---@return std.t.IWinDimension|nil
 function M:__layout__()
   local should_show_preview = self:__should_show_preview__() ---@type boolean
+  local should_show_replacer = self:__should_show_replacer__() ---@type boolean
   local max_height = math.max(math.floor(vim.o.lines * 0.9), vim.o.lines - 10) ---@type integer
   local max_width = math.max(math.floor(vim.o.columns * 0.9), vim.o.columns - 20) ---@type integer
 
@@ -635,6 +758,13 @@ function M:__layout__()
   local linecount = finder.linecount:snapshot() ---@type integer
   finder_height = math.max(1, math.min(5, math.floor(height * 0.3), linecount)) ---@type integer
 
+  local replacer_height = 0 ---@type integer
+  if should_show_replacer and self.replacer ~= nil then
+    local replacer_linecount = self.replacer.linecount:snapshot() ---@type integer
+    replacer_height = math.max(1, math.min(5, math.floor(height * 0.2), replacer_linecount)) ---@type integer
+  end
+  local total_input_height = finder_height + replacer_height ---@type integer
+
   ---@type std.t.IWinDimension
   local finder_dimension = {
     row = row,
@@ -643,11 +773,19 @@ function M:__layout__()
     width = finder_width,
   }
 
-  ---@type std.t.IWinDimension
-  local result_dimension = {
+  ---@type std.t.IWinDimension|nil
+  local replacer_dimension = should_show_replacer and {
     row = row + finder_height + 1,
     col = col,
-    height = height - finder_height - 1,
+    height = replacer_height,
+    width = finder_width,
+  } or nil
+
+  ---@type std.t.IWinDimension
+  local result_dimension = {
+    row = row + total_input_height + (should_show_replacer and 2 or 1),
+    col = col,
+    height = height - total_input_height - (should_show_replacer and 2 or 1),
     width = finder_width,
   }
 
@@ -661,7 +799,7 @@ function M:__layout__()
       width = preview_width,
     }
   end
-  return finder_dimension, result_dimension, preview_dimension
+  return finder_dimension, replacer_dimension, result_dimension, preview_dimension
 end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
@@ -830,7 +968,11 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       aliases = { "<D-j>", "<M-j>" },
       desc = "searcher#finder: focus down",
       callback = function()
-        self:__focus_pane__("result")
+        if self:__should_show_replacer__() then
+          self:__focus_pane__("replacer")
+        else
+          self:__focus_pane__("result")
+        end
       end,
     },
     {
@@ -1095,7 +1237,9 @@ function M:__resolve_builtin_keymaps_result__()
           return
         end
 
-        self:__focus_pane__("finder")
+        if not self:__should_show_replacer__() then
+          self:__focus_pane__("finder")
+        end
       end,
     },
     {
@@ -1144,7 +1288,11 @@ function M:__resolve_builtin_keymaps_result__()
       aliases = { "<D-k>", "<M-k>" },
       desc = "searcher#result: focus up",
       callback = function()
-        self:__focus_pane__("finder")
+        if self:__should_show_replacer__() then
+          self:__focus_pane__("replacer")
+        else
+          self:__focus_pane__("finder")
+        end
       end,
     },
     {
@@ -1160,6 +1308,108 @@ function M:__resolve_builtin_keymaps_result__()
       modes = { "n", "v" },
       key = "k",
       desc = "searcher#result: focus prev item",
+      callback = function()
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(-step)
+      end,
+    },
+  }
+  return builtin_keymaps
+end
+
+---@param has_input_history             boolean
+---@return std.t.IKeymap[]
+function M:__resolve_builtin_keymaps_replacer__(has_input_history)
+  ---@type std.t.IKeymap[]
+  local builtin_keymaps = {
+    {
+      modes = { "i", "n", "v" },
+      key = "<Down>",
+      desc = "searcher#replacer: focus next item",
+      callback = function()
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(step)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<Up>",
+      desc = "searcher#replacer: focus prev item",
+      callback = function()
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(-step)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>j",
+      aliases = { "<D-j>", "<M-j>" },
+      desc = "searcher#replacer: focus down",
+      callback = function()
+        self:__focus_pane__("result")
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>k",
+      aliases = { "<D-k>", "<M-k>" },
+      desc = "searcher#replacer: focus up",
+      callback = function()
+        self:__focus_pane__("finder")
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>h",
+      aliases = { "<D-h>", "<M-h>" },
+      desc = "searcher#replacer: focus left",
+      callback = function()
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          std.tmux.change_pane("h")
+          return
+        end
+
+        if self.preview ~= nil then
+          local winnr = self.preview:get_winnr() ---@type integer|nil
+          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+            self:__focus_pane__("preview")
+            return
+          end
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>l",
+      aliases = { "<D-l>", "<M-l>" },
+      desc = "searcher#replacer: focus right",
+      callback = function()
+        if self.preview ~= nil then
+          local winnr = self.preview:get_winnr() ---@type integer|nil
+          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+            self:__focus_pane__("preview")
+            return
+          end
+        end
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          std.tmux.change_pane("l")
+          return
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-j>",
+      desc = "searcher#replacer: focus next item",
+      callback = function()
+        local step = vim.v.count1 or 1 ---@type integer
+        self:__result_move_down__(step)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-k>",
+      desc = "searcher#replacer: focus prev item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(-step)
@@ -1303,6 +1553,19 @@ end
 ---@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
+function M:__resolve_keymaps_replacer__(flags, flags_start_index, has_input_history, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
+  local builtin_keymaps_replacer = self:__resolve_builtin_keymaps_replacer__(has_input_history) ---@type std.t.IKeymap[]
+  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_replacer) ---@type std.t.IKeymap[]
+  vim.list_extend(resolved_keymaps, keymaps)
+  return resolved_keymaps
+end
+
+---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
+---@param flags_start_index             0|1
+---@param has_input_history             boolean
+---@param keymaps                       std.t.IKeymap[]
+---@return std.t.IKeymap[]
 function M:__resolve_keymaps_result__(flags, flags_start_index, has_input_history, keymaps)
   local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
   local builtin_keymaps_result = self:__resolve_builtin_keymaps_result__() ---@type std.t.IKeymap[]
@@ -1339,6 +1602,54 @@ end
 ---@return boolean
 function M:__should_show_preview__()
   return self.preview ~= nil and vim.o.columns > 140
+end
+
+---@return boolean
+function M:__should_show_replacer__()
+  return self.replacer ~= nil and self._flag_replace ~= nil and self._flag_replace:snapshot()
+end
+
+---@protected
+---@param flag_replace                  boolean
+---@return nil
+function M:__toggle_replacer_visibility__(flag_replace)
+  if self.replacer == nil then
+    return
+  end
+
+  local replacer_winnr = self.replacer:get_winnr() ---@type integer|nil
+
+  if flag_replace then
+    if replacer_winnr == nil or not vim.api.nvim_win_is_valid(replacer_winnr) then
+      self:resize()
+    end
+  else
+    if replacer_winnr ~= nil and vim.api.nvim_win_is_valid(replacer_winnr) then
+      local current_winnr = vim.api.nvim_get_current_win() ---@type integer
+      if current_winnr == replacer_winnr then
+        self._pane_focused = "finder"
+        self.finder:focus()
+      end
+
+      eve.win.close(replacer_winnr)
+      self:resize()
+    end
+  end
+end
+
+---@param should_show_replacer           boolean
+---@param should_show_preview            boolean
+---@return string[]
+function M:__get_finder_border__(should_show_replacer, should_show_preview)
+  if should_show_replacer and should_show_preview then
+    return __borders__.finder_with_replacer_and_preview
+  elseif should_show_replacer then
+    return __borders__.finder_with_replacer
+  elseif should_show_preview then
+    return __borders__.finder_with_preview
+  else
+    return __borders__.finder
+  end
 end
 
 return M
