@@ -109,27 +109,6 @@ local function on_attach(client, bufnr)
       end,
       desc = "Next Copilot Suggestion",
     },
-    {
-      modes = { "i" },
-      key = "<Tab>",
-      callback = function()
-        -- Try to accept inline completion first, fallback to normal behavior
-        if vim.lsp.inline_completion.accept() then
-          return
-        end
-
-        -- Check if blink.cmp is available and has active completion
-        local ok, blink = pcall(require, "blink.cmp")
-        if ok and blink.is_visible() then
-          blink.select_next()
-          return
-        end
-
-        -- Fallback to normal tab behavior or other tab handlers
-        vim.fn.feedkeys("\t", "n")
-      end,
-      desc = "Accept Copilot Suggestion or Tab",
-    },
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 
