@@ -34,6 +34,7 @@ alias vdir='vdir --color=auto'
 
 ### claude code
 alias ccc='claude --dangerously-skip-permissions'
+alias spec-status='bash .specify/scripts/bash/check-prerequisites.sh'
 
 ### fzf
 alias fzf="$HOMEBREW_PREFIX/bin/fzf"
