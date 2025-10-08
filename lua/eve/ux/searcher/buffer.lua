@@ -164,6 +164,8 @@ end
 ---@field protected _replacer_keymaps   std.t.IKeymap[]
 ---@field protected _preserve_match_index integer|nil
 ---@field protected _last_focused_window "finder"|"replacer"
+---@field protected _last_search_pattern string|nil
+---@field protected _last_bufnr_source integer|nil
 local M = {}
 M.__index = M
 
@@ -239,6 +241,8 @@ function M.new(props)
   self._replacer_keymaps = replacer_keymaps
   self._preserve_match_index = nil
   self._last_focused_window = "finder"
+  self._last_search_pattern = nil
+  self._last_bufnr_source = nil
   return self
 end
 
@@ -1133,12 +1137,18 @@ function M:__search__()
   local pattern = self.o_search_pattern:snapshot() ---@type string
   if pattern == "" then
     self._matches = {}
+    self._last_search_pattern = nil
+    self._last_bufnr_source = nil
     self.o_match_index:next(0)
     self.o_match_total:next(0)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
     return
   end
+
+  -- Check if pattern or source buffer changed
+  local pattern_changed = self._last_search_pattern ~= pattern
+  local buffer_changed = self._last_bufnr_source ~= bufnr_source
 
   -- Construct search parameters
   ---@type oxi.searcher.ISearchInBufferParams
@@ -1157,6 +1167,8 @@ function M:__search__()
   -- Check for errors or no matches
   if not matches or #matches < 1 then
     self._matches = {}
+    self._last_search_pattern = pattern
+    self._last_bufnr_source = bufnr_source
     self.o_match_index:next(0)
     self.o_match_total:next(0)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
@@ -1165,15 +1177,24 @@ function M:__search__()
   end
 
   self._matches = matches
+  self._last_search_pattern = pattern
+  self._last_bufnr_source = bufnr_source
   self.o_match_total:next(#matches)
 
-  -- Use preserved match index if available, otherwise default to 1
+  -- Determine match index to use
   local match_index = 1
   if self._preserve_match_index ~= nil then
+    -- Use preserved match index (from replace operations)
     local preserved_index = self._preserve_match_index ---@type integer
     match_index = math.min(preserved_index, #matches)
     match_index = math.max(1, match_index)
     self._preserve_match_index = nil -- Clear after use
+  elseif not pattern_changed and not buffer_changed then
+    -- Pattern and buffer unchanged - preserve current match index
+    local current_index = self.o_match_index:snapshot() ---@type integer
+    if current_index > 0 then
+      match_index = math.min(current_index, #matches)
+    end
   end
   self.o_match_index:next(match_index)
 
