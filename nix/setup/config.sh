@@ -9,6 +9,7 @@ clone_or_update_config_repo() {
     "conda"
     "fish"
     "fzf"
+    "gh"
     "git-delta"
     "lazygit"
     "lsd"
