@@ -912,6 +912,15 @@ function M:__create_keymaps__(raw_flags, window_type)
         self:replace_all_matches()
       end,
     },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-a>r",
+      aliases = { "<D-r>", "<M-r>" },
+      desc = "search_buffer: trigger re-search",
+      callback = function()
+        self._scheduler_search:schedule()
+      end,
+    },
   }
 
   for index, flag in ipairs(raw_flags) do
