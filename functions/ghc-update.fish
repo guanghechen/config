@@ -20,6 +20,7 @@ function ghc-update
         claude \
         conda \
         fzf \
+        gh \
         ghostty \
         git-delta \
         helix \
