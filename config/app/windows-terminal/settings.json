@@ -1112,11 +1112,11 @@
     },
     {
       "id": "Terminal.MoveTabBackward",
-      "keys": "ctrl+alt+shift+["
+      "keys": "ctrl+alt+shift+,"
     },
     {
       "id": "Terminal.MoveTabForward",
-      "keys": "ctrl+alt+shift+]"
+      "keys": "ctrl+alt+shift+."
     },
     {
       "id": "Terminal.PrevTab",
