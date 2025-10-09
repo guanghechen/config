@@ -46,6 +46,58 @@
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)"
     ```
 
+## APP
+
+* **Neovim**: Build from Source (nightly): see https://github.com/neovim/neovim/blob/master/BUILD.md
+
+  - nix
+
+    ```bash
+    # git clone https://github.com/neovim/neovim && cd neovim
+    git fetch origin --tags --force && git checkout nightly
+    make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="$HOME/.app/neovim/"
+    rm -rf "$HOME/.app/neovim/"
+    make install
+    ```
+
+  - macos
+
+    ```bash
+    # git clone https://github.com/neovim/neovim && cd neovim
+    git fetch origin --tags --force && git checkout nightly
+    make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="/opt/me/app/neovim/"
+    rm -rf /opt/me/app/neovim/
+    make install
+    ```
+
+  - Win
+
+    - No c compiler found! "cc", "gcc", "clang", "cl", "zig" are not executable.
+
+      - Install msys2.
+
+        ```powershell
+        winget install -e --source winget --id MSYS2.MSYS2
+        ```
+
+      - Start MSYS2 UCRT64 from Windows start menu, then run the following command on the prompt opened.
+
+        1. update the package manager inside MSYS2.
+
+           ```shell
+           pacman -Syu
+           ```
+
+        2. Install `gcc`.
+
+           ```shell
+           pacman -S base-devel mingw-w64-x86_64-toolchain
+           ```
+
+           Choose the gcc toolchain if there are multiple options to select.
+
+        3. Add `C:\msys64\mingw64\bin` to the system path.
+
 ## FAQ
 
 * bat
