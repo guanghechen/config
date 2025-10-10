@@ -10,6 +10,7 @@
     "http:weather": "node cli/http.mjs fixtures/weather.http"
   },
   "dependencies": {
+    "dayjs": "^1.11.18",
     "uuid": "13.0.0"
   }
 }
