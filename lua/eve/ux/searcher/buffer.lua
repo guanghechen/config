@@ -18,7 +18,7 @@ end
 ---@param o_flag_regex                  std.collection.IObservable
 ---@param o_flag_case_sensitive         std.collection.IObservable
 ---@param o_flag_replace                std.collection.IObservable
----@param title                          string
+---@param title                         string
 ---@return eve.ux.searcher.result.IFlagItem[], eve.ux.searcher.result.IFlagItemRaw[]
 local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, title)
   ---@type eve.ux.searcher.result.IFlagItemRaw[]
@@ -259,6 +259,9 @@ function M:attach(winnr_source)
   self._bufnr_source = bufnr_source
   self._matches = {}
 
+  -- Set up n and N keymaps on source buffer
+  self:__setup_source_keymaps__(bufnr_source)
+
   if winnr_source == vim.api.nvim_get_current_win() then
     local mode = vim.fn.mode() ---@type string
     if mode == "v" or mode == "V" or mode == "\22" then -- visual, visual-line, visual-block
@@ -322,6 +325,8 @@ function M:close()
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_REPLACE_PREVIEW, 0, -1)
+    -- Clean up source buffer keymaps
+    self:__cleanup_source_keymaps__(bufnr_source)
   end
   self._scheduler_search:cancel()
 end
@@ -834,6 +839,22 @@ function M:__create_keymaps__(raw_flags, window_type)
       desc = "search_buffer: close",
       callback = function()
         self:close()
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "n",
+      desc = "search_buffer: goto next match",
+      callback = function()
+        self:goto_next_match()
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "N",
+      desc = "search_buffer: goto previous match",
+      callback = function()
+        self:goto_prev_match()
       end,
     },
     {
@@ -1387,6 +1408,63 @@ function M:__calculate_line_start_pos__(lines, lnum)
     line_start_pos = line_start_pos + #lines[i] + 1
   end
   return line_start_pos
+end
+
+---@protected
+---@param bufnr                          integer
+---@return nil
+function M:__setup_source_keymaps__(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local keymap_opts = { buffer = bufnr, noremap = true, silent = true }
+
+  vim.keymap.set("n", "n", function()
+    local current_win = vim.api.nvim_get_current_win() ---@type integer
+    local current_buf = vim.api.nvim_win_get_buf(current_win) ---@type integer
+    local finder_winnr = self._winnr_finder ---@type integer|nil
+
+    if
+      finder_winnr ~= nil
+      and vim.api.nvim_win_is_valid(finder_winnr)
+      and current_win == self._winnr_source
+      and current_buf == self._bufnr_source
+    then
+      self:goto_next_match()
+    else
+      vim.cmd("normal! n")
+    end
+  end, keymap_opts)
+
+  vim.keymap.set("n", "N", function()
+    local current_win = vim.api.nvim_get_current_win() ---@type integer
+    local current_buf = vim.api.nvim_win_get_buf(current_win) ---@type integer
+    local finder_winnr = self._winnr_finder ---@type integer|nil
+
+    if
+      finder_winnr ~= nil
+      and vim.api.nvim_win_is_valid(finder_winnr)
+      and current_win == self._winnr_source
+      and current_buf == self._bufnr_source
+    then
+      self:goto_prev_match()
+    else
+      vim.cmd("normal! N")
+    end
+  end, keymap_opts)
+end
+
+---@protected
+---@param bufnr                          integer
+---@return nil
+function M:__cleanup_source_keymaps__(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  pcall(vim.keymap.del, "n", "n", { buffer = bufnr })
+  pcall(vim.keymap.del, "n", "N", { buffer = bufnr })
 end
 
 return M
