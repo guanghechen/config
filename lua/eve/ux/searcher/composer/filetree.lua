@@ -164,6 +164,7 @@ function M.new(props)
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
   local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
+  local keymaps_replacer = props.keymaps_replacer ---@type std.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
 
   local flags_append = props.flags_append ---@type eve.ux.searcher.result.IFlagItemRaw[]|nil
@@ -947,6 +948,102 @@ function M.new(props)
   }
 
   ---@type std.t.IKeymap[]
+  local preset_keymaps_replacer = {
+    {
+      modes = { "n", "v" },
+      key = "<C-a><cr>",
+      aliases = { "<D-cr>", "<M-cr>" },
+      desc = "searcher: replace all files",
+      callback = actions.replace_all,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader><cr>",
+      desc = "search: replace file",
+      callback = actions.replace_in_node,
+    },
+    {
+      modes = { "n", "v" },
+      key = ".",
+      desc = "searcher: change root",
+      callback = actions.attach_node,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<Backspace>",
+      desc = "searcher: change root to parent",
+      callback = actions.attach_parent,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<Enter>",
+      desc = "searcher: open",
+      callback = actions.open_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-h>",
+      aliases = { "<C-l>" },
+      desc = "searcher: toggle",
+      callback = actions.toggle_node,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<Tab>",
+      desc = "searcher: toggle selection",
+      callback = actions.toggle_selection,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>D",
+      desc = "searcher: mark the subroot invisible",
+      callback = actions.mark_subroot_invisible,
+    },
+    {
+      modes = { "n", "v" },
+      key = "<leader>dd",
+      desc = "searcher: mark the node invisible",
+      callback = actions.mark_node_invisible,
+    },
+    {
+      modes = { "n", "v" },
+      key = "[i",
+      desc = "searcher: goto the parent line",
+      callback = actions.goto_lnum_parent,
+    },
+    {
+      modes = { "n", "v" },
+      key = "]i",
+      desc = "searcher: goto the lastchild line",
+      callback = actions.goto_lnum_lastchild,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oA",
+      desc = "searcher: add to ai (full subtree)",
+      callback = actions.add_subtree_to_ai,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oa",
+      desc = "searcher: add to ai",
+      callback = actions.add_node_to_ai,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oc",
+      desc = "searcher: copy filepath",
+      callback = actions.copy_node_filepath,
+    },
+    {
+      modes = { "n", "v" },
+      key = "oz",
+      desc = "searcher: toggle (recursively)",
+      callback = actions.toggle_node_recursively,
+    },
+  }
+
+  ---@type std.t.IKeymap[]
   local preset_keymaps_result = {
     {
       modes = { "n", "v" },
@@ -1083,6 +1180,7 @@ function M.new(props)
 
     keymaps_common = keymaps_common and vim.list_extend(preset_keymaps_common, keymaps_common) or preset_keymaps_common,
     keymaps_finder = keymaps_finder and vim.list_extend(preset_keymaps_finder, keymaps_finder) or preset_keymaps_finder,
+    keymaps_replacer = keymaps_replacer and vim.list_extend(preset_keymaps_replacer, keymaps_replacer) or preset_keymaps_replacer,
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
