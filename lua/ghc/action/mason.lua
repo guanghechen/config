@@ -39,6 +39,9 @@ function M.get_mason_ensure_installed()
     "shfmt",
     "stylelint",
     "stylua",
+
+    -- utilities --
+    "tree-sitter-cli",
   }
 end
 

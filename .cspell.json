@@ -1,5 +1,8 @@
 {
-  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
+  "ignorePaths": [
+    "lua/std/fileicon.lua",
+    "lsp/yamlls.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -399,6 +402,7 @@
     "gomod",
     "goodnode",
     "goodroot",
+    "gosum",
     "gotmpl",
     "grepformat",
     "grepprg",
@@ -821,4 +825,3 @@
     "zindex"
   ]
 }
-
