@@ -71,7 +71,7 @@ function M.install(packages, force, on_close)
   for _, pkg in ipairs(packages) do
     local p = mr.get_package(pkg)
     local handle = p:install()
-    handle:on("close", function()
+    handle:once("closed", function()
       count = count - 1
       if count < 1 then
         on_close()
