@@ -11,4 +11,19 @@ local storage = { editor = default_storage.editor, workspace = default_storage.w
 eve.setup_context(storage)
 
 require("ghc.plugin")
-vim.cmd("qa")
+
+require("mason")
+local action = require("ghc.action.mason")
+
+std.stdout.info("[guanghechen]", "Installing Mason packages...")
+action.install_all(false, function()
+  std.stdout.success("[guanghechen]", "All Mason packages installed successfully!")
+  local ok, err = pcall(function()
+    vim.cmd("qa!")
+  end)
+
+  if not ok then
+    std.stdout.error("[guanghechen]", "Error during exit: " .. tostring(err))
+    os.exit(1)
+  end
+end)

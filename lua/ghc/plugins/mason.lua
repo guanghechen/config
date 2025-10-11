@@ -1,6 +1,7 @@
 return {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
+  build = ":MasonUpdate",
   opts = {
     PATH = "prepend",
     log_level = vim.log.levels.INFO,
