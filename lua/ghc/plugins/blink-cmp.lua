@@ -300,6 +300,7 @@ return {
             name = "path",
             module = "blink.cmp.sources.path",
             score_offset = 200,
+            timeout_ms = 2000,
             opts = {
               ignore_root_slash = std.path.is_git_repo(),
               show_hidden_files_by_default = true,
@@ -309,8 +310,13 @@ return {
             name = "path_at",
             module = "ghc.cmp.path",
             score_offset = 210,
+            timeout_ms = 2000,
             opts = {
               show_hidden_files_by_default = true,
+              max_concurrent_requests = 1,
+              debounce = 150,
+              request_timeout = 2000,
+              max_entries_per_scan = 50,
             },
           },
           snippets = {

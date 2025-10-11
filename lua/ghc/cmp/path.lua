@@ -300,9 +300,16 @@ function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
           -- Use scandir type when available, only stat when necessary
           local stat = nil
           if not type or type == "unknown" then
-            stat = uv.fs_stat(std.path.join(dirname, name))
-            if stat then
+            -- Wrap fs_stat in pcall to catch EAGAIN and other errors
+            local stat_success, stat_result = pcall(function()
+              return uv.fs_stat(std.path.join(dirname, name))
+            end)
+            if stat_success and stat_result then
+              stat = stat_result
               type = stat.type
+            else
+              -- Skip entries we can't stat instead of failing the whole scan
+              goto continue
             end
           end
 
@@ -315,6 +322,7 @@ function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
             count = count + 1
           end
         end
+        ::continue::
         name, type = uv.fs_scandir_next(handle)
       end
 
