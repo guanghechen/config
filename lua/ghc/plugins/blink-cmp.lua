@@ -67,6 +67,8 @@ return {
         enabled = true,
         keymap = {
           preset = "cmdline",
+          ["<Left>"] = false,
+          ["<Right>"] = false,
           ["<Tab>"] = { "show", "accept" },
         },
         completion = {
