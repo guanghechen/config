@@ -190,27 +190,66 @@ return {
         preset = "none",
         ["<CR>"] = { "accept", "fallback" },
         ["<Tab>"] = {
-          "select_next",
-          "snippet_forward",
-          actions.has_native_completion,
+          function(cmp)
+            -- Priority 1: Navigate blink.cmp menu if visible
+            if cmp.is_menu_visible() then
+              return cmp.select_next()
+            end
+          end,
+          function()
+            -- Priority 2: Jump to next snippet placeholder
+            if vim.snippet.active({ direction = 1 }) then
+              vim.snippet.jump(1)
+              return true
+            end
+          end,
+          function()
+            -- Priority 3: Accept copilot inline completion
+            -- Just return truthy if completion exists; pressing TAB will accept it
+            return vim.lsp.inline_completion.get()
+          end,
           actions.tab_fallback,
           "fallback",
         },
         ["<S-Tab>"] = {
-          "select_prev",
-          "snippet_backward",
-          actions.has_native_completion,
+          function(cmp)
+            -- Priority 1: Navigate blink.cmp menu if visible
+            if cmp.is_menu_visible() then
+              return cmp.select_prev()
+            end
+          end,
+          function()
+            -- Priority 2: Jump to previous snippet placeholder
+            if vim.snippet.active({ direction = -1 }) then
+              vim.snippet.jump(-1)
+              return true
+            end
+          end,
           actions.tab_fallback,
           "fallback",
         },
-        ["<C-y>"] = { actions.has_native_completion, "select_and_accept", "fallback" },
+        ["<C-y>"] = {
+          function()
+            -- Accept copilot inline completion first if available
+            return vim.lsp.inline_completion.get()
+          end,
+          "select_and_accept",
+          "fallback",
+        },
 
         ["<Up>"] = { "select_prev", "fallback" },
         ["<Down>"] = { "select_next", "fallback" },
         ["<C-k>"] = { "select_prev", "fallback_to_mappings" },
         ["<C-j>"] = { "select_next", "fallback_to_mappings" },
-        ["<C-h>"] = { actions.has_native_completion, "hide" },
-        ["<C-l>"] = { actions.has_native_completion, "select_and_accept" },
+        ["<C-h>"] = { "hide", "fallback" },
+        ["<C-l>"] = {
+          function()
+            -- Accept copilot inline completion first if available
+            return vim.lsp.inline_completion.get()
+          end,
+          "select_and_accept",
+          "fallback",
+        },
 
         ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
         ["<C-p>"] = { "show_signature", "hide_signature", "fallback" },
