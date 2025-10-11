@@ -69,9 +69,7 @@ Copy-Item -Path $source -Destination $PROFILE -Force
 
 # Setup nvim
 Write-Host "  [setup config] setup nvim..." -ForegroundColor Cyan
-$nvim_repopath = Join-Path $reporoot "nvim"
-. "$nvim_repopath/rust/nvim_tools/build.ps1"
-nvim --headless -u "$nvim_repopath/init-update.lua"
+pwsh ./nvim.ps1
 
 # Setup rust
 

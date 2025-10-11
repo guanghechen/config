@@ -1,5 +1,8 @@
 #! /usr/bin/env bash
 
+export PREFER_NODE_VERSION=22
+export PREFER_PYTHON_ENV=lemon
+
 ### Homebrew
 if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
   export HOME_HOMEBREW=/home/linuxbrew/.linuxbrew

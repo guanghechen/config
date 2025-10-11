@@ -11,6 +11,8 @@ $env:PYTHONIOENCODING     = "utf8"
 $env:PYTHONUTF8           = 1
 $env:YAZI_CONFIG_HOME     = "$env:XDG_CONFIG_HOME\yazi"
 $env:YAZI_FILE_ONE        = "$env:APP_HOME_GIT\usr\bin\file.exe"
+$env:PREFER_NODE_VERSION  = 22
+$env:PREFER_PYTHON_ENV    = "lemon"
 
 setx APP_HOME_MINIFORGE   "$env:APP_HOME_MINIFORGE"
 setx APP_HOME_GIT         "$env:APP_HOME_GIT"
