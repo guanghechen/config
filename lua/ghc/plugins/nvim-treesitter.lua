@@ -177,15 +177,6 @@ return {
     install_dir = std.path.locate_data_filepath("treesitter"),
   },
   config = function(_, opts)
-    if vim.fn.executable("tree-sitter") == 0 then
-      std.reporter.error({
-        from = __module_name__,
-        subject = "config",
-        message = "**treesitter-main** requires the `tree-sitter` executable to be installed",
-      })
-      return
-    end
-
     require("nvim-treesitter").setup(opts)
     vim.api.nvim_create_user_command("TreesitterInstallAll", function()
       install("setup", function()
