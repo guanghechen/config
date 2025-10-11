@@ -297,16 +297,12 @@ local group_items = {
     markdown = {
       title = "markdown",
       snapshot = function()
-        return "unknown", "Boolean"
+        local enabled = require("render-markdown").get() ---@type boolean
+        return tostring(enabled), "Boolean"
       end,
       action = function()
-        local ok, render_markdown = pcall(require, "render-markdown")
-        if ok then
-          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-          eve.tab.focus_win_fixed(tabnr)
-          eve.context.plugin.render_markdown:next(true)
-          render_markdown.buf_toggle()
-        end
+        local enabled = require("render-markdown").get() ---@type boolean
+        require("render-markdown").set(not enabled)
       end,
     },
     relativenumber = {
@@ -317,8 +313,8 @@ local group_items = {
           return "unknown", "Boolean"
         end
 
-        local flag = vim.wo[winnr_command].relativenumber ---@type boolean
-        return flag and "true" or "false", "Boolean"
+        local enabled = vim.wo[winnr_command].relativenumber ---@type boolean
+        return tostring(enabled), "Boolean"
       end,
       action = function()
         local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
@@ -338,8 +334,8 @@ local group_items = {
           return "unknown", "Boolean"
         end
 
-        local flag = vim.wo[winnr_command].wrap ---@type boolean
-        return flag and "true" or "false", "Boolean"
+        local enabled = vim.wo[winnr_command].wrap ---@type boolean
+        return tostring(enabled), "Boolean"
       end,
       action = function()
         local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
