@@ -69,7 +69,12 @@ return {
           preset = "cmdline",
           ["<Left>"] = false,
           ["<Right>"] = false,
-          ["<Tab>"] = { "show", "accept" },
+          ["<Tab>"] = { "show", "select_next", "accept" },
+          ["<S-Tab>"] = { "show", "select_prev", "accept" },
+          ["<Up>"] = { "select_prev", "fallback" },
+          ["<Down>"] = { "select_next", "fallback" },
+          ["<C-k>"] = { "select_prev", "fallback_to_mappings" },
+          ["<C-j>"] = { "select_next", "fallback_to_mappings" },
         },
         completion = {
           ghost_text = { enabled = true },
@@ -212,17 +217,17 @@ return {
         ["<C-b>"] = { "scroll_documentation_up", "fallback" },
         ["<C-f>"] = { "scroll_documentation_down", "fallback" },
 
-      -- stylua: ignore start
-      ['<C-1>'] = { function(cmp) cmp.accept({ index = 1 }) end },
-      ['<C-2>'] = { function(cmp) cmp.accept({ index = 2 }) end },
-      ['<C-3>'] = { function(cmp) cmp.accept({ index = 3 }) end },
-      ['<C-4>'] = { function(cmp) cmp.accept({ index = 4 }) end },
-      ['<C-5>'] = { function(cmp) cmp.accept({ index = 5 }) end },
-      ['<C-6>'] = { function(cmp) cmp.accept({ index = 6 }) end },
-      ['<C-7>'] = { function(cmp) cmp.accept({ index = 7 }) end },
-      ['<C-8>'] = { function(cmp) cmp.accept({ index = 8 }) end },
-      ['<C-9>'] = { function(cmp) cmp.accept({ index = 9 }) end },
-      ['<C-0>'] = { function(cmp) cmp.accept({ index = 10 }) end },
+        -- stylua: ignore start
+        ['<C-1>'] = { function(cmp) cmp.accept({ index = 1 }) end },
+        ['<C-2>'] = { function(cmp) cmp.accept({ index = 2 }) end },
+        ['<C-3>'] = { function(cmp) cmp.accept({ index = 3 }) end },
+        ['<C-4>'] = { function(cmp) cmp.accept({ index = 4 }) end },
+        ['<C-5>'] = { function(cmp) cmp.accept({ index = 5 }) end },
+        ['<C-6>'] = { function(cmp) cmp.accept({ index = 6 }) end },
+        ['<C-7>'] = { function(cmp) cmp.accept({ index = 7 }) end },
+        ['<C-8>'] = { function(cmp) cmp.accept({ index = 8 }) end },
+        ['<C-9>'] = { function(cmp) cmp.accept({ index = 9 }) end },
+        ['<C-0>'] = { function(cmp) cmp.accept({ index = 10 }) end },
         -- stylua: ignore end
       },
       signature = {
