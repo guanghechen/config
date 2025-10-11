@@ -89,7 +89,9 @@ local function on_attach(client, bufnr)
   eve.lsp.on_attach(client, bufnr)
 
   -- Enable inline completion for this buffer with the copilot client
-  vim.lsp.inline_completion.enable(true, { bufnr = bufnr })
+  vim.schedule(function()
+    vim.lsp.inline_completion.enable(true, { bufnr = bufnr })
+  end)
 
   ---@type std.t.IKeymap[]
   local keymaps = {
