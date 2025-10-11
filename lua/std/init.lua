@@ -14,6 +14,7 @@ local __mods = {
   json = "std.json",
   path = "std.path",
   reporter = "std.reporter",
+  stdout = "std.stdout",
   string = "std.string",
   table = "std.table",
   timer = "std.timer",
@@ -58,6 +59,7 @@ local __mods = {
 ---@field public json                   std.json
 ---@field public path                   std.path
 ---@field public reporter               std.reporter
+---@field public stdout                 std.stdout
 ---@field public string                 std.string
 ---@field public table                  std.table
 ---@field public timer                  std.timer
