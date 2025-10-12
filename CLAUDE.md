@@ -2,9 +2,9 @@
 
 The following rules are **supreme principles** that must be followed at **all times** regardless of circumstances. Each item is an **absolute principle** that **supersedes all other guidelines** and is essential to the core workflow.
 
-1. **CRITICAL**: Don't try to read files that are ignored by git unless I provide the filepaths explicitly.
-2. **CRITICAL**: Never read, access, or reference any environment variable files including `.env.local`, `.env.*.local`, `*.http_request`, `*.http_response`, and any files containing sensitive information like secrets, passwords, or credentials.
-3. **CRITICAL**: Never stage or commit changes to git unless explicitly instructed to do so. All modifications, fixes, and changes must remain in the working directory for manual review and confirmation.
+1. **CRITICAL**: **Never** try to read files that are ignored by git unless I provide the filepaths explicitly.
+2. **CRITICAL**: **Never** read, access, or reference any environment variable files including `.env.local`, `.env.*.local`, `*.http_request`, `*.http_response`, and any files containing sensitive information like secrets, passwords, or credentials.
+3. **CRITICAL**: **Never** stage or commit changes to git unless explicitly instructed to do so. All modifications, fixes, and changes must remain in the working directory for manual review and confirmation.
 
 ## Coding Guidances
 

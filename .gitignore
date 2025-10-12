@@ -1,6 +1,10 @@
+debug/
+file-history/
 projects/
 shell-snapshots/
 statsig/
 todos/
+
 .claude.json*
 *.local.json
+history.jsonl
