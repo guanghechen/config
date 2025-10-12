@@ -11,7 +11,16 @@ else
   fish -c "npm install -g @anthropic-ai/claude-code @google/gemini-cli"
 fi
 
+fnm use $PREFER_NODE_VERSION
+
+## Setup ora
+if [ -d "$HOME/.config/ora" ]; then
+  printf "\n\e[94m  [setup node] setup ora...\e[0m\n"
+  fish -c "cd $HOME/.config/ora && yarn"
+fi
+
+## Setup yoz
 if [ -d "$HOME/.config/yoz" ]; then
   printf "\n\e[94m  [setup node] setup yoz...\e[0m\n"
-  fish -c "cd $HOME/.config/yoz && yarn install"
+  fish -c "cd $HOME/.config/yoz && yarn"
 fi
