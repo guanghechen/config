@@ -41,7 +41,7 @@ function M.get_mason_ensure_installed()
     "stylua",
 
     -- utilities --
-    "tree-sitter-cli",
+    -- "tree-sitter-cli",
   }
 end
 
