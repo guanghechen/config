@@ -40,12 +40,12 @@ local function should_show_buffer(bufnr, scope, tabnr)
     return true
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
-
+  local buftype = vim.bo[bufnr].buftype ---@type string
   if scope == "T" then
-    return filetype == eve.filetype.TERM
+    return buftype == "terminal"
   end
 
+  local filetype = vim.bo[bufnr].filetype ---@type string
   if scope == "F" then
     return eve.tab.has_buf(tabnr, bufnr)
   end

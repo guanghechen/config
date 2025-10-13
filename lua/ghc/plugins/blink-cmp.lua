@@ -192,9 +192,6 @@ return {
         preset = "none",
         ["<CR>"] = { "select_and_accept", "fallback" },
         ["<Tab>"] = {
-          function()
-            return require("sidekick").nes_jump_or_apply()
-          end,
           function(cmp)
             -- Priority 1: Navigate blink.cmp menu if visible
             if cmp.is_menu_visible() then
@@ -202,14 +199,21 @@ return {
             end
           end,
           function()
-            -- Priority 2: Jump to next snippet placeholder
+            -- Priority 2: Apply sidekick next edit suggestions
+            local Nes = require("sidekick.nes")
+            if Nes.have() and (Nes.jump() or Nes.apply()) then
+              return true
+            end
+          end,
+          function()
+            -- Priority 3: Jump to next snippet placeholder
             if vim.snippet.active({ direction = 1 }) then
               vim.snippet.jump(1)
               return true
             end
           end,
           function()
-            -- Priority 3: Accept copilot inline completion
+            -- Priority 4: Accept copilot inline completion
             -- Just return truthy if completion exists; pressing TAB will accept it
             return vim.lsp.inline_completion.get()
           end,

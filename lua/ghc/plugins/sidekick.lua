@@ -6,6 +6,7 @@ return {
       mux = {
         backend = "tmux",
         enabled = true,
+        create = "terminal",
       },
       prompts = {
         changes = "Can you review my changes?",
