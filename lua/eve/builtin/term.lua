@@ -346,18 +346,10 @@ function M.create(params)
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
-    key = "<C-w>",
+    key = "<C-d>",
     desc = eve.command.definitions.term.destroy.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.destroy.uuid)
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "v" },
-    key = "q",
-    desc = "term: close",
-    callback = function()
-      M.on_closed(termmeta)
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -368,6 +360,14 @@ function M.create(params)
       if termmeta.jobid ~= nil then
         vim.fn.chansend(termmeta.jobid, "\x1b")
       end
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "n", "v" },
+    key = "q",
+    desc = "term: close",
+    callback = function()
+      M.on_closed(termmeta)
     end,
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
