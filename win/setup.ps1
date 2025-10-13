@@ -40,6 +40,9 @@ if (Test-Path $repomain) {
 }
 
 Set-Location -Path $repomain
+. .\win\setup\cargo.ps1
+
+Set-Location -Path $repomain
 . .\win\setup\winget.ps1
 
 Set-Location -Path $repomain

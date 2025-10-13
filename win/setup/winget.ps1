@@ -1,5 +1,6 @@
 Write-Host "  [setup winget] preparing..." -ForegroundColor Green
 
+
 # winget install -e --source winget --id Git.Git
 winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
 winget install -e --source winget --id Microsoft.PowerShell
@@ -25,14 +26,5 @@ winget install -e --source winget --id ajeetdsouza.zoxide
 
 # winget install -e --source winget --id LGUG2Z.komorebi
 # winget install -e --source winget --id AmN.yasb
-
-## Cargo version is updated too frequently and sometimes could build failed.
-# cargo install --locked git-delta
-# cargo install --locked fd-find
-# cargo install --locked fnm
-# cargo install --locked lsd
-# cargo install --locked ripgrep
-# cargo install --locked yazi-fm yazi-cli
-# cargo install --locked zoxide
 
 Write-Host "  [setup winget] done." -ForegroundColor Green
