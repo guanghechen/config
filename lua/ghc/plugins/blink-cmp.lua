@@ -192,6 +192,9 @@ return {
         preset = "none",
         ["<CR>"] = { "select_and_accept", "fallback" },
         ["<Tab>"] = {
+          function()
+            return require("sidekick").nes_jump_or_apply()
+          end,
           function(cmp)
             -- Priority 1: Navigate blink.cmp menu if visible
             if cmp.is_menu_visible() then

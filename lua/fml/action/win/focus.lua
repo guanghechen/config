@@ -106,7 +106,10 @@ end
 local navigate = std.env.IS_TMUX and tmux_navigate or vim_navigate
 
 ---@class fml.action.win
-local M = {}
+---@field public navigate               fun(direction: "p"|"n"|"h"|"j"|"k"|"l"): nil
+local M = {
+  navigate = navigate,
+}
 
 ---@return nil
 function M.focus_top()

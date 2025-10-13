@@ -80,6 +80,7 @@ local raw_specs = {
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.common             },
   { name = "plenary.nvim",                main = "plenary",                       cond = conds.common             },
   { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode         },
+  { name = "sidekick.nvim",               main = "sidekick",                      cond = conds.not_vscode         },
   { name = "which-key.nvim",              main = "which-key",                     cond = conds.common             },
   -- stylua: ignore end
 }
