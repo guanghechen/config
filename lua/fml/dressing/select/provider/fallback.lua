@@ -1,9 +1,17 @@
+---@return string
+local function default_format_item(item)
+  if type(item) == "string" then
+    return item:gsub("\n", "\\n")
+  end
+  return tostring(item)
+end
+
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
 ---@return eve.ux.picker.composer.list.IResetData
 ---@return integer
 local function normal_provider(items, opts)
-  local format_item = opts.format_item or std.fn.identity ---@type fun(item): string
+  local format_item = opts.format_item or default_format_item ---@type fun(item): string
   local width = 0 ---@type integer
   local select_items = {} ---@type fml.dressing.select.IItem[]
   for index, item in ipairs(items) do
