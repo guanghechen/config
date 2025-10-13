@@ -69,7 +69,8 @@ Copy-Item -Path $source -Destination $PROFILE -Force
 
 # Setup nvim
 Write-Host "  [setup config] setup nvim..." -ForegroundColor Cyan
-pwsh ./nvim.ps1
+Set-Location -Path $repomain
+. .\win\setup\nvim.ps1
 
 # Setup rust
 
