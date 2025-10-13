@@ -69,12 +69,14 @@ return {
           preset = "cmdline",
           ["<Left>"] = false,
           ["<Right>"] = false,
-          ["<Tab>"] = { "show", "select_next", "accept" },
-          ["<S-Tab>"] = { "show", "select_prev", "accept" },
+          ["<Tab>"] = { "show_and_insert_or_accept_single", "select_next" },
+          ["<S-Tab>"] = { "show_and_insert_or_accept_single", "select_prev" },
           ["<Up>"] = { "select_prev", "fallback" },
           ["<Down>"] = { "select_next", "fallback" },
           ["<C-k>"] = { "select_prev", "fallback_to_mappings" },
           ["<C-j>"] = { "select_next", "fallback_to_mappings" },
+          ["<C-y>"] = { "select_and_accept", "fallback" },
+          ["<C-e>"] = { "cancel", "fallback" },
         },
         completion = {
           ghost_text = { enabled = true },
@@ -188,7 +190,7 @@ return {
       },
       keymap = {
         preset = "none",
-        ["<CR>"] = { "accept", "fallback" },
+        ["<CR>"] = { "select_and_accept", "fallback" },
         ["<Tab>"] = {
           function(cmp)
             -- Priority 1: Navigate blink.cmp menu if visible
