@@ -5,7 +5,7 @@ return {
     cli = {
       mux = {
         backend = "tmux",
-        enabled = true,
+        enabled = not std.env.IS_WIN,
         create = "terminal",
       },
       prompts = {
