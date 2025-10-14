@@ -1,5 +1,7 @@
 # https://github.com/sxyazi/yazi/blob/ef599a160aa377b1685b0f9b9c247a0e7a0c26b5/yazi-config/preset/theme-dark.toml#L1
 
+# onehalf-dark
+
 [cmp]
 border                  = { fg = "#61AFEF" }
 active                  = { reversed = true }
