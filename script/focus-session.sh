@@ -6,8 +6,10 @@ function _ghc_tmux_focus_session_ {
 
   if [[ "${current_session_name}" == _popup@* ]]; then
     sessions=$(tmux list-sessions -F "#{session_name}" | grep "^_popup@")
+  elif [[ "${current_session_name}" =~ ^claude\ [0-9a-f]+$ ]]; then
+    sessions=$(tmux list-sessions -F "#{session_name}" | grep -E "^claude [0-9a-f]+$")
   else
-    sessions=$(tmux list-sessions -F "#{session_name}" | grep -v "^_popup@")
+    sessions=$(tmux list-sessions -F "#{session_name}" | grep -v "^_popup@" | grep -v -E "^claude [0-9a-f]+$")
   fi
 
   # Find the index of the current session in the list of sessions
