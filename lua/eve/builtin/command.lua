@@ -541,6 +541,8 @@ M.definitions.win = {
   project = def("Fwinproject", "win: project (with picker)"),
   swap = def("Fwinswap", "win: swap (with picker)"),
 
+  mark_sourcefile = def("Fwinmarksoucefile", "win: mark sourcefile"),
+
   scroll_down = def("Fwinscrolldown", "win: scroll down"),
   scroll_up = def("Fwinscrollup", "win: scroll up"),
 }

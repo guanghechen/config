@@ -898,6 +898,14 @@ command
     end,
   })
 
+--[win] mark----------------------------------------------------------------------------------------
+command.implement({
+  uuid = K.win.mark_sourcefile.uuid,
+  action = function()
+    require("fml.action.win.mark").mark_sourcefile()
+  end,
+})
+
 --[win] picker--------------------------------------------------------------------------------------
 command
   .implement({
