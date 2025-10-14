@@ -100,14 +100,6 @@ return {
       desc = "sidekick: goto/apply next edit suggestion",
     },
     {
-      "<leader>;",
-      function()
-        require("sidekick.cli").toggle({ filter = { installed = true } })
-      end,
-      desc = "sidekick: toggle",
-      mode = { "n", "v" },
-    },
-    {
       "<leader>ac",
       function()
         require("sidekick.cli").toggle({ name = "claude", focus = true })
