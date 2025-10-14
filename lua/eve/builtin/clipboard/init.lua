@@ -14,6 +14,9 @@ local M = {}
 
 if std.env.IS_MAC then
   M = require("eve.builtin.clipboard.mac")
+  if std.env.IS_TMUX then
+    M.get_clipboard = require("eve.builtin.clipboard.tmux").get_clipboard
+  end
 elseif std.env.IS_WSL then
   M = require("eve.builtin.clipboard.wsl")
 elseif std.env.IS_NIX then
