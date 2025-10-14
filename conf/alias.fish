@@ -60,7 +60,7 @@ end
 ### tmux
 alias tnew='tmux new -s' # Create a new tmux session
 alias tkill='tmux kill-session -t' # Kill a tmux session
-alias tkill-all='tmux list-sessions | awk \'{print $1}\' | xargs -n 1 tmux kill-session -t'
+alias tkill-all='tmux list-sessions | awk -F: \'{print $1}\' | xargs -I {} tmux kill-session -t "{}"'
 alias tdetach='tmux detach' # Detach from the session
 alias tattach='tmux attach -t' # Attach to a session
 alias tdetach-others='tmux detach -a' # Detach other clients from the session
