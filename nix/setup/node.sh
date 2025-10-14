@@ -6,12 +6,11 @@ if fnm list | grep -q "v$PREFER_NODE_VERSION"; then
   printf "\n\e[93m  [setup node] node@$PREFER_NODE_VERSION is already installed. (skipped)\e[0m\n"
 else
   fnm install $PREFER_NODE_VERSION
-  fnm use $PREFER_NODE_VERSION
-  fish -c "npm install -g npm bun pm2 yarn prettier"
-  fish -c "npm install -g @anthropic-ai/claude-code @google/gemini-cli"
 fi
 
 fnm use $PREFER_NODE_VERSION
+fish -c "npm install -g npm bun pm2 yarn prettier"
+# fish -c "npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex"
 
 ## Setup ora
 if [ -d "$HOME/.config/ora" ]; then
