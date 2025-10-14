@@ -2,6 +2,16 @@ local __module_name__ = "fml.dressing.clipboard" ---@type string
 
 local original_vim_paste = vim.paste
 
+---@param lines                         string[]
+---@param phase                         number
+local function unified_paste(lines, phase)
+  if std.env.IS_MAC and std.env.IS_TMUX then
+    local text = table.concat(lines, "\n"):gsub("\x1b%[106;5u", "\n")
+    lines = vim.split(text, "\n")
+  end
+  return original_vim_paste(lines, phase)
+end
+
 local buffer = "" ---@type string
 
 local IMAGE_EXTENSIONS = {
@@ -13,8 +23,8 @@ local IMAGE_EXTENSIONS = {
   [".tiff"] = true,
 }
 
----@param lines string[]
----@param phase number
+---@param lines                         string[]
+---@param phase                         number
 local function convert_streaming_paste(lines, phase)
   if phase == 1 then
     buffer = ""
@@ -46,7 +56,7 @@ local function fallback(lines, phase, silent)
       details = { lines = lines, filetype = vim.bo.filetype },
     })
   end
-  return original_vim_paste(lines, phase)
+  return unified_paste(lines, phase)
 end
 
 -- override vim.paste to handle image pasting from system clipboard
@@ -56,7 +66,7 @@ end
 vim.paste = function(lines, phase)
   local flag_dressing_clipboard = eve.context.flight.dressing_clipboard:snapshot() ---@type boolean
   if not flag_dressing_clipboard then
-    return original_vim_paste(lines, phase)
+    return unified_paste(lines, phase)
   end
 
   if phase ~= -1 then
@@ -134,14 +144,14 @@ vim.paste = function(lines, phase)
       return true
     end
 
-    return original_vim_paste(lines, phase)
+    return unified_paste(lines, phase)
   end
 
   local line = lines[1]
 
   -- probably not a file path or url to an image if the input is this long
   if string.len(line) > 512 then
-    return original_vim_paste(lines, phase)
+    return unified_paste(lines, phase)
   end
 
   local text = line
