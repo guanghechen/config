@@ -281,6 +281,20 @@ function M.new(props)
     },
     {
       modes = { "i", "n", "v" },
+      key = "<2-LeftMouse>",
+      desc = "list: confirm",
+      callback = function()
+        local result_winnr = self._composer.result:get_winnr() ---@type integer|nil
+        if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
+          local cursor = vim.fn.getmousepos()
+          if cursor.winid == result_winnr then
+            actions.on_confirm()
+          end
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
       key = "<Tab>",
       desc = "list: noop",
       callback = std.fn.noop,
