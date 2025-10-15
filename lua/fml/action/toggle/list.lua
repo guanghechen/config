@@ -30,6 +30,7 @@ local group_flags = {
   ---flight
   flight = {
     ai = eve.context.flight.ai,
+    ai_nes = eve.context.flight.ai_nes,
     autoformat = eve.context.flight.autoformat,
     autoload = eve.context.flight.autoload,
     autosave = eve.context.flight.autosave,

@@ -54,8 +54,7 @@ return {
     },
     nes = {
       enabled = function(bufnr)
-        return false
-        -- return vim.b[bufnr].sidekick_nes ~= false
+        return eve.context.flight.ai_nes:snapshot() and vim.b[bufnr].sidekick_nes ~= false
       end,
       debounce = 300,
       trigger = {

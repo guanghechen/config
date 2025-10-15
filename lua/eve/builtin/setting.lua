@@ -41,6 +41,7 @@ M.togglers = {
   "username_ux",
 
   "ai_flight",
+  "ai_nes_flight",
   "autoformat_flight",
   "autoload_flight",
   "autosave_flight",
