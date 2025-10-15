@@ -281,6 +281,10 @@ function M.gen_hlgroup_map(context)
     RenderMarkdownWarn = { fg = c.yellow, bold = true },
     RenderMarkdownWikiLink = { fg = c.aqua, italic = true },
 
+    ---! snacks.nvim
+    SnacksPickerLabel = { fg = c.brightBlue, bold = true },
+    SnacksPickerFile = { fg = c.brightAqua },
+
     ---! which-key.nvim
     WhichKey = { fg = c.blue },
     WhichKeyDesc = { fg = c.fg3 },

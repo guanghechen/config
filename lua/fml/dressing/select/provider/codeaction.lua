@@ -35,9 +35,10 @@ local LSP_CLIENT_NAME_ORDERS = {
 }
 
 ---@param items                         any[]
+---@param opts                          fml.dressing.select.IOptions
 ---@return eve.ux.picker.composer.list.IResetData
 ---@return integer
-local function codeaction_provider(items)
+local function codeaction_provider(items, opts)
   local width_order = #tostring(#items) ---@type integer
   local width_content = 0 ---@type integer
   local width_client_name = 0 ---@type integer

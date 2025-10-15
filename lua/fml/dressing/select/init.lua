@@ -24,15 +24,41 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public data                   fml.dressing.select.IItemData
 
 ---@alias fml.dressing.select.IDataProvider
----| fun(items: any[], opts: fml.dressing.select.IOptions): eve.ux.picker.composer.list.IResetData, integer, eve.ux.picker.composer.list.IRenderResult|nil
-
-local codeaction_provider = require("fml.dressing.select.provider.codeaction")
-local fallback_provider = require("fml.dressing.select.provider.fallback")
+---| fun(items: any[], opts: fml.dressing.select.IOptions): eve.ux.picker.composer.list.IResetData, integer, eve.ux.picker.composer.list.IRenderResult|nil, eve.ux.picker.composer.list.IRenderPreview|nil
 
 local providers = {
-  codeaction = codeaction_provider,
-  fallback = fallback_provider,
+  ---@type fml.dressing.select.IDataProvider
+  codeaction = function(items, opts)
+    local provider = require("fml.dressing.select.provider.codeaction")
+    return provider(items, opts)
+  end,
+  ---@type fml.dressing.select.IDataProvider
+  snacks = function(items, opts)
+    local provider = require("fml.dressing.select.provider.snacks")
+    return provider(items, opts)
+  end,
+  ---@type fml.dressing.select.IDataProvider
+  fallback = function(items, opts)
+    local provider = require("fml.dressing.select.provider.fallback")
+    return provider(items, opts)
+  end,
 }
+
+---@param opts                          fml.dressing.select.IOptions
+---@return fml.dressing.select.IDataProvider
+local function resolve_provider(opts)
+  local provider = providers[opts.kind] ---@type fml.dressing.select.IDataProvider|nil
+  if provider ~= nil then
+    return provider
+  end
+
+  ---@cast opts any
+  if type(opts.picker) == "table" and type(opts.picker.layout) == "table" then
+    return providers.snacks
+  end
+
+  return providers.fallback
+end
 
 ---@type table<string, eve.context.select.item.state>
 local states_by_title = {}
@@ -45,15 +71,16 @@ local M = {}
 ---@param on_choice                     fun(item: any|nil, idx: integer|nil): nil
 ---@return nil
 function M.select(items, opts, on_choice)
+  local provider = resolve_provider(opts) ---@type fml.dressing.select.IDataProvider
+
   local name = opts.name or __module_name__ ---@type string
   local title = (opts.prompt or opts.kind or "--"):gsub(":$", "") ---@type string
-  local kind = opts.kind or "fallback" ---@type string
-  local create_provider = providers[kind] or providers.fallback ---@type fml.dressing.select.IDataProvider
-  local data, width, render_result = create_provider(items, opts)
-  local render_preview = opts.render_preview ---@type eve.ux.picker.composer.list.IRenderPreview|nil
-
+  local data, width, render_result, render_preview = provider(items, opts)
   if opts.render_result ~= nil then
     render_result = opts.render_result
+  end
+  if opts.render_preview ~= nil then
+    render_preview = opts.render_preview
   end
 
   local uuid_current = nil ---@type string|nil
