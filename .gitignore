@@ -1,0 +1,6 @@
+log/
+sessions/
+
+config.toml
+history.jsonl
+version.json
