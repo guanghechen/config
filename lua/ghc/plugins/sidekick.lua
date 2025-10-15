@@ -54,7 +54,8 @@ return {
     },
     nes = {
       enabled = function(bufnr)
-        return vim.b[bufnr].sidekick_nes ~= false
+        return false
+        -- return vim.b[bufnr].sidekick_nes ~= false
       end,
       debounce = 300,
       trigger = {
