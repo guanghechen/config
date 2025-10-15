@@ -32,6 +32,7 @@ function ghc-update {
     "alacritty-windows",
     "btop",
     "claude",
+    "codex",
     "fish",
     "ghostty",
     "helix",
