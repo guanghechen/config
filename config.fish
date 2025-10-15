@@ -52,6 +52,7 @@ set -gx NODE_OPTIONS "--max-old-space-size=8192"
 set -gx PYTHONIOENCODING utf8
 set -gx PYTHONUTF8 1
 set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
+set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
 
 ## platform specific
 if test (uname) = Darwin
