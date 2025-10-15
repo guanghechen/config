@@ -18,6 +18,7 @@ function ghc-update
         bat \
         btop \
         claude \
+        codex \
         conda \
         fzf \
         gh \
