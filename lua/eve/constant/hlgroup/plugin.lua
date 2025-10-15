@@ -281,6 +281,16 @@ function M.gen_hlgroup_map(context)
     RenderMarkdownWarn = { fg = c.yellow, bold = true },
     RenderMarkdownWikiLink = { fg = c.aqua, italic = true },
 
+    ---! sidekick.nvim
+    SidekickCliAttach = { link = "NormalFloat" },
+    SidekickCliFailed = { link = "DiagnosticError" },
+    SidekickCliStarted = { link = "DiagnosticOk" },
+    SidekickDiffAdd = { link = "DiffWordRight" },
+    SidekickDiffDelete = { link = "DiffWordLeft" },
+    SidekickLocDelim = { link = "Delimiter" },
+    SidekickLocFile = { fg = c.blue },
+    SidekickLocRow = { fg = c.orange },
+
     ---! snacks.nvim
     SnacksPickerLabel = { fg = c.brightBlue, bold = true },
     SnacksPickerFile = { fg = c.brightAqua },
