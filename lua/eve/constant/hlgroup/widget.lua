@@ -80,6 +80,14 @@ function M.gen_hlgroup_map(context)
     f_ft_position = { fg = c.bg4 },
     f_ft_reference = { fg = c.purple, bold = true, italic = true },
     f_ft_text = { fg = c.fg4 },
+    f_ft_git_add = { fg = c.green },
+    f_ft_git_change = { fg = c.yellow },
+    f_ft_git_delete = { fg = c.red },
+    f_ft_git_rename = { fg = c.blue },
+    f_ft_git_untracked = { fg = c.aqua },
+    f_ft_git_ignored = { fg = c.bg4 },
+    f_ft_git_unmerged = { fg = c.orange },
+    f_ft_git_other = { fg = c.fg3 },
 
     ---git hunk preview
     f_ghp_cursor = { bg = c.bg3 },

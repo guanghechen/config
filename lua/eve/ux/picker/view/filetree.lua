@@ -713,6 +713,9 @@ function M.default_render_listview_leaf(ctx, node)
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
   }
 
+  local git_text = eve.git.calc_status_info(node.data.filepath, node.data.filetype, #text, highlights) ---@type string
+  text = text .. git_text ---@type string
+
   local diagnostic_text = eve.lsp.calc_diagnostic_info(node.data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
   return { text = text, highlights = highlights }
@@ -760,6 +763,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
       { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
       { coll = #fileicon + 1, colr = #text, hlname = "f_ft_dirname" },
     }
+
     return { text = text, highlights = highlights }
   end
 
@@ -813,6 +817,9 @@ function M.default_render_treeview_leaf(_, node)
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "f_ft_filename" },
   }
+
+  local git_text = eve.git.calc_status_info(node.data.filepath, node.data.filetype, #text, highlights) ---@type string
+  text = text .. git_text ---@type string
 
   local diagnostic_text = eve.lsp.calc_diagnostic_info(node.data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
