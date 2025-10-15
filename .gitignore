@@ -2,6 +2,10 @@ __test__/__tmp__.lua
 lua/nvim_tools.so
 lua/nvim_tools.dll
 
+.codex/
+.specify/
+specs/
+
 bin/
 local/
 target/
