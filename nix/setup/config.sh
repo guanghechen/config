@@ -25,6 +25,7 @@ clone_or_update_config_repo() {
     "alacritty"
     "alacritty-windows"
     "claude"
+    "codex"
     "ghostty"
     "helix"
     "kitty"

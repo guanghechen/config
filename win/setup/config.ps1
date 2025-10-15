@@ -19,6 +19,7 @@ $repo_optional_branches = @(
   "alacritty-windows",
   "btop",
   "claude",
+  "codex",
   "fish",
   "ghostty",
   "helix",
