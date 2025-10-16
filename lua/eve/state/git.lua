@@ -1,23 +1,9 @@
 local __module_name__ = "eve.state.git" ---@type string
 
-local std = require("std")
-
 local DEFAULT_GIT_STATUS_HL = "f_ft_git_other" ---@type string
 local REFRESH_INTERVAL_MS = 5 * 60 * 1000 ---@type integer
 local REFRESH_DEBOUNCE_MS = 200 ---@type integer
-
----@type table<string, integer>
-local GIT_STATUS_PRIORITY = {
-  U = 90,
-  ["?"] = 80,
-  M = 70,
-  D = 70,
-  A = 60,
-  R = 50,
-  C = 50,
-  T = 40,
-  ["!"] = 30,
-}
+local FS_WATCH_DEBOUNCE_MS = 3000 ---@type integer
 
 ---@type table<string, string>
 local GIT_STATUS_HIGHLIGHT = {
@@ -36,30 +22,40 @@ local GIT_STATUS_HIGHLIGHT = {
 local M = {}
 
 ---@class eve.state.git.cache
----@field initialized boolean
----@field workspace string|nil
----@field last_refresh integer
----@field file_status table<string, string>
----@field file_display table<string, string>
----@field file_summary table<string, string|nil>
----@field dir_display table<string, string>
----@field dir_summary table<string, string|nil>
+---@field initialized                 boolean
+---@field workspace                   string|nil
+---@field last_refresh                integer
+---@field status_table                table<string, std.git.StatusEntry>
+---@field status_groups               table<string, table<string, boolean>>
+---@field file_status                 table<string, string>
+---@field file_display                table<string, string>
+---@field file_summary                table<string, string|nil>
+---@field file_stage                  table<string, "staged"|"unstaged"|"mixed"|nil>
+---@field dir_display                 table<string, string>
+---@field dir_summary                 table<string, string|nil>
+---@field dir_stage                   table<string, "staged"|"unstaged"|"mixed"|nil>
+---@field dir_codes                   table<string, table<string, boolean>>
 local cache = {
   initialized = false,
   workspace = nil,
   last_refresh = 0,
+  status_table = {},
+  status_groups = {},
   file_status = {},
   file_display = {},
   file_summary = {},
+  file_stage = {},
   dir_display = {},
   dir_summary = {},
+  dir_stage = {},
+  dir_codes = {},
 }
 
 ---@class eve.state.git.watchers
----@field workspace string|nil
----@field fs fun()[]
----@field interval uv.uv_timer_t|nil
----@field autocmd_group integer|nil
+---@field workspace                   string|nil
+---@field fs                           fun()[]
+---@field interval                    uv.uv_timer_t|nil
+---@field autocmd_group               integer|nil
 local watchers = {
   workspace = nil,
   fs = {},
@@ -71,89 +67,57 @@ local bootstrap_done = false ---@type boolean
 local refreshing = false ---@type boolean
 local pending_refresh = false ---@type boolean
 
----@param status string|nil
----@param other_status string|nil
+---@param stage_state                 "staged"|"unstaged"|"mixed"|nil
+---@param codes                       table<string, boolean>|nil
+---@param summary                     string|nil
+---@param display                     string|nil
+---@param categories                  table<string, boolean>|nil
 ---@return string|nil
-local function get_priority_git_status_code(status, other_status)
-  if not status then
-    return other_status
-  elseif not other_status then
-    return status
-  elseif status == "U" or other_status == "U" then
-    return "U"
-  elseif status == "?" or other_status == "?" then
-    return "?"
-  elseif status == "M" or other_status == "M" then
-    return "M"
-  elseif status == "A" or other_status == "A" then
-    return "A"
-  else
-    return status
-  end
-end
-
----@param line string
----@param workspace string
----@param git_status table<string, string>
-local function parse_git_status_line(line, workspace, git_status)
-  if type(line) ~= "string" or #line < 3 then
-    return
+local function resolve_highlight(stage_state, codes, summary, display, categories)
+  local resolved = categories ---@type table<string, boolean>|nil
+  if type(resolved) ~= "table" then
+    resolved = std.git.collect_entry_categories(stage_state, codes)
   end
 
-  local line_parts = vim.split(line, "	")
-  if #line_parts < 2 then
-    return
+  resolved = resolved or {}
+
+  if resolved.deleted then
+    return GIT_STATUS_HIGHLIGHT.D
+  end
+  if resolved.conflict then
+    return GIT_STATUS_HIGHLIGHT.U
+  end
+  if resolved.unstaged then
+    return "f_ft_git_unstaged"
+  end
+  if resolved.staged then
+    return "f_ft_git_staged"
+  end
+  if resolved.modified then
+    return GIT_STATUS_HIGHLIGHT.M
+  end
+  if resolved.added then
+    return GIT_STATUS_HIGHLIGHT.A
+  end
+  if resolved.untracked then
+    return GIT_STATUS_HIGHLIGHT["?"]
+  end
+  if resolved.ignored then
+    return GIT_STATUS_HIGHLIGHT["!"]
   end
 
-  local status = line_parts[1]
-  local relative_path = line_parts[2]
-
-  -- rename output is `R000 from/filename to/filename`
-  if status:match("^R") then
-    relative_path = line_parts[3]
-  end
-
-  -- remove any " due to whitespace or utf-8 in the path
-  relative_path = relative_path:gsub('^"', ""):gsub('"$', "")
-  -- convert octal encoded lines to utf-8
-  relative_path = std.string.octal_to_utf8(relative_path)
-  -- normalize the filepath
-  relative_path = std.path.normalize(relative_path)
-
-  local absolute_path = std.path.join(workspace, relative_path)
-  -- merge status result if there are results from multiple passes
-  local existing_status = git_status[absolute_path]
-  if existing_status then
-    local merged = ""
-    local i = 0
-    while i < 2 do
-      i = i + 1
-      local existing_char = #existing_status >= i and string.sub(existing_status, i, i) or ""
-      local new_char = #status >= i and string.sub(status, i, i) or ""
-      local merged_char = get_priority_git_status_code(existing_char, new_char)
-      merged = merged .. merged_char
-    end
-    status = merged
-  end
-  git_status[absolute_path] = status
-end
-
----@param status string
----@param fn fun(char: string): nil
-local function git_status_iter_chars(status, fn)
-  if type(status) ~= "string" or #status == 0 then
-    return
-  end
-
-  local limit = math.min(#status, 2) ---@type integer
-  for index = 1, limit do
-    local char = status:sub(index, index) ---@type string
-    if char ~= " " and char ~= "\t" then
-      if char:match("%a") or char == "?" or char == "!" then
-        fn(char)
-      end
+  if summary ~= nil then
+    local hl = GIT_STATUS_HIGHLIGHT[summary]
+    if hl ~= nil then
+      return hl
     end
   end
+
+  if display ~= nil and #display > 0 then
+    return GIT_STATUS_HIGHLIGHT[display:sub(1, 1)]
+  end
+
+  return nil
 end
 
 ---@return integer
@@ -170,123 +134,61 @@ local function git_status_now()
   return math.floor(vim.fn.reltimefloat(vim.fn.reltime()) * 1000)
 end
 
----@param status string|nil
----@param other string|nil
----@return string|nil
-local function git_status_priority(status, other)
-  if status == nil or status == "" then
-    return other
-  elseif other == nil or other == "" then
-    return status
-  end
-  if status == other then
-    return status
-  end
+---@class eve.state.git.dirinfo
+---@field summary                     string|nil
+---@field stage                       std.git.StageState
+---@field codes                       table<string, boolean>
 
-  local priority_status = GIT_STATUS_PRIORITY[status] or 10 ---@type integer
-  local priority_other = GIT_STATUS_PRIORITY[other] or 10 ---@type integer
-  if priority_other > priority_status then
-    return other
-  else
-    return status
+---@param dir_info                    table<string, eve.state.git.dirinfo>
+---@param path                        string
+---@return                            eve.state.git.dirinfo
+local function dir_info_get(dir_info, path)
+  local info = dir_info[path]
+  if info == nil then
+    info = { summary = nil, stage = nil, codes = {} }
+    dir_info[path] = info
   end
+  return info
 end
 
----@param status string
+---@param info                        eve.state.git.dirinfo
 ---@return string
-local function git_status_build_display(status)
-  local seen = {} ---@type table<string, boolean>
-  local chars = {} ---@type string[]
-  git_status_iter_chars(status, function(char)
-    if not seen[char] then
-      seen[char] = true
-      chars[#chars + 1] = char
-    end
-  end)
-  if #chars < 1 then
-    return ""
-  end
-  return table.concat(chars)
+local function dir_info_collect_display(info)
+  return std.git.codes_to_display(info.codes)
 end
 
----@param status string
----@return string|nil
-local function git_status_summarize(status)
-  local summary = nil ---@type string|nil
-  git_status_iter_chars(status, function(char)
-    summary = git_status_priority(summary, char)
-  end)
-  return summary
-end
-
----@param map table<string, table<string, boolean>>
----@param path string
----@param display string
-local function git_status_dir_add_display(map, path, display)
-  if display == nil or #display == 0 then
-    return
+---@param info                        eve.state.git.dirinfo
+---@param entry                       std.git.StatusEntry
+local function dir_info_update(info, entry)
+  local summary = entry.summary ---@type string|nil
+  if summary ~= nil then
+    info.summary = std.git.merge_priority_status(info.summary, summary)
   end
+  info.stage = std.git.combine_stage(info.stage, entry.stage)
 
-  local set = map[path]
-  if set == nil then
-    set = {}
-    map[path] = set
-  end
-
-  for index = 1, #display do
-    local char = display:sub(index, index) ---@type string
-    if char ~= " " and char ~= "\t" then
-      set[char] = true
-    end
-  end
-end
-
----@param set table<string, boolean>|nil
----@return string
-local function git_status_dir_collect_display(set)
-  if set == nil then
-    return ""
-  end
-
-  local chars = {} ---@type string[]
-  for char, enabled in pairs(set) do
+  local set = info.codes ---@type table<string, boolean>
+  for code, enabled in pairs(entry.codes) do
     if enabled then
-      chars[#chars + 1] = char
+      set[code] = true
     end
   end
-
-  if #chars < 1 then
-    return ""
-  end
-
-  table.sort(chars, function(left, right)
-    local priority_left = GIT_STATUS_PRIORITY[left] or 10 ---@type integer
-    local priority_right = GIT_STATUS_PRIORITY[right] or 10 ---@type integer
-    if priority_left == priority_right then
-      return left < right
-    end
-    return priority_left > priority_right
-  end)
-
-  return table.concat(chars)
 end
 
----@param filepath string
----@param summary string|nil
----@param display string
----@param workspace string|nil
----@param dir_display_sets table<string, table<string, boolean>>
----@param dir_summary table<string, string|nil>
-local function git_status_propagate_directory(filepath, summary, display, workspace, dir_display_sets, dir_summary)
-  if summary == nil and (display == nil or #display == 0) then
+---@param filepath                    string
+---@param workspace                   string|nil
+---@param dir_info                    table<string, eve.state.git.dirinfo>
+---@param entry                       std.git.StatusEntry
+local function git_status_propagate_directory(filepath, workspace, dir_info, entry)
+  local has_codes = type(entry.codes) == "table" and next(entry.codes) ~= nil ---@type boolean
+  if entry.summary == nil and entry.stage == nil and not has_codes then
     return
   end
 
   local dirpath = std.path.dirname(filepath) ---@type string|nil
   while dirpath ~= nil and #dirpath > 0 do
     local normalized_dir = std.path.normalize(dirpath) ---@type string
-    dir_summary[normalized_dir] = git_status_priority(dir_summary[normalized_dir], summary)
-    git_status_dir_add_display(dir_display_sets, normalized_dir, display)
+    local info = dir_info_get(dir_info, normalized_dir)
+    dir_info_update(info, entry)
 
     if workspace ~= nil and normalized_dir == workspace then
       break
@@ -300,53 +202,9 @@ local function git_status_propagate_directory(filepath, summary, display, worksp
   end
 end
 
----@param base string|nil
----@return string
----@return table<string, string>
-local function collect_git_status(base)
-  local workspace = std.path.workspace() ---@type string
-
-  if not std.path.is_git_repo() then
-    return workspace, {}
-  end
-
-  base = base or "HEAD"
-
-  local cmd_staged = { "git", "-C", workspace, "diff", "--staged", "--name-status", base, "--" }
-  local ok_staged, result_staged = std.job.execute_command(cmd_staged)
-  if not ok_staged then
-    return workspace, {}
-  end
-
-  local cmd_unstaged = { "git", "-C", workspace, "diff", "--name-status" }
-  local ok_unstaged, result_unstaged = std.job.execute_command(cmd_unstaged)
-  if not ok_unstaged then
-    return workspace, {}
-  end
-
-  local cmd_untracked = { "git", "-C", workspace, "ls-files", "--exclude-standard", "--others" }
-  local ok_untracked, result_untracked = std.job.execute_command(cmd_untracked)
-  if not ok_untracked then
-    return workspace, {}
-  end
-
-  local git_status = {} ---@type table<string, string>
-
-  for _, line in ipairs(result_staged) do
-    parse_git_status_line(line, workspace, git_status)
-  end
-  for _, line in ipairs(result_unstaged) do
-    parse_git_status_line(line and (" " .. line) or line, workspace, git_status)
-  end
-  for _, line in ipairs(result_untracked) do
-    parse_git_status_line(line and ("?	" .. line) or line, workspace, git_status)
-  end
-
-  return workspace, git_status
-end
-
-local refresh_impl ---@type fun()
-local refresh_debounced ---@type fun()
+local refresh_git_status_impl ---@type fun()
+local refresh_debounced_general ---@type fun()
+local refresh_debounced_fs ---@type fun()
 
 local function clear_fs_watchers()
   for _, unwatch in ipairs(watchers.fs) do
@@ -362,7 +220,7 @@ local function clear_interval()
   end
 end
 
----@param workspace string|nil
+---@param workspace                   string|nil
 local function set_workspace_watchers(workspace)
   if watchers.workspace == workspace then
     return
@@ -380,37 +238,15 @@ local function set_workspace_watchers(workspace)
     return
   end
 
-  local watch_targets = {} ---@type string[]
-
-  local index_path = std.path.join(git_dir, "index") ---@type string
-  if std.path.is_exist(index_path) then
-    watch_targets[#watch_targets + 1] = index_path
-  end
-
-  local head_path = std.path.join(git_dir, "HEAD") ---@type string
-  if std.path.is_exist(head_path) then
-    watch_targets[#watch_targets + 1] = head_path
-  end
-
-  local logs_dir = std.path.join(git_dir, "logs") ---@type string
-  if std.path.is_exist_dirpath(logs_dir) then
-    local head_log_path = std.path.join(logs_dir, "HEAD") ---@type string
-    if std.path.is_exist(head_log_path) then
-      watch_targets[#watch_targets + 1] = head_log_path
-    end
-  end
-
-  for _, target in ipairs(watch_targets) do
+  local function attach_watch(target, callback, subject)
     local ok, unwatch = pcall(function()
       return std.fs.watch_file({
         filepath = target,
-        on_event = function()
-          refresh_debounced()
-        end,
+        on_event = callback,
         on_error = function(path, err, unwatch_cb)
           std.reporter.warn({
             from = __module_name__,
-            subject = "watch_git",
+            subject = subject,
             message = "Failed to watch git file changes.",
             details = { filepath = path, error = err },
           })
@@ -423,6 +259,36 @@ local function set_workspace_watchers(workspace)
       watchers.fs[#watchers.fs + 1] = unwatch
     end
   end
+
+  local index_path = std.path.join(git_dir, "index") ---@type string
+  if std.path.is_exist(index_path) then
+    attach_watch(index_path, function()
+      refresh_debounced_general()
+    end, "watch_git_index")
+  end
+
+  local head_path = std.path.join(git_dir, "HEAD") ---@type string
+  if std.path.is_exist(head_path) then
+    attach_watch(head_path, function()
+      refresh_debounced_general()
+    end, "watch_git_head")
+  end
+
+  local logs_dir = std.path.join(git_dir, "logs") ---@type string
+  if std.path.is_exist_dirpath(logs_dir) then
+    local head_log_path = std.path.join(logs_dir, "HEAD") ---@type string
+    if std.path.is_exist(head_log_path) then
+      attach_watch(head_log_path, function()
+        refresh_debounced_general()
+      end, "watch_git_logs")
+    end
+  end
+
+  if std.path.is_exist_dirpath(workspace) then
+    attach_watch(workspace, function()
+      refresh_debounced_fs()
+    end, "watch_git_workspace")
+  end
 end
 
 local function ensure_interval()
@@ -431,7 +297,7 @@ local function ensure_interval()
   end
 
   local timer = std.timer.set_interval(function()
-    refresh_impl()
+    refresh_git_status_impl()
   end, REFRESH_INTERVAL_MS)
 
   if timer ~= nil then
@@ -450,7 +316,7 @@ local function setup_autocmd()
   vim.api.nvim_create_autocmd({ "BufWritePost", "FileChangedShellPost", "FocusGained", "DirChanged" }, {
     group = group,
     callback = function()
-      refresh_debounced()
+      refresh_debounced_general()
     end,
   })
 
@@ -463,53 +329,106 @@ local function setup_autocmd()
   })
 end
 
-refresh_debounced = std.timer.debounce(function()
-  refresh_impl()
+refresh_debounced_general = std.timer.debounce(function()
+  refresh_git_status_impl()
 end, REFRESH_DEBOUNCE_MS)
 
----@param workspace string|nil
----@param status_map table<string, string>
-local function apply_status(workspace, status_map)
+refresh_debounced_fs = std.timer.debounce(function()
+  refresh_git_status_impl()
+end, FS_WATCH_DEBOUNCE_MS)
+
+---@param workspace                   string|nil
+---@param status_table                table<string, std.git.StatusEntry>
+---@param status_groups               table<string, table<string, boolean>>|nil
+local function apply_status(workspace, status_table, status_groups)
   local normalized_workspace = workspace ~= nil and std.path.normalize(workspace) or nil ---@type string|nil
 
+  local status_entries = {} ---@type table<string, std.git.StatusEntry>
   local file_status = {} ---@type table<string, string>
   local file_display = {} ---@type table<string, string>
   local file_summary = {} ---@type table<string, string|nil>
-  local dir_display_sets = {} ---@type table<string, table<string, boolean>>
-  local dir_summary = {} ---@type table<string, string|nil>
+  local file_stage = {} ---@type table<string, "staged"|"unstaged"|"mixed"|nil>
+  local dir_info = {} ---@type table<string, eve.state.git.dirinfo>
+  local status_groups_copy = {} ---@type table<string, table<string, boolean>>
 
-  for filepath, status in pairs(status_map) do
-    if type(filepath) == "string" and type(status) == "string" then
+  for filepath, entry in pairs(status_table) do
+    if type(filepath) == "string" and type(entry) == "table" then
       local normalized_filepath = std.path.normalize(filepath) ---@type string
-      local display = git_status_build_display(status) ---@type string
-      local summary = git_status_summarize(status) ---@type string|nil
+      local display = entry.display or "" ---@type string
+      local summary = entry.summary ---@type string|nil
+      local stage_state = entry.stage ---@type "staged"|"unstaged"|"mixed"|nil
 
-      file_status[normalized_filepath] = status
+      entry.path = normalized_filepath
+      status_entries[normalized_filepath] = entry
+      file_status[normalized_filepath] = display
       file_display[normalized_filepath] = display
-      file_summary[normalized_filepath] = summary
+      if summary ~= nil then
+        file_summary[normalized_filepath] = summary
+      end
+      if stage_state ~= nil then
+        file_stage[normalized_filepath] = stage_state
+      end
 
-      git_status_propagate_directory(
-        normalized_filepath,
-        summary,
-        display,
-        normalized_workspace,
-        dir_display_sets,
-        dir_summary
-      )
+      git_status_propagate_directory(normalized_filepath, normalized_workspace, dir_info, entry)
     end
   end
 
   local dir_display = {} ---@type table<string, string>
-  for dirpath, set in pairs(dir_display_sets) do
-    dir_display[dirpath] = git_status_dir_collect_display(set)
+  local dir_summary = {} ---@type table<string, string|nil>
+  local dir_stage = {} ---@type table<string, "staged"|"unstaged"|"mixed"|nil>
+  local dir_codes = {} ---@type table<string, table<string, boolean>>
+  for dirpath, info in pairs(dir_info) do
+    local display = dir_info_collect_display(info) ---@type string
+    dir_display[dirpath] = display
+    if info.summary ~= nil then
+      dir_summary[dirpath] = info.summary
+    end
+    if info.stage ~= nil then
+      dir_stage[dirpath] = info.stage
+    end
+    local codes_copy = {}
+    for code, enabled in pairs(info.codes) do
+      if enabled then
+        codes_copy[code] = true
+      end
+    end
+    dir_codes[dirpath] = codes_copy
+  end
+
+  if type(status_groups) == "table" then
+    for category, set in pairs(status_groups) do
+      local bucket = {} ---@type table<string, boolean>
+      if type(set) == "table" then
+        for filepath, enabled in pairs(set) do
+          if enabled then
+            local normalized_filepath = std.path.normalize(filepath) ---@type string
+            bucket[normalized_filepath] = true
+          end
+        end
+      end
+      status_groups_copy[category] = bucket
+    end
+  end
+  local category_list = std.git.STATUS_CATEGORY_LIST ---@type string[]|nil
+  if type(category_list) == "table" then
+    for _, category in ipairs(category_list) do
+      if status_groups_copy[category] == nil then
+        status_groups_copy[category] = {}
+      end
+    end
   end
 
   cache.workspace = normalized_workspace
+  cache.status_table = status_entries
+  cache.status_groups = status_groups_copy
   cache.file_status = file_status
   cache.file_display = file_display
   cache.file_summary = file_summary
+  cache.file_stage = file_stage
   cache.dir_display = dir_display
   cache.dir_summary = dir_summary
+  cache.dir_stage = dir_stage
+  cache.dir_codes = dir_codes
   cache.last_refresh = git_status_now()
   cache.initialized = true
 end
@@ -523,7 +442,7 @@ local function ensure_bootstrap()
   ensure_interval()
 end
 
-refresh_impl = function()
+refresh_git_status_impl = function()
   ensure_bootstrap()
 
   if refreshing then
@@ -533,71 +452,74 @@ refresh_impl = function()
 
   refreshing = true
 
-  local ok, workspace, status_map = pcall(collect_git_status, "HEAD")
-  if not ok or type(status_map) ~= "table" then
-    refreshing = false
-    return
-  end
+  local ok, workspace, status_table, status_groups = pcall(std.git.collect_status, { base = "HEAD" })
+  if ok and type(status_table) == "table" then
+    apply_status(workspace, status_table, status_groups)
 
-  apply_status(workspace, status_map)
-
-  if std.path.is_git_repo() and cache.workspace ~= nil then
-    set_workspace_watchers(cache.workspace)
-  else
-    set_workspace_watchers(nil)
+    if std.path.is_git_repo() and cache.workspace ~= nil then
+      set_workspace_watchers(cache.workspace)
+    else
+      set_workspace_watchers(nil)
+    end
   end
 
   refreshing = false
 
   if pending_refresh then
     pending_refresh = false
-    vim.schedule(refresh_impl)
+    vim.schedule(refresh_git_status_impl)
   end
 end
 
 local function ensure_cache_ready()
   ensure_bootstrap()
   if not cache.initialized then
-    refresh_impl()
+    refresh_git_status_impl()
   end
 end
 
----@param base string|nil
+---@param base                         string|nil
 ---@return string
 ---@return table<string, string>
 function M.status(base)
-  return collect_git_status(base)
+  local ok, workspace, status_table = pcall(std.git.collect_status, { base = base }) ---@type boolean, string, table<string, std.git.StatusEntry>
+  if not ok then
+    return std.path.workspace(), {}
+  end
+  if type(status_table) ~= "table" then
+    return workspace, {}
+  end
+
+  local result = {} ---@type table<string, string>
+  for filepath, entry in pairs(status_table) do
+    if type(filepath) == "string" and type(entry) == "table" then
+      result[filepath] = entry.display or ""
+    end
+  end
+
+  return workspace, result
 end
 
----@param status string
+---@return table<string, std.git.StatusEntry>
+function M.status_table()
+  ensure_cache_ready()
+  return cache.status_table
+end
+
+---@return table<string, table<string, boolean>>
+function M.status_groups()
+  ensure_cache_ready()
+  return cache.status_groups
+end
+
+---@param status                      string
 ---@return string
 function M.extract_parent_status(status)
-  -- Prioritize M then A over all others
-  if status == "AA" or status == "DD" or status:match("U") then
-    return "U"
-  elseif status:match("M") then
-    return "M"
-  elseif status:match("[ACR]") then
-    return "A"
-  elseif status:match("!$") then
-    return "!"
-  elseif status:match("?$") then
-    return "?"
-  else
-    local len = #status
-    while len > 0 do
-      local char = string.sub(status, len, len)
-      if char ~= " " then
-        return char
-      end
-      len = len - 1
-    end
-    return status
-  end
+  return std.git.extract_parent_status(status)
 end
 
----@param filepath string
----@param filetype "file"|"directory"|nil
+---@param filepath                    string
+---@param filetype                    "file"|"directory"|nil
 ---@return string|nil
 ---@return string|nil
 function M.resolve_status(filepath, filetype)
@@ -616,8 +538,9 @@ function M.resolve_status(filepath, filetype)
       return nil, nil
     end
     local summary = cache.dir_summary[normalized_filepath] ---@type string|nil
-    local highlight = summary ~= nil and GIT_STATUS_HIGHLIGHT[summary]
-      or GIT_STATUS_HIGHLIGHT[display:sub(1, 1)] ---@type string|nil
+    local stage_state = cache.dir_stage[normalized_filepath] ---@type string|nil
+    local codes = cache.dir_codes[normalized_filepath] ---@type table<string, boolean>|nil
+    local highlight = resolve_highlight(stage_state, codes, summary, display, nil) ---@type string|nil
     return display, highlight
   end
 
@@ -626,15 +549,18 @@ function M.resolve_status(filepath, filetype)
     return nil, nil
   end
   local summary = cache.file_summary[normalized_filepath] ---@type string|nil
-  local highlight = summary ~= nil and GIT_STATUS_HIGHLIGHT[summary]
-    or GIT_STATUS_HIGHLIGHT[display:sub(1, 1)] ---@type string|nil
+  local stage_state = cache.file_stage[normalized_filepath] ---@type string|nil
+  local entry = cache.status_table[normalized_filepath] ---@type std.git.StatusEntry|nil
+  local codes = entry and entry.codes or nil ---@type table<string, boolean>|nil
+  local categories = entry and entry.categories or nil ---@type table<string, boolean>|nil
+  local highlight = resolve_highlight(stage_state, codes, summary, display, categories) ---@type string|nil
   return display, highlight
 end
 
----@param filepath string
----@param filetype "file"|"directory"|nil
----@param offset integer
----@param highlights std.t.IHighlightInline[]
+---@param filepath                    string
+---@param filetype                    "file"|"directory"|nil
+---@param offset                      integer
+---@param highlights                  std.t.IHighlightInline[]
 ---@return string
 ---@return string|nil
 function M.calc_status_info(filepath, filetype, offset, highlights)
@@ -650,8 +576,28 @@ function M.calc_status_info(filepath, filetype, offset, highlights)
   end
 
   local part = " " .. display ---@type string
-  local colr = offset + #part ---@type integer
-  highlights[#highlights + 1] = { coll = offset, colr = colr, hlname = highlight or DEFAULT_GIT_STATUS_HL }
+  local leading_space_colr = offset + 1 ---@type integer
+  highlights[#highlights + 1] = { coll = offset, colr = leading_space_colr, hlname = DEFAULT_GIT_STATUS_HL }
+
+  local status_offset = leading_space_colr ---@type integer
+  local staged_len = 0 ---@type integer
+  local normalized_filepath = std.path.normalize(filepath) ---@type string
+  local entry = cache.status_table[normalized_filepath] ---@type std.git.StatusEntry|nil
+  if entry ~= nil then
+    staged_len = #(entry.staged_display or "")
+  end
+  for index = 1, #display do
+    local char = display:sub(index, index) ---@type string
+    local hlname = GIT_STATUS_HIGHLIGHT[char] or DEFAULT_GIT_STATUS_HL ---@type string
+    local is_staged_char = index <= staged_len ---@type boolean
+    if is_staged_char and char ~= "D" and char ~= "U" then
+      hlname = "f_ft_git_staged"
+    end
+    local coll = status_offset + index - 1 ---@type integer
+    local colr = coll + 1 ---@type integer
+    highlights[#highlights + 1] = { coll = coll, colr = colr, hlname = hlname }
+  end
+
   return part, highlight
 end
 
@@ -661,14 +607,16 @@ function M.snapshot()
   return cache.file_status
 end
 
----@param force boolean|nil
-function M.refresh(force)
+---@param force                       boolean|nil
+function M.refresh_git_status(force)
   pending_refresh = false
   if force then
     cache.initialized = false
   end
-  refresh_impl()
+  refresh_git_status_impl()
 end
+
+M.refresh = M.refresh_git_status
 
 ---@return integer
 function M.last_refreshed_at()

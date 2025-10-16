@@ -87,6 +87,8 @@ function M.gen_hlgroup_map(context)
     f_ft_git_untracked = { fg = c.fg4, bold = true },
     f_ft_git_ignored = { fg = c.fg4, bold = true },
     f_ft_git_unmerged = { fg = c.brightOrange, bold = true },
+    f_ft_git_staged = { fg = c.brightGreen, bold = true },
+    f_ft_git_unstaged = { fg = c.brightYellow, bold = true },
     f_ft_git_other = { fg = c.fg3, bold = true },
 
     ---git hunk preview
