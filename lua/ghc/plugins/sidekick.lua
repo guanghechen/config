@@ -1,6 +1,117 @@
+---@class ghc.plugins.sidekick.actions
+local actions = {
+  select_cli = function()
+    require("sidekick.cli").select({ filter = { installed = true } })
+  end,
+  detach_cli = function()
+    require("sidekick.cli").close()
+  end,
+  submit_buffer = function()
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+    local content = table.concat(lines, "\n")
+    require("sidekick.cli").send({ msg = content, render = false, focus = true, submit = true })
+  end,
+  submit_selection = function()
+    local text = eve.buf.retrieve_selected_text() ---@type string
+    require("sidekick.cli").send({ msg = text, render = false, focus = true, submit = true })
+  end,
+  send_buffer = function()
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+    local content = table.concat(lines, "\n")
+    require("sidekick.cli").send({ msg = content, render = false })
+  end,
+  send_selection = function()
+    local text = eve.buf.retrieve_selected_text() ---@type string
+    require("sidekick.cli").send({ msg = text, render = false })
+  end,
+  send_this = function()
+    require("sidekick.cli").send({ msg = "{this}" })
+  end,
+  send_file = function()
+    require("sidekick.cli").send({ msg = "{file}" })
+  end,
+  select_prompt = function()
+    require("sidekick.cli").prompt()
+  end,
+}
+
+---@type std.t.IKeymap[]
+local keymaps = {
+  {
+    modes = { "n", "v" },
+    key = "<leader>aa",
+    desc = "sidekick: select cli",
+    callback = actions.select_cli,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader>ad",
+    desc = "sidekick: detach a cli session",
+    callback = actions.detach_cli,
+  },
+  {
+    modes = { "n" },
+    key = "<leader>ax",
+    desc = "sidekick: submit with the buffer content",
+    callback = actions.submit_buffer,
+  },
+  {
+    modes = { "v" },
+    key = "<leader>ax",
+    desc = "sidekick: submit with selection",
+    callback = actions.submit_selection,
+  },
+  {
+    modes = { "n" },
+    key = "<leader>as",
+    desc = "sidekick: send the buffer content",
+    callback = actions.send_buffer,
+  },
+  {
+    modes = { "v" },
+    key = "<leader>as",
+    desc = "sidekick: send the selection",
+    callback = actions.send_selection,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader>at",
+    desc = "sidekick: send this",
+    callback = actions.send_this,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader>af",
+    desc = "sidekick: send file",
+    callback = actions.send_file,
+  },
+  {
+    modes = { "n", "x" },
+    key = "<leader>ap",
+    desc = "sidekick: select prompt",
+    callback = actions.select_prompt,
+  },
+}
+eve.nvim.bindkeys(keymaps, { noremap = true, silent = true })
+
 return {
   name = "sidekick.nvim",
   event = "VeryLazy",
+  keys = {
+    {
+      "<Tab>",
+      function()
+        -- if there is a next edit, jump to it, otherwise apply it if any
+        if not require("sidekick").nes_jump_or_apply() then
+          return "<Tab>" -- fallback to normal tab
+        end
+      end,
+      expr = true,
+      desc = "sidekick: goto/apply next edit suggestion",
+    },
+  },
   opts = {
     cli = {
       mux = {
@@ -9,23 +120,12 @@ return {
         create = "terminal",
       },
       prompts = {
-        changes = "Can you review my changes?",
-        diagnostics = "Can you help me fix the diagnostics in {file}?\n{diagnostics}",
-        diagnostics_all = "Can you help me fix these diagnostics?\n{diagnostics_all}",
-        document = "Add documentation to {function|line}",
-        explain = "Explain {this}",
-        fix = "Can you fix {this}?",
-        optimize = "How can {this} be optimized?",
-        review = "Can you review {file} for any issues or improvements?",
-        tests = "Can you write tests for {this}?",
-        buffers = "{buffers}",
-        file = "{file}",
-        line = "{line}",
-        position = "{position}",
-        quickfix = "{quickfix}",
-        selection = "{selection}",
-        ["function"] = "{function}",
-        class = "{class}",
+        code = function(ctx)
+          local bufnr = ctx.buf ---@type integer
+          local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+          local content = table.concat(lines, "\n")
+          return content
+        end,
       },
       win = {
         wo = {
@@ -85,75 +185,6 @@ return {
         terminal_attached = " ",
         terminal_started = " ",
       },
-    },
-  },
-  keys = {
-    {
-      "<Tab>",
-      function()
-        -- if there is a next edit, jump to it, otherwise apply it if any
-        if not require("sidekick").nes_jump_or_apply() then
-          return "<Tab>" -- fallback to normal tab
-        end
-      end,
-      expr = true,
-      desc = "sidekick: goto/apply next edit suggestion",
-    },
-    {
-      "<leader>ac",
-      function()
-        require("sidekick.cli").toggle({ name = "claude", focus = true })
-      end,
-      desc = "sidekick: toggle claude",
-      mode = { "n", "v" },
-    },
-    {
-      "<leader>as",
-      function()
-        require("sidekick.cli").select({ filter = { installed = true } })
-      end,
-      desc = "sidekick: select cli",
-      mode = { "n", "v" },
-    },
-    {
-      "<leader>ad",
-      function()
-        require("sidekick.cli").close()
-      end,
-      desc = "sidekick: detach a cli session",
-      mode = { "n", "v" },
-    },
-    {
-      "<leader>at",
-      function()
-        require("sidekick.cli").send({ msg = "{this}" })
-      end,
-      desc = "sidekick: send this",
-      mode = { "n", "v" },
-    },
-    {
-      "<leader>af",
-      function()
-        require("sidekick.cli").send({ msg = "{file}" })
-      end,
-      desc = "sidekick: send file",
-      mode = { "n", "v" },
-    },
-    {
-      "<leader>av",
-      function()
-        require("sidekick.cli").send({ msg = "{selection}" })
-      end,
-      desc = "sidekick: send visual selection",
-      mode = { "x" },
-    },
-    {
-      "<leader>ap",
-      function()
-        require("sidekick.cli").prompt()
-      end,
-      desc = "sidekick: select prompt",
-      mode = { "n", "x" },
     },
   },
 }
