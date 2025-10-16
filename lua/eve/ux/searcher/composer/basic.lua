@@ -154,6 +154,7 @@ local __highlights__ = {
 ---@field protected _recommended_width  number
 ---
 ---@field protected _flag_replace       std.collection.IObservable|nil
+---@field protected _flag_replace_unsub std.collection.IUnsubscribable|nil
 ---
 ---@field protected _finder_input_history ?std.collection.IHistory
 ---
@@ -313,6 +314,7 @@ function M.new(props)
 
   self._result_number = result_number ---@type boolean
   self._flag_replace = flag_replace
+  self._flag_replace_unsub = nil
 
   if preview ~= nil then
     std.fn.observe({ result.lnum_current, result.lnum_total }, function()
@@ -336,13 +338,15 @@ function M.new(props)
   end
 
   -- Observer for flag_replace to toggle replacer window visibility
+  local flag_replace_unsub = nil ---@type std.collection.IUnsubscribable|nil
   if flag_replace ~= nil then
-    std.fn.observe({ flag_replace }, function()
+    flag_replace_unsub = std.fn.observe({ flag_replace }, function()
       if self:isvisible() then
         self:__toggle_replacer_visibility__(flag_replace:snapshot())
       end
     end, true)
   end
+  self._flag_replace_unsub = flag_replace_unsub
 
   return self
 end
@@ -360,12 +364,14 @@ function M:dispose()
   local result = self.result ---@type eve.ux.searcher.Result
   local preview = self.preview ---@type eve.ux.searcher.Preview|nil
   local on_disposed = self._on_disposed ---@type eve.ux.searcher.composer.basic.IOnDisposed
+  local flag_replace_unsub = self._flag_replace_unsub ---@type std.collection.IUnsubscribable|nil
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
     local ok2, error2 = pcall(result.dispose, result)
     local ok3, error3 = true, nil
     local ok4, error4 = true, nil
     local ok5, error5 = pcall(on_disposed)
+    local ok6, error6 = true, nil
 
     if replacer ~= nil then
       ok3, error3 = pcall(replacer.dispose, replacer)
@@ -375,7 +381,11 @@ function M:dispose()
       ok4, error4 = pcall(preview.dispose, preview)
     end
 
-    if not (ok1 and ok2 and ok3 and ok4 and ok5) then
+    if flag_replace_unsub ~= nil then
+      ok6, error6 = pcall(flag_replace_unsub.unsubscribe, flag_replace_unsub)
+    end
+
+    if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
       std.reporter.error({
         from = fullname,
         subject = "dispose",
@@ -386,6 +396,7 @@ function M:dispose()
           error3 = not ok3 and error3 or nil,
           error4 = not ok4 and error4 or nil,
           error5 = not ok5 and error5 or nil,
+          error6 = not ok6 and error6 or nil,
         },
       })
     end
@@ -402,6 +413,7 @@ function M:dispose()
   self._recommended_width = nil
 
   self._flag_replace = nil
+  self._flag_replace_unsub = nil
   self._finder_input_history = nil
 
   self._on_cancel = nil

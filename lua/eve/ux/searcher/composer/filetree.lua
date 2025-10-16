@@ -128,6 +128,7 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field protected _on_attached        eve.ux.searcher.composer.filetree.IOnAttached
 ---@field protected _on_confirm         eve.ux.searcher.composer.filetree.IOnConfirm|nil
 ---@field protected _on_disposed        eve.ux.searcher.composer.filetree.IOnDisposed
+---@field protected _observer_unsubs    std.collection.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
@@ -1420,8 +1421,11 @@ function M.new(props)
   self._on_attached = on_attached
   self._on_confirm = on_confirm
   self._on_disposed = on_disposed
+  self._observer_unsubs = nil
 
-  std.fn.observe({
+  local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
+
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({
     o_search_pattern,
     o_flag_foldempty,
     o_flag_regex,
@@ -1432,19 +1436,20 @@ function M.new(props)
   }, function()
     composer:mark_result_flags_dirty()
   end, true)
-  std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  std.fn.observe({ o_replace_pattern, o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_replace_pattern, o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive }, function()
     scheduler_search:schedule()
   end)
-  std.fn.observe({ composer.result.lnum_current }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     if uuid ~= nil then
       self._uuid_current = uuid
     end
   end)
+  self._observer_unsubs = observer_unsubs
 
   return self
 end
@@ -1463,6 +1468,20 @@ function M:dispose()
   local retriever = self._retriever ---@type eve.ux.retriever.TreeRetriever
   local scheduler_search = self._scheduler_search ---@type std.collection.Scheduler
   local treeview = self._treeview ---@type eve.ux.searcher.FiletreeView
+  local observer_unsubs = self._observer_unsubs ---@type std.collection.IUnsubscribable[]|nil
+  self._observer_unsubs = nil
+
+  local ok_unsubs = true ---@type boolean
+  local error_unsubs = {} ---@type table[]
+  if observer_unsubs ~= nil then
+    for index, unsub in ipairs(observer_unsubs) do
+      local ok, err = pcall(unsub.unsubscribe, unsub)
+      if not ok then
+        ok_unsubs = false
+        error_unsubs[#error_unsubs + 1] = { index = index, error = err }
+      end
+    end
+  end
 
   vim.schedule(function()
     local ok1, error1 = pcall(scheduler_search.dispose, scheduler_search)
@@ -1484,6 +1503,7 @@ function M:dispose()
           error4 = not ok4 and error4 or nil,
           error5 = not ok5 and error5 or nil,
           error6 = not ok6 and error6 or nil,
+          error_observers = not ok_unsubs and error_unsubs or nil,
         },
       })
     end

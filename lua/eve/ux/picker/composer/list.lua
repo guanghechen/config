@@ -106,6 +106,7 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---
 ---@field protected _on_confirm         eve.ux.picker.composer.list.IOnConfirm|nil
 ---@field protected _on_disposed        eve.ux.picker.composer.list.IOnDisposed
+---@field protected _observer_unsubs    std.collection.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
@@ -397,20 +398,24 @@ function M.new(props)
 
   self._on_confirm = on_confirm
   self._on_disposed = on_disposed
+  self._observer_unsubs = nil
 
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
+  local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
+
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     composer:mark_result_flags_dirty()
   end, true)
-  std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     scheduler_match:schedule()
   end)
-  std.fn.observe({ composer.result.lnum_current }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     if uuid ~= nil then
       self._uuid_current = uuid
     end
   end)
+  self._observer_unsubs = observer_unsubs
 
   return self
 end
@@ -427,6 +432,20 @@ function M:dispose()
   local composer = self._composer
   local retriever = self._retriever ---@type eve.ux.retriever.ListRetriever
   local scheduler_match = self._scheduler_match
+  local observer_unsubs = self._observer_unsubs ---@type std.collection.IUnsubscribable[]|nil
+  self._observer_unsubs = nil
+
+  local ok_unsubs = true ---@type boolean
+  local error_unsubs = {} ---@type table[]
+  if observer_unsubs ~= nil then
+    for index, unsub in ipairs(observer_unsubs) do
+      local ok, err = pcall(unsub.unsubscribe, unsub)
+      if not ok then
+        ok_unsubs = false
+        error_unsubs[#error_unsubs + 1] = { index = index, error = err }
+      end
+    end
+  end
 
   vim.schedule(function()
     local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
@@ -444,6 +463,7 @@ function M:dispose()
           error2 = not ok2 and error2 or nil,
           error3 = not ok3 and error3 or nil,
           error4 = not ok4 and error4 or nil,
+          error_observers = not ok_unsubs and error_unsubs or nil,
         },
       })
     end
