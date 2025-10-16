@@ -7,7 +7,7 @@ local __mods = {
   clipboard = "eve.builtin.clipboard",
   command = "eve.builtin.command",
   filetype = "eve.builtin.filetype",
-  git = "eve.builtin.git",
+  git = "eve.state.git",
   icon = "eve.builtin.icon",
   im = "eve.builtin.im",
   lsp = "eve.builtin.lsp",
@@ -43,7 +43,7 @@ local __mods = {
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public command                eve.builtin.command
 ---@field public filetype               eve.builtin.filetype
----@field public git                    eve.builtin.git
+---@field public git                    eve.state.git
 ---@field public icon                   eve.builtin.icon
 ---@field public im                     eve.builtin.im
 ---@field public lsp                    eve.builtin.lsp
