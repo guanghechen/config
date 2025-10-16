@@ -445,13 +445,13 @@ function M.calc_status_info(filepath, filetype, offset, highlights)
 
   local display, highlight = git_status_resolve(filepath, filetype)
   if display == nil or #display < 1 then
-    return ""
+    return "", nil
   end
 
   local part = " " .. display ---@type string
   local colr = offset + #part ---@type integer
   highlights[#highlights + 1] = { coll = offset, colr = colr, hlname = highlight or DEFAULT_GIT_STATUS_HL }
-  return part
+  return part, highlight
 end
 
 ---@param force boolean|nil
