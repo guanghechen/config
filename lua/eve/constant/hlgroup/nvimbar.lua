@@ -32,6 +32,9 @@ function M.gen_hlgroup_map(context)
     ai_copilot_status_Busy = { fg = c.brightYellow, bg = "bg_bar" },
     ai_copilot_status_Disconnected = { fg = c.red, bg = "bg_bar" },
     ai_copilot_text = { fg = c.fg2, bg = "bg_bar" },
+    ai_sidekick_icon_attached = { fg = c.brightBlue, bg = "bg_bar" },
+    ai_sidekick_icon_detached = { fg = c.bg4, bg = "bg_bar" },
+    ai_sidekick_text = { fg = c.fg2, bg = "bg_bar" },
 
     ---! buf
     buf = { fg = c.bg4, bg = "bg_bar" },

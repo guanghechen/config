@@ -98,6 +98,12 @@ M.symbols = {
   sep_right = "",
 }
 
+---@class eve.builtin.icon.status
+M.status = {
+  attached = "󰖩",
+  detached = "󰖪",
+}
+
 ----------------------------------------------------------------------------------------------------
 
 ---@class eve.builtin.icon.app

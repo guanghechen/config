@@ -1,5 +1,6 @@
 ---@class eve.ux.nvimbar.component.__mods
 local __mods = {
+  ai = "eve.ux.nvimbar.component.ai",
   buf = "eve.ux.nvimbar.component.buf",
   copilot = "eve.ux.nvimbar.component.copilot",
   cwd = "eve.ux.nvimbar.component.cwd",
@@ -20,6 +21,7 @@ local __mods = {
 ---@class eve.ux.nvimbar.component
 ---@field public __mods                 eve.ux.nvimbar.component.__mods
 ---
+---@field public ai                     eve.ux.nvimbar.component.ai
 ---@field public buf                    eve.ux.nvimbar.component.buf
 ---@field public copilot                eve.ux.nvimbar.component.copilot
 ---@field public cwd                    eve.ux.nvimbar.component.cwd
