@@ -11,6 +11,7 @@ local __mods = {
   icon = "eve.builtin.icon",
   im = "eve.builtin.im",
   lsp = "eve.builtin.lsp",
+  lsp_action = "eve.builtin.lsp_action",
   notifier = "eve.builtin.notifier",
   nvim = "eve.builtin.nvim",
   qflist = "eve.builtin.qflist",
@@ -47,6 +48,7 @@ local __mods = {
 ---@field public icon                   eve.builtin.icon
 ---@field public im                     eve.builtin.im
 ---@field public lsp                    eve.builtin.lsp
+---@field public lsp_action             eve.builtin.lsp_action
 ---@field public notifier               eve.builtin.notifier
 ---@field public nvim                   eve.builtin.nvim
 ---@field public qflist                 eve.builtin.qflist
