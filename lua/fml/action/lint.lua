@@ -1,26 +1,23 @@
 local __module_name__ = "fml.action.lint" ---@type string
 
----@return string|nil
-local function get_strict_word_under_cursor()
+---@return string[]
+local function collect_candidate_words()
+  local words = {} ---@type string[]
   local _, col = unpack(vim.api.nvim_win_get_cursor(0))
   local line = vim.api.nvim_get_current_line()
+  local cursor_index = col + 1 ---@type integer
 
-  local start_col = col
-  local end_col = col
-
-  while start_col > 0 and string.sub(line, start_col, start_col):match("[%w]") do
-    start_col = start_col - 1
-  end
-  if not string.sub(line, start_col, start_col):match("[%w]") then
-    start_col = start_col + 1
-  end
-
-  while end_col <= #line and string.sub(line, end_col + 1, end_col + 1):match("[%w]") do
-    end_col = end_col + 1
+  for start_index, segment in line:gmatch("()([%a]+)") do
+    local end_index = start_index + #segment - 1 ---@type integer
+    if cursor_index >= start_index and cursor_index <= end_index then
+      if segment:match("^[A-Za-z][a-z]*$") then
+        words[1] = segment:lower()
+      end
+      break
+    end
   end
 
-  local word = string.sub(line, start_col, end_col)
-  return word:match("^[a-zA-Z0-9]+$") and word:lower() or nil
+  return words
 end
 
 ---@class fml.action.lint
@@ -28,8 +25,8 @@ local M = {}
 
 ---@return nil
 function M.spellcheck_register()
-  local word = get_strict_word_under_cursor() ---@type string|nil
-  if word == nil or #word < 1 then
+  local words = collect_candidate_words()
+  if vim.tbl_isempty(words) then
     return
   end
 
@@ -46,13 +43,13 @@ function M.spellcheck_register()
     local data = {
       version = "0.2",
       language = "en",
-      words = { word },
+      words = vim.list_extend({}, words),
     }
     std.fs.write_json(filepath, data, true)
     std.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
-      message = "Created cspell.json file.",
+      message = string.format("Created cspell.json file with word(s): %s.", table.concat(words, ", ")),
     })
     return
   else
@@ -67,17 +64,32 @@ function M.spellcheck_register()
       return
     end
 
-    if vim.list_contains(data.words, word) then
+    local added = {} ---@type string[]
+    local existing = {} ---@type table<string, boolean>
+    for _, item in ipairs(data.words) do
+      if type(item) == "string" then
+        existing[item] = true
+      end
+    end
+
+    for _, candidate in ipairs(words) do
+      if not existing[candidate] then
+        table.insert(data.words, candidate)
+        existing[candidate] = true
+        table.insert(added, candidate)
+      end
+    end
+
+    if vim.tbl_isempty(added) then
       return
     end
 
-    table.insert(data.words, word)
     table.sort(data.words)
     std.fs.write_json(filepath, data, true)
     std.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
-      message = string.format("Added word (%s) to cspell.json file.", word),
+      message = string.format("Added word(s) (%s) to cspell.json file.", table.concat(added, ", ")),
     })
     return
   end
