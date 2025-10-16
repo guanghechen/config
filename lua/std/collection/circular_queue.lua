@@ -221,8 +221,15 @@ end
 ---@param filter                        fun(element: std.t.T, index: integer): boolean
 ---@return std.collection.CircularQueue
 function M:fork(filter)
-  self:rearrange(filter)
-  return M.from(self)
+  local clone = M.new({ capacity = self._capacity }) ---@type std.collection.CircularQueue
+
+  for element, index in self:iterator() do
+    if filter(element, index) then
+      clone:enqueue(element)
+    end
+  end
+
+  return clone
 end
 
 ---@return std.t.T|nil

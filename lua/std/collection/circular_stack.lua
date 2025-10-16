@@ -151,8 +151,15 @@ end
 ---@param filter                        fun(element: std.t.T, index: integer): boolean
 ---@return std.collection.CircularStack
 function M:fork(filter)
-  self:rearrange(filter)
-  return M.from(self)
+  local clone = M.new({ capacity = self._capacity }) ---@type std.collection.CircularStack
+
+  for element, index in self:iterator() do
+    if filter(element, index) then
+      clone:push(element)
+    end
+  end
+
+  return clone
 end
 
 ---@return fun(): std.t.T|nil, integer|nil

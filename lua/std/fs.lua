@@ -142,11 +142,12 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
     local target_path = dirpath_target .. std.env.PATH_SEP .. name
 
     if type == "directory" then
-      success = success and M.copy_directory(source_path, target_path, force)
+      success = M.copy_directory(source_path, target_path, force) and success
     else
-      pcall(function()
-        M.copy_file(source_path, target_path, force)
-      end)
+      local copied = M.copy_file(source_path, target_path, force)
+      if not copied then
+        success = false
+      end
     end
   end
 
@@ -188,7 +189,7 @@ end
 function M.read_file_as_base64(params)
   local filepath = params.filepath ---@type string
   local silent = not not params.silent ---@type boolean
-  local file = io.open(filepath, "r")
+  local file = io.open(filepath, "rb")
   if not file then
     if not silent then
       std.reporter.error({
@@ -313,6 +314,9 @@ function M.watch_file(opts)
   local unwatch = function()
     if handle ~= nil then
       vim.uv.fs_event_stop(handle)
+      if not handle:is_closing() then
+        handle:close()
+      end
       handle = nil
     end
   end

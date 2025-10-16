@@ -15,10 +15,26 @@ end
 ---@return T
 function M.debounce(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
-  return function()
+  local wrapped = vim.schedule_wrap(fn) ---@type T
+  local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
+  local args ---@type table|nil
+
+  local function call(...)
+    args = { ... }
     timer:stop()
-    timer:start(delay, 0, vim.schedule_wrap(fn))
+    timer:start(delay, 0, function()
+      timer:stop()
+      local call_args = args
+      args = nil
+      if call_args ~= nil then
+        wrapped(unpack(call_args))
+      else
+        wrapped()
+      end
+    end)
   end
+
+  return call
 end
 
 ---@generic T
@@ -28,15 +44,25 @@ end
 function M.throttle(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local pending = false ---@type boolean
-  return function()
+  local wrapped = vim.schedule_wrap(fn) ---@type T
+  local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
+  local args ---@type table|nil
+  return function(...)
     if pending then
       return
     end
 
     pending = true
+    args = { ... }
     timer:start(delay, 0, function()
       pending = false
-      vim.schedule(fn)
+      local call_args = args
+      args = nil
+      if call_args ~= nil then
+        wrapped(unpack(call_args))
+      else
+        wrapped()
+      end
     end)
   end
 end

@@ -145,13 +145,17 @@ function M:xthen(on_fulfilled)
   if self._settled ~= nil then
     return M.new(function(resolve, reject)
       if self._settled == "fulfilled" then
-        resolve(on_fulfilled(self._result))
+        local ok, result = pcall(on_fulfilled, self._result)
+        if ok then
+          resolve(result)
+        else
+          reject(result)
+        end
       elseif self._settled == "rejected" then
         reject(self._reason)
       end
     end)
   end
-
   local _resolve ---@type std.collection.promise.IResolve
   local _reject ---@type std.collection.promise.IReject
   local promise = M.new(function(resolve, reject)
@@ -164,7 +168,12 @@ function M:xthen(on_fulfilled)
     type = "fulfilled",
     callback = function()
       if self._settled == "fulfilled" then
-        _resolve(on_fulfilled(self._result))
+        local ok, result = pcall(on_fulfilled, self._result)
+        if ok then
+          _resolve(result)
+        else
+          _reject(result)
+        end
       elseif self._settled == "rejected" then
         _reject(self._reason)
       end
@@ -178,18 +187,25 @@ end
 ---@return std.collection.Promise
 function M:xcatch(on_rejected)
   if self._settled ~= nil then
-    return M.new(function(resolve)
+    return M.new(function(resolve, reject)
       if self._settled == "fulfilled" then
         resolve(self._result)
       elseif self._settled == "rejected" then
-        resolve(on_rejected(self._reason))
+        local ok, result = pcall(on_rejected, self._reason)
+        if ok then
+          resolve(result)
+        else
+          reject(result)
+        end
       end
     end)
   end
 
   local _resolve ---@type std.collection.promise.IResolve
-  local promise = M.new(function(resolve)
+  local _reject ---@type std.collection.promise.IReject
+  local promise = M.new(function(resolve, reject)
     _resolve = resolve
+    _reject = reject
   end)
 
   ---@type std.collection.promise.ICallback
@@ -199,7 +215,12 @@ function M:xcatch(on_rejected)
       if self._settled == "fulfilled" then
         _resolve(self._result)
       elseif self._settled == "rejected" then
-        _resolve(on_rejected(self._reason))
+        local ok, result = pcall(on_rejected, self._reason)
+        if ok then
+          _resolve(result)
+        else
+          _reject(result)
+        end
       end
     end,
   }
@@ -211,20 +232,32 @@ end
 ---@return std.collection.Promise
 function M:xfinally(on_finally)
   if self._settled ~= nil then
-    return M.new(function(resolve)
-      resolve(on_finally(self._result, self._reason))
+    return M.new(function(resolve, reject)
+      local ok, result = pcall(on_finally, self._settled, self._result, self._reason)
+      if ok then
+        resolve(result)
+      else
+        reject(result)
+      end
     end)
   end
 
   local _resolve ---@type std.collection.promise.IResolve
-  local promise = M.new(function(resolve)
+  local _reject ---@type std.collection.promise.IReject
+  local promise = M.new(function(resolve, reject)
     _resolve = resolve
+    _reject = reject
   end)
   ---@type std.collection.promise.ICallback
   local callback = {
     type = "finally",
     callback = function()
-      _resolve(on_finally(self._settled, self._result, self._reason))
+      local ok, result = pcall(on_finally, self._settled, self._result, self._reason)
+      if ok then
+        _resolve(result)
+      else
+        _reject(result)
+      end
     end,
   }
   self._callbacks[#self._callbacks + 1] = callback

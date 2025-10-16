@@ -425,9 +425,19 @@ function M:calc_include_uuid_set(uuids)
   local N = #uuids ---@type integer
   for index = 1, N, 1 do
     local uuid = uuids[index] ---@type string
-    while not uuidset[uuid] do
+    while uuid ~= nil and not uuidset[uuid] do
+      local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
+      if node == nil then
+        std.reporter.warn({
+          from = self.fullname,
+          subject = "calc_include_uuid_set",
+          message = string.format("Unknown node uuid: %s", uuid),
+        })
+        break
+      end
+
       uuidset[uuid] = true
-      uuid = nodemap[uuid].parent ---@type string
+      uuid = node.parent ---@type string
     end
   end
   return uuidset
