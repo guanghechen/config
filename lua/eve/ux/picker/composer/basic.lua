@@ -519,7 +519,8 @@ function M:__create_wins__()
     preview_winnr = nil
   end
 
-  local should_show_preview = self:__should_show_preview__() ---@type boolean
+  local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+  local should_show_preview = preview_layout ~= "hidden" ---@type boolean
   if preview_winnr ~= nil and not should_show_preview then
     eve.win.close(preview_winnr)
     preview_winnr = nil
@@ -533,14 +534,14 @@ function M:__create_wins__()
 
   ---@type eve.ux.picker.finder.IWinOpts
   local finder_winopts = {
-    border = should_show_preview and __borders__.finder_with_preview or __borders__.finder,
+    border = should_show_preview and preview_layout == "right" and __borders__.finder_with_preview or __borders__.finder,
     winhighlight = __highlights__.finder,
   }
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
 
   ---@type eve.ux.picker.result.IWinOpts
   local result_winopts = {
-    border = should_show_preview and __borders__.result_with_preview or __borders__.result,
+    border = should_show_preview and preview_layout == "right" and __borders__.result_with_preview or __borders__.result,
     number = result_number,
     winhighlight = __highlights__.result,
   }
@@ -607,12 +608,15 @@ end
 ---@return std.t.IWinDimension
 ---@return std.t.IWinDimension|nil
 function M:__layout__()
-  local should_show_preview = self:__should_show_preview__() ---@type boolean
+  local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+  local should_show_preview = preview_layout ~= "hidden" ---@type boolean
+  local preview_on_right = preview_layout == "right" ---@type boolean
+  local preview_on_bottom = preview_layout == "bottom" ---@type boolean
   local max_height = math.max(math.floor(vim.o.lines * 0.9), vim.o.lines - 10) ---@type integer
   local max_width = math.max(math.floor(vim.o.columns * 0.9), vim.o.columns - 20) ---@type integer
 
   local min_height = math.min(math.floor(vim.o.lines * 0.6), 56) ---@type integer
-  local min_width = should_show_preview and math.min(math.floor(vim.o.columns * 0.6), 160)
+  local min_width = preview_on_right and math.min(math.floor(vim.o.columns * 0.6), 160)
     or math.min(math.floor(vim.o.columns * 0.4), 80)
 
   local recommended_height = self._recommended_height <= 1 and math.floor(vim.o.lines * self._recommended_height)
@@ -626,9 +630,9 @@ function M:__layout__()
   local row = math.floor((vim.o.lines - height - 3) / 2) ---@type integer
   local col = math.floor((vim.o.columns - width - 2) / 2) ---@type integer
 
-  local finder_width = should_show_preview and math.floor(width / 2) or width ---@type integer
+  local finder_width = preview_on_right and math.floor(width / 2) or width ---@type integer
   local finder_height = 1 ---@type integer
-  local preview_width = width - finder_width ---@type integer
+  local preview_width = preview_on_right and (width - finder_width) or width ---@type integer
 
   ---@type std.t.IWinDimension
   local finder_dimension = {
@@ -648,13 +652,45 @@ function M:__layout__()
 
   local preview_dimension = nil ---@type std.t.IWinDimension|nil
   if should_show_preview then
-    ---@type std.t.IWinDimension
-    preview_dimension = {
-      row = row,
-      col = col + finder_width + 1,
-      height = height,
-      width = preview_width,
-    }
+    if preview_on_bottom then
+      local gap_finder_result = 1 ---@type integer
+      local gap_result_preview = 0 ---@type integer
+
+      local preview_height_target = math.max(1, math.floor(height * 0.5)) ---@type integer
+      local max_preview_height = math.max(1, height - (finder_height + gap_finder_result + 1 + gap_result_preview)) ---@type integer
+      local preview_height = math.max(1, math.min(preview_height_target, max_preview_height)) ---@type integer
+
+      local top_block_height = height - preview_height - gap_result_preview ---@type integer
+      local minimum_top_block = finder_height + gap_finder_result + 1 ---@type integer
+      if top_block_height < minimum_top_block then
+        top_block_height = minimum_top_block
+        preview_height = math.max(1, height - top_block_height - gap_result_preview)
+        top_block_height = math.max(minimum_top_block, height - preview_height - gap_result_preview)
+      end
+
+      local result_height = math.max(1, top_block_height - finder_height - gap_finder_result) ---@type integer
+
+      finder_dimension.height = finder_height
+
+      result_dimension.row = row + finder_height + gap_finder_result
+      result_dimension.height = result_height
+      result_dimension.width = finder_width
+
+      preview_dimension = {
+        row = row + top_block_height + gap_result_preview,
+        col = col,
+        height = preview_height,
+        width = preview_width,
+      }
+    else
+      ---@type std.t.IWinDimension
+      preview_dimension = {
+        row = row,
+        col = col + finder_width + 1,
+        height = height,
+        width = preview_width,
+      }
+    end
   end
   return finder_dimension, result_dimension, preview_dimension
 end
@@ -882,17 +918,21 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#finder: focus left",
       callback = function()
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("h")
-          return
-        end
-
-        if self.preview ~= nil then
+        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+        if preview_layout == "right" and self.preview ~= nil then
           local winnr = self.preview:get_winnr() ---@type integer|nil
           if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
             self:__focus_pane__("preview")
             return
           end
+        elseif preview_layout == "bottom" then
+          self:__focus_pane__("result")
+          return
+        end
+
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          std.tmux.change_pane("h")
+          return
         end
       end,
     },
@@ -902,12 +942,16 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#finder: focus right",
       callback = function()
-        if self.preview ~= nil then
+        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+        if preview_layout == "right" and self.preview ~= nil then
           local winnr = self.preview:get_winnr() ---@type integer|nil
           if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
             self:__focus_pane__("preview")
             return
           end
+        elseif preview_layout == "bottom" then
+          self:__focus_pane__("result")
+          return
         end
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("l")
@@ -1032,6 +1076,15 @@ function M:__resolve_builtin_keymaps_result__()
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#result: focus down",
       callback = function()
+        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+        if preview_layout == "bottom" and self.preview ~= nil then
+          local winnr = self.preview:get_winnr() ---@type integer|nil
+          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+            self:__focus_pane__("preview")
+            return
+          end
+        end
+
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("j")
           return
@@ -1046,17 +1099,18 @@ function M:__resolve_builtin_keymaps_result__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#result: focus left",
       callback = function()
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("h")
-          return
-        end
-
-        if self.preview ~= nil then
+        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+        if preview_layout == "right" and self.preview ~= nil then
           local winnr = self.preview:get_winnr() ---@type integer|nil
           if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
             self:__focus_pane__("preview")
             return
           end
+        end
+
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          std.tmux.change_pane("h")
+          return
         end
       end,
     },
@@ -1066,7 +1120,8 @@ function M:__resolve_builtin_keymaps_result__()
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#result: focus right",
       callback = function()
-        if self.preview ~= nil then
+        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+        if preview_layout == "right" and self.preview ~= nil then
           local winnr = self.preview:get_winnr() ---@type integer|nil
           if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
             self:__focus_pane__("preview")
@@ -1217,6 +1272,12 @@ function M:__resolve_builtin_keymaps_preview__()
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#preview: focus up",
       callback = function()
+        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+        if preview_layout == "bottom" then
+          self:__focus_pane__("result")
+          return
+        end
+
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("k")
           return
@@ -1278,7 +1339,21 @@ end
 
 ---@return boolean
 function M:__should_show_preview__()
-  return self.preview ~= nil and vim.o.columns > 140
+  return self:__preview_layout__() ~= "hidden"
+end
+
+---@protected
+---@return "hidden"|"right"|"bottom"
+function M:__preview_layout__()
+  if self.preview == nil then
+    return "hidden"
+  end
+
+  if vim.o.columns > 140 then
+    return "right"
+  end
+
+  return "bottom"
 end
 
 return M
