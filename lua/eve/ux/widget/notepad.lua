@@ -420,7 +420,7 @@ end
 ---@return eve.builtin.box.IDimension
 function Notepad:measure_rect()
   local columns = vim.o.columns ---@type integer
-  local desired_width = math.min(120, math.floor(columns * 0.9 + 0.5)) ---@type integer
+  local desired_width = math.min(132, math.floor(columns * 0.9 + 0.5)) ---@type integer
   local desired_height = math.floor(vim.o.lines * 0.8 + 0.5) ---@type integer
   local min_width = math.min(self.min_width, columns) ---@type integer
   local min_height = math.min(self.min_height, vim.o.lines) ---@type integer
