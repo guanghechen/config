@@ -408,6 +408,11 @@ M.definitions.lsp = {
   select_python_venv = def("Flspselectpythonvenv", "lsp: select python venv"),
 }
 
+---@class eve.builtin.command.definitions.notepad
+M.definitions.notepad = {
+  toggle = def("Fnotepadtoggle", "notepad: toggle"),
+}
+
 ---@class eve.builtin.command.definitions.profile
 M.definitions.profile = {
   start = def("Fprofilestart", "profile: start"),

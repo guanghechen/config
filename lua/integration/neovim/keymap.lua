@@ -10,6 +10,7 @@ ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 --- quick access widgets (diagnostic, explorer, terminal) -----
 ms({ "i", "n", "t", "v" }, { "<C-`>" }, K.ux.resume_last_widget)
 ms({ "n", "v" }, "<leader>`", K.ux.resume_last_widget)
+ms({ "n", "v" }, "<leader>;", K.notepad.toggle)
 ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
 ms({ "n", "v" }, "<leader>2", K.search.in_cwd)
 ms({ "n", "v" }, "<leader>3", K.find.git_not_committed)

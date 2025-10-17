@@ -506,6 +506,14 @@ command
     end,
   })
 
+--[notepad] ---------------------------------------------------------------------------------------
+command.implement({
+  uuid = K.notepad.toggle.uuid,
+  action = function()
+    require("fml.action.notepad").toggle()
+  end,
+})
+
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = K.refresh.all.uuid,
