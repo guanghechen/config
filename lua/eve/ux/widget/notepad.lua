@@ -327,7 +327,7 @@ function Notepad:ensure_buf()
     },
     {
       modes = { "i", "n", "v" },
-      key = "<C-/>",
+      key = "<C-n>",
       desc = "notepad: create item",
       callback = function()
         vim.cmd(eve.command.definitions.notepad.create.uuid)

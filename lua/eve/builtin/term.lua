@@ -330,7 +330,7 @@ function M.create(params)
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
-    key = "<C-/>",
+    key = "<C-n>",
     desc = eve.command.definitions.term.create.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.create.uuid)
