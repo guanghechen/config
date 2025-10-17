@@ -10,9 +10,15 @@ command
     end,
   })
   .implement({
-    uuid = K.ai.edit.uuid,
+    uuid = K.ai.code.uuid,
     action = function()
       require("fml.action.ai").edit()
+    end,
+  })
+  .implement({
+    uuid = K.ai.refine.uuid,
+    action = function()
+      require("fml.action.ai").refine()
     end,
   })
 

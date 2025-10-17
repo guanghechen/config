@@ -197,7 +197,8 @@ M.definitions = {}
 ---@class eve.builtin.command.definitions.ai
 M.definitions.ai = {
   ask = def("Faiask", "ai: ask"),
-  edit = def("Faiedit", "ai: edit"),
+  code = def("Faicode", "ai: code"),
+  refine = def("FaiRefine", "ai: refine"),
 }
 
 ---@class eve.builtin.command.definitions.buf

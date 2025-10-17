@@ -1,6 +1,93 @@
 ---@class eve.builtin.ai
 local M = {}
 
+local function load_sidekick_context()
+  local ok, mod = pcall(require, "sidekick.cli.context")
+  if not ok then
+    return nil, mod
+  end
+  return mod
+end
+
+local function load_sidekick_location()
+  local ok, mod = pcall(require, "sidekick.cli.context.location")
+  if not ok then
+    return nil, mod
+  end
+  return mod
+end
+
+---@param config                        eve.builtin.ai.IEditInlineConfig
+local function build_context(config)
+  local bufnr = config.bufnr or vim.api.nvim_get_current_buf()
+  local win = vim.fn.bufwinid(bufnr)
+  if win == -1 or not vim.api.nvim_win_is_valid(win) then
+    win = vim.api.nvim_get_current_win()
+  end
+
+  local cursor = { 1, 0 }
+  if win ~= -1 and vim.api.nvim_win_is_valid(win) then
+    cursor = vim.api.nvim_win_get_cursor(win)
+  end
+
+  local range = config.range
+  local range_payload
+  if range then
+    range_payload = {
+      from = { range.lnum_start, math.max(range.col_start - 1, 0) },
+      to = { range.lnum_end, math.max(range.col_end - 1, 0) },
+      kind = "char",
+    }
+  end
+
+  local cwd = vim.fs.normalize(vim.fn.getcwd((win ~= -1 and win) or nil))
+
+  return {
+    win = win,
+    buf = bufnr,
+    cwd = cwd,
+    row = range and range.lnum_start or cursor[1],
+    col = range and math.max(range.col_start - 1, 0) or cursor[2],
+    range = range_payload,
+  }
+end
+
+---@param config                        eve.builtin.ai.IEditInlineConfig
+---@param template                      string|nil
+---@return string|nil rendered, string|nil err
+local function render_message(config, template)
+  template = template or "/code {this}"
+  local prompt_lines = vim.split(config.prompt or "", "\n", { plain = true, trimempty = false })
+  if #prompt_lines == 0 then
+    prompt_lines = { template }
+  end
+  if prompt_lines[1] == "" then
+    prompt_lines[1] = template
+  end
+
+  local message_template = table.concat(prompt_lines, "\n")
+
+  local context_mod, ctx_err = load_sidekick_context()
+  if not context_mod then
+    return nil, type(ctx_err) == "string" and ctx_err or tostring(ctx_err)
+  end
+
+  local context = context_mod.get()
+  context.context = {}
+  context.ctx = build_context(config)
+
+  local ok, rendered = pcall(context.render, context, { msg = message_template })
+  if not ok then
+    return nil, type(rendered) == "string" and rendered or tostring(rendered)
+  end
+
+  if type(rendered) ~= "string" or #vim.trim(rendered) == 0 then
+    return nil, "Prompt is empty."
+  end
+
+  return rendered
+end
+
 ---@class eve.builtin.ai.ISelectedRange
 ---@field lnum_start                    integer
 ---@field lnum_end                      integer
@@ -8,116 +95,96 @@ local M = {}
 ---@field col_end                       integer
 
 ---@class eve.builtin.ai.IEditInlineConfig
+---@field bufnr                         integer
 ---@field prompt                        string
 ---@field filepath                      string
 ---@field range                         eve.builtin.ai.ISelectedRange
 ---@field content                       string
----@field tools                         string[]
-
----@class eve.builtin.ai.IJobCallbacks
----@field on_start                      fun(): nil
----@field on_stdout                     fun(err: string|nil, data: string|nil): nil
----@field on_stderr                     fun(err: string|nil, data: string|nil): nil
----@field on_success                    fun(output: string): nil
----@field on_error                      fun(code: integer, error: string): nil
----@field on_timeout                    fun(): nil
----@field on_complete                   fun(): nil
+---@field filetype                      string|nil
+---@field location                      string|nil
 
 ---@param config                        eve.builtin.ai.IEditInlineConfig
----@param callbacks                     eve.builtin.ai.IJobCallbacks
----@param timeout                       integer
----@return vim.SystemObj|nil
-function M.edit_inline(config, callbacks, timeout)
-  local filepath = config.filepath ---@type string
-  local range = config.range ---@type eve.builtin.ai.ISelectedRange
-  local content = config.content ---@type string
-  local prompt = config.prompt ---@type string
+---@param template                      string
+---@return boolean ok, string message, boolean should_close
+local function send_prompt(config, template)
+  template = template or "/code {this}"
+  local prompt = vim.trim(config.prompt or "")
+  if #prompt == 0 then
+    return false, "Prompt is empty.", false
+  end
 
-  ---@type string
-  local query = string.format(
-    [[
-## Task Details
+  if not eve.context.flight.ai:snapshot() then
+    return false, "AI flight is disabled.", false
+  end
 
-%s
+  local cli = require("sidekick.cli")
+  local rendered, render_err = render_message(config, template)
+  if not rendered then
+    return false, render_err or "Prompt is empty.", false
+  end
 
-## Selected Content
+  local ok_send, err = pcall(cli.send, {
+    msg = rendered,
+    render = false,
+    focus = false,
+    submit = true,
+  })
 
-Selected text spans from line %d, column %d to line %d, column %d in file %s. The selected content is as follows:
+  if not ok_send then
+    local reason = err or "Failed to send message."
+    return false, type(reason) == "string" and reason or vim.inspect(reason), false
+  end
 
-```text title="selected content"
-%s
-```
-]],
-    prompt,
-    range.lnum_start,
-    range.col_start,
-    range.lnum_end,
-    range.col_end,
-    filepath,
-    content
-  )
+  return true, "Request sent to Sidekick.", true
+end
 
-  local cmd = {
-    "claude",
-    "--output-format=stream-json",
-    "--verbose",
-    "--allowedTools",
-    table.concat(config.tools, ","),
-    "--append-system-prompt",
-    eve.prompt.code_inline,
-    "--print",
-    vim.trim(query),
-  }
+---@param config                        eve.builtin.ai.IEditInlineConfig
+---@return boolean ok, string message, boolean should_close
+function M.edit_inline(config)
+  return send_prompt(config, "/code {this}")
+end
 
-  local process = vim.system(cmd, {
-    text = true,
-    stdout = function(err, data)
-      if callbacks.on_stdout then
-        vim.schedule(function()
-          callbacks.on_stdout(err, data)
-        end)
-      end
-    end,
-    stderr = function(err, data)
-      if callbacks.on_stderr then
-        vim.schedule(function()
-          callbacks.on_stderr(err, data)
-        end)
-      end
-    end,
-  }, function(result)
-    vim.schedule(function()
-      callbacks.on_complete()
+---@param config                        eve.builtin.ai.IEditInlineConfig
+---@return boolean ok, string message, boolean should_close
+function M.refine_inline(config)
+  return send_prompt(config, "/refine {this}")
+end
 
-      if result.code == 0 then
-        local output = result.stdout or ""
-        callbacks.on_success(output)
-      else
-        local error_msg = result.stderr or "Unknown error"
-        callbacks.on_error(result.code, error_msg)
-      end
-    end)
-  end)
-
-  if not process then
+---@param config                        eve.builtin.ai.IEditInlineConfig
+---@return string|nil
+function M.resolve_inline_location(config)
+  local location_mod = load_sidekick_location()
+  if not location_mod then
     return nil
   end
 
-  callbacks.on_start()
-
-  -- Add timeout handling
-  if timeout > 0 then
-    vim.defer_fn(function()
-      if process then
-        process:kill(9)
-        vim.schedule(function()
-          callbacks.on_timeout()
-        end)
-      end
-    end, timeout * 1000)
+  local ctx = build_context(config)
+  local location = location_mod.get(ctx, { kind = "position" })
+  if not location then
+    return nil
   end
 
-  return process
+  local function flatten(segment)
+    local parts = {}
+    for _, piece in ipairs(segment) do
+      parts[#parts + 1] = piece[1]
+    end
+    return table.concat(parts)
+  end
+
+  local lines = {}
+  for _, segment in ipairs(location) do
+    lines[#lines + 1] = flatten(segment)
+  end
+
+  return table.concat(lines)
+end
+
+---@param config                        eve.builtin.ai.IEditInlineConfig
+---@param template                      string|nil
+---@return string|nil rendered, string|nil err
+function M.render_inline_prompt(config, template)
+  return render_message(config, template)
 end
 
 return M

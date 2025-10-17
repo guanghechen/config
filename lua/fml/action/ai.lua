@@ -1,13 +1,6 @@
 local __module_name__ = "fml.action.ai" ---@type string
 
----@class fml.action.ai
-local M = {}
-
-local TIMEOUT_EDIT = 300 ---@type integer
-local NSNR_EDIT = vim.api.nvim_create_namespace("claude_edit_selection")
-
----@return nil
-function M.ask() end
+local NSNR_EDIT = vim.api.nvim_create_namespace("ai_edit_selection")
 
 ---@param lnum_start                   integer
 ---@param col_start                    integer
@@ -95,8 +88,10 @@ local function calculate_chatbox_position(lnum_start, col_start, lnum_end, col_e
   return screen_row, screen_col
 end
 
+---@protected
+---@param template                     string
 ---@return nil
-function M.edit()
+local function _edit(template)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if vim.bo[bufnr].buftype ~= "" then
     std.reporter.warn({
@@ -120,6 +115,8 @@ function M.edit()
   local lnum_start, col_start, lnum_end, col_end = eve.buf.retrieve_visual_range()
   local location = std.uri.file_location(filepath, lnum_start, col_start, lnum_end, col_end)
   local lines = eve.buf.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end) ---@type string[]
+  local content = table.concat(lines, "\n") ---@type string
+  local filetype = vim.bo[bufnr].filetype ---@type string
 
   local extmarkid = nil ---@type number|nil
   extmarkid = vim.api.nvim_buf_set_extmark(bufnr, NSNR_EDIT, lnum_start - 1, col_start - 1, {
@@ -131,20 +128,12 @@ function M.edit()
   })
 
   local chatbox ---@type eve.ux.Chatbox
-  local process_cur = nil ---@type vim.SystemObj|nil
   local ai_group = oxi.fn.uuid() ---@type string
-  local terminated = false ---@type boolean
-  local spinner_step = 200 ---@type integer
-  local spinner_timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil
-  local output ---@type string
 
-  -- Declare cleanup function that will be used in chatbox on_close
-  local function clear_spinner()
-    terminated = true
-    if spinner_timer then
-      spinner_timer:stop()
-      spinner_timer:close()
-      spinner_timer = nil
+  local function clear_selection()
+    if extmarkid then
+      vim.api.nvim_buf_del_extmark(bufnr, NSNR_EDIT, extmarkid)
+      extmarkid = nil
     end
   end
 
@@ -156,173 +145,65 @@ function M.edit()
   local chatbox_row, chatbox_col =
     calculate_chatbox_position(lnum_start, col_start, lnum_end, col_end, chatbox_width, chatbox_height)
 
+  local selection_range = {
+    lnum_start = lnum_start,
+    col_start = col_start,
+    lnum_end = lnum_end,
+    col_end = col_end,
+  }
+
+  local request_base = {
+    bufnr = bufnr,
+    filepath = filepath,
+    filetype = filetype,
+    range = selection_range,
+    content = content,
+  }
+
+  local initial_config = vim.tbl_extend("force", {}, request_base, { prompt = template })
+  local default_prompt = eve.ai.render_inline_prompt(initial_config, template) or template
+  local default_location = eve.ai.resolve_inline_location(initial_config)
+    or string.format(":L%d:C%d-L%d:C%d", lnum_start, col_start, lnum_end, col_end)
+
   chatbox = eve.ux.Chatbox.new({
     width = chatbox_width,
     height = chatbox_height,
-    title = string.format("Edit selected block (L%dC%d-L%dC%d)", lnum_start, col_start, lnum_end, col_end),
+    title = string.format("%s %s", template:find("/refine", 1, true) and "Refine" or "Edit", default_location),
     filetype = "markdown",
     on_close = function()
-      -- Clean up spinner timer
-      clear_spinner()
-
       -- Clean up visual selection highlight
-      if extmarkid then
-        vim.api.nvim_buf_del_extmark(bufnr, NSNR_EDIT, extmarkid)
-        extmarkid = nil
-      end
-
-      if process_cur then
-        process_cur:kill(9)
-        process_cur = nil
-      end
+      clear_selection()
     end,
     on_confirm = function(prompt_lines)
-      local prompt = table.concat(prompt_lines, "\n")
-      if #prompt == 0 then
-        return true -- Close if empty
-      end
-
-      ---@type eve.builtin.ai.IEditInlineConfig
-      local config = {
-        prompt = prompt,
-        filepath = filepath,
-        range = {
-          lnum_start = lnum_start,
-          col_start = col_start,
-          lnum_end = lnum_end,
-          col_end = col_end,
-        },
+      local prompt_text = table.concat(prompt_lines, "\n")
+      local render_fn = template:find("/refine", 1, true) and eve.ai.refine_inline or eve.ai.edit_inline
+      local payload = vim.tbl_extend("force", {}, request_base, {
+        prompt = prompt_text,
         location = location,
-        content = table.concat(lines, "\n"),
-        tools = { "Edit", "Read", "Write" },
-      }
+      })
+      local ok, message, should_close = render_fn(payload)
 
-      output = "Starting AI edit...\n" ---@type string
-
-      local function update_notification(level)
-        local message = terminated and output or (output .. " " .. std.fn.spinner(spinner_step)) ---@type string
-        std.reporter.log(level or "INFO", {
+      if ok then
+        chatbox:set_footer("✓ " .. message)
+        std.reporter.log("INFO", {
           from = __module_name__,
           subject = location,
-          message = message,
+          message = string.format("✓ Sent request to Sidekick\n\nPrompt:\n%s", prompt_text),
           group = ai_group,
         })
-      end
-
-      local callbacks = {
-        on_start = function()
-          chatbox:start_spinner("Processing...")
-          -- Start spinner timer
-          if spinner_timer then
-            spinner_timer:start(0, 200, vim.schedule_wrap(update_notification))
-          end
-          update_notification()
-        end,
-        on_stdout = function(err, data)
-          if err then
-            output = output .. "\n" .. tostring(err)
-          end
-          if data then
-            output = output .. data
-          end
-          update_notification()
-        end,
-        on_stderr = function(err, data)
-          if err then
-            output = output .. "\n" .. tostring(err)
-          end
-          if data then
-            output = output .. data
-          end
-          update_notification("ERROR")
-        end,
-        on_success = function(callback_output)
-          clear_spinner()
-          chatbox:stop_spinner()
-
-          -- Clean up visual selection highlight when process completes
-          if extmarkid then
-            vim.api.nvim_buf_del_extmark(bufnr, NSNR_EDIT, extmarkid)
-            extmarkid = nil
-          end
-
-          -- Trigger checktime to reload buffers after AI edit completion
-          vim.cmd("checktime")
-
-          local final_message = output ~= "Starting AI edit...\n" and output or callback_output
-          if #final_message > 0 then
-            chatbox:set_footer("✓ AI completed")
-            std.reporter.log("INFO", {
-              from = __module_name__,
-              subject = location,
-              message = string.format("%s\n\n✓ AI edit completed", final_message),
-              group = ai_group,
-            })
-            vim.defer_fn(function()
-              chatbox:close()
-            end, 1500)
-          else
-            chatbox:set_footer("⚠ No output returned")
-            std.reporter.log("WARN", {
-              from = __module_name__,
-              subject = location,
-              message = "⚠ AI edit completed but no output returned",
-              group = ai_group,
-            })
-            vim.defer_fn(function()
-              chatbox:close()
-            end, 2000)
-          end
-        end,
-        on_error = function(code, error_msg)
-          clear_spinner()
-          chatbox:stop_spinner()
-
-          -- Clean up visual selection highlight when process completes
-          if extmarkid then
-            vim.api.nvim_buf_del_extmark(bufnr, NSNR_EDIT, extmarkid)
-            extmarkid = nil
-          end
-
-          chatbox:set_footer("✗ Error: " .. error_msg)
-          std.reporter.log("ERROR", {
-            from = __module_name__,
-            subject = location,
-            message = string.format("✗ AI edit failed: %s\nExit code: %d", error_msg, code),
-            group = ai_group,
-          })
-        end,
-        on_timeout = function()
-          clear_spinner()
-          chatbox:stop_spinner()
-          chatbox:set_footer("⏱ Command timed out")
-          std.reporter.log("WARN", {
-            from = __module_name__,
-            subject = location,
-            message = "⏱ AI edit timed out",
-            group = ai_group,
-          })
-        end,
-        on_complete = function()
-          process_cur = nil
-        end,
-      }
-
-      process_cur = eve.ai.edit_inline(config, callbacks, TIMEOUT_EDIT)
-
-      if not process_cur then
-        clear_spinner()
-        chatbox:set_footer("✗ Failed to start AI")
+        if should_close then
+          clear_selection()
+          chatbox:close()
+          return true
+        end
+      else
+        chatbox:set_footer("✗ " .. message)
         std.reporter.log("ERROR", {
           from = __module_name__,
           subject = location,
-          message = "✗ Failed to start AI edit command",
+          message = string.format("✗ Failed to send request to Sidekick\nReason: %s", message),
           group = ai_group,
         })
-        vim.defer_fn(function()
-          chatbox:close()
-        end, 2000)
-        return false
       end
 
       return false
@@ -330,12 +211,28 @@ function M.edit()
   })
 
   chatbox:open({
-    initial_lines = {},
+    initial_prompt = default_prompt,
     row = chatbox_row,
     col = chatbox_col,
-    text_cursor_row = 1,
-    text_cursor_col = 0,
+    text_cursor_row = -1,
+    text_cursor_col = -1,
   })
+end
+
+---@class fml.action.ai
+local M = {}
+
+---@return nil
+function M.ask() end
+
+---@return nil
+function M.edit()
+  _edit("/code {this}\n\n")
+end
+
+---@return nil
+function M.refine()
+  _edit("/refine {this}\n\n")
 end
 
 return M

@@ -24,7 +24,8 @@ local WIN_HIGHLIGHT = table.concat({
 ---@field public stop_spinner           fun(self: eve.ux.IChatbox): nil
 
 ---@class eve.ux.chatbox.IOpenParams
----@field public initial_lines          string[]
+---@field public initial_prompt         string|nil
+---@field public initial_lines          string[]|nil
 ---@field public row                    number
 ---@field public col                    number
 ---@field public width                  ?number
@@ -212,9 +213,37 @@ function M:open(params)
     end)
   end
 
-  local lines = params.initial_lines ---@type string[]
-  local text_cursor_row = params.text_cursor_row or #lines ---@type integer
-  local text_cursor_col = params.text_cursor_col or string.len(lines[#lines]) ---@type integer
+  local lines ---@type string[]
+  if type(params.initial_prompt) == "string" then
+    lines = vim.split(params.initial_prompt, "\n", { plain = true, trimempty = false })
+  elseif type(params.initial_lines) == "table" then
+    lines = vim.list_slice(params.initial_lines)
+  else
+    lines = { "" }
+  end
+
+  if #lines == 0 then
+    lines = { "" }
+  end
+
+  local total_lines = #lines ---@type integer
+  local default_row = total_lines
+  local text_cursor_row = params.text_cursor_row ---@type integer|nil
+  if text_cursor_row == nil or text_cursor_row == -1 then
+    text_cursor_row = default_row
+  else
+    text_cursor_row = math.max(1, math.min(text_cursor_row, total_lines))
+  end
+
+  local line_for_cursor = lines[text_cursor_row] or lines[#lines] ---@type string
+  local default_col = string.len(line_for_cursor)
+  local text_cursor_col = params.text_cursor_col ---@type integer|nil
+  if text_cursor_col == nil or text_cursor_col == -1 then
+    text_cursor_col = default_col
+  else
+    text_cursor_col = math.max(0, math.min(text_cursor_col, string.len(line_for_cursor)))
+  end
+
   vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, lines)
 
   if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
