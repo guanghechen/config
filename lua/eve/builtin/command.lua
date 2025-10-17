@@ -411,7 +411,23 @@ M.definitions.lsp = {
 
 ---@class eve.builtin.command.definitions.notepad
 M.definitions.notepad = {
+  create = def("Fnotepadcreate", "notepad: create"),
+  destroy = def("Fnotepaddestroy", "notepad: destroy"),
+  rename = def("Fnotepadrename", "notepad: rename"),
   toggle = def("Fnotepadtoggle", "notepad: toggle"),
+  focus_1 = def("Fnotepadfocus1", "notepad: focus 1"),
+  focus_2 = def("Fnotepadfocus2", "notepad: focus 2"),
+  focus_3 = def("Fnotepadfocus3", "notepad: focus 3"),
+  focus_4 = def("Fnotepadfocus4", "notepad: focus 4"),
+  focus_5 = def("Fnotepadfocus5", "notepad: focus 5"),
+  focus_6 = def("Fnotepadfocus6", "notepad: focus 6"),
+  focus_7 = def("Fnotepadfocus7", "notepad: focus 7"),
+  focus_8 = def("Fnotepadfocus8", "notepad: focus 8"),
+  focus_9 = def("Fnotepadfocus9", "notepad: focus 9"),
+  focus_left = def("Fnotepadfocusleft", "notepad: focus left", "?"),
+  focus_right = def("Fnotepadfocusright", "notepad: focus right", "?"),
+  swap_left = def("Fnotepadswapleft", "notepad: swap left", "?"),
+  swap_right = def("Fnotepadswapright", "notepad: swap right", "?"),
 }
 
 ---@class eve.builtin.command.definitions.profile

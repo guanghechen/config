@@ -9,6 +9,8 @@ local instances = {} ---@type table<string, eve.ux.widget.Notepad>
 ---@param props                          ?eve.ux.widget.notepad.IProps
 ---@return eve.ux.widget.Notepad
 local function ensure_instance(key, props)
+  eve.notepad.load()
+
   key = key or DEFAULT_KEY
 
   local widget = instances[key] ---@type eve.ux.widget.Notepad|nil
@@ -18,11 +20,28 @@ local function ensure_instance(key, props)
 
   local merged_props = vim.tbl_extend("force", {
     name = string.format("notepad.%s", key),
-  }, props or {})
+  }, props or {}) ---@type eve.ux.widget.notepad.IProps
 
   widget = Notepad.new(merged_props)
   instances[key] = widget
   return widget
+end
+
+---@param args                          string|nil
+---@return integer|nil
+local function resolve_step(args)
+  if args == nil or #args == 0 then
+    return nil
+  end
+  local ok, value = pcall(tonumber, args)
+  if not ok or value == nil then
+    return nil
+  end
+  value = math.floor(value)
+  if value < 1 then
+    return 1
+  end
+  return value
 end
 
 ---@class fml.action.notepad
@@ -40,6 +59,166 @@ end
 ---@return nil
 function M.toggle(key, props)
   ensure_instance(key, props):toggle()
+end
+
+---@return nil
+function M.create()
+  eve.notepad.load()
+
+  local name_default = string.format("Note %d", math.max(1, eve.notepad.size() + 1)) ---@type string
+  vim.ui.input({
+    prompt = "Enter new notepad name:",
+    default = name_default,
+  }, function(input)
+    if input == nil then
+      return
+    end
+
+    local name = vim.trim(input) ---@type string
+    local item = eve.notepad.create(#name > 0 and name or nil) ---@type eve.builtin.notepad.INotepadItem
+
+    ensure_instance(nil):focus()
+
+    std.reporter.info({
+      from = __module_name__,
+      subject = "create",
+      message = string.format("Created notepad '%s'.", item.name),
+    })
+  end)
+end
+
+---@return nil
+function M.rename()
+  eve.notepad.load()
+
+  local item = eve.notepad.current_item() ---@type eve.builtin.notepad.INotepadItem|nil
+  if item == nil then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "rename",
+      message = "No notepad item available to rename.",
+    })
+    return
+  end
+
+  vim.ui.input({
+    prompt = "Rename notepad item:",
+    default = item.name,
+  }, function(input)
+    if input == nil then
+      return
+    end
+
+    local name = vim.trim(input) ---@type string
+    if eve.notepad.rename(item.uuid, name) then
+      std.reporter.info({
+        from = __module_name__,
+        subject = "rename",
+        message = string.format("Renamed notepad to '%s'.", name),
+      })
+    end
+  end)
+end
+
+---@return nil
+function M.destroy()
+  eve.notepad.load()
+
+  local item = eve.notepad.current_item() ---@type eve.builtin.notepad.INotepadItem|nil
+  if item == nil then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "destroy",
+      message = "No notepad item available to destroy.",
+    })
+    return
+  end
+
+  local prompt = string.format("Delete the notepad (%s)? (y/N): ", item.name) ---@type string
+  vim.ui.input({
+    inputtype = "confirmation",
+    prompt = prompt,
+    relative = "editor",
+    row = 3,
+    col = math.floor((vim.o.columns - #prompt) / 2),
+  }, function(answer)
+    if answer == nil then
+      return
+    end
+
+    answer = vim.trim(answer:lower())
+    if answer:sub(1, 1) ~= "y" then
+      return
+    end
+
+    if eve.notepad.remove(item.uuid) then
+      std.reporter.info({
+        from = __module_name__,
+        subject = "destroy",
+        message = string.format("Removed notepad '%s'.", item.name),
+      })
+    end
+  end)
+end
+
+---@param step                          string|nil
+---@return nil
+function M.focus_left(step)
+  eve.notepad.load()
+
+  local resolved = resolve_step(step) ---@type integer|nil
+  local done = eve.notepad.focus_step(-math.max(1, resolved or vim.v.count1 or 1)) ---@type boolean
+  if done then
+    local widget = instances[DEFAULT_KEY]
+    if widget ~= nil and widget:isvisible() then
+      widget:focus()
+    end
+  end
+end
+
+---@param step                          string|nil
+---@return nil
+function M.focus_right(step)
+  eve.notepad.load()
+
+  local resolved = resolve_step(step) ---@type integer|nil
+  local done = eve.notepad.focus_step(math.max(1, resolved or vim.v.count1 or 1)) ---@type boolean
+  if done then
+    local widget = instances[DEFAULT_KEY]
+    if widget ~= nil and widget:isvisible() then
+      widget:focus()
+    end
+  end
+end
+
+---@param index                         integer
+---@return boolean
+function M.focus_index(index)
+  eve.notepad.load()
+  local ok = eve.notepad.focus_index(index) ---@type boolean
+  if ok then
+    local widget = instances[DEFAULT_KEY]
+    if widget ~= nil then
+      widget:focus()
+    end
+  end
+  return ok
+end
+
+---@param step                          string|nil
+---@return nil
+function M.swap_left(step)
+  eve.notepad.load()
+  local resolved = resolve_step(step) ---@type integer|nil
+  eve.notepad.swap_left(resolved)
+end
+
+---@param step                          string|nil
+---@return nil
+function M.swap_right(step)
+  eve.notepad.load()
+  local resolved = resolve_step(step) ---@type integer|nil
+  eve.notepad.swap_right(resolved)
 end
 
 return M

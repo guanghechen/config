@@ -1,3 +1,5 @@
+---@diagnostic disable: invisible
+
 local __module_name__ = "eve.ux.widget.notepad" ---@type string
 
 local DEFAULT_WIDTH = 0.6
@@ -7,6 +9,8 @@ local MAX_HEIGHT = 0.9
 local MIN_WIDTH = 60
 local MIN_HEIGHT = 12
 local WIN_TITLE = " Notepad "
+
+local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" } ---@type string[]
 
 ---@class eve.ux.widget.notepad.IProps
 ---@field public name                   ?string
@@ -35,7 +39,12 @@ local WIN_TITLE = " Notepad "
 ---@field private win_opts              table<string, any>
 ---@field private _bufnr                integer|nil
 ---@field private _winnr                integer|nil
----@field private _last_filepath        string|nil
+---@field private _active_uuid          string|nil
+---@field private _suspend_sync         boolean
+---@field private _buf_autocmds         integer[]
+---@field private _nvimbar              eve.ux.nvimbar.Nvimbar|nil
+---@field private _subscription_active  std.collection.IUnsubscribable|nil
+---@field private _subscription_winbar  std.collection.IUnsubscribable|nil
 local Notepad = {}
 Notepad.__index = Notepad
 
@@ -43,6 +52,7 @@ Notepad.__index = Notepad
 ---@return eve.ux.widget.Notepad
 function Notepad.new(props)
   props = props or {}
+  eve.notepad.load()
 
   local self = setmetatable({}, Notepad)
   self.name = props.name or "notepad"
@@ -56,10 +66,200 @@ function Notepad.new(props)
   self.min_height = props.min_height or MIN_HEIGHT
   self.filetype = props.filetype or "markdown"
   self.win_opts = vim.tbl_extend("force", {}, props.win_opts or {})
+
   self._bufnr = nil
   self._winnr = nil
-  self._last_filepath = nil
+  local _, uuid = eve.notepad.current()
+  self._active_uuid = uuid
+  self._suspend_sync = false
+  self._buf_autocmds = {}
+  local widget = self ---@type eve.ux.widget.Notepad
+  self._nvimbar = eve.ux.nvimbar.Nvimbar.new({
+    name = string.format("%s.winbar", self.name),
+    comp_sep = "",
+    comp_sep_hlname = "f_wl_bg",
+    comp_sep_hlname_active = "f_wl_bg",
+    delay = 128,
+    get_max_width = function()
+      local winnr = widget._winnr ---@type integer|nil
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        local width = vim.api.nvim_win_get_width(winnr) ---@type integer
+        return math.max(0, width - 2)
+      end
+      return vim.o.columns - 2
+    end,
+    get_preset_context = function()
+      return {
+        winnr = widget._winnr,
+      }
+    end,
+    is_active = function()
+      local winnr = widget._winnr ---@type integer|nil
+      return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+    end,
+    on_fulfilled = function(result)
+      local winnr = widget._winnr
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        vim.wo[winnr].winbar = result
+      end
+    end,
+  })
+  self._nvimbar:place("left", eve.ux.nvimbar.component.notepad.items("f_wl"), 100)
+
+  self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(
+    std.Subscriber.new({
+      on_next = function()
+        local nvimbar = widget._nvimbar ---@type eve.ux.nvimbar.Nvimbar|nil
+        if nvimbar ~= nil then
+          nvimbar:render()
+        end
+      end,
+    }),
+    true
+  )
+
+  self._subscription_active = eve.notepad.o_active_uuid:subscribe(
+    std.Subscriber.new({
+      on_next = function(next_uuid)
+        widget:_on_active_uuid(next_uuid)
+      end,
+    }),
+    false
+  )
+
   return self
+end
+
+---@private
+---@return nil
+function Notepad:_dispose_subscriptions()
+  local sub_active = self._subscription_active ---@type std.collection.IUnsubscribable|nil
+  if sub_active ~= nil then
+    sub_active:unsubscribe()
+    self._subscription_active = nil
+  end
+
+  local sub_winbar = self._subscription_winbar ---@type std.collection.IUnsubscribable|nil
+  if sub_winbar ~= nil then
+    sub_winbar:unsubscribe()
+    self._subscription_winbar = nil
+  end
+end
+
+---@private
+---@return nil
+function Notepad:_clear_buf_autocmds()
+  for _, id in ipairs(self._buf_autocmds) do
+    pcall(vim.api.nvim_del_autocmd, id)
+  end
+  self._buf_autocmds = {}
+end
+
+---@private
+---@param bufnr                          integer
+---@param uuid                           string|nil
+---@return nil
+function Notepad:_sync_content_from_buf(bufnr, uuid)
+  uuid = uuid or self._active_uuid
+  if uuid == nil then
+    return
+  end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+  local content = table.concat(lines, "\n") ---@type string
+  eve.notepad.set_content(uuid, content)
+end
+
+---@private
+---@param bufnr                          integer
+---@return nil
+function Notepad:_render_active_item(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local uuid = self._active_uuid ---@type string|nil
+  local item = uuid ~= nil and eve.notepad.get(uuid) or nil ---@type eve.builtin.notepad.INotepadItem|nil
+  local lines ---@type string[]
+
+  if item ~= nil and #item.content > 0 then
+    lines = vim.split(item.content, "\n", { plain = true })
+  else
+    lines = { "" }
+  end
+
+  self._suspend_sync = true
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  self._suspend_sync = false
+  vim.bo[bufnr].modified = false
+end
+
+---@private
+---@return nil
+function Notepad:_on_text_changed()
+  if self._suspend_sync then
+    return
+  end
+
+  local bufnr = self:get_bufnr()
+  if bufnr ~= nil then
+    self:_sync_content_from_buf(bufnr, self._active_uuid)
+  end
+end
+
+---@private
+---@param bufnr                          integer
+---@return nil
+function Notepad:_attach_autocmds(bufnr)
+  self:_clear_buf_autocmds()
+
+  for _, event in ipairs(TEXT_CHANGED_EVENTS) do
+    local id = vim.api.nvim_create_autocmd(event, {
+      buffer = bufnr,
+      callback = function()
+        self:_on_text_changed()
+      end,
+    })
+    table.insert(self._buf_autocmds, id)
+  end
+
+  local wipe_id = vim.api.nvim_create_autocmd("BufWipeout", {
+    buffer = bufnr,
+    callback = function()
+      if self._bufnr == bufnr then
+        self._bufnr = nil
+        self:_clear_buf_autocmds()
+      end
+    end,
+  })
+  table.insert(self._buf_autocmds, wipe_id)
+end
+
+---@private
+---@param uuid                           string|nil
+---@return nil
+function Notepad:_on_active_uuid(uuid)
+  uuid = uuid ~= nil and #uuid > 0 and uuid or nil
+  if self._active_uuid == uuid then
+    return
+  end
+
+  local bufnr = self:get_bufnr()
+  if bufnr ~= nil and self._active_uuid ~= nil then
+    self:_sync_content_from_buf(bufnr, self._active_uuid)
+  end
+
+  self._active_uuid = uuid
+  if bufnr ~= nil then
+    self:_render_active_item(bufnr)
+  end
+
+  if self._nvimbar ~= nil then
+    self._nvimbar:render()
+  end
 end
 
 ---@private
@@ -88,30 +288,33 @@ function Notepad:ensure_buf()
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = self.filetype
   vim.bo[bufnr].modifiable = true
-  local render_manager = package.loaded["render-markdown.core.manager"]
-  if render_manager ~= nil then
-    render_manager.set_buf(bufnr, false) -- disable markdown renderer when plugin is active
-  end
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
+  local render_manager = package.loaded["render-markdown.core.manager"]
+  if render_manager ~= nil then
+    render_manager.set_buf(bufnr, false)
+  end
+
+  self:_attach_autocmds(bufnr)
+  self:_render_active_item(bufnr)
 
   ---@type std.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "v" },
       key = "<C-s>",
-      desc = "notepad: save without lint",
+      desc = "notepad: save",
       callback = function()
-        self:choose_filename(false)
+        self:save()
       end,
     },
     {
       modes = { "i", "n", "v" },
       key = "<C-a>s",
       aliases = { "<D-s>", "<M-s>" },
-      desc = "notepad: save with lint",
+      desc = "notepad: save",
       callback = function()
-        self:choose_filename(true)
+        self:save()
       end,
     },
     {
@@ -122,7 +325,77 @@ function Notepad:ensure_buf()
         self:hide()
       end,
     },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-/>",
+      desc = "notepad: create item",
+      callback = function()
+        vim.cmd(eve.command.definitions.notepad.create.uuid)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-r>",
+      desc = "notepad: rename item",
+      callback = function()
+        vim.cmd(eve.command.definitions.notepad.rename.uuid)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-d>",
+      desc = "notepad: destroy item",
+      callback = function()
+        vim.cmd(eve.command.definitions.notepad.destroy.uuid)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-[>",
+      desc = eve.command.definitions.notepad.focus_left.desc,
+      callback = function()
+        vim.cmd(eve.command.definitions.notepad.focus_left.uuid)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-]>",
+      desc = eve.command.definitions.notepad.focus_right.desc,
+      callback = function()
+        vim.cmd(eve.command.definitions.notepad.focus_right.uuid)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-S-[>",
+      desc = eve.command.definitions.notepad.swap_left.desc,
+      callback = function()
+        vim.cmd(eve.command.definitions.notepad.swap_left.uuid)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-S-]>",
+      desc = eve.command.definitions.notepad.swap_right.desc,
+      callback = function()
+        vim.cmd(eve.command.definitions.notepad.swap_right.uuid)
+      end,
+    },
   }
+
+  for index = 1, 9, 1 do
+    local key = string.format("<C-%d>", index) ---@type string
+    local definition = eve.command.definitions.notepad["focus_" .. tostring(index)] ---@type eve.builtin.command.IDefinition
+    keymaps[#keymaps + 1] = {
+      modes = { "i", "n", "v" },
+      key = key,
+      desc = definition.desc,
+      callback = function()
+        vim.cmd(definition.uuid)
+      end,
+    }
+  end
+
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
   return bufnr
 end
@@ -198,132 +471,35 @@ function Notepad:ensure_win()
   end
   vim.wo[winnr].winfixbuf = true
 
+  if self._nvimbar ~= nil then
+    self._nvimbar:render()
+  end
+
   return winnr
 end
 
----@param bufnr                          integer
----@param filepath                       string
----@param with_lint                      boolean
 ---@return nil
-function Notepad:save_to_filepath(bufnr, filepath, with_lint)
-  vim.fn.mkdir(std.path.dirname(filepath), "p")
-
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  local ok, reason = pcall(vim.fn.writefile, lines, filepath) ---@type boolean, string
-  if not ok then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "save",
-      message = "Failed to write notepad content to disk.",
-      details = { filepath = filepath, reason = reason },
-    })
+function Notepad:save()
+  local bufnr = self:get_bufnr()
+  if bufnr == nil then
     return
   end
 
-  self._last_filepath = filepath
-  vim.api.nvim_buf_set_name(bufnr, filepath)
+  self:_sync_content_from_buf(bufnr, self._active_uuid)
+  eve.notepad.flush()
   vim.bo[bufnr].modified = false
 
-  if with_lint then
-    local target_bufnr = bufnr ---@type integer
-    vim.schedule(function()
-      if not vim.api.nvim_buf_is_valid(target_bufnr) then
-        return
-      end
-
-      local ok_lint, lint = pcall(require, "lint")
-      if not ok_lint or lint == nil then
-        std.reporter.warn({
-          from = __module_name__,
-          subject = "save",
-          message = "Lint plugin is not available.",
-          details = { filepath = filepath },
-        })
-        return
-      end
-
-      vim.api.nvim_buf_call(target_bufnr, function()
-        lint.try_lint()
-      end)
-    end)
+  local filepath = eve.notepad.get_filepath() ---@type string|nil
+  if filepath ~= nil and #filepath > 0 then
+    vim.fn.mkdir(std.path.dirname(filepath), "p")
+    local cwd = std.path.cwd() ---@type string
+    local relative = std.path.relative(cwd, filepath, true) ---@type string
+    std.reporter.info({
+      from = __module_name__,
+      subject = "save",
+      message = string.format("Saved notepad to %s", relative),
+    })
   end
-
-  local cwd = std.path.cwd() ---@type string
-  local relative = std.path.relative(cwd, filepath, true) ---@type string
-  std.reporter.info({
-    from = __module_name__,
-    subject = "save",
-    message = string.format("Saved notepad to %s", relative),
-  })
-end
-
----@param with_lint                      boolean
----@return nil
-function Notepad:choose_filename(with_lint)
-  local bufnr = self:get_bufnr() ---@type integer|nil
-  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-    bufnr = self:ensure_buf()
-  end
-
-  local cwd = std.path.cwd() ---@type string
-  local workspace = std.path.workspace() ---@type string
-  local default_filepath = self._last_filepath ---@type string|nil
-  if default_filepath == nil or #default_filepath == 0 then
-    local bufname = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if bufname ~= nil and #bufname > 0 and std.path.is_absolute(bufname) then
-      default_filepath = bufname
-    else
-      default_filepath = ""
-    end
-  end
-
-  if #default_filepath > 0 and #workspace > 0 and std.path.is_under(workspace, default_filepath) then
-    default_filepath = std.path.relative(cwd, default_filepath, true)
-  end
-
-  vim.ui.input({
-    relative = "editor",
-    prompt = "Save notepad as",
-    default = default_filepath,
-  }, function(text)
-    if text == nil then
-      return
-    end
-
-    text = vim.trim(text)
-    if #text == 0 then
-      return
-    end
-
-    local filepath = std.path.resolve(cwd, text) ---@type string
-    if std.path.is_exist_dirpath(filepath) then
-      std.reporter.error({
-        from = __module_name__,
-        subject = "save",
-        message = "Cannot save notepad to a directory path.",
-        details = { text = text, filepath = filepath },
-      })
-      return
-    end
-
-    local function finalize()
-      self:save_to_filepath(bufnr, filepath, with_lint)
-    end
-
-    if std.path.is_exist_filepath(filepath) then
-      vim.ui.select({ "Yes", "No" }, {
-        name = __module_name__,
-        prompt = "The file already exists, overwrite it?",
-      }, function(choice)
-        if choice == "Yes" then
-          finalize()
-        end
-      end)
-      return
-    end
-
-    finalize()
-  end)
 end
 
 ---@return nil
@@ -385,6 +561,10 @@ function Notepad:resize()
     height = rect.height,
   })
   vim.wo[winnr].winfixbuf = true
+
+  if self._nvimbar ~= nil then
+    self._nvimbar:render()
+  end
 end
 
 ---@return nil
@@ -402,6 +582,15 @@ function Notepad:isdisposed()
 end
 
 ---@return nil
-function Notepad:dispose() end
+function Notepad:dispose()
+  self:_dispose_subscriptions()
+  self:_clear_buf_autocmds()
+  if self._nvimbar ~= nil then
+    self._nvimbar:dispose()
+    self._nvimbar = nil
+  end
+  self._bufnr = nil
+  self._winnr = nil
+end
 
 return Notepad

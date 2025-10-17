@@ -563,6 +563,7 @@
     "noselect",
     "nosplit",
     "noswapfile",
+    "notepadline",
     "nowait",
     "nowinbar",
     "nowrite",

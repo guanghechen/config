@@ -513,12 +513,67 @@ command
   })
 
 --[notepad] ---------------------------------------------------------------------------------------
-command.implement({
-  uuid = K.notepad.toggle.uuid,
-  action = function()
-    require("fml.action.notepad").toggle()
-  end,
-})
+command
+  .implement({
+    uuid = K.notepad.toggle.uuid,
+    action = function()
+      require("fml.action.notepad").toggle()
+    end,
+  })
+  .implement({
+    uuid = K.notepad.create.uuid,
+    action = function()
+      require("fml.action.notepad").create()
+    end,
+  })
+  .implement({
+    uuid = K.notepad.destroy.uuid,
+    action = function()
+      require("fml.action.notepad").destroy()
+    end,
+  })
+  .implement({
+    uuid = K.notepad.rename.uuid,
+    action = function()
+      require("fml.action.notepad").rename()
+    end,
+  })
+
+for index = 1, 9, 1 do
+  local key = "focus_" .. tostring(index)
+  command.implement({
+    uuid = K.notepad[key].uuid,
+    action = function()
+      require("fml.action.notepad").focus_index(index)
+    end,
+  })
+end
+
+command
+  .implement({
+    uuid = K.notepad.focus_left.uuid,
+    action = function(args)
+      require("fml.action.notepad").focus_left(args)
+    end,
+  })
+  .implement({
+    uuid = K.notepad.focus_right.uuid,
+    action = function(args)
+      require("fml.action.notepad").focus_right(args)
+    end,
+  })
+  .implement({
+    uuid = K.notepad.swap_left.uuid,
+    action = function(args)
+      require("fml.action.notepad").swap_left(args)
+    end,
+  })
+  .implement({
+    uuid = K.notepad.swap_right.uuid,
+    action = function(args)
+      require("fml.action.notepad").swap_right(args)
+    end,
+  })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({

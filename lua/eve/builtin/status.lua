@@ -19,6 +19,7 @@
 ---@field public dirtier_statusline     std.collection.IDirtier
 ---@field public dirtier_tabline        std.collection.IDirtier
 ---@field public dirtier_termline       std.collection.IDirtier
+---@field public dirtier_notepadline   std.collection.IDirtier
 ---@field public dirty_winline_nr       std.collection.IObservable
 ---
 ---@field public lint_schedule_nr       std.collection.IObservable
@@ -42,6 +43,7 @@ local M = {
   dirtier_statusline = std.Dirtier.new({ dirty = true }),
   dirtier_tabline = std.Dirtier.new({ dirty = true }),
   dirtier_termline = std.Dirtier.new({ dirty = true }),
+  dirtier_notepadline = std.Dirtier.new({ dirty = true }),
   dirty_winline_nr = std.Observable.from_value(0, std.fn.falsy),
 
   lint_schedule_nr = std.Observable.from_value(0, std.fn.falsy),
@@ -64,6 +66,7 @@ M._disposables
   :add_disposable(M.dirtier_statusline)
   :add_disposable(M.dirtier_tabline)
   :add_disposable(M.dirtier_termline)
+  :add_disposable(M.dirtier_notepadline)
   :add_disposable(M.dirty_winline_nr)
   :add_disposable(M.lint_schedule_nr)
   :add_disposable(M.msg_changes)
@@ -111,6 +114,7 @@ function M.reset()
   M.dirtier_statusline:mark_dirty()
   M.dirtier_tabline:mark_dirty()
   M.dirtier_termline:mark_dirty()
+  M.dirtier_notepadline:mark_dirty()
   M.dirty_winline_nr:next(0)
 
   M.lint_schedule_nr:next(0)

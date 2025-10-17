@@ -32,3 +32,12 @@ Implement a Notepad widget inside the ux/widget/notepad.lua.
    - Bind the command to the toggle function in fml/command.lua
    - Bind the `<leader>;` key to call the toggle function.
    - Lazily construct notepad instances in the action layer so we can reuse or extend the widget later.
+
+----------------------------------------------------------------------------------------------------
+
+The Notepad should ship with a winbar comparable to the terminal widget so the UX feels consistent.
+
+1. Persist notepad data per workspace at `std.path.locate_workspace_filepath("notepad.json")`, tracking the items, their order, and the active uuid (see `INotepadItem`).
+2. Provide create / destroy / rename / reorder / focus / swap operations via both widget keymaps and command bindings, mirroring `lua/eve/ux/widget/terminal.lua`.
+3. Render every note in the winbar with a truncated name, the 1-based index badge, terminal-style separators, and an always-present “add” button. Active items should reuse the focused styling.
+4. Auto-save changes on a short debounce (~10s) and have `<C-s>` / `<C-a>s` (and aliases) flush directly to the workspace JSON file without prompting.

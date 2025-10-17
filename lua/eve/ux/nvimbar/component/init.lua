@@ -10,6 +10,7 @@ local __mods = {
   git = "eve.ux.nvimbar.component.git",
   host = "eve.ux.nvimbar.component.host",
   lsp = "eve.ux.nvimbar.component.lsp",
+  notepad = "eve.ux.nvimbar.component.notepad",
   nvim = "eve.ux.nvimbar.component.nvim",
   picker = "eve.ux.nvimbar.component.picker",
   plugin = "eve.ux.nvimbar.component.plugin",
@@ -31,6 +32,7 @@ local __mods = {
 ---@field public git                    eve.ux.nvimbar.component.git
 ---@field public host                   eve.ux.nvimbar.component.host
 ---@field public lsp                    eve.ux.nvimbar.component.lsp
+---@field public notepad               eve.ux.nvimbar.component.notepad
 ---@field public nvim                   eve.ux.nvimbar.component.nvim
 ---@field public picker                 eve.ux.nvimbar.component.picker
 ---@field public plugin                 eve.ux.nvimbar.component.plugin

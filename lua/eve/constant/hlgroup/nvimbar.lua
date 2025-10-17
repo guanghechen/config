@@ -185,6 +185,19 @@ function M.gen_hlgroup_map(context)
     sidebar_blank = { fg = c.fg1, bg = "bg_bar" },
     sidebar_split = { fg = c.bg4, bg = "bg_bar" },
 
+    ---! notepad
+    notepad_button = { fg = c.fg3, bg = c.bg4 },
+    notepad_name = { fg = c.fg3, bg = c.bg3 },
+    notepad_index = { fg = c.fg3, bg = c.bg4 },
+    notepad_sep_left = { fg = c.bg3, bg = "bg_bar" },
+    notepad_sep_middle = { fg = c.bg4, bg = "bg_bar" },
+    notepad_sep_right = { fg = c.bg4, bg = "bg_bar" },
+    notepadc_name = { link = "mf_b_bg0" },
+    notepadc_index = { link = "mf_b_bg0" },
+    notepadc_sep_left = { link = "ms_b_none" },
+    notepadc_sep_middle = { link = "mf_b_bg0" },
+    notepadc_sep_right = { link = "ms_b_none" },
+
     ---! term
     term_button = { fg = c.fg3, bg = c.bg4 },
     term_index = { fg = c.fg3, bg = c.bg4 },
