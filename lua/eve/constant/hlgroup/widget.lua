@@ -216,6 +216,9 @@ function M.gen_hlgroup_map(context)
     f_pk_sign_line_selected = { fg = c.purple, bg = c.none },
     f_pk_sign_line_selected_current = { fg = c.purple, bg = c.bg3 },
 
+    ---notepad
+    f_np_title = { link = "f_pk_finder_title" },
+
     ---searcher
     f_ss_matches = { fg = c.pink, bold = true, italic = true },
     f_ss_search = { fg = c.red, bold = true, italic = true, strikethrough = true },

@@ -448,6 +448,13 @@ function Notepad:ensure_win()
   local rect = self:measure_rect()
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
 
+  local winhighlight = self.win_opts.winhighlight ---@type string|nil
+  if type(winhighlight) ~= "string" or #winhighlight == 0 then
+    self.win_opts.winhighlight = "FloatTitle:f_np_title"
+  elseif not winhighlight:match("FloatTitle:") then
+    self.win_opts.winhighlight = winhighlight .. ",FloatTitle:f_np_title"
+  end
+
   ---@type vim.api.keyset.win_config
   local config = {
     relative = "editor",
