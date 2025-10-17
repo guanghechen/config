@@ -95,6 +95,17 @@
     "Flspselectpythonvenv",
     "Flspshowcodeaction",
     "Flspshowcodeactionsource",
+    "Fnotepadclose",
+    "Fnotepadcreate",
+    "Fnotepaddestroy",
+    "Fnotepadfocus",
+    "Fnotepadfocusleft",
+    "Fnotepadfocusright",
+    "Fnotepadrename",
+    "Fnotepadsave",
+    "Fnotepadshow",
+    "Fnotepadswapleft",
+    "Fnotepadswapright",
     "Fnotepadtoggle",
     "Fopen",
     "Fprofilestart",
@@ -844,4 +855,3 @@
     "zindex"
   ]
 }
-

@@ -61,6 +61,46 @@ function M.toggle(key, props)
   ensure_instance(key, props):toggle()
 end
 
+---@param key                            ?string
+---@param props                          ?eve.ux.widget.notepad.IProps
+---@return nil
+function M.show(key, props)
+  ensure_instance(key, props):show()
+end
+
+---@param key                            ?string
+---@return nil
+function M.close(key)
+  key = key or DEFAULT_KEY
+  local widget = instances[key]
+  if widget ~= nil then
+    widget:close()
+  end
+end
+
+---@return nil
+function M.save()
+  eve.notepad.load()
+
+  local synced_bufnrs = {} ---@type integer[]
+  for _, widget in pairs(instances) do
+    if widget ~= nil and not widget:isdisposed() then
+      local bufnr = widget:sync_active_content()
+      if bufnr ~= nil then
+        synced_bufnrs[#synced_bufnrs + 1] = bufnr
+      end
+    end
+  end
+
+  Notepad.flush_to_disk()
+
+  for _, bufnr in ipairs(synced_bufnrs) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.bo[bufnr].modified = false
+    end
+  end
+end
+
 ---@return nil
 function M.create()
   eve.notepad.load()

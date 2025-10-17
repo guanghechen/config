@@ -11,6 +11,111 @@ local MIN_HEIGHT = 12
 local WIN_TITLE = " Notepad "
 
 local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" } ---@type string[]
+local K = eve.command.definitions ---@type eve.builtin.command.definitions
+
+---@type std.t.IKeymap[]
+local NOTEPAD_KEYMAPS = {
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-s>",
+    desc = K.notepad.save.desc,
+    callback = function()
+      vim.cmd(K.notepad.save.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-a>s",
+    aliases = { "<D-s>", "<M-s>" },
+    desc = K.notepad.save.desc,
+    callback = function()
+      vim.cmd(K.notepad.save.uuid)
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "q",
+    desc = K.notepad.close.desc,
+    callback = function()
+      vim.cmd(K.notepad.close.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-n>",
+    desc = K.notepad.create.desc,
+    callback = function()
+      vim.cmd(K.notepad.create.uuid)
+    end,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader><cr>",
+    desc = K.ai.submit_buffer.desc,
+    callback = function()
+      vim.cmd(K.ai.submit_buffer.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-r>",
+    desc = K.notepad.rename.desc,
+    callback = function()
+      vim.cmd(K.notepad.rename.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-d>",
+    desc = K.notepad.destroy.desc,
+    callback = function()
+      vim.cmd(K.notepad.destroy.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-,>",
+    desc = K.notepad.focus_left.desc,
+    callback = function()
+      vim.cmd(K.notepad.focus_left.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-.>",
+    desc = K.notepad.focus_right.desc,
+    callback = function()
+      vim.cmd(K.notepad.focus_right.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-S-,>",
+    desc = K.notepad.swap_left.desc,
+    callback = function()
+      vim.cmd(K.notepad.swap_left.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-S-.>",
+    desc = K.notepad.swap_right.desc,
+    callback = function()
+      vim.cmd(K.notepad.swap_right.uuid)
+    end,
+  },
+}
+for index = 1, 9, 1 do
+  local definition = K.notepad["focus_" .. tostring(index)] ---@type eve.builtin.command.IDefinition
+  NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
+    modes = { "i", "n", "v" },
+    key = string.format("<C-%d>", index),
+    desc = definition.desc,
+    callback = function()
+      vim.cmd(definition.uuid)
+    end,
+  }
+end
 
 ---@class eve.ux.widget.notepad.IProps
 ---@field public name                   ?string
@@ -298,105 +403,7 @@ function Notepad:ensure_buf()
   self:_attach_autocmds(bufnr)
   self:_render_active_item(bufnr)
 
-  ---@type std.t.IKeymap[]
-  local keymaps = {
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-s>",
-      desc = "notepad: save",
-      callback = function()
-        self:save()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-a>s",
-      aliases = { "<D-s>", "<M-s>" },
-      desc = "notepad: save",
-      callback = function()
-        self:save()
-      end,
-    },
-    {
-      modes = { "n" },
-      key = "q",
-      desc = "notepad: quit",
-      callback = function()
-        self:hide()
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-n>",
-      desc = "notepad: create item",
-      callback = function()
-        vim.cmd(eve.command.definitions.notepad.create.uuid)
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-r>",
-      desc = "notepad: rename item",
-      callback = function()
-        vim.cmd(eve.command.definitions.notepad.rename.uuid)
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-d>",
-      desc = "notepad: destroy item",
-      callback = function()
-        vim.cmd(eve.command.definitions.notepad.destroy.uuid)
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-,>",
-      desc = eve.command.definitions.notepad.focus_left.desc,
-      callback = function()
-        vim.cmd(eve.command.definitions.notepad.focus_left.uuid)
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-.>",
-      desc = eve.command.definitions.notepad.focus_right.desc,
-      callback = function()
-        vim.cmd(eve.command.definitions.notepad.focus_right.uuid)
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-S-,>",
-      desc = eve.command.definitions.notepad.swap_left.desc,
-      callback = function()
-        vim.cmd(eve.command.definitions.notepad.swap_left.uuid)
-      end,
-    },
-    {
-      modes = { "i", "n", "v" },
-      key = "<C-S-.>",
-      desc = eve.command.definitions.notepad.swap_right.desc,
-      callback = function()
-        vim.cmd(eve.command.definitions.notepad.swap_right.uuid)
-      end,
-    },
-  }
-
-  for index = 1, 9, 1 do
-    local key = string.format("<C-%d>", index) ---@type string
-    local definition = eve.command.definitions.notepad["focus_" .. tostring(index)] ---@type eve.builtin.command.IDefinition
-    keymaps[#keymaps + 1] = {
-      modes = { "i", "n", "v" },
-      key = key,
-      desc = definition.desc,
-      callback = function()
-        vim.cmd(definition.uuid)
-      end,
-    }
-  end
-
-  eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  eve.nvim.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
   return bufnr
 end
 
@@ -487,20 +494,26 @@ function Notepad:ensure_win()
   return winnr
 end
 
----@return nil
-function Notepad:save()
+---@return integer|nil
+function Notepad:sync_active_content()
   local bufnr = self:get_bufnr()
   if bufnr == nil then
-    return
+    return nil
   end
-
   self:_sync_content_from_buf(bufnr, self._active_uuid)
-  eve.notepad.flush()
-  vim.bo[bufnr].modified = false
+  return bufnr
+end
 
+---@return nil
+function Notepad.flush_to_disk()
   local filepath = eve.notepad.get_filepath() ---@type string|nil
   if filepath ~= nil and #filepath > 0 then
     vim.fn.mkdir(std.path.dirname(filepath), "p")
+  end
+
+  eve.notepad.flush()
+
+  if filepath ~= nil and #filepath > 0 then
     local cwd = std.path.cwd() ---@type string
     local relative = std.path.relative(cwd, filepath, true) ---@type string
     std.reporter.info({
@@ -508,6 +521,15 @@ function Notepad:save()
       subject = "save",
       message = string.format("Saved notepad to %s", relative),
     })
+  end
+end
+
+---@return nil
+function Notepad:save()
+  local bufnr = self:sync_active_content()
+  Notepad.flush_to_disk()
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.bo[bufnr].modified = false
   end
 end
 

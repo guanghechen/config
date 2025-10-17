@@ -521,6 +521,24 @@ command
     end,
   })
   .implement({
+    uuid = K.notepad.show.uuid,
+    action = function()
+      require("fml.action.notepad").show()
+    end,
+  })
+  .implement({
+    uuid = K.notepad.close.uuid,
+    action = function()
+      require("fml.action.notepad").close()
+    end,
+  })
+  .implement({
+    uuid = K.notepad.save.uuid,
+    action = function()
+      require("fml.action.notepad").save()
+    end,
+  })
+  .implement({
     uuid = K.notepad.create.uuid,
     action = function()
       require("fml.action.notepad").create()
