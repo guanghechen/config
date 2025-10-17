@@ -192,6 +192,22 @@ local function apply_status_code(entry, stage_key, status)
   entry[stage_key][code] = true
 end
 
+---@param statuses                      table<string, boolean>|nil
+---@return boolean
+local function has_stage_status(statuses)
+  if type(statuses) ~= "table" then
+    return false
+  end
+
+  for code, enabled in pairs(statuses) do
+    if enabled and code ~= "?" and code ~= "!" then
+      return true
+    end
+  end
+
+  return false
+end
+
 ---@param entry                         std.git.StatusEntry
 local function finalize_entry(entry)
   local summary = nil ---@type string|nil
@@ -244,8 +260,8 @@ local function finalize_entry(entry)
   entry.display = staged_display .. unstaged_display
   entry.summary = summary
 
-  local has_staged = next(entry.staged) ~= nil ---@type boolean
-  local has_unstaged = next(entry.unstaged) ~= nil ---@type boolean
+  local has_staged = has_stage_status(entry.staged) ---@type boolean
+  local has_unstaged = has_stage_status(entry.unstaged) ---@type boolean
   if has_staged and has_unstaged then
     entry.stage = "mixed"
   elseif has_staged then
