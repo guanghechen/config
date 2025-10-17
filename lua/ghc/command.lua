@@ -1,6 +1,63 @@
 local command = eve.command ---@type eve.builtin.command
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
+--[ai] sidekick -------------------------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = K.ai.attach_agent.uuid,
+    action = function()
+      require("ghc.action.sidekick").attach_agent()
+    end,
+  })
+  .implement({
+    uuid = K.ai.detach_agent.uuid,
+    action = function()
+      require("ghc.action.sidekick").detach_agent()
+    end,
+  })
+  .implement({
+    uuid = K.ai.submit_buffer.uuid,
+    action = function()
+      require("ghc.action.sidekick").submit_buffer()
+    end,
+  })
+  .implement({
+    uuid = K.ai.submit_selection.uuid,
+    action = function()
+      require("ghc.action.sidekick").submit_selection()
+    end,
+  })
+  .implement({
+    uuid = K.ai.send_buffer.uuid,
+    action = function()
+      require("ghc.action.sidekick").send_buffer()
+    end,
+  })
+  .implement({
+    uuid = K.ai.send_selection.uuid,
+    action = function()
+      require("ghc.action.sidekick").send_selection()
+    end,
+  })
+  .implement({
+    uuid = K.ai.send_this.uuid,
+    action = function()
+      require("ghc.action.sidekick").send_this()
+    end,
+  })
+  .implement({
+    uuid = K.ai.send_file.uuid,
+    action = function()
+      require("ghc.action.sidekick").send_file()
+    end,
+  })
+  .implement({
+    uuid = K.ai.select_prompt.uuid,
+    action = function()
+      require("ghc.action.sidekick").select_prompt()
+    end,
+  })
+
 --[code] -------------------------------------------------------------------------------------------
 command.implement({
   uuid = K.code.swap_conditional_branches.uuid,

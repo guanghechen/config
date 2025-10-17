@@ -198,7 +198,16 @@ M.definitions = {}
 M.definitions.ai = {
   ask = def("Faiask", "ai: ask"),
   code = def("Faicode", "ai: code"),
-  refine = def("FaiRefine", "ai: refine"),
+  refine = def("Fairefine", "ai: refine"),
+  attach_agent = def("Faiattachagent", "ai: attach agent"),
+  detach_agent = def("Faidetachagent", "ai: detach agent"),
+  submit_buffer = def("Faisubmitbuffer", "ai: submit buffer"),
+  submit_selection = def("Faisubmitselection", "ai: submit selection"),
+  send_buffer = def("Faisendbuffer", "ai: send buffer"),
+  send_selection = def("Faisendselection", "ai: send selection"),
+  send_this = def("Faisendthis", "ai: send this"),
+  send_file = def("Faisendfile", "ai: send file"),
+  select_prompt = def("Faiselectprompt", "ai: select prompt"),
 }
 
 ---@class eve.builtin.command.definitions.buf

@@ -21,6 +21,15 @@ ms({ "n", "v" }, "<leader>4", K.explorer.git_cwd)
 ms({ "n", "v" }, "<leader>aa", K.ai.ask)
 ms({ "v" }, "<leader>ac", K.ai.code)
 ms({ "v" }, "<leader>ae", K.ai.refine)
+ms({ "n", "v" }, "<leader>aa", K.ai.attach_agent)
+ms({ "n", "v" }, "<leader>ad", K.ai.detach_agent)
+ms({ "n" }, "<leader>ax", K.ai.submit_buffer)
+ms({ "v" }, "<leader>ax", K.ai.submit_selection)
+ms({ "n" }, "<leader>as", K.ai.send_buffer)
+ms({ "v" }, "<leader>as", K.ai.send_selection)
+ms({ "n", "v" }, "<leader>at", K.ai.send_this)
+ms({ "n", "v" }, "<leader>af", K.ai.send_file)
+ms({ "n", "x" }, "<leader>ap", K.ai.select_prompt)
 ---------------------------------------------------------------------------------------------#[a]i--
 
 --#[b]uf--------------------------------------------------------------------------------------------

@@ -1,15 +1,21 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua",
-    "lsp/yamlls.lua"
-  ],
+  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
   "language": "en",
   "version": "0.2",
   "words": [
-    "FaiRefine",
     "Faiask",
+    "Faiattachagent",
     "Faicode",
+    "Faidetachagent",
+    "Fairefine",
     "Fairefresh",
+    "Faisendbuffer",
+    "Faisendselection",
+    "Faisendfile",
+    "Faiselectprompt",
+    "Faisendthis",
+    "Faisubmitbuffer",
+    "Faisubmitselection",
     "Fbufclose",
     "Fbufcloseothers",
     "Fbufclosetoleftest",
@@ -838,3 +844,4 @@
     "zindex"
   ]
 }
+
