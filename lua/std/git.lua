@@ -6,6 +6,8 @@
 ---@field public staged                 table<string, boolean>
 ---@field public unstaged               table<string, boolean>
 ---@field public codes                  table<string, boolean>
+---@field public staged_bits            integer
+---@field public unstaged_bits          integer
 ---@field public display                string
 ---@field public summary                string|nil
 ---@field public stage                  std.git.StageState
@@ -17,19 +19,6 @@
 ---@field base                          string|nil
 ---@field workspace                     string|nil
 ---@field include_untracked             boolean|nil
-
----@type table<string, integer>
-local STATUS_PRIORITY = {
-  U = 90,
-  ["?"] = 80,
-  M = 70,
-  D = 70,
-  A = 60,
-  R = 50,
-  C = 50,
-  T = 40,
-  ["!"] = 30,
-}
 
 ---@type table<string, string[]>
 local STATUS_CATEGORY_CODE_MAP = {
@@ -57,6 +46,19 @@ local STATUS_CATEGORY_LIST = {
   "conflict",
   "untracked",
   "ignored",
+}
+
+---@enum std.git.StatusEnum
+local GIT_STATUS_ENUM = {
+  U = 1,
+  ["?"] = 2,
+  M = 4,
+  D = 8,
+  A = 16,
+  R = 32,
+  C = 64,
+  T = 128,
+  ["!"] = 256,
 }
 
 ---@param stage_state                   std.git.StageState
@@ -99,6 +101,61 @@ local function create_status_groups()
   return groups
 end
 
+---@type string[]
+local STATUS_CODE_ORDER = {}
+---@type table<string, integer>
+local STATUS_CODE_BIT_MAP = {}
+local next_status_bit_index = 0
+
+do
+  local items = {} ---@type { code: string, bit: integer }[]
+  for code, bitflag in pairs(GIT_STATUS_ENUM) do
+    items[#items + 1] = { code = code, bit = bitflag }
+  end
+  table.sort(items, function(left, right)
+    if left.bit == right.bit then
+      return left.code < right.code
+    end
+    return left.bit < right.bit
+  end)
+
+  for index, item in ipairs(items) do
+    STATUS_CODE_ORDER[index] = item.code
+    STATUS_CODE_BIT_MAP[item.code] = item.bit
+  end
+  next_status_bit_index = #items
+end
+
+---@type integer
+local STATUS_STAGE_RELEVANT_BITS = 0
+for _, code in ipairs(STATUS_CODE_ORDER) do
+  if code ~= "?" and code ~= "!" then
+    STATUS_STAGE_RELEVANT_BITS = bit.bor(STATUS_STAGE_RELEVANT_BITS, STATUS_CODE_BIT_MAP[code])
+  end
+end
+
+---@param code                           string
+---@return integer
+local function ensure_status_bit(code)
+  if type(code) ~= "string" or #code == 0 then
+    return 0
+  end
+
+  local bitflag = STATUS_CODE_BIT_MAP[code]
+  if bitflag ~= nil then
+    return bitflag
+  end
+
+  next_status_bit_index = next_status_bit_index + 1
+  bitflag = bit.lshift(1, next_status_bit_index - 1)
+  STATUS_CODE_BIT_MAP[code] = bitflag
+  STATUS_CODE_ORDER[#STATUS_CODE_ORDER + 1] = code
+  if code ~= "?" and code ~= "!" then
+    STATUS_STAGE_RELEVANT_BITS = bit.bor(STATUS_STAGE_RELEVANT_BITS, bitflag)
+  end
+  return bitflag
+end
+
 ---@param status                        string|nil
 ---@param other                         string|nil
 ---@return                              string|nil
@@ -111,12 +168,86 @@ local function merge_priority_status(status, other)
     return status
   end
 
-  local priority_status = STATUS_PRIORITY[status] or 10 ---@type integer
-  local priority_other = STATUS_PRIORITY[other] or 10 ---@type integer
-  if priority_other > priority_status then
+  local bit_status = ensure_status_bit(status)
+  local bit_other = ensure_status_bit(other)
+
+  if bit_other == 0 then
+    return status
+  end
+  if bit_status == 0 then
+    return other
+  end
+
+  if bit_other < bit_status then
     return other
   end
   return status
+end
+
+---@param bits                           integer|nil
+---@param codes                          table<string, boolean>|nil
+---@return string
+local function collect_display_from_bits(bits, codes)
+  local chars = {} ---@type string[]
+  local count = 0 ---@type integer
+
+  if type(bits) == "number" and bits ~= 0 then
+    for _, code in ipairs(STATUS_CODE_ORDER) do
+      local flag = STATUS_CODE_BIT_MAP[code]
+      if bit.band(bits, flag) ~= 0 then
+        count = count + 1
+        chars[count] = code
+      end
+    end
+  end
+
+  local extras = nil ---@type string[]|nil
+  if type(codes) == "table" then
+    for code, enabled in pairs(codes) do
+      if enabled and STATUS_CODE_BIT_MAP[code] == nil then
+        extras = extras or {}
+        extras[#extras + 1] = code
+      end
+    end
+  end
+
+  if extras ~= nil then
+    table.sort(extras)
+    for _, code in ipairs(extras) do
+      count = count + 1
+      chars[count] = code
+    end
+  end
+
+  if count == 0 then
+    return ""
+  end
+
+  return table.concat(chars)
+end
+
+---@param entry                          std.git.StatusEntry
+---@return string|nil
+local function resolve_entry_summary(entry)
+  local summary_bits = bit.bor(entry.staged_bits or 0, entry.unstaged_bits or 0) ---@type integer
+
+  if summary_bits ~= 0 then
+    for _, code in ipairs(STATUS_CODE_ORDER) do
+      local flag = STATUS_CODE_BIT_MAP[code]
+      if bit.band(summary_bits, flag) ~= 0 then
+        return code
+      end
+    end
+  end
+
+  local summary = nil ---@type string|nil
+  for code, enabled in pairs(entry.codes) do
+    if enabled then
+      summary = merge_priority_status(summary, code)
+    end
+  end
+
+  return summary
 end
 
 ---@param line                          string
@@ -163,6 +294,8 @@ local function ensure_entry(status_map, absolute_path, relative_path)
       staged = {},
       unstaged = {},
       codes = {},
+      staged_bits = 0,
+      unstaged_bits = 0,
       display = "",
       summary = nil,
       stage = nil,
@@ -190,78 +323,31 @@ local function apply_status_code(entry, stage_key, status)
 
   entry.codes[code] = true
   entry[stage_key][code] = true
-end
-
----@param statuses                      table<string, boolean>|nil
----@return boolean
-local function has_stage_status(statuses)
-  if type(statuses) ~= "table" then
-    return false
-  end
-
-  for code, enabled in pairs(statuses) do
-    if enabled and code ~= "?" and code ~= "!" then
-      return true
+  local bitflag = ensure_status_bit(code)
+  if bitflag ~= 0 then
+    if stage_key == "staged" then
+      entry.staged_bits = bit.bor(entry.staged_bits or 0, bitflag)
+    else
+      entry.unstaged_bits = bit.bor(entry.unstaged_bits or 0, bitflag)
     end
   end
-
-  return false
 end
 
 ---@param entry                         std.git.StatusEntry
 local function finalize_entry(entry)
-  local summary = nil ---@type string|nil
+  local staged_bits = entry.staged_bits or 0 ---@type integer
+  local unstaged_bits = entry.unstaged_bits or 0 ---@type integer
 
-  for code in pairs(entry.staged) do
-    summary = merge_priority_status(summary, code)
-  end
+  local staged_display = collect_display_from_bits(staged_bits, entry.staged) ---@type string
+  local unstaged_display = collect_display_from_bits(unstaged_bits, entry.unstaged) ---@type string
 
-  for code in pairs(entry.unstaged) do
-    summary = merge_priority_status(summary, code)
-  end
-
-  local staged_chars = {} ---@type string[]
-  for code, enabled in pairs(entry.staged) do
-    if enabled then
-      staged_chars[#staged_chars + 1] = code
-    end
-  end
-  if #staged_chars > 1 then
-    table.sort(staged_chars, function(left, right)
-      local priority_left = STATUS_PRIORITY[left] or 10 ---@type integer
-      local priority_right = STATUS_PRIORITY[right] or 10 ---@type integer
-      if priority_left == priority_right then
-        return left < right
-      end
-      return priority_left > priority_right
-    end)
-  end
-
-  local unstaged_chars = {} ---@type string[]
-  for code, enabled in pairs(entry.unstaged) do
-    if enabled then
-      unstaged_chars[#unstaged_chars + 1] = code
-    end
-  end
-  if #unstaged_chars > 1 then
-    table.sort(unstaged_chars, function(left, right)
-      local priority_left = STATUS_PRIORITY[left] or 10 ---@type integer
-      local priority_right = STATUS_PRIORITY[right] or 10 ---@type integer
-      if priority_left == priority_right then
-        return left < right
-      end
-      return priority_left > priority_right
-    end)
-  end
-
-  local staged_display = table.concat(staged_chars) ---@type string
-  local unstaged_display = table.concat(unstaged_chars) ---@type string
-
+  entry.staged_display = staged_display
+  entry.unstaged_display = unstaged_display
   entry.display = staged_display .. unstaged_display
-  entry.summary = summary
+  entry.summary = resolve_entry_summary(entry)
 
-  local has_staged = has_stage_status(entry.staged) ---@type boolean
-  local has_unstaged = has_stage_status(entry.unstaged) ---@type boolean
+  local has_staged = bit.band(staged_bits, STATUS_STAGE_RELEVANT_BITS) ~= 0 ---@type boolean
+  local has_unstaged = bit.band(unstaged_bits, STATUS_STAGE_RELEVANT_BITS) ~= 0 ---@type boolean
   if has_staged and has_unstaged then
     entry.stage = "mixed"
   elseif has_staged then
@@ -273,8 +359,6 @@ local function finalize_entry(entry)
   end
 
   entry.categories = collect_entry_categories(entry.stage, entry.codes)
-  entry.staged_display = staged_display
-  entry.unstaged_display = unstaged_display
 end
 
 ---@param opts                          std.git.ICollectStatusOpts|nil
@@ -337,6 +421,10 @@ local function collect_status(opts)
           local entry = ensure_entry(status_map, absolute, relative)
           entry.codes["?"] = true
           entry.unstaged["?"] = true
+          local bitflag = ensure_status_bit("?")
+          if bitflag ~= 0 then
+            entry.unstaged_bits = bit.bor(entry.unstaged_bits or 0, bitflag)
+          end
         end
       end
     end
@@ -365,9 +453,11 @@ end
 ---@class std.git
 local M = {}
 
-M.STATUS_PRIORITY = STATUS_PRIORITY
+M.GIT_STATUS_ENUM = GIT_STATUS_ENUM
 M.STATUS_CATEGORY_CODE_MAP = STATUS_CATEGORY_CODE_MAP
 M.STATUS_CATEGORY_LIST = STATUS_CATEGORY_LIST
+M.STATUS_CODE_ORDER = STATUS_CODE_ORDER
+M.STATUS_CODE_BIT_MAP = STATUS_CODE_BIT_MAP
 M.merge_priority_status = merge_priority_status
 M.parse_name_status_line = parse_name_status_line
 M.collect_entry_categories = collect_entry_categories
@@ -393,27 +483,14 @@ function M.codes_to_display(codes)
     return ""
   end
 
-  local chars = {} ---@type string[]
+  local bits = 0 ---@type integer
   for code, enabled in pairs(codes) do
     if enabled then
-      chars[#chars + 1] = code
+      bits = bit.bor(bits, ensure_status_bit(code))
     end
   end
 
-  if #chars < 1 then
-    return ""
-  end
-
-  table.sort(chars, function(left, right)
-    local priority_left = STATUS_PRIORITY[left] or 10 ---@type integer
-    local priority_right = STATUS_PRIORITY[right] or 10 ---@type integer
-    if priority_left == priority_right then
-      return left < right
-    end
-    return priority_left > priority_right
-  end)
-
-  return table.concat(chars)
+  return collect_display_from_bits(bits, codes)
 end
 
 ---@param status                        string

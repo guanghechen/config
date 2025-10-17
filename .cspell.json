@@ -1,5 +1,8 @@
 {
-  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
+  "ignorePaths": [
+    "lua/std/fileicon.lua",
+    "lsp/yamlls.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -184,6 +187,7 @@
     "bfline",
     "bindkeys",
     "binpath",
+    "bitflag",
     "blockmatch",
     "botright",
     "breakindent",
@@ -501,6 +505,7 @@
     "locationuuid",
     "loclist",
     "loglevel",
+    "lshift",
     "lspconfig",
     "lspinfo",
     "lstate",
@@ -829,4 +834,3 @@
     "zindex"
   ]
 }
-
