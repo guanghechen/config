@@ -351,7 +351,7 @@ function Notepad:ensure_buf()
     },
     {
       modes = { "i", "n", "v" },
-      key = "<C-[>",
+      key = "<C-,>",
       desc = eve.command.definitions.notepad.focus_left.desc,
       callback = function()
         vim.cmd(eve.command.definitions.notepad.focus_left.uuid)
@@ -359,7 +359,7 @@ function Notepad:ensure_buf()
     },
     {
       modes = { "i", "n", "v" },
-      key = "<C-]>",
+      key = "<C-.>",
       desc = eve.command.definitions.notepad.focus_right.desc,
       callback = function()
         vim.cmd(eve.command.definitions.notepad.focus_right.uuid)
@@ -367,7 +367,7 @@ function Notepad:ensure_buf()
     },
     {
       modes = { "i", "n", "v" },
-      key = "<C-S-[>",
+      key = "<C-S-,>",
       desc = eve.command.definitions.notepad.swap_left.desc,
       callback = function()
         vim.cmd(eve.command.definitions.notepad.swap_left.uuid)
@@ -375,7 +375,7 @@ function Notepad:ensure_buf()
     },
     {
       modes = { "i", "n", "v" },
-      key = "<C-S-]>",
+      key = "<C-S-.>",
       desc = eve.command.definitions.notepad.swap_right.desc,
       callback = function()
         vim.cmd(eve.command.definitions.notepad.swap_right.uuid)
