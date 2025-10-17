@@ -127,6 +127,19 @@ return {
           return content
         end,
       },
+      tools = {
+        claude = {
+          cmd = { "claude", "--dangerously-skip-permissions" },
+          env = {
+            CLAUDE_CONFIG_DIR = vim.env.CLAUDE_CONFIG_DIR,
+          },
+        },
+        codex = {
+          env = {
+            CODEX_HOME = vim.env.CODEX_HOME,
+          },
+        },
+      },
       win = {
         wo = {
           number = false,
