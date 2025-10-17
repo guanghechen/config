@@ -54,7 +54,7 @@ function Notepad.new(props)
   self.max_height = props.max_height or MAX_HEIGHT
   self.min_width = props.min_width or MIN_WIDTH
   self.min_height = props.min_height or MIN_HEIGHT
-  self.filetype = props.filetype or "text"
+  self.filetype = props.filetype or "markdown"
   self.win_opts = vim.tbl_extend("force", {}, props.win_opts or {})
   self._bufnr = nil
   self._winnr = nil
@@ -88,6 +88,10 @@ function Notepad:ensure_buf()
   vim.bo[bufnr].buftype = "nofile"
   vim.bo[bufnr].filetype = self.filetype
   vim.bo[bufnr].modifiable = true
+  local render_manager = package.loaded["render-markdown.core.manager"]
+  if render_manager ~= nil then
+    render_manager.set_buf(bufnr, false) -- disable markdown renderer when plugin is active
+  end
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
 
