@@ -412,17 +412,26 @@ end
 ---@private
 ---@return eve.builtin.box.IDimension
 function Notepad:measure_rect()
+  local columns = vim.o.columns ---@type integer
+  local desired_width = math.min(120, math.floor(columns * 0.9 + 0.5)) ---@type integer
+  local desired_height = math.floor(vim.o.lines * 0.8 + 0.5) ---@type integer
+  local min_width = math.min(self.min_width, columns) ---@type integer
+  local min_height = math.min(self.min_height, vim.o.lines) ---@type integer
+  desired_width = math.max(min_width, desired_width) ---@type integer
+  desired_width = math.min(desired_width, columns) ---@type integer
+  desired_height = math.max(min_height, math.min(desired_height, vim.o.lines - 2)) ---@type integer
+
   ---@type eve.builtin.box.IRestriction
   local restriction = {
     position = "center",
     rows = vim.o.lines,
-    cols = vim.o.columns,
-    max_width = self.max_width,
-    max_height = self.max_height,
-    min_width = self.min_width,
-    min_height = self.min_height,
+    cols = columns,
+    max_width = desired_width,
+    max_height = desired_height,
+    min_width = min_width,
+    min_height = min_height,
   }
-  return eve.box.measure(self.width, self.height, restriction)
+  return eve.box.measure(desired_width, desired_height, restriction)
 end
 
 ---@private
