@@ -1,0 +1,20 @@
+model = "gpt-5-codex"
+model_provider = "github-copilot"
+model_reasoning_effort = "high"
+
+[model_providers.github-copilot]
+name = "github-copilot"
+base_url = "http://localhost:4848"
+env_key = "GHC_CODEX_AUTH_TOKEN"
+wire_api = "responses"
+request_max_retries = 3
+stream_max_retries = 0
+stream_idle_timeout_ms = 300000
+
+[tui]
+notifications = ["agent-turn-complete", "approval-requested"]
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+
