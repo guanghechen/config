@@ -57,6 +57,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
     refresh(false)
   end,
   on_refresh = function()
+    eve.state.git.refresh_git_status(true)
     refresh(true)
   end,
 })
