@@ -1,5 +1,8 @@
 {
-  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
+  "ignorePaths": [
+    "lua/std/fileicon.lua",
+    "lsp/yamlls.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -9,10 +12,10 @@
     "Faidetachagent",
     "Fairefine",
     "Fairefresh",
-    "Faisendbuffer",
-    "Faisendselection",
-    "Faisendfile",
     "Faiselectprompt",
+    "Faisendbuffer",
+    "Faisendfile",
+    "Faisendselection",
     "Faisendthis",
     "Faisubmitbuffer",
     "Faisubmitselection",
@@ -719,6 +722,7 @@
     "strdisplaywidth",
     "strs",
     "strwidth",
+    "stylua",
     "submatch",
     "submatches",
     "subroot",

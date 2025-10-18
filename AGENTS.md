@@ -1,32 +1,190 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
-- Core Lua sources live under `lua/`, split into foundation (`lua/std`), Rust bridges (`lua/oxi`), the `eve` framework, frontend layer `lua/fml`, plugin ecosystem `lua/ghc`, and environment adapters `lua/integration`.
-- Rust performance code resides in `rust/nvim_tools/`; compiled artifacts land in `lua/nvim_tools.so` and `bin/{osx,nix,win}.nvim_tools.so`.
-- TreeSitter queries (`queries/`), LSP setups (`lsp/`), documentation (`doc/`), and tests (`__test__/__eve__/`) are maintained alongside Lua sources.
+This file provides guidance to Codex (OpenAI GPT-5) or any other autonomous agent when working with code in this repository.
 
-## Build, Test, and Development Commands
-- `cd rust/nvim_tools && cargo build --release` builds the Rust bridge for local testing.
-- `cd rust/nvim_tools && ./build.sh --force` performs a clean rebuild and syncs the `.so` payloads into `lua/` and `bin/`.
-- Lua test suites run from the repo root with `nvim --headless -c "PlenaryBustedDirectory __test__/__eve__" -c qa` or within Neovim via the project’s test runner.
-- Rust unit tests execute with `cd rust/nvim_tools && cargo test`.
+## Project Overview
 
-## Coding Style & Naming Conventions
-- Lua modules use snake_case filenames and expose globals via `_G.std`, `_G.oxi`, and `_G.eve`; mount new utilities under those namespaces.
-- Follow existing indentation: 2 spaces for Lua, 4 spaces for Rust and JSON; keep ASCII unless a file already diverges.
-- Prefer expressive module-local constants in `eve.constant` and route user messaging through `std.reporter.{error,warn,info,debug}`.
-- Lua type annotations start at column 41 (`---@param name                          string`); avoid redundant inline comments.
+This is a sophisticated, deeply-customized Neovim configuration that combines Lua and Rust for enhanced performance. It uses nvim-oxi to bridge Rust-powered utilities with Lua-based Neovim configuration. The architecture implements a completely custom framework with modular design patterns.
 
-## Testing Guidelines
-- Mirror module paths in test directories (e.g., `__test__/__eve__/ux/picker_spec.lua` for `lua/eve/ux/picker.lua`).
-- Write deterministic tests; prefer fixtures from `std.fs` helpers over ad-hoc paths.
-- Ensure Rust additions include `#[cfg(test)]` modules and, when FFI changes occur, cover Lua integration in `__test__/__eve__/`.
+## Architecture
 
-## Commit & Pull Request Guidelines
-- Use imperative, scope-prefixed commit subjects (`eve.buf: add range validator`); reference module paths when possible.
-- Highlight cross-language changes (Lua ↔ Rust) in the body and mention any required rebuilds of `nvim_tools.so`.
-- Pull requests should summarize behavioral impact, list verification steps (tests, builds), and link related issues; include screenshots or asciinema for UX tweaks.
+### Core Module Structure
+- `lua/std/`: Foundation layer with algorithms, collections, and utilities
+  - `std/collection/`: Data structures (Observable, Promise, Scheduler, etc.)
+  - `std/lib/`: Library utilities (color, easing)
+  - `std/types/`: Shared enums and theme/UX schemas used across modules
+  - Core utilities: bootstrap, debug, fs, path, json, timer, etc.
+- `lua/oxi/`: Rust-Lua bridge interfaces via nvim-oxi
+  - `oxi/fn`: Helper glue for marshalling data at the FFI boundary
+  - `oxi/finder`, `oxi/replacer`, `oxi/searcher`: Performance-critical search operations
+  - `oxi/fs`, `oxi/string`: File system and string utilities
+- `lua/eve/`: Core application framework
+  - `eve/builtin/`: Core modules (G, ai, buf, clipboard, command, lsp, notifier, etc.)
+  - `eve/constant/`: Constants and configurations (hlgroup themes, language configs)
+  - `eve/context/`: Context management (editor, session, workspace)
+  - `eve/state/`: Application state management
+  - `eve/fn/`: Framework functions
+  - `eve/ux/`: User experience components (picker, searcher, nvimbar, widgets)
+- `lua/fml/`: Frontend configuration layer
+  - `fml/action/`: Action handlers for various operations (buf, code, find, git, lsp, etc.)
+  - `fml/dressing/`: UI styling and components (nvimbar, select, ui_attach, etc.)
+  - `fml/command.lua`: Command definitions
+- `lua/ghc/`: Plugin ecosystem
+  - `ghc/cmp/`: Completion configurations
+  - `ghc/plugins/`: Individual plugin configurations
+  - `ghc/action/`: Plugin-specific actions
+- `lua/integration/`: Environment-specific entry points
+  - `integration/neovim/`: Standard Neovim setup
+  - `integration/neovide/`: Neovide GUI setup
+  - `integration/vscode/`: VSCode extension setup
+- Supporting directories:
+  - `queries/`: TreeSitter queries for various languages
+  - `rust/nvim_tools/`: Rust source code for performance-critical operations
+  - `lsp/`: Language server configurations
+  - `doc/`: Documentation and issue tracking
+  - `bin/`: Compiled Rust binaries (platform-specific)
 
-## Rust-Lua Bridge Notes
-- When touching `lua/oxi` or `rust/nvim_tools`, confirm serialization boundaries follow existing `nvim-oxi` patterns and rerun the force build script.
-- Keep ABI stability in mind: bump consumers in `eve` or `fml` when modifying exposed Rust signatures.
+### Global Module Access Pattern
+
+The configuration exposes core modules globally via `_G` for convenient access:
+
+**Global Modules (accessible without require):**
+- `_G.std` → `require("std")` - Foundation utilities
+- `_G.oxi` → `require("oxi")` - Rust bridge interfaces
+- `_G.eve` → `require("eve")` - Core framework
+
+**Module Access Patterns:**
+- `std.*` → Access std utilities directly (e.g., `std.path.*`, `std.json.*`)
+- `std.Observable` → `require("std.collection.observable")` (collections mounted directly)
+- `eve.buf.*` → `require("eve.builtin.buf").*` (builtins mounted directly)
+- `eve.constant.*` → `require("eve.constant").*`
+- `eve.context.*` → `require("eve.context").*`
+- `eve.state.*` → `require("eve.state").*`
+- `eve.fn.*` → `require("eve.fn").*`
+- `eve.ux.*` → `require("eve.ux").*`
+- `oxi.finder.*` → `require("oxi.finder").*` (Rust performance modules)
+
+### Integration Points
+The configuration supports multiple environments through conditional loading in `init.lua`:
+- **Standard Neovim**: `integration/neovim/` (default path)
+- **Neovide GUI**: `integration/neovide/` (when `vim.g.neovide` is set)
+- **VSCode Extension**: `integration/vscode/` (when `vim.g.vscode` is set)
+
+Each integration includes environment-specific:
+- `init.lua`: Main setup and loading sequence
+- `option.lua`: Environment-specific options
+- `keymap.lua`: Key mappings
+- `autocmd.lua`: Auto commands (neovim only)
+
+### Rust-Lua Bridge
+- **Compiled Library**: `lua/nvim_tools.so` (platform-specific binary)
+- **Build Artifacts**: `bin/{osx,nix,win}.nvim_tools.so` (platform builds)
+- **Source Code**: `rust/nvim_tools/` (nvim-oxi integration)
+- **Dependencies**: nvim-oxi 0.6.0, regex, serde, chrono, uuid
+- **Exposed Modules**: `oxi.fn`, `oxi.finder`, `oxi.replacer`, `oxi.searcher`, `oxi.fs`, `oxi.string`
+
+## Development Commands
+
+### Rust Development
+Build the Rust components:
+```bash
+cd rust/nvim_tools
+cargo build --release
+```
+
+Force rebuild (recommended after Rust changes):
+```bash
+cd rust/nvim_tools
+./build.sh --force
+```
+
+The build script automatically:
+- Detects platform (Darwin/Linux/Windows)
+- Builds release version
+- Copies to both `lua/nvim_tools.so` and `bin/{platform}.nvim_tools.so`
+- Cleans up target directory
+
+### Testing
+- **Lua Tests**: Located in `__test__/__eve__/` (organized by module)
+- **Rust Tests**: Run `cargo test` from `rust/nvim_tools/`
+- **Cheat Sheet**: 
+  - prefer `./rust/nvim_tools/build.sh --force && cargo test` when touching OXI bindings.
+
+## Code Conventions
+
+### Lua Code Standards
+- Avoid unnecessary comments except typing comments like `---@type string`
+- Type annotations must start at column 41: `---@param name                          string`
+- Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
+- Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits.
+
+### Error Reporting
+Always use `std.reporter` for notifications and error messages instead of `eve.notifier.notify` or `vim.notify`:
+
+```lua
+-- Basic usage
+std.reporter.error({
+  from = __module_name__,
+  subject = "Operation Name",
+  message = "Error message here",
+})
+
+-- With additional details (will be formatted as JSON)
+std.reporter.error({
+  from = __module_name__,
+  subject = "API Error",
+  message = "Request failed",
+  details = { status = 404, url = "/api/data" },
+})
+
+-- !!Strict same interfaces default level report for std.reporter.{error|warn|info|debug}
+-- Options available:
+-- - from: (required) Module name, usually __module_name__
+-- - subject: (optional) Specific operation or context
+-- - message: (optional) Main message text
+-- - details: (optional) Additional data to be displayed as JSON
+-- - group: (optional) Notification group
+-- - anonymous: (optional) Hide sender info
+-- - silent: (optional) Suppress notification display
+```
+
+### OXI Integration Rules
+When modifying `lua/oxi/` or `rust/nvim_tools/src/`:
+- Reference nvim-oxi examples for proper Deserialization/Serialization patterns
+- Ensure proper type handling between Rust and Lua boundaries
+- Follow the existing pattern in `oxi/` modules for FFI calls
+
+## Plugin Management
+Plugins are managed using a custom plugin system:
+- **Lock File**: `lazy-lock.json` contains exact plugin versions
+- **Plugin Configs**: Individual configurations in `ghc/plugins/`
+- **Completion**: CMP configurations in `ghc/cmp/`
+- **Custom Forks**: Most plugins use forked versions with custom branches (prefixed with `nvim@`)
+- **Key Plugins**: blink.cmp, conform.nvim, diffview.nvim, flash.nvim, nvim-treesitter, nvim-dap, etc.
+
+**Plugin Loading**: Handled through integration-specific initialization sequences
+
+## Initialization Sequence
+1. **Bootstrap**: `std.bootstrap` sets up patches and workspace
+2. **Global Modules**: Load `_G.std`, `_G.oxi`, `_G.eve`
+3. **Logging**: Configure logging for git repositories
+4. **Environment Detection**: Route to appropriate integration
+5. **Context Setup**: Initialize eve context system
+6. **UI Setup**: Load dressing, nvimbar components, theme
+7. **Commands & Plugins**: Load commands and plugin system
+8. **Session Recovery**: Auto-load sessions for git repositories
+
+## Key Features
+- **Performance**: Rust-powered search, file operations
+- **Modularity**: Layered architecture with clear separation
+- **Multi-Environment**: Supports Neovim, Neovide, VSCode
+- **Session Management**: Automatic session handling for git repos
+- **Custom UI**: Comprehensive status line, tab line, window line
+- **Advanced UX**: Custom picker, searcher, and widget systems
+
+## Development Files
+- `init-theme.lua`: Theme testing and development
+- `init-debug.lua`: Debug mode configuration
+- `init-update.lua`: Update utilities
+- `README.md`: Main documentation
+- `doc/`: Issue tracking, design memos, and troubleshooting notes—scan it when you need historical decisions or open tasks.
