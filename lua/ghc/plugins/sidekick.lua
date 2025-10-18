@@ -37,6 +37,7 @@ return {
           },
         },
         codex = {
+          cmd = { "codex", "--cd", std.path.cwd() }, --- codex with `--search` is not supported yet (our-side issues)
           env = {
             CODEX_HOME = vim.env.CODEX_HOME,
           },
