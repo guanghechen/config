@@ -86,4 +86,106 @@ function M.measure(width, height, restriction)
   return { row = row, col = col, width = width, height = height }
 end
 
+---@param border                        string|table|nil
+---@return integer left
+---@return integer right
+---@return integer top
+---@return integer bottom
+function M.resolve_border_extents(border)
+  local left = 0 ---@type integer
+  local right = 0 ---@type integer
+  local top = 0 ---@type integer
+  local bottom = 0 ---@type integer
+
+  local function has_border(entry)
+    if entry == nil then
+      return false
+    end
+    if type(entry) == "string" then
+      return entry ~= ""
+    end
+    if type(entry) == "boolean" then
+      return entry
+    end
+    if type(entry) == "table" then
+      local text = entry[1] ---@type unknown
+      if type(text) == "string" then
+        return text ~= ""
+      end
+      if type(text) == "number" then
+        return text ~= 0
+      end
+      return text == true
+    end
+    return false
+  end
+
+  if border == nil or border == "none" then
+    return left, right, top, bottom
+  end
+
+  if type(border) == "string" then
+    if border == "shadow" then
+      right = 1
+      bottom = 1
+      return left, right, top, bottom
+    end
+    left = 1
+    right = 1
+    top = 1
+    bottom = 1
+    return left, right, top, bottom
+  end
+
+  ---@cast border table
+  ---@type table<integer|string, unknown>
+  local border_tbl = border
+
+  local top_entry = border_tbl[2] or border_tbl["top"] ---@type unknown
+  local right_entry = border_tbl[4] or border_tbl["right"] ---@type unknown
+  local bottom_entry = border_tbl[6] or border_tbl["bottom"] ---@type unknown
+  local left_entry = border_tbl[8] or border_tbl["left"] ---@type unknown
+
+  if has_border(left_entry) then
+    left = 1
+  end
+  if has_border(right_entry) then
+    right = 1
+  end
+  if has_border(top_entry) then
+    top = 1
+  end
+  if has_border(bottom_entry) then
+    bottom = 1
+  end
+
+  return left, right, top, bottom
+end
+
+---@class eve.builtin.box.FitEditorOpts
+---@field public cols                   integer|nil
+---@field public rows                   integer|nil
+
+---@param width                         integer
+---@param height                        integer
+---@param border                        string|table|nil
+---@param opts                          eve.builtin.box.FitEditorOpts|nil
+---@return integer
+---@return integer
+function M.fit_editor(width, height, border, opts)
+  opts = opts or {} ---@type eve.builtin.box.FitEditorOpts
+
+  local cols = opts.cols or vim.o.columns ---@type integer
+  local rows = opts.rows or vim.o.lines ---@type integer
+
+  local left, right, top, bottom = M.resolve_border_extents(border) ---@type integer, integer, integer, integer
+  local max_width = math.max(1, cols - (left + right)) ---@type integer
+  local max_height = math.max(1, rows - (top + bottom)) ---@type integer
+
+  width = math.max(1, math.min(max_width, width)) ---@type integer
+  height = math.max(1, math.min(max_height, height)) ---@type integer
+
+  return width, height
+end
+
 return M

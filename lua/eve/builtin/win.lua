@@ -7,7 +7,6 @@ local Methods = vim.lsp.protocol.Methods
 ---| "ux:chatbox"
 ---| "ux:cmdline"
 ---| "ux:input"
----| "ux:maximize"
 ---| "ux:picker-finder"
 ---| "ux:picker-preview"
 ---| "ux:picker-result"
@@ -46,7 +45,6 @@ local Types = {
   CHATBOX           = "ux:chatbox",
   CMDLINE           = "ux:cmdline",
   INPUT             = "ux:input",
-  MAXIMIZE          = "ux:maximize",
   NOTIFY            = "ux:notify",
   PICKER_FINDER     = "ux:picker-finder",
   PICKER_PREVIEW    = "ux:picker-preview",
@@ -69,7 +67,6 @@ local wintype_attrs = {
   focusable = {
     [Types.BOARD] = true,
     [Types.INPUT] = true,
-    [Types.MAXIMIZE] = true,
     [Types.NOTIFY] = true,
     [Types.PICKER_FINDER] = true,
     [Types.PICKER_PREVIEW] = true,
