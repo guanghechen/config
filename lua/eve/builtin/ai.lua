@@ -1,23 +1,16 @@
 ---@class eve.builtin.ai
 local M = {}
 
-local function load_sidekick_context()
-  local ok, mod = pcall(require, "sidekick.cli.context")
-  if not ok then
-    return nil, mod
-  end
-  return mod
-end
-
-local function load_sidekick_location()
-  local ok, mod = pcall(require, "sidekick.cli.context.location")
-  if not ok then
-    return nil, mod
-  end
-  return mod
-end
+---@class eve.builtin.ai.ISidekickContext
+---@field win                           integer
+---@field buf                           integer
+---@field cwd                           string
+---@field row                           integer
+---@field col                           integer
+---@field range                         { from: integer[], to: integer[], kind: string }|nil
 
 ---@param config                        eve.builtin.ai.IEditInlineConfig
+---@return eve.builtin.ai.ISidekickContext
 local function build_context(config)
   local bufnr = config.bufnr or vim.api.nvim_get_current_buf()
   local win = vim.fn.bufwinid(bufnr)
@@ -57,26 +50,16 @@ end
 ---@return string|nil rendered, string|nil err
 local function render_message(config, template)
   template = template or "/code {this}"
-  local prompt_lines = vim.split(config.prompt or "", "\n", { plain = true, trimempty = false })
-  if #prompt_lines == 0 then
-    prompt_lines = { template }
-  end
-  if prompt_lines[1] == "" then
-    prompt_lines[1] = template
+  local prompt = config.prompt
+  if type(prompt) ~= "string" or #vim.trim(prompt) == 0 then
+    prompt = template
   end
 
-  local message_template = table.concat(prompt_lines, "\n")
-
-  local context_mod, ctx_err = load_sidekick_context()
-  if not context_mod then
-    return nil, type(ctx_err) == "string" and ctx_err or tostring(ctx_err)
-  end
-
-  local context = context_mod.get()
+  local context = require("sidekick.cli.context").get()
   context.context = {}
   context.ctx = build_context(config)
 
-  local ok, rendered = pcall(context.render, context, { msg = message_template })
+  local ok, rendered = pcall(context.render, context, { msg = prompt })
   if not ok then
     return nil, type(rendered) == "string" and rendered or tostring(rendered)
   end
@@ -108,11 +91,6 @@ end
 ---@return boolean ok, string message, boolean should_close
 local function send_prompt(config, template)
   template = template or "/code {this}"
-  local prompt = vim.trim(config.prompt or "")
-  if #prompt == 0 then
-    return false, "Prompt is empty.", false
-  end
-
   if not eve.context.flight.ai:snapshot() then
     return false, "AI flight is disabled.", false
   end
@@ -153,13 +131,8 @@ end
 ---@param config                        eve.builtin.ai.IEditInlineConfig
 ---@return string|nil
 function M.resolve_inline_location(config)
-  local location_mod = load_sidekick_location()
-  if not location_mod then
-    return nil
-  end
-
   local ctx = build_context(config)
-  local location = location_mod.get(ctx, { kind = "position" })
+  local location = require("sidekick.cli.location").get(ctx, { kind = "position" })
   if not location then
     return nil
   end
