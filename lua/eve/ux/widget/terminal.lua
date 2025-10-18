@@ -45,6 +45,11 @@ local termline = eve.ux.nvimbar.Nvimbar.new({
     return not devmode
   end,
   get_max_width = function()
+    local winnr = _terminal_winnr ---@type integer|nil
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      local width = vim.api.nvim_win_get_width(winnr) ---@type integer
+      return math.max(0, width - 2)
+    end
     return vim.o.columns - 2
   end,
   get_preset_context = function()
@@ -64,7 +69,7 @@ local termline = eve.ux.nvimbar.Nvimbar.new({
 
 local c = eve.ux.nvimbar.component
 local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
-termline:place("left", c.term.terms(position), 100)
+termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
 
 std.fn.observe({ eve.term.o_termuuid }, function()
   local winnr = _terminal_winnr ---@type integer|nil

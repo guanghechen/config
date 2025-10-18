@@ -1,139 +1,271 @@
 local btn = eve.nvim.btn
 local txt = eve.nvim.txt
+local decode_btn_args = eve.nvim.decode_btn_args
+local K = eve.command.definitions ---@type table<string, any>
 
 ---@type string
-local fn_switch_term = eve.G.register_anonymous_fn(function(termuuid)
-  eve.term.o_termuuid:next(termuuid) ---@type string
-end) or ""
+local fn_switch_term = eve.G.register_anonymous_fn(function(encoded)
+  local argv = decode_btn_args(tostring(encoded)) ---@type integer[]
+  local index = argv[1] ---@type integer|nil
+  if index ~= nil then
+    eve.term.focus(index)
+  end
+end) or "eve.G.noop"
 
 ---@type string
 local fn_add_term = eve.G.register_anonymous_fn(function()
-  vim.cmd("Ftermcreate")
-end) or ""
+  vim.cmd(K.term.create.uuid)
+end) or "eve.G.noop"
+
+---@type string
+local fn_focus_prev_term = eve.G.register_anonymous_fn(function()
+  vim.cmd(K.term.focus_left.uuid)
+end) or "eve.G.noop"
+
+---@type string
+local fn_focus_next_term = eve.G.register_anonymous_fn(function()
+  vim.cmd(K.term.focus_right.uuid)
+end) or "eve.G.noop"
 
 ---@class eve.ux.nvimbar.component.term
 local M = {}
 
+---@param termmeta                      eve.builtin.term.IMeta
+---@return string
+local function format_name(termmeta)
+  local name = vim.trim(termmeta.name or "") ---@type string
+  if #name == 0 then
+    name = "Terminal"
+  end
+  if #name > 12 then
+    name = name:sub(1, 9) .. "..."
+  end
+  return name
+end
+
 ---@param position                      eve.ux.nvimbar.PositionEnum
 ---@return eve.ux.nvimbar.IRawComponent
-function M.terms(position)
-  local hln_term_button = position .. "_term_button" ---@type string
-  local hln_term_index = position .. "_term_index" ---@type string
-  local hln_term_name = position .. "_term_name" ---@type string
-  local hln_term_sep_left = position .. "_term_sep_left" ---@type string
-  local hln_term_sep_right = position .. "_term_sep_right" ---@type string
+function M.items(position)
+  local hln_button = position .. "_term_button" ---@type string
+  local hln_name = position .. "_term_name" ---@type string
+  local hln_index = position .. "_term_index" ---@type string
+  local hln_sep_left = position .. "_term_sep_left" ---@type string
+  local hln_sep_right = position .. "_term_sep_right" ---@type string
 
-  local hln_termc_index = position .. "_termc_index" ---@type string
-  local hln_termc_name = position .. "_termc_name" ---@type string
-  local hln_termc_sep_middle = position .. "_termc_sep_middle" ---@type string
-  local hln_termc_sep_left = position .. "_termc_sep_left" ---@type string
-  local hln_termc_sep_right = position .. "_termc_sep_right" ---@type string
+  local hln_name_active = position .. "_termc_name" ---@type string
+  local hln_index_active = position .. "_termc_index" ---@type string
+  local hln_sep_left_active = position .. "_termc_sep_left" ---@type string
+  local hln_sep_middle_active = position .. "_termc_sep_middle" ---@type string
+  local hln_sep_right_active = position .. "_termc_sep_right" ---@type string
 
   local text_sep_left = eve.icon.symbols.sep_left ---@type string
   local text_sep_middle = " | " ---@type string
   local text_sep_right = eve.icon.symbols.sep_right ---@type string
 
-  ---@param term                        eve.builtin.term.IMeta
+  local icon_arrow_left = eve.icon.ui.Left ---@type string
+  local icon_arrow_right = eve.icon.ui.Right ---@type string
+  local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
+  local hln_arrow = eve.nvim.make_bg_transparency(hln_button) ---@type string
+
+  ---@param termmeta                    eve.builtin.term.IMeta
   ---@param index                       integer
   ---@return string
   ---@return string
-  local function render_term(term, index)
-    -- Truncate long terminal names for better display
-    local text_name = term.name ---@type string
-    if #text_name > 12 then
-      text_name = string.sub(text_name, 1, 9) .. "..."
-    end
-
-    local text_index = tostring(index) ---@type string
-    text_name = text_name .. " "
-    text_index = " " .. text_index
-
-    local hl_text_index = txt(text_index, hln_term_index)
-    local hl_text_name = txt(text_name, hln_term_name)
-    local hl_text_sep_left = txt(text_sep_left, hln_term_sep_left)
-    local hl_text_sep_right = txt(text_sep_right, hln_term_sep_right)
-
-    local text = text_sep_left .. text_name .. text_index .. text_sep_right
-    local hl_text = hl_text_sep_left .. hl_text_name .. hl_text_index .. hl_text_sep_right
-    return text, btn(hl_text, fn_switch_term, term.bufnr)
+  local function render_item(termmeta, index)
+    local name = format_name(termmeta) ---@type string
+    local text_name = name .. " " ---@type string
+    local text_index = " " .. tostring(index) ---@type string
+    local text = text_sep_left .. text_name .. text_index .. text_sep_right .. " " ---@type string
+    local hl_text = txt(text_sep_left, hln_sep_left)
+      .. txt(text_name, hln_name)
+      .. txt(text_index, hln_index)
+      .. txt(text_sep_right, hln_sep_right)
+      .. txt(" ", hln_sep_right)
+    return text, btn(hl_text, fn_switch_term, { index })
   end
 
-  ---@param term                        eve.builtin.term.IMeta
+  ---@param termmeta                    eve.builtin.term.IMeta
   ---@param index                       integer
   ---@return string
   ---@return string
-  local function render_termc(term, index)
-    -- Truncate long terminal names for better display
-    local text_name = term.name ---@type string
-    if #text_name > 12 then
-      text_name = string.sub(text_name, 1, 9) .. "..."
-    end
-
+  local function render_item_active(termmeta, index)
+    local name = format_name(termmeta) ---@type string
+    local text_name = name ---@type string
     local text_index = tostring(index) ---@type string
-
-    local hl_text_index = txt(text_index, hln_termc_index)
-    local hl_text_name = txt(text_name, hln_termc_name)
-    local hl_text_sep_left = txt(text_sep_left, hln_termc_sep_left)
-    local hl_text_sep_middle = txt(text_sep_middle, hln_termc_sep_middle)
-    local hl_text_sep_right = txt(text_sep_right, hln_termc_sep_right)
-
-    local text = text_sep_left .. text_name .. text_sep_middle .. text_index .. text_sep_right
-    local hl_text = hl_text_sep_left .. hl_text_name .. hl_text_sep_middle .. hl_text_index .. hl_text_sep_right
-    return text, btn(hl_text, fn_switch_term, term.bufnr)
-  end
-
-  ---@return string
-  ---@return string
-  local function render_add_button()
-    local text = " +" ---@type string
-    local hl_text = txt(text, hln_term_button) ---@type string
-    return text, btn(hl_text, fn_add_term)
+    local text = text_sep_left .. text_name .. text_sep_middle .. text_index .. text_sep_right .. " " ---@type string
+    local hl_text = txt(text_sep_left, hln_sep_left_active)
+      .. txt(text_name, hln_name_active)
+      .. txt(text_sep_middle, hln_sep_middle_active)
+      .. txt(text_index, hln_index_active)
+      .. txt(text_sep_right, hln_sep_right_active)
+      .. txt(" ", hln_sep_right_active)
+    return text, btn(hl_text, fn_switch_term, { index })
   end
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
-    name = "term:terms",
+    name = "term:items",
     atomic = false,
-    condition = function(context)
-      return vim.bo[context.bufnr].buftype == "terminal"
-    end,
     render = function(_, remain_width)
-      local termindex = eve.term.current() ---@type integer
-      local text = " " ---@type string
-      local hl_text = " " ---@type string
-      local index = 0 ---@type integer
+      local entries = {} ---@type { term: eve.builtin.term.IMeta, index: integer }[]
+      local total_terms = eve.term.size() ---@type integer
+      for idx = 1, total_terms do
+        local termuuid, termmeta = eve.term.at(idx) ---@type string|nil, eve.builtin.term.IMeta|nil
+        if termuuid ~= nil and termmeta ~= nil then
+          entries[#entries + 1] = { term = termmeta, index = idx }
+        end
+      end
 
-      -- Render existing terminal buttons
-      for termmeta in eve.term:iterator() do
-        index = index + 1 ---@type integer
-        local render = index == termindex and render_termc or render_term
-        local t, ht = render(termmeta, index)
-        local w = vim.api.nvim_strwidth(t) ---@type integer
-        if remain_width < w then
+      local total = #entries ---@type integer
+      if total == 0 then
+        return "", "", false
+      end
+
+      local active_index = eve.term.current() ---@type integer
+      if active_index < 1 or active_index > total_terms then
+        active_index = entries[1].index
+      end
+
+      local active_display_index = nil ---@type integer|nil
+      for display_index, entry in ipairs(entries) do
+        if entry.index == active_index then
+          active_display_index = display_index
+          break
+        end
+      end
+      if active_display_index == nil then
+        active_display_index = 1
+        active_index = entries[1].index
+      end
+
+      local segments = {} ---@type { text: string, hl: string, width: integer }[]
+      for idx, entry in ipairs(entries) do
+        local renderer = idx == active_display_index and render_item_active or render_item
+        local item_text, item_hl = renderer(entry.term, entry.index)
+        segments[idx] = {
+          text = item_text,
+          hl = item_hl,
+          width = vim.api.nvim_strwidth(item_text),
+        }
+      end
+
+      local center = segments[active_display_index]
+      if center == nil then
+        return "", "", false
+      end
+
+      remain_width = remain_width - center.width
+      if remain_width < 0 then
+        return "", "", false
+      end
+
+      local left_reserved_width = active_display_index > 1 and arrow_reserved_width or 0
+      local right_reserved_width = active_display_index < total and arrow_reserved_width or 0
+      remain_width = remain_width - left_reserved_width - right_reserved_width
+
+      local text = center.text ---@type string
+      local hl_text = center.hl ---@type string
+
+      local first_visible_left = active_display_index ---@type integer
+      for idx = active_display_index - 1, 1, -1 do
+        local segment = segments[idx]
+        local width = segment.width
+        if idx == 1 then
+          if remain_width + left_reserved_width >= width then
+            text = segment.text .. text
+            hl_text = segment.hl .. hl_text
+            remain_width = remain_width + left_reserved_width - width
+            first_visible_left = 1
+          end
           break
         end
 
-        text = text .. t .. " "
-        hl_text = hl_text .. ht .. " "
-        remain_width = remain_width - w
+        if remain_width < width then
+          break
+        end
+
+        text = segment.text .. text
+        hl_text = segment.hl .. hl_text
+        remain_width = remain_width - width
+        first_visible_left = idx
       end
 
-      -- Always render the Add button
-      local add_t, add_ht = render_add_button()
-      local add_w = vim.api.nvim_strwidth(add_t) ---@type integer
-      if remain_width >= add_w then
-        text = text .. add_t .. " "
-        hl_text = hl_text .. add_ht .. " "
+      local last_visible_right = active_display_index ---@type integer
+      for idx = active_display_index + 1, total do
+        local segment = segments[idx]
+        local width = segment.width
+        if idx == total then
+          if remain_width + right_reserved_width >= width then
+            text = text .. segment.text
+            hl_text = hl_text .. segment.hl
+            remain_width = remain_width + right_reserved_width - width
+            last_visible_right = total
+          end
+          break
+        end
+
+        if remain_width < width then
+          break
+        end
+
+        text = text .. segment.text
+        hl_text = hl_text .. segment.hl
+        remain_width = remain_width - width
+        last_visible_right = idx
       end
 
-      -- Return empty if no content to show
-      if text == " " or text == "  " then
-        return "", "", false
+      local left_hidden_count = first_visible_left - 1 ---@type integer
+      local right_hidden_count = total - last_visible_right ---@type integer
+      local is_complete = left_hidden_count == 0 and right_hidden_count == 0 ---@type boolean
+
+      if left_hidden_count > 0 then
+        local count = math.min(99, left_hidden_count) ---@type integer
+        local arrow_text = " " .. icon_arrow_left .. "  " .. tostring(count) .. " " ---@type string
+        local arrow_hl = txt(arrow_text, hln_arrow) ---@type string
+        text = arrow_text .. text
+        hl_text = btn(arrow_hl, fn_focus_prev_term) .. hl_text
       end
-      return text, hl_text, true
+
+      if right_hidden_count > 0 then
+        local count = math.min(99, right_hidden_count) ---@type integer
+        local arrow_text = tostring(count) .. " " .. icon_arrow_right .. "  " ---@type string
+        local arrow_hl = txt(arrow_text, hln_arrow) ---@type string
+        text = text .. arrow_text
+        hl_text = hl_text .. btn(arrow_hl, fn_focus_next_term)
+      end
+
+      return text, hl_text, is_complete
     end,
   }
+
   return component
 end
+
+---@param position                      eve.ux.nvimbar.PositionEnum
+---@return eve.ux.nvimbar.IRawComponent
+function M.add_button(position)
+  local hln_button = position .. "_term_button" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "term:add_button",
+    atomic = true,
+    render = function(_, remain_width)
+      local text = " + " ---@type string
+      local width = vim.api.nvim_strwidth(text) ---@type integer
+      if width <= 0 or remain_width < width then
+        return "", "", false
+      end
+
+      local hl_text = txt(text, hln_button)
+      return text, btn(hl_text, fn_add_term), true
+    end,
+  }
+
+  return component
+end
+
+-- Backwards compatibility for legacy consumers
+M.terms = M.items
 
 return M
