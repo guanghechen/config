@@ -16,24 +16,24 @@ end
 
 function M.submit_buffer()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local content = read_buffer(bufnr) ---@type string
-  require("sidekick.cli").send({ msg = content, render = false, focus = false, submit = true })
+  local text = read_buffer(bufnr) ---@type string
+  require("sidekick.cli").send({ text = { { { text } } }, render = false, focus = false, submit = true })
 end
 
 function M.submit_selection()
   local text = eve.buf.retrieve_selected_text() ---@type string
-  require("sidekick.cli").send({ msg = text, render = false, focus = false, submit = true })
+  require("sidekick.cli").send({ text = { { { text } } }, render = false, focus = false, submit = true })
 end
 
 function M.send_buffer()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local content = read_buffer(bufnr) ---@type string
-  require("sidekick.cli").send({ msg = content, render = false })
+  local text = read_buffer(bufnr) ---@type string
+  require("sidekick.cli").send({ text = { { { text } } }, render = false })
 end
 
 function M.send_selection()
   local text = eve.buf.retrieve_selected_text() ---@type string
-  require("sidekick.cli").send({ msg = text, render = false })
+  require("sidekick.cli").send({ text = { { { text } } }, render = false })
 end
 
 function M.send_this()
