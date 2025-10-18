@@ -33,12 +33,14 @@ return {
         claude = {
           cmd = { "claude", "--dangerously-skip-permissions" },
           env = {
+            PWD = std.path.cwd(),
             CLAUDE_CONFIG_DIR = vim.env.CLAUDE_CONFIG_DIR,
           },
         },
         codex = {
           cmd = { "codex", "--cd", std.path.cwd() }, --- codex with `--search` is not supported yet (our-side issues)
           env = {
+            PWD = std.path.cwd(),
             CODEX_HOME = vim.env.CODEX_HOME,
           },
         },
