@@ -1,5 +1,12 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
+---@param content                       string
+---@return nil
+local function write_clipboard_registers(content)
+  vim.fn.setreg('"', content)
+  vim.fn.setreg("+", content)
+end
+
 ---@param candidate                     eve.builtin.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@return nil
@@ -7,7 +14,7 @@ local function copy_current_filepath(candidate, filepath)
   if candidate == "absolute" then
     local content = filepath ---@type string
 
-    vim.fn.setreg("+", content)
+    write_clipboard_registers(content)
     std.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
@@ -16,7 +23,7 @@ local function copy_current_filepath(candidate, filepath)
     local cwd = std.path.cwd() ---@type string
     local content = std.path.relative(cwd, filepath, true) ---@type string
 
-    vim.fn.setreg("+", content)
+    write_clipboard_registers(content)
     std.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
@@ -24,7 +31,7 @@ local function copy_current_filepath(candidate, filepath)
   elseif candidate == "filename" then
     local content = std.path.basename(filepath) ---@type string
 
-    vim.fn.setreg("+", content)
+    write_clipboard_registers(content)
     std.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filename to system clipboard!",

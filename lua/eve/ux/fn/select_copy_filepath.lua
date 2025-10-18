@@ -1,5 +1,12 @@
 local __module_name__ = "eve.ux.fn.select_copy_filepath" ---@type string
 
+---@param content                       string
+---@return nil
+local function write_clipboard_registers(content)
+  vim.fn.setreg('"', content)
+  vim.fn.setreg("+", content)
+end
+
 ---@class eve.ux.fn.select_copy_filepath.IParams
 ---@field public filepath               string
 ---@field public winopts                vim.api.keyset.win_config|nil
@@ -32,7 +39,7 @@ local function select_copy_filepath(params)
         if item.uuid == "absolute" then
           local content = filepath ---@type string
 
-          vim.fn.setreg("+", content)
+          write_clipboard_registers(content)
           std.reporter.info({
             from = __module_name__,
             message = "Copied absolute filepath: " .. content,
@@ -41,14 +48,14 @@ local function select_copy_filepath(params)
           local cwd = std.path.cwd() ---@type string
           local content = std.path.relative(cwd, filepath, true) ---@type string
 
-          vim.fn.setreg("+", content)
+          write_clipboard_registers(content)
           std.reporter.info({
             from = __module_name__,
             message = "Copied relative filepath: " .. content,
           })
         elseif item.uuid == "filename" then
           local content = std.path.basename(filepath) ---@type string
-          vim.fn.setreg("+", content)
+          write_clipboard_registers(content)
           std.reporter.info({
             from = __module_name__,
             message = "Copied filename: " .. content,
