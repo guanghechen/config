@@ -3,8 +3,11 @@
 ---| "confirmation"
 
 ---@class fml.dressing.input.IOptions
----@field public relative               ?"editor"|"cursor"
+---@field public relative               ?"editor"|"cursor"|"win"
+---@field public win                    ?integer
 ---@field public width                  ?integer
+---@field public row                    ?integer
+---@field public col                    ?integer
 ---@field public inputtype                   ?"text"|"confirmation"
 ---
 ---@field public prompt                 ?string
@@ -78,12 +81,48 @@ function M.input(opts, on_confirm)
 
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
   local relative = opts.relative or "cursor"
+  local relative_win = opts.win ---@type integer|nil
+
+  if relative == "win" then
+    if relative_win == nil or not vim.api.nvim_win_is_valid(relative_win) then
+      relative = "cursor"
+      relative_win = nil
+    end
+  else
+    relative_win = nil
+  end
+
   local width = opts.width or 60 ---@type integer
-  local row = relative == "editor" and 3 or (parent_row < 5 and 2 or 2) ---@type integer
-  local col = relative == "editor" and math.floor((vim.o.columns - width) / 2) or 0 ---@type integer
+  local row ---@type integer
+  local col ---@type integer
+
+  if relative == "editor" then
+    row = opts.row or 3
+    col = opts.col or math.floor((vim.o.columns - width) / 2)
+  elseif relative == "win" then
+    row = opts.row or 0
+    col = opts.col or 0
+  else
+    row = opts.row or (parent_row < 5 and 2 or 2)
+    col = opts.col or 0
+  end
+
+  row = math.max(0, row)
+  col = math.max(0, col)
+  width = math.max(1, width)
+
+  local anchor_win_cfg = parent_win_cfg ---@type vim.api.keyset.win_config
+  if relative == "win" and relative_win ~= nil then
+    local ok, cfg = pcall(vim.api.nvim_win_get_config, relative_win)
+    if ok and type(cfg) == "table" then
+      anchor_win_cfg = cfg
+    end
+  end
   local winnr = vim.api.nvim_open_win(bufnr, true, {
-    zindex = parent_win_cfg.zindex and parent_win_cfg.zindex + 1 or nil,
+    zindex = anchor_win_cfg.zindex and anchor_win_cfg.zindex + 1 or nil,
     relative = relative,
+    win = relative_win,
+    anchor = "NW",
     row = row,
     col = col,
     width = width,

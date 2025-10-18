@@ -79,10 +79,45 @@ function M.rename()
     return
   end
 
-  vim.ui.input({
+  local input_opts = {
     prompt = "Enter new terminal name: ",
     default = termmeta.name,
-  }, function(new_name)
+  } ---@type fml.dressing.input.IOptions
+
+  local terminal_widget = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
+  local winnr = terminal_widget:get_winnr() ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    local available_width = nil ---@type integer|nil
+    local ok_width, width_value = pcall(vim.api.nvim_win_get_width, winnr)
+    if ok_width and type(width_value) == "number" then
+      available_width = width_value
+    else
+      local ok_cfg, cfg = pcall(vim.api.nvim_win_get_config, winnr)
+      if ok_cfg and type(cfg) == "table" and type(cfg.width) == "number" then
+        available_width = cfg.width
+      end
+    end
+
+    if type(available_width) == "number" and available_width > 0 then
+      local max_width = math.max(1, available_width - 2) ---@type integer
+      local width = math.min(60, math.max(20, max_width)) ---@type integer
+      width = math.min(width, max_width)
+      local col = math.max(0, math.floor((available_width - width) / 2)) ---@type integer
+
+      input_opts.relative = "win"
+      input_opts.win = winnr
+      input_opts.width = width
+      input_opts.row = 1
+      input_opts.col = col
+    else
+      input_opts.relative = "win"
+      input_opts.win = winnr
+      input_opts.row = 1
+      input_opts.col = 0
+    end
+  end
+
+  vim.ui.input(input_opts, function(new_name)
     if new_name == nil or #new_name == 0 then
       return -- User cancelled or entered empty name
     end
