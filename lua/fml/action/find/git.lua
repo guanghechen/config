@@ -76,6 +76,11 @@ function M.find_git_not_committed()
     return
   end
 
+  if picker:isfocused() then
+    picker:hide()
+    return
+  end
+
   refresh(false)
   picker:focus()
 end

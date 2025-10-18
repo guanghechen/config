@@ -282,6 +282,11 @@ end
 ---@return nil
 function M.search_in_cwd()
   local cwd = std.path.cwd() ---@type string
+  if searcher:isfocused() then
+    searcher:hide()
+    return
+  end
+
   attach(searcher, cwd)
   focus()
 end
