@@ -113,7 +113,25 @@ local function _edit(template)
   end
 
   local lnum_start, col_start, lnum_end, col_end = eve.buf.retrieve_visual_range()
-  local location = std.uri.file_location(filepath, lnum_start, col_start, lnum_end, col_end)
+
+  ---@type std.t.ILocation
+  local raw_location = {
+    filepath = filepath,
+    start_lnum = lnum_start,
+    start_col = col_start,
+    end_lnum = lnum_end,
+    end_col = col_end,
+  }
+  local location, location_err = std.uri.file_location(raw_location)
+  if location == nil then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "edit",
+      message = "Failed to format selection location.",
+      details = { error = location_err, location = raw_location },
+    })
+    location = string.format("@%s", filepath)
+  end
   local lines = eve.buf.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end) ---@type string[]
   local content = table.concat(lines, "\n") ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
@@ -162,8 +180,7 @@ local function _edit(template)
 
   local initial_config = vim.tbl_extend("force", {}, request_base, { prompt = template })
   local default_prompt = eve.ai.render_inline_prompt(initial_config, template) or template
-  local default_location = eve.ai.resolve_inline_location(initial_config)
-    or string.format(":L%d:C%d-L%d:C%d", lnum_start, col_start, lnum_end, col_end)
+  local default_location = eve.ai.resolve_inline_location(initial_config) or location
 
   chatbox = eve.ux.Chatbox.new({
     width = chatbox_width,

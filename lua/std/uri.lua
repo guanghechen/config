@@ -1,15 +1,61 @@
 ---@class std.uri
 local M = {}
 
----@param filepath                      string
----@param lnum_start                    integer
----@param col_start                     integer
----@param lnum_end                      integer
----@param col_end                       integer
-function M.file_location(filepath, lnum_start, col_start, lnum_end, col_end)
-  local uri = vim.uri_from_fname(filepath) ---@type string
-  local location = string.format("%s#L%dC%d-L%dC%d", uri, lnum_start, col_start, lnum_end, col_end)
-  return location
+---@param value                          unknown
+---@return integer|nil
+local function normalize_index(value)
+  local num = tonumber(value)
+  return num ~= nil and math.max(math.floor(num), 1) or nil
+end
+
+---@param location                        std.t.ILocation
+---@return string|nil label
+---@return string|nil err
+function M.file_location(location)
+  if type(location) ~= "table" then
+    return nil, "Location must be a table."
+  end
+
+  local filepath = location.filepath
+  if type(filepath) ~= "string" or #vim.trim(filepath) == 0 then
+    return nil, "Invalid filepath."
+  end
+
+  local relpath = filepath ---@type string
+  local start_lnum = normalize_index(location.start_lnum)
+  local start_col = normalize_index(location.start_col)
+  local end_lnum = normalize_index(location.end_lnum)
+  local end_col = normalize_index(location.end_col)
+
+  local label = string.format("@%s", relpath)
+
+  if start_lnum == nil then
+    return label
+  end
+
+  local resolved_end_lnum = end_lnum or start_lnum ---@type integer
+  local resolved_start_col = start_col or 1 ---@type integer
+  local resolved_end_col = end_col or resolved_start_col ---@type integer
+  local has_explicit_start_col = location.start_col ~= nil and start_col ~= nil ---@type boolean
+  local has_explicit_end_col = location.end_col ~= nil and end_col ~= nil ---@type boolean
+
+  label = label .. string.format(" :L%d", start_lnum)
+  if has_explicit_start_col then
+    label = label .. string.format(":C%d", resolved_start_col)
+  end
+
+  if resolved_end_lnum ~= start_lnum then
+    label = label .. string.format("-L%d", resolved_end_lnum)
+    local should_show_end_col = has_explicit_end_col
+      or (has_explicit_start_col and resolved_end_col ~= resolved_start_col)
+    if should_show_end_col then
+      label = label .. string.format(":C%d", resolved_end_col)
+    end
+  elseif has_explicit_start_col and has_explicit_end_col and resolved_end_col ~= resolved_start_col then
+    label = label .. string.format("-C%d", resolved_end_col)
+  end
+
+  return label
 end
 
 return M
