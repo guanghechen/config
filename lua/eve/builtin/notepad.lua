@@ -45,8 +45,7 @@ local function notify_active_changed()
   o_active_uuid:next(activated_uuid or "")
 end
 
----@return string
----@param name string|nil
+---@param name                          string|nil
 ---@return string
 local function normalize_name(name)
   if type(name) == "string" then
@@ -131,12 +130,14 @@ local function ensure_loaded()
   orders = {}
   activated_uuid = nil
 
+  ---@type table|nil
   local raw_data = std.fs.read_json({
     filepath = data_filepath,
     silent_on_bad_path = true,
     silent_on_bad_json = false,
-  }) ---@type table|nil
-  local mutated = false ---@type boolean
+  })
+  ---@type boolean
+  local mutated = false
 
   if type(raw_data) == "table" then
     local raw_items = raw_data.items ---@type any
