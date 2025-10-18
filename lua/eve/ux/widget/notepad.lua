@@ -58,7 +58,7 @@ local NOTEPAD_KEYMAPS = {
   },
   {
     modes = { "i", "n", "v" },
-    key = "<C-r>",
+    key = "<C-/>",
     desc = K.notepad.rename.desc,
     callback = function()
       vim.cmd(K.notepad.rename.uuid)
