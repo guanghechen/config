@@ -10,13 +10,6 @@ end
 
 ---@return nil
 function M.resume_last_widget()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local maximized_original = eve.state.maximized.get_original() ---@type eve.state.maximized.IOriginalWindow|nil
-  if maximized_original ~= nil and maximized_original.winnr == winnr then
-    eve.command.execute(eve.command.definitions.toggle.maximize.uuid)
-    return
-  end
-
   -- Check if searcher buffer widget exists and is visible
   local search_buffer_action = require("fml.action.search.buffer")
   local searcher = search_buffer_action.get_searcher() ---@type eve.ux.searcher.buffer.Searcher|nil
