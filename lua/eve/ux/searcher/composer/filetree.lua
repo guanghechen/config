@@ -52,6 +52,7 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field public keymaps_common         ?std.t.IKeymap[]
 ---@field public keymaps_finder         ?std.t.IKeymap[]
 ---@field public keymaps_preview        ?std.t.IKeymap[]
+---@field public keymaps_replacer       ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
 ---@field public excludes               std.collection.IObservable
@@ -207,6 +208,95 @@ function M.new(props)
     name = fullname,
   })
 
+  ---@param nodeuuid                    string
+  ---@return std.collection.filetree.INode|nil
+  ---@return eve.ux.searcher.view.filetree.INodeState|nil
+  local function retrieve_node_and_state(nodeuuid)
+    local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
+    local baseuuid = nodeuuid ---@type string
+
+    if nodestate ~= nil and nodestate.nodetype == "location" then
+      ---@cast nodestate                    eve.ux.searcher.view.filetree.ILeafLocationState
+      if type(nodestate.leafuuid) == "string" then
+        baseuuid = nodestate.leafuuid
+      end
+    end
+
+    local node = filetree:retrieve(baseuuid) ---@type std.collection.filetree.INode|nil
+    return node, nodestate
+  end
+
+  ---@param filepath                     string
+  ---@param locationstate                eve.ux.searcher.view.filetree.ILeafLocationState
+  ---@return std.t.ILocation
+  local function build_ai_location(filepath, locationstate)
+    local start_lnum = type(locationstate.lnum) == "number" and math.floor(locationstate.lnum) or nil ---@type integer|nil
+    local end_lnum = start_lnum ---@type integer|nil
+
+    local start_col0 = type(locationstate.col) == "number" and math.floor(locationstate.col) or nil ---@type integer|nil
+    local end_col0 = type(locationstate.col_end) == "number" and math.floor(locationstate.col_end) or nil ---@type integer|nil
+
+    local highlights = locationstate.highlights ---@type std.t.IHighlightInline[]|nil
+    if highlights ~= nil then
+      for _, highlight in ipairs(highlights) do
+        if start_col0 == nil and type(highlight.coll) == "number" then
+          start_col0 = math.floor(highlight.coll)
+        end
+        if type(highlight.colr) == "number" then
+          local colr = math.floor(highlight.colr) ---@type integer
+          end_col0 = end_col0 ~= nil and math.max(end_col0, colr) or colr
+        end
+        if start_col0 ~= nil and end_col0 ~= nil then
+          break
+        end
+      end
+    end
+
+    local start_col = start_col0 ~= nil and (start_col0 + 1) or nil ---@type integer|nil
+    local end_col = end_col0 ~= nil and end_col0 or nil ---@type integer|nil
+
+    if start_col ~= nil then
+      end_col = end_col ~= nil and math.max(end_col, start_col) or start_col
+    elseif end_col ~= nil then
+      start_col = end_col
+    end
+
+    return {
+      filepath = filepath,
+      start_lnum = start_lnum,
+      start_col = start_col,
+      end_lnum = end_lnum,
+      end_col = end_col,
+    }
+  end
+
+  ---@param target                       std.t.ILocation[]
+  ---@param node                         std.collection.filetree.INode|nil
+  ---@param nodestate                    eve.ux.searcher.view.filetree.INodeState|nil
+  ---@param include_directory            boolean
+  local function append_location_payload(target, node, nodestate, include_directory)
+    if node == nil then
+      return
+    end
+
+    local data = node.data ---@type table<string, any>
+    local filepath = data.filepath ---@type string|nil
+    local filetype = data.filetype ---@type string|nil
+    if type(filepath) ~= "string" or #filepath == 0 then
+      return
+    end
+
+    if nodestate ~= nil and nodestate.nodetype == "location" and filetype == "file" then
+      ---@cast nodestate                    eve.ux.searcher.view.filetree.ILeafLocationState
+      target[#target + 1] = build_ai_location(filepath, nodestate)
+      return
+    end
+
+    if filetype == "file" or (include_directory and filetype == "directory") then
+      target[#target + 1] = { filepath = filepath }
+    end
+  end
+
   ---@type eve.ux.searcher.PlainfileView
   local plainfile = eve.ux.searcher.PlainfileView.new({
     name = fullname,
@@ -336,15 +426,15 @@ function M.new(props)
         return
       end
 
-      local filepaths = {} ---@type string[]
+      local locations = {} ---@type std.t.ILocation[]
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
-        if node ~= nil and node.data.filetype == "file" then
-          filepaths[#filepaths + 1] = node.data.filepath
+        if nodeuuid ~= nil then
+          local node, nodestate = retrieve_node_and_state(nodeuuid)
+          append_location_payload(locations, node, nodestate, false)
         end
       end
-      eve.plugin.add_files_to_ai(filepaths)
+      eve.ai.add_files_to_ai(locations)
     end,
     add_subtree_to_ai = function()
       local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
@@ -352,15 +442,15 @@ function M.new(props)
         return
       end
 
-      local filepaths = {} ---@type string[]
+      local locations = {} ---@type std.t.ILocation[]
       local lnum = lnum_from ---@type integer
       while lnum <= lnum_to do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local node = filetree:retrieve(nodeuuid) ---@type std.collection.filetree.INode|nil
-          if node ~= nil then
-            filepaths[#filepaths + 1] = node.data.filepath
+          local node, nodestate = retrieve_node_and_state(nodeuuid)
+          append_location_payload(locations, node, nodestate, true)
 
+          if node ~= nil then
             if node.data.filetype == "directory" then
               local lnum_childline = retriever:retrieve_lastchild_lnum(lnum) ---@type integer|nil
               if lnum_childline ~= nil and lnum_childline > 0 then
@@ -371,7 +461,7 @@ function M.new(props)
         end
         lnum = lnum + 1
       end
-      eve.plugin.add_files_to_ai(filepaths)
+      eve.ai.add_files_to_ai(locations)
     end,
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -1181,7 +1271,8 @@ function M.new(props)
 
     keymaps_common = keymaps_common and vim.list_extend(preset_keymaps_common, keymaps_common) or preset_keymaps_common,
     keymaps_finder = keymaps_finder and vim.list_extend(preset_keymaps_finder, keymaps_finder) or preset_keymaps_finder,
-    keymaps_replacer = keymaps_replacer and vim.list_extend(preset_keymaps_replacer, keymaps_replacer) or preset_keymaps_replacer,
+    keymaps_replacer = keymaps_replacer and vim.list_extend(preset_keymaps_replacer, keymaps_replacer)
+      or preset_keymaps_replacer,
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
@@ -1439,9 +1530,12 @@ function M.new(props)
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_replace_pattern, o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive }, function()
-    scheduler_search:schedule()
-  end)
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
+    { o_replace_pattern, o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive },
+    function()
+      scheduler_search:schedule()
+    end
+  )
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil

@@ -1,3 +1,5 @@
+local __module_name__ = "fml.action.log" ---@type string
+
 local M = {}
 
 ---@param content                          string
@@ -26,12 +28,20 @@ end
 local function show_json_preview(content)
   local json = extract_json_content(content)
   if not json then
-    vim.notify("No JSON content found in the selection", vim.log.levels.WARN)
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "preview_json",
+      message = "No JSON content found in the selection.",
+    })
     return
   end
 
   if not json then
-    vim.notify("Failed to format JSON content", vim.log.levels.ERROR)
+    std.reporter.error({
+      from = __module_name__,
+      subject = "preview_json",
+      message = "Failed to format JSON content.",
+    })
     return
   end
 

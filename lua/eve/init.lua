@@ -16,7 +16,6 @@ local __mods = {
   notifier = "eve.builtin.notifier",
   nvim = "eve.builtin.nvim",
   qflist = "eve.builtin.qflist",
-  plugin = "eve.builtin.plugin",
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
   shell = "eve.builtin.shell",
@@ -53,7 +52,6 @@ local __mods = {
 ---@field public notifier               eve.builtin.notifier
 ---@field public nvim                   eve.builtin.nvim
 ---@field public qflist                 eve.builtin.qflist
----@field public plugin                 eve.builtin.plugin
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting
 ---@field public shell                  eve.builtin.shell

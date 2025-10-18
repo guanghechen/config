@@ -33,15 +33,6 @@ local original_code_action = vim.lsp.buf.code_action
 
 local patched = false ---@type boolean
 
----@param value                         any
----@return boolean
-local function is_list(value)
-  if vim.islist then
-    return vim.islist(value)
-  end
-  return vim.tbl_islist(value)
-end
-
 ---@param bufnr                          integer
 ---@param mode                           string
 ---@return { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }
@@ -98,7 +89,7 @@ local function collect_provider_actions(ctx)
       })
     elseif result ~= nil then
       local items ---@type eve.builtin.lsp_action.ProviderAction[]
-      if is_list(result) then
+      if vim.is_list(result) then
         items = result
       else
         items = { result }
@@ -167,7 +158,9 @@ end
 ---@return nil
 local function custom_code_action(opts)
   opts = opts or {}
-  local context = opts.context and vim.deepcopy(opts.context) or {}
+  local context = opts.context and vim.deepcopy(opts.context) or {} ---@type lsp.CodeActionContext
+  local has_external_diagnostics = context.diagnostics ~= nil
+  context.diagnostics = context.diagnostics or {}
   if not context.triggerKind then
     context.triggerKind = lsp.protocol.CodeActionTriggerKind.Invoked
   end
@@ -189,12 +182,19 @@ local function custom_code_action(opts)
   local function build_params(client)
     local params
     if provider_ctx.selection ~= nil then
-      params = util.make_given_range_params(provider_ctx.selection.start, provider_ctx.selection["end"], bufnr, client.offset_encoding)
+      local selection_start = provider_ctx.selection.start
+      local selection_end = provider_ctx.selection["end"]
+      ---@type [integer, integer]
+      local start_pos = { selection_start.line + 1, selection_start.character }
+      ---@type [integer, integer]
+      local end_pos = { selection_end.line + 1, selection_end.character }
+      params = util.make_given_range_params(start_pos, end_pos, bufnr, client.offset_encoding)
     else
       params = util.make_range_params(win, client.offset_encoding)
     end
+    ---@cast params lsp.CodeActionParams
 
-    if context.diagnostics then
+    if has_external_diagnostics then
       params.context = context
     else
       local ns_pull = lsp.diagnostic.get_namespace(client.id, false)
@@ -202,11 +202,15 @@ local function custom_code_action(opts)
       local diagnostics = {}
       vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum }))
       vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
-      params.context = vim.tbl_extend("force", context, {
+      local enriched_context = vim.tbl_extend("force", context, {
         diagnostics = vim.tbl_map(function(diagnostic)
           return diagnostic.user_data and diagnostic.user_data.lsp or diagnostic
         end, diagnostics),
       })
+      ---@cast enriched_context lsp.CodeActionContext
+      params.context = enriched_context
+      context = enriched_context
+      has_external_diagnostics = true
     end
 
     return params
@@ -271,7 +275,11 @@ local function custom_code_action(opts)
     end
 
     if action.disabled then
-      vim.notify(action.disabled.reason, vim.log.levels.ERROR)
+      std.reporter.error({
+        from = __module_name__,
+        subject = "code_action",
+        message = action.disabled.reason,
+      })
       return
     end
 
@@ -281,7 +289,11 @@ local function custom_code_action(opts)
           if action.edit or action.command then
             apply_action(action, client, choice.ctx)
           else
-            vim.notify(err.code .. ": " .. err.message, vim.log.levels.ERROR)
+            std.reporter.error({
+              from = __module_name__,
+              subject = "code_action",
+              message = err.code .. ": " .. err.message,
+            })
           end
         else
           apply_action(resolved_action, client, choice.ctx)
@@ -360,7 +372,7 @@ local function custom_code_action(opts)
         if include then
           actions[#actions + 1] = {
             action = provider_action.action,
-            ctx = { bufnr = bufnr, client_id = -1 },
+            ctx = { bufnr = bufnr, client_id = -1, method = "textDocument/codeAction" },
             __provider_action = provider_action,
           }
         end
@@ -368,7 +380,11 @@ local function custom_code_action(opts)
     end
 
     if #actions == 0 then
-      vim.notify("No code actions available", vim.log.levels.INFO)
+      std.reporter.info({
+        from = __module_name__,
+        subject = "code_action",
+        message = "No code actions available.",
+      })
       return
     end
 

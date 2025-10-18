@@ -620,7 +620,7 @@ picker = eve.ux.picker.ListComposer.new({
         ---@cast item                   fml.action.find.explorer.IItem|nil
 
         if item ~= nil then
-          eve.plugin.add_files_to_ai({ item.data.fileitem.path })
+          eve.ai.add_files_to_ai({ { filepath = item.data.fileitem.path } })
         end
       end,
     },
@@ -637,7 +637,7 @@ picker = eve.ux.picker.ListComposer.new({
         ---@cast item                   fml.action.find.explorer.IItem|nil
 
         if item ~= nil then
-          eve.plugin.add_files_to_ai({ item.data.fileitem.path })
+          eve.ai.add_files_to_ai({ { filepath = item.data.fileitem.path } })
         end
       end,
     },

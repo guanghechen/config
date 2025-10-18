@@ -1,5 +1,156 @@
+local __module_name__ = "eve.builtin.ai" ---@type string
+
 ---@class eve.builtin.ai
 local M = {}
+
+local payload_bufnr ---@type integer|nil
+
+---@return integer|nil                    bufnr, string|nil err
+local function ensure_payload_buffer()
+  if payload_bufnr ~= nil and vim.api.nvim_buf_is_valid(payload_bufnr) then
+    return payload_bufnr, nil
+  end
+
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  if bufnr == 0 then
+    payload_bufnr = nil
+    return nil, "Failed to create scratch buffer."
+  end
+
+  payload_bufnr = bufnr
+
+  vim.bo[bufnr].buflisted = true
+  vim.bo[bufnr].bufhidden = "hide"
+  vim.bo[bufnr].buftype = "nofile"
+  vim.bo[bufnr].swapfile = false
+  vim.bo[bufnr].filetype = "text"
+  vim.bo[bufnr].modifiable = true
+  vim.bo[bufnr].readonly = false
+
+  local ok_name, err = pcall(vim.api.nvim_buf_set_name, bufnr, "ai://locations")
+  if not ok_name then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "Failed to set AI payload buffer name.",
+      details = { error = err },
+    })
+  end
+
+  return bufnr, nil
+end
+
+---@param locations                     std.t.ILocation[]|nil
+---@return nil
+function M.add_files_to_ai(locations)
+  if type(locations) ~= "table" then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "Invalid payload: expected a list of locations.",
+      details = { locations = locations },
+    })
+    return
+  end
+
+  local valid_locations = {} ---@type std.t.ILocation[]
+  local invalid_indices = {} ---@type integer[]
+  for index, location in ipairs(locations) do
+    if type(location) == "table" and type(location.filepath) == "string" and #vim.trim(location.filepath) > 0 then
+      valid_locations[#valid_locations + 1] = location
+    else
+      invalid_indices[#invalid_indices + 1] = index
+    end
+  end
+
+  if vim.tbl_isempty(valid_locations) then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "No valid locations provided.",
+      details = vim.tbl_isempty(invalid_indices) and { locations = locations } or { invalid_indices = invalid_indices },
+    })
+    return
+  end
+
+  local lines = {} ---@type string[]
+  local failures = {} ---@type { index: integer, error: string, location: std.t.ILocation }[]
+
+  for index, location in ipairs(valid_locations) do
+    local text, err = std.uri.file_location(location)
+    if text ~= nil then
+      lines[#lines + 1] = text
+    else
+      failures[#failures + 1] = {
+        index = index,
+        error = err or "Unknown error.",
+        location = location,
+      }
+    end
+  end
+
+  if vim.tbl_isempty(lines) then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "No locations could be stringified.",
+      details = not vim.tbl_isempty(failures) and { failures = failures } or nil,
+    })
+    return
+  end
+
+  if not vim.tbl_isempty(failures) then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = string.format("Skipped %d invalid location%s.", #failures, #failures == 1 and "" or "s"),
+      details = { failures = failures },
+    })
+  end
+
+  local bufnr_payload, buf_err = ensure_payload_buffer()
+  if bufnr_payload == nil then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "Failed to prepare AI payload buffer.",
+      details = { error = buf_err },
+    })
+    return
+  end
+
+  vim.bo[bufnr_payload].modifiable = true
+  vim.api.nvim_buf_set_lines(bufnr_payload, 0, -1, false, lines)
+  vim.bo[bufnr_payload].modified = false
+
+  local winid = vim.fn.bufwinid(bufnr_payload) ---@type integer
+  if winid ~= -1 then
+    vim.api.nvim_win_set_buf(winid, bufnr_payload)
+  end
+
+  local payload = table.concat(lines, "\n") ---@type string
+  local copy_failures = {} ---@type string[]
+  for _, register in ipairs({ '"', '+' }) do
+    local ok_register, register_err = pcall(vim.fn.setreg, register, payload)
+    if not ok_register then
+      copy_failures[#copy_failures + 1] = string.format("%s register: %s", register, register_err)
+    end
+  end
+
+  if #copy_failures > 0 then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "Copy failed: " .. table.concat(copy_failures, "; "),
+    })
+  else
+    std.reporter.info({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "Locations copied to clipboard.",
+    })
+  end
+end
 
 ---@class eve.builtin.ai.ISidekickContext
 ---@field win                           integer
@@ -132,7 +283,7 @@ end
 ---@return string|nil
 function M.resolve_inline_location(config)
   local ctx = build_context(config)
-  local location = require("sidekick.cli.location").get(ctx, { kind = "position" })
+  local location = require("sidekick.cli.context.location").get(ctx, { kind = "position" })
   if not location then
     return nil
   end

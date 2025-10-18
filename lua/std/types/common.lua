@@ -48,6 +48,13 @@
 ---@field public row                    integer
 ---@field public col                    integer
 
+---@class std.t.ILocation
+---@field public filepath               string
+---@field public start_lnum             ?integer
+---@field public start_col              ?integer
+---@field public end_lnum               ?integer
+---@field public end_col                ?integer
+
 ---@class std.t.IMatchLocation
 ---@field public offset                 integer
 ---@field public lnum                   integer

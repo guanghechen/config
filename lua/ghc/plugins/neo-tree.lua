@@ -70,7 +70,7 @@ return {
         end
 
         local filepath = node:get_id() ---@type string
-        eve.plugin.add_files_to_ai({ filepath })
+        eve.ai.add_files_to_ai({ { filepath = filepath } })
       end,
       copy_filepath = function(state)
         local node = state.tree:get_node()
