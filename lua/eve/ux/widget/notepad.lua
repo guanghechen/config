@@ -209,7 +209,9 @@ function Notepad.new(props)
       end
     end,
   })
-  self._nvimbar:place("left", eve.ux.nvimbar.component.notepad.items("f_wl"), 100)
+  self._nvimbar
+    :place("left", eve.ux.nvimbar.component.notepad.items("f_wl"), 95)
+    :place("left", eve.ux.nvimbar.component.notepad.add_button("f_wl"), 100)
 
   self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(
     std.Subscriber.new({

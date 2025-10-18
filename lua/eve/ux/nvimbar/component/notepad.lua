@@ -16,6 +16,16 @@ local fn_add_notepad = eve.G.register_anonymous_fn(function()
   vim.cmd(eve.command.definitions.notepad.create.uuid)
 end) or "eve.G.noop"
 
+---@type string
+local fn_focus_prev_notepad = eve.G.register_anonymous_fn(function()
+  eve.notepad.focus_step(-1)
+end) or "eve.G.noop"
+
+---@type string
+local fn_focus_next_notepad = eve.G.register_anonymous_fn(function()
+  eve.notepad.focus_step(1)
+end) or "eve.G.noop"
+
 ---@class eve.ux.nvimbar.component.notepad
 local M = {}
 
@@ -26,7 +36,6 @@ function M.items(position)
   local hln_name = position .. "_notepad_name" ---@type string
   local hln_index = position .. "_notepad_index" ---@type string
   local hln_sep_left = position .. "_notepad_sep_left" ---@type string
-  local hln_sep_middle = position .. "_notepad_sep_middle" ---@type string
   local hln_sep_right = position .. "_notepad_sep_right" ---@type string
 
   local hln_name_active = position .. "_notepadc_name" ---@type string
@@ -39,7 +48,12 @@ function M.items(position)
   local text_sep_middle = " | " ---@type string
   local text_sep_right = eve.icon.symbols.sep_right ---@type string
 
-  ---@param item                        eve.builtin.notepad.INotepadItem
+  local icon_arrow_left = eve.icon.ui.Left ---@type string
+  local icon_arrow_right = eve.icon.ui.Right ---@type string
+  local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
+  local hln_arrow = eve.nvim.make_bg_transparency(hln_button) ---@type string
+
+  ---@param item                            eve.builtin.notepad.INotepadItem
   ---@return string
   local function format_name(item)
     local name = vim.trim(item.name or "") ---@type string
@@ -52,44 +66,39 @@ function M.items(position)
     return name
   end
 
-  ---@param item                        eve.builtin.notepad.INotepadItem
+  ---@param item                            eve.builtin.notepad.INotepadItem
+  ---@param index                           integer
   ---@return string
   ---@return string
   local function render_item(item, index)
     local name = format_name(item) ---@type string
     local text_name = name .. " " ---@type string
     local text_index = " " .. tostring(index) ---@type string
-    local text = text_sep_left .. text_name .. text_index .. text_sep_right ---@type string
+    local text = text_sep_left .. text_name .. text_index .. text_sep_right .. " " ---@type string
     local hl_text = txt(text_sep_left, hln_sep_left)
       .. txt(text_name, hln_name)
       .. txt(text_index, hln_index)
       .. txt(text_sep_right, hln_sep_right)
+      .. txt(" ", hln_sep_right)
     return text, btn(hl_text, fn_switch_notepad, { index })
   end
 
-  ---@param item                        eve.builtin.notepad.INotepadItem
-  ---@param index                       integer
+  ---@param item                            eve.builtin.notepad.INotepadItem
+  ---@param index                           integer
   ---@return string
   ---@return string
   local function render_item_active(item, index)
     local name = format_name(item) ---@type string
-    local text_name = name .. " " ---@type string
+    local text_name = name ---@type string
     local text_index = tostring(index) ---@type string
-    local text = text_sep_left .. text_name .. text_sep_middle .. text_index .. text_sep_right ---@type string
+    local text = text_sep_left .. text_name .. text_sep_middle .. text_index .. text_sep_right .. " " ---@type string
     local hl_text = txt(text_sep_left, hln_sep_left_active)
       .. txt(text_name, hln_name_active)
       .. txt(text_sep_middle, hln_sep_middle_active)
       .. txt(text_index, hln_index_active)
       .. txt(text_sep_right, hln_sep_right_active)
+      .. txt(" ", hln_sep_right_active)
     return text, btn(hl_text, fn_switch_notepad, { index })
-  end
-
-  ---@return string
-  ---@return string
-  local function render_add_button()
-    local text = " +" ---@type string
-    local hl_text = txt(text, hln_button)
-    return text, btn(hl_text, fn_add_notepad)
   end
 
   ---@type eve.ux.nvimbar.IRawComponent
@@ -99,33 +108,159 @@ function M.items(position)
     render = function(_, remain_width)
       eve.notepad.load()
 
-      local text = " " ---@type string
-      local hl_text = " " ---@type string
-
-      local _, active_uuid = eve.notepad.current() ---@type integer, string|nil
+      local entries = {} ---@type { item: eve.builtin.notepad.INotepadItem, index: integer }[]
       for item, index in eve.notepad:iterator() do
-        local renderer = item.uuid == active_uuid and render_item_active or render_item
-        local t, ht = renderer(item, index)
-        local w = vim.api.nvim_strwidth(t) ---@type integer
-        if remain_width < w then
-          break
-        end
-        text = text .. t .. " "
-        hl_text = hl_text .. ht .. " "
-        remain_width = remain_width - w
+        entries[#entries + 1] = { item = item, index = index }
       end
 
-      local add_text, add_hl = render_add_button()
-      local add_width = vim.api.nvim_strwidth(add_text) ---@type integer
-      if remain_width >= add_width then
-        text = text .. add_text .. " "
-        hl_text = hl_text .. add_hl .. " "
-      end
-
-      if text == " " or text == "  " then
+      local total = #entries ---@type integer
+      if total == 0 then
         return "", "", false
       end
-      return text, hl_text, true
+
+      local active_index, active_uuid = eve.notepad.current()
+      local active_uuid_text = type(active_uuid) == "string" and active_uuid or nil ---@type string|nil
+      local active_display_index = nil ---@type integer|nil
+
+      if active_uuid_text ~= nil then
+        for idx, entry in ipairs(entries) do
+          if entry.item.uuid == active_uuid_text then
+            active_display_index = idx
+            break
+          end
+        end
+      end
+
+      if active_display_index == nil then
+        if type(active_index) == "number" and active_index >= 1 and active_index <= total then
+          active_display_index = active_index
+          active_uuid_text = entries[active_display_index].item.uuid
+        else
+          active_display_index = 1
+          active_uuid_text = entries[1].item.uuid
+        end
+      end
+
+      local segments = {} ---@type { text: string, hl: string, width: integer }[]
+      for idx, entry in ipairs(entries) do
+        local renderer = entry.item.uuid == active_uuid_text and render_item_active or render_item
+        local item_text, item_hl = renderer(entry.item, entry.index)
+        segments[idx] = {
+          text = item_text,
+          hl = item_hl,
+          width = vim.api.nvim_strwidth(item_text),
+        }
+      end
+
+      local center = segments[active_display_index]
+      if center == nil then
+        return "", "", false
+      end
+
+      remain_width = remain_width - center.width
+      if remain_width < 0 then
+        return "", "", false
+      end
+
+      local left_reserved_width = active_display_index > 1 and arrow_reserved_width or 0
+      local right_reserved_width = active_display_index < total and arrow_reserved_width or 0
+      remain_width = remain_width - left_reserved_width - right_reserved_width
+
+      local text = center.text ---@type string
+      local hl_text = center.hl ---@type string
+
+      local first_visible_left = active_display_index ---@type integer
+      for idx = active_display_index - 1, 1, -1 do
+        local segment = segments[idx]
+        local width = segment.width
+        if idx == 1 then
+          if remain_width + left_reserved_width >= width then
+            text = segment.text .. text
+            hl_text = segment.hl .. hl_text
+            remain_width = remain_width + left_reserved_width - width
+            first_visible_left = 1
+          end
+          break
+        end
+
+        if remain_width < width then
+          break
+        end
+
+        text = segment.text .. text
+        hl_text = segment.hl .. hl_text
+        remain_width = remain_width - width
+        first_visible_left = idx
+      end
+
+      local last_visible_right = active_display_index ---@type integer
+      for idx = active_display_index + 1, total do
+        local segment = segments[idx]
+        local width = segment.width
+        if idx == total then
+          if remain_width + right_reserved_width >= width then
+            text = text .. segment.text
+            hl_text = hl_text .. segment.hl
+            remain_width = remain_width + right_reserved_width - width
+            last_visible_right = total
+          end
+          break
+        end
+
+        if remain_width < width then
+          break
+        end
+
+        text = text .. segment.text
+        hl_text = hl_text .. segment.hl
+        remain_width = remain_width - width
+        last_visible_right = idx
+      end
+
+      local left_hidden_count = first_visible_left - 1 ---@type integer
+      local right_hidden_count = total - last_visible_right ---@type integer
+      local is_complete = (left_hidden_count == 0 and right_hidden_count == 0) ---@type boolean
+
+      if left_hidden_count > 0 then
+        local count = math.min(99, left_hidden_count) ---@type integer
+        local arrow_text = " " .. icon_arrow_left .. "  " .. tostring(count) .. " " ---@type string
+        local arrow_hl = txt(arrow_text, hln_arrow) ---@type string
+        text = arrow_text .. text
+        hl_text = btn(arrow_hl, fn_focus_prev_notepad) .. hl_text
+      end
+
+      if right_hidden_count > 0 then
+        local count = math.min(99, right_hidden_count) ---@type integer
+        local arrow_text = tostring(count) .. " " .. icon_arrow_right .. "  " ---@type string
+        local arrow_hl = txt(arrow_text, hln_arrow) ---@type string
+        text = text .. arrow_text
+        hl_text = hl_text .. btn(arrow_hl, fn_focus_next_notepad)
+      end
+
+      return text, hl_text, is_complete
+    end,
+  }
+
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.PositionEnum
+---@return eve.ux.nvimbar.IRawComponent
+function M.add_button(position)
+  local hln_button = position .. "_notepad_button" ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "notepad:add_button",
+    atomic = true,
+    render = function(_, remain_width)
+      local text = " + " ---@type string
+      local hl_text = txt(text, hln_button)
+      local width = vim.api.nvim_strwidth(text) ---@type integer
+      if width <= 0 or remain_width < width then
+        return "", "", false
+      end
+      return text, btn(hl_text, fn_add_notepad), true
     end,
   }
 
