@@ -11,6 +11,13 @@ local instances = {} ---@type table<string, eve.ux.widget.Notepad>
 local function ensure_instance(key, props)
   eve.notepad.load()
 
+  if eve.notepad.current_item() == nil then
+    local first_uuid = eve.notepad.at(1) ---@type string|nil
+    if first_uuid == nil or not eve.notepad.focus_uuid(first_uuid) then
+      eve.notepad.create(nil)
+    end
+  end
+
   key = key or DEFAULT_KEY
 
   local widget = instances[key] ---@type eve.ux.widget.Notepad|nil
@@ -235,6 +242,10 @@ function M.destroy()
     answer = vim.trim(answer:lower())
     if answer:sub(1, 1) ~= "y" then
       return
+    end
+
+    if eve.notepad.size() <= 1 then
+      eve.notepad.create(nil)
     end
 
     if eve.notepad.remove(item.uuid) then

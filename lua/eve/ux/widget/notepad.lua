@@ -73,6 +73,14 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
+    modes = { "n" },
+    key = "<leader>dd",
+    desc = K.notepad.destroy.desc,
+    callback = function()
+      vim.cmd(K.notepad.destroy.uuid)
+    end,
+  },
+  {
     modes = { "i", "n", "v" },
     key = "<C-,>",
     desc = K.notepad.focus_left.desc,
