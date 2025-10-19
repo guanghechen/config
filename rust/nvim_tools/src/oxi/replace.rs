@@ -1,4 +1,8 @@
 use crate::types::dto::FunResult;
+use crate::types::dto::ReplaceAllMatchesInBufferParams;
+use crate::types::dto::ReplaceAllMatchesInBufferResult;
+use crate::types::dto::ReplaceCurrentMatchInBufferParams;
+use crate::types::dto::ReplaceCurrentMatchInBufferResult;
 use crate::types::dto::ReplaceFileByMatchesAdvanceParams;
 use crate::types::dto::ReplaceFileByMatchesParams;
 use crate::types::dto::ReplaceFileParams;
@@ -11,10 +15,6 @@ use crate::types::dto::ReplaceTextPreviewAdvanceParams;
 use crate::types::dto::ReplaceTextPreviewByMatchesAdvanceParams;
 use crate::types::dto::ReplaceTextPreviewByMatchesParams;
 use crate::types::dto::ReplaceTextPreviewParams;
-use crate::types::dto::ReplaceCurrentMatchInBufferParams;
-use crate::types::dto::ReplaceCurrentMatchInBufferResult;
-use crate::types::dto::ReplaceAllMatchesInBufferParams;
-use crate::types::dto::ReplaceAllMatchesInBufferResult;
 use crate::util;
 use nvim_oxi::api::Buffer;
 
@@ -303,14 +303,10 @@ pub fn replace_current_match_in_buffer(
             let new_lines: Vec<String> = new_text.split('\n').map(|s| s.to_string()).collect();
 
             match buffer.set_lines(.., false, new_lines) {
-                Ok(_) => {
-                    FunResult {
-                        error: None,
-                        data: Some(ReplaceCurrentMatchInBufferResult {
-                            success: true,
-                        }),
-                    }
-                }
+                Ok(_) => FunResult {
+                    error: None,
+                    data: Some(ReplaceCurrentMatchInBufferResult { success: true }),
+                },
                 Err(err) => FunResult {
                     error: Some(format!("Failed to update buffer: {}", err)),
                     data: None,

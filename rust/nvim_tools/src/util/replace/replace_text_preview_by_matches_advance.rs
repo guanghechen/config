@@ -1,7 +1,7 @@
 use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::dto::MatchPoint;
-use crate::util::regex::compile_regex;
 use crate::types::dto::ReplacePreviewResult;
+use crate::util::regex::compile_regex;
 use regex::Captures;
 use std::collections::HashSet;
 

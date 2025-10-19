@@ -1,12 +1,12 @@
-use serde::Deserialize;
-use serde::Serialize;
 use nvim_oxi::conversion::Error as ConversionError;
 use nvim_oxi::conversion::FromObject;
 use nvim_oxi::conversion::ToObject;
+use nvim_oxi::lua;
 use nvim_oxi::serde::Deserializer;
 use nvim_oxi::serde::Serializer;
-use nvim_oxi::lua;
 use nvim_oxi::Object;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "lowercase")]

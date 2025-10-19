@@ -31,9 +31,7 @@ impl ToObject for LineMatch {
 }
 
 impl Poppable for LineMatch {
-    unsafe fn pop(
-        lua_state: *mut nvim_oxi::lua::ffi::State,
-    ) -> Result<Self, nvim_oxi::lua::Error> {
+    unsafe fn pop(lua_state: *mut nvim_oxi::lua::ffi::State) -> Result<Self, nvim_oxi::lua::Error> {
         unsafe {
             let obj = Object::pop(lua_state)?;
             Self::from_object(obj).map_err(nvim_oxi::lua::Error::pop_error_from_err::<Self, _>)

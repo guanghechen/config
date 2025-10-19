@@ -26,6 +26,10 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
             "count_lines",
             lua.create_function(|_, text: String| Ok(string::count_lines(&text)))?,
         ),
+        (
+            "parse_comma_list",
+            lua.create_function(|_, text: String| Ok(string::parse_comma_list(&text)))?,
+        ),
     ])
 }
 

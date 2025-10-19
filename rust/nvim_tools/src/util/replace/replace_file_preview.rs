@@ -23,4 +23,3 @@ pub fn replace_file_preview(
         flag_case_sensitive,
     )
 }
-

@@ -53,10 +53,7 @@ pub fn perform_search(
 }
 
 /// Calculates replacement text for a specific match, handling regex capture groups
-pub fn calculate_replacement_text(
-    matched_text: &str,
-    config: &ReplacePreviewConfig,
-) -> String {
+pub fn calculate_replacement_text(matched_text: &str, config: &ReplacePreviewConfig) -> String {
     if config.flag_regex {
         // For regex replacements, handle capture groups
         match util::regex::compile_regex(&config.search_pattern) {
@@ -169,7 +166,8 @@ pub fn perform_replace_preview(
     let full_text = lines.join("\n");
 
     // Generate replacement matches with actual replacement text
-    let replacement_matches = generate_replacement_points(&search_matches, lines, &full_text, config);
+    let replacement_matches =
+        generate_replacement_points(&search_matches, lines, &full_text, config);
 
     // Create replacement text by applying all replacements
     let replacement_lines = generate_replacement_lines(&full_text, config)?;

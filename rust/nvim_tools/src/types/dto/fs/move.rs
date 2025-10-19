@@ -30,9 +30,7 @@ impl ToObject for MoveParams {
 }
 
 impl Poppable for MoveParams {
-    unsafe fn pop(
-        lstate: *mut nvim_oxi::lua::ffi::State,
-    ) -> Result<Self, nvim_oxi::lua::Error> {
+    unsafe fn pop(lstate: *mut nvim_oxi::lua::ffi::State) -> Result<Self, nvim_oxi::lua::Error> {
         unsafe {
             let obj = Object::pop(lstate)?;
             Self::from_object(obj).map_err(nvim_oxi::lua::Error::pop_error_from_err::<Self, _>)

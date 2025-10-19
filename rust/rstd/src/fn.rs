@@ -1,7 +1,7 @@
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 use md5::Digest;
 use md5::Md5;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 use uuid::Uuid;
 
 pub fn uuid() -> String {

@@ -95,7 +95,7 @@ pub fn search_in_lines_literal(
         // For single-line patterns, search line by line for better efficiency and memory usage
         for (line_idx, line) in lines_vec.iter().enumerate() {
             let line_str = if flag_case_sensitive {
-                line.as_str()  // Use string slice instead of allocation
+                line.as_str() // Use string slice instead of allocation
             } else {
                 // Only allocate when we need case conversion
                 &line.to_lowercase()
@@ -126,7 +126,7 @@ pub fn search_in_lines_literal(
             }
 
             let line_str = if flag_case_sensitive {
-                line.as_str()  // Use string slice instead of allocation
+                line.as_str() // Use string slice instead of allocation
             } else {
                 // Only allocate when we need case conversion
                 &line.to_lowercase()
@@ -277,7 +277,8 @@ pub fn search_in_lines_regex(
                     let end_pos = mat.end();
 
                     // Use binary search to find line number - O(log n) instead of O(n)
-                    let (line_num, line_start_pos) = find_line_for_position(&line_offsets, start_pos);
+                    let (line_num, line_start_pos) =
+                        find_line_for_position(&line_offsets, start_pos);
 
                     let relative_start = start_pos - line_start_pos;
                     let relative_end = end_pos - line_start_pos;
@@ -334,7 +335,12 @@ where
     if flag_regex {
         search_in_lines_regex(pattern, &lines_vec, flag_case_sensitive)
     } else {
-        Ok(search_in_lines_literal(pattern, &lines_vec, flag_fuzzy, flag_case_sensitive))
+        Ok(search_in_lines_literal(
+            pattern,
+            &lines_vec,
+            flag_fuzzy,
+            flag_case_sensitive,
+        ))
     }
 }
 
@@ -345,7 +351,13 @@ pub fn search_in_text(
     flag_regex: bool,
     flag_case_sensitive: bool,
 ) -> Result<Vec<LineMatch>, String> {
-    search_in_lines(pattern, text.lines(), flag_fuzzy, flag_regex, flag_case_sensitive)
+    search_in_lines(
+        pattern,
+        text.lines(),
+        flag_fuzzy,
+        flag_regex,
+        flag_case_sensitive,
+    )
 }
 
 #[cfg(test)]
@@ -446,4 +458,3 @@ mod tests {
         assert_eq!(result[0].lnum, 1);
     }
 }
-

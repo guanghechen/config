@@ -69,4 +69,3 @@ pub fn replace_text_preview_by_matches(
     pieces.push(&text[i..]);
     Ok(pieces.join(""))
 }
-

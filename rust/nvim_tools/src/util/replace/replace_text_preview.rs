@@ -89,7 +89,15 @@ mod tests {
     #[test]
     fn test_replace_regex_with_capture_groups() {
         let text = r#"require("foo")"#;
-        let result = replace_text_preview(text, r#"require\("(.+?)"\)"#, "import $1", false, true, true).unwrap();
+        let result = replace_text_preview(
+            text,
+            r#"require\("(.+?)"\)"#,
+            "import $1",
+            false,
+            true,
+            true,
+        )
+        .unwrap();
         assert_eq!(result, "import foo");
     }
 
@@ -134,9 +142,15 @@ mod tests {
     #[test]
     fn test_replace_regex_multiple_groups() {
         let text = "2024-01-15";
-        let result = replace_text_preview(text, r"(\d{4})-(\d{2})-(\d{2})", "$2/$3/$1", false, true, true).unwrap();
+        let result = replace_text_preview(
+            text,
+            r"(\d{4})-(\d{2})-(\d{2})",
+            "$2/$3/$1",
+            false,
+            true,
+            true,
+        )
+        .unwrap();
         assert_eq!(result, "01/15/2024");
     }
 }
-
-

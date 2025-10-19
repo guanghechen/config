@@ -12,4 +12,8 @@ function M.calc_linewidths(text) end
 ---@return integer
 function M.count_lines(text) end
 
+---@param text                                  string
+---@return string[]
+function M.parse_comma_list(text) end
+
 return M
