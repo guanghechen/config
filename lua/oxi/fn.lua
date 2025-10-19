@@ -7,12 +7,6 @@ local __module_name__ = "oxi.fn" ---@type string
 ---@class oxi.fn
 local M = {}
 
----@return integer
-function M.now()
-  local nvim_tools = require("nvim_tools")
-  return nvim_tools.now()
-end
-
 ---@param method                        string
 ---@param ...                           any
 ---@return boolean

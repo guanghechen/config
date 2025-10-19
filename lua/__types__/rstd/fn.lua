@@ -11,4 +11,7 @@ function M.uuid() end
 ---@return string
 function M.md5(input) end
 
+---@return integer
+function M.now() end
+
 return M

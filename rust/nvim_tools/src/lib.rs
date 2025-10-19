@@ -8,15 +8,15 @@ use crate::types::dto::LineMatch;
 use crate::types::dto::MoveParams;
 use crate::types::dto::ReadAllFilesSucceedResult;
 use crate::types::dto::ReaddirSucceedResult;
+use crate::types::dto::ReplaceAllMatchesInBufferParams;
+use crate::types::dto::ReplaceAllMatchesInBufferResult;
+use crate::types::dto::ReplaceCurrentMatchInBufferParams;
+use crate::types::dto::ReplaceCurrentMatchInBufferResult;
 use crate::types::dto::SearchInBufferParams;
 use crate::types::dto::SearchInLinesParams;
 use crate::types::dto::SearchInTextParams;
 use crate::types::dto::ShowReplacePreviewInBufferParams;
 use crate::types::dto::ShowReplacePreviewInBufferResult;
-use crate::types::dto::ReplaceCurrentMatchInBufferParams;
-use crate::types::dto::ReplaceCurrentMatchInBufferResult;
-use crate::types::dto::ReplaceAllMatchesInBufferParams;
-use crate::types::dto::ReplaceAllMatchesInBufferResult;
 use nvim_oxi::Dictionary;
 use nvim_oxi::Function;
 use nvim_oxi::Object;
@@ -66,11 +66,12 @@ fn nvim_tools() -> Dictionary {
         ),
         (
             "show_replace_preview_in_buffer",
-            Object::from(
-                Function::<ShowReplacePreviewInBufferParams, FunResult<ShowReplacePreviewInBufferResult>>::from_fn(
-                    oxi::search::show_replace_preview_in_buffer,
-                ),
-            ),
+            Object::from(Function::<
+                ShowReplacePreviewInBufferParams,
+                FunResult<ShowReplacePreviewInBufferResult>,
+            >::from_fn(
+                oxi::search::show_replace_preview_in_buffer
+            )),
         ),
         ////
         (
@@ -128,19 +129,21 @@ fn nvim_tools() -> Dictionary {
         ////
         (
             "replace_current_match_in_buffer",
-            Object::from(
-                Function::<ReplaceCurrentMatchInBufferParams, FunResult<ReplaceCurrentMatchInBufferResult>>::from_fn(
-                    oxi::replace::replace_current_match_in_buffer,
-                ),
-            ),
+            Object::from(Function::<
+                ReplaceCurrentMatchInBufferParams,
+                FunResult<ReplaceCurrentMatchInBufferResult>,
+            >::from_fn(
+                oxi::replace::replace_current_match_in_buffer
+            )),
         ),
         (
             "replace_all_matches_in_buffer",
-            Object::from(
-                Function::<ReplaceAllMatchesInBufferParams, FunResult<ReplaceAllMatchesInBufferResult>>::from_fn(
-                    oxi::replace::replace_all_matches_in_buffer,
-                ),
-            ),
+            Object::from(Function::<
+                ReplaceAllMatchesInBufferParams,
+                FunResult<ReplaceAllMatchesInBufferResult>,
+            >::from_fn(
+                oxi::replace::replace_all_matches_in_buffer
+            )),
         ),
         ////
         (
@@ -161,7 +164,5 @@ fn nvim_tools() -> Dictionary {
                 oxi::fs::r#move,
             )),
         ),
-        ////
-        ("now", Object::from(Function::from_fn(oxi::date::now))),
     ])
 }
