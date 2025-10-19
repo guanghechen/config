@@ -2,25 +2,12 @@ local command = eve.command ---@type eve.builtin.command
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
 --[ai] ---------------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.ai.ask.uuid,
-    action = function()
-      require("fml.action.ai").ask()
-    end,
-  })
-  .implement({
-    uuid = K.ai.code.uuid,
-    action = function()
-      require("fml.action.ai").edit()
-    end,
-  })
-  .implement({
-    uuid = K.ai.refine.uuid,
-    action = function()
-      require("fml.action.ai").refine()
-    end,
-  })
+command.implement({
+  uuid = K.ai.edit.uuid,
+  action = function()
+    require("fml.action.ai").edit()
+  end,
+})
 
 --[buf] close---------------------------------------------------------------------------------------
 command

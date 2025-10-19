@@ -305,6 +305,11 @@ function Notepad:_render_active_item(bufnr)
   end
 
   local uuid = self._active_uuid ---@type string|nil
+  if uuid ~= nil then
+    vim.b[bufnr][eve.notepad.BUFFER_VAR] = uuid
+  else
+    vim.b[bufnr][eve.notepad.BUFFER_VAR] = nil
+  end
   local item = uuid ~= nil and eve.notepad.get(uuid) or nil ---@type eve.builtin.notepad.INotepadItem|nil
   local lines ---@type string[]
 
@@ -425,7 +430,6 @@ function Notepad:ensure_buf()
   return bufnr
 end
 
----@private
 ---@return integer|nil
 function Notepad:get_winnr()
   local winnr = self._winnr ---@type integer|nil

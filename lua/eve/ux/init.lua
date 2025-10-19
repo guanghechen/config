@@ -1,7 +1,6 @@
 ---@class eve.ux.__mods
 local __mods = {
   Board = "eve.ux.board",
-  Chatbox = "eve.ux.chatbox",
   Select = "eve.ux.select",
   Setting = "eve.ux.setting",
   Textarea = "eve.ux.textarea",
@@ -18,7 +17,6 @@ local __mods = {
 ---@field public widget                 eve.ux.widget
 ---
 ---@field public Board                  eve.ux.Board
----@field public Chatbox                eve.ux.Chatbox
 ---@field public Select                 eve.ux.Select
 ---@field public Setting                eve.ux.Setting
 ---@field public Textarea               eve.ux.Textarea

@@ -196,9 +196,7 @@ M.definitions = {}
 
 ---@class eve.builtin.command.definitions.ai
 M.definitions.ai = {
-  ask = def("Faiask", "ai: ask"),
-  code = def("Faicode", "ai: code"),
-  refine = def("Fairefine", "ai: refine"),
+  edit = def("Faiedit", "ai: edit"),
   attach_agent = def("Faiattachagent", "ai: attach agent"),
   detach_agent = def("Faidetachagent", "ai: detach agent"),
   submit_buffer = def("Faisubmitbuffer", "ai: submit buffer"),

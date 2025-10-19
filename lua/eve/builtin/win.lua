@@ -4,7 +4,6 @@ local Methods = vim.lsp.protocol.Methods
 
 ---@alias eve.builtin.win.TypeEnum
 ---| "ux:board"
----| "ux:chatbox"
 ---| "ux:cmdline"
 ---| "ux:input"
 ---| "ux:picker-finder"
@@ -42,7 +41,6 @@ local Methods = vim.lsp.protocol.Methods
 local Types = {
   -- stylua: ignore start
   BOARD             = "ux:board",
-  CHATBOX           = "ux:chatbox",
   CMDLINE           = "ux:cmdline",
   INPUT             = "ux:input",
   NOTIFY            = "ux:notify",

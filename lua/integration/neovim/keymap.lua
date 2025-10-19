@@ -18,9 +18,7 @@ ms({ "n", "v" }, "<leader>4", K.explorer.git_cwd)
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------
-ms({ "n", "v" }, "<leader>aa", K.ai.ask)
-ms({ "v" }, "<leader>ac", K.ai.code)
-ms({ "v" }, "<leader>ae", K.ai.refine)
+ms({ "n", "v" }, "<leader>ae", K.ai.edit)
 ms({ "n", "v" }, "<leader>aa", K.ai.attach_agent)
 ms({ "n", "v" }, "<leader>ad", K.ai.detach_agent)
 ms({ "n" }, "<leader>ax", K.ai.submit_buffer)

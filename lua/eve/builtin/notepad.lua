@@ -21,6 +21,65 @@ local o_active_uuid = std.Observable.from_value("")
 
 local schedule_save ---@type fun()
 
+local CHATBOX_NOTE_NAME = "chatbox" ---@type string
+local BUFFER_VAR_NAME = "eve_notepad_uuid" ---@type string
+
+---@param uuid string
+---@param content string
+---@return nil
+local function sync_chatbox_buffer(uuid, content)
+  local item = items_map[uuid]
+  if item == nil then
+    return
+  end
+
+  local name = type(item.name) == "string" and item.name:lower() or ""
+  if name ~= CHATBOX_NOTE_NAME then
+    return
+  end
+
+  local lines = (#content > 0) and vim.split(content, "\n", { plain = true }) or { "" }
+  if #lines == 0 then
+    lines = { "" }
+  end
+
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      if vim.b[bufnr][BUFFER_VAR_NAME] == uuid then
+        local was_modifiable = vim.bo[bufnr].modifiable
+        if not was_modifiable then
+          vim.bo[bufnr].modifiable = true
+        end
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+        vim.bo[bufnr].modified = false
+        if not was_modifiable then
+          vim.bo[bufnr].modifiable = false
+        end
+
+        local tail_row = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+        if tail_row < 1 then
+          tail_row = 1
+        end
+        local tail_line = vim.api.nvim_buf_get_lines(bufnr, tail_row - 1, tail_row, false)[1] or ""
+        local tail_col = vim.fn.strlen(tail_line)
+
+        for _, winnr in ipairs(vim.fn.win_findbuf(bufnr)) do
+          if vim.api.nvim_win_is_valid(winnr) then
+            local ok = pcall(vim.api.nvim_win_set_cursor, winnr, { tail_row, tail_col })
+            if not ok then
+              local last_row = vim.api.nvim_buf_line_count(bufnr)
+              local last_line = last_row > 0 and vim.api.nvim_buf_get_lines(bufnr, last_row - 1, last_row, false)[1]
+                or ""
+              local last_col = vim.fn.strlen(last_line)
+              pcall(vim.api.nvim_win_set_cursor, winnr, { math.max(1, last_row), last_col })
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
 ---@return string
 local function now_iso_utc()
   local text = tostring(os.date("!%Y-%m-%dT%H:%M:%SZ")) ---@type string
@@ -400,6 +459,55 @@ function M.create(name)
   return item
 end
 
+---@param name string
+---@return eve.builtin.notepad.INotepadItem|nil
+function M.find_first_by_name(name)
+  ensure_loaded()
+  if type(name) ~= "string" then
+    return nil
+  end
+
+  local target = vim.trim(name)
+  if #target == 0 then
+    return nil
+  end
+  target = target:lower()
+
+  for _, uuid in ipairs(orders) do
+    local item = items_map[uuid]
+    if item ~= nil and type(item.name) == "string" and item.name:lower() == target then
+      return item
+    end
+  end
+
+  return nil
+end
+
+---@param name string
+---@return eve.builtin.notepad.INotepadItem
+function M.ensure_named_item(name)
+  ensure_loaded()
+
+  local trimmed = vim.trim(type(name) == "string" and name or "")
+  if #trimmed == 0 then
+    trimmed = DEFAULT_ITEM_NAME
+  end
+
+  local existing = M.find_first_by_name(trimmed)
+  if existing ~= nil then
+    return existing
+  end
+
+  local item = allocate_item(trimmed)
+  if activated_uuid == nil then
+    activated_uuid = item.uuid
+    notify_active_changed()
+  end
+  mark_dirty_and_schedule()
+  eve.status.dirtier_notepadline:mark_dirty()
+  return item
+end
+
 ---@param uuid string|nil
 ---@return boolean
 function M.remove(uuid)
@@ -488,7 +596,44 @@ function M.set_content(uuid, content)
   item.content = content
   item.updated_at = now_iso_utc()
   mark_dirty_and_schedule()
+
+  sync_chatbox_buffer(uuid, item.content)
   return true
+end
+
+---@param uuid_or_item string|eve.builtin.notepad.INotepadItem|nil
+---@param text string
+---@return boolean
+function M.append_content(uuid_or_item, text)
+  ensure_loaded()
+
+  if type(text) ~= "string" or #text == 0 then
+    return false
+  end
+
+  local uuid ---@type string|nil
+  local item ---@type eve.builtin.notepad.INotepadItem|nil
+
+  if type(uuid_or_item) == "table" then
+    item = uuid_or_item
+    uuid = uuid_or_item.uuid
+  elseif type(uuid_or_item) == "string" then
+    uuid = uuid_or_item
+  end
+
+  uuid = uuid or activated_uuid
+  if uuid == nil then
+    return false
+  end
+
+  item = item or items_map[uuid]
+  if item == nil then
+    return false
+  end
+
+  local existing = type(item.content) == "string" and item.content or "" ---@type string
+  local new_content = existing .. text ---@type string
+  return M.set_content(uuid, new_content) ---@type boolean
 end
 
 ---@param step integer|nil
@@ -547,5 +692,7 @@ end
 function M.flush()
   M.save(true)
 end
+
+M.BUFFER_VAR = BUFFER_VAR_NAME
 
 return M
