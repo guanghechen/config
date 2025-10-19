@@ -5,7 +5,8 @@ local M = {}
 
 local payload_bufnr ---@type integer|nil
 
----@return integer|nil                    bufnr, string|nil err
+---@return integer|nil                  bufnr
+---@return string|nil                   err
 local function ensure_payload_buffer()
   if payload_bufnr ~= nil and vim.api.nvim_buf_is_valid(payload_bufnr) then
     return payload_bufnr, nil
@@ -198,7 +199,8 @@ end
 
 ---@param config                        eve.builtin.ai.IEditInlineConfig
 ---@param template                      string|nil
----@return string|nil rendered, string|nil err
+---@return string|nil                   rendered
+---@return string|nil                   err
 local function render_message(config, template)
   template = template or "/code {this}"
   local prompt = config.prompt
@@ -239,7 +241,9 @@ end
 
 ---@param config                        eve.builtin.ai.IEditInlineConfig
 ---@param template                      string
----@return boolean ok, string message, boolean should_close
+---@return boolean                      ok
+---@return string                       message
+---@return boolean                      should_close
 local function send_prompt(config, template)
   template = template or "/code {this}"
   if not eve.context.flight.ai:snapshot() then
@@ -268,13 +272,17 @@ local function send_prompt(config, template)
 end
 
 ---@param config                        eve.builtin.ai.IEditInlineConfig
----@return boolean ok, string message, boolean should_close
+---@return boolean                      ok
+---@return string                       message
+---@return boolean                      should_close
 function M.edit_inline(config)
   return send_prompt(config, "/code {this}")
 end
 
 ---@param config                        eve.builtin.ai.IEditInlineConfig
----@return boolean ok, string message, boolean should_close
+---@return boolean                      ok
+---@return string                       message
+---@return boolean                      should_close
 function M.refine_inline(config)
   return send_prompt(config, "/refine {this}")
 end
@@ -306,7 +314,8 @@ end
 
 ---@param config                        eve.builtin.ai.IEditInlineConfig
 ---@param template                      string|nil
----@return string|nil rendered, string|nil err
+---@return string|nil                   rendered
+---@return string|nil                   err
 function M.render_inline_prompt(config, template)
   return render_message(config, template)
 end

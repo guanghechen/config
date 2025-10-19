@@ -2,13 +2,14 @@ local __module_name__ = "fml.action.ai" ---@type string
 
 local NSNR_EDIT = vim.api.nvim_create_namespace("ai_edit_selection")
 
----@param lnum_start                   integer
----@param col_start                    integer
----@param lnum_end                     integer
----@param col_end                      integer
----@param chatbox_width                integer
----@param chatbox_height               integer
----@return integer row, integer col
+---@param lnum_start                    integer
+---@param col_start                     integer
+---@param lnum_end                      integer
+---@param col_end                       integer
+---@param chatbox_width                 integer
+---@param chatbox_height                integer
+---@return integer                      row
+---@return integer                      col
 local function calculate_chatbox_position(lnum_start, col_start, lnum_end, col_end, chatbox_width, chatbox_height)
   local winnr = vim.api.nvim_get_current_win()
   local win_height = vim.api.nvim_win_get_height(winnr)

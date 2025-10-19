@@ -98,7 +98,8 @@ end
 ---@param diritem                       fml.action.find.explorer.IDirItem
 ---@param result_width                  integer
 ---@param filename                      string
----@return string, integer
+---@return string
+---@return integer
 local function format_filename(fileitem, diritem, result_width, filename)
   local date_display_width = vim.api.nvim_strwidth(fileitem.date) ---@type integer
   local fixed_display_width = (diritem.icon_width + 2)

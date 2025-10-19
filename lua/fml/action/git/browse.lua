@@ -155,7 +155,9 @@ local function get_git_branch_or_commit()
   return "HEAD"
 end
 
----@return string|nil, integer, integer
+---@return string|nil
+---@return integer
+---@return integer
 local function get_file_line()
   local mode = vim.fn.mode()
   local line_start, line_end ---@type integer, integer

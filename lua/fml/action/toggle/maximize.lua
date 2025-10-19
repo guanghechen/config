@@ -35,7 +35,8 @@ local function resolve_zindex()
   return MAXIMIZED_ZINDEX
 end
 
----@return integer, integer
+---@return integer
+---@return integer
 local function resolve_editor_size()
   local ui_list = vim.api.nvim_list_uis()
   local ui = ui_list[1]

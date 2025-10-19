@@ -46,7 +46,9 @@ local function format_attached_names(attached)
   return table.concat(names, "|")
 end
 
----@return boolean, string, string
+---@return boolean
+---@return string
+---@return string
 local function sidekick_status()
   local ok, state = pcall(require, "sidekick.cli.state")
   if not ok then
