@@ -1,12 +1,5 @@
 use crate::types::dto::MatchLocation;
-
-pub fn calc_linewidths(text: &str) -> Vec<u32> {
-    let mut lwidths: Vec<u32> = vec![];
-    for line in text.lines() {
-        lwidths.push(line.len() as u32);
-    }
-    lwidths
-}
+pub use rstd::string::calc_linewidths;
 
 pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
     let mut locations: Vec<MatchLocation> = vec![];

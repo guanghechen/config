@@ -74,7 +74,7 @@ end
 ---@param name string|nil
 ---@return eve.builtin.notepad.INotepadItem
 local function allocate_item(name)
-  local uuid = oxi.fn.uuid() ---@type string
+  local uuid = rstd.fn.uuid() ---@type string
   local now = now_iso_utc() ---@type string
   local normalized_name = normalize_name(name)
   local item = {

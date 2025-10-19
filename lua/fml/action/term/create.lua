@@ -52,7 +52,7 @@ function M.show_profile_selector()
 
       if selected_profile then
         eve.term.create({
-          uuid = oxi.fn.uuid(),
+          uuid = rstd.fn.uuid(),
           type = selected_profile.type,
           name = selected_profile.name,
           cmd = selected_profile.cmd,
@@ -155,7 +155,7 @@ function M.toggle()
   local _, termmeta = eve.term.find_index_by_type("shell") ---@type integer, eve.builtin.term.IMeta|nil
   if termmeta == nil then
     terminal:toggle_and_focus({
-      uuid = oxi.fn.uuid(),
+      uuid = rstd.fn.uuid(),
       type = "shell",
       name = "shell",
       cwd = cwd,

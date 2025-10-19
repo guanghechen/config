@@ -25,15 +25,6 @@ use nvim_oxi::Object;
 fn nvim_tools() -> Dictionary {
     Dictionary::from_iter([
         (
-            "calc_linewidths",
-            Object::from(Function::from_fn(oxi::string::calc_linewidths)),
-        ),
-        (
-            "count_lines",
-            Object::from(Function::from_fn(oxi::string::count_lines)),
-        ),
-        ////
-        (
             "collect_files",
             Object::from(Function::<
                 (String, bool),
@@ -172,7 +163,5 @@ fn nvim_tools() -> Dictionary {
         ),
         ////
         ("now", Object::from(Function::from_fn(oxi::date::now))),
-        ("md5", Object::from(Function::from_fn(oxi::string::md5))),
-        ("uuid", Object::from(Function::from_fn(oxi::string::uuid))),
     ])
 }

@@ -133,7 +133,7 @@ function M.uuid(filepath)
       error(string.format("[%s.uuid] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
 
-    uuid = oxi.fn.md5(filepath) ---@type string
+    uuid = rstd.fn.md5(filepath) ---@type string
     if is_cwd_chain(filepath) then
       FILEPATH_TO_UUID[filepath] = uuid
     end
@@ -154,7 +154,7 @@ function M.resolve(filepath, filetype, force)
     if not std.path.is_absolute(filepath) then
       error(string.format("[%s.resolve] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
-    nodeuuid = oxi.fn.md5(filepath) ---@type string
+    nodeuuid = rstd.fn.md5(filepath) ---@type string
   end
 
   local nodedata = FILENODE_DATAMAP[nodeuuid]

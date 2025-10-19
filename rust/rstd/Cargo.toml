@@ -1,0 +1,12 @@
+[package]
+name = "rstd"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+md-5 = "0.10.6"
+mlua = { version = "0.9", default-features = false, features = ["luajit", "module"] }
+uuid = { version = "1.17.0", features = ["v4", "fast-rng"] }

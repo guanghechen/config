@@ -147,7 +147,7 @@ local function _edit(template)
   })
 
   local chatbox ---@type eve.ux.Chatbox
-  local ai_group = oxi.fn.uuid() ---@type string
+  local ai_group = rstd.fn.uuid() ---@type string
 
   local function clear_selection()
     if extmarkid then

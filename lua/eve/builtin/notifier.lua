@@ -266,7 +266,7 @@ function M.notify(params)
 
   local isempty = content == "" ---@type boolean
   local lines = isempty and {} or vim.split(content, "\n", { plain = true }) ---@type string[]
-  local uuid = oxi.fn.md5(string.format("%s:%s:%s:%s", level, group or "", title, content)) ---@type string
+  local uuid = rstd.fn.md5(string.format("%s:%s:%s:%s", level, group or "", title, content)) ---@type string
 
   ---@type eve.builtin.notifier.ITask
   local task = {

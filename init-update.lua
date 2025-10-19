@@ -1,3 +1,5 @@
+_G.rstd = require("rstd")
+
 require("std.bootstrap").setup_patches()
 require("std.bootstrap").setup_workspace()
 

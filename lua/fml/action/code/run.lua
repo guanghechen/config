@@ -68,7 +68,7 @@ local runners = {
       local script_path = std.path.locate_app_config_home("ora/cli/http.mjs") ---@type string
       local cmd = { "node", script_path, filepath } ---@type string[]
 
-      local group = oxi.fn.uuid() ---@type string
+      local group = rstd.fn.uuid() ---@type string
       local terminated = false ---@type boolean
       local spinner_step = 200 ---@type integer
       local spinner_timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil

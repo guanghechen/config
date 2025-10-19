@@ -1,20 +1,18 @@
-__test__/__tmp__.lua
-lua/nvim_tools.so
-lua/nvim_tools.dll
-
 .codex/
 .specify/
-specs/
-
 bin/
 local/
+specs/
 target/
 tmp/
 
 *.local/
-*.local.*
-.opencode/
 local.*/
+*.local.*
+__tmp__.lua
+
+lua/*.dll
+lua/*.so
 
 profile.log
 profile.svg
