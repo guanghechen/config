@@ -59,6 +59,33 @@ function M.add_files_to_ai(locations)
     end
   end
 
+  local append_success = false ---@type boolean
+  local append_error ---@type string|nil
+  local append_payload = payload .. "\n" ---@type string
+  if eve ~= nil and eve.command ~= nil and eve.command.definitions ~= nil then
+    local notepad_commands = eve.command.definitions.notepad ---@type eve.builtin.command.definitions.notepad|nil
+    if notepad_commands ~= nil and notepad_commands.append_content ~= nil then
+      local ok_append, append_err = pcall(eve.command.execute, notepad_commands.append_content.uuid, append_payload)
+      append_success = ok_append
+      if not ok_append then
+        append_error = append_err
+      end
+    else
+      append_error = "Notepad append content command is unavailable."
+    end
+  else
+    append_error = "Notepad command system is unavailable."
+  end
+
+  if append_error ~= nil then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "add_files_to_ai",
+      message = "Failed to append payload to notepad.",
+      details = { error = append_error },
+    })
+  end
+
   if #copy_failures > 0 then
     std.reporter.warn({
       from = __module_name__,
@@ -66,10 +93,14 @@ function M.add_files_to_ai(locations)
       message = "Copy failed: " .. table.concat(copy_failures, "; "),
     })
   else
+    local success_message = "Locations copied to clipboard." ---@type string
+    if append_success then
+      success_message = "Locations copied to clipboard and appended to notepad."
+    end
     std.reporter.info({
       from = __module_name__,
       subject = "add_files_to_ai",
-      message = "Locations copied to clipboard.",
+      message = success_message,
     })
   end
 end
