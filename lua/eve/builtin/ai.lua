@@ -5,11 +5,11 @@ local M = {}
 
 ---@param locations                     std.t.ILocation[]
 ---@return nil
-function M.add_files_to_ai(locations)
+function M.add_locations_to_ai(locations)
   if #locations < 1 then
     std.reporter.warn({
       from = __module_name__,
-      subject = "add_files_to_ai",
+      subject = "add_locations_to_ai",
       message = "No valid locations provided.",
     })
     return
@@ -34,7 +34,7 @@ function M.add_files_to_ai(locations)
   if #lines < 1 then
     std.reporter.warn({
       from = __module_name__,
-      subject = "add_files_to_ai",
+      subject = "add_locations_to_ai",
       message = "No locations could be stringified.",
     })
     return
@@ -43,7 +43,7 @@ function M.add_files_to_ai(locations)
   if #failures > 0 then
     std.reporter.warn({
       from = __module_name__,
-      subject = "add_files_to_ai",
+      subject = "add_locations_to_ai",
       message = string.format("Skipped %d invalid location%s.", #failures, #failures == 1 and "" or "s"),
       details = { failures = failures },
     })
@@ -80,7 +80,7 @@ function M.add_files_to_ai(locations)
   if append_error ~= nil then
     std.reporter.warn({
       from = __module_name__,
-      subject = "add_files_to_ai",
+      subject = "add_locations_to_ai",
       message = "Failed to append payload to notepad.",
       details = { error = append_error },
     })
@@ -89,7 +89,7 @@ function M.add_files_to_ai(locations)
   if #copy_failures > 0 then
     std.reporter.warn({
       from = __module_name__,
-      subject = "add_files_to_ai",
+      subject = "add_locations_to_ai",
       message = "Copy failed: " .. table.concat(copy_failures, "; "),
     })
   else
@@ -99,7 +99,7 @@ function M.add_files_to_ai(locations)
     end
     std.reporter.info({
       from = __module_name__,
-      subject = "add_files_to_ai",
+      subject = "add_locations_to_ai",
       message = success_message,
     })
   end

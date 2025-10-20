@@ -434,7 +434,7 @@ function M.new(props)
           append_location_payload(locations, node, nodestate, false)
         end
       end
-      eve.ai.add_files_to_ai(locations)
+      eve.ai.add_locations_to_ai(locations)
     end,
     add_subtree_to_ai = function()
       local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
@@ -461,7 +461,7 @@ function M.new(props)
         end
         lnum = lnum + 1
       end
-      eve.ai.add_files_to_ai(locations)
+      eve.ai.add_locations_to_ai(locations)
     end,
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
