@@ -16,12 +16,18 @@ function M.file_location(location)
     return nil, "Location must be a table."
   end
 
-  local filepath = location.filepath
+  local filepath = std.path.normalize(location.filepath, "/")
   if type(filepath) ~= "string" or #vim.trim(filepath) == 0 then
     return nil, "Invalid filepath."
   end
 
-  local relpath = filepath ---@type string
+  ---@type string
+  local relpath = (
+    std.path.is_absolute(filepath)
+    and std.path.is_under(std.path.workspace(), filepath)
+    and std.path.relative(std.path.cwd(), filepath, true)
+  ) or filepath
+
   local start_lnum = normalize_index(location.start_lnum)
   local start_col = normalize_index(location.start_col)
   local end_lnum = normalize_index(location.end_lnum)
