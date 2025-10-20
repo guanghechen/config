@@ -9,6 +9,10 @@ local MAX_HEIGHT = 0.9
 local MIN_WIDTH = 60
 local MIN_HEIGHT = 12
 local WIN_TITLE = " Notepad "
+local NOTEPAD_WIN_HIGHLIGHT = table.concat({
+  "FloatBorder:FloatBorder",
+  "FloatTitle:f_np_title",
+}, ",") ---@type string
 
 local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" } ---@type string[]
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
@@ -186,7 +190,7 @@ function Notepad.new(props)
   self.min_width = props.min_width or MIN_WIDTH
   self.min_height = props.min_height or MIN_HEIGHT
   self.filetype = props.filetype or "markdown"
-  self.win_opts = vim.tbl_extend("force", {}, props.win_opts or {})
+  self.win_opts = vim.tbl_extend("force", { winhighlight = NOTEPAD_WIN_HIGHLIGHT }, props.win_opts or {})
 
   self._bufnr = nil
   self._winnr = nil
@@ -472,10 +476,16 @@ function Notepad:ensure_win()
 
   local winhighlight = self.win_opts.winhighlight ---@type string|nil
   if type(winhighlight) ~= "string" or #winhighlight == 0 then
-    self.win_opts.winhighlight = "FloatTitle:f_np_title"
-  elseif not winhighlight:match("FloatTitle:") then
-    self.win_opts.winhighlight = winhighlight .. ",FloatTitle:f_np_title"
+    winhighlight = NOTEPAD_WIN_HIGHLIGHT
+  else
+    if not winhighlight:match("FloatBorder:") then
+      winhighlight = table.concat({ winhighlight, "FloatBorder:FloatBorder" }, ",")
+    end
+    if not winhighlight:match("FloatTitle:") then
+      winhighlight = table.concat({ winhighlight, "FloatTitle:f_np_title" }, ",")
+    end
   end
+  self.win_opts.winhighlight = winhighlight
 
   ---@type vim.api.keyset.win_config
   local config = {
@@ -493,10 +503,12 @@ function Notepad:ensure_win()
   }
 
   local winnr = self:get_winnr() ---@type integer|nil
+  local is_new_win = winnr == nil ---@type boolean
   if winnr == nil then
     winnr = vim.api.nvim_open_win(bufnr, true, config)
     self._winnr = winnr
     eve.win.set_type(winnr, eve.win.Types.TEXTAREA)
+    is_new_win = true
   else
     vim.wo[winnr].winfixbuf = false
     ---@type eve.state.maximized.ResolveResizeResult
@@ -515,7 +527,9 @@ function Notepad:ensure_win()
   vim.wo[winnr].wrap = true
   vim.wo[winnr].winblend = winblend
   for key, value in pairs(self.win_opts) do
-    vim.wo[winnr][key] = value
+    if key ~= "winhighlight" or is_new_win then
+      vim.wo[winnr][key] = value
+    end
   end
   vim.wo[winnr].winfixbuf = true
 
