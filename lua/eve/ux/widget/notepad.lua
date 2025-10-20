@@ -546,12 +546,10 @@ function Notepad.flush_to_disk()
   eve.notepad.flush()
 
   if filepath ~= nil and #filepath > 0 then
-    local cwd = std.path.cwd() ---@type string
-    local relative = std.path.relative(cwd, filepath, true) ---@type string
     std.reporter.info({
       from = __module_name__,
       subject = "save",
-      message = string.format("Saved notepad to %s", relative),
+      message = "Notes are saved successfully",
     })
   end
 end
