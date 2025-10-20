@@ -4,6 +4,9 @@ pub use string::*;
 pub mod r#fn;
 pub use r#fn::*;
 
+pub mod path;
+pub use path::*;
+
 use mlua::prelude::*;
 
 fn fn_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
@@ -33,10 +36,56 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     ])
 }
 
+fn path_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+    let table = lua.create_table_from([
+        (
+            "is_absolute",
+            lua.create_function(|_, filepath: String| Ok(path::is_absolute(&filepath)))?,
+        ),
+        (
+            "is_dirpath",
+            lua.create_function(|_, filepath: String| Ok(path::is_dirpath(&filepath)))?,
+        ),
+        (
+            "is_exist",
+            lua.create_function(|_, filepath: String| Ok(path::is_exist(&filepath)))?,
+        ),
+        (
+            "is_exist_dirpath",
+            lua.create_function(|_, filepath: String| Ok(path::is_exist_dirpath(&filepath)))?,
+        ),
+        (
+            "is_exist_filepath",
+            lua.create_function(|_, filepath: String| Ok(path::is_exist_filepath(&filepath)))?,
+        ),
+        (
+            "is_descendant",
+            lua.create_function(|_, (from, to): (String, String)| {
+                Ok(path::is_descendant(&from, &to))
+            })?,
+        ),
+        (
+            "basename",
+            lua.create_function(|_, filepath: String| Ok(path::basename(&filepath)))?,
+        ),
+        (
+            "dirname",
+            lua.create_function(|_, filepath: String| Ok(path::dirname(&filepath)))?,
+        ),
+        (
+            "extname",
+            lua.create_function(|_, filepath: String| Ok(path::extname(&filepath)))?,
+        ),
+    ])?;
+    table.set("SEP", path::SEP)?;
+    Ok(table)
+}
+
 #[mlua::lua_module]
 fn rstd(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     let exports = lua.create_table()?;
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;
+    exports.set("path", path_module(lua)?)?;
     Ok(exports)
 }
