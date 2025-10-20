@@ -64,14 +64,7 @@ function M.edit()
     location = string.format("@%s", filepath)
   end
 
-  local note = eve.notepad.ensure_named_item("chatbox") ---@type eve.builtin.notepad.INotepadItem
-  eve.notepad.append_content(note.uuid, location .. "\n")
-  eve.notepad.focus_uuid(note.uuid)
-
-  local widget = require("fml.action.notepad").ensure()
-  if widget ~= nil then
-    widget:focus()
-  end
+  eve.command.execute(eve.command.definitions.notepad.append_content.uuid, location .. "\n")
 end
 
 return M

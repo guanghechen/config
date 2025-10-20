@@ -502,6 +502,14 @@ command
 --[notepad] ---------------------------------------------------------------------------------------
 command
   .implement({
+    uuid = K.notepad.append_content.uuid,
+    action = function(args)
+      if type(args) == "string" and #args > 0 then
+        require("fml.action.notepad").append_content(args)
+      end
+    end,
+  })
+  .implement({
     uuid = K.notepad.toggle.uuid,
     action = function()
       require("fml.action.notepad").toggle()

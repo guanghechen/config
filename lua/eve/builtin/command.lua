@@ -418,6 +418,7 @@ M.definitions.lsp = {
 
 ---@class eve.builtin.command.definitions.notepad
 M.definitions.notepad = {
+  append_content = def("Fnotepadappendcontent", "notepad: append content", 1),
   create = def("Fnotepadcreate", "notepad: create"),
   destroy = def("Fnotepaddestroy", "notepad: destroy"),
   rename = def("Fnotepadrename", "notepad: rename"),

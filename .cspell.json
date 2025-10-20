@@ -1,8 +1,5 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua",
-    "lsp/yamlls.lua"
-  ],
+  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -96,6 +93,7 @@
     "Flspselectpythonvenv",
     "Flspshowcodeaction",
     "Flspshowcodeactionsource",
+    "Fnotepadappendcontent",
     "Fnotepadclose",
     "Fnotepadcreate",
     "Fnotepaddestroy",
@@ -862,3 +860,4 @@
     "zindex"
   ]
 }
+
