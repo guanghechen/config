@@ -338,6 +338,7 @@ function M:__create_win_as_needed__(termmeta)
     title_pos = "center",
   }
 
+  local resize_result = nil ---@type eve.state.maximized.ResolveResizeResult|nil
   local winnr = _terminal_winnr ---@type integer|nil
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -361,12 +362,14 @@ function M:__create_win_as_needed__(termmeta)
     end)
   else
     vim.wo[winnr].winfixbuf = false
-    vim.api.nvim_win_set_config(winnr, wincfg)
+    ---@type eve.state.maximized.ResolveResizeResult
+    resize_result = eve.state.maximized.resolve_resize_config(winnr, wincfg, { winblend = 0 })
+    vim.api.nvim_win_set_config(winnr, resize_result.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.wo[winnr].winfixbuf = true
   end
 
-  vim.wo[winnr].winblend = 0
+  vim.wo[winnr].winblend = resize_result and resize_result.winblend or 0
   vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
   eve.status.dirtier_termline:mark_dirty()
 

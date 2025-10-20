@@ -599,12 +599,14 @@ function M:resize(dimension)
     return self
   end
 
-  local _wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  _wincfg.row = dimension.row
-  _wincfg.col = dimension.col
-  _wincfg.width = dimension.width
-  _wincfg.height = dimension.height
-  vim.api.nvim_win_set_config(winnr, _wincfg)
+  local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+  wincfg.row = dimension.row
+  wincfg.col = dimension.col
+  wincfg.width = dimension.width
+  wincfg.height = dimension.height
+
+  local resize = eve.state.maximized.resolve_resize_config(winnr, wincfg) ---@type eve.state.maximized.ResolveResizeResult
+  vim.api.nvim_win_set_config(winnr, resize.cfg)
   return self
 end
 

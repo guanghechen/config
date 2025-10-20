@@ -211,8 +211,11 @@ function M:create_win_as_needed()
     vim.wo[winnr].wrap = false
   else
     vim.wo[winnr].winfixbuf = false
-    vim.api.nvim_win_set_config(winnr, self._wincfg)
+    ---@type eve.state.maximized.ResolveResizeResult
+    local resize = eve.state.maximized.resolve_resize_config(winnr, self._wincfg, { winblend = winblend })
+    vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
+    winblend = resize.winblend or winblend
   end
 
   vim.wo[winnr].cursorline = true

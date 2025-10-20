@@ -499,8 +499,11 @@ function Notepad:ensure_win()
     eve.win.set_type(winnr, eve.win.Types.TEXTAREA)
   else
     vim.wo[winnr].winfixbuf = false
-    vim.api.nvim_win_set_config(winnr, config)
+    ---@type eve.state.maximized.ResolveResizeResult
+    local resize = eve.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
+    vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
+    winblend = resize.winblend or winblend
   end
 
   vim.wo[winnr].cursorline = true
@@ -612,14 +615,19 @@ function Notepad:resize()
 
   local rect = self:measure_rect()
   vim.wo[winnr].winfixbuf = false
-  vim.api.nvim_win_set_config(winnr, {
+  local config = {
     relative = "editor",
     anchor = "NW",
     row = rect.row,
     col = rect.col,
     width = rect.width,
     height = rect.height,
-  })
+  }
+  local resize = eve.state.maximized.resolve_resize_config(winnr, config, nil) ---@type eve.state.maximized.ResolveResizeResult
+  vim.api.nvim_win_set_config(winnr, resize.cfg)
+  if resize.winblend ~= nil then
+    vim.wo[winnr].winblend = resize.winblend
+  end
   vim.wo[winnr].winfixbuf = true
 
   if self._nvimbar ~= nil then
