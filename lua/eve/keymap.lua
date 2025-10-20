@@ -49,7 +49,6 @@ mk({ "i", "n", "s" }, "<esc>", function()
   end
   return "<esc>"
 end, "system: clear search highlights", true)
-mk({ "n", "v" }, "<leader>:", "q:", "system: open command line window")
 mk({ "t" }, "<C-n>", "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
 
 ---! quit

@@ -164,6 +164,12 @@ command
     end,
   })
   .implement({
+    uuid = K.code.run_as_neovim_command.uuid,
+    action = function()
+      require("fml.action.code.run").run_as_neovim_command()
+    end,
+  })
+  .implement({
     uuid = K.code.format.uuid,
     action = function()
       local bufnr = vim.api.nvim_get_current_buf()

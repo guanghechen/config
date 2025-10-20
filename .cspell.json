@@ -1,5 +1,8 @@
 {
-  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
+  "ignorePaths": [
+    "lua/std/fileicon.lua",
+    "lsp/yamlls.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -602,6 +605,7 @@
     "oldstate",
     "omapclear",
     "omitter",
+    "ommand",
     "omnifunc",
     "onehalf",
     "oneline",
@@ -860,4 +864,3 @@
     "zindex"
   ]
 }
-

@@ -60,6 +60,7 @@ The configuration exposes core modules globally via `_G` for convenient access:
 - `eve.state.*` → `require("eve.state").*`
 - `eve.fn.*` → `require("eve.fn").*`
 - `eve.ux.*` → `require("eve.ux").*`
+- `eve.buf.retrieve_selected_text()` → helper that returns the current visual selection text (empty when nothing selected)
 - `oxi.finder.*` → `require("oxi.finder").*` (Rust performance modules)
 
 ### Integration Points

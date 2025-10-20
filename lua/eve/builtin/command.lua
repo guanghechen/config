@@ -306,6 +306,7 @@ M.definitions.clipboard = {
 M.definitions.code = {
   run = def("Fcoderun", "code: run"),
   run_force = def("Fcoderunforce", "code: run (force)"),
+  run_as_neovim_command = def("Fcoderunasneovimcommand", "code: run selection/buffer as :cmd"),
   format = def("Fcodeformat", "code: format buffer"),
 
   swap_conditional_branches = def("Fcodeswapconditionalbranches", "code: swap conditional branches"),

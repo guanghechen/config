@@ -199,4 +199,29 @@ function M.run(force)
   runner.run(filepath, force)
 end
 
+---@return nil
+function M.run_as_neovim_command()
+  local selected = eve.buf.retrieve_selected_text() ---@type string
+  if selected == "" then
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) ---@type string[]
+    selected = table.concat(lines, "\n")
+  end
+
+  if selected:match("^%s*$") then
+    return
+  end
+
+  local ok, err = pcall(function()
+    vim.api.nvim_command(selected)
+  end)
+
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "run_as_neovim_command",
+      message = err,
+    })
+  end
+end
+
 return M

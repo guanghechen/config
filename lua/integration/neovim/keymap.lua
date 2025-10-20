@@ -3,6 +3,10 @@ local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
 vim.cmd.menu(("PopUp.%s :%s<cr>"):format("Add\\ word\\ to\\ cspell", K.lint.spellcheck_register.uuid)) --action is like map-rhs
 
+--#[c]ommand----------------------------------------------------------------------------------------
+ms({ "n", "v" }, "<leader>:", K.code.run_as_neovim_command)
+----------------------------------------------------------------------------------------#[c]ommand--
+
 --#enhance------------------------------------------------------------------------------------------
 ----- better copy/paste list -----
 ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
