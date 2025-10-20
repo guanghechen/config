@@ -89,7 +89,7 @@ local function collect_provider_actions(ctx)
       })
     elseif result ~= nil then
       local items ---@type eve.builtin.lsp_action.ProviderAction[]
-      if vim.is_list(result) then
+      if vim.islist(result) then
         items = result
       else
         items = { result }
