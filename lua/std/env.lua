@@ -47,8 +47,9 @@ function M.locate_gitroot(dirpath)
 end
 
 ---@param filepath                      string
+---@param prefer_sep                    "/"|"\\"|nil
 ---@return string
-function M.normalize_path(filepath)
+function M.normalize_path(filepath, prefer_sep)
   if filepath == "/" and not IS_WIN then
     return "/"
   end
@@ -61,8 +62,9 @@ function M.normalize_path(filepath)
     return string.char(tonumber(hex, 16))
   end)
 
-  local pieces = M.split_path(filepath, true)
-  return table.concat(pieces, PATH_SEP)
+  local sep = prefer_sep or PATH_SEP ---@type string
+  local pieces = M.split_path(filepath, true) ---@type string[]
+  return table.concat(pieces, sep)
 end
 
 ---@param filepath                      string

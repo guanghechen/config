@@ -77,11 +77,14 @@ local repo_map = {
   },
 }
 
+---@module 'std.path'
 ---@class std.path
-local M = {}
-
-M.normalize = std.env.normalize_path
-M.split = std.env.split_path
+---@field public normalize              fun(filepath: string, prefer_sep?: "/"|"\\"): string
+---@field public split                  fun(filepath: string, keep_suffix_sep?: boolean): string[]
+local M = {
+  normalize = std.env.normalize_path,
+  split = std.env.split_path,
+}
 
 ---@param filepath                      string
 ---@return string
