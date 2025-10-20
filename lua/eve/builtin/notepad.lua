@@ -55,26 +55,6 @@ local function sync_chatbox_buffer(uuid, content)
         if not was_modifiable then
           vim.bo[bufnr].modifiable = false
         end
-
-        local tail_row = vim.api.nvim_buf_line_count(bufnr) ---@type integer
-        if tail_row < 1 then
-          tail_row = 1
-        end
-        local tail_line = vim.api.nvim_buf_get_lines(bufnr, tail_row - 1, tail_row, false)[1] or ""
-        local tail_col = vim.fn.strlen(tail_line)
-
-        for _, winnr in ipairs(vim.fn.win_findbuf(bufnr)) do
-          if vim.api.nvim_win_is_valid(winnr) then
-            local ok = pcall(vim.api.nvim_win_set_cursor, winnr, { tail_row, tail_col })
-            if not ok then
-              local last_row = vim.api.nvim_buf_line_count(bufnr)
-              local last_line = last_row > 0 and vim.api.nvim_buf_get_lines(bufnr, last_row - 1, last_row, false)[1]
-                or ""
-              local last_col = vim.fn.strlen(last_line)
-              pcall(vim.api.nvim_win_set_cursor, winnr, { math.max(1, last_row), last_col })
-            end
-          end
-        end
       end
     end
   end
