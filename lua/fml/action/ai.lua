@@ -35,8 +35,9 @@ function M.edit()
     or col_end == nil
     or ((lnum_start == lnum_end) and (col_start == col_end))
   then
-    location = string.format("@%s", filepath)
-    location_err = nil
+    location, location_err = std.uri.file_location({
+      filepath = filepath,
+    })
   else
     location, location_err = std.uri.file_location({
       filepath = filepath,
