@@ -127,6 +127,53 @@ local __module_name__ = "eve.ux.view.treeview" ---@type string
 
 local NSNR_DEFAULT = eve.var.nsnr.view_tree ---@type integer
 
+---@param childline                     integer[]
+---@param location_lnums                integer[]
+---@return integer|nil
+local function assign_childline_location(childline, location_lnums)
+  local lnum_last_location = location_lnums[#location_lnums] ---@type integer|nil
+  if lnum_last_location ~= nil then
+    for _, location_lnum in ipairs(location_lnums) do
+      childline[location_lnum] = lnum_last_location ---@type integer
+    end
+  end
+  return lnum_last_location
+end
+
+---@param parent_leaf_lines             table<string, integer[]>
+---@param parentuuid                    string|nil
+---@param lnum_leaf                     integer
+---@return nil
+local function track_parent_leaf_line(parent_leaf_lines, parentuuid, lnum_leaf)
+  if parentuuid == nil then
+    return
+  end
+
+  local parentleafs = parent_leaf_lines[parentuuid] ---@type integer[]|nil
+  if parentleafs == nil then
+    parentleafs = {}
+    parent_leaf_lines[parentuuid] = parentleafs
+  end
+  parentleafs[#parentleafs + 1] = lnum_leaf ---@type integer
+end
+
+---@param childline                     integer[]
+---@param parent_leaf_lines             table<string, integer[]>
+---@param leaf_has_location             table<integer, boolean>
+---@return nil
+local function finalize_parent_leaf_childline(childline, parent_leaf_lines, leaf_has_location)
+  for _, leaflines in pairs(parent_leaf_lines) do
+    local last_leaf = leaflines[#leaflines] ---@type integer|nil
+    if last_leaf ~= nil then
+      for _, leafline in ipairs(leaflines) do
+        if not leaf_has_location[leafline] then
+          childline[leafline] = last_leaf ---@type integer
+        end
+      end
+    end
+  end
+end
+
 ---@class eve.ux.view.ITreeProps
 ---@field public name                   string
 ---@field public fullname               ?string
@@ -336,6 +383,8 @@ function M:render_listview(params)
   local highlights_list = {} ---@type (std.t.IHighlightInline[]|nil)[]
   local lnum2uuid = {} ---@type string[]
   local uuid2lnum = {} ---@type table<string, integer>
+  local parent_leaf_lines = {} ---@type table<string, integer[]>
+  local leaf_has_location = {} ---@type table<integer, boolean>
 
   local lnum = 0 ---@type integer
 
@@ -356,6 +405,7 @@ function M:render_listview(params)
     end
 
     if last_child_index > 0 then
+      local location_lnums = {} ---@type integer[]
       for index = 1, N, 1 do
         local location = leafstate.locations[index] ---@type eve.ux.view.tree.ILeafLocationState
         if location.tick_invisible ~= tick_invisible then
@@ -363,17 +413,20 @@ function M:render_listview(params)
           local indent = index == last_child_index and indent_location_lastchild or indent_location ---@type string
           local result = render_listview_location(ctx, leafnode, leafstate, location, lnum)
 
-          childline[lnum] = lnum ---@type integer
           indents[lnum] = indent ---@type string
           lines[lnum] = indent .. result.text ---@type string
           highlights_list[lnum] = result.highlights ---@type std.t.IHighlightInline[]|nil
           lnum2uuid[lnum] = location.locationuuid
           uuid2lnum[location.locationuuid] = lnum
+          location_lnums[#location_lnums + 1] = lnum
         end
+      end
+      if #location_lnums > 0 then
+        return assign_childline_location(childline, location_lnums)
       end
     end
 
-    return lnum
+    return nil
   end
 
   ---@type eve.ux.view.tree.IRenderListviewLeafNode
@@ -402,7 +455,14 @@ function M:render_listview(params)
     lnum2uuid[lnum] = leafnode.uuid
     uuid2lnum[leafnode.uuid] = lnum
 
-    render_leaf_locations(leafnode, leafstate)
+    local lnum_last_location = render_leaf_locations(leafnode, leafstate) ---@type integer|nil
+    if lnum_last_location ~= nil then
+      childline[lnum_leaf] = lnum_last_location ---@type integer
+      leaf_has_location[lnum_leaf] = true
+    end
+
+    track_parent_leaf_line(parent_leaf_lines, leafnode.parent, lnum_leaf)
+
     return lnum
   end
 
@@ -583,6 +643,8 @@ function M:render_listview(params)
     end
   end
 
+  finalize_parent_leaf_childline(childline, parent_leaf_lines, leaf_has_location)
+
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   for index = 1, #lines, 1 do
@@ -663,6 +725,8 @@ function M:render_treeview(params)
   local highlights_list = {} ---@type (std.t.IHighlightInline[]|nil)[]
   local lnum2uuid = {} ---@type string[]
   local uuid2lnum = {} ---@type table<string, integer>
+  local parent_leaf_lines = {} ---@type table<string, integer[]>
+  local leaf_has_location = {} ---@type table<integer, boolean>
 
   local folded_depth = 0 ---@type integer
   local folded_indent = INDENT_COMMON ---@type string
@@ -689,6 +753,7 @@ function M:render_treeview(params)
     end
 
     if last_child_index > 0 then
+      local location_lnums = {} ---@type integer[]
       for index = 1, N, 1 do
         local location = leafstate.locations[index] ---@type eve.ux.view.tree.ILeafLocationState
         if location.tick_invisible ~= tick_invisible then
@@ -699,14 +764,17 @@ function M:render_treeview(params)
           lines[lnum] = indent .. result.text ---@type string
           highlights_list[lnum] = result.highlights ---@type std.t.IHighlightInline[]|nil
           indents[lnum] = indent ---@type string
-          childline[lnum] = lnum ---@type integer
           lnum2uuid[lnum] = location.locationuuid
           uuid2lnum[location.locationuuid] = lnum
+          location_lnums[#location_lnums + 1] = lnum ---@type integer
         end
+      end
+      if #location_lnums > 0 then
+        return assign_childline_location(childline, location_lnums)
       end
     end
 
-    return lnum
+    return nil
   end
 
   ---@type eve.ux.view.tree.IRenderTreeviewLeafNode
@@ -748,7 +816,14 @@ function M:render_treeview(params)
     lnum2uuid[lnum] = leafnode.uuid
     uuid2lnum[leafnode.uuid] = lnum
 
-    render_leaf_locations(leafnode, leafstate, child_indent)
+    local lnum_last_location = render_leaf_locations(leafnode, leafstate, child_indent) ---@type integer|nil
+    if lnum_last_location ~= nil then
+      childline[lnum_leaf] = lnum_last_location ---@type integer
+      leaf_has_location[lnum_leaf] = true
+    end
+
+    track_parent_leaf_line(parent_leaf_lines, leafnode.parent, lnum_leaf)
+
     return lnum
   end
 
@@ -1063,6 +1138,17 @@ function M:render_treeview(params)
   for index = 1, last_cur, 1 do
     local lnum_container = stack_lnum_roots[index] ---@type integer
     childline[lnum_container] = lnum ---@type integer
+  end
+
+  for _, leaflines in pairs(parent_leaf_lines) do
+    local last_leaf = leaflines[#leaflines] ---@type integer|nil
+    if last_leaf ~= nil then
+      for _, leafline in ipairs(leaflines) do
+        if not leaf_has_location[leafline] then
+          childline[leafline] = last_leaf ---@type integer
+        end
+      end
+    end
   end
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
