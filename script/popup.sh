@@ -36,7 +36,16 @@ function _ghc_tmux_popup_ {
 
     # Launch the popup with desired settings, since the tmux popup could block following scripts,
     # so run it in the background and sleep 300ms to run the remain codes.
-    tmux popup -d '#{pane_current_path}' -xC -yC -w90% -h90% -E "tmux new-session -A -s ${popup_session_name}" &
+    local border_color=$(tmux show -gqv @GHC_PSL_FG_BORDER_CUR)
+    if [[ -z "${border_color}" ]]; then
+      border_color=$(tmux show -gqv @popup-fg)
+    fi
+    if [[ -z "${border_color}" ]]; then
+      border_color="default"
+    fi
+    local popup_border_style="fg=${border_color},bold"
+
+    tmux popup -d '#{pane_current_path}' -xC -yC -w90% -h90% -S "${popup_border_style}" -E "tmux new-session -A -s ${popup_session_name}" &
 
     sleep 0.3 # Sleep 300ms.
 
