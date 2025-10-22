@@ -1,8 +1,13 @@
--- https://github.com/neovim/nvim-lspconfig/blob/612d9fcc652725ce2e3a8043daad6cfc6865c4a7/lsp/eslint.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/78174f395e705de97d1329c18394831737d9a4b4/lsp/eslint.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
 ---@type string[]
 local CONFIG_FILENAMES = {
+  "package-lock.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  "bun.lockb",
+  "bun.lock",
   "eslint.config.js",
   "eslint.config.ts",
   "eslint.config.mjs",
@@ -103,6 +108,7 @@ local function root_dir(bufnr, on_dir)
   on_dir(rootdir)
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "vscode-eslint-language-server", "--stdio" },
@@ -143,7 +149,7 @@ return {
   workspace_required = true,
   settings = {
     validate = "on",
-    packageManager = nil,
+    packageManager = vim.NIL,
     useESLintClass = false,
     experimental = {
       useFlatConfig = false,

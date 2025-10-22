@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/336b388c272555d2ae94627a50df4c2f89a5e257/lsp/copilot.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/44201a94c6b2031f53bdcf645d5de72489e806b9/lsp/copilot.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#copilot
 
 local __module_name__ = "lsp.copilot" ---@type string
@@ -134,6 +134,7 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "copilot-language-server", "--stdio" },

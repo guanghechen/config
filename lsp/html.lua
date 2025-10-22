@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/5b646bf2d04a8e93ecef23d38442546b079577d4/lsp/html.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/5a49a97f9d3de5c39a2b18d583035285b3640cb0/lsp/html.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#html
 
 ---@param params                        lsp.InitializeParams
@@ -25,11 +25,15 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "vscode-html-language-server", "--stdio" },
   filetypes = { "html", "templ" },
-  flags = { debounce_text_changes = 500 },
+  flags = {
+    debounce_text_changes = 500,
+    exit_timeout = 200,
+  },
   root_markers = { "package.json", ".git" },
   init_options = {
     embeddedLanguages = { css = true, javascript = true },

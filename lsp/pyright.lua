@@ -62,6 +62,7 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "pyright-langserver", "--stdio" },

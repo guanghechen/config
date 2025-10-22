@@ -1,10 +1,11 @@
--- https://github.com/neovim/nvim-lspconfig/blob/0112e1f77983141e1453bd37d124302f1c876c46/lsp/rust_analyzer.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/rust_analyzer.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#rust_analyzer
 
 local function reload_workspace(bufnr)
   local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "rust_analyzer" })
   for _, client in ipairs(clients) do
     vim.notify("Reloading Cargo Workspace")
+    ---@diagnostic disable-next-line:param-type-mismatch
     client:request("rust-analyzer/reloadWorkspace", nil, function(err)
       if err then
         error(tostring(err))
@@ -117,6 +118,7 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "rust-analyzer" },

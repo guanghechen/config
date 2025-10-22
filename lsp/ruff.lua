@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/5b646bf2d04a8e93ecef23d38442546b079577d4/lsp/ruff.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/5a49a97f9d3de5c39a2b18d583035285b3640cb0/lsp/ruff.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ruff
 
 ---@param params                        lsp.InitializeParams
@@ -47,6 +47,7 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "ruff", "server" },

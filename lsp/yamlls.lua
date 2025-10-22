@@ -31,6 +31,7 @@ local function on_init(client, config)
   client.server_capabilities.documentFormattingProvider = true
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "yaml-language-server", "--stdio" },

@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/1ddc1a2e692b120cda6d33c890461e49cb85d6bf/lsp/tailwindcss.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/tailwindcss.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#tailwindcss
 
 ---@type string[]
@@ -18,6 +18,8 @@ local CONFIG_FILENAMES = {
   "theme/static_src/tailwind.config.mjs",
   "theme/static_src/tailwind.config.ts",
   "theme/static_src/postcss.config.js",
+  -- Fallback for tailwind v4, where tailwind.config.* is not required anymore
+  ".git",
 }
 
 ---@type string[]
@@ -92,6 +94,7 @@ end
 
 local lspBinPath = detectLspServer()
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = lspBinPath and { lspBinPath, "--stdio" } or nil,

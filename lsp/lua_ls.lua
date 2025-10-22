@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/a05bfc8988bb10d5bff32c314642c3243226d8dc/lsp/lua_ls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/5a49a97f9d3de5c39a2b18d583035285b3640cb0/lsp/lua_ls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#lua_ls
 
 local nvim_config = nil ---@type string|nil
@@ -33,6 +33,7 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "lua-language-server" },

@@ -1,7 +1,13 @@
--- https://github.com/neovim/nvim-lspconfig/blob/4da7247b2b348b4f6cade30a7a7fcb299879d275/lsp/clangd.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/clangd.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#clangd
 
+---@class ghc.lsp.ClangdInitializeResult: lsp.InitializeResult
+---@field offsetEncoding? string
+
 -- https://clangd.llvm.org/extensions.html#switch-between-sourceheader
+---@param bufnr                         integer
+---@param client                        vim.lsp.Client|nil
+---@return nil
 local function switch_source_header(bufnr, client)
   local method_name = "textDocument/switchSourceHeader"
   ---@diagnostic disable-next-line:param-type-mismatch
@@ -22,6 +28,9 @@ local function switch_source_header(bufnr, client)
   end, bufnr)
 end
 
+---@param bufnr                         integer
+---@param client                        vim.lsp.Client|nil
+---@return nil
 local function symbol_info(bufnr, client)
   local method_name = "textDocument/symbolInfo"
   ---@diagnostic disable-next-line:param-type-mismatch
@@ -68,11 +77,11 @@ local function on_attach(client, bufnr)
   eve.lsp.on_attach(client, bufnr)
 
   vim.api.nvim_buf_create_user_command(bufnr, "LspClangdSwitchSourceHeader", function()
-    switch_source_header(bufnr)
+    switch_source_header(bufnr, client)
   end, { desc = "Switch between source/header" })
 
   vim.api.nvim_buf_create_user_command(bufnr, "LspClangdShowSymbolInfo", function()
-    symbol_info()
+    symbol_info(bufnr, client)
   end, { desc = "Show symbol info" })
 end
 
@@ -83,16 +92,24 @@ local function on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
----@param config                        any
-local function on_init(client, config)
-  eve.lsp.on_init(client, config)
-  if config.offsetEncoding then
-    client.offset_encoding = config.offsetEncoding
+---@param init_result                   ghc.lsp.ClangdInitializeResult
+local function on_init(client, init_result)
+  if init_result.offsetEncoding then
+    client.offset_encoding = init_result.offsetEncoding
   end
 end
 
+local capabilities = eve.lsp.get_capabilities()
+capabilities.textDocument = capabilities.textDocument or {}
+capabilities.textDocument.completion = capabilities.textDocument.completion or {}
+---@diagnostic disable-next-line: inject-field
+capabilities.textDocument.completion.editsNearCursor = true
+---@diagnostic disable-next-line: inject-field
+capabilities.offsetEncoding = { "utf-8", "utf-16" }
+
+---@type vim.lsp.Config
 return {
-  capabilities = eve.lsp.get_capabilities(),
+  capabilities = capabilities,
   cmd = {
     "clangd",
     "--background-index",

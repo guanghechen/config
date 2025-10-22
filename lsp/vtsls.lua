@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/eeae0957130a02860b2d154a74d50f180a2d0910/lsp/vtsls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/78174f395e705de97d1329c18394831737d9a4b4/lsp/vtsls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vtsls
 
 local __module_name__ = "lsp.vtsls" ---@type string
@@ -201,6 +201,7 @@ local plugins = {
   vue = eve.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
 
+---@type vim.lsp.Config
 return {
   capabilities = eve.lsp.get_capabilities(),
   cmd = { "vtsls", "--stdio" },
