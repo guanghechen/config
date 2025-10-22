@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-export PREFER_NODE_VERSION=22
+export PREFER_NODE_VERSION=25
 export PREFER_PYTHON_ENV=lemon
 
 ### Homebrew
