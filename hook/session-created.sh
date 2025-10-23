@@ -5,7 +5,7 @@ function _ghc_tmux_hook_session_created {
   local new_session_name=$1
 
   # Check if the session name starts with "_popup"
-  if [[ "${new_session_name}" == _popup@* ]] || [[ "${new_session_name}" =~ ^(claude|codex)\ [0-9a-f]+$ ]]; then
+  if [[ "${new_session_name}" == _popup@* ]] || [[ "${new_session_name}" =~ ^(claude|codex|gemini)\ [0-9a-f]+$ ]]; then
     # Hide the status line
     tmux set-option -t "${new_session_name}" status off
   else
@@ -16,4 +16,3 @@ function _ghc_tmux_hook_session_created {
 }
 
 _ghc_tmux_hook_session_created "$1"
-
