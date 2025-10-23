@@ -3,76 +3,122 @@ function ghc-upgrade {
   pwsh "$env:XDG_CONFIG_HOME\guanghechen\win\setup.ps1"
 }
 
-# Update config repositories.
-function ghc-update {
-  $reporoot = "$env:XDG_CONFIG_HOME"
-  $repomain = Join-Path $reporoot "guanghechen"
-
-  if (Test-Path $repomain) {
-    git -C "$repomain" fetch origin
-    git -C "$repomain" merge origin/guanghechen --ff-only
-  } else {
-    git -C "$reporoot" clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
-  }
-
-  $repo_required_branches = @(
-    "bat",
-    "conda",
-    "gh",
-    "git-delta",
-    "fzf",
-    "lazygit",
-    "nvim",
-    "pwsh",
-    "ripgrep",
-    "yazi"
-  )
-  $repo_optional_branches = @(
-    "alacritty",
-    "alacritty-windows",
-    "btop",
-    "claude",
-    "codex",
-    "fish",
-    "ghostty",
-    "helix",
-    "kitty",
-    "komorebi",
-    "lsd",
-    "neovide",
-    "nvim-lazy",
-    "nvim-nvchad",
-    "plan",
-    "pm2",
-    "skhd",
-    "tsuki",
-    "wezterm",
-    "yabai",
-    "yasb",
-    "yoz"
+function Script:Sync-GhcGitWorktrees {
+  param(
+    [string]$RepoRoot,
+    [string]$RepoMain,
+    [string]$RepoUrl,
+    [string]$RepoName,
+    [string]$Scope,
+    [string[]]$Branches
   )
 
-  foreach ($branch in $repo_required_branches) {
-    $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
-    if (Test-Path -Path $repopath) {
-      Write-Host "merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
-      $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
-    } else {
-      Write-Host "add new worktree of $branch into $repopath..." -ForegroundColor DarkBlue
-      $cmd = "git -C '$repomain' worktree add '$repopath' $branch"
-    }
-    Invoke-Expression $cmd
+  if (-not (Test-Path -Path $RepoRoot)) {
+    Write-Host ("   [{0}] mkdir -p {1}" -f $RepoName, $RepoRoot) -ForegroundColor Blue
+    New-Item -ItemType Directory -Path $RepoRoot -Force | Out-Null
     Write-Host
   }
 
-  foreach ($branch in $repo_optional_branches) {
-    $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
-    if (Test-Path -Path $repopath) {
-      Write-Host "merging origin/$branch into $repopath..." -ForegroundColor DarkBlue
-      $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
-      Invoke-Expression $cmd
+  if ($Scope -eq "main") {
+    $mainBranch = $Branches[0]
+    $gitPath = Join-Path $RepoMain ".git"
+
+    if (Test-Path $gitPath) {
+      Write-Host "   [$RepoName] fetching and merging origin/$mainBranch" -ForegroundColor Blue
+      git -C "$RepoMain" fetch origin
+      git -C "$RepoMain" merge "origin/$mainBranch" --ff-only
+      Write-Host
+    } else {
+      Write-Host "   [$RepoName] cloning $RepoUrl (branch: $mainBranch)" -ForegroundColor Blue
+      git -C "$RepoRoot" clone $RepoUrl --branch=$mainBranch "$RepoMain"
+      Write-Host
+    }
+
+    return
+  }
+
+  $isRequired = $Scope -eq "required"
+  foreach ($branch in $Branches) {
+    if ([string]::IsNullOrWhiteSpace($branch)) {
+      continue
+    }
+
+    $repoPath = Join-Path $RepoRoot $branch
+
+    if (Test-Path -Path $repoPath) {
+      Write-Host "   [$RepoName] syncing $branch" -ForegroundColor Blue
+      git -C "$repoPath" merge "origin/$branch" --ff-only
+      Write-Host
+    } elseif ($isRequired) {
+      Write-Host "   [$RepoName] add new worktree of $branch" -ForegroundColor Blue
+      git -C "$RepoMain" worktree add "$repoPath" $branch
       Write-Host
     }
   }
 }
 
+# Update config repositories.
+function ghc-update {
+  $configRoot = "$env:XDG_CONFIG_HOME"
+  $configMain = Join-Path $configRoot "guanghechen"
+  $configUrl = "https://github.com/guanghechen/config.git"
+  $configMainBranch = "guanghechen"
+
+  $configRequiredBranches = @("pwsh")
+  $configOptionalBranches = @(
+    "alacritty",
+    "alacritty-windows",
+    "bat",
+    "btop",
+    "claude",
+    "codex",
+    "conda",
+    "fzf",
+    "gh",
+    "ghostty",
+    "git-delta",
+    "helix",
+    "kitty",
+    "komorebi",
+    "lazygit",
+    "lsd",
+    "neovide",
+    "nvim",
+    "nvim-lazy",
+    "nvim-nvchad",
+    "ora",
+    "plan",
+    "pm2",
+    "ripgrep",
+    "skhd",
+    "tsuki",
+    "wezterm",
+    "yabai",
+    "yasb",
+    "yazi",
+    "yoz"
+  )
+
+  Write-Host "  [$configMain] syncing..." -ForegroundColor Green
+  Sync-GhcGitWorktrees -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "main" -Branches @($configMainBranch)
+  Sync-GhcGitWorktrees -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "required" -Branches $configRequiredBranches
+  Sync-GhcGitWorktrees -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "optional" -Branches $configOptionalBranches
+  Write-Host "  [config] done." -ForegroundColor Cyan
+  Write-Host
+
+  #----------------------------------------------------------------------------------------------#
+
+  $wikiRoot = Join-Path $HOME "wiki"
+  $wikiMain = Join-Path $wikiRoot "wiki"
+  $wikiUrl = "https://github.com/guanghechen/wiki.git"
+  $wikiMainBranch = "wiki"
+
+  $wikiRequiredBranches = @("translator", "wiki-note")
+  $wikiOptionalBranches = @()
+
+  Write-Host "  [$wikiMain] syncing..." -ForegroundColor Green
+  Sync-GhcGitWorktrees -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "main" -Branches @($wikiMainBranch)
+  Sync-GhcGitWorktrees -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "required" -Branches $wikiRequiredBranches
+  Sync-GhcGitWorktrees -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "optional" -Branches $wikiOptionalBranches
+  Write-Host "  [wiki] done." -ForegroundColor Cyan
+}
