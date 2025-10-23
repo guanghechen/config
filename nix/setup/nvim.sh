@@ -6,8 +6,7 @@ fish -c "\
   cd $HOME/.config/nvim\
   && conda activate $PREFER_PYTHON_ENV\
   && fnm use $PREFER_NODE_VERSION\
-  && bash rust/rstd/build.sh\
-  && bash rust/nvim_tools/build.sh\
+  && bash rust/build.sh\
   && nvim --headless -u ./init-update.lua\
 "
 if [ -d "$HOME/.config/nvim-nvchad/" ]; then
@@ -15,8 +14,7 @@ if [ -d "$HOME/.config/nvim-nvchad/" ]; then
     cd $HOME/.config/nvim-nvchad\
     && conda activate $PREFER_PYTHON_ENV\
     && fnm use $PREFER_NODE_VERSION\
-    && bash rust/rstd/build.sh\
-    && bash rust/nvim_tools/build.sh\
+    && bash rust/build.sh\
     && nvchad --headless -u ./init-update.lua\
   "
 fi
