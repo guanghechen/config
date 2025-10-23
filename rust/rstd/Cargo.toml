@@ -9,4 +9,4 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 md-5 = "0.10.6"
 mlua = { version = "0.9", default-features = false, features = ["luajit", "module"] }
-uuid = { version = "1.17.0", features = ["v4", "fast-rng"] }
+uuid = { version = "1.18.1", features = ["v4", "fast-rng"] }
