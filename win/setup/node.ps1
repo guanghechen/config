@@ -1,4 +1,4 @@
-if (fnm list | Select-String -Quiet "v20") {
+if (fnm list | Select-String -Quiet "v$env:PREFER_NODE_VERSION") {
   Write-Host "  [setup node] node@20 is already installed. (skipped)" -ForegroundColor Yellow
 } else {
   fnm install $env:PREFER_NODE_VERSION
