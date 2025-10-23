@@ -1,0 +1,2 @@
+description = "Add a new keymap in CSI u format"
+prompt = """Please add a new keymap of {{args}} in csi u format, you can refer to the existing `ctrl+[` keymap, carefully following the existing format especially spaces."""
