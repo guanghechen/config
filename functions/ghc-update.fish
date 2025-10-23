@@ -1,18 +1,12 @@
 function ghc-update
     set reporoot "$HOME/.config"
     set repomain "$reporoot/guanghechen"
+    set repo_url "https://github.com/guanghechen/config.git"
+    set reponame config
+    set main_branch guanghechen
 
-    if test -d "$repomain/.git"
-        git -C $repomain fetch origin
-        git -C $repomain merge origin/guanghechen --ff-only
-    else
-        git clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
-    end
-
-    #----------------------------------------------------------------------------------------------#
-
-    set required_configs fish
-    set optional_configs \
+    set required_branches fish
+    set optional_branches \
         alacritty \
         alacritty-windows \
         bat \
@@ -47,28 +41,26 @@ function ghc-update
         yazi \
         yoz
 
-    for branch in $required_configs
-        set repopath "$reporoot/$branch"
-        if test -d "$repopath"
-            printf "\e[94m  merging origin/$branch into $repopath\e[0m\n"
-            set cmd "git -C '$repopath' merge origin/$branch --ff-only"
-        else
-            printf "\e[94m  add new worktree of $branch into $repopath\e[0m\n"
-            set cmd "git -C '$repomain' worktree add '$repopath' $branch"
-        end
+    printf "\e[92m  [$repomain] syncing...\e[0m\n"
+    __sync_git_worktrees $reporoot $repomain $repo_url $reponame main $main_branch
+    __sync_git_worktrees $reporoot $repomain $repo_url $reponame required $required_branches
+    __sync_git_worktrees $reporoot $repomain $repo_url $reponame optional $optional_branches
+    printf "\e[96m  [$reponame] done.\e[0m\n\n"
 
-        fish -c "$cmd"
-        printf "\n"
-    end
+    #----------------------------------------------------------------------------------------------#
 
-    for branch in $optional_configs
-        set repopath "$reporoot/$branch"
-        if test -d "$repopath"
-            printf "\e[94m  merging origin/$branch into $repopath\e[0m\n"
-            set cmd "git -C '$repopath' merge origin/$branch --ff-only"
+    set reporoot "$HOME/wiki"
+    set repomain "$reporoot/wiki"
+    set repo_url "https://github.com/guanghechen/wiki.git"
+    set reponame wiki
+    set main_branch wiki
 
-            fish -c "$cmd"
-            printf "\n"
-        end
-    end
+    set required_branches translator wiki-note
+    set optional_branches
+
+    printf "\e[92m  [$repomain] syncing...\e[0m\n"
+    __sync_git_worktrees $reporoot $repomain $repo_url $reponame main $main_branch
+    __sync_git_worktrees $reporoot $repomain $repo_url $reponame required $required_branches
+    __sync_git_worktrees $reporoot $repomain $repo_url $reponame optional $optional_branches
+    printf "\e[96m  [$reponame] done.\e[0m\n"
 end
