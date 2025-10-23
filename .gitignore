@@ -1,4 +1,9 @@
+google_account_id
+installation_id
+user_id
+
 google_accounts.json
 oauth_creds.json
+settings.json.orig
 
 tmp/
