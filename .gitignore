@@ -5,5 +5,7 @@ user_id
 google_accounts.json
 oauth_creds.json
 settings.json.orig
+trustedFolders.json
 
+local/
 tmp/
