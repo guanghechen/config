@@ -4,7 +4,9 @@
 local function generate_highlights(text)
   local matches = {} ---@type {pos: integer, end_pos: integer, content: string, group: string}[]
 
-  for start_pos, content, group, end_pos in text:gmatch("()%[([^%]]+)%]%(([^%)]+)%)()") do
+  for start_pos_raw, content, group, end_pos_raw in text:gmatch("()%[([^%]]+)%]%(([^%)]+)%)()") do
+    local start_pos = assert(tonumber(start_pos_raw), "invalid match start") ---@type integer
+    local end_pos = assert(tonumber(end_pos_raw), "invalid match end") ---@type integer
     matches[#matches + 1] = { pos = start_pos, end_pos = end_pos, content = content, group = group }
   end
 
@@ -13,13 +15,17 @@ local function generate_highlights(text)
     explicit_positions[matches[i].pos] = true
   end
 
-  for start_pos, content, end_pos in text:gmatch("()%[([^%]]+)%]()") do
+  for start_pos_raw, content, end_pos_raw in text:gmatch("()%[([^%]]+)%]()") do
+    local start_pos = assert(tonumber(start_pos_raw), "invalid label start") ---@type integer
+    local end_pos = assert(tonumber(end_pos_raw), "invalid label end") ---@type integer
     if not explicit_positions[start_pos] then
       matches[#matches + 1] = { pos = start_pos, end_pos = end_pos, content = content, group = "SnacksPickerLabel" }
     end
   end
 
-  for start_pos, content, end_pos in text:gmatch("()%{([^}]+)%}()") do
+  for start_pos_raw, content, end_pos_raw in text:gmatch("()%{([^}]+)%}()") do
+    local start_pos = assert(tonumber(start_pos_raw), "invalid file match start") ---@type integer
+    local end_pos = assert(tonumber(end_pos_raw), "invalid file match end") ---@type integer
     matches[#matches + 1] = {
       pos = start_pos,
       end_pos = end_pos,
@@ -69,7 +75,7 @@ end
 ---@return eve.ux.picker.composer.list.IRenderResult|nil
 ---@return eve.ux.picker.composer.list.IRenderPreview|nil
 local function snacks_provider(items, opts)
-  local format_item = opts.format_item or std.fn.identity ---@type fun(item): string|nil
+  local format_item = opts.format_item or (opts.snacks and opts.snacks.format) or std.fn.identity ---@type fun(item): string|nil
   local width = 0 ---@type integer
   local select_items = {} ---@type fml.dressing.select.IItem[]
 
@@ -96,7 +102,7 @@ local function snacks_provider(items, opts)
   local render_preview ---@type eve.ux.picker.composer.list.IRenderPreview|nil
 
   ---@diagnostic disable-next-line: undefined-field
-  if opts.picker and opts.picker.preview == "preview" then
+  if opts.snacks and opts.snacks.preview == "preview" then
     render_preview = function(composer, bufnr)
       local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
       if lnum_current < 1 then
@@ -104,7 +110,8 @@ local function snacks_provider(items, opts)
         return { cursorline = false, number = false, title = "Preview", wrap = false }
       end
 
-      local item = composer:retrieve(lnum_current) ---@type fml.dressing.select.IItem|nil
+      local item = composer:retrieve(lnum_current)
+      ---@cast item fml.dressing.select.IItem|nil
       if not item then
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No item selected" })
         return { cursorline = false, number = false, title = "Preview", wrap = false }

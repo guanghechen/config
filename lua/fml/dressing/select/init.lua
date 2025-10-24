@@ -16,6 +16,7 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public render_preview         ?eve.ux.picker.composer.list.IRenderPreview
 ---@field public uuid_current           ?string
 ---@field public uuid_present           ?string
+---@field public snacks                 ?any
 
 ---@class fml.dressing.select.IItemData
 ---@field public original_item          any
@@ -53,7 +54,7 @@ local function resolve_provider(opts)
   end
 
   ---@cast opts any
-  if type(opts.picker) == "table" and type(opts.picker.layout) == "table" then
+  if type(opts.snacks) == "table" then
     return providers.snacks
   end
 
