@@ -2,12 +2,36 @@
   "security": {
     "auth": {
       "selectedType": "oauth-personal"
+    },
+    "folderTrust": {
+      "enabled": true
     }
   },
   "general": {
+    "debugKeystrokeLogging": true,
+    "disableAutoUpdate": true,
+    "disableUpdateNag": false,
+    "enablePromptCompletion": true,
+    "preferredEditor": "nvim",
     "vimMode": true
   },
+  "privacy": {
+    "usageStatisticsEnabled": false
+  },
+  "telemetry": {
+    "enabled": false
+  },
+  "tools": {
+    "autoAccept": true
+  },
   "ui": {
+    "hideBanner": true,
+    "hideTips": true,
+    "hideWindowTitle": true,
+    "showStatusInTitle": true,
     "theme": "GitHub"
-  }
+  },
+  "useSmartEdit": true,
+  "useWriteTodos": true
 }
+
