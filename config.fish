@@ -53,6 +53,7 @@ set -gx PYTHONIOENCODING utf8
 set -gx PYTHONUTF8 1
 set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
 set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
+set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
 ## platform specific
 if test (uname) = Darwin
