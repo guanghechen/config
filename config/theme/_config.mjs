@@ -10,24 +10,26 @@ import { gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 export const apps = [
   {
     name: 'alacritty',
+    home: path.join(XDG_CONFIG_HOME, 'alacritty'),
     themes: 'theme/',
     extname: '.toml',
     local: 'local/theme.toml',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
-      const main_config_filepath = path.join(XDG_CONFIG_HOME, app.name, 'alacritty.toml')
+      const main_config_filepath = path.join(app.home, 'alacritty.toml')
       await touch(main_config_filepath)
     },
   },
   {
     name: 'bat',
+    home: path.join(XDG_CONFIG_HOME, 'bat'),
     themes: 'themes/',
     extname: '.tmTheme',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const main_config_filepath = path.join(XDG_CONFIG_HOME, app.name, 'config')
+      const main_config_filepath = path.join(app.home, 'config')
       const content = [
         `--theme=${scheme.variant ? scheme.theme + '-' + scheme.variant : scheme.theme}`,
       ].join('\n')
@@ -39,29 +41,32 @@ export const apps = [
   },
   {
     name: 'fzf',
+    home: path.join(XDG_CONFIG_HOME, 'fzf'),
     themes: 'themes/',
     extname: '.fzfrc',
     local: 'fzf.fzfrc',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'git-delta',
+    home: path.join(XDG_CONFIG_HOME, 'git-delta'),
     themes: 'theme/',
     extname: '.conf',
     local: 'config.conf',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'ghostty',
+    home: path.join(XDG_CONFIG_HOME, 'ghostty'),
     themes: 'theme/',
     extname: '',
     local: 'local/theme',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
-      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
+      const theme_filepath = path.join(app.home, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
       // const backgroundImagePath =
@@ -75,13 +80,14 @@ export const apps = [
   },
   {
     name: 'kitty',
+    home: path.join(XDG_CONFIG_HOME, 'kitty'),
     themes: 'theme/',
     extname: '.conf',
     local: 'local/theme.conf',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
+      const theme_filepath = path.join(app.home, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
       const backgroundImagePath = scheme.darken
@@ -94,21 +100,23 @@ export const apps = [
   },
   {
     name: 'lazygit',
+    home: path.join(XDG_CONFIG_HOME, 'lazygit'),
     themes: 'theme/',
     extname: '.yml',
     local: 'local/theme.yml',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'nvim',
+    home: path.join(XDG_CONFIG_HOME, 'nvim'),
     themes: 'lua/eve/constant/theme/',
     extname: '.lua',
     local: null,
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const theme_config_filepath = path.join(XDG_CONFIG_HOME, app.name, 'init-theme.lua')
+      const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       await safe_exec('nvim', ['--headless', '-u', theme_config_filepath, '+q'], {
         NVIM_APPNAME: app.name,
         GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
@@ -117,13 +125,14 @@ export const apps = [
   },
   {
     name: 'nvim-nvchad',
+    home: path.join(XDG_CONFIG_HOME, 'nvim-nvchad'),
     themes: 'lua/eve/constant/theme/',
     extname: '.lua',
     local: null,
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
-      const theme_config_filepath = path.join(XDG_CONFIG_HOME, app.name, 'init-theme.lua')
+      const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       await safe_exec('nvim', ['--headless', '-u', theme_config_filepath, '+q'], {
         NVIM_APPNAME: app.name,
         GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
@@ -132,31 +141,33 @@ export const apps = [
   },
   {
     name: 'tmux',
+    home: path.join(XDG_CONFIG_HOME, 'tmux'),
     themes: 'theme/',
     extname: '.tmux.conf',
     local: 'local/theme.tmux.conf',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
       if (process.env.TMUX) {
-        const script_filepath = path.join(XDG_CONFIG_HOME, app.name, 'script/load-theme.sh')
+        const script_filepath = path.join(app.home, 'script/load-theme.sh')
         await safe_exec('/bin/bash', [script_filepath])
       }
     },
   },
   {
     name: 'wezterm',
+    home: path.join(XDG_CONFIG_HOME, 'wezterm'),
     themes: 'theme/',
     extname: '.lua',
     local: 'local/theme.lua',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const backgroundImagePath = scheme.darken
         ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
         : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
 
-      const theme_filepath = path.join(XDG_CONFIG_HOME, app.name, app.local)
+      const theme_filepath = path.join(app.home, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
       content = content.replace(
@@ -199,6 +210,9 @@ export const apps = [
   },
   {
     name: 'windows-terminal',
+    home: process.env.f_windows_terminal_settings
+      ? path.dirname(process.env.f_windows_terminal_settings)
+      : XDG_CONFIG_HOME,
     themes: null,
     extname: '.json',
     local: process.env.f_windows_terminal_settings,
@@ -254,10 +268,11 @@ export const apps = [
   },
   {
     name: 'yazi',
+    home: path.join(XDG_CONFIG_HOME, 'yazi'),
     themes: 'theme/',
     extname: '.toml',
     local: 'theme.toml',
-    active: app => is_directory(path.join(XDG_CONFIG_HOME, app.name)),
+    active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
   },
 ]

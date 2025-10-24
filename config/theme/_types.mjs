@@ -202,6 +202,7 @@
 /**
  * @typedef {Object} IAppConfig
  * @property {string}                       name
+ * @property {string}                       home
  * @property {string|null}                  themes
  * @property {string}                       extname
  * @property {string|null}                  local

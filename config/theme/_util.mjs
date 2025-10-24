@@ -2,7 +2,6 @@ import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { XDG_CONFIG_HOME } from '../_shared/env.mjs'
 import { HOME_THEME_SCHEME, HOME_THEME_APP, cwd, themes } from './_env.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
@@ -159,7 +158,7 @@ export async function apply_theme_per_app(app, scheme) {
     const template = await fs.readFile(template_filepath, 'utf8')
     const content = await app.render(app, template, scheme)
 
-    const theme_filepath = path.resolve(XDG_CONFIG_HOME, app.name, app.local)
+    const theme_filepath = path.resolve(app.home, app.local)
     mkdirSync(path.dirname(theme_filepath), { recursive: true })
     await fs.writeFile(theme_filepath, content, 'utf8')
   }
@@ -181,7 +180,7 @@ export async function gen_themes_per_app(app) {
   }
   const template = await fs.readFile(template_filepath, 'utf8')
 
-  const THEME_HOME = path.join(XDG_CONFIG_HOME, app.name, app.themes)
+  const THEME_HOME = path.resolve(app.home, app.themes)
   const tasks_gen_theme = themes.map(theme => gen_theme(theme))
   await Promise.allSettled(tasks_gen_theme)
   await app.after_gen?.(app)
