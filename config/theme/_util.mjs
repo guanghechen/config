@@ -27,31 +27,40 @@ export async function render_template(template, scheme) {
   const variant = scheme.variant
   const opposite = scheme.opposite
   const darken = scheme.darken
+
   const catppuccin = scheme.palette.catppuccin
   const gruvbox = scheme.palette.gruvbox
   const nord = scheme.palette.nord
   const onehalf = scheme.palette.onehalf
   const rosepine = scheme.palette.rosepine
   const unified = scheme.palette.unified
-  const palette = Object.fromEntries(
-    Object.entries({ catppuccin, gruvbox, nord, onehalf, rosepine }).filter(([_, v]) => !!v),
-  )
+  const palette = { catppuccin, gruvbox, nord, onehalf, rosepine, unified }
+  const themes = Object.keys(palette)
 
   const content = template
     .replace(/\\{3}\n[ \t ]*/g, '')
-    .replace(/\{{2}([^\n]+?)\}{2}/g, (_, key) => {
+    .replace(/\{{2}([^\n]+?)\}{2}/g, (_, expression) => {
       const fn = new Function(
         'name',
         'theme',
         'variant',
         'opposite',
         'darken',
-        'unified',
         'palette',
+        ...themes,
         'expression',
-        `try { return (${key}) ?? expression; } catch { return \`{{\${expression}}}\`; }`,
+        `try { return (${expression}) ?? expression; } catch (error) { console.log({ expression, error }); return \`{{\${expression}}}\`; }`,
       )
-      const result = fn(name, theme, variant, opposite, darken, unified, palette)
+      const result = fn(
+        name,
+        theme,
+        variant,
+        opposite,
+        darken,
+        palette,
+        ...themes.map(t => palette[t]),
+        expression,
+      )
       return result
     })
   return content
