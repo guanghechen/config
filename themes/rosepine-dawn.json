@@ -1,0 +1,24 @@
+{
+  "name":           "rosepine-dawn",
+  "type":           "custom",
+  "Background":     "#FAF4ED",
+  "Foreground":     "#464261",
+  "LightBlue":      "#286983",
+  "AccentBlue":     "#286983",
+  "AccentPurple":   "#907AA9",
+  "AccentCyan":     "#56949F",
+  "AccentGreen":    "#6D8F89",
+  "AccentYellow":   "#EA9D34",
+  "AccentRed":      "#B4637A",
+  "Comment":        "#9893A5",
+  "Gray":           "#9893A5",
+  "DiffAdded":      "#E4EBE4",
+  "DiffRemoved":    "#F5D8E0",
+  "DiffModified":   "#286983",
+  "GradientColors": [
+    "#286983",
+    "#286983",
+    "#907AA9",
+    "#907AA9"
+  ]
+}

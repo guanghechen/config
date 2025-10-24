@@ -1,0 +1,24 @@
+{
+  "name":           "rosepine-main",
+  "type":           "custom",
+  "Background":     "#191724",
+  "Foreground":     "#E0DEF4",
+  "LightBlue":      "#31748F",
+  "AccentBlue":     "#31748F",
+  "AccentPurple":   "#C4A7E7",
+  "AccentCyan":     "#9CCFD8",
+  "AccentGreen":    "#95B1AC",
+  "AccentYellow":   "#F6C177",
+  "AccentRed":      "#EB6F92",
+  "Comment":        "#6E6A86",
+  "Gray":           "#908CAA",
+  "DiffAdded":      "#2A3440",
+  "DiffRemoved":    "#362434",
+  "DiffModified":   "#31748F",
+  "GradientColors": [
+    "#31748F",
+    "#31748F",
+    "#C4A7E7",
+    "#C4A7E7"
+  ]
+}

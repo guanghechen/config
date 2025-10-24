@@ -1,0 +1,24 @@
+{
+  "name":           "rosepine-moon",
+  "type":           "custom",
+  "Background":     "#232136",
+  "Foreground":     "#E0DEF4",
+  "LightBlue":      "#3E8FB0",
+  "AccentBlue":     "#3E8FB0",
+  "AccentPurple":   "#C4A7E7",
+  "AccentCyan":     "#9CCFD8",
+  "AccentGreen":    "#95B1AC",
+  "AccentYellow":   "#F6C177",
+  "AccentRed":      "#EB6F92",
+  "Comment":        "#6E6A86",
+  "Gray":           "#908CAA",
+  "DiffAdded":      "#2A3645",
+  "DiffRemoved":    "#362436",
+  "DiffModified":   "#3E8FB0",
+  "GradientColors": [
+    "#3E8FB0",
+    "#3E8FB0",
+    "#C4A7E7",
+    "#C4A7E7"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name":           "catppuccin-macchiato",
+  "type":           "custom",
+  "Background":     "#24273A",
+  "Foreground":     "#B8C0E0",
+  "LightBlue":      "#8AADF4",
+  "AccentBlue":     "#8AADF4",
+  "AccentPurple":   "#C6A0F6",
+  "AccentCyan":     "#8BD5CA",
+  "AccentGreen":    "#A6DA95",
+  "AccentYellow":   "#EED49F",
+  "AccentRed":      "#ED8796",
+  "Comment":        "#8087A2",
+  "Gray":           "#6E738D",
+  "DiffAdded":      "#2A3A2A",
+  "DiffRemoved":    "#3A273A",
+  "DiffModified":   "#8AADF4",
+  "GradientColors": [
+    "#8AADF4",
+    "#8AADF4",
+    "#C6A0F6",
+    "#C6A0F6"
+  ]
+}

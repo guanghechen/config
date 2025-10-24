@@ -1,0 +1,24 @@
+{
+  "name":           "catppuccin-mocha",
+  "type":           "custom",
+  "Background":     "#1E1E2E",
+  "Foreground":     "#CDD6F4",
+  "LightBlue":      "#89B4FA",
+  "AccentBlue":     "#89B4FA",
+  "AccentPurple":   "#CBA6F7",
+  "AccentCyan":     "#94E2D5",
+  "AccentGreen":    "#A6E3A1",
+  "AccentYellow":   "#F9E2AF",
+  "AccentRed":      "#F38BA8",
+  "Comment":        "#9399B2",
+  "Gray":           "#7F849C",
+  "DiffAdded":      "#293232",
+  "DiffRemoved":    "#362424",
+  "DiffModified":   "#89B4FA",
+  "GradientColors": [
+    "#89B4FA",
+    "#89B4FA",
+    "#CBA6F7",
+    "#CBA6F7"
+  ]
+}

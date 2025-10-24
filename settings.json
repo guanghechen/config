@@ -29,9 +29,8 @@
     "hideTips": true,
     "hideWindowTitle": true,
     "showStatusInTitle": true,
-    "theme": "GitHub"
+    "theme": "$GEMINI_CONFIG_DIR/local/theme.json"
   },
   "useSmartEdit": true,
   "useWriteTodos": true
 }
-

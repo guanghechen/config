@@ -1,0 +1,24 @@
+{
+  "name":           "onehalf-light",
+  "type":           "custom",
+  "Background":     "#FAFAFA",
+  "Foreground":     "#696D75",
+  "LightBlue":      "#4078F2",
+  "AccentBlue":     "#4078F2",
+  "AccentPurple":   "#A28DCD",
+  "AccentCyan":     "#0B8EC6",
+  "AccentGreen":    "#50A14F",
+  "AccentYellow":   "#DEA95F",
+  "AccentRed":      "#E45649",
+  "Comment":        "#383A42",
+  "Gray":           "#B7B7B7",
+  "DiffAdded":      "#E7EDD9",
+  "DiffRemoved":    "#FBBBBE",
+  "DiffModified":   "#4078F2",
+  "GradientColors": [
+    "#4078F2",
+    "#4078F2",
+    "#A28DCD",
+    "#B294BB"
+  ]
+}
