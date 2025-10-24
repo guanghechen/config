@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { XDG_CONFIG_HOME } from '../_shared/env.mjs'
+import { GEMINI_CONFIG_DIR, XDG_CONFIG_HOME } from '../_shared/env.mjs'
 import { is_directory, is_file, touch } from '../_shared/util.mjs'
 import { gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
@@ -47,6 +47,19 @@ export const apps = [
     local: 'fzf.fzfrc',
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
+  },
+  {
+    name: 'gemini',
+    home: GEMINI_CONFIG_DIR,
+    themes: 'themes/',
+    extname: '.json',
+    local: 'local/theme.json',
+    active: app => is_directory(app.home),
+    render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async app => {
+      const main_config_filepath = path.join(app.home, 'settings.json')
+      await touch(main_config_filepath)
+    },
   },
   {
     name: 'git-delta',

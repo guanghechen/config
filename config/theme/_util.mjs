@@ -171,7 +171,7 @@ export async function apply_theme_per_app(app, scheme) {
  * @return {Promise<void>}
  */
 export async function gen_themes_per_app(app) {
-  if (!app.active(app) || !app.themes) return
+  if (!app.active(app)) return
 
   const template_filepath = path.join(HOME_THEME_APP, `${app.name}.hbs`)
   if (!existsSync(template_filepath)) {
@@ -180,7 +180,6 @@ export async function gen_themes_per_app(app) {
   }
   const template = await fs.readFile(template_filepath, 'utf8')
 
-  const THEME_HOME = path.resolve(app.home, app.themes)
   const tasks_gen_theme = themes.map(theme => gen_theme(theme))
   await Promise.allSettled(tasks_gen_theme)
   await app.after_gen?.(app)
@@ -195,8 +194,12 @@ export async function gen_themes_per_app(app) {
     if (!scheme) return
 
     const content = await app.render(app, template, scheme)
-    const theme_filepath = path.resolve(THEME_HOME, `${theme}${app.extname}`)
-    mkdirSync(path.dirname(theme_filepath), { recursive: true })
-    await fs.writeFile(theme_filepath, content, 'utf8')
+
+    if (app.themes) {
+      const THEME_HOME = path.resolve(app.home, app.themes)
+      const theme_filepath = path.resolve(THEME_HOME, `${theme}${app.extname}`)
+      mkdirSync(path.dirname(theme_filepath), { recursive: true })
+      await fs.writeFile(theme_filepath, content, 'utf8')
+    }
   }
 }
