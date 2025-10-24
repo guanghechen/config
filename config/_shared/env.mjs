@@ -9,7 +9,8 @@ const __XDG_CONFIG_HOME =
 const __F_WINDOWS_TERMINAL_SETTINGS = process.env.f_windows_terminal_settings
 const __F_VSCODE_KEYBINDINGS = process.env.f_vscode_keybindings
 
-export const USER_HOME = process.env.HOME || path.dirname(__XDG_CONFIG_HOME)
+export const USER_HOME =
+  process.env.HOME || process.env.USERPROFILE || path.dirname(__XDG_CONFIG_HOME)
 export const GEMINI_CONFIG_DIR = process.env.GEMINI_CONFIG_DIR || path.join(USER_HOME, '.gemini')
 export const XDG_CONFIG_HOME = __XDG_CONFIG_HOME
 export const F_WINDOWS_TERMINAL_SETTINGS = fs.existsSync(__F_WINDOWS_TERMINAL_SETTINGS)
