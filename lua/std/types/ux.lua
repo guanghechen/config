@@ -1,3 +1,5 @@
+---@meta
+
 ---@class std.t.ux.IRawWidget
 ---@field public name                   string|nil
 ---@field public close                  fun(widget: std.t.ux.IWidget): nil

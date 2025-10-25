@@ -1,3 +1,5 @@
+---@meta
+
 --- @class blink.cmp.CompletionItem : lsp.CompletionItem
 --- @field documentation? string | { kind: lsp.MarkupKind, value: string, draw?: fun(opts?: unknown) }
 --- @field score_offset? number

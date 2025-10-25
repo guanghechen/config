@@ -1,3 +1,5 @@
+---@meta
+
 ---@class std.t.theme.CatppuccinPalette
 ---@field public none                   string
 ---

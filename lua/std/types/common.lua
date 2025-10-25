@@ -1,3 +1,5 @@
+---@meta
+
 ---@alias std.t.T
 ---| any
 

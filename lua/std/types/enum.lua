@@ -1,3 +1,5 @@
+---@meta
+
 ---@alias std.e.LogLevelEnum
 ---| 'TRACE'
 ---| 'DEBUG'
