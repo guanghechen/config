@@ -26,7 +26,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://localhost/*"],
+      "matches": ["https://localhost/*", "http://localhost/*"],
       "js": ["inject/localhost-yoz.js"],
       "run_at": "document_start"
     },
