@@ -34,7 +34,7 @@
     },
     "unified": {
       "bg0":            "{{base}}",
-      "bg1":            "{{mantle}}",
+      "bg1":            "{{crust}}",
       "bg2":            "{{surface0}}",
       "bg3":            "{{surface1}}",
       "bg4":            "{{surface2}}",
@@ -49,7 +49,7 @@
       "green":          "{{green}}",
       "yellow":         "{{yellow}}",
       "blue":           "{{blue}}",
-      "purple":         "{{mauve}}",
+      "purple":         "{{pink}}",
       "aqua":           "{{teal}}",
       "orange":         "{{peach}}",
 
@@ -57,13 +57,13 @@
       "brightGreen":    "{{green}}",
       "brightYellow":   "{{yellow}}",
       "brightBlue":     "{{blue}}",
-      "brightPurple":   "{{mauve}}",
+      "brightPurple":   "{{pink}}",
       "brightAqua":     "{{teal}}",
       "brightOrange":   "{{peach}}",
 
-      "black":          "{{base}}",
+      "black":          "{{surface1}}",
       "white":          "{{subtext1}}",
-      "grey":           "{{overlay0}}",
+      "grey":           "{{surface2}}",
       "pink":           "{{pink}}",
 
       "diffDel":        "#3A273A",

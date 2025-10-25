@@ -3,38 +3,45 @@
 # Primary colors
 background              {{unified.bg0}}
 foreground              {{unified.fg1}}
-
-# Border colors
-active_border_color     {{unified.purple}}
-inactive_border_color   {{unified.grey}}
+selection_background    {{catppuccin?.rosewater || unified.pink}}
+selection_foreground    {{unified.bg0}}
 
 # Cursor colors
-cursor                  {{unified.pink}}
-cursor_text_color       {{unified.bg1}}
+cursor                  {{catppuccin?.rosewater || unified.pink}}
+cursor_text_color       {{unified.bg0}}
 
-# Selection colors
-selection_background    {{unified.brightYellow}}
-selection_foreground    {{unified.bg1}}
+# URL underline color when hovering with mouse
+url_color               {{catppuccin?.rosewater || unified.pink}}
+
+# Border colors
+active_border_color     {{catppuccin?.lavender || unified.fg0}}
+inactive_border_color   {{catppuccin?.overlay0 || unified.fg4}}
+bell_border_color       {{unified.yellow}}
 
 # Tab bar colors
-active_tab_background   {{unified.brightPurple}}
-active_tab_foreground   {{unified.bg0}}
-inactive_tab_background {{unified.bg1}}
-inactive_tab_foreground {{unified.purple}}
-tab_bar_background      {{unified.bg0}}
+active_tab_foreground   {{unified.bg1}}
+active_tab_background   {{catppuccin?.mauve || unified.purple}}
+inactive_tab_foreground {{unified.fg0}}
+inactive_tab_background {{catppuccin?.mantle || unified.bg1}}
+tab_bar_background      {{unified.bg1}}
 
-# Url colors
-url_color               {{unified.brightBlue}}
+# Colors for marks (marked text in the terminal)
+mark1_foreground        {{unified.bg0}}
+mark1_background        {{catppuccin?.lavender || unified.fg0}}
+mark2_foreground        {{unified.bg0}}
+mark2_background        {{catppuccin?.mauve || unified.purple}}
+mark3_foreground        {{unified.bg0}}
+mark3_background        {{catppuccin?.sapphire || unified.blue}}
 
 # Normal colors
-color0                  {{unified.bg0}}
+color0                  {{unified.black}}
 color1                  {{unified.red}}
 color2                  {{unified.green}}
 color3                  {{unified.yellow}}
 color4                  {{unified.blue}}
 color5                  {{unified.purple}}
 color6                  {{unified.aqua}}
-color7                  {{unified.fg4}}
+color7                  {{unified.white}}
 
 # Bright colors
 color8                  {{unified.grey}}
@@ -44,4 +51,4 @@ color11                 {{unified.brightYellow}}
 color12                 {{unified.brightBlue}}
 color13                 {{unified.brightPurple}}
 color14                 {{unified.brightAqua}}
-color15                 {{unified.fg1}}
+color15                 {{unified.fg2}}
