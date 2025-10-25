@@ -2,26 +2,26 @@
   "name":                 "{{name}}",
 
   "background":           "{{unified.bg0}}",
-  "foreground":           "{{unified.fg1}}",
+  "foreground":           "{{catppuccin?.text || unified.fg0}}",
 
-  "cursorColor":          "{{unified.pink}}",
-  "selectionBackground":  "{{unified.brightOrange}}",
+  "cursorColor":          "{{catppuccin?.rosewater || unified.pink}}",
+  "selectionBackground":  "{{catppuccin?.surface2 || unified.brightOrange}}",
 
-  "black":                "{{unified.bg0}}",
+  "black":                "{{catppuccin?.surface1 || unified.bg3}}",
   "blue":                 "{{unified.blue}}",
-  "cyan":                 "{{unified.aqua}}",
+  "cyan":                 "{{catppuccin?.teal || unified.aqua}}",
   "green":                "{{unified.green}}",
-  "purple":               "{{unified.purple}}",
+  "purple":               "{{catppuccin?.pink || unified.purple}}",
   "red":                  "{{unified.red}}",
   "yellow":               "{{unified.yellow}}",
-  "white":                "{{unified.fg4}}",
+  "white":                "{{catppuccin?.subtext1 || unified.fg1}}",
 
-  "brightBlack":          "{{unified.grey}}",
+  "brightBlack":          "{{catppuccin?.surface2 || unified.grey}}",
   "brightBlue":           "{{unified.brightBlue}}",
-  "brightCyan":           "{{unified.brightAqua}}",
+  "brightCyan":           "{{catppuccin?.teal || unified.brightAqua}}",
   "brightGreen":          "{{unified.brightGreen}}",
-  "brightPurple":         "{{unified.brightPurple}}",
+  "brightPurple":         "{{catppuccin?.pink || unified.brightPurple}}",
   "brightRed":            "{{unified.brightRed}}",
   "brightYellow":         "{{unified.brightYellow}}",
-  "brightWhite":          "{{unified.fg1}}"
+  "brightWhite":          "{{catppuccin?.subtext0 || unified.fg2}}"
 }
