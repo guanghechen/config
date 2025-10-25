@@ -3,17 +3,17 @@
 gui:
   authorColors:
     guanghechen: 'blue'
-    '*': '#BAC2DE'
+    '*': '#A6ADC8'
   branchColors:
     main: 'blue'
   theme:
     defaultFgColor:
-      - '#BAC2DE'
+      - '#A6ADC8'
     activeBorderColor:
       - 'magenta'
       - bold
     inactiveBorderColor:
-      - '#9399B2'
+      - '#7F849C'
     optionsTextColor:
       -  '#FAB387'
     selectedLineBgColor:
