@@ -5,62 +5,77 @@ draw_bold_text_with_bright_colors = false
 transparent_background_colors = true
 
 [colors.cursor]
-cursor            = "#F5BDE6"
-text              = "#1E2030"
+text              = "#24273A"
+cursor            = "#F4DBD6"
 
 [colors.vi_mode_cursor]
-cursor            = "#F5BDE6"
-text              = "#1E2030"
+text              = "#24273A"
+cursor            = "#B7BDF8"
 
 [colors.search.matches]
-background        = "#EED49F"
-foreground        = "#1E2030"
+foreground        = "#24273A"
+background        = "#A5ADCB"
 
 [colors.search.focused_match]
+foreground        = "#24273A"
+background        = "#A6DA95"
+
+[colors.hints.start]
+foreground        = "#24273A"
 background        = "#EED49F"
-foreground        = "#1E2030"
+
+[colors.hints.end]
+foreground        = "#24273A"
+background        = "#A5ADCB"
 
 [colors.selection]
-background        = "#F5A97F"
-text              = "#1E2030"
+text              = "#24273A"
+background        = "#F4DBD6"
 
 [colors.footer_bar]
-background        = "#363A4F"
-foreground        = "#B8C0E0"
+foreground        = "#24273A"
+background        = "#A5ADCB"
 
 [colors.primary]
 background        = "#24273A"
-foreground        = "#B8C0E0"
-dim_foreground    = "#B8C0E0"
-bright_foreground = "#B8C0E0"
+foreground        = "#CAD3F5"
+dim_foreground    = "#8087A2"
+bright_foreground = "#CAD3F5"
 
 [colors.normal]
-black             = "#24273A"
-blue              = "#8AADF4"
-cyan              = "#8BD5CA"
-green             = "#A6DA95"
-magenta           = "#C6A0F6"
+black             = "#494D64"
 red               = "#ED8796"
-yellow            = "#EED49F"
-white             = "#8087A2"
-
-[colors.bright]
-black             = "#6E738D"
-blue              = "#8AADF4"
-cyan              = "#8BD5CA"
 green             = "#A6DA95"
-magenta           = "#C6A0F6"
-red               = "#ED8796"
 yellow            = "#EED49F"
+blue              = "#8AADF4"
+magenta           = "#F5BDE6"
+cyan              = "#8BD5CA"
 white             = "#B8C0E0"
 
-[colors.dim]
-black             = "#24273A"
-blue              = "#8AADF4"
-cyan              = "#8BD5CA"
-green             = "#A6DA95"
-magenta           = "#C6A0F6"
+[colors.bright]
+black             = "#5B6078"
 red               = "#ED8796"
+green             = "#A6DA95"
 yellow            = "#EED49F"
-white             = "#8087A2"
+blue              = "#8AADF4"
+magenta           = "#F5BDE6"
+cyan              = "#8BD5CA"
+white             = "#A5ADCB"
 
+[colors.dim]
+black             = "#494D64"
+red               = "#ED8796"
+green             = "#A6DA95"
+yellow            = "#EED49F"
+blue              = "#8AADF4"
+magenta           = "#F5BDE6"
+cyan              = "#8BD5CA"
+white             = "#B8C0E0"
+
+[[colors.indexed_colors]]
+index = 16
+color = "#F5A97F"
+
+[[colors.indexed_colors]]
+index = 17
+color = "#F4DBD6"
