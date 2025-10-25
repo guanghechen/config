@@ -27,19 +27,19 @@ local M = {
       green         = "#40A02B",
       yellow        = "#DF8E1D",
       blue          = "#1E66F5",
-      purple        = "#8839EF",
+      purple        = "#EA76CB",
       aqua          = "#179299",
       orange        = "#FE640B",
 
-      brightRed     = "#E64553",
+      brightRed     = "#D20F39",
       brightGreen   = "#40A02B",
       brightYellow  = "#DF8E1D",
       brightBlue    = "#1E66F5",
-      brightPurple  = "#8839EF",
+      brightPurple  = "#EA76CB",
       brightAqua    = "#179299",
       brightOrange  = "#FE640B",
 
-      grey          = "#9CA0B0",
+      grey          = "#6C6F85",
       pink          = "#EA76CB",
 
       diffDel       = "#E8CDD6",

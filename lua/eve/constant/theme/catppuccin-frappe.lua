@@ -12,10 +12,10 @@ local M = {
       none          = "none",
 
       bg0           = "#303446",
-      bg1           = "#292C3C",
-      bg2           = "#232634",
-      bg3           = "#414559",
-      bg4           = "#51576D",
+      bg1           = "#232634",
+      bg2           = "#414559",
+      bg3           = "#51576D",
+      bg4           = "#626880",
 
       fg0           = "#C6D0F5",
       fg1           = "#B5BFE2",
@@ -27,7 +27,7 @@ local M = {
       green         = "#A6D189",
       yellow        = "#E5C890",
       blue          = "#8CAAEE",
-      purple        = "#CA9EE6",
+      purple        = "#F4B8E4",
       aqua          = "#81C8BE",
       orange        = "#EF9F76",
 
@@ -35,11 +35,11 @@ local M = {
       brightGreen   = "#A6D189",
       brightYellow  = "#E5C890",
       brightBlue    = "#8CAAEE",
-      brightPurple  = "#CA9EE6",
+      brightPurple  = "#F4B8E4",
       brightAqua    = "#81C8BE",
       brightOrange  = "#EF9F76",
 
-      grey          = "#737994",
+      grey          = "#626880",
       pink          = "#F4B8E4",
 
       diffDel       = "#4C3A3A",
