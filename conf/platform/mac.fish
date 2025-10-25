@@ -18,8 +18,13 @@ set -gx LDFLAGS -L/opt/homebrew/opt/llvm/lib
 set -gx CPPFLAGS -I/opt/homebrew/opt/llvm/include
 
 ## Aliases
-alias code='env -u TMUX -u TERM /usr/local/bin/code'
 alias ghc-reset-git-credential='echo -e "host=github.com\nprotocol=https\n" | git credential-osxkeychain erase'
+
+if set -q TMUX
+    alias code='env -u TMUX -u TERM /usr/local/bin/code'
+else
+    alias code='/usr/local/bin/code'
+end
 
 ## Abbr
 abbr -a ghc-gen-secret "node -e \"console.log(crypto.randomBytes(32).toString('base64'))\" | pbcopy"

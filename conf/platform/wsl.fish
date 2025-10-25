@@ -8,9 +8,17 @@ alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in
 alias pbpaste="powershell.exe Get-Clipboard >"
 
 if test -e /mnt/c/app/vscode/bin/code
-    alias code='env -u TMUX -u TERM /mnt/c/app/vscode/bin/code'
+    if set -q TMUX
+        alias code='env -u TMUX -u TERM /mnt/c/app/vscode/bin/code'
+    else
+        alias code='/mnt/c/app/vscode/bin/code'
+    end
 else if test -e /mnt/d/app/vscode/bin/code
-    alias code='env -u TMUX -u TERM /mnt/d/app/vscode/bin/code'
+    if set -q TMUX
+        alias code='env -u TMUX -u TERM /mnt/d/app/vscode/bin/code'
+    else
+        alias code='/mnt/d/app/vscode/bin/code'
+    end
 end
 
 ## Abbr
