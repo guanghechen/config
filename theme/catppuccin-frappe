@@ -1,23 +1,42 @@
-palette =  0=#303446
+# catppuccin-frappe
+
+# ANSI Colors (following official catppuccin theme)
+# Dark themes: palette 0 = surface1, palette 7 = subtext0
+# Light theme: palette 0 = subtext1, palette 7 = surface2
+palette =  0=#51576D
 palette =  1=#E78284
 palette =  2=#A6D189
 palette =  3=#E5C890
 palette =  4=#8CAAEE
-palette =  5=#CA9EE6
+palette =  5=#F4B8E4
 palette =  6=#81C8BE
-palette =  7=#B5BFE2
-palette =  8=#303446
+palette =  7=#A5ADCE
+
+# Bright colors
+# Dark themes: palette 8 = surface2, palette 15 = subtext1
+# Light theme: palette 8 = subtext0, palette 15 = surface1
+palette =  8=#626880
 palette =  9=#E78284
 palette = 10=#A6D189
 palette = 11=#E5C890
 palette = 12=#8CAAEE
-palette = 13=#CA9EE6
+palette = 13=#F4B8E4
 palette = 14=#81C8BE
 palette = 15=#B5BFE2
 
+# Primary colors
 background = #303446
-foreground = #B5BFE2
-selection-background = #EF9F76
-selection-foreground = #B5BFE2
-cursor-color = #F4B8E4
+foreground = #C6D0F5
+
+# Cursor colors (following official catppuccin theme)
+cursor-color = #F2D5CF
+cursor-text = #232634
+
+# Selection colors (following official catppuccin theme)
+# Official uses overlay2 mixed with base, resulting in a subtle highlight
+selection-background = #51576D
+selection-foreground = #C6D0F5
+
+# Split divider color (following official catppuccin theme)
+split-divider-color = #414559
 

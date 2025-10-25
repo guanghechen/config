@@ -1,3 +1,8 @@
+# onehalf-dark
+
+# ANSI Colors (following official catppuccin theme)
+# Dark themes: palette 0 = surface1, palette 7 = subtext0
+# Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#1E222A
 palette =  1=#E06C75
 palette =  2=#98C379
@@ -5,8 +10,12 @@ palette =  3=#E5C07B
 palette =  4=#61AFEF
 palette =  5=#C678DD
 palette =  6=#56B6C2
-palette =  7=#D7DAE0
-palette =  8=#1E222A
+palette =  7=#C8CCD4
+
+# Bright colors
+# Dark themes: palette 8 = surface2, palette 15 = subtext1
+# Light theme: palette 8 = subtext0, palette 15 = surface1
+palette =  8=#42464E
 palette =  9=#E06C75
 palette = 10=#7ECA9C
 palette = 11=#D19A66
@@ -15,9 +24,19 @@ palette = 13=#B294BB
 palette = 14=#4EC9B0
 palette = 15=#D7DAE0
 
+# Primary colors
 background = #1E222A
-foreground = #D7DAE0
-selection-background = #FE8655
-selection-foreground = #D7DAE0
+foreground = #E5E9F0
+
+# Cursor colors (following official catppuccin theme)
 cursor-color = #DE8C92
+cursor-text = #252931
+
+# Selection colors (following official catppuccin theme)
+# Official uses overlay2 mixed with base, resulting in a subtle highlight
+selection-background = #545862
+selection-foreground = #E5E9F0
+
+# Split divider color (following official catppuccin theme)
+split-divider-color = #3E4451
 
