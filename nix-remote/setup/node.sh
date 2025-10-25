@@ -14,17 +14,8 @@ fnm use $PREFER_NODE_VERSION
 printf "\n\e[94m   [setup node] installing npm bun pm2 yarn prettier\e[0m\n"
 fish -c "npm install -g npm bun pm2 yarn prettier"
 
-printf "\n\e[94m   [setup node] installing @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot\e[0m\n"
-fish -c "npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot"
-
 ## Setup ora
 if [ -d "$HOME/.config/ora" ]; then
   printf "\n\e[94m   [setup node] setup ora...\e[0m\n"
   fish -c "cd $HOME/.config/ora && yarn"
-fi
-
-## Setup yoz
-if [ -d "$HOME/.config/yoz" ]; then
-  printf "\n\e[94m   [setup node] setup yoz...\e[0m\n"
-  fish -c "cd $HOME/.config/yoz && yarn"
 fi

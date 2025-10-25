@@ -10,8 +10,8 @@ fnm use $env:PREFER_NODE_VERSION
 Write-Host "  [setup node] installing npm bun pm2 yarn prettier" -ForegroundColor Blue
 npm install -g npm bun pm2 yarn prettier
 
-# Write-Host "  [setup node] installing @anthropic-ai/claude-code @google/gemini-cli @openai/codex" -ForegroundColor Blue
-# npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex
+Write-Host "  [setup node] installing @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot" -ForegroundColor Blue
+npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot
 
 # Setup ora
 $ora_repopath = Join-Path "$env:XDG_CONFIG_HOME" "ora"

@@ -57,7 +57,7 @@ printf "\n\e[96m  [setup fish] done.\e[0m\n"
 
 ## Setup node
 printf "\n\e[94m  [setup node] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/node.sh
+source ~/.config/guanghechen/nix-remote/setup/node.sh
 printf "\n\e[96m  [setup node] done.\e[0m\n"
 
 ## Setup nvim
