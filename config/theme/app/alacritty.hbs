@@ -5,62 +5,77 @@ draw_bold_text_with_bright_colors = false
 transparent_background_colors = true
 
 [colors.cursor]
-cursor            = "{{unified.pink}}"
-text              = "{{unified.bg1}}"
+text              = "{{unified.bg0}}"
+cursor            = "{{catppuccin?.rosewater || unified.pink}}"
 
 [colors.vi_mode_cursor]
-cursor            = "{{unified.pink}}"
-text              = "{{unified.bg1}}"
+text              = "{{unified.bg0}}"
+cursor            = "{{catppuccin?.lavender || unified.fg0}}"
 
 [colors.search.matches]
-background        = "{{unified.yellow}}"
-foreground        = "{{unified.bg1}}"
+foreground        = "{{unified.bg0}}"
+background        = "{{catppuccin?.subtext0 || unified.fg2}}"
 
 [colors.search.focused_match]
-background        = "{{unified.brightYellow}}"
-foreground        = "{{unified.bg1}}"
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.green}}"
+
+[colors.hints.start]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.yellow}}"
+
+[colors.hints.end]
+foreground        = "{{unified.bg0}}"
+background        = "{{catppuccin?.subtext0 || unified.fg2}}"
 
 [colors.selection]
-background        = "{{unified.brightOrange}}"
-text              = "{{unified.bg1}}"
+text              = "{{unified.bg0}}"
+background        = "{{catppuccin?.rosewater || unified.pink}}"
 
 [colors.footer_bar]
-background        = "{{unified.bg2}}"
-foreground        = "{{unified.fg1}}"
+foreground        = "{{unified.bg0}}"
+background        = "{{catppuccin?.subtext0 || unified.bg2}}"
 
 [colors.primary]
 background        = "{{unified.bg0}}"
-foreground        = "{{unified.fg1}}"
-dim_foreground    = "{{unified.fg1}}"
-bright_foreground = "{{unified.fg1}}"
+foreground        = "{{catppuccin?.text || unified.fg1}}"
+dim_foreground    = "{{catppuccin?.overlay1 || unified.fg4}}"
+bright_foreground = "{{catppuccin?.text || unified.fg1}}"
 
 [colors.normal]
-black             = "{{unified.bg0}}"
-blue              = "{{unified.blue}}"
-cyan              = "{{unified.aqua}}"
-green             = "{{unified.green}}"
-magenta           = "{{unified.purple}}"
+black             = "{{catppuccin?.surface1 || unified.black}}"
 red               = "{{unified.red}}"
+green             = "{{unified.green}}"
 yellow            = "{{unified.yellow}}"
-white             = "{{unified.fg4}}"
+blue              = "{{unified.blue}}"
+magenta           = "{{unified.purple}}"
+cyan              = "{{unified.aqua}}"
+white             = "{{catppuccin?.subtext1 || unified.white}}"
 
 [colors.bright]
-black             = "{{unified.grey}}"
-blue              = "{{unified.brightBlue}}"
-cyan              = "{{unified.brightAqua}}"
-green             = "{{unified.brightGreen}}"
-magenta           = "{{unified.brightPurple}}"
-red               = "{{unified.brightRed}}"
-yellow            = "{{unified.brightYellow}}"
-white             = "{{unified.fg1}}"
+black             = "{{catppuccin?.surface2 || unified.grey}}"
+red               = "{{unified.red}}"
+green             = "{{unified.green}}"
+yellow            = "{{unified.yellow}}"
+blue              = "{{unified.blue}}"
+magenta           = "{{unified.purple}}"
+cyan              = "{{unified.aqua}}"
+white             = "{{catppuccin?.subtext0 || unified.fg2}}"
 
 [colors.dim]
-black             = "{{unified.bg0}}"
-blue              = "{{unified.blue}}"
-cyan              = "{{unified.aqua}}"
-green             = "{{unified.green}}"
-magenta           = "{{unified.purple}}"
+black             = "{{catppuccin?.surface1 || unified.black}}"
 red               = "{{unified.red}}"
+green             = "{{unified.green}}"
 yellow            = "{{unified.yellow}}"
-white             = "{{unified.fg4}}"
+blue              = "{{unified.blue}}"
+magenta           = "{{unified.purple}}"
+cyan              = "{{unified.aqua}}"
+white             = "{{catppuccin?.subtext1 || unified.white}}"
 
+[[colors.indexed_colors]]
+index = 16
+color = "{{catppuccin?.peach || unified.orange}}"
+
+[[colors.indexed_colors]]
+index = 17
+color = "{{catppuccin?.rosewater || unified.pink}}"
