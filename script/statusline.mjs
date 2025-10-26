@@ -55,7 +55,7 @@ async function getCwdPart(data) {
   }
 
   return {
-    display: `\x1b[0m󱃪 ${cwd}\x1b[0m`,
+    display: `\x1b[94m󱃪 ${cwd}\x1b[0m`,
     fullPath: fullCwd,
   }
 }
@@ -69,7 +69,7 @@ async function getGitPart(fullCwd) {
     }).trim()
 
     if (branch) {
-      return `\x1b[0m(\x1b[91m ${branch}\x1b[0m)`
+      return `\x1b[90m(\x1b[91m ${branch}\x1b[90m)\x1b[0m`
     }
   } catch (err) {
     // Not a git repository or git command failed
@@ -79,10 +79,10 @@ async function getGitPart(fullCwd) {
 
 async function getModelPart(data) {
   const model = data.model?.display_name || 'Unknown'
-  return `\x1b[36m\x1b[0m ${model}\x1b[0m`
+  return `\x1b[90m ${model}\x1b[0m`
 }
 
 async function getCostPart(data) {
   const costUsd = data.cost?.total_cost_usd || 0
-  return `\x1b[0m$${costUsd.toFixed(4)}\x1b[0m`
+  return `\x1b[90m$${costUsd.toFixed(4)}\x1b[0m`
 }
