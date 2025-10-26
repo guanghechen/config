@@ -9,13 +9,13 @@ function M.clear_timer(timer)
   end
 end
 
----@generic T
+---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
 ---@return T
 function M.debounce(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
-  local wrapped = vim.schedule_wrap(fn) ---@type T
+  local wrapped = vim.schedule_wrap(fn)
   local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
   local args ---@type table|nil
 
@@ -37,14 +37,14 @@ function M.debounce(fn, delay)
   return call
 end
 
----@generic T
+---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
 ---@return T
 function M.throttle(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local pending = false ---@type boolean
-  local wrapped = vim.schedule_wrap(fn) ---@type T
+  local wrapped = vim.schedule_wrap(fn)
   local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
   local args ---@type table|nil
   return function(...)
