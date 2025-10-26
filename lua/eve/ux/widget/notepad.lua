@@ -7,128 +7,45 @@ local MAX_HEIGHT = 0.9
 local MIN_WIDTH = 60
 local MIN_HEIGHT = 12
 local WIN_TITLE = " Notepad "
-local NOTEPAD_WIN_HIGHLIGHT = table.concat({
-  "FloatBorder:FloatBorder",
-  "FloatTitle:f_np_title",
-}, ",") ---@type string
+local NOTEPAD_WIN_HIGHLIGHT = "FloatBorder:FloatBorder,FloatTitle:f_np_title"
+local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" }
+local DEFAULT_ITEM_NAME = eve.setting.BUF_UNTITLED
+local BUFFER_VAR_NAME = "eve_notepad_uuid"
 
-local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" } ---@type string[]
-local K = eve.command.definitions ---@type eve.builtin.command.definitions
+local K = eve.command.definitions
 
-local DEFAULT_ITEM_NAME = eve.setting.BUF_UNTITLED ---@type string
-local BUFFER_VAR_NAME = "eve_notepad_uuid" ---@type string
+---@param modes string[]
+---@param key string
+---@param cmd string
+---@param desc string
+---@param opts table|nil
+---@return std.t.IKeymap
+local function create_keymap(modes, key, cmd, desc, opts)
+  opts = opts or {}
+  return vim.tbl_extend("force", {
+    modes = modes,
+    key = key,
+    desc = desc,
+    callback = function()
+      vim.cmd(cmd)
+    end,
+  }, opts)
+end
 
----@type std.t.IKeymap[]
 local NOTEPAD_KEYMAPS = {
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-s>",
-    desc = K.notepad.save.desc,
-    callback = function()
-      vim.cmd(K.notepad.save.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-a>s",
-    aliases = { "<D-s>", "<M-s>" },
-    desc = K.notepad.save.desc,
-    callback = function()
-      vim.cmd(K.notepad.save.uuid)
-    end,
-  },
-  {
-    modes = { "n" },
-    key = "q",
-    desc = K.notepad.close.desc,
-    callback = function()
-      vim.cmd(K.notepad.close.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-n>",
-    desc = K.notepad.create.desc,
-    callback = function()
-      vim.cmd(K.notepad.create.uuid)
-    end,
-  },
-  {
-    modes = { "n" },
-    key = "<leader><cr>",
-    desc = K.ai.submit_buffer.desc,
-    callback = function()
-      vim.cmd(K.ai.submit_buffer.uuid)
-    end,
-  },
-  {
-    modes = { "v" },
-    key = "<leader><cr>",
-    desc = K.ai.submit_selection.desc,
-    callback = function()
-      vim.cmd(K.ai.submit_selection.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-/>",
-    desc = K.notepad.rename.desc,
-    callback = function()
-      vim.cmd(K.notepad.rename.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-d>",
-    desc = K.notepad.destroy.desc,
-    callback = function()
-      vim.cmd(K.notepad.destroy.uuid)
-    end,
-  },
-  {
-    modes = { "n" },
-    key = "<leader>dd",
-    desc = K.notepad.destroy.desc,
-    callback = function()
-      vim.cmd(K.notepad.destroy.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-,>",
-    aliases = { "<C-[>" },
-    desc = K.notepad.focus_left.desc,
-    callback = function()
-      vim.cmd(K.notepad.focus_left.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-.>",
-    aliases = { "<C-]>" },
-    desc = K.notepad.focus_right.desc,
-    callback = function()
-      vim.cmd(K.notepad.focus_right.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-S-,>",
-    aliases = { "<C-S-[>" },
-    desc = K.notepad.swap_left.desc,
-    callback = function()
-      vim.cmd(K.notepad.swap_left.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-S-.>",
-    aliases = { "<C-S-]>" },
-    desc = K.notepad.swap_right.desc,
-    callback = function()
-      vim.cmd(K.notepad.swap_right.uuid)
-    end,
-  },
+  create_keymap({ "i", "n", "v" }, "<C-s>", K.notepad.save.uuid, K.notepad.save.desc),
+  create_keymap({ "i", "n", "v" }, "<C-a>s", K.notepad.save.uuid, K.notepad.save.desc, { aliases = { "<D-s>", "<M-s>" } }),
+  create_keymap({ "n" }, "q", K.notepad.close.uuid, K.notepad.close.desc),
+  create_keymap({ "i", "n", "v" }, "<C-n>", K.notepad.create.uuid, K.notepad.create.desc),
+  create_keymap({ "n" }, "<leader><cr>", K.ai.submit_buffer.uuid, K.ai.submit_buffer.desc),
+  create_keymap({ "v" }, "<leader><cr>", K.ai.submit_selection.uuid, K.ai.submit_selection.desc),
+  create_keymap({ "i", "n", "v" }, "<C-/>", K.notepad.rename.uuid, K.notepad.rename.desc),
+  create_keymap({ "i", "n", "v" }, "<C-d>", K.notepad.destroy.uuid, K.notepad.destroy.desc),
+  create_keymap({ "n" }, "<leader>dd", K.notepad.destroy.uuid, K.notepad.destroy.desc),
+  create_keymap({ "i", "n", "v" }, "<C-,>", K.notepad.focus_left.uuid, K.notepad.focus_left.desc, { aliases = { "<C-[>" } }),
+  create_keymap({ "i", "n", "v" }, "<C-.>", K.notepad.focus_right.uuid, K.notepad.focus_right.desc, { aliases = { "<C-]>" } }),
+  create_keymap({ "i", "n", "v" }, "<C-S-,>", K.notepad.swap_left.uuid, K.notepad.swap_left.desc, { aliases = { "<C-S-[>" } }),
+  create_keymap({ "i", "n", "v" }, "<C-S-.>", K.notepad.swap_right.uuid, K.notepad.swap_right.desc, { aliases = { "<C-S-]>" } }),
   {
     modes = { "i", "n", "v" },
     key = "<esc>",
@@ -140,16 +57,10 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
 }
-for index = 1, 9, 1 do
-  local definition = K.notepad["focus_" .. tostring(index)] ---@type eve.builtin.command.IDefinition
-  NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
-    modes = { "i", "n", "v" },
-    key = string.format("<C-%d>", index),
-    desc = definition.desc,
-    callback = function()
-      vim.cmd(definition.uuid)
-    end,
-  }
+
+for index = 1, 9 do
+  local definition = K.notepad["focus_" .. tostring(index)]
+  NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = create_keymap({ "i", "n", "v" }, string.format("<C-%d>", index), definition.uuid, definition.desc)
 end
 
 ---@class eve.ux.widget.notepad.IProps
@@ -195,11 +106,6 @@ M.__index = M
 function M.new(props)
   props = props or {}
 
-  local source = props.source
-  if source == nil then
-    source = eve.state.notepad.workspace
-  end
-
   local self = setmetatable({}, M)
   self.name = props.name or "notepad"
   self.title = props.title or WIN_TITLE
@@ -212,31 +118,43 @@ function M.new(props)
   self.min_height = props.min_height or MIN_HEIGHT
   self.filetype = props.filetype or "markdown"
   self.win_opts = vim.tbl_extend("force", { winhighlight = NOTEPAD_WIN_HIGHLIGHT }, props.win_opts or {})
-
   self._bufnr = nil
   self._winnr = nil
   self._suspend_sync = false
   self._buf_autocmds = {}
+  self._source = props.source or eve.state.notepad.workspace
 
-  self._source = source
-
-  -- Ensure source data is loaded
   local data = self._source:load(false)
-
-  -- Initialize observable with loaded active_uuid
   self._o_active_uuid = std.Observable.from_value(data.active_uuid or "")
 
-  -- Set up subscription
-  local widget = self ---@type eve.ux.widget.Notepad
-  self._subscription_active = self._o_active_uuid:subscribe(
-    std.Subscriber.new({
-      on_next = function(next_uuid)
-        widget:_on_active_uuid_changed(next_uuid)
-      end,
-    }),
-    false
-  )
+  self:_setup_subscriptions()
+  self:_setup_nvimbar()
 
+  return self
+end
+
+---@private
+---@return nil
+function M:_setup_subscriptions()
+  self._subscription_active = self._o_active_uuid:subscribe(std.Subscriber.new({
+    on_next = function(next_uuid)
+      self:_on_active_uuid_changed(next_uuid)
+    end,
+  }), false)
+
+  self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(std.Subscriber.new({
+    on_next = function()
+      if self._nvimbar ~= nil then
+        self._nvimbar:render()
+      end
+    end,
+  }), true)
+end
+
+---@private
+---@return nil
+function M:_setup_nvimbar()
+  local widget = self
   self._nvimbar = eve.ux.nvimbar.Nvimbar.new({
     name = string.format("%s.winbar", self.name),
     comp_sep = "",
@@ -244,21 +162,17 @@ function M.new(props)
     comp_sep_hlname_active = "f_wl_bg",
     delay = 128,
     get_max_width = function()
-      local winnr = widget._winnr ---@type integer|nil
+      local winnr = widget._winnr
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        local width = vim.api.nvim_win_get_width(winnr) ---@type integer
-        return math.max(0, width - 2)
+        return math.max(0, vim.api.nvim_win_get_width(winnr) - 2)
       end
       return vim.o.columns - 2
     end,
     get_preset_context = function()
-      return {
-        winnr = widget._winnr,
-      }
+      return { winnr = widget._winnr }
     end,
     is_active = function()
-      local winnr = widget._winnr ---@type integer|nil
-      return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+      return widget._winnr ~= nil and vim.api.nvim_win_is_valid(widget._winnr)
     end,
     on_fulfilled = function(result)
       local winnr = widget._winnr
@@ -267,34 +181,8 @@ function M.new(props)
       end
     end,
   })
-  self._nvimbar
     :place("left", eve.ux.nvimbar.component.notepad.items("f_wl", widget), 95)
     :place("left", eve.ux.nvimbar.component.notepad.add_button("f_wl"), 100)
-
-  self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(
-    std.Subscriber.new({
-      on_next = function()
-        local nvimbar = widget._nvimbar ---@type eve.ux.nvimbar.Nvimbar|nil
-        if nvimbar ~= nil then
-          nvimbar:render()
-        end
-      end,
-    }),
-    true
-  )
-
-  return self
-end
-
----@private
----@return nil
-function M:_notify_active_changed()
-  local data = self._source._data ---@type std.t.INotepadSourceSaveData|nil
-  if data ~= nil and data.active_uuid ~= nil then
-    self._o_active_uuid:next(data.active_uuid)
-  else
-    self._o_active_uuid:next("")
-  end
 end
 
 ---@private
@@ -303,10 +191,22 @@ function M:_ensure_data()
   return self._source:load(false)
 end
 
+---@private
+---@return nil
+function M:_notify_active_changed()
+  local data = self._source._data
+  self._o_active_uuid:next(data ~= nil and data.active_uuid or "")
+end
+
+---@private
+---@return nil
+function M:_mark_dirty()
+  eve.status.dirtier_notepadline:mark_dirty()
+end
+
 ---@return string
 function M:get_filepath()
-  local workspace = eve.state.notepad.workspace
-  if self._source == workspace then
+  if self._source == eve.state.notepad.workspace then
     return std.path.locate_workspace_filepath("notepad.json")
   end
   return ""
@@ -314,17 +214,16 @@ end
 
 ---@return integer
 function M:size()
-  local data = self:_ensure_data()
-  return #data.orders
+  return #self:_ensure_data().orders
 end
 
 ---@param uuid string|nil
 ---@return integer
 function M:indexof(uuid)
-  local data = self:_ensure_data()
   if uuid == nil then
     return -1
   end
+  local data = self:_ensure_data()
   for index, target in ipairs(data.orders) do
     if target == uuid then
       return index
@@ -334,19 +233,14 @@ function M:indexof(uuid)
 end
 
 ---@param index integer
----@return string|nil
----@return std.t.INotepadItem|nil
+---@return string|nil, std.t.INotepadItem|nil
 function M:at(index)
   local data = self:_ensure_data()
   local uuid = data.orders[index]
-  if uuid ~= nil then
-    return uuid, data.items[uuid]
-  end
-  return nil, nil
+  return uuid, uuid and data.items[uuid] or nil
 end
 
----@return integer
----@return string|nil
+---@return integer, string|nil
 function M:current()
   local data = self:_ensure_data()
   return self:indexof(data.active_uuid), data.active_uuid
@@ -355,84 +249,59 @@ end
 ---@return std.t.INotepadItem|nil
 function M:current_item()
   local data = self:_ensure_data()
-  if data.active_uuid == nil then
-    return nil
-  end
-  return data.items[data.active_uuid]
+  return data.active_uuid and data.items[data.active_uuid] or nil
 end
 
 ---@param uuid string
 ---@return std.t.INotepadItem|nil
 function M:get(uuid)
-  local data = self:_ensure_data()
-  return data.items[uuid]
+  return self:_ensure_data().items[uuid]
 end
 
 ---@return fun():std.t.INotepadItem|nil, integer|nil
 function M:iterator()
   local data = self:_ensure_data()
-  local index = 0 ---@type integer
-  local orders = data.orders
-  local items_map = data.items
+  local index = 0
   return function()
     index = index + 1
-    if index > #orders then
-      return nil, nil
-    end
-    local uuid = orders[index] ---@type string
-    local item = items_map[uuid]
-    if item == nil then
-      return nil, nil
-    end
-    return item, index
+    local uuid = data.orders[index]
+    return uuid and data.items[uuid] or nil, uuid and index or nil
   end
 end
 
 ---@param uuid string|nil
 ---@return boolean
 function M:focus_uuid(uuid)
-  local data = self:_ensure_data()
   if uuid == nil then
     return false
   end
-  if data.items[uuid] == nil then
-    return false
-  end
-  if data.active_uuid == uuid then
-    return true
+  local data = self:_ensure_data()
+  if data.items[uuid] == nil or data.active_uuid == uuid then
+    return data.active_uuid == uuid
   end
 
-  -- Emit notification (will trigger _on_active_uuid_changed which updates data.active_uuid)
   self._o_active_uuid:next(uuid)
-
-  eve.status.dirtier_notepadline:mark_dirty()
+  self:_mark_dirty()
   return true
 end
 
 ---@param index integer
 ---@return boolean
 function M:focus_index(index)
-  local data = self:_ensure_data()
-  local uuid = data.orders[index]
-  if uuid == nil then
-    return false
-  end
-  return self:focus_uuid(uuid)
+  local uuid = self:_ensure_data().orders[index]
+  return uuid ~= nil and self:focus_uuid(uuid) or false
 end
 
 ---@param step integer
 ---@return boolean
 function M:focus_step(step)
   local data = self:_ensure_data()
-  local count = #data.orders ---@type integer
+  local count = #data.orders
   if count == 0 then
     return false
   end
-  local index_current = self:indexof(data.active_uuid)
-  if index_current < 1 then
-    index_current = 1
-  end
-  local index_next = std.fn.navigate_circular(index_current, step, count) ---@type integer
+  local index_current = math.max(1, self:indexof(data.active_uuid))
+  local index_next = std.fn.navigate_circular(index_current, step, count)
   return self:focus_index(index_next)
 end
 
@@ -441,8 +310,7 @@ end
 function M:create(name)
   local trimmed = type(name) == "string" and vim.trim(name) or nil
   local item = self._source:create(#(trimmed or "") > 0 and trimmed or nil, nil)
-
-  eve.status.dirtier_notepadline:mark_dirty()
+  self:_mark_dirty()
   self:focus_uuid(item.uuid)
   return item
 end
@@ -450,24 +318,21 @@ end
 ---@param name string
 ---@return std.t.INotepadItem|nil
 function M:find_first_by_name(name)
-  local data = self:_ensure_data()
   if type(name) ~= "string" then
     return nil
   end
-
-  local target = vim.trim(name)
+  local target = vim.trim(name):lower()
   if #target == 0 then
     return nil
   end
-  target = target:lower()
 
+  local data = self:_ensure_data()
   for _, uuid in ipairs(data.orders) do
     local item = data.items[uuid]
     if item ~= nil and type(item.name) == "string" and item.name:lower() == target then
       return item
     end
   end
-
   return nil
 end
 
@@ -475,9 +340,7 @@ end
 ---@return std.t.INotepadItem
 function M:ensure_named_item(name)
   local trimmed = vim.trim(type(name) == "string" and name or "")
-  if #trimmed == 0 then
-    trimmed = DEFAULT_ITEM_NAME
-  end
+  trimmed = #trimmed > 0 and trimmed or DEFAULT_ITEM_NAME
 
   local existing = self:find_first_by_name(trimmed)
   if existing ~= nil then
@@ -492,7 +355,7 @@ function M:ensure_named_item(name)
     self:_notify_active_changed()
   end
 
-  eve.status.dirtier_notepadline:mark_dirty()
+  self:_mark_dirty()
   return item
 end
 
@@ -505,25 +368,18 @@ function M:remove(uuid)
     return false
   end
 
-  local ok = self._source:remove(uuid)
-  if not ok then
+  if not self._source:remove(uuid) then
     return false
   end
 
-  local active_changed = false ---@type boolean
   if data.active_uuid == uuid then
     data.active_uuid = data.orders[1]
     if data.active_uuid ~= nil then
-      active_changed = true
+      self:_notify_active_changed()
     end
   end
 
-  eve.status.dirtier_notepadline:mark_dirty()
-
-  if active_changed then
-    self:_notify_active_changed()
-  end
-
+  self:_mark_dirty()
   return true
 end
 
@@ -536,6 +392,7 @@ function M:rename(uuid, name)
   if uuid == nil then
     return false
   end
+
   local item = data.items[uuid]
   if item == nil then
     return false
@@ -546,12 +403,11 @@ function M:rename(uuid, name)
     return false
   end
 
-  local ok = self._source:update(uuid, { name = name, content = item.content })
-  if ok then
-    eve.status.dirtier_notepadline:mark_dirty()
+  if self._source:update(uuid, { name = name, content = item.content }) then
+    self:_mark_dirty()
+    return true
   end
-
-  return ok
+  return false
 end
 
 ---@param uuid string|nil
@@ -563,17 +419,13 @@ function M:set_content(uuid, content)
   if uuid == nil then
     return false
   end
+
   local item = data.items[uuid]
-  if item == nil then
+  if item == nil or item.content == (content or "") then
     return false
   end
 
-  content = content or ""
-  if item.content == content then
-    return false
-  end
-
-  return self._source:update(uuid, { name = item.name, content = content })
+  return self._source:update(uuid, { name = item.name, content = content or "" })
 end
 
 ---@param uuid_or_item string|std.t.INotepadItem|nil
@@ -584,32 +436,18 @@ function M:append_content(uuid_or_item, text)
     return false
   end
 
-  local uuid ---@type string|nil
-  local item ---@type std.t.INotepadItem|nil
-
-  if type(uuid_or_item) == "table" then
-    item = uuid_or_item
-    uuid = uuid_or_item.uuid
-  elseif type(uuid_or_item) == "string" then
-    uuid = uuid_or_item
-  end
-
+  local uuid = type(uuid_or_item) == "table" and uuid_or_item.uuid or uuid_or_item
   local data = self:_ensure_data()
   uuid = uuid or data.active_uuid
-  if uuid == nil then
-    return false
-  end
 
-  item = item or data.items[uuid]
+  local item = uuid and data.items[uuid] or nil
   if item == nil then
     return false
   end
 
-  local existing = type(item.content) == "string" and item.content or "" ---@type string
-  local new_content = existing .. text ---@type string
-  local ok = self:set_content(uuid, new_content) ---@type boolean
+  local new_content = (type(item.content) == "string" and item.content or "") .. text
+  local ok = self:set_content(uuid, new_content)
 
-  -- Update buffer if it's the active item and buffer exists
   if ok and uuid == data.active_uuid then
     local bufnr = self:get_bufnr()
     if bufnr ~= nil then
@@ -620,11 +458,12 @@ function M:append_content(uuid_or_item, text)
   return ok
 end
 
----@param step integer|nil
+---@private
+---@param step integer
 ---@return boolean
-function M:swap_left(step)
+function M:_swap_step(step)
   local data = self:_ensure_data()
-  local count = #data.orders ---@type integer
+  local count = #data.orders
   if count <= 1 then
     return false
   end
@@ -634,42 +473,27 @@ function M:swap_left(step)
     return false
   end
 
-  step = math.max(1, step or vim.v.count1 or 1)
-  local index_next = std.fn.navigate_circular(index_current, -step, count) ---@type integer
+  local actual_step = math.max(1, step or vim.v.count1 or 1)
+  local index_next = std.fn.navigate_circular(index_current, actual_step, count)
   if index_next == index_current then
     return false
   end
 
   data.orders[index_current], data.orders[index_next] = data.orders[index_next], data.orders[index_current]
-
-  eve.status.dirtier_notepadline:mark_dirty()
+  self:_mark_dirty()
   return true
 end
 
 ---@param step integer|nil
 ---@return boolean
+function M:swap_left(step)
+  return self:_swap_step(-(step or 1))
+end
+
+---@param step integer|nil
+---@return boolean
 function M:swap_right(step)
-  local data = self:_ensure_data()
-  local count = #data.orders ---@type integer
-  if count <= 1 then
-    return false
-  end
-
-  local index_current = self:indexof(data.active_uuid)
-  if index_current < 1 then
-    return false
-  end
-
-  step = math.max(1, step or vim.v.count1 or 1)
-  local index_next = std.fn.navigate_circular(index_current, step, count) ---@type integer
-  if index_next == index_current then
-    return false
-  end
-
-  data.orders[index_current], data.orders[index_next] = data.orders[index_next], data.orders[index_current]
-
-  eve.status.dirtier_notepadline:mark_dirty()
-  return true
+  return self:_swap_step(step or 1)
 end
 
 ---@return boolean
@@ -680,15 +504,12 @@ end
 ---@private
 ---@return nil
 function M:_dispose_subscriptions()
-  local sub_active = self._subscription_active ---@type std.collection.IUnsubscribable|nil
-  if sub_active ~= nil then
-    sub_active:unsubscribe()
+  if self._subscription_active ~= nil then
+    self._subscription_active:unsubscribe()
     self._subscription_active = nil
   end
-
-  local sub_winbar = self._subscription_winbar ---@type std.collection.IUnsubscribable|nil
-  if sub_winbar ~= nil then
-    sub_winbar:unsubscribe()
+  if self._subscription_winbar ~= nil then
+    self._subscription_winbar:unsubscribe()
     self._subscription_winbar = nil
   end
 end
@@ -707,18 +528,14 @@ end
 ---@param uuid                           string|nil
 ---@return nil
 function M:_sync_content_from_buf(bufnr, uuid)
-  local data = self:_ensure_data()
-  uuid = uuid or data.active_uuid
-  if uuid == nil then
-    return
-  end
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
-
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  local content = table.concat(lines, "\n") ---@type string
-  self:set_content(uuid, content)
+  uuid = uuid or self:_ensure_data().active_uuid
+  if uuid ~= nil then
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    self:set_content(uuid, table.concat(lines, "\n"))
+  end
 end
 
 ---@private
@@ -730,25 +547,16 @@ function M:_render_active_item(bufnr)
   end
 
   local data = self:_ensure_data()
-  local uuid = data.active_uuid ---@type string|nil
-  if uuid ~= nil then
-    vim.b[bufnr][BUFFER_VAR_NAME] = uuid
-  else
-    vim.b[bufnr][BUFFER_VAR_NAME] = nil
-  end
-  local item = uuid ~= nil and self:get(uuid) or nil ---@type std.t.INotepadItem|nil
-  local lines ---@type string[]
+  local uuid = data.active_uuid
+  vim.b[bufnr][BUFFER_VAR_NAME] = uuid
 
-  if item ~= nil and #item.content > 0 then
-    lines = vim.split(item.content, "\n", { plain = true })
-  else
-    lines = { "" }
-  end
+  local item = uuid and self:get(uuid) or nil
+  local lines = (item ~= nil and #item.content > 0) and vim.split(item.content, "\n", { plain = true }) or { "" }
 
   self._suspend_sync = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  self._suspend_sync = false
   vim.bo[bufnr].modified = false
+  self._suspend_sync = false
 end
 
 ---@private
@@ -757,11 +565,9 @@ function M:_on_text_changed()
   if self._suspend_sync then
     return
   end
-
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
-    local data = self:_ensure_data()
-    self:_sync_content_from_buf(bufnr, data.active_uuid)
+    self:_sync_content_from_buf(bufnr, self:_ensure_data().active_uuid)
   end
 end
 
@@ -821,10 +627,8 @@ end
 ---@private
 ---@return integer|nil
 function M:get_bufnr()
-  local bufnr = self._bufnr ---@type integer|nil
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    return bufnr
-  end
+  local bufnr = self._bufnr
+  return bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and bufnr or nil
 end
 
 ---@private
@@ -846,6 +650,7 @@ function M:ensure_buf()
   vim.bo[bufnr].modifiable = true
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
+
   local render_manager = package.loaded["render-markdown.core.manager"]
   if render_manager ~= nil then
     render_manager.set_buf(bufnr, false)
@@ -853,33 +658,29 @@ function M:ensure_buf()
 
   self:_attach_autocmds(bufnr)
   self:_render_active_item(bufnr)
-
   eve.nvim.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
+
   return bufnr
 end
 
 ---@return integer|nil
 function M:get_winnr()
-  local winnr = self._winnr ---@type integer|nil
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    return winnr
-  end
+  local winnr = self._winnr
+  return winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and winnr or nil
 end
 
 ---@private
 ---@return eve.builtin.box.IDimension
 function M:measure_rect()
-  local columns = vim.o.columns ---@type integer
-  local desired_width = math.min(132, math.floor(columns * 0.9 + 0.5)) ---@type integer
-  local desired_height = math.floor(vim.o.lines * 0.8 + 0.5) ---@type integer
-  local min_width = math.min(self.min_width, columns) ---@type integer
-  local min_height = math.min(self.min_height, vim.o.lines) ---@type integer
-  desired_width = math.max(min_width, desired_width) ---@type integer
-  desired_width = math.min(desired_width, columns) ---@type integer
-  desired_height = math.max(min_height, math.min(desired_height, vim.o.lines - 2)) ---@type integer
+  local columns = vim.o.columns
+  local desired_width = math.min(132, math.floor(columns * 0.9 + 0.5))
+  local desired_height = math.floor(vim.o.lines * 0.8 + 0.5)
+  local min_width = math.min(self.min_width, columns)
+  local min_height = math.min(self.min_height, vim.o.lines)
+  desired_width = math.min(math.max(min_width, desired_width), columns)
+  desired_height = math.min(math.max(min_height, desired_height), vim.o.lines - 2)
 
-  ---@type eve.builtin.box.IRestriction
-  local restriction = {
+  return eve.box.measure(desired_width, desired_height, {
     position = "center",
     rows = vim.o.lines,
     cols = columns,
@@ -887,8 +688,23 @@ function M:measure_rect()
     max_height = desired_height,
     min_width = min_width,
     min_height = min_height,
-  }
-  return eve.box.measure(desired_width, desired_height, restriction)
+  })
+end
+
+---@private
+---@param winhighlight string|nil
+---@return string
+function M:_normalize_winhighlight(winhighlight)
+  if type(winhighlight) ~= "string" or #winhighlight == 0 then
+    return NOTEPAD_WIN_HIGHLIGHT
+  end
+  if not winhighlight:match("FloatBorder:") then
+    winhighlight = winhighlight .. ",FloatBorder:FloatBorder"
+  end
+  if not winhighlight:match("FloatTitle:") then
+    winhighlight = winhighlight .. ",FloatTitle:f_np_title"
+  end
+  return winhighlight
 end
 
 ---@private
@@ -896,22 +712,10 @@ end
 function M:ensure_win()
   local bufnr = self:ensure_buf()
   local rect = self:measure_rect()
-  local winblend = eve.context.theme.get_float_winblend() ---@type integer
+  local winblend = eve.context.theme.get_float_winblend()
 
-  local winhighlight = self.win_opts.winhighlight ---@type string|nil
-  if type(winhighlight) ~= "string" or #winhighlight == 0 then
-    winhighlight = NOTEPAD_WIN_HIGHLIGHT
-  else
-    if not winhighlight:match("FloatBorder:") then
-      winhighlight = table.concat({ winhighlight, "FloatBorder:FloatBorder" }, ",")
-    end
-    if not winhighlight:match("FloatTitle:") then
-      winhighlight = table.concat({ winhighlight, "FloatTitle:f_np_title" }, ",")
-    end
-  end
-  self.win_opts.winhighlight = winhighlight
+  self.win_opts.winhighlight = self:_normalize_winhighlight(self.win_opts.winhighlight)
 
-  ---@type vim.api.keyset.win_config
   local config = {
     relative = "editor",
     anchor = "NW",
@@ -926,16 +730,15 @@ function M:ensure_win()
     style = "minimal",
   }
 
-  local winnr = self:get_winnr() ---@type integer|nil
-  local is_new_win = winnr == nil ---@type boolean
+  local winnr = self:get_winnr()
+  local is_new_win = winnr == nil
+
   if winnr == nil then
     winnr = vim.api.nvim_open_win(bufnr, true, config)
     self._winnr = winnr
     eve.win.set_type(winnr, eve.win.Types.TEXTAREA)
-    is_new_win = true
   else
     vim.wo[winnr].winfixbuf = false
-    ---@type eve.state.maximized.ResolveResizeResult
     local resize = eve.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
     vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
@@ -950,6 +753,7 @@ function M:ensure_win()
   vim.wo[winnr].spell = true
   vim.wo[winnr].wrap = true
   vim.wo[winnr].winblend = winblend
+
   for key, value in pairs(self.win_opts) do
     if key ~= "winhighlight" or is_new_win then
       vim.wo[winnr][key] = value
@@ -967,11 +771,9 @@ end
 ---@return integer|nil
 function M:sync_active_content()
   local bufnr = self:get_bufnr()
-  if bufnr == nil then
-    return nil
+  if bufnr ~= nil then
+    self:_sync_content_from_buf(bufnr, self:_ensure_data().active_uuid)
   end
-  local data = self:_ensure_data()
-  self:_sync_content_from_buf(bufnr, data.active_uuid)
   return bufnr
 end
 
@@ -979,8 +781,8 @@ end
 function M:save()
   local bufnr = self:sync_active_content()
 
-  local filepath = self:get_filepath() ---@type string|nil
-  if filepath ~= nil and #filepath > 0 then
+  local filepath = self:get_filepath()
+  if #filepath > 0 then
     vim.fn.mkdir(std.path.dirname(filepath), "p")
   end
 
@@ -996,7 +798,6 @@ end
 ---@return nil
 function M:focus()
   eve.widget.push(self)
-
   local winnr = self:ensure_win()
   if vim.api.nvim_get_current_win() ~= winnr then
     vim.api.nvim_set_current_win(winnr)
@@ -1028,10 +829,7 @@ end
 ---@return boolean
 function M:isfocused()
   local winnr = self:get_winnr()
-  if winnr == nil then
-    return false
-  end
-  return vim.api.nvim_get_current_win() == winnr
+  return winnr ~= nil and vim.api.nvim_get_current_win() == winnr
 end
 
 ---@return nil
@@ -1043,15 +841,16 @@ function M:resize()
 
   local rect = self:measure_rect()
   vim.wo[winnr].winfixbuf = false
-  local config = {
+
+  local resize = eve.state.maximized.resolve_resize_config(winnr, {
     relative = "editor",
     anchor = "NW",
     row = rect.row,
     col = rect.col,
     width = rect.width,
     height = rect.height,
-  }
-  local resize = eve.state.maximized.resolve_resize_config(winnr, config, nil) ---@type eve.state.maximized.ResolveResizeResult
+  }, nil)
+
   vim.api.nvim_win_set_config(winnr, resize.cfg)
   if resize.winblend ~= nil then
     vim.wo[winnr].winblend = resize.winblend
