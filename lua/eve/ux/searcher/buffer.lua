@@ -663,7 +663,7 @@ function M:__create_finder_buffer_as_needed__()
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
   -- Set up search icon sign
-  local sign_group = "fml_search_buffer_prompt"
+  local sign_group = "eve_ux_search_buffer_prompt"
   local sign_name = "SearchBufferPrompt"
   vim.fn.sign_define(sign_name, { text = eve.icon.ui.Search, texthl = "f_pk_finder_prompt" })
   vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
@@ -709,7 +709,7 @@ function M:__create_replacer_buffer_as_needed__()
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
   -- Set up replace icon sign
-  local sign_group = "fml_replace_buffer_prompt"
+  local sign_group = "eve_ux_replace_buffer_prompt"
   local sign_name = "ReplaceBufferPrompt"
   vim.fn.sign_define(sign_name, { text = eve.icon.symbols.flag_replace, texthl = "f_pk_finder_prompt" })
   vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
