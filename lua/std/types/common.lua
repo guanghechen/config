@@ -35,6 +35,8 @@
 ---@field public nowait                 ?boolean
 ---@field public noremap                ?boolean
 ---@field public silent                 ?boolean
+---@field public expr                   ?boolean
+---@field public replace_keycodes       ?boolean
 
 ---@class std.t.IKeymap : std.t.IKeymapOverridable
 ---@field public disabled               boolean|nil
@@ -42,7 +44,7 @@
 ---@field public key                    string
 ---@field public aliases                string[]|nil
 ---@field public desc                   string|nil
----@field public callback               fun(): nil
+---@field public callback               string|(fun(): nil)|(fun(): string)
 
 ---@class std.t.ILspSymbol
 ---@field public kind                   string

@@ -77,6 +77,8 @@ function M.bindkeys(keymaps, keymap_override)
       local nowait = keymap_override.nowait or keymap.nowait ---@type boolean|nil
       local noremap = keymap_override.noremap or keymap.noremap ---@type boolean|nil
       local silent = keymap_override.silent or keymap.silent ---@type boolean|nil
+      local expr = keymap_override.expr or keymap.expr ---@type boolean|nil
+      local replace_keycodes = keymap_override.replace_keycodes or keymap.replace_keycodes ---@type boolean|nil
 
       ---@type vim.keymap.set.Opts
       local opts = {
@@ -84,6 +86,8 @@ function M.bindkeys(keymaps, keymap_override)
         nowait = nowait,
         noremap = noremap,
         silent = silent,
+        expr = expr,
+        replace_keycodes = replace_keycodes,
         desc = keymap.desc,
       }
       vim.keymap.set(keymap.modes, keymap.key, keymap.callback, opts)

@@ -360,10 +360,10 @@ function M.create(params)
     modes = { "i", "n", "t", "v" },
     key = "<esc>",
     desc = "term: feedback esc to terminal (fix the conflict caused by  the csi u)",
+    expr = true,
+    replace_keycodes = true,
     callback = function()
-      if termmeta.jobid ~= nil then
-        vim.fn.chansend(termmeta.jobid, "\x1b")
-      end
+      return "<esc>"
     end,
   }
   keymaps[#keymaps + 1] = {
