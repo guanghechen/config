@@ -982,7 +982,7 @@ function M:__create_nvimbar__(o_match_index, o_match_total, flags)
       get_max_width = function()
         local winnr = self._winnr_finder ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return vim.api.nvim_win_get_width(winnr) - 2
+          return vim.api.nvim_win_get_width(winnr)
         end
         return 0
       end,
