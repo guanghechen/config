@@ -1,3 +1,23 @@
+---@class std.source.__mods
+local source__mods = {
+  NotepadJsonSource = "std.source.notepad-json",
+}
+
+---@class std.source
+---@field public __mods                 std.source.__mods
+---@field public NotepadJsonSource      std.source.NotepadJsonSource
+local source = setmetatable({
+  __mods = source__mods,
+}, {
+  __index = function(t, k)
+    local m = source__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
 ---@class std.__mods
 local __mods = {
   color = "std.lib.color",
@@ -45,6 +65,7 @@ local __mods = {
 
 ---@class std
 ---@field public __mods                 std.__mods
+---@field public source                 std.source
 ---
 ---@field public color                  std.lib.color
 ---@field public easing                 std.lib.easing
@@ -87,7 +108,10 @@ local __mods = {
 ---@field public Theme                  std.collection.Theme
 ---@field public Ticker                 std.collection.Ticker
 ---@field public Tree                   std.collection.Tree
-local M = setmetatable({ __mods = __mods }, {
+local M = setmetatable({
+  __mods = __mods,
+  source = source,
+}, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
     if m == nil then

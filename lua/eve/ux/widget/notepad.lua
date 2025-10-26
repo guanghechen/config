@@ -1,7 +1,5 @@
 ---@diagnostic disable: invisible
 
-local __module_name__ = "eve.ux.widget.notepad" ---@type string
-
 local DEFAULT_WIDTH = 0.6
 local DEFAULT_HEIGHT = 0.6
 local MAX_WIDTH = 0.9
@@ -16,6 +14,10 @@ local NOTEPAD_WIN_HIGHLIGHT = table.concat({
 
 local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" } ---@type string[]
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
+
+local DEFAULT_ITEM_NAME = eve.setting.BUF_UNTITLED ---@type string
+local CHATBOX_NOTE_NAME = "chatbox" ---@type string
+local BUFFER_VAR_NAME = "eve_notepad_uuid" ---@type string
 
 ---@type std.t.IKeymap[]
 local NOTEPAD_KEYMAPS = {
@@ -161,6 +163,7 @@ end
 ---@field public min_height             ?number
 ---@field public filetype               ?string
 ---@field public win_opts               ?table<string, any>
+---@field public source                 ?std.t.INotepadSource
 
 ---@class eve.ux.widget.Notepad : std.t.ux.IWidget
 ---@field public name                   string|nil
@@ -176,20 +179,50 @@ end
 ---@field private win_opts              table<string, any>
 ---@field private _bufnr                integer|nil
 ---@field private _winnr                integer|nil
----@field private _active_uuid          string|nil
 ---@field private _suspend_sync         boolean
 ---@field private _buf_autocmds         integer[]
 ---@field private _nvimbar              eve.ux.nvimbar.Nvimbar|nil
 ---@field private _subscription_active  std.collection.IUnsubscribable|nil
 ---@field private _subscription_winbar  std.collection.IUnsubscribable|nil
+---@field private _source               std.t.INotepadSource
+---@field private _o_active_uuid        std.collection.IObservable
 local Notepad = {}
 Notepad.__index = Notepad
+
+---@param uuid string
+---@param content string
+---@return nil
+local function sync_chatbox_buffer(uuid, content)
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      if vim.b[bufnr][BUFFER_VAR_NAME] == uuid then
+        local was_modifiable = vim.bo[bufnr].modifiable
+        if not was_modifiable then
+          vim.bo[bufnr].modifiable = true
+        end
+        local lines = (#content > 0) and vim.split(content, "\n", { plain = true }) or { "" }
+        if #lines == 0 then
+          lines = { "" }
+        end
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+        vim.bo[bufnr].modified = false
+        if not was_modifiable then
+          vim.bo[bufnr].modifiable = false
+        end
+      end
+    end
+  end
+end
 
 ---@param props                         eve.ux.widget.notepad.IProps|nil
 ---@return eve.ux.widget.Notepad
 function Notepad.new(props)
   props = props or {}
-  eve.notepad.load()
+
+  local source = props.source
+  if source == nil then
+    source = eve.state.notepad.workspace
+  end
 
   local self = setmetatable({}, Notepad)
   self.name = props.name or "notepad"
@@ -206,11 +239,28 @@ function Notepad.new(props)
 
   self._bufnr = nil
   self._winnr = nil
-  local _, uuid = eve.notepad.current()
-  self._active_uuid = uuid
   self._suspend_sync = false
   self._buf_autocmds = {}
+
+  self._source = source
+
+  -- Ensure source data is loaded
+  local data = self._source:load(false)
+
+  -- Initialize observable with loaded active_uuid
+  self._o_active_uuid = std.Observable.from_value(data.active_uuid or "")
+
+  -- Set up subscription
   local widget = self ---@type eve.ux.widget.Notepad
+  self._subscription_active = self._o_active_uuid:subscribe(
+    std.Subscriber.new({
+      on_next = function(next_uuid)
+        widget:_on_active_uuid_changed(next_uuid)
+      end,
+    }),
+    false
+  )
+
   self._nvimbar = eve.ux.nvimbar.Nvimbar.new({
     name = string.format("%s.winbar", self.name),
     comp_sep = "",
@@ -242,7 +292,7 @@ function Notepad.new(props)
     end,
   })
   self._nvimbar
-    :place("left", eve.ux.nvimbar.component.notepad.items("f_wl"), 95)
+    :place("left", eve.ux.nvimbar.component.notepad.items("f_wl", widget), 95)
     :place("left", eve.ux.nvimbar.component.notepad.add_button("f_wl"), 100)
 
   self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(
@@ -257,16 +307,396 @@ function Notepad.new(props)
     true
   )
 
-  self._subscription_active = eve.notepad.o_active_uuid:subscribe(
-    std.Subscriber.new({
-      on_next = function(next_uuid)
-        widget:_on_active_uuid(next_uuid)
-      end,
-    }),
-    false
-  )
-
   return self
+end
+
+---@private
+---@return nil
+function Notepad:_notify_active_changed()
+  local data = self._source._data ---@type std.t.INotepadSourceSaveData|nil
+  if data ~= nil and data.active_uuid ~= nil then
+    self._o_active_uuid:next(data.active_uuid)
+  else
+    self._o_active_uuid:next("")
+  end
+end
+
+---@private
+---@return std.t.INotepadSourceSaveData
+function Notepad:_ensure_data()
+  return self._source:load(false)
+end
+
+---@return string
+function Notepad:get_filepath()
+  local workspace = eve.state.notepad.workspace
+  if self._source == workspace then
+    return std.path.locate_workspace_filepath("notepad.json")
+  end
+  return ""
+end
+
+---@return integer
+function Notepad:size()
+  local data = self:_ensure_data()
+  return #data.orders
+end
+
+---@param uuid string|nil
+---@return integer
+function Notepad:indexof(uuid)
+  local data = self:_ensure_data()
+  if uuid == nil then
+    return -1
+  end
+  for index, target in ipairs(data.orders) do
+    if target == uuid then
+      return index
+    end
+  end
+  return -1
+end
+
+---@param index integer
+---@return string|nil
+---@return std.t.INotepadItem|nil
+function Notepad:at(index)
+  local data = self:_ensure_data()
+  local uuid = data.orders[index]
+  if uuid ~= nil then
+    return uuid, data.items[uuid]
+  end
+  return nil, nil
+end
+
+---@return integer
+---@return string|nil
+function Notepad:current()
+  local data = self:_ensure_data()
+  return self:indexof(data.active_uuid), data.active_uuid
+end
+
+---@return std.t.INotepadItem|nil
+function Notepad:current_item()
+  local data = self:_ensure_data()
+  if data.active_uuid == nil then
+    return nil
+  end
+  return data.items[data.active_uuid]
+end
+
+---@param uuid string
+---@return std.t.INotepadItem|nil
+function Notepad:get(uuid)
+  local data = self:_ensure_data()
+  return data.items[uuid]
+end
+
+---@return fun():std.t.INotepadItem|nil, integer|nil
+function Notepad:iterator()
+  local data = self:_ensure_data()
+  local index = 0 ---@type integer
+  local orders = data.orders
+  local items_map = data.items
+  return function()
+    index = index + 1
+    if index > #orders then
+      return nil, nil
+    end
+    local uuid = orders[index] ---@type string
+    local item = items_map[uuid]
+    if item == nil then
+      return nil, nil
+    end
+    return item, index
+  end
+end
+
+---@param uuid string|nil
+---@return boolean
+function Notepad:focus_uuid(uuid)
+  local data = self:_ensure_data()
+  if uuid == nil then
+    return false
+  end
+  if data.items[uuid] == nil then
+    return false
+  end
+  if data.active_uuid == uuid then
+    return true
+  end
+
+  -- Emit notification (will trigger _on_active_uuid_changed which updates data.active_uuid)
+  self._o_active_uuid:next(uuid)
+
+  eve.status.dirtier_notepadline:mark_dirty()
+  return true
+end
+
+---@param index integer
+---@return boolean
+function Notepad:focus_index(index)
+  local data = self:_ensure_data()
+  local uuid = data.orders[index]
+  if uuid == nil then
+    return false
+  end
+  return self:focus_uuid(uuid)
+end
+
+---@param step integer
+---@return boolean
+function Notepad:focus_step(step)
+  local data = self:_ensure_data()
+  local count = #data.orders ---@type integer
+  if count == 0 then
+    return false
+  end
+  local index_current = self:indexof(data.active_uuid)
+  if index_current < 1 then
+    index_current = 1
+  end
+  local index_next = std.fn.navigate_circular(index_current, step, count) ---@type integer
+  return self:focus_index(index_next)
+end
+
+---@param name string|nil
+---@return std.t.INotepadItem
+function Notepad:create(name)
+  local trimmed = type(name) == "string" and vim.trim(name) or nil
+  local item = self._source:create(#(trimmed or "") > 0 and trimmed or nil, nil)
+
+  eve.status.dirtier_notepadline:mark_dirty()
+  self:focus_uuid(item.uuid)
+  return item
+end
+
+---@param name string
+---@return std.t.INotepadItem|nil
+function Notepad:find_first_by_name(name)
+  local data = self:_ensure_data()
+  if type(name) ~= "string" then
+    return nil
+  end
+
+  local target = vim.trim(name)
+  if #target == 0 then
+    return nil
+  end
+  target = target:lower()
+
+  for _, uuid in ipairs(data.orders) do
+    local item = data.items[uuid]
+    if item ~= nil and type(item.name) == "string" and item.name:lower() == target then
+      return item
+    end
+  end
+
+  return nil
+end
+
+---@param name string
+---@return std.t.INotepadItem
+function Notepad:ensure_named_item(name)
+  local trimmed = vim.trim(type(name) == "string" and name or "")
+  if #trimmed == 0 then
+    trimmed = DEFAULT_ITEM_NAME
+  end
+
+  local existing = self:find_first_by_name(trimmed)
+  if existing ~= nil then
+    return existing
+  end
+
+  local item = self._source:create(trimmed, nil)
+  local data = self:_ensure_data()
+
+  if data.active_uuid == nil then
+    data.active_uuid = item.uuid
+    self:_notify_active_changed()
+  end
+
+  eve.status.dirtier_notepadline:mark_dirty()
+  return item
+end
+
+---@param uuid string|nil
+---@return boolean
+function Notepad:remove(uuid)
+  local data = self:_ensure_data()
+  uuid = uuid or data.active_uuid
+  if uuid == nil or data.items[uuid] == nil then
+    return false
+  end
+
+  local ok = self._source:remove(uuid)
+  if not ok then
+    return false
+  end
+
+  local active_changed = false ---@type boolean
+  if data.active_uuid == uuid then
+    data.active_uuid = data.orders[1]
+    if data.active_uuid ~= nil then
+      active_changed = true
+    end
+  end
+
+  eve.status.dirtier_notepadline:mark_dirty()
+
+  if active_changed then
+    self:_notify_active_changed()
+  end
+
+  return true
+end
+
+---@param uuid string|nil
+---@param name string
+---@return boolean
+function Notepad:rename(uuid, name)
+  local data = self:_ensure_data()
+  uuid = uuid or data.active_uuid
+  if uuid == nil then
+    return false
+  end
+  local item = data.items[uuid]
+  if item == nil then
+    return false
+  end
+
+  name = vim.trim(name or "")
+  if #name == 0 or name == item.name then
+    return false
+  end
+
+  local ok = self._source:update(uuid, { name = name, content = item.content })
+  if ok then
+    eve.status.dirtier_notepadline:mark_dirty()
+  end
+
+  return ok
+end
+
+---@param uuid string|nil
+---@param content string
+---@return boolean
+function Notepad:set_content(uuid, content)
+  local data = self:_ensure_data()
+  uuid = uuid or data.active_uuid
+  if uuid == nil then
+    return false
+  end
+  local item = data.items[uuid]
+  if item == nil then
+    return false
+  end
+
+  content = content or ""
+  if item.content == content then
+    return false
+  end
+
+  local ok = self._source:update(uuid, { name = item.name, content = content })
+  if ok then
+    local item_name = type(item.name) == "string" and item.name:lower() or ""
+    if item_name == CHATBOX_NOTE_NAME then
+      sync_chatbox_buffer(uuid, content)
+    end
+  end
+
+  return ok
+end
+
+---@param uuid_or_item string|std.t.INotepadItem|nil
+---@param text string
+---@return boolean
+function Notepad:append_content(uuid_or_item, text)
+  if type(text) ~= "string" or #text == 0 then
+    return false
+  end
+
+  local uuid ---@type string|nil
+  local item ---@type std.t.INotepadItem|nil
+
+  if type(uuid_or_item) == "table" then
+    item = uuid_or_item
+    uuid = uuid_or_item.uuid
+  elseif type(uuid_or_item) == "string" then
+    uuid = uuid_or_item
+  end
+
+  local data = self:_ensure_data()
+  uuid = uuid or data.active_uuid
+  if uuid == nil then
+    return false
+  end
+
+  item = item or data.items[uuid]
+  if item == nil then
+    return false
+  end
+
+  local existing = type(item.content) == "string" and item.content or "" ---@type string
+  local new_content = existing .. text ---@type string
+  return self:set_content(uuid, new_content) ---@type boolean
+end
+
+---@param step integer|nil
+---@return boolean
+function Notepad:swap_left(step)
+  local data = self:_ensure_data()
+  local count = #data.orders ---@type integer
+  if count <= 1 then
+    return false
+  end
+
+  local index_current = self:indexof(data.active_uuid)
+  if index_current < 1 then
+    return false
+  end
+
+  step = math.max(1, step or vim.v.count1 or 1)
+  local index_next = std.fn.navigate_circular(index_current, -step, count) ---@type integer
+  if index_next == index_current then
+    return false
+  end
+
+  data.orders[index_current], data.orders[index_next] = data.orders[index_next], data.orders[index_current]
+
+  eve.status.dirtier_notepadline:mark_dirty()
+  return true
+end
+
+---@param step integer|nil
+---@return boolean
+function Notepad:swap_right(step)
+  local data = self:_ensure_data()
+  local count = #data.orders ---@type integer
+  if count <= 1 then
+    return false
+  end
+
+  local index_current = self:indexof(data.active_uuid)
+  if index_current < 1 then
+    return false
+  end
+
+  step = math.max(1, step or vim.v.count1 or 1)
+  local index_next = std.fn.navigate_circular(index_current, step, count) ---@type integer
+  if index_next == index_current then
+    return false
+  end
+
+  data.orders[index_current], data.orders[index_next] = data.orders[index_next], data.orders[index_current]
+
+  eve.status.dirtier_notepadline:mark_dirty()
+  return true
+end
+
+---@return boolean
+function Notepad:flush()
+  return self._source:flush()
 end
 
 ---@private
@@ -299,7 +729,8 @@ end
 ---@param uuid                           string|nil
 ---@return nil
 function Notepad:_sync_content_from_buf(bufnr, uuid)
-  uuid = uuid or self._active_uuid
+  local data = self:_ensure_data()
+  uuid = uuid or data.active_uuid
   if uuid == nil then
     return
   end
@@ -309,7 +740,7 @@ function Notepad:_sync_content_from_buf(bufnr, uuid)
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
   local content = table.concat(lines, "\n") ---@type string
-  eve.notepad.set_content(uuid, content)
+  self:set_content(uuid, content)
 end
 
 ---@private
@@ -320,13 +751,14 @@ function Notepad:_render_active_item(bufnr)
     return
   end
 
-  local uuid = self._active_uuid ---@type string|nil
+  local data = self:_ensure_data()
+  local uuid = data.active_uuid ---@type string|nil
   if uuid ~= nil then
-    vim.b[bufnr][eve.notepad.BUFFER_VAR] = uuid
+    vim.b[bufnr][BUFFER_VAR_NAME] = uuid
   else
-    vim.b[bufnr][eve.notepad.BUFFER_VAR] = nil
+    vim.b[bufnr][BUFFER_VAR_NAME] = nil
   end
-  local item = uuid ~= nil and eve.notepad.get(uuid) or nil ---@type eve.builtin.notepad.INotepadItem|nil
+  local item = uuid ~= nil and self:get(uuid) or nil ---@type std.t.INotepadItem|nil
   local lines ---@type string[]
 
   if item ~= nil and #item.content > 0 then
@@ -350,7 +782,8 @@ function Notepad:_on_text_changed()
 
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
-    self:_sync_content_from_buf(bufnr, self._active_uuid)
+    local data = self:_ensure_data()
+    self:_sync_content_from_buf(bufnr, data.active_uuid)
   end
 end
 
@@ -385,18 +818,19 @@ end
 ---@private
 ---@param uuid                           string|nil
 ---@return nil
-function Notepad:_on_active_uuid(uuid)
+function Notepad:_on_active_uuid_changed(uuid)
+  local data = self:_ensure_data()
   uuid = uuid ~= nil and #uuid > 0 and uuid or nil
-  if self._active_uuid == uuid then
+  if data.active_uuid == uuid then
     return
   end
 
   local bufnr = self:get_bufnr()
-  if bufnr ~= nil and self._active_uuid ~= nil then
-    self:_sync_content_from_buf(bufnr, self._active_uuid)
+  if bufnr ~= nil and data.active_uuid ~= nil then
+    self:_sync_content_from_buf(bufnr, data.active_uuid)
   end
 
-  self._active_uuid = uuid
+  data.active_uuid = uuid
   if bufnr ~= nil then
     self:_render_active_item(bufnr)
   end
@@ -558,35 +992,27 @@ function Notepad:sync_active_content()
   if bufnr == nil then
     return nil
   end
-  self:_sync_content_from_buf(bufnr, self._active_uuid)
+  local data = self:_ensure_data()
+  self:_sync_content_from_buf(bufnr, data.active_uuid)
   return bufnr
 end
 
----@return nil
-function Notepad.flush_to_disk()
-  local filepath = eve.notepad.get_filepath() ---@type string|nil
+---@return boolean
+function Notepad:save()
+  local bufnr = self:sync_active_content()
+
+  local filepath = self:get_filepath() ---@type string|nil
   if filepath ~= nil and #filepath > 0 then
     vim.fn.mkdir(std.path.dirname(filepath), "p")
   end
 
-  eve.notepad.flush()
+  local ok = self:flush()
 
-  if filepath ~= nil and #filepath > 0 then
-    std.reporter.info({
-      from = __module_name__,
-      subject = "save",
-      message = "Notes are saved successfully",
-    })
-  end
-end
-
----@return nil
-function Notepad:save()
-  local bufnr = self:sync_active_content()
-  Notepad.flush_to_disk()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.bo[bufnr].modified = false
   end
+
+  return ok
 end
 
 ---@return nil
@@ -683,6 +1109,11 @@ function Notepad:dispose()
   end
   self._bufnr = nil
   self._winnr = nil
+end
+
+Notepad.BUFFER_VAR = BUFFER_VAR_NAME
+Notepad.o_active_uuid = function(self)
+  return self._o_active_uuid
 end
 
 return Notepad

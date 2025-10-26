@@ -7,7 +7,11 @@ local fn_switch_notepad = eve.G.register_anonymous_fn(function(encoded)
   local args = decode_btn_args(tostring(encoded)) ---@type integer[]
   local index = args[1] ---@type integer|nil
   if index ~= nil then
-    eve.notepad.focus_index(index)
+    local cmd_key = "focus_" .. tostring(index)
+    local cmd = eve.command.definitions.notepad[cmd_key]
+    if cmd ~= nil then
+      vim.cmd(cmd.uuid)
+    end
   end
 end) or "eve.G.noop"
 
@@ -18,20 +22,21 @@ end) or "eve.G.noop"
 
 ---@type string
 local fn_focus_prev_notepad = eve.G.register_anonymous_fn(function()
-  eve.notepad.focus_step(-1)
+  vim.cmd(eve.command.definitions.notepad.focus_left.uuid)
 end) or "eve.G.noop"
 
 ---@type string
 local fn_focus_next_notepad = eve.G.register_anonymous_fn(function()
-  eve.notepad.focus_step(1)
+  vim.cmd(eve.command.definitions.notepad.focus_right.uuid)
 end) or "eve.G.noop"
 
 ---@class eve.ux.nvimbar.component.notepad
 local M = {}
 
 ---@param position                      eve.ux.nvimbar.PositionEnum
+---@param notepad                       eve.ux.widget.Notepad
 ---@return eve.ux.nvimbar.IRawComponent
-function M.items(position)
+function M.items(position, notepad)
   local hln_button = position .. "_notepad_button" ---@type string
   local hln_name = position .. "_notepad_name" ---@type string
   local hln_index = position .. "_notepad_index" ---@type string
@@ -53,7 +58,7 @@ function M.items(position)
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
   local hln_arrow = eve.nvim.make_bg_transparency(hln_button) ---@type string
 
-  ---@param item                            eve.builtin.notepad.INotepadItem
+  ---@param item                            std.t.INotepadItem
   ---@return string
   local function format_name(item)
     local name = vim.trim(item.name or "") ---@type string
@@ -66,7 +71,7 @@ function M.items(position)
     return name
   end
 
-  ---@param item                            eve.builtin.notepad.INotepadItem
+  ---@param item                            std.t.INotepadItem
   ---@param index                           integer
   ---@return string
   ---@return string
@@ -83,7 +88,7 @@ function M.items(position)
     return text, btn(hl_text, fn_switch_notepad, { index })
   end
 
-  ---@param item                            eve.builtin.notepad.INotepadItem
+  ---@param item                            std.t.INotepadItem
   ---@param index                           integer
   ---@return string
   ---@return string
@@ -106,10 +111,8 @@ function M.items(position)
     name = "notepad:items",
     atomic = false,
     render = function(_, remain_width)
-      eve.notepad.load()
-
-      local entries = {} ---@type { item: eve.builtin.notepad.INotepadItem, index: integer }[]
-      for item, index in eve.notepad:iterator() do
+      local entries = {} ---@type { item: std.t.INotepadItem, index: integer }[]
+      for item, index in notepad:iterator() do
         entries[#entries + 1] = { item = item, index = index }
       end
 
@@ -118,7 +121,7 @@ function M.items(position)
         return "", "", false
       end
 
-      local active_index, active_uuid = eve.notepad.current()
+      local active_index, active_uuid = notepad:current()
       local active_uuid_text = type(active_uuid) == "string" and active_uuid or nil ---@type string|nil
       local active_display_index = nil ---@type integer|nil
 
