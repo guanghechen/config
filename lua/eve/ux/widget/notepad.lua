@@ -128,6 +128,14 @@ local NOTEPAD_KEYMAPS = {
       vim.cmd(K.notepad.swap_right.uuid)
     end,
   },
+  {
+    modes = { "i", "n", "v" },
+    key = "<esc>",
+    desc = "notepad: feedback esc to notepad (fix the conflict caused by the csi u)",
+    callback = function()
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), "n", false)
+    end,
+  },
 }
 for index = 1, 9, 1 do
   local definition = K.notepad["focus_" .. tostring(index)] ---@type eve.builtin.command.IDefinition
