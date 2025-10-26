@@ -5,6 +5,7 @@ local HOME_NVIM_CACHE = std.env.HOME_NVIM_CACHE ---@type string
 local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
 local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
 local HOME_CONTEXT = std.env.HOME_CONTEXT ---@type string
+local HOME_SHARED = std.env.HOME_SHARED ---@type string
 
 -- stylua: ignore start
 local BYTE_SLASH      = std.byte.BYTES.SLASH      ---@type integer '/'
@@ -420,6 +421,10 @@ end
 ---@return string
 function M.locate_context_filepath(filename)
   return M.join(HOME_CONTEXT, filename)
+end
+---@param filename                      string
+function M.locate_shared_filepath(filename)
+  return M.join(HOME_SHARED, filename)
 end
 
 ---@param dirpath                       string

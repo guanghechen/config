@@ -23,7 +23,7 @@ function M.retrieve_source(name)
     if _global_source == nil then
       _global_source = std.source.NotepadJsonSource.new({
         name = "global",
-        filepath = std.path.locate_context_filepath("notepad.json"),
+        filepath = std.path.locate_shared_filepath("notepad/global.json"),
         default_item_name = eve.setting.BUF_UNTITLED,
       })
     end

@@ -128,5 +128,6 @@ M.HOME_NVIM_CONFIG = vim.fn.stdpath("config") --[[@as string]]
 M.HOME_NVIM_DATA = vim.fn.stdpath("data") --[[@as string]]
 M.HOME_NVIM_STATE = vim.fn.stdpath("state") --[[@as string]]
 M.HOME_CONTEXT = M.HOME_NVIM_STATE .. PATH_SEP .. "guanghechen" ---@type string
+M.HOME_SHARED = M.HOME_USER .. PATH_SEP .. ".guanghechen" ---@type string
 
 return M
