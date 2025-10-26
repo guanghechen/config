@@ -28,6 +28,8 @@ function M.edit()
   local location ---@type string|nil
   local location_err ---@type string|nil
   local lnum_start, col_start, lnum_end, col_end = eve.buf.retrieve_visual_range()
+  local content ---@type string
+
   if
     lnum_start == nil
     or col_start == nil
@@ -38,6 +40,7 @@ function M.edit()
     location, location_err = std.uri.file_location({
       filepath = filepath,
     })
+    content = location or filepath
   else
     location, location_err = std.uri.file_location({
       filepath = filepath,
@@ -46,6 +49,8 @@ function M.edit()
       end_lnum = lnum_end,
       end_col = col_end,
     })
+    local lines = eve.buf.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end)
+    content = table.concat(lines, "\n")
   end
 
   if location == nil then
@@ -65,7 +70,10 @@ function M.edit()
     location = string.format("@%s", filepath)
   end
 
-  eve.command.execute(eve.command.definitions.notepad.append_content.uuid, location .. "\n")
+  vim.schedule(function()
+    vim.fn.setreg('"', content)
+  end)
+  eve.command.execute(eve.command.definitions.notepad.append_content.uuid, "\n" .. location .. " ")
 end
 
 return M

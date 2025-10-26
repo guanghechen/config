@@ -287,7 +287,7 @@ function M.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, c
   end
 
   if N > 1 then
-    lines[1] = string.sub(lines[1], 1, col_start)
+    lines[1] = string.sub(lines[1], col_start, -1)
     lines[N] = string.sub(lines[N], 1, col_end)
   end
 
