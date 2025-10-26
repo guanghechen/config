@@ -149,6 +149,18 @@ bindings = [
   { key = "F10",        mods = "Command",                   chars = "\u0001\u001b[21~" },   # <Ctrl-a>F10
   { key = "F11",        mods = "Command",                   chars = "\u0001\u001b[23~" },   # <Ctrl-a>F11
   { key = "F12",        mods = "Command",                   chars = "\u0001\u001b[24~" },   # <Ctrl-a>F12
+  { key = "F1",         mods = "Command|Shift",             chars = "\u0001\u001b[1;2P" },  # <Ctrl-a><Shift-F1>
+  { key = "F2",         mods = "Command|Shift",             chars = "\u0001\u001b[1;2Q" },  # <Ctrl-a><Shift-F2>
+  { key = "F3",         mods = "Command|Shift",             chars = "\u0001\u001b[1;2R" },  # <Ctrl-a><Shift-F3>
+  { key = "F4",         mods = "Command|Shift",             chars = "\u0001\u001b[1;2S" },  # <Ctrl-a><Shift-F4>
+  { key = "F5",         mods = "Command|Shift",             chars = "\u0001\u001b[15;2~" }, # <Ctrl-a><Shift-F5>
+  { key = "F6",         mods = "Command|Shift",             chars = "\u0001\u001b[17;2~" }, # <Ctrl-a><Shift-F6>
+  { key = "F7",         mods = "Command|Shift",             chars = "\u0001\u001b[18;2~" }, # <Ctrl-a><Shift-F7>
+  { key = "F8",         mods = "Command|Shift",             chars = "\u0001\u001b[19;2~" }, # <Ctrl-a><Shift-F8>
+  { key = "F9",         mods = "Command|Shift",             chars = "\u0001\u001b[20;2~" }, # <Ctrl-a><Shift-F9>
+  { key = "F10",        mods = "Command|Shift",             chars = "\u0001\u001b[21;2~" }, # <Ctrl-a><Shift-F10>
+  { key = "F11",        mods = "Command|Shift",             chars = "\u0001\u001b[23;2~" }, # <Ctrl-a><Shift-F11>
+  { key = "F12",        mods = "Command|Shift",             chars = "\u0001\u001b[24;2~" }, # <Ctrl-a><Shift-F12>
 
   { key = "Up",         mods = "Command",                   chars = "\u0001\u001b[A" },     # <Ctrl-a><Up>
   { key = "Right",      mods = "Command",                   chars = "\u0001\u001b[C" },     # <Ctrl-a><Right>
