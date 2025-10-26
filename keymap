@@ -87,10 +87,6 @@ keybind = cmd+shift+up=text:\x01\x1b[1;2A
 keybind = cmd+shift+right=text:\x01\x1b[1;2C
 keybind = cmd+shift+down=text:\x01\x1b[1;2B
 keybind = cmd+shift+left=text:\x01\x1b[1;2D
-keybind = cmd+ctrl+up=text:\x01\x1b[1;5A
-keybind = cmd+ctrl+right=text:\x01\x1b[1;5C
-keybind = cmd+ctrl+down=text:\x01\x1b[1;5B
-keybind = cmd+ctrl+left=text:\x01\x1b[1;5D
 
 # Digit keys
 keybind = cmd+one=text:\x01\x31
@@ -241,6 +237,8 @@ keybind = cmd+ctrl+h=goto_split:left
 keybind = cmd+ctrl+j=goto_split:bottom
 keybind = cmd+ctrl+k=goto_split:top
 keybind = cmd+ctrl+l=goto_split:right
+# keybind = cmd+ctrl+o=close_all_splits # TODO this is InvalidAction
+keybind = cmd+ctrl+z=toggle_split_zoom
 
 # Font size controls
 keybind = cmd+ctrl+equal=increase_font_size:1
@@ -248,5 +246,8 @@ keybind = cmd+ctrl+minus=decrease_font_size:1
 keybind = cmd+ctrl+zero=reset_font_size
 
 # Configuration functions
+# keybind = cmd+ctrl+f2=write_screen_file:toggle  # TODO this is InvliadFormat
 keybind = cmd+ctrl+f5=reload_config
 keybind = cmd+ctrl+f11=toggle_fullscreen
+keybind = cmd+ctrl+f12=toggle_fullscreen
+
