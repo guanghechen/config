@@ -599,18 +599,6 @@ command
       require("fml.action.notepad").source_select()
     end,
   })
-  .implement({
-    uuid = K.notepad.source_workspace.uuid,
-    action = function()
-      require("fml.action.notepad").source_workspace()
-    end,
-  })
-  .implement({
-    uuid = K.notepad.source_global.uuid,
-    action = function()
-      require("fml.action.notepad").source_global()
-    end,
-  })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({

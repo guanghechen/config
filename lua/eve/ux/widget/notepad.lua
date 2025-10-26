@@ -135,22 +135,6 @@ local NOTEPAD_KEYMAPS = {
   },
   {
     modes = { "i", "n", "v" },
-    key = "<C-w>",
-    desc = K.notepad.source_workspace.desc,
-    callback = function()
-      vim.cmd(K.notepad.source_workspace.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<C-g>",
-    desc = K.notepad.source_global.desc,
-    callback = function()
-      vim.cmd(K.notepad.source_global.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
     key = "<esc>",
     desc = "notepad: feedback esc to notepad (fix the conflict caused by the csi u)",
     expr = true,
@@ -234,10 +218,7 @@ function M.new(props)
   self._buf_autocmds = {}
 
   local source_name = eve.context.option.notepad_source:snapshot() ---@type string
-  local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource|nil
-  if source == nil then
-    source = eve.state.notepad.retrieve_source("workspace")
-  end
+  local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource
 
   local data = source:load(false)
   self._o_active_uuid = std.Observable.from_value(data.active_uuid or "")
@@ -295,7 +276,7 @@ function M:_setup_nvimbar()
       get_max_width = function()
         local winnr = widget._winnr
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return math.max(0, vim.api.nvim_win_get_width(winnr) - 2)
+          return math.max(0, vim.api.nvim_win_get_width(winnr))
         end
         return vim.o.columns - 2
       end,
@@ -339,22 +320,14 @@ end
 
 ---@return string
 function M:get_filepath()
-  local source = self:get_source()
-  if source.name == "workspace" then
-    return std.path.locate_workspace_filepath("notepad.json")
-  elseif source.name == "global" then
-    return std.path.locate_context_filepath("notepad.json")
-  end
-  return ""
+  local source = self:get_source() ---@type std.t.INotepadSource
+  return source.filepath or ""
 end
 
 ---@return std.t.INotepadSource
 function M:get_source()
   local source_name = eve.context.option.notepad_source:snapshot() ---@type string
-  local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource|nil
-  if source == nil then
-    source = eve.state.notepad.retrieve_source("workspace")
-  end
+  local source = eve.state.notepad.retrieve_source(source_name)
   return source
 end
 
@@ -376,10 +349,6 @@ function M:attach(source_name)
   eve.context.option.notepad_source:next(source_name)
 
   local new_source = eve.state.notepad.retrieve_source(source_name)
-  if new_source == nil then
-    return
-  end
-
   local data = new_source:load(false)
   self._o_active_uuid:next(data.active_uuid or "")
 
@@ -908,8 +877,9 @@ end
 ---@private
 ---@return string
 function M:_get_window_title()
-  local source = self:get_source()
-  return string.format(" Notepad (%s) ", source.name)
+  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local _, config = eve.state.notepad.retrieve_source(source_name)
+  return string.format(" %s ", config.title)
 end
 
 ---@private

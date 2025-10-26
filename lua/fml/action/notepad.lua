@@ -3,12 +3,119 @@ local __module_name__ = "fml.action.notepad" ---@type string
 ---@type eve.ux.widget.Notepad
 local widget = eve.ux.widget.Notepad.new({ name = "notepad.default" })
 
+local dirty_data = true ---@type boolean
+local o_search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
+local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
+local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
+local o_flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+
 if widget:current_item() == nil then
   local first_uuid = widget:at(1) ---@type string|nil
   if first_uuid == nil or not widget:focus_uuid(first_uuid) then
     widget:create(nil)
   end
 end
+
+---@class fml.action.notepad.ISourceItem : eve.ux.picker.composer.list.IItem
+---@field public data                   { name: string, title: string, filepath: string }
+---@field public text_lower             string
+
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_source_data()
+  dirty_data = false
+
+  local current_source = widget:get_source() ---@type std.t.INotepadSource
+  local items = {} ---@type fml.action.notepad.ISourceItem[]
+
+  for _, config in ipairs(eve.state.notepad.source_configs) do
+    local source = eve.state.notepad.retrieve_source(config.name)
+    items[#items + 1] = {
+      uuid = config.name,
+      text = config.name,
+      text_lower = config.name:lower(),
+      highlights = {},
+      data = {
+        name = source.name,
+        title = config.title,
+        filepath = source.filepath,
+      },
+    }
+  end
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  return {
+    items = items,
+    uuid_current = current_source.name,
+    uuid_present = current_source.name,
+  }
+end
+
+local source_picker ---@type eve.ux.picker.ListComposer|nil
+source_picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__ .. ".source_select",
+  permanent = true,
+  title = "Select Notepad Source",
+  height = 12,
+  width = 120,
+
+  search_pattern = o_search_pattern,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_case_sensitive = o_flag_case_sensitive,
+
+  render_preview = function(composer, bufnr, _)
+    local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
+    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    ---@cast item fml.action.notepad.ISourceItem|nil
+
+    if item == nil then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No source selected" })
+      ---@type eve.ux.picker.preview.IDrawResult
+      return {
+        cursorline = false,
+        number = false,
+        title = "Preview",
+        wrap = false,
+      }
+    end
+
+    local lines = { item.data.filepath } ---@type string[]
+
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+    ---@type eve.ux.picker.preview.IDrawResult
+    return {
+      cursorline = false,
+      number = false,
+      title = "Source Information",
+      wrap = true,
+    }
+  end,
+
+  on_confirm = function(composer, item)
+    ---@cast item fml.action.notepad.ISourceItem
+    composer:close()
+    if item ~= nil then
+      widget:attach(item.data.name)
+      dirty_data = true
+      std.reporter.info({
+        from = __module_name__,
+        subject = "source_select",
+        message = string.format("Switched to '%s' notepad source.", item.data.name),
+      })
+    end
+  end,
+  on_disposed = function()
+    o_search_pattern:dispose()
+    o_flag_fuzzy:dispose()
+    o_flag_regex:dispose()
+    o_flag_case_sensitive:dispose()
+  end,
+  on_refresh = function(composer)
+    local data = fetch_source_data()
+    composer:reset_data(data)
+  end,
+})
 
 ---@param args                          string|nil
 ---@return integer|nil
@@ -48,7 +155,11 @@ end
 
 ---@return nil
 function M.create()
-  local name_default = string.format("Note %d", math.max(1, widget:size() + 1)) ---@type string
+  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local _, config = eve.state.notepad.retrieve_source(source_name)
+
+  local prefix = config.default_item_name() ---@type string
+  local name_default = string.format("%s %d", prefix, math.max(1, widget:size() + 1)) ---@type string
   vim.ui.input({
     prompt = "Enter new notepad name:",
     default = name_default,
@@ -273,58 +384,11 @@ end
 
 ---@return nil
 function M.source_select()
-  local current_source = widget:get_source() ---@type std.t.INotepadSource
-  local items = {} ---@type eve.ux.ISelectItem[]
-  local item_present_uuid = current_source.name ---@type string
-
-  items[#items + 1] = { uuid = "workspace", text = "workspace" }
-  items[#items + 1] = { uuid = "global", text = "global" }
-
-  local select_widget = eve.ux.Select.new({
-    items = items,
-    item_present_uuid = item_present_uuid,
-    wincfg = {
-      title = " Notepad Source ",
-      relative = "editor",
-      row = 3,
-      col = math.floor((vim.o.columns - 20) / 2),
-      border = "rounded",
-    },
-    on_select = function(_, item)
-      if item == nil then
-        return
-      end
-
-      widget:attach(item.uuid)
-      std.reporter.info({
-        from = __module_name__,
-        subject = "source_select",
-        message = string.format("Switched to '%s' notepad source.", item.uuid),
-      })
-    end,
-  })
-
-  select_widget:focus()
-end
-
----@return nil
-function M.source_workspace()
-  widget:attach("workspace")
-  std.reporter.info({
-    from = __module_name__,
-    subject = "source_workspace",
-    message = "Switched to 'workspace' notepad source.",
-  })
-end
-
----@return nil
-function M.source_global()
-  widget:attach("global")
-  std.reporter.info({
-    from = __module_name__,
-    subject = "source_global",
-    message = "Switched to 'global' notepad source.",
-  })
+  if dirty_data then
+    local data = fetch_source_data()
+    source_picker:reset_data(data)
+  end
+  source_picker:focus()
 end
 
 return M

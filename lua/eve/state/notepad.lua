@@ -1,35 +1,81 @@
+---@class eve.state.notepad.ISourceConfig : std.source.INotepadJsonSourceConfig
+---@field public title                  string Human-readable source title
+
+---@type eve.state.notepad.ISourceConfig[]
+local source_configs = {
+  {
+    name = "workspace:notes",
+    title = "Notes (workspace)",
+    filepath = std.path.locate_workspace_filepath("notepad/notes.json"),
+    default_item_name = function()
+      return "Note"
+    end,
+  },
+  {
+    name = "workspace:todos",
+    title = "Todos (workspace)",
+    filepath = std.path.locate_workspace_filepath("notepad/todos.json"),
+    default_item_name = function()
+      return "Note"
+    end,
+  },
+  {
+    name = "shared:notes",
+    title = "Notes (shared)",
+    filepath = std.path.locate_shared_filepath("notepad/notes.json"),
+    default_item_name = function()
+      return "Note"
+    end,
+  },
+  {
+    name = "shared:todos",
+    title = "Todos (shared)",
+    filepath = std.path.locate_shared_filepath("notepad/todos.json"),
+    default_item_name = function()
+      return "todo:" .. os.date("%Y-%m-%d")
+    end,
+  },
+}
+
+---@type table<string, eve.state.notepad.ISourceConfig>
+local source_config_map = {}
+for _, config in ipairs(source_configs) do
+  source_config_map[config.name] = config
+end
+
+---@type table<string, std.t.INotepadSource>
+local _source_cache = {}
+
 ---@class eve.state.notepad
-local M = {}
-
----@type std.t.INotepadSource|nil
-local _workspace_source = nil
-
----@type std.t.INotepadSource|nil
-local _global_source = nil
+---@field public source_configs         eve.state.notepad.ISourceConfig[]
+---@field public source_config_map      table<string, eve.state.notepad.ISourceConfig>
+local M = {
+  source_configs = source_configs,
+  source_config_map = source_config_map,
+}
 
 ---@param name                          string
----@return std.t.INotepadSource|nil
+---@return std.t.INotepadSource
+---@return eve.state.notepad.ISourceConfig
 function M.retrieve_source(name)
-  if name == "workspace" then
-    if _workspace_source == nil then
-      _workspace_source = std.source.NotepadJsonSource.new({
-        name = "workspace",
-        filepath = std.path.locate_workspace_filepath("notepad.json"),
-        default_item_name = eve.setting.BUF_UNTITLED,
-      })
+  local config = M.source_config_map[name]
+
+  if config ~= nil then
+    if _source_cache[name] ~= nil then
+      return _source_cache[name], config
     end
-    return _workspace_source
-  elseif name == "global" then
-    if _global_source == nil then
-      _global_source = std.source.NotepadJsonSource.new({
-        name = "global",
-        filepath = std.path.locate_shared_filepath("notepad/global.json"),
-        default_item_name = eve.setting.BUF_UNTITLED,
-      })
-    end
-    return _global_source
+
+    local source = std.source.NotepadJsonSource.new(config)
+    _source_cache[name] = source
+    return source, config
   end
-  return nil
+
+  local default_config = source_configs[1]
+  local default_name = default_config.name
+  if _source_cache[default_name] == nil then
+    _source_cache[default_name] = std.source.NotepadJsonSource.new(default_config)
+  end
+  return _source_cache[default_name], default_config
 end
 
 return M

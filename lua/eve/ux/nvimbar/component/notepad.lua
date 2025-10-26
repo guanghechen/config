@@ -68,8 +68,8 @@ function M.items(position, notepad)
     if #name == 0 then
       name = eve.setting.BUF_UNTITLED
     end
-    if #name > 12 then
-      name = name:sub(1, 9) .. "..."
+    if #name > 20 then
+      name = name:sub(1, 17) .. "..."
     end
     return name
   end
@@ -283,34 +283,7 @@ function M.source(position, notepad)
 
   if fn_switch_source_registry[widget_id] == nil then
     fn_switch_source_registry[widget_id] = function()
-      local current_source = notepad:get_source() ---@type std.t.INotepadSource
-      local items = {} ---@type eve.ux.ISelectItem[]
-      local item_present_uuid = current_source.name ---@type string
-
-      items[#items + 1] = { uuid = "workspace", text = "workspace" }
-      items[#items + 1] = { uuid = "global", text = "global" }
-
-      local select_widget = eve.ux.Select.new({
-        items = items,
-        item_present_uuid = item_present_uuid,
-        wincfg = {
-          title = " Notepad Source ",
-          relative = "win",
-          anchor = "NE",
-          row = 1,
-          col = vim.api.nvim_win_get_width(0) - 2,
-          border = "rounded",
-        },
-        on_select = function(_, item)
-          if item == nil then
-            return
-          end
-
-          notepad:attach(item.uuid)
-        end,
-      })
-
-      select_widget:focus()
+      vim.cmd(eve.command.definitions.notepad.source_select.uuid)
     end
   end
 
@@ -327,7 +300,7 @@ function M.source(position, notepad)
       local source = notepad:get_source() ---@type std.t.INotepadSource
       local source_name = source.name ---@type string
 
-      local text_source = source_name .. " " .. icon_source ---@type string
+      local text_source = source_name .. " " .. icon_source .. " " ---@type string
       local text = text_sep_left .. text_source ---@type string
       local hl_text = txt(text_sep_left, hln_source_sep) .. btn(txt(text_source, hln_source), fn_switch_source)
       local width = vim.api.nvim_strwidth(text) ---@type integer

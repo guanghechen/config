@@ -4,12 +4,12 @@ local __module_name__ = "std.source.notepad-json" ---@type string
 ---@class std.source.INotepadJsonSourceConfig
 ---@field public name                   string Unique source identifier
 ---@field public filepath               string Absolute path to JSON file
----@field public default_item_name      string Default name for untitled items
+---@field public default_item_name      fun(): string Default name generator for untitled items
 
 ---@class std.source.NotepadJsonSource : std.t.INotepadSource
 ---@field public name                   string
 ---@field protected filepath            string
----@field protected default_item_name   string
+---@field protected default_item_name   fun(): string
 ---@field protected flush_scheduler     std.collection.Scheduler|nil Debounced flush scheduler
 ---@field protected _data               std.t.INotepadSourceSaveData|nil Internal data cache
 local M = {}
@@ -23,7 +23,7 @@ local function now_iso_utc()
 end
 
 ---@param name                          string|nil
----@param default_name                  string
+---@param default_name                  fun(): string
 ---@return string
 local function normalize_name(name, default_name)
   if type(name) == "string" then
@@ -32,7 +32,7 @@ local function normalize_name(name, default_name)
     name = ""
   end
   if #name == 0 then
-    return default_name
+    return default_name()
   end
   return name
 end
@@ -166,7 +166,7 @@ function M:load(force)
       local now = now_iso_utc()
       local item = {
         uuid = uuid,
-        name = self.default_item_name,
+        name = normalize_name(nil, self.default_item_name),
         content = "",
         created_at = now,
         updated_at = now,
@@ -199,7 +199,7 @@ function M:load(force)
     local now = now_iso_utc()
     local item = {
       uuid = uuid,
-      name = self.default_item_name,
+      name = normalize_name(nil, self.default_item_name),
       content = "",
       created_at = now,
       updated_at = now,

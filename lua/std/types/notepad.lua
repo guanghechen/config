@@ -20,6 +20,7 @@
 
 ---@class std.t.INotepadSource
 ---@field public name                   string Unique source identifier (e.g., "workspace", "global")
+---@field public filepath               string Absolute path to storage file
 ---@field public _data                  std.t.INotepadSourceSaveData|nil Internal data cache
 ---@field public load                   fun(self: std.t.INotepadSource, force: boolean): std.t.INotepadSourceSaveData Load data from storage
 ---@field public list                   fun(self: std.t.INotepadSource): std.t.INotepadItemMeta[] Get all note metas in order
