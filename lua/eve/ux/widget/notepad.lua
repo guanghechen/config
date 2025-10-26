@@ -95,6 +95,7 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "v" },
     key = "<C-,>",
+    aliases = { "<C-[>" },
     desc = K.notepad.focus_left.desc,
     callback = function()
       vim.cmd(K.notepad.focus_left.uuid)
@@ -103,6 +104,7 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "v" },
     key = "<C-.>",
+    aliases = { "<C-]>" },
     desc = K.notepad.focus_right.desc,
     callback = function()
       vim.cmd(K.notepad.focus_right.uuid)
@@ -111,6 +113,7 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "v" },
     key = "<C-S-,>",
+    aliases = { "<C-S-[>" },
     desc = K.notepad.swap_left.desc,
     callback = function()
       vim.cmd(K.notepad.swap_left.uuid)
@@ -119,6 +122,7 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "v" },
     key = "<C-S-.>",
+    aliases = { "<C-S-]>" },
     desc = K.notepad.swap_right.desc,
     callback = function()
       vim.cmd(K.notepad.swap_right.uuid)

@@ -299,6 +299,7 @@ function M.create(params)
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
     key = "<C-,>",
+    aliases = { "<C-[>" },
     desc = eve.command.definitions.term.focus_left.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.focus_left.uuid)
@@ -307,6 +308,7 @@ function M.create(params)
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
     key = "<C-.>",
+    aliases = { "<C-]>" },
     desc = eve.command.definitions.term.focus_right.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.focus_right.uuid)
@@ -315,6 +317,7 @@ function M.create(params)
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
     key = "<C-S-,>",
+    aliases = { "<C-S-[>" },
     desc = eve.command.definitions.term.swap_left.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.swap_left.uuid)
@@ -323,6 +326,7 @@ function M.create(params)
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
     key = "<C-S-.>",
+    aliases = { "<C-S-]>" },
     desc = eve.command.definitions.term.swap_right.desc,
     callback = function()
       vim.cmd(eve.command.definitions.term.swap_right.uuid)
