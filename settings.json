@@ -8,6 +8,11 @@
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "DISABLE_TELEMETRY": "1"
   },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.config/claude/script/statusline.mjs",
+    "padding": 0
+  },
   "includeCoAuthoredBy": false,
   "feedbackSurveyState": {
     "lastShownTime": 1754640140229
