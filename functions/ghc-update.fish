@@ -18,6 +18,7 @@ function ghc-update
         gh \
         ghostty \
         git-delta \
+        gemini:~/.gemini \
         helix \
         kitty \
         komorebi \
