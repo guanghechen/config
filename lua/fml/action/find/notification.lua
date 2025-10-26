@@ -69,7 +69,7 @@ picker = eve.ux.picker.ListComposer.new({
       ---@type eve.ux.picker.preview.IDrawResult
       return {
         cursorline = false,
-        number = false,
+        number = true,
         title = "Notification",
         wrap = false,
       }
@@ -81,7 +81,7 @@ picker = eve.ux.picker.ListComposer.new({
       ---@type eve.ux.picker.preview.IDrawResult
       return {
         cursorline = false,
-        number = false,
+        number = true,
         title = "Notification",
         wrap = false,
       }
@@ -150,7 +150,7 @@ picker = eve.ux.picker.ListComposer.new({
     ---@type eve.ux.picker.preview.IDrawResult
     return {
       cursorline = false,
-      number = false,
+      number = true,
       title = task.title,
       wrap = false,
     }
