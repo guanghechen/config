@@ -274,6 +274,12 @@ M.loglevel = {
   ERROR = "",
 }
 
+---@class eve.builtin.icon.notepad
+M.notepad = {
+  Notebook = "󰠮",
+  Source = "",
+}
+
 ---@class eve.builtin.icon.ui
 M.ui = {
   Accepted = "",

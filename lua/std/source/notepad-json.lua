@@ -2,10 +2,12 @@
 local __module_name__ = "std.source.notepad-json" ---@type string
 
 ---@class std.source.INotepadJsonSourceConfig
+---@field public name                   string Unique source identifier
 ---@field public filepath               string Absolute path to JSON file
 ---@field public default_item_name      string Default name for untitled items
 
 ---@class std.source.NotepadJsonSource : std.t.INotepadSource
+---@field public name                   string
 ---@field protected filepath            string
 ---@field protected default_item_name   string
 ---@field protected flush_scheduler     std.collection.Scheduler|nil Debounced flush scheduler
@@ -65,6 +67,7 @@ end
 ---@return std.source.NotepadJsonSource
 function M.new(config)
   local self = setmetatable({}, M)
+  self.name = config.name
   self.filepath = config.filepath
   self.default_item_name = config.default_item_name
   self._data = nil

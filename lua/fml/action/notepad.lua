@@ -1,34 +1,13 @@
 local __module_name__ = "fml.action.notepad" ---@type string
 
-local DEFAULT_KEY = "default" ---@type string
-local instances = {} ---@type table<string, eve.ux.widget.Notepad>
+---@type eve.ux.widget.Notepad
+local widget = eve.ux.widget.Notepad.new({ name = "notepad.default" })
 
----@param key                            ?string
----@param props                          ?eve.ux.widget.notepad.IProps
----@return eve.ux.widget.Notepad
-local function ensure_instance(key, props)
-  key = key or DEFAULT_KEY
-
-  local widget = instances[key] ---@type eve.ux.widget.Notepad|nil
-  if widget ~= nil then
-    return widget
+if widget:current_item() == nil then
+  local first_uuid = widget:at(1) ---@type string|nil
+  if first_uuid == nil or not widget:focus_uuid(first_uuid) then
+    widget:create(nil)
   end
-
-  local merged_props = vim.tbl_extend("force", {
-    name = string.format("notepad.%s", key),
-  }, props or {}) ---@type eve.ux.widget.notepad.IProps
-
-  widget = eve.ux.widget.Notepad.new(merged_props)
-
-  if widget:current_item() == nil then
-    local first_uuid = widget:at(1) ---@type string|nil
-    if first_uuid == nil or not widget:focus_uuid(first_uuid) then
-      widget:create(nil)
-    end
-  end
-
-  instances[key] = widget
-  return widget
 end
 
 ---@param args                          string|nil
@@ -58,25 +37,17 @@ function M.append_content(content)
     return
   end
 
-  local widget = ensure_instance()
   widget:append_content(nil, content)
   widget:focus()
 end
 
----@param key                            ?string
 ---@return nil
-function M.close(key)
-  key = key or DEFAULT_KEY
-  local widget = instances[key]
-  if widget ~= nil then
-    widget:close()
-  end
+function M.close()
+  widget:close()
 end
 
 ---@return nil
 function M.create()
-  local widget = ensure_instance()
-
   local name_default = string.format("Note %d", math.max(1, widget:size() + 1)) ---@type string
   vim.ui.input({
     prompt = "Enter new notepad name:",
@@ -109,8 +80,6 @@ end
 
 ---@return nil
 function M.destroy()
-  local widget = ensure_instance()
-
   local item = widget:current_item() ---@type std.t.INotepadItem|nil
   if item == nil then
     std.reporter.warn({
@@ -162,17 +131,9 @@ function M.destroy()
   end)
 end
 
----@param key                            ?string
----@param props                          ?eve.ux.widget.notepad.IProps
----@return eve.ux.widget.Notepad
-function M.ensure(key, props)
-  return ensure_instance(key, props)
-end
-
 ---@param index                         integer
 ---@return boolean
 function M.focus_index(index)
-  local widget = ensure_instance()
   local ok = widget:focus_index(index) ---@type boolean
   if ok then
     widget:focus()
@@ -183,8 +144,6 @@ end
 ---@param step                          string|nil
 ---@return nil
 function M.focus_left(step)
-  local widget = ensure_instance()
-
   local resolved = resolve_step(step) ---@type integer|nil
   local done = widget:focus_step(-math.max(1, resolved or vim.v.count1 or 1)) ---@type boolean
   if done and widget:isvisible() then
@@ -195,8 +154,6 @@ end
 ---@param step                          string|nil
 ---@return nil
 function M.focus_right(step)
-  local widget = ensure_instance()
-
   local resolved = resolve_step(step) ---@type integer|nil
   local done = widget:focus_step(math.max(1, resolved or vim.v.count1 or 1)) ---@type boolean
   if done and widget:isvisible() then
@@ -206,8 +163,6 @@ end
 
 ---@return nil
 function M.rename()
-  local widget = ensure_instance()
-
   local item = widget:current_item() ---@type std.t.INotepadItem|nil
   if item == nil then
     std.reporter.warn({
@@ -275,7 +230,6 @@ end
 
 ---@return nil
 function M.save()
-  local widget = ensure_instance()
   local ok = widget:save()
 
   if ok then
@@ -293,17 +247,14 @@ function M.save()
   end
 end
 
----@param key                            ?string
----@param props                          ?eve.ux.widget.notepad.IProps
 ---@return nil
-function M.show(key, props)
-  ensure_instance(key, props):show()
+function M.show()
+  widget:show()
 end
 
 ---@param step                          string|nil
 ---@return nil
 function M.swap_left(step)
-  local widget = ensure_instance()
   local resolved = resolve_step(step) ---@type integer|nil
   widget:swap_left(resolved)
 end
@@ -311,16 +262,69 @@ end
 ---@param step                          string|nil
 ---@return nil
 function M.swap_right(step)
-  local widget = ensure_instance()
   local resolved = resolve_step(step) ---@type integer|nil
   widget:swap_right(resolved)
 end
 
----@param key                            ?string
----@param props                          ?eve.ux.widget.notepad.IProps
 ---@return nil
-function M.toggle(key, props)
-  ensure_instance(key, props):toggle()
+function M.toggle()
+  widget:toggle()
+end
+
+---@return nil
+function M.source_select()
+  local current_source = widget:get_source() ---@type std.t.INotepadSource
+  local items = {} ---@type eve.ux.ISelectItem[]
+  local item_present_uuid = current_source.name ---@type string
+
+  items[#items + 1] = { uuid = "workspace", text = "workspace" }
+  items[#items + 1] = { uuid = "global", text = "global" }
+
+  local select_widget = eve.ux.Select.new({
+    items = items,
+    item_present_uuid = item_present_uuid,
+    wincfg = {
+      title = " Notepad Source ",
+      relative = "editor",
+      row = 3,
+      col = math.floor((vim.o.columns - 20) / 2),
+      border = "rounded",
+    },
+    on_select = function(_, item)
+      if item == nil then
+        return
+      end
+
+      widget:attach(item.uuid)
+      std.reporter.info({
+        from = __module_name__,
+        subject = "source_select",
+        message = string.format("Switched to '%s' notepad source.", item.uuid),
+      })
+    end,
+  })
+
+  select_widget:focus()
+end
+
+---@return nil
+function M.source_workspace()
+  widget:attach("workspace")
+  std.reporter.info({
+    from = __module_name__,
+    subject = "source_workspace",
+    message = "Switched to 'workspace' notepad source.",
+  })
+end
+
+---@return nil
+function M.source_global()
+  widget:attach("global")
+  std.reporter.info({
+    from = __module_name__,
+    subject = "source_global",
+    message = "Switched to 'global' notepad source.",
+  })
 end
 
 return M

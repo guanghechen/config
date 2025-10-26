@@ -440,6 +440,9 @@ M.definitions.notepad = {
   focus_right = def("Fnotepadfocusright", "notepad: focus right", "?"),
   swap_left = def("Fnotepadswapleft", "notepad: swap left", "?"),
   swap_right = def("Fnotepadswapright", "notepad: swap right", "?"),
+  source_select = def("Fnotepadsourceselect", "notepad: select source"),
+  source_workspace = def("Fnotepadsourceworkspace", "notepad: switch to workspace source"),
+  source_global = def("Fnotepadsourceglobal", "notepad: switch to global source"),
 }
 
 ---@class eve.builtin.command.definitions.profile

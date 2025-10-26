@@ -19,6 +19,7 @@
 ---@field public active_uuid            string|nil Currently active note UUID
 
 ---@class std.t.INotepadSource
+---@field public name                   string Unique source identifier (e.g., "workspace", "global")
 ---@field public _data                  std.t.INotepadSourceSaveData|nil Internal data cache
 ---@field public load                   fun(self: std.t.INotepadSource, force: boolean): std.t.INotepadSourceSaveData Load data from storage
 ---@field public list                   fun(self: std.t.INotepadSource): std.t.INotepadItemMeta[] Get all note metas in order

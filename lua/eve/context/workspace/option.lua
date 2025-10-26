@@ -1,8 +1,10 @@
 ---@class eve.context.option.data
 ---@field public relativenumber         boolean
+---@field public notepad_source         string
 
 ---@class eve.context.option.state
 ---@field public relativenumber         std.collection.IObservable
+---@field public notepad_source         std.collection.IObservable
 
 ---@class eve.context.option : eve.context.option.state
 ---@field public defaults               fun(): eve.context.option.data
@@ -16,6 +18,7 @@ function M.defaults()
   ---@type eve.context.option.data
   return {
     relativenumber = true,
+    notepad_source = "workspace",
   }
 end
 
@@ -26,6 +29,9 @@ function M.normalize(data)
   if type(data) == "table" then
     if type(data.relativenumber) == "boolean" then
       resolved.relativenumber = data.relativenumber
+    end
+    if type(data.notepad_source) == "string" then
+      resolved.notepad_source = data.notepad_source
     end
   end
 
@@ -38,6 +44,7 @@ function M.dump()
   ---@type eve.context.option.data
   return {
     relativenumber = M.relativenumber:snapshot(),
+    notepad_source = M.notepad_source:snapshot(),
   }
 end
 
@@ -47,11 +54,13 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.context.option.data
 
   M.relativenumber:next(data.relativenumber)
+  M.notepad_source:next(data.notepad_source)
 end
 
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.option.data
 M.relativenumber = std.Observable.from_value(_defaults.relativenumber)
+M.notepad_source = std.Observable.from_value(_defaults.notepad_source)
 
 return M

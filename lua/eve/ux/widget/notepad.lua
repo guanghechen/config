@@ -14,38 +14,141 @@ local BUFFER_VAR_NAME = "eve_notepad_uuid"
 
 local K = eve.command.definitions
 
----@param modes string[]
----@param key string
----@param cmd string
----@param desc string
----@param opts table|nil
----@return std.t.IKeymap
-local function create_keymap(modes, key, cmd, desc, opts)
-  opts = opts or {}
-  return vim.tbl_extend("force", {
-    modes = modes,
-    key = key,
-    desc = desc,
-    callback = function()
-      vim.cmd(cmd)
-    end,
-  }, opts)
-end
-
+---@type std.t.IKeymap[]
 local NOTEPAD_KEYMAPS = {
-  create_keymap({ "i", "n", "v" }, "<C-s>", K.notepad.save.uuid, K.notepad.save.desc),
-  create_keymap({ "i", "n", "v" }, "<C-a>s", K.notepad.save.uuid, K.notepad.save.desc, { aliases = { "<D-s>", "<M-s>" } }),
-  create_keymap({ "n" }, "q", K.notepad.close.uuid, K.notepad.close.desc),
-  create_keymap({ "i", "n", "v" }, "<C-n>", K.notepad.create.uuid, K.notepad.create.desc),
-  create_keymap({ "n" }, "<leader><cr>", K.ai.submit_buffer.uuid, K.ai.submit_buffer.desc),
-  create_keymap({ "v" }, "<leader><cr>", K.ai.submit_selection.uuid, K.ai.submit_selection.desc),
-  create_keymap({ "i", "n", "v" }, "<C-/>", K.notepad.rename.uuid, K.notepad.rename.desc),
-  create_keymap({ "i", "n", "v" }, "<C-d>", K.notepad.destroy.uuid, K.notepad.destroy.desc),
-  create_keymap({ "n" }, "<leader>dd", K.notepad.destroy.uuid, K.notepad.destroy.desc),
-  create_keymap({ "i", "n", "v" }, "<C-,>", K.notepad.focus_left.uuid, K.notepad.focus_left.desc, { aliases = { "<C-[>" } }),
-  create_keymap({ "i", "n", "v" }, "<C-.>", K.notepad.focus_right.uuid, K.notepad.focus_right.desc, { aliases = { "<C-]>" } }),
-  create_keymap({ "i", "n", "v" }, "<C-S-,>", K.notepad.swap_left.uuid, K.notepad.swap_left.desc, { aliases = { "<C-S-[>" } }),
-  create_keymap({ "i", "n", "v" }, "<C-S-.>", K.notepad.swap_right.uuid, K.notepad.swap_right.desc, { aliases = { "<C-S-]>" } }),
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-s>",
+    desc = K.notepad.save.desc,
+    callback = function()
+      vim.cmd(K.notepad.save.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-a>s",
+    aliases = { "<D-s>", "<M-s>" },
+    desc = K.notepad.save.desc,
+    callback = function()
+      vim.cmd(K.notepad.save.uuid)
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "q",
+    desc = K.notepad.close.desc,
+    callback = function()
+      vim.cmd(K.notepad.close.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-n>",
+    desc = K.notepad.create.desc,
+    callback = function()
+      vim.cmd(K.notepad.create.uuid)
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "<leader><cr>",
+    desc = K.ai.submit_buffer.desc,
+    callback = function()
+      vim.cmd(K.ai.submit_buffer.uuid)
+    end,
+  },
+  {
+    modes = { "v" },
+    key = "<leader><cr>",
+    desc = K.ai.submit_selection.desc,
+    callback = function()
+      vim.cmd(K.ai.submit_selection.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-/>",
+    desc = K.notepad.rename.desc,
+    callback = function()
+      vim.cmd(K.notepad.rename.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-d>",
+    desc = K.notepad.destroy.desc,
+    callback = function()
+      vim.cmd(K.notepad.destroy.uuid)
+    end,
+  },
+  {
+    modes = { "n" },
+    key = "<leader>dd",
+    desc = K.notepad.destroy.desc,
+    callback = function()
+      vim.cmd(K.notepad.destroy.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-,>",
+    aliases = { "<C-[>" },
+    desc = K.notepad.focus_left.desc,
+    callback = function()
+      vim.cmd(K.notepad.focus_left.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-.>",
+    aliases = { "<C-]>" },
+    desc = K.notepad.focus_right.desc,
+    callback = function()
+      vim.cmd(K.notepad.focus_right.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-S-,>",
+    aliases = { "<C-S-[>" },
+    desc = K.notepad.swap_left.desc,
+    callback = function()
+      vim.cmd(K.notepad.swap_left.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-S-.>",
+    aliases = { "<C-S-]>" },
+    desc = K.notepad.swap_right.desc,
+    callback = function()
+      vim.cmd(K.notepad.swap_right.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-0>",
+    desc = K.notepad.source_select.desc,
+    callback = function()
+      vim.cmd(K.notepad.source_select.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-w>",
+    desc = K.notepad.source_workspace.desc,
+    callback = function()
+      vim.cmd(K.notepad.source_workspace.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-g>",
+    desc = K.notepad.source_global.desc,
+    callback = function()
+      vim.cmd(K.notepad.source_global.uuid)
+    end,
+  },
   {
     modes = { "i", "n", "v" },
     key = "<esc>",
@@ -60,7 +163,14 @@ local NOTEPAD_KEYMAPS = {
 
 for index = 1, 9 do
   local definition = K.notepad["focus_" .. tostring(index)]
-  NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = create_keymap({ "i", "n", "v" }, string.format("<C-%d>", index), definition.uuid, definition.desc)
+  NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
+    modes = { "i", "n", "v" },
+    key = string.format("<C-%d>", index),
+    desc = definition.desc,
+    callback = function()
+      vim.cmd(definition.uuid)
+    end,
+  }
 end
 
 ---@class eve.ux.widget.notepad.IProps
@@ -96,7 +206,7 @@ end
 ---@field private _nvimbar              eve.ux.nvimbar.Nvimbar|nil
 ---@field private _subscription_active  std.collection.IUnsubscribable|nil
 ---@field private _subscription_winbar  std.collection.IUnsubscribable|nil
----@field private _source               std.t.INotepadSource
+---@field private _subscription_source  std.collection.IUnsubscribable|nil
 ---@field private _o_active_uuid        std.collection.IObservable
 local M = {}
 M.__index = M
@@ -122,9 +232,14 @@ function M.new(props)
   self._winnr = nil
   self._suspend_sync = false
   self._buf_autocmds = {}
-  self._source = props.source or eve.state.notepad.workspace
 
-  local data = self._source:load(false)
+  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource|nil
+  if source == nil then
+    source = eve.state.notepad.retrieve_source("workspace")
+  end
+
+  local data = source:load(false)
   self._o_active_uuid = std.Observable.from_value(data.active_uuid or "")
 
   self:_setup_subscriptions()
@@ -136,65 +251,83 @@ end
 ---@private
 ---@return nil
 function M:_setup_subscriptions()
-  self._subscription_active = self._o_active_uuid:subscribe(std.Subscriber.new({
-    on_next = function(next_uuid)
-      self:_on_active_uuid_changed(next_uuid)
-    end,
-  }), false)
+  self._subscription_active = self._o_active_uuid:subscribe(
+    std.Subscriber.new({
+      on_next = function(next_uuid)
+        self:_on_active_uuid_changed(next_uuid)
+      end,
+    }),
+    false
+  )
 
-  self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(std.Subscriber.new({
-    on_next = function()
-      if self._nvimbar ~= nil then
-        self._nvimbar:render()
-      end
-    end,
-  }), true)
+  self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(
+    std.Subscriber.new({
+      on_next = function()
+        if self._nvimbar ~= nil then
+          self._nvimbar:render()
+        end
+      end,
+    }),
+    true
+  )
+
+  self._subscription_source = eve.context.option.notepad_source:subscribe(
+    std.Subscriber.new({
+      on_next = function(source_name)
+        self:attach(source_name)
+      end,
+    }),
+    false
+  )
 end
 
 ---@private
 ---@return nil
 function M:_setup_nvimbar()
   local widget = self
-  self._nvimbar = eve.ux.nvimbar.Nvimbar.new({
-    name = string.format("%s.winbar", self.name),
-    comp_sep = "",
-    comp_sep_hlname = "f_wl_bg",
-    comp_sep_hlname_active = "f_wl_bg",
-    delay = 128,
-    get_max_width = function()
-      local winnr = widget._winnr
-      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        return math.max(0, vim.api.nvim_win_get_width(winnr) - 2)
-      end
-      return vim.o.columns - 2
-    end,
-    get_preset_context = function()
-      return { winnr = widget._winnr }
-    end,
-    is_active = function()
-      return widget._winnr ~= nil and vim.api.nvim_win_is_valid(widget._winnr)
-    end,
-    on_fulfilled = function(result)
-      local winnr = widget._winnr
-      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        vim.wo[winnr].winbar = result
-      end
-    end,
-  })
+  self._nvimbar = eve.ux.nvimbar.Nvimbar
+    .new({
+      name = string.format("%s.winbar", self.name),
+      comp_sep = "",
+      comp_sep_hlname = "f_wl_bg",
+      comp_sep_hlname_active = "f_wl_bg",
+      delay = 128,
+      get_max_width = function()
+        local winnr = widget._winnr
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          return math.max(0, vim.api.nvim_win_get_width(winnr) - 2)
+        end
+        return vim.o.columns - 2
+      end,
+      get_preset_context = function()
+        return { winnr = widget._winnr }
+      end,
+      is_active = function()
+        return widget._winnr ~= nil and vim.api.nvim_win_is_valid(widget._winnr)
+      end,
+      on_fulfilled = function(result)
+        local winnr = widget._winnr
+        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+          vim.wo[winnr].winbar = result
+        end
+      end,
+    })
     :place("left", eve.ux.nvimbar.component.notepad.items("f_wl", widget), 95)
     :place("left", eve.ux.nvimbar.component.notepad.add_button("f_wl"), 100)
+    :place("right", eve.ux.nvimbar.component.notepad.source("f_wl", widget), 100)
 end
 
 ---@private
 ---@return std.t.INotepadSourceSaveData
 function M:_ensure_data()
-  return self._source:load(false)
+  local source = self:get_source()
+  return source:load(false)
 end
 
 ---@private
 ---@return nil
 function M:_notify_active_changed()
-  local data = self._source._data
+  local data = self:_ensure_data()
   self._o_active_uuid:next(data ~= nil and data.active_uuid or "")
 end
 
@@ -206,10 +339,66 @@ end
 
 ---@return string
 function M:get_filepath()
-  if self._source == eve.state.notepad.workspace then
+  local source = self:get_source()
+  if source.name == "workspace" then
     return std.path.locate_workspace_filepath("notepad.json")
+  elseif source.name == "global" then
+    return std.path.locate_context_filepath("notepad.json")
   end
   return ""
+end
+
+---@return std.t.INotepadSource
+function M:get_source()
+  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource|nil
+  if source == nil then
+    source = eve.state.notepad.retrieve_source("workspace")
+  end
+  return source
+end
+
+---@param source_name                   string
+---@return nil
+function M:attach(source_name)
+  local current_source = self:get_source()
+  if current_source.name == source_name then
+    return
+  end
+
+  local bufnr = self:get_bufnr()
+  if bufnr ~= nil then
+    self:_sync_content_from_buf(bufnr, self:_ensure_data().active_uuid)
+  end
+
+  self:flush()
+
+  eve.context.option.notepad_source:next(source_name)
+
+  local new_source = eve.state.notepad.retrieve_source(source_name)
+  if new_source == nil then
+    return
+  end
+
+  local data = new_source:load(false)
+  self._o_active_uuid:next(data.active_uuid or "")
+
+  if bufnr ~= nil then
+    self:_render_active_item(bufnr)
+  end
+
+  local winnr = self:get_winnr()
+  if winnr ~= nil then
+    local current_config = vim.api.nvim_win_get_config(winnr)
+    current_config.title = self:_get_window_title()
+    vim.api.nvim_win_set_config(winnr, current_config)
+  end
+
+  self:_mark_dirty()
+
+  if self._nvimbar ~= nil then
+    self._nvimbar:render()
+  end
 end
 
 ---@return integer
@@ -309,7 +498,8 @@ end
 ---@return std.t.INotepadItem
 function M:create(name)
   local trimmed = type(name) == "string" and vim.trim(name) or nil
-  local item = self._source:create(#(trimmed or "") > 0 and trimmed or nil, nil)
+  local source = self:get_source()
+  local item = source:create(#(trimmed or "") > 0 and trimmed or nil, nil)
   self:_mark_dirty()
   self:focus_uuid(item.uuid)
   return item
@@ -347,7 +537,8 @@ function M:ensure_named_item(name)
     return existing
   end
 
-  local item = self._source:create(trimmed, nil)
+  local source = self:get_source()
+  local item = source:create(trimmed, nil)
   local data = self:_ensure_data()
 
   if data.active_uuid == nil then
@@ -368,7 +559,8 @@ function M:remove(uuid)
     return false
   end
 
-  if not self._source:remove(uuid) then
+  local source = self:get_source()
+  if not source:remove(uuid) then
     return false
   end
 
@@ -403,7 +595,8 @@ function M:rename(uuid, name)
     return false
   end
 
-  if self._source:update(uuid, { name = name, content = item.content }) then
+  local source = self:get_source()
+  if source:update(uuid, { name = name, content = item.content }) then
     self:_mark_dirty()
     return true
   end
@@ -425,18 +618,18 @@ function M:set_content(uuid, content)
     return false
   end
 
-  return self._source:update(uuid, { name = item.name, content = content or "" })
+  local source = self:get_source()
+  return source:update(uuid, { name = item.name, content = content or "" })
 end
 
----@param uuid_or_item string|std.t.INotepadItem|nil
+---@param uuid string|nil
 ---@param text string
 ---@return boolean
-function M:append_content(uuid_or_item, text)
+function M:append_content(uuid, text)
   if type(text) ~= "string" or #text == 0 then
     return false
   end
 
-  local uuid = type(uuid_or_item) == "table" and uuid_or_item.uuid or uuid_or_item
   local data = self:_ensure_data()
   uuid = uuid or data.active_uuid
 
@@ -498,7 +691,8 @@ end
 
 ---@return boolean
 function M:flush()
-  return self._source:flush()
+  local source = self:get_source()
+  return source:flush()
 end
 
 ---@private
@@ -511,6 +705,10 @@ function M:_dispose_subscriptions()
   if self._subscription_winbar ~= nil then
     self._subscription_winbar:unsubscribe()
     self._subscription_winbar = nil
+  end
+  if self._subscription_source ~= nil then
+    self._subscription_source:unsubscribe()
+    self._subscription_source = nil
   end
 end
 
@@ -708,6 +906,13 @@ function M:_normalize_winhighlight(winhighlight)
 end
 
 ---@private
+---@return string
+function M:_get_window_title()
+  local source = self:get_source()
+  return string.format(" Notepad (%s) ", source.name)
+end
+
+---@private
 ---@return integer
 function M:ensure_win()
   local bufnr = self:ensure_buf()
@@ -724,7 +929,7 @@ function M:ensure_win()
     width = rect.width,
     height = rect.height,
     focusable = true,
-    title = self.title,
+    title = self:_get_window_title(),
     title_pos = "center",
     border = "rounded",
     style = "minimal",

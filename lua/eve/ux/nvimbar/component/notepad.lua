@@ -30,6 +30,9 @@ local fn_focus_next_notepad = eve.G.register_anonymous_fn(function()
   vim.cmd(eve.command.definitions.notepad.focus_right.uuid)
 end) or "eve.G.noop"
 
+---@type table<string, fun(): nil>
+local fn_switch_source_registry = {}
+
 ---@class eve.ux.nvimbar.component.notepad
 local M = {}
 
@@ -264,6 +267,74 @@ function M.add_button(position)
         return "", "", false
       end
       return text, btn(hl_text, fn_add_notepad), true
+    end,
+  }
+
+  return component
+end
+
+---@param position                      eve.ux.nvimbar.PositionEnum
+---@param notepad                       eve.ux.widget.Notepad
+---@return eve.ux.nvimbar.IRawComponent
+function M.source(position, notepad)
+  local hln_source = position .. "_notepad_source" ---@type string
+  local hln_source_sep = position .. "_notepad_source_sep" ---@type string
+  local widget_id = tostring(notepad) ---@type string
+
+  if fn_switch_source_registry[widget_id] == nil then
+    fn_switch_source_registry[widget_id] = function()
+      local current_source = notepad:get_source() ---@type std.t.INotepadSource
+      local items = {} ---@type eve.ux.ISelectItem[]
+      local item_present_uuid = current_source.name ---@type string
+
+      items[#items + 1] = { uuid = "workspace", text = "workspace" }
+      items[#items + 1] = { uuid = "global", text = "global" }
+
+      local select_widget = eve.ux.Select.new({
+        items = items,
+        item_present_uuid = item_present_uuid,
+        wincfg = {
+          title = " Notepad Source ",
+          relative = "win",
+          anchor = "NE",
+          row = 1,
+          col = vim.api.nvim_win_get_width(0) - 2,
+          border = "rounded",
+        },
+        on_select = function(_, item)
+          if item == nil then
+            return
+          end
+
+          notepad:attach(item.uuid)
+        end,
+      })
+
+      select_widget:focus()
+    end
+  end
+
+  local fn_switch_source = eve.G.register_anonymous_fn(fn_switch_source_registry[widget_id]) or "eve.G.noop"
+
+  local text_sep_left = eve.icon.symbols.sep_left ---@type string
+  local icon_source = eve.icon.notepad.Source ---@type string
+
+  ---@type eve.ux.nvimbar.IRawComponent
+  local component = {
+    name = "notepad:source",
+    atomic = true,
+    render = function(_, remain_width)
+      local source = notepad:get_source() ---@type std.t.INotepadSource
+      local source_name = source.name ---@type string
+
+      local text_source = source_name .. " " .. icon_source ---@type string
+      local text = text_sep_left .. text_source ---@type string
+      local hl_text = txt(text_sep_left, hln_source_sep) .. btn(txt(text_source, hln_source), fn_switch_source)
+      local width = vim.api.nvim_strwidth(text) ---@type integer
+      if width <= 0 or remain_width < width then
+        return "", "", false
+      end
+      return text, hl_text, true
     end,
   }
 
