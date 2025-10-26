@@ -59,9 +59,7 @@ function M.append_content(content)
   end
 
   local widget = ensure_instance()
-  local note = widget:ensure_named_item("chatbox") ---@type std.t.INotepadItem
-  widget:append_content(note.uuid, content)
-  widget:focus_uuid(note.uuid)
+  widget:append_content(nil, content)
   widget:focus()
 end
 

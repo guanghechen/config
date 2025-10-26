@@ -280,6 +280,39 @@ function M:update(uuid, item_data)
   return modified
 end
 
+---@param uuid                          string|nil
+---@param text                          string
+---@return boolean
+function M:append_content(uuid, text)
+  if type(text) ~= "string" or #text == 0 then
+    return false
+  end
+
+  local data = self:load(false) ---@type std.t.INotepadSourceSaveData
+
+  uuid = uuid or data.active_uuid
+  if uuid == nil then
+    return false
+  end
+
+  local item = data.items[uuid]
+  if item == nil then
+    return false
+  end
+
+  local existing = type(item.content) == "string" and item.content or ""
+  local new_content = existing .. text
+
+  if new_content == item.content then
+    return false
+  end
+
+  item.content = new_content
+  item.updated_at = now_iso_utc()
+  self:_schedule_flush()
+  return true
+end
+
 ---@param uuid                          string
 ---@return boolean
 function M:remove(uuid)
