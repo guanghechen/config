@@ -1,3 +1,5 @@
+local __module_name__ = "eve.fn.rename" ---@type string
+
 local Methods = vim.lsp.protocol.Methods
 
 ---@alias eve.fn.rename
@@ -19,7 +21,7 @@ local function rename(params)
   -- Early validation
   if not std.path.is_exist(from) then
     std.reporter.error({
-      from = "eve.fn.rename",
+      from = __module_name__,
       subject = "source_not_exist",
       message = string.format("Source path does not exist: %s", from),
     })
@@ -30,7 +32,7 @@ local function rename(params)
   local dest_dir = std.path.dirname(to)
   if not std.path.is_exist(dest_dir) then
     std.reporter.error({
-      from = "eve.fn.rename",
+      from = __module_name__,
       subject = "dest_dir_not_exist",
       message = string.format("Destination directory does not exist: %s", dest_dir),
     })
@@ -96,7 +98,7 @@ local function rename(params)
   if not move_success then
     local entity_type = isdir and "directory" or "file"
     std.reporter.error({
-      from = "eve.fn.rename",
+      from = __module_name__,
       subject = "rename_failed",
       message = string.format("Failed to rename %s from %s to %s", entity_type, from, to),
     })
