@@ -77,7 +77,8 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---
 ---@field public frecency               ?std.collection.IFrecency
 ---
----@field public finder_input_history   ?std.collection.IHistory
+---@field public search_pattern_history ?std.collection.IHistory
+---@field public replace_pattern_history ?std.collection.IHistory
 ---
 ---@field public on_attached            ?eve.ux.searcher.composer.filetree.IOnAttached
 ---@field public on_closed              ?eve.ux.searcher.composer.filetree.IOnClosed
@@ -161,7 +162,8 @@ function M.new(props)
   local o_rootpath = props.rootpath ---@type std.collection.IObservable
   local o_search_pattern = props.search_pattern ---@type std.collection.IObservable
 
-  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
+  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
+  local replace_pattern_history = props.replace_pattern_history ---@type std.collection.IHistory|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
@@ -575,12 +577,12 @@ function M.new(props)
         return
       end
 
-      local finder_input = o_search_pattern:snapshot() ---@type string
+      local search_pattern = o_search_pattern:snapshot() ---@type string
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
           local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
-          if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
+          if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
         end
@@ -1276,11 +1278,12 @@ function M.new(props)
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
-    finder_input = o_search_pattern,
-    finder_input_history = finder_input_history,
+    search_pattern = o_search_pattern,
+    search_pattern_history = search_pattern_history,
     finder_title = title,
 
-    replacer_input = o_replace_pattern,
+    replace_pattern = o_replace_pattern,
+    replace_pattern_history = replace_pattern_history,
     replacer_title = "Replace",
     flag_replace = o_flag_replace,
 

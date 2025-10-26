@@ -118,7 +118,7 @@ local function fetch_data(winnr_sourcefile)
   return { items = items, uuid_present = uuid_present, uuid_current = uuid_present }
 end
 
-local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
 local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
 local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
@@ -131,7 +131,7 @@ local picker = eve.ux.picker.ListComposer.new({
   height = 20,
   width = 80,
 
-  finder_input = finder_input,
+  search_pattern = search_pattern,
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
   flag_case_sensitive = flag_case_sensitive,
@@ -262,7 +262,7 @@ function M.history()
   end
 
   last_winnr_sourcefile = winnr_sourcefile ---@type integer
-  finder_input:next("")
+  search_pattern:next("")
 
   local data = fetch_data(winnr_sourcefile) ---@type eve.ux.picker.composer.list.IResetData
   picker:reset_data(data)

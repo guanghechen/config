@@ -111,10 +111,25 @@ function M.select(items, opts, on_choice)
 
   title = (#title > 1 and string.sub(title, 1, 1) ~= " ") and " " .. title .. " " or title ---@type string
 
-  local finder_input = std.Observable.from_value(context and context.input:snapshot() or "") ---@type std.collection.IObservable
-  local flag_fuzzy = std.Observable.from_value(context and context.flag_fuzzy:snapshot() or true) ---@type std.collection.IObservable
-  local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-  local flag_case_sensitive = std.Observable.from_value(context and context.flag_case_sensitive:snapshot() or false) ---@type std.collection.IObservable
+  local is_new_context = context == nil ---@type boolean
+  local search_pattern ---@type std.collection.IObservable
+  local flag_fuzzy ---@type std.collection.IObservable
+  local flag_regex ---@type std.collection.IObservable
+  local flag_case_sensitive ---@type std.collection.IObservable
+
+  if context then
+    -- Use existing context observables
+    search_pattern = context.search_pattern
+    flag_fuzzy = context.flag_fuzzy
+    flag_regex = context.flag_regex
+    flag_case_sensitive = context.flag_case_sensitive
+  else
+    -- Create new observables
+    search_pattern = std.Observable.from_value("")
+    flag_fuzzy = std.Observable.from_value(true)
+    flag_regex = std.Observable.from_value(false)
+    flag_case_sensitive = std.Observable.from_value(false)
+  end
 
   -- Handle dimension options
   local picker_height = math.min(#items + 3, math.floor(vim.o.lines * 0.8))
@@ -139,7 +154,7 @@ function M.select(items, opts, on_choice)
     height = picker_height,
     width = picker_width,
 
-    finder_input = finder_input,
+    search_pattern = search_pattern,
     flag_fuzzy = flag_fuzzy,
     flag_regex = flag_regex,
     flag_case_sensitive = flag_case_sensitive,
@@ -168,10 +183,13 @@ function M.select(items, opts, on_choice)
     end,
 
     on_disposed = function()
-      finder_input:dispose()
-      flag_fuzzy:dispose()
-      flag_regex:dispose()
-      flag_case_sensitive:dispose()
+      -- Only dispose if we created new observables
+      if is_new_context then
+        search_pattern:dispose()
+        flag_fuzzy:dispose()
+        flag_regex:dispose()
+        flag_case_sensitive:dispose()
+      end
     end,
   })
 

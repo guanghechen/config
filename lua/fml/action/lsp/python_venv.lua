@@ -3,7 +3,7 @@ local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 local clp = require("eve.constant.lang.python")
 
 local dirty_data = true ---@type boolean
-local o_finder_input = std.Observable.from_value("")
+local o_search_pattern = std.Observable.from_value("")
 local o_flag_fuzzy = std.Observable.from_value(true)
 local o_flag_regex = std.Observable.from_value(false)
 local o_flag_case_sensitive = std.Observable.from_value(false)
@@ -292,7 +292,7 @@ picker = eve.ux.picker.ListComposer.new({
   height = 25,
   width = 120,
 
-  finder_input = o_finder_input,
+  search_pattern = o_search_pattern,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,
@@ -306,7 +306,7 @@ picker = eve.ux.picker.ListComposer.new({
     end
   end,
   on_disposed = function()
-    o_finder_input:dispose()
+    o_search_pattern:dispose()
     o_flag_fuzzy:dispose()
     o_flag_regex:dispose()
     o_flag_case_sensitive:dispose()

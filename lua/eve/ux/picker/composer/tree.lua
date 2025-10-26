@@ -60,8 +60,8 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field public flags_prepend          eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public finder_input           std.collection.IObservable
----@field public finder_input_history   ?std.collection.IHistory
+---@field public search_pattern         std.collection.IObservable
+---@field public search_pattern_history ?std.collection.IHistory
 ---
 ---@field public render_preview             ?eve.ux.picker.preview.IDraw
 ---@field public render_listview_leaf       eve.ux.picker.view.tree.IListviewLeafNodeRenderer
@@ -126,8 +126,8 @@ function M.new(props)
   local width = props.width ---@type number|nil
   local node_sorter = props.node_sorter ---@type std.collection.tree.INodeSorter
 
-  local o_finder_input = props.finder_input ---@type std.collection.IObservable
-  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
+  local o_search_pattern = props.search_pattern ---@type std.collection.IObservable
+  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
@@ -199,7 +199,7 @@ function M.new(props)
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
-      local input = o_finder_input:snapshot() ---@type string
+      local input = o_search_pattern:snapshot() ---@type string
       self:__match__(input)
       treeview:mark_cache_treeview_dirty()
       self:mark_result_dirty()
@@ -374,12 +374,12 @@ function M.new(props)
         return
       end
 
-      local finder_input = o_finder_input:snapshot() ---@type string
+      local search_pattern = o_search_pattern:snapshot() ---@type string
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
           local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
-          if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
+          if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
         end
@@ -653,8 +653,8 @@ function M.new(props)
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
-    finder_input = o_finder_input,
-    finder_input_history = finder_input_history,
+    search_pattern = o_search_pattern,
+    search_pattern_history = search_pattern_history,
     finder_title = title,
 
     result_number = true,
@@ -669,7 +669,7 @@ function M.new(props)
     render_result = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
       local result ---@type eve.ux.view.tree.IRenderResult
-      local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean
+      local only_matched = o_search_pattern:snapshot() ~= "" ---@type boolean
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
       if viewtype == "list" then
@@ -765,7 +765,7 @@ function M.new(props)
   local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
 
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
-    { o_finder_input, o_flag_foldempty, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_selected, o_flag_viewtype },
+    { o_search_pattern, o_flag_foldempty, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_selected, o_flag_viewtype },
     function()
       composer:mark_result_flags_dirty()
     end,
@@ -774,7 +774,7 @@ function M.new(props)
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_finder_input, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_search_pattern, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive }, function()
     scheduler_match:schedule()
   end)
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ composer.result.lnum_current }, function()

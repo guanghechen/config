@@ -20,7 +20,7 @@ local OFFSET_SCOPE = OFFSET_TYPE + WIDTH_TYPE ---@type integer
 local OFFSET_VALUE = OFFSET_SCOPE + WIDTH_SCOPE ---@type integer
 
 local dirty_data = true ---@type boolean
-local o_finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local o_search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
 local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
 local o_flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
@@ -87,7 +87,7 @@ local picker = eve.ux.picker.ListComposer.new({
   height = 0.9,
   width = 120,
 
-  finder_input = o_finder_input,
+  search_pattern = o_search_pattern,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,

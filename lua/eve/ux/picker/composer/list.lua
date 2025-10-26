@@ -65,8 +65,8 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field public flags_prepend          eve.ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public finder_input           std.collection.IObservable
----@field public finder_input_history   ?std.collection.IHistory
+---@field public search_pattern         std.collection.IObservable
+---@field public search_pattern_history ?std.collection.IHistory
 ---
 ---@field public render_preview         ?eve.ux.picker.composer.list.IRenderPreview
 ---@field public render_result          ?eve.ux.picker.composer.list.IRenderResult
@@ -122,8 +122,8 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local finder_input = props.finder_input ---@type std.collection.IObservable
-  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
+  local search_pattern = props.search_pattern ---@type std.collection.IObservable
+  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
@@ -210,7 +210,7 @@ function M.new(props)
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
-      local input = finder_input:snapshot() ---@type string
+      local input = search_pattern:snapshot() ---@type string
       self:__match__(input)
       self:mark_result_dirty()
     end,
@@ -326,8 +326,8 @@ function M.new(props)
     keymaps_result = keymaps_result and vim.list_extend(preset_ks_result, keymaps_result) or preset_ks_result,
     keymaps_preview = keymaps_preview and vim.list_extend(preset_ks_preview, keymaps_preview) or preset_ks_preview,
 
-    finder_input = finder_input,
-    finder_input_history = finder_input_history,
+    search_pattern = search_pattern,
+    search_pattern_history = search_pattern_history,
     finder_title = title,
 
     result_number = false,
@@ -402,10 +402,10 @@ function M.new(props)
 
   local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
 
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     composer:mark_result_flags_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ finder_input, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     scheduler_match:schedule()
   end)
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ composer.result.lnum_current }, function()

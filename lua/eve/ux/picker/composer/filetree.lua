@@ -83,8 +83,8 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---
 ---@field public frecency               ?std.collection.IFrecency
 ---
----@field public finder_input           std.collection.IObservable
----@field public finder_input_history   ?std.collection.IHistory
+---@field public search_pattern         std.collection.IObservable
+---@field public search_pattern_history ?std.collection.IHistory
 ---
 ---@field public on_attached            ?eve.ux.picker.composer.filetree.IOnAttached
 ---@field public on_closed              ?eve.ux.picker.composer.filetree.IOnClosed
@@ -153,8 +153,8 @@ function M.new(props)
 
   local render_preview = props.render_preview ---@type eve.ux.picker.preview.IDraw|nil
 
-  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory|nil
-  local o_finder_input = props.finder_input ---@type std.collection.IObservable
+  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
+  local o_search_pattern = props.search_pattern ---@type std.collection.IObservable
   local o_flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
   local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
   local o_flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
@@ -216,7 +216,7 @@ function M.new(props)
     silent = std.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
-      local input = o_finder_input:snapshot() ---@type string
+      local input = o_search_pattern:snapshot() ---@type string
       self:__match__(input)
       treeview:mark_cache_treeview_dirty()
       self:mark_result_dirty()
@@ -933,12 +933,12 @@ function M.new(props)
         return
       end
 
-      local finder_input = o_finder_input:snapshot() ---@type string
+      local search_pattern = o_search_pattern:snapshot() ---@type string
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
           local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
-          if nodestate ~= nil and (finder_input == "" or nodestate.nodetype ~= "container") then
+          if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
         end
@@ -1336,8 +1336,8 @@ function M.new(props)
     keymaps_result = keymaps_result and vim.list_extend(preset_keymaps_result, keymaps_result) or preset_keymaps_result,
     keymaps_preview = keymaps_preview,
 
-    finder_input = o_finder_input,
-    finder_input_history = finder_input_history,
+    search_pattern = o_search_pattern,
+    search_pattern_history = search_pattern_history,
     finder_title = title,
 
     result_number = true,
@@ -1352,7 +1352,7 @@ function M.new(props)
     render_result = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
       local result ---@type eve.ux.view.tree.IRenderResult
-      local only_matched = o_finder_input:snapshot() ~= "" ---@type boolean
+      local only_matched = o_search_pattern:snapshot() ~= "" ---@type boolean
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
       if viewtype == "list" then
@@ -1457,7 +1457,7 @@ function M.new(props)
 
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
     {
-      o_finder_input,
+      o_search_pattern,
       o_flag_foldempty,
       o_flag_fuzzy,
       o_flag_regex,
@@ -1474,7 +1474,7 @@ function M.new(props)
     composer:mark_result_dirty()
   end, true)
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
-    { o_finder_input, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive },
+    { o_search_pattern, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive },
     function()
       scheduler_match:schedule()
     end

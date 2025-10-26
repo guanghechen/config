@@ -10,8 +10,8 @@
 ---@field public flag_viewtype          string
 ---@field public includes               string[]
 ---@field public excludes               string[]
----@field public input                  string
----@field public input_history          std.collection.history.ISerializedData
+---@field public search_pattern         string
+---@field public search_pattern_history std.collection.history.ISerializedData
 
 ---@class eve.context.select.item.state
 ---@field public flag_case_sensitive    std.collection.IObservable
@@ -25,8 +25,8 @@
 ---@field public flag_viewtype          std.collection.IObservable
 ---@field public includes               std.collection.IObservable
 ---@field public excludes               std.collection.IObservable
----@field public input                  std.collection.IObservable
----@field public input_history          std.collection.IHistory
+---@field public search_pattern         std.collection.IObservable
+---@field public search_pattern_history std.collection.IHistory
 
 ---@class eve.context.select.item
 ---@field public defaults               fun(): eve.context.select.item.data
@@ -64,8 +64,8 @@ function M.defaults()
       "*.mp4",
       "*.zip",
     },
-    input = "",
-    input_history = { present = 0, stack = {} },
+    search_pattern = "",
+    search_pattern_history = { present = 0, stack = {} },
   }
 end
 
@@ -109,15 +109,15 @@ function M.normalize(data)
     if type(data.excludes) == "table" then
       resolved.excludes = data.excludes
     end
-    if type(data.input) == "string" then
-      resolved.input = data.input
+    if type(data.search_pattern) == "string" then
+      resolved.search_pattern = data.search_pattern
     end
-    if type(data.input_history) == "table" then
-      if type(data.input_history.present) == "number" then
-        resolved.input_history.present = data.input_history.present
+    if type(data.search_pattern_history) == "table" then
+      if type(data.search_pattern_history.present) == "number" then
+        resolved.search_pattern_history.present = data.search_pattern_history.present
       end
-      if type(data.input_history.stack) == "table" then
-        resolved.input_history.stack = data.input_history.stack
+      if type(data.search_pattern_history.stack) == "table" then
+        resolved.search_pattern_history.stack = data.search_pattern_history.stack
       end
     end
   end
@@ -142,8 +142,8 @@ function M.dump(state)
     flag_viewtype = state.flag_viewtype:snapshot(),
     includes = state.includes:snapshot(),
     excludes = state.excludes:snapshot(),
-    input = state.input:snapshot(),
-    input_history = state.input_history:dump(),
+    search_pattern = state.search_pattern:snapshot(),
+    search_pattern_history = state.search_pattern_history:dump(),
   }
 end
 
@@ -168,11 +168,11 @@ function M.load(state, name, raw_data)
       flag_viewtype = std.Observable.from_value(data.flag_viewtype),
       includes = std.Observable.from_value(data.includes),
       excludes = std.Observable.from_value(data.excludes),
-      input = std.Observable.from_value(data.input),
-      input_history = std.History.deserialize({
+      search_pattern = std.Observable.from_value(data.search_pattern),
+      search_pattern_history = std.History.deserialize({
         name = name,
         capacity = 100,
-        data = data.input_history,
+        data = data.search_pattern_history,
       }),
     }
     return state
@@ -193,8 +193,8 @@ function M.load(state, name, raw_data)
   if not std.fn.equals_list(state.excludes:snapshot(), data.excludes) then
     state.excludes:next(data.excludes)
   end
-  state.input:next(data.input)
-  state.input_history:load(data.input_history)
+  state.search_pattern:next(data.search_pattern)
+  state.search_pattern_history:load(data.search_pattern_history)
   return state
 end
 

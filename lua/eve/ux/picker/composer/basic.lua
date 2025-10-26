@@ -96,8 +96,8 @@ local __highlights__ = {
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
----@field public finder_input           std.collection.IObservable
----@field public finder_input_history   ?std.collection.IHistory
+---@field public search_pattern         std.collection.IObservable
+---@field public search_pattern_history ?std.collection.IHistory
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
@@ -132,7 +132,7 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _finder_input_history ?std.collection.IHistory
+---@field protected _search_pattern_history ?std.collection.IHistory
 ---
 ---@field protected _on_cancel          eve.ux.picker.composer.basic.IOnCancel
 ---@field protected _on_closed          eve.ux.picker.composer.basic.IOnClosed
@@ -163,8 +163,8 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview or {} ---@type std.t.IKeymap[]
   local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
 
-  local finder_input = props.finder_input ---@type std.collection.IObservable
-  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory
+  local search_pattern = props.search_pattern ---@type std.collection.IObservable
+  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean
@@ -182,8 +182,6 @@ function M.new(props)
   local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnPreviewRendered
   local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.picker.composer.basic.IOnResultRendered
 
-  local has_finder_input_history = finder_input_history ~= nil ---@type boolean
-
   local self = setmetatable({}, M)
   self.uuid = uuid
   self.fullname = fullname
@@ -193,7 +191,7 @@ function M.new(props)
   self._pane_last_focused = pane_last_focused
   self._recommended_height = recommended_height
   self._recommended_width = recommended_width
-  self._finder_input_history = finder_input_history
+  self._search_pattern_history = search_pattern_history
   self._on_cancel = on_cancel ---@type eve.ux.picker.composer.basic.IOnCancel
   self._on_closed = on_closed ---@type eve.ux.picker.composer.basic.IOnClosed
   self._on_disposed = on_disposed ---@type eve.ux.picker.composer.basic.IOnDisposed
@@ -207,10 +205,9 @@ function M.new(props)
     keymaps = self:__resolve_keymaps_finder__(
       flags,
       flags_start_index,
-      has_finder_input_history,
       vim.list_extend(vim.list_slice(keymaps_common), keymaps_finder)
     ),
-    input = finder_input,
+    input = search_pattern,
     title = finder_title,
   })
 
@@ -219,10 +216,10 @@ function M.new(props)
     uuid = uuid,
     name = name,
     draw = function(bufnr)
-      if finder_input_history ~= nil then
-        local keyword = finder_input:snapshot() ---@type string
+      if search_pattern_history ~= nil then
+        local keyword = search_pattern:snapshot() ---@type string
         if keyword ~= nil and vim.trim(keyword) ~= "" then
-          finder_input_history:push(keyword)
+          search_pattern_history:push(keyword)
         end
       end
       return render_result(bufnr)
@@ -321,7 +318,7 @@ function M:dispose()
   self._recommended_height = nil
   self._recommended_width = nil
 
-  self._finder_input_history = nil
+  self._search_pattern_history = nil
 
   self._on_cancel = nil
   self._on_closed = nil
@@ -738,32 +735,6 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
         end
       end,
     },
-    {
-      disabled = self._finder_input_history == nil,
-      modes = { "i", "n", "v" },
-      key = "<C-,>",
-      desc = "picker: history backward",
-      callback = function()
-        local present = self._finder_input_history:present() ---@type string|nil
-        local backward = self._finder_input_history:backward() ---@type string|nil
-        if present ~= backward and backward ~= nil then
-          self.finder:set_content(backward)
-        end
-      end,
-    },
-    {
-      disabled = self._finder_input_history == nil,
-      modes = { "i", "n", "v" },
-      key = "<C-.>",
-      desc = "picker: history forward",
-      callback = function()
-        local present = self._finder_input_history:present() ---@type string|nil
-        local forward = self._finder_input_history:forward() ---@type string|nil
-        if present ~= forward and forward ~= nil then
-          self.finder:set_content(forward)
-        end
-      end,
-    },
   }
 
   local N = #builtin_keymaps ---@type integer
@@ -807,9 +778,8 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   return builtin_keymaps
 end
 
----@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_keymaps_finder__(has_input_history)
+function M:__resolve_builtin_keymaps_finder__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -880,24 +850,28 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       end,
     },
     {
-      disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-,>",
+      key = "<C-i>",
       desc = "picker#finder: history backward",
       callback = function()
-        local last_input = self._finder_input_history:backward() ---@type string|nil
+        if self._search_pattern_history == nil then
+          return
+        end
+        local last_input = self._search_pattern_history:backward() ---@type string|nil
         if last_input ~= nil then
           self.finder:set_content(last_input)
         end
       end,
     },
     {
-      disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-.>",
+      key = "<C-o>",
       desc = "picker#finder: history forward",
       callback = function()
-        local next_input = self._finder_input_history:forward() ---@type string|nil
+        if self._search_pattern_history == nil then
+          return
+        end
+        local next_input = self._search_pattern_history:forward() ---@type string|nil
         if next_input ~= nil then
           self.finder:set_content(next_input)
         end
@@ -1290,12 +1264,11 @@ end
 
 ---@param flags                         eve.ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_finder__(flags, flags_start_index, has_input_history, keymaps)
+function M:__resolve_keymaps_finder__(flags, flags_start_index, keymaps)
   local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__(has_input_history) ---@type std.t.IKeymap[]
+  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__() ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps

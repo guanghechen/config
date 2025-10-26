@@ -1,11 +1,11 @@
 local name = "fml.action.find.pinned_files" ---@type string
 local title = "Find Pinned Files" ---@type string
 
-local finder_input = std.Observable.from_value("")
-local finder_input_history = std.InputHistory.new({
+local search_pattern = std.Observable.from_value("")
+local search_pattern_history = std.InputHistory.new({
   name = name,
   capacity = 5,
-  input = finder_input,
+  input = search_pattern,
 })
 local o_flag_foldempty = std.Observable.from_value(true)
 local o_flag_fuzzy = std.Observable.from_value(false)
@@ -30,8 +30,8 @@ local picker = eve.ux.picker.FiletreeComposer.new({
   height = 0.9,
   width = 0.9,
 
-  finder_input = finder_input,
-  finder_input_history = finder_input_history,
+  search_pattern = search_pattern,
+  search_pattern_history = search_pattern_history,
 
   flag_foldempty = o_flag_foldempty,
   flag_fuzzy = o_flag_fuzzy,

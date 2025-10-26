@@ -21,14 +21,7 @@ return {
         enabled = not std.env.IS_WIN,
         create = "terminal",
       },
-      prompts = {
-        code = function(ctx)
-          local bufnr = ctx.buf ---@type integer
-          local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-          local content = table.concat(lines, "\n")
-          return content
-        end,
-      },
+      prompts = {},
       tools = {
         claude = {
           cmd = { "claude", "--dangerously-skip-permissions" },

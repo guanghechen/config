@@ -16,7 +16,7 @@ local title = "Find Buffers" ---@type string
 
 local scopes = vim.list_slice(eve.context.select.find_buffer_scopes) ---@type std.e.FindBufferScope[]
 local o_scope = eve.context.select.find_buffer_scope ---@type std.collection.IObservable
-local o_finder_input = eve.context.select.find_buffer.input ---@type std.collection.IObservable
+local o_search_pattern = eve.context.select.find_buffer.search_pattern ---@type std.collection.IObservable
 local o_flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy ---@type std.collection.IObservable
 local o_flag_regex = eve.context.select.find_buffer.flag_regex ---@type std.collection.IObservable
 local o_flag_case_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type std.collection.IObservable
@@ -140,7 +140,7 @@ picker = eve.ux.picker.ListComposer.new({
   height = 0.8,
   width = 120,
 
-  finder_input = o_finder_input,
+  search_pattern = o_search_pattern,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,
@@ -285,7 +285,7 @@ local M = {}
 
 ---@return nil
 function M.find_bufs()
-  o_finder_input:next("")
+  o_search_pattern:next("")
   local data = fetch_data()
   picker:reset_data(data)
   picker:focus()
@@ -294,7 +294,7 @@ end
 ---@return nil
 function M.find_bufs_file()
   o_scope:next("F")
-  o_finder_input:next("")
+  o_search_pattern:next("")
   local data = fetch_data()
   picker:reset_data(data)
   picker:focus()
@@ -303,7 +303,7 @@ end
 ---@return nil
 function M.find_bufs_term()
   o_scope:next("T")
-  o_finder_input:next("")
+  o_search_pattern:next("")
   local data = fetch_data()
   picker:reset_data(data)
   picker:focus()

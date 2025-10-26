@@ -26,7 +26,9 @@ function M.search_in_buffer()
       o_flag_replace = context.flag_replace,
       o_flag_case_sensitive = context.flag_case_sensitive,
       o_search_pattern = context.search_pattern,
+      o_search_pattern_history = context.search_pattern_history,
       o_replace_pattern = context.replace_pattern,
+      o_replace_pattern_history = context.replace_pattern_history,
     })
   end
 

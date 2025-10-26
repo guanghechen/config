@@ -15,10 +15,11 @@ local o_flag_viewtype = eve.context.select.search_file.flag_viewtype
 local o_includes = eve.context.select.search_file.includes
 local o_max_filesize = eve.context.search_file.max_filesize
 local o_max_matches = eve.context.search_file.max_matches
-local o_search_pattern = eve.context.select.search_file.input
+local o_search_pattern = eve.context.select.search_file.search_pattern
 local o_replace_pattern = eve.context.search_file.replacement
 
-local o_input_history = eve.context.select.search_file.input_history
+local o_search_pattern_history = eve.context.select.search_file.search_pattern_history
+local o_replace_pattern_history = eve.context.search_file.replace_pattern_history
 
 ---@class fml.action.search.files.searcher.ISettingData
 ---@field public search_pattern         string
@@ -161,7 +162,8 @@ searcher = eve.ux.searcher.FiletreeComposer.new({
     },
   },
 
-  finder_input_history = o_input_history,
+  search_pattern_history = o_search_pattern_history,
+  replace_pattern_history = o_replace_pattern_history,
 
   excludes = o_excludes,
   flag_exclude = o_flag_exclude,

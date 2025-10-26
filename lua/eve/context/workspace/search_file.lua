@@ -3,12 +3,14 @@
 ---@field public max_filesize           string
 ---@field public max_matches            integer
 ---@field public replacement            string
+---@field public replace_pattern_history std.collection.history.ISerializedData
 
 ---@class eve.context.search_file.state
 ---@field public flag_replace           std.collection.IObservable
 ---@field public max_filesize           std.collection.IObservable
 ---@field public max_matches            std.collection.IObservable
 ---@field public replacement            std.collection.IObservable
+---@field public replace_pattern_history std.collection.IHistory
 
 ---@class eve.context.search_file : eve.context.search_file.state
 ---@field public defaults               fun(): eve.context.search_file.data
@@ -25,6 +27,7 @@ function M.defaults()
     max_filesize = "1M",
     max_matches = 500,
     replacement = "",
+    replace_pattern_history = { present = 0, stack = {} },
   }
 end
 
@@ -45,6 +48,14 @@ function M.normalize(data)
     if type(data.replacement) == "string" then
       resolved.replacement = data.replacement
     end
+    if type(data.replace_pattern_history) == "table" then
+      if type(data.replace_pattern_history.present) == "number" then
+        resolved.replace_pattern_history.present = data.replace_pattern_history.present
+      end
+      if type(data.replace_pattern_history.stack) == "table" then
+        resolved.replace_pattern_history.stack = data.replace_pattern_history.stack
+      end
+    end
   end
 
   ---@type eve.context.search_file.data
@@ -59,6 +70,7 @@ function M.dump()
     max_matches = M.max_matches:snapshot(),
     max_filesize = M.max_filesize:snapshot(),
     replacement = M.replacement:snapshot(),
+    replace_pattern_history = M.replace_pattern_history:dump(),
   }
 end
 
@@ -71,6 +83,7 @@ function M.load(raw_data)
   M.max_filesize:next(data.max_filesize)
   M.max_matches:next(data.max_matches)
   M.replacement:next(data.replacement)
+  M.replace_pattern_history:load(data.replace_pattern_history)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -80,5 +93,10 @@ M.flag_replace = std.Observable.from_value(_defaults.flag_replace)
 M.max_filesize = std.Observable.from_value(_defaults.max_filesize)
 M.max_matches = std.Observable.from_value(_defaults.max_matches)
 M.replacement = std.Observable.from_value(_defaults.replacement)
+M.replace_pattern_history = std.History.deserialize({
+  name = "search_file.replace_pattern",
+  capacity = 100,
+  data = _defaults.replace_pattern_history,
+})
 
 return M

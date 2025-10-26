@@ -9,11 +9,11 @@ require("plenary.reload").reload_module("eve.ux.picker.preview")
 require("plenary.reload").reload_module("eve.ux.retriever")
 
 local name = "test-list-picker"
-local finder_input = std.Observable.from_value("")
-local finder_input_history = std.InputHistory.new({
+local search_pattern = std.Observable.from_value("")
+local search_pattern_history = std.InputHistory.new({
   name = name,
   capacity = 5,
-  input = finder_input,
+  input = search_pattern,
 })
 local o_flag_fuzzy = std.Observable.from_value(true)
 local o_flag_regex = std.Observable.from_value(false)
@@ -81,8 +81,8 @@ picker = eve.ux.picker.ListComposer.new({
   title = "Test List Picker",
   height = 0.80,
   width = 0.85,
-  finder_input = finder_input,
-  finder_input_history = finder_input_history,
+  search_pattern = search_pattern,
+  search_pattern_history = search_pattern_history,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,

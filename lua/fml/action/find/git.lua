@@ -1,8 +1,8 @@
 local name = "fml.action.find.git" ---@type string
 local title = "Find Git" ---@type string
 
-local finder_input_history = std.InputHistory.new({ name = name, capacity = 5 })
-local o_finder_input = eve.context.select.find_git.input
+local search_pattern_history = std.InputHistory.new({ name = name, capacity = 5 })
+local o_search_pattern = eve.context.select.find_git.search_pattern
 local o_flag_foldempty = eve.context.select.find_git.flag_foldempty
 local o_flag_fuzzy = eve.context.select.find_git.flag_fuzzy
 local o_flag_regex = eve.context.select.find_git.flag_regex
@@ -39,8 +39,8 @@ picker = eve.ux.picker.FiletreeComposer.new({
   width = 120,
   preview = false,
 
-  finder_input = o_finder_input,
-  finder_input_history = finder_input_history,
+  search_pattern = o_search_pattern,
+  search_pattern_history = search_pattern_history,
 
   flag_foldempty = o_flag_foldempty,
   flag_fuzzy = o_flag_fuzzy,

@@ -12,8 +12,8 @@ local o_flag_selected = eve.context.select.find_file.flag_selected
 local o_flag_textonly = eve.context.select.find_file.flag_textonly
 local o_flag_viewtype = eve.context.select.find_file.flag_viewtype
 
-local o_input = eve.context.select.find_file.input
-local o_input_history = eve.context.select.find_file.input_history
+local o_search_pattern = eve.context.select.find_file.search_pattern
+local o_search_pattern_history = eve.context.select.find_file.search_pattern_history
 local o_excludes = eve.context.select.find_file.excludes
 local o_includes = eve.context.select.find_file.includes
 
@@ -25,7 +25,7 @@ local o_includes = eve.context.select.find_file.includes
 ---@param picker                        eve.ux.picker.FiletreeComposer
 ---@return nil
 local function edit_setting(picker)
-  local s_keyword = o_input:snapshot() ---@type string
+  local s_keyword = o_search_pattern:snapshot() ---@type string
   local s_includes = o_includes:snapshot() ---@type string[]
   local s_excludes = o_excludes:snapshot() ---@type string[]
 
@@ -61,7 +61,7 @@ local function edit_setting(picker)
       end,
       on_confirm = function(raw_data)
         vim.schedule(function()
-          local last_keyword = o_input:snapshot() ---@type string
+          local last_keyword = o_search_pattern:snapshot() ---@type string
           local raw = vim.tbl_extend("force", data, raw_data)
           ---@cast raw                  fml.action.find.files.ISettingData
 
@@ -154,8 +154,8 @@ picker = eve.ux.picker.FiletreeComposer.new({
     },
   },
 
-  finder_input = o_input,
-  finder_input_history = o_input_history,
+  search_pattern = o_search_pattern,
+  search_pattern_history = o_search_pattern_history,
 
   flag_foldempty = o_flag_foldempty,
   flag_fuzzy = o_flag_fuzzy,

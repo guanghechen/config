@@ -9,7 +9,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public col                    integer
 ---@field public col_end                integer
 
-local finder_input = std.Observable.from_value("")
+local search_pattern = std.Observable.from_value("")
 local flag_foldempty = eve.context.select.lsp_reference.flag_foldempty
 local flag_fuzzy = eve.context.select.lsp_reference.flag_fuzzy
 local flag_regex = eve.context.select.lsp_reference.flag_regex
@@ -25,7 +25,7 @@ local picker = eve.ux.picker.FiletreeComposer.new({
   height = 0.80,
   width = 0.85,
 
-  finder_input = finder_input,
+  search_pattern = search_pattern,
 
   flag_foldempty = flag_foldempty,
   flag_fuzzy = flag_fuzzy,
@@ -36,7 +36,7 @@ local picker = eve.ux.picker.FiletreeComposer.new({
   flags_start_index = 1,
 
   on_close = function()
-    finder_input:next("")
+    search_pattern:next("")
   end,
 })
 

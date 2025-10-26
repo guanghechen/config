@@ -138,7 +138,9 @@ end
 ---@field public o_flag_replace?         std.collection.IObservable
 ---@field public o_flag_case_sensitive?  std.collection.IObservable
 ---@field public o_search_pattern?       std.collection.IObservable
+---@field public o_search_pattern_history? std.collection.IHistory
 ---@field public o_replace_pattern?      std.collection.IObservable
+---@field public o_replace_pattern_history? std.collection.IHistory
 
 ---@class eve.ux.searcher.buffer.Searcher
 ---@field public title                  string

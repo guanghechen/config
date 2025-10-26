@@ -493,7 +493,7 @@ do
 end
 
 local dirty_data = true ---@type boolean
-local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
 local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
 local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
@@ -615,7 +615,7 @@ picker = eve.ux.picker.ListComposer.new({
   height = math.max(math.floor(vim.o.lines * 0.6), 24),
   width = 64,
 
-  finder_input = finder_input,
+  search_pattern = search_pattern,
   flag_fuzzy = flag_fuzzy,
   flag_regex = flag_regex,
   flag_case_sensitive = flag_case_sensitive,
@@ -677,7 +677,7 @@ function M.list(arg)
     end
 
     if flag_name ~= "" then
-      finder_input:next(flag_name)
+      search_pattern:next(flag_name)
     end
 
     picker:focus()

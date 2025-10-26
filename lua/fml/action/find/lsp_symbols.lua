@@ -70,7 +70,7 @@ local function client_supports_document_symbols(client, bufnr)
 end
 
 ---@param bufnr                         integer
----@param callback                      fun(responses:{ client:vim.lsp.Client, result:lsp.Symbol[] }[]): nil
+---@param callback                      fun(responses:{ client:vim.lsp.Client, result:lsp.DocumentSymbol[]|lsp.SymbolInformation[] }[]): nil
 ---@return nil
 local function request_document_symbols(bufnr, callback)
   local clients = vim.lsp.get_clients({ bufnr = bufnr }) ---@type vim.lsp.Client[]
@@ -91,7 +91,7 @@ local function request_document_symbols(bufnr, callback)
   vim.b[bufnr].support_documentSymbol = 1
 
   local pending = #supported ---@type integer
-  local responses = {} ---@type { client:vim.lsp.Client, result:lsp.Symbol[] }[]
+  local responses = {} ---@type { client:vim.lsp.Client, result:lsp.DocumentSymbol[]|lsp.SymbolInformation[] }[]
   local params = {
     textDocument = vim.lsp.util.make_text_document_params(bufnr),
   }
@@ -225,7 +225,7 @@ local function collect_treesitter_scopes(bufnr)
   return roots
 end
 
-local o_finder_input = eve.context.select.lsp_symbols.input ---@type std.collection.IObservable
+local o_search_pattern = eve.context.select.lsp_symbols.search_pattern ---@type std.collection.IObservable
 local o_flag_fuzzy = eve.context.select.lsp_symbols.flag_fuzzy ---@type std.collection.IObservable
 local o_flag_regex = eve.context.select.lsp_symbols.flag_regex ---@type std.collection.IObservable
 local o_flag_case_sensitive = eve.context.select.lsp_symbols.flag_case_sensitive ---@type std.collection.IObservable
@@ -264,10 +264,10 @@ local function fetch_symbols(tree, callback)
   ---@param data                        fml.action.find.lsp_symbols.ISymbolData
   ---@return string|nil
   local function insert_node(parent_uuid, data)
-    local name = data.name or "Unknown"
+    local symbol_name = data.name or "Unknown"
     local key = table.concat({
       data.kind or "Unknown",
-      name,
+      symbol_name,
       tostring(data.lnum or -1),
       tostring(data.col or -1),
       tostring(data.end_lnum or -1),
@@ -365,14 +365,14 @@ local function fetch_symbols(tree, callback)
     local col = lsp_position_to_col(bufnr, range.start, client and client.offset_encoding or nil)
     local end_lnum = range["end"].line + 1
     local end_col = lsp_position_to_col(bufnr, range["end"], client and client.offset_encoding or nil)
-    local name = symbol.name or "Unknown"
+    local symbol_name = symbol.name or "Unknown"
     if symbol.containerName and symbol.containerName ~= "" then
-      name = string.format("%s.%s", symbol.containerName, name)
+      symbol_name = string.format("%s.%s", symbol.containerName, symbol_name)
     end
 
     ---@class fml.action.find.lsp_symbols.ISymbolData
     local data = {
-      name = name,
+      name = symbol_name,
       kind = kindname,
       lnum = lnum,
       col = col,
@@ -388,13 +388,14 @@ local function fetch_symbols(tree, callback)
     end
   end
 
-  ---@param responses                   { client:vim.lsp.Client, result:lsp.Symbol[] }[]
+  ---@param responses                   { client:vim.lsp.Client, result:lsp.DocumentSymbol[]|lsp.SymbolInformation[] }[]
   local function populate_from_lsp(responses)
     for _, response in ipairs(responses) do
       local result = response.result
       if result ~= nil and result ~= vim.NIL then
-        local list = vim.tbl_islist(result) and result or { result }
+        local list = vim.islist(result) and result or { result }
         for _, symbol in ipairs(list) do
+          ---@cast symbol table
           if type(symbol) == "table" and symbol.kind then
             if symbol.children or symbol.selectionRange or symbol.range then
               handle_document_symbol(symbol, tree.root, response.client)
@@ -693,7 +694,7 @@ picker = eve.ux.picker.TreeComposer.new({
     return a_line < b_line
   end,
 
-  finder_input = o_finder_input,
+  search_pattern = o_search_pattern,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,

@@ -18,7 +18,7 @@ local severity2numhl = eve.constant.diagnostic.severity2numhl ---@type table<vim
 local name = "fml.action.find.diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
-local o_finder_input = eve.context.select.find_diagnostics.input ---@type std.collection.IObservable
+local o_search_pattern = eve.context.select.find_diagnostics.search_pattern ---@type std.collection.IObservable
 local o_flag_foldempty = eve.context.select.find_diagnostics.flag_foldempty ---@type std.collection.IObservable
 local o_flag_fuzzy = eve.context.select.find_diagnostics.flag_fuzzy ---@type std.collection.IObservable
 local o_flag_regex = eve.context.select.find_diagnostics.flag_regex ---@type std.collection.IObservable
@@ -26,7 +26,7 @@ local o_flag_case_sensitive = eve.context.select.find_diagnostics.flag_case_sens
 local o_flag_selected = eve.context.select.find_diagnostics.flag_selected ---@type std.collection.IObservable
 local o_flag_viewtype = eve.context.select.find_diagnostics.flag_viewtype ---@type std.collection.IObservable
 
-local finder_input_history = std.InputHistory.new({ name = name, capacity = 5 })
+local search_pattern_history = std.InputHistory.new({ name = name, capacity = 5 })
 local o_bufnr_sourcefile = std.Observable.from_value(nil)---@type std.collection.IObservable
 local o_rootpath = std.Observable.from_value(std.path.cwd())---@type std.collection.IObservable
 local o_flag_buffer = std.Observable.from_value(false)---@type std.collection.IObservable
@@ -69,7 +69,7 @@ local function refresh(force)
     end
   end
 
-  local flag_severity = o_flag_severity:snapshot() ---@type string
+  local flag_severity = o_flag_severity:snapshot() ---@type vim.diagnostic.Severity|nil
   local original_diagnostics = vim.diagnostic.get(bufnr_sourcefile, { severity = flag_severity }) ---@type vim.Diagnostic[]
 
   local diagnostics = {} ---@type vim.Diagnostic[]
@@ -128,8 +128,8 @@ local function refresh(force)
     ---@cast bufnr                      integer
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local severity = diagnostic.severity
-    severity = type(severity) == "number" and vim.diagnostic.severity[severity] or severity
+    local severity_raw = diagnostic.severity ---@type vim.diagnostic.Severity
+    local severity = type(severity_raw) == "number" and vim.diagnostic.severity[severity_raw] or tostring(severity_raw) ---@type string
     ---@cast severity                 fml.action.find.diagnostics.SeverityEnum
 
     local leafuuid = std.Filetree.uuid(filepath) ---@type string
@@ -233,8 +233,8 @@ picker = eve.ux.picker.FiletreeComposer.new({
     },
   },
 
-  finder_input_history = finder_input_history,
-  finder_input = o_finder_input,
+  search_pattern_history = search_pattern_history,
+  search_pattern = o_search_pattern,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,

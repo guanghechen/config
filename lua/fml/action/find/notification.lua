@@ -8,7 +8,7 @@ local title = "Find Notifications" ---@type string
 ---@field public data                   fml.action.find.notification.IItemData
 
 local dirty_data = true ---@type boolean
-local o_finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+local o_search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
 local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
 local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
 local o_flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
@@ -56,7 +56,7 @@ picker = eve.ux.picker.ListComposer.new({
   height = 0.9,
   width = 0.9,
 
-  finder_input = o_finder_input,
+  search_pattern = o_search_pattern,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,
@@ -179,7 +179,7 @@ picker = eve.ux.picker.ListComposer.new({
     })
   end,
   on_disposed = function()
-    o_finder_input:dispose()
+    o_search_pattern:dispose()
     o_flag_fuzzy:dispose()
     o_flag_regex:dispose()
     o_flag_case_sensitive:dispose()

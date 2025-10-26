@@ -112,11 +112,12 @@ local __highlights__ = {
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
----@field public finder_input           std.collection.IObservable
----@field public finder_input_history   ?std.collection.IHistory
+---@field public search_pattern         std.collection.IObservable
+---@field public search_pattern_history ?std.collection.IHistory
 ---@field public finder_title           string
 ---
----@field public replacer_input          ?std.collection.IObservable
+---@field public replace_pattern         ?std.collection.IObservable
+---@field public replace_pattern_history ?std.collection.IHistory
 ---@field public replacer_title          ?string
 ---@field public flag_replace            ?std.collection.IObservable
 ---
@@ -156,7 +157,8 @@ local __highlights__ = {
 ---@field protected _flag_replace       std.collection.IObservable|nil
 ---@field protected _flag_replace_unsub std.collection.IUnsubscribable|nil
 ---
----@field protected _finder_input_history ?std.collection.IHistory
+---@field protected _search_pattern_history ?std.collection.IHistory
+---@field protected _replace_pattern_history ?std.collection.IHistory
 ---
 ---@field protected _on_cancel          eve.ux.searcher.composer.basic.IOnCancel
 ---@field protected _on_closed          eve.ux.searcher.composer.basic.IOnClosed
@@ -188,11 +190,12 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview or {} ---@type std.t.IKeymap[]
   local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
 
-  local finder_input = props.finder_input ---@type std.collection.IObservable
-  local finder_input_history = props.finder_input_history ---@type std.collection.IHistory
+  local search_pattern = props.search_pattern ---@type std.collection.IObservable
+  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
-  local replacer_input = props.replacer_input ---@type std.collection.IObservable|nil
+  local replace_pattern = props.replace_pattern ---@type std.collection.IObservable|nil
+  local replace_pattern_history = props.replace_pattern_history ---@type std.collection.IHistory|nil
   local replacer_title = props.replacer_title and string.format(" %s ", vim.trim(props.replacer_title)) or " Replace " ---@type string
   local flag_replace = props.flag_replace ---@type std.collection.IObservable|nil
 
@@ -210,7 +213,6 @@ function M.new(props)
   local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnRefresh
   local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnPreviewRendered
   local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type eve.ux.searcher.composer.basic.IOnResultRendered
-  local has_finder_input_history = finder_input_history ~= nil ---@type boolean
 
   local self = setmetatable({}, M)
   self.uuid = uuid
@@ -221,7 +223,8 @@ function M.new(props)
   self._pane_last_focused = pane_last_focused
   self._recommended_height = recommended_height
   self._recommended_width = recommended_width
-  self._finder_input_history = finder_input_history
+  self._search_pattern_history = search_pattern_history
+  self._replace_pattern_history = replace_pattern_history
   self._on_cancel = on_cancel ---@type eve.ux.searcher.composer.basic.IOnCancel
   self._on_closed = on_closed ---@type eve.ux.searcher.composer.basic.IOnClosed
   self._on_disposed = on_disposed ---@type eve.ux.searcher.composer.basic.IOnDisposed
@@ -235,25 +238,23 @@ function M.new(props)
     keymaps = self:__resolve_keymaps_finder__(
       flags,
       flags_start_index,
-      has_finder_input_history,
       vim.list_extend(vim.list_slice(keymaps_common), keymaps_finder)
     ),
-    input = finder_input,
+    input = search_pattern,
     title = finder_title,
   })
 
   ---@type eve.ux.searcher.Finder|nil
   local replacer = nil
-  if replacer_input ~= nil then
+  if replace_pattern ~= nil then
     replacer = eve.ux.searcher.Finder.new({
       name = name .. " (replacer)",
       keymaps = self:__resolve_keymaps_replacer__(
         flags,
         flags_start_index,
-        has_finder_input_history,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_replacer)
       ),
-      input = replacer_input,
+      input = replace_pattern,
       title = replacer_title,
     })
   end
@@ -263,10 +264,16 @@ function M.new(props)
     uuid = uuid,
     name = name,
     draw = function(bufnr)
-      if finder_input_history ~= nil then
-        local keyword = finder_input:snapshot() ---@type string
+      if search_pattern_history ~= nil then
+        local keyword = search_pattern:snapshot() ---@type string
         if keyword ~= nil and vim.trim(keyword) ~= "" then
-          finder_input_history:push(keyword)
+          search_pattern_history:push(keyword)
+        end
+      end
+      if replace_pattern_history ~= nil and replace_pattern ~= nil then
+        local replacement = replace_pattern:snapshot() ---@type string
+        if replacement ~= nil and vim.trim(replacement) ~= "" then
+          replace_pattern_history:push(replacement)
         end
       end
       return render_result(bufnr)
@@ -275,7 +282,6 @@ function M.new(props)
     keymaps = self:__resolve_keymaps_result__(
       flags,
       flags_start_index,
-      has_finder_input_history,
       vim.list_extend(vim.list_slice(keymaps_common), keymaps_result)
     ),
     flags = flags,
@@ -297,7 +303,6 @@ function M.new(props)
       keymaps = self:__resolve_keymaps_preview__(
         flags,
         flags_start_index,
-        has_finder_input_history,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_preview)
       ),
       ---@type eve.ux.searcher.preview.IOnDrawed
@@ -414,7 +419,8 @@ function M:dispose()
 
   self._flag_replace = nil
   self._flag_replace_unsub = nil
-  self._finder_input_history = nil
+  self._search_pattern_history = nil
+  self._replace_pattern_history = nil
 
   self._on_cancel = nil
   self._on_closed = nil
@@ -844,9 +850,8 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history)
+function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -883,32 +888,6 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_inpu
             message = "Failed to run on_refresh",
             details = { error = refresh_error },
           })
-        end
-      end,
-    },
-    {
-      disabled = not has_input_history,
-      modes = { "i", "n", "v" },
-      key = "<C-,>",
-      desc = "searcher: history backward",
-      callback = function()
-        local present = self._finder_input_history:present() ---@type string|nil
-        local finder_input = self._finder_input_history:backward() ---@type string|nil
-        if present ~= finder_input and finder_input ~= nil then
-          self.finder:set_content(finder_input)
-        end
-      end,
-    },
-    {
-      disabled = not has_input_history,
-      modes = { "i", "n", "v" },
-      key = "<C-.>",
-      desc = "searcher: history forward",
-      callback = function()
-        local present = self._finder_input_history:present() ---@type string|nil
-        local finder_input = self._finder_input_history:forward() ---@type string|nil
-        if present ~= finder_input and finder_input ~= nil then
-          self.finder:set_content(finder_input)
         end
       end,
     },
@@ -955,9 +934,8 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_inpu
   return builtin_keymaps
 end
 
----@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_keymaps_finder__(has_input_history)
+function M:__resolve_builtin_keymaps_finder__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -979,24 +957,28 @@ function M:__resolve_builtin_keymaps_finder__(has_input_history)
       end,
     },
     {
-      disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-,>",
+      key = "<C-i>",
       desc = "searcher#finder: history backward",
       callback = function()
-        local last_input = self._finder_input_history:backward() ---@type string|nil
+        if self._search_pattern_history == nil then
+          return
+        end
+        local last_input = self._search_pattern_history:backward() ---@type string|nil
         if last_input ~= nil then
           self.finder:set_content(last_input)
         end
       end,
     },
     {
-      disabled = not has_input_history,
       modes = { "i", "n", "v" },
-      key = "<C-.>",
+      key = "<C-o>",
       desc = "searcher#finder: history forward",
       callback = function()
-        local next_input = self._finder_input_history:forward() ---@type string|nil
+        if self._search_pattern_history == nil then
+          return
+        end
+        local next_input = self._search_pattern_history:forward() ---@type string|nil
         if next_input ~= nil then
           self.finder:set_content(next_input)
         end
@@ -1379,9 +1361,8 @@ function M:__resolve_builtin_keymaps_result__()
   return builtin_keymaps
 end
 
----@param has_input_history             boolean
 ---@return std.t.IKeymap[]
-function M:__resolve_builtin_keymaps_replacer__(has_input_history)
+function M:__resolve_builtin_keymaps_replacer__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -1400,6 +1381,34 @@ function M:__resolve_builtin_keymaps_replacer__(has_input_history)
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
         self:__result_move_down__(-step)
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-i>",
+      desc = "searcher#replacer: history backward",
+      callback = function()
+        if self._replace_pattern_history == nil then
+          return
+        end
+        local last_input = self._replace_pattern_history:backward() ---@type string|nil
+        if last_input ~= nil and self.replacer ~= nil then
+          self.replacer:set_content(last_input)
+        end
+      end,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-o>",
+      desc = "searcher#replacer: history forward",
+      callback = function()
+        if self._replace_pattern_history == nil then
+          return
+        end
+        local next_input = self._replace_pattern_history:forward() ---@type string|nil
+        if next_input ~= nil and self.replacer ~= nil then
+          self.replacer:set_content(next_input)
+        end
       end,
     },
     {
@@ -1613,12 +1622,11 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_finder__(flags, flags_start_index, has_input_history, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
-  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__(has_input_history) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_finder__(flags, flags_start_index, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__() ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
@@ -1626,12 +1634,11 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_replacer__(flags, flags_start_index, has_input_history, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
-  local builtin_keymaps_replacer = self:__resolve_builtin_keymaps_replacer__(has_input_history) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_replacer__(flags, flags_start_index, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
+  local builtin_keymaps_replacer = self:__resolve_builtin_keymaps_replacer__() ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_replacer) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
@@ -1639,11 +1646,10 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_result__(flags, flags_start_index, has_input_history, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
   local builtin_keymaps_result = self:__resolve_builtin_keymaps_result__() ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_result) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
@@ -1652,11 +1658,10 @@ end
 
 ---@param flags                         eve.ux.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param has_input_history             boolean
 ---@param keymaps                       std.t.IKeymap[]
 ---@return std.t.IKeymap[]
-function M:__resolve_keymaps_preview__(flags, flags_start_index, has_input_history, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index, has_input_history) ---@type std.t.IKeymap[]
+function M:__resolve_keymaps_preview__(flags, flags_start_index, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
   local builtin_keymaps_preview = self:__resolve_builtin_keymaps_preview__() ---@type std.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_preview) ---@type std.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)

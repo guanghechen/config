@@ -102,7 +102,7 @@ local function select_encoding(params)
   local title = params.title or "Select Encoding" ---@type string
   local on_select = params.on_select ---@type fun(encoding: string|nil): nil
 
-  local finder_input = std.Observable.from_value("") ---@type std.collection.IObservable
+  local search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
   local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
   local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
   local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
@@ -119,7 +119,7 @@ local function select_encoding(params)
     height = math.min(20, #fileencodings + 2),
     width = 80,
 
-    finder_input = finder_input,
+    search_pattern = search_pattern,
     flag_fuzzy = flag_fuzzy,
     flag_regex = flag_regex,
     flag_case_sensitive = flag_case_sensitive,
@@ -137,7 +137,7 @@ local function select_encoding(params)
       composer:close()
     end,
     on_disposed = function()
-      finder_input:dispose()
+      search_pattern:dispose()
       flag_fuzzy:dispose()
       flag_regex:dispose()
       flag_case_sensitive:dispose()
