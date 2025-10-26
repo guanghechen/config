@@ -6,14 +6,20 @@ local config = {
 	keys = {
 		{ key = "Insert", mods = "CTRL", action = act.CopyTo("Clipboard") },
 		{ key = "Insert", mods = "SHIFT", action = act.PasteFrom("Clipboard") },
-		{ key = "F11", mods = "", action = act.ToggleFullScreen },
 		{ key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") },
 		{ key = "N", mods = "CMD|CTRL|SHIFT", action = act.SpawnCommandInNewWindow({ args = { "wezterm" } }) },
 		{ key = "T", mods = "CMD|CTRL|SHIFT", action = act.SpawnTab("CurrentPaneDomain") },
 		{ key = "W", mods = "CMD|CTRL|SHIFT", action = act.CloseCurrentPane({ confirm = true }) },
-		{ key = ")", mods = "CMD|CTRL|SHIFT", action = act.ResetFontSize },
-		{ key = "+", mods = "CMD|CTRL|SHIFT", action = act.IncreaseFontSize },
-		{ key = "_", mods = "CMD|CTRL|SHIFT", action = act.DecreaseFontSize },
+
+		-- Font size controls (matching Kitty)
+		{ key = "0", mods = "CMD|CTRL", action = act.ResetFontSize },
+		{ key = "=", mods = "CMD|CTRL", action = act.IncreaseFontSize },
+		{ key = "-", mods = "CMD|CTRL", action = act.DecreaseFontSize },
+
+		-- Special terminal functions (matching Kitty)
+		{ key = "F5", mods = "CMD|CTRL", action = act.ReloadConfiguration },
+		{ key = "F11", mods = "CMD|CTRL", action = act.ToggleFullScreen },
+		{ key = "F12", mods = "CMD|CTRL", action = act.ToggleFullScreen },
 
 		---
 
@@ -185,6 +191,16 @@ for _, key in ipairs(fns) do
 			act.SendKey({ key = key }),
 		}),
 	})
+
+	-- Add shift+function key support (matching Kitty)
+	table.insert(config.keys, {
+		key = key,
+		mods = "CMD|SHIFT",
+		action = act.Multiple({
+			act.SendKey({ key = "a", mods = "CTRL" }),
+			act.SendKey({ key = key, mods = "SHIFT" }),
+		}),
+	})
 end
 
 for _, key in ipairs(arrows) do
@@ -225,14 +241,8 @@ for _, key in ipairs(digits) do
 			act.SendKey({ key = key }),
 		}),
 	})
-	table.insert(config.keys, {
-		key = key,
-		mods = "CMD|CTRL",
-		action = act.Multiple({
-			act.SendKey({ key = "a", mods = "CTRL" }),
-			act.SendKey({ key = key, mods = "CTRL" }),
-		}),
-	})
+	-- Note: cmd+ctrl+0 is used for ResetFontSize, cmd+ctrl+= for IncreaseFontSize, cmd+ctrl+- for DecreaseFontSize
+	-- Don't bind cmd+ctrl+digits as they conflict with font controls and aren't used in Kitty (goto_tab overrides them)
 end
 
 for _, key in ipairs(letters) do
@@ -293,6 +303,9 @@ do
 		{ key = "[", code = 91 }, -- ctrl+left bracket
 		{ key = "]", code = 93 }, -- ctrl+right bracket
 		{ key = "`", code = 96 }, -- ctrl+backtick
+		{ key = "i", code = 105 }, -- ctrl+i
+		{ key = "m", code = 109 }, -- ctrl+m
+		{ key = "o", code = 111 }, -- ctrl+o
 	}
 
 	for _, entry in ipairs(keys) do
