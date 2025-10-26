@@ -47,7 +47,6 @@ function ghc-update
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame required $required_branches
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame optional $optional_branches
     printf "\e[96m  [$reponame] done.\e[0m\n\n"
-
     #----------------------------------------------------------------------------------------------#
 
     set reporoot "$HOME/wiki"
@@ -64,4 +63,13 @@ function ghc-update
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame required $required_branches
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame optional $optional_branches
     printf "\e[96m  [$reponame] done.\e[0m\n"
+    #----------------------------------------------------------------------------------------------#
+
+    set sync_scripts $f_fish_additional_ghc_update
+    for sync_script in $sync_scripts
+        if test -f $sync_script
+            printf "\e[92m  Running $sync_script...\e[0m\n"
+            source $sync_script
+        end
+    end
 end
