@@ -308,8 +308,10 @@ function M.source(position, notepad)
     render = function(_, remain_width)
       local source = notepad:get_source() ---@type std.t.INotepadSource
       local source_name = source.name ---@type string
+      local _, config = eve.state.notepad.retrieve_source(source_name)
+      local engine = config.engine ---@type 'json'|'sqlite'
 
-      local text_source = source_name .. " " .. icon_source .. " " ---@type string
+      local text_source = source_name .. "@" .. engine .. " " .. icon_source .. " " ---@type string
       local text = text_sep_left .. text_source ---@type string
       local hl_text = txt(text_sep_left, hln_source_sep) .. btn(txt(text_source, hln_source), fn_switch_source)
       local width = vim.api.nvim_strwidth(text) ---@type integer

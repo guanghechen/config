@@ -1,11 +1,13 @@
 ---@class eve.state.notepad.ISourceConfig : std.source.INotepadJsonSourceConfig
 ---@field public title                  string Human-readable source title
+---@field public engine                 'json'|'sqlite' Source engine type
 
 ---@type eve.state.notepad.ISourceConfig[]
 local source_configs = {
   {
     name = "workspace:notes",
     title = "Notes (workspace)",
+    engine = "json",
     filepath = std.path.locate_workspace_filepath("notepad/notes.json"),
     default_item_name = function()
       return "Note"
@@ -14,6 +16,7 @@ local source_configs = {
   {
     name = "workspace:todos",
     title = "Todos (workspace)",
+    engine = "json",
     filepath = std.path.locate_workspace_filepath("notepad/todos.json"),
     default_item_name = function()
       return "Note"
@@ -22,7 +25,8 @@ local source_configs = {
   {
     name = "shared:notes",
     title = "Notes (shared)",
-    filepath = std.path.locate_shared_filepath("notepad/notes.json"),
+    engine = "sqlite",
+    filepath = std.path.locate_shared_filepath("notepad/notes.db"),
     default_item_name = function()
       return "Note"
     end,
@@ -30,6 +34,7 @@ local source_configs = {
   {
     name = "shared:todos",
     title = "Todos (shared)",
+    engine = "json",
     filepath = std.path.locate_shared_filepath("notepad/todos.json"),
     default_item_name = function()
       return "todo:" .. os.date("%Y-%m-%d")
@@ -65,7 +70,12 @@ function M.retrieve_source(name)
       return _source_cache[name], config
     end
 
-    local source = std.source.NotepadJsonSource.new(config)
+    local source
+    if config.engine == "sqlite" then
+      source = std.source.NotepadSqliteSource.new(config)
+    else
+      source = std.source.NotepadJsonSource.new(config)
+    end
     _source_cache[name] = source
     return source, config
   end
