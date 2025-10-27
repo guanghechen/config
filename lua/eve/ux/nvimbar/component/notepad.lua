@@ -42,18 +42,15 @@ local M = {}
 function M.items(position, notepad)
   local hln_button = position .. "_notepad_button" ---@type string
   local hln_name = position .. "_notepad_name" ---@type string
-  local hln_index = position .. "_notepad_index" ---@type string
   local hln_sep_left = position .. "_notepad_sep_left" ---@type string
   local hln_sep_right = position .. "_notepad_sep_right" ---@type string
 
   local hln_name_active = position .. "_notepadc_name" ---@type string
   local hln_index_active = position .. "_notepadc_index" ---@type string
   local hln_sep_left_active = position .. "_notepadc_sep_left" ---@type string
-  local hln_sep_middle_active = position .. "_notepadc_sep_middle" ---@type string
   local hln_sep_right_active = position .. "_notepadc_sep_right" ---@type string
 
   local text_sep_left = eve.icon.symbols.sep_left ---@type string
-  local text_sep_middle = " | " ---@type string
   local text_sep_right = eve.icon.symbols.sep_right ---@type string
 
   local icon_arrow_left = eve.icon.ui.Left ---@type string
@@ -76,16 +73,23 @@ function M.items(position, notepad)
 
   ---@param item                            std.t.INotepadItem
   ---@param index                           integer
+  ---@param relative_distance               integer|nil
   ---@return string
   ---@return string
-  local function render_item(item, index)
+  local function render_item(item, index, relative_distance)
     local name = format_name(item) ---@type string
-    local text_name = name .. " " ---@type string
-    local text_index = " " .. tostring(index) ---@type string
-    local text = text_sep_left .. text_name .. text_index .. text_sep_right .. " " ---@type string
+    local text_index ---@type string
+    if relative_distance ~= nil then
+      local distance = math.abs(relative_distance) ---@type integer
+      local marker = relative_distance < 0 and "₋" or "₊" ---@type string
+      text_index = eve.icon.todigit_subscript(distance) .. marker ---@type string
+    else
+      text_index = tostring(index) .. " " ---@type string
+    end
+    local text_name = name ---@type string
+    local text = text_sep_left .. text_index .. text_name .. text_sep_right .. " " ---@type string
     local hl_text = txt(text_sep_left, hln_sep_left)
-      .. txt(text_name, hln_name)
-      .. txt(text_index, hln_index)
+      .. txt(text_index .. text_name, hln_name)
       .. txt(text_sep_right, hln_sep_right)
       .. txt(" ", hln_sep_right)
     return text, btn(hl_text, fn_switch_notepad, { index })
@@ -97,13 +101,12 @@ function M.items(position, notepad)
   ---@return string
   local function render_item_active(item, index)
     local name = format_name(item) ---@type string
+    local text_index = eve.icon.todigit_subscript(index) .. "." ---@type string
     local text_name = name ---@type string
-    local text_index = tostring(index) ---@type string
-    local text = text_sep_left .. text_name .. text_sep_middle .. text_index .. text_sep_right .. " " ---@type string
+    local text = text_sep_left .. text_index .. text_name .. text_sep_right .. " " ---@type string
     local hl_text = txt(text_sep_left, hln_sep_left_active)
-      .. txt(text_name, hln_name_active)
-      .. txt(text_sep_middle, hln_sep_middle_active)
       .. txt(text_index, hln_index_active)
+      .. txt(text_name, hln_name_active)
       .. txt(text_sep_right, hln_sep_right_active)
       .. txt(" ", hln_sep_right_active)
     return text, btn(hl_text, fn_switch_notepad, { index })
@@ -149,8 +152,14 @@ function M.items(position, notepad)
 
       local segments = {} ---@type { text: string, hl: string, width: integer }[]
       for idx, entry in ipairs(entries) do
-        local renderer = entry.item.uuid == active_uuid_text and render_item_active or render_item
-        local item_text, item_hl = renderer(entry.item, entry.index)
+        local is_active = entry.item.uuid == active_uuid_text ---@type boolean
+        local item_text, item_hl ---@type string, string
+        if is_active then
+          item_text, item_hl = render_item_active(entry.item, entry.index)
+        else
+          local relative_distance = idx - active_display_index ---@type integer
+          item_text, item_hl = render_item(entry.item, entry.index, relative_distance)
+        end
         segments[idx] = {
           text = item_text,
           hl = item_hl,
@@ -260,7 +269,7 @@ function M.add_button(position)
     name = "notepad:add_button",
     atomic = true,
     render = function(_, remain_width)
-      local text = " + " ---@type string
+      local text = " " ---@type string
       local hl_text = txt(text, hln_button)
       local width = vim.api.nvim_strwidth(text) ---@type integer
       if width <= 0 or remain_width < width then

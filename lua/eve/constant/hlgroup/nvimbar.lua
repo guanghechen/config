@@ -186,14 +186,14 @@ function M.gen_hlgroup_map(context)
     sidebar_split = { fg = c.bg4, bg = "bg_bar" },
 
     ---! notepad
-    notepad_button = { fg = c.fg3, bg = c.bg4 },
+    notepad_button = { fg = c.fg3, bg = "bg_bar" },
     notepad_source = { fg = c.bg1, bg = c.pink, bold = true },
     notepad_source_sep = { fg = c.pink, bg = "bg_bar" },
     notepad_name = { fg = c.fg3, bg = c.bg3 },
     notepad_index = { fg = c.fg3, bg = c.bg4 },
     notepad_sep_left = { fg = c.bg3, bg = "bg_bar" },
     notepad_sep_middle = { fg = c.bg4, bg = "bg_bar" },
-    notepad_sep_right = { fg = c.bg4, bg = "bg_bar" },
+    notepad_sep_right = { fg = c.bg3, bg = "bg_bar" },
     notepadc_name = { link = "mf_b_bg0" },
     notepadc_index = { link = "mf_b_bg0" },
     notepadc_sep_left = { link = "ms_b_none" },
