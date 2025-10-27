@@ -14,15 +14,6 @@ local source_configs = {
     end,
   },
   {
-    name = "workspace:todos",
-    title = "Todos (workspace)",
-    engine = "json",
-    filepath = std.path.locate_workspace_filepath("notepad/todos.json"),
-    default_item_name = function()
-      return "Note"
-    end,
-  },
-  {
     name = "shared:notes",
     title = "Notes (shared)",
     engine = "sqlite",
@@ -34,8 +25,8 @@ local source_configs = {
   {
     name = "shared:todos",
     title = "Todos (shared)",
-    engine = "json",
-    filepath = std.path.locate_shared_filepath("notepad/todos.json"),
+    engine = "sqlite",
+    filepath = std.path.locate_shared_filepath("notepad/todos.db"),
     default_item_name = function()
       return "todo:" .. os.date("%Y-%m-%d")
     end,
