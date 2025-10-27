@@ -122,6 +122,22 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
+    modes = { "n", "v" },
+    key = "<leader>[",
+    desc = K.notepad.focus_left.desc,
+    callback = function()
+      vim.cmd(K.notepad.focus_left.uuid)
+    end,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<leader>]",
+    desc = K.notepad.focus_right.desc,
+    callback = function()
+      vim.cmd(K.notepad.focus_right.uuid)
+    end,
+  },
+  {
     modes = { "i", "n", "v" },
     key = "<C-S-,>",
     aliases = { "<C-S-[>" },
