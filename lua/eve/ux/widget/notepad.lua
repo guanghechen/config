@@ -156,29 +156,19 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
-    key = "<C-0>",
-    desc = K.notepad.source_select.desc,
+    modes = { "n", "v" },
+    key = "<leader>0",
+    desc = K.notepad.change_engine.desc,
     callback = function()
-      vim.cmd(K.notepad.source_select.uuid)
-    end,
-  },
-  {
-    modes = { "i", "n", "v" },
-    key = "<cr>",
-    desc = "notepad: feedback cr to notepad (prevent <c-m> conflict)",
-    expr = true,
-    replace_keycodes = true,
-    callback = function()
-      return "<cr>"
+      vim.cmd(K.notepad.change_engine.uuid)
     end,
   },
   {
     modes = { "n", "v" },
-    key = "<C-m>",
-    desc = K.notepad.change_engine.desc,
+    key = "<leader>1",
+    desc = K.notepad.source_select.desc,
     callback = function()
-      vim.cmd(K.notepad.change_engine.uuid)
+      vim.cmd(K.notepad.source_select.uuid)
     end,
   },
   {
@@ -386,6 +376,22 @@ end
 ---@return nil
 function M:_mark_dirty()
   eve.status.dirtier_notepadline:mark_dirty()
+end
+
+---@private
+---@return nil
+function M:_mark_orders_dirty()
+  local source = self:get_source()
+  source:mark_orders_dirty()
+  self:_mark_dirty()
+end
+
+---@private
+---@return nil
+function M:_mark_active_dirty()
+  local source = self:get_source()
+  source:mark_active_dirty()
+  self:_mark_dirty()
 end
 
 ---@return string
@@ -712,7 +718,7 @@ function M:_swap_step(step)
   end
 
   data.orders[index_current], data.orders[index_next] = data.orders[index_next], data.orders[index_current]
-  self:_mark_dirty()
+  self:_mark_orders_dirty()
   return true
 end
 
@@ -852,6 +858,7 @@ function M:_on_active_uuid_changed(uuid)
   end
 
   data.active_uuid = uuid
+  self:_mark_active_dirty()
   if bufnr ~= nil then
     self:_render_active_item(bufnr)
   end

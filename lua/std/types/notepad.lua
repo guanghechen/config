@@ -41,3 +41,5 @@
 ---@field public remove                 fun(self: std.t.INotepadSource, uuid: string): boolean Remove note (rejects if last note)
 ---@field public dump_to_json           fun(self: std.t.INotepadSource): std.t.INotepadSourceJsonData Export to standard JSON format
 ---@field public load_from_json         fun(self: std.t.INotepadSource, json_data: std.t.INotepadSourceJsonData): boolean Import from standard JSON format
+---@field public mark_orders_dirty      fun(self: std.t.INotepadSource)|nil Mark orders as dirty for persistence
+---@field public mark_active_dirty      fun(self: std.t.INotepadSource)|nil Mark active UUID as dirty for persistence

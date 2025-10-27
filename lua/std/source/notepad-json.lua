@@ -93,6 +93,20 @@ function M:_schedule_flush()
   end
 end
 
+---Mark orders as dirty (called when orders are modified externally)
+---For JSON source, this triggers a flush since entire file is rewritten anyway
+---@return nil
+function M:mark_orders_dirty()
+  self:_schedule_flush()
+end
+
+---Mark active uuid as dirty (called when active item changes)
+---For JSON source, this triggers a flush since entire file is rewritten anyway
+---@return nil
+function M:mark_active_dirty()
+  self:_schedule_flush()
+end
+
 ---@param force                         boolean
 ---@return std.t.INotepadSourceSaveData
 function M:load(force)
@@ -274,6 +288,7 @@ function M:update(uuid, item_data)
 
   if modified then
     item.updated_at = now_iso_utc()
+    self:_schedule_flush()
   end
   return modified
 end

@@ -11,12 +11,13 @@ local sqlite_ffi = require("std.source.sqlite-ffi")
 ---@field protected _data               std.t.INotepadSourceSaveData|nil Internal data cache
 ---@field protected _conn               std.source.sqlite.IConnection|nil Database connection
 ---@field protected _dirty_items        table<string, boolean> Track modified items
+---@field protected _dirty_orders       boolean Track if orders changed
+---@field protected _dirty_active       boolean Track if active_uuid changed
 local M = {}
 M.__index = M
 
 local FLUSH_DEBOUNCE_MS = 3000 ---@type integer milliseconds
 local SCHEMA_VERSION = 1
-local MAX_POSITION = 999999 ---@type integer Fallback position for notes without explicit order
 
 ---@return string
 local function now_iso_utc()
@@ -48,6 +49,8 @@ function M.new(config)
   self._data = nil
   self._conn = nil
   self._dirty_items = {}
+  self._dirty_orders = false
+  self._dirty_active = false
 
   self.flush_scheduler = std.Scheduler.new({
     name = "notepad-sqlite-flush",
@@ -102,13 +105,6 @@ function M:_init_schema()
   ]])
 
   conn:exec([[
-    CREATE TABLE IF NOT EXISTS note_orders (
-      uuid TEXT PRIMARY KEY REFERENCES notes(uuid) ON DELETE CASCADE,
-      position INTEGER NOT NULL UNIQUE
-    );
-  ]])
-
-  conn:exec([[
     CREATE TABLE IF NOT EXISTS metadata (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
@@ -142,7 +138,7 @@ function M:_ensure_default_note()
       conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
         :bind(uuid, name, "", now, now)
         :execute()
-      conn:prepare("INSERT INTO note_orders (uuid, position) VALUES (?, ?)"):bind(uuid, 1):execute()
+      conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)"):bind("note_orders", vim.json.encode({ uuid })):execute()
       conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)"):bind("activated_item_uuid", uuid):execute()
     end)
   end
@@ -155,6 +151,20 @@ function M:_schedule_flush()
   if self.flush_scheduler ~= nil then
     self.flush_scheduler:schedule()
   end
+end
+
+---Mark orders as dirty (called when orders are modified externally)
+---@return nil
+function M:mark_orders_dirty()
+  self._dirty_orders = true
+  self:_schedule_flush()
+end
+
+---Mark active uuid as dirty (called when active item changes)
+---@return nil
+function M:mark_active_dirty()
+  self._dirty_active = true
+  self:_schedule_flush()
 end
 
 ---@param force                         boolean
@@ -170,14 +180,13 @@ function M:load(force)
   local conn = self:_get_conn()
 
   local rows = conn:prepare([[
-    SELECT n.uuid, n.name, n.content, n.created_at, n.updated_at, o.position
-    FROM notes n
-    LEFT JOIN note_orders o ON n.uuid = o.uuid
-    ORDER BY COALESCE(o.position, ?)
-  ]]):bind(MAX_POSITION):execute()
+    SELECT uuid, name, content, created_at, updated_at
+    FROM notes
+    ORDER BY updated_at DESC, uuid ASC
+  ]]):execute()
 
   local items_map = {} ---@type table<string, std.t.INotepadItem>
-  local orders = {} ---@type string[]
+  local default_orders = {} ---@type string[]
 
   for _, row in ipairs(rows) do
     items_map[row.uuid] = {
@@ -187,7 +196,33 @@ function M:load(force)
       created_at = row.created_at,
       updated_at = row.updated_at,
     }
-    orders[#orders + 1] = row.uuid
+    default_orders[#default_orders + 1] = row.uuid
+  end
+
+  local orders_row = conn:prepare("SELECT value FROM metadata WHERE key = 'note_orders'"):execute_one()
+  local orders = default_orders ---@type string[]
+
+  if orders_row ~= nil and type(orders_row.value) == "string" then
+    local ok, decoded = pcall(vim.json.decode, orders_row.value)
+    if ok and type(decoded) == "table" then
+      local valid_orders = {} ---@type string[]
+      local seen = {} ---@type table<string, boolean>
+
+      for _, uuid in ipairs(decoded) do
+        if items_map[uuid] ~= nil then
+          valid_orders[#valid_orders + 1] = uuid
+          seen[uuid] = true
+        end
+      end
+
+      for _, uuid in ipairs(default_orders) do
+        if not seen[uuid] then
+          valid_orders[#valid_orders + 1] = uuid
+        end
+      end
+
+      orders = valid_orders
+    end
   end
 
   local active_row = conn:prepare("SELECT value FROM metadata WHERE key = 'activated_item_uuid'"):execute_one()
@@ -204,6 +239,8 @@ function M:load(force)
   }
 
   self._dirty_items = {}
+  self._dirty_orders = false
+  self._dirty_active = false
 
   return self._data
 end
@@ -242,6 +279,7 @@ function M:create(name, content)
   data.orders[#data.orders + 1] = uuid
 
   self._dirty_items[uuid] = true
+  self._dirty_orders = true
   self:_schedule_flush()
 
   return item
@@ -339,6 +377,7 @@ function M:remove(uuid)
   end)
 
   self._dirty_items[uuid] = true
+  self._dirty_orders = true
   self:_schedule_flush()
 
   return true
@@ -359,7 +398,6 @@ function M:flush()
   local ok, err = pcall(function()
     conn:transaction(function()
       local delete_note_stmt = conn:prepare("DELETE FROM notes WHERE uuid = ?")
-      local delete_order_stmt = conn:prepare("DELETE FROM note_orders WHERE uuid = ?")
       local check_exists_stmt = conn:prepare("SELECT 1 FROM notes WHERE uuid = ?")
       local insert_note_stmt = conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
       local update_note_stmt = conn:prepare("UPDATE notes SET name = ?, content = ?, updated_at = ? WHERE uuid = ?")
@@ -369,7 +407,6 @@ function M:flush()
 
         if item == nil then
           delete_note_stmt:bind(uuid):execute()
-          delete_order_stmt:bind(uuid):execute()
         else
           local exists_row = check_exists_stmt:bind(uuid):execute_one()
 
@@ -381,13 +418,13 @@ function M:flush()
         end
       end
 
-      conn:prepare("DELETE FROM note_orders"):execute()
-      local insert_order_stmt = conn:prepare("INSERT INTO note_orders (uuid, position) VALUES (?, ?)")
-      for position, uuid in ipairs(self._data.orders) do
-        insert_order_stmt:bind(uuid, position):execute()
+      if self._dirty_orders then
+        conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+          :bind("note_orders", vim.json.encode(self._data.orders))
+          :execute()
       end
 
-      if self._data.active_uuid ~= nil then
+      if self._dirty_active and self._data.active_uuid ~= nil then
         conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
           :bind("activated_item_uuid", self._data.active_uuid)
           :execute()
@@ -406,6 +443,8 @@ function M:flush()
   end
 
   self._dirty_items = {}
+  self._dirty_orders = false
+  self._dirty_active = false
 
   return true
 end
@@ -448,7 +487,6 @@ function M:load_from_json(json_data)
 
   local ok, err = pcall(function()
     conn:transaction(function()
-      conn:prepare("DELETE FROM note_orders"):execute()
       conn:prepare("DELETE FROM notes"):execute()
 
       if type(json_data.items) == "table" then
@@ -468,12 +506,9 @@ function M:load_from_json(json_data)
       end
 
       if type(json_data.orders) == "table" then
-        local insert_order_stmt = conn:prepare("INSERT INTO note_orders (uuid, position) VALUES (?, ?)")
-        for position, uuid in ipairs(json_data.orders) do
-          if type(uuid) == "string" and #uuid > 0 then
-            insert_order_stmt:bind(uuid, position):execute()
-          end
-        end
+        conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+          :bind("note_orders", vim.json.encode(json_data.orders))
+          :execute()
       end
 
       local activated_uuid = json_data.activated_item_uuid
