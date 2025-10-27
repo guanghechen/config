@@ -157,6 +157,28 @@ for index = 1, 9 do
   }
 end
 
+for index = 1, 9 do
+  local definition_left = K.notepad["focus_left_" .. tostring(index)]
+  NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
+    modes = { "n", "v" },
+    key = string.format("[%d", index),
+    desc = definition_left.desc,
+    callback = function()
+      vim.cmd(definition_left.uuid)
+    end,
+  }
+
+  local definition_right = K.notepad["focus_right_" .. tostring(index)]
+  NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
+    modes = { "n", "v" },
+    key = string.format("]%d", index),
+    desc = definition_right.desc,
+    callback = function()
+      vim.cmd(definition_right.uuid)
+    end,
+  }
+end
+
 ---@class eve.ux.widget.notepad.IProps
 ---@field public name                   ?string
 ---@field public title                  ?string

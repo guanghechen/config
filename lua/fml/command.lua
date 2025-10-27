@@ -568,6 +568,21 @@ for index = 1, 9, 1 do
   })
 end
 
+for index = 1, 9, 1 do
+  command.implement({
+    uuid = K.notepad["focus_left_" .. tostring(index)].uuid,
+    action = function()
+      require("fml.action.notepad").focus_left(tostring(index))
+    end,
+  })
+  command.implement({
+    uuid = K.notepad["focus_right_" .. tostring(index)].uuid,
+    action = function()
+      require("fml.action.notepad").focus_right(tostring(index))
+    end,
+  })
+end
+
 command
   .implement({
     uuid = K.notepad.focus_left.uuid,
