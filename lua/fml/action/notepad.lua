@@ -453,4 +453,114 @@ function M.source_next()
   })
 end
 
+---@class fml.action.notepad.IEngineItem : eve.ux.picker.composer.list.IItem
+---@field public data                   { engine: 'json'|'sqlite', description: string }
+---@field public text_lower             string
+
+local engine_picker ---@type eve.ux.picker.ListComposer|nil
+engine_picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__ .. ".engine_select",
+  permanent = true,
+  title = "Select Storage Engine",
+  height = 8,
+  width = 80,
+
+  search_pattern = o_search_pattern,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_case_sensitive = o_flag_case_sensitive,
+
+  render_preview = function(composer, bufnr, _)
+    local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
+    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    ---@cast item fml.action.notepad.IEngineItem|nil
+
+    if item == nil then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No engine selected" })
+      return {
+        cursorline = false,
+        number = false,
+        title = "Preview",
+        wrap = false,
+      }
+    end
+
+    local lines = { item.data.description }
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+    return {
+      cursorline = false,
+      number = false,
+      title = "Engine Information",
+      wrap = true,
+    }
+  end,
+
+  on_confirm = function(composer, item)
+    ---@cast item fml.action.notepad.IEngineItem
+    composer:close()
+    if item ~= nil then
+      local current_source = widget:get_source()
+      local current_config = eve.state.notepad.source_config_map[current_source.name]
+
+      if current_config.engine == item.data.engine then
+        std.reporter.info({
+          from = __module_name__,
+          subject = "change_engine",
+          message = string.format("Already using %s engine", item.data.engine),
+        })
+        return
+      end
+
+      if eve.state.notepad.migrate_source_engine(current_source.name, item.data.engine) then
+        widget:attach(current_source.name)
+        dirty_data = true
+      end
+    end
+  end,
+  on_disposed = function()
+    o_search_pattern:next("")
+  end,
+})
+
+---@return nil
+function M.change_engine()
+  local current_source = widget:get_source()
+  local current_config = eve.state.notepad.source_config_map[current_source.name]
+
+  ---@type fml.action.notepad.IEngineItem[]
+  local items = {
+    {
+      uuid = "json",
+      text = "json",
+      text_lower = "json",
+      highlights = {},
+      data = {
+        engine = "json",
+        description = "JSON file storage - Human-readable, git-friendly, simple",
+      },
+    },
+    {
+      uuid = "sqlite",
+      text = "sqlite",
+      text_lower = "sqlite",
+      highlights = {},
+      data = {
+        engine = "sqlite",
+        description = "SQLite database - Fast queries, full-text search, ACID transactions",
+      },
+    },
+  }
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  local data = {
+    items = items,
+    uuid_current = current_config.engine,
+    uuid_present = current_config.engine,
+  }
+
+  engine_picker:reset_data(data)
+  engine_picker:focus()
+end
+
 return M

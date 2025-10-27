@@ -461,6 +461,7 @@ M.definitions.notepad = {
   source_select = def("Fnotepadsourceselect", "notepad: select source"),
   source_prev = def("Fnotepadsourceprev", "notepad: previous source"),
   source_next = def("Fnotepadsourcenext", "notepad: next source"),
+  change_engine = def("Fnotepadchangeengine", "notepad: change storage engine"),
 }
 
 ---@class eve.builtin.command.definitions.profile

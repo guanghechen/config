@@ -626,6 +626,12 @@ command
       require("fml.action.notepad").source_next()
     end,
   })
+  .implement({
+    uuid = K.notepad.change_engine.uuid,
+    action = function()
+      require("fml.action.notepad").change_engine()
+    end,
+  })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({

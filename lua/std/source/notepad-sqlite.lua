@@ -3,11 +3,6 @@ local __module_name__ = "std.source.notepad-sqlite" ---@type string
 
 local sqlite_ffi = require("std.source.sqlite-ffi")
 
----@class std.source.INotepadSqliteSourceConfig
----@field public name                   string Unique source identifier
----@field public filepath               string Absolute path to SQLite database file
----@field public default_item_name      fun(): string Default name generator for untitled items
-
 ---@class std.source.NotepadSqliteSource : std.t.INotepadSource
 ---@field public name                   string
 ---@field protected filepath            string
@@ -43,7 +38,7 @@ local function normalize_name(name, default_name)
   return name
 end
 
----@param config                        std.source.INotepadSqliteSourceConfig
+---@param config                        std.t.INotepadSourceConfig
 ---@return std.source.NotepadSqliteSource
 function M.new(config)
   local self = setmetatable({}, M)
@@ -411,6 +406,97 @@ function M:flush()
   end
 
   self._dirty_items = {}
+
+  return true
+end
+
+---Export to standard JSON format
+---@return std.t.INotepadSourceJsonData
+function M:dump_to_json()
+  local data = self:load(false)
+  local items = {}
+
+  for _, uuid in ipairs(data.orders) do
+    local item = data.items[uuid]
+    if item ~= nil then
+      items[#items + 1] = {
+        uuid = item.uuid,
+        name = item.name,
+        content = item.content,
+        created_at = item.created_at,
+        updated_at = item.updated_at,
+      }
+    end
+  end
+
+  return {
+    items = items,
+    orders = vim.deepcopy(data.orders),
+    activated_item_uuid = data.active_uuid,
+  }
+end
+
+---Import from standard JSON format
+---@param json_data                     std.t.INotepadSourceJsonData
+---@return boolean
+function M:load_from_json(json_data)
+  if type(json_data) ~= "table" then
+    return false
+  end
+
+  local conn = self:_get_conn()
+
+  local ok, err = pcall(function()
+    conn:transaction(function()
+      conn:prepare("DELETE FROM note_orders"):execute()
+      conn:prepare("DELETE FROM notes"):execute()
+
+      if type(json_data.items) == "table" then
+        local insert_note_stmt = conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
+
+        for _, entry in ipairs(json_data.items) do
+          if type(entry) == "table" and type(entry.uuid) == "string" and #entry.uuid > 0 then
+            local uuid = entry.uuid
+            local name = normalize_name(entry.name, self.default_item_name)
+            local content = type(entry.content) == "string" and entry.content or ""
+            local created_at = type(entry.created_at) == "string" and entry.created_at or now_iso_utc()
+            local updated_at = type(entry.updated_at) == "string" and entry.updated_at or created_at
+
+            insert_note_stmt:bind(uuid, name, content, created_at, updated_at):execute()
+          end
+        end
+      end
+
+      if type(json_data.orders) == "table" then
+        local insert_order_stmt = conn:prepare("INSERT INTO note_orders (uuid, position) VALUES (?, ?)")
+        for position, uuid in ipairs(json_data.orders) do
+          if type(uuid) == "string" and #uuid > 0 then
+            insert_order_stmt:bind(uuid, position):execute()
+          end
+        end
+      end
+
+      local activated_uuid = json_data.activated_item_uuid
+      if type(activated_uuid) == "string" and #activated_uuid > 0 then
+        conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+          :bind("activated_item_uuid", activated_uuid)
+          :execute()
+      end
+    end)
+  end)
+
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Import Failed",
+      message = "Failed to import JSON data to SQLite",
+      details = { error = err },
+    })
+    return false
+  end
+
+  self._data = nil
+  self:load(true)
 
   return true
 end

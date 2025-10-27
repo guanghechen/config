@@ -13,10 +13,20 @@
 ---@field public name                   string Human-readable name (defaults to "untitled")
 ---@field public content                string Note content (markdown format)
 
+---@class std.t.INotepadSourceConfig
+---@field public name                   string Unique source identifier
+---@field public filepath               string Absolute path to storage file
+---@field public default_item_name      fun(): string Default name generator for untitled items
+
 ---@class std.t.INotepadSourceSaveData
 ---@field public items                  table<string, std.t.INotepadItem> Map of UUID to note items
 ---@field public orders                 string[] Ordered list of UUIDs
 ---@field public active_uuid            string|nil Currently active note UUID
+
+---@class std.t.INotepadSourceJsonData
+---@field public items                  table[] Array of note items with {uuid, name, content, created_at, updated_at}
+---@field public orders                 string[] Ordered list of UUIDs
+---@field public activated_item_uuid    string|nil Currently active note UUID
 
 ---@class std.t.INotepadSource
 ---@field public name                   string Unique source identifier (e.g., "workspace", "global")
@@ -29,3 +39,5 @@
 ---@field public create                 fun(self: std.t.INotepadSource, name: string|nil, content: string|nil): std.t.INotepadItem Create new note
 ---@field public update                 fun(self: std.t.INotepadSource, uuid: string, data: std.t.INotepadItemData): boolean Update existing note
 ---@field public remove                 fun(self: std.t.INotepadSource, uuid: string): boolean Remove note (rejects if last note)
+---@field public dump_to_json           fun(self: std.t.INotepadSource): std.t.INotepadSourceJsonData Export to standard JSON format
+---@field public load_from_json         fun(self: std.t.INotepadSource, json_data: std.t.INotepadSourceJsonData): boolean Import from standard JSON format

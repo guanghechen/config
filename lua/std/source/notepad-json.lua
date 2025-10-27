@@ -1,11 +1,6 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "std.source.notepad-json" ---@type string
 
----@class std.source.INotepadJsonSourceConfig
----@field public name                   string Unique source identifier
----@field public filepath               string Absolute path to JSON file
----@field public default_item_name      fun(): string Default name generator for untitled items
-
 ---@class std.source.NotepadJsonSource : std.t.INotepadSource
 ---@field public name                   string
 ---@field protected filepath            string
@@ -63,7 +58,7 @@ local function cleanup_orders(items_map, orders)
   end
 end
 
----@param config                        std.source.INotepadJsonSourceConfig
+---@param config                        std.t.INotepadSourceConfig
 ---@return std.source.NotepadJsonSource
 function M.new(config)
   local self = setmetatable({}, M)
@@ -415,6 +410,87 @@ function M:flush()
     return false
   end
 
+  return true
+end
+
+---Export to standard JSON format (identity for JSON source)
+---@return std.t.INotepadSourceJsonData
+function M:dump_to_json()
+  local data = self:load(false)
+  local items = {}
+
+  for _, uuid in ipairs(data.orders) do
+    local item = data.items[uuid]
+    if item ~= nil then
+      items[#items + 1] = {
+        uuid = item.uuid,
+        name = item.name,
+        content = item.content,
+        created_at = item.created_at,
+        updated_at = item.updated_at,
+      }
+    end
+  end
+
+  return {
+    items = items,
+    orders = vim.deepcopy(data.orders),
+    activated_item_uuid = data.active_uuid,
+  }
+end
+
+---Import from standard JSON format (identity for JSON source)
+---@param json_data                     std.t.INotepadSourceJsonData
+---@return boolean
+function M:load_from_json(json_data)
+  if type(json_data) ~= "table" then
+    return false
+  end
+
+  local items_map = {}
+  local orders = {}
+
+  if type(json_data.items) == "table" then
+    for _, entry in ipairs(json_data.items) do
+      if type(entry) == "table" and type(entry.uuid) == "string" and #entry.uuid > 0 then
+        local uuid = entry.uuid
+        local created_at = type(entry.created_at) == "string" and entry.created_at or now_iso_utc()
+        local updated_at = type(entry.updated_at) == "string" and entry.updated_at or created_at
+        local name = normalize_name(entry.name, self.default_item_name)
+
+        items_map[uuid] = {
+          uuid = uuid,
+          name = name,
+          content = type(entry.content) == "string" and entry.content or "",
+          created_at = created_at,
+          updated_at = updated_at,
+        }
+      end
+    end
+  end
+
+  if type(json_data.orders) == "table" then
+    for _, uuid in ipairs(json_data.orders) do
+      if type(uuid) == "string" and #uuid > 0 and items_map[uuid] ~= nil then
+        orders[#orders + 1] = uuid
+      end
+    end
+  end
+
+  cleanup_orders(items_map, orders)
+
+  local active_uuid = json_data.activated_item_uuid
+  if type(active_uuid) ~= "string" or items_map[active_uuid] == nil then
+    active_uuid = orders[1]
+  end
+
+  self._data = {
+    items = items_map,
+    orders = orders,
+    active_uuid = active_uuid,
+  }
+
+  self:flush()
   return true
 end
 

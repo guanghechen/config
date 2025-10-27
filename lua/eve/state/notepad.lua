@@ -1,4 +1,4 @@
----@class eve.state.notepad.ISourceConfig : std.source.INotepadJsonSourceConfig
+---@class eve.state.notepad.ISourceConfig : std.t.INotepadSourceConfig
 ---@field public title                  string Human-readable source title
 ---@field public engine                 'json'|'sqlite' Source engine type
 
@@ -86,6 +86,105 @@ function M.retrieve_source(name)
     _source_cache[default_name] = std.source.NotepadJsonSource.new(default_config)
   end
   return _source_cache[default_name], default_config
+end
+
+---Migrate source engine and update config
+---@param name                          string Source name
+---@param target_engine                 'json'|'sqlite' Target engine
+---@return boolean success
+function M.migrate_source_engine(name, target_engine)
+  local config = M.source_config_map[name]
+  if config == nil then
+    std.reporter.error({
+      from = "eve.state.notepad",
+      subject = "Migration Failed",
+      message = string.format("Source '%s' not found", name),
+    })
+    return false
+  end
+
+  if config.engine == target_engine then
+    std.reporter.warn({
+      from = "eve.state.notepad",
+      subject = "Migration Skipped",
+      message = string.format("Source '%s' is already using %s engine", name, target_engine),
+    })
+    return false
+  end
+
+  local source_engine = config.engine
+  local source = _source_cache[name]
+
+  if source == nil then
+    source, _ = M.retrieve_source(name)
+  end
+
+  source:flush()
+  local json_data = source:dump_to_json()
+
+  local new_filepath
+  if target_engine == "sqlite" then
+    new_filepath = config.filepath:gsub("%.json$", ".db")
+  else
+    new_filepath = config.filepath:gsub("%.db$", ".json")
+  end
+
+  local new_config = vim.tbl_extend("force", config, {
+    engine = target_engine,
+    filepath = new_filepath,
+  })
+
+  local new_source
+  if target_engine == "sqlite" then
+    new_source = std.source.NotepadSqliteSource.new(new_config)
+  else
+    new_source = std.source.NotepadJsonSource.new(new_config)
+  end
+
+  if not new_source:load_from_json(json_data) then
+    std.reporter.error({
+      from = "eve.state.notepad",
+      subject = "Migration Failed",
+      message = string.format("Failed to import data to %s engine", target_engine),
+    })
+    return false
+  end
+
+  local old_filepath = config.filepath
+  if vim.fn.filereadable(old_filepath) == 1 then
+    local backup_filepath = old_filepath .. ".bak"
+    vim.fn.rename(old_filepath, backup_filepath)
+  end
+
+  config.engine = target_engine
+  config.filepath = new_filepath
+  _source_cache[name] = new_source
+
+  std.reporter.info({
+    from = "eve.state.notepad",
+    subject = "Migration Complete",
+    message = string.format("Migrated '%s' from %s to %s", config.title, source_engine, target_engine),
+  })
+
+  return true
+end
+
+---Toggle source engine between json and sqlite
+---@param name                          string Source name
+---@return boolean success
+function M.toggle_source_engine(name)
+  local config = M.source_config_map[name]
+  if config == nil then
+    std.reporter.error({
+      from = "eve.state.notepad",
+      subject = "Toggle Failed",
+      message = string.format("Source '%s' not found", name),
+    })
+    return false
+  end
+
+  local target_engine = config.engine == "json" and "sqlite" or "json"
+  return M.migrate_source_engine(name, target_engine)
 end
 
 return M

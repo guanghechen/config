@@ -165,6 +165,24 @@ local NOTEPAD_KEYMAPS = {
   },
   {
     modes = { "i", "n", "v" },
+    key = "<cr>",
+    desc = "notepad: feedback cr to notepad (prevent <c-m> conflict)",
+    expr = true,
+    replace_keycodes = true,
+    callback = function()
+      return "<cr>"
+    end,
+  },
+  {
+    modes = { "n", "v" },
+    key = "<C-m>",
+    desc = K.notepad.change_engine.desc,
+    callback = function()
+      vim.cmd(K.notepad.change_engine.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
     key = "<esc>",
     desc = "notepad: feedback esc to notepad (fix the conflict caused by the csi u)",
     expr = true,
