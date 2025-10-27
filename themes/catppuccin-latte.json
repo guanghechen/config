@@ -5,20 +5,20 @@
   "Foreground":     "#5C5F77",
   "LightBlue":      "#1E66F5",
   "AccentBlue":     "#1E66F5",
-  "AccentPurple":   "#8839EF",
+  "AccentPurple":   "#EA76CB",
   "AccentCyan":     "#179299",
   "AccentGreen":    "#40A02B",
   "AccentYellow":   "#DF8E1D",
   "AccentRed":      "#D20F39",
   "Comment":        "#8C8FA1",
-  "Gray":           "#9CA0B0",
+  "Gray":           "#6C6F85",
   "DiffAdded":      "#D2E1D5",
   "DiffRemoved":    "#E8CDD6",
   "DiffModified":   "#1E66F5",
   "GradientColors": [
     "#1E66F5",
     "#1E66F5",
-    "#8839EF",
-    "#8839EF"
+    "#EA76CB",
+    "#EA76CB"
   ]
 }
