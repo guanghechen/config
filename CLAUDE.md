@@ -8,18 +8,22 @@ The following rules are **supreme principles** that must be followed at **all ti
 
 ## Coding Guidances
 
-1. **ALWAYS**: Don't try to install anything unless I ask you to explicitly.
+1. **ALWAYS**: Only install packages when explicitly instructed.
 2. **ALWAYS**: Use `I`-prefixed naming for all types and interfaces (e.g., `IChatMessage`, `IUser`)
 3. **ALWAYS**: Write clean and concise code, avoid unnecessary comments.
 4. **ALWAYS**: Strictly adhere to the single responsibility principle, keep each file doing as few things as possible.
 5. **ALWAYS**: Keep processing until the task is completed or an unsolvable problem is encountered, without stopping in between.
-6. **ALWAYS**: You are not allowed to run any npm or yarn script except the `yarn format`, `yarn lintfix` and the `yarn add`.
+6. **ALWAYS**: You are not allowed to run any npm or yarn script except `yarn format`, `yarn lintfix`, and `yarn add`.
+7. **ALWAYS**: Recognize that the user is a skilled software engineer with strong engineering and algorithmic capabilities. When facing challenging problems or complex design decisions, proactively engage in discussion with the user to seek inspiration, explore ideas, and collaborate on better solutions.
+8. **ALWAYS**: Implement code in a concise, elegant, and efficient manner. Performance is crucial. Prioritize simplicity and elegance in your implementations. Caching should be the lowest priority consideration unless explicitly requested.
 
 ## Recommended Requirements
 
 The following rules are merely recommended for adoption and can be referenced at your discretion based on the circumstances.
 
-1. **RECOMMENDED**: use `fd` instead of `find` command to search files.
-2. **RECOMMENDED**: use `rg` instead of `grep` command to search contents from files or piped-contents.
-3. **RECOMMENDED**: When implementing a new feature, forking existing code is encouraged. Try to avoid considering rewriting existing code to achieve reuse, unless the modification is particularly simple or no other logic depends on that part of the code.
+1. **RECOMMENDED**: Use `fd` rather than `find` command to search files.
+2. **RECOMMENDED**: Use `rg` rather than `grep` command to search contents from files or piped-contents.
+3. **RECOMMENDED**: When implementing a new feature, forking existing code is encouraged. Avoid rewriting existing code for reuse purposes, unless the modification is particularly simple or no other logic depends on that part of the code.
+
+----End of the Supreme Principles----
 
