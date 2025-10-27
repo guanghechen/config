@@ -1,4 +1,4 @@
---- https://github.com/folke/snacks.nvim/blob/1239fb84bc426d4fcd1c8dc9dde8503c17501842/lua/snacks/statuscolumn.lua#L1
+--- https://github.com/folke/snacks.nvim/blob/7bcd3baaf8e9fbea1c51e0690e67e7be69441311/lua/snacks/statuscolumn.lua#L1
 
 ---@class fml.dressing.statuscolumn.config
 local config = {
@@ -6,6 +6,52 @@ local config = {
   right = { "fold", "git" }, -- priority of signs on the right (high to low)
   refresh = 200, -- refresh at most every 50ms
 }
+
+---@class fml.dressing.statuscolumn.FoldInfo
+---@field start number Line number where deepest fold starts
+---@field level number Fold level, when zero other fields are N/A
+---@field llevel number Lowest level that starts in v:lnum
+---@field lines number Number of lines from v:lnum to end of closed fold
+
+---@type ffi.namespace*
+local C
+
+local function _ffi()
+  if not C then
+    local ffi = require("ffi")
+    ffi.cdef([[
+      typedef struct {} Error;
+      typedef struct {} win_T;
+      typedef struct {
+        int start;  // line number where deepest fold starts
+        int level;  // fold level, when zero other fields are N/A
+        int llevel; // lowest level that starts in v:lnum
+        int lines;  // number of lines from v:lnum to end of closed fold
+      } foldinfo_T;
+      foldinfo_T fold_info(win_T* wp, int lnum);
+      win_T *find_window_by_handle(int Window, Error *err);
+    ]])
+    C = ffi.C
+  end
+  return C
+end
+
+---@param win number
+---@param lnum number
+---@return fml.dressing.statuscolumn.FoldInfo|nil
+local function fold_info(win, lnum)
+  pcall(_ffi)
+  if not C then
+    return
+  end
+  local ffi = require("ffi")
+  local err = ffi.new("Error")
+  local wp = C.find_window_by_handle(win, err)
+  if wp == nil then
+    return
+  end
+  return C.fold_info(wp, lnum)
+end
 
 ---@alias fml.dressing.statuscolumn.SignType
 ---| "mark"
@@ -132,19 +178,8 @@ local function line_signs(winnr, bufnr, lnum)
       return
     end
 
-    local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
-    if support_foldingRange > 0 and vim.lsp.foldexpr(lnum):sub(1, 1) == ">" then
-      ---@type fml.dressing.statuscolumn.ISign
-      local sign = {
-        type = "fold",
-        text = eve.icon.fillchars.foldopen,
-        priority = 0,
-      }
-      signs[#signs + 1] = sign
-      return
-    end
-
-    if vim.fn.foldlevel(lnum) > vim.fn.foldlevel(lnum - 1) then
+    local info = fold_info(winnr, lnum)
+    if info and info.level > 0 and info.start == lnum then
       ---@type fml.dressing.statuscolumn.ISign
       local sign = {
         type = "fold",
