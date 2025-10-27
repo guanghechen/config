@@ -459,6 +459,8 @@ M.definitions.notepad = {
   swap_left = def("Fnotepadswapleft", "notepad: swap left", "?"),
   swap_right = def("Fnotepadswapright", "notepad: swap right", "?"),
   source_select = def("Fnotepadsourceselect", "notepad: select source"),
+  source_prev = def("Fnotepadsourceprev", "notepad: previous source"),
+  source_next = def("Fnotepadsourcenext", "notepad: next source"),
 }
 
 ---@class eve.builtin.command.definitions.profile

@@ -614,6 +614,18 @@ command
       require("fml.action.notepad").source_select()
     end,
   })
+  .implement({
+    uuid = K.notepad.source_prev.uuid,
+    action = function()
+      require("fml.action.notepad").source_prev()
+    end,
+  })
+  .implement({
+    uuid = K.notepad.source_next.uuid,
+    action = function()
+      require("fml.action.notepad").source_next()
+    end,
+  })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({

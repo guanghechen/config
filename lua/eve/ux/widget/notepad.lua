@@ -92,7 +92,22 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "v" },
     key = "<C-,>",
-    aliases = { "<C-[>" },
+    desc = K.notepad.source_prev.desc,
+    callback = function()
+      vim.cmd(K.notepad.source_prev.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-.>",
+    desc = K.notepad.source_next.desc,
+    callback = function()
+      vim.cmd(K.notepad.source_next.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<C-[>",
     desc = K.notepad.focus_left.desc,
     callback = function()
       vim.cmd(K.notepad.focus_left.uuid)
@@ -100,8 +115,7 @@ local NOTEPAD_KEYMAPS = {
   },
   {
     modes = { "i", "n", "v" },
-    key = "<C-.>",
-    aliases = { "<C-]>" },
+    key = "<C-]>",
     desc = K.notepad.focus_right.desc,
     callback = function()
       vim.cmd(K.notepad.focus_right.uuid)

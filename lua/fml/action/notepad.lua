@@ -391,4 +391,66 @@ function M.source_select()
   source_picker:focus()
 end
 
+---@return nil
+function M.source_prev()
+  local current_source = widget:get_source() ---@type std.t.INotepadSource
+  local current_index = nil ---@type integer|nil
+
+  for i, config in ipairs(eve.state.notepad.source_configs) do
+    if config.name == current_source.name then
+      current_index = i
+      break
+    end
+  end
+
+  if current_index == nil then
+    return
+  end
+
+  local prev_index = current_index - 1
+  if prev_index < 1 then
+    prev_index = #eve.state.notepad.source_configs
+  end
+
+  local prev_config = eve.state.notepad.source_configs[prev_index]
+  widget:attach(prev_config.name)
+  dirty_data = true
+  std.reporter.info({
+    from = __module_name__,
+    subject = "source_prev",
+    message = string.format("Switched to '%s' notepad source.", prev_config.title),
+  })
+end
+
+---@return nil
+function M.source_next()
+  local current_source = widget:get_source() ---@type std.t.INotepadSource
+  local current_index = nil ---@type integer|nil
+
+  for i, config in ipairs(eve.state.notepad.source_configs) do
+    if config.name == current_source.name then
+      current_index = i
+      break
+    end
+  end
+
+  if current_index == nil then
+    return
+  end
+
+  local next_index = current_index + 1
+  if next_index > #eve.state.notepad.source_configs then
+    next_index = 1
+  end
+
+  local next_config = eve.state.notepad.source_configs[next_index]
+  widget:attach(next_config.name)
+  dirty_data = true
+  std.reporter.info({
+    from = __module_name__,
+    subject = "source_next",
+    message = string.format("Switched to '%s' notepad source.", next_config.title),
+  })
+end
+
 return M
