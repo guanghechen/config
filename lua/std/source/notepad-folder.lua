@@ -8,7 +8,6 @@ local __module_name__ = "std.source.notepad-folder" ---@type string
 ---@field protected default_item_name   fun(): string
 ---@field protected flush_scheduler     std.collection.Scheduler|nil Debounced flush scheduler
 ---@field protected _state              std.t.INotepadSourceFolderState|nil Internal state cache
----@field protected _dirty_items        table<string, boolean> Track modified items
 ---@field protected _dirty_orders       boolean Track if orders changed
 ---@field protected _dirty_active       boolean Track if active_uuid changed
 ---@field protected _dirpath            string Directory path for notes
@@ -45,7 +44,6 @@ function M.new(config)
   self.filepath = self._metadata_path
   self.default_item_name = config.default_item_name
   self._state = nil
-  self._dirty_items = {}
   self._dirty_orders = false
   self._dirty_active = false
 
@@ -291,7 +289,6 @@ function M:load(force)
     history_index = history_index,
   }
 
-  self._dirty_items = {}
   self._dirty_orders = false
   self._dirty_active = false
 
@@ -426,7 +423,6 @@ function M:create(name, content)
   state.orders[#state.orders + 1] = uuid
 
   self:_save_note_content(item)
-  self._dirty_items[uuid] = true
   self._dirty_orders = true
   self:_schedule_flush()
 
@@ -481,7 +477,6 @@ function M:update(uuid, item_data)
       self:_rename_note_file(old_name, item.name)
     end
 
-    self._dirty_items[uuid] = true
     self:_schedule_flush()
   end
 
@@ -523,7 +518,6 @@ function M:rename(uuid, new_name)
   item.updated_at = std.notepad.now_iso_utc()
 
   self:_rename_note_file(old_name, item.name)
-  self._dirty_items[uuid] = true
   self:_schedule_flush()
 
   return true
@@ -561,7 +555,6 @@ function M:append_content(uuid, text)
   item.content = new_content
   item.updated_at = std.notepad.now_iso_utc()
   self:_save_note_content(item)
-  self._dirty_items[uuid] = true
   self:_schedule_flush()
 
   return true
@@ -593,7 +586,6 @@ function M:remove(uuid)
     return element ~= uuid
   end)
 
-  self._dirty_items[uuid] = true
   self._dirty_orders = true
   self:_schedule_flush()
 
@@ -712,7 +704,6 @@ function M:flush()
     return false
   end
 
-  self._dirty_items = {}
   self._dirty_orders = false
   self._dirty_active = false
 

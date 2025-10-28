@@ -11,7 +11,6 @@ local sqlite_ffi = require("std.source.sqlite-ffi")
 ---@field protected flush_scheduler     std.collection.Scheduler|nil Debounced flush scheduler
 ---@field protected _state              std.t.INotepadSourceSqliteState|nil Internal state cache
 ---@field protected _conn               std.source.sqlite.IConnection|nil Database connection
----@field protected _dirty_items        table<string, boolean> Track modified items
 ---@field protected _dirty_orders       boolean Track if orders changed
 ---@field protected _dirty_active       boolean Track if active_uuid changed
 local M = {}
@@ -29,7 +28,6 @@ function M.new(config)
   self.default_item_name = config.default_item_name
   self._state = nil
   self._conn = nil
-  self._dirty_items = {}
   self._dirty_orders = false
   self._dirty_active = false
 
@@ -248,7 +246,6 @@ function M:load(force)
     history_index = history_index,
   }
 
-  self._dirty_items = {}
   self._dirty_orders = false
   self._dirty_active = false
 
@@ -384,7 +381,6 @@ function M:create(name, content)
   state.name_to_uuid[normalized_name] = uuid
   state.orders[#state.orders + 1] = uuid
 
-  self._dirty_items[uuid] = true
   self._dirty_orders = true
   self:_schedule_flush()
 
@@ -432,7 +428,6 @@ function M:update(uuid, item_data)
 
   if modified then
     item.updated_at = std.notepad.now_iso_utc()
-    self._dirty_items[uuid] = true
     self:_schedule_flush()
   end
 
@@ -473,7 +468,6 @@ function M:rename(uuid, new_name)
   std.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
   item.name = normalized_name
   item.updated_at = std.notepad.now_iso_utc()
-  self._dirty_items[uuid] = true
   self:_schedule_flush()
 
   return true
@@ -510,7 +504,6 @@ function M:append_content(uuid, text)
 
   item.content = new_content
   item.updated_at = std.notepad.now_iso_utc()
-  self._dirty_items[uuid] = true
   self:_schedule_flush()
 
   return true
@@ -542,7 +535,6 @@ function M:remove(uuid)
     return element ~= uuid
   end)
 
-  self._dirty_items[uuid] = true
   self._dirty_orders = true
   self:_schedule_flush()
 
@@ -636,23 +628,15 @@ function M:flush()
 
   local ok, err = pcall(function()
     conn:transaction(function()
-      local delete_note_stmt = conn:prepare("DELETE FROM notes WHERE uuid = ?")
       local check_exists_stmt = conn:prepare("SELECT 1 FROM notes WHERE uuid = ?")
       local insert_note_stmt = conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
       local update_note_stmt = conn:prepare("UPDATE notes SET name = ?, content = ?, updated_at = ? WHERE uuid = ?")
 
-      for uuid, _ in pairs(self._dirty_items) do
-        local item = self._state.items[uuid]
-
-        if item == nil then
-          delete_note_stmt:bind(uuid):execute()
-        else
+      for uuid, item in pairs(self._state.items) do
+        if item.content ~= nil and item.content ~= item.original then
           local exists_row = check_exists_stmt:bind(uuid):execute_one()
 
           local content_to_save = item.content
-          if content_to_save == nil and item._raw_content ~= nil then
-            content_to_save = item._raw_content
-          end
           if content_to_save == nil then
             content_to_save = ""
           end
@@ -663,10 +647,7 @@ function M:flush()
             update_note_stmt:bind(item.name, content_to_save, item.updated_at, uuid):execute()
           end
 
-          -- Update original after successful save
-          if item.content ~= nil then
-            item.original = item.content
-          end
+          item.original = item.content
         end
       end
 
@@ -694,7 +675,6 @@ function M:flush()
     return false
   end
 
-  self._dirty_items = {}
   self._dirty_orders = false
   self._dirty_active = false
 
