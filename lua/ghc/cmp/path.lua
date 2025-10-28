@@ -10,6 +10,8 @@ local uv = vim.uv
 ---@field request_timeout               integer Request timeout in milliseconds
 ---@field max_concurrent_requests       integer Maximum concurrent requests
 ---@field max_entries_per_scan          integer Maximum entries to process per directory scan
+---@field chunk_size                    integer Number of entries to process per chunk
+---@field gc_threshold_mb                integer Memory threshold in MB before triggering garbage collection
 local config = {
   trailing_slash = true,
   label_trailing_slash = true,
@@ -17,7 +19,9 @@ local config = {
   debounce = 100, -- 100ms debounce for path completion
   request_timeout = 5000, -- 5 second timeout for file operations
   max_concurrent_requests = 2, -- Limit concurrent directory scans
-  max_entries_per_scan = 100, -- Limit entries processed per scan for performance
+  max_entries_per_scan = 500, -- Limit entries processed per scan for performance (increased from 100)
+  chunk_size = 100, -- Process entries in chunks for better performance
+  gc_threshold_mb = 100, -- Trigger GC if memory usage exceeds 100MB
 }
 
 ---@class ghc.cmp.path.util
@@ -226,7 +230,7 @@ function M:entry_to_completion_item(entry, dirname, range)
       insertText = insert_text,
       textEdit = { newText = insert_text, range = range },
       sortText = (is_dir and "1" or "2") .. entry.name:lower(), -- Sort directories before files
-      data = { path = entry.name, full_path = std.path.join(dirname, entry.name), type = entry.type, stat = entry.stat },
+      data = { path = entry.name, full_path = std.path.join(dirname, entry.name), type = entry.type },
     }
   end)
 
@@ -297,18 +301,16 @@ function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
       local name, type = uv.fs_scandir_next(handle)
       while name and count < self.opts.max_entries_per_scan do
         if include_hidden or name:sub(1, 1) ~= "." then
-          -- Use scandir type when available, only stat when necessary
-          local stat = nil
+          -- Use scandir type when available, only stat when type is unknown
           if not type or type == "unknown" then
-            -- Wrap fs_stat in pcall to catch EAGAIN and other errors
+            -- Only stat when we don't have type information
             local stat_success, stat_result = pcall(function()
               return uv.fs_stat(std.path.join(dirname, name))
             end)
             if stat_success and stat_result then
-              stat = stat_result
-              type = stat.type
+              type = stat_result.type
             else
-              -- Skip entries we can't stat instead of failing the whole scan
+              -- Skip entries we can't determine type for
               goto continue
             end
           end
@@ -317,7 +319,6 @@ function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
             table.insert(entries, {
               name = name,
               type = type,
-              stat = stat,
             })
             count = count + 1
           end
@@ -356,6 +357,13 @@ function M:get_completions(context, callback)
   -- Check if directory exists
   if not std.path.is_exist_dirpath(dirname) then
     return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
+  end
+
+  -- Prevent excessive memory growth when scanning large directories
+  local mem_usage_kb = collectgarbage("count")
+  local threshold_kb = self.opts.gc_threshold_mb * 1024
+  if mem_usage_kb > threshold_kb then
+    collectgarbage("collect")
   end
 
   -- State management for debouncing and rate limiting

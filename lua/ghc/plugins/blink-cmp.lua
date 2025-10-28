@@ -364,7 +364,9 @@ return {
               max_concurrent_requests = 1,
               debounce = 150,
               request_timeout = 2000,
-              max_entries_per_scan = 50,
+              max_entries_per_scan = 200, -- Increased from 50 for better coverage
+              chunk_size = 100,
+              gc_threshold_mb = 100,
             },
           },
           snippets = {
