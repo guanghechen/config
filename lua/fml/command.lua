@@ -632,6 +632,18 @@ command
       require("fml.action.notepad").change_engine()
     end,
   })
+  .implement({
+    uuid = K.notepad.go_backward.uuid,
+    action = function()
+      require("fml.action.notepad").go_backward()
+    end,
+  })
+  .implement({
+    uuid = K.notepad.go_forward.uuid,
+    action = function()
+      require("fml.action.notepad").go_forward()
+    end,
+  })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({

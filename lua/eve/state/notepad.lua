@@ -42,12 +42,18 @@ end
 ---@type table<string, std.t.INotepadSource>
 local _source_cache = {}
 
+---Observable for the currently activated note UUID
+---@type std.collection.IObservable
+local o_activated_uuid = std.Observable.from_value("")
+
 ---@class eve.state.notepad
 ---@field public source_configs         eve.state.notepad.ISourceConfig[]
 ---@field public source_config_map      table<string, eve.state.notepad.ISourceConfig>
+---@field public o_activated_uuid       std.collection.IObservable Observable for activated note UUID
 local M = {
   source_configs = source_configs,
   source_config_map = source_config_map,
+  o_activated_uuid = o_activated_uuid,
 }
 
 ---@param name                          string
@@ -176,6 +182,24 @@ function M.toggle_source_engine(name)
 
   local target_engine = config.engine == "json" and "sqlite" or "json"
   return M.migrate_source_engine(name, target_engine)
+end
+
+---Focus a note by UUID in the current source
+---@param uuid                          string|nil Note UUID to focus
+---@return boolean success
+function M.focus_note(uuid)
+  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source = M.retrieve_source(source_name)
+
+  -- Update the source's activated UUID
+  if not source:set_activated_uuid(uuid) then
+    return false
+  end
+
+  -- Notify observers to trigger UI updates
+  o_activated_uuid:next(uuid or "")
+
+  return true
 end
 
 return M

@@ -35,6 +35,7 @@ local __mods = {
   is = "std.is",
   job = "std.job",
   json = "std.json",
+  notepad = "std.notepad",
   path = "std.path",
   reporter = "std.reporter",
   stdout = "std.stdout",
@@ -82,6 +83,7 @@ local __mods = {
 ---@field public is                     std.is
 ---@field public job                    std.job
 ---@field public json                   std.json
+---@field public notepad                std.notepad
 ---@field public path                   std.path
 ---@field public reporter               std.reporter
 ---@field public stdout                 std.stdout

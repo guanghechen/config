@@ -173,6 +173,22 @@ local NOTEPAD_KEYMAPS = {
   },
   {
     modes = { "i", "n", "v" },
+    key = "<M-i>",
+    desc = K.notepad.go_backward.desc,
+    callback = function()
+      vim.cmd(K.notepad.go_backward.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
+    key = "<M-o>",
+    desc = K.notepad.go_forward.desc,
+    callback = function()
+      vim.cmd(K.notepad.go_forward.uuid)
+    end,
+  },
+  {
+    modes = { "i", "n", "v" },
     key = "<esc>",
     desc = "notepad: feedback esc to notepad (fix the conflict caused by the csi u)",
     expr = true,
@@ -251,7 +267,6 @@ end
 ---@field private _subscription_active  std.collection.IUnsubscribable|nil
 ---@field private _subscription_winbar  std.collection.IUnsubscribable|nil
 ---@field private _subscription_source  std.collection.IUnsubscribable|nil
----@field private _o_active_uuid        std.collection.IObservable
 local M = {}
 M.__index = M
 
@@ -280,8 +295,7 @@ function M.new(props)
   local source_name = eve.context.option.notepad_source:snapshot() ---@type string
   local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource
 
-  local data = source:load(false)
-  self._o_active_uuid = std.Observable.from_value(data.active_uuid or "")
+  source:load(false)
 
   self:_setup_subscriptions()
   self:_setup_nvimbar()
@@ -292,7 +306,7 @@ end
 ---@private
 ---@return nil
 function M:_setup_subscriptions()
-  self._subscription_active = self._o_active_uuid:subscribe(
+  self._subscription_active = eve.state.notepad.o_activated_uuid:subscribe(
     std.Subscriber.new({
       on_next = function(next_uuid)
         self:_on_active_uuid_changed(next_uuid)
@@ -359,8 +373,8 @@ function M:_setup_nvimbar()
 end
 
 ---@private
----@return std.t.INotepadSourceSaveData
-function M:_ensure_data()
+---@return std.t.INotepadSourceState
+function M:_ensure_state()
   local source = self:get_source()
   return source:load(false)
 end
@@ -368,8 +382,9 @@ end
 ---@private
 ---@return nil
 function M:_notify_active_changed()
-  local data = self:_ensure_data()
-  self._o_active_uuid:next(data ~= nil and data.active_uuid or "")
+  local source = self:get_source()
+  local uuid = source:get_activated_uuid()
+  eve.state.notepad.focus_note(uuid)
 end
 
 ---@private
@@ -417,7 +432,7 @@ function M:attach(source_name)
 
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
-    self:_sync_content_from_buf(bufnr, self:_ensure_data().active_uuid)
+    self:_sync_content_from_buf(bufnr, current_source:get_activated_uuid())
   end
 
   self:flush()
@@ -425,8 +440,8 @@ function M:attach(source_name)
   eve.context.option.notepad_source:next(source_name)
 
   local new_source = eve.state.notepad.retrieve_source(source_name)
-  local data = new_source:load(false)
-  self._o_active_uuid:next(data.active_uuid or "")
+  local new_uuid = new_source:get_activated_uuid()
+  eve.state.notepad.focus_note(new_uuid)
 
   if bufnr ~= nil then
     self:_render_active_item(bufnr)
@@ -448,7 +463,7 @@ end
 
 ---@return integer
 function M:size()
-  return #self:_ensure_data().orders
+  return #self:_ensure_state().orders
 end
 
 ---@param uuid string|nil
@@ -457,8 +472,8 @@ function M:indexof(uuid)
   if uuid == nil then
     return -1
   end
-  local data = self:_ensure_data()
-  for index, target in ipairs(data.orders) do
+  local state = self:_ensure_state()
+  for index, target in ipairs(state.orders) do
     if target == uuid then
       return index
     end
@@ -469,37 +484,43 @@ end
 ---@param index integer
 ---@return string|nil, std.t.INotepadItem|nil
 function M:at(index)
-  local data = self:_ensure_data()
-  local uuid = data.orders[index]
-  return uuid, uuid and data.items[uuid] or nil
+  local state = self:_ensure_state()
+  local uuid = state.orders[index]
+  return uuid, uuid and state.items[uuid] or nil
 end
 
 ---@return integer, string|nil
 function M:current()
-  local data = self:_ensure_data()
-  return self:indexof(data.active_uuid), data.active_uuid
+  local source = self:get_source()
+  local active_uuid = source:get_activated_uuid()
+  return self:indexof(active_uuid), active_uuid
 end
 
 ---@return std.t.INotepadItem|nil
 function M:current_item()
-  local data = self:_ensure_data()
-  return data.active_uuid and data.items[data.active_uuid] or nil
+  local source = self:get_source()
+  local active_uuid = source:get_activated_uuid()
+  if active_uuid == nil then
+    return nil
+  end
+  local state = self:_ensure_state()
+  return state.items[active_uuid]
 end
 
 ---@param uuid string
 ---@return std.t.INotepadItem|nil
 function M:get(uuid)
-  return self:_ensure_data().items[uuid]
+  return self:_ensure_state().items[uuid]
 end
 
 ---@return fun():std.t.INotepadItem|nil, integer|nil
 function M:iterator()
-  local data = self:_ensure_data()
+  local state = self:_ensure_state()
   local index = 0
   return function()
     index = index + 1
-    local uuid = data.orders[index]
-    return uuid and data.items[uuid] or nil, uuid and index or nil
+    local uuid = state.orders[index]
+    return uuid and state.items[uuid] or nil, uuid and index or nil
   end
 end
 
@@ -509,32 +530,48 @@ function M:focus_uuid(uuid)
   if uuid == nil then
     return false
   end
-  local data = self:_ensure_data()
-  if data.items[uuid] == nil or data.active_uuid == uuid then
-    return data.active_uuid == uuid
+
+  local source = self:get_source()
+
+  -- Check if already focused
+  if source:get_activated_uuid() == uuid then
+    return true
   end
 
-  self._o_active_uuid:next(uuid)
-  self:_mark_dirty()
-  return true
+  -- Save the current buffer content before switching
+  local bufnr = self:get_bufnr()
+  if bufnr ~= nil then
+    local old_uuid = source:get_activated_uuid()
+    if old_uuid ~= nil then
+      self:_sync_content_from_buf(bufnr, old_uuid)
+    end
+  end
+
+  -- Push to history before changing focus
+  source:push_history(uuid)
+
+  -- Use state's focus_note to update source and notify observers
+  return eve.state.notepad.focus_note(uuid)
 end
 
 ---@param index integer
 ---@return boolean
 function M:focus_index(index)
-  local uuid = self:_ensure_data().orders[index]
+  local uuid = self:_ensure_state().orders[index]
   return uuid ~= nil and self:focus_uuid(uuid) or false
 end
 
 ---@param step integer
 ---@return boolean
 function M:focus_step(step)
-  local data = self:_ensure_data()
-  local count = #data.orders
+  local state = self:_ensure_state()
+  local count = #state.orders
   if count == 0 then
     return false
   end
-  local index_current = math.max(1, self:indexof(data.active_uuid))
+  local source = self:get_source()
+  local active_uuid = source:get_activated_uuid()
+  local index_current = math.max(1, self:indexof(active_uuid))
   local index_next = std.fn.navigate_circular(index_current, step, count)
   return self:focus_index(index_next)
 end
@@ -561,9 +598,9 @@ function M:find_first_by_name(name)
     return nil
   end
 
-  local data = self:_ensure_data()
-  for _, uuid in ipairs(data.orders) do
-    local item = data.items[uuid]
+  local state = self:_ensure_state()
+  for _, uuid in ipairs(state.orders) do
+    local item = state.items[uuid]
     if item ~= nil and type(item.name) == "string" and item.name:lower() == target then
       return item
     end
@@ -584,10 +621,9 @@ function M:ensure_named_item(name)
 
   local source = self:get_source()
   local item = source:create(trimmed, nil)
-  local data = self:_ensure_data()
 
-  if data.active_uuid == nil then
-    data.active_uuid = item.uuid
+  if source:get_activated_uuid() == nil then
+    source:set_activated_uuid(item.uuid)
     self:_notify_active_changed()
   end
 
@@ -598,21 +634,36 @@ end
 ---@param uuid string|nil
 ---@return boolean
 function M:remove(uuid)
-  local data = self:_ensure_data()
-  uuid = uuid or data.active_uuid
-  if uuid == nil or data.items[uuid] == nil then
+  local source = self:get_source()
+  local active_uuid = source:get_activated_uuid()
+  uuid = uuid or active_uuid
+  if uuid == nil then
     return false
   end
 
-  local source = self:get_source()
+  local state = self:_ensure_state()
+  if state.items[uuid] == nil then
+    return false
+  end
+
+  -- If deleting the currently active note, navigate backward in history first
+  if active_uuid == uuid then
+    local history_uuid = source:go_backward()
+    if history_uuid ~= nil and history_uuid ~= uuid then
+      -- Set the previous note from history
+      eve.state.notepad.focus_note(history_uuid)
+    end
+  end
+
   if not source:remove(uuid) then
     return false
   end
 
-  if data.active_uuid == uuid then
-    data.active_uuid = data.orders[1]
-    if data.active_uuid ~= nil then
-      self:_notify_active_changed()
+  -- If we couldn't find a history entry, fall back to first note
+  if source:get_activated_uuid() == uuid then
+    local fallback_uuid = state.orders[1]
+    if fallback_uuid ~= nil then
+      eve.state.notepad.focus_note(fallback_uuid)
     end
   end
 
@@ -620,17 +671,62 @@ function M:remove(uuid)
   return true
 end
 
----@param uuid string|nil
----@param name string
 ---@return boolean
-function M:rename(uuid, name)
-  local data = self:_ensure_data()
-  uuid = uuid or data.active_uuid
+function M:go_backward()
+  local source = self:get_source()
+  local uuid = source:go_backward()
   if uuid == nil then
     return false
   end
 
-  local item = data.items[uuid]
+  -- Save the current buffer content before switching
+  local bufnr = self:get_bufnr()
+  if bufnr ~= nil then
+    local old_uuid = source:get_activated_uuid()
+    if old_uuid ~= nil then
+      self:_sync_content_from_buf(bufnr, old_uuid)
+    end
+  end
+
+  -- Use state's focus_note to update source and notify observers
+  -- The notification will trigger _on_active_uuid_changed which renders the buffer
+  return eve.state.notepad.focus_note(uuid)
+end
+
+---@return boolean
+function M:go_forward()
+  local source = self:get_source()
+  local uuid = source:go_forward()
+  if uuid == nil then
+    return false
+  end
+
+  -- Save the current buffer content before switching
+  local bufnr = self:get_bufnr()
+  if bufnr ~= nil then
+    local old_uuid = source:get_activated_uuid()
+    if old_uuid ~= nil then
+      self:_sync_content_from_buf(bufnr, old_uuid)
+    end
+  end
+
+  -- Use state's focus_note to update source and notify observers
+  -- The notification will trigger _on_active_uuid_changed which renders the buffer
+  return eve.state.notepad.focus_note(uuid)
+end
+
+---@param uuid string|nil
+---@param name string
+---@return boolean
+function M:rename(uuid, name)
+  local source = self:get_source()
+  uuid = uuid or source:get_activated_uuid()
+  if uuid == nil then
+    return false
+  end
+
+  local state = self:_ensure_state()
+  local item = state.items[uuid]
   if item == nil then
     return false
   end
@@ -640,8 +736,7 @@ function M:rename(uuid, name)
     return false
   end
 
-  local source = self:get_source()
-  if source:update(uuid, { name = name, content = item.content }) then
+  if source:rename(uuid, name) then
     self:_mark_dirty()
     return true
   end
@@ -652,18 +747,18 @@ end
 ---@param content string
 ---@return boolean
 function M:set_content(uuid, content)
-  local data = self:_ensure_data()
-  uuid = uuid or data.active_uuid
+  local source = self:get_source()
+  uuid = uuid or source:get_activated_uuid()
   if uuid == nil then
     return false
   end
 
-  local item = data.items[uuid]
+  local state = self:_ensure_state()
+  local item = state.items[uuid]
   if item == nil or item.content == (content or "") then
     return false
   end
 
-  local source = self:get_source()
   return source:update(uuid, { name = item.name, content = content or "" })
 end
 
@@ -675,10 +770,11 @@ function M:append_content(uuid, text)
     return false
   end
 
-  local data = self:_ensure_data()
-  uuid = uuid or data.active_uuid
+  local source = self:get_source()
+  uuid = uuid or source:get_activated_uuid()
 
-  local item = uuid and data.items[uuid] or nil
+  local state = self:_ensure_state()
+  local item = uuid and state.items[uuid] or nil
   if item == nil then
     return false
   end
@@ -686,7 +782,7 @@ function M:append_content(uuid, text)
   local new_content = (type(item.content) == "string" and item.content or "") .. text
   local ok = self:set_content(uuid, new_content)
 
-  if ok and uuid == data.active_uuid then
+  if ok and uuid == source:get_activated_uuid() then
     local bufnr = self:get_bufnr()
     if bufnr ~= nil then
       self:_render_active_item(bufnr)
@@ -700,13 +796,14 @@ end
 ---@param step integer
 ---@return boolean
 function M:_swap_step(step)
-  local data = self:_ensure_data()
-  local count = #data.orders
+  local state = self:_ensure_state()
+  local count = #state.orders
   if count <= 1 then
     return false
   end
 
-  local index_current = self:indexof(data.active_uuid)
+  local source = self:get_source()
+  local index_current = self:indexof(source:get_activated_uuid())
   if index_current < 1 then
     return false
   end
@@ -717,7 +814,7 @@ function M:_swap_step(step)
     return false
   end
 
-  data.orders[index_current], data.orders[index_next] = data.orders[index_next], data.orders[index_current]
+  state.orders[index_current], state.orders[index_next] = state.orders[index_next], state.orders[index_current]
   self:_mark_orders_dirty()
   return true
 end
@@ -774,7 +871,8 @@ function M:_sync_content_from_buf(bufnr, uuid)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
-  uuid = uuid or self:_ensure_data().active_uuid
+  local source = self:get_source()
+  uuid = uuid or source:get_activated_uuid()
   if uuid ~= nil then
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
     self:set_content(uuid, table.concat(lines, "\n"))
@@ -789,8 +887,8 @@ function M:_render_active_item(bufnr)
     return
   end
 
-  local data = self:_ensure_data()
-  local uuid = data.active_uuid
+  local source = self:get_source()
+  local uuid = source:get_activated_uuid()
   vim.b[bufnr][BUFFER_VAR_NAME] = uuid
 
   local item = uuid and self:get(uuid) or nil
@@ -810,7 +908,8 @@ function M:_on_text_changed()
   end
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
-    self:_sync_content_from_buf(bufnr, self:_ensure_data().active_uuid)
+    local source = self:get_source()
+    self:_sync_content_from_buf(bufnr, source:get_activated_uuid())
   end
 end
 
@@ -846,21 +945,17 @@ end
 ---@param uuid                           string|nil
 ---@return nil
 function M:_on_active_uuid_changed(uuid)
-  local data = self:_ensure_data()
   uuid = uuid ~= nil and #uuid > 0 and uuid or nil
-  if data.active_uuid == uuid then
-    return
-  end
 
+  -- The source's activated UUID has already been updated by focus_note()
+  -- We just need to render the buffer with the new note's content
   local bufnr = self:get_bufnr()
-  if bufnr ~= nil and data.active_uuid ~= nil then
-    self:_sync_content_from_buf(bufnr, data.active_uuid)
-  end
-
-  data.active_uuid = uuid
-  self:_mark_active_dirty()
   if bufnr ~= nil then
-    self:_render_active_item(bufnr)
+    -- Check if the buffer is already showing this UUID to avoid unnecessary renders
+    local current_uuid = vim.b[bufnr][BUFFER_VAR_NAME]
+    if current_uuid ~= uuid then
+      self:_render_active_item(bufnr)
+    end
   end
 
   if self._nvimbar ~= nil then
@@ -1024,7 +1119,8 @@ end
 function M:sync_active_content()
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
-    self:_sync_content_from_buf(bufnr, self:_ensure_data().active_uuid)
+    local source = self:get_source()
+    self:_sync_content_from_buf(bufnr, source:get_activated_uuid())
   end
   return bufnr
 end
@@ -1141,8 +1237,8 @@ function M:dispose()
 end
 
 M.BUFFER_VAR = BUFFER_VAR_NAME
-M.o_active_uuid = function(self)
-  return self._o_active_uuid
+M.o_active_uuid = function()
+  return eve.state.notepad.o_activated_uuid
 end
 
 return M

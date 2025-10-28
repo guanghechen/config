@@ -3,12 +3,13 @@ local __module_name__ = "std.source.notepad-sqlite" ---@type string
 
 local sqlite_ffi = require("std.source.sqlite-ffi")
 
+---@class std.t.INotepadSourceSqliteState : std.t.INotepadSourceState
+---SQLite-specific state (inherits all fields from INotepadSourceState)
+
 ---@class std.source.NotepadSqliteSource : std.t.INotepadSource
----@field public name                   string
----@field protected filepath            string
 ---@field protected default_item_name   fun(): string
 ---@field protected flush_scheduler     std.collection.Scheduler|nil Debounced flush scheduler
----@field protected _data               std.t.INotepadSourceSaveData|nil Internal data cache
+---@field protected _state              std.t.INotepadSourceSqliteState|nil Internal state cache
 ---@field protected _conn               std.source.sqlite.IConnection|nil Database connection
 ---@field protected _dirty_items        table<string, boolean> Track modified items
 ---@field protected _dirty_orders       boolean Track if orders changed
@@ -19,26 +20,6 @@ M.__index = M
 local FLUSH_DEBOUNCE_MS = 3000 ---@type integer milliseconds
 local SCHEMA_VERSION = 1
 
----@return string
-local function now_iso_utc()
-  return tostring(os.date("!%Y-%m-%dT%H:%M:%SZ"))
-end
-
----@param name                          string|nil
----@param default_name                  fun(): string
----@return string
-local function normalize_name(name, default_name)
-  if type(name) == "string" then
-    name = vim.trim(name)
-  else
-    name = ""
-  end
-  if #name == 0 then
-    return default_name()
-  end
-  return name
-end
-
 ---@param config                        std.t.INotepadSourceConfig
 ---@return std.source.NotepadSqliteSource
 function M.new(config)
@@ -46,7 +27,7 @@ function M.new(config)
   self.name = config.name
   self.filepath = config.filepath
   self.default_item_name = config.default_item_name
-  self._data = nil
+  self._state = nil
   self._conn = nil
   self._dirty_items = {}
   self._dirty_orders = false
@@ -131,8 +112,8 @@ function M:_ensure_default_note()
 
   if note_count == 0 then
     local uuid = rstd.fn.uuid()
-    local now = now_iso_utc()
-    local name = normalize_name(nil, self.default_item_name)
+    local now = std.notepad.now_iso_utc()
+    local name = std.notepad.normalize_name(nil, self.default_item_name)
 
     conn:transaction(function()
       conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
@@ -168,10 +149,10 @@ function M:mark_active_dirty()
 end
 
 ---@param force                         boolean
----@return std.t.INotepadSourceSaveData
+---@return std.t.INotepadSourceSqliteState
 function M:load(force)
-  if self._data ~= nil and not force then
-    return self._data
+  if self._state ~= nil and not force then
+    return self._state
   end
 
   self:_init_schema()
@@ -186,6 +167,7 @@ function M:load(force)
   ]]):execute()
 
   local items_map = {} ---@type table<string, std.t.INotepadItem>
+  local name_to_uuid = {} ---@type table<string, string>
   local default_orders = {} ---@type string[]
 
   for _, row in ipairs(rows) do
@@ -196,6 +178,7 @@ function M:load(force)
       created_at = row.created_at,
       updated_at = row.updated_at,
     }
+    name_to_uuid[row.name] = row.uuid
     default_orders[#default_orders + 1] = row.uuid
   end
 
@@ -232,39 +215,114 @@ function M:load(force)
     active_uuid = orders[1]
   end
 
-  self._data = {
+  local history, history_index = std.notepad.initialize_history(active_uuid)
+
+  self._state = {
     items = items_map,
     orders = orders,
     active_uuid = active_uuid,
+    name_to_uuid = name_to_uuid,
+    note_uuid_history = history,
+    history_index = history_index,
   }
 
   self._dirty_items = {}
   self._dirty_orders = false
   self._dirty_active = false
 
-  return self._data
+  return self._state
 end
 
 ---@return std.t.INotepadItemMeta[]
 function M:list()
-  local data = self:load(false) ---@type std.t.INotepadSourceSaveData
-  return data.items
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+  return state.items
+end
+
+---@return string|nil
+function M:get_activated_uuid()
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+  return state.active_uuid
+end
+
+---@param uuid                          string|nil
+---@return boolean
+function M:set_activated_uuid(uuid)
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+
+  if uuid == nil then
+    state.active_uuid = nil
+    self._dirty_active = true
+    self:_schedule_flush()
+    return true
+  end
+
+  if state.items[uuid] == nil then
+    return false
+  end
+
+  if state.active_uuid == uuid then
+    return true
+  end
+
+  state.active_uuid = uuid
+  self._dirty_active = true
+  self:_schedule_flush()
+  return true
 end
 
 ---@param uuid                          string
+---@param createIfNonexistent           boolean|nil
 ---@return std.t.INotepadItem|nil
-function M:retrieve(uuid)
-  local data = self:load(false) ---@type std.t.INotepadSourceSaveData
-  return data.items[uuid]
+function M:retrieve(uuid, createIfNonexistent)
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+  local item = state.items[uuid]
+
+  if item == nil and createIfNonexistent then
+    return self:create(nil, nil)
+  end
+
+  return item
+end
+
+---@param name                          string
+---@param createIfNonexistent           boolean|nil
+---@return std.t.INotepadItem|nil
+function M:retrieve_by_name(name, createIfNonexistent)
+  if type(name) ~= "string" or #name == 0 then
+    return nil
+  end
+
+  local normalized_name = std.notepad.normalize_name(name, self.default_item_name)
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+
+  local uuid = state.name_to_uuid[normalized_name]
+  if uuid ~= nil then
+    return state.items[uuid]
+  end
+
+  if createIfNonexistent then
+    return self:create(normalized_name, nil)
+  end
+
+  return nil
 end
 
 ---@param name                          string|nil
 ---@param content                       string|nil
 ---@return std.t.INotepadItem
 function M:create(name, content)
+  local normalized_name = std.notepad.normalize_name(name, self.default_item_name)
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+
+  -- Check if note with this name already exists using index
+  local existing_uuid = state.name_to_uuid[normalized_name]
+  if existing_uuid ~= nil then
+    return state.items[existing_uuid]
+  end
+
   local uuid = rstd.fn.uuid()
-  local now = now_iso_utc()
-  local normalized_name = normalize_name(name, self.default_item_name)
+  local now = std.notepad.now_iso_utc()
 
   local item = {
     uuid = uuid,
@@ -274,9 +332,9 @@ function M:create(name, content)
     updated_at = now,
   }
 
-  local data = self:load(false) ---@type std.t.INotepadSourceSaveData
-  data.items[uuid] = item
-  data.orders[#data.orders + 1] = uuid
+  state.items[uuid] = item
+  state.name_to_uuid[normalized_name] = uuid
+  state.orders[#state.orders + 1] = uuid
 
   self._dirty_items[uuid] = true
   self._dirty_orders = true
@@ -289,17 +347,30 @@ end
 ---@param item_data                     std.t.INotepadItemData
 ---@return boolean
 function M:update(uuid, item_data)
-  local data = self:load(false) ---@type std.t.INotepadSourceSaveData
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
 
-  local item = data.items[uuid]
+  local item = state.items[uuid]
   if item == nil then
     return false
   end
 
   local modified = false
 
-  local normalized_name = normalize_name(item_data.name, self.default_item_name)
+  local normalized_name = std.notepad.normalize_name(item_data.name, self.default_item_name)
   if normalized_name ~= item.name then
+    -- Check if new name conflicts with another note using index
+    local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
+    if has_conflict then
+      std.reporter.warn({
+        from = __module_name__,
+        subject = "Update Rejected",
+        message = string.format("Note with name '%s' already exists", normalized_name),
+      })
+      return false
+    end
+
+    -- Update name index
+    std.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
     item.name = normalized_name
     modified = true
   end
@@ -310,12 +381,50 @@ function M:update(uuid, item_data)
   end
 
   if modified then
-    item.updated_at = now_iso_utc()
+    item.updated_at = std.notepad.now_iso_utc()
     self._dirty_items[uuid] = true
     self:_schedule_flush()
   end
 
   return modified
+end
+
+---@param uuid                          string
+---@param new_name                      string
+---@return boolean
+function M:rename(uuid, new_name)
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+
+  local item = state.items[uuid]
+  if item == nil then
+    return false
+  end
+
+  local normalized_name = std.notepad.normalize_name(new_name, self.default_item_name)
+
+  if normalized_name == item.name then
+    return false
+  end
+
+  -- Check if new name conflicts with another note using index
+  local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
+  if has_conflict then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "Rename Rejected",
+      message = string.format("Note with name '%s' already exists", normalized_name),
+    })
+    return false
+  end
+
+  -- Update name index
+  std.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
+  item.name = normalized_name
+  item.updated_at = std.notepad.now_iso_utc()
+  self._dirty_items[uuid] = true
+  self:_schedule_flush()
+
+  return true
 end
 
 ---@param uuid                          string|nil
@@ -326,14 +435,14 @@ function M:append_content(uuid, text)
     return false
   end
 
-  local data = self:load(false) ---@type std.t.INotepadSourceSaveData
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
 
-  uuid = uuid or data.active_uuid
+  uuid = uuid or state.active_uuid
   if uuid == nil then
     return false
   end
 
-  local item = data.items[uuid]
+  local item = state.items[uuid]
   if item == nil then
     return false
   end
@@ -346,7 +455,7 @@ function M:append_content(uuid, text)
   end
 
   item.content = new_content
-  item.updated_at = now_iso_utc()
+  item.updated_at = std.notepad.now_iso_utc()
   self._dirty_items[uuid] = true
   self:_schedule_flush()
 
@@ -356,9 +465,9 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:remove(uuid)
-  local data = self:load(false) ---@type std.t.INotepadSourceSaveData
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
 
-  if #data.orders <= 1 then
+  if #state.orders <= 1 then
     std.reporter.warn({
       from = __module_name__,
       subject = "Delete Rejected",
@@ -367,12 +476,15 @@ function M:remove(uuid)
     return false
   end
 
-  if data.items[uuid] == nil then
+  local item = state.items[uuid]
+  if item == nil then
     return false
   end
 
-  data.items[uuid] = nil
-  std.table.filter_inline(data.orders, function(element)
+  -- Remove from name index
+  std.notepad.remove_from_name_index(state.name_to_uuid, item.name)
+  state.items[uuid] = nil
+  std.table.filter_inline(state.orders, function(element)
     return element ~= uuid
   end)
 
@@ -383,9 +495,82 @@ function M:remove(uuid)
   return true
 end
 
+---@param uuid                          string
+---@return nil
+function M:push_history(uuid)
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+
+  if state.items[uuid] == nil then
+    return
+  end
+
+  -- Remove all forward history when pushing new entry
+  if state.history_index > 0 and state.history_index < #state.note_uuid_history then
+    for i = #state.note_uuid_history, state.history_index + 1, -1 do
+      state.note_uuid_history[i] = nil
+    end
+  end
+
+  -- Don't add duplicate if already at the top
+  if #state.note_uuid_history > 0 and state.note_uuid_history[#state.note_uuid_history] == uuid then
+    return
+  end
+
+  state.note_uuid_history[#state.note_uuid_history + 1] = uuid
+  state.history_index = #state.note_uuid_history
+end
+
+---@return boolean
+function M:can_go_backward()
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+  return state.history_index > 1
+end
+
+---@return boolean
+function M:can_go_forward()
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+  return state.history_index > 0 and state.history_index < #state.note_uuid_history
+end
+
+---@return string|nil
+function M:go_backward()
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+
+  -- Keep going back until we find a valid note or reach the start
+  while state.history_index > 1 do
+    state.history_index = state.history_index - 1
+    local uuid = state.note_uuid_history[state.history_index]
+
+    -- Return the first valid note we find
+    if uuid ~= nil and state.items[uuid] ~= nil then
+      return uuid
+    end
+  end
+
+  return nil
+end
+
+---@return string|nil
+function M:go_forward()
+  local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
+
+  -- Keep going forward until we find a valid note or reach the end
+  while state.history_index < #state.note_uuid_history do
+    state.history_index = state.history_index + 1
+    local uuid = state.note_uuid_history[state.history_index]
+
+    -- Return the first valid note we find
+    if uuid ~= nil and state.items[uuid] ~= nil then
+      return uuid
+    end
+  end
+
+  return nil
+end
+
 ---@return boolean
 function M:flush()
-  if self._data == nil then
+  if self._state == nil then
     return true
   end
 
@@ -403,7 +588,7 @@ function M:flush()
       local update_note_stmt = conn:prepare("UPDATE notes SET name = ?, content = ?, updated_at = ? WHERE uuid = ?")
 
       for uuid, _ in pairs(self._dirty_items) do
-        local item = self._data.items[uuid]
+        local item = self._state.items[uuid]
 
         if item == nil then
           delete_note_stmt:bind(uuid):execute()
@@ -420,13 +605,13 @@ function M:flush()
 
       if self._dirty_orders then
         conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
-          :bind("note_orders", vim.json.encode(self._data.orders))
+          :bind("note_orders", vim.json.encode(self._state.orders))
           :execute()
       end
 
-      if self._dirty_active and self._data.active_uuid ~= nil then
+      if self._dirty_active and self._state.active_uuid ~= nil then
         conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
-          :bind("activated_item_uuid", self._data.active_uuid)
+          :bind("activated_item_uuid", self._state.active_uuid)
           :execute()
       end
     end)
@@ -450,13 +635,13 @@ function M:flush()
 end
 
 ---Export to standard JSON format
----@return std.t.INotepadSourceJsonData
+---@return std.t.INotepadSourceData
 function M:dump_to_json()
-  local data = self:load(false)
+  local state = self:load(false)
   local items = {}
 
-  for _, uuid in ipairs(data.orders) do
-    local item = data.items[uuid]
+  for _, uuid in ipairs(state.orders) do
+    local item = state.items[uuid]
     if item ~= nil then
       items[#items + 1] = {
         uuid = item.uuid,
@@ -470,13 +655,13 @@ function M:dump_to_json()
 
   return {
     items = items,
-    orders = vim.deepcopy(data.orders),
-    activated_item_uuid = data.active_uuid,
+    orders = vim.deepcopy(state.orders),
+    activated_item_uuid = state.active_uuid,
   }
 end
 
 ---Import from standard JSON format
----@param json_data                     std.t.INotepadSourceJsonData
+---@param json_data                     std.t.INotepadSourceData
 ---@return boolean
 function M:load_from_json(json_data)
   if type(json_data) ~= "table" then
@@ -495,9 +680,9 @@ function M:load_from_json(json_data)
         for _, entry in ipairs(json_data.items) do
           if type(entry) == "table" and type(entry.uuid) == "string" and #entry.uuid > 0 then
             local uuid = entry.uuid
-            local name = normalize_name(entry.name, self.default_item_name)
+            local name = std.notepad.normalize_name(entry.name, self.default_item_name)
             local content = type(entry.content) == "string" and entry.content or ""
-            local created_at = type(entry.created_at) == "string" and entry.created_at or now_iso_utc()
+            local created_at = type(entry.created_at) == "string" and entry.created_at or std.notepad.now_iso_utc()
             local updated_at = type(entry.updated_at) == "string" and entry.updated_at or created_at
 
             insert_note_stmt:bind(uuid, name, content, created_at, updated_at):execute()
@@ -530,7 +715,7 @@ function M:load_from_json(json_data)
     return false
   end
 
-  self._data = nil
+  self._state = nil
   self:load(true)
 
   return true

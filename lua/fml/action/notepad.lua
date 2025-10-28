@@ -156,12 +156,12 @@ end
 ---@return nil
 function M.create()
   local source_name = eve.context.option.notepad_source:snapshot() ---@type string
-  local _, config = eve.state.notepad.retrieve_source(source_name)
+  local source, config = eve.state.notepad.retrieve_source(source_name)
 
   local prefix = config.default_item_name() ---@type string
   local name_default = string.format("%s %d", prefix, math.max(1, widget:size() + 1)) ---@type string
   vim.ui.input({
-    prompt = "Enter new notepad name:",
+    prompt = "Enter notepad name (create or navigate):",
     default = name_default,
   }, function(input)
     if input == nil then
@@ -169,7 +169,26 @@ function M.create()
     end
 
     local name = vim.trim(input) ---@type string
-    local item = widget:create(#name > 0 and name or nil) ---@type std.t.INotepadItem
+    local item ---@type std.t.INotepadItem|nil
+    if #name == 0 then
+      item = widget:create(nil)
+    else
+      item = source:retrieve_by_name(name, true)
+      if item == nil then
+        std.reporter.error({
+          from = __module_name__,
+          subject = "create",
+          message = string.format("Failed to create or retrieve notepad '%s'.", name),
+        })
+        return
+      end
+      widget:focus_uuid(item.uuid)
+    end
+
+    if item == nil then
+      return
+    end
+
     widget:focus()
 
     local ok = widget:flush()
@@ -177,13 +196,13 @@ function M.create()
       std.reporter.info({
         from = __module_name__,
         subject = "create",
-        message = string.format("Created notepad '%s'.", item.name),
+        message = string.format("Opened notepad '%s'.", item.name),
       })
     else
       std.reporter.warn({
         from = __module_name__,
         subject = "create",
-        message = string.format("Created notepad '%s', but failed to save.", item.name),
+        message = string.format("Opened notepad '%s', but failed to save.", item.name),
       })
     end
   end)
@@ -561,6 +580,30 @@ function M.change_engine()
 
   engine_picker:reset_data(data)
   engine_picker:focus()
+end
+
+---@return nil
+function M.go_backward()
+  if not widget:go_backward() then
+    std.reporter.info({
+      from = __module_name__,
+      subject = "go_backward",
+      message = "No previous note in history",
+    })
+  end
+  widget:focus()
+end
+
+---@return nil
+function M.go_forward()
+  if not widget:go_forward() then
+    std.reporter.info({
+      from = __module_name__,
+      subject = "go_forward",
+      message = "No next note in history",
+    })
+  end
+  widget:focus()
 end
 
 return M

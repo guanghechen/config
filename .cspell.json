@@ -1,8 +1,5 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua",
-    "lsp/yamlls.lua"
-  ],
+  "ignorePaths": ["lua/std/fileicon.lua", "lsp/yamlls.lua"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -34,6 +31,7 @@
     "Fcodeformat",
     "Fcoderun",
     "Fcoderunforce",
+    "Fcoderunasneovimcommand",
     "Fcodeswapconditionalbranches",
     "Fcopycharundercursor",
     "Fcopyfilepath",
@@ -97,18 +95,24 @@
     "Flspshowcodeaction",
     "Flspshowcodeactionsource",
     "Fnotepadappendcontent",
+    "Fnotepadchangeengine",
     "Fnotepadclose",
     "Fnotepadcreate",
     "Fnotepaddestroy",
     "Fnotepadfocus",
     "Fnotepadfocusleft",
     "Fnotepadfocusright",
+    "Fnotepadgobackward",
+    "Fnotepadgoforward",
     "Fnotepadrename",
     "Fnotepadsave",
     "Fnotepadshow",
     "Fnotepadswapleft",
     "Fnotepadswapright",
     "Fnotepadtoggle",
+    "Fnotepadsourceselect",
+    "Fnotepadsourceprev",
+    "Fnotepadsourcenext",
     "Fopen",
     "Fprofilestart",
     "Fprofilestop",
@@ -868,3 +872,4 @@
     "zindex"
   ]
 }
+
