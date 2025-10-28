@@ -1,6 +1,6 @@
 ---@class eve.state.notepad.ISourceConfig : std.t.INotepadSourceConfig
 ---@field public title                  string Human-readable source title
----@field public engine                 'json'|'sqlite' Source engine type
+---@field public engine                 'json'|'sqlite'|'folder' Source engine type
 
 ---@type eve.state.notepad.ISourceConfig[]
 local source_configs = {
@@ -25,10 +25,10 @@ local source_configs = {
   {
     name = "shared:todos",
     title = "Todos (shared)",
-    engine = "sqlite",
-    filepath = std.path.locate_shared_filepath("notepad/todos.db"),
+    engine = "folder",
+    filepath = std.path.locate_shared_filepath("notepad/todos"),
     default_item_name = function()
-      return "todo:" .. os.date("%Y-%m-%d")
+      return tostring(os.date("%Y-%m-%d"))
     end,
   },
 }
@@ -70,6 +70,8 @@ function M.retrieve_source(name)
     local source
     if config.engine == "sqlite" then
       source = std.source.NotepadSqliteSource.new(config)
+    elseif config.engine == "folder" then
+      source = std.source.NotepadFolderSource.new(config)
     else
       source = std.source.NotepadJsonSource.new(config)
     end
@@ -87,7 +89,7 @@ end
 
 ---Migrate source engine and update config
 ---@param name                          string Source name
----@param target_engine                 'json'|'sqlite' Target engine
+---@param target_engine                 'json'|'sqlite'|'folder' Target engine
 ---@return boolean success
 function M.migrate_source_engine(name, target_engine)
   local config = M.source_config_map[name]
@@ -121,9 +123,11 @@ function M.migrate_source_engine(name, target_engine)
 
   local new_filepath
   if target_engine == "sqlite" then
-    new_filepath = config.filepath:gsub("%.json$", ".db")
+    new_filepath = config.filepath:gsub("%.json$", ".db"):gsub("/$", ".db")
+  elseif target_engine == "folder" then
+    new_filepath = config.filepath:gsub("%.json$", ""):gsub("%.db$", "")
   else
-    new_filepath = config.filepath:gsub("%.db$", ".json")
+    new_filepath = config.filepath:gsub("%.db$", ".json"):gsub("/$", ".json")
   end
 
   local new_config = vim.tbl_extend("force", config, {
@@ -134,6 +138,8 @@ function M.migrate_source_engine(name, target_engine)
   local new_source
   if target_engine == "sqlite" then
     new_source = std.source.NotepadSqliteSource.new(new_config)
+  elseif target_engine == "folder" then
+    new_source = std.source.NotepadFolderSource.new(new_config)
   else
     new_source = std.source.NotepadJsonSource.new(new_config)
   end
@@ -180,7 +186,15 @@ function M.toggle_source_engine(name)
     return false
   end
 
-  local target_engine = config.engine == "json" and "sqlite" or "json"
+  local target_engine
+  if config.engine == "json" then
+    target_engine = "sqlite"
+  elseif config.engine == "sqlite" then
+    target_engine = "folder"
+  else
+    target_engine = "json"
+  end
+
   return M.migrate_source_engine(name, target_engine)
 end
 
