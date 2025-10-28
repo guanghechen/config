@@ -77,8 +77,8 @@ fi
 
 ## copy ~/.inputrc
 if [ -f "$HOME/.inputrc" ]; then
-  backup_file="$HOME/.inputrc.$(date +%Y%m%d).bak"
-  mv "$HOME/.inputrc" "$backup_file"
-  printf "\e[93m  [backup] ~/.inputrc -> $backup_file\e[0m\n"
+  printf "\n\e[93m  [setup config] ~/.inputrc is already exist. (skipped).\e[0m\n"
+else
+  printf "\n\e[94m  [setup config] setting up ~/.inputrc...\e[0m\n"
+  cp ~/.config/guanghechen/nix/config/.inputrc $HOME/.inputrc
 fi
-cp ~/.config/guanghechen/nix/config/.inputrc $HOME/.inputrc
