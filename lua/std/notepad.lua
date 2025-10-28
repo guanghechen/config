@@ -24,7 +24,7 @@ function M.normalize_name(name, default_name)
 end
 
 ---Build name-to-uuid index from items
----@param items                         table<string, std.t.INotepadItem>
+---@param items                         table<string, std.t.INotepadItemState>
 ---@return table<string, string>
 function M.build_name_index(items)
   local name_to_uuid = {} ---@type table<string, string>

@@ -74,6 +74,26 @@ function M:_schedule_flush()
   end
 end
 
+---Load note content on demand
+---@private
+---@param item                          std.t.INotepadItemState
+---@return nil
+function M:_load_note_content(item)
+  if item.original ~= nil then
+    return
+  end
+
+  local raw_content = item._raw_content
+  if type(raw_content) == "string" then
+    item.content = raw_content
+    item.original = raw_content
+    item._raw_content = nil
+  else
+    item.content = ""
+    item.original = ""
+  end
+end
+
 ---Mark orders as dirty (called when orders are modified externally)
 ---For JSON source, this triggers a flush since entire file is rewritten anyway
 ---@return nil
@@ -123,9 +143,11 @@ function M:load(force)
               items_map[uuid] = {
                 uuid = uuid,
                 name = name,
-                content = type(entry.content) == "string" and entry.content or "",
+                content = nil,
+                original = nil,
                 created_at = created_at,
                 updated_at = updated_at,
+                _raw_content = type(entry.content) == "string" and entry.content or "",
               }
               name_to_uuid[name] = uuid
             end
@@ -161,6 +183,7 @@ function M:load(force)
         uuid = uuid,
         name = name,
         content = "",
+        original = "",
         created_at = now,
         updated_at = now,
       }
@@ -197,6 +220,7 @@ function M:load(force)
       uuid = uuid,
       name = name,
       content = "",
+      original = "",
       created_at = now,
       updated_at = now,
     }
@@ -223,7 +247,21 @@ end
 ---@return std.t.INotepadItemMeta[]
 function M:list()
   local state = self:load(false) ---@type std.t.INotepadSourceJsonState
-  return state.items
+  local result = {} ---@type std.t.INotepadItemMeta[]
+
+  for _, uuid in ipairs(state.orders) do
+    local item = state.items[uuid]
+    if item ~= nil then
+      result[#result + 1] = {
+        uuid = item.uuid,
+        name = item.name,
+        created_at = item.created_at,
+        updated_at = item.updated_at,
+      }
+    end
+  end
+
+  return result
 end
 
 ---@return string|nil
@@ -258,7 +296,7 @@ end
 
 ---@param uuid                          string
 ---@param createIfNonexistent           boolean|nil
----@return std.t.INotepadItem|nil
+---@return std.t.INotepadItemState|nil
 function M:retrieve(uuid, createIfNonexistent)
   local state = self:load(false) ---@type std.t.INotepadSourceJsonState
   local item = state.items[uuid]
@@ -267,12 +305,16 @@ function M:retrieve(uuid, createIfNonexistent)
     return self:create(nil, nil)
   end
 
+  if item ~= nil then
+    self:_load_note_content(item)
+  end
+
   return item
 end
 
 ---@param name                          string
 ---@param createIfNonexistent           boolean|nil
----@return std.t.INotepadItem|nil
+---@return std.t.INotepadItemState|nil
 function M:retrieve_by_name(name, createIfNonexistent)
   if type(name) ~= "string" or #name == 0 then
     return nil
@@ -283,7 +325,11 @@ function M:retrieve_by_name(name, createIfNonexistent)
 
   local uuid = state.name_to_uuid[normalized_name]
   if uuid ~= nil then
-    return state.items[uuid]
+    local item = state.items[uuid]
+    if item ~= nil then
+      self:_load_note_content(item)
+    end
+    return item
   end
 
   if createIfNonexistent then
@@ -295,7 +341,7 @@ end
 
 ---@param name                          string|nil
 ---@param content                       string|nil
----@return std.t.INotepadItem
+---@return std.t.INotepadItemState
 function M:create(name, content)
   local normalized_name = std.notepad.normalize_name(name, self.default_item_name)
   local state = self:load(false) ---@type std.t.INotepadSourceJsonState
@@ -303,15 +349,19 @@ function M:create(name, content)
   -- Check if note with this name already exists using index
   local existing_uuid = state.name_to_uuid[normalized_name]
   if existing_uuid ~= nil then
-    return state.items[existing_uuid]
+    local existing_item = state.items[existing_uuid]
+    self:_load_note_content(existing_item)
+    return existing_item
   end
 
   local uuid = rstd.fn.uuid()
   local now = std.notepad.now_iso_utc()
+  local initial_content = content or ""
   local item = {
     uuid = uuid,
     name = normalized_name,
-    content = content or "",
+    content = initial_content,
+    original = initial_content,
     created_at = now,
     updated_at = now,
   }
@@ -333,6 +383,8 @@ function M:update(uuid, item_data)
   if item == nil then
     return false
   end
+
+  self:_load_note_content(item)
 
   local modified = false
 
@@ -377,6 +429,8 @@ function M:rename(uuid, new_name)
   if item == nil then
     return false
   end
+
+  self:_load_note_content(item)
 
   local normalized_name = std.notepad.normalize_name(new_name, self.default_item_name)
 
@@ -423,6 +477,8 @@ function M:append_content(uuid, text)
   if item == nil then
     return false
   end
+
+  self:_load_note_content(item)
 
   local existing = type(item.content) == "string" and item.content or ""
   local new_content = existing .. text
@@ -569,27 +625,49 @@ function M:flush()
     for _, uuid in ipairs(self._state.orders) do
       local item = self._state.items[uuid]
       if item ~= nil then
+        local content_to_save = item.content
+        if content_to_save == nil and item._raw_content ~= nil then
+          content_to_save = item._raw_content
+        end
+        if content_to_save == nil then
+          content_to_save = ""
+        end
         items[#items + 1] = {
           uuid = item.uuid,
           name = item.name,
-          content = item.content,
+          content = content_to_save,
           created_at = item.created_at,
           updated_at = item.updated_at,
         }
         existing[uuid] = true
+        -- Update original after successful save preparation
+        if item.content ~= nil then
+          item.original = item.content
+        end
       end
     end
 
     -- Add any items not in orders
     for uuid, item in pairs(self._state.items) do
       if not existing[uuid] then
+        local content_to_save = item.content
+        if content_to_save == nil and item._raw_content ~= nil then
+          content_to_save = item._raw_content
+        end
+        if content_to_save == nil then
+          content_to_save = ""
+        end
         items[#items + 1] = {
           uuid = item.uuid,
           name = item.name,
-          content = item.content,
+          content = content_to_save,
           created_at = item.created_at,
           updated_at = item.updated_at,
         }
+        -- Update original after successful save preparation
+        if item.content ~= nil then
+          item.original = item.content
+        end
       end
     end
 
@@ -663,9 +741,11 @@ function M:load_from_json(json_data)
         items_map[uuid] = {
           uuid = uuid,
           name = name,
-          content = type(entry.content) == "string" and entry.content or "",
+          content = nil,
+          original = nil,
           created_at = created_at,
           updated_at = updated_at,
+          _raw_content = type(entry.content) == "string" and entry.content or "",
         }
       end
     end

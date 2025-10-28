@@ -482,7 +482,7 @@ function M:indexof(uuid)
 end
 
 ---@param index integer
----@return string|nil, std.t.INotepadItem|nil
+---@return string|nil, std.t.INotepadItemState|nil
 function M:at(index)
   local state = self:_ensure_state()
   local uuid = state.orders[index]
@@ -496,24 +496,24 @@ function M:current()
   return self:indexof(active_uuid), active_uuid
 end
 
----@return std.t.INotepadItem|nil
+---@return std.t.INotepadItemState|nil
 function M:current_item()
   local source = self:get_source()
   local active_uuid = source:get_activated_uuid()
   if active_uuid == nil then
     return nil
   end
-  local state = self:_ensure_state()
-  return state.items[active_uuid]
+  return source:retrieve(active_uuid, false)
 end
 
 ---@param uuid string
----@return std.t.INotepadItem|nil
+---@return std.t.INotepadItemState|nil
 function M:get(uuid)
-  return self:_ensure_state().items[uuid]
+  local source = self:get_source()
+  return source:retrieve(uuid, false)
 end
 
----@return fun():std.t.INotepadItem|nil, integer|nil
+---@return fun():std.t.INotepadItemState|nil, integer|nil
 function M:iterator()
   local state = self:_ensure_state()
   local index = 0
@@ -577,7 +577,7 @@ function M:focus_step(step)
 end
 
 ---@param name string|nil
----@return std.t.INotepadItem
+---@return std.t.INotepadItemState
 function M:create(name)
   local trimmed = type(name) == "string" and vim.trim(name) or nil
   local source = self:get_source()
@@ -588,7 +588,7 @@ function M:create(name)
 end
 
 ---@param name string
----@return std.t.INotepadItem|nil
+---@return std.t.INotepadItemState|nil
 function M:find_first_by_name(name)
   if type(name) ~= "string" then
     return nil
@@ -609,7 +609,7 @@ function M:find_first_by_name(name)
 end
 
 ---@param name string
----@return std.t.INotepadItem
+---@return std.t.INotepadItemState
 function M:ensure_named_item(name)
   local trimmed = vim.trim(type(name) == "string" and name or "")
   trimmed = #trimmed > 0 and trimmed or DEFAULT_ITEM_NAME
@@ -753,9 +753,13 @@ function M:set_content(uuid, content)
     return false
   end
 
-  local state = self:_ensure_state()
-  local item = state.items[uuid]
-  if item == nil or item.content == (content or "") then
+  local item = source:retrieve(uuid, false)
+  if item == nil then
+    return false
+  end
+
+  -- Content is now guaranteed to be loaded
+  if item.content == (content or "") then
     return false
   end
 
@@ -773,12 +777,12 @@ function M:append_content(uuid, text)
   local source = self:get_source()
   uuid = uuid or source:get_activated_uuid()
 
-  local state = self:_ensure_state()
-  local item = uuid and state.items[uuid] or nil
+  local item = uuid and source:retrieve(uuid, false) or nil
   if item == nil then
     return false
   end
 
+  -- Content is now guaranteed to be loaded
   local new_content = (type(item.content) == "string" and item.content or "") .. text
   local ok = self:set_content(uuid, new_content)
 

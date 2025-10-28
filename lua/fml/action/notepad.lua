@@ -169,7 +169,7 @@ function M.create()
     end
 
     local name = vim.trim(input) ---@type string
-    local item ---@type std.t.INotepadItem|nil
+    local item ---@type std.t.INotepadItemState|nil
     if #name == 0 then
       item = widget:create(nil)
     else
@@ -210,7 +210,7 @@ end
 
 ---@return nil
 function M.destroy()
-  local item = widget:current_item() ---@type std.t.INotepadItem|nil
+  local item = widget:current_item() ---@type std.t.INotepadItemState|nil
   if item == nil then
     std.reporter.warn({
       from = __module_name__,
@@ -293,7 +293,7 @@ end
 
 ---@return nil
 function M.rename()
-  local item = widget:current_item() ---@type std.t.INotepadItem|nil
+  local item = widget:current_item() ---@type std.t.INotepadItemState|nil
   if item == nil then
     std.reporter.warn({
       from = __module_name__,
