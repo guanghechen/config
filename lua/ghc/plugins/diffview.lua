@@ -228,7 +228,6 @@ return {
             { desc = "Flatten empty subdirectories in tree listing style" },
           },
           { "n", "R", actions.refresh_files, { desc = "Update stats and entries in the file list" } },
-          { "n", "<leader>ee", actions.focus_files, { desc = "Bring focus to the file panel" } },
           { "n", "<leader>er", actions.focus_files, { desc = "Bring focus to the file panel" } },
           { "n", "<leader>et", actions.toggle_files, { desc = "Toggle the file panel" } },
           { "n", "g<C-x>", actions.cycle_layout, { desc = "Cycle available layouts" } },

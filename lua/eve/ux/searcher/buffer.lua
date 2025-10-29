@@ -833,6 +833,21 @@ end
 ---@param window_type                   "finder"|"replacer"
 ---@return std.t.IKeymap[]
 function M:__create_keymaps__(raw_flags, window_type)
+  local actions = {
+    toggle_source_with_searcher = function()
+      local current_winnr = vim.api.nvim_get_current_win() ---@type integer
+      local winnr_source = self._winnr_source ---@type integer|nil
+
+      -- If we're in the source window, focus back to the searcher
+      if current_winnr == winnr_source then
+        self:focus_last()
+      else
+        -- Otherwise, focus the source window
+        self:focus_source()
+      end
+    end,
+  }
+
   ---@type std.t.IKeymap[]
   local base_keymaps = {
     {
@@ -884,21 +899,17 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "t", "v" },
+      key = "<C-a>`",
+      aliases = { "<D-`>", "<M-`>" },
+      desc = "search_buffer: toggle between searcher and source window",
+      callback = actions.toggle_source_with_searcher,
+    },
+    {
+      modes = { "n", "v" },
       key = "<leader>`",
       desc = "search_buffer: toggle between searcher and source window",
-      callback = function()
-        local current_winnr = vim.api.nvim_get_current_win() ---@type integer
-        local winnr_source = self._winnr_source ---@type integer|nil
-
-        -- If we're in the source window, focus back to the searcher
-        if current_winnr == winnr_source then
-          self:focus_last()
-        else
-          -- Otherwise, focus the source window
-          self:focus_source()
-        end
-      end,
+      callback = actions.toggle_source_with_searcher,
     },
     {
       modes = { "i", "n", "v" },
