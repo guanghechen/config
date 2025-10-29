@@ -771,7 +771,10 @@ function M:set_content(uuid, content)
     return false
   end
 
-  return source:update(uuid, { name = item.name, content = content or "" })
+  return source:update(uuid, {
+    name = item.name,
+    content = content or "",
+  })
 end
 
 ---@param uuid string|nil

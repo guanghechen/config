@@ -8,6 +8,10 @@
 ---@field public content                string|nil Note content (nil if not loaded)
 ---@field public original               string|nil Original content for dirty checking (nil if not loaded)
 
+---@class std.t.INotepadItemPatch
+---@field public name                   string Human-readable name
+---@field public content                string Note content (markdown format)
+
 ---@class std.t.INotepadItemData : std.t.INotepadItemMeta
 ---@field public content                string Note content (markdown format)
 
@@ -40,7 +44,7 @@
 ---@field public retrieve               fun(self: std.t.INotepadSource, uuid: string, createIfNonexistent: boolean|nil): std.t.INotepadItemState|nil Retrieve note by UUID, optionally create if not found
 ---@field public retrieve_by_name       fun(self: std.t.INotepadSource, name: string, createIfNonexistent: boolean|nil): std.t.INotepadItemState|nil Retrieve note by name, optionally create if not found
 ---@field public create                 fun(self: std.t.INotepadSource, name: string|nil, content: string|nil): std.t.INotepadItemState Create new note (returns existing if name exists)
----@field public update                 fun(self: std.t.INotepadSource, uuid: string, data: std.t.INotepadItemData): boolean Update existing note
+---@field public update                 fun(self: std.t.INotepadSource, uuid: string, patch: std.t.INotepadItemPatch): boolean Update existing note
 ---@field public rename                 fun(self: std.t.INotepadSource, uuid: string, new_name: string): boolean Rename note (rejects if name already exists)
 ---@field public remove                 fun(self: std.t.INotepadSource, uuid: string): boolean Remove note (rejects if last note)
 ---@field public push_history           fun(self: std.t.INotepadSource, uuid: string): nil Add note to history stack

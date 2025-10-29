@@ -22,7 +22,7 @@ local METADATA_FILENAME = ".__notepad__"
 ---@param name                          string
 ---@return string
 local function sanitize_filename(name)
-  local sanitized = name:gsub("[/\\:*?\"<>|]", "_")
+  local sanitized = name:gsub('[/\\:*?"<>|]', "_")
   sanitized = sanitized:gsub("^%.+", "_")
   return sanitized
 end
@@ -430,9 +430,9 @@ function M:create(name, content)
 end
 
 ---@param uuid                          string
----@param item_data                     std.t.INotepadItemData
+---@param patch                         std.t.INotepadItemPatch
 ---@return boolean
-function M:update(uuid, item_data)
+function M:update(uuid, patch)
   local state = self:load(false) ---@type std.t.INotepadSourceFolderState
 
   local item = state.items[uuid]
@@ -446,7 +446,7 @@ function M:update(uuid, item_data)
   local name_changed = false
   local old_name = item.name
 
-  local normalized_name = std.notepad.normalize_name(item_data.name, self.default_item_name)
+  local normalized_name = std.notepad.normalize_name(patch.name, self.default_item_name)
   if normalized_name ~= item.name then
     local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
     if has_conflict then
@@ -464,8 +464,8 @@ function M:update(uuid, item_data)
     modified = true
   end
 
-  if item_data.content ~= item.content then
-    item.content = item_data.content
+  if patch.content ~= item.content then
+    item.content = patch.content
     modified = true
   end
 
@@ -794,7 +794,7 @@ function M:load_from_json(json_data)
     history_index = history_index,
   }
 
-  for uuid, item in pairs(items_map) do
+  for _, item in pairs(items_map) do
     self:_save_note_content(item)
   end
 

@@ -96,7 +96,10 @@ function M:_init_schema()
 
   local version_row = conn:prepare("SELECT value FROM metadata WHERE key = 'schema_version'"):execute_one()
   if version_row == nil then
-    conn:prepare("INSERT INTO metadata (key, value) VALUES (?, ?)"):bind("schema_version", tostring(SCHEMA_VERSION)):execute()
+    conn
+      :prepare("INSERT INTO metadata (key, value) VALUES (?, ?)")
+      :bind("schema_version", tostring(SCHEMA_VERSION))
+      :execute()
   end
 end
 
@@ -114,11 +117,18 @@ function M:_ensure_default_note()
     local name = std.notepad.normalize_name(nil, self.default_item_name)
 
     conn:transaction(function()
-      conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
+      conn
+        :prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
         :bind(uuid, name, "", now, now)
         :execute()
-      conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)"):bind("note_orders", vim.json.encode({ uuid })):execute()
-      conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)"):bind("activated_item_uuid", uuid):execute()
+      conn
+        :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        :bind("note_orders", vim.json.encode({ uuid }))
+        :execute()
+      conn
+        :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        :bind("activated_item_uuid", uuid)
+        :execute()
     end)
   end
 end
@@ -137,15 +147,12 @@ end
 ---@param item                          std.t.INotepadItemState
 ---@return nil
 function M:_load_note_content(item)
-  if item.original ~= nil then
+  if item.content ~= nil then
     return
   end
 
-  local raw_content = item._raw_content
-  if type(raw_content) == "string" then
-    item.content = raw_content
-    item.original = raw_content
-    item._raw_content = nil
+  if type(item.original) == "string" then
+    item.content = item.original
   else
     item.content = ""
     item.original = ""
@@ -178,13 +185,15 @@ function M:load(force)
 
   local conn = self:_get_conn()
 
-  local rows = conn:prepare([[
+  local rows = conn
+    :prepare([[
     SELECT uuid, name, content, created_at, updated_at
     FROM notes
     ORDER BY updated_at DESC, uuid ASC
-  ]]):execute()
+  ]])
+    :execute()
 
-  local items_map = {} ---@type table<string, std.t.INotepadItem>
+  local items_map = {} ---@type table<string, std.t.INotepadItemState>
   local name_to_uuid = {} ---@type table<string, string>
   local default_orders = {} ---@type string[]
 
@@ -193,10 +202,9 @@ function M:load(force)
       uuid = row.uuid,
       name = row.name,
       content = nil,
-      original = nil,
+      original = row.content,
       created_at = row.created_at,
       updated_at = row.updated_at,
-      _raw_content = row.content,
     }
     name_to_uuid[row.name] = row.uuid
     default_orders[#default_orders + 1] = row.uuid
@@ -388,9 +396,9 @@ function M:create(name, content)
 end
 
 ---@param uuid                          string
----@param item_data                     std.t.INotepadItemData
+---@param patch                         std.t.INotepadItemPatch
 ---@return boolean
-function M:update(uuid, item_data)
+function M:update(uuid, patch)
   local state = self:load(false) ---@type std.t.INotepadSourceSqliteState
 
   local item = state.items[uuid]
@@ -402,7 +410,7 @@ function M:update(uuid, item_data)
 
   local modified = false
 
-  local normalized_name = std.notepad.normalize_name(item_data.name, self.default_item_name)
+  local normalized_name = std.notepad.normalize_name(patch.name, self.default_item_name)
   if normalized_name ~= item.name then
     -- Check if new name conflicts with another note using index
     local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
@@ -421,8 +429,8 @@ function M:update(uuid, item_data)
     modified = true
   end
 
-  if item_data.content ~= item.content then
-    item.content = item_data.content
+  if patch.content ~= item.content then
+    item.content = patch.content
     modified = true
   end
 
@@ -629,7 +637,8 @@ function M:flush()
   local ok, err = pcall(function()
     conn:transaction(function()
       local check_exists_stmt = conn:prepare("SELECT 1 FROM notes WHERE uuid = ?")
-      local insert_note_stmt = conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
+      local insert_note_stmt =
+        conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
       local update_note_stmt = conn:prepare("UPDATE notes SET name = ?, content = ?, updated_at = ? WHERE uuid = ?")
 
       for uuid, item in pairs(self._state.items) do
@@ -652,13 +661,15 @@ function M:flush()
       end
 
       if self._dirty_orders then
-        conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        conn
+          :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
           :bind("note_orders", vim.json.encode(self._state.orders))
           :execute()
       end
 
       if self._dirty_active and self._state.active_uuid ~= nil then
-        conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        conn
+          :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
           :bind("activated_item_uuid", self._state.active_uuid)
           :execute()
       end
@@ -722,7 +733,8 @@ function M:load_from_json(json_data)
       conn:prepare("DELETE FROM notes"):execute()
 
       if type(json_data.items) == "table" then
-        local insert_note_stmt = conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
+        local insert_note_stmt =
+          conn:prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
 
         for _, entry in ipairs(json_data.items) do
           if type(entry) == "table" and type(entry.uuid) == "string" and #entry.uuid > 0 then
@@ -738,14 +750,16 @@ function M:load_from_json(json_data)
       end
 
       if type(json_data.orders) == "table" then
-        conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        conn
+          :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
           :bind("note_orders", vim.json.encode(json_data.orders))
           :execute()
       end
 
       local activated_uuid = json_data.activated_item_uuid
       if type(activated_uuid) == "string" and #activated_uuid > 0 then
-        conn:prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        conn
+          :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
           :bind("activated_item_uuid", activated_uuid)
           :execute()
       end
