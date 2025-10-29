@@ -1,9 +1,9 @@
 use crate::algorithm::kmp::find_all_matched_points;
-use crate::types::dto::MatchLocation;
 use crate::types::dto::ReplaceFileResult;
 use crate::util::regex::compile_regex;
-use crate::util::string::get_locations;
 use regex::Captures;
+use rstd::string::get_locations;
+use rstd::types::MatchLocation;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;

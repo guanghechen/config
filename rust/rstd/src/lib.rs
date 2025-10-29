@@ -1,6 +1,9 @@
 pub mod string;
 pub use string::*;
 
+pub mod types;
+pub use types::*;
+
 pub mod r#fn;
 pub use r#fn::*;
 
@@ -32,6 +35,12 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
         (
             "parse_comma_list",
             lua.create_function(|_, text: String| Ok(string::parse_comma_list(&text)))?,
+        ),
+        (
+            "get_locations",
+            lua.create_function(|_, (text, offsets): (String, Vec<usize>)| {
+                Ok(string::get_locations(&text, &offsets))
+            })?,
         ),
     ])
 }

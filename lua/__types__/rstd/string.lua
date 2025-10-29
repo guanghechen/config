@@ -16,4 +16,9 @@ function M.count_lines(text) end
 ---@return string[]
 function M.parse_comma_list(text) end
 
+---@param text                                  string
+---@param offsets                               integer[]
+---@return std.t.IMatchLocation[]
+function M.get_locations(text, offsets) end
+
 return M
