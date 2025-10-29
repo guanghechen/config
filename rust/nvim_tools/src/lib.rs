@@ -1,4 +1,3 @@
-pub mod algorithm;
 pub mod oxi;
 pub mod types;
 pub mod util;
