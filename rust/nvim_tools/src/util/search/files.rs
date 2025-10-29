@@ -1,9 +1,9 @@
-use crate::types::dto::search::search_in_files::SearchInFilesFailedResult;
-use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
 use crate::types::dto::MatchPoint;
 use crate::types::dto::SearchBlockMatch;
 use crate::types::dto::SearchFileMatch;
 use crate::types::dto::SearchInFilesParams;
+use crate::types::dto::search::search_in_files::SearchInFilesFailedResult;
+use crate::types::dto::search::search_in_files::SearchInFilesSucceedResult;
 use crate::types::third_party::ripgrep;
 use regex::Regex;
 use rstd::string;

@@ -1,3 +1,4 @@
+use nvim_oxi::Object;
 use nvim_oxi::conversion::Error as ConversionError;
 use nvim_oxi::conversion::FromObject;
 use nvim_oxi::conversion::ToObject;
@@ -5,7 +6,6 @@ use nvim_oxi::lua::Poppable;
 use nvim_oxi::lua::Pushable;
 use nvim_oxi::serde::Deserializer;
 use nvim_oxi::serde::Serializer;
-use nvim_oxi::Object;
 use serde::Deserialize;
 use serde::Serialize;
 

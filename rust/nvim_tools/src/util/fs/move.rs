@@ -132,9 +132,11 @@ mod tests {
         let result = super::r#move(old_path, new_path, false);
         assert!(result.is_err());
         let error = result.unwrap_err();
-        assert!(error
-            .error
-            .contains("[rename] Destination path already exists"));
+        assert!(
+            error
+                .error
+                .contains("[rename] Destination path already exists")
+        );
 
         // Clean up
         fs::remove_file(old_path).unwrap();
