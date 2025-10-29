@@ -119,6 +119,8 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field protected _plainfile          eve.ux.searcher.PlainfileView
 ---@field protected _retriever          eve.ux.retriever.TreeRetriever
 ---@field protected _scheduler_search   std.collection.Scheduler|nil
+---@field protected _is_searching       boolean
+---@field protected _search_pending     boolean
 ---@field protected _treeview           eve.ux.searcher.FiletreeView
 ---
 ---@field protected _last_preview_filepath  string|nil
@@ -1505,6 +1507,8 @@ function M.new(props)
   self._plainfile = plainfile
   self._retriever = retriever
   self._scheduler_search = scheduler_search
+  self._is_searching = false
+  self._search_pending = false
   self._treeview = treeview
 
   self._last_preview_filepath = nil
@@ -1864,6 +1868,47 @@ end
 ---@protected
 ---@return nil
 function M:__search__()
+  if self._is_searching then
+    self._search_pending = true
+    return
+  end
+
+  self._is_searching = true
+
+  local function finalize_once()
+    if not self._is_searching then
+      return nil
+    end
+
+    if self._search_pending then
+      local scheduler = self._scheduler_search
+      self._search_pending = false
+      if scheduler ~= nil then
+        scheduler:schedule()
+      end
+    else
+      self._search_pending = false
+    end
+
+    self._is_searching = false
+    return nil
+  end
+
+  local ok, err = xpcall(function()
+    self:__search_internal__()
+  end, function(message)
+    finalize_once()
+    return message
+  end)
+
+  if not ok then
+    error(err)
+  end
+
+  finalize_once()
+end
+
+function M:__search_internal__()
   local rootpath = self.rootpath:snapshot() ---@type string
 
   if not std.path.is_exist(rootpath) then
