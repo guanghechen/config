@@ -12,6 +12,8 @@ local __module_name__ = "eve.ux.searcher.finder" ---@type string
 ---@field public keymaps                std.t.IKeymap[]
 ---@field public input                  std.collection.IObservable
 ---@field public title                  string
+---@field public prompt_sign?           string
+---@field public prompt_sign_hl?        string
 
 ---@class eve.ux.searcher.Finder
 ---@field public fullname               string
@@ -19,6 +21,8 @@ local __module_name__ = "eve.ux.searcher.finder" ---@type string
 ---@field public input                  std.collection.IObservable
 ---@field public linecount              std.collection.IObservable
 ---@field public title                  string
+---@field public prompt_sign_group      string
+---@field public prompt_sign_name       string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
@@ -35,6 +39,8 @@ function M.new(props)
   local input = props.input ---@type std.collection.IObservable
   local linecount = std.Observable.from_value(0) ---@type std.collection.IObservable
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
+  local prompt_sign = props.prompt_sign ---@type string|nil
+  local prompt_sign_hl = props.prompt_sign_hl or "f_pk_finder_prompt" ---@type string
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -42,6 +48,16 @@ function M.new(props)
   self.input = input
   self.linecount = linecount
   self.title = title
+
+  -- Set prompt sign group and name based on provided sign or default
+  if prompt_sign ~= nil then
+    self.prompt_sign_group = string.format("eve_ux_searcher_finder_prompt_%s", name)
+    self.prompt_sign_name = string.format("SearcherFinderPrompt_%s", name)
+    vim.fn.sign_define(self.prompt_sign_name, { text = prompt_sign, texthl = prompt_sign_hl })
+  else
+    self.prompt_sign_group = eve.var.sign.GROUP_PICKER_FINDER_PROMPT
+    self.prompt_sign_name = eve.var.sign.PICKER_FINDER_PROMPT
+  end
 
   self._disposed = false
   self._bufnr = nil
@@ -324,8 +340,8 @@ end
 ---@return eve.ux.searcher.Finder
 function M:__set_prompt__(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
-    local group = eve.var.sign.GROUP_PICKER_FINDER_PROMPT ---@type string
-    local sign = eve.var.sign.PICKER_FINDER_PROMPT ---@type string
+    local group = self.prompt_sign_group ---@type string
+    local sign = self.prompt_sign_name ---@type string
     pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
   end
   return self

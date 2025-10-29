@@ -713,7 +713,7 @@ function M:__create_replacer_buffer_as_needed__()
   -- Set up replace icon sign
   local sign_group = "eve_ux_replace_buffer_prompt"
   local sign_name = "ReplaceBufferPrompt"
-  vim.fn.sign_define(sign_name, { text = eve.icon.symbols.flag_replace, texthl = "f_pk_finder_prompt" })
+  vim.fn.sign_define(sign_name, { text = eve.icon.symbols.flag_replace, texthl = "f_pk_replacer_prompt" })
   vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {

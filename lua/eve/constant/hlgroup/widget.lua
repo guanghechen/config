@@ -204,6 +204,7 @@ function M.gen_hlgroup_map(context)
     f_pk_finder_normal = { fg = c.fg1, bg = bg_pane },
     f_pk_finder_title = { link = t and "ms_b_bg0" or "ms_b_none" },
     f_pk_finder_prompt = { fg = c.red, bg = bg_pane },
+    f_pk_replacer_prompt = { fg = c.brightBlue, bg = bg_pane },
     f_pk_matches = { fg = c.pink, bold = true, italic = true },
     f_pk_preview_current = { bg = c.bg2 },
     f_pk_preview_normal = { bg = bg_pane },

@@ -262,6 +262,8 @@ function M.new(props)
       ),
       input = replace_pattern,
       title = replacer_title,
+      prompt_sign = eve.icon.symbols.flag_replace,
+      prompt_sign_hl = "f_pk_replacer_prompt",
     })
   end
 
@@ -693,10 +695,12 @@ function M:__create_wins__()
     replacer_winnr = nil
   end
 
-  if finder_winnr ~= nil
+  if
+    finder_winnr ~= nil
     and result_winnr ~= nil
     and (replacer_winnr ~= nil or not should_show_replacer)
-    and (preview_winnr ~= nil or not should_show_preview) then
+    and (preview_winnr ~= nil or not should_show_preview)
+  then
     return false, finder_winnr, replacer_winnr, result_winnr, preview_winnr
   end
 
@@ -856,8 +860,7 @@ function M:__layout__()
   local finder_height = 1 ---@type integer
 
   local min_top_height = should_show_replacer and 5 or 3 ---@type integer
-  local preview_height = should_show_preview and preview_on_bottom and math.max(1, math.floor(height * 0.5))
-    or height ---@type integer
+  local preview_height = should_show_preview and preview_on_bottom and math.max(1, math.floor(height * 0.5)) or height ---@type integer
   if should_show_preview and preview_on_bottom then
     local max_preview_height = math.max(1, height - min_top_height) ---@type integer
     preview_height = math.max(1, math.min(preview_height, max_preview_height))
@@ -891,12 +894,14 @@ function M:__layout__()
   }
 
   ---@type std.t.IWinDimension|nil
-  local replacer_dimension = should_show_replacer and {
-    row = row + finder_height + 1,
-    col = col,
-    height = replacer_height,
-    width = finder_width,
-  } or nil
+  local replacer_dimension = should_show_replacer
+      and {
+        row = row + finder_height + 1,
+        col = col,
+        height = replacer_height,
+        width = finder_width,
+      }
+    or nil
 
   ---@type std.t.IWinDimension
   local result_dimension = {
