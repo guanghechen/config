@@ -472,6 +472,107 @@ function M.source_next()
   })
 end
 
+---@class fml.action.notepad.INoteItem : eve.ux.picker.composer.list.IItem
+---@field public data                   std.t.INotepadItemMeta
+---@field public text_lower             string
+
+---@return eve.ux.picker.composer.list.IResetData
+local function fetch_notes_data()
+  local source = widget:get_source() ---@type std.t.INotepadSource
+  local current_item = widget:current_item() ---@type std.t.INotepadItemState|nil
+  local items = {} ---@type fml.action.notepad.INoteItem[]
+
+  for _, note_meta in ipairs(source:list()) do
+    items[#items + 1] = {
+      uuid = note_meta.uuid,
+      text = note_meta.name,
+      text_lower = note_meta.name:lower(),
+      highlights = {},
+      data = note_meta,
+    }
+  end
+
+  ---@type eve.ux.picker.composer.list.IResetData
+  return {
+    items = items,
+    uuid_current = current_item and current_item.uuid or nil,
+    uuid_present = current_item and current_item.uuid or nil,
+  }
+end
+
+local notes_picker ---@type eve.ux.picker.ListComposer|nil
+notes_picker = eve.ux.picker.ListComposer.new({
+  name = __module_name__ .. ".note_select",
+  permanent = true,
+  title = "Select Note",
+  height = 0.8,
+  width = 120,
+
+  search_pattern = o_search_pattern,
+  flag_fuzzy = o_flag_fuzzy,
+  flag_regex = o_flag_regex,
+  flag_case_sensitive = o_flag_case_sensitive,
+
+  render_preview = function(composer, bufnr, _)
+    local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
+    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    ---@cast item fml.action.notepad.INoteItem|nil
+
+    if item == nil then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No note selected" })
+      ---@type eve.ux.picker.preview.IDrawResult
+      return {
+        cursorline = false,
+        number = false,
+        title = "Preview",
+        wrap = false,
+      }
+    end
+
+    local source = widget:get_source() ---@type std.t.INotepadSource
+    local note = source:retrieve(item.data.uuid) ---@type std.t.INotepadItemState|nil
+
+    if note == nil then
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Failed to load note content" })
+      ---@type eve.ux.picker.preview.IDrawResult
+      return {
+        cursorline = false,
+        number = false,
+        title = "Error",
+        wrap = false,
+      }
+    end
+
+    local lines = vim.split(note.content or "", "\n") ---@type string[]
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.bo[bufnr].filetype = "markdown"
+
+    ---@type eve.ux.picker.preview.IDrawResult
+    return {
+      cursorline = false,
+      number = true,
+      title = string.format(" %s ", note.name),
+      wrap = true,
+    }
+  end,
+
+  on_confirm = function(composer, item)
+    ---@cast item fml.action.notepad.INoteItem
+    composer:close()
+    if item ~= nil then
+      widget:focus_uuid(item.data.uuid)
+      widget:focus()
+    end
+  end,
+  on_disposed = function()
+    o_search_pattern:next("")
+  end,
+  on_refresh = function(composer)
+    local data = fetch_notes_data()
+    composer:reset_data(data)
+  end,
+})
+
 ---@class fml.action.notepad.IEngineItem : eve.ux.picker.composer.list.IItem
 ---@field public data                   { engine: 'json'|'sqlite', description: string }
 ---@field public text_lower             string
@@ -604,6 +705,13 @@ function M.go_forward()
     })
   end
   widget:focus()
+end
+
+---@return nil
+function M.note_select()
+  local data = fetch_notes_data()
+  notes_picker:reset_data(data)
+  notes_picker:focus()
 end
 
 return M

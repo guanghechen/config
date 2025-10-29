@@ -172,6 +172,14 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
+    modes = { "n", "v" },
+    key = "<leader>2",
+    desc = K.notepad.note_select.desc,
+    callback = function()
+      vim.cmd(K.notepad.note_select.uuid)
+    end,
+  },
+  {
     modes = { "i", "n", "v" },
     key = "<M-i>",
     desc = K.notepad.go_backward.desc,

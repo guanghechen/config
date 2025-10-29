@@ -459,6 +459,7 @@ M.definitions.notepad = {
   swap_left = def("Fnotepadswapleft", "notepad: swap left", "?"),
   swap_right = def("Fnotepadswapright", "notepad: swap right", "?"),
   source_select = def("Fnotepadsourceselect", "notepad: select source"),
+  note_select = def("Fnotepadnoteselect", "notepad: select note"),
   source_prev = def("Fnotepadsourceprev", "notepad: previous source"),
   source_next = def("Fnotepadsourcenext", "notepad: next source"),
   change_engine = def("Fnotepadchangeengine", "notepad: change storage engine"),

@@ -615,6 +615,12 @@ command
     end,
   })
   .implement({
+    uuid = K.notepad.note_select.uuid,
+    action = function()
+      require("fml.action.notepad").note_select()
+    end,
+  })
+  .implement({
     uuid = K.notepad.source_prev.uuid,
     action = function()
       require("fml.action.notepad").source_prev()
