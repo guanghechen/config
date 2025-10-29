@@ -72,11 +72,27 @@ local config = {
 			}),
 		},
 		{
+			key = ";",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = ";" }),
+			}),
+		},
+		{
 			key = ":",
 			mods = "CMD|SHIFT",
 			action = act.Multiple({
 				act.SendKey({ key = "a", mods = "CTRL" }),
 				act.SendKey({ key = ":", mods = "SHIFT" }),
+			}),
+		},
+		{
+			key = "'",
+			mods = "CMD",
+			action = act.Multiple({
+				act.SendKey({ key = "a", mods = "CTRL" }),
+				act.SendKey({ key = "'" }),
 			}),
 		},
 		{
