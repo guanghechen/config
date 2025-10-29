@@ -1,6 +1,6 @@
 use crate::util::regex::compile_regex;
 use regex::Captures;
-use rstd::string::kmp_find_all_matched_points;
+use rstd::algorithm::kmp::find_all_matched_points;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
@@ -49,11 +49,11 @@ pub fn replace_file_by_matches(
         }
     } else {
         let match_points: Vec<usize> = if flag_case_sensitive {
-            kmp_find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+            find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
         } else {
             let text_lower = text.to_lowercase();
             let pattern_lower = search_pattern.to_lowercase();
-            kmp_find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+            find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
         };
         let mut pieces: Vec<&str> = vec![];
         let mut i: usize = 0;

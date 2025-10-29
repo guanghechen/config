@@ -2,7 +2,7 @@ use crate::types::dto::MatchPoint;
 use crate::types::dto::ReplacePreviewResult;
 use crate::util::regex::compile_regex;
 use regex::Captures;
-use rstd::string::kmp_find_all_matched_points;
+use rstd::algorithm::kmp::find_all_matched_points;
 use std::collections::HashSet;
 
 pub fn replace_text_preview_by_matches_advance(
@@ -79,11 +79,11 @@ pub fn replace_text_preview_by_matches_advance(
     }
 
     let match_points: Vec<usize> = if flag_case_sensitive {
-        kmp_find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
     } else {
         let text_lower = text.to_lowercase();
         let pattern_lower = search_pattern.to_lowercase();
-        kmp_find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+        find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
     };
     let len_of_search: usize = search_pattern.len();
     let len_of_replace: usize = replace_pattern.len();

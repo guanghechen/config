@@ -1,8 +1,7 @@
 use crate::types::dto::LineMatch;
 use crate::types::dto::MatchPoint;
 use regex::Regex;
-use rstd::string::kmp_calc_fails;
-use rstd::string::kmp_find_all_matched_points;
+use rstd::algorithm::kmp::{calc_fails, find_all_matched_points};
 
 /// Find the line number for a given byte position using binary search
 /// Returns (line_number, line_start_position)
@@ -56,7 +55,7 @@ pub fn search_in_lines_literal(
     let n_pattern_bytes: usize = pattern_bytes.len();
     let n_pattern_chars: usize = pattern_chars.len();
     let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
-    kmp_calc_fails(pattern_bytes, &mut fails);
+    calc_fails(pattern_bytes, &mut fails);
 
     // Smart pattern detection: check if pattern contains newlines
     let is_multiline_pattern = pattern.contains('\n');
@@ -72,7 +71,7 @@ pub fn search_in_lines_literal(
         let full_text_bytes = full_text_str.as_bytes();
         let line_offsets = build_line_offsets(lines_vec);
 
-        let points = kmp_find_all_matched_points(full_text_bytes, pattern_bytes, Some(&fails));
+        let points = find_all_matched_points(full_text_bytes, pattern_bytes, Some(&fails));
         for start_pos in points {
             let end_pos = start_pos + n_pattern_bytes;
 
@@ -102,7 +101,7 @@ pub fn search_in_lines_literal(
             };
             let line_bytes = line_str.as_bytes();
 
-            let points = kmp_find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
+            let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
             for start_pos in points {
                 let end_pos = start_pos + n_pattern_bytes;
 
@@ -133,7 +132,7 @@ pub fn search_in_lines_literal(
             };
             let line_bytes = line_str.as_bytes();
             let base: f64 = line.len() as f64;
-            let points = kmp_find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
+            let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
             if !points.is_empty() {
                 let mut pieces: Vec<MatchPoint> = vec![];
                 let mut score: u32 = 0;
