@@ -1,6 +1,9 @@
 pub mod algorithm;
 pub use algorithm::*;
 
+pub mod find;
+pub use find::*;
+
 pub mod string;
 pub use string::*;
 
@@ -14,6 +17,7 @@ pub mod path;
 pub use path::*;
 
 use mlua::prelude::*;
+use mlua::{FromLua, IntoLua, MultiValue as LuaMultiValue, Value as LuaValue};
 
 fn fn_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     lua.create_table_from([
@@ -93,11 +97,37 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     Ok(table)
 }
 
+fn find_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+    lua.create_table_from([(
+        "find_files",
+        lua.create_function(|lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
+            let options = IFindFilesOptions::from_lua(options, lua)?;
+            match find::find_files(&options) {
+                Ok(result) => {
+                    let data = result.into_lua(lua)?;
+                    Ok(LuaMultiValue::from_vec(vec![
+                        data,
+                        LuaValue::Nil,
+                    ]))
+                }
+                Err(error) => {
+                    let err = error.into_lua(lua)?;
+                    Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        err,
+                    ]))
+                }
+            }
+        })?,
+    )])
+}
+
 #[mlua::lua_module]
 fn rstd(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     let exports = lua.create_table()?;
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;
     exports.set("path", path_module(lua)?)?;
+    exports.set("find", find_module(lua)?)?;
     Ok(exports)
 }

@@ -1,42 +1,15 @@
-use rstd::string;
-use serde::Deserialize;
-use serde::Serialize;
+use crate::string;
+use crate::types::{
+    IFindFilesFailedResult,
+    IFindFilesOptions,
+    IFindFilesSucceedResult,
+};
 use std::path::PathBuf;
 use std::process::Command;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FindFilesSucceedResult {
-    #[serde(skip_serializing)]
-    pub cmd: String,
-    #[serde(skip_serializing)]
-    pub stdout: String,
-
-    pub filepaths: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FindFilesFailedResult {
-    #[serde(skip_serializing)]
-    pub cmd: String,
-
-    pub error: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FindFilesOptions {
-    pub workspace: String,
-    pub cwd: String,
-    pub flag_case_sensitive: bool,
-    pub flag_gitignore: bool,
-    pub flag_regex: bool,
-    pub search_pattern: String,
-    pub search_paths: String,
-    pub exclude_patterns: String,
-}
-
 pub fn find_files(
-    options: &FindFilesOptions,
-) -> Result<FindFilesSucceedResult, FindFilesFailedResult> {
+    options: &IFindFilesOptions,
+) -> Result<IFindFilesSucceedResult, IFindFilesFailedResult> {
     let workspace: &str = &options.workspace;
     let cwd: &str = &options.cwd;
     let flag_case_sensitive: bool = options.flag_case_sensitive;
@@ -48,15 +21,11 @@ pub fn find_files(
 
     let (cmd, output) = {
         let mut cmd = Command::new("fd");
-        cmd
-            //
-            .current_dir(cwd)
+        cmd.current_dir(cwd)
             .args(["--base-directory", cwd])
             .arg("--color=never")
             .arg("--hidden")
-            .arg("--type=file")
-            // -
-        ;
+            .arg("--type=file");
 
         if flag_gitignore {
             let mut gitignore_path = PathBuf::from(workspace);
@@ -82,7 +51,7 @@ pub fn find_files(
             cmd.args(["--exclude", &pattern]);
         }
 
-        if !options.search_pattern.is_empty() {
+        if !search_pattern.is_empty() {
             if flag_regex {
                 cmd.args(["--regex", search_pattern]);
             } else {
@@ -90,7 +59,6 @@ pub fn find_files(
             }
         }
 
-        // return the output of the cmd
         let output = cmd.output().expect("failed to execute fd");
         (format!("{:?}", cmd), output)
     };
@@ -112,7 +80,7 @@ pub fn find_files(
             .filter(|x| !x.is_empty())
             .collect();
 
-        Ok(FindFilesSucceedResult {
+        Ok(IFindFilesSucceedResult {
             cmd,
             stdout: stdout.to_string(),
             filepaths,
@@ -120,13 +88,13 @@ pub fn find_files(
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.is_empty() {
-            Ok(FindFilesSucceedResult {
+            Ok(IFindFilesSucceedResult {
                 cmd,
                 stdout: "".to_string(),
                 filepaths: vec![],
             })
         } else {
-            Err(FindFilesFailedResult {
+            Err(IFindFilesFailedResult {
                 cmd,
                 error: stderr.to_string(),
             })

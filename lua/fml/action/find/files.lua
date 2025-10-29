@@ -95,8 +95,8 @@ local function refresh(picker, rootpath)
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
 
-  ---@type string[]
-  local filepaths = oxi.finder.find_files({
+  ---@type rstd.find.IFindFilesOptions
+  local find_files_options = {
     workspace = workspace,
     cwd = rootpath,
     flag_case_sensitive = false,
@@ -105,7 +105,19 @@ local function refresh(picker, rootpath)
     search_pattern = "",
     search_paths = "",
     exclude_patterns = table.concat(excludes, ","),
-  })
+  }
+
+  local filepaths = {}
+  local result, err = rstd.find.find_files(find_files_options)
+  if err ~= nil then
+    std.reporter.warn({
+      from = name,
+      subject = "find_files",
+      message = err.error,
+    })
+  elseif result ~= nil then
+    filepaths = result.filepaths or {}
+  end
 
   picker:reset_filepaths(rootpath, filepaths, false)
   picker:attach(rootuuid)
