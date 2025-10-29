@@ -1,6 +1,6 @@
-use crate::algorithm::kmp::find_all_matched_points;
 use crate::util::regex::compile_regex;
 use regex::Captures;
+use rstd::string::kmp_find_all_matched_points;
 
 pub fn replace_text_preview(
     text: &str,
@@ -37,11 +37,11 @@ pub fn replace_text_preview(
     }
 
     let match_points: Vec<usize> = if flag_case_sensitive {
-        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
+        kmp_find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
     } else {
         let text_lower = text.to_lowercase();
         let pattern_lower = search_pattern.to_lowercase();
-        find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
+        kmp_find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
     };
     let len_of_search: usize = search_pattern.len();
     let mut pieces: Vec<&str> = vec![];

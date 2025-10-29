@@ -42,6 +42,35 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
                 Ok(string::get_locations(&text, &offsets))
             })?,
         ),
+        (
+            "kmp_calc_fails",
+            lua.create_function(|_, pattern: String| {
+                let bytes = pattern.into_bytes();
+                let mut fails = vec![0; bytes.len() + 1];
+                string::kmp_calc_fails(&bytes, &mut fails);
+                Ok(fails)
+            })?,
+        ),
+        (
+            "kmp_find_all_matched_points",
+            lua.create_function(|_, (text, pattern): (String, String)| {
+                Ok(string::kmp_find_all_matched_points(
+                    text.as_bytes(),
+                    pattern.as_bytes(),
+                    None,
+                ))
+            })?,
+        ),
+        (
+            "kmp_find_first_matched_point",
+            lua.create_function(|_, (text, pattern): (String, String)| {
+                Ok(string::kmp_find_first_matched_point(
+                    text.as_bytes(),
+                    pattern.as_bytes(),
+                    None,
+                ))
+            })?,
+        ),
     ])
 }
 
