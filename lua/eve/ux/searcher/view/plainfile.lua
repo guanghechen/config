@@ -8,7 +8,7 @@ local __module_name__ = "eve.ux.searcher.view.plainfile" ---@type string
 ---@field public replace_pattern        std.collection.IObservable
 ---
 ---@field public filepath               string
----@field public filematch              oxi.searcher.IFileMatch|nil
+---@field public filematch              rstd.search.ISearchFileMatch|nil
 ---@field public offset_current         integer
 ---@field public match_offsets          integer[]
 

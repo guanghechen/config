@@ -4,6 +4,9 @@ pub use algorithm::*;
 pub mod find;
 pub use find::*;
 
+pub mod search;
+pub use search::*;
+
 pub mod string;
 pub use string::*;
 
@@ -122,6 +125,31 @@ fn find_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     )])
 }
 
+fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+    lua.create_table_from([(
+        "search_in_files",
+        lua.create_function(|lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
+            let options = ISearchInFilesOptions::from_lua(options, lua)?;
+            match search::search_in_files(&options) {
+                Ok(result) => {
+                    let data = result.into_lua(lua)?;
+                    Ok(LuaMultiValue::from_vec(vec![
+                        data,
+                        LuaValue::Nil,
+                    ]))
+                }
+                Err(error) => {
+                    let err = error.into_lua(lua)?;
+                    Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        err,
+                    ]))
+                }
+            }
+        })?,
+    )])
+}
+
 #[mlua::lua_module]
 fn rstd(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     let exports = lua.create_table()?;
@@ -129,5 +157,6 @@ fn rstd(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     exports.set("fn", fn_module(lua)?)?;
     exports.set("path", path_module(lua)?)?;
     exports.set("find", find_module(lua)?)?;
+    exports.set("search", search_module(lua)?)?;
     Ok(exports)
 }

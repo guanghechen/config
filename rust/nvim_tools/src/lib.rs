@@ -32,10 +32,6 @@ fn nvim_tools() -> Dictionary {
         ),
         ////
         (
-            "search_in_files",
-            Object::from(Function::from_fn(oxi::search::search_in_files)),
-        ),
-        (
             "search_in_lines",
             Object::from(Function::<
                 SearchInLinesParams,

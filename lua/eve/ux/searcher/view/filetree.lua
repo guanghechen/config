@@ -25,7 +25,7 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 
 ---@class eve.ux.searcher.view.filetree.IFileNodeState : eve.ux.view.tree.ILeafNodeState
 ---@field public locations              eve.ux.searcher.view.filetree.ILeafLocationState|nil
----@field public filematch              oxi.searcher.IFileMatch|nil
+---@field public filematch              rstd.search.ISearchFileMatch|nil
 
 ---@class eve.ux.searcher.view.filetree.ILeafLocationState : eve.ux.view.tree.ILeafLocationState
 ---@field public lnum                   integer
@@ -67,7 +67,7 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 
 ---@class eve.ux.searcher.view.filetree.ISearchResult
 ---@field public items                  eve.ux.searcher.view.filetree.ISearchedItem[]
----@field public filematch_map          table<string, oxi.searcher.IFileMatch>
+---@field public filematch_map          table<string, rstd.search.ISearchFileMatch>
 
 ---@class eve.ux.searcher.view.filetree.ISearchedPreviewItem
 ---@field public offset                 integer
@@ -233,8 +233,8 @@ function M:search(params)
   local search_pattern = flag_case_sensitive and params.search_pattern or params.search_pattern:lower() ---@type string
   local replace_pattern = params.replace_pattern ---@type string|nil
 
-  ---@type oxi.searcher.ISearchInFilesResult|nil
-  local results = oxi.searcher.search_in_files({
+  ---@type rstd.search.ISearchInFilesSucceedResult|nil
+  local results, err = rstd.search.search_in_files({
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,
     flag_gitignore = flag_gitignore,
@@ -248,7 +248,7 @@ function M:search(params)
     specified_filepath = specified_filepath,
   })
 
-  if results == nil or results.error ~= nil or results.items == nil then
+  if results == nil or results.items == nil then
     std.reporter.error({
       from = self.fullname,
       subject = "search",
@@ -267,21 +267,42 @@ function M:search(params)
         specified_filepath = specified_filepath,
         search_pattern = search_pattern,
         replacement = replace_pattern,
-        error = results ~= nil and results.error or nil,
+        error = err ~= nil and err.error or nil,
       },
     })
     return
   end
 
   local items = {} ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = {} ---@type table<string, oxi.searcher.IFileMatch>
+  local filematch_map = {} ---@type table<string, rstd.search.ISearchFileMatch>
 
-  for _, filepath in ipairs(results.item_orders) do
-    local filematch = results.items[filepath] ---@type oxi.searcher.IFileMatch
-    filepath = std.path.join(cwd, filepath) ---@type string
+  local normalized_items = {} ---@type table<string, rstd.search.ISearchFileMatch>
+  local item_orders = {} ---@type string[]
+
+  for filepath, filematch in pairs(results.items) do
+    local relpath = std.path.relative(cwd, filepath, true) ---@type string
+    table.insert(item_orders, relpath)
+    normalized_items[relpath] = filematch
+
+    for _, block_match in ipairs(filematch.matches) do
+      local text = block_match.text ---@type string
+      local lwidths = rstd.string.calc_linewidths(text) ---@type integer[]
+      local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
+      block_match.lines = lines
+      block_match.lwidths = lwidths
+    end
+  end
+
+  table.sort(item_orders)
+  results.items = normalized_items
+  results.item_orders = item_orders
+
+  for _, relpath in ipairs(results.item_orders) do
+    local filematch = results.items[relpath] ---@type rstd.search.ISearchFileMatch
+    local filepath = std.path.join(cwd, relpath) ---@type string
     local uuid = std.Filetree.uuid(filepath) ---@type string
 
-    filematch_map[uuid] = filematch ---@type oxi.searcher.IFileMatch
+    filematch_map[uuid] = filematch ---@type rstd.search.ISearchFileMatch
 
     if flag_replace and replace_pattern ~= nil then
       local lnum_delta = 0 ---@type integer

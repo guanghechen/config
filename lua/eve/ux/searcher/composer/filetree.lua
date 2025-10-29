@@ -1927,7 +1927,7 @@ function M:__search__()
   end
 
   local items = result.items ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = result.filematch_map ---@type table<string, oxi.searcher.IFileMatch>
+  local filematch_map = result.filematch_map ---@type table<string, rstd.search.ISearchFileMatch>
 
   local filepaths = {} ---@type string[]
   local uuids = {} ---@type string[]
