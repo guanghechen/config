@@ -1,22 +1,5 @@
 use crate::types::MatchLocation;
 
-pub fn calc_linewidths(text: &str) -> Vec<u32> {
-    text.lines().map(|line| line.len() as u32).collect()
-}
-
-pub fn count_lines(text: &str) -> u32 {
-    text.lines().count() as u32
-}
-
-pub fn parse_comma_list(input: &str) -> Vec<String> {
-    input
-        .split(',')
-        .map(|segment| segment.trim())
-        .filter(|segment| !segment.is_empty())
-        .map(|segment| segment.to_string())
-        .collect()
-}
-
 pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
     let mut locations: Vec<MatchLocation> = Vec::with_capacity(offsets.len());
 
@@ -52,17 +35,10 @@ pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::get_locations;
 
     #[test]
-    fn test_calc_linewidths() {
-        let text = "abc\ndef\nghi";
-        let widths = calc_linewidths(text);
-        assert_eq!(widths, vec![3, 3, 3]);
-    }
-
-    #[test]
-    fn test_get_locations() {
+    fn maps_offsets_to_line_meta() {
         let text = "foo\nbar\nbaz";
         let offsets = vec![0, 4, 8];
         let locations = get_locations(text, &offsets);
