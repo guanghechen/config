@@ -22,6 +22,7 @@ return {
       matchparen = {
         enabled = true,
         cmdline = false,
+        include_surrounding = true,
         group = "f_matched_pairs_0",
       },
     },
