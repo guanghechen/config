@@ -1,3 +1,6 @@
+pub mod algorithm;
+pub use algorithm::*;
+
 pub mod string;
 pub use string::*;
 
