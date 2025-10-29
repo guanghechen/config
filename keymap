@@ -196,7 +196,9 @@ keybind = cmd+shift+right_bracket=text:\x01\x7d
 
 # Misc
 keybind = cmd+enter=text:\x1b\x0d
+keybind = cmd+semicolon=text:\x01\x3b
 keybind = cmd+shift+semicolon=text:\x01\x3a
+keybind = cmd+apostrophe=text:\x01\x27
 keybind = cmd+grave_accent=text:\x01\x60
 
 # Terminal functions
