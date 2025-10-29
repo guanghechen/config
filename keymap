@@ -89,16 +89,16 @@ keybind = cmd+shift+down=text:\x01\x1b[1;2B
 keybind = cmd+shift+left=text:\x01\x1b[1;2D
 
 # Digit keys
-keybind = cmd+one=text:\x01\x31
-keybind = cmd+two=text:\x01\x32
-keybind = cmd+three=text:\x01\x33
-keybind = cmd+four=text:\x01\x34
-keybind = cmd+five=text:\x01\x35
-keybind = cmd+six=text:\x01\x36
-keybind = cmd+seven=text:\x01\x37
-keybind = cmd+eight=text:\x01\x38
-keybind = cmd+nine=text:\x01\x39
-keybind = cmd+zero=text:\x01\x30
+keybind = cmd+digit_1=text:\x01\x31
+keybind = cmd+digit_2=text:\x01\x32
+keybind = cmd+digit_3=text:\x01\x33
+keybind = cmd+digit_4=text:\x01\x34
+keybind = cmd+digit_5=text:\x01\x35
+keybind = cmd+digit_6=text:\x01\x36
+keybind = cmd+digit_7=text:\x01\x37
+keybind = cmd+digit_8=text:\x01\x38
+keybind = cmd+digit_9=text:\x01\x39
+keybind = cmd+digit_0=text:\x01\x30
 
 # Lower letter keys
 keybind = cmd+a=text:\x01\x61

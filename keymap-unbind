@@ -25,3 +25,14 @@ keybind = cmd+x=unbind
 keybind = cmd+y=unbind
 keybind = cmd+z=unbind
 
+keybind = cmd+digit_0=unbind
+keybind = cmd+digit_1=unbind
+keybind = cmd+digit_2=unbind
+keybind = cmd+digit_3=unbind
+keybind = cmd+digit_4=unbind
+keybind = cmd+digit_5=unbind
+keybind = cmd+digit_6=unbind
+keybind = cmd+digit_7=unbind
+keybind = cmd+digit_8=unbind
+keybind = cmd+digit_9=unbind
+
