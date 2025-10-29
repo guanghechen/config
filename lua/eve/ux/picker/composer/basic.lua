@@ -38,7 +38,9 @@ local __module_name__ = "eve.ux.picker.composer.basic" ---@type string
 ---@field public finder_without_result  string[]
 ---@field public result                 string[]
 ---@field public result_with_preview    string[]
+---@field public result_stacked         string[]
 ---@field public preview                string[]
+---@field public preview_stacked        string[]
 local __borders__ = {
   -- stylua: ignore start
   finder                = { "╭", "─", "╮", "│", "┤", "─", "├", "│" },
@@ -46,7 +48,9 @@ local __borders__ = {
   finder_without_result = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
   result                = { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
   result_with_preview   = { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
+  result_stacked        = { "├", "─", "┤", "│", "┤", "─", "├", "│" },
   preview               = { "┬", "─", "╮", "│", "╯", "─", "┴", "│" },
+  preview_stacked       = { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
   -- stylua: ignore end
 }
 
@@ -470,11 +474,32 @@ function M:resize()
     return
   end
 
+  local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+  local finder_border, result_border, preview_border = self:__get_borders__(preview_layout) ---@type string[], string[], string[]
+
   local finder_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension, std.t.IWinDimension|nil
   self.finder:resize(finder_dimension)
   self.result:resize(result_dimension)
   if self.preview ~= nil and preview_dimension ~= nil then
     self.preview:resize(preview_dimension)
+  end
+
+  -- Update borders when layout changes
+  local finder_winnr = self.finder:get_winnr() ---@type integer|nil
+  if finder_winnr ~= nil and vim.api.nvim_win_is_valid(finder_winnr) then
+    vim.api.nvim_win_set_config(finder_winnr, { border = finder_border })
+  end
+
+  local result_winnr = self.result:get_winnr() ---@type integer|nil
+  if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
+    vim.api.nvim_win_set_config(result_winnr, { border = result_border })
+  end
+
+  if self.preview ~= nil then
+    local preview_winnr = self.preview:get_winnr() ---@type integer|nil
+    if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
+      vim.api.nvim_win_set_config(preview_winnr, { border = preview_border })
+    end
   end
 end
 
@@ -528,17 +553,18 @@ function M:__create_wins__()
   end
 
   local finder_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension, std.t.IWinDimension|nil
+  local finder_border, result_border, preview_border = self:__get_borders__(preview_layout) ---@type string[], string[], string[]
 
   ---@type eve.ux.picker.finder.IWinOpts
   local finder_winopts = {
-    border = should_show_preview and preview_layout == "right" and __borders__.finder_with_preview or __borders__.finder,
+    border = finder_border,
     winhighlight = __highlights__.finder,
   }
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
 
   ---@type eve.ux.picker.result.IWinOpts
   local result_winopts = {
-    border = should_show_preview and preview_layout == "right" and __borders__.result_with_preview or __borders__.result,
+    border = result_border,
     number = result_number,
     winhighlight = __highlights__.result,
   }
@@ -547,7 +573,7 @@ function M:__create_wins__()
   if preview ~= nil and preview_dimension ~= nil and should_show_preview then
     ---@type eve.ux.picker.preview.IWinOpts
     local preview_winopts = {
-      border = __borders__.preview,
+      border = preview_border,
       winhighlight = __highlights__.preview,
     }
     preview_winnr = preview:create_win(preview_winopts, preview_dimension) ---@type integer|nil
@@ -651,7 +677,7 @@ function M:__layout__()
   if should_show_preview then
     if preview_on_bottom then
       local gap_finder_result = 1 ---@type integer
-      local gap_result_preview = 0 ---@type integer
+      local gap_result_preview = 1 ---@type integer
 
       local preview_height_target = math.max(1, math.floor(height * 0.5)) ---@type integer
       local max_preview_height = math.max(1, height - (finder_height + gap_finder_result + 1 + gap_result_preview)) ---@type integer
@@ -1327,6 +1353,22 @@ function M:__preview_layout__()
   end
 
   return "bottom"
+end
+
+---@protected
+---@param preview_layout               "hidden"|"right"|"bottom"
+---@return string[]
+---@return string[]
+---@return string[]
+function M:__get_borders__(preview_layout)
+  local should_show_preview = preview_layout ~= "hidden" ---@type boolean
+  local finder_border = should_show_preview and preview_layout == "right" and __borders__.finder_with_preview
+    or __borders__.finder
+  local result_border = should_show_preview
+      and (preview_layout == "right" and __borders__.result_with_preview or __borders__.result_stacked)
+    or __borders__.result
+  local preview_border = preview_layout == "bottom" and __borders__.preview_stacked or __borders__.preview
+  return finder_border, result_border, preview_border
 end
 
 return M

@@ -41,9 +41,12 @@ local __module_name__ = "eve.ux.searcher.composer.basic" ---@type string
 ---@field public finder_with_replacer_and_preview string[]
 ---@field public replacer               string[]
 ---@field public replacer_with_preview  string[]
+---@field public replacer_stacked       string[]
 ---@field public result                 string[]
 ---@field public result_with_preview    string[]
+---@field public result_stacked         string[]
 ---@field public preview                string[]
+---@field public preview_stacked        string[]
 local __borders__ = {
   -- stylua: ignore start
   finder                = { "╭", "─", "╮", "│", "┤", "─", "├", "│" },
@@ -53,9 +56,12 @@ local __borders__ = {
   finder_with_replacer_and_preview = { "╭", "─", "┬", "│", "┤", "─", "├", "│" },
   replacer              = { "├", "─", "┤", "│", "┤", "─", "├", "│" },
   replacer_with_preview = { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
+  replacer_stacked      = { "├", "─", "┤", "│", "┤", "─", "├", "│" },
   result                = { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
   result_with_preview   = { "├", "─", "┤", "│", "┴", "─", "╰", "│" },
+  result_stacked        = { "├", "─", "┤", "│", "┤", "─", "├", "│" },
   preview               = { "┬", "─", "╮", "│", "╯", "─", "┴", "│" },
+  preview_stacked       = { "├", "─", "┤", "│", "╯", "─", "╰", "│" },
   -- stylua: ignore end
 }
 
@@ -577,6 +583,11 @@ function M:resize()
     return
   end
 
+  local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+  local should_show_preview = preview_layout ~= "hidden" ---@type boolean
+  local should_show_replacer = self:__should_show_replacer__() ---@type boolean
+  local replacer_border, result_border, preview_border = self:__get_borders__(preview_layout, should_show_replacer) ---@type string[], string[], string[]
+
   local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension|nil, std.t.IWinDimension, std.t.IWinDimension|nil
   self.finder:resize(finder_dimension)
   if self.replacer ~= nil and replacer_dimension ~= nil then
@@ -585,6 +596,33 @@ function M:resize()
   self.result:resize(result_dimension)
   if self.preview ~= nil and preview_dimension ~= nil then
     self.preview:resize(preview_dimension)
+  end
+
+  -- Update borders when layout changes
+  local finder_winnr = self.finder:get_winnr() ---@type integer|nil
+  if finder_winnr ~= nil and vim.api.nvim_win_is_valid(finder_winnr) then
+    vim.api.nvim_win_set_config(finder_winnr, {
+      border = self:__get_finder_border__(should_show_replacer, should_show_preview and preview_layout == "right"),
+    })
+  end
+
+  if self.replacer ~= nil then
+    local replacer_winnr = self.replacer:get_winnr() ---@type integer|nil
+    if replacer_winnr ~= nil and vim.api.nvim_win_is_valid(replacer_winnr) then
+      vim.api.nvim_win_set_config(replacer_winnr, { border = replacer_border })
+    end
+  end
+
+  local result_winnr = self.result:get_winnr() ---@type integer|nil
+  if result_winnr ~= nil and vim.api.nvim_win_is_valid(result_winnr) then
+    vim.api.nvim_win_set_config(result_winnr, { border = result_border })
+  end
+
+  if self.preview ~= nil then
+    local preview_winnr = self.preview:get_winnr() ---@type integer|nil
+    if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
+      vim.api.nvim_win_set_config(preview_winnr, { border = preview_border })
+    end
   end
 end
 
@@ -654,6 +692,7 @@ function M:__create_wins__()
   end
 
   local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension|nil, std.t.IWinDimension, std.t.IWinDimension|nil
+  local replacer_border, result_border, preview_border = self:__get_borders__(preview_layout, should_show_replacer) ---@type string[], string[], string[]
 
   ---@type eve.ux.searcher.finder.IWinOpts
   local finder_winopts = {
@@ -665,7 +704,7 @@ function M:__create_wins__()
   if replacer ~= nil and replacer_dimension ~= nil and should_show_replacer then
     ---@type eve.ux.searcher.finder.IWinOpts
     local replacer_winopts = {
-      border = should_show_preview and preview_layout == "right" and __borders__.replacer_with_preview or __borders__.replacer,
+      border = replacer_border,
       winhighlight = __highlights__.replacer,
     }
     replacer_winnr = replacer:create_win(replacer_winopts, replacer_dimension)
@@ -673,7 +712,7 @@ function M:__create_wins__()
 
   ---@type eve.ux.searcher.result.IWinOpts
   local result_winopts = {
-    border = should_show_preview and preview_layout == "right" and __borders__.result_with_preview or __borders__.result,
+    border = result_border,
     number = result_number,
     winhighlight = __highlights__.result,
   }
@@ -682,7 +721,7 @@ function M:__create_wins__()
   if preview ~= nil and preview_dimension ~= nil and should_show_preview then
     ---@type eve.ux.searcher.preview.IWinOpts
     local preview_winopts = {
-      border = __borders__.preview,
+      border = preview_border,
       winhighlight = __highlights__.preview,
     }
     preview_winnr = preview:create_win(preview_winopts, preview_dimension) ---@type integer|nil
@@ -830,8 +869,9 @@ function M:__layout__()
   local preview_dimension = nil ---@type std.t.IWinDimension|nil
   if should_show_preview then
     if preview_on_bottom then
+      local gap_result_preview = 1 ---@type integer
       preview_dimension = {
-        row = row + layout_height,
+        row = row + layout_height + gap_result_preview,
         col = col,
         height = preview_height,
         width = preview_width,
@@ -1745,6 +1785,24 @@ function M:__get_finder_border__(should_show_replacer, should_show_preview)
   else
     return __borders__.finder
   end
+end
+
+---@protected
+---@param preview_layout               "hidden"|"right"|"bottom"
+---@param should_show_replacer         boolean
+---@return string[]
+---@return string[]
+---@return string[]
+function M:__get_borders__(preview_layout, should_show_replacer)
+  local should_show_preview = preview_layout ~= "hidden" ---@type boolean
+  local replacer_border = should_show_preview
+      and (preview_layout == "right" and __borders__.replacer_with_preview or __borders__.replacer_stacked)
+    or __borders__.replacer
+  local result_border = should_show_preview
+      and (preview_layout == "right" and __borders__.result_with_preview or __borders__.result_stacked)
+    or __borders__.result
+  local preview_border = preview_layout == "bottom" and __borders__.preview_stacked or __borders__.preview
+  return replacer_border, result_border, preview_border
 end
 
 return M
