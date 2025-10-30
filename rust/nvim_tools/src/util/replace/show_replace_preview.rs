@@ -43,13 +43,14 @@ pub fn perform_search(
     lines: &[String],
     config: &ReplacePreviewConfig,
 ) -> Result<Vec<LineMatch>, String> {
-    util::search::search_in_lines(
+    rstd::search::search_in_lines(
         &config.search_pattern,
         lines,
         config.flag_fuzzy,
         config.flag_regex,
         config.flag_case_sensitive,
     )
+    .map(|matches| matches.into_iter().map(LineMatch::from).collect())
 }
 
 /// Calculates replacement text for a specific match, handling regex capture groups

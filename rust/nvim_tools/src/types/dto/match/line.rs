@@ -52,3 +52,17 @@ impl Pushable for LineMatch {
         }
     }
 }
+
+impl From<rstd::search::ISearchInLinesLineMatch> for LineMatch {
+    fn from(line_match: rstd::search::ISearchInLinesLineMatch) -> Self {
+        Self {
+            lnum: line_match.lnum,
+            score: line_match.score,
+            matches: line_match
+                .matches
+                .into_iter()
+                .map(MatchPoint::from)
+                .collect(),
+        }
+    }
+}

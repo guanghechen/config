@@ -1,21 +1,10 @@
 use crate::types::dto::FunResult;
 use crate::types::dto::LineMatch;
 use crate::types::dto::SearchInBufferParams;
-use crate::types::dto::SearchInLinesParams;
 use crate::types::dto::ShowReplacePreviewInBufferParams;
 use crate::types::dto::ShowReplacePreviewInBufferResult;
 use crate::util;
 use nvim_oxi::api::Buffer;
-
-pub fn search_in_lines(params: SearchInLinesParams) -> Result<Vec<LineMatch>, String> {
-    util::search::search_in_lines(
-        &params.pattern,
-        &params.lines,
-        params.flag_fuzzy,
-        params.flag_regex,
-        params.flag_case_sensitive,
-    )
-}
 
 pub fn search_in_buffer(params: SearchInBufferParams) -> FunResult<Vec<LineMatch>> {
     let buffer = Buffer::from(params.bufnr);
@@ -32,7 +21,7 @@ pub fn search_in_buffer(params: SearchInBufferParams) -> FunResult<Vec<LineMatch
     match lines_result {
         Ok(lines_iter) => {
             let lines: Vec<String> = lines_iter.map(|s| s.to_string()).collect();
-            match util::search::search_in_lines(
+            match rstd::search::search_in_lines(
                 &params.search_pattern,
                 &lines,
                 params.flag_fuzzy,
@@ -41,7 +30,7 @@ pub fn search_in_buffer(params: SearchInBufferParams) -> FunResult<Vec<LineMatch
             ) {
                 Ok(matches) => FunResult {
                     error: None,
-                    data: Some(matches),
+                    data: Some(matches.into_iter().map(LineMatch::from).collect()),
                 },
                 Err(error) => FunResult {
                     error: Some(error),

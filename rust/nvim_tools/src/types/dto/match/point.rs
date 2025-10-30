@@ -51,3 +51,12 @@ impl Pushable for MatchPoint {
         }
     }
 }
+
+impl From<rstd::search::ISearchInLinesMatchPoint> for MatchPoint {
+    fn from(point: rstd::search::ISearchInLinesMatchPoint) -> Self {
+        Self {
+            start: point.start,
+            end: point.end,
+        }
+    }
+}
