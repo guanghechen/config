@@ -22,11 +22,13 @@ impl FromLua<'_> for ISearchInLinesRegexMatchPoint {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesRegexMatchPoint",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesRegexMatchPoint",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {
@@ -57,11 +59,13 @@ impl FromLua<'_> for ISearchInLinesRegexLineMatch {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesRegexLineMatch",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesRegexLineMatch",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {
@@ -83,11 +87,13 @@ impl FromLua<'_> for ISearchInLinesRegexOptions {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesRegexOptions",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesRegexOptions",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {

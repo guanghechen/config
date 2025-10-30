@@ -35,7 +35,8 @@ pub fn search_in_lines(
             .collect())
     } else {
         // Use literal search and convert types
-        let literal_results = search_in_lines_literal(pattern, lines, flag_fuzzy, flag_case_sensitive);
+        let literal_results =
+            search_in_lines_literal(pattern, lines, flag_fuzzy, flag_case_sensitive);
 
         Ok(literal_results
             .into_iter()

@@ -225,9 +225,9 @@ pub fn search_in_lines_literal(
                     }
                     all_pattern_matches.extend(pattern_matches);
 
-                    let bonus: u32 =
-                        (max_weight as f64 / n_pattern_chars as f64 * score_scalar_bonus).round()
-                            as u32;
+                    let bonus: u32 = (max_weight as f64 / n_pattern_chars as f64
+                        * score_scalar_bonus)
+                        .round() as u32;
                     score += score_scalar + bonus;
                 }
             }
@@ -279,7 +279,11 @@ mod tests {
 
     #[test]
     fn test_search_multiline_literal() {
-        let lines = vec!["line1".to_string(), "line2".to_string(), "line3".to_string()];
+        let lines = vec![
+            "line1".to_string(),
+            "line2".to_string(),
+            "line3".to_string(),
+        ];
         let result = search_in_lines_literal("line1\nline2", &lines, false, true);
         assert_eq!(result.len(), 1);
     }

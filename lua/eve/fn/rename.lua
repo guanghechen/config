@@ -42,9 +42,21 @@ local function rename(params)
   local changes = { files = {} } ---@type { files: { oldUri: string, newUri: string }[] }
 
   if isdir then
-    local result = oxi.fs.collect_files(from, true)
-    if result and result.files then
-      for _, relative_filepath in ipairs(result.files) do
+    local collect_result, collect_err = rstd.fs.collect_files(from, true)
+    if collect_err ~= nil then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "collect_files_failed",
+        details = {
+          error = collect_err.error,
+          source = from,
+        },
+      })
+      return false
+    end
+
+    if collect_result ~= nil and collect_result.files ~= nil then
+      for _, relative_filepath in ipairs(collect_result.files) do
         local from_filepath = from .. std.env.PATH_SEP .. relative_filepath ---@type string
         local to_filepath = to .. std.env.PATH_SEP .. relative_filepath ---@type string
 
@@ -89,7 +101,7 @@ local function rename(params)
   end
 
   -- Perform the rename using robust Rust implementation
-  local move_success = oxi.fs.move({
+  local move_success, move_err = rstd.fs.move({
     old_path = from,
     new_path = to,
     force = force,
@@ -101,6 +113,7 @@ local function rename(params)
       from = __module_name__,
       subject = "rename_failed",
       message = string.format("Failed to rename %s from %s to %s", entity_type, from, to),
+      details = move_err and { error = move_err.error } or nil,
     })
     return false
   end

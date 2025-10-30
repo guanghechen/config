@@ -310,8 +310,6 @@ dependencies = [
 name = "nvim_tools"
 version = "0.1.0"
 dependencies = [
- "chrono",
- "libc",
  "nvim-oxi",
  "regex",
  "rstd",
@@ -426,6 +424,8 @@ checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 name = "rstd"
 version = "0.1.0"
 dependencies = [
+ "chrono",
+ "libc",
  "md-5",
  "mlua",
  "regex",

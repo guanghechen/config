@@ -1,43 +1,38 @@
+use crate::types::fs::{IFsCollectFilesError, IFsCollectFilesResult};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use crate::types::dto::ReadAllFilesFailedResult; // Import for Windows-specific metadata extensions
-use crate::types::dto::ReadAllFilesSucceedResult; // Import for Windows-specific metadata extensions
-
-/// Read files from a directory, optionally recursively, returning a list of relative file paths
-pub fn collect_files<P: AsRef<Path>>(
-    dirpath: P,
+pub fn collect_files(
+    dirpath: &str,
     recursive: bool,
-) -> Result<ReadAllFilesSucceedResult, ReadAllFilesFailedResult> {
-    let dirpath = dirpath.as_ref();
+) -> Result<IFsCollectFilesResult, IFsCollectFilesError> {
+    let dirpath = PathBuf::from(dirpath);
 
     if !dirpath.exists() {
-        return Err(ReadAllFilesFailedResult {
+        return Err(IFsCollectFilesError {
             error: format!("Directory does not exist: {}", dirpath.display()),
         });
     }
 
     if !dirpath.is_dir() {
-        return Err(ReadAllFilesFailedResult {
+        return Err(IFsCollectFilesError {
             error: format!("Path is not a directory: {}", dirpath.display()),
         });
     }
 
     let mut files = Vec::new();
 
-    if let Err(e) = collect_files_recursive(dirpath, dirpath, &mut files, recursive) {
-        return Err(ReadAllFilesFailedResult {
+    if let Err(e) = collect_files_recursive(&dirpath, &dirpath, &mut files, recursive) {
+        return Err(IFsCollectFilesError {
             error: format!("Failed to read directory contents: {}", e),
         });
     }
 
-    // Sort the files for consistent results
     files.sort();
 
-    Ok(ReadAllFilesSucceedResult { files })
+    Ok(IFsCollectFilesResult { files })
 }
 
-// Helper function to recursively collect all file paths
 fn collect_files_recursive(
     dir_path: &Path,
     base_path: &Path,

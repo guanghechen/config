@@ -19,7 +19,7 @@ impl FromLua<'_> for ISearchInTextOptions {
                     from: value.type_name(),
                     to: "ISearchInTextOptions",
                     message: Some("expected table".to_string()),
-                })
+                });
             }
         };
 

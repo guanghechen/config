@@ -22,11 +22,13 @@ impl FromLua<'_> for ISearchInLinesMatchPoint {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesMatchPoint",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesMatchPoint",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {
@@ -57,11 +59,13 @@ impl FromLua<'_> for ISearchInLinesLineMatch {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesLineMatch",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesLineMatch",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {
@@ -85,11 +89,13 @@ impl FromLua<'_> for ISearchInLinesOptions {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesOptions",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesOptions",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {

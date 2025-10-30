@@ -1,14 +1,9 @@
-use rstd::search::{
-    search_in_files,
-    ISearchInFilesOptions,
-};
+use rstd::search::{ISearchInFilesOptions, search_in_files};
 use std::collections::HashSet;
 
 fn fixtures_dir() -> String {
-    let manifest_dir =
-        std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not defined");
-    let path = std::path::Path::new(&manifest_dir)
-        .join("../nvim_tools/tests/fixtures");
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not defined");
+    let path = std::path::Path::new(&manifest_dir).join("../nvim_tools/tests/fixtures");
     path.to_string_lossy().to_string()
 }
 
@@ -36,7 +31,13 @@ fn test_search_in_files_lf_pattern_matches_only_lf_files() {
     let filenames: HashSet<_> = result
         .items
         .keys()
-        .map(|path| std::path::Path::new(path).file_name().unwrap().to_string_lossy().to_string())
+        .map(|path| {
+            std::path::Path::new(path)
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string()
+        })
         .collect();
 
     assert!(filenames.contains("a.txt"), "a.txt should be present");
@@ -74,7 +75,13 @@ fn test_search_in_files_crlf_pattern_matches_crlf_files() {
     let filenames: HashSet<_> = result
         .items
         .keys()
-        .map(|path| std::path::Path::new(path).file_name().unwrap().to_string_lossy().to_string())
+        .map(|path| {
+            std::path::Path::new(path)
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string()
+        })
         .collect();
 
     assert!(

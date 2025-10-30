@@ -141,10 +141,7 @@ mod tests {
 
     #[test]
     fn test_search_regex_with_groups() {
-        let lines = vec![
-            "require('foo')".to_string(),
-            "import 'bar'".to_string(),
-        ];
+        let lines = vec!["require('foo')".to_string(), "import 'bar'".to_string()];
         let pattern = "require\\(['\"](.+?)['\"]\\)";
         let result = search_in_lines_regex(pattern, &lines, true).unwrap();
         assert_eq!(result.len(), 1);

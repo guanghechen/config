@@ -7,6 +7,8 @@ local fileformat_text_map = {
   unix = "LF",
 }
 
+local __module_name__ = "eve.ux.nvimbar.component.file" ---@type string
+
 local fileformat_icon_map = {
   dos = eve.icon.os.dos,
   mac = eve.icon.os.mac,
@@ -224,7 +226,26 @@ function M.size(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
-      local text = oxi.fs.get_filesize(context.filepath) or "" ---@type string
+      if context.filepath == nil or context.filepath == "" then
+        return "", "", true
+      end
+
+      if not std.path.is_exist(context.filepath) then
+        return "", "", true
+      end
+
+      local text, err = rstd.fs.get_filesize(context.filepath)
+      if err ~= nil then
+        std.reporter.error({
+          from = __module_name__,
+          subject = "get_filesize failed",
+          details = {
+            error = err,
+            filepath = context.filepath,
+          },
+        })
+      end
+      text = text or ""
       local hl_text = txt(text, hln_text)
       return text, hl_text, true
     end,

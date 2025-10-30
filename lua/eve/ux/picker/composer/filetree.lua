@@ -2101,8 +2101,20 @@ function M:__update_tree_after_rename__(from, to, isdir)
   local filepaths = {} ---@type string[]
 
   if isdir then
-    local result = oxi.fs.collect_files(to, true)
-    if result and result.files then
+    local result, err = rstd.fs.collect_files(to, true)
+    if err ~= nil then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "collect_files_failed",
+        details = {
+          error = err.error,
+          directory = to,
+        },
+      })
+      return
+    end
+
+    if result ~= nil and result.files ~= nil then
       for _, relative_filepath in ipairs(result.files) do
         local to_filepath = to .. std.env.PATH_SEP .. relative_filepath ---@type string
         filepaths[#filepaths + 1] = to_filepath

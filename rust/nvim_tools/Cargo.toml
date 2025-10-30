@@ -7,8 +7,6 @@ edition = "2024"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-chrono = "0.4.42"
-libc = "0.2.177"
 nvim-oxi = { version = "0.6.0", features=["neovim-nightly"] }
 regex = "1.12.2"
 serde = { version = "1.0.228", features = ["derive"] }

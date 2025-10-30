@@ -33,7 +33,7 @@ local title = "Find Explorer" ---@type string
 local dir_datamap = {} ---@type table<string, fml.action.find.explorer.IDirItem>
 local file_datamap = {} ---@type table<string, fml.action.find.explorer.IFileItem>
 
----@param raw_item                      oxi.fs.IFileItemWithStatus
+---@param raw_item                      rstd.fs.IFileItemWithStatus
 ---@param dirpath                       string
 ---@return fml.action.find.explorer.IFileItem
 local function create_file_item(raw_item, dirpath)
@@ -271,10 +271,21 @@ local function fetch_diritem(dirpath, force)
   end
 
   local items = {} ---@type fml.action.find.explorer.IFileItem[]
-  local raw_data = oxi.fs.readdir(dirpath) ---@type oxi.fs.IReaddirResult|nil
+  local raw_data, raw_err = rstd.fs.readdir(dirpath) ---@type rstd.fs.IReaddirResult|nil, rstd.fs.IReaddirError|nil
+
+  if raw_data == nil and raw_err ~= nil then
+    std.reporter.error({
+      from = name,
+      subject = "readdir failed",
+      details = {
+        error = raw_err.error,
+        dirpath = dirpath,
+      },
+    })
+  end
 
   if raw_data ~= nil then
-    local raw_itself = raw_data.itself ---@type oxi.fs.IFileItemWithStatus
+    local raw_itself = raw_data.itself ---@type rstd.fs.IFileItemWithStatus
 
     ---@type fml.action.find.explorer.IFileItem
     local itself = {

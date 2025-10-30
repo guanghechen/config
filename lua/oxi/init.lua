@@ -1,8 +1,6 @@
 ---@class oxi.__mods
 local __mods = {
   fn = "oxi.fn",
-  fs = "oxi.fs",
-
   replacer = "oxi.replacer",
   string = "oxi.string",
 }
@@ -10,7 +8,6 @@ local __mods = {
 ---@class oxi
 ---@field public __mods                 oxi.__mods
 ---@field public fn                     oxi.fn
----@field public fs                     oxi.fs
 ---
 ---@field public replacer               oxi.replacer
 ---@field public string                 oxi.string

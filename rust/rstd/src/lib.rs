@@ -19,6 +19,9 @@ pub use r#fn::*;
 pub mod path;
 pub use path::*;
 
+pub mod fs;
+pub use fs::*;
+
 use mlua::prelude::*;
 use mlua::{FromLua, IntoLua, MultiValue as LuaMultiValue, Value as LuaValue};
 
@@ -100,6 +103,74 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     Ok(table)
 }
 
+fn fs_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+    lua.create_table_from([
+        (
+            "collect_files",
+            lua.create_function(
+                |lua, (dirpath, recursive): (String, bool)| -> LuaResult<LuaMultiValue> {
+                    match fs::collect_files(&dirpath, recursive) {
+                        Ok(result) => {
+                            let data = result.into_lua(lua)?;
+                            Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                        }
+                        Err(error) => {
+                            let err = error.into_lua(lua)?;
+                            Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
+                        }
+                    }
+                },
+            )?,
+        ),
+        (
+            "get_filesize",
+            lua.create_function(|lua, filepath: String| -> LuaResult<LuaMultiValue> {
+                match fs::get_filesize(&filepath) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "readdir",
+            lua.create_function(|lua, dirpath: String| -> LuaResult<LuaMultiValue> {
+                match fs::readdir(&dirpath) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => {
+                        let err = error.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
+                    }
+                }
+            })?,
+        ),
+        (
+            "move",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params = crate::types::IFsMoveParams::from_lua(params, lua)?;
+                match fs::r#move(&params) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => {
+                        let err = error.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
+                    }
+                }
+            })?,
+        ),
+    ])
+}
+
 fn find_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     lua.create_table_from([(
         "find_files",
@@ -108,17 +179,11 @@ fn find_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
             match find::find_files(&options) {
                 Ok(result) => {
                     let data = result.into_lua(lua)?;
-                    Ok(LuaMultiValue::from_vec(vec![
-                        data,
-                        LuaValue::Nil,
-                    ]))
+                    Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
                 }
                 Err(error) => {
                     let err = error.into_lua(lua)?;
-                    Ok(LuaMultiValue::from_vec(vec![
-                        LuaValue::Nil,
-                        err,
-                    ]))
+                    Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
                 }
             }
         })?,
@@ -134,17 +199,11 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
                 match search::search_in_files(&options) {
                     Ok(result) => {
                         let data = result.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            data,
-                            LuaValue::Nil,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
                     }
                     Err(error) => {
                         let err = error.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            LuaValue::Nil,
-                            err,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
                     }
                 }
             })?,
@@ -162,17 +221,11 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
                 ) {
                     Ok(result) => {
                         let data = result.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            data,
-                            LuaValue::Nil,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
                     }
                     Err(error) => {
                         let err = error.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            LuaValue::Nil,
-                            err,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
                     }
                 }
             })?,
@@ -190,17 +243,11 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
                 ) {
                     Ok(result) => {
                         let data = result.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            data,
-                            LuaValue::Nil,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
                     }
                     Err(error) => {
                         let err = error.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            LuaValue::Nil,
-                            err,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
                     }
                 }
             })?,
@@ -229,17 +276,11 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
                 ) {
                     Ok(result) => {
                         let data = result.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            data,
-                            LuaValue::Nil,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
                     }
                     Err(error) => {
                         let err = error.into_lua(lua)?;
-                        Ok(LuaMultiValue::from_vec(vec![
-                            LuaValue::Nil,
-                            err,
-                        ]))
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
                     }
                 }
             })?,
@@ -253,6 +294,7 @@ fn rstd(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;
     exports.set("path", path_module(lua)?)?;
+    exports.set("fs", fs_module(lua)?)?;
     exports.set("find", find_module(lua)?)?;
     exports.set("search", search_module(lua)?)?;
     Ok(exports)

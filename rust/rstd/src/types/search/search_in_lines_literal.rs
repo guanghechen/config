@@ -22,11 +22,13 @@ impl FromLua<'_> for ISearchInLinesLiteralMatchPoint {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesLiteralMatchPoint",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesLiteralMatchPoint",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {
@@ -57,11 +59,13 @@ impl FromLua<'_> for ISearchInLinesLiteralLineMatch {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesLiteralLineMatch",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesLiteralLineMatch",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {
@@ -84,11 +88,13 @@ impl FromLua<'_> for ISearchInLinesLiteralOptions {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
-            _ => return Err(LuaError::FromLuaConversionError {
-                from: value.type_name(),
-                to: "ISearchInLinesLiteralOptions",
-                message: Some("expected table".to_string()),
-            }),
+            _ => {
+                return Err(LuaError::FromLuaConversionError {
+                    from: value.type_name(),
+                    to: "ISearchInLinesLiteralOptions",
+                    message: Some("expected table".to_string()),
+                });
+            }
         };
 
         Ok(Self {

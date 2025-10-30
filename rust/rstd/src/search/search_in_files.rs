@@ -63,8 +63,10 @@ pub fn search_in_files(
             cmd.arg("--no-ignore-vcs");
         }
 
-        if let Some(max_filesize) =
-            options.max_filesize.as_ref().filter(|size| !size.is_empty())
+        if let Some(max_filesize) = options
+            .max_filesize
+            .as_ref()
+            .filter(|size| !size.is_empty())
         {
             cmd.args(["--max-filesize", max_filesize]);
         }
@@ -93,8 +95,10 @@ pub fn search_in_files(
             cmd.args(["--fixed-strings", "--", search_pattern]);
         }
 
-        if let Some(specified_filepath) =
-            options.specified_filepath.as_ref().filter(|path| !path.is_empty())
+        if let Some(specified_filepath) = options
+            .specified_filepath
+            .as_ref()
+            .filter(|path| !path.is_empty())
         {
             cmd.arg(specified_filepath);
         } else if !search_paths.is_empty() {

@@ -1,9 +1,5 @@
 use crate::string;
-use crate::types::{
-    IFindFilesFailedResult,
-    IFindFilesOptions,
-    IFindFilesSucceedResult,
-};
+use crate::types::{IFindFilesFailedResult, IFindFilesOptions, IFindFilesSucceedResult};
 use std::path::PathBuf;
 use std::process::Command;
 
