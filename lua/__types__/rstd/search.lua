@@ -103,4 +103,16 @@ function M.search_in_lines_regex(options) end
 ---@return string|nil
 function M.search_in_lines(options) end
 
+---@class rstd.search.ISearchInTextOptions
+---@field public pattern                string
+---@field public text                   string
+---@field public flag_fuzzy             boolean
+---@field public flag_regex             boolean
+---@field public flag_case_sensitive    boolean
+
+---@param options                       rstd.search.ISearchInTextOptions
+---@return rstd.search.ISearchInLinesLineMatch[]|nil
+---@return string|nil
+function M.search_in_text(options) end
+
 return M

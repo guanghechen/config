@@ -13,7 +13,6 @@ use crate::types::dto::ReplaceCurrentMatchInBufferParams;
 use crate::types::dto::ReplaceCurrentMatchInBufferResult;
 use crate::types::dto::SearchInBufferParams;
 use crate::types::dto::SearchInLinesParams;
-use crate::types::dto::SearchInTextParams;
 use crate::types::dto::ShowReplacePreviewInBufferParams;
 use crate::types::dto::ShowReplacePreviewInBufferResult;
 use nvim_oxi::Dictionary;
@@ -37,14 +36,6 @@ fn nvim_tools() -> Dictionary {
                 SearchInLinesParams,
                 Result<Vec<LineMatch>, String>,
             >::from_fn(oxi::search::search_in_lines)),
-        ),
-        (
-            "search_in_text",
-            Object::from(
-                Function::<SearchInTextParams, Result<Vec<LineMatch>, String>>::from_fn(
-                    oxi::search::search_in_text,
-                ),
-            ),
         ),
         (
             "search_in_buffer",

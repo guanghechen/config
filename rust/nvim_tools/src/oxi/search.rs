@@ -2,7 +2,6 @@ use crate::types::dto::FunResult;
 use crate::types::dto::LineMatch;
 use crate::types::dto::SearchInBufferParams;
 use crate::types::dto::SearchInLinesParams;
-use crate::types::dto::SearchInTextParams;
 use crate::types::dto::ShowReplacePreviewInBufferParams;
 use crate::types::dto::ShowReplacePreviewInBufferResult;
 use crate::util;
@@ -12,16 +11,6 @@ pub fn search_in_lines(params: SearchInLinesParams) -> Result<Vec<LineMatch>, St
     util::search::search_in_lines(
         &params.pattern,
         &params.lines,
-        params.flag_fuzzy,
-        params.flag_regex,
-        params.flag_case_sensitive,
-    )
-}
-
-pub fn search_in_text(params: SearchInTextParams) -> Result<Vec<LineMatch>, String> {
-    util::search::search_in_text(
-        &params.pattern,
-        &params.text,
         params.flag_fuzzy,
         params.flag_regex,
         params.flag_case_sensitive,

@@ -58,19 +58,39 @@ end
 ---@param params                        oxi.searcher.ISearchInTextParams
 ---@return oxi.string.ILineMatch[]|nil
 function M.search_in_text(params)
-  -- Convert text to lines array
-  local lines = {}
-  for line in params.text:gmatch("[^\n]*") do
-    table.insert(lines, line)
-  end
-
-  return M.search_in_lines({
+  local ok, result, err = pcall(rstd.search.search_in_text, {
     pattern = params.pattern,
-    lines = lines,
+    text = params.text,
     flag_fuzzy = params.flag_fuzzy,
     flag_regex = params.flag_regex,
     flag_case_sensitive = params.flag_case_sensitive,
   })
+
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "search_in_text failed",
+      details = {
+        error = result,
+        params = params,
+      },
+    })
+    return nil
+  end
+
+  if err then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "search_in_text failed",
+      details = {
+        error = err,
+        params = params,
+      },
+    })
+    return nil
+  end
+
+  return result
 end
 
 ---@class oxi.searcher.ISearchInBufferParams
