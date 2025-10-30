@@ -1,14 +1,8 @@
 use crate::string;
 use crate::types::{
-    IRipgrepResult,
-    IRipgrepResultData,
-    IRipgrepResultMatchedPath,
-    ISearchBlockMatch,
-    ISearchFileMatch,
-    ISearchInFilesFailedResult,
-    ISearchInFilesOptions,
-    ISearchInFilesSucceedResult,
-    ISearchMatchPoint,
+    IRipgrepResult, IRipgrepResultData, IRipgrepResultMatchedPath, ISearchBlockMatch,
+    ISearchFileMatch, ISearchInFilesFailedResult, ISearchInFilesOptions,
+    ISearchInFilesSucceedResult, ISearchMatchPoint,
 };
 use regex::Regex;
 use std::collections::HashMap;
