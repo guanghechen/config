@@ -109,7 +109,6 @@ local __module_name__ = "eve.ux.picker.composer.list" ---@type string
 ---@field protected _observer_unsubs    std.collection.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
-
 ---@param props                         eve.ux.picker.IListComposerProps
 ---@return eve.ux.picker.ListComposer
 function M.new(props)
@@ -627,13 +626,26 @@ function M:__match__(input)
       lines[#lines + 1] = case_sensitive and item.text or item.text_lower
     end
 
-    local oxi_matches = oxi.searcher.search_in_lines({
+    ---@type rstd.search.ISearchInLinesOptions
+    local search_params = {
       pattern = search_pattern,
       lines = lines,
       flag_fuzzy = use_fuzzy,
       flag_regex = use_regex,
       flag_case_sensitive = case_sensitive,
-    })
+    }
+    local oxi_matches, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchInLinesLineMatch[]|nil, string|nil
+    if search_err then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "search_in_lines failed",
+        details = {
+          error = search_err,
+          params = search_params,
+        },
+      })
+      oxi_matches = nil
+    end
     if oxi_matches then
       for _, oxi_match in ipairs(oxi_matches) do
         matches[#matches + 1] = {

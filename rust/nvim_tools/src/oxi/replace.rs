@@ -15,6 +15,8 @@ use crate::types::dto::ReplaceTextPreviewAdvanceParams;
 use crate::types::dto::ReplaceTextPreviewByMatchesAdvanceParams;
 use crate::types::dto::ReplaceTextPreviewByMatchesParams;
 use crate::types::dto::ReplaceTextPreviewParams;
+use crate::types::dto::ShowReplacePreviewInBufferParams;
+use crate::types::dto::ShowReplacePreviewInBufferResult;
 use crate::util;
 use nvim_oxi::api::Buffer;
 
@@ -228,6 +230,39 @@ pub fn replace_text_preview_by_matches_advance(
         },
         Err(error) => FunResult {
             error: Some(error),
+            data: None,
+        },
+    }
+}
+
+pub fn show_replace_preview_in_buffer(
+    params: ShowReplacePreviewInBufferParams,
+) -> FunResult<ShowReplacePreviewInBufferResult> {
+    let buffer = Buffer::from(params.bufnr);
+
+    let config = util::replace::ReplacePreviewConfig {
+        search_pattern: params.search_pattern,
+        replace_pattern: params.replace_pattern,
+        flag_fuzzy: params.flag_fuzzy,
+        flag_regex: params.flag_regex,
+        flag_case_sensitive: params.flag_case_sensitive,
+    };
+
+    match util::replace::perform_buffer_replace_preview(&buffer, &config) {
+        Ok(preview_result) => FunResult {
+            error: None,
+            data: Some(ShowReplacePreviewInBufferResult {
+                bufnr: params.bufnr,
+                error: None,
+                preview_applied: true,
+                matches_count: preview_result.matches_count,
+                search_matches: preview_result.search_matches,
+                replacement_lines: preview_result.replacement_lines,
+                replacement_matches: preview_result.replacement_matches,
+            }),
+        },
+        Err(error_message) => FunResult {
+            error: Some(error_message),
             data: None,
         },
     }

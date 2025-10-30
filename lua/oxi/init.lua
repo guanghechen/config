@@ -4,7 +4,6 @@ local __mods = {
   fs = "oxi.fs",
 
   replacer = "oxi.replacer",
-  searcher = "oxi.searcher",
   string = "oxi.string",
 }
 
@@ -14,7 +13,6 @@ local __mods = {
 ---@field public fs                     oxi.fs
 ---
 ---@field public replacer               oxi.replacer
----@field public searcher               oxi.searcher
 ---@field public string                 oxi.string
 local M = setmetatable({
   __mods = __mods,

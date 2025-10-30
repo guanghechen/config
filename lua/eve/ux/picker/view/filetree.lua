@@ -71,7 +71,6 @@ local __module_name__ = "eve.ux.picker.view.filetree" ---@type string
 ----------------------------------------------------------------------------------------------------
 
 local DEFAULT_NSNR_MATCHES = eve.var.nsnr.view_filetree_matches ---@type integer
-
 ---@class eve.ux.picker.view.IFiletreeProps
 ---@field public name                   string
 ---@field public tree                   std.collection.IFiletree
@@ -255,18 +254,31 @@ function M:match(params)
     end
   end)
 
-  local oxi_matches = oxi.searcher.search_in_lines({
+  ---@type rstd.search.ISearchInLinesOptions
+  local search_params = {
     pattern = pattern,
     lines = lines,
     flag_fuzzy = fuzzy,
     flag_regex = regex,
     flag_case_sensitive = case_sensitive,
-  }) ---@type oxi.string.ILineMatch[]|nil
+  }
+  local oxi_matches, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchInLinesLineMatch[]|nil, string|nil
+  if search_err then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "search_in_lines failed",
+      details = {
+        error = search_err,
+        params = search_params,
+      },
+    })
+    oxi_matches = nil
+  end
   if oxi_matches ~= nil then
     for _, oxi_match in ipairs(oxi_matches) do
       local lnum = oxi_match.lnum ---@type integer
       local uuid = uuids[lnum] ---@type string
-      local matches = oxi_match.matches ---@type std.t.IMatchPoint[]
+      local matches = oxi_match.matches ---@type rstd.search.ISearchInLinesMatchPoint[]
       local state = statemap[uuid]
       state.tick_matched = tick_matched ---@type integer
       state.cache_match = { score = oxi_match.score, matches = matches } ---@type eve.ux.picker.view.filetree.INodeMatchResultCache
@@ -275,7 +287,7 @@ function M:match(params)
     local N = #oxi_matches ---@type integer
     if N < #uuids then
       for index = 1, N, 1 do
-        local oxi_match = oxi_matches[index] ---@type oxi.string.ILineMatch
+        local oxi_match = oxi_matches[index] ---@type rstd.search.ISearchInLinesLineMatch
         local lnum = oxi_match.lnum ---@type integer
         uuids[index] = uuids[lnum] ---@type string
       end

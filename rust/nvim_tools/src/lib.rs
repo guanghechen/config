@@ -3,7 +3,6 @@ pub mod types;
 pub mod util;
 
 use crate::types::dto::FunResult;
-use crate::types::dto::LineMatch;
 use crate::types::dto::MoveParams;
 use crate::types::dto::ReadAllFilesSucceedResult;
 use crate::types::dto::ReaddirSucceedResult;
@@ -11,7 +10,6 @@ use crate::types::dto::ReplaceAllMatchesInBufferParams;
 use crate::types::dto::ReplaceAllMatchesInBufferResult;
 use crate::types::dto::ReplaceCurrentMatchInBufferParams;
 use crate::types::dto::ReplaceCurrentMatchInBufferResult;
-use crate::types::dto::SearchInBufferParams;
 use crate::types::dto::ShowReplacePreviewInBufferParams;
 use crate::types::dto::ShowReplacePreviewInBufferResult;
 use nvim_oxi::Dictionary;
@@ -30,23 +28,14 @@ fn nvim_tools() -> Dictionary {
         ),
         ////
         (
-            "search_in_buffer",
-            Object::from(
-                Function::<SearchInBufferParams, FunResult<Vec<LineMatch>>>::from_fn(
-                    oxi::search::search_in_buffer,
-                ),
-            ),
-        ),
-        (
             "show_replace_preview_in_buffer",
             Object::from(Function::<
                 ShowReplacePreviewInBufferParams,
                 FunResult<ShowReplacePreviewInBufferResult>,
             >::from_fn(
-                oxi::search::show_replace_preview_in_buffer
+                oxi::replace::show_replace_preview_in_buffer
             )),
         ),
-        ////
         (
             "replace_file",
             Object::from(Function::from_fn(oxi::replace::replace_file)),

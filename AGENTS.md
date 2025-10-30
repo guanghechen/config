@@ -16,8 +16,10 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
   - Core utilities: bootstrap, debug, fs, path, json, timer, etc.
 - `lua/oxi/`: Rust-Lua bridge interfaces via nvim-oxi
   - `oxi/fn`: Helper glue for marshalling data at the FFI boundary
-  - `oxi/finder`, `oxi/replacer`, `oxi/searcher`: Performance-critical search operations
+  - `oxi/finder`, `oxi/replacer`: Performance-critical operations
   - `oxi/fs`, `oxi/string`: File system and string utilities
+- `lua/rstd/`: Rust-backed standard library surfaces
+  - `rstd/search`: Search operations that wrap Rust implementations
 - `lua/eve/`: Core application framework
   - `eve/builtin/`: Core modules (G, ai, buf, clipboard, command, lsp, notifier, etc.)
   - `eve/constant/`: Constants and configurations (hlgroup themes, language configs)
@@ -82,7 +84,7 @@ Each integration includes environment-specific:
 - **Build Artifacts**: `bin/{osx,nix,win}.nvim_tools.so` (platform builds)
 - **Source Code**: `rust/nvim_tools/` (nvim-oxi integration)
 - **Dependencies**: nvim-oxi 0.6.0, regex, serde, chrono, uuid
-- **Exposed Modules**: `oxi.fn`, `oxi.finder`, `oxi.replacer`, `oxi.searcher`, `oxi.fs`, `oxi.string`
+- **Exposed Modules**: `oxi.fn`, `oxi.finder`, `oxi.replacer`, `oxi.fs`, `oxi.string`, `rstd.search`
 
 ## Development Commands
 

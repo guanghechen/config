@@ -159,7 +159,7 @@ end
 ---@field protected _bufnr_replacer     integer|nil
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
----@field protected _matches            oxi.string.ILineMatch[]|nil
+---@field protected _matches            rstd.search.ISearchInLinesLineMatch[]|nil
 ---@field protected _scheduler_search   std.collection.Scheduler
 ---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     std.t.IKeymap[]
@@ -375,7 +375,7 @@ end
 
 ---@return nil
 function M:goto_prev_match()
-  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
   if matches == nil then
     return
   end
@@ -397,7 +397,7 @@ function M:goto_prev_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = std.fn.navigate_circular(index_current, -1, N) ---@type integer
-  local match_prev = matches[index] ---@type oxi.string.ILineMatch
+  local match_prev = matches[index] ---@type rstd.search.ISearchInLinesLineMatch
   if match_prev and match_prev.matches and #match_prev.matches > 0 then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_prev.lnum, match_prev.matches[1].l })
@@ -415,7 +415,7 @@ end
 
 ---@return nil
 function M:goto_next_match()
-  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
   if matches == nil then
     return
   end
@@ -437,7 +437,7 @@ function M:goto_next_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = std.fn.navigate_circular(index_current, 1, N) ---@type integer
-  local match_next = matches[index] ---@type oxi.string.ILineMatch
+  local match_next = matches[index] ---@type rstd.search.ISearchInLinesLineMatch
   if match_next and match_next.matches and #match_next.matches > 0 then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_next.lnum, match_next.matches[1].l })
@@ -477,7 +477,7 @@ function M:replace_current_match()
     return
   end
 
-  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
   if matches == nil or #matches == 0 then
     std.reporter.error({
       from = __module_name__,
@@ -570,7 +570,7 @@ function M:replace_all_matches()
     return
   end
 
-  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
   if matches == nil or #matches == 0 then
     std.reporter.error({
       from = __module_name__,
@@ -1186,18 +1186,52 @@ function M:__search__()
   local buffer_changed = self._last_bufnr_source ~= bufnr_source
 
   -- Construct search parameters
-  ---@type oxi.searcher.ISearchInBufferParams
-  local search_params = {
-    bufnr = bufnr_source,
-    search_pattern = pattern,
-    flag_fuzzy = self.o_flag_fuzzy:snapshot(),
-    flag_regex = self.o_flag_regex:snapshot(),
-    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
-    flag_replace = self.o_flag_replace:snapshot(),
-  }
+  local flag_fuzzy = self.o_flag_fuzzy:snapshot() ---@type boolean
+  local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
+  local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
 
-  -- Perform the search
-  local matches = oxi.searcher.search_in_buffer(search_params)
+  local matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local ok_lines, lines = pcall(vim.api.nvim_buf_get_lines, bufnr_source, 0, -1, false)
+
+  if not ok_lines then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "search_in_buffer failed",
+      details = {
+        error = lines,
+        params = {
+          bufnr = bufnr_source,
+          search_pattern = pattern,
+          flag_fuzzy = flag_fuzzy,
+          flag_regex = flag_regex,
+          flag_case_sensitive = flag_case_sensitive,
+        },
+      },
+    })
+  else
+    ---@type rstd.search.ISearchInLinesOptions
+    local search_params = {
+      pattern = pattern,
+      lines = lines,
+      flag_fuzzy = flag_fuzzy,
+      flag_regex = flag_regex,
+      flag_case_sensitive = flag_case_sensitive,
+    }
+    local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchInLinesLineMatch[]|nil, string|nil
+    if search_err then
+      std.reporter.error({
+        from = __module_name__,
+        subject = "search_in_lines failed",
+        details = {
+          error = search_err,
+          params = search_params,
+        },
+      })
+      matches = nil
+    else
+      matches = search_result
+    end
+  end
 
   -- Check for errors or no matches
   if not matches or #matches < 1 then
@@ -1375,13 +1409,13 @@ end
 ---@return integer|nil
 function M:__get_current_match_offset__(lines)
   local current_match_index = self.o_match_index:snapshot() ---@type integer
-  local matches = self._matches ---@type oxi.string.ILineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
 
   if not matches or current_match_index <= 0 or current_match_index > #matches then
     return nil
   end
 
-  local current_line_match = matches[current_match_index] ---@type oxi.string.ILineMatch
+  local current_line_match = matches[current_match_index] ---@type rstd.search.ISearchInLinesLineMatch
   if not current_line_match or not current_line_match.matches or #current_line_match.matches == 0 then
     return nil
   end
