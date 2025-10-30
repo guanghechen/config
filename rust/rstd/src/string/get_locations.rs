@@ -38,7 +38,7 @@ mod tests {
     use super::get_locations;
 
     #[test]
-    fn maps_offsets_to_line_meta() {
+    fn test_maps_offsets_to_line_meta() {
         let text = "foo\nbar\nbaz";
         let offsets = vec![0, 4, 8];
         let locations = get_locations(text, &offsets);

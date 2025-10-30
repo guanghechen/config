@@ -10,7 +10,7 @@ pub struct ISearchInLinesLiteralMatchPoint {
 }
 
 impl IntoLua<'_> for ISearchInLinesLiteralMatchPoint {
-    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue<'_>> {
         let table = lua.create_table()?;
         table.set("l", self.start)?;
         table.set("r", self.end)?;
@@ -44,7 +44,7 @@ pub struct ISearchInLinesLiteralLineMatch {
 }
 
 impl IntoLua<'_> for ISearchInLinesLiteralLineMatch {
-    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue<'_>> {
         let table = lua.create_table()?;
         table.set("lnum", self.lnum)?;
         table.set("score", self.score)?;
