@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/rust_analyzer.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/1c3da72569cca0d372c2a344a83f6272a493f2cb/lsp/rust_analyzer.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#rust_analyzer
 
 local function reload_workspace(bufnr)
@@ -91,6 +91,25 @@ local function before_init(params, config)
     params.initializationOptions = config.settings["rust-analyzer"]
   end
 
+  ---@param command table{ title: string, command: string, arguments: any[] }
+  vim.lsp.commands["rust-analyzer.runSingle"] = function(command)
+    local r = command.arguments[1]
+    local cmd = { "cargo", unpack(r.args.cargoArgs) }
+    if r.args.executableArgs and #r.args.executableArgs > 0 then
+      vim.list_extend(cmd, { "--", unpack(r.args.executableArgs) })
+    end
+
+    local proc = vim.system(cmd, { cwd = r.args.cwd })
+
+    local result = proc:wait()
+
+    if result.code == 0 then
+      vim.notify(result.stdout, vim.log.levels.INFO)
+    else
+      vim.notify(result.stderr, vim.log.levels.ERROR)
+    end
+  end
+
   local capabilities = params.capabilities
   capabilities.experimental = capabilities.experimental or {}
   capabilities.experimental.serverStatusNotification = true
@@ -118,9 +137,18 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
+local capabilities = eve.lsp.get_capabilities()
+capabilities.experimental = capabilities.experimental or {}
+capabilities.experimental.serverStatusNotification = true
+capabilities.experimental.commands = vim.list_extend({
+  "rust-analyzer.showReferences",
+  "rust-analyzer.runSingle",
+  "rust-analyzer.debugSingle",
+}, capabilities.experimental.commands or {})
+
 ---@type vim.lsp.Config
 return {
-  capabilities = eve.lsp.get_capabilities(),
+  capabilities = capabilities,
   cmd = { "rust-analyzer" },
   filetypes = { "rust" },
   settings = {
