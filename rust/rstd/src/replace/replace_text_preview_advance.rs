@@ -1,8 +1,8 @@
-use crate::types::dto::MatchPoint;
-use crate::types::dto::ReplacePreviewResult;
-use crate::util::regex::compile_regex;
+use super::regex::compile_regex;
+use crate::algorithm::kmp::find_all_matched_points;
+use crate::search::ISearchInLinesMatchPoint;
+use crate::types::replace::IReplacePreviewResult;
 use regex::Captures;
-use rstd::algorithm::kmp::find_all_matched_points;
 
 pub fn replace_text_preview_advance(
     text: &str,
@@ -11,10 +11,10 @@ pub fn replace_text_preview_advance(
     keep_search_pieces: bool,
     flag_regex: bool,
     flag_case_sensitive: bool,
-) -> Result<ReplacePreviewResult, String> {
-    let mut matches: Vec<MatchPoint> = vec![];
+) -> Result<IReplacePreviewResult, String> {
+    let mut matches: Vec<ISearchInLinesMatchPoint> = vec![];
     if flag_regex {
-        let result: Result<ReplacePreviewResult, String> = match compile_regex(search_pattern) {
+        let result: Result<IReplacePreviewResult, String> = match compile_regex(search_pattern) {
             Ok(r) => {
                 let regex = r;
                 let mut total_search_len: usize = 0;
@@ -38,11 +38,11 @@ pub fn replace_text_preview_advance(
                             let replace_end: usize = replace_start + replacement.len();
                             total_search_len += m.len();
                             total_replace_len += replacement.len();
-                            matches.push(MatchPoint {
+                            matches.push(ISearchInLinesMatchPoint {
                                 start: search_start,
                                 end: search_end,
                             });
-                            matches.push(MatchPoint {
+                            matches.push(ISearchInLinesMatchPoint {
                                 start: replace_start,
                                 end: replace_end,
                             });
@@ -53,7 +53,7 @@ pub fn replace_text_preview_advance(
                             let replace_end: usize = replace_start + replacement.len();
                             total_search_len += m.len();
                             total_replace_len += replacement.len();
-                            matches.push(MatchPoint {
+                            matches.push(ISearchInLinesMatchPoint {
                                 start: replace_start,
                                 end: replace_end,
                             });
@@ -61,7 +61,7 @@ pub fn replace_text_preview_advance(
                         }
                     })
                     .to_string();
-                Ok(ReplacePreviewResult {
+                Ok(IReplacePreviewResult {
                     text: next_text,
                     matches,
                 })
@@ -93,11 +93,11 @@ pub fn replace_text_preview_advance(
             let replace_end: usize = replace_start + len_of_replace;
             total_search_len += len_of_search;
             total_replace_len += len_of_replace;
-            matches.push(MatchPoint {
+            matches.push(ISearchInLinesMatchPoint {
                 start: search_start,
                 end: search_end,
             });
-            matches.push(MatchPoint {
+            matches.push(ISearchInLinesMatchPoint {
                 start: replace_start,
                 end: replace_end,
             });
@@ -108,7 +108,7 @@ pub fn replace_text_preview_advance(
             let replace_end: usize = replace_start + len_of_replace;
             total_search_len += len_of_search;
             total_replace_len += len_of_replace;
-            matches.push(MatchPoint {
+            matches.push(ISearchInLinesMatchPoint {
                 start: replace_start,
                 end: replace_end,
             });
@@ -119,7 +119,7 @@ pub fn replace_text_preview_advance(
     }
     pieces.push(&text[i..]);
     let next_text: String = pieces.join("");
-    Ok(ReplacePreviewResult {
+    Ok(IReplacePreviewResult {
         text: next_text,
         matches,
     })

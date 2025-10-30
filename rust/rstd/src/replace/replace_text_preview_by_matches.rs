@@ -1,6 +1,6 @@
-use crate::util::regex::compile_regex;
+use super::regex::compile_regex;
+use crate::algorithm::kmp::find_all_matched_points;
 use regex::Captures;
-use rstd::algorithm::kmp::find_all_matched_points;
 use std::collections::HashSet;
 
 pub fn replace_text_preview_by_matches(

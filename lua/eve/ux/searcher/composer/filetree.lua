@@ -741,19 +741,34 @@ function M.new(props)
           end
         end
 
-        local succeed, preview_locations = oxi.replacer.replace_file_by_matches_advance({
-          cwd = cwd,
-          filepath = leafnode.data.filepath,
-          flag_case_sensitive = flag_case_sensitive,
-          flag_regex = flag_regex,
+        local filepath = std.path.resolve(cwd, leafnode.data.filepath) ---@type string
+        local advance_result, advance_error = rstd.replace.replace_file_by_matches_advance({
+          filepath = filepath,
           search_pattern = search_pattern,
           replace_pattern = replace_pattern,
+          flag_regex = flag_regex,
+          flag_case_sensitive = flag_case_sensitive,
           match_offsets = { offset_current },
           remain_offsets = offsets_remain,
         })
-        if not succeed or preview_locations == nil then
+        if advance_result == nil then
+          if advance_error ~= nil then
+            std.reporter.error({
+              from = self.fullname,
+              subject = "replace_file_by_matches_advance",
+              message = advance_error,
+              details = {
+                nodeuuid = nodeuuid,
+                nodestate = nodestate,
+                rootuuid = rootuuid,
+                rootnode = rootnode,
+              },
+            })
+          end
           return
         end
+
+        local preview_locations = advance_result.locations ---@type std.t.IMatchLocation[]
 
         local nt = 0 ---@type integer
         for i = st + 1, L, 1 do
@@ -2206,20 +2221,29 @@ function M:__replace_file__(cwd, node, nodestate)
   local replace_pattern = self.replace_pattern:snapshot() ---@type string
 
   if count == L then
-    ---@type boolean
-    local succeed = oxi.replacer.replace_file({
-      cwd = cwd,
-      filepath = node.data.filepath,
-      flag_case_sensitive = flag_case_sensitive,
-      flag_regex = flag_regex,
+    local filepath = std.path.resolve(cwd, node.data.filepath) ---@type string
+    local succeed, replace_error = rstd.replace.replace_file({
+      filepath = filepath,
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
+      flag_regex = flag_regex,
+      flag_case_sensitive = flag_case_sensitive,
     })
 
-    if succeed then
+    if succeed == true then
       treeview:remove_all_locations(nodestate)
+    elseif replace_error ~= nil then
+      std.reporter.error({
+        from = self.fullname,
+        subject = "replace_file",
+        message = replace_error,
+        details = {
+          cwd = cwd,
+          filepath = node.data.filepath,
+        },
+      })
     end
-    return succeed
+    return succeed == true
   end
 
   local match_offsets = {} ---@type integer[]
@@ -2230,18 +2254,17 @@ function M:__replace_file__(cwd, node, nodestate)
     end
   end
 
-  ---@type boolean
-  local succeed = oxi.replacer.replace_file_by_matches({
-    cwd = cwd,
-    filepath = node.data.filepath,
-    flag_case_sensitive = flag_case_sensitive,
-    flag_regex = flag_regex,
+  local filepath = std.path.resolve(cwd, node.data.filepath) ---@type string
+  local succeed, replace_error = rstd.replace.replace_file_by_matches({
+    filepath = filepath,
     search_pattern = search_pattern,
     replace_pattern = replace_pattern,
+    flag_regex = flag_regex,
+    flag_case_sensitive = flag_case_sensitive,
     match_offsets = match_offsets,
   })
 
-  if succeed then
+  if succeed == true then
     local k = 0 ---@type integer
     local statemap = treeview.statemap ---@type table<string, eve.ux.searcher.view.filetree.INodeState>
 
@@ -2255,8 +2278,15 @@ function M:__replace_file__(cwd, node, nodestate)
       end
     end
     std.table.truncate_inline(locations, k)
+  elseif replace_error ~= nil then
+    std.reporter.error({
+      from = self.fullname,
+      subject = "replace_file_by_matches",
+      message = replace_error,
+      details = { filepath = node.data.filepath },
+    })
   end
-  return succeed
+  return succeed == true
 end
 
 ---@param nodeuuid                      string

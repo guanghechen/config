@@ -22,6 +22,9 @@ pub use path::*;
 pub mod fs;
 pub use fs::*;
 
+pub mod replace;
+pub use replace::*;
+
 use mlua::prelude::*;
 use mlua::{FromLua, IntoLua, MultiValue as LuaMultiValue, Value as LuaValue};
 
@@ -171,6 +174,259 @@ fn fs_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     ])
 }
 
+fn replace_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+    lua.create_table_from([
+        (
+            "replace_file",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params = crate::types::replace::IReplaceFileParams::from_lua(params, lua)?;
+                match crate::replace::replace_file(
+                    &params.filepath,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_file_by_matches",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceFileByMatchesParams::from_lua(params, lua)?;
+                match crate::replace::replace_file_by_matches(
+                    &params.filepath,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                    &params.match_offsets,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_file_by_matches_advance",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params = crate::types::replace::IReplaceFileByMatchesAdvanceParams::from_lua(
+                    params, lua,
+                )?;
+                match crate::replace::replace_file_by_matches_advance(
+                    &params.filepath,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                    &params.match_offsets,
+                    &params.remain_offsets,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_file_preview",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceFilePreviewParams::from_lua(params, lua)?;
+                match crate::replace::replace_file_preview(
+                    &params.filepath,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.keep_search_pieces,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_file_preview_advance",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceFilePreviewParams::from_lua(params, lua)?;
+                match crate::replace::replace_file_preview_advance(
+                    &params.filepath,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.keep_search_pieces,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_file_preview_by_matches_advance",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceFilePreviewByMatchesAdvanceParams::from_lua(
+                        params, lua,
+                    )?;
+                match crate::replace::replace_file_preview_by_matches_advance(
+                    &params.filepath,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.keep_search_pieces,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                    &params.match_offsets,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_text_preview",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceTextPreviewParams::from_lua(params, lua)?;
+                match crate::replace::replace_text_preview(
+                    &params.text,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.keep_search_pieces,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_text_preview_by_matches",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params = crate::types::replace::IReplaceTextPreviewByMatchesParams::from_lua(
+                    params, lua,
+                )?;
+                match crate::replace::replace_text_preview_by_matches(
+                    &params.text,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.keep_search_pieces,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                    &params.match_offsets,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_text_preview_advance",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceTextPreviewAdvanceParams::from_lua(params, lua)?;
+                match crate::replace::replace_text_preview_advance(
+                    &params.text,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.keep_search_pieces,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
+            "replace_text_preview_by_matches_advance",
+            lua.create_function(|lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceTextPreviewByMatchesAdvanceParams::from_lua(
+                        params, lua,
+                    )?;
+                match crate::replace::replace_text_preview_by_matches_advance(
+                    &params.text,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.keep_search_pieces,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                    &params.match_offsets,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+    ])
+}
+
 fn find_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     lua.create_table_from([(
         "find_files",
@@ -295,6 +551,7 @@ fn rstd(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     exports.set("fn", fn_module(lua)?)?;
     exports.set("path", path_module(lua)?)?;
     exports.set("fs", fs_module(lua)?)?;
+    exports.set("replace", replace_module(lua)?)?;
     exports.set("find", find_module(lua)?)?;
     exports.set("search", search_module(lua)?)?;
     Ok(exports)

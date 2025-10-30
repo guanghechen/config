@@ -82,7 +82,7 @@ Each integration includes environment-specific:
 - **Build Artifacts**: `bin/{osx,nix,win}.nvim_tools.so` (platform builds)
 - **Source Code**: `rust/nvim_tools/` (nvim-oxi integration)
 - **Dependencies**: nvim-oxi 0.6.0, regex, serde, chrono, uuid
-- **Exposed Modules**: `oxi.replacer`, `oxi.string`, `rstd.fs`, `rstd.find`, `rstd.search`
+- **Exposed Modules**: `oxi.replacer`, `oxi.string`, `rstd.fs`, `rstd.replace`, `rstd.find`, `rstd.search`
 
 ## Development Commands
 

@@ -109,20 +109,32 @@ function M:calc_preview_data(context)
   local highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
 
   if flag_replace then
-    ---@type oxi.replacer.replace_file_preview_by_matches_advance.IResult
-    local preview_result = oxi.replacer.replace_file_preview_by_matches_advance({
-      flag_case_sensitive = flag_case_sensitive,
-      flag_regex = flag_regex,
+    local preview_result, preview_error = rstd.replace.replace_file_preview_by_matches_advance({
+      filepath = filepath,
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
-      filepath = filepath,
       keep_search_pieces = true,
+      flag_regex = flag_regex,
+      flag_case_sensitive = flag_case_sensitive,
       match_offsets = match_offsets,
     })
 
-    lines = preview_result.lines ---@type string[]
+    if preview_result == nil then
+      if preview_error ~= nil then
+        std.reporter.error({
+          from = __module_name__,
+          subject = "replace_file_preview_by_matches_advance",
+          message = preview_error,
+        })
+      end
+      local fallback_lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
+      preview_result = { text = table.concat(fallback_lines, "\n"), matches = {} }
+    end
+
+    local preview_text = preview_result.text ---@type string
+    local lwidths = rstd.string.calc_linewidths(preview_text) ---@type integer[]
+    lines = oxi.string.parse_lines(preview_text, lwidths) ---@type string[]
     highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
-    local lwidths = preview_result.lwidths ---@type integer[]
     local matches = preview_result.matches ---@type std.t.IMatchPoint[]
 
     local lnum0 = 1 ---@type integer

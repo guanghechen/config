@@ -131,7 +131,7 @@ pub fn generate_replacement_lines(
     full_text: &str,
     config: &ReplacePreviewConfig,
 ) -> Result<Vec<String>, String> {
-    match util::replace::replace_text_preview_advance(
+    match rstd::replace::replace_text_preview_advance(
         full_text,
         &config.search_pattern,
         &config.replace_pattern,

@@ -307,18 +307,29 @@ function M:search(params)
     if flag_replace and replace_pattern ~= nil then
       local lnum_delta = 0 ---@type integer
       for _, block_match in ipairs(filematch.matches) do
-        ---@type oxi.replacer.replace_text_preview_advance.IResult
-        local preview_result = oxi.replacer.replace_text_preview_advance({
-          flag_case_sensitive = flag_case_sensitive,
-          flag_regex = flag_regex,
-          keep_search_pieces = true,
+        local preview_result, preview_error = rstd.replace.replace_text_preview_advance({
+          text = block_match.text,
           search_pattern = search_pattern,
           replace_pattern = replace_pattern,
-          text = block_match.text,
+          keep_search_pieces = true,
+          flag_regex = flag_regex,
+          flag_case_sensitive = flag_case_sensitive,
         })
 
-        local r_lines = preview_result.lines ---@type string[]
-        local r_lwidths = preview_result.lwidths ---@type integer[]
+        if preview_result == nil then
+          if preview_error ~= nil then
+            std.reporter.error({
+              from = __module_name__,
+              subject = "replace_text_preview_advance",
+              message = preview_error,
+            })
+          end
+          preview_result = { text = block_match.text, matches = {} }
+        end
+
+        local preview_text = preview_result.text ---@type string
+        local r_lwidths = rstd.string.calc_linewidths(preview_text) ---@type integer[]
+        local r_lines = oxi.string.parse_lines(preview_text, r_lwidths) ---@type string[]
         local r_matches = preview_result.matches ---@type std.t.IMatchPoint[]
         local s_lines = block_match.lines ---@type string[]
         local s_lwidths = block_match.lwidths ---@type integer[]
