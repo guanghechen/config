@@ -82,4 +82,25 @@ function M.search_in_lines_literal(options) end
 ---@return string|nil
 function M.search_in_lines_regex(options) end
 
+---@class rstd.search.ISearchInLinesMatchPoint
+---@field public l                      integer
+---@field public r                      integer
+
+---@class rstd.search.ISearchInLinesLineMatch
+---@field public lnum                   integer
+---@field public score                  integer
+---@field public matches                rstd.search.ISearchInLinesMatchPoint[]
+
+---@class rstd.search.ISearchInLinesOptions
+---@field public pattern                string
+---@field public lines                  string[]
+---@field public flag_fuzzy             boolean
+---@field public flag_regex             boolean
+---@field public flag_case_sensitive    boolean
+
+---@param options                       rstd.search.ISearchInLinesOptions
+---@return rstd.search.ISearchInLinesLineMatch[]|nil
+---@return string|nil
+function M.search_in_lines(options) end
+
 return M

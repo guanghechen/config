@@ -1,3 +1,5 @@
+local __module_name__ = "oxi.searcher" ---@type string
+
 ---@class oxi.searcher
 local M = {}
 
@@ -11,13 +13,38 @@ local M = {}
 ---@param params                        oxi.searcher.ISearchInLinesParams
 ---@return oxi.string.ILineMatch[]|nil
 function M.search_in_lines(params)
-  local result = oxi.fn.safe_run("search_in_lines", {
+  local ok, result, err = pcall(rstd.search.search_in_lines, {
     pattern = params.pattern,
     lines = params.lines,
     flag_fuzzy = params.flag_fuzzy,
     flag_regex = params.flag_regex,
     flag_case_sensitive = params.flag_case_sensitive,
   })
+
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "search_in_lines failed",
+      details = {
+        error = result,
+        params = params,
+      },
+    })
+    return nil
+  end
+
+  if err then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "search_in_lines failed",
+      details = {
+        error = err,
+        params = params,
+      },
+    })
+    return nil
+  end
+
   return result
 end
 
@@ -31,14 +58,19 @@ end
 ---@param params                        oxi.searcher.ISearchInTextParams
 ---@return oxi.string.ILineMatch[]|nil
 function M.search_in_text(params)
-  local result = oxi.fn.safe_run("search_in_text", {
+  -- Convert text to lines array
+  local lines = {}
+  for line in params.text:gmatch("[^\n]*") do
+    table.insert(lines, line)
+  end
+
+  return M.search_in_lines({
     pattern = params.pattern,
-    text = params.text,
+    lines = lines,
     flag_fuzzy = params.flag_fuzzy,
     flag_regex = params.flag_regex,
     flag_case_sensitive = params.flag_case_sensitive,
   })
-  return result
 end
 
 ---@class oxi.searcher.ISearchInBufferParams

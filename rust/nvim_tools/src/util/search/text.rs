@@ -12,61 +12,33 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    if pattern.is_empty() {
-        return Ok(vec![]);
-    }
-
-    // Convert lines to vector to enable reuse and efficient indexing
+    // Convert lines to vector
     let lines_vec: Vec<String> = lines.into_iter().map(|s| s.as_ref().to_string()).collect();
 
-    if flag_regex {
-        // Use rstd's search_in_lines_regex and convert types
-        let rstd_results = rstd::search::search_in_lines_regex(
-            pattern,
-            &lines_vec,
-            flag_case_sensitive,
-        )?;
+    // Use rstd's search_in_lines and convert types
+    let rstd_results = rstd::search::search_in_lines(
+        pattern,
+        &lines_vec,
+        flag_fuzzy,
+        flag_regex,
+        flag_case_sensitive,
+    )?;
 
-        Ok(rstd_results
-            .into_iter()
-            .map(|rstd_match| LineMatch {
-                lnum: rstd_match.lnum,
-                score: rstd_match.score,
-                matches: rstd_match
-                    .matches
-                    .into_iter()
-                    .map(|rstd_point| MatchPoint {
-                        start: rstd_point.start,
-                        end: rstd_point.end,
-                    })
-                    .collect(),
-            })
-            .collect())
-    } else {
-        // Use rstd's search_in_lines_literal and convert types
-        let rstd_results = rstd::search::search_in_lines_literal(
-            pattern,
-            &lines_vec,
-            flag_fuzzy,
-            flag_case_sensitive,
-        );
-
-        Ok(rstd_results
-            .into_iter()
-            .map(|rstd_match| LineMatch {
-                lnum: rstd_match.lnum,
-                score: rstd_match.score,
-                matches: rstd_match
-                    .matches
-                    .into_iter()
-                    .map(|rstd_point| MatchPoint {
-                        start: rstd_point.start,
-                        end: rstd_point.end,
-                    })
-                    .collect(),
-            })
-            .collect())
-    }
+    Ok(rstd_results
+        .into_iter()
+        .map(|rstd_match| LineMatch {
+            lnum: rstd_match.lnum,
+            score: rstd_match.score,
+            matches: rstd_match
+                .matches
+                .into_iter()
+                .map(|rstd_point| MatchPoint {
+                    start: rstd_point.start,
+                    end: rstd_point.end,
+                })
+                .collect(),
+        })
+        .collect())
 }
 
 pub fn search_in_text(

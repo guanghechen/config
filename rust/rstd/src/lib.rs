@@ -150,6 +150,34 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
             })?,
         ),
         (
+            "search_in_lines",
+            lua.create_function(|lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
+                let options = search::ISearchInLinesOptions::from_lua(options, lua)?;
+                match search::search_in_lines(
+                    &options.pattern,
+                    &options.lines,
+                    options.flag_fuzzy,
+                    options.flag_regex,
+                    options.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![
+                            data,
+                            LuaValue::Nil,
+                        ]))
+                    }
+                    Err(error) => {
+                        let err = error.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::Nil,
+                            err,
+                        ]))
+                    }
+                }
+            })?,
+        ),
+        (
             "search_in_lines_literal",
             lua.create_function(|lua, options: LuaValue| -> LuaResult<LuaValue> {
                 let options = search::ISearchInLinesLiteralOptions::from_lua(options, lua)?;
