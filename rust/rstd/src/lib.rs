@@ -162,6 +162,32 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
                 result.into_lua(lua)
             })?,
         ),
+        (
+            "search_in_lines_regex",
+            lua.create_function(|lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
+                let options = search::ISearchInLinesRegexOptions::from_lua(options, lua)?;
+                match search::search_in_lines_regex(
+                    &options.pattern,
+                    &options.lines,
+                    options.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![
+                            data,
+                            LuaValue::Nil,
+                        ]))
+                    }
+                    Err(error) => {
+                        let err = error.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::Nil,
+                            err,
+                        ]))
+                    }
+                }
+            })?,
+        ),
     ])
 }
 

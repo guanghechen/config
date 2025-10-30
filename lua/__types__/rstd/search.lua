@@ -63,4 +63,23 @@ function M.search_in_files(options) end
 ---@return rstd.search.ISearchInLinesLiteralLineMatch[]
 function M.search_in_lines_literal(options) end
 
+---@class rstd.search.ISearchInLinesRegexMatchPoint
+---@field public l                      integer
+---@field public r                      integer
+
+---@class rstd.search.ISearchInLinesRegexLineMatch
+---@field public lnum                   integer
+---@field public score                  integer
+---@field public matches                rstd.search.ISearchInLinesRegexMatchPoint[]
+
+---@class rstd.search.ISearchInLinesRegexOptions
+---@field public pattern                string
+---@field public lines                  string[]
+---@field public flag_case_sensitive    boolean
+
+---@param options                       rstd.search.ISearchInLinesRegexOptions
+---@return rstd.search.ISearchInLinesRegexLineMatch[]|nil
+---@return string|nil
+function M.search_in_lines_regex(options) end
+
 return M
