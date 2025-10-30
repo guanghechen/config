@@ -52,16 +52,13 @@ fn collect_files_recursive(
         let entry = entry?;
         let path = entry.path();
 
-        if path.is_dir() {
-            if recursive {
-                collect_files_recursive(&path, base_path, files, recursive)?;
-            }
-        } else if path.is_file() {
-            if let Ok(relative_path) = path.strip_prefix(base_path) {
-                if let Some(path_str) = relative_path.to_str() {
-                    files.push(path_str.to_string());
-                }
-            }
+        if path.is_dir() && recursive {
+            collect_files_recursive(&path, base_path, files, recursive)?;
+        } else if path.is_file()
+            && let Ok(relative_path) = path.strip_prefix(base_path)
+            && let Some(path_str) = relative_path.to_str()
+        {
+            files.push(path_str.to_string());
         }
     }
 

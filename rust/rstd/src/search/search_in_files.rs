@@ -46,10 +46,8 @@ pub fn search_in_files(
 
     let (cmd, output, elapsed_duration) = {
         let mut cmd = Command::new("rg");
-        if let Some(cwd) = &options.cwd {
-            if !cwd.is_empty() {
-                cmd.current_dir(cwd);
-            }
+        if let Some(cwd) = options.cwd.as_ref().filter(|cwd| !cwd.is_empty()) {
+            cmd.current_dir(cwd);
         }
 
         cmd.arg("--multiline")
@@ -65,10 +63,10 @@ pub fn search_in_files(
             cmd.arg("--no-ignore-vcs");
         }
 
-        if let Some(max_filesize) = &options.max_filesize {
-            if !max_filesize.is_empty() {
-                cmd.args(["--max-filesize", max_filesize]);
-            }
+        if let Some(max_filesize) =
+            options.max_filesize.as_ref().filter(|size| !size.is_empty())
+        {
+            cmd.args(["--max-filesize", max_filesize]);
         }
 
         if flag_case_sensitive {
@@ -95,12 +93,10 @@ pub fn search_in_files(
             cmd.args(["--fixed-strings", "--", search_pattern]);
         }
 
-        if let Some(specified_filepath) = &options.specified_filepath {
-            if !specified_filepath.is_empty() {
-                cmd.arg(specified_filepath);
-            } else if !search_paths.is_empty() {
-                cmd.args(&search_paths);
-            }
+        if let Some(specified_filepath) =
+            options.specified_filepath.as_ref().filter(|path| !path.is_empty())
+        {
+            cmd.arg(specified_filepath);
         } else if !search_paths.is_empty() {
             cmd.args(&search_paths);
         }

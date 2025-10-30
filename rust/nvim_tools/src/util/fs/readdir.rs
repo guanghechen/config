@@ -201,7 +201,7 @@ pub fn format_filesize(size_bytes: u64) -> String {
     let remain: u32 = ((value * 100.0).round() as u32) % 100;
     if remain == 0 {
         format!("{}{unit}", value.round())
-    } else if remain % 10 == 0 {
+    } else if remain.is_multiple_of(10) {
         format!("{value:.1}{unit}")
     } else {
         format!("{value:.2}{unit}")

@@ -95,7 +95,7 @@ mod tests {
     fn test_search_fuzzy_mode() {
         let lines = vec!["hello world".to_string()];
         let result = search_in_lines("hw", &lines, true, false, false).unwrap();
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
     }
 
     #[test]

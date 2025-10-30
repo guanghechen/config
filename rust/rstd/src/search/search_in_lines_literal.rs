@@ -288,7 +288,7 @@ mod tests {
     fn test_search_fuzzy_match() {
         let lines = vec!["hello world".to_string()];
         let result = search_in_lines_literal("hw", &lines, true, false);
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
     }
 
     #[test]
