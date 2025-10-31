@@ -51,6 +51,9 @@ mk({ "i", "n", "s" }, "<esc>", function()
 end, "system: clear search highlights", true)
 -- mk({ "t" }, { "<C-a>i", "<M-i>", "<D-i>" }, "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
 mk({ "t" }, { "<C-i>" }, "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
+mk({ "t" }, "<Tab>", function()
+  return vim.api.nvim_replace_termcodes("<Tab>", true, false, true)
+end, "terminal: insert tab", true)
 
 ---! quit
 mk({ "n", "v" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
