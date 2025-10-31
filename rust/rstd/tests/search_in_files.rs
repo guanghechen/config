@@ -90,3 +90,49 @@ fn test_search_in_files_crlf_pattern_matches_crlf_files() {
     );
     assert!(filenames.contains("b.txt"), "b.txt should be present");
 }
+
+#[test]
+fn test_search_in_files_respects_max_matches_limit() {
+    let cwd = fixtures_dir();
+
+    let options = ISearchInFilesOptions {
+        cwd: Some(cwd),
+        flag_case_sensitive: true,
+        flag_gitignore: true,
+        flag_regex: false,
+        max_filesize: None,
+        max_matches: Some(5),
+        search_pattern: "Hello".to_string(),
+        search_paths: ".".to_string(),
+        include_patterns: "*.txt".to_string(),
+        exclude_patterns: String::new(),
+        specified_filepath: None,
+    };
+
+    let result = search_in_files(&options).expect("expected successful search");
+    assert_eq!(result.items.len(), 1, "only a.txt should be included");
+
+    let file_match = result
+        .items
+        .get("a.txt")
+        .expect("a.txt should be present in results");
+
+    assert_eq!(
+        file_match.matches.len(),
+        5,
+        "expected exactly 5 matches to be recorded"
+    );
+
+    let last_block = file_match
+        .matches
+        .last()
+        .expect("matches collection should not be empty");
+    assert!(
+        !last_block.matches.is_empty(),
+        "last block should retain the final match"
+    );
+    assert_eq!(
+        last_block.lnum, 5,
+        "the final recorded match should correspond to line 5"
+    );
+}

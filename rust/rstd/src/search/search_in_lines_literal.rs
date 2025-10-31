@@ -1,5 +1,6 @@
 use crate::algorithm::kmp::{calc_fails, find_all_matched_points};
 use crate::types::{ISearchInLinesLiteralLineMatch, ISearchInLinesLiteralMatchPoint};
+use std::borrow::Cow;
 
 /// Find the line number for a given byte position using binary search
 /// Returns (line_number, line_start_position)
@@ -91,11 +92,10 @@ pub fn search_in_lines_literal(
     } else {
         // For single-line patterns, search line by line for better efficiency and memory usage
         for (line_idx, line) in lines_vec.iter().enumerate() {
-            let line_str = if flag_case_sensitive {
-                line.as_str() // Use string slice instead of allocation
+            let line_str: Cow<'_, str> = if flag_case_sensitive {
+                Cow::Borrowed(line.as_str())
             } else {
-                // Only allocate when we need case conversion
-                &line.to_lowercase()
+                Cow::Owned(line.to_lowercase())
             };
             let line_bytes = line_str.as_bytes();
 
@@ -122,11 +122,10 @@ pub fn search_in_lines_literal(
                 continue;
             }
 
-            let line_str = if flag_case_sensitive {
-                line.as_str() // Use string slice instead of allocation
+            let line_str: Cow<'_, str> = if flag_case_sensitive {
+                Cow::Borrowed(line.as_str())
             } else {
-                // Only allocate when we need case conversion
-                &line.to_lowercase()
+                Cow::Owned(line.to_lowercase())
             };
             let line_bytes = line_str.as_bytes();
             let base: f64 = line.len() as f64;

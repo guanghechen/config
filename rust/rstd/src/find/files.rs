@@ -40,11 +40,10 @@ fn build_excludes(patterns: &[String]) -> Result<Option<GlobSet>, String> {
 
     let mut builder = globset::GlobSetBuilder::new();
     for pattern in patterns {
-        builder
-            .add(
-                Glob::new(pattern)
-                    .map_err(|error| format!("Invalid exclude glob '{}': {}", pattern, error))?,
-            );
+        builder.add(
+            Glob::new(pattern)
+                .map_err(|error| format!("Invalid exclude glob '{}': {}", pattern, error))?,
+        );
     }
 
     builder

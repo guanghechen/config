@@ -6,8 +6,8 @@ use crate::types::{
 use grep::matcher::Matcher;
 use grep::regex::{RegexMatcher, RegexMatcherBuilder};
 use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
-use ignore::overrides::OverrideBuilder;
 use ignore::WalkBuilder;
+use ignore::overrides::OverrideBuilder;
 use regex::escape;
 use std::collections::HashMap;
 use std::io;
@@ -48,12 +48,9 @@ fn parse_max_filesize(value: &Option<String>) -> Result<Option<u64>, String> {
         return Err(format!("Invalid max_filesize value: {}", raw));
     }
 
-    let value: u64 = number_part.parse().map_err(|_| {
-        format!(
-            "Unable to parse max_filesize numeric portion from: {}",
-            raw
-        )
-    })?;
+    let value: u64 = number_part
+        .parse()
+        .map_err(|_| format!("Unable to parse max_filesize numeric portion from: {}", raw))?;
 
     let unit_part = trimmed[digits_end..].trim().to_ascii_lowercase();
     let multiplier: u64 = match unit_part.as_str() {
@@ -190,17 +187,12 @@ struct FileMatchSink<'matcher, 'count> {
     blocks: &'matcher mut Vec<ISearchBlockMatch>,
     matches_count: &'count mut u32,
     max_matches: u32,
-    counted_file: &'count mut bool,
 }
 
 impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
     type Error = io::Error;
 
-    fn matched(
-        &mut self,
-        _searcher: &Searcher,
-        mat: &SinkMatch<'_>,
-    ) -> Result<bool, Self::Error> {
+    fn matched(&mut self, _searcher: &Searcher, mat: &SinkMatch<'_>) -> Result<bool, Self::Error> {
         if *self.matches_count >= self.max_matches {
             return Ok(false);
         }
@@ -208,22 +200,6 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
         let bytes = mat.bytes();
         let line_number = mat.line_number().unwrap_or(0) as usize;
         let absolute_offset = mat.absolute_byte_offset() as usize;
-
-        if !*self.counted_file {
-            *self.matches_count = self.matches_count.saturating_add(1);
-            *self.counted_file = true;
-        }
-
-        if *self.matches_count >= self.max_matches {
-            let text = String::from_utf8_lossy(bytes).into_owned();
-            self.blocks.push(ISearchBlockMatch {
-                lnum: line_number,
-                text,
-                offset: absolute_offset,
-                matches: Vec::new(),
-            });
-            return Ok(false);
-        }
 
         let mut match_points: Vec<ISearchMatchPoint> = Vec::new();
         let mut continue_search = true;
@@ -243,10 +219,11 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
         });
 
         if let Err(error) = result {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                error.to_string(),
-            ));
+            return Err(io::Error::new(io::ErrorKind::Other, error.to_string()));
+        }
+
+        if match_points.is_empty() {
+            return Ok(continue_search && *self.matches_count < self.max_matches);
         }
 
         let text = String::from_utf8_lossy(bytes).into_owned();
@@ -371,13 +348,11 @@ pub fn search_in_files(
         let display = display_path(&path, &base_dir);
 
         let mut blocks: Vec<ISearchBlockMatch> = Vec::new();
-        let mut counted_file = false;
         let mut sink = FileMatchSink {
             matcher: &matcher,
             blocks: &mut blocks,
             matches_count: &mut matches_count,
             max_matches,
-            counted_file: &mut counted_file,
         };
 
         let search_result = searcher.search_path(&matcher, &path, &mut sink);
