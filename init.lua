@@ -4,7 +4,6 @@ require("std.bootstrap").setup_patches()
 require("std.bootstrap").setup_workspace()
 
 _G.std = require("std")
-_G.oxi = require("oxi")
 _G.eve = require("eve")
 
 if std.path.is_git_repo() then

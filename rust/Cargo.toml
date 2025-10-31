@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "nvim_tools",
     "rstd",
 ]
 resolver = "3"

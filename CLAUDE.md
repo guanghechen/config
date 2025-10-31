@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a sophisticated, deeply-customized Neovim configuration that combines Lua and Rust for enhanced performance. It uses nvim-oxi to bridge Rust-powered utilities with Lua-based Neovim configuration. The architecture implements a completely custom framework with modular design patterns.
+This is a sophisticated, deeply-customized Neovim configuration that combines Lua and Rust for enhanced performance. Rust-native helpers are exposed through the `rstd` module, giving Lua fast search, replace, filesystem, and string utilities. The architecture implements a completely custom framework with modular design patterns.
 
 ## Architecture
 
@@ -13,8 +13,6 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
   - `std/collection/`: Data structures (Observable, Promise, Scheduler, etc.)
   - `std/lib/`: Library utilities (color, easing)
   - Core utilities: bootstrap, debug, fs, path, json, timer, etc.
-- `lua/oxi/`: Rust-Lua bridge interfaces via nvim-oxi
-  - `oxi/replacer`: Performance-critical replacement operations
 - `lua/rstd/`: Rust-backed standard library surfaces
   - `rstd/fs`: File system utilities exposed via mlua bindings
   - `rstd/search`: Search operations rooted in Rust implementations
@@ -39,7 +37,7 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
   - `integration/vscode/`: VSCode extension setup
 - Supporting directories:
   - `queries/`: TreeSitter queries for various languages
-  - `rust/nvim_tools/`: Rust source code for performance-critical operations
+  - `rust/rstd/`: Rust source code for performance-critical operations
   - `lsp/`: Language server configurations
   - `doc/`: Documentation and issue tracking
   - `bin/`: Compiled Rust binaries (platform-specific)
@@ -50,7 +48,7 @@ The configuration exposes core modules globally via `_G` for convenient access:
 
 **Global Modules (accessible without require):**
 - `_G.std` → `require("std")` - Foundation utilities
-- `_G.oxi` → `require("oxi")` - Rust bridge interfaces
+- `_G.rstd` → `require("rstd")` - Rust-powered helpers
 - `_G.eve` → `require("eve")` - Core framework
 
 **Module Access Patterns:**
@@ -63,7 +61,6 @@ The configuration exposes core modules globally via `_G` for convenient access:
 - `eve.fn.*` → `require("eve.fn").*`
 - `eve.ux.*` → `require("eve.ux").*`
 - `eve.buf.retrieve_selected_text()` → helper that returns the current visual selection text (empty when nothing selected)
-- `oxi.finder.*` → `require("oxi.finder").*` (Rust performance modules)
 
 ### Integration Points
 The configuration supports multiple environments through conditional loading in `init.lua:14-24`:
@@ -78,36 +75,36 @@ Each integration includes environment-specific:
 - `autocmd.lua`: Auto commands (neovim only)
 
 ### Rust-Lua Bridge
-- **Compiled Library**: `lua/nvim_tools.so` (platform-specific binary)
-- **Build Artifacts**: `bin/{osx,nix,win}.nvim_tools.so` (platform builds)
-- **Source Code**: `rust/nvim_tools/` (nvim-oxi integration)
-- **Dependencies**: nvim-oxi 0.6.0, regex, serde, chrono, uuid
-- **Exposed Modules**: `oxi.replacer`, `rstd.fs`, `rstd.replace`, `rstd.find`, `rstd.search`
+- **Compiled Library**: `lua/rstd.so` (platform-specific binary)
+- **Build Artifacts**: `bin/{osx,nix,win}.rstd.so` (platform builds)
+- **Source Code**: `rust/rstd/` (mlua integration)
+- **Dependencies**: mlua 0.9 (luajit), regex, serde, chrono, uuid
+- **Exposed Modules**: `rstd.fs`, `rstd.replace`, `rstd.find`, `rstd.search`, `rstd.string`, `rstd.fn`
 
 ## Development Commands
 
 ### Rust Development
 Build the Rust components:
 ```bash
-cd rust/nvim_tools
+cd rust/rstd
 cargo build --release
 ```
 
 Force rebuild (recommended after Rust changes):
 ```bash
-cd rust/nvim_tools
+cd rust
 ./build.sh --force
 ```
 
 The build script automatically:
 - Detects platform (Darwin/Linux/Windows)
 - Builds release version
-- Copies to both `lua/nvim_tools.so` and `bin/{platform}.nvim_tools.so`
+- Copies to both `lua/rstd.so` and `bin/{platform}.rstd.so`
 - Cleans up target directory
 
 ### Testing
 - **Lua Tests**: Located in `__test__/__eve__/` (organized by module)
-- **Rust Tests**: Run `cargo test` from `rust/nvim_tools/`
+- **Rust Tests**: Run `cargo test` from `rust/rstd/`
 
 ## Code Conventions
 
@@ -146,11 +143,11 @@ std.reporter.error({
 -- - silent: (optional) Suppress notification display
 ```
 
-### OXI Integration Rules
-When modifying `lua/oxi/` or `rust/nvim_tools/src/`:
-- Reference nvim-oxi examples for proper Deserialization/Serialization patterns
-- Ensure proper type handling between Rust and Lua boundaries
-- Follow the existing pattern in `oxi/` modules for FFI calls
+### rstd Integration Notes
+When modifying `rust/rstd/src/`:
+- Follow existing mlua patterns for serialization/deserialization
+- Keep Lua-facing APIs synchronized with Lua call sites
+- Ensure bridging code stays lean to protect UX performance
 
 ## Plugin Management
 Plugins are managed using a custom plugin system:
@@ -164,7 +161,7 @@ Plugins are managed using a custom plugin system:
 
 ## Initialization Sequence
 1. **Bootstrap**: `std.bootstrap` sets up patches and workspace
-2. **Global Modules**: Load `_G.std`, `_G.oxi`, `_G.eve`
+2. **Global Modules**: Load `_G.std`, `_G.rstd`, `_G.eve`
 3. **Logging**: Configure logging for git repositories
 4. **Environment Detection**: Route to appropriate integration
 5. **Context Setup**: Initialize eve context system

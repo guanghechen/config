@@ -132,6 +132,14 @@ local function highlight_match_point(bufnr, namespace, hlgroup, lnum, point)
   end
 end
 
+---@param bufnr                         integer
+---@return string[]
+---@return string
+local function collect_buffer_content(bufnr)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+  return lines, table.concat(lines, "\n")
+end
+
 ---@class eve.ux.searcher.buffer.ISearcherProps
 ---@field public o_flag_fuzzy?           std.collection.IObservable
 ---@field public o_flag_regex?           std.collection.IObservable
@@ -518,18 +526,43 @@ function M:replace_current_match()
     return
   end
 
-  -- Use oxi.replacer to replace current match in buffer
-  local result = oxi.replacer.replace_current_match_in_buffer({
-    bufnr = bufnr_source,
-    current_match_index = current_match_index,
-    matches = matches,
+  local lines, text = collect_buffer_content(bufnr_source) ---@type string[], string
+  local current_match = matches[current_match_index] ---@type rstd.search.ISearchInLinesLineMatch
+  if current_match == nil or current_match.matches == nil or #current_match.matches == 0 then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "Current match has no match points",
+    })
+    return
+  end
+
+  local match_point = current_match.matches[1] ---@type rstd.search.ISearchInLinesMatchPoint
+  local line_start_offset = self:__calculate_line_start_pos__(lines, current_match.lnum) ---@type integer
+  local match_offset = line_start_offset + match_point.l ---@type integer
+
+  local replaced_text, replace_err = rstd.replace.replace_text_preview_by_matches({
+    text = text,
     search_pattern = search_pattern,
     replace_pattern = replace_pattern,
+    keep_search_pieces = false,
     flag_regex = self.o_flag_regex:snapshot(),
     flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
+    match_offsets = { match_offset },
   })
 
-  if result and result.success then
+  if replaced_text == nil then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = replace_err or "Failed to replace match",
+    })
+    return
+  end
+
+  local new_lines = vim.split(replaced_text, "\n", { plain = true }) ---@type string[]
+  local ok, set_err = pcall(vim.api.nvim_buf_set_lines, bufnr_source, 0, -1, false, new_lines)
+  if ok then
     -- Store the desired match index to preserve after search refresh
     local next_index = current_match_index
     if current_match_index < #matches then
@@ -553,7 +586,7 @@ function M:replace_current_match()
     std.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
-      message = "Failed to replace match",
+      message = string.format("Failed to update buffer: %s", set_err),
     })
   end
 end
@@ -601,17 +634,29 @@ function M:replace_all_matches()
     return
   end
 
-  -- Use oxi.replacer to replace all matches in buffer
-  local result = oxi.replacer.replace_all_matches_in_buffer({
-    bufnr = bufnr_source,
-    matches = matches,
+  local lines, text = collect_buffer_content(bufnr_source) ---@type string[], string
+  local replaced_text, replace_err = rstd.replace.replace_text_preview({
+    text = text,
     search_pattern = search_pattern,
     replace_pattern = replace_pattern,
+    keep_search_pieces = false,
     flag_regex = self.o_flag_regex:snapshot(),
     flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
   })
 
-  if result and result.success then
+  if replaced_text == nil then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Replace All Matches",
+      message = replace_err or "Failed to replace matches",
+    })
+    return
+  end
+
+  local new_lines = vim.split(replaced_text, "\n", { plain = true }) ---@type string[]
+  local ok, set_err = pcall(vim.api.nvim_buf_set_lines, bufnr_source, 0, -1, false, new_lines)
+
+  if ok then
     -- Clear all highlights since all matches are replaced
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
@@ -625,13 +670,13 @@ function M:replace_all_matches()
     std.reporter.info({
       from = __module_name__,
       subject = "Replace All Matches",
-      message = string.format("Replaced %d matches successfully", result.replaced_count),
+      message = string.format("Replaced %d matches successfully", #matches),
     })
   else
     std.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
-      message = "Failed to replace matches",
+      message = string.format("Failed to update buffer: %s", set_err),
     })
   end
 end
@@ -1337,42 +1382,69 @@ function M:__update_replace_preview__()
     return
   end
 
-  -- Call the oxi replacer function to get replacement data
-  ---@type oxi.replacer.show_replace_preview_in_buffer.IParams
-  local params = {
-    bufnr = bufnr_source,
-    search_pattern = search_pattern,
-    replace_pattern = replace_pattern,
-    flag_fuzzy = self.o_flag_fuzzy:snapshot(),
-    flag_regex = self.o_flag_regex:snapshot(),
-    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
-    namespace_id = NSNR_REPLACE_PREVIEW,
-    highlight_group_search = "Search",
-    highlight_group_replace = "DiffAdd",
-  }
-
-  local result = oxi.replacer.show_replace_preview_in_buffer(params)
-  if not result then
+  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  if not matches or #matches == 0 then
     return
   end
 
-  if result.error then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "Replace Preview",
-      message = result.error,
-    })
-    return
+  local lines, text = collect_buffer_content(bufnr_source) ---@type string[], string
+  local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
+  local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
+  local replacement_matches = {} ---@type eve.ux.searcher.buffer.IReplacementMatch[]
+
+  local text_len = #text ---@type integer
+
+  for _, line_match in ipairs(matches) do
+    if line_match.matches ~= nil and #line_match.matches > 0 then
+      local line_start_offset = self:__calculate_line_start_pos__(lines, line_match.lnum) ---@type integer
+      for _, point in ipairs(line_match.matches) do
+        local start_offset = line_start_offset + point.l ---@type integer
+        local end_offset = line_start_offset + point.r ---@type integer
+        local bounded_end = math.min(end_offset, text_len) ---@type integer
+
+        if bounded_end > start_offset then
+          local matched_text = string.sub(text, start_offset + 1, bounded_end) ---@type string
+          local replacement_text, preview_err = rstd.replace.replace_text_preview({
+            text = matched_text,
+            search_pattern = search_pattern,
+            replace_pattern = replace_pattern,
+            keep_search_pieces = false,
+            flag_regex = flag_regex,
+            flag_case_sensitive = flag_case_sensitive,
+          })
+
+          if replacement_text == nil then
+            std.reporter.error({
+              from = __module_name__,
+              subject = "Replace Preview",
+              message = preview_err or "Failed to compute replacement preview",
+            })
+            return
+          end
+
+          replacement_matches[#replacement_matches + 1] = {
+            l = start_offset,
+            r = bounded_end,
+            text = replacement_text,
+          }
+        end
+      end
+    end
   end
 
-  if result.replacement_matches then
-    self:__render_replacement_matches__(bufnr_source, result.replacement_matches)
+  if #replacement_matches > 0 then
+    self:__render_replacement_matches__(bufnr_source, replacement_matches)
   end
 end
 
+---@class eve.ux.searcher.buffer.IReplacementMatch
+---@field public l                      integer
+---@field public r                      integer
+---@field public text                   string
+
 ---@protected
 ---@param bufnr                          integer
----@param replacement_matches            table[]
+---@param replacement_matches            eve.ux.searcher.buffer.IReplacementMatch[]
 ---@return nil
 function M:__render_replacement_matches__(bufnr, replacement_matches)
   local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")

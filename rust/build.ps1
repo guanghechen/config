@@ -17,8 +17,8 @@ $RESET = "`e[0m"
 
 # Function to build a Rust package and deploy it
 # Parameters:
-#   SourceName - original package name (e.g., nvim_tools, rstd)
-#   TargetName - target package name for output (e.g., oxi, rstd)
+#   SourceName - original package name (e.g., rstd)
+#   TargetName - target package name for output (e.g., rstd)
 #   ForceRebuild - whether to force rebuild
 function Invoke-GhcRustBuild {
     param(
@@ -99,6 +99,5 @@ function Invoke-GhcRustBuild {
 
 # Build packages
 Invoke-GhcRustBuild -SourceName "rstd" -TargetName "rstd" -ForceRebuild $Force.IsPresent
-Invoke-GhcRustBuild -SourceName "nvim_tools" -TargetName "nvim_tools" -ForceRebuild $Force.IsPresent
 
 Write-Host "${BLUE}[neovim build] done${RESET}"

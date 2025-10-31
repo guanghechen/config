@@ -3,7 +3,7 @@ use std::collections::HashSet;
 
 fn fixtures_dir() -> String {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not defined");
-    let path = std::path::Path::new(&manifest_dir).join("../nvim_tools/tests/fixtures");
+    let path = std::path::Path::new(&manifest_dir).join("tests/fixtures");
     path.to_string_lossy().to_string()
 }
 
