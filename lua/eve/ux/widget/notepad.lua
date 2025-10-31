@@ -44,9 +44,9 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "v" },
     key = "<C-n>",
-    desc = K.notepad.create.desc,
+    desc = K.notepad.rename.desc,
     callback = function()
-      vim.cmd(K.notepad.create.uuid)
+      vim.cmd(K.notepad.rename.uuid)
     end,
   },
   {
@@ -68,9 +68,9 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "v" },
     key = "<C-/>",
-    desc = K.notepad.rename.desc,
+    desc = K.notepad.create.desc,
     callback = function()
-      vim.cmd(K.notepad.rename.uuid)
+      vim.cmd(K.notepad.create.uuid)
     end,
   },
   {

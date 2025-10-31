@@ -49,7 +49,8 @@ mk({ "i", "n", "s" }, "<esc>", function()
   end
   return "<esc>"
 end, "system: clear search highlights", true)
-mk({ "t" }, "<C-n>", "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
+-- mk({ "t" }, { "<C-a>i", "<M-i>", "<D-i>" }, "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
+mk({ "t" }, { "<C-i>" }, "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
 
 ---! quit
 mk({ "n", "v" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")

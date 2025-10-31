@@ -899,7 +899,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "t", "v" },
+      modes = { "i", "n", "v" },
       key = "<C-a>`",
       aliases = { "<D-`>", "<M-`>" },
       desc = "search_buffer: toggle between searcher and source window",

@@ -275,7 +275,6 @@ return {
         ['<C-7>'] = { function(cmp) cmp.accept({ index = 7 }) end },
         ['<C-8>'] = { function(cmp) cmp.accept({ index = 8 }) end },
         ['<C-9>'] = { function(cmp) cmp.accept({ index = 9 }) end },
-        ['<C-0>'] = { function(cmp) cmp.accept({ index = 10 }) end },
         -- stylua: ignore end
       },
       signature = {

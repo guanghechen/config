@@ -335,17 +335,17 @@ function M.create(params)
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
     key = "<C-n>",
-    desc = eve.command.definitions.term.create.desc,
+    desc = eve.command.definitions.term.rename.desc,
     callback = function()
-      vim.cmd(eve.command.definitions.term.create.uuid)
+      vim.cmd(eve.command.definitions.term.rename.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "v" },
     key = "<C-/>",
-    desc = eve.command.definitions.term.rename.desc,
+    desc = eve.command.definitions.term.create.desc,
     callback = function()
-      vim.cmd(eve.command.definitions.term.rename.uuid)
+      vim.cmd(eve.command.definitions.term.create.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
