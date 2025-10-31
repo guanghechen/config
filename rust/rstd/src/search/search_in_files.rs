@@ -1,20 +1,264 @@
 use crate::string;
 use crate::types::{
-    IRipgrepResult, IRipgrepResultData, IRipgrepResultMatchedPath, ISearchBlockMatch,
-    ISearchFileMatch, ISearchInFilesFailedResult, ISearchInFilesOptions,
+    ISearchBlockMatch, ISearchFileMatch, ISearchInFilesFailedResult, ISearchInFilesOptions,
     ISearchInFilesSucceedResult, ISearchMatchPoint,
 };
-use regex::Regex;
+use grep::matcher::Matcher;
+use grep::regex::{RegexMatcher, RegexMatcherBuilder};
+use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
+use ignore::overrides::OverrideBuilder;
+use ignore::WalkBuilder;
+use regex::escape;
 use std::collections::HashMap;
-use std::process::Command;
-use std::time::{Duration, SystemTime};
-
-fn make_regex() -> Regex {
-    Regex::new(r"\s*(?:\r|\r\n|\n)\s*").expect("failed to compile newline regex")
-}
+use std::io;
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
 fn format_elapsed(duration: Duration) -> String {
     format!("{:.3}s", duration.as_secs_f32())
+}
+
+fn parse_max_matches(options: &ISearchInFilesOptions) -> u32 {
+    match options.max_matches {
+        Some(value) if value >= 0 => value as u32,
+        _ => u32::MAX,
+    }
+}
+
+fn parse_max_filesize(value: &Option<String>) -> Result<Option<u64>, String> {
+    let Some(raw) = value.as_ref() else {
+        return Ok(None);
+    };
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+
+    let mut digits_end = 0usize;
+    for ch in trimmed.chars() {
+        if ch.is_ascii_digit() {
+            digits_end += 1;
+        } else {
+            break;
+        }
+    }
+
+    let number_part = trimmed[..digits_end].trim();
+    if number_part.is_empty() {
+        return Err(format!("Invalid max_filesize value: {}", raw));
+    }
+
+    let value: u64 = number_part.parse().map_err(|_| {
+        format!(
+            "Unable to parse max_filesize numeric portion from: {}",
+            raw
+        )
+    })?;
+
+    let unit_part = trimmed[digits_end..].trim().to_ascii_lowercase();
+    let multiplier: u64 = match unit_part.as_str() {
+        "" | "b" => 1,
+        "k" | "kb" => 1_000,
+        "m" | "mb" => 1_000_000,
+        "g" | "gb" => 1_000_000_000,
+        "t" | "tb" => 1_000_000_000_000,
+        "p" | "pb" => 1_000_000_000_000_000,
+        "ki" | "kib" => 1 << 10,
+        "mi" | "mib" => 1 << 20,
+        "gi" | "gib" => 1 << 30,
+        "ti" | "tib" => 1 << 40,
+        "pi" | "pib" => 1 << 50,
+        other => {
+            return Err(format!(
+                "Unsupported max_filesize unit: {} (value: {})",
+                other, raw
+            ));
+        }
+    };
+
+    Ok(Some(value.saturating_mul(multiplier)))
+}
+
+fn resolve_base_dir(options: &ISearchInFilesOptions) -> Result<PathBuf, String> {
+    if let Some(cwd) = options.cwd.as_ref().filter(|cwd| !cwd.is_empty()) {
+        Ok(PathBuf::from(cwd))
+    } else {
+        std::env::current_dir()
+            .map_err(|error| format!("Failed to determine current directory: {}", error))
+    }
+}
+
+fn resolve_search_paths(base: &Path, options: &ISearchInFilesOptions) -> Vec<PathBuf> {
+    if let Some(filepath) = options
+        .specified_filepath
+        .as_ref()
+        .filter(|path| !path.is_empty())
+    {
+        return vec![normalize_path(base, Path::new(filepath))];
+    }
+
+    let mut resolved_paths = Vec::new();
+    for path in string::parse_comma_list(&options.search_paths) {
+        if path.is_empty() {
+            continue;
+        }
+        resolved_paths.push(normalize_path(base, Path::new(&path)));
+    }
+
+    if resolved_paths.is_empty() {
+        resolved_paths.push(base.to_path_buf());
+    }
+
+    resolved_paths
+}
+
+fn normalize_path(base: &Path, path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        base.join(path)
+    }
+}
+
+fn display_path(path: &Path, base: &Path) -> String {
+    let relative = path
+        .strip_prefix(base)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .to_string();
+    if cfg!(windows) {
+        relative.replace('\\', "/")
+    } else {
+        relative
+    }
+}
+
+fn build_overrides(
+    base: &Path,
+    include_patterns: &[String],
+    exclude_patterns: &[String],
+) -> Result<Option<ignore::overrides::Override>, String> {
+    if include_patterns.is_empty() && exclude_patterns.is_empty() {
+        return Ok(None);
+    }
+
+    let mut builder = OverrideBuilder::new(base);
+
+    for pattern in include_patterns {
+        builder
+            .add(pattern)
+            .map_err(|error| format!("Invalid include glob '{}': {}", pattern, error))?;
+    }
+
+    for pattern in exclude_patterns {
+        let glob = format!("!{}", pattern);
+        builder
+            .add(&glob)
+            .map_err(|error| format!("Invalid exclude glob '{}': {}", pattern, error))?;
+    }
+
+    builder
+        .build()
+        .map(Some)
+        .map_err(|error| format!("Failed to build glob overrides: {}", error))
+}
+
+fn build_matcher(options: &ISearchInFilesOptions) -> Result<RegexMatcher, String> {
+    if options.search_pattern.is_empty() {
+        return Err("Search pattern cannot be empty".into());
+    }
+
+    let mut builder = RegexMatcherBuilder::new();
+    builder.case_insensitive(!options.flag_case_sensitive);
+    builder.multi_line(true);
+    builder.unicode(true);
+    builder.dot_matches_new_line(true);
+
+    if options.flag_regex {
+        builder
+            .build(&options.search_pattern)
+            .map_err(|error| format!("Failed to build regex matcher: {}", error))
+    } else {
+        builder
+            .build(&escape(&options.search_pattern))
+            .map_err(|error| format!("Failed to build literal matcher: {}", error))
+    }
+}
+
+struct FileMatchSink<'matcher, 'count> {
+    matcher: &'matcher RegexMatcher,
+    blocks: &'matcher mut Vec<ISearchBlockMatch>,
+    matches_count: &'count mut u32,
+    max_matches: u32,
+    counted_file: &'count mut bool,
+}
+
+impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
+    type Error = io::Error;
+
+    fn matched(
+        &mut self,
+        _searcher: &Searcher,
+        mat: &SinkMatch<'_>,
+    ) -> Result<bool, Self::Error> {
+        if *self.matches_count >= self.max_matches {
+            return Ok(false);
+        }
+
+        let bytes = mat.bytes();
+        let line_number = mat.line_number().unwrap_or(0) as usize;
+        let absolute_offset = mat.absolute_byte_offset() as usize;
+
+        if !*self.counted_file {
+            *self.matches_count = self.matches_count.saturating_add(1);
+            *self.counted_file = true;
+        }
+
+        if *self.matches_count >= self.max_matches {
+            let text = String::from_utf8_lossy(bytes).into_owned();
+            self.blocks.push(ISearchBlockMatch {
+                lnum: line_number,
+                text,
+                offset: absolute_offset,
+                matches: Vec::new(),
+            });
+            return Ok(false);
+        }
+
+        let mut match_points: Vec<ISearchMatchPoint> = Vec::new();
+        let mut continue_search = true;
+
+        let result = self.matcher.find_iter(bytes, |range| {
+            if *self.matches_count >= self.max_matches {
+                continue_search = false;
+                return false;
+            }
+
+            match_points.push(ISearchMatchPoint {
+                l: range.start(),
+                r: range.end(),
+            });
+            *self.matches_count = self.matches_count.saturating_add(1);
+            true
+        });
+
+        if let Err(error) = result {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                error.to_string(),
+            ));
+        }
+
+        let text = String::from_utf8_lossy(bytes).into_owned();
+        self.blocks.push(ISearchBlockMatch {
+            lnum: line_number,
+            text,
+            offset: absolute_offset,
+            matches: match_points,
+        });
+
+        Ok(continue_search && *self.matches_count < self.max_matches)
+    }
 }
 
 pub fn search_in_files(
@@ -22,203 +266,137 @@ pub fn search_in_files(
 ) -> Result<ISearchInFilesSucceedResult, ISearchInFilesFailedResult> {
     if options.search_pattern.is_empty() {
         return Ok(ISearchInFilesSucceedResult {
-            cmd: String::new(),
             stdout: String::new(),
             elapsed_time: "0s".into(),
             items: HashMap::new(),
         });
     }
 
-    let max_matches: u32 = match options.max_matches {
-        Some(value) if value >= 0 => value as u32,
-        Some(_) | None => u32::MAX,
+    let start = Instant::now();
+
+    let base_dir = match resolve_base_dir(options) {
+        Ok(path) => path,
+        Err(error) => {
+            return Err(ISearchInFilesFailedResult {
+                elapsed_time: "0s".into(),
+                error,
+            });
+        }
     };
 
-    let flag_case_sensitive = options.flag_case_sensitive;
-    let flag_gitignore = options.flag_gitignore;
-    let flag_regex = options.flag_regex;
-    let search_pattern = &options.search_pattern;
-    let search_paths = string::parse_comma_list(&options.search_paths);
     let include_patterns = string::parse_comma_list(&options.include_patterns);
     let exclude_patterns = string::parse_comma_list(&options.exclude_patterns);
 
-    let line_separator_regex = make_regex();
-
-    let (cmd, output, elapsed_duration) = {
-        let mut cmd = Command::new("rg");
-        if let Some(cwd) = options.cwd.as_ref().filter(|cwd| !cwd.is_empty()) {
-            cmd.current_dir(cwd);
+    let overrides = match build_overrides(&base_dir, &include_patterns, &exclude_patterns) {
+        Ok(overrides) => overrides,
+        Err(error) => {
+            return Err(ISearchInFilesFailedResult {
+                elapsed_time: "0s".into(),
+                error,
+            });
         }
-
-        cmd.arg("--multiline")
-            .arg("--hidden")
-            .arg("--color=never")
-            .arg("--line-number")
-            .arg("--column")
-            .arg("--no-heading")
-            .arg("--no-filename")
-            .arg("--json");
-
-        if !flag_gitignore {
-            cmd.arg("--no-ignore-vcs");
-        }
-
-        if let Some(max_filesize) = options
-            .max_filesize
-            .as_ref()
-            .filter(|size| !size.is_empty())
-        {
-            cmd.args(["--max-filesize", max_filesize]);
-        }
-
-        if flag_case_sensitive {
-            cmd.arg("--case-sensitive");
-        } else {
-            cmd.arg("--ignore-case");
-        }
-
-        for pattern in include_patterns {
-            if !pattern.is_empty() {
-                cmd.args(["--glob", &pattern]);
-            }
-        }
-
-        for pattern in exclude_patterns {
-            if !pattern.is_empty() {
-                cmd.args(["--glob", &format!("!{}", pattern)]);
-            }
-        }
-
-        if flag_regex {
-            cmd.args(["--regexp", search_pattern]);
-        } else {
-            cmd.args(["--fixed-strings", "--", search_pattern]);
-        }
-
-        if let Some(specified_filepath) = options
-            .specified_filepath
-            .as_ref()
-            .filter(|path| !path.is_empty())
-        {
-            cmd.arg(specified_filepath);
-        } else if !search_paths.is_empty() {
-            cmd.args(&search_paths);
-        }
-
-        let start_time = SystemTime::now();
-        let output = match cmd.output() {
-            Ok(output) => output,
-            Err(error) => {
-                return Err(ISearchInFilesFailedResult {
-                    cmd: format!("{:?}", cmd),
-                    elapsed_time: "0s".into(),
-                    error: format!("Failed to execute ripgrep: {}", error),
-                });
-            }
-        };
-        let elapsed = start_time
-            .elapsed()
-            .unwrap_or_else(|_| Duration::from_secs(0));
-
-        (format!("{:?}", cmd), output, elapsed)
     };
 
-    if output.status.success() {
-        let mut matches_count: u32 = 0;
-        let mut summary_elapsed: Option<String> = None;
-        let mut filematches: HashMap<String, ISearchFileMatch> = HashMap::new();
+    let matcher = match build_matcher(options) {
+        Ok(matcher) => matcher,
+        Err(error) => {
+            return Err(ISearchInFilesFailedResult {
+                elapsed_time: "0s".into(),
+                error,
+            });
+        }
+    };
 
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        for chunk in line_separator_regex
-            .split(&stdout)
-            .filter(|entry| !entry.is_empty())
-        {
-            if matches_count >= max_matches {
-                break;
-            }
+    let mut searcher_builder = SearcherBuilder::new();
+    searcher_builder
+        .multi_line(true)
+        .line_number(true)
+        .binary_detection(BinaryDetection::quit(b'\x00'));
+    let mut searcher = searcher_builder.build();
 
-            if let Ok(event) = serde_json::from_str::<IRipgrepResult>(chunk) {
-                match event.data {
-                    IRipgrepResultData::Begin { .. } => {}
-                    IRipgrepResultData::Match {
-                        path,
-                        lines,
-                        line_number,
-                        absolute_offset,
-                        submatches,
-                    } => {
-                        if matches_count >= max_matches {
-                            continue;
-                        }
+    let max_matches = parse_max_matches(options);
+    let resolved_paths = resolve_search_paths(&base_dir, options);
+    let filesize_limit = match parse_max_filesize(&options.max_filesize) {
+        Ok(limit) => limit,
+        Err(error) => {
+            return Err(ISearchInFilesFailedResult {
+                elapsed_time: "0s".into(),
+                error,
+            });
+        }
+    };
 
-                        let filepath = normalize_filepath(&path);
-                        let filematch = filematches
-                            .entry(filepath)
-                            .or_insert_with(|| ISearchFileMatch { matches: vec![] });
-                        if filematch.matches.is_empty() {
-                            matches_count = matches_count.saturating_add(1);
-                        }
+    let mut walk_builder = WalkBuilder::new(&resolved_paths[0]);
+    for additional in resolved_paths.iter().skip(1) {
+        walk_builder.add(additional);
+    }
 
-                        let mut blocks: Vec<ISearchMatchPoint> = Vec::new();
-                        for submatch in submatches.iter() {
-                            if matches_count >= max_matches {
-                                break;
-                            }
+    walk_builder.hidden(true);
+    walk_builder.git_ignore(options.flag_gitignore);
+    walk_builder.git_global(options.flag_gitignore);
+    walk_builder.git_exclude(options.flag_gitignore);
 
-                            matches_count = matches_count.saturating_add(1);
-                            blocks.push(ISearchMatchPoint {
-                                l: submatch.start,
-                                r: submatch.end,
-                            });
-                        }
+    if let Some(limit) = filesize_limit {
+        walk_builder.max_filesize(Some(limit));
+    }
 
-                        filematch.matches.push(ISearchBlockMatch {
-                            lnum: line_number,
-                            text: lines.text.clone(),
-                            offset: absolute_offset,
-                            matches: blocks,
-                        });
-                    }
-                    IRipgrepResultData::End { .. } => {}
-                    IRipgrepResultData::Summary { elapsed_total, .. } => {
-                        summary_elapsed = Some(elapsed_total.human);
-                    }
-                }
-            }
+    if let Some(overrides) = overrides {
+        walk_builder.overrides(overrides);
+    }
+
+    let mut matches_count: u32 = 0;
+    let mut filematches: HashMap<String, ISearchFileMatch> = HashMap::new();
+
+    for result in walk_builder.build() {
+        if matches_count >= max_matches {
+            break;
         }
 
-        let elapsed_time = summary_elapsed.unwrap_or_else(|| format_elapsed(elapsed_duration));
-        Ok(ISearchInFilesSucceedResult {
-            cmd,
-            stdout: stdout.to_string(),
-            elapsed_time,
-            items: filematches,
-        })
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        if stderr.is_empty() {
-            Ok(ISearchInFilesSucceedResult {
-                cmd,
-                stdout: String::new(),
-                elapsed_time: format_elapsed(elapsed_duration),
-                items: HashMap::new(),
-            })
-        } else {
-            Err(ISearchInFilesFailedResult {
-                cmd,
-                elapsed_time: format_elapsed(elapsed_duration),
-                error: stderr.to_string(),
-            })
+        let entry = match result {
+            Ok(entry) => entry,
+            Err(_) => {
+                continue;
+            }
+        };
+
+        if !entry
+            .file_type()
+            .map(|file_type| file_type.is_file())
+            .unwrap_or(false)
+        {
+            continue;
+        }
+
+        let path = entry.into_path();
+        let display = display_path(&path, &base_dir);
+
+        let mut blocks: Vec<ISearchBlockMatch> = Vec::new();
+        let mut counted_file = false;
+        let mut sink = FileMatchSink {
+            matcher: &matcher,
+            blocks: &mut blocks,
+            matches_count: &mut matches_count,
+            max_matches,
+            counted_file: &mut counted_file,
+        };
+
+        let search_result = searcher.search_path(&matcher, &path, &mut sink);
+
+        if let Err(error) = search_result {
+            return Err(ISearchInFilesFailedResult {
+                elapsed_time: format_elapsed(start.elapsed()),
+                error: format!("Failed to search '{}': {}", display, error),
+            });
+        }
+
+        if !blocks.is_empty() {
+            filematches.insert(display, ISearchFileMatch { matches: blocks });
         }
     }
-}
 
-#[cfg(windows)]
-fn normalize_filepath(path: &IRipgrepResultMatchedPath) -> String {
-    path.text.replace('\\', "/")
-}
-
-#[cfg(not(windows))]
-fn normalize_filepath(path: &IRipgrepResultMatchedPath) -> String {
-    path.text.clone()
+    Ok(ISearchInFilesSucceedResult {
+        stdout: String::new(),
+        elapsed_time: format_elapsed(start.elapsed()),
+        items: filematches,
+    })
 }

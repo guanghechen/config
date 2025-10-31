@@ -53,8 +53,6 @@ impl<'lua> IntoLua<'lua> for ISearchFileMatch {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ISearchInFilesSucceedResult {
     #[serde(skip_serializing)]
-    pub cmd: String,
-    #[serde(skip_serializing)]
     pub stdout: String,
 
     pub elapsed_time: String,
@@ -76,9 +74,6 @@ impl<'lua> IntoLua<'lua> for ISearchInFilesSucceedResult {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ISearchInFilesFailedResult {
-    #[serde(skip_serializing)]
-    pub cmd: String,
-
     pub elapsed_time: String,
     pub error: String,
 }
