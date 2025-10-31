@@ -22,7 +22,7 @@ local M = {}
 ---@field public error                  string|nil
 ---@field public preview_applied        boolean
 ---@field public matches_count          integer
----@field public search_matches         oxi.string.ILineMatch[]
+---@field public search_matches         rstd.search.ISearchInLinesLineMatch[]
 ---@field public replacement_lines      string[]
 ---@field public replacement_matches    oxi.replacer.show_replace_preview_in_buffer.IReplacementPoint[]
 
@@ -47,7 +47,7 @@ end
 ---@class oxi.replacer.replace_current_match_in_buffer.IParams
 ---@field public bufnr                  integer
 ---@field public current_match_index    integer
----@field public matches                oxi.string.ILineMatch[]
+---@field public matches                rstd.search.ISearchInLinesLineMatch[]
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
 ---@field public flag_regex             boolean
@@ -74,7 +74,7 @@ end
 
 ---@class oxi.replacer.replace_all_matches_in_buffer.IParams
 ---@field public bufnr                  integer
----@field public matches                oxi.string.ILineMatch[]
+---@field public matches                rstd.search.ISearchInLinesLineMatch[]
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
 ---@field public flag_regex             boolean

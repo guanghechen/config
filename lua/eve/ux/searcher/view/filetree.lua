@@ -287,7 +287,7 @@ function M:search(params)
     for _, block_match in ipairs(filematch.matches) do
       local text = block_match.text ---@type string
       local lwidths = rstd.string.calc_linewidths(text) ---@type integer[]
-      local lines = oxi.string.parse_lines(text, lwidths) ---@type string[]
+      local lines = rstd.string.parse_lines(text, lwidths) ---@type string[]
       block_match.lines = lines
       block_match.lwidths = lwidths
     end
@@ -329,7 +329,7 @@ function M:search(params)
 
         local preview_text = preview_result.text ---@type string
         local r_lwidths = rstd.string.calc_linewidths(preview_text) ---@type integer[]
-        local r_lines = oxi.string.parse_lines(preview_text, r_lwidths) ---@type string[]
+        local r_lines = rstd.string.parse_lines(preview_text, r_lwidths) ---@type string[]
         local r_matches = preview_result.matches ---@type std.t.IMatchPoint[]
         local s_lines = block_match.lines ---@type string[]
         local s_lwidths = block_match.lwidths ---@type integer[]

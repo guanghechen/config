@@ -20,5 +20,9 @@ function M.parse_comma_list(text) end
 ---@param offsets                               integer[]
 ---@return std.t.IMatchLocation[]
 function M.get_locations(text, offsets) end
+---@param text                                  string
+---@param widths                                integer[]|nil
+---@return string[]
+function M.parse_lines(text, widths) end
 
 return M

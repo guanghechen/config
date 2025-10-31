@@ -133,7 +133,7 @@ function M:calc_preview_data(context)
 
     local preview_text = preview_result.text ---@type string
     local lwidths = rstd.string.calc_linewidths(preview_text) ---@type integer[]
-    lines = oxi.string.parse_lines(preview_text, lwidths) ---@type string[]
+    lines = rstd.string.parse_lines(preview_text, lwidths) ---@type string[]
     highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
     local matches = preview_result.matches ---@type std.t.IMatchPoint[]
 
