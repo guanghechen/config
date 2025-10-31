@@ -3,19 +3,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IFindFilesSucceedResult {
-    #[serde(skip_serializing)]
-    pub cmd: String,
-    #[serde(skip_serializing)]
-    pub stdout: String,
-
     pub filepaths: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IFindFilesFailedResult {
-    #[serde(skip_serializing)]
-    pub cmd: String,
-
     pub error: String,
 }
 

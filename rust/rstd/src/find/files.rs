@@ -1,99 +1,140 @@
 use crate::string;
 use crate::types::{IFindFilesFailedResult, IFindFilesOptions, IFindFilesSucceedResult};
-use std::path::PathBuf;
-use std::process::Command;
+use globset::{Glob, GlobSet};
+use ignore::WalkBuilder;
+use regex::RegexBuilder;
+use std::path::{Path, PathBuf};
+
+fn normalize_root(base: &Path, entry: &str) -> PathBuf {
+    let path = Path::new(entry);
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        base.join(path)
+    }
+}
+
+fn build_matcher(options: &IFindFilesOptions) -> Result<Option<regex::Regex>, String> {
+    if options.search_pattern.trim().is_empty() {
+        return Ok(None);
+    }
+
+    let expression = if options.flag_regex {
+        options.search_pattern.clone()
+    } else {
+        regex::escape(&options.search_pattern)
+    };
+
+    RegexBuilder::new(&expression)
+        .case_insensitive(!options.flag_case_sensitive)
+        .unicode(true)
+        .build()
+        .map(Some)
+        .map_err(|error| format!("Failed to build search pattern: {}", error))
+}
+
+fn build_excludes(patterns: &[String]) -> Result<Option<GlobSet>, String> {
+    if patterns.is_empty() {
+        return Ok(None);
+    }
+
+    let mut builder = globset::GlobSetBuilder::new();
+    for pattern in patterns {
+        builder
+            .add(
+                Glob::new(pattern)
+                    .map_err(|error| format!("Invalid exclude glob '{}': {}", pattern, error))?,
+            );
+    }
+
+    builder
+        .build()
+        .map(Some)
+        .map_err(|error| format!("Failed to build exclude globs: {}", error))
+}
 
 pub fn find_files(
     options: &IFindFilesOptions,
 ) -> Result<IFindFilesSucceedResult, IFindFilesFailedResult> {
-    let workspace: &str = &options.workspace;
-    let cwd: &str = &options.cwd;
-    let flag_case_sensitive: bool = options.flag_case_sensitive;
-    let flag_gitignore: bool = options.flag_gitignore;
-    let flag_regex: bool = options.flag_regex;
-    let search_pattern: &str = &options.search_pattern;
-    let search_paths: Vec<String> = string::parse_comma_list(&options.search_paths);
-    let exclude_patterns: Vec<String> = string::parse_comma_list(&options.exclude_patterns);
+    let cwd = PathBuf::from(&options.cwd);
+    let search_paths = string::parse_comma_list(&options.search_paths);
+    let exclude_patterns = string::parse_comma_list(&options.exclude_patterns);
 
-    let (cmd, output) = {
-        let mut cmd = Command::new("fd");
-        cmd.current_dir(cwd)
-            .args(["--base-directory", cwd])
-            .arg("--color=never")
-            .arg("--hidden")
-            .arg("--type=file");
+    let matcher = build_matcher(options).map_err(|error| IFindFilesFailedResult { error })?;
+    let excludes =
+        build_excludes(&exclude_patterns).map_err(|error| IFindFilesFailedResult { error })?;
 
-        if flag_gitignore {
-            let mut gitignore_path = PathBuf::from(workspace);
-            gitignore_path.push(".gitignore");
-            if gitignore_path.exists() {
-                cmd.args(["--ignore-file", &gitignore_path.to_string_lossy()]);
-            }
-        } else {
-            cmd.arg("--no-ignore-vcs");
-        }
-
-        if flag_case_sensitive {
-            cmd.arg("--case-sensitive");
-        } else {
-            cmd.arg("--ignore-case");
-        }
-
-        for search_path in &search_paths {
-            cmd.args(["--search-path", search_path]);
-        }
-
-        for pattern in exclude_patterns {
-            cmd.args(["--exclude", &pattern]);
-        }
-
-        if !search_pattern.is_empty() {
-            if flag_regex {
-                cmd.args(["--regex", search_pattern]);
-            } else {
-                cmd.args(["--fixed-strings", search_pattern]);
-            }
-        }
-
-        let output = cmd.output().expect("failed to execute fd");
-        (format!("{:?}", cmd), output)
-    };
-
-    if output.status.success() {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-
-        #[cfg(not(windows))]
-        let filepaths: Vec<String> = stdout
-            .lines()
-            .map(|x| x.to_owned())
-            .filter(|x| !x.is_empty())
-            .collect();
-
-        #[cfg(windows)]
-        let filepaths: Vec<String> = stdout
-            .lines()
-            .map(|x| x.replace('\\', "/"))
-            .filter(|x| !x.is_empty())
-            .collect();
-
-        Ok(IFindFilesSucceedResult {
-            cmd,
-            stdout: stdout.to_string(),
-            filepaths,
-        })
+    let mut roots: Vec<PathBuf> = Vec::new();
+    if search_paths.is_empty() {
+        roots.push(cwd.clone());
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        if stderr.is_empty() {
-            Ok(IFindFilesSucceedResult {
-                cmd,
-                stdout: "".to_string(),
-                filepaths: vec![],
-            })
-        } else {
-            Err(IFindFilesFailedResult {
-                cmd,
-                error: stderr.to_string(),
-            })
+        for entry in search_paths {
+            if entry.is_empty() {
+                continue;
+            }
+            roots.push(normalize_root(&cwd, &entry));
+        }
+        if roots.is_empty() {
+            roots.push(cwd.clone());
         }
     }
+
+    let mut walk_builder = WalkBuilder::new(&roots[0]);
+    for additional in roots.iter().skip(1) {
+        walk_builder.add(additional);
+    }
+
+    walk_builder.hidden(true);
+    walk_builder.git_ignore(options.flag_gitignore);
+    walk_builder.git_global(options.flag_gitignore);
+    walk_builder.git_exclude(options.flag_gitignore);
+
+    let mut filepaths: Vec<String> = Vec::new();
+
+    for entry in walk_builder.build() {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(_) => {
+                continue;
+            }
+        };
+
+        if !entry
+            .file_type()
+            .map(|file_type| file_type.is_file())
+            .unwrap_or(false)
+        {
+            continue;
+        }
+
+        let path = entry.path();
+        let filename = match path.file_name().and_then(|name| name.to_str()) {
+            Some(name) => name,
+            None => continue,
+        };
+
+        if let Some(exclude_set) = &excludes {
+            if exclude_set.is_match(filename) {
+                continue;
+            }
+        }
+
+        if let Some(regex) = &matcher {
+            if !regex.is_match(filename) {
+                continue;
+            }
+        }
+
+        let relative = path.strip_prefix(&cwd).unwrap_or(path);
+        let mut display = relative.to_string_lossy().to_string();
+        if cfg!(windows) {
+            display = display.replace('\\', "/");
+        }
+        filepaths.push(display);
+    }
+
+    filepaths.sort();
+    filepaths.dedup();
+
+    Ok(IFindFilesSucceedResult { filepaths })
 }
