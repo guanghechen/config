@@ -102,7 +102,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_search_regex_valid() {
+    fn t_search_regex_valid() {
         let lines = vec![
             "foo123".to_string(),
             "bar456".to_string(),
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_regex_invalid_pattern() {
+    fn t_search_regex_invalid_pattern() {
         let lines = vec!["foo123".to_string(), "bar456".to_string()];
         let result = search_in_lines_regex(r"foo(bar", &lines, true);
         // Invalid regex should return error
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_regex_unclosed_bracket() {
+    fn t_search_regex_unclosed_bracket() {
         let lines = vec!["test".to_string()];
         let result = search_in_lines_regex(r"[abc", &lines, true);
         // Invalid regex should return error
@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_multiline_regex() {
+    fn t_search_multiline_regex() {
         let lines = vec!["foo".to_string(), "bar".to_string(), "baz".to_string()];
         // Use actual newline in pattern
         let result = search_in_lines_regex("foo\nbar", &lines, true).unwrap();
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_regex_with_groups() {
+    fn t_search_regex_with_groups() {
         let lines = vec!["require('foo')".to_string(), "import 'bar'".to_string()];
         let pattern = "require\\(['\"](.+?)['\"]\\)";
         let result = search_in_lines_regex(pattern, &lines, true).unwrap();
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_regex_case_insensitive() {
+    fn t_search_regex_case_insensitive() {
         let lines = vec![
             "Hello World".to_string(),
             "hello world".to_string(),

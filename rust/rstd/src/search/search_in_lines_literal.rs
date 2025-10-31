@@ -249,7 +249,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_search_literal_case_sensitive() {
+    fn t_search_literal_case_sensitive() {
         let lines = vec![
             "Hello World".to_string(),
             "hello world".to_string(),
@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_literal_case_insensitive() {
+    fn t_search_literal_case_insensitive() {
         let lines = vec![
             "Hello World".to_string(),
             "hello world".to_string(),
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_multiline_literal() {
+    fn t_search_multiline_literal() {
         let lines = vec![
             "line1".to_string(),
             "line2".to_string(),
@@ -288,14 +288,14 @@ mod tests {
     }
 
     #[test]
-    fn test_search_fuzzy_match() {
+    fn t_search_fuzzy_match() {
         let lines = vec!["hello world".to_string()];
         let result = search_in_lines_literal("hw", &lines, true, false);
         assert!(!result.is_empty());
     }
 
     #[test]
-    fn test_search_multiple_matches_same_line() {
+    fn t_search_multiple_matches_same_line() {
         let lines = vec!["foo bar foo baz foo".to_string()];
         let result = search_in_lines_literal("foo", &lines, false, true);
         assert_eq!(result.len(), 3);

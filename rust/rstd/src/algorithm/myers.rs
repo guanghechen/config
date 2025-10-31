@@ -181,7 +181,7 @@ mod internals {
 mod tests {
     use super::*;
 
-    fn test_case(left: &str, right: &str, expected: usize) {
+    fn t_case(left: &str, right: &str, expected: usize) {
         let left_chars: Vec<char> = left.chars().collect();
         let right_chars: Vec<char> = right.chars().collect();
         let points: Vec<(usize, usize)> = lcs(&left_chars, &right_chars);
@@ -207,25 +207,25 @@ mod tests {
     }
 
     #[test]
-    fn test_same_ascii() {
-        test_case("hello, world!", "hello, world!", 13);
-        test_case(
+    fn t_same_ascii() {
+        t_case("hello, world!", "hello, world!", 13);
+        t_case(
             "f8d1d155-d14e-433f-88e1-07b54f184740",
             "a00322f7-256e-46fe-ae91-8de835c57778",
             12,
         );
-        test_case("abcde", "ace", 3);
-        test_case("ace", "abcde", 3);
-        test_case("abc", "abc", 3);
-        test_case("abc", "abce", 3);
-        test_case("", "abce", 0);
-        test_case("abce", "", 0);
-        test_case("", "", 0);
-        test_case("abeep boop", "beep boob blah", 8);
+        t_case("abcde", "ace", 3);
+        t_case("ace", "abcde", 3);
+        t_case("abc", "abc", 3);
+        t_case("abc", "abce", 3);
+        t_case("", "abce", 0);
+        t_case("abce", "", 0);
+        t_case("", "", 0);
+        t_case("abeep boop", "beep boob blah", 8);
     }
 
     #[test]
-    fn test_same_unicode() {
-        test_case("你好，中国!", "你好，中国!", 6);
+    fn t_same_unicode() {
+        t_case("你好，中国!", "你好，中国!", 6);
     }
 }

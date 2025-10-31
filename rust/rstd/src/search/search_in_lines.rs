@@ -61,14 +61,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_search_empty_pattern() {
+    fn t_search_empty_pattern() {
         let lines = vec!["some text".to_string()];
         let result = search_in_lines("", &lines, false, false, true).unwrap();
         assert_eq!(result.len(), 0);
     }
 
     #[test]
-    fn test_search_literal_mode() {
+    fn t_search_literal_mode() {
         let lines = vec![
             "Hello World".to_string(),
             "hello world".to_string(),
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_regex_mode() {
+    fn t_search_regex_mode() {
         let lines = vec![
             "foo123".to_string(),
             "bar456".to_string(),
@@ -93,14 +93,14 @@ mod tests {
     }
 
     #[test]
-    fn test_search_fuzzy_mode() {
+    fn t_search_fuzzy_mode() {
         let lines = vec!["hello world".to_string()];
         let result = search_in_lines("hw", &lines, true, false, false).unwrap();
         assert!(!result.is_empty());
     }
 
     #[test]
-    fn test_search_case_insensitive() {
+    fn t_search_case_insensitive() {
         let lines = vec![
             "Hello World".to_string(),
             "hello world".to_string(),

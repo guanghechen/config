@@ -105,6 +105,7 @@ The build script automatically:
 ### Testing
 - **Lua Tests**: Located in `__test__/__eve__/` (organized by module)
 - **Rust Tests**: Run `cargo test` from `rust/rstd/`
+- **Naming**: Prefix every Rust unit test function name with `t_` (example: `fn t_parses_config()`).
 
 ## Code Conventions
 

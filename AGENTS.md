@@ -107,6 +107,7 @@ The build script automatically:
 - **Rust Tests**: Run `cargo test` from `rust/rstd/`
 - **Cheat Sheet**: 
   - prefer `./rust/build.sh --force && cargo test -p rstd` after touching native bindings.
+- **Naming**: Prefix every Rust unit test function name with `t_` (for example, `fn t_handles_edge_case()`).
 
 ## Code Conventions
 

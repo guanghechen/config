@@ -8,7 +8,7 @@ fn fixtures_dir() -> String {
 }
 
 #[test]
-fn test_search_in_files_lf_pattern_matches_only_lf_files() {
+fn t_search_in_files_lf_pattern_matches_only_lf_files() {
     let cwd = fixtures_dir();
 
     let options = ISearchInFilesOptions {
@@ -52,7 +52,7 @@ fn test_search_in_files_lf_pattern_matches_only_lf_files() {
 }
 
 #[test]
-fn test_search_in_files_crlf_pattern_matches_crlf_files() {
+fn t_search_in_files_crlf_pattern_matches_crlf_files() {
     let cwd = fixtures_dir();
 
     let options = ISearchInFilesOptions {
@@ -92,7 +92,7 @@ fn test_search_in_files_crlf_pattern_matches_crlf_files() {
 }
 
 #[test]
-fn test_search_in_files_respects_max_matches_limit() {
+fn t_search_in_files_respects_max_matches_limit() {
     let cwd = fixtures_dir();
 
     let options = ISearchInFilesOptions {

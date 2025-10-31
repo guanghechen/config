@@ -128,7 +128,7 @@ pub fn replace_text_preview_advance(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_replace_text_preview_advance_1() {
+    fn t_replace_text_preview_advance_1() {
         let text = r#"require("node.path")"#.to_string();
         {
             let search_pattern = r#"require\(([\w\W]+?)\)"#.to_string();
@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn test_replace_text_preview_advance_2() {
+    fn t_replace_text_preview_advance_2() {
         let text: &str = r#"
 ### Requirements
 
