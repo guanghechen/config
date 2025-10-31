@@ -11,11 +11,33 @@ local M = {}
 ---@type fml.action.term.create.IProfile[]
 local profiles = {
   { name = "shell", type = "shell", cmd = vim.o.shell },
-  { name = "claude", type = "claude", cmd = "claude" },
 }
+
+---@param profile                      fml.action.term.create.IProfile|nil
+---@return nil
+local function apply_profile(profile)
+  if profile == nil then
+    return
+  end
+
+  eve.term.create({
+    uuid = rstd.fn.uuid(),
+    type = profile.type,
+    name = profile.name,
+    cmd = profile.cmd,
+    permanent = false,
+  })
+  eve.ux.widget.Terminal:focus()
+end
 
 ---@return nil
 function M.show_profile_selector()
+  local profile_count = #profiles ---@type integer
+  if profile_count == 1 then
+    apply_profile(profiles[1])
+    return
+  end
+
   local items = {} ---@type eve.ux.ISelectItem[]
   for _, profile in ipairs(profiles) do
     table.insert(items, {
@@ -51,14 +73,7 @@ function M.show_profile_selector()
       end
 
       if selected_profile then
-        eve.term.create({
-          uuid = rstd.fn.uuid(),
-          type = selected_profile.type,
-          name = selected_profile.name,
-          cmd = selected_profile.cmd,
-          permanent = false,
-        })
-        eve.ux.widget.Terminal:focus()
+        apply_profile(selected_profile)
       end
     end,
   })
