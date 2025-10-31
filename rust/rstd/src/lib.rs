@@ -61,7 +61,7 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
         (
             "parse_lines",
             lua.create_function(|lua, (text, widths): (String, Option<Vec<u32>>)| {
-                let lines = string::parse_lines(&text, widths.as_ref().map(|w| w.as_slice()));
+                let lines = string::parse_lines(&text, widths.as_deref());
                 lines.into_lua(lua)
             })?,
         ),

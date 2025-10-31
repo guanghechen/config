@@ -36,10 +36,8 @@ pub fn parse_lines(text: &str, lwidths: Option<&[u32]>) -> Vec<String> {
                     offset = end;
                 }
 
-                if offset < text_len {
-                    if bytes[offset] == b'\r' {
-                        offset += 1;
-                    }
+                if offset < text_len && bytes[offset] == b'\r' {
+                    offset += 1;
                 }
                 if offset < text_len && bytes[offset] == b'\n' {
                     offset += 1;

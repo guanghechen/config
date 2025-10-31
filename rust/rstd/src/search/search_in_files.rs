@@ -219,7 +219,7 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
         });
 
         if let Err(error) = result {
-            return Err(io::Error::new(io::ErrorKind::Other, error.to_string()));
+            return Err(io::Error::other(error));
         }
 
         if match_points.is_empty() {

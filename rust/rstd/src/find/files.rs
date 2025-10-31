@@ -112,16 +112,18 @@ pub fn find_files(
             None => continue,
         };
 
-        if let Some(exclude_set) = &excludes {
-            if exclude_set.is_match(filename) {
-                continue;
-            }
+        if excludes
+            .as_ref()
+            .is_some_and(|exclude_set| exclude_set.is_match(filename))
+        {
+            continue;
         }
 
-        if let Some(regex) = &matcher {
-            if !regex.is_match(filename) {
-                continue;
-            }
+        if matcher
+            .as_ref()
+            .is_some_and(|regex| !regex.is_match(filename))
+        {
+            continue;
         }
 
         let relative = path.strip_prefix(&cwd).unwrap_or(path);
