@@ -6,6 +6,6 @@ mod search;
 
 pub use find::*;
 pub use fs::*;
-pub use match_location::MatchLocation;
+pub use match_location::IMatchLocation;
 pub use replace::*;
 pub use search::*;

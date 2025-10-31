@@ -13,7 +13,6 @@ pub struct IFindFilesFailedResult {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IFindFilesOptions {
-    pub workspace: String,
     pub cwd: String,
     pub flag_case_sensitive: bool,
     pub flag_gitignore: bool,
@@ -27,7 +26,6 @@ impl<'lua> FromLua<'lua> for IFindFilesOptions {
     fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
         match value {
             LuaValue::Table(table) => Ok(Self {
-                workspace: table.get("workspace")?,
                 cwd: table.get("cwd")?,
                 flag_case_sensitive: table.get("flag_case_sensitive")?,
                 flag_gitignore: table.get("flag_gitignore")?,

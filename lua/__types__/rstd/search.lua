@@ -44,14 +44,8 @@ local M = {}
 ---@return rstd.search.ISearchInFilesFailedResult|nil
 function M.search_in_files(options) end
 
----@class rstd.search.ISearchInLinesLiteralMatchPoint
----@field public l                      integer
----@field public r                      integer
-
----@class rstd.search.ISearchInLinesLiteralLineMatch
----@field public lnum                   integer
----@field public score                  integer
----@field public matches                rstd.search.ISearchInLinesLiteralMatchPoint[]
+---@alias rstd.search.ISearchInLinesLiteralMatchPoint rstd.search.ISearchInLinesMatchPoint
+---@alias rstd.search.ISearchInLinesLiteralLineMatch rstd.search.ISearchInLinesLineMatch
 
 ---@class rstd.search.ISearchInLinesLiteralOptions
 ---@field public pattern                string
@@ -63,14 +57,8 @@ function M.search_in_files(options) end
 ---@return rstd.search.ISearchInLinesLiteralLineMatch[]
 function M.search_in_lines_literal(options) end
 
----@class rstd.search.ISearchInLinesRegexMatchPoint
----@field public l                      integer
----@field public r                      integer
-
----@class rstd.search.ISearchInLinesRegexLineMatch
----@field public lnum                   integer
----@field public score                  integer
----@field public matches                rstd.search.ISearchInLinesRegexMatchPoint[]
+---@alias rstd.search.ISearchInLinesRegexMatchPoint rstd.search.ISearchInLinesMatchPoint
+---@alias rstd.search.ISearchInLinesRegexLineMatch rstd.search.ISearchInLinesLineMatch
 
 ---@class rstd.search.ISearchInLinesRegexOptions
 ---@field public pattern                string

@@ -90,14 +90,12 @@ end
 ---@return nil
 local function refresh(picker, rootpath)
   local rootuuid = std.Filetree.uuid(rootpath) ---@type string
-  local workspace = std.path.workspace() ---@type string
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
 
   ---@type rstd.find.IFindFilesOptions
   local find_files_options = {
-    workspace = workspace,
     cwd = rootpath,
     flag_case_sensitive = false,
     flag_gitignore = enabled_gitignore,

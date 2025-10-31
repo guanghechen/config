@@ -1,7 +1,7 @@
 use super::regex::compile_regex;
 use crate::algorithm::kmp::find_all_matched_points;
 use crate::string::get_locations;
-use crate::types::MatchLocation;
+use crate::types::IMatchLocation;
 use crate::types::replace::IReplaceFileResult;
 use regex::Captures;
 use std::collections::HashSet;
@@ -125,6 +125,6 @@ pub fn replace_file_by_matches_advance(
             .map_err(|e| e.to_string())?;
     }
 
-    let locations: Vec<MatchLocation> = get_locations(&next_text, &next_offsets);
+    let locations: Vec<IMatchLocation> = get_locations(&next_text, &next_offsets);
     Ok(IReplaceFileResult { locations })
 }

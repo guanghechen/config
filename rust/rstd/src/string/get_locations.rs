@@ -1,7 +1,7 @@
-use crate::types::MatchLocation;
+use crate::types::IMatchLocation;
 
-pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
-    let mut locations: Vec<MatchLocation> = Vec::with_capacity(offsets.len());
+pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<IMatchLocation> {
+    let mut locations: Vec<IMatchLocation> = Vec::with_capacity(offsets.len());
 
     let n: usize = offsets.len();
     let mut k: usize = 0;
@@ -18,7 +18,7 @@ pub fn get_locations(text: &str, offsets: &[usize]) -> Vec<MatchLocation> {
                 break;
             }
 
-            locations.push(MatchLocation {
+            locations.push(IMatchLocation {
                 offset,
                 lnum: lnum + 1,
                 col: offset - pos,

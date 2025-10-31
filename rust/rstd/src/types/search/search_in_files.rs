@@ -52,9 +52,6 @@ impl<'lua> IntoLua<'lua> for ISearchFileMatch {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ISearchInFilesSucceedResult {
-    #[serde(skip_serializing)]
-    pub stdout: String,
-
     pub elapsed_time: String,
     pub items: HashMap<String, ISearchFileMatch>,
 }

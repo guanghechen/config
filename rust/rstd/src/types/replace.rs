@@ -1,5 +1,5 @@
 use crate::search::ISearchInLinesMatchPoint;
-use crate::types::MatchLocation;
+use crate::types::IMatchLocation;
 use mlua::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -244,7 +244,7 @@ impl<'lua> FromLua<'lua> for IReplaceTextPreviewByMatchesAdvanceParams {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IReplaceFileResult {
-    pub locations: Vec<MatchLocation>,
+    pub locations: Vec<IMatchLocation>,
 }
 
 impl<'lua> IntoLua<'lua> for IReplaceFileResult {

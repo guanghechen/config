@@ -243,7 +243,6 @@ pub fn search_in_files(
 ) -> Result<ISearchInFilesSucceedResult, ISearchInFilesFailedResult> {
     if options.search_pattern.is_empty() {
         return Ok(ISearchInFilesSucceedResult {
-            stdout: String::new(),
             elapsed_time: "0s".into(),
             items: HashMap::new(),
         });
@@ -370,7 +369,6 @@ pub fn search_in_files(
     }
 
     Ok(ISearchInFilesSucceedResult {
-        stdout: String::new(),
         elapsed_time: format_elapsed(start.elapsed()),
         items: filematches,
     })

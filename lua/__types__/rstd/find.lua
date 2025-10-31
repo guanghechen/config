@@ -5,7 +5,6 @@
 local M = {}
 
 ---@class rstd.find.IFindFilesOptions
----@field public workspace              string
 ---@field public cwd                    string
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_gitignore         boolean
