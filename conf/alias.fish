@@ -37,6 +37,10 @@ alias vdir='vdir --color=auto'
 alias ccc='claude --dangerously-skip-permissions'
 alias spec-status='bash .specify/scripts/bash/check-prerequisites.sh'
 
+### codex
+alias cx1='codex --profile=azure'
+alias cx2='codex --profile=azure2'
+
 ### fzf
 alias fzf="$HOMEBREW_PREFIX/bin/fzf"
 alias fvim='$HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim'
