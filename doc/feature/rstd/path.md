@@ -18,12 +18,12 @@ export function basename(filepath: string): string // Returns the last portion o
 export function extname(filepath: string): string // Returns the file extension of the path
 
 export function split(filepath: string): string[] // Splits a path into its components by the '/' and '\' (must split both type separators since we cannot assume the input path use the platform-specific separator)
-export function join(from: string, to: string, prefer_slash: boolean): string // Joins two paths together, if the prefer_slash is true, use '/' as separator instead of the platform-specific separator
-export function relative(from: string, to: string, prefer_slash: boolean) // Returns the relative path from `from` to `to`, if the prefer_slash is true, use '/' as separator instead of the platform-specific separator
-export function relative_dir(from: string, to: string, prefer_slash: boolean) // Similar to the `relative` function, but if the `to` path is a dir path (with '/' or '\' suffix), then we need to keep a platform-specific separator at the end of the result path)
-export function normalize(filepath: string, prefer_slash: boolean): string // Normalizes a path, resolving `..` and `.` segments
+export function join(from: string, to: string, sep?: "/"|"\\"): string // Joins two paths together with the provided separator (falls back to platform separator when omitted)
+export function relative(from: string, to: string, sep?: "/"|"\\") // Returns the relative path from `from` to `to`, using the provided separator or the platform separator when omitted
+export function relative_dir(from: string, to: string, sep?: "/"|"\\") // Similar to the `relative` function, but if the `to` path is a dir path (with '/' or '\' suffix), then we keep the separator at the end of the result path)
+export function normalize(filepath: string, sep?: "/"|"\\", keep_trailing_slash?: boolean): string // Normalizes a path, resolving `..` and `.` segments with the provided separator or the platform default. When keep_trailing_slash is true, preserves trailing slashes from the input (except for drive roots like "C:"). Defaults to false.
 
-export function mkdir_if_nonexist(dirpath: string): void // Creates a directory and all its parent components if they do not exist
+export function mkdirs(dirpath: string): void // Creates a directory and all its parent components if they do not exist
 export function locate_nearest(start_dirpath: string, filenames: string[]): string|null // Locates the nearest file from the `start_dirpath` by searching upwards the directory tree, returns the found file path or null if not found
 ```
 

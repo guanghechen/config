@@ -1,0 +1,83 @@
+use std::path::Path;
+
+pub fn is_exist(path: &str) -> bool {
+    if path.is_empty() {
+        return false;
+    }
+    Path::new(path).exists()
+}
+
+pub fn is_exist_directory(path: &str) -> bool {
+    if path.is_empty() {
+        return false;
+    }
+    Path::new(path).is_dir()
+}
+
+pub fn is_exist_file(path: &str) -> bool {
+    if path.is_empty() {
+        return false;
+    }
+    Path::new(path).is_file()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::path;
+    use std::fs;
+
+    struct PreparedPaths {
+        base: String,
+        dir: String,
+        file: String,
+        missing: String,
+    }
+
+    fn prepare_paths() -> PreparedPaths {
+        let base_dir = std::env::temp_dir().join(format!(
+            "rstd_path_is_exist_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        let base = base_dir.to_string_lossy().to_string();
+        let dir = path::join(&base, "dir", false, path::SEP);
+        let file = path::join(&base, "file.txt", false, path::SEP);
+        let missing = path::join(&base, "missing.txt", false, path::SEP);
+
+        fs::create_dir_all(&dir).expect("create dir");
+        fs::write(&file, b"data").expect("write file");
+
+        PreparedPaths {
+            base,
+            dir,
+            file,
+            missing,
+        }
+    }
+
+    #[test]
+    fn t_is_exist_directory() {
+        let paths = prepare_paths();
+        assert!(is_exist(&paths.dir));
+        assert!(is_exist_directory(&paths.dir));
+        assert!(!is_exist_file(&paths.dir));
+
+        assert!(is_exist(&paths.file));
+        assert!(!is_exist_directory(&paths.file));
+        assert!(is_exist_file(&paths.file));
+
+        assert!(!is_exist(&paths.missing));
+        assert!(!is_exist_directory(&paths.missing));
+        assert!(!is_exist_file(&paths.missing));
+
+        assert!(!is_exist(""));
+        assert!(!is_exist_directory(""));
+        assert!(!is_exist_file(""));
+
+        fs::remove_dir_all(&paths.base).ok();
+    }
+}
