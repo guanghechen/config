@@ -18,6 +18,33 @@ fn format_elapsed(duration: Duration) -> String {
     format!("{:.3}s", duration.as_secs_f32())
 }
 
+fn trim_trailing_line_terminators(text: &mut String, match_points: &[ISearchMatchPoint]) {
+    let max_match_end = match_points.iter().map(|point| point.r).max().unwrap_or(0);
+    let mut end = text.len();
+    let bytes = text.as_bytes();
+
+    while end > max_match_end {
+        if end == 0 {
+            break;
+        }
+        let byte = bytes[end - 1];
+        if byte == b'\n' {
+            end -= 1;
+            if end > max_match_end && end > 0 && bytes[end - 1] == b'\r' {
+                end -= 1;
+            }
+        } else if byte == b'\r' {
+            end -= 1;
+        } else {
+            break;
+        }
+    }
+
+    if end < text.len() {
+        text.truncate(end);
+    }
+}
+
 fn parse_max_matches(options: &ISearchInFilesOptions) -> u32 {
     match options.max_matches {
         Some(value) if value >= 0 => value as u32,
@@ -226,7 +253,19 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
             return Ok(continue_search && *self.matches_count < self.max_matches);
         }
 
-        let text = String::from_utf8_lossy(bytes).into_owned();
+        let mut text = String::from_utf8_lossy(bytes).into_owned();
+        trim_trailing_line_terminators(&mut text, &match_points);
+
+        let text_len = text.len();
+        for point in &mut match_points {
+            if point.l > text_len {
+                point.l = text_len;
+            }
+            if point.r > text_len {
+                point.r = text_len;
+            }
+        }
+
         self.blocks.push(ISearchBlockMatch {
             lnum: line_number,
             text,
@@ -307,6 +346,7 @@ pub fn search_in_files(
         walk_builder.add(additional);
     }
 
+    walk_builder.sort_by_file_path(|a, b| a.cmp(b));
     walk_builder.hidden(true);
     walk_builder.git_ignore(options.flag_gitignore);
     walk_builder.git_global(options.flag_gitignore);
