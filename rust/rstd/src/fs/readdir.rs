@@ -1,5 +1,7 @@
 use crate::types::fs::{IFsFileItemWithStatus, IFsFileType, IFsReaddirError, IFsReaddirResult};
-use chrono::{DateTime, Local};
+use time::{
+    format_description::FormatItem, macros::format_description, OffsetDateTime, UtcOffset,
+};
 #[cfg(unix)]
 use std::ffi::CStr;
 use std::fs;
@@ -186,8 +188,19 @@ fn format_filesize(size_bytes: u64) -> String {
 }
 
 fn format_time(timestamp: SystemTime) -> String {
-    let datetime: DateTime<Local> = DateTime::from(timestamp);
-    datetime.format("%b %d %H:%M").to_string()
+    static FORMAT: &[FormatItem<'static>] =
+        format_description!("[month repr:short] [day padding:space] [hour]:[minute]");
+
+    let datetime = OffsetDateTime::from(timestamp);
+
+    let offset = UtcOffset::local_offset_at(datetime)
+        .or_else(|_| UtcOffset::current_local_offset())
+        .unwrap_or(UtcOffset::UTC);
+
+    datetime
+        .to_offset(offset)
+        .format(&FORMAT)
+        .unwrap_or_else(|_| String::from("unknown"))
 }
 
 #[cfg(unix)]

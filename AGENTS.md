@@ -78,7 +78,7 @@ Each integration includes environment-specific:
 - **Compiled Library**: `lua/rstd.so` (platform-specific binary)
 - **Build Artifacts**: `bin/{osx,nix,win}.rstd.so` (platform builds)
 - **Source Code**: `rust/rstd/` (mlua-powered integration)
-- **Dependencies**: mlua 0.9 (luajit), regex, serde, chrono, uuid
+- **Dependencies**: mlua 0.9 (luajit), regex, serde, time, uuid
 - **Exposed Modules**: `rstd.fs`, `rstd.replace`, `rstd.find`, `rstd.search`, `rstd.string`, `rstd.fn`
 
 ## Development Commands
