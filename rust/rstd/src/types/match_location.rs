@@ -10,8 +10,8 @@ pub struct IMatchLocation {
     pub line: String,
 }
 
-impl<'lua> IntoLua<'lua> for IMatchLocation {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IMatchLocation {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("offset", self.offset)?;
         table.set("lnum", self.lnum)?;
@@ -21,8 +21,8 @@ impl<'lua> IntoLua<'lua> for IMatchLocation {
     }
 }
 
-impl<'lua> FromLua<'lua> for IMatchLocation {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IMatchLocation {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         match value {
             LuaValue::Table(table) => Ok(IMatchLocation {
                 offset: table.get("offset")?,
@@ -32,7 +32,7 @@ impl<'lua> FromLua<'lua> for IMatchLocation {
             }),
             value => Err(LuaError::FromLuaConversionError {
                 from: value.type_name(),
-                to: "IMatchLocation",
+                to: "IMatchLocation".into(),
                 message: Some("expected table".into()),
             }),
         }

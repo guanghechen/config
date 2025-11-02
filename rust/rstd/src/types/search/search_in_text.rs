@@ -10,14 +10,14 @@ pub struct ISearchInTextOptions {
     pub flag_case_sensitive: bool,
 }
 
-impl FromLua<'_> for ISearchInTextOptions {
+impl FromLua for ISearchInTextOptions {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
             _ => {
                 return Err(LuaError::FromLuaConversionError {
                     from: value.type_name(),
-                    to: "ISearchInTextOptions",
+                    to: "ISearchInTextOptions".into(),
                     message: Some("expected table".to_string()),
                 });
             }

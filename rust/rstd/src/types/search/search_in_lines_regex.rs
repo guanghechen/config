@@ -12,14 +12,14 @@ pub struct ISearchInLinesRegexOptions {
     pub flag_case_sensitive: bool,
 }
 
-impl FromLua<'_> for ISearchInLinesRegexOptions {
+impl FromLua for ISearchInLinesRegexOptions {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
             _ => {
                 return Err(LuaError::FromLuaConversionError {
                     from: value.type_name(),
-                    to: "ISearchInLinesRegexOptions",
+                    to: "ISearchInLinesRegexOptions".into(),
                     message: Some("expected table".to_string()),
                 });
             }

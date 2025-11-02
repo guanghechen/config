@@ -9,8 +9,8 @@ pub struct ISearchInLinesMatchPoint {
     pub end: usize,
 }
 
-impl IntoLua<'_> for ISearchInLinesMatchPoint {
-    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue<'_>> {
+impl IntoLua for ISearchInLinesMatchPoint {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("l", self.start)?;
         table.set("r", self.end)?;
@@ -18,14 +18,14 @@ impl IntoLua<'_> for ISearchInLinesMatchPoint {
     }
 }
 
-impl FromLua<'_> for ISearchInLinesMatchPoint {
+impl FromLua for ISearchInLinesMatchPoint {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
             _ => {
                 return Err(LuaError::FromLuaConversionError {
                     from: value.type_name(),
-                    to: "ISearchInLinesMatchPoint",
+                    to: "ISearchInLinesMatchPoint".into(),
                     message: Some("expected table".to_string()),
                 });
             }
@@ -45,8 +45,8 @@ pub struct ISearchInLinesLineMatch {
     pub matches: Vec<ISearchInLinesMatchPoint>,
 }
 
-impl IntoLua<'_> for ISearchInLinesLineMatch {
-    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue<'_>> {
+impl IntoLua for ISearchInLinesLineMatch {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("lnum", self.lnum)?;
         table.set("score", self.score)?;
@@ -55,14 +55,14 @@ impl IntoLua<'_> for ISearchInLinesLineMatch {
     }
 }
 
-impl FromLua<'_> for ISearchInLinesLineMatch {
+impl FromLua for ISearchInLinesLineMatch {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
             _ => {
                 return Err(LuaError::FromLuaConversionError {
                     from: value.type_name(),
-                    to: "ISearchInLinesLineMatch",
+                    to: "ISearchInLinesLineMatch".into(),
                     message: Some("expected table".to_string()),
                 });
             }
@@ -85,14 +85,14 @@ pub struct ISearchInLinesOptions {
     pub flag_case_sensitive: bool,
 }
 
-impl FromLua<'_> for ISearchInLinesOptions {
+impl FromLua for ISearchInLinesOptions {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = match value {
             LuaValue::Table(t) => t,
             _ => {
                 return Err(LuaError::FromLuaConversionError {
                     from: value.type_name(),
-                    to: "ISearchInLinesOptions",
+                    to: "ISearchInLinesOptions".into(),
                     message: Some("expected table".to_string()),
                 });
             }

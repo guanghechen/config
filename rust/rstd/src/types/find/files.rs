@@ -22,8 +22,8 @@ pub struct IFindFilesOptions {
     pub exclude_patterns: String,
 }
 
-impl<'lua> FromLua<'lua> for IFindFilesOptions {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IFindFilesOptions {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         match value {
             LuaValue::Table(table) => Ok(Self {
                 cwd: table.get("cwd")?,
@@ -36,15 +36,15 @@ impl<'lua> FromLua<'lua> for IFindFilesOptions {
             }),
             other => Err(LuaError::FromLuaConversionError {
                 from: other.type_name(),
-                to: "rstd.find.IFindFilesOptions",
+                to: "rstd.find.IFindFilesOptions".into(),
                 message: Some("expected table".into()),
             }),
         }
     }
 }
 
-impl<'lua> IntoLua<'lua> for IFindFilesSucceedResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFindFilesSucceedResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         let filepaths = lua.create_sequence_from(self.filepaths)?;
         table.set("filepaths", filepaths)?;
@@ -52,8 +52,8 @@ impl<'lua> IntoLua<'lua> for IFindFilesSucceedResult {
     }
 }
 
-impl<'lua> IntoLua<'lua> for IFindFilesFailedResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFindFilesFailedResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("error", self.error)?;
         Ok(LuaValue::Table(table))

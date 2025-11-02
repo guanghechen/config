@@ -6,8 +6,8 @@ pub struct IFsCollectFilesResult {
     pub files: Vec<String>,
 }
 
-impl<'lua> IntoLua<'lua> for IFsCollectFilesResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFsCollectFilesResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("files", lua.create_sequence_from(self.files)?)?;
         Ok(LuaValue::Table(table))
@@ -19,8 +19,8 @@ pub struct IFsCollectFilesError {
     pub error: String,
 }
 
-impl<'lua> IntoLua<'lua> for IFsCollectFilesError {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFsCollectFilesError {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("error", self.error)?;
         Ok(LuaValue::Table(table))

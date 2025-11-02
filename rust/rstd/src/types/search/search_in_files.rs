@@ -9,8 +9,8 @@ pub struct ISearchMatchPoint {
     pub r: usize,
 }
 
-impl<'lua> IntoLua<'lua> for ISearchMatchPoint {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for ISearchMatchPoint {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("l", self.l)?;
         table.set("r", self.r)?;
@@ -26,8 +26,8 @@ pub struct ISearchBlockMatch {
     pub matches: Vec<ISearchMatchPoint>,
 }
 
-impl<'lua> IntoLua<'lua> for ISearchBlockMatch {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for ISearchBlockMatch {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("lnum", self.lnum)?;
         table.set("text", self.text)?;
@@ -42,8 +42,8 @@ pub struct ISearchFileMatch {
     pub matches: Vec<ISearchBlockMatch>,
 }
 
-impl<'lua> IntoLua<'lua> for ISearchFileMatch {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for ISearchFileMatch {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("matches", lua.create_sequence_from(self.matches)?)?;
         Ok(LuaValue::Table(table))
@@ -56,8 +56,8 @@ pub struct ISearchInFilesSucceedResult {
     pub items: HashMap<String, ISearchFileMatch>,
 }
 
-impl<'lua> IntoLua<'lua> for ISearchInFilesSucceedResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for ISearchInFilesSucceedResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("elapsed_time", self.elapsed_time)?;
         let items_table = lua.create_table()?;
@@ -75,8 +75,8 @@ pub struct ISearchInFilesFailedResult {
     pub error: String,
 }
 
-impl<'lua> IntoLua<'lua> for ISearchInFilesFailedResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for ISearchInFilesFailedResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("elapsed_time", self.elapsed_time)?;
         table.set("error", self.error)?;
@@ -99,31 +99,31 @@ pub struct ISearchInFilesOptions {
     pub specified_filepath: Option<String>,
 }
 
-impl<'lua> FromLua<'lua> for ISearchInFilesOptions {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for ISearchInFilesOptions {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         match value {
             LuaValue::Table(table) => Ok(Self {
-                cwd: table.get::<_, Option<String>>("cwd")?,
+                cwd: table.get::<Option<String>>("cwd")?,
                 flag_case_sensitive: table.get("flag_case_sensitive")?,
                 flag_gitignore: table.get("flag_gitignore")?,
                 flag_regex: table.get("flag_regex")?,
-                max_filesize: table.get::<_, Option<String>>("max_filesize")?,
-                max_matches: table.get::<_, Option<i32>>("max_matches")?,
+                max_filesize: table.get::<Option<String>>("max_filesize")?,
+                max_matches: table.get::<Option<i32>>("max_matches")?,
                 search_pattern: table.get("search_pattern")?,
                 search_paths: table
-                    .get::<_, Option<String>>("search_paths")?
+                    .get::<Option<String>>("search_paths")?
                     .unwrap_or_default(),
                 include_patterns: table
-                    .get::<_, Option<String>>("include_patterns")?
+                    .get::<Option<String>>("include_patterns")?
                     .unwrap_or_default(),
                 exclude_patterns: table
-                    .get::<_, Option<String>>("exclude_patterns")?
+                    .get::<Option<String>>("exclude_patterns")?
                     .unwrap_or_default(),
-                specified_filepath: table.get::<_, Option<String>>("specified_filepath")?,
+                specified_filepath: table.get::<Option<String>>("specified_filepath")?,
             }),
             other => Err(LuaError::FromLuaConversionError {
                 from: other.type_name(),
-                to: "rstd.search.ISearchInFilesOptions",
+                to: "rstd.search.ISearchInFilesOptions".into(),
                 message: Some("expected table".into()),
             }),
         }

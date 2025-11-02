@@ -27,8 +27,8 @@ impl IFsFileType {
     }
 }
 
-impl<'lua> IntoLua<'lua> for IFsFileType {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFsFileType {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         Ok(LuaValue::String(lua.create_string(self.as_str())?))
     }
 }
@@ -49,8 +49,8 @@ pub struct IFsFileItemWithStatus {
     pub modify_time: String,
 }
 
-impl<'lua> IntoLua<'lua> for IFsFileItemWithStatus {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFsFileItemWithStatus {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("type", self.filetype)?;
         table.set("name", self.filename)?;
@@ -69,8 +69,8 @@ pub struct IFsReaddirResult {
     pub items: Vec<IFsFileItemWithStatus>,
 }
 
-impl<'lua> IntoLua<'lua> for IFsReaddirResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFsReaddirResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("itself", self.itself)?;
         table.set("items", lua.create_sequence_from(self.items)?)?;
@@ -83,8 +83,8 @@ pub struct IFsReaddirError {
     pub error: String,
 }
 
-impl<'lua> IntoLua<'lua> for IFsReaddirError {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFsReaddirError {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("error", self.error)?;
         Ok(LuaValue::Table(table))

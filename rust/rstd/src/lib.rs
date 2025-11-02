@@ -15,23 +15,23 @@ use mlua::{
 };
 
 #[inline]
-fn f<'lua, A, R, F>(lua: &'lua Lua, func: F) -> LuaResult<Function<'lua>>
+fn f<A, R, F>(lua: &Lua, func: F) -> LuaResult<Function>
 where
-    A: FromLuaMulti<'lua>,
-    R: IntoLuaMulti<'lua>,
-    F: Fn(&'lua Lua, A) -> LuaResult<R> + Send + 'static,
+    A: FromLuaMulti,
+    R: IntoLuaMulti,
+    F: Fn(&Lua, A) -> LuaResult<R> + Send + 'static,
 {
     lua.create_function(func)
 }
 
-fn fn_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn fn_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         ("uuid", f(lua, |_, ()| Ok(r#fn::uuid()))?),
         ("md5", f(lua, |_, input: String| Ok(r#fn::md5(&input)))?),
     ])
 }
 
-fn string_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn string_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         ("calc_linewidths", f(lua, |_, text: String| Ok(string::calc_linewidths(&text)))?),
         ("count_lines", f(lua, |_, text: String| Ok(string::count_lines(&text)))?),
@@ -52,7 +52,7 @@ fn string_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     ])
 }
 
-fn path_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
     let table = lua.create_table_from([
         (
             "basename",
@@ -186,7 +186,7 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     Ok(table)
 }
 
-fn fs_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn fs_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         (
             "collect_files",
@@ -255,7 +255,7 @@ fn fs_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     ])
 }
 
-fn replace_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn replace_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         (
             "replace_file",
@@ -508,7 +508,7 @@ fn replace_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     ])
 }
 
-fn find_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn find_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([(
         "find_files",
         f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
@@ -527,7 +527,7 @@ fn find_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
     )])
 }
 
-fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         (
             "search_in_files",
@@ -626,7 +626,7 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable<'_>> {
 }
 
 #[mlua::lua_module]
-fn rstd(lua: &Lua) -> LuaResult<LuaTable<'_>> {
+fn rstd(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;

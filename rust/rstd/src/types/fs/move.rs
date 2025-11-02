@@ -8,8 +8,8 @@ pub struct IFsMoveParams {
     pub force: bool,
 }
 
-impl<'lua> FromLua<'lua> for IFsMoveParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IFsMoveParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         match value {
             LuaValue::Table(table) => Ok(Self {
                 old_path: table.get("old_path")?,
@@ -18,7 +18,7 @@ impl<'lua> FromLua<'lua> for IFsMoveParams {
             }),
             other => Err(LuaError::FromLuaConversionError {
                 from: other.type_name(),
-                to: "rstd.fs.IFsMoveParams",
+                to: "rstd.fs.IFsMoveParams".into(),
                 message: Some("expected table".into()),
             }),
         }
@@ -30,8 +30,8 @@ pub struct IFsMoveError {
     pub error: String,
 }
 
-impl<'lua> IntoLua<'lua> for IFsMoveError {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IFsMoveError {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("error", self.error)?;
         Ok(LuaValue::Table(table))

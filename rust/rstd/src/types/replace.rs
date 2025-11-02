@@ -3,12 +3,12 @@ use crate::types::IMatchLocation;
 use mlua::prelude::*;
 use serde::{Deserialize, Serialize};
 
-fn expect_table<'lua>(value: LuaValue<'lua>, to: &'static str) -> LuaResult<LuaTable<'lua>> {
+fn expect_table(value: LuaValue, to: &'static str) -> LuaResult<LuaTable> {
     match value {
         LuaValue::Table(table) => Ok(table),
         other => Err(LuaError::FromLuaConversionError {
             from: other.type_name(),
-            to,
+            to: to.to_string(),
             message: Some("expected table".into()),
         }),
     }
@@ -23,8 +23,8 @@ pub struct IReplaceFileParams {
     pub flag_case_sensitive: bool,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceFileParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceFileParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(value, "rstd.replace.IReplaceFileParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
@@ -46,8 +46,8 @@ pub struct IReplaceFileByMatchesParams {
     pub match_offsets: Vec<usize>,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceFileByMatchesParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceFileByMatchesParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(value, "rstd.replace.IReplaceFileByMatchesParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
@@ -71,8 +71,8 @@ pub struct IReplaceFileByMatchesAdvanceParams {
     pub remain_offsets: Vec<usize>,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceFileByMatchesAdvanceParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceFileByMatchesAdvanceParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(value, "rstd.replace.IReplaceFileByMatchesAdvanceParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
@@ -96,8 +96,8 @@ pub struct IReplaceFilePreviewParams {
     pub flag_case_sensitive: bool,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceFilePreviewParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceFilePreviewParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(value, "rstd.replace.IReplaceFilePreviewParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
@@ -121,8 +121,8 @@ pub struct IReplaceFilePreviewByMatchesAdvanceParams {
     pub match_offsets: Vec<usize>,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceFilePreviewByMatchesAdvanceParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceFilePreviewByMatchesAdvanceParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(
             value,
             "rstd.replace.IReplaceFilePreviewByMatchesAdvanceParams",
@@ -149,8 +149,8 @@ pub struct IReplaceTextPreviewParams {
     pub flag_case_sensitive: bool,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceTextPreviewParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceTextPreviewParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(value, "rstd.replace.IReplaceTextPreviewParams")?;
         Ok(Self {
             text: table.get("text")?,
@@ -174,8 +174,8 @@ pub struct IReplaceTextPreviewByMatchesParams {
     pub match_offsets: Vec<usize>,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceTextPreviewByMatchesParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceTextPreviewByMatchesParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(value, "rstd.replace.IReplaceTextPreviewByMatchesParams")?;
         Ok(Self {
             text: table.get("text")?,
@@ -199,8 +199,8 @@ pub struct IReplaceTextPreviewAdvanceParams {
     pub flag_case_sensitive: bool,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceTextPreviewAdvanceParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceTextPreviewAdvanceParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(value, "rstd.replace.IReplaceTextPreviewAdvanceParams")?;
         Ok(Self {
             text: table.get("text")?,
@@ -224,8 +224,8 @@ pub struct IReplaceTextPreviewByMatchesAdvanceParams {
     pub match_offsets: Vec<usize>,
 }
 
-impl<'lua> FromLua<'lua> for IReplaceTextPreviewByMatchesAdvanceParams {
-    fn from_lua(value: LuaValue<'lua>, _lua: &'lua Lua) -> LuaResult<Self> {
+impl FromLua for IReplaceTextPreviewByMatchesAdvanceParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(
             value,
             "rstd.replace.IReplaceTextPreviewByMatchesAdvanceParams",
@@ -247,8 +247,8 @@ pub struct IReplaceFileResult {
     pub locations: Vec<IMatchLocation>,
 }
 
-impl<'lua> IntoLua<'lua> for IReplaceFileResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IReplaceFileResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("locations", self.locations)?;
         Ok(LuaValue::Table(table))
@@ -261,8 +261,8 @@ pub struct IReplacePreviewResult {
     pub matches: Vec<ISearchInLinesMatchPoint>,
 }
 
-impl<'lua> IntoLua<'lua> for IReplacePreviewResult {
-    fn into_lua(self, lua: &'lua Lua) -> LuaResult<LuaValue<'lua>> {
+impl IntoLua for IReplacePreviewResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("text", self.text)?;
         table.set("matches", self.matches)?;

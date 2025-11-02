@@ -323,27 +323,25 @@ pub fn search_in_files(
     let mut matches_count: u32 = 0;
     let mut filematches: HashMap<String, ISearchFileMatch> = HashMap::new();
 
-    for result in walk_builder.build() {
+    let mut candidate_paths: Vec<PathBuf> = walk_builder
+        .build()
+        .filter_map(|result| result.ok())
+        .filter(|entry| {
+            entry
+                .file_type()
+                .map(|file_type| file_type.is_file())
+                .unwrap_or(false)
+        })
+        .map(|entry| entry.into_path())
+        .collect();
+
+    candidate_paths.sort();
+
+    for path in candidate_paths {
         if matches_count >= max_matches {
             break;
         }
 
-        let entry = match result {
-            Ok(entry) => entry,
-            Err(_) => {
-                continue;
-            }
-        };
-
-        if !entry
-            .file_type()
-            .map(|file_type| file_type.is_file())
-            .unwrap_or(false)
-        {
-            continue;
-        }
-
-        let path = entry.into_path();
         let display = display_path(&path, &base_dir);
 
         let mut blocks: Vec<ISearchBlockMatch> = Vec::new();
