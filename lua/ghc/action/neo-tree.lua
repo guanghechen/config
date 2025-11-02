@@ -4,7 +4,7 @@ local function check_could_reveal(cwd)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
   if bufnr ~= nil and eve.buf.is_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    return std.path.is_under(cwd, filepath)
+    return std.path.is_descendant(cwd, filepath)
   end
   return false
 end

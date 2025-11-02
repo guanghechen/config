@@ -63,7 +63,7 @@ local function refresh(force)
 
   if bufnr_sourcefile ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-    if not std.path.is_under(rootpath, filepath) then
+    if not std.path.is_descendant(rootpath, filepath) then
       rootpath = std.path.dirname(filepath) ---@type string
       o_rootpath:next(rootpath)
     end
@@ -94,7 +94,7 @@ local function refresh(force)
       local bufnr = diagnostic.bufnr
       if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        if filepath ~= "" and std.path.is_under(rootpath, filepath) then
+        if filepath ~= "" and std.path.is_descendant(rootpath, filepath) then
           diagnostics[#diagnostics + 1] = diagnostic
           filepaths[#filepaths + 1] = filepath
         end
@@ -307,7 +307,7 @@ std.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
     local bufnr = o_bufnr_sourcefile:snapshot() ---@type integer|nil
     if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local relpath = std.path.relative(cwd, filepath, false) ---@type string
+      local relpath = std.path.relative(cwd, filepath) ---@type string
       picker.finder:set_title(string.format("%s (%s)", title, relpath))
       return
     end
@@ -320,7 +320,7 @@ std.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
   elseif rootpath == cwd then
     picker.finder:set_title(string.format("%s (cwd)", title))
   else
-    local relative_path = std.path.is_under(workspace, rootpath) and std.path.relative(cwd, rootpath, false) or rootpath ---@type string
+    local relative_path = std.path.is_descendant(workspace, rootpath) and std.path.relative(cwd, rootpath) or rootpath ---@type string
     picker.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)

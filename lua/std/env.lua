@@ -13,9 +13,6 @@ local PATH_ENV_SEP = IS_WIN and ";" or ":" ---@type string
 local PATH_SEP = IS_WIN and "\\" or "/" ---@type string
 local USERNAME = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 
-local BYTE_COLON = string.byte(":") ---@type integer
-local BYTE_PATHSEP = string.byte(PATH_SEP) ---@type integer
-
 ---@class std.env
 local M = {}
 
@@ -26,7 +23,7 @@ function M.locate_gitroot(dirpath)
     return dirpath
   end
 
-  local pieces = M.split_path(dirpath) ---@type string[]
+  local pieces = rstd.path.split(dirpath, false) ---@type string[]
   for index = #pieces - 1, 1, -1 do
     local p = table.concat(pieces, PATH_SEP, 1, index) ---@type string
     if vim.uv.fs_stat(p .. PATH_SEP .. ".git") ~= nil then
@@ -44,67 +41,6 @@ function M.locate_gitroot(dirpath)
   end
 
   return nil
-end
-
----@param filepath                      string
----@param prefer_sep                    "/"|"\\"|nil
----@return string
-function M.normalize_path(filepath, prefer_sep)
-  if filepath == "/" and not IS_WIN then
-    return "/"
-  end
-
-  if filepath == "" then
-    return "."
-  end
-
-  filepath = filepath:gsub("%%(%x%x)", function(hex)
-    return string.char(tonumber(hex, 16))
-  end)
-
-  local sep = prefer_sep or PATH_SEP ---@type string
-  local pieces = M.split_path(filepath, true) ---@type string[]
-  return table.concat(pieces, sep)
-end
-
----@param filepath                      string
----@param keep_suffix_sep               ?boolean
----@return string[]
----@return boolean
-function M.split_path(filepath, keep_suffix_sep)
-  local L = #filepath ---@type integer
-  local pieces = {} ---@type string[]
-  local pattern = "([^/\\]+)" ---@type string
-  local has_prefix_sep = PATH_SEP == "/" and string.byte(filepath, 1, 1) == BYTE_PATHSEP ---@type boolean
-  local has_suffix_sep = L > 1 and string.byte(filepath, L, L) == BYTE_PATHSEP ---@type boolean
-
-  local k = 0 ---@type integer
-  if has_prefix_sep then
-    k = k + 1 ---@type integer
-    pieces[k] = ""
-  end
-
-  for piece in string.gmatch(filepath, pattern) do
-    if piece ~= "" and piece ~= "." then
-      if piece == ".." and (has_prefix_sep or k > 0) then
-        pieces[k] = nil
-        k = k - 1 ---@type integer
-      else
-        k = k + 1 ---@type integer
-        pieces[k] = piece
-      end
-    end
-  end
-
-  if has_suffix_sep and keep_suffix_sep then
-    k = k + 1 ---@type integer
-    pieces[k] = ""
-  end
-
-  if IS_WIN and L > 1 and string.byte(filepath, 2, 2) == BYTE_COLON then
-    pieces[1] = pieces[1]:upper()
-  end
-  return pieces, has_suffix_sep
 end
 
 ---! OS settings

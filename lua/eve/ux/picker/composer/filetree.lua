@@ -380,7 +380,7 @@ function M.new(props)
 
       local rootpath = rootnode.data.filepath ---@type string
       local nodepath = filenode.data.filepath ---@type string
-      local relpath = std.path.relative(rootpath, nodepath, false) ---@type string
+      local relpath = std.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
         relpath = relpath .. std.env.PATH_SEP ---@type string
       end
@@ -475,7 +475,7 @@ function M.new(props)
 
       local nodepath = filenode.data.filepath ---@type string
       local rootpath = rootnode.data.filepath ---@type string
-      local relpath = std.path.relative(rootpath, nodepath, false) ---@type string
+      local relpath = std.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
         relpath = relpath .. std.env.PATH_SEP ---@type string
       end
@@ -970,7 +970,7 @@ function M.new(props)
           local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
-            local relative_filepath = std.path.relative(cwd, filepath, false) ---@type string
+            local relative_filepath = std.path.relative(cwd, filepath) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
             local locations = nodestate and nodestate.locations or nil ---@type eve.ux.picker.view.filetree.ILocationNodeState[]|nil
@@ -1455,21 +1455,17 @@ function M.new(props)
 
   local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
 
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
-    {
-      o_search_pattern,
-      o_flag_foldempty,
-      o_flag_fuzzy,
-      o_flag_regex,
-      o_flag_case_sensitive,
-      o_flag_selected,
-      o_flag_viewtype,
-    },
-    function()
-      composer:mark_result_flags_dirty()
-    end,
-    true
-  )
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({
+    o_search_pattern,
+    o_flag_foldempty,
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_flag_selected,
+    o_flag_viewtype,
+  }, function()
+    composer:mark_result_flags_dirty()
+  end, true)
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
@@ -1733,8 +1729,7 @@ function M:render_preview(bufnr, force)
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
   local filepath = node.data.filepath ---@type string
-  local relative_filepath = rootnode ~= nil
-      and std.path.relative(rootnode.data.filepath or std.path.cwd(), filepath, false)
+  local relative_filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath or std.path.cwd(), filepath)
     or filepath
 
   if nodestate.nodetype == "container" then
@@ -2043,7 +2038,7 @@ function M:__resolve_confirmation__(nodeuuid)
     end
   end
 
-  local filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath, node.data.filepath, false)
+  local filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath, node.data.filepath)
     or node.data.filepath
   composer:close()
   self._on_confirm(self, { filepath })

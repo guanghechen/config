@@ -184,11 +184,13 @@ function M.resolve(bufnr, force)
     return meta
   end
 
+  local dirpath_pieces = std.path.split(filepath, false) ---@type string[]
+  dirpath_pieces[#dirpath_pieces] = nil
+
   local cwd = std.path.cwd() ---@type string
-  local dirpath_pieces = std.path.split(std.path.dirname(filepath)) ---@type string[]
   local filename = std.path.basename(filepath) ---@type string
   local fileicon, fileicon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
-  local relpath = std.path.relative(cwd, filepath, false) ---@type string
+  local relpath = std.path.relative(cwd, filepath) ---@type string
 
   if meta == nil then
     ---@type eve.builtin.buf.IMeta

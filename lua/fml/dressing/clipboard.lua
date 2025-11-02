@@ -107,7 +107,7 @@ vim.paste = function(lines, phase)
         dirpath = std.path.dirname(filepath_cur) ---@type string
       end
 
-      local placeholder = std.path.relative(cwd, dirpath, false) ---@type string
+      local placeholder = std.path.relative(cwd, dirpath) ---@type string
       if placeholder == "" then
         placeholder = "." ---@type string
       end
@@ -179,13 +179,13 @@ vim.paste = function(lines, phase)
     local filepath_default = std.path.join(dirpath, basename_source) ---@type string
     local suffix = is_dirpath and std.env.PATH_SEP or "" ---@type string
 
-    local placeholder = std.path.relative(cwd, filepath_default, false) ---@type string
+    local placeholder = std.path.relative(cwd, filepath_default) ---@type string
     if placeholder == "" then
       placeholder = "." ---@type string
     end
 
     vim.ui.input({
-      prompt = string.format(" Copy %s to ", std.path.relative(cwd, filepath_source, false) .. suffix),
+      prompt = string.format(" Copy %s to ", std.path.relative(cwd, filepath_source) .. suffix),
       default = placeholder .. suffix,
       relative = "editor",
     }, function(filepath_target_relative)
@@ -208,7 +208,7 @@ vim.paste = function(lines, phase)
         if is_filepath and eve.filetype.is_sourcefile(filetype) then
           local extname = std.path.extname(filepath_target_relative) ---@type string
           if IMAGE_EXTENSIONS[extname] then
-            local src = std.path.relative(dirpath, filepath_target, true) ---@type string
+            local src = std.path.relative(dirpath, filepath_target, "/") ---@type string
             if #src > 1 then
               if string.sub(src, 1, 1) ~= "." then
                 src = "." .. std.env.PATH_SEP .. src

@@ -49,7 +49,7 @@ local function fetch_data(winnr_sourcefile)
     if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
       local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
+      local relative_filepath = std.path.relative(cwd, filepath, '/') ---@type string
       local filename = std.path.basename(filepath) ---@type string
       local icon, icon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
 
@@ -81,7 +81,7 @@ local function fetch_data(winnr_sourcefile)
       local filepath = history_item.filepath ---@type string|nil
       if filepath ~= nil and std.path.is_exist_filepath(filepath) then
         local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-        local relative_filepath = std.path.relative(cwd, filepath, true) ---@type string
+        local relative_filepath = std.path.relative(cwd, filepath, '/') ---@type string
         local filename = std.path.basename(filepath) ---@type string
         local icon, icon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
 
@@ -146,7 +146,7 @@ local picker = eve.ux.picker.ListComposer.new({
 
     for _, match in ipairs(matches) do
       local item = itemmap[match.uuid] ---@type fml.action.win.history.IItem
-      local relative_filepath = std.path.relative(cwd, item.data.filepath, false) ---@type string
+      local relative_filepath = std.path.relative(cwd, item.data.filepath, '/') ---@type string
       local text_displayed = string.format("%s %s %s", item.uuid, item.data.icon, relative_filepath) ---@type string
       lines[#lines + 1] = text_displayed
       uuids[#uuids + 1] = item.uuid

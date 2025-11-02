@@ -329,7 +329,7 @@ local function gen_title()
     return "File explorer (cwd)" ---@type string
   end
 
-  local relative_dirpath = std.path.relative(cwd, dirpath, false)
+  local relative_dirpath = std.path.relative(cwd, dirpath)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer (cwd)" ---@type string
   end
@@ -474,7 +474,7 @@ local function preview_render(composer, bufnr)
       local result = {
         cursorline = true,
         number = true,
-        title = std.path.relative(std.path.cwd(), fileitem.path, false),
+        title = std.path.relative(std.path.cwd(), fileitem.path),
         whitespaces = true,
         wrap = false,
       }
@@ -576,7 +576,7 @@ local function preview_render(composer, bufnr)
       end
     end
 
-    local result_title = std.path.relative(std.path.cwd(), fileitem.path, false) ---@type string
+    local result_title = std.path.relative(std.path.cwd(), fileitem.path) ---@type string
     if #result_title < 1 or string.sub(result_title, 1, 1) == "." then
       result_title = std.path.normalize(fileitem.path)
     end

@@ -198,7 +198,7 @@ return {
         local modified = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec)
         local mode = string.format("%o", stat.mode)
 
-        local filepath_relative = std.path.relative(std.path.cwd(), filepath, false) ---@type string
+        local filepath_relative = std.path.relative(std.path.cwd(), filepath) ---@type string
         local filename = std.path.basename(filepath) ---@type string
         local icon = std.fileicon.get_file_icon(filename)
 

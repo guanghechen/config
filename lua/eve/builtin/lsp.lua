@@ -178,7 +178,7 @@ function M.locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local pieces = std.path.split(filepath) ---@type string[]
+  local pieces = std.path.split(filepath, false) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
     local dirpath = table.concat(pieces, std.env.PATH_SEP, 1, k) ---@type string

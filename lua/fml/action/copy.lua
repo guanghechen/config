@@ -21,7 +21,7 @@ local function copy_current_filepath(candidate, filepath)
     })
   elseif candidate == "relative" then
     local cwd = std.path.cwd() ---@type string
-    local content = std.path.relative(cwd, filepath, true) ---@type string
+    local content = std.path.relative(cwd, filepath, "/") ---@type string
 
     write_clipboard_registers(content)
     std.reporter.info({

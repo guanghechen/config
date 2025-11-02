@@ -849,7 +849,7 @@ function M.new(props)
           local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
-            local relative_filepath = std.path.relative(cwd, filepath, false) ---@type string
+            local relative_filepath = std.path.relative(cwd, filepath) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
             local locations = nodestate and nodestate.locations or nil ---@type eve.ux.searcher.view.filetree.ILeafLocationState[]|nil
@@ -1376,7 +1376,7 @@ function M.new(props)
           local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
           local filepath = node.data.filepath ---@type string
           local relative_filepath = rootnode ~= nil
-              and std.path.relative(rootnode.data.filepath or std.path.cwd(), filepath, false)
+              and std.path.relative(rootnode.data.filepath or std.path.cwd(), filepath)
             or filepath
 
           if nodestate.nodetype == "container" then
@@ -2327,7 +2327,7 @@ function M:__resolve_confirmation__(nodeuuid)
     end
   end
 
-  local filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath, node.data.filepath, false)
+  local filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath, node.data.filepath)
     or node.data.filepath
   composer:close()
   self._on_confirm(self, { filepath })

@@ -112,7 +112,7 @@ return {
 
         local workspace = std.path.workspace() ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath_relative = std.path.relative(workspace, filepath, true) ---@type string
+        local filepath_relative = std.path.relative(workspace, filepath, "/") ---@type string
         if std.path.is_absolute(filepath_relative) then
           return true
         end

@@ -90,7 +90,7 @@ local function fetch_data()
           local dirpath = std.string.remove_last_slash(line) ---@type string
           if not uuid_set[dirpath] then
             uuid_set[dirpath] = true
-            local resolved_dirpath = std.path.is_under(workspace, dirpath) and std.path.relative(cwd, dirpath, false)
+            local resolved_dirpath = std.path.is_descendant(workspace, dirpath) and std.path.relative(cwd, dirpath)
               or dirpath
             local text_content = icon .. " " .. resolved_dirpath
 

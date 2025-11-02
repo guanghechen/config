@@ -226,7 +226,7 @@ function M.browse()
 
   local workspace = std.path.workspace() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string|nil
-  filepath = filepath ~= nil and std.path.is_under(workspace, filepath) and std.path.relative(workspace, filepath, true) or nil
+  filepath = filepath ~= nil and std.path.is_descendant(workspace, filepath) and std.path.relative(workspace, filepath, '/') or nil
 
   local remotes = {} ---@type fml.action.git.browse.IRemote[]
   local line_fragment, line_start, line_end ---@type string|nil, integer|nil, integer|nil

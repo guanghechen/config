@@ -210,7 +210,7 @@ function M.refresh_breakpoints()
         log_message = raw_breakpoint.log_message,
       }
       if is_valid_breakpoint(workspace, breakpoint) then
-        breakpoint.filepath = std.path.relative(workspace, breakpoint.filepath, false) ---@type string
+        breakpoint.filepath = std.path.relative(workspace, breakpoint.filepath) ---@type string
         table.insert(breakpoints, breakpoint)
       end
     end

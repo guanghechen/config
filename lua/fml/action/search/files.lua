@@ -237,7 +237,7 @@ std.fn.observe({ o_rootpath }, function()
   elseif rootpath == cwd then
     searcher.finder:set_title(string.format("%s (cwd)", title))
   else
-    local relative_path = std.path.is_under(workspace, rootpath) and std.path.relative(cwd, rootpath, false) or rootpath ---@type string
+    local relative_path = std.path.is_descendant(workspace, rootpath) and std.path.relative(cwd, rootpath) or rootpath ---@type string
     searcher.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)

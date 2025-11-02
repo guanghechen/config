@@ -46,7 +46,7 @@ local function select_copy_filepath(params)
           })
         elseif item.uuid == "relative" then
           local cwd = std.path.cwd() ---@type string
-          local content = std.path.relative(cwd, filepath, true) ---@type string
+          local content = std.path.relative(cwd, filepath, "/") ---@type string
 
           write_clipboard_registers(content)
           std.reporter.info({

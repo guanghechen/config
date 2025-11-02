@@ -280,7 +280,7 @@ function M:search(params)
   local item_orders = {} ---@type string[]
 
   for filepath, filematch in pairs(results.items) do
-    local relpath = std.path.relative(cwd, filepath, true) ---@type string
+    local relpath = std.path.relative(cwd, filepath, "/") ---@type string
     table.insert(item_orders, relpath)
     normalized_items[relpath] = filematch
 
