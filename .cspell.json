@@ -436,6 +436,7 @@
     "gitsigns",
     "gitstatus",
     "globpath",
+    "globset",
     "gomod",
     "goodnode",
     "goodroot",
