@@ -23,8 +23,9 @@ pub fn is_exist_file(path: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use super::super::SEP;
+    use super::super::join;
     use super::*;
-    use crate::path;
     use std::fs;
 
     struct PreparedPaths {
@@ -44,9 +45,9 @@ mod tests {
                 .unwrap_or(0)
         ));
         let base = base_dir.to_string_lossy().to_string();
-        let dir = path::join(&base, "dir", false, path::SEP);
-        let file = path::join(&base, "file.txt", false, path::SEP);
-        let missing = path::join(&base, "missing.txt", false, path::SEP);
+        let dir = join(&base, "dir", false, SEP);
+        let file = join(&base, "file.txt", false, SEP);
+        let missing = join(&base, "missing.txt", false, SEP);
 
         fs::create_dir_all(&dir).expect("create dir");
         fs::write(&file, b"data").expect("write file");

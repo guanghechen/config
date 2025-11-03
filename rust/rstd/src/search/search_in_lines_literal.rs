@@ -1,5 +1,7 @@
-use crate::algorithm::kmp::{calc_fails, find_all_matched_points};
-use crate::types::{ISearchInLinesLiteralLineMatch, ISearchInLinesLiteralMatchPoint};
+use crate::algorithm::kmp::calc_fails;
+use crate::algorithm::kmp::find_all_matched_points;
+use crate::types::ISearchInLinesLiteralLineMatch;
+use crate::types::ISearchInLinesLiteralMatchPoint;
 use std::borrow::Cow;
 
 /// Find the line number for a given byte position using binary search

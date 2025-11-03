@@ -37,8 +37,8 @@ pub fn locate_nearest(start_dirpath: &str, filenames: &[String]) -> Option<Strin
 
 #[cfg(test)]
 mod tests {
+    use super::super::SEP;
     use super::locate_nearest;
-    use crate::path::SEP;
     use std::fs;
     use std::path::Path;
 

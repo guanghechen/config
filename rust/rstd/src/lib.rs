@@ -8,11 +8,14 @@ pub mod search;
 pub mod string;
 pub mod types;
 
+use mlua::FromLua;
+use mlua::FromLuaMulti;
+use mlua::Function;
+use mlua::IntoLua;
+use mlua::IntoLuaMulti;
+use mlua::MultiValue as LuaMultiValue;
+use mlua::Value as LuaValue;
 use mlua::prelude::*;
-use mlua::{
-    FromLua, FromLuaMulti, Function, IntoLua, IntoLuaMulti, MultiValue as LuaMultiValue,
-    Value as LuaValue,
-};
 
 #[inline]
 fn f<A, R, F>(lua: &Lua, func: F) -> LuaResult<Function>
@@ -33,9 +36,18 @@ fn fn_module(lua: &Lua) -> LuaResult<LuaTable> {
 
 fn string_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
-        ("calc_linewidths", f(lua, |_, text: String| Ok(string::calc_linewidths(&text)))?),
-        ("count_lines", f(lua, |_, text: String| Ok(string::count_lines(&text)))?),
-        ("parse_comma_list", f(lua, |_, text: String| Ok(string::parse_comma_list(&text)))?),
+        (
+            "calc_linewidths",
+            f(lua, |_, text: String| Ok(string::calc_linewidths(&text)))?,
+        ),
+        (
+            "count_lines",
+            f(lua, |_, text: String| Ok(string::count_lines(&text)))?,
+        ),
+        (
+            "parse_comma_list",
+            f(lua, |_, text: String| Ok(string::parse_comma_list(&text)))?,
+        ),
         (
             "get_locations",
             f(lua, |_, (text, offsets): (String, Vec<usize>)| {
@@ -78,18 +90,15 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
         ),
         (
             "is_descendant",
-            f(lua, |_, (from, to): (String, String)| Ok(path::is_descendant(&from, &to)))?,
+            f(lua, |_, (from, to): (String, String)| {
+                Ok(path::is_descendant(&from, &to))
+            })?,
         ),
         (
             "join",
             f(
                 lua,
-                |_, (from, to, keep_trailing_slash, sep): (
-                    String,
-                    String,
-                    bool,
-                    String,
-                )| {
+                |_, (from, to, keep_trailing_slash, sep): (String, String, bool, String)| {
                     let sep = sep.chars().next().unwrap_or(path::SEP);
                     Ok(path::join(&from, &to, keep_trailing_slash, sep))
                 },
@@ -99,12 +108,7 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
             "relative",
             f(
                 lua,
-                |_, (from, to, keep_trailing_slash, sep): (
-                    String,
-                    String,
-                    bool,
-                    String,
-                )| {
+                |_, (from, to, keep_trailing_slash, sep): (String, String, bool, String)| {
                     let sep = sep.chars().next().unwrap_or(path::SEP);
                     Ok(path::relative(&from, &to, keep_trailing_slash, sep))
                 },
@@ -114,12 +118,7 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
             "resolve",
             f(
                 lua,
-                |_, (from, to, keep_trailing_slash, sep): (
-                    String,
-                    String,
-                    bool,
-                    String,
-                )| {
+                |_, (from, to, keep_trailing_slash, sep): (String, String, bool, String)| {
                     let sep = sep.chars().next().unwrap_or(path::SEP);
                     Ok(path::resolve(&from, &to, keep_trailing_slash, sep))
                 },
@@ -151,10 +150,13 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
         ),
         (
             "split",
-            f(lua, |lua, (filepath, keep_trailing_slash): (String, bool)| {
-                let segments = path::split(&filepath, keep_trailing_slash);
-                segments.into_lua(lua)
-            })?,
+            f(
+                lua,
+                |lua, (filepath, keep_trailing_slash): (String, bool)| {
+                    let segments = path::split(&filepath, keep_trailing_slash);
+                    segments.into_lua(lua)
+                },
+            )?,
         ),
         (
             "is_exist",
@@ -177,9 +179,12 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
         ),
         (
             "locate_nearest",
-            f(lua, |_, (start_dirpath, filenames): (String, Vec<String>)| {
-                Ok(path::locate_nearest(&start_dirpath, &filenames))
-            })?,
+            f(
+                lua,
+                |_, (start_dirpath, filenames): (String, Vec<String>)| {
+                    Ok(path::locate_nearest(&start_dirpath, &filenames))
+                },
+            )?,
         ),
     ])?;
     table.set("SEP", path::SEP.to_string())?;

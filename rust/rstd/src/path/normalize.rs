@@ -22,6 +22,7 @@ pub(crate) fn normalize_splits(pieces: &[String], sep: char) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::super::SEP;
     use super::normalize;
 
     #[test]
@@ -79,13 +80,13 @@ mod tests {
         {
             assert_eq!(normalize("\\foo/bar", false, '\\'), "\\foo\\bar");
             assert_eq!(normalize("/foo/bar", false, '\\'), "\\foo\\bar");
-            assert_eq!(normalize("/foo/bar", false, crate::path::SEP), "\\foo\\bar");
+            assert_eq!(normalize("/foo/bar", false, SEP), "\\foo\\bar");
         }
 
         #[cfg(not(windows))]
         {
             assert_eq!(normalize("foo/bar", false, '\\'), "foo\\bar");
-            assert_eq!(normalize("foo/bar", false, crate::path::SEP), "foo/bar");
+            assert_eq!(normalize("foo/bar", false, SEP), "foo/bar");
         }
     }
 }

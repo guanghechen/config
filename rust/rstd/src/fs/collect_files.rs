@@ -1,6 +1,8 @@
-use crate::types::fs::{IFsCollectFilesError, IFsCollectFilesResult};
+use crate::types::fs::IFsCollectFilesError;
+use crate::types::fs::IFsCollectFilesResult;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::path::PathBuf;
 
 pub fn collect_files(
     dirpath: &str,

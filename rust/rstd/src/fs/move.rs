@@ -1,4 +1,5 @@
-use crate::types::fs::{IFsMoveError, IFsMoveParams};
+use crate::types::fs::IFsMoveError;
+use crate::types::fs::IFsMoveParams;
 use std::fs;
 use std::path::Path;
 

@@ -1,7 +1,7 @@
+use super::search_in_lines::ISearchInLinesLineMatch;
 use mlua::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
-use super::search_in_lines::ISearchInLinesLineMatch;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ITextMatch {

@@ -1,4 +1,5 @@
-use crate::types::{ISearchInLinesRegexLineMatch, ISearchInLinesRegexMatchPoint};
+use crate::types::ISearchInLinesRegexLineMatch;
+use crate::types::ISearchInLinesRegexMatchPoint;
 use regex::Regex;
 
 /// Find the line number for a given byte position using binary search

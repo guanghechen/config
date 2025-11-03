@@ -1,8 +1,12 @@
-use crate::search::{search_in_lines_literal, search_in_lines_regex};
-use crate::types::{
-    ISearchInLinesLineMatch, ISearchInLinesMatchPoint, ISearchTextResult, ITextMatch,
-};
-use super::text_utils::{build_preview_string, compute_line_offsets, locate_line};
+use super::search_in_lines_literal::search_in_lines_literal;
+use super::search_in_lines_regex::search_in_lines_regex;
+use super::text_utils::build_preview_string;
+use super::text_utils::compute_line_offsets;
+use super::text_utils::locate_line;
+use crate::types::ISearchInLinesLineMatch;
+use crate::types::ISearchInLinesMatchPoint;
+use crate::types::ISearchTextResult;
+use crate::types::ITextMatch;
 use std::time::Instant;
 
 /// Unified search function that combines literal and regex search
@@ -216,3 +220,4 @@ mod tests {
         assert_eq!(m.sy, 16, "preview offset should reflect last match column");
     }
 }
+

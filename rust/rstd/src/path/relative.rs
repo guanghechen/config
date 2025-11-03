@@ -98,9 +98,9 @@ pub fn relative(from: &str, to: &str, keep_tailing_slash: bool, sep: char) -> St
 
 #[cfg(test)]
 mod tests {
+    use super::super::get_cwd;
+    use super::super::set_cwd;
     use super::relative;
-    use crate::path::get_cwd;
-    use crate::path::set_cwd;
 
     #[test]
     fn t_relative_cases() {

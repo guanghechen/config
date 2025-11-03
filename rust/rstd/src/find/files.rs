@@ -1,9 +1,13 @@
 use crate::string;
-use crate::types::{IFindFilesFailedResult, IFindFilesOptions, IFindFilesSucceedResult};
-use globset::{Glob, GlobSet};
+use crate::types::IFindFilesFailedResult;
+use crate::types::IFindFilesOptions;
+use crate::types::IFindFilesSucceedResult;
+use globset::Glob;
+use globset::GlobSet;
 use ignore::WalkBuilder;
 use regex::RegexBuilder;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::path::PathBuf;
 
 fn normalize_root(base: &Path, entry: &str) -> PathBuf {
     let path = Path::new(entry);

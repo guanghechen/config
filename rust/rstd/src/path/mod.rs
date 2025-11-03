@@ -1,6 +1,6 @@
 mod basename;
-mod dirname;
 mod cwd;
+mod dirname;
 mod extname;
 mod is_absolute;
 mod is_descendant;
@@ -15,8 +15,8 @@ mod sep;
 mod split;
 
 pub use basename::*;
-pub use dirname::*;
 pub use cwd::*;
+pub use dirname::*;
 pub use extname::*;
 pub use is_absolute::*;
 pub use is_descendant::*;

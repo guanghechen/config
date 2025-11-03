@@ -1,4 +1,4 @@
-use crate::search::search_in_lines;
+use super::search_in_lines::search_in_lines;
 use crate::types::ISearchTextResult;
 
 pub fn search_in_text(
@@ -125,3 +125,4 @@ mod tests {
         assert_eq!(m.sy, 16);
     }
 }
+

@@ -41,8 +41,8 @@ pub fn dirname(filepath: &str, keep_tailing_slash: bool, sep: char) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::super::SEP;
     use super::dirname;
-    use crate::path::SEP;
 
     #[test]
     fn t_dirname_cases() {

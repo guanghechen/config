@@ -5,13 +5,22 @@ mod search_in_lines_regex;
 mod search_in_text;
 mod text_utils;
 
-pub use crate::types::{
-    IFileMatch, ISearchFailedResult, ISearchFileResult, ISearchInFilesOptions, ISearchInLinesLineMatch,
-    ISearchInLinesLiteralLineMatch, ISearchInLinesLiteralMatchPoint, ISearchInLinesLiteralOptions,
-    ISearchInLinesMatchPoint, ISearchInLinesOptions, ISearchInLinesRegexLineMatch,
-    ISearchInLinesRegexMatchPoint, ISearchInLinesRegexOptions, ISearchInTextOptions, ISearchTextResult,
-    ITextMatch,
-};
+pub use crate::types::IFileMatch;
+pub use crate::types::ISearchFailedResult;
+pub use crate::types::ISearchFileResult;
+pub use crate::types::ISearchInFilesOptions;
+pub use crate::types::ISearchInLinesLineMatch;
+pub use crate::types::ISearchInLinesLiteralLineMatch;
+pub use crate::types::ISearchInLinesLiteralMatchPoint;
+pub use crate::types::ISearchInLinesLiteralOptions;
+pub use crate::types::ISearchInLinesMatchPoint;
+pub use crate::types::ISearchInLinesOptions;
+pub use crate::types::ISearchInLinesRegexLineMatch;
+pub use crate::types::ISearchInLinesRegexMatchPoint;
+pub use crate::types::ISearchInLinesRegexOptions;
+pub use crate::types::ISearchInTextOptions;
+pub use crate::types::ISearchTextResult;
+pub use crate::types::ITextMatch;
 pub use search_in_files::*;
 pub use search_in_lines::*;
 pub use search_in_lines_literal::*;

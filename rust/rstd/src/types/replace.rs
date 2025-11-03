@@ -1,7 +1,8 @@
 use crate::search::ISearchInLinesMatchPoint;
 use crate::types::IMatchLocation;
 use mlua::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 fn expect_table(value: LuaValue, to: &'static str) -> LuaResult<LuaTable> {
     match value {

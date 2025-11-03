@@ -1,6 +1,8 @@
-use super::search_in_lines::{ISearchInLinesLineMatch, ISearchInLinesMatchPoint};
+use super::search_in_lines::ISearchInLinesLineMatch;
+use super::search_in_lines::ISearchInLinesMatchPoint;
 use mlua::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 pub type ISearchInLinesRegexMatchPoint = ISearchInLinesMatchPoint;
 pub type ISearchInLinesRegexLineMatch = ISearchInLinesLineMatch;

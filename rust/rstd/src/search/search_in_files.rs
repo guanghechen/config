@@ -1,15 +1,27 @@
+use super::text_utils::build_preview_string;
+use super::text_utils::compute_line_offsets;
+use super::text_utils::locate_line;
 use crate::string;
-use crate::types::{IFileMatch, ISearchFailedResult, ISearchFileResult, ISearchInFilesOptions, ITextMatch};
-use super::text_utils::{build_preview_string, compute_line_offsets, locate_line};
-use grep::matcher::Matcher;
-use grep::regex::{RegexMatcher, RegexMatcherBuilder};
-use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
-use ignore::WalkBuilder;
-use ignore::overrides::OverrideBuilder;
-use regex::escape;
+use crate::types::IFileMatch;
+use crate::types::ISearchFailedResult;
+use crate::types::ISearchFileResult;
+use crate::types::ISearchInFilesOptions;
+use crate::types::ITextMatch;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::path::PathBuf;
 use std::time::Instant;
+use grep::matcher::Matcher;
+use grep::regex::RegexMatcher;
+use grep::regex::RegexMatcherBuilder;
+use grep::searcher::BinaryDetection;
+use grep::searcher::Searcher;
+use grep::searcher::SearcherBuilder;
+use grep::searcher::Sink;
+use grep::searcher::SinkMatch;
+use ignore::overrides::OverrideBuilder;
+use ignore::WalkBuilder;
+use regex::escape;
 
 #[derive(Clone)]
 struct MatchRange {
@@ -609,3 +621,5 @@ mod tests {
         assert_eq!(last_match.lx, 5, "last match should be on line 5");
     }
 }
+
+

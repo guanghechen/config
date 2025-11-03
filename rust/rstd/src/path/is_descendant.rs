@@ -39,8 +39,11 @@ pub fn is_descendant(from: &str, to: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use super::super::SEP;
+    use super::super::get_cwd;
+    use super::super::join;
+    use super::super::resolve;
     use super::is_descendant;
-    use crate::path::{get_cwd, join, resolve, SEP};
 
     #[test]
     fn t_is_descendant_cases() {
