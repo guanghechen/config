@@ -409,13 +409,13 @@ function M.new(props)
     toggle_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
-        self:__toggle_node__(nodeuuid, false)
+        self:__toggle_node__(nodeuuid, false, false)
       end
     end,
     toggle_node_recursively = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
-        self:__toggle_node__(nodeuuid, true)
+        self:__toggle_node__(nodeuuid, false, true)
       end
     end,
     toggle_selection = function()
@@ -764,19 +764,26 @@ function M.new(props)
 
   local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
 
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
-    { o_search_pattern, o_flag_foldempty, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_selected, o_flag_viewtype },
-    function()
-      composer:mark_result_flags_dirty()
-    end,
-    true
-  )
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({
+    o_search_pattern,
+    o_flag_foldempty,
+    o_flag_fuzzy,
+    o_flag_regex,
+    o_flag_case_sensitive,
+    o_flag_selected,
+    o_flag_viewtype,
+  }, function()
+    composer:mark_result_flags_dirty()
+  end, true)
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_search_pattern, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive }, function()
-    scheduler_match:schedule()
-  end)
+  observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
+    { o_search_pattern, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive },
+    function()
+      scheduler_match:schedule()
+    end
+  )
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
@@ -1131,9 +1138,10 @@ function M:__retrieve_lnum_parent__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
+---@param open                          boolean
 ---@param recursively                   boolean
 ---@return nil
-function M:__toggle_node__(nodeuuid, recursively)
+function M:__toggle_node__(nodeuuid, open, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type eve.ux.picker.BasicComposer
@@ -1147,6 +1155,10 @@ function M:__toggle_node__(nodeuuid, recursively)
   if nodestate.nodetype == "leaf" and #node.children > 0 then
     treeview:collapse(node.uuid, "toggle", false)
     composer:mark_result_dirty()
+    return
+  end
+
+  if not open then
     return
   end
 
