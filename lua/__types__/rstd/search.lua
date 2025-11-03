@@ -17,31 +17,37 @@ local M = {}
 ---@field public exclude_patterns       string
 ---@field public specified_filepath     string|nil
 
----@class rstd.search.ISearchMatchPoint
----@field public l                      integer
----@field public r                      integer
+---@class rstd.search.ITextMatch
+---@field public lx                     integer
+---@field public ly                     integer
+---@field public cx                     integer
+---@field public cy                     integer
+---@field public ox                     integer
+---@field public oy                     integer
+---@field public s                      string
+---@field public sx                     integer
+---@field public sy                     integer
 
----@class rstd.search.ISearchBlockMatch
----@field public lnum                   integer
----@field public text                   string
----@field public offset                 integer
----@field public matches                rstd.search.ISearchMatchPoint[]
+---@class rstd.search.IFileMatch
+---@field public p                      string
+---@field public matches                rstd.search.ITextMatch[]
 
----@class rstd.search.ISearchFileMatch
----@field public matches                rstd.search.ISearchBlockMatch[]
+---@class rstd.search.ISearchFileResult
+---@field public elapsed_time           integer
+---@field public items                  rstd.search.IFileMatch[]
 
----@class rstd.search.ISearchInFilesSucceedResult
----@field public elapsed_time           string
----@field public items                  table<string, rstd.search.ISearchFileMatch>
----@field public item_orders            string[]|nil
-
----@class rstd.search.ISearchInFilesFailedResult
----@field public elapsed_time           string
+---@class rstd.search.ISearchFailedResult
+---@field public elapsed_time           integer
 ---@field public error                  string
 
+---@class rstd.search.ISearchTextResult
+---@field public elapsed_time           integer
+---@field public matches                rstd.search.ITextMatch[]
+---@field public lines                  rstd.search.ISearchInLinesLineMatch[]
+
 ---@param options                       rstd.search.ISearchInFilesOptions
----@return rstd.search.ISearchInFilesSucceedResult|nil
----@return rstd.search.ISearchInFilesFailedResult|nil
+---@return rstd.search.ISearchFileResult|nil
+---@return rstd.search.ISearchFailedResult|nil
 function M.search_in_files(options) end
 
 ---@alias rstd.search.ISearchInLinesLiteralMatchPoint rstd.search.ISearchInLinesMatchPoint
@@ -54,7 +60,8 @@ function M.search_in_files(options) end
 ---@field public flag_case_sensitive    boolean
 
 ---@param options                       rstd.search.ISearchInLinesLiteralOptions
----@return rstd.search.ISearchInLinesLiteralLineMatch[]
+---@return rstd.search.ISearchTextResult|nil
+---@return string|nil
 function M.search_in_lines_literal(options) end
 
 ---@alias rstd.search.ISearchInLinesRegexMatchPoint rstd.search.ISearchInLinesMatchPoint
@@ -66,7 +73,7 @@ function M.search_in_lines_literal(options) end
 ---@field public flag_case_sensitive    boolean
 
 ---@param options                       rstd.search.ISearchInLinesRegexOptions
----@return rstd.search.ISearchInLinesRegexLineMatch[]|nil
+---@return rstd.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_lines_regex(options) end
 
@@ -87,7 +94,7 @@ function M.search_in_lines_regex(options) end
 ---@field public flag_case_sensitive    boolean
 
 ---@param options                       rstd.search.ISearchInLinesOptions
----@return rstd.search.ISearchInLinesLineMatch[]|nil
+---@return rstd.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_lines(options) end
 
@@ -99,7 +106,7 @@ function M.search_in_lines(options) end
 ---@field public flag_case_sensitive    boolean
 
 ---@param options                       rstd.search.ISearchInTextOptions
----@return rstd.search.ISearchInLinesLineMatch[]|nil
+---@return rstd.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_text(options) end
 

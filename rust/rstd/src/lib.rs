@@ -591,24 +591,13 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
         ),
         (
             "search_in_lines_literal",
-            f(lua, |lua, options: LuaValue| -> LuaResult<LuaValue> {
+            f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
                 let options = search::ISearchInLinesLiteralOptions::from_lua(options, lua)?;
-                let result = search::search_in_lines_literal(
+                match search::search_in_lines(
                     &options.pattern,
                     &options.lines,
                     options.flag_fuzzy,
-                    options.flag_case_sensitive,
-                );
-                result.into_lua(lua)
-            })?,
-        ),
-        (
-            "search_in_lines_regex",
-            f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
-                let options = search::ISearchInLinesRegexOptions::from_lua(options, lua)?;
-                match search::search_in_lines_regex(
-                    &options.pattern,
-                    &options.lines,
+                    false,
                     options.flag_case_sensitive,
                 ) {
                     Ok(result) => {
@@ -616,7 +605,29 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
                         Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
                     }
                     Err(error) => {
-                        let err = error.into_lua(lua)?;
+                        let err = LuaValue::String(lua.create_string(&error)?);
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
+                    }
+                }
+            })?,
+        ),
+        (
+            "search_in_lines_regex",
+            f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
+                let options = search::ISearchInLinesRegexOptions::from_lua(options, lua)?;
+                match search::search_in_lines(
+                    &options.pattern,
+                    &options.lines,
+                    false,
+                    true,
+                    options.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = result.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => {
+                        let err = LuaValue::String(lua.create_string(&error)?);
                         Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
                     }
                 }

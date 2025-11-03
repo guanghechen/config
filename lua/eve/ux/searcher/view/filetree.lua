@@ -25,7 +25,7 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 
 ---@class eve.ux.searcher.view.filetree.IFileNodeState : eve.ux.view.tree.ILeafNodeState
 ---@field public locations              eve.ux.searcher.view.filetree.ILeafLocationState|nil
----@field public filematch              rstd.search.ISearchFileMatch|nil
+---@field public filematch              eve.ux.searcher.view.filetree.IResolvedFileMatch|nil
 
 ---@class eve.ux.searcher.view.filetree.ILeafLocationState : eve.ux.view.tree.ILeafLocationState
 ---@field public lnum                   integer
@@ -35,6 +35,11 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 ---@field public highlights             ?std.t.IHighlightInline[]
 ---
 ---@field public match                  eve.ux.searcher.view.filetree.ISearchedItem
+
+---@class eve.ux.searcher.view.filetree.IResolvedFileMatch
+---@field public filepath               string
+---@field public relative               string
+---@field public matches                rstd.search.ITextMatch[]
 
 ---@class eve.ux.searcher.view.filetree.IListviewRendererContext : eve.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               std.collection.filetree.INode
@@ -67,7 +72,7 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 
 ---@class eve.ux.searcher.view.filetree.ISearchResult
 ---@field public items                  eve.ux.searcher.view.filetree.ISearchedItem[]
----@field public filematch_map          table<string, rstd.search.ISearchFileMatch>
+---@field public filematch_map          table<string, eve.ux.searcher.view.filetree.IResolvedFileMatch>
 
 ---@class eve.ux.searcher.view.filetree.ISearchedPreviewItem
 ---@field public offset                 integer
@@ -86,27 +91,13 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 ---
 ---@field public preview                eve.ux.searcher.view.filetree.ISearchedPreviewItem
 
-----------------------------------------------------------------------------------------------------
+local function decode_preview_text(text)
+  return text:gsub(eve.icon.listchars.eol, "\n")
+end
 
----@param lwidths                       integer[]
----@param l                             integer
----@param r                             integer
----@return integer
----@return integer
----@return integer
-local function calc_same_line_pos(lwidths, l, r)
-  local offset = 0 ---@type integer
-  local lwidth = lwidths[1] + 1 ---@type integer
-  local N, lnum = #lwidths, 1 ---@type integer, integer
-  while offset + lwidth <= l and lnum < N do
-    lnum = lnum + 1
-    offset = offset + lwidth
-    lwidth = lwidths[lnum] + 1
-  end
-
-  local col = l - offset ---@type integer
-  local col_end = r - offset ---@type integer
-  return lnum, col, col_end < lwidth and col_end or lwidth
+local function encode_preview_text(text)
+  local sanitized = text:gsub("\r\n", "\n"):gsub("\r", "\n")
+  return sanitized:gsub("\n", eve.icon.listchars.eol)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -230,10 +221,9 @@ function M:search(params)
 
   local cwd = params.cwd ---@type string
   local specified_filepath = params.specified_filepath ---@type string|nil
-  local search_pattern = flag_case_sensitive and params.search_pattern or params.search_pattern:lower() ---@type string
+  local search_pattern = params.search_pattern ---@type string
   local replace_pattern = params.replace_pattern ---@type string|nil
 
-  ---@type rstd.search.ISearchInFilesSucceedResult|nil
   local results, err = rstd.search.search_in_files({
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,
@@ -246,7 +236,7 @@ function M:search(params)
     include_patterns = table.concat(includes, ","),
     exclude_patterns = table.concat(excludes, ","),
     specified_filepath = specified_filepath,
-  })
+  }) ---@type rstd.search.ISearchFileResult|nil, rstd.search.ISearchFailedResult|nil
 
   if results == nil or results.items == nil then
     std.reporter.error({
@@ -267,162 +257,133 @@ function M:search(params)
         specified_filepath = specified_filepath,
         search_pattern = search_pattern,
         replacement = replace_pattern,
-        error = err ~= nil and err.error or nil,
+        error = err and err.error or err,
       },
     })
     return
   end
 
-  local items = {} ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = {} ---@type table<string, rstd.search.ISearchFileMatch>
+  local has_replace_preview = flag_replace and replace_pattern ~= nil and replace_pattern ~= ""
+  local search_highlight = has_replace_preview and "f_ss_search" or "f_ss_matches"
+  local eol_icon = eve.icon.listchars.eol ---@type string
 
-  local normalized_items = {} ---@type table<string, rstd.search.ISearchFileMatch>
-  local item_orders = {} ---@type string[]
-
-  for filepath, filematch in pairs(results.items) do
-    local relpath = std.path.relative(cwd, filepath, "/") ---@type string
-    table.insert(item_orders, relpath)
-    normalized_items[relpath] = filematch
-
-    for _, block_match in ipairs(filematch.matches) do
-      local text = block_match.text ---@type string
-      local lwidths = rstd.string.calc_linewidths(text) ---@type integer[]
-      local lines = rstd.string.parse_lines(text, lwidths) ---@type string[]
-      block_match.lines = lines
-      block_match.lwidths = lwidths
+  local function resolve_filepath(relpath)
+    if relpath == nil or relpath == "" then
+      return cwd
     end
+    if std.path.is_absolute(relpath) then
+      return relpath
+    end
+    return std.path.join(cwd, relpath)
   end
 
-  table.sort(item_orders)
-  results.items = normalized_items
-  results.item_orders = item_orders
+  local items = {} ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
+  local filematch_map = {} ---@type table<string, eve.ux.searcher.view.filetree.IResolvedFileMatch>
 
-  for _, relpath in ipairs(results.item_orders) do
-    local filematch = results.items[relpath] ---@type rstd.search.ISearchFileMatch
-    local filepath = std.path.join(cwd, relpath) ---@type string
+  for _, filematch in ipairs(results.items) do
+    local relpath = filematch.p or "" ---@type string
+    local filepath = resolve_filepath(relpath) ---@type string
     local uuid = std.Filetree.uuid(filepath) ---@type string
 
-    filematch_map[uuid] = filematch ---@type rstd.search.ISearchFileMatch
+    filematch_map[uuid] = {
+      filepath = filepath,
+      relative = relpath,
+      matches = filematch.matches or {},
+    }
 
-    if flag_replace and replace_pattern ~= nil then
-      local lnum_delta = 0 ---@type integer
-      for _, block_match in ipairs(filematch.matches) do
-        local preview_result, preview_error = rstd.replace.replace_text_preview_advance({
-          text = block_match.text,
+    for _, match in ipairs(filematch.matches or {}) do
+      local preview_text = match.s or "" ---@type string
+      local sx = match.sx or 0 ---@type integer
+      local sy = match.sy or sx ---@type integer
+
+      local text ---@type string
+      local highlights ---@type std.t.IHighlightInline[]
+
+      if has_replace_preview then
+        local prefix = preview_text:sub(1, sy + 1) ---@type string
+        local suffix = preview_text:sub(sy + 2) ---@type string
+        local match_chunk = preview_text:sub(sx + 1, sy + 1) ---@type string
+        local match_real = decode_preview_text(match_chunk) ---@type string
+
+        local replacement_real, preview_err = rstd.replace.replace_text_preview({
+          text = match_real,
           search_pattern = search_pattern,
           replace_pattern = replace_pattern,
-          keep_search_pieces = true,
+          keep_search_pieces = false,
           flag_regex = flag_regex,
           flag_case_sensitive = flag_case_sensitive,
         })
 
-        if preview_result == nil then
-          if preview_error ~= nil then
+        if type(replacement_real) ~= "string" then
+          if preview_err ~= nil then
             std.reporter.error({
               from = __module_name__,
-              subject = "replace_text_preview_advance",
-              message = preview_error,
+              subject = "replace_text_preview",
+              message = preview_err,
+              details = {
+                filepath = filepath,
+                offset = match.ox,
+              },
             })
           end
-          preview_result = { text = block_match.text, matches = {} }
+          replacement_real = match_real
         end
 
-        local preview_text = preview_result.text ---@type string
-        local r_lwidths = rstd.string.calc_linewidths(preview_text) ---@type integer[]
-        local r_lines = rstd.string.parse_lines(preview_text, r_lwidths) ---@type string[]
-        local r_matches = preview_result.matches ---@type std.t.IMatchPoint[]
-        local s_lines = block_match.lines ---@type string[]
-        local s_lwidths = block_match.lwidths ---@type integer[]
-        local s_matches = block_match.matches ---@type std.t.IMatchPoint[]
-        for i = 1, #s_matches, 1 do
-          local s_match = s_matches[i] ---@type std.t.IMatchPoint
-          local k, col, col_end = calc_same_line_pos(s_lwidths, s_match.l, s_match.r)
-          local line = s_lines[k] ---@type string
-          local lnum = block_match.lnum + k - 1 ---@type integer
+        local replacement_display = encode_preview_text(replacement_real) ---@type string
+        text = prefix .. replacement_display .. suffix .. eol_icon
 
-          local search_match = r_matches[i * 2 - 1] ---@type std.t.IMatchPoint
-          local s_k, s_col = calc_same_line_pos(r_lwidths, search_match.l, search_match.r)
-          local s_lnum = block_match.lnum + s_k - 1 + lnum_delta ---@type integer
+        local prefix_len = #prefix ---@type integer
+        local replacement_len = #replacement_display ---@type integer
 
-          local replace_match = r_matches[i * 2] ---@type std.t.IMatchPoint
-          local r_k, r_col, r_col_end = calc_same_line_pos(r_lwidths, replace_match.l, replace_match.r)
-          local r_line = r_lines[r_k] ---@type string
+        highlights = {
+          { coll = sx, colr = sy + 1, hlname = search_highlight },
+        }
 
-          local text ---@type string
-          local highlights ---@type std.t.IHighlightInline[]
-
-          if s_k == r_k then
-            text = string.sub(line, 1, col_end)
-              .. string.sub(r_line, r_col + 1, r_col_end)
-              .. string.sub(line, col_end + 1)
-              .. eve.icon.listchars.eol
-
-            highlights = {
-              { coll = col, colr = col_end, hlname = "f_ss_search" },
-              { coll = col_end, colr = col_end + (r_col_end - r_col), hlname = "f_ss_replace" },
-            }
-          else
-            text = line .. eve.icon.listchars.eol
-            highlights = {
-              { coll = col, colr = col_end, hlname = "f_ss_matches" },
-            }
-          end
-
-          ---@type eve.ux.searcher.view.filetree.ISearchedItem
-          local item = {
-            filepath = filepath,
-            uuid = uuid,
-            lnum = lnum,
-            col = col,
-            text = text,
-            highlights = highlights,
-            preview = {
-              offset = block_match.offset + s_match.l,
-              lnum = s_lnum,
-              col = s_col,
-              content = s_lines[s_k],
-            },
+        if replacement_len > 0 then
+          highlights[#highlights + 1] = {
+            coll = prefix_len,
+            colr = prefix_len + replacement_len,
+            hlname = "f_ss_replace",
           }
-          items[#items + 1] = item
         end
-
-        lnum_delta = lnum_delta + #r_lwidths - #s_lwidths
+      else
+        text = preview_text .. eol_icon
+        highlights = {
+          { coll = sx, colr = sy + 1, hlname = search_highlight },
+        }
       end
-    else
-      for _, block_match in ipairs(filematch.matches) do
-        local lines = block_match.lines ---@type string[]
-        local lwidths = block_match.lwidths ---@type integer[]
-        for _, s_match in ipairs(block_match.matches) do
-          local k, col, col_end = calc_same_line_pos(lwidths, s_match.l, s_match.r)
-          local lnum = block_match.lnum + k - 1 ---@type integer
 
-          local text = lines[k] .. eve.icon.listchars.eol ---@type string
-
-          ---@type std.t.IHighlightInline[]
-          local highlights = {
-            { coll = col, colr = col_end, hlname = "f_ss_matches" },
-          }
-
-          ---@type eve.ux.searcher.view.filetree.ISearchedItem
-          local item = {
-            filepath = filepath,
-            uuid = uuid,
-            lnum = lnum,
-            col = col,
-            text = text,
-            highlights = highlights,
-            preview = {
-              offset = block_match.offset + s_match.l,
-              lnum = lnum,
-              col = col,
-              content = lines[k],
-            },
-          }
-          items[#items + 1] = item
-        end
-      end
+      ---@type eve.ux.searcher.view.filetree.ISearchedItem
+      local item = {
+        filepath = filepath,
+        uuid = uuid,
+        lnum = match.lx,
+        col = match.cx,
+        text = text,
+        highlights = highlights,
+        preview = {
+          offset = match.ox,
+          lnum = match.lx,
+          col = match.cx,
+          content = match.s,
+        },
+      }
+      items[#items + 1] = item
     end
   end
+
+  table.sort(items, function(a, b)
+    if a.filepath ~= b.filepath then
+      return a.filepath < b.filepath
+    end
+    if a.lnum ~= b.lnum then
+      return a.lnum < b.lnum
+    end
+    if a.col ~= b.col then
+      return a.col < b.col
+    end
+    return a.preview.offset < b.preview.offset
+  end)
 
   ---@type eve.ux.searcher.view.filetree.ISearchResult
   local result = {

@@ -80,56 +80,56 @@ end
 ---@param bufnr                         integer
 ---@param namespace                     integer
 ---@param hlgroup                       string
----@param lnum                          integer
----@param point                         std.t.IMatchPoint
+---@param match                         rstd.search.ITextMatch
 ---@return nil
-local function highlight_match_point(bufnr, namespace, hlgroup, lnum, point)
+local function highlight_text_match(bufnr, namespace, hlgroup, match)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
-  -- Get the current line content to check if match extends beyond it
-  local current_line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1] or ""
-  local line_length = #current_line
-  local row = lnum - 1 -- Convert to 0-based indexing
-
-  -- Single line match - point.r is within current line bounds
-  if point.r <= line_length then
-    vim.hl.range(bufnr, namespace, hlgroup, { row, point.l }, { row, point.r })
+  local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+  if line_count == 0 then
     return
   end
 
-  -- Multiline match - need to handle across multiple lines
-  local remaining_chars = point.r - point.l -- Total characters to highlight
-  local current_pos = point.l -- Current position within the match
-  local current_row = row -- Current line being processed
-
-  while remaining_chars > 0 and current_row < vim.api.nvim_buf_line_count(bufnr) do
-    -- Get current line content
-    local line = vim.api.nvim_buf_get_lines(bufnr, current_row, current_row + 1, false)[1] or ""
-    local line_len = #line
-
-    -- Calculate start position on current line
-    local line_start = current_pos
-    if current_row > row then
-      line_start = 0 -- Start from beginning of subsequent lines
-    end
-
-    -- Calculate end position on current line
-    local chars_available = line_len - line_start
-    local chars_to_highlight = math.min(remaining_chars, chars_available)
-    local line_end = line_start + chars_to_highlight
-
-    -- Apply highlighting to current line segment
-    if chars_to_highlight > 0 then
-      vim.hl.range(bufnr, namespace, hlgroup, { current_row, line_start }, { current_row, line_end })
-    end
-
-    -- Update for next iteration
-    remaining_chars = remaining_chars - chars_to_highlight - 1 -- -1 for newline character
-    current_pos = 0 -- Reset position for next line
-    current_row = current_row + 1
+  local start_row = math.max(0, (match.lx or 1) - 1) ---@type integer
+  local end_row = math.max(0, (match.ly or match.lx or 1) - 1) ---@type integer
+  if start_row >= line_count then
+    return
   end
+  if end_row >= line_count then
+    end_row = line_count - 1
+  end
+
+  local function line_length(row)
+    if row < 0 or row >= line_count then
+      return 0
+    end
+    local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
+    return #line
+  end
+
+  local function highlight_range(row, col_start, col_end)
+    if row < 0 or row >= line_count then
+      return
+    end
+    col_start = math.max(0, col_start)
+    col_end = math.max(col_start, col_end)
+    vim.hl.range(bufnr, namespace, hlgroup, { row, col_start }, { row, col_end })
+  end
+
+  if start_row == end_row then
+    highlight_range(start_row, match.cx or 0, (match.cy or (match.cx or 0)) + 1)
+    return
+  end
+
+  highlight_range(start_row, match.cx or 0, line_length(start_row))
+
+  for row = start_row + 1, end_row - 1 do
+    highlight_range(row, 0, line_length(row))
+  end
+
+  highlight_range(end_row, 0, math.min((match.cy or 0) + 1, line_length(end_row)))
 end
 
 ---@param bufnr                         integer
@@ -167,7 +167,7 @@ end
 ---@field protected _bufnr_replacer     integer|nil
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
----@field protected _matches            rstd.search.ISearchInLinesLineMatch[]|nil
+---@field protected _matches            rstd.search.ITextMatch[]|nil
 ---@field protected _scheduler_search   std.collection.Scheduler
 ---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     std.t.IKeymap[]
@@ -383,7 +383,7 @@ end
 
 ---@return nil
 function M:goto_prev_match()
-  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
   if matches == nil then
     return
   end
@@ -405,16 +405,14 @@ function M:goto_prev_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = std.fn.navigate_circular(index_current, -1, N) ---@type integer
-  local match_prev = matches[index] ---@type rstd.search.ISearchInLinesLineMatch
-  if match_prev and match_prev.matches and #match_prev.matches > 0 then
+  local match_prev = matches[index] ---@type rstd.search.ITextMatch
+  if match_prev then
     self.o_match_index:next(index)
-    pcall(vim.api.nvim_win_set_cursor, winnr, { match_prev.lnum, match_prev.matches[1].l })
+    pcall(vim.api.nvim_win_set_cursor, winnr, { match_prev.lx or 1, match_prev.cx or 0 })
 
     -- Update current match highlight
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
-    for _, point in ipairs(match_prev.matches) do
-      highlight_match_point(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_prev.lnum, point)
-    end
+    highlight_text_match(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_prev)
 
     -- Update replace preview for the new current match
     self:__update_replace_preview__()
@@ -423,7 +421,7 @@ end
 
 ---@return nil
 function M:goto_next_match()
-  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
   if matches == nil then
     return
   end
@@ -445,16 +443,16 @@ function M:goto_next_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = std.fn.navigate_circular(index_current, 1, N) ---@type integer
-  local match_next = matches[index] ---@type rstd.search.ISearchInLinesLineMatch
-  if match_next and match_next.matches and #match_next.matches > 0 then
+  local match_next = matches[index] ---@type rstd.search.ITextMatch
+  if match_next then
     self.o_match_index:next(index)
-    pcall(vim.api.nvim_win_set_cursor, winnr, { match_next.lnum, match_next.matches[1].l })
+    pcall(vim.api.nvim_win_set_cursor, winnr, { match_next.lx or 1, match_next.cx or 0 })
 
     -- Update current match highlight
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
-    for _, point in ipairs(match_next.matches) do
-      highlight_match_point(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_next.lnum, point)
-    end
+    highlight_text_match(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_next)
+
+    self:__update_replace_preview__()
   end
 end
 
@@ -485,7 +483,7 @@ function M:replace_current_match()
     return
   end
 
-  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
   if matches == nil or #matches == 0 then
     std.reporter.error({
       from = __module_name__,
@@ -526,20 +524,18 @@ function M:replace_current_match()
     return
   end
 
-  local lines, text = collect_buffer_content(bufnr_source) ---@type string[], string
-  local current_match = matches[current_match_index] ---@type rstd.search.ISearchInLinesLineMatch
-  if current_match == nil or current_match.matches == nil or #current_match.matches == 0 then
+  local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
+  local current_match = matches[current_match_index] ---@type rstd.search.ITextMatch
+  if current_match == nil then
     std.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
-      message = "Current match has no match points",
+      message = "Current match is invalid",
     })
     return
   end
 
-  local match_point = current_match.matches[1] ---@type rstd.search.ISearchInLinesMatchPoint
-  local line_start_offset = self:__calculate_line_start_pos__(lines, current_match.lnum) ---@type integer
-  local match_offset = line_start_offset + match_point.l ---@type integer
+  local match_offset = current_match.ox ---@type integer
 
   local replaced_text, replace_err = rstd.replace.replace_text_preview_by_matches({
     text = text,
@@ -603,7 +599,7 @@ function M:replace_all_matches()
     return
   end
 
-  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
   if matches == nil or #matches == 0 then
     std.reporter.error({
       from = __module_name__,
@@ -634,7 +630,7 @@ function M:replace_all_matches()
     return
   end
 
-  local lines, text = collect_buffer_content(bufnr_source) ---@type string[], string
+  local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
   local replaced_text, replace_err = rstd.replace.replace_text_preview({
     text = text,
     search_pattern = search_pattern,
@@ -1235,7 +1231,7 @@ function M:__search__()
   local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
   local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
 
-  local matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local matches ---@type rstd.search.ITextMatch[]|nil
   local ok_lines, lines = pcall(vim.api.nvim_buf_get_lines, bufnr_source, 0, -1, false)
 
   if not ok_lines then
@@ -1262,7 +1258,7 @@ function M:__search__()
       flag_regex = flag_regex,
       flag_case_sensitive = flag_case_sensitive,
     }
-    local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchInLinesLineMatch[]|nil, string|nil
+    local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchTextResult|nil, string|nil
     if search_err then
       std.reporter.error({
         from = __module_name__,
@@ -1274,7 +1270,7 @@ function M:__search__()
       })
       matches = nil
     else
-      matches = search_result
+      matches = search_result and search_result.matches or nil
     end
   end
 
@@ -1315,23 +1311,19 @@ function M:__search__()
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
   vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
   for _, match in ipairs(matches) do
-    for _, point in ipairs(match.matches) do
-      highlight_match_point(bufnr_source, NSNR_SEARCH, "Search", match.lnum, point)
-    end
+    highlight_text_match(bufnr_source, NSNR_SEARCH, "Search", match)
   end
 
   -- Move cursor to the selected match (either preserved or first) and highlight it
   local target_match = matches[match_index]
-  if target_match and target_match.matches and #target_match.matches > 0 then
+  if target_match then
     local target_win = self._winnr_source ---@type integer|nil
     if target_win ~= nil and vim.api.nvim_win_is_valid(target_win) then
       local line_count = vim.api.nvim_buf_line_count(bufnr_source)
-      if target_match.lnum > 0 and target_match.lnum <= line_count then
-        vim.api.nvim_win_set_cursor(target_win, { target_match.lnum, target_match.matches[1].l })
-        -- Highlight current match
-        for _, point in ipairs(target_match.matches) do
-          highlight_match_point(bufnr_source, NSNR_SEARCH_CURRENT, "IncSearch", target_match.lnum, point)
-        end
+      local target_line = target_match.lx ---@type integer
+      if target_line > 0 and target_line <= line_count then
+        vim.api.nvim_win_set_cursor(target_win, { target_line, target_match.cx or 0 })
+        highlight_text_match(bufnr_source, NSNR_SEARCH_CURRENT, "IncSearch", target_match)
       end
     end
   end
@@ -1382,7 +1374,7 @@ function M:__update_replace_preview__()
     return
   end
 
-  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
   if not matches or #matches == 0 then
     return
   end
@@ -1394,41 +1386,35 @@ function M:__update_replace_preview__()
 
   local text_len = #text ---@type integer
 
-  for _, line_match in ipairs(matches) do
-    if line_match.matches ~= nil and #line_match.matches > 0 then
-      local line_start_offset = self:__calculate_line_start_pos__(lines, line_match.lnum) ---@type integer
-      for _, point in ipairs(line_match.matches) do
-        local start_offset = line_start_offset + point.l ---@type integer
-        local end_offset = line_start_offset + point.r ---@type integer
-        local bounded_end = math.min(end_offset, text_len) ---@type integer
+  for _, text_match in ipairs(matches) do
+    local start_offset = text_match.ox ---@type integer
+    local end_offset = math.min((text_match.oy or text_match.ox) + 1, text_len) ---@type integer
 
-        if bounded_end > start_offset then
-          local matched_text = string.sub(text, start_offset + 1, bounded_end) ---@type string
-          local replacement_text, preview_err = rstd.replace.replace_text_preview({
-            text = matched_text,
-            search_pattern = search_pattern,
-            replace_pattern = replace_pattern,
-            keep_search_pieces = false,
-            flag_regex = flag_regex,
-            flag_case_sensitive = flag_case_sensitive,
-          })
+    if end_offset > start_offset then
+      local matched_text = string.sub(text, start_offset + 1, end_offset) ---@type string
+      local replacement_text, preview_err = rstd.replace.replace_text_preview({
+        text = matched_text,
+        search_pattern = search_pattern,
+        replace_pattern = replace_pattern,
+        keep_search_pieces = false,
+        flag_regex = flag_regex,
+        flag_case_sensitive = flag_case_sensitive,
+      })
 
-          if replacement_text == nil then
-            std.reporter.error({
-              from = __module_name__,
-              subject = "Replace Preview",
-              message = preview_err or "Failed to compute replacement preview",
-            })
-            return
-          end
-
-          replacement_matches[#replacement_matches + 1] = {
-            l = start_offset,
-            r = bounded_end,
-            text = replacement_text,
-          }
-        end
+      if replacement_text == nil then
+        std.reporter.error({
+          from = __module_name__,
+          subject = "Replace Preview",
+          message = preview_err or "Failed to compute replacement preview",
+        })
+        return
       end
+
+      replacement_matches[#replacement_matches + 1] = {
+        l = start_offset,
+        r = end_offset,
+        text = replacement_text,
+      }
     end
   end
 
@@ -1481,25 +1467,18 @@ end
 ---@return integer|nil
 function M:__get_current_match_offset__(lines)
   local current_match_index = self.o_match_index:snapshot() ---@type integer
-  local matches = self._matches ---@type rstd.search.ISearchInLinesLineMatch[]|nil
+  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
 
   if not matches or current_match_index <= 0 or current_match_index > #matches then
     return nil
   end
 
-  local current_line_match = matches[current_match_index] ---@type rstd.search.ISearchInLinesLineMatch
-  if not current_line_match or not current_line_match.matches or #current_line_match.matches == 0 then
+  local current_match = matches[current_match_index]
+  if not current_match then
     return nil
   end
 
-  local line_index = current_line_match.lnum - 1
-  local line_start_offset = 0
-  for i = 0, line_index - 1 do
-    if i < #lines then
-      line_start_offset = line_start_offset + #lines[i + 1] + 1
-    end
-  end
-  return line_start_offset + current_line_match.matches[1].l
+  return current_match.ox
 end
 
 ---@protected

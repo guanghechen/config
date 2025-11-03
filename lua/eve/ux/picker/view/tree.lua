@@ -236,7 +236,7 @@ function M:match(params)
     flag_regex = regex,
     flag_case_sensitive = case_sensitive,
   }
-  local oxi_matches, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchInLinesLineMatch[]|nil, string|nil
+  local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchTextResult|nil, string|nil
   if search_err then
     std.reporter.error({
       from = __module_name__,
@@ -246,23 +246,31 @@ function M:match(params)
         params = search_params,
       },
     })
-    oxi_matches = nil
+    search_result = nil
   end
-  if oxi_matches ~= nil then
-    for _, oxi_match in ipairs(oxi_matches) do
-      local lnum = oxi_match.lnum ---@type integer
+  if search_result ~= nil and search_result.lines ~= nil then
+    local line_matches = search_result.lines ---@type rstd.search.ISearchInLinesLineMatch[]
+    table.sort(line_matches, function(a, b)
+      if a.lnum == b.lnum then
+        return a.score > b.score
+      end
+      return a.lnum < b.lnum
+    end)
+
+    for _, line_match in ipairs(line_matches) do
+      local lnum = line_match.lnum ---@type integer
       local uuid = uuids[lnum] ---@type string
-      local matches = oxi_match.matches ---@type rstd.search.ISearchInLinesMatchPoint[]
+      local matches = line_match.matches ---@type std.t.IMatchPoint[]
       local state = statemap[uuid]
       state.tick_matched = tick_matched ---@type integer
-      state.cache_match = { score = oxi_match.score, matches = matches } ---@type eve.ux.picker.view.tree.INodeMatchResultCache
+      state.cache_match = { score = line_match.score, matches = matches } ---@type eve.ux.picker.view.tree.INodeMatchResultCache
     end
 
-    local N = #oxi_matches ---@type integer
+    local N = #line_matches ---@type integer
     if N < #uuids then
       for index = 1, N, 1 do
-        local oxi_match = oxi_matches[index] ---@type rstd.search.ISearchInLinesLineMatch
-        local lnum = oxi_match.lnum ---@type integer
+        local line_match = line_matches[index]
+        local lnum = line_match.lnum ---@type integer
         uuids[index] = uuids[lnum] ---@type string
       end
       std.table.truncate_inline(uuids, N)

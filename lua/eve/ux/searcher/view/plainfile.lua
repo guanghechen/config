@@ -8,7 +8,7 @@ local __module_name__ = "eve.ux.searcher.view.plainfile" ---@type string
 ---@field public replace_pattern        std.collection.IObservable
 ---
 ---@field public filepath               string
----@field public filematch              rstd.search.ISearchFileMatch|nil
+---@field public filematch              eve.ux.searcher.view.filetree.IResolvedFileMatch|nil
 ---@field public offset_current         integer
 ---@field public match_offsets          integer[]
 
@@ -174,39 +174,31 @@ function M:calc_preview_data(context)
       end
     end
   else
-    lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+    lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
     highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
 
     if context.filematch ~= nil then
-      for _, block_match in ipairs(context.filematch.matches) do
-        local lwidths = block_match.lwidths ---@type integer[]
-        local lnum0 = block_match.lnum ---@type integer
+      for _, match in ipairs(context.filematch.matches) do
+        if vim.list_contains(match_offsets, match.ox) then
+          local start_line = match.lx ---@type integer
+          local end_line = match.ly ---@type integer
 
-        local k = 1 ---@type integer
-        local offset = 0 ---@type integer
-        local lwidth = lwidths[1] + 1 ---@type integer
-        for _, search_match in ipairs(block_match.matches) do
-          local match_offset = block_match.offset + search_match.l ---@type integer
-          if vim.list_contains(match_offsets, match_offset) then
-            local hlname = "f_sr_match" ---@type string
+          for lnum = start_line, end_line, 1 do
+            local line_text = lines[lnum] or "" ---@type string
+            local line_len = #line_text ---@type integer
+            local col_start = (lnum == start_line) and match.cx or 0 ---@type integer
+            local col_end = (lnum == end_line) and (match.cy + 1) or line_len ---@type integer
 
-            local l = search_match.l ---@type integer
-            local r = search_match.r ---@type integer
-            while l < r do
-              while l >= offset + lwidth and k < #lwidths do
-                k = k + 1
-                offset = offset + lwidth
-                lwidth = lwidths[k] + 1
-              end
+            col_start = math.max(0, math.min(col_start, line_len))
+            col_end = math.max(col_start, math.min(col_end, line_len))
 
-              local lnum = lnum0 + k - 1 ---@type integer
-              local col = l - offset ---@type integer
-              local col_end = math.min(lwidth, r - offset) ---@type integer
-              l = offset + lwidth ---@type integer
-
-              highlights[#highlights + 1] =
-                { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
-            end
+            highlights[#highlights + 1] = {
+              offset = match.ox,
+              lnum = lnum,
+              coll = col_start,
+              colr = col_end,
+              hlname = "f_sr_match",
+            }
           end
         end
       end

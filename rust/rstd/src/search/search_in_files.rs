@@ -1,48 +1,113 @@
 use crate::string;
-use crate::types::{
-    ISearchBlockMatch, ISearchFileMatch, ISearchInFilesFailedResult, ISearchInFilesOptions,
-    ISearchInFilesSucceedResult, ISearchMatchPoint,
-};
+use crate::types::{IFileMatch, ISearchFailedResult, ISearchFileResult, ISearchInFilesOptions, ITextMatch};
+use super::text_utils::{build_preview_string, compute_line_offsets, locate_line};
 use grep::matcher::Matcher;
 use grep::regex::{RegexMatcher, RegexMatcherBuilder};
 use grep::searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkMatch};
 use ignore::WalkBuilder;
 use ignore::overrides::OverrideBuilder;
 use regex::escape;
-use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
-fn format_elapsed(duration: Duration) -> String {
-    format!("{:.3}s", duration.as_secs_f32())
+#[derive(Clone)]
+struct MatchRange {
+    start: usize,
+    end: usize,
 }
 
-fn trim_trailing_line_terminators(text: &mut String, match_points: &[ISearchMatchPoint]) {
-    let max_match_end = match_points.iter().map(|point| point.r).max().unwrap_or(0);
-    let mut end = text.len();
-    let bytes = text.as_bytes();
+struct LineMatch {
+    line_number: u64,
+    offset: usize,
+    text: Vec<u8>,
+    matches: Vec<MatchRange>,
+}
 
-    while end > max_match_end {
-        if end == 0 {
-            break;
-        }
-        let byte = bytes[end - 1];
-        if byte == b'\n' {
-            end -= 1;
-            if end > max_match_end && end > 0 && bytes[end - 1] == b'\r' {
-                end -= 1;
-            }
-        } else if byte == b'\r' {
-            end -= 1;
-        } else {
-            break;
-        }
+fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
+    if line.text.is_empty() {
+        return Vec::new();
     }
 
-    if end < text.len() {
-        text.truncate(end);
+    let offsets = compute_line_offsets(&line.text);
+    if offsets.len() < 2 {
+        return Vec::new();
     }
+
+    let mut matches = Vec::new();
+
+    for range in line.matches {
+        if range.start >= range.end || range.start >= line.text.len() {
+            continue;
+        }
+        let end_exclusive = range.end.min(line.text.len());
+        if end_exclusive <= range.start {
+            continue;
+        }
+
+        let end_inclusive = end_exclusive - 1;
+        let start_line = locate_line(&offsets, range.start);
+        let end_line = locate_line(&offsets, end_inclusive);
+
+        let line_start_rel = offsets[start_line - 1];
+        let end_line_start_rel = offsets[end_line - 1];
+
+        let ox = line.offset + range.start;
+        let oy = line.offset + end_inclusive;
+
+        let line_start_abs = line.offset + line_start_rel;
+        let line_end_abs_exclusive = line.offset + offsets[end_line];
+
+        let preview_start_abs = std::cmp::max(line_start_abs, ox.saturating_sub(16));
+        let preview_end_abs_exclusive =
+            std::cmp::min(line_end_abs_exclusive, (oy + 1).saturating_add(16));
+
+        let preview_start_rel = preview_start_abs.saturating_sub(line.offset);
+        let preview_end_rel = preview_end_abs_exclusive.saturating_sub(line.offset);
+
+        if preview_end_rel <= preview_start_rel || preview_end_rel > line.text.len() {
+            continue;
+        }
+
+        let preview_bytes = &line.text[preview_start_rel..preview_end_rel];
+        let start_rel_in_preview = range.start.saturating_sub(preview_start_rel);
+        let end_rel_in_preview = end_inclusive.saturating_sub(preview_start_rel);
+
+        let (preview_string, sx, sy) =
+            build_preview_string(preview_bytes, start_rel_in_preview, end_rel_in_preview);
+
+        let lx = (line.line_number as u32)
+            .saturating_add((start_line - 1) as u32)
+            .max(1);
+        let ly = (line.line_number as u32)
+            .saturating_add((end_line - 1) as u32)
+            .max(lx);
+
+        let cx = (range.start - line_start_rel) as u32;
+        let cy = (end_inclusive - end_line_start_rel) as u32;
+
+        matches.push(ITextMatch {
+            lx,
+            ly,
+            cx,
+            cy,
+            ox,
+            oy,
+            s: preview_string,
+            sx,
+            sy,
+        });
+    }
+
+    matches
+}
+
+fn flatten_line_matches(lines: Vec<LineMatch>) -> Vec<ITextMatch> {
+    let mut result = Vec::new();
+    for line in lines {
+        result.extend(convert_line_matches(line));
+    }
+    result
 }
 
 fn parse_max_matches(options: &ISearchInFilesOptions) -> u32 {
@@ -211,7 +276,7 @@ fn build_matcher(options: &ISearchInFilesOptions) -> Result<RegexMatcher, String
 
 struct FileMatchSink<'matcher, 'count> {
     matcher: &'matcher RegexMatcher,
-    blocks: &'matcher mut Vec<ISearchBlockMatch>,
+    lines: &'matcher mut Vec<LineMatch>,
     matches_count: &'count mut u32,
     max_matches: u32,
 }
@@ -225,10 +290,10 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
         }
 
         let bytes = mat.bytes();
-        let line_number = mat.line_number().unwrap_or(0) as usize;
+        let line_number = mat.line_number().unwrap_or(0);
         let absolute_offset = mat.absolute_byte_offset() as usize;
 
-        let mut match_points: Vec<ISearchMatchPoint> = Vec::new();
+        let mut match_ranges: Vec<MatchRange> = Vec::new();
         let mut continue_search = true;
 
         let result = self.matcher.find_iter(bytes, |range| {
@@ -237,9 +302,9 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
                 return false;
             }
 
-            match_points.push(ISearchMatchPoint {
-                l: range.start(),
-                r: range.end(),
+            match_ranges.push(MatchRange {
+                start: range.start(),
+                end: range.end(),
             });
             *self.matches_count = self.matches_count.saturating_add(1);
             true
@@ -249,28 +314,15 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
             return Err(io::Error::other(error));
         }
 
-        if match_points.is_empty() {
+        if match_ranges.is_empty() {
             return Ok(continue_search && *self.matches_count < self.max_matches);
         }
 
-        let mut text = String::from_utf8_lossy(bytes).into_owned();
-        trim_trailing_line_terminators(&mut text, &match_points);
-
-        let text_len = text.len();
-        for point in &mut match_points {
-            if point.l > text_len {
-                point.l = text_len;
-            }
-            if point.r > text_len {
-                point.r = text_len;
-            }
-        }
-
-        self.blocks.push(ISearchBlockMatch {
-            lnum: line_number,
-            text,
+        self.lines.push(LineMatch {
+            line_number,
             offset: absolute_offset,
-            matches: match_points,
+            text: bytes.to_vec(),
+            matches: match_ranges,
         });
 
         Ok(continue_search && *self.matches_count < self.max_matches)
@@ -279,11 +331,11 @@ impl<'matcher, 'count> Sink for FileMatchSink<'matcher, 'count> {
 
 pub fn search_in_files(
     options: &ISearchInFilesOptions,
-) -> Result<ISearchInFilesSucceedResult, ISearchInFilesFailedResult> {
+) -> Result<ISearchFileResult, ISearchFailedResult> {
     if options.search_pattern.is_empty() {
-        return Ok(ISearchInFilesSucceedResult {
-            elapsed_time: "0s".into(),
-            items: HashMap::new(),
+        return Ok(ISearchFileResult {
+            elapsed_time: 0,
+            items: Vec::new(),
         });
     }
 
@@ -292,8 +344,8 @@ pub fn search_in_files(
     let base_dir = match resolve_base_dir(options) {
         Ok(path) => path,
         Err(error) => {
-            return Err(ISearchInFilesFailedResult {
-                elapsed_time: "0s".into(),
+            return Err(ISearchFailedResult {
+                elapsed_time: 0,
                 error,
             });
         }
@@ -305,8 +357,8 @@ pub fn search_in_files(
     let overrides = match build_overrides(&base_dir, &include_patterns, &exclude_patterns) {
         Ok(overrides) => overrides,
         Err(error) => {
-            return Err(ISearchInFilesFailedResult {
-                elapsed_time: "0s".into(),
+            return Err(ISearchFailedResult {
+                elapsed_time: 0,
                 error,
             });
         }
@@ -315,8 +367,8 @@ pub fn search_in_files(
     let matcher = match build_matcher(options) {
         Ok(matcher) => matcher,
         Err(error) => {
-            return Err(ISearchInFilesFailedResult {
-                elapsed_time: "0s".into(),
+            return Err(ISearchFailedResult {
+                elapsed_time: 0,
                 error,
             });
         }
@@ -334,8 +386,8 @@ pub fn search_in_files(
     let filesize_limit = match parse_max_filesize(&options.max_filesize) {
         Ok(limit) => limit,
         Err(error) => {
-            return Err(ISearchInFilesFailedResult {
-                elapsed_time: "0s".into(),
+            return Err(ISearchFailedResult {
+                elapsed_time: 0,
                 error,
             });
         }
@@ -361,53 +413,199 @@ pub fn search_in_files(
     }
 
     let mut matches_count: u32 = 0;
-    let mut filematches: HashMap<String, ISearchFileMatch> = HashMap::new();
+    let mut items: Vec<IFileMatch> = Vec::new();
 
-    let mut candidate_paths: Vec<PathBuf> = walk_builder
-        .build()
-        .filter_map(|result| result.ok())
-        .filter(|entry| {
-            entry
-                .file_type()
-                .map(|file_type| file_type.is_file())
-                .unwrap_or(false)
-        })
-        .map(|entry| entry.into_path())
-        .collect();
-
-    candidate_paths.sort();
-
-    for path in candidate_paths {
+    for entry in walk_builder.build() {
         if matches_count >= max_matches {
             break;
         }
 
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(_) => continue,
+        };
+
+        if !entry
+            .file_type()
+            .map(|file_type| file_type.is_file())
+            .unwrap_or(false)
+        {
+            continue;
+        }
+
+        let path = entry.into_path();
         let display = display_path(&path, &base_dir);
 
-        let mut blocks: Vec<ISearchBlockMatch> = Vec::new();
+        let mut lines: Vec<LineMatch> = Vec::new();
         let mut sink = FileMatchSink {
             matcher: &matcher,
-            blocks: &mut blocks,
+            lines: &mut lines,
             matches_count: &mut matches_count,
             max_matches,
         };
 
-        let search_result = searcher.search_path(&matcher, &path, &mut sink);
-
-        if let Err(error) = search_result {
-            return Err(ISearchInFilesFailedResult {
-                elapsed_time: format_elapsed(start.elapsed()),
+        if let Err(error) = searcher.search_path(&matcher, &path, &mut sink) {
+            return Err(ISearchFailedResult {
+                elapsed_time: start.elapsed().as_millis() as u64,
                 error: format!("Failed to search '{}': {}", display, error),
             });
         }
 
-        if !blocks.is_empty() {
-            filematches.insert(display, ISearchFileMatch { matches: blocks });
+        if lines.is_empty() {
+            continue;
         }
+
+        let matches = flatten_line_matches(lines);
+        if matches.is_empty() {
+            continue;
+        }
+
+        items.push(IFileMatch { p: display, matches });
     }
 
-    Ok(ISearchInFilesSucceedResult {
-        elapsed_time: format_elapsed(start.elapsed()),
-        items: filematches,
+    Ok(ISearchFileResult {
+        elapsed_time: start.elapsed().as_millis() as u64,
+        items,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    fn fixtures_dir() -> String {
+        let manifest_dir =
+            std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not defined");
+        let path = std::path::Path::new(&manifest_dir).join("tests/fixtures");
+        path.to_string_lossy().to_string()
+    }
+
+    #[test]
+    fn t_search_in_files_lf_pattern_matches_only_lf_files() {
+        let cwd = fixtures_dir();
+
+        let options = ISearchInFilesOptions {
+            cwd: Some(cwd.clone()),
+            flag_case_sensitive: true,
+            flag_gitignore: true,
+            flag_regex: true,
+            max_filesize: Some("1M".to_string()),
+            max_matches: Some(300),
+            search_pattern: r#"Hello, (world|世界)!\n"#.to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: "*.txt".to_string(),
+            exclude_patterns: "c.txt".to_string(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        assert!(!result.items.is_empty(), "expect at least one matched file");
+
+        let filenames: HashSet<_> = result
+            .items
+            .iter()
+            .map(|file| {
+                std::path::Path::new(&file.p)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+            })
+            .collect();
+
+        assert!(filenames.contains("a.txt"), "a.txt should be present");
+        assert!(
+            !filenames.contains("b.txt"),
+            "b.txt should not be present when searching with \\n"
+        );
+        assert!(
+            !filenames.contains("c.txt"),
+            "c.txt should be excluded by exclude_patterns"
+        );
+    }
+
+    #[test]
+    fn t_search_in_files_crlf_pattern_matches_crlf_files() {
+        let cwd = fixtures_dir();
+
+        let options = ISearchInFilesOptions {
+            cwd: Some(cwd),
+            flag_case_sensitive: true,
+            flag_gitignore: true,
+            flag_regex: true,
+            max_filesize: Some("1M".to_string()),
+            max_matches: Some(300),
+            search_pattern: r#"Hello, (world|世界)!\r\n"#.to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: "*.txt".to_string(),
+            exclude_patterns: "c.txt".to_string(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        assert!(!result.items.is_empty(), "expect at least one matched file");
+
+        let filenames: HashSet<_> = result
+            .items
+            .iter()
+            .map(|file| {
+                std::path::Path::new(&file.p)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+            })
+            .collect();
+
+        assert!(
+            !filenames.contains("a.txt"),
+            "a.txt should not be present when searching with \\r\\n"
+        );
+        assert!(filenames.contains("b.txt"), "b.txt should be present");
+    }
+
+    #[test]
+    fn t_search_in_files_respects_max_matches_limit() {
+        let cwd = fixtures_dir();
+
+        let options = ISearchInFilesOptions {
+            cwd: Some(cwd),
+            flag_case_sensitive: true,
+            flag_gitignore: true,
+            flag_regex: false,
+            max_filesize: None,
+            max_matches: Some(5),
+            search_pattern: "Hello".to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: "*.txt".to_string(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        assert_eq!(result.items.len(), 1, "only a.txt should be included");
+
+        let file_match = result
+            .items
+            .iter()
+            .find(|file| file.p == "a.txt")
+            .expect("a.txt should be present in results");
+
+        assert_eq!(
+            file_match.matches.len(),
+            5,
+            "expected exactly 5 matches to be recorded"
+        );
+
+        let last_match = file_match
+            .matches
+            .last()
+            .expect("matches collection should not be empty");
+        assert!(
+            last_match.lx == last_match.ly,
+            "match should occur on a single line"
+        );
+        assert_eq!(last_match.lx, 5, "last match should be on line 5");
+    }
 }

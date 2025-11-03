@@ -634,7 +634,7 @@ function M:__match__(input)
       flag_regex = use_regex,
       flag_case_sensitive = case_sensitive,
     }
-    local oxi_matches, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchInLinesLineMatch[]|nil, string|nil
+    local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchTextResult|nil, string|nil
     if search_err then
       std.reporter.error({
         from = __module_name__,
@@ -644,15 +644,16 @@ function M:__match__(input)
           params = search_params,
         },
       })
-      oxi_matches = nil
+      search_result = nil
     end
-    if oxi_matches then
-      for _, oxi_match in ipairs(oxi_matches) do
+    if search_result and search_result.lines then
+      for _, entry in ipairs(search_result.lines) do
+        local lnum = entry.lnum ---@type integer
         matches[#matches + 1] = {
-          order = oxi_match.lnum,
-          uuid = items[oxi_match.lnum].uuid,
-          score = oxi_match.score,
-          matches = oxi_match.matches,
+          order = lnum,
+          uuid = items[lnum].uuid,
+          score = entry.score,
+          matches = entry.matches,
         }
       end
     end

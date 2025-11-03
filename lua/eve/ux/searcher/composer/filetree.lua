@@ -1987,7 +1987,7 @@ function M:__search_internal__()
   end
 
   local items = result.items ---@type eve.ux.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = result.filematch_map ---@type table<string, rstd.search.ISearchFileMatch>
+  local filematch_map = result.filematch_map ---@type table<string, eve.ux.searcher.view.filetree.IResolvedFileMatch>
 
   local filepaths = {} ---@type string[]
   local uuids = {} ---@type string[]

@@ -1,81 +1,91 @@
 use mlua::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
-use std::collections::HashMap;
+use super::search_in_lines::ISearchInLinesLineMatch;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchMatchPoint {
-    pub l: usize,
-    pub r: usize,
+pub struct ITextMatch {
+    pub lx: u32,
+    pub ly: u32,
+    pub cx: u32,
+    pub cy: u32,
+    pub ox: usize,
+    pub oy: usize,
+    pub s: String,
+    pub sx: u32,
+    pub sy: u32,
 }
 
-impl IntoLua for ISearchMatchPoint {
+impl IntoLua for ITextMatch {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
-        table.set("l", self.l)?;
-        table.set("r", self.r)?;
+        table.set("lx", self.lx)?;
+        table.set("ly", self.ly)?;
+        table.set("cx", self.cx)?;
+        table.set("cy", self.cy)?;
+        table.set("ox", self.ox)?;
+        table.set("oy", self.oy)?;
+        table.set("s", self.s)?;
+        table.set("sx", self.sx)?;
+        table.set("sy", self.sy)?;
         Ok(LuaValue::Table(table))
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchBlockMatch {
-    pub lnum: usize,
-    pub text: String,
-    pub offset: usize,
-    pub matches: Vec<ISearchMatchPoint>,
+pub struct IFileMatch {
+    pub p: String,
+    pub matches: Vec<ITextMatch>,
 }
 
-impl IntoLua for ISearchBlockMatch {
+impl IntoLua for IFileMatch {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
-        table.set("lnum", self.lnum)?;
-        table.set("text", self.text)?;
-        table.set("offset", self.offset)?;
+        table.set("p", self.p)?;
         table.set("matches", lua.create_sequence_from(self.matches)?)?;
         Ok(LuaValue::Table(table))
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchFileMatch {
-    pub matches: Vec<ISearchBlockMatch>,
+pub struct ISearchFileResult {
+    pub elapsed_time: u64,
+    pub items: Vec<IFileMatch>,
 }
 
-impl IntoLua for ISearchFileMatch {
-    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
-        let table = lua.create_table()?;
-        table.set("matches", lua.create_sequence_from(self.matches)?)?;
-        Ok(LuaValue::Table(table))
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchInFilesSucceedResult {
-    pub elapsed_time: String,
-    pub items: HashMap<String, ISearchFileMatch>,
-}
-
-impl IntoLua for ISearchInFilesSucceedResult {
+impl IntoLua for ISearchFileResult {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("elapsed_time", self.elapsed_time)?;
-        let items_table = lua.create_table()?;
-        for (filepath, filematch) in self.items {
-            items_table.set(filepath, filematch)?;
-        }
-        table.set("items", items_table)?;
+        table.set("items", lua.create_sequence_from(self.items)?)?;
         Ok(LuaValue::Table(table))
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ISearchInFilesFailedResult {
-    pub elapsed_time: String,
+pub struct ISearchTextResult {
+    pub elapsed_time: u64,
+    pub matches: Vec<ITextMatch>,
+    pub lines: Vec<ISearchInLinesLineMatch>,
+}
+
+impl IntoLua for ISearchTextResult {
+    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
+        let table = lua.create_table()?;
+        table.set("elapsed_time", self.elapsed_time)?;
+        table.set("matches", lua.create_sequence_from(self.matches)?)?;
+        table.set("lines", lua.create_sequence_from(self.lines)?)?;
+        Ok(LuaValue::Table(table))
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ISearchFailedResult {
+    pub elapsed_time: u64,
     pub error: String,
 }
 
-impl IntoLua for ISearchInFilesFailedResult {
+impl IntoLua for ISearchFailedResult {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
         let table = lua.create_table()?;
         table.set("elapsed_time", self.elapsed_time)?;

@@ -1,5 +1,9 @@
 use crate::search::{search_in_lines_literal, search_in_lines_regex};
-use crate::types::{ISearchInLinesLineMatch, ISearchInLinesMatchPoint};
+use crate::types::{
+    ISearchInLinesLineMatch, ISearchInLinesMatchPoint, ISearchTextResult, ITextMatch,
+};
+use super::text_utils::{build_preview_string, compute_line_offsets, locate_line};
+use std::time::Instant;
 
 /// Unified search function that combines literal and regex search
 /// Converts from specific types to unified ISearchInLines types
@@ -9,51 +13,133 @@ pub fn search_in_lines(
     flag_fuzzy: bool,
     flag_regex: bool,
     flag_case_sensitive: bool,
-) -> Result<Vec<ISearchInLinesLineMatch>, String> {
+) -> Result<ISearchTextResult, String> {
+    let start = Instant::now();
+
     if pattern.is_empty() {
-        return Ok(vec![]);
+        return Ok(ISearchTextResult {
+            elapsed_time: 0,
+            matches: Vec::new(),
+            lines: Vec::new(),
+        });
     }
 
-    if flag_regex {
-        // Use regex search and convert types
-        let regex_results = search_in_lines_regex(pattern, lines, flag_case_sensitive)?;
-
-        Ok(regex_results
-            .into_iter()
-            .map(|regex_match| ISearchInLinesLineMatch {
-                lnum: regex_match.lnum,
-                score: regex_match.score,
-                matches: regex_match
-                    .matches
-                    .into_iter()
-                    .map(|regex_point| ISearchInLinesMatchPoint {
-                        start: regex_point.start,
-                        end: regex_point.end,
-                    })
-                    .collect(),
-            })
-            .collect())
+    let line_matches: Vec<ISearchInLinesLineMatch> = if flag_regex {
+        search_in_lines_regex(pattern, lines, flag_case_sensitive)?
     } else {
-        // Use literal search and convert types
-        let literal_results =
-            search_in_lines_literal(pattern, lines, flag_fuzzy, flag_case_sensitive);
-
-        Ok(literal_results
-            .into_iter()
-            .map(|literal_match| ISearchInLinesLineMatch {
-                lnum: literal_match.lnum,
-                score: literal_match.score,
-                matches: literal_match
-                    .matches
-                    .into_iter()
-                    .map(|literal_point| ISearchInLinesMatchPoint {
-                        start: literal_point.start,
-                        end: literal_point.end,
-                    })
-                    .collect(),
-            })
-            .collect())
+        search_in_lines_literal(pattern, lines, flag_fuzzy, flag_case_sensitive)
     }
+    .into_iter()
+    .map(|matched_line| ISearchInLinesLineMatch {
+        lnum: matched_line.lnum,
+        score: matched_line.score,
+        matches: matched_line
+            .matches
+            .into_iter()
+            .map(|point| ISearchInLinesMatchPoint {
+                start: point.start,
+                end: point.end,
+            })
+            .collect(),
+    })
+    .collect();
+
+    let matches = convert_line_matches(lines, &line_matches);
+
+    Ok(ISearchTextResult {
+        elapsed_time: start.elapsed().as_millis() as u64,
+        matches,
+        lines: line_matches,
+    })
+}
+
+fn build_full_text(lines: &[String]) -> (String, Vec<usize>) {
+    if lines.is_empty() {
+        return (String::new(), vec![0]);
+    }
+
+    let full_text = lines.join("\n");
+    let offsets = compute_line_offsets(full_text.as_bytes());
+    (full_text, offsets)
+}
+
+fn convert_line_matches(
+    lines: &[String],
+    line_matches: &[ISearchInLinesLineMatch],
+) -> Vec<ITextMatch> {
+    if lines.is_empty() || line_matches.is_empty() {
+        return Vec::new();
+    }
+
+    let (full_text, line_offsets) = build_full_text(lines);
+    if line_offsets.len() < 2 {
+        return Vec::new();
+    }
+    let bytes = full_text.as_bytes();
+    let mut matches = Vec::new();
+
+    for line_match in line_matches {
+        let line_number = line_match.lnum;
+        if line_number == 0 || (line_number as usize) > lines.len() {
+            continue;
+        }
+        let line_start_abs = line_offsets[line_number - 1];
+
+        for point in &line_match.matches {
+            let start_abs = line_start_abs.saturating_add(point.start);
+            let end_abs_exclusive = line_start_abs.saturating_add(point.end);
+            if start_abs >= end_abs_exclusive || start_abs >= bytes.len() {
+                continue;
+            }
+            let end_abs_exclusive = std::cmp::min(end_abs_exclusive, bytes.len());
+            if end_abs_exclusive == 0 || end_abs_exclusive <= start_abs {
+                continue;
+            }
+            let end_abs_inclusive = end_abs_exclusive - 1;
+
+            let start_line = locate_line(&line_offsets, start_abs);
+            let end_line = locate_line(&line_offsets, end_abs_inclusive);
+
+            let line_start = line_offsets[start_line - 1];
+            let line_end_exclusive = line_offsets[end_line];
+
+            let preview_start_abs = std::cmp::max(line_start, start_abs.saturating_sub(16));
+            let preview_end_abs_exclusive =
+                std::cmp::min(line_end_exclusive, end_abs_exclusive.saturating_add(16));
+
+            if preview_end_abs_exclusive <= preview_start_abs
+                || preview_end_abs_exclusive > bytes.len()
+            {
+                continue;
+            }
+
+            let preview_bytes = &bytes[preview_start_abs..preview_end_abs_exclusive];
+            let start_rel = start_abs - preview_start_abs;
+            let end_rel = end_abs_inclusive - preview_start_abs;
+
+            let (preview_string, sx, sy) = build_preview_string(preview_bytes, start_rel, end_rel);
+
+            let lx = u32::try_from(start_line).unwrap_or(u32::MAX);
+            let ly = u32::try_from(end_line).unwrap_or(u32::MAX);
+
+            let cx = u32::try_from(start_abs - line_offsets[start_line - 1]).unwrap_or(u32::MAX);
+            let cy = u32::try_from(end_abs_inclusive - line_offsets[end_line - 1]).unwrap_or(u32::MAX);
+
+            matches.push(ITextMatch {
+                lx,
+                ly,
+                cx,
+                cy,
+                ox: start_abs,
+                oy: end_abs_inclusive,
+                s: preview_string,
+                sx,
+                sy,
+            });
+        }
+    }
+
+    matches
 }
 
 #[cfg(test)]
@@ -64,7 +150,7 @@ mod tests {
     fn t_search_empty_pattern() {
         let lines = vec!["some text".to_string()];
         let result = search_in_lines("", &lines, false, false, true).unwrap();
-        assert_eq!(result.len(), 0);
+        assert!(result.matches.is_empty());
     }
 
     #[test]
@@ -75,8 +161,8 @@ mod tests {
             "HELLO WORLD".to_string(),
         ];
         let result = search_in_lines("Hello", &lines, false, false, true).unwrap();
-        assert_eq!(result.len(), 1);
-        assert_eq!(result[0].lnum, 1);
+        assert_eq!(result.matches.len(), 1);
+        assert_eq!(result.matches[0].lx, 1);
     }
 
     #[test]
@@ -87,16 +173,16 @@ mod tests {
             "foo789".to_string(),
         ];
         let result = search_in_lines(r"foo\d+", &lines, false, true, true).unwrap();
-        assert_eq!(result.len(), 2);
-        assert_eq!(result[0].lnum, 1);
-        assert_eq!(result[1].lnum, 3);
+        assert_eq!(result.matches.len(), 2);
+        assert_eq!(result.matches[0].lx, 1);
+        assert_eq!(result.matches[1].lx, 3);
     }
 
     #[test]
     fn t_search_fuzzy_mode() {
         let lines = vec!["hello world".to_string()];
         let result = search_in_lines("hw", &lines, true, false, false).unwrap();
-        assert!(!result.is_empty());
+        assert!(!result.matches.is_empty());
     }
 
     #[test]
@@ -107,6 +193,26 @@ mod tests {
             "HELLO WORLD".to_string(),
         ];
         let result = search_in_lines("hello", &lines, false, false, false).unwrap();
-        assert_eq!(result.len(), 3);
+        assert_eq!(result.matches.len(), 3);
+    }
+
+    #[test]
+    fn t_search_multiline_preview_metadata() {
+        let lines = vec!["foo bar baz".to_string(), "qux quux".to_string()];
+
+        let result =
+            search_in_lines("bar baz\nqux", &lines, false, false, true).expect("search succeeds");
+        assert_eq!(result.matches.len(), 1);
+
+        let m = &result.matches[0];
+        assert_eq!(m.lx, 1, "left line should equal first line");
+        assert_eq!(m.ly, 2, "right line should equal second line");
+        assert_eq!(m.cx, 4, "start column should align with 'bar'");
+        assert_eq!(m.cy, 2, "end column should align with 'x'");
+        assert_eq!(m.ox, 4, "absolute start offset should match sliced text");
+        assert_eq!(m.oy, 14, "absolute end offset should match sliced text");
+        assert_eq!(m.s, "foo bar baz↲qux quux", "preview should span both lines");
+        assert_eq!(m.sx, 4, "preview offset should reflect first match column");
+        assert_eq!(m.sy, 16, "preview offset should reflect last match column");
     }
 }
