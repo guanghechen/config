@@ -7,10 +7,6 @@ use crate::types::ISearchFailedResult;
 use crate::types::ISearchFileResult;
 use crate::types::ISearchInFilesOptions;
 use crate::types::ITextMatch;
-use std::io;
-use std::path::Path;
-use std::path::PathBuf;
-use std::time::Instant;
 use grep::matcher::Matcher;
 use grep::regex::RegexMatcher;
 use grep::regex::RegexMatcherBuilder;
@@ -19,9 +15,13 @@ use grep::searcher::Searcher;
 use grep::searcher::SearcherBuilder;
 use grep::searcher::Sink;
 use grep::searcher::SinkMatch;
-use ignore::overrides::OverrideBuilder;
 use ignore::WalkBuilder;
+use ignore::overrides::OverrideBuilder;
 use regex::escape;
+use std::io;
+use std::path::Path;
+use std::path::PathBuf;
+use std::time::Instant;
 
 #[derive(Clone)]
 struct MatchRange {
@@ -69,10 +69,22 @@ fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
 
         let line_start_abs = line.offset + line_start_rel;
         let line_end_abs_exclusive = line.offset + offsets[end_line];
+        let line_content_end_rel = if start_line == end_line {
+            trim_line_trailing_newline(&line.text, line_start_rel, offsets[start_line])
+        } else {
+            offsets[start_line]
+        };
+        let line_content_end_abs = line.offset + line_content_end_rel;
 
         let preview_start_abs = std::cmp::max(line_start_abs, ox.saturating_sub(16));
+        let preview_line_limit = if start_line == end_line && end_exclusive <= line_content_end_rel
+        {
+            line_content_end_abs
+        } else {
+            line_end_abs_exclusive
+        };
         let preview_end_abs_exclusive =
-            std::cmp::min(line_end_abs_exclusive, (oy + 1).saturating_add(16));
+            std::cmp::min(preview_line_limit, (oy + 1).saturating_add(16));
 
         let preview_start_rel = preview_start_abs.saturating_sub(line.offset);
         let preview_end_rel = preview_end_abs_exclusive.saturating_sub(line.offset);
@@ -112,6 +124,24 @@ fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
     }
 
     matches
+}
+
+fn trim_line_trailing_newline(bytes: &[u8], start: usize, end: usize) -> usize {
+    let mut cursor = end;
+    while cursor > start {
+        let byte = bytes[cursor.saturating_sub(1)];
+        match byte {
+            b'\n' => {
+                cursor = cursor.saturating_sub(1);
+                if cursor > start && bytes[cursor - 1] == b'\r' {
+                    cursor -= 1;
+                }
+            }
+            b'\r' => cursor = cursor.saturating_sub(1),
+            _ => break,
+        }
+    }
+    cursor
 }
 
 fn flatten_line_matches(lines: Vec<LineMatch>) -> Vec<ITextMatch> {
@@ -472,7 +502,10 @@ pub fn search_in_files(
             continue;
         }
 
-        items.push(IFileMatch { p: display, matches });
+        items.push(IFileMatch {
+            p: display,
+            matches,
+        });
     }
 
     Ok(ISearchFileResult {
@@ -621,5 +654,3 @@ mod tests {
         assert_eq!(last_match.lx, 5, "last match should be on line 5");
     }
 }
-
-

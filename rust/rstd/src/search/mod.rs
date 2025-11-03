@@ -1,3 +1,4 @@
+mod buffer;
 mod search_in_files;
 mod search_in_lines;
 mod search_in_lines_literal;
@@ -21,6 +22,7 @@ pub use crate::types::ISearchInLinesRegexOptions;
 pub use crate::types::ISearchInTextOptions;
 pub use crate::types::ISearchTextResult;
 pub use crate::types::ITextMatch;
+pub(crate) use buffer::ISearchBuffer;
 pub use search_in_files::*;
 pub use search_in_lines::*;
 pub use search_in_lines_literal::*;

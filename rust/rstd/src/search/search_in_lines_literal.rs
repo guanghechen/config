@@ -1,42 +1,14 @@
+use super::ISearchBuffer;
+use super::text_utils::locate_line;
 use crate::algorithm::kmp::calc_fails;
 use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::ISearchInLinesLiteralLineMatch;
 use crate::types::ISearchInLinesLiteralMatchPoint;
 use std::borrow::Cow;
 
-/// Find the line number for a given byte position using binary search
-/// Returns (line_number, line_start_position)
-fn find_line_for_position(line_offsets: &[usize], position: usize) -> (usize, usize) {
-    match line_offsets.binary_search(&position) {
-        Ok(idx) => (idx + 1, line_offsets[idx]),
-        Err(idx) => {
-            if idx == 0 {
-                (1, 0)
-            } else {
-                (idx, line_offsets[idx - 1])
-            }
-        }
-    }
-}
-
-/// Build line offset table for efficient line number lookups
-fn build_line_offsets(lines: &[impl AsRef<str>]) -> Vec<usize> {
-    let mut offsets = Vec::with_capacity(lines.len() + 1);
-    offsets.push(0); // First line always starts at position 0
-
-    let mut current_pos = 0;
-    for line in lines {
-        current_pos += line.as_ref().len() + 1; // +1 for newline
-        offsets.push(current_pos);
-    }
-
-    offsets
-}
-
-/// Search for literal text matches (non-regex) using KMP algorithm
 pub fn search_in_lines_literal(
     pattern: &str,
-    lines_vec: &[String],
+    buffer: &ISearchBuffer,
     flag_fuzzy: bool,
     flag_case_sensitive: bool,
 ) -> Vec<ISearchInLinesLiteralLineMatch> {
@@ -44,7 +16,6 @@ pub fn search_in_lines_literal(
     let score_scalar: u32 = 30;
     let score_exact_bonus: f64 = 30.0;
     let score_scalar_bonus: f64 = 30.0;
-    let mut matches: Vec<ISearchInLinesLiteralLineMatch> = vec![];
 
     let pattern_str = if flag_case_sensitive {
         pattern.to_string()
@@ -55,209 +26,275 @@ pub fn search_in_lines_literal(
     let pattern_chars = pattern_str.chars().collect::<Vec<char>>();
     let n_pattern_bytes: usize = pattern_bytes.len();
     let n_pattern_chars: usize = pattern_chars.len();
+    if n_pattern_bytes == 0 {
+        return Vec::new();
+    }
+
     let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
     calc_fails(pattern_bytes, &mut fails);
 
-    // Smart pattern detection: check if pattern contains newlines
     let is_multiline_pattern = pattern.contains('\n');
 
     if is_multiline_pattern {
-        // For multiline patterns, use full text approach with optimized line lookup
-        let full_text = lines_vec.join("\n");
-        let full_text_str = if flag_case_sensitive {
-            full_text
-        } else {
-            full_text.to_lowercase()
-        };
-        let full_text_bytes = full_text_str.as_bytes();
-        let line_offsets = build_line_offsets(lines_vec);
+        return search_multiline(
+            buffer,
+            &pattern_bytes,
+            n_pattern_bytes,
+            &fails,
+            score_exact,
+            flag_case_sensitive,
+        );
+    }
 
-        let points = find_all_matched_points(full_text_bytes, pattern_bytes, Some(&fails));
-        for start_pos in points {
-            let end_pos = start_pos + n_pattern_bytes;
+    search_single_line(
+        buffer,
+        &pattern_bytes,
+        &pattern_chars,
+        n_pattern_bytes,
+        n_pattern_chars,
+        &fails,
+        score_exact,
+        score_scalar,
+        score_exact_bonus,
+        score_scalar_bonus,
+        flag_fuzzy,
+        flag_case_sensitive,
+    )
+}
 
-            // Use binary search to find line number - O(log n) instead of O(n)
-            let (line_num, line_start_pos) = find_line_for_position(&line_offsets, start_pos);
+fn search_multiline(
+    buffer: &ISearchBuffer,
+    pattern_bytes: &[u8],
+    n_pattern_bytes: usize,
+    fails: &Vec<usize>,
+    score_exact: u32,
+    flag_case_sensitive: bool,
+) -> Vec<ISearchInLinesLiteralLineMatch> {
+    let line_offsets = buffer.line_offsets();
+    if line_offsets.len() < 2 {
+        return Vec::new();
+    }
 
-            let relative_start = start_pos - line_start_pos;
-            let relative_end = end_pos - line_start_pos;
-
-            matches.push(ISearchInLinesLiteralLineMatch {
-                lnum: line_num,
-                score: score_exact,
-                matches: vec![ISearchInLinesLiteralMatchPoint {
-                    start: relative_start,
-                    end: relative_end,
-                }],
-            });
-        }
+    let search_text: Cow<'_, str> = if flag_case_sensitive {
+        Cow::Borrowed(buffer.as_str())
     } else {
-        // For single-line patterns, search line by line for better efficiency and memory usage
-        for (line_idx, line) in lines_vec.iter().enumerate() {
-            let line_str: Cow<'_, str> = if flag_case_sensitive {
-                Cow::Borrowed(line.as_str())
-            } else {
-                Cow::Owned(line.to_lowercase())
-            };
-            let line_bytes = line_str.as_bytes();
+        Cow::Owned(buffer.as_str().to_lowercase())
+    };
 
-            let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
+    let mut matches: Vec<ISearchInLinesLiteralLineMatch> = Vec::new();
+    let points = find_all_matched_points(search_text.as_bytes(), pattern_bytes, Some(fails));
+    for start_pos in points {
+        let end_pos = start_pos + n_pattern_bytes;
+        let line_num = locate_line(line_offsets, start_pos);
+        if line_num == 0 || (line_num as usize) > buffer.line_count() {
+            continue;
+        }
+
+        let line_index = (line_num - 1) as usize;
+        let line_start_pos = line_offsets[line_index];
+        let relative_start = start_pos.saturating_sub(line_start_pos);
+        let relative_end = end_pos.saturating_sub(line_start_pos);
+
+        matches.push(ISearchInLinesLiteralLineMatch {
+            lnum: line_num,
+            score: score_exact,
+            matches: vec![ISearchInLinesLiteralMatchPoint {
+                start: relative_start,
+                end: relative_end,
+            }],
+        });
+    }
+
+    matches
+}
+
+#[allow(clippy::too_many_arguments)]
+fn search_single_line(
+    buffer: &ISearchBuffer,
+    pattern_bytes: &[u8],
+    pattern_chars: &[char],
+    n_pattern_bytes: usize,
+    n_pattern_chars: usize,
+    fails: &Vec<usize>,
+    score_exact: u32,
+    score_scalar: u32,
+    score_exact_bonus: f64,
+    score_scalar_bonus: f64,
+    flag_fuzzy: bool,
+    flag_case_sensitive: bool,
+) -> Vec<ISearchInLinesLiteralLineMatch> {
+    let mut matches: Vec<ISearchInLinesLiteralLineMatch> = Vec::new();
+
+    for (line_idx, line) in buffer.iter_lines().enumerate() {
+        let line_view: Cow<'_, str> = if flag_case_sensitive {
+            Cow::Borrowed(line)
+        } else {
+            Cow::Owned(line.to_lowercase())
+        };
+        let line_bytes = line_view.as_bytes();
+        let base: f64 = line.len() as f64;
+
+        let points = find_all_matched_points(line_bytes, pattern_bytes, Some(fails));
+        if !points.is_empty() {
             for start_pos in points {
                 let end_pos = start_pos + n_pattern_bytes;
+                let delta: f64 = end_pos as f64;
+                let bonus: u32 = if base <= f64::EPSILON {
+                    0
+                } else {
+                    ((delta / base) * score_exact_bonus).round() as u32
+                };
+                let score = score_exact + bonus;
 
                 matches.push(ISearchInLinesLiteralLineMatch {
                     lnum: line_idx + 1,
-                    score: score_exact,
+                    score,
                     matches: vec![ISearchInLinesLiteralMatchPoint {
                         start: start_pos,
                         end: end_pos,
                     }],
                 });
             }
+            continue;
         }
-    }
 
-    // Add fallback fuzzy search if no exact matches found and fuzzy is enabled
-    if flag_fuzzy && matches.is_empty() {
-        for (i, line) in lines_vec.iter().enumerate() {
-            if line.is_empty() {
-                continue;
-            }
+        if !flag_fuzzy {
+            continue;
+        }
 
-            let line_str: Cow<'_, str> = if flag_case_sensitive {
-                Cow::Borrowed(line.as_str())
-            } else {
-                Cow::Owned(line.to_lowercase())
-            };
-            let line_bytes = line_str.as_bytes();
-            let base: f64 = line.len() as f64;
-            let points = find_all_matched_points(line_bytes, pattern_bytes, Some(&fails));
-            if !points.is_empty() {
-                let mut pieces: Vec<ISearchInLinesLiteralMatchPoint> = vec![];
-                let mut score: u32 = 0;
-                for l in points {
-                    let r: usize = l + n_pattern_bytes;
-                    let delta: f64 = r as f64;
-                    let bonus: u32 = ((delta / base) * score_exact_bonus) as u32;
-                    score += score_exact + bonus;
-                    pieces.push(ISearchInLinesLiteralMatchPoint { start: l, end: r });
-                }
-                matches.push(ISearchInLinesLiteralLineMatch {
-                    lnum: i + 1,
-                    score,
-                    matches: pieces,
-                });
-                continue;
-            }
-
-            if !flag_fuzzy {
-                continue;
-            }
-
-            // Use string slices and avoid unnecessary allocations in fuzzy matching
-            let line_chars = line_str.chars().collect::<Vec<char>>();
-            let n_line_chars: usize = line_chars.len();
-            let mut score = 0;
-            let mut all_pattern_matches: Vec<ISearchInLinesLiteralMatchPoint> = vec![];
-            let mut last_ti: usize = 0;
-            let mut len: usize = 0;
-            let mut pi: usize = 0;
-            for ti in 0..n_line_chars {
-                let c: char = line_chars[ti];
-                if c != pattern_chars[pi] {
-                    continue;
-                }
-
-                pi += 1;
-                if pi == n_pattern_chars {
-                    pi = 0;
-                    let mut pattern_matches: Vec<ISearchInLinesLiteralMatchPoint> = {
-                        let mut i: usize = ti;
-                        let mut last_piece: ISearchInLinesLiteralMatchPoint =
-                            ISearchInLinesLiteralMatchPoint {
-                                start: ti,
-                                end: ti + 1,
-                            };
-                        let mut pieces: Vec<ISearchInLinesLiteralMatchPoint> = vec![];
-                        for j in (0..n_pattern_chars).rev() {
-                            while i > 0 && line_chars[i] != pattern_chars[j] {
-                                i -= 1;
-                            }
-
-                            if i + 1 == last_piece.start {
-                                last_piece.start = i;
-                            } else {
-                                pieces.push(last_piece);
-                                last_piece = ISearchInLinesLiteralMatchPoint {
-                                    start: i,
-                                    end: i + 1,
-                                };
-                            }
-
-                            if i == 0 {
-                                break;
-                            }
-                            i -= 1;
-                        }
-                        pieces.push(last_piece);
-                        pieces.reverse();
-                        pieces
-                    };
-
-                    let mut i: usize = last_ti;
-                    last_ti = ti;
-
-                    let mut max_weight: usize = 0;
-                    for piece in &mut pattern_matches {
-                        let weight: usize = piece.end - piece.start;
-                        max_weight = max_weight.max(weight);
-
-                        while i < piece.start {
-                            len += line_chars[i].len_utf8();
-                            i += 1;
-                        }
-                        piece.start = len;
-
-                        while i < piece.end {
-                            len += line_chars[i].len_utf8();
-                            i += 1;
-                        }
-                        piece.end = len;
-                    }
-                    all_pattern_matches.extend(pattern_matches);
-
-                    let bonus: u32 = (max_weight as f64 / n_pattern_chars as f64
-                        * score_scalar_bonus)
-                        .round() as u32;
-                    score += score_scalar + bonus;
-                }
-            }
-
-            if score > 0 {
-                matches.push(ISearchInLinesLiteralLineMatch {
-                    lnum: i + 1,
-                    score,
-                    matches: all_pattern_matches,
-                });
-            }
+        if let Some(fuzzy_match) = fuzzy_match_line(
+            &line_view,
+            pattern_chars,
+            n_pattern_chars,
+            score_scalar,
+            score_scalar_bonus,
+        ) {
+            matches.push(ISearchInLinesLiteralLineMatch {
+                lnum: line_idx + 1,
+                score: fuzzy_match.0,
+                matches: fuzzy_match.1,
+            });
         }
     }
 
     matches
 }
 
+fn fuzzy_match_line(
+    line_view: &Cow<'_, str>,
+    pattern_chars: &[char],
+    n_pattern_chars: usize,
+    score_scalar: u32,
+    score_scalar_bonus: f64,
+) -> Option<(u32, Vec<ISearchInLinesLiteralMatchPoint>)> {
+    if line_view.is_empty() || pattern_chars.is_empty() {
+        return None;
+    }
+
+    let line_chars = line_view.chars().collect::<Vec<char>>();
+    let n_line_chars = line_chars.len();
+    if n_line_chars < n_pattern_chars {
+        return None;
+    }
+
+    let mut score: u32 = 0;
+    let mut all_pattern_matches: Vec<ISearchInLinesLiteralMatchPoint> = Vec::new();
+    let mut last_ti: usize = 0;
+    let mut len: usize = 0;
+    let mut pi: usize = 0;
+
+    for ti in 0..n_line_chars {
+        let c: char = line_chars[ti];
+        if c != pattern_chars[pi] {
+            continue;
+        }
+
+        pi += 1;
+        if pi != n_pattern_chars {
+            continue;
+        }
+
+        pi = 0;
+        let mut pattern_matches: Vec<ISearchInLinesLiteralMatchPoint> = {
+            let mut i: usize = ti;
+            let mut last_piece = ISearchInLinesLiteralMatchPoint {
+                start: ti,
+                end: ti + 1,
+            };
+            let mut pieces: Vec<ISearchInLinesLiteralMatchPoint> = Vec::new();
+            for j in (0..n_pattern_chars).rev() {
+                while i > 0 && line_chars[i] != pattern_chars[j] {
+                    i -= 1;
+                }
+
+                if i + 1 == last_piece.start {
+                    last_piece.start = i;
+                } else {
+                    pieces.push(last_piece);
+                    last_piece = ISearchInLinesLiteralMatchPoint {
+                        start: i,
+                        end: i + 1,
+                    };
+                }
+
+                if i == 0 {
+                    break;
+                }
+                i -= 1;
+            }
+            pieces.push(last_piece);
+            pieces.reverse();
+            pieces
+        };
+
+        let mut i: usize = last_ti;
+        last_ti = ti;
+        let mut max_weight: usize = 0;
+
+        for piece in &mut pattern_matches {
+            let weight: usize = piece.end - piece.start;
+            max_weight = max_weight.max(weight);
+
+            while i < piece.start {
+                len += line_chars[i].len_utf8();
+                i += 1;
+            }
+            piece.start = len;
+
+            while i < piece.end {
+                len += line_chars[i].len_utf8();
+                i += 1;
+            }
+            piece.end = len;
+        }
+
+        all_pattern_matches.extend(pattern_matches);
+
+        let bonus: u32 =
+            (max_weight as f64 / n_pattern_chars as f64 * score_scalar_bonus).round() as u32;
+        score += score_scalar + bonus;
+    }
+
+    if score == 0 {
+        return None;
+    }
+
+    Some((score, all_pattern_matches))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn buffer(lines: &[&str]) -> ISearchBuffer<'static> {
+        let owned: Vec<String> = lines.iter().map(|line| (*line).to_string()).collect();
+        ISearchBuffer::from_lines(&owned)
+    }
+
     #[test]
     fn t_search_literal_case_sensitive() {
-        let lines = vec![
-            "Hello World".to_string(),
-            "hello world".to_string(),
-            "HELLO WORLD".to_string(),
-        ];
-        let result = search_in_lines_literal("Hello", &lines, false, true);
+        let buf = buffer(&["Hello World", "hello world", "HELLO WORLD"]);
+        let result = search_in_lines_literal("Hello", &buf, false, true);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].lnum, 1);
         assert_eq!(result[0].matches[0].start, 0);
@@ -266,12 +303,8 @@ mod tests {
 
     #[test]
     fn t_search_literal_case_insensitive() {
-        let lines = vec![
-            "Hello World".to_string(),
-            "hello world".to_string(),
-            "HELLO WORLD".to_string(),
-        ];
-        let result = search_in_lines_literal("hello", &lines, false, false);
+        let buf = buffer(&["Hello World", "hello world", "HELLO WORLD"]);
+        let result = search_in_lines_literal("hello", &buf, false, false);
         assert_eq!(result.len(), 3);
         assert_eq!(result[0].lnum, 1);
         assert_eq!(result[1].lnum, 2);
@@ -280,26 +313,22 @@ mod tests {
 
     #[test]
     fn t_search_multiline_literal() {
-        let lines = vec![
-            "line1".to_string(),
-            "line2".to_string(),
-            "line3".to_string(),
-        ];
-        let result = search_in_lines_literal("line1\nline2", &lines, false, true);
+        let buf = buffer(&["line1", "line2", "line3"]);
+        let result = search_in_lines_literal("line1\nline2", &buf, false, true);
         assert_eq!(result.len(), 1);
     }
 
     #[test]
     fn t_search_fuzzy_match() {
-        let lines = vec!["hello world".to_string()];
-        let result = search_in_lines_literal("hw", &lines, true, false);
+        let buf = buffer(&["hello world"]);
+        let result = search_in_lines_literal("hw", &buf, true, false);
         assert!(!result.is_empty());
     }
 
     #[test]
     fn t_search_multiple_matches_same_line() {
-        let lines = vec!["foo bar foo baz foo".to_string()];
-        let result = search_in_lines_literal("foo", &lines, false, true);
+        let buf = buffer(&["foo bar foo baz foo"]);
+        let result = search_in_lines_literal("foo", &buf, false, true);
         assert_eq!(result.len(), 3);
         assert_eq!(result[0].lnum, 1);
         assert_eq!(result[1].lnum, 1);

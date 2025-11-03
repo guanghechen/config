@@ -1,4 +1,5 @@
-use super::search_in_lines::search_in_lines;
+use super::ISearchBuffer;
+use super::search_in_lines::search_in_lines_buffer;
 use crate::types::ISearchTextResult;
 
 pub fn search_in_text(
@@ -8,8 +9,14 @@ pub fn search_in_text(
     flag_regex: bool,
     flag_case_sensitive: bool,
 ) -> Result<ISearchTextResult, String> {
-    let lines: Vec<String> = text.lines().map(|line| line.to_string()).collect();
-    search_in_lines(pattern, &lines, flag_fuzzy, flag_regex, flag_case_sensitive)
+    let buffer = ISearchBuffer::from_text(text);
+    search_in_lines_buffer(
+        pattern,
+        &buffer,
+        flag_fuzzy,
+        flag_regex,
+        flag_case_sensitive,
+    )
 }
 
 #[cfg(test)]
@@ -125,4 +132,3 @@ mod tests {
         assert_eq!(m.sy, 16);
     }
 }
-
