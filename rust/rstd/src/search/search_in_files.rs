@@ -441,7 +441,7 @@ pub fn search_in_files(
     }
 
     walk_builder.sort_by_file_path(|a, b| a.cmp(b));
-    walk_builder.hidden(true);
+    walk_builder.hidden(false);
     walk_builder.git_ignore(options.flag_gitignore);
     walk_builder.git_global(options.flag_gitignore);
     walk_builder.git_exclude(options.flag_gitignore);

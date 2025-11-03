@@ -87,7 +87,7 @@ pub fn find_files(
         walk_builder.add(additional);
     }
 
-    walk_builder.hidden(true);
+    walk_builder.hidden(false);
     walk_builder.git_ignore(options.flag_gitignore);
     walk_builder.git_global(options.flag_gitignore);
     walk_builder.git_exclude(options.flag_gitignore);
