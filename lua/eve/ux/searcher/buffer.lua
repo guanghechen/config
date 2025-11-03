@@ -195,6 +195,7 @@ function M.new(props)
 
   local self = setmetatable({}, M)
   self.title = "Search in Buffer"
+  self.o_flag_replace = o_flag_replace
 
   local flags, raw_flags =
     create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, self.title)
@@ -231,7 +232,6 @@ function M.new(props)
   )
   self.o_flag_fuzzy = o_flag_fuzzy
   self.o_flag_regex = o_flag_regex
-  self.o_flag_replace = o_flag_replace
   self.o_flag_case_sensitive = o_flag_case_sensitive
   self.o_search_pattern = o_search_pattern
   self.o_search_pattern_linecount = o_search_pattern_linecount
@@ -1001,6 +1001,18 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
   }
+
+  if self.o_flag_replace ~= nil then
+    base_keymaps[#base_keymaps + 1] = {
+      modes = { "n", "v" },
+      key = "tr",
+      desc = string.format("%s: toggle replace mode", self.title),
+      callback = function()
+        local flag = self.o_flag_replace ---@type std.collection.IObservable
+        flag:next(not flag:snapshot())
+      end,
+    }
+  end
 
   for index, flag in ipairs(raw_flags) do
     base_keymaps[#base_keymaps + 1] = {

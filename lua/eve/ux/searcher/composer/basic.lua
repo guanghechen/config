@@ -231,6 +231,7 @@ function M.new(props)
   self._recommended_width = recommended_width
   self._search_pattern_history = search_pattern_history
   self._replace_pattern_history = replace_pattern_history
+  self._flag_replace = flag_replace
   self._on_cancel = on_cancel ---@type eve.ux.searcher.composer.basic.IOnCancel
   self._on_closed = on_closed ---@type eve.ux.searcher.composer.basic.IOnClosed
   self._on_disposed = on_disposed ---@type eve.ux.searcher.composer.basic.IOnDisposed
@@ -326,7 +327,6 @@ function M.new(props)
   self.preview = preview
 
   self._result_number = result_number ---@type boolean
-  self._flag_replace = flag_replace
   self._flag_replace_unsub = nil
 
   if preview ~= nil then
@@ -984,6 +984,21 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   local index_maximum = index + #flags - 1 ---@type integer
   local index_width = #(tostring(index_maximum)) ---@type integer
   local index_format = string.format("t%%0%dd", index_width) ---@type string
+
+  if self._flag_replace ~= nil then
+    N = N + 1 ---@type integer
+    builtin_keymaps[N] = {
+      modes = { "n", "v" },
+      key = "tr",
+      desc = "searcher: toggle replace mode",
+      callback = function()
+        local flag = self._flag_replace ---@type std.collection.IObservable|nil
+        if flag ~= nil then
+          flag:next(not flag:snapshot())
+        end
+      end,
+    }
+  end
 
   for _, item in ipairs(flags) do
     if index <= 9 then
