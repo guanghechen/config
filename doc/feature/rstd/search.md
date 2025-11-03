@@ -5,14 +5,23 @@ First, let's consider what's the result we deliver to the lua, I believe the res
 
 ```typescript
 export interface ITextMatch {
-  readonly lx: number // the line number of the leftest pos of the matched content (start from 1)
-  readonly ly: number // the line number of the rightest pos of the matched content (start from 1)
-  readonly cx: number // the column index of the leftest pos of the matched content (start from 0)
-  readonly cy: number // the column index of the rightest pos of the matched content (start from 0)
-  readonly ox: number // the offset of the leftest pos of the matched content (start from 0)
-  readonly oy: number // the offset of the rightest pos of the matched content (start from 0)
+  readonly lx: number // The line number of the leftest pos of the matched content (start from 1)
+  readonly ly: number // The line number of the rightest pos of the matched content (start from 1)
+  readonly cx: number // The column index of the leftest pos of the matched content (start from 0)
+  readonly cy: number // The column index of the rightest pos of the matched content (start from 0)
+  readonly ox: number // The offset of the leftest pos of the matched content (start from 0)
+  readonly oy: number // The offset of the rightest pos of the matched content (start from 0)
 
-  readonly s: string // the preview text for the search match, it should be sliced the original text from [min{L,ox-16}, max{R,oy+16}], while the L is the offset of the first pos of the lx line, and R is the the last pos of the ly line. to make things simple, the `s` should better pre replace the '\n' to `↲`, since each `↲` take two byte,
+  // The preview text for the search match, it should be sliced the original text from [min{L,ox-16}, max{R,oy+16}],
+  // while the L is the offset of the first pos of the lx line, and R is the the last pos of the ly line.
+  // to make things simple, the `s` should better pre replace the '\n' to `↲`, since each `↲` take two byte,
+  //
+  // but if the matched content is not include the last lineending of the `s` (the sy position),
+  // then we should exclude it from the `s`, to avoid confuse.
+  // e.g., if the text is `hello\nworld\n`, and we matched `llo\nworld`, then the `s` should be `hello↲world`, not `hello↲world↲`.
+  // trailing line-ending glyphs should be omitted even when the match captures them,
+  // so `llo\nworld\n` becomes `hello↲world`.
+  readonly s: string 
   readonly sx: number // the leftest matched pos offset of the leftest pos of the s.
   readonly sy: number // the rightest matched pos offset of the rightest pos of the s.
 }
