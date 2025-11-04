@@ -1352,6 +1352,17 @@ function M:__preview_layout__()
     return "right"
   end
 
+  local lines = vim.o.lines ---@type integer
+  local max_height = math.max(math.floor(lines * 0.9), lines - 10) ---@type integer
+  local min_height = math.min(math.floor(lines * 0.6), 56) ---@type integer
+  local recommended_height = self._recommended_height <= 1 and math.floor(lines * self._recommended_height)
+    or math.floor(self._recommended_height) ---@type integer
+  local height = math.min(max_height, math.max(min_height, recommended_height)) ---@type integer
+
+  if height < 32 then
+    return "hidden"
+  end
+
   return "bottom"
 end
 
