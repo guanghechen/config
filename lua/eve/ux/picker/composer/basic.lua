@@ -364,7 +364,10 @@ function M:focus(pane)
   eve.widget.push(self)
 
   local has_new_created = self:__create_wins__()
-  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type eve.ux.picker.composer.basic.PaneEnum
+  local pane_focused = self._pane_focused ---@type eve.ux.picker.composer.basic.PaneEnum
+  if has_new_created and not self:__is_pane_valid__(pane_focused) then
+    pane_focused = self:__is_pane_valid__(self._pane_last_focused) and self._pane_last_focused or "finder"
+  end
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
@@ -469,10 +472,6 @@ function M:resize()
   end
 
   local has_new_created = self:__create_wins__() ---@type boolean
-  if has_new_created then
-    self:__focus_pane__("finder")
-    return
-  end
 
   local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
   local finder_border, result_border, preview_border = self:__get_borders__(preview_layout) ---@type string[], string[], string[]
@@ -499,6 +498,14 @@ function M:resize()
     local preview_winnr = self.preview:get_winnr() ---@type integer|nil
     if preview_winnr ~= nil and vim.api.nvim_win_is_valid(preview_winnr) then
       vim.api.nvim_win_set_config(preview_winnr, { border = preview_border })
+    end
+  end
+
+  if has_new_created then
+    local current_focused_valid = self:__is_pane_valid__(self._pane_focused) ---@type boolean
+    if not current_focused_valid then
+      local pane_to_focus = self:__is_pane_valid__(self._pane_last_focused) and self._pane_last_focused or "finder" ---@type eve.ux.picker.composer.basic.PaneEnum
+      self:__focus_pane__(pane_to_focus)
     end
   end
 end
@@ -580,6 +587,31 @@ function M:__create_wins__()
   end
 
   return true, finder_winnr, result_winnr, preview_winnr
+end
+
+---@protected
+---@param pane                         eve.ux.picker.composer.basic.PaneEnum|nil
+---@return boolean
+function M:__is_pane_valid__(pane)
+  if pane == nil then
+    return false
+  end
+
+  if pane == "finder" then
+    local winnr = self.finder:get_winnr() ---@type integer|nil
+    return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+  elseif pane == "result" then
+    local winnr = self.result:get_winnr() ---@type integer|nil
+    return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+  elseif pane == "preview" then
+    if self.preview == nil then
+      return false
+    end
+    local winnr = self.preview:get_winnr() ---@type integer|nil
+    return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+  end
+
+  return false
 end
 
 ---@protected
