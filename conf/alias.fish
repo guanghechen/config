@@ -59,8 +59,9 @@ abbr -a lst 'lsd --tree -I .git -I node_modules'
 if set -q NEOVIM_HOME; and test -n "$NEOVIM_HOME"
     alias vim="$NEOVIM_HOME/bin/nvim"
     alias vi="$NEOVIM_HOME/bin/nvim"
-    alias nvchad="NVIM_APPNAME=nvim-nvchad $NEOVIM_HOME/bin/nvim"
-    alias lazyvim="NVIM_APPNAME=nvim-lazy $NEOVIM_HOME/bin/nvim"
+    alias nvchad="NVIM_APPNAME=nvim-nvchad  $NEOVIM_HOME/bin/nvim"
+    alias nvlazy="NVIM_APPNAME=nvim-lazy    $NEOVIM_HOME/bin/nvim"
+    alias lazyvim="NVIM_APPNAME=nvim-lazy   $NEOVIM_HOME/bin/nvim"
 end
 
 ### tmux
