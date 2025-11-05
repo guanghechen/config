@@ -1,4 +1,4 @@
---- https://github.com/folke/snacks.nvim/blob/6917597f6d22d79fcd0bf9b0eb7845f7ffdc80a0/lua/snacks/util/spawn.lua
+--- https://github.com/folke/snacks.nvim/blob/5589c9d37bccf56f98982cd88a72e69cddf13436/lua/snacks/util/spawn.lua
 
 ---@param handle                        uv.uv_handle_t|nil
 ---@return nil
@@ -36,7 +36,13 @@ end
 
 ---@return boolean
 function Proc:failed()
-  return (self.code ~= 0 or self.signal ~= 0) and not self:running()
+  if self.aborted then
+    return true
+  end
+  if self:running() then
+    return false
+  end
+  return self.code ~= 0 or self.signal ~= 0
 end
 
 ---@return boolean
@@ -139,6 +145,11 @@ end
 ---@return string
 function Proc:err()
   return table.concat(self.data[self.stderr] or {})
+end
+
+---@return any
+function Proc:json()
+  return vim.json.decode(self:out())
 end
 
 ---@return string[]
