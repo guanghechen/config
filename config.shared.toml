@@ -1,4 +1,4 @@
-approval_policy = "on-request"
+approval_policy = "on-failure"
 profile = "github-copilot"
 
 [profiles.github-copilot]
