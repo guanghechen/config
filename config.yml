@@ -8,11 +8,11 @@ git:
   mainBranches:
     - main
     - master
-  paging:
-    # cargo install git-delta
-    colorArg: always
-    useConfig: false
-    pager: delta --paging=never
+  pagers:
+    - # cargo install git-delta
+      colorArg: always
+      useConfig: false
+      pager: delta --paging=never
   autoFetch: false
   autoRefresh: true
   fetchAll: false
