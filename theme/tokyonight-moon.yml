@@ -1,0 +1,39 @@
+# tokyonight-moon
+
+gui:
+  authorColors:
+    guanghechen: 'blue'
+    '*': '#a5afd9'
+  branchColors:
+    main: 'blue'
+  theme:
+    defaultFgColor:
+      - '#a5afd9'
+    activeBorderColor:
+      - 'magenta'
+      - bold
+    inactiveBorderColor:
+      - '#7c86ba'
+    optionsTextColor:
+      -  '#ff966c'
+    selectedLineBgColor:
+      - '#191b29'
+    cherryPickedCommitFgColor:
+      - 'blue'
+    cherryPickedCommitBgColor:
+      - 'cyan'
+    markedBaseCommitFgColor:
+      - 'green'
+    markedBaseCommitBgColor:
+      - 'magenta'
+    searchingActiveBorderColor:
+      - 'blue'
+    unstagedChangesColor:
+      - 'red'
+
+git:
+  paging:
+    colorArg: always
+    useConfig: true
+    pager: delta --diff-so-fancy --dark
+
