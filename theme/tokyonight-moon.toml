@@ -1,0 +1,81 @@
+# tokyonight-moon
+
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
+
+[colors.cursor]
+text              = "#222436"
+cursor            = "#c099ff"
+
+[colors.vi_mode_cursor]
+text              = "#222436"
+cursor            = "#c8d3f5"
+
+[colors.search.matches]
+foreground        = "#222436"
+background        = "#a5afd9"
+
+[colors.search.focused_match]
+foreground        = "#222436"
+background        = "#c3e88d"
+
+[colors.hints.start]
+foreground        = "#222436"
+background        = "#ffc777"
+
+[colors.hints.end]
+foreground        = "#222436"
+background        = "#a5afd9"
+
+[colors.selection]
+text              = "#222436"
+background        = "#c099ff"
+
+[colors.footer_bar]
+foreground        = "#222436"
+background        = "#191b29"
+
+[colors.primary]
+background        = "#222436"
+foreground        = "#b6c1e7"
+dim_foreground    = "#7c86ba"
+bright_foreground = "#b6c1e7"
+
+[colors.normal]
+black             = "#222436"
+red               = "#ff757f"
+green             = "#c3e88d"
+yellow            = "#ffc777"
+blue              = "#82aaff"
+magenta           = "#fca7ea"
+cyan              = "#86e1fc"
+white             = "#7c86ba"
+
+[colors.bright]
+black             = "#636da6"
+red               = "#ff757f"
+green             = "#c3e88d"
+yellow            = "#ffc777"
+blue              = "#82aaff"
+magenta           = "#fca7ea"
+cyan              = "#86e1fc"
+white             = "#a5afd9"
+
+[colors.dim]
+black             = "#222436"
+red               = "#ff757f"
+green             = "#c3e88d"
+yellow            = "#ffc777"
+blue              = "#82aaff"
+magenta           = "#fca7ea"
+cyan              = "#86e1fc"
+white             = "#7c86ba"
+
+[[colors.indexed_colors]]
+index = 16
+color = "#ff966c"
+
+[[colors.indexed_colors]]
+index = 17
+color = "#c099ff"

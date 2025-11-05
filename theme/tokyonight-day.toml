@@ -1,0 +1,81 @@
+# tokyonight-day
+
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
+
+[colors.cursor]
+text              = "#e1e2e7"
+cursor            = "#9854f1"
+
+[colors.vi_mode_cursor]
+text              = "#e1e2e7"
+cursor            = "#3760bf"
+
+[colors.search.matches]
+foreground        = "#e1e2e7"
+background        = "#294891"
+
+[colors.search.focused_match]
+foreground        = "#e1e2e7"
+background        = "#587539"
+
+[colors.hints.start]
+foreground        = "#e1e2e7"
+background        = "#8c6c3e"
+
+[colors.hints.end]
+foreground        = "#e1e2e7"
+background        = "#294891"
+
+[colors.selection]
+text              = "#e1e2e7"
+background        = "#9854f1"
+
+[colors.footer_bar]
+foreground        = "#e1e2e7"
+background        = "#c4c8da"
+
+[colors.primary]
+background        = "#e1e2e7"
+foreground        = "#3054a8"
+dim_foreground    = "#1e3469"
+bright_foreground = "#3054a8"
+
+[colors.normal]
+black             = "#e1e2e7"
+red               = "#f52a65"
+green             = "#587539"
+yellow            = "#8c6c3e"
+blue              = "#2e7de9"
+magenta           = "#7847bd"
+cyan              = "#007197"
+white             = "#1e3469"
+
+[colors.bright]
+black             = "#848cb5"
+red               = "#f52a65"
+green             = "#587539"
+yellow            = "#8c6c3e"
+blue              = "#2e7de9"
+magenta           = "#7847bd"
+cyan              = "#007197"
+white             = "#294891"
+
+[colors.dim]
+black             = "#e1e2e7"
+red               = "#f52a65"
+green             = "#587539"
+yellow            = "#8c6c3e"
+blue              = "#2e7de9"
+magenta           = "#7847bd"
+cyan              = "#007197"
+white             = "#1e3469"
+
+[[colors.indexed_colors]]
+index = 16
+color = "#b15c00"
+
+[[colors.indexed_colors]]
+index = 17
+color = "#9854f1"
