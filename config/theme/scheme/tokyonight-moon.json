@@ -53,17 +53,17 @@
       "warning":         "#ffc777"
     },
     "unified": {
-      "bg0":             "{{bg}}",
-      "bg1":             "{{bg_dark}}",
-      "bg2":             "{{bg_highlight}}",
-      "bg3":             "{{fg_gutter}}",
-      "bg4":             "{{dark3}}",
+      "bg0":             "#222436",
+      "bg1":             "#1e2030",
+      "bg2":             "#191b29",
+      "bg3":             "#2f334d",
+      "bg4":             "#2d3f76",
 
-      "fg0":             "{{fg}}",
-      "fg1":             "{{fg_dark}}",
-      "fg2":             "{{dark5}}",
-      "fg3":             "{{comment}}",
-      "fg4":             "{{fg_gutter}}",
+      "fg0":             "#c8d3f5",
+      "fg1":             "#b6c1e7",
+      "fg2":             "#a5afd9",
+      "fg3":             "#909bca",
+      "fg4":             "#7c86ba",
 
       "red":             "{{red}}",
       "green":           "{{green}}",
