@@ -173,6 +173,7 @@ function M.gen_hlgroup_map(context)
     SpellLocal = { undercurl = true, sp = c.info },
     SpellRare = { undercurl = true, sp = c.hint },
     Statement = { fg = c.magenta },
+    StatusColumnMark = { link = "DiagnosticHint", default = true },
     StatusLine = { fg = c.fg_sidebar, bg = t and c.none or c.bg_dark },
     StatusLineNC = { fg = c.fg_gutter, bg = t and c.none or c.bg_dark },
     StorageClass = { fg = c.cyan },

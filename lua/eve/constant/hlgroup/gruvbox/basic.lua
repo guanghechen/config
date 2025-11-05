@@ -208,6 +208,7 @@ function M.gen_hlgroup_map(context)
     Search = { fg = c.bg0, bg = c.yellow, reverse = false },
     SignColumn = { bg = c.none },
     SpecialKey = { link = "NonText" },
+    StatusColumnMark = { link = "DiagnosticHint", default = true },
     StatusLine = { fg = c.fg2, bg = c.none, reverse = false },
     StatusLineNC = { link = "StatusLine" },
     Substitute = { fg = c.bg1, bg = c.yellow, sp = c.none },
