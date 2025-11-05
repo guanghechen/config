@@ -1,0 +1,42 @@
+# tokyonight-moon
+
+# ANSI Colors (following official catppuccin theme)
+# Dark themes: palette 0 = surface1, palette 7 = subtext0
+# Light theme: palette 0 = subtext1, palette 7 = surface2
+palette =  0=#222436
+palette =  1=#ff757f
+palette =  2=#c3e88d
+palette =  3=#ffc777
+palette =  4=#82aaff
+palette =  5=#fca7ea
+palette =  6=#86e1fc
+palette =  7=#a5afd9
+
+# Bright colors
+# Dark themes: palette 8 = surface2, palette 15 = subtext1
+# Light theme: palette 8 = subtext0, palette 15 = surface1
+palette =  8=#636da6
+palette =  9=#c53b53
+palette = 10=#4fd6be
+palette = 11=#ffc777
+palette = 12=#65bcff
+palette = 13=#c099ff
+palette = 14=#4fd6be
+palette = 15=#b6c1e7
+
+# Primary colors
+background = #222436
+foreground = #c8d3f5
+
+# Cursor colors (following official catppuccin theme)
+cursor-color = #c099ff
+cursor-text = #1e2030
+
+# Selection colors (following official catppuccin theme)
+# Official uses overlay2 mixed with base, resulting in a subtle highlight
+selection-background = #2f334d
+selection-foreground = #c8d3f5
+
+# Split divider color (following official catppuccin theme)
+split-divider-color = #191b29
+
