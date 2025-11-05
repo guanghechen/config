@@ -68,6 +68,7 @@ function M.default_gen_hlgroup_map(context)
 
     ---! diffview.nvim
     DiffviewFilePanelDeletions = { fg = c.red, bold = true },
+    DiffviewFilePanelFileName = { fg = c.fg2, bold = true },
     DiffviewFilePanelInsertions = { fg = c.green, bold = true },
     DiffviewStatusModified = { fg = c.green, bold = true },
 
