@@ -74,7 +74,8 @@ local function tmux_navigate(direction)
   else
     -- save the current window number to check later whether we're in the same
     -- window after issuing a vim navigation command
-    local winnr = vim.api.nvim_tabpage_get_win(0) ---@type integer
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
     local should_by_tmux = config.relative ~= nil and config.relative ~= "" ---@type boolean
 
@@ -83,7 +84,7 @@ local function tmux_navigate(direction)
       vim_navigate(direction)
 
       -- if we're in the same window after navigating
-      local winnr_next = vim.api.nvim_tabpage_get_win(0) ---@type integer
+      local winnr_next = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
       if winnr == winnr_next then
         should_by_tmux = true
       end
