@@ -1,0 +1,24 @@
+{
+  "name":           "tokyonight-storm",
+  "type":           "custom",
+  "Background":     "#24283b",
+  "Foreground":     "#adb7e2",
+  "LightBlue":      "#2ac3de",
+  "AccentBlue":     "#7aa2f7",
+  "AccentPurple":   "#9d7cd8",
+  "AccentCyan":     "#7dcfff",
+  "AccentGreen":    "#9ece6a",
+  "AccentYellow":   "#e0af68",
+  "AccentRed":      "#f7768e",
+  "Comment":        "#707aa4",
+  "Gray":           "#565f89",
+  "DiffAdded":      "#2b485a",
+  "DiffRemoved":    "#52313f",
+  "DiffModified":   "#2ac3de",
+  "GradientColors": [
+    "#7aa2f7",
+    "#2ac3de",
+    "#9d7cd8",
+    "#bb9af7"
+  ]
+}
