@@ -79,6 +79,7 @@ function M.default_gen_hlgroup_map(context)
     DiagnosticFloatingError = { fg = c.red },
     DiagnosticFloatingHint = { fg = c.purple },
     DiagnosticFloatingInfo = { fg = c.green },
+    DiagnosticFloatingOk = { fg = c.green },
     DiagnosticFloatingWarn = { fg = c.orange },
     DiagnosticUnderlineError = { undercurl = true, sp = c.red },
     DiagnosticUnderlineHint = { undercurl = true, sp = c.purple },
@@ -87,11 +88,13 @@ function M.default_gen_hlgroup_map(context)
     DiagnosticVirtualTextError = { fg = c.red },
     DiagnosticVirtualTextHint = { fg = c.purple },
     DiagnosticVirtualTextInfo = { fg = c.green },
+    DiagnosticVirtualTextOk = { fg = c.green },
     DiagnosticVirtualTextWarn = { fg = c.yellow },
     DiagnosticOk = { fg = c.green },
     DiagnosticSignError = { fg = c.red },
     DiagnosticSignHint = { fg = c.purple },
     DiagnosticSignInfo = { fg = c.green },
+    DiagnosticSignOk = { fg = c.green },
     DiagnosticSignWarn = { fg = c.yellow },
 
     ---diff
@@ -136,7 +139,9 @@ function M.default_gen_hlgroup_map(context)
     WarningMsg = { fg = c.red, bold = true },
 
     ---spell
+    healthError = { fg = c.red },
     healthSuccess = { fg = c.bg0, bg = c.green },
+    healthWarning = { fg = c.yellow },
     SpellBad = { undercurl = true, sp = c.red },
     SpellCap = { undercurl = true, sp = c.blue },
     SpellLocal = { undercurl = true, sp = c.aqua },

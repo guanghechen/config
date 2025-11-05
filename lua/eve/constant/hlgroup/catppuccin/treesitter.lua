@@ -7,7 +7,8 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
 
-  return {
+  ---@type table<string, std.t.theme.IHlgroup>
+  local hlgroup_map = {
     -- Comments
     ["@comment"] = { fg = c.overlay2, italic = true },
     ["@comment.documentation"] = { fg = c.overlay2, italic = true },
@@ -144,6 +145,59 @@ function M.gen_hlgroup_map(context)
     ["@text.uri"] = { fg = c.blue, underline = true, italic = true },
     ["@text.warning"] = { fg = c.base, bg = t and c.none or c.yellow },
 
+    -- Compatibility
+    ["@character.printf"] = { link = "SpecialChar" },
+    ["@comment.danger"] = { fg = c.base, bg = t and c.none or c.red },
+    ["@comment.info"] = { fg = c.base, bg = t and c.none or c.sky },
+    ["@conditional"] = { link = "Conditional" },
+    ["@constructor.tsx"] = { link = "@constructor" },
+    ["@debug"] = { link = "Debug" },
+    ["@define"] = { link = "PreProc" },
+    ["@event"] = { link = "Keyword" },
+    ["@exception"] = { link = "Exception" },
+    ["@include"] = { link = "Include" },
+    ["@macro"] = { link = "Macro" },
+    ["@markup"] = { fg = c.text },
+    ["@markup.emphasis"] = { fg = c.red, italic = true },
+    ["@markup.heading.1"] = { fg = c.red, bold = true },
+    ["@markup.heading.1.marker"] = { fg = c.red },
+    ["@markup.heading.2"] = { fg = c.peach, bold = true },
+    ["@markup.heading.2.marker"] = { fg = c.peach },
+    ["@markup.heading.3"] = { fg = c.yellow, bold = true },
+    ["@markup.heading.3.marker"] = { fg = c.yellow },
+    ["@markup.heading.4"] = { fg = c.green, bold = true },
+    ["@markup.heading.4.marker"] = { fg = c.green },
+    ["@markup.heading.5"] = { fg = c.sapphire, bold = true },
+    ["@markup.heading.5.marker"] = { fg = c.sapphire },
+    ["@markup.heading.6"] = { fg = c.lavender, bold = true },
+    ["@markup.heading.6.marker"] = { fg = c.lavender },
+    ["@markup.link.label.symbol"] = { link = "@markup.link.label" },
+    ["@markup.list.markdown"] = { link = "@markup.list" },
+    ["@markup.raw.markdown_inline"] = { link = "@markup.raw" },
+    ["@modifier"] = { link = "Keyword" },
+    ["@module.builtin"] = { fg = c.yellow, italic = true },
+    ["@namespace.builtin"] = { fg = c.yellow, italic = true },
+    ["@none"] = { fg = c.text },
+    ["@preproc"] = { link = "PreProc" },
+    ["@punctuation"] = { link = "Delimiter" },
+    ["@punctuation.special.markdown"] = { link = "@punctuation.delimiter" },
+    ["@reference"] = { fg = c.lavender },
+    ["@regexp"] = { fg = c.pink },
+    ["@repeat"] = { link = "Repeat" },
+    ["@scope"] = {},
+    ["@storageclass"] = { link = "StorageClass" },
+    ["@string.regex"] = { link = "@string.regexp" },
+    ["@structure"] = { link = "Structure" },
+    ["@tag.delimiter.tsx"] = { link = "@tag.delimiter" },
+    ["@tag.javascript"] = { link = "@tag" },
+    ["@tag.tsx"] = { link = "@tag" },
+    ["@text.danger.comment"] = { fg = c.base, bg = t and c.none or c.red },
+    ["@text.note.comment"] = { fg = c.base, bg = t and c.none or c.rosewater },
+    ["@type.tsx"] = { link = "@type" },
+    ["@variable.jsx"] = { fg = c.text },
+    ["@variable.parameter.builtin"] = { link = "@variable.parameter" },
+    ["@variable.tsx"] = { fg = c.text },
+
     -- Types
     ["@type"] = { link = "Type" },
     ["@type.builtin"] = { fg = c.mauve, italic = true },
@@ -179,6 +233,8 @@ function M.gen_hlgroup_map(context)
     ["@label.yaml"] = { fg = c.yellow },
     ["@comment.warning.gitcommit"] = { fg = c.yellow },
   }
+
+  return hlgroup_map
 end
 
 return M
