@@ -140,6 +140,56 @@
  */
 
 /**
+ * @typedef {Object} IThemeTokyonightPalette
+ * @property {string}                   bg
+ * @property {string}                   bg_dark
+ * @property {string}                   bg_dark1
+ * @property {string}                   bg_highlight
+ * @property {string}                   bg_visual
+ * @property {string}                   fg
+ * @property {string}                   fg_dark
+ * @property {string}                   fg_gutter
+ * @property {string}                   fg_sidebar
+ * @property {string}                   comment
+ * @property {string}                   dark3
+ * @property {string}                   dark5
+ * @property {string}                   blue
+ * @property {string}                   blue0
+ * @property {string}                   blue1
+ * @property {string}                   blue2
+ * @property {string}                   blue5
+ * @property {string}                   blue6
+ * @property {string}                   blue7
+ * @property {string}                   cyan
+ * @property {string}                   green
+ * @property {string}                   green1
+ * @property {string}                   green2
+ * @property {string}                   magenta
+ * @property {string}                   magenta2
+ * @property {string}                   orange
+ * @property {string}                   purple
+ * @property {string}                   red
+ * @property {string}                   red1
+ * @property {string}                   teal
+ * @property {string}                   yellow
+ * @property {string}                   terminal_black
+ * @property {string}                   black
+ * @property {string}                   border
+ * @property {string}                   border_highlight
+ * @property {string}                   git_add
+ * @property {string}                   git_change
+ * @property {string}                   git_delete
+ * @property {string}                   diff_add
+ * @property {string}                   diff_change
+ * @property {string}                   diff_delete
+ * @property {string}                   diff_text
+ * @property {string}                   hint
+ * @property {string}                   info
+ * @property {string}                   todo
+ * @property {string}                   warning
+ */
+
+/**
  * @typedef {Object} IThemeUnifiedPalette
  * @property {string}                   bg0
  * @property {string}                   bg1
@@ -187,6 +237,7 @@
  * @property {IThemeNordPalette|undefined}        nord
  * @property {IThemeOnehalfPalette|undefined}     onehalf
  * @property {IThemeRosepinePalette|undefined}    rosepine
+ * @property {IThemeTokyonightPalette|undefined}  tokyonight
  * @property {IThemeUnifiedPalette}               unified
  */
 
