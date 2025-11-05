@@ -51,7 +51,7 @@ function M.defaults()
   ---@type eve.context.flight.data
   return {
     ai = is_thirdparty or is_playground or is_personal_public,
-    ai_nes = is_thirdparty or is_playground or is_personal_public,
+    ai_nes = false,
     autoformat = is_git_repo,
     autoload = false,
     autosave = is_git_repo,
