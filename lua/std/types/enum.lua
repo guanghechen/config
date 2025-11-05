@@ -37,6 +37,10 @@
 ---|"rosepine-main"
 ---|"rosepine-moon"
 ---|"rosepine-dawn"
+---|"tokyonight-day"
+---|"tokyonight-moon"
+---|"tokyonight-night"
+---|"tokyonight-storm"
 
 ---@alias std.e.ThemeFamily
 ---|"catppuccin"
@@ -44,6 +48,7 @@
 ---|"nord"
 ---|"onehalf"
 ---|"rosepine"
+---|"tokyonight"
 
 ---@alias std.e.ThemeVariant
 ---|"frappe"
@@ -55,6 +60,9 @@
 ---|"main"
 ---|"moon"
 ---|"dawn"
+---|"day"
+---|"night"
+---|"storm"
 
 ---@alias std.e.ThemeIntegration
 ---|"basic"

@@ -70,6 +70,10 @@ local theme__mods = {
   ["rosepine-main"] = "eve.constant.theme.rosepine-main",
   ["rosepine-moon"] = "eve.constant.theme.rosepine-moon",
   ["rosepine-dawn"] = "eve.constant.theme.rosepine-dawn",
+  ["tokyonight-day"] = "eve.constant.theme.tokyonight-day",
+  ["tokyonight-moon"] = "eve.constant.theme.tokyonight-moon",
+  ["tokyonight-night"] = "eve.constant.theme.tokyonight-night",
+  ["tokyonight-storm"] = "eve.constant.theme.tokyonight-storm",
 }
 
 ---@class eve.constant.theme
@@ -86,6 +90,10 @@ local theme__mods = {
 ---@field public ["rosepine-main"]      std.t.theme.IScheme
 ---@field public ["rosepine-moon"]      std.t.theme.IScheme
 ---@field public ["rosepine-dawn"]      std.t.theme.IScheme
+---@field public ["tokyonight-day"]     std.t.theme.IScheme
+---@field public ["tokyonight-moon"]    std.t.theme.IScheme
+---@field public ["tokyonight-night"]   std.t.theme.IScheme
+---@field public ["tokyonight-storm"]   std.t.theme.IScheme
 local theme = setmetatable({
   __mods = theme__mods,
 }, {

@@ -141,6 +141,56 @@
 ---@field public surface                string
 ---@field public text                   string
 
+---@class std.t.theme.TokyonightPalette
+---@field public none                   string
+---
+---@field public bg                     string
+---@field public bg_dark                string
+---@field public bg_dark1               string
+---@field public bg_highlight           string
+---@field public bg_visual              string
+---@field public fg                     string
+---@field public fg_dark                string
+---@field public fg_gutter              string
+---@field public fg_sidebar             string
+---@field public comment                string
+---@field public dark3                  string
+---@field public dark5                  string
+---@field public blue                   string
+---@field public blue0                  string
+---@field public blue1                  string
+---@field public blue2                  string
+---@field public blue5                  string
+---@field public blue6                  string
+---@field public blue7                  string
+---@field public cyan                   string
+---@field public green                  string
+---@field public green1                 string
+---@field public green2                 string
+---@field public magenta                string
+---@field public magenta2               string
+---@field public orange                 string
+---@field public purple                 string
+---@field public red                    string
+---@field public red1                   string
+---@field public teal                   string
+---@field public yellow                 string
+---@field public terminal_black         string
+---@field public black                  string
+---@field public border                 string
+---@field public border_highlight       string
+---@field public git_add                string
+---@field public git_change             string
+---@field public git_delete             string
+---@field public diff_add               string
+---@field public diff_change            string
+---@field public diff_delete            string
+---@field public diff_text              string
+---@field public hint                   string
+---@field public info                   string
+---@field public todo                   string
+---@field public warning                string
+
 ---@class std.t.theme.UnifiedPalette
 ---@field public none                   string
 ---
@@ -187,6 +237,7 @@
 ---@field public nord                   std.t.theme.NordPalette|nil
 ---@field public onehalf                std.t.theme.OnehalfPalette|nil
 ---@field public rosepine               std.t.theme.RosepinePalette|nil
+---@field public tokyonight             std.t.theme.TokyonightPalette|nil
 
 ---@class std.t.theme.IScheme
 ---@field public theme                  std.e.ThemeFamily

@@ -19,6 +19,10 @@ M.themes = {
   "rosepine-main",
   "rosepine-moon",
   "rosepine-dawn",
+  "tokyonight-day",
+  "tokyonight-moon",
+  "tokyonight-night",
+  "tokyonight-storm",
 }
 
 ---@class eve.builtin.setting.togglers

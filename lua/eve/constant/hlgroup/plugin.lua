@@ -4,6 +4,16 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
+  local md = string.format("eve.constant.hlgroup.%s.plugin", context.scheme.theme) ---@type string
+  local ok, mod = pcall(require, md)
+  if ok and mod then
+    return mod.gen_hlgroup_map(context)
+  end
+
+  return M.default_gen_hlgroup_map(context)
+end
+
+function M.default_gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
