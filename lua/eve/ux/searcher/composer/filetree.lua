@@ -33,6 +33,7 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field public mark_node_invisible    fun(): nil
 ---@field public mark_subroot_invisible fun(): nil
 ---@field public open_node              fun(): nil
+---@field public collapse_node         fun(): nil
 ---@field public send_to_qflist         fun(): nil
 ---@field public toggle_node            fun(): nil
 ---@field public toggle_node_recursively fun(): nil
@@ -619,6 +620,33 @@ function M.new(props)
         self:__resolve_confirmation__(nodeuuid)
       end
     end,
+    collapse_node = function()
+      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
+      if nodeuuid == nil then
+        return
+      end
+
+      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.searcher.view.filetree.INodeState|nil
+      if nodestate ~= nil and nodestate.nodetype == "container" and not nodestate.collapsed then
+        treeview:collapse(nodeuuid, "collapse", true)
+        treeview:mark_cache_listview_dirty()
+        self._composer:mark_result_dirty()
+        self._composer.result:set_lnum_current(lnum)
+        return
+      end
+
+      local lnum_parent, parentuuid = self:__retrieve_lnum_parent__(nodeuuid) ---@type integer|nil, string|nil
+      if parentuuid == nil then
+        return
+      end
+
+      treeview:collapse(parentuuid, "collapse", true)
+      treeview:mark_cache_listview_dirty()
+      self._composer:mark_result_dirty()
+      if lnum_parent ~= nil then
+        self._composer.result:set_lnum_current(lnum_parent)
+      end
+    end,
     replace_all = function()
       local rootuuid = self._uuid_root ---@type string|nil
       local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type std.collection.filetree.INode|nil
@@ -997,9 +1025,14 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<C-h>",
-      aliases = { "<C-l>" },
-      desc = "searcher: toggle",
-      callback = actions.toggle_node,
+      desc = "searcher: collapse",
+      callback = actions.collapse_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-l>",
+      desc = "searcher: open",
+      callback = actions.open_node,
     },
     {
       modes = { "n", "v" },
@@ -1093,9 +1126,14 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<C-h>",
-      aliases = { "<C-l>" },
       desc = "searcher: toggle",
       callback = actions.toggle_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-l>",
+      desc = "searcher: collapse",
+      callback = actions.collapse_node,
     },
     {
       modes = { "n", "v" },
@@ -1203,8 +1241,14 @@ function M.new(props)
     {
       modes = { "i", "n" },
       key = "h",
-      desc = "searcher: toggle",
-      callback = actions.toggle_node,
+      desc = "searcher: collapse",
+      callback = actions.collapse_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-l>",
+      desc = "searcher: open",
+      callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },

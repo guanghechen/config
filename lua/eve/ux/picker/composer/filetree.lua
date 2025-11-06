@@ -39,6 +39,7 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field public remove_node            fun(): nil
 ---@field public rename_node            fun(): nil
 ---@field public move_node              fun(): nil
+---@field public collapse_node          fun(): nil
 ---@field public toggle_node            fun(): nil
 ---@field public toggle_node_deeply     fun(): nil
 ---
@@ -454,6 +455,33 @@ function M.new(props)
         else
           self:__resolve_confirmation__(nodeuuid)
         end
+      end
+    end,
+    collapse_node = function()
+      local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
+      if nodeuuid == nil then
+        return
+      end
+
+      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.picker.view.filetree.INodeState|nil
+      if nodestate ~= nil and nodestate.nodetype == "container" and not nodestate.collapsed then
+        treeview:collapse(nodeuuid, "collapse", true)
+        treeview:mark_cache_listview_dirty()
+        self:mark_result_dirty()
+        self._composer.result:set_lnum_current(lnum)
+        return
+      end
+
+      local lnum_parent, parentuuid = self:__retrieve_lnum_parent__(nodeuuid) ---@type integer|nil, string|nil
+      if parentuuid == nil then
+        return
+      end
+
+      treeview:collapse(parentuuid, "collapse", true)
+      treeview:mark_cache_listview_dirty()
+      self:mark_result_dirty()
+      if lnum_parent ~= nil then
+        self._composer.result:set_lnum_current(lnum_parent)
       end
     end,
     remove_node = function()
@@ -1093,9 +1121,14 @@ function M.new(props)
     {
       modes = { "i", "n", "v" },
       key = "<C-h>",
-      aliases = { "<C-l>" },
-      desc = "filetree: toggle",
-      callback = actions.toggle_node,
+      desc = "filetree: collapse",
+      callback = actions.collapse_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-l>",
+      desc = "filetree: open",
+      callback = actions.open_node,
     },
     {
       modes = { "n", "v" },
@@ -1214,8 +1247,14 @@ function M.new(props)
     {
       modes = { "i", "n" },
       key = "h",
-      desc = "filetree: toggle",
-      callback = actions.toggle_node,
+      desc = "filetree: collapse",
+      callback = actions.collapse_node,
+    },
+    {
+      modes = { "i", "n", "v" },
+      key = "<C-l>",
+      desc = "filetree: open",
+      callback = actions.open_node,
     },
     {
       modes = { "i", "n", "v" },
