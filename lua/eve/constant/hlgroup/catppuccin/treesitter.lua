@@ -69,7 +69,7 @@ function M.gen_hlgroup_map(context)
     ["@operator"] = { link = "Operator" },
 
     -- Keywords
-    ["@keyword"] = { link = "Keyword" },
+    ["@keyword"] = { fg = c.mauve, italic = true },
     ["@keyword.conditional"] = { link = "Conditional" },
     ["@keyword.conditional.ternary"] = { fg = c.sky },
     ["@keyword.coroutine"] = { link = "Keyword" },

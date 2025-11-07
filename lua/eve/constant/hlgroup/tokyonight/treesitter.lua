@@ -37,7 +37,7 @@ function M.gen_hlgroup_map(context)
     ["@function.macro"] = { link = "Macro" },
     ["@function.method"] = { link = "Function" },
     ["@function.method.call"] = { link = "@function.method" },
-    ["@keyword"] = { fg = c.purple },
+    ["@keyword"] = { fg = c.purple, italic = true },
     ["@keyword.conditional"] = { link = "Conditional" },
     ["@keyword.coroutine"] = { link = "@keyword" },
     ["@keyword.debug"] = { link = "Debug" },

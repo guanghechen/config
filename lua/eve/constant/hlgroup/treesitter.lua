@@ -65,7 +65,7 @@ function M.default_gen_hlgroup_map(context)
     ["@function.method"] = { link = "Method" },
     ["@function.method.call"] = { link = "@function.method" },
     ["@include"] = { link = "Include" },
-    ["@keyword"] = { link = "Keyword" },
+    ["@keyword"] = { fg = c.purple, italic = true },
     ["@keyword.coroutine"] = { link = "Keyword" },
     ["@keyword.conditional"] = { link = "Conditional" },
     ["@keyword.conditional.ternary"] = { link = "Keyword" },

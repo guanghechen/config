@@ -50,7 +50,7 @@ function M.gen_hlgroup_map(context)
     ["@function.method"] = { link = "Function" },
     ["@function.method.call"] = { link = "Function" },
     ["@include"] = { link = "Include" },
-    ["@keyword"] = { link = "Keyword" },
+    ["@keyword"] = { fg = c.purple, italic = true },
     ["@keyword.conditional"] = { link = "Conditional" },
     ["@keyword.conditional.ternary"] = { fg = c.brightOrange },
     ["@keyword.debug"] = { link = "Debug" },
