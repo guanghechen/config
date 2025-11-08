@@ -7,14 +7,17 @@ setmetatable(M, { __index = gfn })
 
 M.noop = std.fn.noop
 
----@param fn                       fun(...): nil
+---@param fn                            fun(...): nil
+---@param fn_name                       string|nil
 ---@return string
-function M.register_anonymous_fn(fn)
-  id = id + 1
-  local fn_name = "_" .. id
+function M.register_anonymous_fn(fn, fn_name)
+  if fn_name == nil then
+    id = id + 1
+    fn_name = "_" .. id
+  end
+
   gfn[fn_name] = fn
   return "eve.G." .. fn_name
 end
 
 return M
-
