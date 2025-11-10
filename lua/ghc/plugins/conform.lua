@@ -93,7 +93,7 @@ local fns = {
   ---@param dirname                     string
   ---@return string
   find_prettier_binpath = function(dirname)
-    local binpath = std.path.locate_nearest(dirname, { config.prettier_bin_path }) ---@type string|nil
+    local binpath = rstd.path.locate_nearest(dirname, { config.prettier_bin_path }) ---@type string|nil
     return binpath or eve.lsp.locate_mason_bin_path("prettier") ---@type string
   end,
 
@@ -112,7 +112,7 @@ local fns = {
       "prettier.config.mjs",
       "prettier.config.cjs",
     }
-    return std.path.locate_nearest(dirname, config_files)
+    return rstd.path.locate_nearest(dirname, config_files)
   end,
 
   ---@param config_table table

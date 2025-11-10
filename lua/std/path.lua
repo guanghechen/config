@@ -155,13 +155,6 @@ function M.join(from, to)
   return rstd.path.join(from, to, true, SEP)
 end
 
----@param start_dirpath                 string
----@param filenames                     string[]
----@return string|nil
-function M.locate_nearest(start_dirpath, filenames)
-  return rstd.path.locate_nearest(start_dirpath, filenames)
-end
-
 ---@param dirpath                       string
 ---@return nil
 function M.mkdir_if_nonexist(dirpath)
