@@ -17,24 +17,52 @@ eve.lsp_action.register({
     end
 
     local lint = require("fml.action.lint") ---@type fml.action.lint
-    local word = lint.word_under_cursor()
-    if word == nil then
+    local word_context = lint.word_context(ctx.bufnr, ctx.lnum, ctx.cursor.col)
+    if word_context == nil then
       return
     end
 
-    if not lint.has_cspell_diagnostic(ctx.bufnr, ctx.lnum) then
+    local diagnostic = lint.find_cspell_diagnostic(ctx.bufnr, ctx.lnum, word_context)
+    if diagnostic == nil then
       return
     end
 
-    return {
-      {
-        title = string.format('cspell: add "%s" to dictionary', word),
-        kind = "quickfix",
-        source = "cspell",
-        execute = function()
-          lint.spellcheck_register()
-        end,
-      },
+    local actions = {} ---@type eve.builtin.lsp_action.ProviderAction[]
+
+    local suggestions = lint.cspell_suggestions_from_diagnostic(diagnostic) ---@type string[]
+    if #suggestions > 0 then
+      local seen = {} ---@type table<string, boolean>
+      local limit = 5 ---@type integer
+      local collected = 0 ---@type integer
+      for _, raw_suggestion in ipairs(suggestions) do
+        local preview = lint.preview_cspell_suggestion(word_context, raw_suggestion)
+        if #preview > 0 and preview ~= word_context.text and not seen[preview] then
+          seen[preview] = true
+          actions[#actions + 1] = {
+            title = string.format('cspell: replace "%s" with "%s"', word_context.text, preview),
+            kind = "quickfix",
+            source = "cspell",
+            execute = function()
+              lint.apply_cspell_suggestion(ctx.bufnr, ctx.lnum, ctx.cursor.col, raw_suggestion)
+            end,
+          }
+          collected = collected + 1
+          if collected >= limit then
+            break
+          end
+        end
+      end
+    end
+
+    actions[#actions + 1] = {
+      title = string.format('cspell: add "%s" to dictionary', word_context.normalized),
+      kind = "quickfix",
+      source = "cspell",
+      execute = function()
+        lint.spellcheck_register()
+      end,
     }
+
+    return actions
   end,
 })

@@ -55,7 +55,20 @@ local linters_by_ft = {
 }
 -- stylua: ignore end
 
-local linters = {}
+local linters = {
+  cspell = {
+    args = {
+      "lint",
+      "--no-color",
+      "--no-progress",
+      "--no-summary",
+      "--show-suggestions",
+      function()
+        return "stdin://" .. vim.api.nvim_buf_get_name(0)
+      end,
+    },
+  },
+}
 
 local scheduler = nil ---@type std.collection.Scheduler|nil
 
