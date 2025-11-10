@@ -190,13 +190,6 @@ function M.resolve(cwd, to)
   return rstd.path.resolve(cwd, to, true, SEP)
 end
 
----@param filepath                      string
----@param keep_trailing_slash           boolean
----return string[]
-function M.split(filepath, keep_trailing_slash)
-  return rstd.path.split(filepath, keep_trailing_slash)
-end
-
 ----------------------------------------------------------------------------------------------------
 
 ---@return boolean
@@ -206,7 +199,7 @@ function M.is_repo_personal_public()
   end
 
   local workspace = M.workspace() ---@type string
-  local pieces = M.split(workspace, false) ---@type string[]
+  local pieces = rstd.path.split(workspace, false) ---@type string[]
   if #pieces <= 2 then
     return false
   end
@@ -224,7 +217,7 @@ function M.is_repo_playground()
   end
 
   local workspace = M.workspace() ---@type string
-  local pieces = M.split(workspace, false) ---@type string[]
+  local pieces = rstd.path.split(workspace, false) ---@type string[]
   return vim.list_contains(pieces, "playground")
 end
 
@@ -235,7 +228,7 @@ function M.is_repo_thirdparty()
   end
 
   local workspace = M.workspace() ---@type string
-  local pieces = M.split(workspace, false) ---@type string[]
+  local pieces = rstd.path.split(workspace, false) ---@type string[]
   return vim.list_contains(pieces, "sourcecode") or vim.list_contains(pieces, "sourcecodes")
 end
 
