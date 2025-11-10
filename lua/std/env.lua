@@ -19,16 +19,9 @@ local M = {}
 ---@param dirpath                       string
 ---@return string|nil
 function M.locate_gitroot(dirpath)
-  if vim.uv.fs_stat(dirpath .. PATH_SEP .. ".git") ~= nil then
-    return dirpath
-  end
-
-  local pieces = rstd.path.split(dirpath, false) ---@type string[]
-  for index = #pieces - 1, 1, -1 do
-    local p = table.concat(pieces, PATH_SEP, 1, index) ---@type string
-    if vim.uv.fs_stat(p .. PATH_SEP .. ".git") ~= nil then
-      return p
-    end
+  local dot_git_path = rstd.path.locate_nearest(dirpath, { ".git" }) ---@type string|nil
+  if dot_git_path ~= nil then
+    return rstd.path.dirname(dot_git_path, false, PATH_SEP)
   end
 
   local ok, p = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
@@ -40,6 +33,7 @@ function M.locate_gitroot(dirpath)
     return vim.trim(p)
   end
 
+  vim.notify("Git root located failed: " .. p, vim.log.levels.WARN)
   return nil
 end
 
