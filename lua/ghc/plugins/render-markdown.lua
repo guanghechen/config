@@ -125,6 +125,9 @@ return {
       border = true,
       render_modes = true, -- keep rendering while inserting
     },
+    latex = {
+      enabled = false,
+    },
     link = {
       wiki = { icon = " ", highlight = "RenderMarkdownWikiLink", scope_highlight = "RenderMarkdownWikiLink" },
       image = " ",

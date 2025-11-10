@@ -417,7 +417,7 @@ function M.on_attach(client, bufnr)
 
   -- highlighting: stop treesitter
   if client.server_capabilities.semanticTokensProvider then
-    vim.highlight.priorities.semantic_tokens = 125
+    vim.hl.priorities.semantic_tokens = 125
   end
 
   if support_foldingRange == 1 then
