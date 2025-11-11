@@ -22,6 +22,7 @@ export const CodeSource: React.FC<IProps> = props => {
   const themeScheme: IPrismThemeScheme = darken ? vscDarkTheme : vscLightTheme
   const title: string = (meta.filename || meta.title || '') as string
   const lineCount = React.useMemo(() => code.split('\n').length, [code])
+  const maxLines = meta.maxlines > 0 ? meta.maxlines : undefined
 
   const [expanded, setExpanded] = React.useState(initialExpanded ?? lineCount < 16)
   const calcContentForCopy = React.useCallback(() => code, [code])
@@ -67,6 +68,7 @@ export const CodeSource: React.FC<IProps> = props => {
             lang={lang ?? ''}
             code={code}
             collapsed={false}
+            maxLines={maxLines}
             showLineno={showLineno}
           />
         </div>

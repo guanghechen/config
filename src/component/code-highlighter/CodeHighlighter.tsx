@@ -60,6 +60,10 @@ export class CodeHighlighter extends React.Component<IProps, IState> {
     const countOfLines: number = tokens.length
 
     // Sync lineno width.
+    const effectiveMaxHeight =
+      maxLines > 0
+        ? `calc(1.6em * ${Math.min(maxLines, countOfLines) + 0.8} + 6px)`
+        : undefined
     const style: React.CSSProperties = {
       ...this.state.themeDict.root,
       backgroundColor: 'none',
@@ -68,11 +72,9 @@ export class CodeHighlighter extends React.Component<IProps, IState> {
             maxHeight: 0,
           }
         : {
-            maxHeight:
-              maxLines > 0
-                ? `calc(1.6em * ${Math.min(maxLines, countOfLines) + 0.8} + 6px)`
-                : undefined,
+            maxHeight: effectiveMaxHeight,
             minHeight: '100%',
+            overflow: maxLines > 0 ? 'hidden' : undefined,
           }),
     }
 
