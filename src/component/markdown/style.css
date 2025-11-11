@@ -1,3 +1,30 @@
+@keyframes yozoraSwordAura {
+  0% {
+    opacity: 0.45;
+    transform: translateY(-50%) scaleX(0.9) skewX(-10deg);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateY(-53%) scaleX(1.05) skewX(-4deg);
+  }
+  100% {
+    opacity: 0.45;
+    transform: translateY(-50%) scaleX(0.9) skewX(-10deg);
+  }
+}
+
+@keyframes yozoraSwordBladeShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .yozora-root > :last-child,
 .yozora-admonition__content > :last-child,
 .yozora-blockquote__content > :last-child,
@@ -23,6 +50,249 @@
   overflow-wrap: break-word;
   hyphenate-character: '-';
   -webkit-hyphenate-character: '-';
+}
+
+.yozora-delete {
+  display: inline;
+  color: var(--color-gray-600);
+  text-decoration-line: line-through;
+  text-decoration-color: rgba(75, 85, 99, 0.65);
+  text-decoration-thickness: 1.5px;
+}
+
+.yozora-delete__content {
+  color: inherit;
+}
+
+.yozora-delete__blade {
+  display: none;
+}
+
+.yozora-heading .yozora-delete,
+h1.yozora-root .yozora-delete {
+  --sword-text-color: #0f766e;
+  --sword-bg: transparent;
+  --sword-wind-bg: linear-gradient(
+    120deg,
+    rgba(16, 185, 129, 0.18) 0%,
+    rgba(34, 197, 94, 0.12) 45%,
+    rgba(45, 212, 191, 0.18) 100%
+  );
+  --sword-wind-shadow:
+    0 8px 22px rgba(45, 212, 191, 0.22),
+    0 2px 8px rgba(20, 184, 166, 0.18);
+  --sword-glow-color: rgba(45, 212, 191, 0.2);
+  --sword-hover-glow-color: rgba(56, 189, 248, 0.35);
+  --sword-aura-bg: radial-gradient(
+    ellipse at center,
+    rgba(45, 212, 191, 0.45) 0%,
+    rgba(56, 189, 248, 0.32) 45%,
+    rgba(56, 189, 248, 0) 80%
+  );
+  --sword-content-shadow: rgba(226, 255, 244, 0.65);
+  --sword-blade-bg: linear-gradient(
+    90deg,
+    #ecfccb 0%,
+    #a7f3d0 25%,
+    #5eead4 55%,
+    #22d3ee 75%,
+    #0f766e 100%
+  );
+  --sword-blade-shadow:
+    0 0 8px rgba(16, 185, 129, 0.35),
+    0 0 14px rgba(20, 184, 166, 0.25);
+  --sword-guard-bg: linear-gradient(
+    135deg,
+    rgba(15, 118, 110, 0.95) 0%,
+    rgba(34, 197, 94, 0.88) 50%,
+    rgba(56, 189, 248, 0.85) 100%
+  );
+  --sword-guard-shadow:
+    0 0 10px rgba(45, 212, 191, 0.45),
+    0 0 6px rgba(34, 197, 94, 0.4);
+  --sword-tip-bg: linear-gradient(
+    115deg,
+    rgba(186, 230, 253, 0.9) 0%,
+    rgba(56, 189, 248, 0.85) 60%,
+    rgba(14, 165, 233, 0.88) 100%
+  );
+  --sword-tip-shadow:
+    0 0 10px rgba(56, 189, 248, 0.45),
+    0 0 6px rgba(34, 197, 94, 0.35);
+  --sword-wind-offset: -49%;
+  --sword-wind-rotate: -6deg;
+  --sword-wind-skew: -6deg;
+  --sword-wind-scale-x: 1.04;
+  --sword-wind-opacity: 0.85;
+  --sword-wind-hover-offset-delta: 2%;
+  --sword-wind-hover-rotate: 1.6deg;
+  --sword-wind-hover-skew: 1.3deg;
+  --sword-wind-hover-scale: 0.08;
+  --sword-wind-saturation: 1.2;
+  --sword-wind-hover-saturation: 1.45;
+  --sword-wind-clip: polygon(
+    0% 65%,
+    18% 48%,
+    35% 38%,
+    52% 32%,
+    80% 25%,
+    100% 0%,
+    100% 55%,
+    88% 68%,
+    68% 85%,
+    42% 92%,
+    0% 80%
+  );
+  --sword-aura-blur: 6px;
+  --sword-aura-duration: 3.6s;
+  --sword-blade-duration: 3s;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.24rem 0.95rem 0.24rem 1.15rem;
+  border-radius: 999px;
+  color: var(--sword-text-color);
+  background: transparent;
+  text-decoration-color: transparent;
+  overflow: visible;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  filter: drop-shadow(0 2px 6px var(--sword-glow-color));
+}
+
+.yozora-heading .yozora-delete:hover,
+h1.yozora-root .yozora-delete:hover {
+  transform: translateY(-1px) scale(1.01);
+  filter: drop-shadow(0 5px 12px var(--sword-hover-glow-color));
+}
+
+.yozora-heading .yozora-delete::before,
+h1.yozora-root .yozora-delete::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  right: 0.2rem;
+  top: 50%;
+  height: 70%;
+  background: var(--sword-aura-bg);
+  border-radius: 999px;
+  filter: blur(var(--sword-aura-blur, 6px));
+  z-index: -1;
+  pointer-events: none;
+  animation: yozoraSwordAura var(--sword-aura-duration, 3.6s) ease-in-out infinite;
+}
+
+.yozora-heading .yozora-delete__content,
+h1.yozora-root .yozora-delete__content {
+  position: relative;
+  z-index: 3;
+  color: inherit;
+  text-shadow: 0 0 4px var(--sword-content-shadow);
+}
+
+.yozora-heading .yozora-delete__blade,
+h1.yozora-root .yozora-delete__blade {
+  display: block;
+  position: absolute;
+  left: 0.68rem;
+  right: 0.58rem;
+  top: 50%;
+  height: 0.16rem;
+  transform: translateY(-50%) rotate(-9deg);
+  background: var(--sword-blade-bg);
+  background-size: 220% 100%;
+  border-radius: 999px;
+  box-shadow: var(--sword-blade-shadow);
+  pointer-events: none;
+  z-index: 1;
+  animation: yozoraSwordBladeShimmer var(--sword-blade-duration, 3s) ease-in-out infinite;
+}
+
+.yozora-heading .yozora-delete__blade::before,
+h1.yozora-root .yozora-delete__blade::before {
+  content: '';
+  position: absolute;
+  left: -0.56rem;
+  top: 50%;
+  width: 0.58rem;
+  height: 0.42rem;
+  background: var(--sword-guard-bg);
+  clip-path: polygon(
+    0% 38%,
+    18% 38%,
+    18% 0%,
+    45% 0%,
+    45% 38%,
+    55% 38%,
+    55% 0%,
+    82% 0%,
+    82% 38%,
+    100% 38%,
+    100% 62%,
+    82% 62%,
+    82% 100%,
+    55% 100%,
+    55% 62%,
+    45% 62%,
+    45% 100%,
+    18% 100%,
+    18% 62%,
+    0% 62%
+  );
+  transform: translate(-22%, -50%) rotate(-9deg);
+  box-shadow: var(--sword-guard-shadow);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.yozora-heading .yozora-delete__blade::after,
+h1.yozora-root .yozora-delete__blade::after {
+  content: '';
+  position: absolute;
+  right: -0.4rem;
+  top: 50%;
+  width: 0.42rem;
+  height: 0.26rem;
+  background: var(--sword-tip-bg);
+  clip-path: polygon(0% 12%, 100% 50%, 0% 88%);
+  transform: translateY(-50%) rotate(-9deg);
+  box-shadow: var(--sword-tip-shadow);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.yozora-heading .yozora-delete::after,
+h1.yozora-root .yozora-delete::after {
+  content: '';
+  position: absolute;
+  left: -0.35rem;
+  right: -0.25rem;
+  top: 50%;
+  height: 110%;
+  background: var(--sword-wind-bg);
+  opacity: var(--sword-wind-opacity);
+  transform: translateY(var(--sword-wind-offset))
+    rotate(var(--sword-wind-rotate))
+    skewX(var(--sword-wind-skew))
+    scaleX(var(--sword-wind-scale-x));
+  clip-path: var(
+    --sword-wind-clip,
+    polygon(0% 65%, 18% 48%, 35% 38%, 52% 32%, 80% 25%, 100% 0%, 100% 55%, 88% 68%, 68% 85%, 42% 92%, 0% 80%)
+  );
+  z-index: 0;
+  pointer-events: none;
+  box-shadow: var(--sword-wind-shadow);
+  transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+  filter: saturate(var(--sword-wind-saturation, 1.2));
+}
+
+.yozora-heading .yozora-delete:hover::after,
+h1.yozora-root .yozora-delete:hover::after {
+  transform: translateY(calc(var(--sword-wind-offset) - var(--sword-wind-hover-offset-delta, 2%)))
+    rotate(calc(var(--sword-wind-rotate) + var(--sword-wind-hover-rotate, 1deg)))
+    skewX(calc(var(--sword-wind-skew) + var(--sword-wind-hover-skew, 1deg)))
+    scaleX(calc(var(--sword-wind-scale-x) + var(--sword-wind-hover-scale, 0.08)));
+  opacity: calc(var(--sword-wind-opacity) + 0.12);
+  filter: saturate(var(--sword-wind-hover-saturation, 1.45));
 }
 
 .yozora-admonition .yozora-admonition-danger__title {
@@ -145,6 +415,65 @@ html.dark {
   .yozora-root {
     --color-inline-math: var(--color-blue-300);
     --color-math: var(--color-blue-300);
+  }
+
+  .yozora-delete {
+    color: #cbd5f5;
+    text-decoration-color: rgba(148, 163, 184, 0.6);
+  }
+
+  .yozora-heading .yozora-delete,
+  h1.yozora-root .yozora-delete {
+    --sword-text-color: #a7f3d0;
+    --sword-wind-bg: linear-gradient(
+      120deg,
+      rgba(8, 145, 178, 0.28) 0%,
+      rgba(14, 165, 233, 0.16) 40%,
+      rgba(13, 71, 161, 0.32) 100%
+    );
+    --sword-wind-shadow:
+      0 10px 24px rgba(14, 165, 233, 0.32),
+      0 4px 12px rgba(13, 148, 136, 0.28);
+    --sword-glow-color: rgba(14, 165, 233, 0.28);
+    --sword-hover-glow-color: rgba(59, 130, 246, 0.45);
+    --sword-aura-bg: radial-gradient(
+      ellipse at center,
+      rgba(34, 197, 94, 0.35) 0%,
+      rgba(59, 130, 246, 0.28) 45%,
+      rgba(59, 130, 246, 0) 80%
+    );
+    --sword-content-shadow: rgba(15, 118, 110, 0.75);
+    --sword-blade-bg: linear-gradient(
+      90deg,
+      #bbf7d0 0%,
+      #6ee7b7 25%,
+      #5eead4 55%,
+      #38bdf8 75%,
+      #0ea5e9 100%
+    );
+    --sword-blade-shadow:
+      0 0 12px rgba(56, 189, 248, 0.45),
+      0 0 16px rgba(45, 212, 191, 0.3);
+    --sword-guard-bg: linear-gradient(
+      135deg,
+      rgba(15, 118, 110, 0.95) 0%,
+      rgba(34, 197, 94, 0.88) 55%,
+      rgba(59, 130, 246, 0.85) 100%
+    );
+    --sword-guard-shadow:
+      0 0 14px rgba(45, 212, 191, 0.45),
+      0 0 10px rgba(34, 197, 94, 0.45);
+    --sword-tip-bg: linear-gradient(
+      115deg,
+      rgba(190, 242, 100, 0.75) 0%,
+      rgba(59, 130, 246, 0.85) 65%,
+      rgba(59, 130, 246, 0.95) 100%
+    );
+    --sword-tip-shadow:
+      0 0 12px rgba(56, 189, 248, 0.55),
+      0 0 8px rgba(34, 197, 94, 0.4);
+    --sword-wind-saturation: 1.3;
+    --sword-wind-hover-saturation: 1.55;
   }
 
   .yozora-admonition .yozora-admonition-danger__title {

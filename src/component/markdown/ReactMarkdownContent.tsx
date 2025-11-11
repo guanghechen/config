@@ -4,6 +4,7 @@ import React from 'react'
 import { MarkdownContentProvider } from './context/content'
 import { useMarkdownTopViewmodel } from './context/top'
 import { NodesRenderer } from './NodesRenderer'
+import { applySwordDeletePalette } from './util/applySwordPalette'
 
 interface IProps {
   readonly Tag?: React.ElementType
@@ -26,6 +27,10 @@ export const ReactMarkdownContent: React.FC<IProps> = props => {
 
   const top = useMarkdownTopViewmodel()
   const ast: Root = React.useMemo<Root>(() => top.parseMarkdown(content), [top, content])
+
+  React.useEffect(() => {
+    applySwordDeletePalette()
+  }, [ast])
 
   return (
     <MarkdownContentProvider ast={ast}>

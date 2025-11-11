@@ -14,8 +14,11 @@ export class DeleteRenderer extends React.Component<Delete> {
   public override render(): React.ReactElement {
     const childNodes: Node[] = this.props.children
     return (
-      <del className="yozora-delete mx-1 rounded px-1 italic text-gray-600 line-through decoration-gray-400 dark:text-gray-200 dark:decoration-gray-500">
-        <NodesRenderer nodes={childNodes} />
+      <del className="yozora-delete mx-1 italic">
+        <span aria-hidden="true" className="yozora-delete__blade" />
+        <span className="yozora-delete__content">
+          <NodesRenderer nodes={childNodes} />
+        </span>
       </del>
     )
   }

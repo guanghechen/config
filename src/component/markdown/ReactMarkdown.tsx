@@ -5,6 +5,7 @@ import React from 'react'
 import { MarkdownContentProvider } from './context/content'
 import { FootnoteDefinitions } from './FootnoteDefinitions'
 import { NodesRenderer } from './NodesRenderer'
+import { applySwordDeletePalette } from './util/applySwordPalette'
 
 interface IProps {
   /**
@@ -26,6 +27,14 @@ interface IProps {
 }
 
 export class ReactMarkdown extends React.Component<IProps> {
+  public override componentDidMount(): void {
+    applySwordDeletePalette()
+  }
+
+  public override componentDidUpdate(): void {
+    applySwordDeletePalette()
+  }
+
   public override render(): React.ReactElement {
     const { ast, dontShowFirstHeading, className, style } = this.props
     const childNodes: Node[] =
