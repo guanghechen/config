@@ -17,6 +17,14 @@
   margin-left: 1.2rem;
 }
 
+.yozora-paragraph {
+  hyphens: auto;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphenate-character: '-';
+  -webkit-hyphenate-character: '-';
+}
+
 .yozora-admonition .yozora-admonition-danger__title {
   --color-inline-math: var(--color-red-700);
 }
