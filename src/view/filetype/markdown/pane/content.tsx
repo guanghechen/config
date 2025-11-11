@@ -14,24 +14,35 @@ export const ContentPane: React.FC = () => {
   const ast: Root = useMarkdownAst()
   const toc: IHeadingToc | undefined = data?.toc
   const frontmatter: Record<string, unknown> | undefined = data?.frontmatter
+  const frontmatterTitle =
+    typeof frontmatter?.title === 'string' ? frontmatter.title.trim() : undefined
+  const frontmatterSubtitle =
+    typeof frontmatter?.subtitle === 'string' ? frontmatter.subtitle.trim() : undefined
+  const titleClassName = 'text-center text-3xl font-bold text-gray-900 dark:text-white'
 
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   let title: React.ReactElement
   if (
-    !frontmatter?.title &&
+    !frontmatterTitle &&
     ast.children[0].type === 'heading' &&
     (ast.children[0] as Heading).depth === 1
   ) {
     const heading: Heading = ast.children[0] as Heading
     title = (
-      <h1 className="yozora-root">
+      <h1 className={`yozora-root ${titleClassName}`}>
         <NodesRenderer nodes={heading.children} />
       </h1>
     )
   } else {
-    title = <ReactMarkdownContent Tag="h1" content={(frontmatter?.title as string) || 'Untitled'} />
+    title = (
+      <ReactMarkdownContent
+        Tag="h1"
+        className={titleClassName}
+        content={frontmatterTitle || 'Untitled'}
+      />
+    )
   }
 
   React.useEffect(() => {
@@ -81,9 +92,18 @@ export const ContentPane: React.FC = () => {
   return (
     <div ref={containerRef} className="flex-auto max-w-[72rem]">
       <div className="px-8 py-4">
-        <div className="mb-4 flex justify-center text-3xl font-bold text-gray-900 dark:text-white">
+        <header
+          className={`${
+            frontmatterSubtitle ? 'mb-6' : 'mb-4'
+          } flex w-full flex-col items-center text-center`}
+        >
           {title}
-        </div>
+          {frontmatterSubtitle && (
+            <div className="mt-1 flex w-full justify-end">
+              <p className="text-base text-gray-600 dark:text-gray-400">{frontmatterSubtitle}</p>
+            </div>
+          )}
+        </header>
         <ReactMarkdown ast={ast} dontShowFirstHeading={true} />
       </div>
     </div>
