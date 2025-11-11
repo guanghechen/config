@@ -213,8 +213,8 @@ h1.yozora-root .yozora-delete__blade::before {
   position: absolute;
   left: -0.56rem;
   top: 50%;
-  width: 0.58rem;
-  height: 0.42rem;
+  width: 0.72rem;
+  height: 0.52rem;
   background: var(--sword-guard-bg);
   clip-path: polygon(
     0% 38%,
@@ -238,9 +238,9 @@ h1.yozora-root .yozora-delete__blade::before {
     18% 62%,
     0% 62%
   );
-  transform: translate(-22%, -50%) rotate(-9deg);
-  box-shadow: var(--sword-guard-shadow);
-  z-index: 1;
+  transform: translate(-18%, -50%) rotate(-9deg);
+  box-shadow: var(--sword-guard-shadow), 0 0 4px rgba(0, 0, 0, 0.3);
+  z-index: 2;
   pointer-events: none;
 }
 

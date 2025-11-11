@@ -19,208 +19,163 @@ const swordPalettes: ReadonlyArray<ISwordPalette> = [
     text: '#0f766e',
     background:
       'linear-gradient(120deg, rgba(16, 185, 129, 0.18) 0%, rgba(34, 197, 94, 0.12) 45%, rgba(45, 212, 191, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(45, 212, 191, 0.22), 0 2px 8px rgba(20, 184, 166, 0.18)',
+    windShadow: '0 8px 22px rgba(45, 212, 191, 0.22), 0 2px 8px rgba(20, 184, 166, 0.18)',
     glow: 'rgba(45, 212, 191, 0.2)',
     hoverGlow: 'rgba(56, 189, 248, 0.35)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(45, 212, 191, 0.45) 0%, rgba(56, 189, 248, 0.32) 45%, rgba(56, 189, 248, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(45, 212, 191, 0.45) 0%, rgba(56, 189, 248, 0.32) 45%, rgba(56, 189, 248, 0) 80%)',
     contentShadow: 'rgba(226, 255, 244, 0.65)',
-    blade: 'linear-gradient(90deg, #ecfccb 0%, #a7f3d0 25%, #5eead4 55%, #22d3ee 75%, #0f766e 100%)',
-    bladeShadow:
-      '0 0 8px rgba(16, 185, 129, 0.35), 0 0 14px rgba(20, 184, 166, 0.25)',
+    blade:
+      'linear-gradient(90deg, #ecfccb 0%, #a7f3d0 25%, #5eead4 55%, #22d3ee 75%, #0f766e 100%)',
+    bladeShadow: '0 0 8px rgba(16, 185, 129, 0.35), 0 0 14px rgba(20, 184, 166, 0.25)',
     guard:
       'linear-gradient(135deg, rgba(15, 118, 110, 0.95) 0%, rgba(34, 197, 94, 0.88) 50%, rgba(56, 189, 248, 0.85) 100%)',
-    guardShadow:
-      '0 0 10px rgba(45, 212, 191, 0.45), 0 0 6px rgba(34, 197, 94, 0.4)',
-    tip:
-      'linear-gradient(115deg, rgba(186, 230, 253, 0.9) 0%, rgba(56, 189, 248, 0.85) 60%, rgba(14, 165, 233, 0.88) 100%)',
-    tipShadow:
-      '0 0 10px rgba(56, 189, 248, 0.45), 0 0 6px rgba(34, 197, 94, 0.35)',
+    guardShadow: '0 0 10px rgba(45, 212, 191, 0.45), 0 0 6px rgba(34, 197, 94, 0.4)',
+    tip: 'linear-gradient(115deg, rgba(186, 230, 253, 0.9) 0%, rgba(56, 189, 248, 0.85) 60%, rgba(14, 165, 233, 0.88) 100%)',
+    tipShadow: '0 0 10px rgba(56, 189, 248, 0.45), 0 0 6px rgba(34, 197, 94, 0.35)',
   },
   {
     text: '#075985',
     background:
       'linear-gradient(120deg, rgba(14, 165, 233, 0.18) 0%, rgba(37, 99, 235, 0.12) 50%, rgba(59, 130, 246, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(59, 130, 246, 0.24), 0 2px 8px rgba(14, 165, 233, 0.2)',
+    windShadow: '0 8px 22px rgba(59, 130, 246, 0.24), 0 2px 8px rgba(14, 165, 233, 0.2)',
     glow: 'rgba(59, 130, 246, 0.22)',
     hoverGlow: 'rgba(14, 165, 233, 0.4)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(129, 212, 250, 0.5) 0%, rgba(37, 99, 235, 0.3) 45%, rgba(59, 130, 246, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(129, 212, 250, 0.5) 0%, rgba(37, 99, 235, 0.3) 45%, rgba(59, 130, 246, 0) 80%)',
     contentShadow: 'rgba(219, 234, 254, 0.75)',
-    blade: 'linear-gradient(90deg, #dbeafe 0%, #bfdbfe 25%, #93c5fd 55%, #60a5fa 75%, #1d4ed8 100%)',
-    bladeShadow:
-      '0 0 8px rgba(59, 130, 246, 0.4), 0 0 14px rgba(14, 165, 233, 0.28)',
+    blade:
+      'linear-gradient(90deg, #dbeafe 0%, #bfdbfe 25%, #93c5fd 55%, #60a5fa 75%, #1d4ed8 100%)',
+    bladeShadow: '0 0 8px rgba(59, 130, 246, 0.4), 0 0 14px rgba(14, 165, 233, 0.28)',
     guard:
       'linear-gradient(135deg, rgba(15, 118, 110, 0.85) 0%, rgba(37, 99, 235, 0.88) 55%, rgba(59, 130, 246, 0.9) 100%)',
-    guardShadow:
-      '0 0 10px rgba(59, 130, 246, 0.55), 0 0 6px rgba(37, 99, 235, 0.45)',
-    tip:
-      'linear-gradient(115deg, rgba(191, 219, 254, 0.95) 0%, rgba(96, 165, 250, 0.9) 60%, rgba(29, 78, 216, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(96, 165, 250, 0.55), 0 0 6px rgba(37, 99, 235, 0.4)',
+    guardShadow: '0 0 10px rgba(59, 130, 246, 0.55), 0 0 6px rgba(37, 99, 235, 0.45)',
+    tip: 'linear-gradient(115deg, rgba(191, 219, 254, 0.95) 0%, rgba(96, 165, 250, 0.9) 60%, rgba(29, 78, 216, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(96, 165, 250, 0.55), 0 0 6px rgba(37, 99, 235, 0.4)',
   },
   {
     text: '#92400e',
     background:
       'linear-gradient(120deg, rgba(249, 115, 22, 0.18) 0%, rgba(217, 119, 6, 0.12) 45%, rgba(245, 158, 11, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(245, 158, 11, 0.26), 0 2px 8px rgba(249, 115, 22, 0.2)',
+    windShadow: '0 8px 22px rgba(245, 158, 11, 0.26), 0 2px 8px rgba(249, 115, 22, 0.2)',
     glow: 'rgba(245, 158, 11, 0.3)',
     hoverGlow: 'rgba(249, 115, 22, 0.45)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(250, 204, 21, 0.5) 0%, rgba(251, 191, 36, 0.35) 45%, rgba(251, 191, 36, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(250, 204, 21, 0.5) 0%, rgba(251, 191, 36, 0.35) 45%, rgba(251, 191, 36, 0) 80%)',
     contentShadow: 'rgba(254, 243, 199, 0.75)',
-    blade: 'linear-gradient(90deg, #fef3c7 0%, #fde68a 25%, #fcd34d 55%, #f59e0b 75%, #ea580c 100%)',
-    bladeShadow:
-      '0 0 8px rgba(249, 115, 22, 0.35), 0 0 14px rgba(234, 179, 8, 0.3)',
+    blade:
+      'linear-gradient(90deg, #fef3c7 0%, #fde68a 25%, #fcd34d 55%, #f59e0b 75%, #ea580c 100%)',
+    bladeShadow: '0 0 8px rgba(249, 115, 22, 0.35), 0 0 14px rgba(234, 179, 8, 0.3)',
     guard:
       'linear-gradient(135deg, rgba(249, 115, 22, 0.95) 0%, rgba(245, 158, 11, 0.9) 55%, rgba(234, 88, 12, 0.9) 100%)',
-    guardShadow:
-      '0 0 10px rgba(251, 191, 36, 0.5), 0 0 6px rgba(249, 115, 22, 0.45)',
-    tip:
-      'linear-gradient(115deg, rgba(254, 228, 138, 0.95) 0%, rgba(252, 211, 77, 0.9) 60%, rgba(251, 146, 60, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(251, 191, 36, 0.55), 0 0 6px rgba(249, 115, 22, 0.45)',
+    guardShadow: '0 0 10px rgba(251, 191, 36, 0.5), 0 0 6px rgba(249, 115, 22, 0.45)',
+    tip: 'linear-gradient(115deg, rgba(254, 228, 138, 0.95) 0%, rgba(252, 211, 77, 0.9) 60%, rgba(251, 146, 60, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(251, 191, 36, 0.55), 0 0 6px rgba(249, 115, 22, 0.45)',
   },
   {
     text: '#6b21a8',
     background:
       'linear-gradient(120deg, rgba(168, 85, 247, 0.18) 0%, rgba(126, 34, 206, 0.12) 45%, rgba(147, 51, 234, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(168, 85, 247, 0.26), 0 2px 8px rgba(147, 51, 234, 0.2)',
+    windShadow: '0 8px 22px rgba(168, 85, 247, 0.26), 0 2px 8px rgba(147, 51, 234, 0.2)',
     glow: 'rgba(192, 132, 252, 0.28)',
     hoverGlow: 'rgba(168, 85, 247, 0.45)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(192, 132, 252, 0.5) 0%, rgba(147, 51, 234, 0.35) 45%, rgba(147, 51, 234, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(192, 132, 252, 0.5) 0%, rgba(147, 51, 234, 0.35) 45%, rgba(147, 51, 234, 0) 80%)',
     contentShadow: 'rgba(243, 232, 255, 0.75)',
-    blade: 'linear-gradient(90deg, #ede9fe 0%, #ddd6fe 25%, #c4b5fd 55%, #a855f7 75%, #6b21a8 100%)',
-    bladeShadow:
-      '0 0 8px rgba(168, 85, 247, 0.35), 0 0 14px rgba(147, 51, 234, 0.28)',
+    blade:
+      'linear-gradient(90deg, #ede9fe 0%, #ddd6fe 25%, #c4b5fd 55%, #a855f7 75%, #6b21a8 100%)',
+    bladeShadow: '0 0 8px rgba(168, 85, 247, 0.35), 0 0 14px rgba(147, 51, 234, 0.28)',
     guard:
       'linear-gradient(135deg, rgba(134, 25, 143, 0.95) 0%, rgba(155, 48, 255, 0.9) 55%, rgba(126, 34, 206, 0.9) 100%)',
-    guardShadow:
-      '0 0 10px rgba(192, 132, 252, 0.5), 0 0 6px rgba(168, 85, 247, 0.45)',
-    tip:
-      'linear-gradient(115deg, rgba(237, 233, 254, 0.95) 0%, rgba(221, 214, 254, 0.9) 60%, rgba(196, 181, 253, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(192, 132, 252, 0.55), 0 0 6px rgba(147, 51, 234, 0.45)',
+    guardShadow: '0 0 10px rgba(192, 132, 252, 0.5), 0 0 6px rgba(168, 85, 247, 0.45)',
+    tip: 'linear-gradient(115deg, rgba(237, 233, 254, 0.95) 0%, rgba(221, 214, 254, 0.9) 60%, rgba(196, 181, 253, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(192, 132, 252, 0.55), 0 0 6px rgba(147, 51, 234, 0.45)',
   },
   {
     text: '#b91c1c',
     background:
       'linear-gradient(120deg, rgba(239, 68, 68, 0.18) 0%, rgba(220, 38, 38, 0.12) 45%, rgba(248, 113, 113, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(248, 113, 113, 0.3), 0 2px 8px rgba(239, 68, 68, 0.24)',
+    windShadow: '0 8px 22px rgba(248, 113, 113, 0.3), 0 2px 8px rgba(239, 68, 68, 0.24)',
     glow: 'rgba(248, 113, 113, 0.28)',
     hoverGlow: 'rgba(239, 68, 68, 0.45)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(252, 165, 165, 0.5) 0%, rgba(248, 113, 113, 0.35) 45%, rgba(248, 113, 113, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(252, 165, 165, 0.5) 0%, rgba(248, 113, 113, 0.35) 45%, rgba(248, 113, 113, 0) 80%)',
     contentShadow: 'rgba(254, 226, 226, 0.75)',
-    blade: 'linear-gradient(90deg, #fee2e2 0%, #fecaca 25%, #fca5a5 55%, #f87171 75%, #b91c1c 100%)',
-    bladeShadow:
-      '0 0 8px rgba(248, 113, 113, 0.4), 0 0 14px rgba(239, 68, 68, 0.32)',
+    blade:
+      'linear-gradient(90deg, #fee2e2 0%, #fecaca 25%, #fca5a5 55%, #f87171 75%, #b91c1c 100%)',
+    bladeShadow: '0 0 8px rgba(248, 113, 113, 0.4), 0 0 14px rgba(239, 68, 68, 0.32)',
     guard:
       'linear-gradient(135deg, rgba(190, 18, 60, 0.95) 0%, rgba(248, 113, 113, 0.9) 55%, rgba(239, 68, 68, 0.9) 100%)',
-    guardShadow:
-      '0 0 10px rgba(252, 165, 165, 0.5), 0 0 6px rgba(248, 113, 113, 0.45)',
-    tip:
-      'linear-gradient(115deg, rgba(254, 205, 211, 0.95) 0%, rgba(252, 165, 165, 0.9) 60%, rgba(248, 113, 113, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(248, 113, 113, 0.55), 0 0 6px rgba(239, 68, 68, 0.45)',
+    guardShadow: '0 0 10px rgba(252, 165, 165, 0.5), 0 0 6px rgba(248, 113, 113, 0.45)',
+    tip: 'linear-gradient(115deg, rgba(254, 205, 211, 0.95) 0%, rgba(252, 165, 165, 0.9) 60%, rgba(248, 113, 113, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(248, 113, 113, 0.55), 0 0 6px rgba(239, 68, 68, 0.45)',
   },
   {
     text: '#166534',
     background:
       'linear-gradient(120deg, rgba(74, 222, 128, 0.18) 0%, rgba(34, 197, 94, 0.12) 45%, rgba(22, 163, 74, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(74, 222, 128, 0.26), 0 2px 8px rgba(22, 163, 74, 0.2)',
+    windShadow: '0 8px 22px rgba(74, 222, 128, 0.26), 0 2px 8px rgba(22, 163, 74, 0.2)',
     glow: 'rgba(74, 222, 128, 0.25)',
     hoverGlow: 'rgba(34, 197, 94, 0.4)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(74, 222, 128, 0.5) 0%, rgba(34, 197, 94, 0.32) 45%, rgba(34, 197, 94, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(74, 222, 128, 0.5) 0%, rgba(34, 197, 94, 0.32) 45%, rgba(34, 197, 94, 0) 80%)',
     contentShadow: 'rgba(220, 252, 231, 0.75)',
-    blade: 'linear-gradient(90deg, #dcfce7 0%, #bbf7d0 25%, #86efac 55%, #4ade80 75%, #16a34a 100%)',
-    bladeShadow:
-      '0 0 8px rgba(74, 222, 128, 0.35), 0 0 14px rgba(34, 197, 94, 0.28)',
+    blade:
+      'linear-gradient(90deg, #dcfce7 0%, #bbf7d0 25%, #86efac 55%, #4ade80 75%, #16a34a 100%)',
+    bladeShadow: '0 0 8px rgba(74, 222, 128, 0.35), 0 0 14px rgba(34, 197, 94, 0.28)',
     guard:
       'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(22, 163, 74, 0.9) 55%, rgba(34, 197, 94, 0.9) 100%)',
-    guardShadow:
-      '0 0 10px rgba(74, 222, 128, 0.45), 0 0 6px rgba(34, 197, 94, 0.4)',
-    tip:
-      'linear-gradient(115deg, rgba(209, 250, 229, 0.95) 0%, rgba(134, 239, 172, 0.9) 60%, rgba(52, 211, 153, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(74, 222, 128, 0.55), 0 0 6px rgba(34, 197, 94, 0.4)',
+    guardShadow: '0 0 10px rgba(74, 222, 128, 0.45), 0 0 6px rgba(34, 197, 94, 0.4)',
+    tip: 'linear-gradient(115deg, rgba(209, 250, 229, 0.95) 0%, rgba(134, 239, 172, 0.9) 60%, rgba(52, 211, 153, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(74, 222, 128, 0.55), 0 0 6px rgba(34, 197, 94, 0.4)',
   },
   {
     text: '#1e3a8a',
     background:
       'linear-gradient(120deg, rgba(99, 102, 241, 0.18) 0%, rgba(59, 130, 246, 0.12) 45%, rgba(37, 99, 235, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(129, 140, 248, 0.28), 0 2px 8px rgba(59, 130, 246, 0.22)',
+    windShadow: '0 8px 22px rgba(129, 140, 248, 0.28), 0 2px 8px rgba(59, 130, 246, 0.22)',
     glow: 'rgba(99, 102, 241, 0.28)',
     hoverGlow: 'rgba(129, 140, 248, 0.45)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(165, 180, 252, 0.5) 0%, rgba(99, 102, 241, 0.32) 45%, rgba(99, 102, 241, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(165, 180, 252, 0.5) 0%, rgba(99, 102, 241, 0.32) 45%, rgba(99, 102, 241, 0) 80%)',
     contentShadow: 'rgba(224, 231, 255, 0.75)',
-    blade: 'linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 25%, #a5b4fc 55%, #818cf8 75%, #4338ca 100%)',
-    bladeShadow:
-      '0 0 8px rgba(129, 140, 248, 0.35), 0 0 14px rgba(79, 70, 229, 0.28)',
+    blade:
+      'linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 25%, #a5b4fc 55%, #818cf8 75%, #4338ca 100%)',
+    bladeShadow: '0 0 8px rgba(129, 140, 248, 0.35), 0 0 14px rgba(79, 70, 229, 0.28)',
     guard:
       'linear-gradient(135deg, rgba(67, 56, 202, 0.95) 0%, rgba(99, 102, 241, 0.9) 55%, rgba(129, 140, 248, 0.9) 100%)',
-    guardShadow:
-      '0 0 10px rgba(165, 180, 252, 0.5), 0 0 6px rgba(99, 102, 241, 0.45)',
-    tip:
-      'linear-gradient(115deg, rgba(224, 231, 255, 0.95) 0%, rgba(191, 219, 254, 0.9) 60%, rgba(148, 163, 254, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(129, 140, 248, 0.55), 0 0 6px rgba(99, 102, 241, 0.4)',
+    guardShadow: '0 0 10px rgba(165, 180, 252, 0.5), 0 0 6px rgba(99, 102, 241, 0.45)',
+    tip: 'linear-gradient(115deg, rgba(224, 231, 255, 0.95) 0%, rgba(191, 219, 254, 0.9) 60%, rgba(148, 163, 254, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(129, 140, 248, 0.55), 0 0 6px rgba(99, 102, 241, 0.4)',
   },
   {
     text: '#0f172a',
     background:
       'linear-gradient(120deg, rgba(148, 163, 184, 0.2) 0%, rgba(100, 116, 139, 0.12) 45%, rgba(71, 85, 105, 0.2) 100%)',
-    windShadow:
-      '0 8px 22px rgba(148, 163, 184, 0.3), 0 2px 8px rgba(94, 234, 212, 0.24)',
+    windShadow: '0 8px 22px rgba(148, 163, 184, 0.3), 0 2px 8px rgba(94, 234, 212, 0.24)',
     glow: 'rgba(148, 163, 184, 0.28)',
     hoverGlow: 'rgba(94, 234, 212, 0.4)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(148, 163, 184, 0.5) 0%, rgba(94, 234, 212, 0.35) 45%, rgba(148, 163, 184, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(148, 163, 184, 0.5) 0%, rgba(94, 234, 212, 0.35) 45%, rgba(148, 163, 184, 0) 80%)',
     contentShadow: 'rgba(226, 232, 240, 0.75)',
-    blade: 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 25%, #cbd5f5 55%, #a5b4fc 75%, #475569 100%)',
-    bladeShadow:
-      '0 0 8px rgba(148, 163, 184, 0.35), 0 0 14px rgba(94, 234, 212, 0.25)',
+    blade:
+      'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 25%, #cbd5f5 55%, #a5b4fc 75%, #475569 100%)',
+    bladeShadow: '0 0 8px rgba(148, 163, 184, 0.35), 0 0 14px rgba(94, 234, 212, 0.25)',
     guard:
       'linear-gradient(135deg, rgba(51, 65, 85, 0.95) 0%, rgba(148, 163, 184, 0.9) 55%, rgba(94, 234, 212, 0.85) 100%)',
-    guardShadow:
-      '0 0 10px rgba(148, 163, 184, 0.45), 0 0 6px rgba(94, 234, 212, 0.4)',
-    tip:
-      'linear-gradient(115deg, rgba(226, 232, 240, 0.95) 0%, rgba(191, 219, 254, 0.9) 60%, rgba(94, 234, 212, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(94, 234, 212, 0.5), 0 0 6px rgba(148, 163, 184, 0.4)',
+    guardShadow: '0 0 10px rgba(148, 163, 184, 0.45), 0 0 6px rgba(94, 234, 212, 0.4)',
+    tip: 'linear-gradient(115deg, rgba(226, 232, 240, 0.95) 0%, rgba(191, 219, 254, 0.9) 60%, rgba(94, 234, 212, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(94, 234, 212, 0.5), 0 0 6px rgba(148, 163, 184, 0.4)',
   },
   {
     text: '#831843',
     background:
       'linear-gradient(120deg, rgba(244, 114, 182, 0.18) 0%, rgba(236, 72, 153, 0.12) 45%, rgba(219, 39, 119, 0.18) 100%)',
-    windShadow:
-      '0 8px 22px rgba(244, 114, 182, 0.3), 0 2px 8px rgba(236, 72, 153, 0.24)',
+    windShadow: '0 8px 22px rgba(244, 114, 182, 0.3), 0 2px 8px rgba(236, 72, 153, 0.24)',
     glow: 'rgba(244, 114, 182, 0.3)',
     hoverGlow: 'rgba(236, 72, 153, 0.45)',
-    aura:
-      'radial-gradient(ellipse at center, rgba(249, 168, 212, 0.5) 0%, rgba(236, 72, 153, 0.35) 45%, rgba(236, 72, 153, 0) 80%)',
+    aura: 'radial-gradient(ellipse at center, rgba(249, 168, 212, 0.5) 0%, rgba(236, 72, 153, 0.35) 45%, rgba(236, 72, 153, 0) 80%)',
     contentShadow: 'rgba(253, 242, 248, 0.8)',
-    blade: 'linear-gradient(90deg, #fce7f3 0%, #fbcfe8 25%, #f9a8d4 55%, #f472b6 75%, #db2777 100%)',
-    bladeShadow:
-      '0 0 8px rgba(244, 114, 182, 0.4), 0 0 14px rgba(219, 39, 119, 0.32)',
+    blade:
+      'linear-gradient(90deg, #fce7f3 0%, #fbcfe8 25%, #f9a8d4 55%, #f472b6 75%, #db2777 100%)',
+    bladeShadow: '0 0 8px rgba(244, 114, 182, 0.4), 0 0 14px rgba(219, 39, 119, 0.32)',
     guard:
       'linear-gradient(135deg, rgba(190, 24, 93, 0.95) 0%, rgba(236, 72, 153, 0.9) 55%, rgba(244, 114, 182, 0.9) 100%)',
-    guardShadow:
-      '0 0 10px rgba(244, 114, 182, 0.5), 0 0 6px rgba(236, 72, 153, 0.45)',
-    tip:
-      'linear-gradient(115deg, rgba(251, 207, 232, 0.95) 0%, rgba(249, 168, 212, 0.9) 60%, rgba(244, 114, 182, 0.9) 100%)',
-    tipShadow:
-      '0 0 10px rgba(244, 114, 182, 0.55), 0 0 6px rgba(219, 39, 119, 0.45)',
+    guardShadow: '0 0 10px rgba(244, 114, 182, 0.5), 0 0 6px rgba(236, 72, 153, 0.45)',
+    tip: 'linear-gradient(115deg, rgba(251, 207, 232, 0.95) 0%, rgba(249, 168, 212, 0.9) 60%, rgba(244, 114, 182, 0.9) 100%)',
+    tipShadow: '0 0 10px rgba(244, 114, 182, 0.55), 0 0 6px rgba(219, 39, 119, 0.45)',
   },
 ]
 

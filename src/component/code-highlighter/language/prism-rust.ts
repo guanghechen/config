@@ -4,18 +4,11 @@
 
 import Prism from 'prismjs'
 
-let multilineComment: string =
-  /\/\*(?:[^*/]|\*(?!\/)|\/(?!\*)|<self>)*\*\//.source
+let multilineComment: string = /\/\*(?:[^*/]|\*(?!\/)|\/(?!\*)|<self>)*\*\//.source
 for (let index = 0; index < 2; ++index) {
-  multilineComment = multilineComment.replace(
-    /<self>/g,
-    (): string => multilineComment,
-  )
+  multilineComment = multilineComment.replace(/<self>/g, (): string => multilineComment)
 }
-multilineComment = multilineComment.replace(
-  /<self>/g,
-  (): string => /[^\s\S]/.source,
-)
+multilineComment = multilineComment.replace(/<self>/g, (): string => /[^\s\S]/.source)
 
 const rustLanguage = {
   comment: [
@@ -35,8 +28,7 @@ const rustLanguage = {
     greedy: true,
   },
   char: {
-    pattern:
-      /b?'(?:\\(?:x[0-7][\da-fA-F]|u\{(?:[\da-fA-F]_*){1,6}\}|.)|[^\\\r\n\t'])'/,
+    pattern: /b?'(?:\\(?:x[0-7][\da-fA-F]|u\{(?:[\da-fA-F]_*){1,6}\}|.)|[^\\\r\n\t'])'/,
     greedy: true,
   },
   attribute: {
@@ -107,8 +99,7 @@ const rustLanguage = {
   constant: /\b[A-Z_][A-Z_\d]+\b/,
   'class-name': /\b[A-Z]\w*\b/,
   namespace: {
-    pattern:
-      /(?:\b[a-z][a-z_\d]*\s*::\s*)*\b[a-z][a-z_\d]*\s*::(?!\s*<)/,
+    pattern: /(?:\b[a-z][a-z_\d]*\s*::\s*)*\b[a-z][a-z_\d]*\s*::(?!\s*<)/,
     inside: {
       punctuation: /::/,
     },
@@ -125,4 +116,3 @@ Prism.languages.rust = rustLanguage
 ;(Prism.languages.rust.attribute as any).inside.string = Prism.languages.rust.string
 
 Prism.languages.rs = Prism.languages.rust
-
