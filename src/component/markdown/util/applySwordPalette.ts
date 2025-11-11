@@ -198,60 +198,76 @@ const createRandomSeries = (index: number): ((offset: number) => number) => {
   return (offset: number): number => pseudoRandom(base * 13.37 + offset * 17.17)
 }
 
+// Global counter to ensure unique sword indices across all instances
+let globalSwordCounter = 0
+
 export function applySwordDeletePalette(): void {
   if (typeof document === 'undefined') return
-  const swords = document.querySelectorAll<HTMLElement>(
-    '.yozora-heading .yozora-delete, h1.yozora-root .yozora-delete',
-  )
-  if (swords.length <= 0) return
 
-  swords.forEach((element, index) => {
-    const palette = swordPalettes[index % swordPalettes.length]
-    const rand = createRandomSeries(index)
-    const rotate = -8 + rand(0.21) * 6.5
-    const skew = -7 + rand(0.43) * 6.2
-    const scaleX = 0.92 + rand(0.65) * 0.32
-    const offset = -52 + rand(0.87) * 9
-    const opacity = 0.72 + rand(1.07) * 0.26
-    const hoverOffset = 1.1 + rand(1.23) * 1.8
-    const hoverRotate = 0.6 + rand(1.39) * 1.8
-    const hoverSkew = 0.4 + rand(1.51) * 1.6
-    const hoverScale = 0.045 + rand(1.73) * 0.085
-    const saturation = 1.15 + rand(1.91) * 0.28
-    const hoverSaturation = saturation + 0.18 + rand(2.13) * 0.22
-    const auraBlur = 4 + rand(2.31) * 4.5
-    const auraDuration = 3 + rand(2.47) * 2.4
-    const bladeDuration = 2.3 + rand(2.61) * 2.4
+  // Use requestAnimationFrame to ensure DOM is fully rendered
+  requestAnimationFrame(() => {
+    const swords = document.querySelectorAll<HTMLElement>(
+      '.yozora-heading .yozora-delete, h1.yozora-root .yozora-delete',
+    )
+    if (swords.length <= 0) return
 
-    element.style.setProperty('--sword-text-color', palette.text)
-    element.style.setProperty('--sword-bg', 'transparent')
-    element.style.setProperty('--sword-wind-bg', palette.background)
-    element.style.setProperty('--sword-wind-shadow', palette.windShadow)
-    element.style.setProperty('--sword-glow-color', palette.glow)
-    element.style.setProperty('--sword-hover-glow-color', palette.hoverGlow)
-    element.style.setProperty('--sword-aura-bg', palette.aura)
-    element.style.setProperty('--sword-content-shadow', palette.contentShadow)
-    element.style.setProperty('--sword-blade-bg', palette.blade)
-    element.style.setProperty('--sword-blade-shadow', palette.bladeShadow)
-    element.style.setProperty('--sword-guard-bg', palette.guard)
-    element.style.setProperty('--sword-guard-shadow', palette.guardShadow)
-    element.style.setProperty('--sword-tip-bg', palette.tip)
-    element.style.setProperty('--sword-tip-shadow', palette.tipShadow)
-    element.style.setProperty('--sword-wind-clip', swordWindClips[index % swordWindClips.length])
-    element.style.setProperty('--sword-wind-offset', `${offset.toFixed(2)}%`)
-    element.style.setProperty('--sword-wind-rotate', `${rotate.toFixed(2)}deg`)
-    element.style.setProperty('--sword-wind-skew', `${skew.toFixed(2)}deg`)
-    element.style.setProperty('--sword-wind-scale-x', scaleX.toFixed(3))
-    element.style.setProperty('--sword-wind-opacity', opacity.toFixed(2))
-    element.style.setProperty('--sword-wind-hover-offset-delta', `${hoverOffset.toFixed(2)}%`)
-    element.style.setProperty('--sword-wind-hover-rotate', `${hoverRotate.toFixed(2)}deg`)
-    element.style.setProperty('--sword-wind-hover-skew', `${hoverSkew.toFixed(2)}deg`)
-    element.style.setProperty('--sword-wind-hover-scale', hoverScale.toFixed(3))
-    element.style.setProperty('--sword-wind-saturation', saturation.toFixed(2))
-    element.style.setProperty('--sword-wind-hover-saturation', hoverSaturation.toFixed(2))
-    element.style.setProperty('--sword-aura-blur', `${auraBlur.toFixed(2)}px`)
-    element.style.setProperty('--sword-aura-duration', `${auraDuration.toFixed(2)}s`)
-    element.style.setProperty('--sword-blade-duration', `${bladeDuration.toFixed(2)}s`)
-    element.dataset.swordIndex = `${index + 1}`
+    swords.forEach(element => {
+      // Skip if element already has a sword index (already initialized)
+      if (element.dataset.swordIndex) return
+
+      // Assign unique global index
+      const globalIndex = globalSwordCounter++
+      const palette = swordPalettes[globalIndex % swordPalettes.length]
+      const rand = createRandomSeries(globalIndex)
+      const rotate = -8 + rand(0.21) * 6.5
+      const skew = -7 + rand(0.43) * 6.2
+      const scaleX = 0.92 + rand(0.65) * 0.32
+      const offset = -52 + rand(0.87) * 9
+      const opacity = 0.72 + rand(1.07) * 0.26
+      const hoverOffset = 1.1 + rand(1.23) * 1.8
+      const hoverRotate = 0.6 + rand(1.39) * 1.8
+      const hoverSkew = 0.4 + rand(1.51) * 1.6
+      const hoverScale = 0.045 + rand(1.73) * 0.085
+      const saturation = 1.15 + rand(1.91) * 0.28
+      const hoverSaturation = saturation + 0.18 + rand(2.13) * 0.22
+      const auraBlur = 4 + rand(2.31) * 4.5
+      const auraDuration = 3 + rand(2.47) * 2.4
+      const bladeDuration = 2.3 + rand(2.61) * 2.4
+
+      element.style.setProperty('--sword-text-color', palette.text)
+      element.style.setProperty('--sword-bg', 'transparent')
+      element.style.setProperty('--sword-wind-bg', palette.background)
+      element.style.setProperty('--sword-wind-shadow', palette.windShadow)
+      element.style.setProperty('--sword-glow-color', palette.glow)
+      element.style.setProperty('--sword-hover-glow-color', palette.hoverGlow)
+      element.style.setProperty('--sword-aura-bg', palette.aura)
+      element.style.setProperty('--sword-content-shadow', palette.contentShadow)
+      element.style.setProperty('--sword-blade-bg', palette.blade)
+      element.style.setProperty('--sword-blade-shadow', palette.bladeShadow)
+      element.style.setProperty('--sword-guard-bg', palette.guard)
+      element.style.setProperty('--sword-guard-shadow', palette.guardShadow)
+      element.style.setProperty('--sword-tip-bg', palette.tip)
+      element.style.setProperty('--sword-tip-shadow', palette.tipShadow)
+      element.style.setProperty(
+        '--sword-wind-clip',
+        swordWindClips[globalIndex % swordWindClips.length],
+      )
+      element.style.setProperty('--sword-wind-offset', `${offset.toFixed(2)}%`)
+      element.style.setProperty('--sword-wind-rotate', `${rotate.toFixed(2)}deg`)
+      element.style.setProperty('--sword-wind-skew', `${skew.toFixed(2)}deg`)
+      element.style.setProperty('--sword-wind-scale-x', scaleX.toFixed(3))
+      element.style.setProperty('--sword-wind-opacity', opacity.toFixed(2))
+      element.style.setProperty('--sword-wind-hover-offset-delta', `${hoverOffset.toFixed(2)}%`)
+      element.style.setProperty('--sword-wind-hover-rotate', `${hoverRotate.toFixed(2)}deg`)
+      element.style.setProperty('--sword-wind-hover-skew', `${hoverSkew.toFixed(2)}deg`)
+      element.style.setProperty('--sword-wind-hover-scale', hoverScale.toFixed(3))
+      element.style.setProperty('--sword-wind-saturation', saturation.toFixed(2))
+      element.style.setProperty('--sword-wind-hover-saturation', hoverSaturation.toFixed(2))
+      element.style.setProperty('--sword-aura-blur', `${auraBlur.toFixed(2)}px`)
+      element.style.setProperty('--sword-aura-duration', `${auraDuration.toFixed(2)}s`)
+      element.style.setProperty('--sword-blade-duration', `${bladeDuration.toFixed(2)}s`)
+      // eslint-disable-next-line no-param-reassign
+      element.dataset.swordIndex = `${globalIndex + 1}`
+    })
   })
 }
