@@ -52,6 +52,14 @@
   -webkit-hyphenate-character: '-';
 }
 
+/* List item content should never use justified text */
+.yozora-list-item > div {
+  text-align: left !important;
+  hyphens: none;
+  text-justify: none;
+  display: block;
+}
+
 .yozora-delete {
   display: inline;
   color: var(--color-gray-600);
@@ -78,9 +86,7 @@ h1.yozora-root .yozora-delete {
     rgba(34, 197, 94, 0.12) 45%,
     rgba(45, 212, 191, 0.18) 100%
   );
-  --sword-wind-shadow:
-    0 8px 22px rgba(45, 212, 191, 0.22),
-    0 2px 8px rgba(20, 184, 166, 0.18);
+  --sword-wind-shadow: 0 8px 22px rgba(45, 212, 191, 0.22), 0 2px 8px rgba(20, 184, 166, 0.18);
   --sword-glow-color: rgba(45, 212, 191, 0.2);
   --sword-hover-glow-color: rgba(56, 189, 248, 0.35);
   --sword-aura-bg: radial-gradient(
@@ -98,27 +104,21 @@ h1.yozora-root .yozora-delete {
     #22d3ee 75%,
     #0f766e 100%
   );
-  --sword-blade-shadow:
-    0 0 8px rgba(16, 185, 129, 0.35),
-    0 0 14px rgba(20, 184, 166, 0.25);
+  --sword-blade-shadow: 0 0 8px rgba(16, 185, 129, 0.35), 0 0 14px rgba(20, 184, 166, 0.25);
   --sword-guard-bg: linear-gradient(
     135deg,
     rgba(15, 118, 110, 0.95) 0%,
     rgba(34, 197, 94, 0.88) 50%,
     rgba(56, 189, 248, 0.85) 100%
   );
-  --sword-guard-shadow:
-    0 0 10px rgba(45, 212, 191, 0.45),
-    0 0 6px rgba(34, 197, 94, 0.4);
+  --sword-guard-shadow: 0 0 10px rgba(45, 212, 191, 0.45), 0 0 6px rgba(34, 197, 94, 0.4);
   --sword-tip-bg: linear-gradient(
     115deg,
     rgba(186, 230, 253, 0.9) 0%,
     rgba(56, 189, 248, 0.85) 60%,
     rgba(14, 165, 233, 0.88) 100%
   );
-  --sword-tip-shadow:
-    0 0 10px rgba(56, 189, 248, 0.45),
-    0 0 6px rgba(34, 197, 94, 0.35);
+  --sword-tip-shadow: 0 0 10px rgba(56, 189, 248, 0.45), 0 0 6px rgba(34, 197, 94, 0.35);
   --sword-wind-offset: -49%;
   --sword-wind-rotate: -6deg;
   --sword-wind-skew: -6deg;
@@ -155,7 +155,9 @@ h1.yozora-root .yozora-delete {
   background: transparent;
   text-decoration-color: transparent;
   overflow: visible;
-  transition: transform 0.25s ease, filter 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    filter 0.25s ease;
   filter: drop-shadow(0 2px 6px var(--sword-glow-color));
 }
 
@@ -239,7 +241,9 @@ h1.yozora-root .yozora-delete__blade::before {
     0% 62%
   );
   transform: translate(-18%, -50%) rotate(-9deg);
-  box-shadow: var(--sword-guard-shadow), 0 0 4px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    var(--sword-guard-shadow),
+    0 0 4px rgba(0, 0, 0, 0.3);
   z-index: 2;
   pointer-events: none;
 }
@@ -270,18 +274,31 @@ h1.yozora-root .yozora-delete::after {
   height: 110%;
   background: var(--sword-wind-bg);
   opacity: var(--sword-wind-opacity);
-  transform: translateY(var(--sword-wind-offset))
-    rotate(var(--sword-wind-rotate))
-    skewX(var(--sword-wind-skew))
-    scaleX(var(--sword-wind-scale-x));
+  transform: translateY(var(--sword-wind-offset)) rotate(var(--sword-wind-rotate))
+    skewX(var(--sword-wind-skew)) scaleX(var(--sword-wind-scale-x));
   clip-path: var(
     --sword-wind-clip,
-    polygon(0% 65%, 18% 48%, 35% 38%, 52% 32%, 80% 25%, 100% 0%, 100% 55%, 88% 68%, 68% 85%, 42% 92%, 0% 80%)
+    polygon(
+      0% 65%,
+      18% 48%,
+      35% 38%,
+      52% 32%,
+      80% 25%,
+      100% 0%,
+      100% 55%,
+      88% 68%,
+      68% 85%,
+      42% 92%,
+      0% 80%
+    )
   );
   z-index: 0;
   pointer-events: none;
   box-shadow: var(--sword-wind-shadow);
-  transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease,
+    filter 0.3s ease;
   filter: saturate(var(--sword-wind-saturation, 1.2));
 }
 
@@ -431,9 +448,7 @@ html.dark {
       rgba(14, 165, 233, 0.16) 40%,
       rgba(13, 71, 161, 0.32) 100%
     );
-    --sword-wind-shadow:
-      0 10px 24px rgba(14, 165, 233, 0.32),
-      0 4px 12px rgba(13, 148, 136, 0.28);
+    --sword-wind-shadow: 0 10px 24px rgba(14, 165, 233, 0.32), 0 4px 12px rgba(13, 148, 136, 0.28);
     --sword-glow-color: rgba(14, 165, 233, 0.28);
     --sword-hover-glow-color: rgba(59, 130, 246, 0.45);
     --sword-aura-bg: radial-gradient(
@@ -451,27 +466,21 @@ html.dark {
       #38bdf8 75%,
       #0ea5e9 100%
     );
-    --sword-blade-shadow:
-      0 0 12px rgba(56, 189, 248, 0.45),
-      0 0 16px rgba(45, 212, 191, 0.3);
+    --sword-blade-shadow: 0 0 12px rgba(56, 189, 248, 0.45), 0 0 16px rgba(45, 212, 191, 0.3);
     --sword-guard-bg: linear-gradient(
       135deg,
       rgba(15, 118, 110, 0.95) 0%,
       rgba(34, 197, 94, 0.88) 55%,
       rgba(59, 130, 246, 0.85) 100%
     );
-    --sword-guard-shadow:
-      0 0 14px rgba(45, 212, 191, 0.45),
-      0 0 10px rgba(34, 197, 94, 0.45);
+    --sword-guard-shadow: 0 0 14px rgba(45, 212, 191, 0.45), 0 0 10px rgba(34, 197, 94, 0.45);
     --sword-tip-bg: linear-gradient(
       115deg,
       rgba(190, 242, 100, 0.75) 0%,
       rgba(59, 130, 246, 0.85) 65%,
       rgba(59, 130, 246, 0.95) 100%
     );
-    --sword-tip-shadow:
-      0 0 12px rgba(56, 189, 248, 0.55),
-      0 0 8px rgba(34, 197, 94, 0.4);
+    --sword-tip-shadow: 0 0 12px rgba(56, 189, 248, 0.55), 0 0 8px rgba(34, 197, 94, 0.4);
     --sword-wind-saturation: 1.3;
     --sword-wind-hover-saturation: 1.55;
   }
