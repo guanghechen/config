@@ -1,4 +1,5 @@
 pub mod algorithm;
+pub mod dict;
 pub mod find;
 pub mod r#fn;
 pub mod fs;
@@ -17,6 +18,8 @@ use mlua::MultiValue as LuaMultiValue;
 use mlua::Value as LuaValue;
 use mlua::prelude::*;
 
+use crate::dict::search::SearchResultKind;
+
 #[inline]
 fn f<A, R, F>(lua: &Lua, func: F) -> LuaResult<Function>
 where
@@ -32,6 +35,28 @@ fn fn_module(lua: &Lua) -> LuaResult<LuaTable> {
         ("uuid", f(lua, |_, ()| Ok(r#fn::uuid()))?),
         ("md5", f(lua, |_, input: String| Ok(r#fn::md5(&input)))?),
     ])
+}
+
+fn dict_module(lua: &Lua) -> LuaResult<LuaTable> {
+    lua.create_table_from([(
+        "search",
+        f(lua, |lua, params: LuaValue| {
+            let options = crate::types::IDictSearchOptions::from_lua(params, lua)?;
+            let results = crate::dict::search::search(&options);
+            let table = lua.create_table_with_capacity(results.len(), 0)?;
+            for (idx, result) in results.into_iter().enumerate() {
+                let entry = lua.create_table()?;
+                let kind = match result.kind {
+                    SearchResultKind::Scalar => "scalar",
+                    SearchResultKind::Segment => "segment",
+                };
+                entry.set("type", kind)?;
+                entry.set("indexes", result.indexes)?;
+                table.set(idx + 1, entry)?;
+            }
+            Ok(LuaValue::Table(table))
+        })?,
+    )])
 }
 
 fn string_module(lua: &Lua) -> LuaResult<LuaTable> {
@@ -644,6 +669,7 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
 #[mlua::lua_module]
 fn rstd(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
+    exports.set("dict", dict_module(lua)?)?;
     exports.set("string", string_module(lua)?)?;
     exports.set("fn", fn_module(lua)?)?;
     exports.set("path", path_module(lua)?)?;

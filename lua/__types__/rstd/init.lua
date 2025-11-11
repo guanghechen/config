@@ -4,6 +4,7 @@
 ---@class rstd
 ---@field public string                 rstd.string
 ---@field public fn                     rstd.fn
+---@field public dict                   rstd.dict
 ---@field public path                   rstd.path
 ---@field public fs                     rstd.fs
 ---@field public replace                rstd.replace

@@ -1,8 +1,5 @@
 {
-  "ignorePaths": [
-    "lua/std/fileicon.lua",
-    "lsp/yamlls.lua"
-  ],
+  "ignorePaths": ["lua/resource/dict/", "lua/std/fileicon.lua", "lsp/yamlls.lua"],
   "language": "en",
   "version": "0.2",
   "words": [

@@ -2,9 +2,9 @@ use crate::string;
 use crate::types::IFindFilesFailedResult;
 use crate::types::IFindFilesOptions;
 use crate::types::IFindFilesSucceedResult;
+use ignore::WalkBuilder;
 use ignore::overrides::Override;
 use ignore::overrides::OverrideBuilder;
-use ignore::WalkBuilder;
 use regex::RegexBuilder;
 use std::path::Path;
 use std::path::PathBuf;
@@ -58,13 +58,7 @@ fn build_overrides(
         }
         builder
             .add(&format!("!{}", trimmed))
-            .map_err(|error| {
-                format!(
-                    "Invalid exclude glob '{}': {}",
-                    trimmed,
-                    error
-                )
-            })?;
+            .map_err(|error| format!("Invalid exclude glob '{}': {}", trimmed, error))?;
     }
 
     builder
@@ -81,12 +75,8 @@ pub fn find_files(
     let exclude_patterns = string::parse_comma_list(&options.exclude_patterns);
 
     let matcher = build_matcher(options).map_err(|error| IFindFilesFailedResult { error })?;
-    let overrides = build_overrides(
-        &cwd,
-        &exclude_patterns,
-        options.flag_case_sensitive,
-    )
-    .map_err(|error| IFindFilesFailedResult { error })?;
+    let overrides = build_overrides(&cwd, &exclude_patterns, options.flag_case_sensitive)
+        .map_err(|error| IFindFilesFailedResult { error })?;
 
     let mut roots: Vec<PathBuf> = Vec::new();
     if search_paths.is_empty() {
@@ -178,8 +168,8 @@ mod tests {
 
     impl TempWorkspace {
         fn new(prefix: &str) -> Self {
-            let path = std::env::temp_dir()
-                .join(format!("rstd-find-{}-{}", prefix, Uuid::new_v4()));
+            let path =
+                std::env::temp_dir().join(format!("rstd-find-{}-{}", prefix, Uuid::new_v4()));
             fs::create_dir_all(&path).expect("failed to create temp workspace");
             Self { path }
         }
@@ -228,11 +218,9 @@ mod tests {
         fs::create_dir_all(&nested).expect("failed to create nested directory");
         fs::write(nested.join("TestFile.TXT"), "test file\n")
             .expect("failed to write nested test file");
-        fs::write(nested.join("notes.md"), "notes\n")
-            .expect("failed to write markdown file");
+        fs::write(nested.join("notes.md"), "notes\n").expect("failed to write markdown file");
         fs::create_dir_all(nested.join("deep")).expect("failed to create deep directory");
-        fs::write(nested.join("deep/sample.rs"), "sample\n")
-            .expect("failed to write sample file");
+        fs::write(nested.join("deep/sample.rs"), "sample\n").expect("failed to write sample file");
 
         workspace
     }
@@ -262,10 +250,7 @@ mod tests {
     fn find_in_workspace(flag_gitignore: bool) -> HashSet<String> {
         let workspace = setup_workspace();
         let options = IFindFilesOptions {
-            cwd: workspace
-                .path()
-                .to_string_lossy()
-                .to_string(),
+            cwd: workspace.path().to_string_lossy().to_string(),
             flag_case_sensitive: false,
             flag_gitignore,
             flag_regex: false,

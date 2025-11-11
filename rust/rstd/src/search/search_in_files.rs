@@ -557,8 +557,8 @@ mod tests {
 
     impl TempWorkspace {
         fn new(prefix: &str) -> Self {
-            let path = std::env::temp_dir()
-                .join(format!("rstd-search-{}-{}", prefix, Uuid::new_v4()));
+            let path =
+                std::env::temp_dir().join(format!("rstd-search-{}-{}", prefix, Uuid::new_v4()));
             fs::create_dir_all(&path).expect("failed to create temp workspace");
             Self { path }
         }
@@ -597,18 +597,21 @@ mod tests {
         workspace
     }
 
-fn setup_nested_gitignore_workspace() -> (TempWorkspace, PathBuf) {
-    let workspace = TempWorkspace::new("gitignore-nested");
-    let base = workspace.path();
-    let root = base.join("nested");
+    fn setup_nested_gitignore_workspace() -> (TempWorkspace, PathBuf) {
+        let workspace = TempWorkspace::new("gitignore-nested");
+        let base = workspace.path();
+        let root = base.join("nested");
 
         fs::create_dir_all(&root).expect("failed to create nested workspace root");
         fs::write(base.join(".gitignore"), "ignored.txt\nignored_dir/\n")
             .expect("failed to write parent .gitignore");
         fs::write(root.join("tracked.txt"), "needle in tracked file\n")
             .expect("failed to write nested tracked fixture");
-        fs::write(root.join("ignored.txt"), "needle hidden by parent gitignore\n")
-            .expect("failed to write nested ignored fixture");
+        fs::write(
+            root.join("ignored.txt"),
+            "needle hidden by parent gitignore\n",
+        )
+        .expect("failed to write nested ignored fixture");
         fs::create_dir_all(root.join("ignored_dir")).expect("failed to create nested ignored_dir");
         fs::write(
             root.join("ignored_dir/nested.txt"),
@@ -616,33 +619,33 @@ fn setup_nested_gitignore_workspace() -> (TempWorkspace, PathBuf) {
         )
         .expect("failed to write nested ignored dir fixture");
 
-    (workspace, root)
-}
+        (workspace, root)
+    }
 
-fn setup_pattern_workspace() -> TempWorkspace {
-    let workspace = TempWorkspace::new("pattern");
-    let base = workspace.path();
+    fn setup_pattern_workspace() -> TempWorkspace {
+        let workspace = TempWorkspace::new("pattern");
+        let base = workspace.path();
 
-    fs::write(base.join("root.txt"), "needle in root\n").expect("failed to write root fixture");
+        fs::write(base.join("root.txt"), "needle in root\n").expect("failed to write root fixture");
 
-    let nested = base.join("nested");
-    fs::create_dir_all(&nested).expect("failed to create nested directory");
-    fs::write(nested.join("TestFile.TXT"), "Needle inside nested\n")
-        .expect("failed to write nested fixture");
-    fs::write(nested.join("notes.md"), "notes without keyword\n")
-        .expect("failed to write markdown fixture");
+        let nested = base.join("nested");
+        fs::create_dir_all(&nested).expect("failed to create nested directory");
+        fs::write(nested.join("TestFile.TXT"), "Needle inside nested\n")
+            .expect("failed to write nested fixture");
+        fs::write(nested.join("notes.md"), "notes without keyword\n")
+            .expect("failed to write markdown fixture");
 
-    let deep = nested.join("deep");
-    fs::create_dir_all(&deep).expect("failed to create deep directory");
-    fs::write(deep.join("sample.rs"), "needle appears here\n")
-        .expect("failed to write sample fixture");
+        let deep = nested.join("deep");
+        fs::create_dir_all(&deep).expect("failed to create deep directory");
+        fs::write(deep.join("sample.rs"), "needle appears here\n")
+            .expect("failed to write sample fixture");
 
-    workspace
-}
+        workspace
+    }
 
-fn search_in_workspace(flag_gitignore: bool) -> HashSet<String> {
-    let workspace = setup_gitignore_workspace();
-    let cwd = workspace.path().to_string_lossy().to_string();
+    fn search_in_workspace(flag_gitignore: bool) -> HashSet<String> {
+        let workspace = setup_gitignore_workspace();
+        let cwd = workspace.path().to_string_lossy().to_string();
 
         let options = ISearchInFilesOptions {
             cwd: Some(cwd),
@@ -658,17 +661,13 @@ fn search_in_workspace(flag_gitignore: bool) -> HashSet<String> {
             specified_filepath: None,
         };
 
-    let result = search_in_files(&options).expect("expected successful search");
-    result
-        .items
-        .into_iter()
-        .map(|file| file.p)
-        .collect()
-}
+        let result = search_in_files(&options).expect("expected successful search");
+        result.items.into_iter().map(|file| file.p).collect()
+    }
 
-fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
-    result.items.into_iter().map(|file| file.p).collect()
-}
+    fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
+        result.items.into_iter().map(|file| file.p).collect()
+    }
 
     fn search_in_nested_workspace(flag_gitignore: bool) -> HashSet<String> {
         let (_workspace, root) = setup_nested_gitignore_workspace();
@@ -689,11 +688,7 @@ fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
         };
 
         let result = search_in_files(&options).expect("expected successful search");
-        result
-            .items
-            .into_iter()
-            .map(|file| file.p)
-            .collect()
+        result.items.into_iter().map(|file| file.p).collect()
     }
 
     #[test]
@@ -918,7 +913,8 @@ fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
             specified_filepath: None,
         };
 
-        let files = collect_result_paths(search_in_files(&options).expect("expected search success"));
+        let files =
+            collect_result_paths(search_in_files(&options).expect("expected search success"));
         assert!(
             files.contains("root.txt"),
             "case-insensitive search should include root.txt"
@@ -955,7 +951,8 @@ fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
             specified_filepath: None,
         };
 
-        let files = collect_result_paths(search_in_files(&options).expect("expected search success"));
+        let files =
+            collect_result_paths(search_in_files(&options).expect("expected search success"));
         assert!(
             files.contains("root.txt"),
             "case-sensitive search should include root.txt"
@@ -988,7 +985,8 @@ fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
             specified_filepath: None,
         };
 
-        let files = collect_result_paths(search_in_files(&options).expect("expected search success"));
+        let files =
+            collect_result_paths(search_in_files(&options).expect("expected search success"));
         assert_eq!(
             files,
             HashSet::from(["nested/TestFile.TXT".to_string()]),
@@ -1014,7 +1012,8 @@ fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
             specified_filepath: None,
         };
 
-        let files = collect_result_paths(search_in_files(&options).expect("expected search success"));
+        let files =
+            collect_result_paths(search_in_files(&options).expect("expected search success"));
         assert!(
             files.contains("root.txt"),
             "root.txt should remain when excluding nested txt files"
@@ -1047,7 +1046,8 @@ fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
             specified_filepath: None,
         };
 
-        let files = collect_result_paths(search_in_files(&options).expect("expected search success"));
+        let files =
+            collect_result_paths(search_in_files(&options).expect("expected search success"));
         assert!(
             !files.contains("root.txt"),
             "files outside the search path should not be returned"
@@ -1080,7 +1080,8 @@ fn collect_result_paths(result: ISearchFileResult) -> HashSet<String> {
             specified_filepath: Some("nested/deep/sample.rs".to_string()),
         };
 
-        let files = collect_result_paths(search_in_files(&options).expect("expected search success"));
+        let files =
+            collect_result_paths(search_in_files(&options).expect("expected search success"));
         assert_eq!(
             files,
             HashSet::from(["nested/deep/sample.rs".to_string()]),

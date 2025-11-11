@@ -28,9 +28,8 @@ return {
       [eve.filetype.UX_PICKER_FINDER] = { "path" },
     }
     do
-      local code_sources = { "lsp", "path", "snippets", "buffer" }
-      -- Add our custom '@' path source
-      table.insert(code_sources, "path_at")
+      local code_sources = { "lsp", "path_at", "path", "snippets", "buffer", "dict" }
+
       for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do
         if sources_per_filetype[cmp_code] == nil then
           sources_per_filetype[cmp_code] = code_sources
@@ -124,6 +123,7 @@ return {
               -- { "kind_icon", "source_name" },
               { "kind_icon" },
               { "label", "label_description", gap = 1 },
+              { "source_name" },
             },
             components = {
               item_idx = {
@@ -152,7 +152,7 @@ return {
               },
               source_name = {
                 text = function(ctx)
-                  return ctx.source_name:lower()
+                  return string.format("[%s]", ctx.source_name:lower())
                 end,
                 highlight = function()
                   return "BlinkCmpSource"
@@ -337,6 +337,11 @@ return {
           cmdline = {
             name = "cmdline",
             module = "blink.cmp.sources.cmdline",
+          },
+          dict = {
+            name = "dict",
+            module = "ghc.cmp.dict",
+            score_offset = 95,
           },
           lsp = {
             name = "lsp",

@@ -168,6 +168,7 @@ fn search_single_line(
             n_pattern_chars,
             score_scalar,
             score_scalar_bonus,
+            flag_case_sensitive,
         ) {
             matches.push(ISearchInLinesLiteralLineMatch {
                 lnum: line_idx + 1,
@@ -186,8 +187,9 @@ fn fuzzy_match_line(
     n_pattern_chars: usize,
     score_scalar: u32,
     score_scalar_bonus: f64,
+    case_sensitive: bool,
 ) -> Option<(u32, Vec<ISearchInLinesLiteralMatchPoint>)> {
-    if line_view.is_empty() || pattern_chars.is_empty() {
+    if line_view.is_empty() || n_pattern_chars == 0 {
         return None;
     }
 
@@ -250,10 +252,35 @@ fn fuzzy_match_line(
         let mut i: usize = last_ti;
         last_ti = ti;
         let mut max_weight: usize = 0;
+        let mut heuristic_bonus: i32 = 0;
+        let mut prev_end: Option<usize> = None;
 
         for piece in &mut pattern_matches {
-            let weight: usize = piece.end - piece.start;
-            max_weight = max_weight.max(weight);
+            let length = piece.end - piece.start;
+            max_weight = max_weight.max(length);
+
+            if length > 1 {
+                heuristic_bonus += 50 * (length as i32);
+            }
+
+            let start_char_index = piece.start;
+            if start_char_index == 0 {
+                heuristic_bonus += 120;
+            } else if is_boundary(
+                line_chars[start_char_index - 1],
+                line_chars[start_char_index],
+                case_sensitive,
+            ) {
+                heuristic_bonus += 90;
+            }
+
+            if let Some(prev) = prev_end {
+                let gap = piece.start.saturating_sub(prev);
+                if gap > 1 {
+                    heuristic_bonus -= (gap as i32) * 15;
+                }
+            }
+            prev_end = Some(piece.end);
 
             while i < piece.start {
                 len += line_chars[i].len_utf8();
@@ -272,7 +299,8 @@ fn fuzzy_match_line(
 
         let bonus: u32 =
             (max_weight as f64 / n_pattern_chars as f64 * score_scalar_bonus).round() as u32;
-        score += score_scalar + bonus;
+        let adjusted = heuristic_bonus.max(0) as u32;
+        score = score.saturating_add(score_scalar + bonus + adjusted);
     }
 
     if score == 0 {
@@ -280,6 +308,17 @@ fn fuzzy_match_line(
     }
 
     Some((score, all_pattern_matches))
+}
+
+fn is_boundary(prev: char, current: char, case_sensitive: bool) -> bool {
+    if !prev.is_alphanumeric() && current.is_alphanumeric() {
+        return true;
+    }
+    if case_sensitive {
+        prev.is_lowercase() && current.is_uppercase()
+    } else {
+        prev == '_' || prev == '-' || prev == ' '
+    }
 }
 
 #[cfg(test)]
