@@ -6,9 +6,10 @@ import Prism from 'prismjs'
 
 let multilineComment: string = /\/\*(?:[^*/]|\*(?!\/)|\/(?!\*)|<self>)*\*\//.source
 for (let index = 0; index < 2; ++index) {
-  multilineComment = multilineComment.replace(/<self>/g, (): string => multilineComment)
+  const current = multilineComment
+  multilineComment = current.replace(/<self>/g, current)
 }
-multilineComment = multilineComment.replace(/<self>/g, (): string => /[^\s\S]/.source)
+multilineComment = multilineComment.replace(/<self>/g, /[^\s\S]/.source)
 
 const rustLanguage = {
   comment: [
@@ -32,7 +33,7 @@ const rustLanguage = {
     greedy: true,
   },
   attribute: {
-    pattern: /#!?\[(?:[^\[\]"]|"(?:\\[\s\S]|[^\\"])*")*\]/,
+    pattern: /#!?\[(?:[^"[\]]|"(?:\\[\s\S]|[^\\"])*")*\]/,
     greedy: true,
     alias: 'attr-name',
     inside: {
@@ -108,7 +109,7 @@ const rustLanguage = {
     /\b(?:0x[\dA-Fa-f](?:_?[\dA-Fa-f])*|0o[0-7](?:_?[0-7])*|0b[01](?:_?[01])*|(?:(?:\d(?:_?\d)*)?\.)?\d(?:_?\d)*(?:[Ee][+-]?\d+)?)(?:_?(?:f32|f64|[iu](?:8|16|32|64|size)?))?\b/,
   boolean: /\b(?:false|true)\b/,
   punctuation: /->|\.\.=|\.{1,3}|::|[{}[\];(),:]/,
-  operator: /[-+*\/%!^]=?|=[=>]?|&[&=]?|\|[|=]?|<<?=?|>>?=?|[@?]/,
+  operator: /[-+*/%!^]=?|=[=>]?|&[&=]?|\|[|=]?|<<?=?|>>?=?|[@?]/,
 }
 
 Prism.languages.rust = rustLanguage

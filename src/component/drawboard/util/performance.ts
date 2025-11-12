@@ -174,7 +174,7 @@ export const useRafRender = (
 ): void => {
   React.useEffect(() => {
     performanceManager.scheduleRender(id, callback)
-  }, deps)
+  }, [id, callback, deps])
 
   React.useEffect(() => {
     return () => performanceManager.cancelRender(id)
@@ -189,7 +189,7 @@ export const useDebouncedRender = (
 ): void => {
   React.useEffect(() => {
     performanceManager.debounceRender(id, callback, delay)
-  }, deps)
+  }, [id, callback, delay, deps])
 
   React.useEffect(() => {
     return () => performanceManager.cancelRender(id)
