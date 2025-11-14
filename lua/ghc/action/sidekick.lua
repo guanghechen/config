@@ -3,11 +3,6 @@ local __module_name__ = "ghc.action.sidekick" ---@type string
 ---@class ghc.action.sidekick
 local M = {}
 
-local function read_buffer(bufnr)
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  return table.concat(lines, "\n")
-end
-
 ---@param subject                       string
 ---@return nil
 local function notify_submit_success(subject)
@@ -56,9 +51,11 @@ function M.detach_agent()
   require("sidekick.cli").close()
 end
 
+---@return nil
 function M.submit_buffer()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local text = read_buffer(bufnr) ---@type string
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local text = eve.buf.retrieve_split_block(winnr) ---@type string
+
   local ok_cli, cli = pcall(require, "sidekick.cli")
   if not ok_cli then
     std.reporter.warn({
@@ -111,7 +108,8 @@ end
 
 function M.send_buffer()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local text = read_buffer(bufnr) ---@type string
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+  local text = table.concat(lines, "\n") ---@type string
   require("sidekick.cli").send({ text = { { { text } } }, render = false })
 end
 
