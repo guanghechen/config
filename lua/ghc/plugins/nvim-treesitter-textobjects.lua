@@ -23,170 +23,96 @@ return {
     local select = require("nvim-treesitter-textobjects.select")
     local move = require("nvim-treesitter-textobjects.move")
 
-    ---@type std.t.IKeymap[]
-    local keymaps = {
-      {
-        modes = { "x", "o" },
-        key = "af",
-        callback = function()
-          select.select_textobject("@function.outer", "textobjects")
-        end,
+    ---@param key string
+    ---@param query string|string[]
+    ---@return string
+    local function make_move_desc(key, query)
+      local queries = type(query) == "table" and query or { query } ---@type string[]
+      local parts = {}
+      for _, q in ipairs(queries) do
+        local part = q:gsub("@", ""):gsub("%..*", "")
+        part = part:sub(1, 1):upper() .. part:sub(2)
+        parts[#parts + 1] = part
+      end
+      local prefix = key:sub(1, 1) == "[" and "Prev " or "Next "
+      local suffix = key:sub(2, 2) == key:sub(2, 2):upper() and " End" or " Start"
+      return prefix .. table.concat(parts, " or ") .. suffix
+    end
+
+    ---@alias ITreeTextobjectMoveSpec { key: string, query: string|string[], source?: string, desc?: string, modes?: string[] }
+
+    ---@type table<string, ITreeTextobjectMoveSpec[]>
+    local move_specs = {
+      goto_next_start = {
+        { key = "]a", query = "@parameter.inner" },
+        { key = "]b", query = "@block.outer" },
+        { key = "]c", query = "@class.outer" },
+        { key = "]f", query = "@function.outer" },
+        { key = "]s", query = "@local.scope", source = "locals", desc = "Next Scope Start" },
+        { key = "]z", query = "@fold", source = "folds", desc = "Next Fold Start" },
       },
-      {
-        modes = { "x", "o" },
-        key = "if",
-        callback = function()
-          select.select_textobject("@function.inner", "textobjects")
-        end,
+      goto_next_end = {
+        { key = "]A", query = "@parameter.inner" },
+        { key = "]C", query = "@class.outer" },
+        { key = "]F", query = "@function.outer" },
       },
-      {
-        modes = { "x", "o" },
-        key = "ac",
-        callback = function()
-          select.select_textobject("@class.outer", "textobjects")
-        end,
+      goto_previous_start = {
+        { key = "[a", query = "@parameter.inner" },
+        { key = "[b", query = "@block.outer" },
+        { key = "[c", query = "@class.outer" },
+        { key = "[f", query = "@function.outer" },
+        { key = "[s", query = "@local.scope", source = "locals", desc = "Prev Scope Start" },
+        { key = "[z", query = "@fold", source = "folds", desc = "Prev Fold Start" },
       },
-      {
-        modes = { "x", "o" },
-        key = "ic",
-        callback = function()
-          select.select_textobject("@class.inner", "textobjects")
-        end,
-      },
-      {
-        modes = { "x", "o" },
-        key = "as",
-        callback = function()
-          select.select_textobject("@local.scope", "locals")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]a",
-        callback = function()
-          move.goto_next_start("@parameter.inner", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]b",
-        callback = function()
-          move.goto_next_start("@block.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]c",
-        callback = function()
-          move.goto_next_start("@class.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]f",
-        callback = function()
-          move.goto_next_start("@function.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]s",
-        callback = function()
-          move.goto_next_start("@local.scope", "locals")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]z",
-        callback = function()
-          move.goto_next_start("@fold", "folds")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]A",
-        callback = function()
-          move.goto_next_end("@parameter.inner", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]C",
-        callback = function()
-          move.goto_next_end("@class.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "]F",
-        callback = function()
-          move.goto_next_end("@function.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[a",
-        callback = function()
-          move.goto_previous_start("@parameter.inner", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[b",
-        callback = function()
-          move.goto_previous_start("@block.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[c",
-        callback = function()
-          move.goto_previous_start("@class.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[f",
-        callback = function()
-          move.goto_previous_start("@function.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[s",
-        callback = function()
-          move.goto_previous_start("@local.scope", "locals")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[z",
-        callback = function()
-          move.goto_previous_start("@fold", "folds")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[A",
-        callback = function()
-          move.goto_previous_end("@parameter.inner", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[C",
-        callback = function()
-          move.goto_previous_end("@class.outer", "textobjects")
-        end,
-      },
-      {
-        modes = { "n", "x", "o" },
-        key = "[F",
-        callback = function()
-          move.goto_previous_end("@function.outer", "textobjects")
-        end,
+      goto_previous_end = {
+        { key = "[A", query = "@parameter.inner" },
+        { key = "[C", query = "@class.outer" },
+        { key = "[F", query = "@function.outer" },
       },
     }
+
+    ---@type std.t.IKeymap[]
+    local keymaps = {}
+
+    ---@type { key: string, query: string, source?: string, desc: string, modes?: string[] }[]
+    local select_specs = {
+      { key = "af", query = "@function.outer", desc = "Select Function Outer" },
+      { key = "if", query = "@function.inner", desc = "Select Function Inner" },
+      { key = "ac", query = "@class.outer", desc = "Select Class Outer" },
+      { key = "ic", query = "@class.inner", desc = "Select Class Inner" },
+      { key = "as", query = "@local.scope", source = "locals", desc = "Select Scope" },
+    }
+
+    for _, spec in ipairs(select_specs) do
+      local key = spec.key
+      local query = spec.query
+      local source = spec.source or "textobjects"
+      keymaps[#keymaps + 1] = {
+        modes = spec.modes or { "x", "o" },
+        key = key,
+        desc = spec.desc,
+        callback = function()
+          select.select_textobject(query, source)
+        end,
+      }
+    end
+
+    for method, specs in pairs(move_specs) do
+      for _, spec in ipairs(specs) do
+        local key = spec.key
+        local query = spec.query
+        local source = spec.source or "textobjects"
+        local desc = spec.desc or make_move_desc(key, query)
+        keymaps[#keymaps + 1] = {
+          modes = spec.modes or { "n", "x", "o" },
+          key = key,
+          desc = desc,
+          callback = function()
+            move[method](query, source)
+          end,
+        }
+      end
+    end
 
     eve.nvim.bindkeys(keymaps, {})
   end,
