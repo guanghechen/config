@@ -15,7 +15,7 @@ function M.restart()
 
   for _, client in ipairs(clients) do
     if client.name ~= "copilot" then
-      vim.lsp.stop_client(client.id)
+      client:stop(true)
     end
   end
 

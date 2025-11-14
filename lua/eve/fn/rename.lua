@@ -80,10 +80,10 @@ local function rename(params)
   for _, client in ipairs(clients) do
     if client:supports_method(Methods.workspace_willRenameFiles) then
       -- Ensure the client is attached to buffers for relevant file types
-      local buffers = vim.lsp.get_buffers_by_client_id(client.id)
+      local buffers = client.attached_buffers or {} ---@type table<integer, boolean>
       local client_active = false
 
-      for _, bufnr in ipairs(buffers) do
+      for bufnr in pairs(buffers) do
         local buf_name = vim.api.nvim_buf_get_name(bufnr)
         if buf_name ~= "" and (buf_name == from or buf_name:find(std.path.dirname(from), 1, true)) then
           client_active = true

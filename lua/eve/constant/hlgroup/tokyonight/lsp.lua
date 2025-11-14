@@ -5,7 +5,6 @@ local M = {}
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
-  local t = context.transparency ---@type boolean
   local c = context.scheme.palette.tokyonight ---@type std.t.theme.TokyonightPalette
 
   ---@type table<string, std.t.theme.IHlgroup>

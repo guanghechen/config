@@ -325,7 +325,7 @@ function M.gen_hlgroup_map(context)
     WhichKeyIconPurple = { fg = c.purple },
     WhichKeyIconRed = { fg = c.red },
     WhichKeyIconYellow = { fg = c.yellow },
-    WhichKeyNormal = { bg = t and c.none or c.bg_sidebar },
+    WhichKeyNormal = { bg = t and c.none or c.bg_dark1 },
     WhichKeySeparator = { fg = c.comment },
     WhichKeyValue = { fg = c.dark5 },
   }

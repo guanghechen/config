@@ -304,11 +304,12 @@ function M:search(params)
         local suffix = preview_text:sub(sy + 2) ---@type string
         local match_chunk = preview_text:sub(sx + 1, sy + 1) ---@type string
         local match_real = decode_preview_text(match_chunk) ---@type string
+        local replace_pattern_text = replace_pattern or "" ---@type string
 
         local replacement_real, preview_err = rstd.replace.replace_text_preview({
           text = match_real,
           search_pattern = search_pattern,
-          replace_pattern = replace_pattern,
+          replace_pattern = replace_pattern_text,
           keep_search_pieces = false,
           flag_regex = flag_regex,
           flag_case_sensitive = flag_case_sensitive,
@@ -365,7 +366,7 @@ function M:search(params)
           offset = match.ox,
           lnum = match.lx,
           col = match.cx,
-          content = match.s,
+          content = match.s or "",
         },
       }
       items[#items + 1] = item
