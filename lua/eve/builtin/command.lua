@@ -422,6 +422,7 @@ M.definitions.notepad = {
   append_content = def("Fnotepadappendcontent", "notepad: append content", 1),
   create = def("Fnotepadcreate", "notepad: create"),
   destroy = def("Fnotepaddestroy", "notepad: destroy"),
+  insert_splitline = def("Fnotapadinsertsplitline", "notepad: insert splitline"),
   rename = def("Fnotepadrename", "notepad: rename"),
   toggle = def("Fnotepadtoggle", "notepad: toggle"),
   save = def("Fnotepadsave", "notepad: save"),

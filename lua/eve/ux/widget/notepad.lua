@@ -58,6 +58,14 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
+    modes = { "n", "v" },
+    key = "g;",
+    desc = K.notepad.insert_splitline.desc,
+    callback = function()
+      vim.cmd(K.notepad.insert_splitline.uuid)
+    end,
+  },
+  {
     modes = { "v" },
     key = "<leader><cr>",
     desc = K.ai.submit_selection.desc,

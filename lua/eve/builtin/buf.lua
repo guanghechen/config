@@ -10,6 +10,8 @@ local __module_name__ = "eve.builtin.buf" ---@type string
 ---| "terminal"
 ---| "prompt"
 
+local BUFFER_CONTENT_SPLITLINE = string.rep("-", 100) ---@type string
+
 ---@class eve.builtin.buf.Types
 local Types = {
   EMPTY = "",
@@ -44,6 +46,7 @@ local meta_map = {} ---@type table<integer, eve.builtin.buf.IMeta|nil>
 ---@class eve.builtin.buf
 local M = {}
 
+M.CONTENT_SPLITLINE = BUFFER_CONTENT_SPLITLINE ---@type string
 M.Types = vim.deepcopy(Types)
 
 ---@param bufnr                         integer|nil

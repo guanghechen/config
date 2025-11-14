@@ -552,6 +552,12 @@ command
     end,
   })
   .implement({
+    uuid = K.notepad.insert_splitline.uuid,
+    action = function()
+      require("fml.action.notepad").insert_splitline()
+    end,
+  })
+  .implement({
     uuid = K.notepad.rename.uuid,
     action = function()
       require("fml.action.notepad").rename()
