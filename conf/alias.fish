@@ -38,8 +38,12 @@ alias ccc='claude --dangerously-skip-permissions'
 alias spec-status='bash .specify/scripts/bash/check-prerequisites.sh'
 
 ### codex
+alias cx0='codex --profile=github-copilot'
 alias cx1='codex --profile=azure'
 alias cx2='codex --profile=azure2'
+abbr -a cy0 'codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox'
+abbr -a cy1 'codex --profile=azure --dangerously-bypass-approvals-and-sandbox'
+abbr -a cy2 'codex --profile=azure2 --dangerously-bypass-approvals-and-sandbox'
 
 ### fzf
 alias fzf="$HOMEBREW_PREFIX/bin/fzf"
