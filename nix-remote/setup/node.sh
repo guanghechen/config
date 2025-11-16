@@ -10,6 +10,7 @@ else
 fi
 
 fnm use $PREFER_NODE_VERSION
+fnm default $PREFER_NODE_VERSION
 
 printf "\n\e[94m   [setup node] installing npm bun pm2 yarn prettier\e[0m\n"
 npm install -g npm bun pm2 yarn prettier

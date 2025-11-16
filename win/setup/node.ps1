@@ -6,6 +6,7 @@ if (fnm list | Select-String -Quiet "v$env:PREFER_NODE_VERSION") {
 }
 
 fnm use $env:PREFER_NODE_VERSION
+fnm default $env:PREFER_NODE_VERSION
 
 Write-Host "  [setup node] installing npm bun pm2 yarn prettier" -ForegroundColor Blue
 npm install -g npm bun pm2 yarn prettier
