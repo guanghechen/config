@@ -4,11 +4,24 @@ local util = require("ghc.util")
 local os_name = util.os_name() ---@type "nix"|"osx"|"win"
 local platform_config = require("ghc.platform." .. os_name)
 
+local harfbuzz_features = {
+	"cv61=1",
+	"cv62=1",
+	"cv66=1",
+	"cv98=1",
+	"ss03=1",
+	"ss07=1",
+	"ss09=1",
+	"ss10=1",
+	"calt=1",
+}
+
 local config = {
 	font_size = platform_config.font_size or 15.0,
 	font = wezterm.font({
 		family = "Maple Mono NF CN",
 		weight = "Medium",
+		harfbuzz_features = harfbuzz_features,
 	}),
 	font_rules = {
 		-- Italic text
@@ -19,6 +32,7 @@ local config = {
 				family = "Maple Mono NF CN",
 				weight = "Medium",
 				style = "Italic",
+				harfbuzz_features = harfbuzz_features,
 			}),
 		},
 		-- Bold text
@@ -28,6 +42,7 @@ local config = {
 			font = wezterm.font({
 				family = "Maple Mono NF CN",
 				weight = "ExtraBold",
+				harfbuzz_features = harfbuzz_features,
 			}),
 		},
 		-- Bold and Italic text
@@ -38,6 +53,7 @@ local config = {
 				family = "Maple Mono NF CN",
 				weight = "ExtraBold",
 				style = "Italic",
+				harfbuzz_features = harfbuzz_features,
 			}),
 		},
 	},
