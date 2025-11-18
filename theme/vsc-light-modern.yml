@@ -1,0 +1,39 @@
+# vsc-light-modern
+
+gui:
+  authorColors:
+    guanghechen: 'blue'
+    '*': '#616161'
+  branchColors:
+    main: 'blue'
+  theme:
+    defaultFgColor:
+      - '#616161'
+    activeBorderColor:
+      - 'magenta'
+      - bold
+    inactiveBorderColor:
+      - '#767676'
+    optionsTextColor:
+      -  '#C72E0F'
+    selectedLineBgColor:
+      - '#F2F2F2'
+    cherryPickedCommitFgColor:
+      - 'blue'
+    cherryPickedCommitBgColor:
+      - 'cyan'
+    markedBaseCommitFgColor:
+      - 'green'
+    markedBaseCommitBgColor:
+      - 'magenta'
+    searchingActiveBorderColor:
+      - 'blue'
+    unstagedChangesColor:
+      - 'red'
+
+git:
+  paging:
+    colorArg: always
+    useConfig: true
+    pager: delta --diff-so-fancy --light
+
