@@ -23,6 +23,8 @@ M.themes = {
   "tokyonight-moon",
   "tokyonight-night",
   "tokyonight-storm",
+  "vsc-dark-modern",
+  "vsc-light-modern",
 }
 
 ---@class eve.builtin.setting.togglers

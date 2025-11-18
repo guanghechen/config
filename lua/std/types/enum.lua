@@ -41,6 +41,8 @@
 ---|"tokyonight-moon"
 ---|"tokyonight-night"
 ---|"tokyonight-storm"
+---|"vsc-dark-modern"
+---|"vsc-light-modern"
 
 ---@alias std.e.ThemeFamily
 ---|"catppuccin"
@@ -49,6 +51,7 @@
 ---|"onehalf"
 ---|"rosepine"
 ---|"tokyonight"
+---|"vsc"
 
 ---@alias std.e.ThemeVariant
 ---|"frappe"
@@ -56,7 +59,9 @@
 ---|"macchiato"
 ---|"mocha"
 ---|"light"
+---|"light-modern"
 ---|"dark"
+---|"dark-modern"
 ---|"main"
 ---|"moon"
 ---|"dawn"

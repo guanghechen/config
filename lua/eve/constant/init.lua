@@ -74,6 +74,8 @@ local theme__mods = {
   ["tokyonight-moon"] = "eve.constant.theme.tokyonight-moon",
   ["tokyonight-night"] = "eve.constant.theme.tokyonight-night",
   ["tokyonight-storm"] = "eve.constant.theme.tokyonight-storm",
+  ["vsc-dark-modern"] = "eve.constant.theme.vsc-dark-modern",
+  ["vsc-light-modern"] = "eve.constant.theme.vsc-light-modern",
 }
 
 ---@class eve.constant.theme
