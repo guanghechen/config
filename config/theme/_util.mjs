@@ -34,8 +34,9 @@ export async function render_template(template, scheme) {
   const onehalf = scheme.palette.onehalf
   const rosepine = scheme.palette.rosepine
   const tokyonight = scheme.palette.tokyonight
+  const vsc = scheme.palette.vsc
   const unified = scheme.palette.unified
-  const palette = { catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, unified }
+  const palette = { catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc, unified }
   const themes = Object.keys(palette)
 
   const content = template
