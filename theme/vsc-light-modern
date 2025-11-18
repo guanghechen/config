@@ -1,0 +1,42 @@
+# vsc-light-modern
+
+# ANSI Colors (following official catppuccin theme)
+# Dark themes: palette 0 = surface1, palette 7 = subtext0
+# Light theme: palette 0 = subtext1, palette 7 = surface2
+palette =  0=#FFFFFF
+palette =  1=#F85149
+palette =  2=#2EA043
+palette =  3=#795E26
+palette =  4=#005FB8
+palette =  5=#AF00DB
+palette =  6=#267F99
+palette =  7=#616161
+
+# Bright colors
+# Dark themes: palette 8 = surface2, palette 15 = subtext1
+# Light theme: palette 8 = subtext0, palette 15 = surface1
+palette =  8=#767676
+palette =  9=#F85149
+palette = 10=#098658
+palette = 11=#795E26
+palette = 12=#001080
+palette = 13=#AF00DB
+palette = 14=#0070C1
+palette = 15=#3B3B3B
+
+# Primary colors
+background = #FFFFFF
+foreground = #1F1F1F
+
+# Cursor colors (following official catppuccin theme)
+cursor-color = #FD716C
+cursor-text = #F8F8F8
+
+# Selection colors (following official catppuccin theme)
+# Official uses overlay2 mixed with base, resulting in a subtle highlight
+selection-background = #E5E5E5
+selection-foreground = #1F1F1F
+
+# Split divider color (following official catppuccin theme)
+split-divider-color = #F2F2F2
+
