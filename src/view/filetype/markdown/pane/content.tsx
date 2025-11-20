@@ -22,6 +22,7 @@ export const ContentPane: React.FC = () => {
 
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastActivatedIdentifierRef = React.useRef<string | null>(null)
 
   let title: React.ReactElement
   if (
@@ -62,20 +63,25 @@ export const ContentPane: React.FC = () => {
     }
     for (const child of toc.children) collect(child)
 
+    const flushSpecifiedActivation = (): void => {
+      const specifiedTocIdentifier: string | null =
+        viewmodel.specifiedTocActivatedIdentifier$.getSnapshot()
+      if (specifiedTocIdentifier === null) return
+      viewmodel.specifiedTocActivatedIdentifier$.next(null)
+      lastActivatedIdentifierRef.current = specifiedTocIdentifier
+      viewmodel.tocActivatedIdentifier$.next(specifiedTocIdentifier)
+    }
+
     const scheduleSpecifiedActivation = (): void => {
-      if (timerRef.current) clearTimeout(timerRef.current)
+      if (timerRef.current !== null) return
+      if (viewmodel.specifiedTocActivatedIdentifier$.getSnapshot() === null) return
       timerRef.current = setTimeout(() => {
         timerRef.current = null
-        const specifiedTocIdentifier: string | null =
-          viewmodel.specifiedTocActivatedIdentifier$.getSnapshot()
-        if (specifiedTocIdentifier !== null) {
-          viewmodel.specifiedTocActivatedIdentifier$.next(null)
-          viewmodel.tocActivatedIdentifier$.next(specifiedTocIdentifier)
-        }
+        flushSpecifiedActivation()
       }, 72)
     }
 
-    const onScroll = throttle((): void => {
+    const updateActivatedIdentifier = (): void => {
       const viewportTopOffset: number = 48
       let nextTocActivatedIdentifier: string | null = null
       for (const [identifier, element] of identifiers) {
@@ -84,12 +90,22 @@ export const ContentPane: React.FC = () => {
           break
         }
       }
-      viewmodel.tocActivatedIdentifier$.next(nextTocActivatedIdentifier)
-      scheduleSpecifiedActivation()
-    }, 50)
 
-    onScroll()
-    scrollContainer.addEventListener('scroll', onScroll)
+      if (lastActivatedIdentifierRef.current !== nextTocActivatedIdentifier) {
+        lastActivatedIdentifierRef.current = nextTocActivatedIdentifier
+        viewmodel.tocActivatedIdentifier$.next(nextTocActivatedIdentifier)
+      }
+
+      scheduleSpecifiedActivation()
+    }
+
+    const onScroll = throttle(updateActivatedIdentifier, 120, {
+      leading: true,
+      trailing: true,
+    })
+
+    updateActivatedIdentifier()
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       scrollContainer.removeEventListener('scroll', onScroll)
       onScroll.cancel()
