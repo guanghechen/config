@@ -1,5 +1,11 @@
 ---@class eve.__mods
 local __mods = {
+  constant = "eve.constant",
+  context = "eve.context",
+  fn = "eve.fn",
+  state = "eve.state",
+  ux = "eve.ux",
+
   G = "eve.builtin.G",
   ai = "eve.builtin.ai",
   box = "eve.builtin.box",
@@ -60,14 +66,7 @@ local __mods = {
 ---@field public widget                 eve.builtin.widget
 ---@field public win                    eve.builtin.win
 ---@field public winpicker              eve.builtin.winpicker
-local M = setmetatable({
-  __mods = __mods,
-  constant = require("eve.constant"),
-  context = require("eve.context"),
-  fn = require("eve.fn"),
-  state = require("eve.state"),
-  ux = require("eve.ux"),
-}, {
+local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
     if m == nil then

@@ -29,17 +29,14 @@
 ---@class eve.ux.nvimbar.__mods
 local __mods = {
   Nvimbar = "eve.ux.nvimbar.nvimbar",
+  component = "eve.ux.nvimbar.component",
 }
 
 ---@class eve.ux.nvimbar
 ---@field public __mods                 eve.ux.nvimbar.__mods
 ---@field public component              eve.ux.nvimbar.component
----
 ---@field public Nvimbar                eve.ux.nvimbar.Nvimbar
-local M = setmetatable({
-  __mods = __mods,
-  component = require("eve.ux.nvimbar.component"),
-}, {
+local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
     if m == nil then

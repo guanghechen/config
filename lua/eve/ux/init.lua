@@ -1,5 +1,13 @@
 ---@class eve.ux.__mods
 local __mods = {
+  fn = "eve.ux.fn",
+  nvimbar = "eve.ux.nvimbar",
+  picker = "eve.ux.picker",
+  retriever = "eve.ux.retriever",
+  searcher = "eve.ux.searcher",
+  view = "eve.ux.view",
+  widget = "eve.ux.widget",
+
   Board = "eve.ux.board",
   Select = "eve.ux.select",
   Setting = "eve.ux.setting",
@@ -20,16 +28,7 @@ local __mods = {
 ---@field public Select                 eve.ux.Select
 ---@field public Setting                eve.ux.Setting
 ---@field public Textarea               eve.ux.Textarea
-local M = setmetatable({
-  __mods = __mods,
-  fn = require("eve.ux.fn"),
-  nvimbar = require("eve.ux.nvimbar"),
-  picker = require("eve.ux.picker"),
-  retriever = require("eve.ux.retriever"),
-  searcher = require("eve.ux.searcher"),
-  view = require("eve.ux.view"),
-  widget = require("eve.ux.widget"),
-}, {
+local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
     if m == nil then
