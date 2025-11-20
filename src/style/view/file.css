@@ -79,6 +79,7 @@
         box-sizing: border-box;
         min-height: calc(100vh - 1rem - var(--v-vlt-height));
         border-width: 1rem 0.5rem;
+        scroll-behavior: smooth;
 
         @apply shadow-lg rounded-lg border-transparent
           backdrop-blur-md backdrop-saturate-150 bg-white/70 dark:bg-gray-700/80

@@ -49,6 +49,9 @@ export const ContentPane: React.FC = () => {
     const contentContainer: HTMLDivElement | null = containerRef.current
     if (!contentContainer || !toc) return
 
+    const scrollContainer: HTMLElement =
+      (contentContainer.closest('.vlm-pane') as HTMLElement | null) ?? contentContainer
+
     const identifiers: Array<[string, HTMLElement]> = []
     const collect = (item: IHeadingTocNode): void => {
       let identifier: string = decodeURIComponent(item.identifier)
@@ -58,6 +61,19 @@ export const ContentPane: React.FC = () => {
       for (const child of item.children) collect(child)
     }
     for (const child of toc.children) collect(child)
+
+    const scheduleSpecifiedActivation = (): void => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null
+        const specifiedTocIdentifier: string | null =
+          viewmodel.specifiedTocActivatedIdentifier$.getSnapshot()
+        if (specifiedTocIdentifier !== null) {
+          viewmodel.specifiedTocActivatedIdentifier$.next(null)
+          viewmodel.tocActivatedIdentifier$.next(specifiedTocIdentifier)
+        }
+      }, 72)
+    }
 
     const onScroll = throttle((): void => {
       const viewportTopOffset: number = 48
@@ -69,24 +85,19 @@ export const ContentPane: React.FC = () => {
         }
       }
       viewmodel.tocActivatedIdentifier$.next(nextTocActivatedIdentifier)
-
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(() => {
-          timerRef.current = null
-          const specifiedTocIdentifier: string | null =
-            viewmodel.specifiedTocActivatedIdentifier$.getSnapshot()
-          if (specifiedTocIdentifier !== null) {
-            viewmodel.specifiedTocActivatedIdentifier$.next(null)
-            viewmodel.tocActivatedIdentifier$.next(specifiedTocIdentifier)
-          }
-        }, 72)
-      }
+      scheduleSpecifiedActivation()
     }, 50)
 
     onScroll()
-    contentContainer.addEventListener('scroll', onScroll)
-    return () => contentContainer.removeEventListener('scroll', onScroll)
+    scrollContainer.addEventListener('scroll', onScroll)
+    return () => {
+      scrollContainer.removeEventListener('scroll', onScroll)
+      onScroll.cancel()
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+    }
   }, [toc, viewmodel])
 
   return (
