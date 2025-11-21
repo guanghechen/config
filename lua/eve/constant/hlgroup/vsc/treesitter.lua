@@ -4,166 +4,132 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local palette = context.scheme.palette ---@type std.t.theme.IPalette
-  local c = palette.vsc ---@type std.t.theme.IVscPalette|nil
-  if not c then
-    return {}
-  end
-
-  local u = palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
-
-  local comment = c.tokenComment or c.status or c.textMuted or u.fg4
-  local keyword = c.tokenKeyword or c.accentPurple or u.brightPurple
-  local control_keyword = c.tokenControlFlowSpecialKeywords or keyword
-  local operator_color = c.semanticNewOperator or c.tokenKeywordOperator or (c.text or u.fg1)
-  local type_color = c.tokenTypesDeclarationAndReferences or c.accentAqua or u.brightAqua
-  local builtin_type = c.tokenStorageType or type_color
-  local function_color = c.tokenFunctionDeclarations or c.accentBlue or u.brightBlue
-  local variable = c.tokenVariableAndParameterName or (c.text or u.fg2)
-  local builtin = c.tokenThisSelf or keyword
-  local constant = c.tokenConstantsAndEnums or c.tokenConstantNumeric or c.brightAqua or u.brightAqua
-  local number_color = c.semanticNumberLiteral or c.tokenConstantNumeric or c.accentGreen or u.brightGreen
-  local boolean_color = c.tokenConstantLanguage or keyword
-  local string_color = c.semanticStringLiteral or c.tokenString or c.accentOrange or u.brightOrange
-  local string_escape = c.tokenConstantCharacterEscape or c.tokenStringInterpolation or string_color
-  local regex_color = c.tokenStringRegexp or c.tokenRegularExpressionGroups or string_color
-  local attribute_color = c.tokenEntityOtherAttributeName or c.tokenSupportTypeVendoredPropertyName or type_color
-  local property_color = c.tokenObjectKeysTsGrammarSpecific or c.tokenMetaStructureDictionaryKeyPython or variable
-  local tag_color = c.tokenEntityNameTag or c.tokenCssTagsInSelectorsXmlTags or c.tokenEntityNameSelector or c.tokenBracketsOfXmlHtmlTags or keyword
-  local delimiter_color = c.tokenBracketsOfXmlHtmlTags or operator_color
-  local markup_heading = c.tokenMarkupHeading or function_color
-  local markup_bold = c.tokenMarkupBold or markup_heading
-  local markup_code = c.tokenMarkupInlineRaw or string_color
-  local markup_inserted = c.tokenMarkupInserted or c.accentGreen or u.brightGreen
-  local markup_deleted = c.tokenMarkupDeleted or c.accentRed or u.brightRed
-  local markup_changed = c.tokenMarkupChanged or c.accentYellow or u.brightYellow
-  local invalid = c.tokenInvalid or c.accentRed or u.red
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
     -- Comments
-    ["@comment"] = { fg = comment, italic = true },
-    ["@comment.documentation"] = { fg = comment, italic = true },
-    ["@comment.error"] = { fg = u.bg0, bg = t and c.none or invalid },
-    ["@comment.warning"] = { fg = u.bg0, bg = t and c.none or markup_deleted },
-    ["@comment.note"] = { fg = u.bg0, bg = t and c.none or markup_inserted },
-    ["@comment.todo"] = { fg = u.bg0, bg = t and c.none or markup_heading, bold = true },
+    ["@comment"] = { fg = c.tokenComment, italic = true },
+    ["@comment.documentation"] = { fg = c.tokenComment, italic = true },
+    ["@comment.error"] = { fg = c.editor_background, bg = t and c.none or c.tokenInvalid },
+    ["@comment.warning"] = { fg = c.editor_background, bg = t and c.none or c.tokenMarkupDeleted },
+    ["@comment.note"] = { fg = c.editor_background, bg = t and c.none or c.tokenMarkupInserted },
+    ["@comment.todo"] = { fg = c.editor_background, bg = t and c.none or c.tokenMarkupHeading, bold = true },
 
     -- Identifiers
-    ["@attribute"] = { fg = attribute_color },
-    ["@attribute.builtin"] = { fg = builtin, italic = true },
-    ["@constant"] = { fg = constant },
-    ["@constant.builtin"] = { fg = boolean_color, italic = true },
-    ["@constant.macro"] = { fg = control_keyword, italic = true },
-    ["@field"] = { fg = property_color },
-    ["@module"] = { fg = type_color, italic = true },
-    ["@namespace"] = { fg = type_color, italic = true },
-    ["@parameter"] = { fg = variable, italic = true },
-    ["@property"] = { fg = property_color },
-    ["@symbol"] = { fg = constant },
-    ["@variable"] = { fg = variable },
-    ["@variable.builtin"] = { fg = builtin, italic = true },
-    ["@variable.member"] = { fg = property_color },
-    ["@variable.parameter"] = { fg = variable, italic = true },
+    ["@attribute"] = { fg = c.tokenEntityOtherAttributeName },
+    ["@attribute.builtin"] = { fg = c.tokenThisSelf, italic = true },
+    ["@constant"] = { fg = c.tokenConstantsAndEnums },
+    ["@constant.builtin"] = { fg = c.tokenConstantLanguage, italic = true },
+    ["@constant.macro"] = { fg = c.tokenControlFlowSpecialKeywords, italic = true },
+    ["@field"] = { fg = c.tokenObjectKeysTsGrammarSpecific },
+    ["@module"] = { fg = c.tokenTypesDeclarationAndReferences, italic = true },
+    ["@namespace"] = { fg = c.tokenTypesDeclarationAndReferences, italic = true },
+    ["@parameter"] = { fg = c.tokenVariableAndParameterName, italic = true },
+    ["@property"] = { fg = c.tokenObjectKeysTsGrammarSpecific },
+    ["@symbol"] = { fg = c.tokenConstantsAndEnums },
+    ["@variable"] = { fg = c.tokenVariableAndParameterName },
+    ["@variable.builtin"] = { fg = c.tokenThisSelf, italic = true },
+    ["@variable.member"] = { fg = c.tokenObjectKeysTsGrammarSpecific },
+    ["@variable.parameter"] = { fg = c.tokenVariableAndParameterName, italic = true },
 
     -- Literals
-    ["@boolean"] = { fg = boolean_color },
-    ["@character"] = { fg = string_color },
-    ["@number"] = { fg = number_color },
-    ["@number.float"] = { fg = number_color },
-    ["@string"] = { fg = string_color },
-    ["@string.documentation"] = { fg = markup_code },
-    ["@string.escape"] = { fg = string_escape },
-    ["@string.regexp"] = { fg = regex_color },
-    ["@string.special"] = { fg = markup_code },
-    ["@string.special.symbol"] = { fg = constant },
-    ["@string.special.url"] = { fg = markup_heading, underline = true },
+    ["@boolean"] = { fg = c.tokenConstantLanguage },
+    ["@character"] = { fg = c.semanticStringLiteral },
+    ["@number"] = { fg = c.semanticNumberLiteral },
+    ["@number.float"] = { fg = c.semanticNumberLiteral },
+    ["@string"] = { fg = c.semanticStringLiteral },
+    ["@string.documentation"] = { fg = c.tokenMarkupInlineRaw },
+    ["@string.escape"] = { fg = c.tokenConstantCharacterEscape },
+    ["@string.regexp"] = { fg = c.tokenStringRegexp },
+    ["@string.special"] = { fg = c.tokenMarkupInlineRaw },
+    ["@string.special.symbol"] = { fg = c.tokenConstantsAndEnums },
+    ["@string.special.url"] = { fg = c.tokenMarkupHeading, underline = true },
 
     -- Functions
-    ["@constructor"] = { fg = type_color },
-    ["@function"] = { fg = function_color },
-    ["@function.builtin"] = { fg = builtin },
-    ["@function.call"] = { fg = function_color },
-    ["@function.macro"] = { fg = control_keyword, italic = true },
-    ["@function.method"] = { fg = function_color },
-    ["@method"] = { fg = function_color },
-    ["@operator"] = { fg = operator_color },
+    ["@constructor"] = { fg = c.tokenTypesDeclarationAndReferences },
+    ["@function"] = { fg = c.tokenFunctionDeclarations },
+    ["@function.builtin"] = { fg = c.tokenThisSelf },
+    ["@function.call"] = { fg = c.tokenFunctionDeclarations },
+    ["@function.macro"] = { fg = c.tokenControlFlowSpecialKeywords, italic = true },
+    ["@function.method"] = { fg = c.tokenFunctionDeclarations },
+    ["@method"] = { fg = c.tokenFunctionDeclarations },
+    ["@operator"] = { fg = c.semanticNewOperator },
 
     -- Keywords
-    ["@keyword"] = { fg = keyword, italic = true },
-    ["@keyword.conditional"] = { fg = control_keyword, italic = true },
-    ["@keyword.debug"] = { fg = control_keyword },
-    ["@keyword.directive"] = { fg = control_keyword, italic = true },
-    ["@keyword.exception"] = { fg = control_keyword },
-    ["@keyword.function"] = { fg = control_keyword, italic = true },
-    ["@keyword.import"] = { fg = control_keyword },
-    ["@keyword.modifier"] = { fg = control_keyword },
-    ["@keyword.operator"] = { fg = operator_color },
-    ["@keyword.repeat"] = { fg = control_keyword, italic = true },
-    ["@keyword.return"] = { fg = control_keyword, italic = true },
-    ["@keyword.storage"] = { fg = control_keyword },
-    ["@keyword.type"] = { fg = type_color },
+    ["@keyword"] = { fg = c.tokenKeyword, italic = true },
+    ["@keyword.conditional"] = { fg = c.tokenControlFlowSpecialKeywords, italic = true },
+    ["@keyword.debug"] = { fg = c.tokenControlFlowSpecialKeywords },
+    ["@keyword.directive"] = { fg = c.tokenControlFlowSpecialKeywords, italic = true },
+    ["@keyword.exception"] = { fg = c.tokenControlFlowSpecialKeywords },
+    ["@keyword.function"] = { fg = c.tokenControlFlowSpecialKeywords, italic = true },
+    ["@keyword.import"] = { fg = c.tokenControlFlowSpecialKeywords },
+    ["@keyword.modifier"] = { fg = c.tokenControlFlowSpecialKeywords },
+    ["@keyword.operator"] = { fg = c.semanticNewOperator },
+    ["@keyword.repeat"] = { fg = c.tokenControlFlowSpecialKeywords, italic = true },
+    ["@keyword.return"] = { fg = c.tokenControlFlowSpecialKeywords, italic = true },
+    ["@keyword.storage"] = { fg = c.tokenControlFlowSpecialKeywords },
+    ["@keyword.type"] = { fg = c.tokenTypesDeclarationAndReferences },
 
     -- Types
-    ["@label"] = { fg = tag_color },
-    ["@type"] = { fg = type_color },
-    ["@type.builtin"] = { fg = builtin_type },
-    ["@type.definition"] = { fg = type_color },
-    ["@type.qualifier"] = { fg = control_keyword },
+    ["@label"] = { fg = c.tokenEntityNameTag },
+    ["@type"] = { fg = c.tokenTypesDeclarationAndReferences },
+    ["@type.builtin"] = { fg = c.tokenStorageType },
+    ["@type.definition"] = { fg = c.tokenTypesDeclarationAndReferences },
+    ["@type.qualifier"] = { fg = c.tokenControlFlowSpecialKeywords },
 
     -- Punctuation
-    ["@punctuation.bracket"] = { fg = delimiter_color },
-    ["@punctuation.delimiter"] = { fg = delimiter_color },
-    ["@punctuation.special"] = { fg = delimiter_color },
+    ["@punctuation.bracket"] = { fg = c.tokenBracketsOfXmlHtmlTags },
+    ["@punctuation.delimiter"] = { fg = c.tokenBracketsOfXmlHtmlTags },
+    ["@punctuation.special"] = { fg = c.tokenBracketsOfXmlHtmlTags },
 
     -- Markup
-    ["@markup.heading"] = { fg = markup_heading, bold = true },
-    ["@markup.italic"] = { fg = markup_bold, italic = true },
-    ["@markup.link"] = { fg = markup_heading, underline = true },
-    ["@markup.link.label"] = { fg = markup_heading },
-    ["@markup.link.url"] = { fg = markup_heading, underline = true },
-    ["@markup.list"] = { fg = markup_heading },
-    ["@markup.quote"] = { fg = comment },
-    ["@markup.raw"] = { fg = markup_code },
-    ["@markup.strikethrough"] = { fg = markup_deleted, strikethrough = true },
-    ["@markup.strong"] = { fg = markup_bold, bold = true },
+    ["@markup.heading"] = { fg = c.tokenMarkupHeading, bold = true },
+    ["@markup.italic"] = { fg = c.tokenMarkupBold, italic = true },
+    ["@markup.link"] = { fg = c.tokenMarkupHeading, underline = true },
+    ["@markup.link.label"] = { fg = c.tokenMarkupHeading },
+    ["@markup.link.url"] = { fg = c.tokenMarkupHeading, underline = true },
+    ["@markup.list"] = { fg = c.tokenMarkupHeading },
+    ["@markup.quote"] = { fg = c.tokenComment },
+    ["@markup.raw"] = { fg = c.tokenMarkupInlineRaw },
+    ["@markup.strikethrough"] = { fg = c.tokenMarkupDeleted, strikethrough = true },
+    ["@markup.strong"] = { fg = c.tokenMarkupBold, bold = true },
     ["@markup.underline"] = { underline = true },
-    ["@markup.deleted"] = { fg = markup_deleted },
-    ["@markup.inserted"] = { fg = markup_inserted },
-    ["@markup.math"] = { fg = number_color },
-    ["@markup.changed"] = { fg = markup_changed },
+    ["@markup.deleted"] = { fg = c.tokenMarkupDeleted },
+    ["@markup.inserted"] = { fg = c.tokenMarkupInserted },
+    ["@markup.math"] = { fg = c.semanticNumberLiteral },
+    ["@markup.changed"] = { fg = c.tokenMarkupChanged },
 
     -- Tags
-    ["@tag"] = { fg = tag_color },
-    ["@tag.attribute"] = { fg = attribute_color },
-    ["@tag.builtin"] = { fg = tag_color },
-    ["@tag.delimiter"] = { fg = delimiter_color },
+    ["@tag"] = { fg = c.tokenEntityNameTag },
+    ["@tag.attribute"] = { fg = c.tokenEntityOtherAttributeName },
+    ["@tag.builtin"] = { fg = c.tokenEntityNameTag },
+    ["@tag.delimiter"] = { fg = c.tokenBracketsOfXmlHtmlTags },
 
     -- Legacy text groups
-    ["@text"] = { fg = variable },
-    ["@text.danger"] = { fg = u.bg0, bg = t and c.none or invalid },
-    ["@text.diff.add"] = { fg = markup_inserted },
-    ["@text.diff.delete"] = { fg = markup_deleted },
-    ["@text.emphasis"] = { fg = markup_bold, italic = true },
-    ["@text.literal"] = { fg = markup_code },
-    ["@text.note"] = { fg = u.bg0, bg = t and c.none or markup_inserted },
-    ["@text.reference"] = { fg = markup_heading },
-    ["@text.strike"] = { fg = markup_deleted, strikethrough = true },
-    ["@text.strong"] = { fg = markup_bold, bold = true },
-    ["@text.title"] = { fg = markup_heading, bold = true },
-    ["@text.todo"] = { fg = u.bg0, bg = t and c.none or markup_changed, bold = true, italic = true },
+    ["@text"] = { fg = c.tokenVariableAndParameterName },
+    ["@text.danger"] = { fg = c.editor_background, bg = t and c.none or c.tokenInvalid },
+    ["@text.diff.add"] = { fg = c.tokenMarkupInserted },
+    ["@text.diff.delete"] = { fg = c.tokenMarkupDeleted },
+    ["@text.emphasis"] = { fg = c.tokenMarkupBold, italic = true },
+    ["@text.literal"] = { fg = c.tokenMarkupInlineRaw },
+    ["@text.note"] = { fg = c.editor_background, bg = t and c.none or c.tokenMarkupInserted },
+    ["@text.reference"] = { fg = c.tokenMarkupHeading },
+    ["@text.strike"] = { fg = c.tokenMarkupDeleted, strikethrough = true },
+    ["@text.strong"] = { fg = c.tokenMarkupBold, bold = true },
+    ["@text.title"] = { fg = c.tokenMarkupHeading, bold = true },
+    ["@text.todo"] = { fg = c.editor_background, bg = t and c.none or c.tokenMarkupChanged, bold = true, italic = true },
     ["@text.underline"] = { underline = true },
-    ["@text.uri"] = { fg = markup_heading, underline = true },
+    ["@text.uri"] = { fg = c.tokenMarkupHeading, underline = true },
 
     -- Diff compatibility
-    ["@diff.plus"] = { fg = markup_inserted },
-    ["@diff.minus"] = { fg = markup_deleted },
-    ["@diff.delta"] = { fg = markup_changed },
+    ["@diff.plus"] = { fg = c.tokenMarkupInserted },
+    ["@diff.minus"] = { fg = c.tokenMarkupDeleted },
+    ["@diff.delta"] = { fg = c.tokenMarkupChanged },
   }
 
   return hlgroup_map
 end
 
 return M
-

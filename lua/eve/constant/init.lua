@@ -96,6 +96,8 @@ local theme__mods = {
 ---@field public ["tokyonight-moon"]    std.t.theme.IScheme
 ---@field public ["tokyonight-night"]   std.t.theme.IScheme
 ---@field public ["tokyonight-storm"]   std.t.theme.IScheme
+---@field public ["vsc-dark-modern"]    std.t.theme.IScheme
+---@field public ["vsc-light-modern"]   std.t.theme.IScheme
 local theme = setmetatable({
   __mods = theme__mods,
 }, {

@@ -16,6 +16,7 @@ end
 function M.default_gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local t = context.transparency ---@type boolean
 
   local item_kind_bg = c.none ---@type string
 
@@ -333,7 +334,7 @@ function M.default_gen_hlgroup_map(context)
     WhichKeyIconPurple = { fg = c.purple },
     WhichKeyIconRed = { fg = c.red },
     WhichKeyIconYellow = { fg = c.yellow },
-    WhichKeyNormal = { bg = c.bg1 },
+    WhichKeyNormal = { fg = c.fg1, bg = t and c.none or c.bg2 },
     WhichKeySeparator = { fg = c.bg4 },
     WhichKeyValue = { fg = c.green },
   }

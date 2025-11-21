@@ -59,9 +59,9 @@ function M.default_gen_hlgroup_map(context)
 
     ---cursor
     Cursor = { fg = c.bg1, bg = c.pink },
-    CursorColumn = { bg = c.bg1 },
-    CursorLine = { bg = c.bg1 },
-    CursorLineNr = { fg = c.fg2, bg = c.bg1, bold = true },
+    CursorColumn = { bg = c.bg1, blend = t and 50 or 0 },
+    CursorLine = { bg = c.bg1, blend = t and 50 or 0 },
+    CursorLineNr = { fg = c.fg2, bg = c.bg1, bold = true, blend = t and 50 or 0 },
     vCursor = { link = "Cursor" },
     iCursor = { link = "Cursor" },
     lCursor = { link = "Cursor" },
@@ -150,7 +150,7 @@ function M.default_gen_hlgroup_map(context)
     ---special
     Delimiter = { fg = c.orange },
     EndOfBuffer = { fg = c.bg2 },
-    NonText = { fg = c.bg2 },
+    NonText = { fg = cs.mix(bg, c.bg2, 45), italic = true },
     Whitespace = { fg = c.bg4 },
 
     ---syntax
@@ -204,8 +204,8 @@ function M.default_gen_hlgroup_map(context)
     Exception = { fg = c.red },
     FloatActiveBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
     FloatActiveTitle = { link = "ms_b_bg0" },
-    FloatBorder = { fg = c.bg2, bg = t and c.bg0 or c.none, bold = true },
-    FloatNormal = { fg = c.fg1, bg = c.bg0 },
+    FloatBorder = { fg = c.bg2, bg = c.bg0, bold = true, blend = t and 50 or 0 },
+    FloatNormal = { fg = c.fg1, bg = c.bg0, blend = t and 50 or 0 },
     FloatTitle = { link = "ms_b_bg0" },
     FoldColumn = { fg = c.fg4, bg = c.none },
     Folded = { fg = c.fg4 },
@@ -214,7 +214,7 @@ function M.default_gen_hlgroup_map(context)
     LineNr = { fg = c.bg4 },
     MatchParen = { bg = c.bg3, bold = true },
     MatchWord = { fg = c.fg1, bg = c.bg4 },
-    Normal = { fg = c.fg1, bg = c.none },
+    Normal = { fg = c.fg1, bg = c.bg0, blend = t and 50 or 0 },
     NormalFloat = { link = "FloatNormal" },
     NormalNC = { link = "Normal" },
     NvimInternalError = { fg = c.red },
