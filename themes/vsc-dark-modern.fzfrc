@@ -1,0 +1,14 @@
+# vsc-dark-modern
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#D7D7D7,bg+:#202020,hl+:#CE9178"
+--color="fg:#616161,bg:#1F1F1F,hl:#DCDCAA"
+--color="gutter:#1F1F1F,pointer:#CE9178,spinner:#0078D4"
+--color="info:#9CDCFE,prompt:#B5CEA8,marker:#CE9178,query:#D7D7D7"
+--preview='bat --line-range=:500 --style=snip --theme=vsc-dark-modern --number --color=always {} || cat -n {}'

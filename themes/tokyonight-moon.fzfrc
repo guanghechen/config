@@ -1,0 +1,14 @@
+# tokyonight-moon
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#b6c1e7,bg+:#191b29,hl+:#c099ff"
+--color="fg:#909bca,bg:#222436,hl:#ffc777"
+--color="gutter:#222436,pointer:#c099ff,spinner:#82aaff"
+--color="info:#65bcff,prompt:#4fd6be,marker:#c099ff,query:#b6c1e7"
+--preview='bat --line-range=:500 --style=snip --theme=tokyonight-moon --number --color=always {} || cat -n {}'

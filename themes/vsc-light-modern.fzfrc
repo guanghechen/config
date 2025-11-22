@@ -1,0 +1,14 @@
+# vsc-light-modern
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#3B3B3B,bg+:#F2F2F2,hl+:#FD716C"
+--color="fg:#6E7681,bg:#FFFFFF,hl:#795E26"
+--color="gutter:#FFFFFF,pointer:#FD716C,spinner:#005FB8"
+--color="info:#001080,prompt:#098658,marker:#FD716C,query:#3B3B3B"
+--preview='bat --line-range=:500 --style=snip --theme=vsc-light-modern --number --color=always {} || cat -n {}'

@@ -1,0 +1,14 @@
+# tokyonight-storm
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#adb7e2,bg+:#1b1e2d,hl+:#bb9af7"
+--color="fg:#868fba,bg:#24283b,hl:#e0af68"
+--color="gutter:#24283b,pointer:#bb9af7,spinner:#7aa2f7"
+--color="info:#2ac3de,prompt:#73daca,marker:#bb9af7,query:#adb7e2"
+--preview='bat --line-range=:500 --style=snip --theme=tokyonight-storm --number --color=always {} || cat -n {}'

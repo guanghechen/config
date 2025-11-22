@@ -1,0 +1,14 @@
+# tokyonight-day
+
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--scrollbar="┃"
+--multi
+--color="fg+:#3054a8,bg+:#c4c8da,hl+:#9854f1"
+--color="fg:#233e7c,bg:#e1e2e7,hl:#8c6c3e"
+--color="gutter:#e1e2e7,pointer:#9854f1,spinner:#2e7de9"
+--color="info:#188092,prompt:#387068,marker:#9854f1,query:#3054a8"
+--preview='bat --line-range=:500 --style=snip --theme=tokyonight-day --number --color=always {} || cat -n {}'
