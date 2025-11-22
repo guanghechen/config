@@ -23,6 +23,7 @@ end
 
 vim.g.mapleader = " "
 vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
+vim.g.bigfile_line_length = 2500
 vim.g.qf_disable_statusline = true
 
 vim.opt.mouse:append("a")

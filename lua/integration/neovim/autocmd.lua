@@ -1,3 +1,5 @@
+local __module_name__ = "integration.neovim.autocmd" ---@type string
+
 --- Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd("BufWritePre", {
   group = eve.nvim.augroup("auto_create_dirs"),
@@ -86,12 +88,33 @@ vim.filetype.add({
   pattern = {
     [".*"] = {
       function(filepath, bufnr)
-        return vim.bo[bufnr]
-            and vim.bo[bufnr].filetype ~= eve.filetype.BIGFILE
-            and filepath
-            and vim.fn.getfsize(filepath) > vim.g.bigfile_size
-            and eve.filetype.BIGFILE
-          or nil
+        if not filepath or not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
+
+        if vim.bo[bufnr].filetype == eve.filetype.BIGFILE then
+          return
+        end
+
+        local size = vim.fn.getfsize(filepath) ---@type integer
+        if size <= 0 then
+          return
+        end
+
+        local size_limit = vim.g.bigfile_size or 0 ---@type integer
+        if size_limit > 0 and size > size_limit then
+          return eve.filetype.BIGFILE
+        end
+
+        local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+        if line_count <= 0 then
+          return
+        end
+
+        local threshold = vim.g.bigfile_line_length or 0 ---@type integer
+        if threshold > 0 and (size - line_count) / line_count > threshold then
+          return eve.filetype.BIGFILE
+        end
       end,
     },
 
@@ -123,9 +146,28 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "bigfile",
   callback = function(evt)
     local bufnr = evt.buf ---@type integer
+    if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
     vim.api.nvim_buf_call(bufnr, function()
-      vim.bo[bufnr].filetype = vim.filetype.match({ buf = bufnr }) or ""
+      vim.b[bufnr].completion = false
+      vim.b[bufnr].minihipatterns_disable = true
+      vim.schedule(function()
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
+        local filetype = vim.filetype.match({ buf = bufnr }) or "" ---@type string
+        vim.bo[bufnr].syntax = filetype
+      end)
     end)
+
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "bigfile",
+      message = ("Big file detected `%s`.\nSome Neovim features have been **disabled**."):format(filepath),
+    })
   end,
 })
 
