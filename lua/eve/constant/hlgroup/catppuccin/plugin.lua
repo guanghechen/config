@@ -4,8 +4,9 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
   local t = context.transparency ---@type boolean
+  local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
+  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
   local mix = std.color.mix
   local cmp_panel_bg = mix(t and c.none or c.mantle, c.surface0, 65)
   local lazy_panel_bg = mix(t and c.none or c.mantle, c.surface1, 60)
@@ -16,6 +17,8 @@ function M.gen_hlgroup_map(context)
   local dap_virtual_bg = mix(t and c.none or c.surface0, c.peach, 25)
   local treesitter_context_bg = t and c.none or mix(c.base, c.sapphire, 65)
   local indent_marker_fg = mix(t and c.none or c.surface0, c.overlay0, 30)
+  local lazy_badge_fg = u.bg1 ---@type string
+  local lazy_badge_bg = u.pink ---@type string
 
   local function staged_color(accent)
     return mix(accent, c.subtext0, 35)
@@ -119,7 +122,7 @@ function M.gen_hlgroup_map(context)
     LazyCommit = { fg = c.green },
     LazyCommitIssue = { fg = c.yellow },
     LazyDir = { fg = c.blue },
-    LazyH1 = { fg = t and c.none or c.base, bg = c.blue, bold = true },
+    LazyH1 = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     LazyH2 = { fg = c.text, bold = true, underline = true },
     LazyNoCond = { fg = c.red },
     LazyNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
@@ -135,15 +138,15 @@ function M.gen_hlgroup_map(context)
     LazyReasonSource = { fg = c.green },
     LazyReasonStart = { fg = c.text },
     LazyOperator = { fg = c.text },
-    LazySpecial = { fg = c.mauve },
+    LazySpecial = { fg = c.blue },
     LazyTaskOutput = { fg = c.text },
     LazyUrl = { fg = c.blue, underline = true },
     LazyValue = { fg = c.teal },
 
     ---! mason.nvim
-    MasonHeader = { fg = t and c.none or c.base, bg = c.blue },
+    MasonHeader = { fg = u.pink, bg = c.none },
     MasonHighlight = { fg = c.blue },
-    MasonHighlightBlock = { fg = t and c.none or c.base, bg = c.green },
+    MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = c.overlay1 },

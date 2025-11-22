@@ -21,6 +21,8 @@ function M.default_gen_hlgroup_map(context)
   local item_kind_bg = c.none ---@type string
   local cmp_panel_bg = cs.mix(c.bg0, c.bg2, 75) ---@type string
   local treesitter_context_bg = t and c.none or cs.mix(c.bg0, c.brightBlue, 65) ---@type string
+  local lazy_badge_fg = c.bg1 ---@type string
+  local lazy_badge_bg = c.pink ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
@@ -116,7 +118,7 @@ function M.default_gen_hlgroup_map(context)
     LazyCommit = { fg = c.green },
     LazyCommitIssue = { fg = c.orange },
     LazyDir = { fg = c.fg1 },
-    LazyH1 = { fg = c.bg2, bg = c.orange, bold = true },
+    LazyH1 = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     LazyH2 = { fg = c.fg2, bold = true, underline = true },
     LazyNoCond = { fg = c.red },
     LazyNormal = { bg = cs.mix(c.bg0, c.bg1, 80), blend = 50 },
@@ -138,9 +140,9 @@ function M.default_gen_hlgroup_map(context)
     LazyValue = { fg = c.brightAqua },
 
     ---! mason.nvim
-    MasonHeader = { fg = c.bg0, bg = c.red },
+    MasonHeader = { fg = c.pink, bg = c.none },
     MasonHighlight = { fg = c.blue },
-    MasonHighlightBlock = { fg = c.bg0, bg = c.green },
+    MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = c.fg4 },

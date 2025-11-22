@@ -4,10 +4,14 @@ local M = {}
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
+  local cs = std.color
   local t = context.transparency ---@type boolean
-  local cmp_panel_bg = std.color.mix(c.overlay, c.base, 70) ---@type string
-  local treesitter_context_bg = t and c.none or std.color.mix(c.base, c.accentBlue, 70) ---@type string
+  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local cmp_panel_bg = cs.mix(c.overlay, c.base, 70) ---@type string
+  local treesitter_context_bg = t and c.none or cs.mix(c.base, c.accentBlue, 70) ---@type string
+  local lazy_badge_fg = u.bg1 ---@type string
+  local lazy_badge_bg = u.pink ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
@@ -103,7 +107,7 @@ function M.gen_hlgroup_map(context)
     LazyCommit = { fg = c.success },
     LazyCommitIssue = { fg = c.warning },
     LazyDir = { fg = c.text },
-    LazyH1 = { fg = t and c.none or c.base, bg = c.accentBlue, bold = true },
+    LazyH1 = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     LazyH2 = { fg = c.text, bold = true, underline = true },
     LazyNoCond = { fg = c.accentRed },
     LazyNormal = { fg = c.text, bg = std.color.mix(t and c.none or c.base, t and c.none or c.overlay, 70), blend = 40 },
@@ -125,9 +129,9 @@ function M.gen_hlgroup_map(context)
     LazyValue = { fg = c.accentAqua },
 
     ---! mason.nvim
-    MasonHeader = { fg = t and c.none or c.base, bg = c.accentBlue },
+    MasonHeader = { fg = u.pink, bg = c.none },
     MasonHighlight = { fg = c.accentBlue },
-    MasonHighlightBlock = { fg = t and c.none or c.base, bg = c.success },
+    MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = c.textMuted },
