@@ -6,13 +6,14 @@ local M = {}
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
+  local cmp_panel_bg = std.color.mix(c.overlay, c.base, 70) ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
     ---! blink.cmp
-    BlinkCmpDoc = { fg = c.text, bg = t and c.none or c.overlay },
-    BlinkCmpDocBorder = { fg = c.border, bg = t and c.none or c.overlay },
-    BlinkCmpDocSeparator = { fg = c.textMuted, bg = c.none },
+    BlinkCmpDoc = { fg = c.text, bg = cmp_panel_bg },
+    BlinkCmpDocBorder = { fg = c.border, bg = cmp_panel_bg },
+    BlinkCmpDocSeparator = { fg = c.textMuted, bg = cmp_panel_bg },
     BlinkCmpGhostText = { fg = c.textMuted, default = true },
     BlinkCmpItemIdx = { fg = c.textDim, bg = c.none },
     BlinkCmpKindClass = { fg = c.tokenTypesDeclarationAndReferences, bg = c.none },
@@ -51,11 +52,11 @@ function M.gen_hlgroup_map(context)
     BlinkCmpLabel = { fg = c.text, bg = c.none },
     BlinkCmpLabelDeprecated = { fg = c.textMuted, bg = c.none, strikethrough = true },
     BlinkCmpLabelMatch = { fg = c.accentBlue, bg = c.none, bold = true },
-    BlinkCmpMenu = { fg = c.text, bg = t and c.none or c.overlay },
-    BlinkCmpMenuBorder = { fg = c.border, bg = t and c.none or c.overlay },
-    BlinkCmpSignatureHelp = { fg = c.text, bg = t and c.none or c.overlay },
+    BlinkCmpMenu = { fg = c.text, bg = cmp_panel_bg },
+    BlinkCmpMenuBorder = { fg = c.border, bg = cmp_panel_bg },
+    BlinkCmpSignatureHelp = { fg = c.text, bg = cmp_panel_bg },
     BlinkCmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
-    BlinkCmpSignatureHelpBorder = { fg = c.border, bg = t and c.none or c.overlay },
+    BlinkCmpSignatureHelpBorder = { fg = c.border, bg = cmp_panel_bg },
     BlinkCmpSource = { fg = c.textDim, bg = c.none },
 
     ---! diffview.nvim

@@ -19,13 +19,14 @@ function M.default_gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
 
   local item_kind_bg = c.none ---@type string
+  local cmp_panel_bg = cs.mix(c.bg0, c.bg2, 75) ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
     ---! cmp
-    BlinkCmpDoc = { bg = c.none },
-    BlinkCmpDocBorder = { link = "FloatBorder" },
-    BlinkCmpDocSeparator = { fg = c.bg4, bg = c.none },
+    BlinkCmpDoc = { bg = cmp_panel_bg },
+    BlinkCmpDocBorder = { fg = c.bg4, bg = cmp_panel_bg },
+    BlinkCmpDocSeparator = { fg = c.bg4, bg = cmp_panel_bg },
     BlinkCmpGhostText = { link = "Comment", default = true },
     BlinkCmpItemIdx = { fg = c.fg3, bg = item_kind_bg },
     BlinkCmpKindClass = { fg = c.aqua, bg = item_kind_bg },
@@ -64,11 +65,11 @@ function M.default_gen_hlgroup_map(context)
     BlinkCmpLabel = { fg = c.fg4, italic = true, bg = item_kind_bg },
     BlinkCmpLabelDeprecated = { fg = c.bg4, italic = true, bg = item_kind_bg, strikethrough = true },
     BlinkCmpLabelMatch = { fg = c.blue, italic = true, bg = item_kind_bg },
-    BlinkCmpMenu = { fg = c.fg4, italic = true },
-    BlinkCmpMenuBorder = { link = "FloatBorder" },
-    BlinkCmpSignatureHelp = { bg = c.none },
+    BlinkCmpMenu = { fg = c.fg4, italic = true, bg = cmp_panel_bg },
+    BlinkCmpMenuBorder = { fg = c.bg4, bg = cmp_panel_bg },
+    BlinkCmpSignatureHelp = { bg = cmp_panel_bg },
     BlinkCmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
-    BlinkCmpSignatureHelpBorder = { link = "FloatBorder" },
+    BlinkCmpSignatureHelpBorder = { fg = c.bg4, bg = cmp_panel_bg },
     BlinkCmpSource = { fg = c.fg3, bg = item_kind_bg },
 
     ---! diffview.nvim

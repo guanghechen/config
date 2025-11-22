@@ -1,0 +1,375 @@
+---@class eve.constant.hlgroup.catppuccin.plugin
+local M = {}
+
+---@param context                       std.t.theme.IContext
+---@return table<string, std.t.theme.IHlgroup>
+function M.gen_hlgroup_map(context)
+  local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
+  local t = context.transparency ---@type boolean
+  local mix = std.color.mix
+  local cmp_panel_bg = mix(t and c.none or c.mantle, c.surface0, 65)
+  local lazy_panel_bg = mix(t and c.none or c.mantle, c.surface1, 60)
+  local mason_muted_bg = mix(t and c.none or c.surface0, c.mantle, 20)
+  local markdown_code_bg = mix(t and c.none or c.mantle, c.surface1, 55)
+  local markdown_inline_bg = mix(t and c.none or c.surface0, c.surface1, 55)
+  local markdown_quote_bg = mix(t and c.none or c.base, c.surface0, 65)
+  local dap_virtual_bg = mix(t and c.none or c.surface0, c.peach, 25)
+  local treesitter_context_bg = mix(t and c.none or c.base, c.surface0, 65)
+  local indent_marker_fg = mix(t and c.none or c.surface0, c.overlay0, 30)
+
+  local function staged_color(accent)
+    return mix(accent, c.subtext0, 35)
+  end
+
+  local function heading_bg(accent)
+    return mix(t and c.none or c.base, accent, 18)
+  end
+
+  ---@type table<string, std.t.theme.IHlgroup>
+  return {
+    ---! blink.cmp
+    BlinkCmpDoc = { fg = c.text, bg = cmp_panel_bg },
+    BlinkCmpDocBorder = { fg = c.overlay1, bg = cmp_panel_bg },
+    BlinkCmpDocSeparator = { fg = c.overlay0, bg = cmp_panel_bg },
+    BlinkCmpGhostText = { fg = c.overlay1, default = true },
+    BlinkCmpItemIdx = { fg = c.overlay2, bg = c.none },
+    BlinkCmpKindClass = { fg = c.yellow, bg = c.none },
+    BlinkCmpKindCodeium = { fg = c.teal, bg = c.none },
+    BlinkCmpKindColor = { fg = c.pink, bg = c.none },
+    BlinkCmpKindConstant = { fg = c.peach, bg = c.none },
+    BlinkCmpKindConstructor = { fg = c.blue, bg = c.none },
+    BlinkCmpKindCopilot = { fg = c.teal, bg = c.none },
+    BlinkCmpKindDefault = { fg = c.overlay2, bg = c.none },
+    BlinkCmpKindEnum = { fg = c.yellow, bg = c.none },
+    BlinkCmpKindEnumMember = { fg = c.red, bg = c.none },
+    BlinkCmpKindEvent = { fg = c.sky, bg = c.none },
+    BlinkCmpKindField = { fg = c.green, bg = c.none },
+    BlinkCmpKindFile = { fg = c.blue, bg = c.none },
+    BlinkCmpKindFolder = { fg = c.blue, bg = c.none },
+    BlinkCmpKindFunction = { fg = c.blue, bg = c.none },
+    BlinkCmpKindIdentifier = { fg = c.flamingo, bg = c.none },
+    BlinkCmpKindInterface = { fg = c.lavender, bg = c.none },
+    BlinkCmpKindKeyword = { fg = c.mauve, bg = c.none },
+    BlinkCmpKindMethod = { fg = c.blue, bg = c.none },
+    BlinkCmpKindModule = { fg = c.blue, bg = c.none },
+    BlinkCmpKindOperator = { fg = c.sky, bg = c.none },
+    BlinkCmpKindProperty = { fg = c.green, bg = c.none },
+    BlinkCmpKindReference = { fg = c.red, bg = c.none },
+    BlinkCmpKindSnippet = { fg = c.mauve, bg = c.none },
+    BlinkCmpKindStruct = { fg = c.lavender, bg = c.none },
+    BlinkCmpKindStructure = { fg = c.lavender, bg = c.none },
+    BlinkCmpKindSupermaven = { fg = c.teal, bg = c.none },
+    BlinkCmpKindTabNine = { fg = c.teal, bg = c.none },
+    BlinkCmpKindText = { fg = c.teal, bg = c.none },
+    BlinkCmpKindType = { fg = c.lavender, bg = c.none },
+    BlinkCmpKindTypeParameter = { fg = c.lavender, bg = c.none },
+    BlinkCmpKindUnit = { fg = c.green, bg = c.none },
+    BlinkCmpKindValue = { fg = c.peach, bg = c.none },
+    BlinkCmpKindVariable = { fg = c.flamingo, bg = c.none },
+    BlinkCmpLabel = { fg = c.text, bg = c.none },
+    BlinkCmpLabelDeprecated = { fg = c.overlay1, bg = c.none, strikethrough = true },
+    BlinkCmpLabelMatch = { fg = c.blue, bg = c.none, bold = true },
+    BlinkCmpMenu = { fg = c.text, bg = cmp_panel_bg },
+    BlinkCmpMenuBorder = { fg = c.overlay1, bg = cmp_panel_bg },
+    BlinkCmpSignatureHelp = { fg = c.text, bg = cmp_panel_bg },
+    BlinkCmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
+    BlinkCmpSignatureHelpBorder = { fg = c.overlay1, bg = cmp_panel_bg },
+    BlinkCmpSource = { fg = c.overlay2, bg = c.none },
+
+    ---! diffview.nvim
+    DiffviewFilePanelDeletions = { fg = c.red, bold = true },
+    DiffviewFilePanelFileName = { fg = c.text, bold = true },
+    DiffviewFilePanelInsertions = { fg = c.green, bold = true },
+    DiffviewStatusModified = { fg = c.yellow, bold = true },
+
+    ---! flash.nvim
+    FlashBackdrop = { fg = c.overlay1 },
+    FlashCurrent = { fg = c.peach, italic = true, bold = true },
+    FlashLabel = { fg = t and c.none or c.base, bg = c.mauve, bold = true },
+    FlashMatch = { fg = c.sky, italic = true },
+    FlashPrompt = { fg = c.text, bg = mix(t and c.none or c.surface0, c.mantle, 45) },
+    FlashPromptIcon = { fg = c.peach, bg = c.none },
+
+    ---! gitsigns.nvim
+    GitSignsAdd = { fg = c.green },
+    GitSignsAddNr = { link = "GitSignsAdd" },
+    GitSignsChange = { fg = c.yellow },
+    GitSignsChangeNr = { link = "GitSignsChange" },
+    GitSignsDelete = { fg = c.red },
+    GitSignsDeleteNr = { link = "GitSignsDelete" },
+    GitSignsTopdelete = { fg = c.red },
+    GitSignsTopdeleteNr = { link = "GitSignsTopdelete" },
+    GitSignsUntracked = { fg = c.overlay1 },
+    GitSignsUntrackedNr = { link = "GitSignsUntracked" },
+    GitSignsCurrentLineBlame = { fg = c.overlay1, italic = true },
+    GitSignsStagedAdd = { fg = staged_color(c.green) },
+    GitSignsStagedAddNr = { link = "GitSignsStagedAdd" },
+    GitSignsStagedChange = { fg = staged_color(c.yellow) },
+    GitSignsStagedChangeNr = { link = "GitSignsStagedChange" },
+    GitSignsStagedDelete = { fg = staged_color(c.red) },
+    GitSignsStagedDeleteNr = { link = "GitSignsStagedDelete" },
+    GitSignsStagedTopdelete = { fg = staged_color(c.red) },
+    GitSignsStagedTopdeleteNr = { link = "GitSignsStagedTopdelete" },
+    GitSignsStagedUntracked = { fg = staged_color(c.overlay1) },
+    GitSignsStagedUntrackedNr = { link = "GitSignsStagedUntracked" },
+
+    ---! lazy.nvim
+    LazyButton = { fg = c.text, bg = c.none },
+    LazyButtonActive = { fg = t and c.none or c.base, bg = c.blue, bold = true },
+    LazyCommit = { fg = c.green },
+    LazyCommitIssue = { fg = c.yellow },
+    LazyDir = { fg = c.blue },
+    LazyH1 = { fg = t and c.none or c.base, bg = c.blue, bold = true },
+    LazyH2 = { fg = c.text, bold = true, underline = true },
+    LazyNoCond = { fg = c.red },
+    LazyNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
+    LazyProgressDone = { fg = c.blue, bold = true },
+    LazyProgressTodo = { fg = c.overlay1, italic = true },
+    LazyReasonCmd = { fg = c.yellow },
+    LazyReasonEvent = { fg = c.sky },
+    LazyReasonFt = { fg = c.lavender },
+    LazyReasonImport = { fg = c.subtext0 },
+    LazyReasonKeys = { fg = c.blue },
+    LazyReasonPlugin = { fg = c.red },
+    LazyReasonRuntime = { fg = c.mauve },
+    LazyReasonSource = { fg = c.green },
+    LazyReasonStart = { fg = c.text },
+    LazyOperator = { fg = c.text },
+    LazySpecial = { fg = c.mauve },
+    LazyTaskOutput = { fg = c.text },
+    LazyUrl = { fg = c.blue, underline = true },
+    LazyValue = { fg = c.teal },
+
+    ---! mason.nvim
+    MasonHeader = { fg = t and c.none or c.base, bg = c.blue },
+    MasonHighlight = { fg = c.blue },
+    MasonHighlightBlock = { fg = t and c.none or c.base, bg = c.green },
+    MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
+    MasonHeaderSecondary = { link = "MasonHighlightBlock" },
+    MasonMuted = { fg = c.overlay1 },
+    MasonMutedBlock = { fg = c.overlay2, bg = mason_muted_bg },
+    MasonNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
+
+    ---! mini.hipatterns
+    MiniHipatternsFixme = {
+      fg = t and c.none or c.base,
+      bg = c.red,
+      bold = true,
+      italic = true,
+      underline = true,
+    },
+    MiniHipatternsHack = { fg = t and c.none or c.base, bg = c.peach, bold = true, italic = true, underline = true },
+    MiniHipatternsTodo = {
+      fg = t and c.none or c.base,
+      bg = c.blue,
+      bold = true,
+      italic = true,
+      underline = true,
+    },
+    MiniHipatternsNote = { fg = t and c.none or c.base, bg = c.green, bold = true, italic = true, underline = true },
+
+    ---! mini.icons
+    MiniIconsAzure = { fg = c.sky },
+    MiniIconsBlue = { fg = c.blue },
+    MiniIconsCyan = { fg = c.sky },
+    MiniIconsGreen = { fg = c.green },
+    MiniIconsGrey = { fg = c.overlay2 },
+    MiniIconsOrange = { fg = c.peach },
+    MiniIconsPurple = { fg = c.mauve },
+    MiniIconsRed = { fg = c.red },
+    MiniIconsYellow = { fg = c.yellow },
+
+    ---! mini.indentscope
+    MiniIndentscopeSymbol = { fg = c.blue },
+    MiniIndentscopeSymbolOff = { fg = c.yellow },
+
+    ---! neo-tree.nvim
+    NeoTreeCursorLine = { link = "CursorLine" },
+    NeoTreeCursorLineNr = { link = "CursorLineNr" },
+    NeoTreeDirectoryIcon = { fg = c.blue },
+    NeoTreeDirectoryName = { fg = c.blue },
+    NeoTreeExpander = { fg = c.overlay1 },
+    NeoTreeFileName = { fg = c.text },
+    NeoTreeFloatTitle = { link = "FloatTitle" },
+    NeoTreeGitIgnored = { fg = c.overlay1 },
+    NeoTreeGitModified = { fg = c.yellow },
+    NeoTreeGitUntracked = { fg = c.mauve },
+    NeoTreeIndentMarker = { fg = indent_marker_fg },
+    NeoTreeNormal = { link = "Normal" },
+    NeoTreeNormalNC = { link = "NormalNC" },
+    NeoTreeRootName = { fg = c.lavender, bold = true },
+    NeoTreeSignColumn = { link = "SignColumn" },
+    NeoTreeFloatBorder = { link = "FloatBorder" },
+    NeoTreeTab = { fg = c.overlay1, bg = c.none, bold = true },
+    NeoTreeTabActive = { fg = t and c.none or c.base, bg = c.blue, bold = true },
+    NeoTreeTabSeparator = { fg = c.none, bg = c.none },
+    NeoTreeTabSeparatorActive = { fg = c.blue, bg = c.none },
+    NeoTreeStatusLine = { link = "StatusLine" },
+    NeoTreeStatusLineNC = { link = "StatusLineNC" },
+    NeoTreeVertSplit = { link = "VertSplit" },
+    NeoTreeEndOfBuffer = { link = "EndOfBuffer" },
+    NeoTreeWinSeparator = { link = "WinSeparator" },
+    NeoTreeWinbar = { fg = c.overlay1 },
+    NeoTreeHiddenByName = { fg = c.overlay0 },
+    NeoTreeMessage = { fg = c.subtext0 },
+    NeoTreeTitleBar = { fg = t and c.none or c.base, bg = c.blue },
+
+    ---! nvim-dap
+    DapBreakpoint = { fg = c.red },
+    DapBreakpointCondition = { fg = c.yellow },
+    DapBreakpointRejected = { fg = c.overlay1 },
+    DapLogPoint = { fg = c.blue },
+    DapStopped = { fg = c.peach },
+    DapStoppedLine = { bg = mix(t and c.none or c.surface0, c.peach, 25), blend = 40 },
+
+    ---! nvim-dap-ui
+    DapUIBreakpointsCurrentLine = { fg = c.green, bold = true },
+    DapUIBreakpointsDisabledLine = { fg = c.overlay1 },
+    DapUIBreakpointsInfo = { fg = c.green },
+    DapUIBreakpointsLine = { fg = c.blue },
+    DapUIBreakpointsPath = { fg = c.blue, bold = true },
+    DapUICurrentFrameName = { fg = c.green, bold = true },
+    DapUIDecoration = { fg = c.blue },
+    DapUIFloatBorder = { fg = c.overlay1, bg = t and c.none or c.mantle },
+    DapUILineNumber = { fg = c.blue },
+    DapUIModifiedValue = { fg = c.peach },
+    DapUIPlayPause = { fg = c.green },
+    DapUIRestart = { fg = c.blue },
+    DapUIScope = { fg = c.blue },
+    DapUISource = { fg = c.lavender },
+    DapUIStepBack = { fg = c.yellow },
+    DapUIStepInto = { fg = c.blue },
+    DapUIStepOut = { fg = c.blue },
+    DapUIStepOver = { fg = c.blue },
+    DapUIStop = { fg = c.red },
+    DapUIStopNC = { fg = c.red },
+    DapUIThread = { fg = c.green },
+    DapUIEndofBuffer = { link = "EndOfBuffer" },
+    DapUIFloatNormal = { link = "NormalFloat" },
+    DapUIFrameName = { link = "Normal" },
+    DapUINormal = { link = "Normal" },
+    DapUIPlayPauseNC = { fg = c.green },
+    DapUIRestartNC = { fg = c.green },
+    DapUIStepBackNC = { fg = c.blue },
+    DapUIStepIntoNC = { fg = c.blue },
+    DapUIStepOutNC = { fg = c.blue },
+    DapUIStepOverNC = { fg = c.blue },
+    DapUIStoppedThread = { fg = c.teal },
+    DapUIType = { fg = c.mauve },
+    DapUIUnavailable = { fg = c.overlay2 },
+    DapUIUnavailableNC = { fg = c.overlay2 },
+    DapUIValue = { fg = c.teal },
+    DapUIVariable = { fg = c.text },
+    DapUIWatchesEmpty = { fg = c.red },
+    DapUIWatchesError = { fg = c.red },
+    DapUIWatchesValue = { fg = c.green },
+    DapUIWinSelect = { fg = c.teal, bold = true },
+
+    ---! nvim-dap-virtual-text
+    NvimDapVirtualText = {
+      fg = c.overlay1,
+      bg = dap_virtual_bg,
+      italic = true,
+    },
+    NvimDapVirtualTextChanged = {
+      fg = c.text,
+      bg = dap_virtual_bg,
+      italic = true,
+    },
+
+    ---! render-markdown.nvim
+    RenderMarkdownBullet = { fg = c.overlay2 },
+    RenderMarkdownCheckboxChecked = { fg = c.green, bold = true },
+    RenderMarkdownCheckboxUnchecked = { fg = c.red },
+    RenderMarkdownCode = { bg = markdown_code_bg },
+    RenderMarkdownCodeBorder = { fg = c.teal, bg = markdown_code_bg },
+    RenderMarkdownCodeFallback = { fg = c.overlay1 },
+    RenderMarkdownCodeInfo = { fg = c.mauve, bg = markdown_code_bg },
+    RenderMarkdownCodeInline = { fg = c.peach, bg = markdown_inline_bg },
+    RenderMarkdownDash = { fg = c.peach },
+    RenderMarkdownError = { fg = c.red, bold = true },
+    RenderMarkdownH1 = { fg = c.mauve, bold = true },
+    RenderMarkdownH1Fg = { fg = c.mauve, bold = true },
+    RenderMarkdownH1Bg = { bg = heading_bg(c.mauve) },
+    RenderMarkdownH2 = { fg = c.teal, bold = true },
+    RenderMarkdownH2Fg = { fg = c.teal, bold = true },
+    RenderMarkdownH2Bg = { bg = heading_bg(c.teal) },
+    RenderMarkdownH3 = { fg = c.peach, bold = true },
+    RenderMarkdownH3Fg = { fg = c.peach, bold = true },
+    RenderMarkdownH3Bg = { bg = heading_bg(c.peach) },
+    RenderMarkdownH4 = { fg = c.yellow, bold = true },
+    RenderMarkdownH4Fg = { fg = c.yellow, bold = true },
+    RenderMarkdownH4Bg = { bg = heading_bg(c.yellow) },
+    RenderMarkdownH5 = { fg = c.blue, bold = true },
+    RenderMarkdownH5Fg = { fg = c.blue, bold = true },
+    RenderMarkdownH5Bg = { bg = heading_bg(c.blue) },
+    RenderMarkdownH6 = { fg = c.green, bold = true },
+    RenderMarkdownH6Fg = { fg = c.green, bold = true },
+    RenderMarkdownH6Bg = { bg = heading_bg(c.green) },
+    RenderMarkdownHint = { fg = c.teal },
+    RenderMarkdownInfo = { fg = c.blue },
+    RenderMarkdownLink = { fg = c.teal, underline = true },
+    RenderMarkdownLinkText = { fg = c.blue },
+    RenderMarkdownList = { fg = c.blue, bold = true },
+    RenderMarkdownListMarker = { fg = c.peach },
+    RenderMarkdownMath = { fg = c.mauve },
+    RenderMarkdownQuote = { fg = c.text, bg = markdown_quote_bg },
+    RenderMarkdownSuccess = { fg = c.green, bold = true },
+    RenderMarkdownTableHead = { fg = c.mauve, bold = true },
+    RenderMarkdownTableRow = { fg = c.peach },
+    RenderMarkdownUnchecked = { fg = c.green },
+    RenderMarkdownWarn = { fg = c.yellow, bold = true },
+    RenderMarkdownWikiLink = { fg = c.teal, italic = true },
+
+    ---! sidekick.nvim
+    SidekickCliAttach = { link = "NormalFloat" },
+    SidekickCliFailed = { link = "DiagnosticError" },
+    SidekickCliStarted = { link = "DiagnosticOk" },
+    SidekickDiffAdd = { link = "DiffWordRight" },
+    SidekickDiffDelete = { link = "DiffWordLeft" },
+    SidekickLocDelim = { link = "Delimiter" },
+    SidekickLocFile = { fg = c.blue },
+    SidekickLocRow = { fg = c.peach },
+
+    ---! snacks.nvim
+    SnacksPickerLabel = { fg = c.blue, bold = true },
+    SnacksPickerFile = { fg = c.teal },
+
+    ---! notify.nvim
+    NotifyERRORIcon = { fg = c.red },
+    NotifyWARNIcon = { fg = c.yellow },
+    NotifyINFOIcon = { fg = c.green },
+    NotifyDEBUGIcon = { fg = c.peach },
+    NotifyTRACEIcon = { fg = c.overlay2 },
+    NotifyERRORTitle = { link = "NotifyERRORIcon" },
+    NotifyWARNTitle = { link = "NotifyWARNIcon" },
+    NotifyINFOTitle = { link = "NotifyINFOIcon" },
+    NotifyDEBUGTitle = { link = "NotifyDEBUGIcon" },
+    NotifyTRACETitle = { link = "NotifyTRACEIcon" },
+
+    ---! treesitter-context
+    TreesitterContext = { fg = c.text, bg = treesitter_context_bg },
+    TreesitterContextBottom = { underline = true, sp = c.blue },
+    TreesitterContextLineNumber = { fg = c.peach, bg = treesitter_context_bg },
+    TreesitterContextLineNumberBottom = { underline = true, sp = c.blue },
+
+    ---! which-key.nvim
+    WhichKey = { fg = c.blue, bold = true },
+    WhichKeyDesc = { fg = c.subtext0 },
+    WhichKeyGroup = { fg = c.mauve, italic = true },
+    WhichKeyIconAzure = { fg = c.sky },
+    WhichKeyIconBlue = { fg = c.blue },
+    WhichKeyIconCyan = { fg = c.sky },
+    WhichKeyIconGreen = { fg = c.green },
+    WhichKeyIconGrey = { fg = c.overlay2 },
+    WhichKeyIconOrange = { fg = c.peach },
+    WhichKeyIconPurple = { fg = c.mauve },
+    WhichKeyIconRed = { fg = c.red },
+    WhichKeyIconYellow = { fg = c.yellow },
+    WhichKeyNormal = { fg = c.text, bg = mix(t and c.none or c.surface0, c.surface1, 65) },
+    WhichKeySeparator = { fg = c.overlay1 },
+    WhichKeyValue = { fg = c.green },
+  }
+end
+
+return M

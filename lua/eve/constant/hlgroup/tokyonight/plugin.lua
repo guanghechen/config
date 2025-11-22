@@ -8,13 +8,14 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.tokyonight ---@type std.t.theme.TokyonightPalette
   local item_kind_bg = c.none ---@type string
+  local cmp_panel_bg = cs.mix(c.bg_dark, c.bg, 80) ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
     ---! blink.cmp
-    BlinkCmpDoc = { fg = c.fg, bg = t and c.none or c.bg_dark },
-    BlinkCmpDocBorder = { fg = c.border_highlight, bg = t and c.none or c.bg_dark },
-    BlinkCmpDocSeparator = { fg = c.dark3, bg = c.none },
+    BlinkCmpDoc = { fg = c.fg, bg = cmp_panel_bg },
+    BlinkCmpDocBorder = { fg = c.border_highlight, bg = cmp_panel_bg },
+    BlinkCmpDocSeparator = { fg = c.dark3, bg = cmp_panel_bg },
     BlinkCmpGhostText = { fg = c.terminal_black, default = true },
     BlinkCmpItemIdx = { fg = c.dark5, bg = item_kind_bg },
     BlinkCmpKindClass = { fg = c.orange, bg = item_kind_bg },
@@ -53,11 +54,11 @@ function M.gen_hlgroup_map(context)
     BlinkCmpLabel = { fg = c.fg, bg = item_kind_bg },
     BlinkCmpLabelDeprecated = { fg = c.fg_gutter, bg = item_kind_bg, strikethrough = true },
     BlinkCmpLabelMatch = { fg = c.blue1, bg = item_kind_bg },
-    BlinkCmpMenu = { fg = c.fg, bg = t and c.none or c.bg_dark },
-    BlinkCmpMenuBorder = { fg = c.border_highlight, bg = t and c.none or c.bg_dark },
-    BlinkCmpSignatureHelp = { fg = c.fg, bg = t and c.none or c.bg_dark },
+    BlinkCmpMenu = { fg = c.fg, bg = cmp_panel_bg },
+    BlinkCmpMenuBorder = { fg = c.border_highlight, bg = cmp_panel_bg },
+    BlinkCmpSignatureHelp = { fg = c.fg, bg = cmp_panel_bg },
     BlinkCmpSignatureHelpActiveParameter = { link = "LspSignatureActiveParameter" },
-    BlinkCmpSignatureHelpBorder = { fg = c.border_highlight, bg = t and c.none or c.bg_dark },
+    BlinkCmpSignatureHelpBorder = { fg = c.border_highlight, bg = cmp_panel_bg },
     BlinkCmpSource = { fg = c.dark5, bg = item_kind_bg },
 
     ---! diffview.nvim
