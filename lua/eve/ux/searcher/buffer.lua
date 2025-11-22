@@ -1391,7 +1391,7 @@ function M:__update_replace_preview__()
     return
   end
 
-  local lines, text = collect_buffer_content(bufnr_source) ---@type string[], string
+  local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
   local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
   local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
   local replacement_matches = {} ---@type eve.ux.searcher.buffer.IReplacementMatch[]
@@ -1477,6 +1477,7 @@ end
 ---@protected
 ---@param lines                          string[]
 ---@return integer|nil
+---@diagnostic disable-next-line: unused-local
 function M:__get_current_match_offset__(lines)
   local current_match_index = self.o_match_index:snapshot() ---@type integer
   local matches = self._matches ---@type rstd.search.ITextMatch[]|nil

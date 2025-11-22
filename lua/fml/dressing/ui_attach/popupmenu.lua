@@ -169,8 +169,8 @@ function M._show(state)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
   if state.selected >= 0 then
-    local row = state.selected ---@type integer
-    vim.hl.range(bufnr, nsnrs.popupmenu_selected, "f_up_selected", { row, 0 }, { row, -1 })
+    local row_selected = state.selected ---@type integer
+    vim.hl.range(bufnr, nsnrs.popupmenu_selected, "f_up_selected", { row_selected, 0 }, { row_selected, -1 })
   end
 
   vim.api.nvim__redraw({ win = winnr, flush = true })

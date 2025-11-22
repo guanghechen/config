@@ -1864,6 +1864,7 @@ end
 ---@return string[]
 ---@return string[]
 ---@return string[]
+---@diagnostic disable-next-line: unused-local
 function M:__get_borders__(preview_layout, should_show_replacer)
   local should_show_preview = preview_layout ~= "hidden" ---@type boolean
   local replacer_border = should_show_preview
