@@ -265,7 +265,6 @@ function M:search(params)
 
   local has_replace_preview = flag_replace and replace_pattern ~= nil and replace_pattern ~= ""
   local search_highlight = has_replace_preview and "f_ss_search" or "f_ss_matches"
-  local eol_icon = eve.icon.listchars.eol ---@type string
 
   local function resolve_filepath(relpath)
     if relpath == nil or relpath == "" then
@@ -331,7 +330,7 @@ function M:search(params)
         end
 
         local replacement_display = encode_preview_text(replacement_real) ---@type string
-        text = prefix .. replacement_display .. suffix .. eol_icon
+        text = prefix .. replacement_display .. suffix
 
         local prefix_len = #prefix ---@type integer
         local replacement_len = #replacement_display ---@type integer
@@ -348,7 +347,7 @@ function M:search(params)
           }
         end
       else
-        text = preview_text .. eol_icon
+        text = preview_text
         highlights = {
           { coll = sx, colr = sy + 1, hlname = search_highlight },
         }
