@@ -268,13 +268,14 @@ function M._update_cmdline_position(state, winnr)
 
   -- Calculate the screen position of the cmdline content
   -- The content starts after the icon and any concealed portions
-  local content_start_col = #state.icon ---@type integer
-  if state.concealable and state.pos >= #state.first then
-    -- When concealed, the content starts at the icon position
-    content_start_col = #state.icon
-  else
-    -- When not concealed, content starts after icon + first part
-    content_start_col = #state.icon + #state.first
+  local icon_width = vim.api.nvim_strwidth(state.icon) ---@type integer
+  local first_width = vim.api.nvim_strwidth(state.first) ---@type integer
+  local concealed_prefix = state.concealable and state.pos >= #state.first ---@type boolean
+
+  local content_start_col = icon_width ---@type integer
+  if not concealed_prefix then
+    -- When not concealed, content starts after icon + first part (command verb)
+    content_start_col = icon_width + first_width
   end
 
   -- Set vim.g.ui_cmdline_pos for blink.cmp to use
@@ -286,7 +287,7 @@ function M._update_cmdline_position(state, winnr)
   local popup_row = wincfg.row + wincfg.height + 2 ---@type integer
   vim.g.ui_cmdline_pos = {
     popup_row, -- position popup below the cmdline UI with spacing
-    wincfg.col + content_start_col, -- col + offset to the content start
+    wincfg.col + content_start_col, -- col + offset to the content start (display width aware)
   }
 end
 
