@@ -1,5 +1,9 @@
 {
-  "ignorePaths": ["lua/resource/dict/", "lua/std/fileicon.lua", "lsp/yamlls.lua"],
+  "ignorePaths": [
+    "lua/resource/dict/",
+    "lua/std/fileicon.lua",
+    "lsp/yamlls.lua"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -94,6 +98,7 @@
     "Flspselectpythonvenv",
     "Flspshowcodeaction",
     "Flspshowcodeactionsource",
+    "Fnotapadinsertsplitline",
     "Fnotepadappendcontent",
     "Fnotepadchangeengine",
     "Fnotepadclose",
@@ -104,7 +109,6 @@
     "Fnotepadfocusright",
     "Fnotepadgobackward",
     "Fnotepadgoforward",
-    "Fnotapadinsertsplitline",
     "Fnotepadnoteselect",
     "Fnotepadrename",
     "Fnotepadsave",
@@ -590,6 +594,7 @@
     "nodeuuid",
     "nofile",
     "noformat",
+    "noice",
     "noinsert",
     "nonblank",
     "nonexist",
@@ -750,9 +755,9 @@
     "submatches",
     "subroot",
     "sumhexa",
+    "supermaven",
     "superroot",
     "superrooturi",
-    "supermaven",
     "supscript",
     "swapfile",
     "symbolname",

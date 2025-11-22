@@ -36,11 +36,18 @@
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
+---@class fml.dressing.ui_attach.cmdline_block.IState
+---@field public lines                  string[]
+---@field public highlights             std.t.IHighlight[]
+---@field public bufnr                  integer|nil
+---@field public winnr                  integer|nil
+
 ---@class fml.dressing.ui_attach.state
 local M = {}
 
 M.cmdline = {} ---@type fml.dressing.ui_attach.cmdline.IState[]
 M.message = {} ---@type fml.dressing.ui_attach.message.IState
 M.popupmenu = nil ---@type fml.dressing.ui_attach.popupmenu.IState|nil
+M.cmdline_block = { lines = {}, highlights = {} } ---@type fml.dressing.ui_attach.cmdline_block.IState
 
 return M

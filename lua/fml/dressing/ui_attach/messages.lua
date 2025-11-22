@@ -231,6 +231,26 @@ function M.showcmd(task)
   eve.status.dirtier_statusline:mark_dirty()
 end
 
+function M.ruler(task)
+  local contents = unpack(task.args)
+  ---@cast contents                     [integer, string, integer][]|nil
+
+  if contents == nil or #contents < 1 then
+    eve.status.msg_command:next("")
+    eve.status.dirtier_statusline:mark_dirty()
+    return
+  end
+
+  local text = "" ---@type string
+  for _, item in ipairs(contents) do
+    local _, piece = unpack(item)
+    text = text .. piece
+  end
+
+  eve.status.msg_command:next(text)
+  eve.status.dirtier_statusline:mark_dirty()
+end
+
 function M.showmode(task)
   local contents = unpack(task.args)
   ---@cast contents                     [integer, string, integer][]

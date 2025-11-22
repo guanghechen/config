@@ -2,6 +2,49 @@ local states = require("fml.dressing.ui_attach.state")
 
 local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
 
+---@param entries                      table[]|nil
+---@return string[]
+---@return std.t.IHighlight[]
+local function parse_block_entries(entries)
+  local lines = {} ---@type string[]
+  local highlights = {} ---@type std.t.IHighlight[]
+  if type(entries) ~= "table" then
+    return lines, highlights
+  end
+
+  for idx, entry in ipairs(entries) do
+    local text = ""
+    local offset = 0 ---@type integer
+    if type(entry) == "table" then
+      for _, chunk in ipairs(entry) do
+        local chunk_text = ""
+        local chunk_width = 0 ---@type integer
+        if type(chunk) == "table" and chunk[2] ~= nil then
+          chunk_text = tostring(chunk[2])
+          chunk_width = vim.fn.strdisplaywidth(chunk_text)
+          local hlid = chunk[1]
+          if type(hlid) == "number" and hlid > 0 and #chunk_text > 0 then
+            local hlname = vim.fn.synIDattr(hlid, "name") ---@type string
+            if #hlname > 0 then
+              highlights[#highlights + 1] = {
+                lnum = idx,
+                coll = offset,
+                colr = offset + chunk_width,
+                hlname = hlname,
+              }
+            end
+          end
+        end
+        text = text .. chunk_text
+        offset = offset + chunk_width
+      end
+    end
+    lines[#lines + 1] = text
+  end
+
+  return lines, highlights
+end
+
 -- stylua: ignore start
 local _cmdline_title_map = {
   ["command"]         = string.format(" %s Command ", eve.icon.ui.Cmdline),
@@ -291,6 +334,91 @@ function M._update_cmdline_position(state, winnr)
   }
 end
 
+---@param block                        fml.dressing.ui_attach.cmdline_block.IState
+---@return nil
+function M._render_block(block)
+  if #block.lines < 1 then
+    return
+  end
+
+  local bufnr = block.bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = vim.api.nvim_create_buf(false, true)
+    block.bufnr = bufnr
+
+    vim.bo[bufnr].bufhidden = "wipe"
+    vim.bo[bufnr].buflisted = false
+    vim.bo[bufnr].buftype = "nofile"
+    vim.bo[bufnr].filetype = eve.filetype.UX_CMDLINE
+    vim.bo[bufnr].swapfile = false
+  end
+
+  local width = 0 ---@type integer
+  for _, line in ipairs(block.lines) do
+    local w = vim.api.nvim_strwidth(line)
+    width = w > width and w or width
+  end
+  width = math.max(20, math.min(width, math.floor(vim.o.columns * 0.9)))
+
+  local height = math.min(#block.lines, math.max(1, math.floor(vim.o.lines * 0.6))) ---@type integer
+  local row = math.max(0, math.floor((vim.o.lines - height) / 2)) ---@type integer
+  local col = math.max(0, math.floor((vim.o.columns - width) / 2)) ---@type integer
+
+  ---@type vim.api.keyset.win_config
+  local wincfg = {
+    zindex = 1200,
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    style = "minimal",
+    border = "rounded",
+    title = " Command Window ",
+    title_pos = "center",
+    focusable = false,
+  }
+
+  local winnr = block.winnr ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    wincfg.noautocmd = true
+    winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
+    block.winnr = winnr
+
+    eve.win.set_type(winnr, eve.win.Types.CMDLINE)
+    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+
+    vim.wo[winnr].cursorline = false
+    vim.wo[winnr].list = false
+    vim.wo[winnr].number = false
+    vim.wo[winnr].relativenumber = false
+    vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].spell = false
+    vim.wo[winnr].wrap = false
+    vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
+  else
+    vim.api.nvim_win_set_config(winnr, wincfg)
+  end
+
+  local padded = {} ---@type string[]
+  for _, line in ipairs(block.lines) do
+    padded[#padded + 1] = std.string.pad_end(line, width, " ")
+  end
+
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, padded)
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
+
+  local total_lines = #block.lines ---@type integer
+  for _, hl in ipairs(block.highlights) do
+    local row_idx = hl.lnum - 1
+    if row_idx >= 0 and row_idx < total_lines then
+      vim.hl.range(bufnr, nsnrs.cmdline, hl.hlname, { row_idx, hl.coll }, { row_idx, hl.colr })
+    end
+  end
+
+  vim.api.nvim__redraw({ win = winnr, flush = true })
+end
+
 ---@param state                         fml.dressing.ui_attach.cmdline.IState
 ---@param msg_show_task                 fml.dressing.ui_attach.ITask
 ---@return nil
@@ -458,6 +586,61 @@ function M._show_confirm(state, msg_show_task)
 
   -- Set the cmdline position for blink.cmp compatibility (confirm dialog)
   M._update_cmdline_position(state, winnr)
+end
+
+---@param task                          fml.dressing.ui_attach.ITask
+---@return nil
+---@diagnostic disable-next-line: unused-local
+function M.special_char(task) end
+
+---@param task                          fml.dressing.ui_attach.ITask
+---@return nil
+function M.block_show(task)
+  local entries = unpack(task.args)
+  ---@cast entries                      table[]|nil
+  local lines, highlights = parse_block_entries(entries)
+  local block = states.cmdline_block
+  block.lines = lines
+  block.highlights = highlights
+  M._render_block(block)
+end
+
+---@param task                          fml.dressing.ui_attach.ITask
+---@return nil
+function M.block_append(task)
+  local entries = unpack(task.args)
+  ---@cast entries                      table[]|nil
+  local lines, highlights = parse_block_entries(entries)
+  local block = states.cmdline_block
+  local base = #block.lines
+  for _, line in ipairs(lines) do
+    block.lines[#block.lines + 1] = line
+  end
+  for _, hl in ipairs(highlights) do
+    hl.lnum = hl.lnum + base
+    block.highlights[#block.highlights + 1] = hl
+  end
+  M._render_block(block)
+end
+
+---@param task                          fml.dressing.ui_attach.ITask
+---@return nil
+---@diagnostic disable-next-line: unused-local
+function M.block_hide(task)
+  local block = states.cmdline_block
+  block.lines = {}
+  block.highlights = {}
+
+  local winnr = block.winnr ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    vim.api.nvim_win_close(winnr, true)
+  end
+  local bufnr = block.bufnr ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+  block.winnr = nil
+  block.bufnr = nil
 end
 
 return M

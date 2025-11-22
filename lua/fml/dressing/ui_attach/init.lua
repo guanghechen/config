@@ -24,11 +24,23 @@ local handlers = {
   cmdline_hide = function(task)
     require("fml.dressing.ui_attach.cmdline").hide(task)
   end,
+  cmdline_special_char = function(task)
+    require("fml.dressing.ui_attach.cmdline").special_char(task)
+  end,
   cmdline_pos = function(task)
     require("fml.dressing.ui_attach.cmdline").pos(task)
   end,
   cmdline_show = function(task)
     require("fml.dressing.ui_attach.cmdline").show(task)
+  end,
+  cmdline_block_show = function(task)
+    require("fml.dressing.ui_attach.cmdline").block_show(task)
+  end,
+  cmdline_block_append = function(task)
+    require("fml.dressing.ui_attach.cmdline").block_append(task)
+  end,
+  cmdline_block_hide = function(task)
+    require("fml.dressing.ui_attach.cmdline").block_hide(task)
   end,
   msg_clear = function(task)
     require("fml.dressing.ui_attach.messages").clear(task)
@@ -47,6 +59,9 @@ local handlers = {
   end,
   msg_showmode = function(task)
     require("fml.dressing.ui_attach.messages").showmode(task)
+  end,
+  msg_ruler = function(task)
+    require("fml.dressing.ui_attach.messages").ruler(task)
   end,
   popupmenu_hide = function(task)
     require("fml.dressing.ui_attach.popupmenu").hide(task)
