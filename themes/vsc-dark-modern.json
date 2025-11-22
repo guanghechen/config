@@ -1,0 +1,24 @@
+{
+  "name":           "vsc-dark-modern",
+  "type":           "custom",
+  "Background":     "#1F1F1F",
+  "Foreground":     "#D7D7D7",
+  "LightBlue":      "#9CDCFE",
+  "AccentBlue":     "#0078D4",
+  "AccentPurple":   "#C586C0",
+  "AccentCyan":     "#4EC9B0",
+  "AccentGreen":    "#2EA043",
+  "AccentYellow":   "#DCDCAA",
+  "AccentRed":      "#F85149",
+  "Comment":        "#6E7681",
+  "Gray":           "#9D9D9D",
+  "DiffAdded":      "#1E2D22",
+  "DiffRemoved":    "#3B2021",
+  "DiffModified":   "#9CDCFE",
+  "GradientColors": [
+    "#0078D4",
+    "#9CDCFE",
+    "#C586C0",
+    "#C586C0"
+  ]
+}

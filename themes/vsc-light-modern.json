@@ -1,0 +1,24 @@
+{
+  "name":           "vsc-light-modern",
+  "type":           "custom",
+  "Background":     "#FFFFFF",
+  "Foreground":     "#3B3B3B",
+  "LightBlue":      "#001080",
+  "AccentBlue":     "#005FB8",
+  "AccentPurple":   "#AF00DB",
+  "AccentCyan":     "#267F99",
+  "AccentGreen":    "#2EA043",
+  "AccentYellow":   "#795E26",
+  "AccentRed":      "#F85149",
+  "Comment":        "#767676",
+  "Gray":           "#767676",
+  "DiffAdded":      "#DFF0D8",
+  "DiffRemoved":    "#FFE2DA",
+  "DiffModified":   "#001080",
+  "GradientColors": [
+    "#005FB8",
+    "#001080",
+    "#AF00DB",
+    "#AF00DB"
+  ]
+}
