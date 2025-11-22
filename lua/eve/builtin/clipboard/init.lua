@@ -2,7 +2,7 @@
 
 local __module_name__ = "eve.builtin.clipboard" ---@type string
 
-local BYTE_DOT = std.byte.BYTES.DOT ---@type integer
+local BYTE_DOT = 0x2e ---@type integer '.'
 local MAX_BASE64_SIZE = 24 * 1024 ---@type number
 
 ---@class eve.builtin.clipboard

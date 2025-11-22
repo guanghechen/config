@@ -1,8 +1,8 @@
 ---@see https://github.com/echasnovski/mini.icons/blob/b8f6fa6f5a3fd0c56936252edcd691184e5aac0c/lua/mini/icons.lua#L1
 
 -- stylua: ignore start
-local BYTE_SLASH      = std.byte.BYTES.SLASH ---@type integer
-local BYTE_BACKSLASH  = std.byte.BYTES.BACKSLASH ---@type integer
+local BYTE_SLASH      = 0x2f ---@type integer '/'
+local BYTE_BACKSLASH  = 0x5c ---@type integer '\\'
 -- stylua: ignore end
 
 -- stylua: ignore start

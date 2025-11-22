@@ -1,6 +1,6 @@
 -- stylua: ignore start
-local BYTE_SLASH      = std.byte.BYTES.SLASH      ---@type integer '/'
-local BYTE_BACKSLASH  = std.byte.BYTES.BACKSLASH  ---@type integer '\\'
+local BYTE_SLASH      = 0x2f ---@type integer '/'
+local BYTE_BACKSLASH  = 0x5c ---@type integer '\\'
 -- stylua: ignore end
 
 ---@param octal                          string

@@ -18,7 +18,7 @@
 local M = {}
 M.__index = M
 
-local BYTE_AT = std.byte.BYTES.AT ---@type integer
+local BYTE_AT = 0x40 ---@type integer '@'
 
 ---@return std.collection.Theme
 function M.new()

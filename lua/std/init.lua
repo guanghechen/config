@@ -10,9 +10,7 @@ local source__mods = {
 ---@field public NotepadJsonSource      std.source.NotepadJsonSource
 ---@field public NotepadSqliteSource    std.source.NotepadSqliteSource
 ---@field public NotepadFolderSource    std.source.NotepadFolderSource
-local source = setmetatable({
-  __mods = source__mods,
-}, {
+local source = setmetatable({ __mods = source__mods }, {
   __index = function(t, k)
     local m = source__mods[k] ---@type string|nil
     if m == nil then
@@ -27,7 +25,6 @@ local __mods = {
   color = "std.lib.color",
   easing = "std.lib.easing",
 
-  byte = "std.byte",
   debug = "std.debug",
   env = "std.env",
   fileicon = "std.fileicon",
@@ -75,7 +72,6 @@ local __mods = {
 ---@field public color                  std.lib.color
 ---@field public easing                 std.lib.easing
 ---
----@field public byte                   std.byte
 ---@field public debug                  std.debug
 ---@field public env                    std.env
 ---@field public fileicon               std.fileicon
