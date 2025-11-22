@@ -105,9 +105,7 @@ return {
         },
         list = {
           selection = {
-            preselect = function()
-              return not require("blink.cmp").snippet_active({ direction = 1 })
-            end,
+            preselect = false,
             auto_insert = true,
           },
         },
