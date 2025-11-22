@@ -97,14 +97,30 @@ function M._show(state)
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
   local height = math.min(math.floor(vim.o.lines * 0.8), #state.items)
 
+  local row = math.floor(state.row or 0) ---@type integer
+  local col = math.floor(state.col or 0) ---@type integer
+
+  if state.grid == -1 and type(vim.g.ui_cmdline_pos) == "table" then
+    local cmd_pos = vim.g.ui_cmdline_pos ---@type integer[]|nil
+    if cmd_pos ~= nil and #cmd_pos >= 2 then
+      row = cmd_pos[1]
+      col = cmd_pos[2]
+    end
+  end
+
+  local max_row = math.max(0, vim.o.lines - height - 1) ---@type integer
+  local max_col = math.max(0, vim.o.columns - width - 1) ---@type integer
+  row = math.max(0, math.min(row, max_row))
+  col = math.max(0, math.min(col, max_col))
+
   ---@type vim.api.keyset.win_config
   local wincfg = {
     zindex = 2000,
     relative = "editor",
     width = width,
     height = height,
-    row = 6,
-    col = math.floor((vim.o.columns - width) / 2),
+    row = row,
+    col = col,
     style = "minimal",
     border = "rounded",
     focusable = false,
