@@ -123,14 +123,14 @@ fn convert_line_matches(
                 line_end_exclusive
             };
 
-            let preview_start_abs = std::cmp::max(line_start, start_abs.saturating_sub(16));
+            let preview_start_abs = std::cmp::max(line_start, start_abs.saturating_sub(64));
             let preview_line_limit = if same_line && end_abs_exclusive <= line_content_end {
                 line_content_end
             } else {
                 line_end_exclusive
             };
             let preview_end_abs_exclusive =
-                std::cmp::min(preview_line_limit, end_abs_exclusive.saturating_add(16));
+                std::cmp::min(preview_line_limit, end_abs_exclusive.saturating_add(64));
 
             if preview_end_abs_exclusive <= preview_start_abs
                 || preview_end_abs_exclusive > bytes.len()

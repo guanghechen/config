@@ -77,7 +77,7 @@ fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
         };
         let line_content_end_abs = line.offset + line_content_end_rel;
 
-        let preview_start_abs = std::cmp::max(line_start_abs, ox.saturating_sub(16));
+        let preview_start_abs = std::cmp::max(line_start_abs, ox.saturating_sub(64));
         let preview_line_limit = if start_line == end_line && end_exclusive <= line_content_end_rel
         {
             line_content_end_abs
@@ -85,7 +85,7 @@ fn convert_line_matches(line: LineMatch) -> Vec<ITextMatch> {
             line_end_abs_exclusive
         };
         let preview_end_abs_exclusive =
-            std::cmp::min(preview_line_limit, (oy + 1).saturating_add(16));
+            std::cmp::min(preview_line_limit, (oy + 1).saturating_add(64));
 
         let preview_start_rel = preview_start_abs.saturating_sub(line.offset);
         let preview_end_rel = preview_end_abs_exclusive.saturating_sub(line.offset);
