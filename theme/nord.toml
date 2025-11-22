@@ -57,9 +57,9 @@ black             = "#4C566A"
 red               = "#BF616A"
 green             = "#A3BE8C"
 yellow            = "#EBCB8B"
-blue              = "#5E81AC"
+blue              = "#81A1C1"
 magenta           = "#B48EAD"
-cyan              = "#88C0D0"
+cyan              = "#8FBCBB"
 white             = "#D8DEE9"
 
 [colors.dim]

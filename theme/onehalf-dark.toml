@@ -55,11 +55,11 @@ white             = "#ABB2BF"
 [colors.bright]
 black             = "#42464E"
 red               = "#E06C75"
-green             = "#98C379"
-yellow            = "#E5C07B"
+green             = "#7ECA9C"
+yellow            = "#D19A66"
 blue              = "#61AFEF"
-magenta           = "#C678DD"
-cyan              = "#56B6C2"
+magenta           = "#B294BB"
+cyan              = "#4EC9B0"
 white             = "#C8CCD4"
 
 [colors.dim]

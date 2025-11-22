@@ -54,12 +54,12 @@ white             = "#1e3469"
 
 [colors.bright]
 black             = "#848cb5"
-red               = "#f52a65"
-green             = "#587539"
+red               = "#c64343"
+green             = "#387068"
 yellow            = "#8c6c3e"
-blue              = "#2e7de9"
-magenta           = "#7847bd"
-cyan              = "#007197"
+blue              = "#188092"
+magenta           = "#9854f1"
+cyan              = "#118c74"
 white             = "#294891"
 
 [colors.dim]
