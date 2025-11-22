@@ -216,7 +216,7 @@ function M.default_gen_hlgroup_map(context)
     MatchWord = { fg = c.fg1, bg = c.bg4 },
     Normal = { fg = c.fg1, bg = c.bg0, blend = t and 50 or 0 },
     NormalFloat = { link = "FloatNormal" },
-    NormalNC = { link = "Normal" },
+    NormalNC = { fg = c.fg1, bg = c.bg1, blend = t and 50 or 0 },
     NvimInternalError = { fg = c.red },
     Pmenu = { fg = c.fg1, bg = c.bg2 },
     PmenuSbar = { bg = c.bg2 },
@@ -243,8 +243,8 @@ function M.default_gen_hlgroup_map(context)
     Visual = { bg = cs.mix(c.bg0, c.purple, 65), blend = 0, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
-    WinBar = { fg = c.blue, bg = c.none },
-    WinBarNC = { fg = c.blue, bg = c.none },
+    WinBar = { fg = c.blue, bg = c.bg0 },
+    WinBarNC = { fg = c.blue, bg = c.bg1 },
     WinSeparator = { fg = c.bg2, bg = c.none },
   }
   return hlgroup_map

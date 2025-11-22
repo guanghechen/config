@@ -25,6 +25,7 @@ function M.gen_hlgroup_map(context)
   local cs = std.color
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.tokyonight ---@type std.t.theme.TokyonightPalette
+  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   local bg = t and c.none or c.bg ---@type string
   local function diag_bg(color)
@@ -150,9 +151,9 @@ function M.gen_hlgroup_map(context)
     MoreMsg = { fg = c.blue },
     MsgArea = { link = "Normal" },
     NonText = { fg = cs.mix(bg, c.dark3, 45), italic = true },
-    Normal = { fg = c.fg, bg = c.bg, blend = t and 50 or 0 },
+    Normal = { fg = c.fg, bg = u.bg0, blend = t and 50 or 0 },
     NormalFloat = { fg = c.fg, bg = c.bg_dark },
-    NormalNC = { fg = c.fg, bg = c.bg, blend = t and 50 or 0 },
+    NormalNC = { fg = c.fg, bg = u.bg1, blend = t and 50 or 0 },
     Number = { fg = c.orange },
     NvimInternalError = { fg = c.red },
     Operator = { fg = c.blue5 },
@@ -205,8 +206,8 @@ function M.gen_hlgroup_map(context)
     WarningMsg = { fg = c.warning },
     Whitespace = { fg = c.fg_gutter },
     WildMenu = { bg = c.bg_visual },
-    WinBar = { fg = c.fg },
-    WinBarNC = { link = "WinBar" },
+    WinBar = { fg = c.fg, bg = u.bg0 },
+    WinBarNC = { fg = c.fg, bg = u.bg1 },
     WinSeparator = { fg = c.fg_gutter, blend = t and 50 or 0 },
   }
 

@@ -25,6 +25,7 @@ function M.gen_hlgroup_map(context)
   local cs = std.color
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
+  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   local bg = t and c.none or c.base ---@type string
   local function diag_bg(color)
@@ -150,9 +151,9 @@ function M.gen_hlgroup_map(context)
     MoreMsg = { fg = c.blue },
     MsgArea = { link = "Normal" },
     NonText = { fg = cs.mix(bg, c.overlay0, 45), italic = true },
-    Normal = { fg = c.text, bg = c.base, blend = t and 50 or 0 },
+    Normal = { fg = c.text, bg = u.bg0, blend = t and 50 or 0 },
     NormalFloat = { fg = c.text, bg = c.mantle },
-    NormalNC = { fg = c.text, bg = c.base, blend = t and 50 or 0 },
+    NormalNC = { fg = c.text, bg = u.bg1, blend = t and 50 or 0 },
     Number = { fg = c.peach },
     NvimInternalError = { fg = c.red },
     Operator = { fg = c.sky },
@@ -205,8 +206,8 @@ function M.gen_hlgroup_map(context)
     WarningMsg = { fg = c.yellow },
     Whitespace = { fg = c.surface1 },
     WildMenu = { bg = c.overlay0 },
-    WinBar = { fg = c.rosewater },
-    WinBarNC = { link = "WinBar" },
+    WinBar = { fg = c.rosewater, bg = u.bg0 },
+    WinBarNC = { fg = c.rosewater, bg = u.bg1 },
     WinSeparator = { fg = t and c.surface1 or c.crust },
   }
 

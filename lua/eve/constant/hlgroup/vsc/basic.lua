@@ -24,6 +24,7 @@ function M.gen_hlgroup_map(context)
   local cs = std.color
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   local function diag_bg(color)
     if t then
@@ -158,9 +159,9 @@ function M.gen_hlgroup_map(context)
       fg = cs.mix(c.editor_background, c.editorLineNumber_foreground, 45),
       italic = true,
     },
-    Normal = { fg = c.editor_foreground, bg = c.editor_background, blend = t and 50 or 0 },
+    Normal = { fg = c.editor_foreground, bg = u.bg0, blend = t and 50 or 0 },
     NormalFloat = { fg = c.dropdown_foreground, bg = c.dropdown_background },
-    NormalNC = { fg = c.editor_foreground, bg = c.editor_background, blend = t and 50 or 0 },
+    NormalNC = { fg = c.editor_foreground, bg = u.bg1, blend = t and 50 or 0 },
     NvimInternalError = { fg = c.errorForeground },
     Number = { fg = c.semanticNumberLiteral },
     Operator = { fg = c.semanticNewOperator },
@@ -211,8 +212,8 @@ function M.gen_hlgroup_map(context)
     WarningMsg = { fg = c.warning, bg = c.statusBar_background, bold = true },
     Whitespace = { fg = c.editorIndentGuide_background1 },
     WildMenu = { fg = c.menu_foreground, bg = c.menu_selectionBackground, bold = true },
-    WinBar = { fg = c.titleBar_activeForeground, bg = c.titleBar_activeBackground, blend = t and 50 or 0 },
-    WinBarNC = { fg = c.titleBar_inactiveForeground, bg = c.titleBar_inactiveBackground, blend = t and 50 or 0 },
+    WinBar = { fg = c.titleBar_activeForeground, bg = u.bg0, blend = t and 50 or 0 },
+    WinBarNC = { fg = c.titleBar_inactiveForeground, bg = u.bg1, blend = t and 50 or 0 },
     VertSplit = { fg = c.editorGroupHeader_tabsBorder },
     VertSplitActive = { fg = c.tab_activeBorder },
     WinSeparator = { fg = c.editorGroup_border },
