@@ -3,12 +3,12 @@
 gui:
   authorColors:
     guanghechen: 'blue'
-    '*': '#CCCCCC'
+    '*': '#9D9D9D'
   branchColors:
     main: 'blue'
   theme:
     defaultFgColor:
-      - '#CCCCCC'
+      - '#9D9D9D'
     activeBorderColor:
       - 'magenta'
       - bold
