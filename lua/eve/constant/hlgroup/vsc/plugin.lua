@@ -7,6 +7,7 @@ function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
   local cmp_panel_bg = std.color.mix(c.overlay, c.base, 70) ---@type string
+  local treesitter_context_bg = t and c.none or std.color.mix(c.base, c.accentBlue, 70) ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
@@ -331,11 +332,11 @@ function M.gen_hlgroup_map(context)
     NotifyTRACETitle = { link = "NotifyTRACEIcon" },
 
     ---! treesitter-context
-    TreesitterContext = { fg = c.text, bg = t and c.none or std.color.mix(c.base, c.list_dropBackground, 70) },
+    TreesitterContext = { fg = c.text, bg = treesitter_context_bg },
     TreesitterContextBottom = { underline = true, sp = c.accentBlue },
     TreesitterContextLineNumber = {
       fg = c.accentOrange,
-      bg = t and c.none or std.color.mix(c.base, c.list_dropBackground, 70),
+      bg = treesitter_context_bg,
     },
     TreesitterContextLineNumberBottom = { underline = true, sp = c.accentBlue },
 

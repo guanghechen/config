@@ -9,6 +9,7 @@ function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.tokyonight ---@type std.t.theme.TokyonightPalette
   local item_kind_bg = c.none ---@type string
   local cmp_panel_bg = cs.mix(c.bg_dark, c.bg, 80) ---@type string
+  local treesitter_context_bg = t and c.none or cs.mix(c.bg_dark, c.blue1, 70) ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
@@ -249,9 +250,9 @@ function M.gen_hlgroup_map(context)
     NotifyTRACETitle = { link = "NotifyTRACEIcon" },
 
     ---! nvim-treesitter-context
-    TreesitterContext = { fg = c.fg, bg = cs.mix(c.bg, c.fg_gutter, 80) },
+    TreesitterContext = { fg = c.fg, bg = treesitter_context_bg },
     TreesitterContextBottom = {},
-    TreesitterContextLineNumber = { fg = c.orange },
+    TreesitterContextLineNumber = { fg = c.orange, bg = treesitter_context_bg },
     TreesitterContextLineNumberBottom = { underline = true },
 
     ---! render-markdown.nvim

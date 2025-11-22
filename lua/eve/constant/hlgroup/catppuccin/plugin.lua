@@ -14,7 +14,7 @@ function M.gen_hlgroup_map(context)
   local markdown_inline_bg = mix(t and c.none or c.surface0, c.surface1, 55)
   local markdown_quote_bg = mix(t and c.none or c.base, c.surface0, 65)
   local dap_virtual_bg = mix(t and c.none or c.surface0, c.peach, 25)
-  local treesitter_context_bg = mix(t and c.none or c.base, c.surface0, 65)
+  local treesitter_context_bg = t and c.none or mix(c.base, c.sapphire, 65)
   local indent_marker_fg = mix(t and c.none or c.surface0, c.overlay0, 30)
 
   local function staged_color(accent)
