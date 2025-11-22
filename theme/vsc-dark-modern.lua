@@ -4,7 +4,7 @@ local config = {
   colors = {
     -- Primary colors
     background    = "#1F1F1F",
-    foreground    = "#FFFFFF",
+    foreground    = "#CCCCCC",
 
     -- Cursor colors (following official catppuccin theme)
     cursor_bg     = "#CE9178",
@@ -13,7 +13,7 @@ local config = {
 
     -- Selection colors (following official catppuccin theme)
     selection_bg  = "#313131",
-    selection_fg  = "#FFFFFF",
+    selection_fg  = "#CCCCCC",
 
     -- Split separator color
     split         = "#6E7681",
@@ -48,7 +48,7 @@ local config = {
       "#9CDCFE",
       "#C586C0",
       "#4FC1FF",
-      "#CCCCCC",  -- bright white (subtext0 for dark themes, surface1 for latte)
+      "#9D9D9D",  -- bright white (subtext0 for dark themes, surface1 for latte)
     },
 
     -- Indexed colors (extended palette)
@@ -68,22 +68,22 @@ local config = {
 
       inactive_tab = {
         bg_color = "#181818",
-        fg_color = "#FFFFFF",
+        fg_color = "#CCCCCC",
       },
 
       inactive_tab_hover = {
         bg_color = "#1F1F1F",
-        fg_color = "#FFFFFF",
+        fg_color = "#CCCCCC",
       },
 
       new_tab = {
         bg_color = "#202020",
-        fg_color = "#FFFFFF",
+        fg_color = "#CCCCCC",
       },
 
       new_tab_hover = {
         bg_color = "#2B2B2B",
-        fg_color = "#FFFFFF",
+        fg_color = "#CCCCCC",
       },
 
       inactive_tab_edge = "#202020",
@@ -93,16 +93,16 @@ local config = {
   -- Window frame colors
   window_frame = {
     active_titlebar_bg = "#181818",
-    active_titlebar_fg = "#FFFFFF",
+    active_titlebar_fg = "#CCCCCC",
     inactive_titlebar_bg = "#181818",
-    inactive_titlebar_fg = "#FFFFFF",
-    button_fg = "#FFFFFF",
+    inactive_titlebar_fg = "#CCCCCC",
+    button_fg = "#CCCCCC",
     button_bg = "#1F1F1F",
   },
 
   -- Command palette colors
   command_palette_bg_color = "#181818",
-  command_palette_fg_color = "#FFFFFF",
+  command_palette_fg_color = "#CCCCCC",
 }
 
 return config
