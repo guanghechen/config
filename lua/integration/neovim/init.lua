@@ -12,9 +12,6 @@ pcall(require, "integration.local.keymap")
 
 require("fml.dressing.notifier")
 require("fml.dressing.ui_attach")
-require("fml.dressing.nvimbar.statusline")
-require("fml.dressing.nvimbar.tabline")
-require("fml.dressing.nvimbar.winline")
 eve.setup_theme()
 
 require("fml.command")
@@ -31,19 +28,23 @@ if std.path.is_git_repo() then
 end
 
 vim.schedule(function()
-  require("fml.dressing.clipboard")
+  require("fml.dressing.nvimbar.statusline")
+  require("fml.dressing.nvimbar.tabline")
+  require("fml.dressing.nvimbar.winline")
   require("fml.dressing.commentstring")
   require("fml.dressing.foldtext")
+  require("fml.dressing.indentline")
+  require("fml.dressing.statuscolumn")
+  require("fml.dressing.winsep")
+
+  require("fml.dressing.clipboard")
   require("fml.dressing.hipairs")
   require("fml.dressing.illumniate")
   require("fml.dressing.im")
-  require("fml.dressing.indentline")
   require("fml.dressing.input")
   require("fml.dressing.lsp_action")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
-  require("fml.dressing.statuscolumn")
-  require("fml.dressing.winsep")
   pcall(require, "integration.local.dressing")
 
   eve.setup_breakpoints()
