@@ -148,6 +148,9 @@ function M.apply_theme(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
+    vim.g.colors_name = theme
+    vim.o.background = scheme.darken and "dark" or "light"
+
     local h_nvimbar = require("eve.constant.hlgroup.nvimbar")
 
     ---@type eve.constant.hlgroup.nvimbar
@@ -233,6 +236,7 @@ function M.reload_theme(force, reload_plugins)
 
   local scheme = M.get_scheme(theme) ---@type std.t.theme.IScheme|nil
   if scheme ~= nil then
+    vim.g.colors_name = theme
     vim.o.background = scheme.darken and "dark" or "light"
   end
 
