@@ -17,7 +17,6 @@ require("fml.dressing.ui_attach")
 require("fml.dressing.nvimbar.statusline")
 require("fml.dressing.nvimbar.tabline")
 require("fml.dressing.nvimbar.winline")
-eve.setup_theme()
 
 require("fml.command")
 require("ghc.command")

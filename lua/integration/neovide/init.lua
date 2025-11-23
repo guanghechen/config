@@ -12,7 +12,6 @@ pcall(require, "integration.local.keymap")
 
 require("fml.dressing.notifier")
 require("fml.dressing.ui_attach")
-eve.setup_theme()
 
 require("fml.command")
 require("ghc.plugin")
@@ -51,4 +50,5 @@ vim.schedule(function()
 
   eve.setup_breakpoints()
   eve.setup_lsp()
+  eve.context.watch_changes()
 end)

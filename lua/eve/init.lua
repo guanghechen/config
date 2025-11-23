@@ -96,15 +96,9 @@ function M.setup_context(storage)
   storage = storage or M.get_default_storage() ---@type eve.context.storage
   eve.context.set_storage(storage)
   eve.context.load(storage, false)
-end
 
----@return nil
-function M.setup_theme()
-  eve.context.theme.reload_theme(false, false)
-  vim.schedule(function()
-    eve.context.theme.reload_theme(false, false)
-    eve.context.watch_changes()
-  end)
+  local colorscheme = eve.context.theme.theme:snapshot() ---@type std.e.ThemeFullName
+  vim.cmd.colorscheme(colorscheme)
 end
 
 ---@return nil

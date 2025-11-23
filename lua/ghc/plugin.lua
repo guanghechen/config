@@ -173,7 +173,7 @@ require("lazy").setup({
     lazy = true,
   },
   install = {
-    colorscheme = {},
+    colorscheme = { "default" },
   },
   checker = {
     enabled = false, -- set true to automatically check for plugin updates
