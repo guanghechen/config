@@ -223,6 +223,7 @@ require("lazy").setup({
     enabled = false,
   },
   ui = {
+    backdrop = 100,
     icons = {
       ft = "",
       lazy = "󰂠 ",
