@@ -11,7 +11,6 @@ function M.gen_hlgroup_map(context)
   local cmp_panel_bg = cs.mix(c.overlay, c.base, 70) ---@type string
   local treesitter_context_bg = t and c.none or cs.mix(c.base, c.accentBlue, 70) ---@type string
   local lazy_badge_fg = u.bg1 ---@type string
-  local lazy_badge_bg = u.pink ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
@@ -103,11 +102,11 @@ function M.gen_hlgroup_map(context)
 
     ---! lazy.nvim
     LazyButton = { fg = c.text, bg = c.none },
-    LazyButtonActive = { fg = t and c.none or c.base, bg = c.accentBlue, bold = true },
+    LazyButtonActive = { fg = u.pink, bg = c.none },
     LazyCommit = { fg = c.success },
     LazyCommitIssue = { fg = c.warning },
     LazyDir = { fg = c.text },
-    LazyH1 = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
+    LazyH1 = { fg = lazy_badge_fg, bg = u.pink, bold = true },
     LazyH2 = { fg = c.text, bold = true, underline = true },
     LazyNoCond = { fg = c.accentRed },
     LazyNormal = { fg = c.text, bg = std.color.mix(t and c.none or c.base, t and c.none or c.overlay, 70), blend = 40 },
@@ -123,6 +122,7 @@ function M.gen_hlgroup_map(context)
     LazyReasonSource = { fg = c.success },
     LazyReasonStart = { fg = c.text },
     LazyOperator = { fg = c.text },
+    LazyProp = { fg = c.tokenMarkupHeading, bold = true },
     LazySpecial = { fg = c.accentBlue },
     LazyTaskOutput = { fg = c.text },
     LazyUrl = { fg = c.accentBlue, underline = true },
@@ -131,7 +131,7 @@ function M.gen_hlgroup_map(context)
     ---! mason.nvim
     MasonHeader = { fg = u.pink, bg = c.none },
     MasonHighlight = { fg = c.accentBlue },
-    MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
+    MasonHighlightBlock = { fg = lazy_badge_fg, bg = u.pink, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = c.textMuted },

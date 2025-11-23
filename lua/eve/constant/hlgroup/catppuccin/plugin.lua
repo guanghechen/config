@@ -118,7 +118,7 @@ function M.gen_hlgroup_map(context)
 
     ---! lazy.nvim
     LazyButton = { fg = c.text, bg = c.none },
-    LazyButtonActive = { fg = t and c.none or c.base, bg = c.blue, bold = true },
+    LazyButtonActive = { fg = u.pink, bg = c.none },
     LazyCommit = { fg = c.green },
     LazyCommitIssue = { fg = c.yellow },
     LazyDir = { fg = c.blue },
@@ -138,6 +138,7 @@ function M.gen_hlgroup_map(context)
     LazyReasonSource = { fg = c.green },
     LazyReasonStart = { fg = c.text },
     LazyOperator = { fg = c.text },
+    LazyProp = { fg = c.lavender, bold = true },
     LazySpecial = { fg = c.blue },
     LazyTaskOutput = { fg = c.text },
     LazyUrl = { fg = c.blue, underline = true },
