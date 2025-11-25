@@ -20,8 +20,7 @@ local tailwind_filetypes = {
 
 return {
   name = "mini.hipatterns",
-  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
-  ft = eve.filetype.get_hipattern_filetypes(),
+  event = "VeryLazy",
   config = function()
     local hipatterns = require("mini.hipatterns")
     hipatterns.setup({
