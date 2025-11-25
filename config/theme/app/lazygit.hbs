@@ -2,38 +2,44 @@
 
 gui:
   authorColors:
-    guanghechen: 'blue'
+    guanghechen: '{{vsc?.textLink_foreground || unified.blue}}'
     '*': '{{unified.fg2}}'
-  branchColors:
-    main: 'blue'
+  branchColorPatterns:
+    "^(main|master)$": '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
+    "^(user/[^/]+/)?fix": '{{vsc?.editorGutter_deletedBackground || unified.red}}'
+    "^(user/[^/]+/)?feat": '{{vsc?.editorGutter_addedBackground || unified.green}}'
+    "^(user/[^/]+/)?feature": '{{vsc?.editorGutter_addedBackground || unified.green}}'
+    "^(user/[^/]+/)?release": '{{vsc?.editorGutter_modifiedBackground || unified.blue}}'
   theme:
+    activeBorderColor:
+      - '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
+      - bold
+    cherryPickedCommitBgColor:
+      - '{{vsc?.tokenTypesDeclarationAndReferences || unified.aqua}}'
+    cherryPickedCommitFgColor:
+      - '{{vsc?.editorGutter_modifiedBackground || unified.blue}}'
     defaultFgColor:
       - '{{unified.fg2}}'
-    activeBorderColor:
-      - 'magenta'
-      - bold
     inactiveBorderColor:
       - '{{unified.fg4}}'
-    optionsTextColor:
-      -  '{{unified.orange}}'
-    selectedLineBgColor:
-      - '{{unified.bg2}}'
-    cherryPickedCommitFgColor:
-      - 'blue'
-    cherryPickedCommitBgColor:
-      - 'cyan'
-    markedBaseCommitFgColor:
-      - 'green'
+    inactiveViewSelectedLineBgColor:
+      - '{{vsc?.editor_inactiveSelectionBackground || unified.bg3}}'
+      - bold
     markedBaseCommitBgColor:
-      - 'magenta'
+      - '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
+    markedBaseCommitFgColor:
+      - '{{vsc?.editorGutter_addedBackground || unified.green}}'
+    optionsTextColor:
+      - '{{vsc?.tokenFunctionDeclarations || unified.orange}}'
     searchingActiveBorderColor:
-      - 'blue'
+      - '{{vsc?.focusBorder || unified.blue}}'
+    selectedLineBgColor:
+      - '{{vsc?.subtle || unified.bg2}}'
     unstagedChangesColor:
-      - 'red'
+      - '{{vsc?.editorGutter_deletedBackground || unified.red}}'
 
 git:
   paging:
     colorArg: always
-    useConfig: true
-    pager: delta --diff-so-fancy --{{darken ? 'dark' : 'light'}}
+    pager: delta --paging=never --diff-so-fancy --{{darken ? 'dark' : 'light'}}
 
