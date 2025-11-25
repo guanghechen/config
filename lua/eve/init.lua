@@ -133,32 +133,31 @@ end
 
 ---@return nil
 function M.setup_lsp()
-  local lsp_servers = {
-    -- "basedpyright",
-    "bashls",
-    "clangd",
-    "cssls",
-    "docker_compose_language_service",
-    "dockerls",
-    "eslint",
-    "html",
-    "jsonls",
-    "lua_ls",
-    "pyright",
-    "ruff",
-    "rust_analyzer",
-    "tailwindcss",
-    "taplo",
-    "vtsls",
-    "yamlls",
-  }
+  -- Lazy load LSP servers on FileType, see lua/integration/neovim/autocmd.lua
+  -- local lsp_servers = {
+  --   -- "basedpyright",
+  --   "bashls",
+  --   "clangd",
+  --   "cssls",
+  --   "docker_compose_language_service",
+  --   "dockerls",
+  --   "eslint",
+  --   "html",
+  --   "jsonls",
+  --   "lua_ls",
+  --   "pyright",
+  --   "ruff",
+  --   "rust_analyzer",
+  --   "tailwindcss",
+  --   "taplo",
+  --   "vtsls",
+  --   "yamlls",
+  -- }
+  -- vim.lsp.enable(lsp_servers)
 
-  -- Add Copilot LSP if AI is enabled
-  if eve.context.flight.ai:snapshot() then
-    table.insert(lsp_servers, "copilot")
+  if not vim.g.vscode and eve.context.flight.ai:snapshot() then
+    vim.lsp.enable("copilot")
   end
-
-  vim.lsp.enable(lsp_servers)
 
   local severity2prefixicon = eve.constant.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string> {
   local severity2texticon = eve.constant.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
