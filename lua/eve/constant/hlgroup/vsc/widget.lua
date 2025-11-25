@@ -1,23 +1,12 @@
----@class eve.constant.hlgroup.widget
+---@class eve.constant.hlgroup.vsc.widget
 local M = {}
 
 ---@param context                       std.t.theme.IContext
 ---@return table<string, std.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local md = string.format("eve.constant.hlgroup.%s.widget", context.scheme.theme) ---@type string
-  local ok, mod = pcall(require, md)
-  if ok and mod then
-    return mod.gen_hlgroup_map(context)
-  end
-
-  return M.default_gen_hlgroup_map(context)
-end
-
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
-function M.default_gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local v = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or c.bg0 ---@type string
@@ -39,21 +28,21 @@ function M.default_gen_hlgroup_map(context)
     f_buf_filepath = { fg = c.fg2 },
 
     ---hipairs
-    f_hipairs_1 = { fg = c.brightPurple, bg = c.bg4, bold = true, italic = true },
-    f_hipairs_2 = { fg = c.brightBlue, bg = c.bg4, bold = true, italic = true },
-    f_hipairs_3 = { fg = c.brightYellow, bg = c.bg4, bold = true, italic = true },
-    f_hipairs_4 = { fg = c.brightOrange, bg = c.bg4, bold = true, italic = true },
-    f_hipairs_5 = { fg = c.brightAqua, bg = c.bg4, bold = true, italic = true },
-    f_hipairs_6 = { fg = c.brightRed, bg = c.bg4, bold = true, italic = true },
-    f_hipairs_7 = { fg = c.brightGreen, bg = c.bg4, bold = true, italic = true },
-    f_matched_pairs_0 = { fg = c.green, bg = c.bg4, bold = true, italic = true },
-    f_matched_pairs_1 = { fg = cs.mix(c.bg0, c.brightPurple, 90) },
-    f_matched_pairs_2 = { fg = cs.mix(c.bg0, c.brightBlue, 90) },
-    f_matched_pairs_3 = { fg = cs.mix(c.bg0, c.brightYellow, 90) },
-    f_matched_pairs_4 = { fg = cs.mix(c.bg0, c.brightOrange, 90) },
-    f_matched_pairs_5 = { fg = cs.mix(c.bg0, c.brightAqua, 90) },
-    f_matched_pairs_6 = { fg = cs.mix(c.bg0, c.brightGreen, 90) },
-    f_unmatched_pairs = { fg = c.red, italic = true },
+    f_hipairs_1 = { fg = v.editorBracket_fg1, bg = c.bg4, bold = true },
+    f_hipairs_2 = { fg = v.editorBracket_fg2, bg = c.bg4, bold = true },
+    f_hipairs_3 = { fg = v.editorBracket_fg3, bg = c.bg4, bold = true },
+    f_hipairs_4 = { fg = v.editorBracket_fg4, bg = c.bg4, bold = true },
+    f_hipairs_5 = { fg = v.editorBracket_fg5, bg = c.bg4, bold = true },
+    f_hipairs_6 = { fg = v.editorBracket_fg6, bg = c.bg4, bold = true },
+    f_hipairs_7 = { fg = v.editorBracket_fg1, bg = c.bg4, bold = true },
+    f_matched_pairs_0 = { fg = v.editorBracket_fg1, bg = c.bg4, bold = true },
+    f_matched_pairs_1 = { fg = v.editorBracket_fg1 },
+    f_matched_pairs_2 = { fg = v.editorBracket_fg2 },
+    f_matched_pairs_3 = { fg = v.editorBracket_fg3 },
+    f_matched_pairs_4 = { fg = v.editorBracket_fg4 },
+    f_matched_pairs_5 = { fg = v.editorBracket_fg5 },
+    f_matched_pairs_6 = { fg = v.editorBracket_fg6 },
+    f_unmatched_pairs = { fg = v.editorBracket_fg0 },
 
     ---indentline
     indentline_0 = { fg = c.bg1 },

@@ -9,186 +9,77 @@ function M.gen_hlgroup_map(context)
   return {
     ["@lsp.mod.declaration"] = {},
     ["@lsp.mod.definition"] = {},
-    ["@lsp.mod.deprecated"] = {
-      fg = c.tokenInvalid or c.tokenMarkupDeleted or c.accentRed,
-      strikethrough = true,
-    },
-    ["@lsp.mod.documentation"] = { fg = c.tokenComment or c.textMuted, italic = true },
-    ["@lsp.mod.modification"] = { underline = true },
-    ["@lsp.mod.readonly"] = { italic = true },
-    ["@lsp.mod.static"] = { underline = true },
-
-    ["@lsp.type.boolean"] = { fg = c.tokenConstantLanguage or c.tokenKeyword },
-    ["@lsp.type.builtin"] = {
-      fg = c.tokenStorageType or c.tokenTypesDeclarationAndReferences or c.accentAqua,
-    },
-    ["@lsp.type.builtinType"] = {
-      fg = c.tokenStorageType or c.tokenTypesDeclarationAndReferences or c.accentAqua,
-    },
+    ["@lsp.mod.deprecated"] = { fg = c.tokenInvalid, strikethrough = true },
+    ["@lsp.mod.documentation"] = { link = "@comment.documentation" },
+    ["@lsp.mod.modification"] = {},
+    ["@lsp.mod.readonly"] = {},
+    ["@lsp.mod.static"] = {},
+    ["@lsp.type.boolean"] = { link = "@boolean" },
+    ["@lsp.type.builtin"] = { link = "@type.builtin" },
+    ["@lsp.type.builtinType"] = { link = "@type.builtin" },
     ["@lsp.type.class"] = { link = "@type" },
     ["@lsp.type.comment"] = { link = "@comment" },
-    ["@lsp.type.decorator"] = {
-      fg = c.tokenControlFlowSpecialKeywords or c.tokenMarkupHeading or c.tokenKeyword,
-      italic = true,
-    },
+    ["@lsp.type.decorator"] = { link = "@function" },
     ["@lsp.type.enum"] = { link = "@type" },
-    ["@lsp.type.enumMember"] = {
-      fg = c.tokenConstantsAndEnums or c.tokenConstantNumeric or c.accentGreen,
-    },
-    ["@lsp.type.escapeSequence"] = {
-      fg = c.tokenConstantCharacterEscape or c.tokenStringInterpolation or c.semanticStringLiteral
-        or c.tokenString
-        or c.accentOrange,
-    },
-    ["@lsp.type.event"] = {
-      fg = c.tokenControlFlowSpecialKeywords or c.tokenMarkupHeading or c.tokenKeyword,
-    },
-    ["@lsp.type.formatSpecifier"] = {
-      fg = c.tokenConstantCharacterEscape or c.tokenStringInterpolation or c.semanticStringLiteral
-        or c.tokenString
-        or c.accentOrange,
-    },
-    ["@lsp.type.function"] = { fg = c.tokenFunctionDeclarations or c.accentBlue },
-    ["@lsp.type.generic"] = { link = "@variable" },
+    ["@lsp.type.enumMember"] = { link = "@constant" },
+    ["@lsp.type.escapeSequence"] = { link = "@string.escape" },
+    ["@lsp.type.event"] = { link = "@keyword" },
+    ["@lsp.type.formatSpecifier"] = { link = "@string.special" },
+    ["@lsp.type.function"] = { link = "@function" },
+    ["@lsp.type.generic"] = { link = "@type" },
     ["@lsp.type.interface"] = { link = "@type" },
-    ["@lsp.type.keyword"] = { fg = c.tokenKeyword, italic = true },
-    ["@lsp.type.lifetime"] = { fg = c.tokenKeyword, italic = true },
-    ["@lsp.type.macro"] = {
-      fg = c.tokenControlFlowSpecialKeywords or c.tokenMarkupHeading or c.tokenKeyword,
-    },
-    ["@lsp.type.method"] = { fg = c.tokenFunctionDeclarations or c.accentBlue },
-    ["@lsp.type.modifier"] = { fg = c.tokenKeyword },
+    ["@lsp.type.keyword"] = { link = "@keyword" },
+    ["@lsp.type.lifetime"] = { link = "@keyword" },
+    ["@lsp.type.macro"] = { link = "@function.macro" },
+    ["@lsp.type.method"] = { link = "@function.method" },
+    ["@lsp.type.modifier"] = { link = "@keyword.modifier" },
     ["@lsp.type.namespace"] = { link = "@namespace" },
-    ["@lsp.type.number"] = {
-      fg = c.semanticNumberLiteral or c.tokenConstantNumeric or c.accentGreen,
-    },
-    ["@lsp.type.operator"] = {
-      fg = c.semanticNewOperator or c.tokenKeywordOperator or c.text,
-    },
-    ["@lsp.type.parameter"] = {
-      fg = c.tokenVariableAndParameterName or c.text,
-      italic = true,
-    },
-    ["@lsp.type.primitive"] = {
-      fg = c.tokenStorageType or c.tokenTypesDeclarationAndReferences or c.accentAqua,
-    },
-    ["@lsp.type.property"] = {
-      fg = c.tokenObjectKeysTsGrammarSpecific or c.tokenEntityOtherAttributeName or c.tokenVariableAndParameterName
-        or c.text,
-    },
-    ["@lsp.type.regexp"] = {
-      fg = c.tokenStringRegexp or c.tokenRegularExpressionGroups or c.semanticStringLiteral or c.tokenString
-        or c.accentOrange,
-    },
-    ["@lsp.type.selfKeyword"] = {
-      fg = c.tokenThisSelf or c.tokenKeyword,
-      italic = true,
-    },
-    ["@lsp.type.selfTypeKeyword"] = {
-      fg = c.tokenTypesDeclarationAndReferences or c.accentAqua,
-      italic = true,
-    },
-    ["@lsp.type.string"] = {
-      fg = c.semanticStringLiteral or c.tokenString or c.accentOrange,
-    },
+    ["@lsp.type.number"] = { link = "@number" },
+    ["@lsp.type.operator"] = { link = "@operator" },
+    ["@lsp.type.parameter"] = { link = "@variable.parameter" },
+    ["@lsp.type.primitive"] = { link = "@type.builtin" },
+    ["@lsp.type.property"] = { link = "@variable.member" },
+    ["@lsp.type.regexp"] = { link = "@string.regexp" },
+    ["@lsp.type.selfKeyword"] = { link = "@variable.builtin" },
+    ["@lsp.type.selfTypeKeyword"] = { link = "@type.builtin" },
+    ["@lsp.type.string"] = { link = "@string" },
     ["@lsp.type.struct"] = { link = "@type" },
-    ["@lsp.type.type"] = { fg = c.tokenTypesDeclarationAndReferences or c.accentAqua },
-    ["@lsp.type.typeAlias"] = { fg = c.tokenTypesDeclarationAndReferences or c.accentAqua },
-    ["@lsp.type.typeParameter"] = { fg = c.tokenTypesDeclarationAndReferences or c.accentAqua },
-    ["@lsp.type.unresolvedReference"] = {
-      undercurl = true,
-      sp = c.tokenInvalid or c.tokenMarkupDeleted or c.accentRed,
-    },
-    ["@lsp.type.variable"] = { fg = c.tokenVariableAndParameterName or c.text },
-
+    ["@lsp.type.type"] = { link = "@type" },
+    ["@lsp.type.typeAlias"] = { link = "@type.definition" },
+    ["@lsp.type.typeParameter"] = { link = "@type" },
+    ["@lsp.type.unresolvedReference"] = { undercurl = true, sp = c.tokenInvalid },
+    ["@lsp.type.variable"] = { link = "@variable" },
     ["@lsp.typemod.class.declaration"] = { link = "@type.definition" },
-    ["@lsp.typemod.class.defaultLibrary"] = {
-      fg = c.tokenTypesDeclarationAndReferences or c.accentAqua,
-      italic = true,
-    },
+    ["@lsp.typemod.class.defaultLibrary"] = { link = "@type.builtin" },
     ["@lsp.typemod.enum.declaration"] = { link = "@type.definition" },
-    ["@lsp.typemod.enum.defaultLibrary"] = {
-      fg = c.tokenTypesDeclarationAndReferences or c.accentAqua,
-      italic = true,
-    },
-    ["@lsp.typemod.enumMember.declaration"] = {
-      fg = c.tokenConstantsAndEnums or c.tokenConstantNumeric or c.accentGreen,
-    },
-    ["@lsp.typemod.enumMember.defaultLibrary"] = {
-      fg = c.tokenConstantsAndEnums or c.tokenConstantNumeric or c.accentGreen,
-      italic = true,
-    },
-    ["@lsp.typemod.function.builtin"] = {
-      fg = c.tokenFunctionDeclarations or c.accentBlue,
-      italic = true,
-    },
-    ["@lsp.typemod.function.declaration"] = { fg = c.tokenFunctionDeclarations or c.accentBlue },
-    ["@lsp.typemod.function.defaultLibrary"] = {
-      fg = c.tokenFunctionDeclarations or c.accentBlue,
-      italic = true,
-    },
+    ["@lsp.typemod.enum.defaultLibrary"] = { link = "@type.builtin" },
+    ["@lsp.typemod.enumMember.declaration"] = { link = "@constant" },
+    ["@lsp.typemod.enumMember.defaultLibrary"] = { link = "@constant" },
+    ["@lsp.typemod.function.builtin"] = { link = "@function.builtin" },
+    ["@lsp.typemod.function.declaration"] = { link = "@function" },
+    ["@lsp.typemod.function.defaultLibrary"] = { link = "@function.builtin" },
     ["@lsp.typemod.interface.declaration"] = { link = "@type.definition" },
-    ["@lsp.typemod.keyword.async"] = {
-      fg = c.tokenControlFlowSpecialKeywords or c.tokenMarkupHeading or c.tokenKeyword,
-    },
-    ["@lsp.typemod.keyword.documentation"] = { fg = c.tokenKeyword, italic = true },
-    ["@lsp.typemod.keyword.injected"] = { fg = c.tokenKeyword },
-    ["@lsp.typemod.macro.defaultLibrary"] = {
-      fg = c.tokenControlFlowSpecialKeywords or c.tokenMarkupHeading or c.tokenKeyword,
-      italic = true,
-    },
-    ["@lsp.typemod.method.builtin"] = {
-      fg = c.tokenFunctionDeclarations or c.accentBlue,
-      italic = true,
-    },
-    ["@lsp.typemod.method.declaration"] = { fg = c.tokenFunctionDeclarations or c.accentBlue },
-    ["@lsp.typemod.method.defaultLibrary"] = {
-      fg = c.tokenFunctionDeclarations or c.accentBlue,
-      italic = true,
-    },
-    ["@lsp.typemod.operator.injected"] = {
-      fg = c.semanticNewOperator or c.tokenKeywordOperator or c.text,
-    },
-    ["@lsp.typemod.parameter.declaration"] = {
-      fg = c.tokenVariableAndParameterName or c.text,
-      italic = true,
-    },
-    ["@lsp.typemod.parameter.documentation"] = {
-      fg = c.tokenVariableAndParameterName or c.text,
-      italic = true,
-    },
-    ["@lsp.typemod.property.readonly"] = {
-      fg = c.tokenObjectKeysTsGrammarSpecific or c.tokenEntityOtherAttributeName or c.tokenVariableAndParameterName
-        or c.text,
-      italic = true,
-    },
-    ["@lsp.typemod.string.injected"] = {
-      fg = c.semanticStringLiteral or c.tokenString or c.accentOrange,
-    },
+    ["@lsp.typemod.keyword.async"] = { link = "@keyword" },
+    ["@lsp.typemod.keyword.documentation"] = { link = "@comment.documentation" },
+    ["@lsp.typemod.keyword.injected"] = { link = "@keyword" },
+    ["@lsp.typemod.macro.defaultLibrary"] = { link = "@function.macro" },
+    ["@lsp.typemod.method.builtin"] = { link = "@function.method" },
+    ["@lsp.typemod.method.declaration"] = { link = "@function.method" },
+    ["@lsp.typemod.method.defaultLibrary"] = { link = "@function.method" },
+    ["@lsp.typemod.operator.injected"] = { link = "@operator" },
+    ["@lsp.typemod.parameter.declaration"] = { link = "@variable.parameter" },
+    ["@lsp.typemod.parameter.documentation"] = { link = "@variable.parameter" },
+    ["@lsp.typemod.property.readonly"] = { link = "@variable.member" },
+    ["@lsp.typemod.string.injected"] = { link = "@string" },
     ["@lsp.typemod.struct.declaration"] = { link = "@type.definition" },
-    ["@lsp.typemod.struct.defaultLibrary"] = {
-      fg = c.tokenTypesDeclarationAndReferences or c.accentAqua,
-      italic = true,
-    },
-    ["@lsp.typemod.type.defaultLibrary"] = {
-      fg = c.tokenTypesDeclarationAndReferences or c.accentAqua,
-      italic = true,
-    },
-    ["@lsp.typemod.typeAlias.defaultLibrary"] = {
-      fg = c.tokenTypesDeclarationAndReferences or c.accentAqua,
-      italic = true,
-    },
-    ["@lsp.typemod.variable.callable"] = { fg = c.tokenFunctionDeclarations or c.accentBlue },
-    ["@lsp.typemod.variable.defaultLibrary"] = {
-      fg = c.tokenThisSelf or c.tokenKeyword,
-      italic = true,
-    },
-    ["@lsp.typemod.variable.injected"] = { fg = c.tokenVariableAndParameterName or c.text },
-    ["@lsp.typemod.variable.readonly"] = {
-      fg = c.tokenVariableAndParameterName or c.text,
-      italic = true,
-    },
-    ["@lsp.typemod.variable.static"] = { underline = true },
+    ["@lsp.typemod.struct.defaultLibrary"] = { link = "@type.builtin" },
+    ["@lsp.typemod.type.defaultLibrary"] = { link = "@type.builtin" },
+    ["@lsp.typemod.typeAlias.defaultLibrary"] = { link = "@type.definition" },
+    ["@lsp.typemod.variable.callable"] = { link = "@function" },
+    ["@lsp.typemod.variable.defaultLibrary"] = { link = "@variable.builtin" },
+    ["@lsp.typemod.variable.injected"] = { link = "@variable" },
+    ["@lsp.typemod.variable.readonly"] = { link = "@variable" },
+    ["@lsp.typemod.variable.static"] = { link = "@variable" },
   }
 end
 
