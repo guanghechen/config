@@ -1,3 +1,5 @@
+---@see https://github.com/nvim-mini/mini.ai/tree/bfb26d9072670c3aaefab0f53024b2f3729c8083
+
 -- taken from MiniExtra.gen_ai_spec.buffer
 local function ai_buffer(ai_type)
   local start_line, end_line = 1, vim.fn.line("$")
@@ -15,66 +17,6 @@ local function ai_buffer(ai_type)
   return { from = { line = start_line, col = 1 }, to = { line = end_line, col = to_col } }
 end
 
--- register all text objects with which-key
----@param opts                          table
-local function ai_whichkey(opts)
-  local objects = {
-    { " ", desc = "whitespace" },
-    { '"', desc = '" string' },
-    { "'", desc = "' string" },
-    { "(", desc = "() block" },
-    { ")", desc = "() block with ws" },
-    { "<", desc = "<> block" },
-    { ">", desc = "<> block with ws" },
-    { "?", desc = "user prompt" },
-    { "U", desc = "use/call without dot" },
-    { "[", desc = "[] block" },
-    { "]", desc = "[] block with ws" },
-    { "_", desc = "underscore" },
-    { "`", desc = "` string" },
-    { "a", desc = "argument" },
-    { "b", desc = ")]} block" },
-    { "c", desc = "class" },
-    { "d", desc = "digit(s)" },
-    { "e", desc = "CamelCase / snake_case" },
-    { "f", desc = "function" },
-    { "g", desc = "entire file" },
-    { "i", desc = "indent" },
-    { "o", desc = "block, conditional, loop" },
-    { "q", desc = "quote `\"'" },
-    { "t", desc = "tag" },
-    { "u", desc = "use/call" },
-    { "{", desc = "{} block" },
-    { "}", desc = "{} with ws" },
-  }
-
-  local ret = { mode = { "o", "x" } }
-  ---@type table<string, string>
-  local mappings = vim.tbl_extend("force", {}, {
-    around = "a",
-    inside = "i",
-    around_next = "an",
-    inside_next = "in",
-    around_last = "al",
-    inside_last = "il",
-  }, opts.mappings or {})
-  mappings.goto_left = nil
-  mappings.goto_right = nil
-
-  for name, prefix in pairs(mappings) do
-    name = name:gsub("^around_", ""):gsub("^inside_", "")
-    ret[#ret + 1] = { prefix, group = name }
-    for _, obj in ipairs(objects) do
-      local desc = obj.desc
-      if string.sub(prefix, 1, 1) == "i" then
-        desc = desc:gsub(" with ws", "")
-      end
-      ret[#ret + 1] = { prefix .. obj[1], desc = obj.desc }
-    end
-  end
-  require("which-key").add(ret, { notify = false })
-end
-
 return {
   name = "mini.ai",
   event = "VeryLazy",
@@ -82,6 +24,8 @@ return {
     local ai = require("mini.ai")
     return {
       n_lines = 500,
+      search_method = "cover_or_next",
+      silent = false,
       custom_textobjects = {
         o = ai.gen_spec.treesitter({ -- code block
           a = { "@block.outer", "@conditional.outer", "@loop.outer" },
@@ -96,15 +40,78 @@ return {
           "^().*()$",
         },
         g = ai_buffer, -- buffer
+        m = ai.gen_spec.treesitter({ a = "@comment.outer", i = "@comment.inner" }), --- comment
+        n = { "%-?%d+%.?%d*" }, --- number with natural decimal point
         u = ai.gen_spec.function_call(), -- u for "Usage"
         U = ai.gen_spec.function_call({ name_pattern = "[%w_]" }), -- without dot in function name
+      },
+      mappings = {
+        around = "a",
+        inside = "i",
+        around_next = "", --- Disable for lsp selection
+        inside_next = "", --- Disable for lsp selection
+        around_last = "", --- Disable for lsp selection
+        inside_last = "", --- Disable for lsp selection
+        goto_left = "g[",
+        goto_right = "g]",
       },
     }
   end,
   config = function(_, opts)
     require("mini.ai").setup(opts)
+
+    --- Register all text objects with which-key
     vim.schedule(function()
-      ai_whichkey(opts)
+      local objects = {
+        { " ", desc = "whitespace" },
+        { '"', desc = '" string' },
+        { "'", desc = "' string" },
+        { "(", desc = "() block" },
+        { ")", desc = "() block with ws" },
+        { "<", desc = "<> block" },
+        { ">", desc = "<> block with ws" },
+        { "?", desc = "user prompt" },
+        { "U", desc = "use/call without dot" },
+        { "[", desc = "[] block" },
+        { "]", desc = "[] block with ws" },
+        { "`", desc = "` string" },
+        { "a", desc = "argument" },
+        { "b", desc = ")]} block" },
+        { "c", desc = "class" },
+        { "d", desc = "digit(s)" },
+        { "e", desc = "CamelCase / snake_case" },
+        { "f", desc = "function" },
+        { "g", desc = "entire file" },
+        { "i", desc = "indent" },
+        { "m", desc = "comment" },
+        { "n", desc = "number" },
+        { "o", desc = "block, conditional, loop" },
+        { "q", desc = "quote `\"'" },
+        { "t", desc = "tag" },
+        { "u", desc = "use/call" },
+        { "{", desc = "{} block" },
+        { "}", desc = "{} with ws" },
+      }
+
+      local ret = { mode = { "o", "x" } }
+      local mappings = vim.tbl_extend("force", {}, opts.mappings) ---@type table<string, string>
+      mappings.goto_left = nil
+      mappings.goto_right = nil
+
+      for name, prefix in pairs(mappings) do
+        if prefix ~= nil and prefix ~= "" then
+          name = name:gsub("^around_", ""):gsub("^inside_", "")
+          ret[#ret + 1] = { prefix, group = name }
+          for _, obj in ipairs(objects) do
+            local desc = obj.desc
+            if string.sub(prefix, 1, 1) == "i" then
+              desc = desc:gsub(" with ws", "")
+            end
+            ret[#ret + 1] = { prefix .. obj[1], desc = desc }
+          end
+        end
+      end
+      require("which-key").add(ret, { notify = false })
     end)
   end,
 }
