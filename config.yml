@@ -1,6 +1,12 @@
+disableStartupPopups: true
+notARepository: skip
+promptToReturnFromSubprocess: false
 git:
   commit:
     signOff: false
+  commitPrefix:
+    - pattern: "^(?:user/[^/]+/)?(fix|feat|chore|refactor|docs|test)-(.+)$"
+      replace: "$1(#$2): "
   log:
     order: topo-order
     showGraph: "always"
@@ -11,21 +17,28 @@ git:
   pagers:
     - # cargo install git-delta
       colorArg: always
-      useConfig: false
       pager: delta --paging=never
   autoFetch: false
   autoRefresh: true
+  diffContextSize: 5
   fetchAll: false
+  localBranchSortOrder: alphabetical
   ignoreWhitespaceInDiffView: false
   parseEmoji: true
+  remoteBranchSortOrder: alphabetical
   skipHookPrefix: WIP
+  truncateCopiedCommitHashesTo: 40
 gui:
   authorColors:
     guanghechen: blue
     "*": white
-  branchColors:
-    main: blue
-  spiner:
+  branchColorPatterns:
+    "^(main|master)$": purple
+    "^(user/[^/]+/)?fix": red
+    "^(user/[^/]+/)?feat": green
+    "^(user/[^/]+/)?feature": green
+    "^(user/[^/]+/)?release": blue
+  spinner:
     frames:
       - ⣾
       - ⣽
@@ -36,39 +49,47 @@ gui:
       - ⣯
       - ⣷
   theme:
-    defaultFgColor:
-      - default
     activeBorderColor:
       - magenta
       - bold
-    inactiveBorderColor:
-      - white
-    optionsTextColor:
-      - yellow
-    selectedLineBgColor:
-      - white
-    cherryPickedCommitFgColor:
-      - blue
     cherryPickedCommitBgColor:
       - cyan
-    markedBaseCommitFgColor:
-      - green
+    cherryPickedCommitFgColor:
+      - blue
+    defaultFgColor:
+      - default
+    inactiveBorderColor:
+      - white
+    inactiveViewSelectedLineBgColor:
+      - bold
     markedBaseCommitBgColor:
       - magenta
+    markedBaseCommitFgColor:
+      - green
+    optionsTextColor:
+      - yellow
     searchingActiveBorderColor:
       - blue
+    selectedLineBgColor:
+      - white
     unstagedChangesColor:
       - red
   border: "rounded"
+  commitAuthorShortLength: 4
+  commitHashLength: 9
   expandFocusedSidePanel: false
+  filterMode: fuzzy
   language: 'en'
   mainPanelSplitMode: flexible
   mouseEvents: true
   nerdFontsVersion: "3"
   showBottomLine: false
+  showBranchCommitHash: true
   showCommandLog: true
+  showDivergenceFromBaseBranch: arrowAndNumber
   showFileTree: true
   showIcons: true
+  showNumstatInFilesView: true
   showRandomTip: true
   skipAmendWarning: false
   skipDiscardChangeWarning: false
@@ -79,7 +100,6 @@ gui:
   tabWidth: 2
   useHunkModeInStagingView: true
   wrapLinesInStagingView: false
-notARepository: skip
 os:
   edit: "nvim"
   editAtLine: "nvim --line={{line}} {{filename}}"
@@ -95,4 +115,3 @@ keybinding:
     prevScreenMode: <backtab>
   main:
     toggleSelectHunk: '`'
-promptToReturnFromSubprocess: false
