@@ -1,10 +1,9 @@
--- https://www.lazyvim.org/configuration/recipes#change-surround-mappings
--- Change surround mappings
+---@see https://github.com/nvim-mini/mini.surround/tree/88c52297ed3e69ecf9f8652837888ecc727a28ee
+
 return {
   name = "mini.surround",
-  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   keys = {
-    { "gsa", mode = { "n", "v" }, desc = "surrounding: add" },
+    { "gsa", mode = { "n", "x" }, desc = "surrounding: add" },
     { "gsd", desc = "surrounding: delete" },
     { "gsf", desc = "surrounding: find right" },
     { "gsF", desc = "surrounding: find left" },
@@ -13,6 +12,9 @@ return {
     { "gsn", desc = "surrounding: update n_lines" },
   },
   opts = {
+    n_lines = 50,
+    respect_selection_type = true, -- Linewise/blockwise add places surroundings on separate lines
+    search_method = "cover_or_next", -- Use covering match, fallback to next if not found
     mappings = {
       add = "gsa", -- Add surrounding in Normal and Visual modes
       delete = "gsd", -- Delete surrounding
@@ -21,7 +23,8 @@ return {
       highlight = "gsh", -- Highlight surrounding
       replace = "gsr", -- Replace surrounding
       update_n_lines = "gsn", -- Update `n_lines`
+      suffix_last = "", -- Disable extended mappings for "prev" search (e.g., gsdl, gsrl)
+      suffix_next = "", -- Disable extended mappings for "next" search (e.g., gsdn, gsrn)
     },
-    n_lines = 3000,
   },
 }
