@@ -4,7 +4,7 @@ local config = {
   colors = {
     -- Primary colors
     background    = "#1F1F1F",
-    foreground    = "#CCCCCC",
+    foreground    = "#D7D7D7",
 
     -- Cursor colors (following official catppuccin theme)
     cursor_bg     = "#CE9178",
@@ -13,16 +13,16 @@ local config = {
 
     -- Selection colors (following official catppuccin theme)
     selection_bg  = "#313131",
-    selection_fg  = "#CCCCCC",
+    selection_fg  = "#D7D7D7",
 
     -- Split separator color
-    split         = "#6E7681",
+    split         = "#989898",
 
     -- Scrollbar thumb color
     scrollbar_thumb = "#313131",
 
     -- Visual bell color
-    visual_bell   = "#202020",
+    visual_bell   = "#2A2D2E",
 
     -- Compose cursor (for IME)
     compose_cursor = "#CE9178",
@@ -36,7 +36,7 @@ local config = {
       "#0078D4",
       "#C586C0",
       "#4EC9B0",
-      "#D7D7D7",  -- white (subtext1 for dark themes, surface2 for latte)
+      "#CCCCCC",  -- white (subtext1 for dark themes, surface2 for latte)
     },
 
     -- Bright colors
@@ -48,7 +48,7 @@ local config = {
       "#9CDCFE",
       "#C586C0",
       "#4FC1FF",
-      "#9D9D9D",  -- bright white (subtext0 for dark themes, surface1 for latte)
+      "#868686",  -- bright white (subtext0 for dark themes, surface1 for latte)
     },
 
     -- Indexed colors (extended palette)
@@ -68,41 +68,41 @@ local config = {
 
       inactive_tab = {
         bg_color = "#181818",
-        fg_color = "#CCCCCC",
+        fg_color = "#D7D7D7",
       },
 
       inactive_tab_hover = {
         bg_color = "#1F1F1F",
-        fg_color = "#CCCCCC",
+        fg_color = "#D7D7D7",
       },
 
       new_tab = {
-        bg_color = "#202020",
-        fg_color = "#CCCCCC",
+        bg_color = "#2A2D2E",
+        fg_color = "#D7D7D7",
       },
 
       new_tab_hover = {
         bg_color = "#2B2B2B",
-        fg_color = "#CCCCCC",
+        fg_color = "#D7D7D7",
       },
 
-      inactive_tab_edge = "#202020",
+      inactive_tab_edge = "#2A2D2E",
     },
   },
 
   -- Window frame colors
   window_frame = {
     active_titlebar_bg = "#181818",
-    active_titlebar_fg = "#CCCCCC",
+    active_titlebar_fg = "#D7D7D7",
     inactive_titlebar_bg = "#181818",
-    inactive_titlebar_fg = "#CCCCCC",
-    button_fg = "#CCCCCC",
+    inactive_titlebar_fg = "#D7D7D7",
+    button_fg = "#D7D7D7",
     button_bg = "#1F1F1F",
   },
 
   -- Command palette colors
   command_palette_bg_color = "#181818",
-  command_palette_fg_color = "#CCCCCC",
+  command_palette_fg_color = "#D7D7D7",
 }
 
 return config
