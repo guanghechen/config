@@ -152,7 +152,7 @@ function M.gen_hlgroup_map(context)
     MiniIconsYellow = { fg = c.yellow },
 
     ---! mini.indentscope
-    MiniIndentscopeSymbol = { fg = c.blue1 },
+    MiniIndentscopeSymbol = { fg = c.pink },
     MiniIndentscopeSymbolOff = { fg = c.warning },
 
     ---! neo-tree.nvim
