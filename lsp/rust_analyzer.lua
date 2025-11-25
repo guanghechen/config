@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/1c3da72569cca0d372c2a344a83f6272a493f2cb/lsp/rust_analyzer.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/784531c83cdab93ed7a2ec10f0111ca564b1c18a/lsp/rust_analyzer.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#rust_analyzer
 
 local function reload_workspace(bufnr)
@@ -169,6 +169,19 @@ return {
         merge = {
           blob = false,
         },
+      },
+      lens = {
+        debug = { enable = true },
+        enable = true,
+        implementations = { enable = true },
+        references = {
+          adt = { enable = true },
+          enumVariant = { enable = true },
+          method = { enable = true },
+          trait = { enable = true },
+        },
+        run = { enable = true },
+        updateTest = { enable = true },
       },
       procMacro = {
         enable = true,
