@@ -3,21 +3,21 @@
 gui:
   authorColors:
     guanghechen: 'blue'
-    '*': '#9D9D9D'
+    '*': '#868686'
   branchColors:
     main: 'blue'
   theme:
     defaultFgColor:
-      - '#9D9D9D'
+      - '#868686'
     activeBorderColor:
       - 'magenta'
       - bold
     inactiveBorderColor:
-      - '#6E7681'
+      - '#989898'
     optionsTextColor:
       -  '#CE9178'
     selectedLineBgColor:
-      - '#202020'
+      - '#2A2D2E'
     cherryPickedCommitFgColor:
       - 'blue'
     cherryPickedCommitBgColor:
