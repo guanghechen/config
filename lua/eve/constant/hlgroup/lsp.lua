@@ -19,7 +19,6 @@ function M.default_gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   return {
-    ---modifiers
     ["@lsp.mod.declaration"] = {},
     ["@lsp.mod.definition"] = {},
     ["@lsp.mod.deprecated"] = { fg = c.bg4, strikethrough = true },
@@ -27,8 +26,6 @@ function M.default_gen_hlgroup_map(context)
     ["@lsp.mod.modification"] = { underline = true },
     ["@lsp.mod.readonly"] = { italic = true },
     ["@lsp.mod.static"] = { italic = true },
-
-    ---types
     ["@lsp.type.boolean"] = { link = "Boolean" },
     ["@lsp.type.builtin"] = { link = "Type" },
     ["@lsp.type.builtinType"] = { link = "Type" },
@@ -47,6 +44,7 @@ function M.default_gen_hlgroup_map(context)
     ["@lsp.type.interface"] = { link = "Special" },
     ["@lsp.type.keyword"] = { link = "Keyword" },
     ["@lsp.type.keyword.lua"] = { link = "Keyword" },
+    ["@lsp.type.label"] = { link = "Label" },
     ["@lsp.type.lifetime"] = { link = "Keyword" },
     ["@lsp.type.macro"] = { link = "Macro" },
     ["@lsp.type.method"] = { link = "Function" },
@@ -70,8 +68,6 @@ function M.default_gen_hlgroup_map(context)
     ["@lsp.type.typeParameter"] = { link = "Typedef" },
     ["@lsp.type.unresolvedReference"] = { undercurl = true, sp = c.red },
     ["@lsp.type.variable"] = { link = "Variable" },
-
-    ---type modifiers
     ["@lsp.typemod.class.declaration"] = { link = "Type" },
     ["@lsp.typemod.class.declaration.lua"] = { fg = c.fg2, italic = true },
     ["@lsp.typemod.class.defaultLibrary"] = { link = "Type" },

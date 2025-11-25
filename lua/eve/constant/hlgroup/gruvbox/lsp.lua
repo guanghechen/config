@@ -9,12 +9,11 @@ function M.gen_hlgroup_map(context)
   return {
     ["@lsp.mod.declaration"] = {},
     ["@lsp.mod.definition"] = {},
-    ["@lsp.mod.deprecated"] = { strikethrough = true, fg = c.grey },
+    ["@lsp.mod.deprecated"] = { fg = c.grey, strikethrough = true },
     ["@lsp.mod.documentation"] = { italic = true },
     ["@lsp.mod.modification"] = { underline = true },
     ["@lsp.mod.readonly"] = { italic = true },
     ["@lsp.mod.static"] = { italic = true },
-
     ["@lsp.type.boolean"] = { link = "@boolean" },
     ["@lsp.type.builtin"] = { link = "@type.builtin" },
     ["@lsp.type.builtinType"] = { link = "@type.builtin" },
@@ -33,6 +32,7 @@ function M.gen_hlgroup_map(context)
     ["@lsp.type.interface"] = { link = "@type" },
     ["@lsp.type.keyword"] = { link = "@keyword" },
     ["@lsp.type.keyword.lua"] = { link = "@keyword" },
+    ["@lsp.type.label"] = { link = "@label" },
     ["@lsp.type.lifetime"] = { link = "@keyword" },
     ["@lsp.type.macro"] = { link = "@macro" },
     ["@lsp.type.method"] = { link = "@method" },
@@ -56,7 +56,6 @@ function M.gen_hlgroup_map(context)
     ["@lsp.type.typeParameter"] = { link = "@type.definition" },
     ["@lsp.type.unresolvedReference"] = { undercurl = true, sp = c.brightRed },
     ["@lsp.type.variable"] = { link = "@variable" },
-
     ["@lsp.typemod.class.declaration"] = { link = "@type.definition" },
     ["@lsp.typemod.class.declaration.lua"] = { fg = c.fg4, italic = true },
     ["@lsp.typemod.class.defaultLibrary"] = { link = "@type.builtin" },

@@ -7,8 +7,7 @@ function M.gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette.tokyonight ---@type std.t.theme.TokyonightPalette
 
-  ---@type table<string, std.t.theme.IHlgroup>
-  local hlgroup_map = {
+  return {
     ["@lsp.mod.declaration"] = {},
     ["@lsp.mod.definition"] = {},
     ["@lsp.mod.deprecated"] = { fg = c.dark3, strikethrough = true },
@@ -34,6 +33,7 @@ function M.gen_hlgroup_map(context)
     ["@lsp.type.interface"] = { fg = cs.mix(c.blue1, c.fg, 70) },
     ["@lsp.type.keyword"] = { link = "@keyword" },
     ["@lsp.type.keyword.lua"] = { link = "@keyword" },
+    ["@lsp.type.label"] = { link = "@label" },
     ["@lsp.type.lifetime"] = { link = "@keyword.storage" },
     ["@lsp.type.macro"] = { link = "@function.macro" },
     ["@lsp.type.method"] = { link = "@function" },
@@ -92,8 +92,6 @@ function M.gen_hlgroup_map(context)
     ["@lsp.typemod.variable.readonly.typescriptreact"] = { italic = true },
     ["@lsp.typemod.variable.static"] = { link = "@constant" },
   }
-
-  return hlgroup_map
 end
 
 return M

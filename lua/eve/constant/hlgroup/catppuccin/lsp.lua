@@ -9,7 +9,7 @@ function M.gen_hlgroup_map(context)
   return {
     ["@lsp.mod.declaration"] = {},
     ["@lsp.mod.definition"] = {},
-    ["@lsp.mod.deprecated"] = { strikethrough = true, fg = c.overlay1 },
+    ["@lsp.mod.deprecated"] = { fg = c.overlay1, strikethrough = true },
     ["@lsp.mod.documentation"] = { italic = true },
     ["@lsp.mod.modification"] = { underline = true },
     ["@lsp.mod.readonly"] = { italic = true },
@@ -32,6 +32,7 @@ function M.gen_hlgroup_map(context)
     ["@lsp.type.interface"] = { link = "@type" },
     ["@lsp.type.keyword"] = { link = "@keyword" },
     ["@lsp.type.keyword.lua"] = { link = "@keyword" },
+    ["@lsp.type.label"] = { link = "@label" },
     ["@lsp.type.lifetime"] = { link = "@keyword" },
     ["@lsp.type.macro"] = { link = "@function.macro" },
     ["@lsp.type.method"] = { link = "@function.method" },
