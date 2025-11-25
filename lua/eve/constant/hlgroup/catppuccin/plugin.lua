@@ -11,9 +11,6 @@ function M.gen_hlgroup_map(context)
   local cmp_panel_bg = mix(t and c.none or c.mantle, c.surface0, 65)
   local lazy_panel_bg = mix(t and c.none or c.mantle, c.surface1, 60)
   local mason_muted_bg = mix(t and c.none or c.surface0, c.mantle, 20)
-  local markdown_code_bg = mix(t and c.none or c.mantle, c.surface1, 55)
-  local markdown_inline_bg = mix(t and c.none or c.surface0, c.surface1, 55)
-  local markdown_quote_bg = mix(t and c.none or c.base, c.surface0, 65)
   local dap_virtual_bg = mix(t and c.none or c.surface0, c.peach, 25)
   local treesitter_context_bg = t and c.none or mix(c.base, c.sapphire, 65)
   local indent_marker_fg = mix(t and c.none or c.surface0, c.overlay0, 30)
@@ -22,10 +19,6 @@ function M.gen_hlgroup_map(context)
 
   local function staged_color(accent)
     return mix(accent, c.subtext0, 35)
-  end
-
-  local function heading_bg(accent)
-    return mix(t and c.none or c.base, accent, 18)
   end
 
   ---@type table<string, std.t.theme.IHlgroup>
@@ -280,50 +273,6 @@ function M.gen_hlgroup_map(context)
       bg = dap_virtual_bg,
       italic = true,
     },
-
-    ---! render-markdown.nvim
-    RenderMarkdownBullet = { fg = c.overlay2 },
-    RenderMarkdownCheckboxChecked = { fg = c.green, bold = true },
-    RenderMarkdownCheckboxUnchecked = { fg = c.red },
-    RenderMarkdownCode = { bg = markdown_code_bg },
-    RenderMarkdownCodeBorder = { fg = c.teal, bg = markdown_code_bg },
-    RenderMarkdownCodeFallback = { fg = c.overlay1 },
-    RenderMarkdownCodeInfo = { fg = c.mauve, bg = markdown_code_bg },
-    RenderMarkdownCodeInline = { fg = c.peach, bg = markdown_inline_bg },
-    RenderMarkdownDash = { fg = c.peach },
-    RenderMarkdownError = { fg = c.red, bold = true },
-    RenderMarkdownH1 = { fg = c.mauve, bold = true },
-    RenderMarkdownH1Fg = { fg = c.mauve, bold = true },
-    RenderMarkdownH1Bg = { bg = heading_bg(c.mauve) },
-    RenderMarkdownH2 = { fg = c.teal, bold = true },
-    RenderMarkdownH2Fg = { fg = c.teal, bold = true },
-    RenderMarkdownH2Bg = { bg = heading_bg(c.teal) },
-    RenderMarkdownH3 = { fg = c.peach, bold = true },
-    RenderMarkdownH3Fg = { fg = c.peach, bold = true },
-    RenderMarkdownH3Bg = { bg = heading_bg(c.peach) },
-    RenderMarkdownH4 = { fg = c.yellow, bold = true },
-    RenderMarkdownH4Fg = { fg = c.yellow, bold = true },
-    RenderMarkdownH4Bg = { bg = heading_bg(c.yellow) },
-    RenderMarkdownH5 = { fg = c.blue, bold = true },
-    RenderMarkdownH5Fg = { fg = c.blue, bold = true },
-    RenderMarkdownH5Bg = { bg = heading_bg(c.blue) },
-    RenderMarkdownH6 = { fg = c.green, bold = true },
-    RenderMarkdownH6Fg = { fg = c.green, bold = true },
-    RenderMarkdownH6Bg = { bg = heading_bg(c.green) },
-    RenderMarkdownHint = { fg = c.teal },
-    RenderMarkdownInfo = { fg = c.blue },
-    RenderMarkdownLink = { fg = c.teal, underline = true },
-    RenderMarkdownLinkText = { fg = c.blue },
-    RenderMarkdownList = { fg = c.blue, bold = true },
-    RenderMarkdownListMarker = { fg = c.peach },
-    RenderMarkdownMath = { fg = c.mauve },
-    RenderMarkdownQuote = { fg = c.text, bg = markdown_quote_bg },
-    RenderMarkdownSuccess = { fg = c.green, bold = true },
-    RenderMarkdownTableHead = { fg = c.mauve, bold = true },
-    RenderMarkdownTableRow = { fg = c.peach },
-    RenderMarkdownUnchecked = { fg = c.green },
-    RenderMarkdownWarn = { fg = c.yellow, bold = true },
-    RenderMarkdownWikiLink = { fg = c.teal, italic = true },
 
     ---! sidekick.nvim
     SidekickCliAttach = { link = "NormalFloat" },
