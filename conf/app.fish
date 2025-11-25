@@ -42,8 +42,10 @@ if test -f "$HOME/.opencode/bin/opencode"
 end
 
 ### tmux
-if test -f "$ROOT_SOURCECODES/github/tmux/tmux/tmux"
-    fish_add_path --prepend "$ROOT_SOURCECODES/github/tmux/tmux"
+if not set -q PREFER_TMUX_VERSION; or test "$PREFER_TMUX_VERSION" != stable
+    if test -f "$ROOT_SOURCECODES/github/tmux/tmux/tmux"
+        fish_add_path --prepend "$ROOT_SOURCECODES/github/tmux/tmux"
+    end
 end
 
 if test -n "$TMUX"
