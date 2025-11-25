@@ -147,24 +147,6 @@ function M.gen_hlgroup_map(context)
     MasonMutedBlock = { fg = c.overlay2, bg = mason_muted_bg },
     MasonNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
 
-    ---! mini.hipatterns
-    MiniHipatternsFixme = {
-      fg = t and c.none or c.base,
-      bg = c.red,
-      bold = true,
-      italic = true,
-      underline = true,
-    },
-    MiniHipatternsHack = { fg = t and c.none or c.base, bg = c.peach, bold = true, italic = true, underline = true },
-    MiniHipatternsTodo = {
-      fg = t and c.none or c.base,
-      bg = c.blue,
-      bold = true,
-      italic = true,
-      underline = true,
-    },
-    MiniHipatternsNote = { fg = t and c.none or c.base, bg = c.green, bold = true, italic = true, underline = true },
-
     ---! mini.icons
     MiniIconsAzure = { fg = c.sky },
     MiniIconsBlue = { fg = c.blue },

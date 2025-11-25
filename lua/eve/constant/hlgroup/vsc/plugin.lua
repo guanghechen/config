@@ -138,24 +138,6 @@ function M.gen_hlgroup_map(context)
     MasonMutedBlock = { fg = c.textDim, bg = std.color.mix(t and c.none or c.overlay, c.border, 8) },
     MasonNormal = { fg = c.text, bg = std.color.mix(t and c.none or c.base, t and c.none or c.overlay, 70), blend = 40 },
 
-    ---! mini.hipatterns
-    MiniHipatternsFixme = {
-      fg = t and c.none or c.base,
-      bg = c.accentRed,
-      bold = true,
-      italic = true,
-      underline = true,
-    },
-    MiniHipatternsHack = { fg = t and c.none or c.base, bg = c.warning, bold = true, italic = true, underline = true },
-    MiniHipatternsTodo = {
-      fg = t and c.none or c.base,
-      bg = c.accentBlue,
-      bold = true,
-      italic = true,
-      underline = true,
-    },
-    MiniHipatternsNote = { fg = t and c.none or c.base, bg = c.success, bold = true, italic = true, underline = true },
-
     ---! mini.icons
     MiniIconsAzure = { fg = c.accentBlue },
     MiniIconsBlue = { fg = c.accentBlue },

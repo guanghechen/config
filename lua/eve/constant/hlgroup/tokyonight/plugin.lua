@@ -140,12 +140,6 @@ function M.gen_hlgroup_map(context)
     MasonMutedBlock = { fg = c.dark3, bg = c.bg_dark },
     MasonNormal = { bg = t and c.none or cs.mix(c.bg, c.bg_dark, 80), blend = 50 },
 
-    ---! mini.hipatterns
-    MiniHipatternsFixme = { fg = c.bg, bg = c.red, bold = true, italic = true, underline = true },
-    MiniHipatternsHack = { fg = c.bg, bg = c.warning, bold = true, italic = true, underline = true },
-    MiniHipatternsTodo = { fg = c.bg, bg = c.info, bold = true, italic = true, underline = true },
-    MiniHipatternsNote = { fg = c.bg, bg = c.hint, bold = true, italic = true, underline = true },
-
     ---! mini.icons
     MiniIconsAzure = { fg = c.info },
     MiniIconsBlue = { fg = c.blue },
