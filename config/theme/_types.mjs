@@ -237,6 +237,13 @@
  * @property {string}                   dropdown_border
  * @property {string}                   dropdown_foreground
  * @property {string}                   dropdown_listBackground
+ * @property {string}                   editorBracket_fg0
+ * @property {string}                   editorBracket_fg1
+ * @property {string}                   editorBracket_fg2
+ * @property {string}                   editorBracket_fg3
+ * @property {string}                   editorBracket_fg4
+ * @property {string}                   editorBracket_fg5
+ * @property {string}                   editorBracket_fg6
  * @property {string}                   editorGroupHeader_tabsBackground
  * @property {string}                   editorGroupHeader_tabsBorder
  * @property {string}                   editorGroup_border
