@@ -10,7 +10,7 @@ palette =  3=#DCDCAA
 palette =  4=#0078D4
 palette =  5=#C586C0
 palette =  6=#4EC9B0
-palette =  7=#CCCCCC
+palette =  7=#868686
 
 # Bright colors
 # Dark themes: palette 8 = surface2, palette 15 = subtext1
@@ -22,11 +22,11 @@ palette = 11=#DCDCAA
 palette = 12=#9CDCFE
 palette = 13=#C586C0
 palette = 14=#4FC1FF
-palette = 15=#D7D7D7
+palette = 15=#CCCCCC
 
 # Primary colors
 background = #1F1F1F
-foreground = #FFFFFF
+foreground = #D7D7D7
 
 # Cursor colors (following official catppuccin theme)
 cursor-color = #CE9178
@@ -35,8 +35,8 @@ cursor-text = #181818
 # Selection colors (following official catppuccin theme)
 # Official uses overlay2 mixed with base, resulting in a subtle highlight
 selection-background = #2B2B2B
-selection-foreground = #FFFFFF
+selection-foreground = #D7D7D7
 
 # Split divider color (following official catppuccin theme)
-split-divider-color = #202020
+split-divider-color = #2A2D2E
 
