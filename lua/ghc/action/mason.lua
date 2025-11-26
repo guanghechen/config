@@ -33,6 +33,7 @@ function M.get_mason_ensure_installed()
     -- lint --
     "cspell",
     "ruff",
+    "shellcheck",
 
     -- formatter --
     "black",

@@ -706,6 +706,7 @@
     "setqflist",
     "setreg",
     "shada",
+    "shellcheck",
     "shellcmdflag",
     "shellescape",
     "shellpipe",

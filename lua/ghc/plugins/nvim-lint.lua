@@ -45,7 +45,9 @@ local linters_by_ft = {
   yaml              = { "cspell" },
 
   -- shell --
-  fish = { "fish" },
+  bash              = { "shellcheck" },
+  sh                = { "shellcheck" },
+  fish              = { "fish" },
 
   -- lang --
   lua               = { "cspell" },
