@@ -11,7 +11,7 @@ return {
     options = {
       border = "both",
       indent_at_cursor = true,
-      n_lines = 300,
+      n_lines = 512,
       try_as_border = true,
     },
   },
