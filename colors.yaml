@@ -1,29 +1,46 @@
-## See https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
+## Aesthetic color scheme using basic 16 colors
+## Designed for both dark and light terminal themes
 
-user: 210
-group: 210
+user: cyan
+group: cyan
 permission:
-  read: 248
-  write: 248
-  exec: 248
-  exec-sticky: 248
-  no-access: 248
-  octal: 248
-  acl: 248
-  context: 248
+  read: green
+  write: yellow
+  exec: red
+  exec-sticky: magenta
+  no-access: dark_grey
+  octal: dark_grey
+  acl: cyan
+  context: blue
+attributes:
+  archive: yellow
+  read: cyan
+  hidden: dark_grey
+  system: dark_grey
 date:
-  hour-old: 248
-  day-old: 248
-  older: 248
+  hour-old: dark_grey
+  day-old: dark_grey
+  older: dark_grey
 size:
-  none: 115
-  small: 115
-  medium: 115
-  large: 115
+  none: dark_grey
+  small: dark_grey
+  medium: dark_grey
+  large: dark_grey
 inode:
-  valid: 248
-  invalid: 210
+  valid: cyan
+  invalid: dark_grey
 links:
-  valid: 248
-  invalid: 210
-tree-edge: 245
+  valid: magenta
+  invalid: red
+tree-edge: dark_grey
+git-status:
+  default: dark_grey
+  unmodified: dark_grey
+  ignored: dark_grey
+  new-in-index: green
+  new-in-workdir: green
+  typechange: yellow
+  deleted: red
+  renamed: cyan
+  modified: yellow
+  conflicted: magenta
