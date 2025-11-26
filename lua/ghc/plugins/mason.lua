@@ -5,7 +5,7 @@ return {
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
   build = ":MasonUpdate",
   opts = {
-    PATH = "prepend",
+    PATH = "skip",
     log_level = vim.log.levels.INFO,
     max_concurrent_installers = 10,
     ui = {

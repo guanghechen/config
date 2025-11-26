@@ -60,4 +60,10 @@ M.HOME_NVIM_STATE = vim.fn.stdpath("state") --[[@as string]]
 M.HOME_CONTEXT = M.HOME_NVIM_STATE .. PATH_SEP .. "guanghechen" ---@type string
 M.HOME_SHARED = M.HOME_USER .. PATH_SEP .. ".guanghechen" ---@type string
 
+M.HOME_MASON = vim.env.MASON or (M.HOME_NVIM_DATA .. PATH_SEP .. "mason") ---@type string
+M.HOME_MASON_BIN = M.HOME_MASON .. PATH_SEP .. "bin" ---@type string
+if not vim.g.vscode and vim.uv.fs_stat(M.HOME_MASON_BIN) then
+  vim.env.PATH = M.HOME_MASON_BIN .. PATH_ENV_SEP .. vim.env.PATH
+end
+
 return M
