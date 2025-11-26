@@ -136,9 +136,9 @@ function M.gen_hlgroup_map(context)
     MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
-    MasonMuted = { fg = c.dark5 },
-    MasonMutedBlock = { fg = c.dark3, bg = c.bg_dark },
-    MasonNormal = { bg = t and c.none or cs.mix(c.bg, c.bg_dark, 80), blend = 50 },
+    MasonMuted = { fg = u.fg1 },
+    MasonMutedBlock = { fg = u.fg1 },
+    MasonNormal = { fg = c.fg, bg = t and c.none or cs.mix(c.bg, c.bg_dark, 60), blend = 50 },
 
     ---! mini.icons
     MiniIconsAzure = { fg = c.info },

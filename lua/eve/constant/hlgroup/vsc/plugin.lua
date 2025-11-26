@@ -11,6 +11,7 @@ function M.gen_hlgroup_map(context)
   local cmp_panel_bg = cs.mix(c.overlay, c.base, 70) ---@type string
   local treesitter_context_bg = t and c.none or cs.mix(c.base, c.accentBlue, 70) ---@type string
   local lazy_badge_fg = u.bg1 ---@type string
+  local lazy_panel_bg = cs.mix(t and c.none or c.base, t and c.none or c.overlay, 60) ---@type string
 
   ---@type table<string, std.t.theme.IHlgroup>
   return {
@@ -109,7 +110,7 @@ function M.gen_hlgroup_map(context)
     LazyH1 = { fg = lazy_badge_fg, bg = u.pink, bold = true },
     LazyH2 = { fg = c.text, bold = true, underline = true },
     LazyNoCond = { fg = c.accentRed },
-    LazyNormal = { fg = c.text, bg = std.color.mix(t and c.none or c.base, t and c.none or c.overlay, 70), blend = 40 },
+    LazyNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
     LazyProgressDone = { fg = c.accentBlue, bold = true },
     LazyProgressTodo = { fg = c.textMuted, italic = true },
     LazyReasonCmd = { fg = c.warning },
@@ -134,9 +135,9 @@ function M.gen_hlgroup_map(context)
     MasonHighlightBlock = { fg = lazy_badge_fg, bg = u.pink, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
-    MasonMuted = { fg = c.textMuted },
-    MasonMutedBlock = { fg = c.textDim, bg = std.color.mix(t and c.none or c.overlay, c.border, 8) },
-    MasonNormal = { fg = c.text, bg = std.color.mix(t and c.none or c.base, t and c.none or c.overlay, 70), blend = 40 },
+    MasonMuted = { fg = u.fg1 },
+    MasonMutedBlock = { fg = u.fg1 },
+    MasonNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
 
     ---! mini.icons
     MiniIconsAzure = { fg = c.accentBlue },

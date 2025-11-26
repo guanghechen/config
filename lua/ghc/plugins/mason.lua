@@ -1,3 +1,5 @@
+---@see https://github.com/mason-org/mason.nvim/tree/57e5a8addb8c71fb063ee4acda466c7cf6ad2800
+
 return {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },
@@ -7,7 +9,9 @@ return {
     log_level = vim.log.levels.INFO,
     max_concurrent_installers = 10,
     ui = {
-      check_outdated_packages_on_open = false,
+      backdrop = 60,
+      border = "none",
+      check_outdated_packages_on_open = true,
       icons = {
         package_pending = " ",
         package_installed = " ",

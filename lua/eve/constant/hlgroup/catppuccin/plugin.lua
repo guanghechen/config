@@ -10,7 +10,6 @@ function M.gen_hlgroup_map(context)
   local mix = std.color.mix
   local cmp_panel_bg = mix(t and c.none or c.mantle, c.surface0, 65)
   local lazy_panel_bg = mix(t and c.none or c.mantle, c.surface1, 60)
-  local mason_muted_bg = mix(t and c.none or c.surface0, c.mantle, 20)
   local dap_virtual_bg = mix(t and c.none or c.surface0, c.peach, 25)
   local treesitter_context_bg = t and c.none or mix(c.base, c.sapphire, 65)
   local indent_marker_fg = mix(t and c.none or c.surface0, c.overlay0, 30)
@@ -143,8 +142,8 @@ function M.gen_hlgroup_map(context)
     MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
-    MasonMuted = { fg = c.overlay1 },
-    MasonMutedBlock = { fg = c.overlay2, bg = mason_muted_bg },
+    MasonMuted = { fg = u.fg1 },
+    MasonMutedBlock = { fg = u.fg1 },
     MasonNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
 
     ---! mini.icons

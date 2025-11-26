@@ -30,7 +30,7 @@ local LSP_CLIENT_NAME_ORDERS = {
   tailwindcss = 3,
   taplo = 5,
   vtsls = 5,
-  vuels = 7,
+  volar = 7,
   yamlls = 5,
 }
 

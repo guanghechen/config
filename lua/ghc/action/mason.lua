@@ -1,3 +1,5 @@
+local __module_name__ = "ghc.action.mason"
+
 ---@class ghc.action.mason
 local M = {}
 
@@ -22,7 +24,7 @@ function M.get_mason_ensure_installed()
     "tailwindcss-language-server", --  tailwindcss
     "taplo", -- taplo
     "vtsls", -- vtsls
-    "vetur-vls", -- vuels
+    "vue-language-server", -- volar
     "yaml-language-server", -- yamlls
 
     -- dap --
@@ -48,41 +50,75 @@ end
 ---@param packages                      string[]
 ---@param force                         boolean
 ---@param on_close                      fun(): nil
-function M.install(packages, force, on_close)
-  if not force then
-    local mr = require("mason-registry")
-    local all_packages = vim.list_slice(packages) ---@type string[]
-    packages = {} ---@type string[]
-    for _, pkg in ipairs(all_packages) do
-      local p = mr.get_package(pkg)
+local function do_install(packages, force, on_close)
+  local mr = require("mason-registry")
+  local to_install = {} ---@type string[]
+  local invalid_packages = {} ---@type string[]
+
+  for _, pkg_name in ipairs(packages) do
+    if not mr.has_package(pkg_name) then
+      table.insert(invalid_packages, pkg_name)
+    elseif force then
+      table.insert(to_install, pkg_name)
+    else
+      local p = mr.get_package(pkg_name)
       if not p:is_installed() then
-        table.insert(packages, pkg)
+        table.insert(to_install, pkg_name)
       end
     end
   end
 
-  local count = #packages
+  if #invalid_packages > 0 then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Invalid packages",
+      message = "The following packages do not exist in mason registry",
+      details = invalid_packages,
+    })
+  end
+
+  local count = #to_install
   if count < 1 then
     on_close()
     return
   end
 
-  local mr = require("mason-registry")
-  for _, pkg in ipairs(packages) do
-    local p = mr.get_package(pkg)
+  local install_failed = {} ---@type string[]
+  for _, pkg_name in ipairs(to_install) do
+    local p = mr.get_package(pkg_name)
     local handle = p:install()
     handle:once("closed", function()
+      if not p:is_installed() then
+        table.insert(install_failed, pkg_name)
+      end
       count = count - 1
       if count < 1 then
+        if #install_failed > 0 then
+          std.reporter.error({
+            from = __module_name__,
+            subject = "Installation failed",
+            message = "The following packages failed to install",
+            details = install_failed,
+          })
+        end
         on_close()
       end
     end)
   end
 end
 
+---@param packages                      string[]
 ---@param force                         boolean
 ---@param on_close                      fun(): nil
----@return nil
+function M.install(packages, force, on_close)
+  local mr = require("mason-registry")
+  mr.refresh(function()
+    do_install(packages, force, on_close)
+  end)
+end
+
+---@param force                         boolean
+---@param on_close                      fun(): nil
 function M.install_all(force, on_close)
   require("mason.ui").open()
   local packages = M.get_mason_ensure_installed() ---@type string[]
