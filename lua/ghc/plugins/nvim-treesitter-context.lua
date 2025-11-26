@@ -1,14 +1,16 @@
----! https://github.com/nvim-treesitter/nvim-treesitter-context
+---@see https://github.com/nvim-treesitter/nvim-treesitter-context/tree/660861b1849256398f70450afdf93908d28dc945
+
 return {
   name = "nvim-treesitter-context",
   event = { "BufReadPost", "BufNewFile", "BufWritePre" },
   opts = {
     enable = true,
     line_numbers = true,
-    max_lines = 3,
+    max_lines = "20%",
     min_window_height = 30,
     mode = "cursor",
     multiline_threshold = 20,
+    multiwindow = true,
     separator = nil,
     trim_scope = "outer",
     zindex = 30,
