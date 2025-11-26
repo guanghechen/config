@@ -486,6 +486,7 @@ function M.open_filepath(winnr_source, filepath, lnum, col)
   end
 
   vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.api.nvim_exec_autocmds("BufRead", { buffer = bufnr, modeline = false })
   vim.schedule(function()
     vim.cmd("stopinsert")
 
@@ -520,11 +521,20 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     return
   end
 
+  local tabnr = vim.api.nvim_win_get_tabpage(winnr) ---@type integer
+  local last_bufnr ---@type integer|nil
   for _, filepath in ipairs(filepaths) do
     local bufnr = eve.buf.loadfile(filepath) ---@type integer|nil
     if bufnr ~= nil then
-      vim.api.nvim_win_set_buf(winnr, bufnr)
+      last_bufnr = bufnr
+      M.on_buf_enter(winnr, bufnr)
+      eve.tab.on_buf_enter(tabnr, bufnr)
     end
+  end
+
+  if last_bufnr then
+    vim.api.nvim_win_set_buf(winnr, last_bufnr)
+    vim.api.nvim_exec_autocmds("BufRead", { buffer = last_bufnr, modeline = false })
   end
 
   vim.schedule(function()
