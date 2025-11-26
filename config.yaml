@@ -21,7 +21,7 @@ color:
 icons:
   when: always
   theme: fancy
-  separator: " "
+  separator: ' '
 
 sorting:
   column: name
@@ -34,6 +34,8 @@ layout: oneline
 literal: true
 permission: rwx
 size: short
+
+hyperlink: auto
 
 no-symlink: false
 symlink-arrow: 
