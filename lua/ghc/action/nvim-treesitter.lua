@@ -21,9 +21,9 @@ function M.swap_conditional_branches()
     return
   end
 
-  local ts_parsers = require("nvim-treesitter.parsers")
-  local lang = ts_parsers.get_buf_lang(bufnr_sourcefile) ---@return string
-  if not ts_parsers.has_parser(lang) then
+  local filetype = vim.bo[bufnr_sourcefile].filetype
+  local lang = vim.treesitter.language.get_lang(filetype)
+  if not lang or not pcall(vim.treesitter.language.inspect, lang) then
     std.reporter.error({
       from = __module_name__,
       subject = "swap conditional branches",

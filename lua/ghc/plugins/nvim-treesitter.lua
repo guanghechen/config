@@ -1,3 +1,5 @@
+---@see https://github.com/nvim-treesitter/nvim-treesitter/tree/c5871d9d870c866fea9f271f1a3b3f29049a4793
+
 local __module_name__ = "ghc.plugin.nvim-treesitter" ---@type string
 
 ---@type string[]
@@ -180,10 +182,8 @@ return {
     require("nvim-treesitter").setup(opts)
     vim.api.nvim_create_user_command("TreesitterInstallAll", function()
       install("setup", function()
-        local treesitter = require("nvim-treesitter")
-        treesitter.install(ensure_installed, { summary = true })
+        require("nvim-treesitter").install(ensure_installed, { summary = true })
       end)
-      require("nvim-treesitter").install(ensure_installed)
     end, {})
 
     vim.treesitter.language.register("json", "excalidraw")
