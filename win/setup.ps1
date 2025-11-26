@@ -8,6 +8,7 @@ $env:CODEX_HOME           = "$env:XDG_CONFIG_HOME\codex"
 $env:GEMINI_CONFIG_DIR    = "$env:USERPROFILE\.gemini"
 $env:KOMOREBI_CONFIG_HOME = "$env:XDG_CONFIG_HOME\komorebi"
 $env:LG_CONFIG_FILE       = "$env:XDG_CONFIG_HOME\lazygit\config.yml,$env:XDG_CONFIG_HOME\lazygit\local\theme.yml"
+$env:LS_COLORS            = "di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93"
 $env:NODE_OPTIONS         = "--max-old-space-size=8192"
 $env:PYTHONIOENCODING     = "utf8"
 $env:PYTHONUTF8           = 1
@@ -26,11 +27,14 @@ setx CODEX_HOME           "$env:CODEX_HOME"
 setx GEMINI_CONFIG_DIR    "$env:GEMINI_CONFIG_DIR"
 setx KOMOREBI_CONFIG_HOME "$env:KOMOREBI_CONFIG_HOME"
 setx LG_CONFIG_FILE       "$env:LG_CONFIG_FILE"
+setx LS_COLORS            "$env:LS_COLORS"
 setx NODE_OPTIONS         "$env:NODE_OPTIONS"
 setx PYTHONIOENCODING     "$env:PYTHONIOENCODING"
 setx PYTHONUTF8           $env:PYTHONUTF8
 setx YAZI_CONFIG_HOME     "$env:YAZI_CONFIG_HOME"
 setx YAZI_FILE_ONE        "$env:YAZI_FILE_ONE"
+setx PREFER_NODE_VERSION  $env:PREFER_NODE_VERSION
+setx PREFER_PYTHON_ENV    "$env:PREFER_PYTHON_ENV"
 
 # Define the local path and repositories
 $reporoot = "$env:XDG_CONFIG_HOME"
