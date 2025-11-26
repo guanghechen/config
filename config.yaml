@@ -32,10 +32,8 @@ date: +%Y-%m-%d %H:%M:%S
 header: false
 layout: oneline
 literal: true
-permission: rwx
 size: short
 
-hyperlink: auto
-
+hyperlink: never
 no-symlink: false
 symlink-arrow: 
