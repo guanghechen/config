@@ -1,20 +1,23 @@
----! https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+---@see https://github.com/nvim-treesitter/nvim-treesitter-textobjects/tree/227165aaeb07b567fb9c066f224816aa8f3ce63f
+
 return {
   name = "nvim-treesitter-textobjects",
   event = "VeryLazy",
   opts = {
     move = {
-      enable = true,
       set_jumps = true,
     },
     select = {
       lookahead = true,
+      lookbehind = false,
       selection_modes = {
         ["@parameter.outer"] = "v",
         ["@function.outer"] = "V",
         ["@class.outer"] = "<c-v>",
       },
-      include_surrounding_whitespace = false,
+      include_surrounding_whitespace = function(opts)
+        return opts.query_string:match("outer") ~= nil
+      end,
     },
   },
   config = function(_, opts)
@@ -103,13 +106,28 @@ return {
         local query = spec.query
         local source = spec.source or "textobjects"
         local desc = spec.desc or make_move_desc(key, query)
-        keymaps[#keymaps + 1] = {
-          modes = spec.modes or { "n", "x", "o" },
-          key = key,
-          desc = desc,
+        local modes = spec.modes or { "n", "x", "o" } ---@type std.e.VimMode[]
+
+        local callback ---@type fun(): nil
+        if key:find("[cC]") then
+          local fallback = vim.api.nvim_replace_termcodes(key, true, true, true)
+          callback = function()
+            if vim.wo.diff then
+              vim.api.nvim_feedkeys(fallback, "n", false)
+            else
+              move[method](query, source)
+            end
+          end
+        else
           callback = function()
             move[method](query, source)
-          end,
+          end
+        end
+        keymaps[#keymaps + 1] = {
+          modes = modes,
+          key = key,
+          desc = desc,
+          callback = callback,
         }
       end
     end
