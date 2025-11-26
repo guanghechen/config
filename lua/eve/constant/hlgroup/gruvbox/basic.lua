@@ -130,7 +130,7 @@ function M.gen_hlgroup_map(context)
     ---special
     Delimiter = { fg = c.aqua },
     EndOfBuffer = { fg = c.bg2 },
-    NonText = { fg = cs.mix(bg, c.bg2, 45), italic = true },
+    NonText = { fg = c.bg4, italic = true },
     Whitespace = { fg = c.bg4 },
 
     ---syntax
