@@ -83,6 +83,7 @@ end
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
+---@return nil
 local function before_init(params, config)
   eve.lsp.before_init(params, config)
 
@@ -110,9 +111,9 @@ local function before_init(params, config)
     end
   end
 
-  local capabilities = params.capabilities
-  capabilities.experimental = capabilities.experimental or {}
-  capabilities.experimental.serverStatusNotification = true
+  local caps = params.capabilities
+  caps.experimental = caps.experimental or {}
+  caps.experimental.serverStatusNotification = true
 end
 
 ---@param client                        vim.lsp.Client

@@ -68,12 +68,6 @@ local fn_open_selector = eve.G.register_anonymous_fn(function()
   end)
 end)
 
----@param name string
----@return boolean
-local function should_run_linter(name)
-  return is_linter_enabled(name)
-end
-
 ---@class eve.ux.nvimbar.component.lint
 local M = {}
 

@@ -83,13 +83,6 @@ command.implement({
 --[explorer] -------------------------------------------------------------------------------------
 command
   .implement({
-    uuid = K.explorer.fs_cwd.uuid,
-    tabtype = eve.tab.Types.DIFFVIEW,
-    action = function()
-      require("ghc.action.diffview").fs_cwd()
-    end,
-  })
-  .implement({
     uuid = K.explorer.toggle.uuid,
     tabtype = eve.tab.Types.DIFFVIEW,
     action = function()
