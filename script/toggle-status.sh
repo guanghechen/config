@@ -2,7 +2,8 @@
 
 function _ghc_tmux_toggle_status_ {
   local direction="${1:-forward}"
-  local mode=$(tmux show -gqv @GHC_SL_MODE)
+  local mode
+  mode=$(tmux show -gqv @GHC_SL_MODE)
 
   if [ -z "$mode" ]; then
     tmux set -g @GHC_SL_MODE "01"

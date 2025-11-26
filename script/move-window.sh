@@ -7,7 +7,8 @@ function _ghc_tmux_move_window_ {
 
   local target_session_name=$1
   if [ "$(tmux list-windows | wc -l)" -eq 1 ]; then
-    local current_session_name=$(tmux display-message -p '#{session_name}')
+    local current_session_name
+    current_session_name=$(tmux display-message -p '#{session_name}')
     tmux switch-client -t "${target_session_name}"
     tmux move-window -s "${current_session_name}:1" -t "${target_session_name}:"
   else

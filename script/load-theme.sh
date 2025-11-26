@@ -1,13 +1,15 @@
 #! /usr/bin/env bash
 
 function _ghc_tmux_load_theme_ {
-  local status_mode=$(tmux show -gqv @GHC_SL_MODE)
+  local status_mode
+  status_mode=$(tmux show -gqv @GHC_SL_MODE)
   if [ -z "$status_mode" ]; then
     status_mode="01"
     tmux set -g @GHC_SL_MODE "$status_mode"
   fi
 
-  local panestatus_mode=$(tmux show -gqv @GHC_PSL_MODE)
+  local panestatus_mode
+  panestatus_mode=$(tmux show -gqv @GHC_PSL_MODE)
   if [ -z "$panestatus_mode" ]; then
     panestatus_mode="01"
     tmux set -g @GHC_PSL_MODE "$panestatus_mode"

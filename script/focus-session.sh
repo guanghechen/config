@@ -2,7 +2,8 @@
 
 function _ghc_tmux_focus_session_ {
   local direction=$1
-  local current_session_name=$(tmux display-message -p '#S')
+  local current_session_name
+  current_session_name=$(tmux display-message -p '#S')
 
   if [[ "${current_session_name}" == _popup@* ]]; then
     sessions=$(tmux list-sessions -F "#{session_name}" | grep "^_popup@")
@@ -32,7 +33,8 @@ function _ghc_tmux_focus_session_ {
   fi
 
   # Get the name of the target session
-  local target_session_name=$(echo "$sessions" | sed -n "$((target_index + 1))p")
+  local target_session_name
+  target_session_name=$(echo "$sessions" | sed -n "$((target_index + 1))p")
 
   # Switch to the target session
   if [ "${current_session_name}" != "${target_session_name}" ]; then

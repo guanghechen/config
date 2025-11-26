@@ -2,7 +2,8 @@
 
 function _ghc_watch_fake_clipboard_ {
   local _fake_clipboard_file=$1
-  local _fake_clipboard_dir=$(dirname "$_fake_clipboard_file")
+  local _fake_clipboard_dir
+  _fake_clipboard_dir=$(dirname "$_fake_clipboard_file")
 
   # Check if the directory exists
   if [ ! -d "$_fake_clipboard_dir" ]; then
@@ -17,7 +18,7 @@ function _ghc_watch_fake_clipboard_ {
   echo "Watching fake clipboard: $_fake_clipboard_file"
 
   # Watch the fake clipboard change and write the content into system clipboard
-  fswatch -0 $_fake_clipboard_file | xargs -0 -n1 sh -c "cat $_fake_clipboard_file | pbcopy"
+  fswatch -0 "$_fake_clipboard_file" | xargs -0 -n1 sh -c "cat \"$_fake_clipboard_file\" | pbcopy"
 }
 
 _ghc_watch_fake_clipboard_ "$1"

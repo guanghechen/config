@@ -2,7 +2,8 @@
 
 function _ghc_tmux_toggle_pane_status_ {
   local direction="${1:-forward}"
-  local mode=$(tmux show -gqv @GHC_PSL_MODE)
+  local mode
+  mode=$(tmux show -gqv @GHC_PSL_MODE)
 
   if [ -z "$mode" ]; then
     tmux set -g @GHC_PSL_MODE "01"
