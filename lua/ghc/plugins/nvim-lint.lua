@@ -1,3 +1,5 @@
+---@see https://github.com/mfussenegger/nvim-lint/tree/d1118791070d090777398792a73032a0ca5c79ff
+
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
 ---@class ghc.plugins.nvim_lint.IScheduleContext
@@ -57,16 +59,7 @@ local linters_by_ft = {
 
 local linters = {
   cspell = {
-    args = {
-      "lint",
-      "--no-color",
-      "--no-progress",
-      "--no-summary",
-      "--show-suggestions",
-      function()
-        return "stdin://" .. vim.api.nvim_buf_get_name(0)
-      end,
-    },
+    append_args = { "--show-suggestions" },
   },
 }
 
@@ -74,15 +67,15 @@ local scheduler = nil ---@type std.collection.Scheduler|nil
 
 return {
   name = "nvim-lint",
-  event = { "BufReadPost", "BufNewFile", "BufWritePre" },
+  event = { "BufReadPost", "BufNewFile" },
   config = function()
     local lint = require("lint")
     for name, linter in pairs(linters) do
       if type(linter) == "table" and type(lint.linters[name]) == "table" then
         lint.linters[name] = vim.tbl_deep_extend("force", lint.linters[name], linter)
-        if type(linter.prepend_args) == "table" then
+        if type(linter.append_args) == "table" then
           lint.linters[name].args = lint.linters[name].args or {}
-          vim.list_extend(lint.linters[name].args, linter.prepend_args)
+          vim.list_extend(lint.linters[name].args, linter.append_args)
         end
       else
         lint.linters[name] = linter
