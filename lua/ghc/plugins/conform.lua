@@ -1,3 +1,5 @@
+---@see https://github.com/stevearc/conform.nvim/tree/4993e07fac6679d0a5005aa7499e0bad2bd39f19
+
 -- stylua: ignore start
 local formatters_by_ft = {
   -- web --
@@ -10,8 +12,8 @@ local formatters_by_ft = {
   javascript        = { "prettier" },
   javascriptreact   = { "prettier" },
   less              = { "prettier" },
-  markdown          = { "prettier" },
-  ["markdown.mdx"]  = { "prettier" },
+  markdown          = { "prettier", "injected" },
+  ["markdown.mdx"]  = { "prettier", "injected" },
   svelte            = { "prettier" },
   typescript        = { "prettier" },
   typescriptreact   = { "prettier" },
@@ -26,7 +28,7 @@ local formatters_by_ft = {
   -- lang --
   lua               = { "stylua" },
   python            = { "isort", "black" },
-  rust              = { "rustfmt" },
+  rust              = { "rustfmt", lsp_format = "never" },
 
   -- app --
   tmux              = { "shfmt" },
@@ -145,7 +147,6 @@ return {
     notify_no_formatters = true,
     default_format_opts = {
       timeout_ms = 3000,
-      async = false,
       quiet = false,
       lsp_format = "fallback",
     },
@@ -158,11 +159,7 @@ return {
       },
       prettier = {
         prepend_args = function(_, ctx)
-          local args = {
-            "--ignore-path=",
-            "--stdin-filepath",
-            vim.api.nvim_buf_get_name(ctx.buf),
-          }
+          local args = { "--ignore-path=" } ---@type string[]
 
           -- Check for existing prettier config
           local prettier_config_path = fns.find_prettier_config(ctx.dirname)
@@ -177,9 +174,7 @@ return {
             if vim.bo[ctx.buf].filetype ~= "markdown" then
               fallback_config.proseWrap = "preserve"
             end
-
-            local config_args = fns.config_to_args(fallback_config)
-            vim.list_extend(args, config_args)
+            vim.list_extend(args, fns.config_to_args(fallback_config))
           end
 
           return args
@@ -189,8 +184,10 @@ return {
         end,
       },
       rustfmt = {
-        -- The default edition of Rust to use when no Cargo.toml file is found
-        default_edition = "2021",
+        options = {
+          -- The default edition of Rust to use when no Cargo.toml file is found
+          default_edition = "2021",
+        },
       },
     },
     format_on_save = function(bufnr)
@@ -208,7 +205,6 @@ return {
       end
 
       return {
-        async = false,
         lsp_format = "fallback",
         quiet = false,
         timeout_ms = 3000,
