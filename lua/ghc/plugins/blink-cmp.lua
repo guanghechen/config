@@ -1,3 +1,5 @@
+---@see https://github.com/saghen/blink.cmp/tree/2e4e54b1283f4cf3673063fc3e10993c20aeec5c
+
 return {
   name = "blink.cmp",
   build = "cargo build --release",
@@ -93,6 +95,10 @@ return {
             enabled = true,
           },
         },
+        trigger = {
+          show_on_backspace = true,
+          show_on_backspace_in_keyword = true,
+        },
         documentation = {
           auto_show = true,
           auto_show_delay_ms = 200,
@@ -184,6 +190,9 @@ return {
           "score",
           "exact",
           "sort_text",
+        },
+        frecency = {
+          enabled = true,
         },
       },
       keymap = {
@@ -287,7 +296,7 @@ return {
         preset = "default",
       },
       sources = {
-        default = {},
+        default = { "path", "buffer" },
         per_filetype = sources_per_filetype,
         providers = {
           buffer = {

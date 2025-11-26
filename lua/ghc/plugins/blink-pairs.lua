@@ -1,3 +1,5 @@
+---@see https://github.com/saghen/blink.pairs/tree/8e935d07ab6a3843565afd6a6d56456678cbf43f
+
 return {
   name = "blink.pairs",
   event = "VeryLazy",
