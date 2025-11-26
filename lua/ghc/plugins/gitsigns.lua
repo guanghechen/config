@@ -1,3 +1,5 @@
+---@see https://github.com/lewis6991/gitsigns.nvim/tree/cdafc320f03f2572c40ab93a4eecb733d4016d07
+
 ---@class ghc.plugins.gitsigns.config
 local config = {
   win = {
@@ -316,11 +318,24 @@ local keymaps = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n" },
     key = "ghu",
-    desc = "git: undo stage hunk",
+    desc = "git: unstage hunk",
     callback = function()
-      require("gitsigns").undo_stage_hunk()
+      local gs = require("gitsigns")
+      gs.nav_hunk("next", { target = "staged", wrap = true, navigation_message = false })
+      vim.schedule(function()
+        gs.stage_hunk()
+      end)
+    end,
+  },
+  {
+    modes = { "v" },
+    key = "ghu",
+    desc = "git: unstage hunk",
+    callback = function()
+      local lnum_start, lnum_end = eve.buf.retrieve_visual_lnum_range()
+      require("gitsigns").stage_hunk({ lnum_start, lnum_end })
     end,
   },
   {
@@ -350,7 +365,6 @@ return {
       virt_text_priority = 200,
       use_focus = true,
     },
-    max_file_length = 3000, -- Disable if file is longer than this (in lines)
     numhl = false,
     linehl = false,
     culhl = false,
@@ -360,10 +374,6 @@ return {
     word_diff = false,
     diff_opts = {
       algorithm = "histogram",
-      ignore_blank_lines = false,
-      ignore_whitespace = false,
-      ignore_whitespace_change = false,
-      ignore_whitespace_change_at_eol = false,
     },
     preview_config = {
       relative = "cursor",
@@ -379,18 +389,18 @@ return {
       focusable = true,
     },
     signs = {
-      add = { text = "▎" },
-      change = { text = "▎" },
-      delete = { text = "_" },
-      topdelete = { text = "‾" },
+      add = { text = "┃" },
+      change = { text = "┃" },
+      delete = { text = "▁" },
+      topdelete = { text = "▔" },
       changedelete = { text = "~" },
       untracked = { text = "┆" },
     },
     signs_staged = {
-      add = { text = "▎" },
-      change = { text = "▎" },
-      delete = { text = "_" },
-      topdelete = { text = "‾" },
+      add = { text = "┃" },
+      change = { text = "┃" },
+      delete = { text = "▁" },
+      topdelete = { text = "▔" },
       changedelete = { text = "~" },
       untracked = { text = "┆" },
     },
