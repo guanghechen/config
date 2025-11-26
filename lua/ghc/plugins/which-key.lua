@@ -3,6 +3,9 @@ return {
   event = { "VeryLazy" },
   opts_extend = { "spec" },
   opts = {
+    triggers = {
+      { "<auto>", mode = "nxs" },
+    },
     disable = {
       ft = {
         eve.filetype.TERM,

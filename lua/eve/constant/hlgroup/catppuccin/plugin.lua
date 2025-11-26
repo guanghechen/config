@@ -78,12 +78,13 @@ function M.gen_hlgroup_map(context)
     DiffviewStatusModified = { fg = c.yellow, bold = true },
 
     ---! flash.nvim
-    FlashBackdrop = { fg = c.overlay1 },
-    FlashCurrent = { fg = c.peach, italic = true, bold = true },
-    FlashLabel = { fg = t and c.none or c.base, bg = c.mauve, bold = true },
-    FlashMatch = { fg = c.sky, italic = true },
+    FlashBackdrop = { fg = c.overlay0 },
+    FlashCurrent = { fg = c.base, bg = c.peach, bold = true },
+    FlashLabel = { fg = c.base, bg = c.pink, bold = true },
+    FlashMatch = { fg = c.base, bg = c.sky, bold = true },
     FlashPrompt = { fg = c.text, bg = mix(t and c.none or c.surface0, c.mantle, 45) },
     FlashPromptIcon = { fg = c.peach, bg = c.none },
+    FlashCursor = { fg = c.base, bg = c.text },
 
     ---! gitsigns.nvim
     GitSignsAdd = { fg = c.green },

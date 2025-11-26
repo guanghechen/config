@@ -83,11 +83,12 @@ function M.default_gen_hlgroup_map(context)
 
     ---! flash.nvim
     FlashBackdrop = { fg = c.bg4, bg = c.none },
-    FlashCurrent = { fg = c.orange, bg = c.none, italic = true },
-    FlashLabel = { fg = c.blue, bg = c.none, bold = true },
-    FlashMatch = { fg = c.yellow, bg = c.none, italic = true },
+    FlashCurrent = { fg = c.bg0, bg = c.orange, bold = true },
+    FlashLabel = { fg = c.bg0, bg = c.pink, bold = true },
+    FlashMatch = { fg = c.bg0, bg = c.aqua, bold = true },
     FlashPrompt = { fg = c.yellow, bg = c.bg2 },
     FlashPromptIcon = { fg = c.orange, bg = c.none },
+    FlashCursor = { fg = c.bg0, bg = c.fg1 },
 
     ---! gitsigns.nvim
     GitSignsAdd = { fg = c.green },
