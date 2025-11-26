@@ -1,4 +1,4 @@
----@see https://github.com/echasnovski/mini.icons/blob/b8f6fa6f5a3fd0c56936252edcd691184e5aac0c/lua/mini/icons.lua#L1
+---@see https://github.com/echasnovski/mini.icons/blob/ff2e4f1d29f659cc2bad0f9256f2f6195c6b2428/lua/mini/icons.lua
 
 -- stylua: ignore start
 local BYTE_SLASH      = 0x2f ---@type integer '/'
