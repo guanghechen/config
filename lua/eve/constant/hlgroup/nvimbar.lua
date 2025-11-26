@@ -93,6 +93,11 @@ function M.gen_hlgroup_map(context)
     host_username_text = { link = "ms_b_none" },
     host_username_sep = { link = "mf_b_bg0" },
 
+    ---! lint
+    lint_icon_active = { fg = c.green, bg = "bg_bar" },
+    lint_icon_inactive = { fg = c.bg4, bg = "bg_bar" },
+    lint_text = { fg = c.fg2, bg = "bg_bar" },
+
     ---! lsp
     lsp_client_text = { fg = c.fg2, bg = "bg_bar" },
     lsp_diagnostics_error = { fg = c.brightRed, bg = "bg_bar" },

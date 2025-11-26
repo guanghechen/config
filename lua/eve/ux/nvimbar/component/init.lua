@@ -9,6 +9,7 @@ local __mods = {
   file = "eve.ux.nvimbar.component.file",
   git = "eve.ux.nvimbar.component.git",
   host = "eve.ux.nvimbar.component.host",
+  lint = "eve.ux.nvimbar.component.lint",
   lsp = "eve.ux.nvimbar.component.lsp",
   notepad = "eve.ux.nvimbar.component.notepad",
   nvim = "eve.ux.nvimbar.component.nvim",
@@ -31,6 +32,7 @@ local __mods = {
 ---@field public file                   eve.ux.nvimbar.component.file
 ---@field public git                    eve.ux.nvimbar.component.git
 ---@field public host                   eve.ux.nvimbar.component.host
+---@field public lint                   eve.ux.nvimbar.component.lint
 ---@field public lsp                    eve.ux.nvimbar.component.lsp
 ---@field public notepad               eve.ux.nvimbar.component.notepad
 ---@field public nvim                   eve.ux.nvimbar.component.nvim
