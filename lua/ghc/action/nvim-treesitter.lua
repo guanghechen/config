@@ -13,6 +13,14 @@ end
 ---@class ghc.action.nvim_treesitter
 local M = {}
 
+function M.swap_next_parameter()
+  require("nvim-treesitter-textobjects.swap").swap_next("@parameter.inner")
+end
+
+function M.swap_prev_parameter()
+  require("nvim-treesitter-textobjects.swap").swap_previous("@parameter.inner")
+end
+
 ---@return nil
 function M.swap_conditional_branches()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

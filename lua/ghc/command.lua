@@ -66,6 +66,20 @@ command.implement({
   end,
 })
 
+command.implement({
+  uuid = K.code.swap_next_parameter.uuid,
+  action = function()
+    require("ghc.action.nvim-treesitter").swap_next_parameter()
+  end,
+})
+
+command.implement({
+  uuid = K.code.swap_prev_parameter.uuid,
+  action = function()
+    require("ghc.action.nvim-treesitter").swap_prev_parameter()
+  end,
+})
+
 --[explorer] -------------------------------------------------------------------------------------
 command
   .implement({
