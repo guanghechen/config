@@ -311,6 +311,7 @@ M.definitions.code = {
   swap_conditional_branches = def("Fcodeswapconditionalbranches", "code: swap conditional branches"),
   swap_next_parameter = def("Fcodeswapnextparameter", "code: swap next parameter"),
   swap_prev_parameter = def("Fcodeswapprevparameter", "code: swap prev parameter"),
+  trim_trailspace = def("Fcodetrimtrailspace", "code: trim trailing whitespace"),
 }
 
 ---@class eve.builtin.command.definitions.copy

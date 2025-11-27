@@ -575,6 +575,7 @@
     "miniicons",
     "miniindentscope",
     "minipairs",
+    "minitrailspace",
     "minmax",
     "mkdirs",
     "mlua",
