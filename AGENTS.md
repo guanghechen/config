@@ -12,11 +12,11 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 - `lua/std/`: Foundation layer with algorithms, collections, and utilities
   - `std/collection/`: Data structures (Observable, Promise, Scheduler, etc.)
   - `std/lib/`: Library utilities (color, easing)
-  - `std/types/`: Shared enums and theme/UX schemas used across modules
+  - `std/source/`: Notepad data source implementations (json, sqlite, folder)
+  - `std/types/`: Shared type definitions (common, enum, notepad, theme, ux)
   - Core utilities: bootstrap, debug, fs, path, json, timer, etc.
-- `lua/rstd/`: Rust-backed standard library surfaces
-  - `rstd/fs`: File system utilities exposed via mlua bindings
-  - `rstd/search`: Search operations that wrap Rust implementations
+- `lua/rstd`: Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper)
+  - Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`
 - `lua/eve/`: Core application framework
   - `eve/builtin/`: Core modules (G, ai, buf, clipboard, command, lsp, notifier, etc.)
   - `eve/constant/`: Constants and configurations (hlgroup themes, language configs)
@@ -38,6 +38,7 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
   - `integration/vscode/`: VSCode extension setup
 - Supporting directories:
   - `queries/`: TreeSitter queries for various languages
+  - `rust/rstd/`: Rust source code for performance-critical operations
   - `lsp/`: Language server configurations
   - `doc/`: Documentation and issue tracking
   - `bin/`: Compiled Rust binaries (platform-specific)
@@ -55,12 +56,8 @@ The configuration exposes core modules globally via `_G` for convenient access:
 - `std.*` → Access std utilities directly (e.g., `std.path.*`, `std.json.*`)
 - `std.Observable` → `require("std.collection.observable")` (collections mounted directly)
 - `eve.buf.*` → `require("eve.builtin.buf").*` (builtins mounted directly)
-- `eve.constant.*` → `require("eve.constant").*`
-- `eve.context.*` → `require("eve.context").*`
-- `eve.state.*` → `require("eve.state").*`
-- `eve.fn.*` → `require("eve.fn").*`
-- `eve.ux.*` → `require("eve.ux").*`
-- `eve.buf.retrieve_selected_text()` → helper that yanks the active visual selection (empty string when nothing selected)
+- `eve.constant.*`, `eve.context.*`, `eve.state.*`, `eve.fn.*`, `eve.ux.*` follow the same pattern
+- `eve.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points
 The configuration supports multiple environments through conditional loading in `init.lua`:
@@ -75,39 +72,9 @@ Each integration includes environment-specific:
 - `autocmd.lua`: Auto commands (neovim only)
 
 ### Rust-Lua Bridge
-- **Compiled Library**: `lua/rstd.so` (platform-specific binary)
-- **Build Artifacts**: `bin/{osx,nix,win}.rstd.so` (platform builds)
-- **Source Code**: `rust/rstd/` (mlua-powered integration)
-- **Dependencies**: mlua 0.9 (luajit), regex, serde, time, uuid
-- **Exposed Modules**: `rstd.fs`, `rstd.replace`, `rstd.find`, `rstd.search`, `rstd.string`, `rstd.fn`
-
-## Development Commands
-
-### Rust Development
-Build the Rust components:
-```bash
-cd rust/rstd
-cargo build --release
-```
-
-Force rebuild (recommended after Rust changes):
-```bash
-cd rust
-./build.sh --force
-```
-
-The build script automatically:
-- Detects platform (Darwin/Linux/Windows)
-- Builds release version
-- Copies to both `lua/rstd.so` and `bin/{platform}.rstd.so`
-- Cleans up target directory
-
-### Testing
-- **Lua Tests**: Located in `__test__/__eve__/` (organized by module)
-- **Rust Tests**: Run `cargo test` from `rust/rstd/`
-- **Cheat Sheet**: 
-  - prefer `./rust/build.sh --force && cargo test -p rstd` after touching native bindings.
-- **Naming**: Prefix every Rust unit test function name with `t_` (for example, `fn t_handles_edge_case()`).
+- **Compiled Library**: `lua/rstd` (`.so` on Unix, `.dll` on Windows)
+- **Source Code**: `rust/rstd/` (mlua integration)
+- **Build**: Run `./rust/build.sh --force` after Rust changes
 
 ## Code Conventions
 
@@ -120,72 +87,38 @@ The build script automatically:
 - Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits.
 
 ### Error Reporting
-Always use `std.reporter` for notifications and error messages instead of `eve.notifier.notify` or `vim.notify`:
+Use `std.reporter` for notifications instead of `vim.notify`:
 
 ```lua
--- Basic usage
 std.reporter.error({
   from = __module_name__,
   subject = "Operation Name",
   message = "Error message here",
+  details = { key = "value" }, -- optional, displayed as JSON
 })
-
--- With additional details (will be formatted as JSON)
-std.reporter.error({
-  from = __module_name__,
-  subject = "API Error",
-  message = "Request failed",
-  details = { status = 404, url = "/api/data" },
-})
-
--- !!Strict same interfaces default level report for std.reporter.{error|warn|info|debug}
--- Options available:
--- - from: (required) Module name, usually __module_name__
--- - subject: (optional) Specific operation or context
--- - message: (optional) Main message text
--- - details: (optional) Additional data to be displayed as JSON
--- - group: (optional) Notification group
--- - anonymous: (optional) Hide sender info
--- - silent: (optional) Suppress notification display
+-- Same interface for std.reporter.{error|warn|info|debug}
 ```
 
-### rstd Integration Notes
+### Rust Integration
 When modifying `rust/rstd/src/`:
 - Follow existing mlua patterns for serialization/deserialization
-- Keep Lua-facing APIs stable unless coordinating corresponding Lua updates
-- Ensure type conversions remain efficient to preserve UI responsiveness
+- Keep Lua-facing APIs synchronized with Lua call sites
+- Prefix Rust unit test function names with `t_` (e.g., `fn t_parses_config()`)
 
 ## Plugin Management
-Plugins are managed using a custom plugin system:
 - **Lock File**: `lazy-lock.json` contains exact plugin versions
-- **Plugin Configs**: Individual configurations in `ghc/plugins/`
-- **Completion**: CMP configurations in `ghc/cmp/`
-- **Custom Forks**: Most plugins use forked versions with custom branches (prefixed with `nvim@`)
-- **Key Plugins**: blink.cmp, conform.nvim, diffview.nvim, flash.nvim, nvim-treesitter, nvim-dap, etc.
-
-**Plugin Loading**: Handled through integration-specific initialization sequences
-
-## Initialization Sequence
-1. **Bootstrap**: `std.bootstrap` sets up patches and workspace
-2. **Global Modules**: Load `_G.std`, `_G.rstd`, `_G.eve`
-3. **Logging**: Configure logging for git repositories
-4. **Environment Detection**: Route to appropriate integration
-5. **Context Setup**: Initialize eve context system
-6. **UI Setup**: Load dressing, nvimbar components, theme
-7. **Commands & Plugins**: Load commands and plugin system
-8. **Session Recovery**: Auto-load sessions for git repositories
-
-## Key Features
-- **Performance**: Rust-powered search, file operations
-- **Modularity**: Layered architecture with clear separation
-- **Multi-Environment**: Supports Neovim, Neovide, VSCode
-- **Session Management**: Automatic session handling for git repos
-- **Custom UI**: Comprehensive status line, tab line, window line
-- **Advanced UX**: Custom picker, searcher, and widget systems
+- **Plugin Configs**: `ghc/plugins/` for individual plugin configurations
+- **Completion**: `ghc/cmp/` for completion source configurations
 
 ## Development Files
 - `init-theme.lua`: Theme testing and development
 - `init-debug.lua`: Debug mode configuration
 - `init-update.lua`: Update utilities
 - `README.md`: Main documentation
-- `doc/`: Issue tracking, design memos, and troubleshooting notes—scan it when you need historical decisions or open tasks.
+- `doc/`: Issue tracking and detailed documentation
+
+## Key Features
+- Rust-powered search, replace, and file operations for performance
+- Multi-environment support: Neovim, Neovide, VSCode
+- Automatic session management for git repositories
+- Custom UI components: status line, tab line, window line, picker, searcher
