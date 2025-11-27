@@ -380,6 +380,8 @@ M.definitions.find = {
 ---@class eve.builtin.command.definitions.git
 M.definitions.git = {
   browse = def("Fgitbrowse", "git: browse"),
+  browse_permalink = def("Fgitbrowsepermalink", "git: browse (permalink)"),
+  browse_repo = def("Fgitbrowserepo", "git: browse (repo)"),
   diffview = def("Fgitdiffview", "git: diffview"),
   history = def("Fgithistory", "git: history (commits)"),
   history_file = def("Fgithistoryfile", "git: history (file)"),

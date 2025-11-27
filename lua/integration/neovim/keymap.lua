@@ -199,6 +199,8 @@ ms({ "n", "v" }, "<leader>fx", K.find.diagnostics_in_workspace)
 
 --#[g]it--------------------------------------------------------------------------------------------
 ms({ "n", "v" }, "<leader>gB", K.git.browse)
+ms({ "n", "v" }, "<leader>gP", K.git.browse_permalink)
+ms({ "n", "v" }, "<leader>gR", K.git.browse_repo)
 ms({ "n", "v" }, "<leader>gf", K.git.history_file)
 ms({ "n", "v" }, "<leader>gG", K.git.history)
 ms({ "n", "v" }, "<leader>gg", K.git.diffview)

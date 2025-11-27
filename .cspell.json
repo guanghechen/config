@@ -85,6 +85,8 @@
     "Ffindpinnedfiles",
     "Ffindvimoptions",
     "Fgitbrowse",
+    "Fgitbrowsepermalink",
+    "Fgitbrowserepo",
     "Fgitdiffview",
     "Fgithistory",
     "Fgithistoryfile",

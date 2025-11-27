@@ -391,12 +391,25 @@ command
   })
 
 --[git] browse--------------------------------------------------------------------------------------
-command.implement({
-  uuid = K.git.browse.uuid,
-  action = function()
-    require("fml.action.git.browse").browse()
-  end,
-})
+command
+  .implement({
+    uuid = K.git.browse.uuid,
+    action = function()
+      require("fml.action.git.browse").browse()
+    end,
+  })
+  .implement({
+    uuid = K.git.browse_permalink.uuid,
+    action = function()
+      require("fml.action.git.browse").browse({ what = "permalink" })
+    end,
+  })
+  .implement({
+    uuid = K.git.browse_repo.uuid,
+    action = function()
+      require("fml.action.git.browse").browse({ what = "repo" })
+    end,
+  })
 
 --[inspect] ------------------------------------------------------------------------------------------
 command
