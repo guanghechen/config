@@ -1,6 +1,6 @@
-local __module_name__ = "eve.builtin.im.wsl" ---@type string
+local __module_name__ = "fml.dressing.im.wsl" ---@type string
 
----@class eve.builtin.im
+---@class fml.dressing.im.wsl : fml.dressing.im
 local M = {}
 
 local app_home = std.path.locate_app_config_home("guanghechen")
@@ -11,7 +11,7 @@ local script_path = std.path.join(
     or "bin/im-select/win/x64/im-select.exe"
 )
 
----@return eve.builtin.im.InputMethod|nil
+---@return fml.dressing.im.InputMethod|nil
 function M.get_input_method()
   if not vim.fn.executable(script_path) then
     std.reporter.error({
@@ -56,7 +56,7 @@ function M.get_input_method()
   })
 end
 
----@param input_method                eve.builtin.im.InputMethod
+---@param input_method                fml.dressing.im.InputMethod
 ---@return nil
 function M.set_input_method(input_method)
   if not vim.fn.executable(script_path) then
