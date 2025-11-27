@@ -1,3 +1,5 @@
+local __module_name__ = "std.env"
+
 local os_name = vim.uv.os_uname().sysname ---@type string|nil
 
 local IS_MAC = os_name == "Darwin" ---@type boolean
@@ -24,16 +26,33 @@ function M.locate_gitroot(dirpath)
     return rstd.path.dirname(dot_git_path, false, PATH_SEP)
   end
 
-  local ok, p = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
-  if not ok then
-    return nil
+  local ok, output = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
+  local trimmed_output = vim.trim(output or "")
+  local shell_error = vim.v.shell_error ---@type integer
+
+  if ok and shell_error == 0 and trimmed_output ~= "" and rstd.path.is_exist_dirpath(trimmed_output) then
+    return trimmed_output
   end
 
-  if p:sub(1, 5) ~= "fatal" then
-    return vim.trim(p)
-  end
+  local message = "Failed to locate git root"
+  local detail_payload = {
+    dirpath = dirpath,
+    output = trimmed_output,
+    shell_error = shell_error,
+    error = ok and nil or output,
+  }
+  local ok_json, detail_json = pcall(vim.json.encode, detail_payload)
+  local details_text = ok_json and detail_json or vim.inspect(detail_payload, { newline = "\n", indent = "  " })
+  local text = string.format("%s\n\n```json\n%s\n```", message, details_text)
 
-  vim.notify("Git root located failed: " .. p, vim.log.levels.WARN)
+  vim.notify(text, vim.log.levels.WARN, {
+    title = string.format("%s │ locate_gitroot", __module_name__),
+    group = string.format("%s:locate_gitroot", __module_name__),
+    timeout = 3000,
+    message = text,
+    anonymous = false,
+    silent = true,
+  })
   return nil
 end
 
