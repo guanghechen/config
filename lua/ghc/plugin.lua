@@ -67,6 +67,7 @@ local raw_specs = {
   { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                },
   { name = "mini.ai",                     main = "mini.ai",                       cond = conds.common             },
   { name = "mini.hipatterns",             main = "mini.hipatterns",               cond = conds.not_vscode         },
+  { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common             },
   { name = "mini.surround",               main = "mini.surround",                 cond = conds.common             },
   { name = "neo-tree.nvim",               main = "neo-tree",                      cond = conds.not_vscode         },
   { name = "nui.nvim",                    main = "nui",                           cond = conds.not_vscode         },

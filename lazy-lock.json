@@ -11,6 +11,7 @@
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "57e5a8addb8c71fb063ee4acda466c7cf6ad2800" },
   "mini.ai": { "branch": "nvim@mini.ai", "commit": "bfb26d9072670c3aaefab0f53024b2f3729c8083" },
   "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "add8d8abad602787377ec5d81f6b248605828e0f" },
+  "mini.splitjoin": { "branch": "nvim@mini.splitjoin", "commit": "9fcd8856efb95a505090c3225726466494076127" },
   "mini.surround": { "branch": "nvim@mini.surround", "commit": "88c52297ed3e69ecf9f8652837888ecc727a28ee" },
   "neo-tree.nvim": { "branch": "nvim@neo-tree.nvim", "commit": "a981ef287503c668434bffa78071d5b9ff92c12f" },
   "nui.nvim": { "branch": "nvim@nui.nvim", "commit": "de740991c12411b663994b2860f1a4fd0937c130" },

@@ -739,6 +739,7 @@
     "spelllang",
     "spelloptions",
     "splitbelow",
+    "splitjoin",
     "splitkeep",
     "splitline",
     "splitstr",
