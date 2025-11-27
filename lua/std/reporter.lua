@@ -14,21 +14,26 @@ local Levels = {
 ---@field details                       ?any
 ---@field anonymous                     ?boolean
 ---@field silent                        ?boolean
+---@field title                         ?string
+---@field timeout                       ?integer
+---@field highlights                    ?std.t.IHighlight[]
 
 ---@class std.reporter
 local M = {}
 
----@param level                         std.e.LogLevelEnum
+---@param level                         std.e.LogLevelEnum|integer
 ---@param options                       std.reporter.IOptions
 ---@return nil
 function M.log(level, options)
-  local title = options.from ---@type string
   local group = options.group ---@type string|nil
   local text = options.message or "" ---@type string
   local anonymous = options.anonymous or false ---@type boolean
   local silent = options.silent or false ---@type boolean
+  local timeout = options.timeout or 3000 ---@type integer
+  local highlights = options.highlights ---@type std.t.IHighlight[]|nil
 
-  if options.subject ~= nil then
+  local title = options.title or options.from ---@type string
+  if options.title == nil and options.subject ~= nil then
     title = title .. " │ " .. options.subject
   end
 
@@ -41,13 +46,15 @@ function M.log(level, options)
     end
   end
 
-  vim.notify(text, vim.log.levels[level], {
+  local LEVEL = type(level) == "integer" and level or Levels[level] or vim.log.levels.INFO ---@type integer
+  vim.notify(text, LEVEL, {
     group = group,
     title = title,
-    timeout = 3000,
+    timeout = timeout,
     message = text,
     anonymous = anonymous,
     silent = silent,
+    highlights = highlights,
   })
 end
 

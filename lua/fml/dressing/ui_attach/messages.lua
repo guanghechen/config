@@ -1,3 +1,4 @@
+local __module_name__ = "fml.dressing.ui_attach.messages"
 local states = require("fml.dressing.ui_attach.state")
 
 local KIND_MAP = {
@@ -200,12 +201,13 @@ function M.show(task)
 
   local anonymous = KIND_MAP.CHANGES[kind] ~= true and kind ~= "echo" and not history ---@type boolean
   local silent = KIND_MAP.CHANGES[kind] == true ---@type boolean
-  vim.notify(message, level, {
-    group = group,
+  std.reporter.log(level, {
+    from = __module_name__,
     title = title,
-    timeout = 3000,
     message = message,
+    group = group,
     highlights = highlights,
+    timeout = 3000,
     anonymous = anonymous,
     silent = silent,
   })

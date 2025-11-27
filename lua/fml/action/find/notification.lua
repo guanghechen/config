@@ -1,5 +1,4 @@
-local name = "fml.action.find.notification" ---@type string
-local title = "Find Notifications" ---@type string
+local __module_name__ = "fml.action.find.notification"
 
 ---@class fml.action.find.notification.IItemData
 ---@field public task                   eve.builtin.notifier.ITask
@@ -50,9 +49,9 @@ end
 
 local picker ---@type eve.ux.picker.ListComposer
 picker = eve.ux.picker.ListComposer.new({
-  name = name,
+  name = __module_name__,
   permanent = true,
-  title = title,
+  title = "Find Notifications",
   height = 0.9,
   width = 0.9,
 
@@ -167,15 +166,14 @@ picker = eve.ux.picker.ListComposer.new({
     dirty_data = true
 
     local task = item.data.task ---@type eve.builtin.notifier.ITask
-    eve.notifier.notify({
-      group = task.group,
-      level = task.level,
+    std.reporter.log(task.level, {
+      from = __module_name__,
       title = task.title,
-      content = task.content,
+      message = task.content,
+      group = task.group,
       highlights = task.highlights,
       timeout = task.timeout,
       anonymous = true,
-      silent = false,
     })
   end,
   on_disposed = function()
