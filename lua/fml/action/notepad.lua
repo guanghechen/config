@@ -130,10 +130,7 @@ local function resolve_step(args)
     return nil
   end
   value = math.floor(value)
-  if value < 1 then
-    return 1
-  end
-  return value
+  return value < 1 and 1 or value
 end
 
 ---@class fml.action.notepad

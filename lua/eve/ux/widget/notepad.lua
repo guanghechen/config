@@ -815,10 +815,10 @@ function M:append_content(uuid, text)
   return ok
 end
 
----@private
----@param step integer
+---@protected
+---@param step                          integer
 ---@return boolean
-function M:_swap_step(step)
+function M:__swap_step__(step)
   local state = self:_ensure_state()
   local count = #state.orders
   if count <= 1 then
@@ -831,8 +831,7 @@ function M:_swap_step(step)
     return false
   end
 
-  local actual_step = math.max(1, step or vim.v.count1 or 1)
-  local index_next = std.fn.navigate_circular(index_current, actual_step, count)
+  local index_next = std.fn.navigate_circular(index_current, step, count)
   if index_next == index_current then
     return false
   end
@@ -845,13 +844,15 @@ end
 ---@param step integer|nil
 ---@return boolean
 function M:swap_left(step)
-  return self:_swap_step(-(step or 1))
+  step = step or vim.v.count1 ---@type integer
+  return self:__swap_step__(-step)
 end
 
 ---@param step integer|nil
 ---@return boolean
 function M:swap_right(step)
-  return self:_swap_step(step or 1)
+  step = step or vim.v.count1 ---@type integer
+  return self:__swap_step__(step)
 end
 
 ---@return boolean
