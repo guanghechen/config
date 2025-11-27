@@ -108,14 +108,31 @@ function M.gen_hlgroup_map(context)
     f_hipattern_quote = { fg = c.base, bg = c.textDim, bold = true, italic = true, underline = true },
 
     ---indentline
-    indentline_0 = { fg = u.bg1 },
-    indentline_1 = { fg = cs.mix(u.bg0, u.red, 20) },
-    indentline_2 = { fg = cs.mix(u.bg0, u.green, 20) },
-    indentline_3 = { fg = cs.mix(u.bg0, u.yellow, 20) },
-    indentline_4 = { fg = cs.mix(u.bg0, u.blue, 20) },
-    indentline_5 = { fg = cs.mix(u.bg0, u.purple, 20) },
-    indentline_6 = { fg = cs.mix(u.bg0, u.aqua, 20) },
-    indentline_7 = { fg = cs.mix(u.bg0, u.orange, 20) },
+    f_indentline_1 = { fg = cs.mix(u.bg0, u.red, 20) },
+    f_indentline_2 = { fg = cs.mix(u.bg0, u.orange, 20) },
+    f_indentline_3 = { fg = cs.mix(u.bg0, u.yellow, 20) },
+    f_indentline_4 = { fg = cs.mix(u.bg0, u.green, 20) },
+    f_indentline_5 = { fg = cs.mix(u.bg0, u.aqua, 20) },
+    f_indentline_6 = { fg = cs.mix(u.bg0, u.blue, 20) },
+    f_indentline_7 = { fg = cs.mix(u.bg0, u.purple, 20) },
+
+    ---indentscope
+    f_indentscope_1 = { fg = cs.mix(u.bg0, u.red, 80), bold = true },
+    f_indentscope_2 = { fg = cs.mix(u.bg0, u.orange, 80), bold = true },
+    f_indentscope_3 = { fg = cs.mix(u.bg0, u.yellow, 80), bold = true },
+    f_indentscope_4 = { fg = cs.mix(u.bg0, u.green, 80), bold = true },
+    f_indentscope_5 = { fg = cs.mix(u.bg0, u.aqua, 80), bold = true },
+    f_indentscope_6 = { fg = cs.mix(u.bg0, u.blue, 80), bold = true },
+    f_indentscope_7 = { fg = cs.mix(u.bg0, u.purple, 80), bold = true },
+
+    ---indent underline
+    f_indent_underline_1 = { sp = cs.mix(u.bg0, u.red, 50), underline = true },
+    f_indent_underline_2 = { sp = cs.mix(u.bg0, u.orange, 50), underline = true },
+    f_indent_underline_3 = { sp = cs.mix(u.bg0, u.yellow, 50), underline = true },
+    f_indent_underline_4 = { sp = cs.mix(u.bg0, u.green, 50), underline = true },
+    f_indent_underline_5 = { sp = cs.mix(u.bg0, u.aqua, 50), underline = true },
+    f_indent_underline_6 = { sp = cs.mix(u.bg0, u.blue, 50), underline = true },
+    f_indent_underline_7 = { sp = cs.mix(u.bg0, u.purple, 50), underline = true },
 
     ---input
     f_ui_current = { bg = u.bg3 },

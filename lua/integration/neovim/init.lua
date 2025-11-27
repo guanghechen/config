@@ -32,7 +32,6 @@ vim.schedule(function()
   require("fml.dressing.nvimbar.winline")
   require("fml.dressing.commentstring")
   require("fml.dressing.foldtext")
-  require("fml.dressing.indentline")
   require("fml.dressing.statuscolumn")
   require("fml.dressing.winsep")
 
