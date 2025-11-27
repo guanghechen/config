@@ -245,15 +245,11 @@ std.fn.observe({ o_rootpath }, function()
   end
 end)
 
-std.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
+std.fn.observe({ o_flag_exclude, o_flag_gitignore, o_includes, o_excludes }, function()
   local rootpath = o_rootpath:snapshot() ---@type string
   picker:mark_result_flags_dirty()
   refresh(picker, rootpath)
 end, true)
-
-std.fn.observe({ o_includes, o_excludes }, function()
-  picker:mark_result_dirty()
-end)
 
 ---@class fml.action.find
 local M = {}
