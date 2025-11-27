@@ -80,14 +80,6 @@ command.implement({
   end,
 })
 
-command.implement({
-  uuid = K.code.trim_trailspace.uuid,
-  action = function()
-    require("mini.trailspace").trim()
-    require("mini.trailspace").trim_last_lines()
-  end,
-})
-
 --[explorer] -------------------------------------------------------------------------------------
 command
   .implement({

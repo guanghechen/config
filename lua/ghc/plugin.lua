@@ -69,7 +69,6 @@ local raw_specs = {
   { name = "mini.hipatterns",             main = "mini.hipatterns",               cond = conds.not_vscode         },
   { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common             },
   { name = "mini.surround",               main = "mini.surround",                 cond = conds.common             },
-  { name = "mini.trailspace",             main = "mini.trailspace",               cond = conds.not_vscode         },
   { name = "neo-tree.nvim",               main = "neo-tree",                      cond = conds.not_vscode         },
   { name = "nui.nvim",                    main = "nui",                           cond = conds.not_vscode         },
   { name = "nvim-dap",                    main = "dap",                           cond = conds.dap                },

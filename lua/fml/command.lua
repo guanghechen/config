@@ -180,6 +180,14 @@ command
       })
     end,
   })
+  .implement({
+    uuid = K.code.trim_trailspace.uuid,
+    action = function()
+      local trailspace = require("fml.dressing.trailspace")
+      trailspace.trim()
+      trailspace.trim_last_lines()
+    end,
+  })
 
 --[copy] filepath-----------------------------------------------------------------------------------
 command

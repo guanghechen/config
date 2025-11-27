@@ -61,7 +61,6 @@ local group_flags = {
 
   ---plugin
   plugin = {
-    mini_trailspace = eve.context.plugin.mini_trailspace,
     render_markdown = eve.context.plugin.render_markdown,
     treesitter_context = eve.context.plugin.treesitter_context,
   },

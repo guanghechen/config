@@ -43,6 +43,7 @@ vim.schedule(function()
   require("fml.dressing.lsp_action")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
+  require("fml.dressing.trailspace")
   pcall(require, "integration.neovide.dressing")
   pcall(require, "integration.local.dressing")
 

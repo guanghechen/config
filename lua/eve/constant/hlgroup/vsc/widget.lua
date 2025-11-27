@@ -355,6 +355,9 @@ function M.gen_hlgroup_map(context)
     f_utw_indent = { fg = u.bg2 },
     f_utw_indent_float = { fg = u.bg4 },
 
+    ---trailspace
+    f_ux_trailspace = { bg = cs.mix(u.bg0, u.red, 60) },
+
     ---vim options
     f_us_vo_name = { fg = u.fg1 },
     f_us_vo_type = { fg = u.orange },
