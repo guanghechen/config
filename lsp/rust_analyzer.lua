@@ -1,31 +1,44 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/784531c83cdab93ed7a2ec10f0111ca564b1c18a/lsp/rust_analyzer.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#rust_analyzer
 
+local __module_name__ = "lsp.rust_analyzer" ---@type string
+
 local function reload_workspace(bufnr)
   local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "rust_analyzer" })
   for _, client in ipairs(clients) do
-    vim.notify("Reloading Cargo Workspace")
+    std.reporter.info({
+      from = __module_name__,
+      subject = "reload_workspace",
+      message = "Reloading Cargo workspace",
+    })
     ---@diagnostic disable-next-line:param-type-mismatch
     client:request("rust-analyzer/reloadWorkspace", nil, function(err)
       if err then
         error(tostring(err))
       end
-      vim.notify("Cargo workspace reloaded")
+      std.reporter.info({
+        from = __module_name__,
+        subject = "reload_workspace",
+        message = "Cargo workspace reloaded",
+      })
     end, 0)
   end
 end
 
+---@param fname                         string
+---@return string|nil
 local function is_library(fname)
-  local user_home = vim.fs.normalize(vim.env.HOME)
-  local cargo_home = os.getenv("CARGO_HOME") or user_home .. "/.cargo"
-  local registry = cargo_home .. "/registry/src"
-  local git_registry = cargo_home .. "/git/checkouts"
+  local user_home = std.env.HOME_USER
+  local cargo_home = os.getenv("CARGO_HOME") or std.path.join(user_home, ".cargo")
 
-  local rustup_home = os.getenv("RUSTUP_HOME") or user_home .. "/.rustup"
-  local toolchains = rustup_home .. "/toolchains"
+  local registry = std.path.join(cargo_home, "registry/src")
+  local git_registry = std.path.join(cargo_home, "git/checkouts")
+  local rustup_home = os.getenv("RUSTUP_HOME") or std.path.join(user_home, ".rustup")
+  local toolchains = std.path.join(rustup_home, "toolchains")
 
+  local normalized_fname = std.path.normalize(fname, false)
   for _, item in ipairs({ toolchains, registry, git_registry }) do
-    if vim.fs.relpath(item, fname) then
+    if std.path.is_descendant(item, normalized_fname) then
       local clients = vim.lsp.get_clients({ name = "rust_analyzer" })
       return #clients > 0 and clients[#clients].config.root_dir or nil
     end
@@ -64,20 +77,30 @@ local function root_dir(bufnr, on_dir)
   }
 
   vim.system(cmd, { text = true }, function(output)
-    if output.code == 0 then
-      if output.stdout then
-        local result = vim.json.decode(output.stdout)
-        if result["workspace_root"] then
-          cargo_workspace_root = vim.fs.normalize(result["workspace_root"])
+    vim.schedule(function()
+      if output.code == 0 then
+        if output.stdout then
+          local result = vim.json.decode(output.stdout)
+          local workspace_root = result["workspace_root"] ---@type unknown
+          if workspace_root ~= "" and type(workspace_root) == "string" then
+            cargo_workspace_root = std.path.normalize(workspace_root, false)
+          end
         end
-      end
 
-      on_dir(cargo_workspace_root or cargo_crate_dir)
-    else
-      vim.schedule(function()
-        vim.notify(("[rust_analyzer] cmd failed with code %d: %s\n%s"):format(output.code, cmd, output.stderr))
-      end)
-    end
+        on_dir(cargo_workspace_root or cargo_crate_dir)
+      else
+        std.reporter.error({
+          from = __module_name__,
+          subject = "root_dir",
+          message = "Failed to run cargo metadata.",
+          details = {
+            cmd = table.concat(cmd, " "),
+            code = output.code,
+            stderr = output.stderr,
+          },
+        })
+      end
+    end)
   end)
 end
 
@@ -105,15 +128,29 @@ local function before_init(params, config)
     local result = proc:wait()
 
     if result.code == 0 then
-      vim.notify(result.stdout, vim.log.levels.INFO)
+      std.reporter.info({
+        from = __module_name__,
+        subject = "runSingle",
+        message = vim.trim(result.stdout or "Command completed."),
+      })
     else
-      vim.notify(result.stderr, vim.log.levels.ERROR)
+      std.reporter.error({
+        from = __module_name__,
+        subject = "runSingle",
+        message = "Command failed.",
+        details = {
+          cmd = table.concat(cmd, " "),
+          code = result.code,
+          stderr = result.stderr,
+        },
+      })
     end
   end
 
   local caps = params.capabilities
-  caps.experimental = caps.experimental or {}
-  caps.experimental.serverStatusNotification = true
+  local experimental = type(caps.experimental) == "table" and caps.experimental or {} ---@cast experimental table
+  experimental.serverStatusNotification = true
+  caps.experimental = experimental
 end
 
 ---@param client                        vim.lsp.Client
@@ -139,13 +176,14 @@ local function on_init(client, config)
 end
 
 local capabilities = eve.lsp.get_capabilities()
-capabilities.experimental = capabilities.experimental or {}
-capabilities.experimental.serverStatusNotification = true
-capabilities.experimental.commands = vim.list_extend({
+local experimental = type(capabilities.experimental) == "table" and capabilities.experimental or {} ---@cast experimental table
+experimental.serverStatusNotification = true
+experimental.commands = vim.list_extend({
   "rust-analyzer.showReferences",
   "rust-analyzer.runSingle",
   "rust-analyzer.debugSingle",
-}, capabilities.experimental.commands or {})
+}, experimental.commands or {})
+capabilities.experimental = experimental
 
 ---@type vim.lsp.Config
 return {

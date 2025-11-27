@@ -114,6 +114,7 @@ The build script automatically:
 - Type annotations must start at column 41: `---@param name                          string`
 - Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
 - Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
+- Use `std.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
 
 ### Error Reporting
 Always use `std.reporter` for notifications and error messages instead of `eve.notifier.notify` or `vim.notify`:

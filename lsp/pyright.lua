@@ -11,10 +11,13 @@ local function set_python_path(command)
     name = "pyright",
   })
   for _, client in ipairs(clients) do
-    client.settings = client.settings or {}
-    client.settings.python = client.settings.python or {}
-    client.settings.python["pythonPath"] = pythonPath
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = nil })
+    local settings = client.config.settings or {}
+    settings.python = settings.python or {}
+    ---@diagnostic disable-next-line: inject-field
+    settings.python.pythonPath = pythonPath
+    client.config.settings = settings
+    client.settings = settings
+    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
   end
 end
 

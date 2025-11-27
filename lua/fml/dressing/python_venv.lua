@@ -17,13 +17,13 @@ end
 local function hook_basedpyright(venv_path, venv_python)
   local client = vim.lsp.get_clients({ name = "basedpyright" })[1]
   if client then
-    if client.settings then
-      client.settings = vim.tbl_deep_extend("force", client.settings, { python = { pythonPath = venv_python } })
-    else
-      client.config.settings =
-        vim.tbl_deep_extend("force", client.config.settings, { python = { pythonPath = venv_python } })
-    end
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = nil })
+    local settings = client.config.settings or {}
+    settings.python = settings.python or {}
+    ---@diagnostic disable-next-line: inject-field
+    settings.python.pythonPath = venv_python
+    client.config.settings = settings
+    client.settings = settings
+    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
   end
 end
 
@@ -34,8 +34,13 @@ end
 local function hook_pyright(venv_path, venv_python)
   local client = vim.lsp.get_clients({ name = "pyright" })[1]
   if client then
-    client.settings.python["pythonPath"] = venv_python
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = nil })
+    local settings = client.config.settings or {}
+    settings.python = settings.python or {}
+    ---@diagnostic disable-next-line: inject-field
+    settings.python.pythonPath = venv_python
+    client.config.settings = settings
+    client.settings = settings
+    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
   end
 end
 
@@ -46,13 +51,13 @@ end
 local function hook_pylance(venv_path, venv_python)
   local client = vim.lsp.get_clients({ name = "pylance" })[1]
   if client then
-    if client.settings then
-      client.settings = vim.tbl_deep_extend("force", client.settings, { python = { pythonPath = venv_python } })
-    else
-      client.config.settings =
-        vim.tbl_deep_extend("force", client.config.settings, { python = { pythonPath = venv_python } })
-    end
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = nil })
+    local settings = client.config.settings or {}
+    settings.python = settings.python or {}
+    ---@diagnostic disable-next-line: inject-field
+    settings.python.pythonPath = venv_python
+    client.config.settings = settings
+    client.settings = settings
+    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
   end
 end
 
