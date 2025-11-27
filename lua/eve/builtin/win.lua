@@ -28,6 +28,7 @@ local Methods = vim.lsp.protocol.Methods
 
 ---@class eve.builtin.win.IWinline
 ---@field public bufnr                  integer
+---@field public locate_cancel          (fun(): nil)|nil
 ---@field public locate_scheduler       std.collection.Scheduler|nil
 ---@field public lsp_symbols            std.t.ILspSymbol[]|nil
 ---@field public nvimbar                eve.ux.nvimbar.Nvimbar
@@ -85,6 +86,60 @@ local wintype_attrs = {
 }
 
 local meta_map = {} ---@type table<integer, eve.builtin.win.IMeta|nil>
+
+---@param encoding                      string|nil
+---@return string
+local function normalize_encoding(encoding)
+  if type(encoding) == "string" and encoding ~= "" then
+    return string.lower(encoding)
+  end
+  return "utf-16"
+end
+
+---@param bufnr                         integer
+---@param row                           integer
+---@param byte_col                      integer
+---@param encoding                      string|nil
+---@return integer
+local function byte_col_to_client_character(bufnr, row, byte_col, encoding)
+  local normalized = normalize_encoding(encoding)
+  if normalized == "utf-8" then
+    return byte_col
+  end
+
+  local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1]
+  if line == nil then
+    return byte_col
+  end
+
+  local use_utf16 = normalized == "utf-16"
+  local ok, character = pcall(vim.str_utfindex, line, byte_col, use_utf16)
+  if ok and type(character) == "number" then
+    return character
+  end
+
+  if normalized == "utf-32" then
+    local fallback_ok, fallback_character = pcall(vim.str_utfindex, line, byte_col)
+    if fallback_ok and type(fallback_character) == "number" then
+      return fallback_character
+    end
+  end
+
+  return byte_col
+end
+
+---@param bufnr                         integer
+---@param position                      lsp.Position
+---@param encoding                      string|nil
+---@return integer
+local function position_to_byte_col(bufnr, position, encoding)
+  local normalized = normalize_encoding(encoding)
+  local ok, col = pcall(vim.lsp.util._get_line_byte_from_position, bufnr, position, normalized)
+  if ok and type(col) == "number" then
+    return col
+  end
+  return position.character or 0
+end
 
 ---@class eve.builtin.win
 local M = {}
@@ -369,44 +424,73 @@ end
 
 ---@param winnr                         integer|nil
 ---@param callback                      fun(ok: boolean, symbols: std.t.ILspSymbol[]|nil): nil
----@return nil
+---@return fun(): nil
 function M.locate_symbols(winnr, callback)
+  local cancel_lsp = std.fn.noop ---@type fun(): nil
+  local settled = false ---@type boolean
+
+  local function settle(ok, symbols)
+    if settled then
+      return
+    end
+    settled = true
+    cancel_lsp = std.fn.noop
+    callback(ok, symbols)
+  end
+
+  local function cancel_request()
+    if settled then
+      return
+    end
+    pcall(cancel_lsp)
+    settle(false)
+  end
+
+  local function abort()
+    settle(false)
+    return cancel_request
+  end
+
   if winnr == nil or not eve.win.is_valid(winnr) then
-    callback(false)
-    return
+    return abort()
   end
 
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
   if vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] or support_documentSymbol < 1 then
-    callback(false)
-    return
+    return abort()
   end
 
-  local ok, cmp = pcall(require, "blink.cmp")
-  if ok and cmp.is_visible() then
-    callback(false)
-    return
+  local cmp = package.loaded["blink.cmp"]
+  if type(cmp) == "table" and type(cmp.is_visible) == "function" then
+    local ok, visible = pcall(cmp.is_visible)
+    if ok and visible then
+      return abort()
+    end
   end
 
-  local row, col = unpack(vim.api.nvim_win_get_cursor(winnr)) ---@type integer, integer
   local textDocument = vim.lsp.util.make_text_document_params(bufnr) ---@type lsp.TextDocumentIdentifier
 
   -- Handle the lsp request response.
   ---@param err                         any|nil
   ---@param symbols                     any[]
+  ---@param ctx                         lsp.HandlerContext|nil
   ---@return nil
-  local function handler(err, symbols)
+  local function handler(err, symbols, ctx)
+    if settled then
+      return
+    end
+
     if not vim.api.nvim_win_is_valid(winnr) then
-      callback(false)
+      settle(false)
       return
     end
 
     if err then
       if type(err) == "table" then
         if err.message == "Content modified." then
-          callback(false)
+          settle(false)
           return
         end
 
@@ -414,13 +498,13 @@ function M.locate_symbols(winnr, callback)
           if vim.api.nvim_buf_is_valid(bufnr) then
             vim.b[bufnr][eve.var.Names.WINLINE_DISABLED] = true
           end
-          callback(false)
+          settle(false)
           return
         end
       end
 
       if eve.status.suppress_warning:snapshot() then
-        callback(false)
+        settle(false)
         return
       end
 
@@ -436,11 +520,22 @@ function M.locate_symbols(winnr, callback)
           textDocument = textDocument,
         },
       })
-      callback(false)
+      settle(false)
       return
     end
 
-    local cursor_pos = { line = row - 1, character = col }
+    local encoding ---@type string|nil
+    if ctx ~= nil and ctx.client_id ~= nil then
+      local client = vim.lsp.get_client_by_id(ctx.client_id) ---@type vim.lsp.Client|nil
+      if client ~= nil then
+        encoding = client.offset_encoding
+      end
+    end
+
+    local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(winnr)) ---@type integer, integer
+    local cursor_line = cursor_row - 1 ---@type integer
+    local cursor_character = byte_col_to_client_character(bufnr, cursor_line, cursor_col, encoding) ---@type integer
+    local cursor_pos = { line = cursor_line, character = cursor_character }
     local symbol_path = eve.lsp.find_symbol_path(cursor_pos, symbols)
     local lsp_symbols = {} ---@type std.t.ILspSymbol[]
 
@@ -449,24 +544,36 @@ function M.locate_symbols(winnr, callback)
       for _, symbol in ipairs(symbol_path) do
         local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
         local name = symbol.name
-        local pos = symbol.range and symbol.range.start or symbol.location.range.start
-        ---@type std.t.ILspSymbol
-        local lsp_symbol = {
-          kind = kind,
-          name = name,
-          row = pos.line + 1,
-          col = pos.character + 1,
-        }
+        local location = symbol.location
+        local range = symbol.range or (location and location.range) ---@type lsp.Range|nil
+        local pos = range and range.start or nil ---@type lsp.Position|nil
+        if pos ~= nil then
+          local byte_col = position_to_byte_col(bufnr, pos, encoding) ---@type integer
+          ---@type std.t.ILspSymbol
+          local lsp_symbol = {
+            kind = kind,
+            name = name,
+            row = pos.line + 1,
+            col = byte_col + 1,
+          }
 
-        lsp_symbols[k] = lsp_symbol
-        k = k + 1
+          lsp_symbols[k] = lsp_symbol
+          k = k + 1
+        end
       end
     end
-    callback(true, lsp_symbols)
+    settle(true, lsp_symbols)
   end
 
   ---! Make the request to the LSP server
-  vim.lsp.buf_request(bufnr, Methods.textDocument_documentSymbol, { textDocument = textDocument }, handler)
+  local requests
+  requests, cancel_lsp = vim.lsp.buf_request(bufnr, Methods.textDocument_documentSymbol, { textDocument = textDocument }, handler)
+  cancel_lsp = cancel_lsp or std.fn.noop
+  if requests == nil or next(requests) == nil then
+    return abort()
+  end
+
+  return cancel_request
 end
 
 ---@param winnr_source                  integer|nil
@@ -567,6 +674,11 @@ function M.on_close(winnr)
   end
 
   if meta.winline ~= nil then
+    if meta.winline.locate_cancel ~= nil then
+      pcall(meta.winline.locate_cancel)
+      meta.winline.locate_cancel = nil
+    end
+
     if meta.winline.nvimbar ~= nil then
       meta.winline.nvimbar:dispose()
     end

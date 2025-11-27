@@ -50,7 +50,7 @@ local function resolve_nvimbar(winnr, source)
     })
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    winline = winline or { bufnr = bufnr, nvimbar = nvimbar } ---@type eve.builtin.win.IWinline
+    winline = winline or { bufnr = bufnr, nvimbar = nvimbar, locate_cancel = nil } ---@type eve.builtin.win.IWinline
 
     winline.nvimbar = nvimbar
     meta.winline = winline
@@ -84,7 +84,14 @@ local function resolve_nvimbar(winnr, source)
         silent = silent,
         task = function(_, _, callback)
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          eve.win.locate_symbols(winnr, function(ok, symbols)
+          if winline.locate_cancel ~= nil then
+            pcall(winline.locate_cancel)
+            winline.locate_cancel = nil
+          end
+
+          winline.locate_cancel = eve.win.locate_symbols(winnr, function(ok, symbols)
+            winline.locate_cancel = nil
+
             if not ok or not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
               callback(false)
               return
