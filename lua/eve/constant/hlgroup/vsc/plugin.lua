@@ -150,10 +150,6 @@ function M.gen_hlgroup_map(context)
     MiniIconsRed = { fg = c.accentRed },
     MiniIconsYellow = { fg = c.accentYellow },
 
-    ---! mini.indentscope
-    MiniIndentscopeSymbol = { fg = u.pink },
-    MiniIndentscopeSymbolOff = { fg = c.warning },
-
     ---! neo-tree.nvim
     NeoTreeCursorLine = { link = "CursorLine" },
     NeoTreeCursorLineNr = { link = "CursorLineNr" },

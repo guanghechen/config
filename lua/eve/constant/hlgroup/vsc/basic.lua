@@ -151,7 +151,6 @@ function M.gen_hlgroup_map(context)
     RenamerTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
     MatchParen = { fg = c.accentOrange, bg = cs.mix(c.editor_background, c.selection, 55), bold = true },
     MatchWord = { fg = c.editor_foreground, bg = c.editor_selectionHighlightBackground },
-    MiniIndentscopeSymbol = { fg = c.editorIndentGuide_activeBackground1 },
     ModeMsg = { fg = c.statusBar_foreground, bg = c.statusBar_background, bold = true },
     MoreMsg = { fg = c.success, bg = c.statusBar_background, bold = true },
     MsgArea = { fg = c.statusBar_foreground, bg = c.statusBar_background, blend = t and 50 or 0 },

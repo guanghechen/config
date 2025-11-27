@@ -151,10 +151,6 @@ function M.gen_hlgroup_map(context)
     MiniIconsRed = { fg = c.red },
     MiniIconsYellow = { fg = c.yellow },
 
-    ---! mini.indentscope
-    MiniIndentscopeSymbol = { fg = u.pink },
-    MiniIndentscopeSymbolOff = { fg = c.warning },
-
     ---! neo-tree.nvim
     NeoTreeCursorLine = { bg = c.bg_highlight },
     NeoTreeDirectoryIcon = { link = "Directory" },
