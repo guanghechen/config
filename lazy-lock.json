@@ -13,6 +13,7 @@
   "mini.hipatterns": { "branch": "nvim@mini.hipatterns", "commit": "add8d8abad602787377ec5d81f6b248605828e0f" },
   "mini.splitjoin": { "branch": "nvim@mini.splitjoin", "commit": "9fcd8856efb95a505090c3225726466494076127" },
   "mini.surround": { "branch": "nvim@mini.surround", "commit": "88c52297ed3e69ecf9f8652837888ecc727a28ee" },
+  "mini.trailspace": { "branch": "nvim@mini.trailspace", "commit": "f8083ca969e1b2098480c10f3c3c4d2ce3586680" },
   "neo-tree.nvim": { "branch": "nvim@neo-tree.nvim", "commit": "a981ef287503c668434bffa78071d5b9ff92c12f" },
   "nui.nvim": { "branch": "nvim@nui.nvim", "commit": "de740991c12411b663994b2860f1a4fd0937c130" },
   "nvim-dap": { "branch": "nvim@nvim-dap", "commit": "5860c7c501eb428d3137ee22c522828d20cca0b3" },
