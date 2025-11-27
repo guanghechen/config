@@ -2,15 +2,6 @@
 local M = {}
 
 ---@return nil
-function M.mock_dressing()
-  if package.loaded["dressing"] then
-    return
-  end
-
-  package.loaded["dressing.nvim"] = {}
-end
-
----@return nil
 function M.mock_miniicons()
   if package.loaded["mini.icons"] then
     return
