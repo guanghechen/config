@@ -92,14 +92,7 @@ function M.default_gen_hlgroup_map(context)
     f_ghp_cursor = { bg = u.bg3 },
     f_ghp_normal = { bg = u.bg1 },
 
-    ---hipairs
-    f_hipairs_1 = { fg = u.brightPurple, bg = u.bg4, bold = true, italic = true },
-    f_hipairs_2 = { fg = u.brightBlue, bg = u.bg4, bold = true, italic = true },
-    f_hipairs_3 = { fg = u.brightYellow, bg = u.bg4, bold = true, italic = true },
-    f_hipairs_4 = { fg = u.brightOrange, bg = u.bg4, bold = true, italic = true },
-    f_hipairs_5 = { fg = u.brightAqua, bg = u.bg4, bold = true, italic = true },
-    f_hipairs_6 = { fg = u.brightRed, bg = u.bg4, bold = true, italic = true },
-    f_hipairs_7 = { fg = u.brightGreen, bg = u.bg4, bold = true, italic = true },
+    ---matched pairs
     f_matched_pairs_0 = { fg = u.green, bg = u.bg4, bold = true, italic = true },
     f_matched_pairs_1 = { fg = cs.mix(u.bg0, u.brightPurple, 90) },
     f_matched_pairs_2 = { fg = cs.mix(u.bg0, u.brightBlue, 90) },

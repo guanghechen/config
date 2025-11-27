@@ -7,7 +7,6 @@
 ---@field public devmode                boolean
 ---
 ---@field public dressing_clipboard     boolean
----@field public dressing_hipairs       boolean
 ---@field public dressing_illumniate    boolean
 ---@field public dressing_input         boolean
 ---@field public dressing_select        boolean
@@ -24,7 +23,6 @@
 ---@field public devmode                std.collection.IObservable
 ---
 ---@field public dressing_clipboard     std.collection.IObservable
----@field public dressing_hipairs       std.collection.IObservable
 ---@field public dressing_illumniate    std.collection.IObservable
 ---@field public dressing_input         std.collection.IObservable
 ---@field public dressing_select        std.collection.IObservable
@@ -58,7 +56,6 @@ function M.defaults()
     devmode = is_home_config_dir,
 
     dressing_clipboard = false,
-    dressing_hipairs = false,
     dressing_illumniate = true,
     dressing_input = true,
     dressing_select = true,
@@ -95,9 +92,6 @@ function M.normalize(data)
     if type(data.dressing_clipboard) == "boolean" then
       resolved.dressing_clipboard = data.dressing_clipboard
     end
-    if type(data.dressing_hipairs) == "boolean" then
-      resolved.dressing_hipairs = data.dressing_hipairs
-    end
     if type(data.dressing_illumniate) == "boolean" then
       resolved.dressing_illumniate = data.dressing_illumniate
     end
@@ -130,7 +124,6 @@ function M.dump()
     devmode = M.devmode:snapshot(),
 
     dressing_clipboard = M.dressing_clipboard:snapshot(),
-    dressing_hipairs = M.dressing_hipairs:snapshot(),
     dressing_illumniate = M.dressing_illumniate:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
     dressing_select = M.dressing_select:snapshot(),
@@ -153,7 +146,6 @@ function M.load(raw_data)
   M.devmode:next(data.devmode)
 
   M.dressing_clipboard:next(data.dressing_clipboard)
-  M.dressing_hipairs:next(data.dressing_hipairs)
   M.dressing_illumniate:next(data.dressing_illumniate)
   M.dressing_input:next(data.dressing_input)
   M.dressing_select:next(data.dressing_select)
@@ -173,7 +165,6 @@ M.autosave = std.Observable.from_value(_defaults.autosave)
 M.devmode = std.Observable.from_value(_defaults.devmode)
 
 M.dressing_clipboard = std.Observable.from_value(_defaults.dressing_clipboard)
-M.dressing_hipairs = std.Observable.from_value(_defaults.dressing_hipairs)
 M.dressing_illumniate = std.Observable.from_value(_defaults.dressing_illumniate)
 M.dressing_input = std.Observable.from_value(_defaults.dressing_input)
 M.dressing_select = std.Observable.from_value(_defaults.dressing_select)

@@ -16,7 +16,6 @@ M.nsnr = {
   attach                = cn("ux:attach"),
   cmdline               = cn("ux:cmdline"),
   diagnostic            = cn("ux:diagnostic"),
-  hipairs               = cn("ux:hipairs"),
   input_confirmation    = cn("ux:input:confirmation"),
   matches               = cn("ux:matches"),
   notify                = cn("ux:notify"),

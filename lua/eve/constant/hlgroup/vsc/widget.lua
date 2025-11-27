@@ -81,14 +81,7 @@ function M.gen_hlgroup_map(context)
     f_ghp_cursor = { bg = u.bg3 },
     f_ghp_normal = { bg = u.bg1 },
 
-    ---hipairs
-    f_hipairs_1 = { fg = c.editorBracket_fg1, bg = u.bg4, bold = true },
-    f_hipairs_2 = { fg = c.editorBracket_fg2, bg = u.bg4, bold = true },
-    f_hipairs_3 = { fg = c.editorBracket_fg3, bg = u.bg4, bold = true },
-    f_hipairs_4 = { fg = c.editorBracket_fg4, bg = u.bg4, bold = true },
-    f_hipairs_5 = { fg = c.editorBracket_fg5, bg = u.bg4, bold = true },
-    f_hipairs_6 = { fg = c.editorBracket_fg6, bg = u.bg4, bold = true },
-    f_hipairs_7 = { fg = c.editorBracket_fg1, bg = u.bg4, bold = true },
+    ---matched pairs
     f_matched_pairs_0 = { fg = c.editorBracket_fg1, bg = u.bg4, bold = true },
     f_matched_pairs_1 = { fg = c.editorBracket_fg1 },
     f_matched_pairs_2 = { fg = c.editorBracket_fg2 },
