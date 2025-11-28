@@ -38,22 +38,16 @@ end
 function M.has_image()
   local cmd = format_command("pngpaste -") ---@type string
   local output = vim.fn.system(cmd) ---@type string
-
-  local exit_code = vim.v.shell_error
+  local exit_code = vim.v.shell_error ---@type integer
   if exit_code ~= 0 then
     std.reporter.error({
       from = __module_name__,
       subject = "has_image",
       message = "Failed to run command.",
-      details = {
-        cmd = cmd,
-        exit_code = exit_code,
-        output = output,
-        shell_error = vim.v.shell_error,
-      },
+      details = { cmd = cmd, exit_code = exit_code, output = output },
     })
+    return false
   end
-
   return true
 end
 
