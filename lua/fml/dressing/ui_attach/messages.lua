@@ -6,6 +6,12 @@ local KIND_MAP = {
     undo = true,
     bufwrite = true,
   },
+  CONFIRM = {
+    confirm = true,
+    confirm_sub = true,
+    emsg = true, ---Treat emsg messages as confirm-like messages so the full context is displayed.
+    number_prompt = true,
+  },
 }
 
 local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
@@ -135,7 +141,7 @@ function M.show(task)
   ---@cast replace_last                 boolean
   ---@cast history                      boolean
 
-  if kind == "confirm" then
+  if KIND_MAP.CONFIRM[kind] then
     states.message.confirming_task = task
     return
   end
@@ -160,6 +166,7 @@ function M.show(task)
 
   local level = kind_2_level_map[kind] or vim.log.levels.INFO
   local title = #kind > 0 and string.format("%s | %s", task.event, kind) or task.event ---@type string
+
   local message = "" ---@type string
   for _, item in ipairs(content) do
     message = message .. item[2] ---@type string
