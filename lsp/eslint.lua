@@ -1,3 +1,5 @@
+local __module_name__ = "lsp.eslint" ---@type string
+
 -- https://github.com/neovim/nvim-lspconfig/blob/78174f395e705de97d1329c18394831737d9a4b4/lsp/eslint.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
@@ -138,11 +140,19 @@ return {
       return 4 -- approved
     end,
     ["eslint/probeFailed"] = function()
-      vim.notify("[lspconfig] ESLint probe failed.", vim.log.levels.WARN)
+      std.reporter.warn({
+        from = __module_name__,
+        subject = "probeFailed",
+        message = "ESLint probe failed.",
+      })
       return {}
     end,
     ["eslint/noLibrary"] = function()
-      vim.notify("[lspconfig] Unable to find ESLint library.", vim.log.levels.WARN)
+      std.reporter.warn({
+        from = __module_name__,
+        subject = "noLibrary",
+        message = "Unable to find ESLint library.",
+      })
       return {}
     end,
   },

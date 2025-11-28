@@ -1,3 +1,5 @@
+local __module_name__ = "lsp.clangd" ---@type string
+
 -- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/clangd.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#clangd
 
@@ -12,7 +14,12 @@ local function switch_source_header(bufnr, client)
   local method_name = "textDocument/switchSourceHeader"
   ---@diagnostic disable-next-line:param-type-mismatch
   if not client or not client:supports_method(method_name) then
-    return vim.notify(("method %s is not supported by any servers active on the current buffer"):format(method_name))
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "switch_source_header",
+      message = string.format("method %s is not supported by any servers active on the current buffer", method_name),
+    })
+    return
   end
   local params = vim.lsp.util.make_text_document_params(bufnr)
   ---@diagnostic disable-next-line:param-type-mismatch
@@ -21,7 +28,11 @@ local function switch_source_header(bufnr, client)
       error(tostring(err))
     end
     if not result then
-      vim.notify("corresponding file cannot be determined")
+      std.reporter.info({
+        from = __module_name__,
+        subject = "switch_source_header",
+        message = "corresponding file cannot be determined",
+      })
       return
     end
     vim.cmd.edit(vim.uri_to_fname(result))
@@ -35,7 +46,12 @@ local function symbol_info(bufnr, client)
   local method_name = "textDocument/symbolInfo"
   ---@diagnostic disable-next-line:param-type-mismatch
   if not client or not client:supports_method(method_name) then
-    return vim.notify("Clangd client not found", vim.log.levels.ERROR)
+    std.reporter.error({
+      from = __module_name__,
+      subject = "symbol_info",
+      message = "Clangd client not found",
+    })
+    return
   end
   local win = vim.api.nvim_get_current_win()
   local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
