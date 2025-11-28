@@ -4,6 +4,11 @@ local match_ids = {} ---@type table<integer, integer>
 
 ---@return nil
 local function highlight()
+  local enabled = eve.context.flight.dressing_trailspace:snapshot()
+  if not enabled then
+    return
+  end
+
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   if match_ids[winnr] then
     return
@@ -37,6 +42,18 @@ local function unhighlight()
 end
 
 ---@return nil
+local function unhighlight_all()
+  for winnr, match_id in pairs(match_ids) do
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_call(winnr, function()
+        pcall(vim.fn.matchdelete, match_id)
+      end)
+    end
+  end
+  match_ids = {}
+end
+
+---@return nil
 local function trim()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local curpos = vim.api.nvim_win_get_cursor(winnr)
@@ -65,7 +82,14 @@ vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave", "InsertEnter" }, {
   callback = unhighlight,
 })
 
-vim.defer_fn(highlight, 0)
+std.fn.observe({ eve.context.flight.dressing_trailspace }, function()
+  local enabled = eve.context.flight.dressing_trailspace:snapshot()
+  if enabled then
+    highlight()
+  else
+    unhighlight_all()
+  end
+end, true)
 
 return {
   trim = trim,
