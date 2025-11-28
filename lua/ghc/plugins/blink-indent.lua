@@ -16,10 +16,10 @@ return {
     },
     mappings = {
       border = "both",
-      object_scope = "ii",
-      object_scope_with_border = "ai",
-      goto_top = "[i",
-      goto_bottom = "]i",
+      object_scope = "", --- "ii",
+      object_scope_with_border = "", --- "ai",
+      goto_top = "", --- "[i",
+      goto_bottom = "", --- "]i",
     },
     static = {
       enabled = true,
@@ -36,7 +36,7 @@ return {
       },
     },
     scope = {
-      enabled = true,
+      enabled = false,
       char = "╎",
       priority = 1000,
       highlights = {
