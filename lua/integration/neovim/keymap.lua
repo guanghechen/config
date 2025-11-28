@@ -272,19 +272,20 @@ ms({ "i", "n", "t", "v" }, { "<C-a>y", "<D-y>", "<M-y>" }, K.term.yazi_reveal)
 
 --#[t]oggle-----------------------------------------------------------------------------------------
 ms({ "i", "n", "v" }, { "<C-a>T", "<D-T>", "<M-T>" }, K.toggle.theme_variant)
-ms({ "n", "v" }, "<leader>tM", K.toggle.markdown)
-ms({ "n", "v" }, "<leader>tR", K.toggle.relativenumber)
-ms({ "n", "v" }, "<leader>tT", K.toggle.theme)
 ms({ "n", "v" }, "<leader>tt", K.toggle.list)
-ms({ "n", "v" }, "<leader>tU", K.toggle.username)
-ms({ "n", "v" }, "<leader>tV", K.toggle.virtcolumn)
-ms({ "n", "v" }, "<leader>tW", K.toggle.wrap)
-ms({ "n", "v" }, { "<leader>z" }, K.toggle.maximize)
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[u]x---------------------------------------------------------------------------------------------
+ms({ "n", "v" }, "<leader>uT", K.toggle.transparency)
+ms({ "n", "v" }, "<leader>uU", K.toggle.username)
 ms({ "n", "v" }, "<leader>uc", K.ux.color_picker)
+ms({ "n", "v" }, "<leader>um", K.toggle.markdown)
 ms({ "n", "v" }, "<leader>un", K.ux.dismiss_notifications)
+ms({ "n", "v" }, "<leader>ur", K.toggle.relativenumber)
+ms({ "n", "v" }, "<leader>ut", K.toggle.theme)
+ms({ "n", "v" }, "<leader>uv", K.toggle.virtcolumn)
+ms({ "n", "v" }, "<leader>uw", K.toggle.wrap)
+ms({ "n", "v" }, "<leader>uz", K.toggle.maximize)
 ---------------------------------------------------------------------------------------------#[u]x--
 
 --#[w]in--------------------------------------------------------------------------------------------
