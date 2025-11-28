@@ -164,7 +164,7 @@ function M.default_gen_hlgroup_map(context)
 
     ---! mini.indentscope
     MiniIndentscopeSymbol = { fg = c.pink },
-    MiniIndentscopeSymbolOff = { fg = c.yellow },
+    MiniIndentscopeSymbolOff = { fg = c.red },
 
     ---! neo-tree.nvim
     NeoTreeCursorLine = { bg = c.bg2 },
