@@ -130,6 +130,54 @@ function M.setup_breakpoints()
 end
 
 ---@return nil
+function M.setup_diagnostics()
+  local severity2numhl = eve.constant.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
+  local severity2prefixicon = eve.constant.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
+  local severity2texticon = eve.constant.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
+
+  std.fn.observe({ eve.context.lsp.diagnostics_virt_lines }, function()
+    ---@type vim.diagnostic.Opts
+    local config = {
+      float = {
+        border = "rounded",
+        focus = true,
+        focusable = true,
+        source = true,
+      },
+      severity_sort = true,
+      signs = {
+        numhl = severity2numhl,
+        text = severity2texticon,
+      },
+      underline = true,
+      update_in_insert = false,
+      virtual_lines = {
+        current_line = true,
+        format = function(diagnostic)
+          local icon = severity2prefixicon[diagnostic.severity] or ""
+          return string.format("%s %s", icon, diagnostic.message)
+        end,
+      },
+      virtual_text = {
+        current_line = false,
+        prefix = function(diagnostic)
+          return severity2prefixicon[diagnostic.severity] or ""
+        end,
+        source = "if_many",
+        spacing = 4,
+      },
+    }
+
+    local enable_diagnostic_virt_lines = eve.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
+    if not enable_diagnostic_virt_lines then
+      config.virtual_lines = false
+      config.virtual_text.current_line = nil
+    end
+    vim.diagnostic.config(config)
+  end)
+end
+
+---@return nil
 function M.setup_lsp()
   -- Lazy load LSP servers on FileType, see lua/integration/neovim/autocmd.lua
   -- local lsp_servers = {
@@ -156,45 +204,6 @@ function M.setup_lsp()
   if not vim.g.vscode and eve.context.flight.ai:snapshot() then
     vim.lsp.enable("copilot")
   end
-
-  local severity2prefixicon = eve.constant.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string> {
-  local severity2texticon = eve.constant.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
-  local severity2numhl = eve.constant.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
-  local enable_diagnostic_virt_lines = eve.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
-  local virtual_text_current_line = nil ---@type boolean|nil
-  if enable_diagnostic_virt_lines then
-    virtual_text_current_line = false ---@type boolean|nil
-  end
-  vim.diagnostic.config({
-    virtual_text = {
-      current_line = virtual_text_current_line,
-      source = "if_many",
-      spacing = 4,
-      prefix = function(diagnostic)
-        return severity2prefixicon[diagnostic.severity] or ""
-      end,
-    },
-    virtual_lines = enable_diagnostic_virt_lines and {
-      current_line = true,
-      format = function(diagnostic)
-        local icon = severity2prefixicon[diagnostic.severity] or ""
-        return string.format("%s %s", icon, diagnostic.message)
-      end,
-    } or nil,
-    signs = {
-      text = severity2texticon,
-      numhl = severity2numhl,
-    },
-    severity_sort = true,
-    underline = true,
-    update_in_insert = false,
-    float = {
-      border = "rounded",
-      focus = true,
-      focusable = true,
-      source = true,
-    },
-  })
 
   local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
   local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer

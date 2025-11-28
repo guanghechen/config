@@ -49,6 +49,7 @@ vim.schedule(function()
   pcall(require, "integration.local.dressing")
 
   eve.setup_breakpoints()
+  eve.setup_diagnostics()
   eve.setup_lsp()
   eve.context.watch_changes()
 end)
