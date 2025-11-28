@@ -46,14 +46,13 @@ return {
           group = "f_hipattern_error",
         },
 
-        -- warn: WARNING, QUESTION, HELP, FAQ, ATTENTION, HACK
+        -- warn: WARNING, QUESTION, HELP, ATTENTION, HACK
         warn_keywords = {
           pattern = {
             "%f[%w]()HACK()%f[%W]",
             "%f[%w]()WARNING()%f[%W]",
             "%f[%w]()QUESTION()%f[%W]",
             "%f[%w]()HELP()%f[%W]",
-            "%f[%w]()FAQ()%f[%W]",
             "%f[%w]()ATTENTION()%f[%W]",
           },
           group = "f_hipattern_warn",
