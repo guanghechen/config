@@ -223,6 +223,33 @@ function M.dismiss_all()
   end
 end
 
+---@param group                         string
+---@return nil
+function M.dismiss_by_group(group)
+  local dismissing = {} ---@type eve.builtin.notifier.IWindow[]
+  for _, win in ipairs(__WINS__) do
+    if win.task.group == group then
+      dismissing[#dismissing + 1] = win
+    end
+  end
+
+  if #dismissing == 0 then
+    return
+  end
+
+  local remaining = {} ---@type eve.builtin.notifier.IWindow[]
+  for _, win in ipairs(__WINS__) do
+    if win.task.group ~= group then
+      remaining[#remaining + 1] = win
+    end
+  end
+  __WINS__ = remaining
+
+  for _, win in ipairs(dismissing) do
+    M.__destroy_win__(win)
+  end
+end
+
 ---@return eve.builtin.notifier.ITask[]
 function M.history()
   return __TASK_HISTORY__:collect()
