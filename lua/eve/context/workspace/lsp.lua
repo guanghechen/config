@@ -63,7 +63,7 @@ function M.defaults()
   return {
     breakpoints = {},
     code_lens = false,
-    diagnostics_virt_lines = false,
+    diagnostics_virt_lines = true,
     inlay_hints = is_git_repo,
     python_debug_host = "127.0.0.1",
     python_debug_port = 9527,
