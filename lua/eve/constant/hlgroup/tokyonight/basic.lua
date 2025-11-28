@@ -28,12 +28,6 @@ function M.gen_hlgroup_map(context)
   local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
   local bg = t and c.none or c.bg ---@type string
-  local function diag_bg(color)
-    if t then
-      return c.none
-    end
-    return cs.mix(c.bg, color, 12)
-  end
 
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
@@ -83,11 +77,16 @@ function M.gen_hlgroup_map(context)
     DiagnosticUnderlineHint = { undercurl = true, sp = c.hint },
     DiagnosticUnderlineInfo = { undercurl = true, sp = c.info },
     DiagnosticUnderlineWarn = { undercurl = true, sp = c.warning },
-    DiagnosticVirtualTextError = { fg = c.red, bg = diag_bg(c.red) },
-    DiagnosticVirtualTextHint = { fg = c.hint, bg = diag_bg(c.hint) },
-    DiagnosticVirtualTextInfo = { fg = c.info, bg = diag_bg(c.info) },
-    DiagnosticVirtualTextWarn = { fg = c.warning, bg = diag_bg(c.warning) },
-    DiagnosticVirtualTextOk = { fg = c.green, bg = diag_bg(c.green) },
+    DiagnosticVirtualTextError = { fg = c.red, bg = t and c.none or cs.mix(c.bg, c.red, 12) },
+    DiagnosticVirtualTextHint = { fg = c.hint, bg = t and c.none or cs.mix(c.bg, c.hint, 12) },
+    DiagnosticVirtualTextInfo = { fg = c.info, bg = t and c.none or cs.mix(c.bg, c.info, 12) },
+    DiagnosticVirtualTextWarn = { fg = c.warning, bg = t and c.none or cs.mix(c.bg, c.warning, 12) },
+    DiagnosticVirtualTextOk = { fg = c.green, bg = t and c.none or cs.mix(c.bg, c.green, 12) },
+    DiagnosticVirtualLinesError = { fg = c.red, bg = t and c.none or cs.mix(c.bg, c.red, 12), italic = true },
+    DiagnosticVirtualLinesHint = { fg = c.hint, bg = t and c.none or cs.mix(c.bg, c.hint, 12), italic = true },
+    DiagnosticVirtualLinesInfo = { fg = c.info, bg = t and c.none or cs.mix(c.bg, c.info, 12), italic = true },
+    DiagnosticVirtualLinesWarn = { fg = c.warning, bg = t and c.none or cs.mix(c.bg, c.warning, 12), italic = true },
+    DiagnosticVirtualLinesOk = { fg = c.green, bg = t and c.none or cs.mix(c.bg, c.green, 12), italic = true },
     DiagnosticWarn = { fg = c.warning },
     DiffAdd = { bg = cs.mix(bg, c.green, 18) },
     DiffAddLeft = { bg = cs.mix(bg, c.red, 30) },

@@ -26,13 +26,6 @@ function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
   local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
 
-  local function diag_bg(color)
-    if t then
-      return c.none
-    end
-    return cs.mix(c.editor_background, color, 18)
-  end
-
   ---@type table<string, std.t.theme.IHlgroup>
   local hlgroup_map = {
     ComplHint = { fg = c.muted, italic = true },
@@ -86,11 +79,16 @@ function M.gen_hlgroup_map(context)
     DiagnosticUnderlineHint = { undercurl = true, sp = c.accentAqua },
     DiagnosticUnderlineInfo = { undercurl = true, sp = c.accentBlue },
     DiagnosticUnderlineWarn = { undercurl = true, sp = c.warning },
-    DiagnosticVirtualTextError = { fg = c.errorForeground, bg = diag_bg(c.errorForeground) },
-    DiagnosticVirtualTextHint = { fg = c.accentAqua, bg = diag_bg(c.accentAqua) },
-    DiagnosticVirtualTextInfo = { fg = c.accentBlue, bg = diag_bg(c.accentBlue) },
-    DiagnosticVirtualTextWarn = { fg = c.warning, bg = diag_bg(c.warning) },
-    DiagnosticVirtualTextOk = { fg = c.success, bg = diag_bg(c.success) },
+    DiagnosticVirtualTextError = { fg = c.errorForeground, bg = t and c.none or cs.mix(c.editor_background, c.errorForeground, 18) },
+    DiagnosticVirtualTextHint = { fg = c.accentAqua, bg = t and c.none or cs.mix(c.editor_background, c.accentAqua, 18) },
+    DiagnosticVirtualTextInfo = { fg = c.accentBlue, bg = t and c.none or cs.mix(c.editor_background, c.accentBlue, 18) },
+    DiagnosticVirtualTextWarn = { fg = c.warning, bg = t and c.none or cs.mix(c.editor_background, c.warning, 18) },
+    DiagnosticVirtualTextOk = { fg = c.success, bg = t and c.none or cs.mix(c.editor_background, c.success, 18) },
+    DiagnosticVirtualLinesError = { fg = c.errorForeground, bg = t and c.none or cs.mix(c.editor_background, c.errorForeground, 18), italic = true },
+    DiagnosticVirtualLinesHint = { fg = c.accentAqua, bg = t and c.none or cs.mix(c.editor_background, c.accentAqua, 18), italic = true },
+    DiagnosticVirtualLinesInfo = { fg = c.accentBlue, bg = t and c.none or cs.mix(c.editor_background, c.accentBlue, 18), italic = true },
+    DiagnosticVirtualLinesWarn = { fg = c.warning, bg = t and c.none or cs.mix(c.editor_background, c.warning, 18), italic = true },
+    DiagnosticVirtualLinesOk = { fg = c.success, bg = t and c.none or cs.mix(c.editor_background, c.success, 18), italic = true },
     DiffAddLeft = { bg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 30) },
     DiffAddRight = { bg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 30) },
     DiffAdd = { bg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 22) },
