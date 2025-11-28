@@ -43,7 +43,6 @@ vim.o.autoindent = true
 vim.o.autowrite = true
 vim.o.backspace = table.concat({ "indent", "eol", "start" }, ",")
 vim.o.breakindent = true
-vim.o.colorcolumn = "100,120"
 vim.o.conceallevel = 0 -- Disable conceal.
 vim.o.cursorline = true -- highlight the row of the cursor.
 vim.o.cursorlineopt = "number,screenline"

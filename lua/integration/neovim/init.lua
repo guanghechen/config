@@ -33,6 +33,7 @@ vim.schedule(function()
   require("fml.dressing.commentstring")
   require("fml.dressing.foldtext")
   require("fml.dressing.statuscolumn")
+  require("fml.dressing.virtcolumn")
   require("fml.dressing.winsep")
 
   require("fml.dressing.clipboard")

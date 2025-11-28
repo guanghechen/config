@@ -39,6 +39,7 @@ local group_flags = {
     dressing_illumniate = eve.context.flight.dressing_illumniate,
     dressing_input = eve.context.flight.dressing_input,
     dressing_select = eve.context.flight.dressing_select,
+    dressing_virtcolumn = eve.context.flight.dressing_virtcolumn,
     dressing_winsep = eve.context.flight.dressing_winsep,
     gitdiff_expand_all = eve.context.flight.gitdiff_expand_all,
   },

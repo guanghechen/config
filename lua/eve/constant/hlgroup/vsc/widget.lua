@@ -355,6 +355,10 @@ function M.gen_hlgroup_map(context)
     ---trailspace
     f_ux_trailspace = { bg = cs.mix(u.bg0, u.red, 60) },
 
+    ---virtcolumn
+    h_virtcolumn_1 = { fg = cs.mix(u.bg0, u.yellow, 20) },
+    h_virtcolumn_2 = { fg = cs.mix(u.bg0, u.red, 25) },
+
     ---vim options
     f_us_vo_name = { fg = u.fg1 },
     f_us_vo_type = { fg = u.orange },

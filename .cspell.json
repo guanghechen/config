@@ -1,6 +1,12 @@
 {
-  "import": ["~/.config/cspell/cspell.json"],
-  "ignorePaths": ["lua/resource/dict/", "lua/std/fileicon.lua", "lsp/yamlls.lua"],
+  "ignorePaths": [
+    "lsp/yamlls.lua",
+    "lua/resource/dict/",
+    "lua/std/fileicon.lua"
+  ],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -224,6 +230,7 @@
     "bitflag",
     "blockmatch",
     "blockwise",
+    "botline",
     "botright",
     "breakindent",
     "btnc",
@@ -850,6 +857,7 @@
     "vimrc",
     "vimruntime",
     "virt",
+    "virtcolumn",
     "virtnum",
     "virtualedit",
     "virtualenvs",

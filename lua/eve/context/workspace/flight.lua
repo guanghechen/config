@@ -10,6 +10,7 @@
 ---@field public dressing_illumniate    boolean
 ---@field public dressing_input         boolean
 ---@field public dressing_select        boolean
+---@field public dressing_virtcolumn    boolean
 ---@field public dressing_winsep        boolean
 ---
 ---@field public gitdiff_expand_all     boolean
@@ -26,6 +27,7 @@
 ---@field public dressing_illumniate    std.collection.IObservable
 ---@field public dressing_input         std.collection.IObservable
 ---@field public dressing_select        std.collection.IObservable
+---@field public dressing_virtcolumn    std.collection.IObservable
 ---@field public dressing_winsep        std.collection.IObservable
 ---
 ---@field public gitdiff_expand_all     std.collection.IObservable
@@ -59,6 +61,7 @@ function M.defaults()
     dressing_illumniate = true,
     dressing_input = true,
     dressing_select = true,
+    dressing_virtcolumn = true,
     dressing_winsep = true,
 
     gitdiff_expand_all = false,
@@ -101,6 +104,9 @@ function M.normalize(data)
     if type(data.dressing_select) == "boolean" then
       resolved.dressing_select = data.dressing_select
     end
+    if type(data.dressing_virtcolumn) == "boolean" then
+      resolved.dressing_virtcolumn = data.dressing_virtcolumn
+    end
     if type(data.dressing_winsep) == "boolean" then
       resolved.dressing_winsep = data.dressing_winsep
     end
@@ -127,6 +133,7 @@ function M.dump()
     dressing_illumniate = M.dressing_illumniate:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
     dressing_select = M.dressing_select:snapshot(),
+    dressing_virtcolumn = M.dressing_virtcolumn:snapshot(),
     dressing_winsep = M.dressing_winsep:snapshot(),
 
     gitdiff_expand_all = M.gitdiff_expand_all:snapshot(),
@@ -149,6 +156,7 @@ function M.load(raw_data)
   M.dressing_illumniate:next(data.dressing_illumniate)
   M.dressing_input:next(data.dressing_input)
   M.dressing_select:next(data.dressing_select)
+  M.dressing_virtcolumn:next(data.dressing_virtcolumn)
   M.dressing_winsep:next(data.dressing_winsep)
 
   M.gitdiff_expand_all:next(data.gitdiff_expand_all)
@@ -168,6 +176,7 @@ M.dressing_clipboard = std.Observable.from_value(_defaults.dressing_clipboard)
 M.dressing_illumniate = std.Observable.from_value(_defaults.dressing_illumniate)
 M.dressing_input = std.Observable.from_value(_defaults.dressing_input)
 M.dressing_select = std.Observable.from_value(_defaults.dressing_select)
+M.dressing_virtcolumn = std.Observable.from_value(_defaults.dressing_virtcolumn)
 M.dressing_winsep = std.Observable.from_value(_defaults.dressing_winsep, std.fn.falsy)
 
 M.gitdiff_expand_all = std.Observable.from_value(_defaults.gitdiff_expand_all)
