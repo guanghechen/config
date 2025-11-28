@@ -2,6 +2,7 @@
   "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "f13226770b4947eb7e66befbeb53c3db39f13e25" },
   "blink.indent": { "branch": "nvim@blink.indent", "commit": "2f4ac0d1bc642049d97da909cae02a5a5bd0beab" },
   "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "8e935d07ab6a3843565afd6a6d56456678cbf43f" },
+  "ccc.nvim": { "branch": "nvim@ccc.nvim", "commit": "9d1a256e006decc574789dfc7d628ca11644d4c2" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "4993e07fac6679d0a5005aa7499e0bad2bd39f19" },
   "diffview.nvim": { "branch": "nvim@diffview.nvim", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
   "flash.nvim": { "branch": "nvim@flash.nvim", "commit": "fcea7ff883235d9024dc41e638f164a450c14ca2" },

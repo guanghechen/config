@@ -571,6 +571,7 @@ M.definitions.toggle = {
 
 ---@class eve.builtin.command.definitions.ux
 M.definitions.ux = {
+  color_picker = def("Fuxcolorpicker", "ux: color picker"),
   dismiss_notifications = def("Fuxdismissnotifications", "ux: dismiss notifications"),
   reload_theme = def("Fuxreloadtheme", "ux: reload theme", "?"),
   resume_last_widget = def("Fuxresume", "ux: resume last widget"),

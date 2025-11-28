@@ -181,9 +181,16 @@ command.implement({
 })
 
 --[ux] notifications -------------------------------------------------------------------------------
-command.implement({
-  uuid = K.ux.dismiss_notifications.uuid,
-  action = function()
-    eve.notifier.dismiss_all()
-  end,
-})
+command
+  .implement({
+    uuid = K.ux.color_picker.uuid,
+    action = function()
+      vim.cmd("CccPick")
+    end,
+  })
+  .implement({
+    uuid = K.ux.dismiss_notifications.uuid,
+    action = function()
+      eve.notifier.dismiss_all()
+    end,
+  })
