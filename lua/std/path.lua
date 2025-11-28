@@ -265,22 +265,30 @@ end
 
 ---@param filename                      string
 ---@return string
+function M.locate_context_filepath(filename)
+  return M.join(HOME_CONTEXT, filename)
+end
+
+---@param filename                      string
+---@return string
 function M.locate_data_filepath(filename)
   return M.join(HOME_NVIM_DATA, filename)
 end
 
 ---@param filename                      string
 ---@return string
-function M.locate_script_filepath(filename)
-  return M.join(HOME_NVIM_CONFIG, "/script/" .. filename)
+function M.locate_log_filepath(filename)
+  return M.locate_workspace_filepath("log/" .. filename)
 end
 
 ---@param filename                      string
 ---@return string
-function M.locate_context_filepath(filename)
-  return M.join(HOME_CONTEXT, filename)
+function M.locate_script_filepath(filename)
+  return M.join(HOME_NVIM_CONFIG, "script/" .. filename)
 end
+
 ---@param filename                      string
+---@return string
 function M.locate_shared_filepath(filename)
   return M.join(HOME_SHARED, filename)
 end
@@ -288,11 +296,9 @@ end
 ---@param filename                      string
 ---@return string
 function M.locate_workspace_filepath(filename)
-  local workspace_path = M.workspace()
-  local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
-
-  local hash = rstd.fn.md5(workspace_path)
-
+  local workspace_path = M.workspace() ---@type string
+  local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path) ---@type string
+  local hash = rstd.fn.md5(workspace_path) ---@type string
   local session_dir = workspace_name .. "@" .. hash ---@type string
   return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
 end
