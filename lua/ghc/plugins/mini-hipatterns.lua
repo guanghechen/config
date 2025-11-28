@@ -50,6 +50,7 @@ return {
         warn_keywords = {
           pattern = {
             "%f[%w]()HACK()%f[%W]",
+            "%f[%w]()WARN()%f[%W]",
             "%f[%w]()WARNING()%f[%W]",
             "%f[%w]()QUESTION()%f[%W]",
             "%f[%w]()HELP()%f[%W]",
