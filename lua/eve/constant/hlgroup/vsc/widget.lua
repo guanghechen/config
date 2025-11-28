@@ -183,6 +183,7 @@ function M.gen_hlgroup_map(context)
     f_um_search_count = { fg = u.yellow },
 
     ---notepad
+    f_np_normal = { bg = bg_pane },
     f_np_title = { link = "f_pk_finder_title" },
 
     ---notify
