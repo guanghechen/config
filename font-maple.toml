@@ -1,8 +1,8 @@
 [font]
 builtin_box_drawing = false
-size = 18
-glyph_offset = { x = 0, y = 0 }
-offset = { x = 0, y = 1 }
+size = 15
+glyph_offset = { x = -0, y = -1 }
+offset = { x = 0, y = 0 }
 
 [font.bold]
 family = "Maple Mono NF CN"
