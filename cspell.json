@@ -1,0 +1,7 @@
+{
+  "ignorePaths": ["node_modules/"],
+  "ignoreRegExpList": ["/```[\\s\\S]*?```/"],
+  "language": "en",
+  "version": "0.2",
+  "words": ["guanghechen", "yozora"]
+}
