@@ -367,8 +367,8 @@ function M.default_gen_hlgroup_map(context)
     f_ux_trailspace = { bg = cs.mix(u.bg0, u.red, 60) },
 
     ---virtcolumn
-    h_virtcolumn_1 = { fg = cs.mix(u.bg0, u.yellow, 20) },
-    h_virtcolumn_2 = { fg = cs.mix(u.bg0, u.red, 25) },
+    h_virtcolumn_1 = { fg = cs.mix(u.bg0, u.pink, 30) },
+    h_virtcolumn_2 = { fg = cs.mix(u.bg0, u.red, 30) },
 
     ---vim options
     f_us_vo_name = { fg = u.fg1 },
