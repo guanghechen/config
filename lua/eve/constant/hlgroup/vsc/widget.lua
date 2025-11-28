@@ -18,6 +18,19 @@ function M.gen_hlgroup_map(context)
     f_buf_filetype = { fg = u.fg3 },
     f_buf_filepath = { fg = u.fg2 },
 
+    ---colorpicker
+    f_cp_normal = { fg = c.text, bg = bg_pane },
+    f_cp_border = { fg = c.widget_border, bg = bg_pane },
+    f_cp_title = { fg = c.accentPurple, bg = bg_pane, bold = true },
+    f_cp_bar_name = { fg = c.textDim, bg = bg_pane },
+    f_cp_bar_value = { fg = c.text, bg = bg_pane },
+    f_cp_point = { fg = c.text, bold = true },
+    f_cp_point_dark = { fg = c.base, bold = true },
+    f_cp_point_light = { fg = c.text, bold = true },
+    f_cp_preview_before = { fg = c.text, bg = c.editorWidget_background },
+    f_cp_preview_after = { fg = c.text, bg = c.editorWidget_background },
+    f_cp_output_mode = { fg = c.textDim, bg = bg_pane },
+
     ---cmdline
     f_uc_border = { link = "FloatActiveBorder" },
     f_uc_icon_command = { fg = u.aqua, bg = bg },

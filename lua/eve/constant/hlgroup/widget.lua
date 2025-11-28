@@ -29,6 +29,19 @@ function M.default_gen_hlgroup_map(context)
     f_buf_filetype = { fg = u.fg3 },
     f_buf_filepath = { fg = u.fg2 },
 
+    ---colorpicker
+    f_cp_normal = { fg = u.fg1, bg = bg_pane },
+    f_cp_border = { fg = u.bg4, bg = bg_pane },
+    f_cp_title = { fg = u.purple, bg = bg_pane, bold = true },
+    f_cp_bar_name = { fg = u.fg3, bg = bg_pane },
+    f_cp_bar_value = { fg = u.fg2, bg = bg_pane },
+    f_cp_point = { fg = u.fg1, bold = true },
+    f_cp_point_dark = { fg = u.bg0, bold = true },
+    f_cp_point_light = { fg = u.fg0, bold = true },
+    f_cp_preview_before = { fg = u.fg1, bg = u.bg3 },
+    f_cp_preview_after = { fg = u.fg1, bg = u.bg3 },
+    f_cp_output_mode = { fg = u.fg4, bg = bg_pane },
+
     ---cmdline
     f_uc_border = { link = "FloatActiveBorder" },
     f_uc_icon_command = { fg = u.aqua, bg = bg },

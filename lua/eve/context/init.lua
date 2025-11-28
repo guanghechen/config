@@ -12,6 +12,7 @@ local __mods = {
   --------------------------------------------------------------------------------------------------
 
   bookmark = "eve.context.workspace.bookmark",
+  colorpicker = "eve.context.workspace.colorpicker",
   flight = "eve.context.workspace.flight",
   frecency = "eve.context.workspace.frecency",
   lsp = "eve.context.workspace.lsp",
@@ -39,6 +40,7 @@ local __mods = {
 ---@field public tab                    eve.context.tab.data
 ---
 ---@field public bookmark               eve.context.bookmark.data
+---@field public colorpicker            eve.context.colorpicker.data
 ---@field public flight                 eve.context.flight.data
 ---@field public frecency               eve.context.frecency.data
 ---@field public lsp                    eve.context.lsp.data
@@ -68,6 +70,7 @@ local __mods = {
 ---@field public tab                    eve.context.tab
 ---
 ---@field public bookmark               eve.context.bookmark
+---@field public colorpicker            eve.context.colorpicker
 ---@field public flight                 eve.context.flight
 ---@field public frecency               eve.context.frecency
 ---@field public lsp                    eve.context.lsp
@@ -99,6 +102,7 @@ function M.dump()
     tab = M.tab.dump(),
 
     bookmark = M.bookmark.dump(),
+    colorpicker = M.colorpicker.dump(),
     flight = M.flight.dump(),
     frecency = M.frecency.dump(),
     lsp = M.lsp.dump(),
@@ -132,6 +136,7 @@ function M.load(storage, initialize)
       and std.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
     ) or {}
     M.bookmark.load(data_workspace.bookmark)
+    M.colorpicker.load(data_workspace.colorpicker)
     M.flight.load(data_workspace.flight)
     M.frecency.load(data_workspace.frecency)
     M.lsp.load(data_workspace.lsp)
@@ -178,6 +183,7 @@ function M.save(storage)
 
     local data = {
       bookmark = M.bookmark.dump(),
+      colorpicker = M.colorpicker.dump(),
       flight = M.flight.dump(),
       frecency = M.frecency.dump(),
       lsp = M.lsp.dump(),

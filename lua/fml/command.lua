@@ -989,6 +989,18 @@ command
 --[ux] widgets -------------------------------------------------------------------------------------
 command
   .implement({
+    uuid = K.ux.color_picker.uuid,
+    action = function()
+      eve.ux.widget.ColorPicker:pick()
+    end,
+  })
+  .implement({
+    uuid = K.ux.dismiss_notifications.uuid,
+    action = function()
+      eve.notifier.dismiss_all()
+    end,
+  })
+  .implement({
     uuid = K.ux.reload_theme.uuid,
     action = function(arg)
       require("fml.action.ux").reload_theme(arg)
