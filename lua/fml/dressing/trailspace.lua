@@ -47,10 +47,11 @@ end
 ---@return nil
 local function trim_last_lines()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local n_lines = vim.api.nvim_buf_line_count(winnr)
-  local last_nonblank = vim.fn.prevnonblank(n_lines)
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local n_lines = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+  local last_nonblank = vim.fn.prevnonblank(n_lines) ---@type integer
   if last_nonblank < n_lines then
-    vim.api.nvim_buf_set_lines(0, last_nonblank, n_lines, true, {})
+    vim.api.nvim_buf_set_lines(bufnr, last_nonblank, n_lines, true, {})
   end
 end
 

@@ -140,8 +140,8 @@ function M.activate_venv(venv_path)
     local venv_path_std = string.gsub(venv_path, "/", "\\")
     local conda_base_path_std = string.gsub(clp.paths.AnacondaBase, "/", "\\")
     local conda_envs_path_std = string.gsub(clp.paths.AnacondaEnvs, "/", "\\")
-    local is_conda_base = string.find(venv_path_std, conda_base_path_std)
-    local is_conda_env = string.find(venv_path, conda_envs_path_std)
+    local is_conda_base = string.find(venv_path_std, conda_base_path_std, 1, true)
+    local is_conda_env = string.find(venv_path_std, conda_envs_path_std, 1, true)
     if is_conda_base == 1 or is_conda_env == 1 then
       vim.fn.setenv("CONDA_PREFIX", venv_path)
     else

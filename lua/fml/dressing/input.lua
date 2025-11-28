@@ -103,11 +103,12 @@ function M.input(opts, on_confirm)
     row = opts.row or 0
     col = opts.col or 0
   else
-    row = opts.row or (parent_row < 5 and 2 or 2)
+    local win_height = vim.api.nvim_win_get_height(parent_winnr) ---@type integer
+    local rows_below = win_height - parent_row ---@type integer
+    row = opts.row or (rows_below >= 3 and 1 or -2)
     col = opts.col or 0
   end
 
-  row = math.max(0, row)
   col = math.max(0, col)
   width = math.max(1, width)
 
@@ -182,7 +183,7 @@ function M.input(opts, on_confirm)
         vim.cmd("stopinsert")
 
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-        local text = override_text or string.sub(lines[1] or "", #prompt) ---@type string
+        local text = override_text or string.sub(lines[1] or "", #prompt + 1) ---@type string
         vim.api.nvim_win_close(winnr, true)
         vim.schedule(function()
           if vim.api.nvim_win_is_valid(parent_winnr) then
