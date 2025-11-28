@@ -37,6 +37,7 @@ M.nsnr = {
   view_printer          = cn("ux:view:printer"),
   view_tree             = cn("ux:view:tree"),
   view_filetree_matches = cn("ux:view:filetree:matches"),
+  virtcolumn            = cn("ux:virtcolumn"),
   -- stylua: ignore end
 }
 

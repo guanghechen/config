@@ -974,6 +974,12 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.virtcolumn.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("dressing_virtcolumn_flight")
+    end,
+  })
+  .implement({
     uuid = K.toggle.wrap.uuid,
     action = function()
       require("fml.action.toggle.list").list("wrap_local")

@@ -565,6 +565,7 @@ M.definitions.toggle = {
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
   transparency = def("Ftoggletransparency", "toggle: transparency"),
   username = def("Ftoggleusername", "toggle: username"),
+  virtcolumn = def("Ftogglevirtcolumn", "toggle: virtcolumn"),
   wrap = def("Ftogglewrap", "toggle: wrap"),
 }
 
