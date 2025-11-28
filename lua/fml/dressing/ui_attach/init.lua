@@ -1,5 +1,10 @@
 local __module_name__ = "fml.dressing.ui_attach" ---@type string
 
+local enabled = eve.context.flight.dressing_ui_attach:snapshot() ---@type boolean
+if not enabled then
+  return
+end
+
 local timer = vim.uv.new_timer()
 if timer == nil then
   return
@@ -16,8 +21,8 @@ local IGNOREABLE_EVENTS = {
 ---@type table<string, boolean|nil>
 local DEVMODE_IGNORED_EVENTS = {
   msg_showcmd = true,
-  cmdline_show = true,
-  cmdline_hide = true,
+  cmdline_show = false,
+  cmdline_hide = false,
 }
 
 local handlers = {
