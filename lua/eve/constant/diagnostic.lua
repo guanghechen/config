@@ -13,10 +13,10 @@ M.severity2prefixicon = {
 
 ---@type table<vim.diagnostic.Severity, string>
 M.severity2texticon = {
-  [severity.ERROR] = eve.icon.diagnostic.Error,
-  [severity.WARN] = eve.icon.diagnostic.Warning,
-  [severity.INFO] = eve.icon.diagnostic.Information,
-  [severity.HINT] = eve.icon.diagnostic.Hint,
+  [severity.ERROR] = eve.icon.diagnostic.Error_alt,
+  [severity.WARN] = eve.icon.diagnostic.Warning_alt,
+  [severity.INFO] = eve.icon.diagnostic.Information_alt,
+  [severity.HINT] = eve.icon.diagnostic.Hint_alt,
 }
 
 ---@type table<vim.diagnostic.Severity, string>

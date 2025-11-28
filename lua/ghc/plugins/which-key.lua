@@ -52,7 +52,11 @@ return {
             return require("which-key.extras").expand.win()
           end,
         },
-        { "<leader>x", group = "diagnostics/quickfix", icon = { icon = eve.icon.diagnostic.Warning, color = "red" } },
+        {
+          "<leader>x",
+          group = "diagnostics/quickfix",
+          icon = { icon = eve.icon.diagnostic.Warning_alt, color = "red" },
+        },
       },
     },
   },

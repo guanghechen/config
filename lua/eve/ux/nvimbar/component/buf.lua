@@ -180,25 +180,25 @@ function M.bufs(position)
 
     local slots = 0 ---@type integer
     if count_error > 0 then
-      local text = " " .. eve.icon.diagnostic.Error .. " " .. count_error ---@type string
+      local text = " " .. eve.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
       text_diagnostic = text_diagnostic .. text ---@type string
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_error) ---@type string
       slots = slots + 1
     end
     if count_warn > 0 then
-      local text = " " .. eve.icon.diagnostic.Warning .. " " .. count_warn ---@type string
+      local text = " " .. eve.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
       text_diagnostic = text_diagnostic .. text
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_warn) ---@type string
       slots = slots + 1
     end
     if count_hint > 0 and slots < 2 then
-      local text = " " .. eve.icon.diagnostic.Hint .. " " .. count_hint ---@type string
+      local text = " " .. eve.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
       text_diagnostic = text_diagnostic .. text ---@type string
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_hint)
       slots = slots + 1
     end
     if count_info > 0 and slots < 2 then
-      local text = " " .. eve.icon.diagnostic.Information .. " " .. count_info ---@type string
+      local text = " " .. eve.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
       text_diagnostic = text_diagnostic .. text ---@type string
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_info)
       slots = slots + 1
@@ -281,19 +281,19 @@ function M.bufs(position)
     local text_diagnostic = "" ---@type string
     local slots = 0 ---@type integer
     if count_error > 0 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Error .. " " .. count_error
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Error_alt .. " " .. count_error
       slots = slots + 1
     end
     if count_warn > 0 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Warning .. " " .. count_warn
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Warning_alt .. " " .. count_warn
       slots = slots + 1
     end
     if count_hint > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Hint .. " " .. count_hint
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Hint_alt .. " " .. count_hint
       slots = slots + 1
     end
     if count_info > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Information .. " " .. count_info
+      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Information_alt .. " " .. count_info
       slots = slots + 1
     end
 

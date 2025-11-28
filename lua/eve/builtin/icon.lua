@@ -172,21 +172,21 @@ M.dap = {
 
 ---@class eve.builtin.icon.diagnostic
 M.diagnostic = {
-  ERROR = "",
-  WARN = "",
-  INFO = "",
-  HINT = "",
+  ERROR = "",
+  WARN = "",
+  INFO = "",
+  HINT = "󱧢",
 
   Error = "",
-  Error_alt = "󰅚",
-  Hint = "",
-  Hint_alt = "󰌶",
+  Error_alt = "",
+  Hint = "󱧡",
+  Hint_alt = "󱧢",
   Information = "",
   Information_alt = "",
   Question = "",
-  Question_alt = "",
+  Question_alt = "",
   Warning = "",
-  Warning_alt = "󰀪",
+  Warning_alt = "",
 }
 
 ---@class eve.builtin.icon.git

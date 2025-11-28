@@ -265,10 +265,10 @@ return {
       },
       diagnostics = {
         symbols = {
-          hint = eve.icon.diagnostic.Hint .. " ",
-          info = eve.icon.diagnostic.Information .. " ",
-          warn = eve.icon.diagnostic.Warning .. " ",
-          error = eve.icon.diagnostic.Error .. " ",
+          hint = eve.icon.diagnostic.Hint_alt .. " ",
+          info = eve.icon.diagnostic.Information_alt .. " ",
+          warn = eve.icon.diagnostic.Warning_alt .. " ",
+          error = eve.icon.diagnostic.Error_alt .. " ",
         },
         highlights = {
           hint = "DiagnosticSignHint",
