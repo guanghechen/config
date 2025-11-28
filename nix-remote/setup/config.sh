@@ -7,6 +7,7 @@ clone_or_update_config_repo() {
     "bat"
     "btop"
     "conda"
+    "cspell"
     "fish"
     "fzf"
     "git-delta"

@@ -5,6 +5,7 @@ $repomain = Join-Path $reporoot guanghechen
 $repo_required_branches = @(
   "bat",
   "conda",
+  "cspell",
   "gh",
   "git-delta",
   "fzf",
