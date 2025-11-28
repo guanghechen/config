@@ -87,6 +87,29 @@ function M.log_silent(title, message)
   })
 end
 
+---@param title                         string|unknown
+---@param message                       unknown|nil
+---@param filename                      string|nil
+function M.log_to_file(title, message, filename)
+  local text_title, text_content = "", "" ---@type string, string
+  if type(title) == "string" then
+    text_title = title
+    text_content = format_message(message)
+  else
+    text_title = "debug"
+    text_content = format_message(title)
+  end
+
+  local filepath = std.path.locate_log_filepath(filename or "debug.log") ---@type string
+  local timestamp = tostring(os.date("%Y-%m-%d %H:%M:%S")) ---@type string
+  local log_line = string.format("[%s] [%s] %s\n", timestamp, text_title, text_content:gsub("\n", " "))
+  local file = io.open(filepath, "a")
+  if file then
+    file:write(log_line)
+    file:close()
+  end
+end
+
 ---@param opts                          std.debug.ICmdParams
 ---@return string
 function M.cmd(opts)
