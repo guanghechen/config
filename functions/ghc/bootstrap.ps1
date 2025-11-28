@@ -73,6 +73,7 @@ function ghc-update {
     "claude",
     "codex",
     "conda",
+    "cspell",
     "fzf",
     "gh",
     "ghostty",
